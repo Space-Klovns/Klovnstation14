@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN.PrimitiveTasks;
@@ -13,10 +11,9 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Squad;
 ///         the hostile in its sights, which also makes the rest of the squad alert.
 /// </summary>
 /// <remarks>
-///     Put it where the information arrives - the sighting, the sensor branch - not somewhere that runs again and
-///         again on old information, since every report counts as fresh. Reports when planned, like
-///         <see cref="SquadCoverOperator"/>: a plan through here means the information is there, whether or not
-///         that plan is the one that ends up running.
+///     Put it where the information arrives - the sensor branch - not somewhere that runs again and again on old
+///         information, since every report counts as fresh. Sightings need no operator: NpcPerceptionSystem reports
+///         those itself. Reports when it runs, not when planned: planning has no side effects (CONTRIBUTING.md).
 /// </remarks>
 public sealed partial class ReportSquadThreatOperator : HTNOperator
 {
@@ -30,10 +27,12 @@ public sealed partial class ReportSquadThreatOperator : HTNOperator
     /// </summary>
     [DataField] public bool Contact = true;
 
-    public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
+    public override void Startup(NPCBlackboard blackboard)
     {
+        base.Startup(blackboard);
+
         if (!blackboard.TryGetValue<EntityCoordinates>(CoordinatesKey, out var coordinates, _entityManager))
-            return (true, null);
+            return;
 
         var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
 
@@ -41,7 +40,5 @@ public sealed partial class ReportSquadThreatOperator : HTNOperator
             _npcSquadSystem.ReportContact(ownerUid, coordinates);
         else
             _npcSquadSystem.ReportThreat(ownerUid, coordinates);
-
-        return (true, null);
     }
 }

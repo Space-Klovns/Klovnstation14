@@ -385,7 +385,13 @@ public sealed partial class HTNSystem : EntitySystem
                 component.CheckServices = false;
             }
 
-            status = currentOperator.Update(blackboard, frameTime);
+            // KS14 start: a task that asked for it stops as soon as its preconditions no longer hold, and replans at once
+            var preconditionsBroken = currentTask.RecheckPreconditions && !currentTask.PreconditionsStillMet(blackboard);
+            if (preconditionsBroken)
+                component.PlanAccumulator = 0f;
+            // KS14 end
+
+            status = preconditionsBroken ? HTNOperatorStatus.Failed /* KS14: precondition recheck */ : currentOperator.Update(blackboard, frameTime);
 
             switch (status)
             {

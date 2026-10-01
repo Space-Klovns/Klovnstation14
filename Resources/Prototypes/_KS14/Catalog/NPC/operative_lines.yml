@@ -83,3 +83,21 @@
   values:
     prefix: ks-operative-line-standdownack-
     count: 4
+
+- type: localizedDataset
+  id: KsOperativeSearching
+  values:
+    prefix: ks-operative-line-searching-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeCalloutReceived
+  values:
+    prefix: ks-operative-line-calloutreceived-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeLostContact
+  values:
+    prefix: ks-operative-line-lostcontact-
+    count: 3

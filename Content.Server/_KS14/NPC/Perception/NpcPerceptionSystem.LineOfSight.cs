@@ -1,0 +1,108 @@
+using System.Numerics;
+using Content.Shared.Examine;
+using Robust.Shared.ComponentTrees;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Physics;
+
+namespace Content.Server._KS14.NPC.Perception;
+
+public sealed partial class NpcPerceptionSystem
+{
+    /// <summary>
+    ///     The occluder trees one ray crosses. Reused, so it stops allocating once grown.
+    /// </summary>
+    private readonly List<Entity<OccluderTreeComponent>> _lineOfSightTrees = new();
+
+    /// <summary>
+    ///     The occluders one ray hits. Reused, as above.
+    /// </summary>
+    private readonly List<EntityUid> _lineOfSightHits = new();
+
+    /// <summary>
+    ///     The same answer as <see cref="ExamineSystemShared.InRangeUnOccluded(MapCoordinates, MapCoordinates, float, ExamineSystemShared.Ignored?)"/>
+    ///         with no predicate, without its allocation: the engine's occluder ray query builds a fresh list of the
+    ///         trees it crosses on every call, about 100 bytes, and perception casts several rays per NPC five times a
+    ///         second. This collects the trees into a reused list and walks them itself.
+    /// </summary>
+    /// <remarks>
+    ///     Main thread only: the scratch lists are fields on the system, shared by every call. Perception never runs
+    ///         anywhere else. Internal so a test can hold it to the examine check's answers.
+    /// </remarks>
+    internal bool InLineOfSight(MapCoordinates origin, MapCoordinates other, float range)
+    {
+        if (other.MapId != origin.MapId || other.MapId == MapId.Nullspace)
+            return false;
+
+        var direction = other.Position - origin.Position;
+        var length = direction.Length();
+
+        // The same rounding allowance the examine check gives.
+        if (range > 0f && length > range + 0.01f)
+            return false;
+
+        if (MathHelper.CloseTo(length, 0f))
+            return true;
+
+        length = MathF.Min(length, ExamineSystemShared.MaxRaycastRange);
+        var ray = new Ray(origin.Position, direction / length);
+        var end = origin.Position + ray.Direction * length;
+        var bounds = new Box2(Vector2.Min(origin.Position, end), Vector2.Max(origin.Position, end));
+
+        // Trees can only be queried with their pending moves applied; the engine's own queries do this first too.
+        _occluderSystem.UpdateTreePositions();
+
+        _lineOfSightTrees.Clear();
+        var gridState = (_lineOfSightTrees, _occluderTreeQuery);
+        _mapSystem.FindGridsIntersecting(origin.MapId,
+            bounds,
+            ref gridState,
+            static (EntityUid gridUid, MapGridComponent _, ref (List<Entity<OccluderTreeComponent>> Trees, EntityQuery<OccluderTreeComponent> TreeQuery) state) =>
+            {
+                if (state.TreeQuery.TryComp(gridUid, out var treeComponent))
+                    state.Trees.Add((gridUid, treeComponent));
+
+                return true;
+            },
+            includeMap: false);
+
+        if (_mapSystem.TryGetMap(origin.MapId, out var mapUid) &&
+            _occluderTreeQuery.TryComp(mapUid, out var mapTreeComponent) &&
+            mapTreeComponent.Tree.Count != 0)
+            _lineOfSightTrees.Add((mapUid.Value, mapTreeComponent));
+
+        _lineOfSightHits.Clear();
+        foreach (var (treeUid, treeComponent) in _lineOfSightTrees)
+        {
+            var (_, treeRotation, invMatrix) = _transformSystem.GetWorldPositionRotationInvMatrix(treeUid);
+            var treeRay = new Ray(Vector2.Transform(ray.Position, invMatrix), new Angle(-treeRotation.Theta).RotateVec(ray.Direction));
+
+            var hitState = (_lineOfSightHits, length);
+            treeComponent.Tree.QueryRay(ref hitState,
+                static (ref (List<EntityUid> Hits, float MaxLength) state, in ComponentTreeEntry<OccluderComponent> value, in Vector2 _, float distance) =>
+                {
+                    if (distance <= state.MaxLength)
+                        state.Hits.Add(value.Uid);
+
+                    return true;
+                },
+                treeRay);
+        }
+
+        // As the examine check: an occluder does not block a ray that starts or ends inside it.
+        foreach (var hitUid in _lineOfSightHits)
+        {
+            if (!_occluderQuery.TryComp(hitUid, out var occluderComponent) ||
+                !TryComp(hitUid, out TransformComponent? hitTransform))
+                return false;
+
+            if (_occluderSystem.ContainsPoint(occluderComponent, hitTransform, origin.Position) ||
+                _occluderSystem.ContainsPoint(occluderComponent, hitTransform, other.Position))
+                continue;
+
+            return false;
+        }
+
+        return true;
+    }
+}

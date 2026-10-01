@@ -4,10 +4,13 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Squad;
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC;
+using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
 using Content.Server.Weapons.Ranged.Systems;
+using Content.Shared._KS14.NPC;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -18,7 +21,8 @@ using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 namespace Content.IntegrationTests.Tests._KS14.NPC;
 
 /// <summary>
-///     Reaction time, squad contact, virtual markers, and the firing distance NPCs keep with pellet weapons.
+///     Reaction time (see <see cref="NpcPerceptionSystem"/>), squad contact, virtual markers, and the firing distance
+///         NPCs keep with pellet weapons.
 /// </summary>
 public sealed class KsNpcCombatReactionTest : GameTest
 {
@@ -31,56 +35,95 @@ public sealed class KsNpcCombatReactionTest : GameTest
     [Test]
     public async Task TestReactionTimeDelaysFirstReaction()
     {
-        var (entManager, npcUid, targetUid) = await SetUpPair();
-        var reactionTimeSystem = entManager.System<NpcReactionTimeSystem>();
+        var (entManager, npcUid, targetUid) = await SetUpLoner();
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
 
         await Pair.Server.WaitAssertion(() =>
-            Assert.That(reactionTimeSystem.TrySeeAndReact(npcUid, targetUid, alert: false), Is.False,
-                "a target seen for the first time should not be reacted to yet"));
-
-        // Keep it in sight - well inside the forget time - until past the reaction time.
-        for (var i = 0; i < 4; i++)
         {
-            await Pair.RunTicksSync(6);
-            await Pair.Server.WaitPost(() => reactionTimeSystem.TrySeeAndReact(npcUid, targetUid, alert: false));
-        }
+            perceptionSystem.UpdateNow(npcUid);
+            Assert.That(perceptionSystem.TryGetContact(npcUid, targetUid, out var contact) && contact.State == NpcContactState.Visible,
+                "the target should be in sight");
+            Assert.That(contact.Reacted, Is.False, "a target seen for the first time should not be reacted to yet");
+        });
+
+        await Pair.RunTicksSync(24); // 0.8s
 
         await Pair.Server.WaitAssertion(() =>
-            Assert.That(reactionTimeSystem.TrySeeAndReact(npcUid, targetUid, alert: false),
-                "a target in sight for longer than the reaction time should be reacted to"));
+        {
+            perceptionSystem.UpdateNow(npcUid);
+            perceptionSystem.TryGetContact(npcUid, targetUid, out var contact);
+            Assert.That(contact.Reacted, "a target in sight for longer than the reaction time should be reacted to");
+        });
     }
 
     /// <summary>
-    ///     An alert NPC - already fighting, or chasing - reacts at once.
+    ///     An alert NPC - already in combat - reacts at once.
     /// </summary>
     [Test]
     public async Task TestAlertNpcReactsAtOnce()
     {
-        var (entManager, npcUid, targetUid) = await SetUpPair();
-        var reactionTimeSystem = entManager.System<NpcReactionTimeSystem>();
+        var (entManager, npcUid, targetUid) = await SetUpLoner();
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
 
         await Pair.Server.WaitAssertion(() =>
-            Assert.That(reactionTimeSystem.TrySeeAndReact(npcUid, targetUid, alert: true)));
+        {
+            entManager.GetComponent<HTNComponent>(npcUid).Blackboard
+                .SetValue(EnsureVirtualMarkerOperator.MarkerSet, new HashSet<string> { "OpInCombat" });
+
+            perceptionSystem.UpdateNow(npcUid);
+            perceptionSystem.TryGetContact(npcUid, targetUid, out var contact);
+            Assert.That(contact.Reacted, "an NPC already in combat should react at once");
+        });
     }
 
     /// <summary>
-    ///     A target out of sight for longer than the forget time counts as newly spotted again.
+    ///     A target out of sight for a moment is still reacted to when it comes back; one out of sight for longer
+    ///         than the reaction forget time (2s) needs a fresh reaction.
     /// </summary>
     [Test]
     public async Task TestTargetOutOfSightIsForgotten()
     {
-        var (entManager, npcUid, targetUid) = await SetUpPair();
-        var reactionTimeSystem = entManager.System<NpcReactionTimeSystem>();
+        var (entManager, npcUid, targetUid) = await SetUpLoner();
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        EntityCoordinates inSight = default;
 
-        await Pair.Server.WaitPost(() => reactionTimeSystem.TrySeeAndReact(npcUid, targetUid, alert: false));
-        await Pair.RunTicksSync(30); // 1s: past the reaction time, but unseen the whole while...
+        await Pair.Server.WaitPost(() =>
+        {
+            inSight = entManager.GetComponent<TransformComponent>(targetUid).Coordinates;
+            perceptionSystem.UpdateNow(npcUid);
+        });
+        await Pair.RunTicksSync(24);
 
-        await Pair.Server.WaitPost(() => reactionTimeSystem.TrySeeAndReact(npcUid, targetUid, alert: false));
-        await Pair.RunTicksSync(90); // ...then 3s unseen, past the 2s forget time.
+        // Reacted to, then out of sight - out of range - for 1s, then back.
+        await Pair.Server.WaitPost(() =>
+        {
+            perceptionSystem.UpdateNow(npcUid);
+            transformSystem.SetCoordinates(targetUid, inSight.Offset(new System.Numerics.Vector2(0f, 20f)));
+            perceptionSystem.UpdateNow(npcUid);
+        });
+        await Pair.RunTicksSync(30);
 
         await Pair.Server.WaitAssertion(() =>
-            Assert.That(reactionTimeSystem.TrySeeAndReact(npcUid, targetUid, alert: false), Is.False,
-                "a target lost for longer than the forget time should need a fresh reaction"));
+        {
+            transformSystem.SetCoordinates(targetUid, inSight);
+            perceptionSystem.UpdateNow(npcUid);
+            perceptionSystem.TryGetContact(npcUid, targetUid, out var contact);
+            Assert.That(contact.Reacted, "a target out of sight for a moment should still be reacted to");
+
+            transformSystem.SetCoordinates(targetUid, inSight.Offset(new System.Numerics.Vector2(0f, 20f)));
+            perceptionSystem.UpdateNow(npcUid);
+        });
+
+        await Pair.RunTicksSync(90); // 3s unseen, past the 2s reaction forget time
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            transformSystem.SetCoordinates(targetUid, inSight);
+            perceptionSystem.UpdateNow(npcUid);
+            perceptionSystem.TryGetContact(npcUid, targetUid, out var contact);
+            Assert.That(contact.Reacted, Is.False, "a target lost for longer than the forget time should need a fresh reaction");
+        });
     }
 
     /// <summary>
@@ -261,7 +304,39 @@ public sealed class KsNpcCombatReactionTest : GameTest
     }
 
     /// <summary>
-    ///     A squad NPC with a reaction time and a target to look at, on an open grid, with the squad formed.
+    ///     A squadless NPC - so nothing makes it alert but itself - asleep, so only <c>UpdateNow</c> moves its
+    ///         perception along, and a target that has only just appeared six tiles away.
+    /// </summary>
+    private async Task<(IEntityManager EntManager, EntityUid NpcUid, EntityUid TargetUid)> SetUpLoner()
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+
+        EntityUid gridUid = default;
+        EntityUid npcUid = default;
+        EntityUid targetUid = default;
+
+        await server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-5, -5), new Vector2i(10, 5)).Owner;
+            npcUid = SpawnAt(entManager, LonerMob, gridUid, 0, 0);
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await server.WaitPost(() =>
+        {
+            entManager.System<NPCSystem>().SleepNPC(npcUid);
+            targetUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
+        });
+
+        return (entManager, npcUid, targetUid);
+    }
+
+    /// <summary>
+    ///     A squad NPC, asleep, and a target to look at, on an open grid, with the squad formed.
     /// </summary>
     private async Task<(IEntityManager EntManager, EntityUid NpcUid, EntityUid TargetUid)> SetUpPair()
     {
@@ -273,14 +348,22 @@ public sealed class KsNpcCombatReactionTest : GameTest
         EntityUid npcUid = default;
         EntityUid targetUid = default;
 
+        EntityUid gridUid = default;
+
         await server.WaitPost(() =>
         {
-            var gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-5, -5), new Vector2i(10, 5)).Owner;
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-5, -5), new Vector2i(10, 5)).Owner;
             npcUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0);
-            targetUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
         });
 
         await Pair.RunTicksSync(90);
+
+        // Asleep before the target appears: an awake one would spot it, call it out, and engage its squad on its own.
+        await server.WaitPost(() =>
+        {
+            entManager.System<NPCSystem>().SleepNPC(npcUid);
+            targetUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
+        });
 
         return (entManager, npcUid, targetUid);
     }

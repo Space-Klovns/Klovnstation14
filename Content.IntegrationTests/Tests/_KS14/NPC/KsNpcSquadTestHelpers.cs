@@ -23,6 +23,12 @@ public static class KsNpcSquadTestHelpers
     public const string OpenFloorMob = "KsSquadTestMobOpenFloor";
 
     /// <summary>
+    ///     A Syndicate mob with perception but no squad, so nothing a squadmate sees makes it alert: for testing its
+    ///         own reaction time.
+    /// </summary>
+    public const string LonerMob = "KsSquadTestMobLoner";
+
+    /// <summary>
     ///     HTN is present but disabled: squads require an NPC, but these must stay exactly where they are put.
     ///         Hard mob fixtures, so room analysis sees walls the way a real mob does.
     /// </summary>
@@ -60,7 +66,39 @@ public static class KsNpcSquadTestHelpers
     - Syndicate
   - type: NpcSquadMember
   - type: NpcSensors
-  - type: NpcReactionTime
+  - type: NpcPerception
+
+- type: entity
+  id: KsSquadTestMobLoner
+  components:
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.35
+        density: 185
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+  - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Critical
+      200: Dead
+  - type: Damageable
+    damageContainer: Biological
+  - type: HTN
+    enabled: false
+    rootTask:
+      task: IdleCompound
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+  - type: NpcPerception
 
 - type: entity
   parent: KsSquadTestMobSyndicate

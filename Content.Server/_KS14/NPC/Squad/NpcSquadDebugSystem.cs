@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Perception;
 using Content.Shared._KS14.NPC;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
@@ -16,6 +17,10 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+
+    [Dependency] private EntityQuery<NpcPerceptionComponent> _perceptionQuery = default!;
 
     private static readonly TimeSpan SendInterval = TimeSpan.FromSeconds(0.5);
 
@@ -87,6 +92,8 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
                 if (squadComponent.CoverPlan is { HasRoom: true } plan &&
                     plan.Assignments.TryGetValue(memberUid, out var assignment))
                     squad.Assignments.Add(new SquadDebugAssignment(memberNetCoordinates, GetNetCoordinates(assignment.Coordinates)));
+
+                AddContacts(squad, memberUid, memberNetCoordinates);
             }
 
             if (squadComponent.CoverPlan is { HasRoom: true } coverPlan)
@@ -103,6 +110,31 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
         foreach (var session in _debuggingSessions)
         {
             RaiseNetworkEvent(message, session.Channel);
+        }
+    }
+
+    private void AddContacts(SquadDebugSquad squad, EntityUid memberUid, NetCoordinates memberNetCoordinates)
+    {
+        if (!_perceptionQuery.TryComp(memberUid, out var perceptionComponent))
+            return;
+
+        foreach (var targetUid in perceptionComponent.Contacts.Keys)
+        {
+            if (!_npcPerceptionSystem.TryGetBelievedCoordinates((memberUid, perceptionComponent), targetUid, out var believedCoordinates, out var state, out _) ||
+                TerminatingOrDeleted(believedCoordinates.EntityId))
+                continue;
+
+            NetCoordinates? predicted = state == NpcContactState.Lost &&
+                _npcPerceptionSystem.TryGetPredictedCoordinates((memberUid, perceptionComponent), targetUid, out var predictedCoordinates)
+                    ? GetNetCoordinates(predictedCoordinates)
+                    : null;
+
+            // Relative to the grid or map: coordinates relative to the hostile would name an entity the client may
+            //      not have, such as one in a locker.
+            squad.Contacts.Add(new SquadDebugContact(memberNetCoordinates,
+                GetNetCoordinates(_transformSystem.GetMoverCoordinates(believedCoordinates)),
+                state.Value,
+                predicted));
         }
     }
 

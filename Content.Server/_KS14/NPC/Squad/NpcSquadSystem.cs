@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Shared.Damage.Components;
@@ -28,13 +29,13 @@ public sealed partial class NpcSquadSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
-    [Dependency] private HTNSystem _htnSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private MobThresholdSystem _mobThresholdSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
+    [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<NpcSquadComponent> _squadQuery = default!;
@@ -106,7 +107,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
         if (!TryGetSquad(memberUid, out var squadEntity))
             return;
 
-        squadEntity.Value.Comp.ThreatCoordinates = threatCoordinates;
+        squadEntity.Value.Comp.ThreatCoordinates = Snapshot(threatCoordinates);
         squadEntity.Value.Comp.ThreatReportedAt = _gameTiming.CurTime;
     }
 
@@ -145,13 +146,38 @@ public sealed partial class NpcSquadSystem : EntitySystem
     ///     Records that <paramref name="memberUid"/> has a hostile in its sights at
     ///         <paramref name="threatCoordinates"/>: the squad is in contact, and that is its threat.
     /// </summary>
+    /// <remarks>
+    ///     Members in contact report every second or so, so the threat position only moves once the new one is
+    ///         <see cref="ThreatRefreshDistance"/> from it - otherwise a hostile shuffling on the spot would rebuild
+    ///         the squad's cover plan with every report. The report itself is always fresh: the hostile is there.
+    /// </remarks>
     public void ReportContact(EntityUid memberUid, EntityCoordinates threatCoordinates)
     {
         if (!TryGetSquad(memberUid, out var squadEntity))
             return;
 
-        squadEntity.Value.Comp.LastContactAt = _gameTiming.CurTime;
-        ReportThreat(memberUid, threatCoordinates);
+        var squadComponent = squadEntity.Value.Comp;
+        var now = _gameTiming.CurTime;
+
+        squadComponent.LastContactAt = now;
+        squadComponent.ThreatReportedAt = now;
+
+        var snapshot = Snapshot(threatCoordinates);
+        if (squadComponent.ThreatCoordinates is { } existingCoordinates &&
+            existingCoordinates.TryDistance(EntityManager, _transformSystem, snapshot, out var distance) &&
+            distance < ThreatRefreshDistance)
+            return;
+
+        squadComponent.ThreatCoordinates = snapshot;
+    }
+
+    /// <summary>
+    ///     <paramref name="coordinates"/> relative to the grid or map rather than to whatever they were relative to,
+    ///         so a threat position given relative to a hostile stays where it was rather than following them about.
+    /// </summary>
+    private EntityCoordinates Snapshot(EntityCoordinates coordinates)
+    {
+        return TerminatingOrDeleted(coordinates.EntityId) ? coordinates : _transformSystem.GetMoverCoordinates(coordinates);
     }
 
     /// <summary>
@@ -522,7 +548,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
                 }
 
                 if (shared)
-                    _htnSystem.Replan(memberHtnComponent);
+                    _npcSensorSystem.RequestReplan(memberUid);
             }
         }
     }

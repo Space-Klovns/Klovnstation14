@@ -49,7 +49,19 @@ public sealed class SquadDebugSquad
     ///     Each member's current position paired with its assigned cover position.
     /// </summary>
     public List<SquadDebugAssignment> Assignments = new();
+
+    /// <summary>
+    ///     What each member believes about each hostile it knows of.
+    /// </summary>
+    public List<SquadDebugContact> Contacts = new();
 }
 
 [Serializable, NetSerializable]
 public readonly record struct SquadDebugAssignment(NetCoordinates Member, NetCoordinates Cover);
+
+/// <summary>
+///     One member's belief about one hostile: where the member is, where it believes the hostile is (the hostile
+///         itself, where it was last seen, or the locker it is in), and, for a lost one, where it guesses it went.
+/// </summary>
+[Serializable, NetSerializable]
+public readonly record struct SquadDebugContact(NetCoordinates Member, NetCoordinates Believed, NpcContactState State, NetCoordinates? Predicted);

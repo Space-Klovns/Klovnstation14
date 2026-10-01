@@ -9,7 +9,8 @@ namespace Content.Client._KS14.NPC;
 /// <summary>
 ///     Draws every NPC squad in its own colour: a double ring on the leader, single rings on members, lines
 ///         from the leader to each member, squares on the room thresholds the squad is covering, and a line
-///         from each member to its assigned cover position. The squad's threat is a cross.
+///         from each member to its assigned cover position. The squad's threat is a cross. What each member believes
+///         about the hostiles it knows of is drawn too - see <see cref="DrawContact"/>.
 /// </summary>
 public sealed partial class SquadDebugOverlay : Overlay
 {
@@ -24,6 +25,12 @@ public sealed partial class SquadDebugOverlay : Overlay
     private const float ThresholdHalfSize = 0.3f;
     private const float CoverRadius = 0.15f;
     private const float ThreatHalfSize = 0.35f;
+    private const float ContactRadius = 0.3f;
+
+    private static readonly Color VisibleContactColor = Color.Red.WithAlpha(0.6f);
+    private static readonly Color LostContactColor = Color.Orange;
+    private static readonly Color ReportedContactColor = Color.Yellow;
+    private static readonly Color HiddenContactColor = Color.Magenta;
 
     protected override void Draw(in OverlayDrawArgs args)
     {
@@ -79,6 +86,50 @@ public sealed partial class SquadDebugOverlay : Overlay
                 worldHandle.DrawLine(memberPosition, coverPosition, color.WithAlpha(0.3f));
                 worldHandle.DrawCircle(coverPosition, CoverRadius, color.WithAlpha(0.8f));
             }
+
+            foreach (var contact in squad.Contacts)
+            {
+                DrawContact(worldHandle, contact, args.MapId);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     A line to a hostile in sight; a ring where a lost or called-out one was, with a line on to where a lost
+    ///         one is guessed to be; a square on the locker a hidden one is in, faint if only suspected.
+    /// </summary>
+    private void DrawContact(DrawingHandleWorld worldHandle, SquadDebugContact contact, MapId mapId)
+    {
+        if (!TryGetPosition(contact.Member, mapId, out var memberPosition) ||
+            !TryGetPosition(contact.Believed, mapId, out var believedPosition))
+            return;
+
+        switch (contact.State)
+        {
+            case NpcContactState.Visible:
+                worldHandle.DrawLine(memberPosition, believedPosition, VisibleContactColor);
+                break;
+
+            case NpcContactState.Lost:
+            case NpcContactState.Reported:
+                var ringColor = contact.State == NpcContactState.Lost ? LostContactColor : ReportedContactColor;
+                worldHandle.DrawCircle(believedPosition, ContactRadius, ringColor, false);
+
+                if (contact.Predicted is { } predicted && TryGetPosition(predicted, mapId, out var predictedPosition))
+                {
+                    worldHandle.DrawLine(believedPosition, predictedPosition, ringColor);
+                    worldHandle.DrawCircle(predictedPosition, ContactRadius * 0.4f, ringColor);
+                }
+
+                break;
+
+            case NpcContactState.Concealed:
+            case NpcContactState.Suspected:
+                var hiddenColor = contact.State == NpcContactState.Concealed ? HiddenContactColor : HiddenContactColor.WithAlpha(0.4f);
+                var halfSize = new Vector2(ContactRadius, ContactRadius);
+                worldHandle.DrawRect(new Box2(believedPosition - halfSize, believedPosition + halfSize), hiddenColor, false);
+                worldHandle.DrawLine(memberPosition, believedPosition, hiddenColor.WithAlpha(0.3f));
+                break;
         }
     }
 

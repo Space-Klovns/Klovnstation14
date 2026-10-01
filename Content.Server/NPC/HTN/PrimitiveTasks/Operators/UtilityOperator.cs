@@ -59,6 +59,11 @@ public sealed partial class UtilityOperator : HTNOperator
                     {KeyCoordinates, new EntityCoordinates(target, Vector2.Zero)},
                 };
 
+                // KS14 start: what the owner believes about the target, see UtilityOperator.Klovn.Perception
+                if (!TryAddPerceptionEffects(blackboard, target, effects))
+                    return (false, null);
+                // KS14 end
+
                 return (true, effects);
 
             case ReturnTypeResult.EnumerableDescending:

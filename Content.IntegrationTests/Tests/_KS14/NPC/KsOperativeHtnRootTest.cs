@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Squad;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
+using Content.Server.NPC.HTN.PrimitiveTasks;
+using Content.Server.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server.NPC.Systems;
+using Content.Shared._KS14.NPC;
+using Content.Shared.Tools.Systems;
 using Robust.Shared.CPUJob.JobQueues;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -25,7 +31,8 @@ namespace Content.IntegrationTests.Tests._KS14.NPC;
 ///         earlier branch that always plans - fails a test instead of passing unnoticed. The operative HTN lives
 ///         in the private _KsModule submodule, so these are ignored when it is absent.
 ///
-///     Also covers sensor data forcing an immediate replan.
+///     Also covers sensor data forcing an immediate replan, and which of the perception-driven branches (search,
+///         lost contact, callouts) may interrupt which.
 /// </summary>
 public sealed class KsOperativeHtnRootTest : GameTest
 {
@@ -34,6 +41,17 @@ public sealed class KsOperativeHtnRootTest : GameTest
     // Not static: the YAML linter validates every static ProtoId field against the client's prototypes too, and
     //      the client has no HTN prototypes at all, so a static one fails the lint.
     private readonly ProtoId<HTNCompoundPrototype> _operativeRoot = "KsOperativeCombatCompound";
+
+    private const string HandsMob = "KsOperativeRootTestMobWithHands";
+
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsOperativeRootTestMobWithHands
+  components:
+  - type: Hands
+";
 
     private const string CombatMarker = "OpInCombat";
     private const string CombatTimeKey = "TimeOfLastCombat";
@@ -101,6 +119,142 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     A hostile seen hiding in a locker is searched for: the operative goes and opens it.
+    /// </summary>
+    [Test]
+    public async Task TestConcealedHostileIsSearched()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) => StageHidden(entManager, mobUid, gridUid, welded: false));
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is OpenEntityStorageOperator),
+            $"expected the locker to be opened, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     A locker that cannot be opened - welded shut - is covered instead.
+    /// </summary>
+    [Test]
+    public async Task TestWeldedHidingPlaceIsCovered()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) => StageHidden(entManager, mobUid, gridUid, welded: true));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is OpenEntityStorageOperator), Is.False,
+                $"a welded locker cannot be opened, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator),
+                $"expected the locker to be covered, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     A hostile being fought that has just gone out of sight is watched for where it should be by now.
+    /// </summary>
+    [Test]
+    public async Task TestLostHostileIsWatched()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) => StageContact(entManager, mobUid, gridUid, NpcContactState.Lost));
+
+        Assert.That(plan.Tasks.Any(IsLostContactWatch), $"expected a lost contact watch, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     An operative not in combat that hears a squadmate call out a hostile joins the fight.
+    /// </summary>
+    [Test]
+    public async Task TestCalloutBringsIdleOperativeIn()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: false, inCombat: false,
+            stage: (entManager, mobUid, gridUid) => StageContact(entManager, mobUid, gridUid, NpcContactState.Reported));
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is UtilityOperator { Prototype.Id: "KsOperativeReportedContacts" }),
+            $"expected the callout to be acted on, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     Which running plan a replan may replace, by the planner's branch traversal record rule: a search is not
+    ///         cut short by anything below it, a hold gives way to a search or a lost contact, and a lost contact
+    ///         watch is not cut short by a hold.
+    /// </summary>
+    [Test]
+    public async Task TestNewBranchesInterruptOnlyWhatTheyShould()
+    {
+        var hold = await PlanOperative(pendingSensorData: false, recentlyFought: true);
+        var sensors = await PlanOperative(pendingSensorData: true, recentlyFought: true);
+        var search = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) => StageHidden(entManager, mobUid, gridUid, welded: false));
+        var cover = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) => StageHidden(entManager, mobUid, gridUid, welded: true));
+        var lost = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) => StageContact(entManager, mobUid, gridUid, NpcContactState.Lost));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(Replaces(search, hold), "a search should interrupt a hold");
+            Assert.That(Replaces(lost, hold), "a lost contact should interrupt a hold");
+            Assert.That(Replaces(hold, search), Is.False, "a hold must not interrupt a search");
+            Assert.That(Replaces(lost, search), Is.False, "a lost contact must not interrupt a search");
+            Assert.That(Replaces(sensors, search), Is.False, "sensor data must not interrupt a search");
+            Assert.That(Replaces(hold, cover), Is.False, "a hold must not interrupt covering a locker");
+            Assert.That(Replaces(lost, cover), Is.False, "a lost contact must not interrupt covering a locker");
+            Assert.That(Replaces(hold, lost), Is.False, "a hold must not interrupt a lost contact watch");
+            Assert.That(Replaces(sensors, lost), Is.False, "sensor data must not interrupt a lost contact watch");
+        });
+    }
+
+    /// <summary>
+    ///     HTNSystem's rule: a new plan replaces the running one if its branch traversal record is lower at any index.
+    /// </summary>
+    private static bool Replaces(HTNPlan newPlan, HTNPlan runningPlan)
+    {
+        var running = runningPlan.BranchTraversalRecord;
+        var proposed = newPlan.BranchTraversalRecord;
+
+        for (var i = 0; i < running.Count; i++)
+        {
+            if (i < proposed.Count && running[i] > proposed[i])
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsLostContactWatch(HTNPrimitiveTask task)
+    {
+        return task.Operator is StaticWaitOperator { DelayKey: "LostContactWatchTime" };
+    }
+
+    /// <summary>
+    ///     A hostile out of sight behind the room's walls, that the operative saw climb into a locker in its room.
+    /// </summary>
+    private static void StageHidden(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, bool welded)
+    {
+        var lockerUid = SpawnAt(entManager, "ClosetSteelBase", gridUid, 2, 2);
+        if (welded)
+            entManager.System<WeldableSystem>().SetWeldedState(lockerUid, true);
+
+        var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 10, 10);
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Concealed,
+            now, now, now, entManager.GetComponent<TransformComponent>(lockerUid).Coordinates, default, lockerUid, Reacted: true));
+    }
+
+    /// <summary>
+    ///     A hostile out of sight behind the room's walls, that the operative believes was last somewhere in its room.
+    /// </summary>
+    private static void StageContact(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, NpcContactState state)
+    {
+        var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 10, 10);
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(state,
+            now, now, now, new EntityCoordinates(gridUid, new System.Numerics.Vector2(2.5f, 2.5f)), new System.Numerics.Vector2(1f, 0f),
+            null, Reacted: state != NpcContactState.Reported));
+    }
+
+    /// <summary>
     ///     New sensor data makes an awake NPC replan on its next update instead of waiting out its cooldown.
     /// </summary>
     [Test]
@@ -159,13 +313,15 @@ public sealed class KsOperativeHtnRootTest : GameTest
         bool recentlyFought,
         bool inCombat = true,
         bool knownThreat = false,
-        bool squadThreat = false)
+        bool squadThreat = false,
+        string mobPrototype = SyndicateMob,
+        System.Action<IEntityManager, EntityUid, EntityUid>? stage = null)
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
         if (!protoManager.HasIndex(_operativeRoot))
             Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
 
-        var (entManager, mobUid) = await SetUpOperativeInRoom();
+        var (entManager, mobUid) = await SetUpOperativeInRoom(mobPrototype);
         var sensorSystem = entManager.System<NpcSensorSystem>();
         var squadSystem = entManager.System<NpcSquadSystem>();
         var timing = Pair.Server.ResolveDependency<IGameTiming>();
@@ -176,6 +332,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
         {
             if (pendingSensorData)
                 sensorSystem.AddEffect(mobUid, "__Sensor__KsTest", true);
+
+            stage?.Invoke(entManager, mobUid, entManager.GetComponent<TransformComponent>(mobUid).ParentUid);
 
             var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard.ShallowClone();
             blackboard.SetValue(NPCBlackboard.Owner, mobUid);
@@ -223,7 +381,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     ///     A lone operative stand-in in a small walled room with one airlock, left long enough for the navmesh
     ///         to build and its one-man squad to form.
     /// </summary>
-    private async Task<(IEntityManager EntManager, EntityUid MobUid)> SetUpOperativeInRoom()
+    private async Task<(IEntityManager EntManager, EntityUid MobUid)> SetUpOperativeInRoom(string mobPrototype = SyndicateMob)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -246,7 +404,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 }
             }
 
-            mobUid = SpawnAt(entManager, SyndicateMob, gridUid, 4, 3);
+            mobUid = SpawnAt(entManager, mobPrototype, gridUid, 4, 3);
         });
 
         await Pair.RunTicksSync(150);
