@@ -38,23 +38,19 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
     private const float MaxFadeStep = 0.1f;
 
     /// <summary>
-    ///     Joining a round floods PVS with entities, which stutters the first moments of gameplay. PVS counts as
-    ///         settled once the client's entity count grows by no more than <see cref="MaxSettledEntityGrowth"/>
-    ///         over one window of this length. Measured in entities rather than frame times, so it means the same
-    ///         thing on every machine however fast it renders.
+    ///     Joining a round floods PVS with entities, so the first ticks of gameplay take longer than a tick period
+    ///         to process and the simulation falls behind real time. The game counts as lagging while, after this
+    ///         frame's ticks have run, it is still more than this many tick periods behind. One period of that is
+    ///         the ordinary leftover the game loop carries between frames; anything past it is tick work that took
+    ///         longer than the tick it was for. Rendering is not counted, so a machine that draws slowly but
+    ///         simulates fine is not mistaken for lagging.
     /// </summary>
-    private const float SettleWindow = 0.125f;
+    private const double MaxSettledTickBacklog = 2d;
 
     /// <summary>
-    ///     Fraction of the current entity count that may still arrive within one <see cref="SettleWindow"/>
-    ///         for PVS to count as settled; there is always some trickle from things spawning and moving about.
+    ///     How long, in real time, the game must go without lagging before the fade starts.
     /// </summary>
-    private const float MaxSettledEntityGrowth = 0.01f;
-
-    /// <summary>
-    ///     Floor for <see cref="MaxSettledEntityGrowth"/>, so a near-empty map does not demand zero arrivals.
-    /// </summary>
-    private const int MinSettledEntityGrowth = 10;
+    private const float RequiredSettledTime = 0.25f;
 
     /// <summary>
     ///     If the game never settles, stop holding the art opaque after this long and fade anyway.
@@ -63,8 +59,7 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
 
     private LobbyTransitionPhase _phase = LobbyTransitionPhase.Idle;
     private float _heldTime;
-    private float _windowTime;
-    private int _windowStartEntityCount;
+    private float _settledTime;
     private float _fadeProgress;
 
     public override void Initialize()
@@ -88,31 +83,24 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
         {
             case LobbyTransitionPhase.Holding:
                 _heldTime += realFrameTime;
-                _windowTime += realFrameTime;
 
-                if (_heldTime >= HoldTimeout)
-                {
-                    Log.Error($"Lobby transition art was held opaque for {HoldTimeout}s without PVS settling (entity count {EntityManager.EntityCount}, local entity {(_playerManager.LocalEntity is { } ? "attached" : "missing")}); fading out anyway.");
-                    _phase = LobbyTransitionPhase.Fading;
-                    break;
-                }
-
-                if (_windowTime < SettleWindow)
-                    break;
-
-                var entityCount = EntityManager.EntityCount;
-                var entityGrowth = entityCount - _windowStartEntityCount;
-                var maxEntityGrowth = Math.Max((int)(entityCount * MaxSettledEntityGrowth), MinSettledEntityGrowth);
+                // FrameUpdate runs after this frame's ticks, so this is how far the simulation is still behind
+                var tickBacklog = (_gameTiming.RealTime - _gameTiming.LastTick) / _gameTiming.TickPeriod;
+                var lagging = tickBacklog > MaxSettledTickBacklog;
 
                 // nothing is worth revealing until we have something to look at
-                if (_playerManager.LocalEntity is { } && entityGrowth <= maxEntityGrowth)
+                _settledTime = lagging || _playerManager.LocalEntity is not { } ? 0f : _settledTime + realFrameTime;
+
+                if (_settledTime >= RequiredSettledTime)
                 {
                     _phase = LobbyTransitionPhase.Fading;
-                    break;
+                }
+                else if (_heldTime >= HoldTimeout)
+                {
+                    Log.Error($"Lobby transition art was held opaque for {HoldTimeout}s without the game settling (tick backlog {tickBacklog:F1} periods, local entity {(_playerManager.LocalEntity is { } ? "attached" : "missing")}); fading out anyway.");
+                    _phase = LobbyTransitionPhase.Fading;
                 }
 
-                _windowTime = 0f;
-                _windowStartEntityCount = entityCount;
                 break;
             case LobbyTransitionPhase.Fading:
                 _fadeProgress += MathF.Min(realFrameTime, MaxFadeStep) / FadeDuration;
@@ -141,8 +129,7 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
 
         _phase = LobbyTransitionPhase.Holding;
         _heldTime = 0f;
-        _windowTime = 0f;
-        _windowStartEntityCount = EntityManager.EntityCount;
+        _settledTime = 0f;
         _fadeProgress = 0f;
 
         _overlay.ArtTexture = _resourceCache.GetResource<TextureResource>(backgroundProto.Background);
