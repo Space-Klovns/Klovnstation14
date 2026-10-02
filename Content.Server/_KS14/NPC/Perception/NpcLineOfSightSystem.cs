@@ -4,11 +4,25 @@ using Robust.Shared.ComponentTrees;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 
 namespace Content.Server._KS14.NPC.Perception;
 
-public sealed partial class NpcPerceptionSystem
+/// <summary>
+///     Sight and clearance for NPCs. Unoccluded line of sight, without allocating: what perception sees with, and what
+///         squad tactics clear search points with - one implementation, so the two never disagree about what can be
+///         seen. And how far something could travel in a straight line before running into something solid.
+/// </summary>
+public sealed partial class NpcLineOfSightSystem : EntitySystem
 {
+    [Dependency] private OccluderSystem _occluderSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+
+    [Dependency] private EntityQuery<OccluderComponent> _occluderQuery = default!;
+    [Dependency] private EntityQuery<OccluderTreeComponent> _occluderTreeQuery = default!;
+
     /// <summary>
     ///     The occluder trees one ray crosses. Reused, so it stops allocating once grown.
     /// </summary>
@@ -26,10 +40,10 @@ public sealed partial class NpcPerceptionSystem
     ///         second. This collects the trees into a reused list and walks them itself.
     /// </summary>
     /// <remarks>
-    ///     Main thread only: the scratch lists are fields on the system, shared by every call. Perception never runs
-    ///         anywhere else. Internal so a test can hold it to the examine check's answers.
+    ///     Main thread only: the scratch lists are fields on the system, shared by every call. NPC systems never run
+    ///         anywhere else.
     /// </remarks>
-    internal bool InLineOfSight(MapCoordinates origin, MapCoordinates other, float range)
+    public bool InLineOfSight(MapCoordinates origin, MapCoordinates other, float range)
     {
         if (other.MapId != origin.MapId || other.MapId == MapId.Nullspace)
             return false;
@@ -104,5 +118,31 @@ public sealed partial class NpcPerceptionSystem
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     How far from <paramref name="origin"/> along <paramref name="direction"/>, up to
+    ///         <paramref name="maxDistance"/>, before the first thing that collides with <paramref name="collisionMask"/>.
+    ///         <paramref name="maxDistance"/> if nothing is in the way.
+    /// </summary>
+    /// <remarks>
+    ///     Allocates: the physics ray query builds its results. Only call it on demand - planning a dive, guessing
+    ///         where a lost hostile went - not every update.
+    /// </remarks>
+    public float GetClearDistance(MapCoordinates origin, Vector2 direction, float maxDistance, int collisionMask)
+    {
+        if (origin.MapId == MapId.Nullspace || direction.LengthSquared() < 0.0001f || maxDistance <= 0f)
+            return 0f;
+
+        var ray = new CollisionRay(origin.Position, Vector2.Normalize(direction), collisionMask);
+
+        // Every hit, not the first: the first is the first the broadphase came across, not the nearest.
+        var nearestHit = maxDistance;
+        foreach (var hit in _physicsSystem.IntersectRay(origin.MapId, ray, maxDistance, returnOnFirstHit: false))
+        {
+            nearestHit = MathF.Min(nearestHit, hit.Distance);
+        }
+
+        return nearestHit;
     }
 }

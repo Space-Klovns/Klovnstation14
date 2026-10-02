@@ -221,6 +221,10 @@ public sealed partial class NPCJukeSystem : EntitySystem
                 var (shotSpread, shotProjectiles) = GetShotSpread(gunEntity);
                 var idealDistance = GetDesiredFiringDistance(rangedCombatComponent.Target, shotSpread, 1.8f) *
                     (shotProjectiles > 1 ? 1f : 4.5f);
+
+                // An NPC meant to fight up close does not back off to its gun's ideal range, however accurate it is.
+                if (component.KsMaxFiringDistance is { } maxFiringDistance)
+                    idealDistance = MathF.Min(idealDistance, maxFiringDistance);
                 if (idealDistance == 0f)
                     return;
 

@@ -79,5 +79,5 @@ public sealed partial class NpcSquadCoverSettings
     ///         where its leader is. Stops a squad chasing forever after something it cannot reach.
     /// </summary>
     [DataField]
-    public float ThreatObjectiveLifetime = 60f;
+    public float ThreatObjectiveLifetime = 40f;
 }

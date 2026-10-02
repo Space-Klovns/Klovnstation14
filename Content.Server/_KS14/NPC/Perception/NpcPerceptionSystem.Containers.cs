@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Server.NPC.Components;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Storage.Components;
 using Robust.Shared.Map;
@@ -27,6 +28,8 @@ public sealed partial class NpcPerceptionSystem
         MapCoordinates observerMapCoordinates,
         float range)
     {
+        contact = contact with { ObserverWasMoving = IsAdvancing(entity.Owner) };
+
         if (TryGetStorageAround(targetUid, out var storageUid))
             return contact with { State = NpcContactState.Concealed, ContainerUid = storageUid };
 
@@ -38,6 +41,17 @@ public sealed partial class NpcPerceptionSystem
             return contact with { State = NpcContactState.Suspected, ContainerUid = storageUid };
 
         return contact with { State = NpcContactState.Lost, ContainerUid = null };
+    }
+
+    /// <summary>
+    ///     Whether the NPC is going somewhere: steering towards a destination, rather than standing, or juking about
+    ///         one spot in a firefight.
+    /// </summary>
+    private bool IsAdvancing(EntityUid uid)
+    {
+        return _steeringQuery.TryComp(uid, out var steeringComponent) &&
+            steeringComponent.Status == SteeringStatus.Moving &&
+            !_jukeQuery.HasComp(uid);
     }
 
     /// <summary>
@@ -56,7 +70,7 @@ public sealed partial class NpcPerceptionSystem
         if (!storageGone &&
             !(_entityStorageQuery.TryComp(contact.ContainerUid!.Value, out var storageComponent) &&
                 storageComponent.Open &&
-                InLineOfSight(observerMapCoordinates, _transformSystem.GetMapCoordinates(contact.ContainerUid.Value), range)))
+                _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, _transformSystem.GetMapCoordinates(contact.ContainerUid.Value), range)))
             return false;
 
         if (contact.State == NpcContactState.Suspected)
@@ -104,7 +118,7 @@ public sealed partial class NpcPerceptionSystem
         var lastKnownMapCoordinates = _transformSystem.ToMapCoordinates(contact.LastKnownCoordinates);
         var expectedMapCoordinates = lastKnownMapCoordinates.Offset(contact.LastKnownVelocity * VanishLookahead);
 
-        return InLineOfSight(observerMapCoordinates, expectedMapCoordinates, range);
+        return _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, expectedMapCoordinates, range);
     }
 
     private bool TryGetClosedStorageNear(EntityCoordinates coordinates, float range, [NotNullWhen(true)] out EntityUid? storageUid)

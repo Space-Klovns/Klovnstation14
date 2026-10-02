@@ -100,4 +100,34 @@
   id: KsOperativeLostContact
   values:
     prefix: ks-operative-line-lostcontact-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeInvestigating
+  values:
+    prefix: ks-operative-line-investigating-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeStaging
+  values:
+    prefix: ks-operative-line-staging-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeBreaching
+  values:
+    prefix: ks-operative-line-breaching-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeSearchingArea
+  values:
+    prefix: ks-operative-line-searchingarea-
+    count: 5
+
+- type: localizedDataset
+  id: KsOperativeRegrouping
+  values:
+    prefix: ks-operative-line-regrouping-
     count: 3

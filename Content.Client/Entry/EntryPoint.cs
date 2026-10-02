@@ -113,6 +113,8 @@ namespace Content.Client.Entry
             _prototypeManager.RegisterIgnore("holiday");
             _prototypeManager.RegisterIgnore("htnCompound");
             _prototypeManager.RegisterIgnore("htnPrimitive");
+            _prototypeManager.RegisterIgnore("npcMeter"); // KS14: server-only NPC meters
+            _prototypeManager.RegisterIgnore("npcVoiceSet"); // KS14: server-only NPC voice sets
             _prototypeManager.RegisterIgnore("gameMap");
             _prototypeManager.RegisterIgnore("gameMapPool");
             _prototypeManager.RegisterIgnore("gamePreset");

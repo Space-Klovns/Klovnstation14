@@ -4,9 +4,11 @@ using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Interactions;
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Orders;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Squad;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Squad.Tactics;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
@@ -31,8 +33,8 @@ namespace Content.IntegrationTests.Tests._KS14.NPC;
 ///         earlier branch that always plans - fails a test instead of passing unnoticed. The operative HTN lives
 ///         in the private _KsModule submodule, so these are ignored when it is absent.
 ///
-///     Also covers sensor data forcing an immediate replan, and which of the perception-driven branches (search,
-///         lost contact, callouts) may interrupt which.
+///     Also covers sensor data forcing an immediate replan, which of the perception- and order-driven branches
+///         (search, orders, callouts) may interrupt which, and an order change cutting the running order short.
 /// </summary>
 public sealed class KsOperativeHtnRootTest : GameTest
 {
@@ -150,15 +152,49 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     A hostile being fought that has just gone out of sight is watched for where it should be by now.
+    ///     Each kind of order plans its own branch of the order compound, through the real root: nothing above it
+    ///         gets in the way of an order in an ordinary in-combat lull. Each ends waiting for the next order, and
+    ///         only a locker search opens anything.
     /// </summary>
-    [Test]
-    public async Task TestLostHostileIsWatched()
+    [TestCase(NpcOrderKind.Investigate)]
+    [TestCase(NpcOrderKind.Watch)]
+    [TestCase(NpcOrderKind.Stage)]
+    [TestCase(NpcOrderKind.Breach)]
+    [TestCase(NpcOrderKind.Search)]
+    [TestCase(NpcOrderKind.HoldArea)]
+    [TestCase(NpcOrderKind.Regroup)]
+    public async Task TestOrderIsCarriedOut(NpcOrderKind kind)
     {
         var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
-            stage: (entManager, mobUid, gridUid) => StageContact(entManager, mobUid, gridUid, NpcContactState.Lost));
+            stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, kind));
 
-        Assert.That(plan.Tasks.Any(IsLostContactWatch), $"expected a lost contact watch, got: {Describe(plan)}");
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is GetOrderOperator), $"expected the order to be read, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is WaitForOrderChangeOperator), $"expected the order to be carried out, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is OpenEntityStorageOperator), Is.False, $"only a locker search opens anything, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     An order to search a locker ends in opening it.
+    /// </summary>
+    [Test]
+    public async Task TestLockerSearchOrderOpensIt()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                var lockerUid = SpawnAt(entManager, "ClosetSteelBase", gridUid, 2, 2);
+                var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+                tacticsSystem.UpdatesPaused = true;
+                tacticsSystem.IssueOrder(mobUid,
+                    NpcOrderKind.Search,
+                    entManager.GetComponent<TransformComponent>(lockerUid).Coordinates,
+                    lockerUid);
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is OpenEntityStorageOperator), $"expected the locker to be opened, got: {Describe(plan)}");
     }
 
     /// <summary>
@@ -176,8 +212,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
     /// <summary>
     ///     Which running plan a replan may replace, by the planner's branch traversal record rule: a search is not
-    ///         cut short by anything below it, a hold gives way to a search or a lost contact, and a lost contact
-    ///         watch is not cut short by a hold.
+    ///         cut short by anything below it, a hold gives way to a search or an order, and an order is not cut
+    ///         short by a hold or by sensor data - a callout does not pull a member off a hunt.
     /// </summary>
     [Test]
     public async Task TestNewBranchesInterruptOnlyWhatTheyShould()
@@ -188,20 +224,25 @@ public sealed class KsOperativeHtnRootTest : GameTest
             stage: (entManager, mobUid, gridUid) => StageHidden(entManager, mobUid, gridUid, welded: false));
         var cover = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
             stage: (entManager, mobUid, gridUid) => StageHidden(entManager, mobUid, gridUid, welded: true));
-        var lost = await PlanOperative(pendingSensorData: false, recentlyFought: true,
-            stage: (entManager, mobUid, gridUid) => StageContact(entManager, mobUid, gridUid, NpcContactState.Lost));
+        var order = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Watch));
+        var orderWithSensors = await PlanOperative(pendingSensorData: true, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Watch));
 
         Assert.Multiple(() =>
         {
             Assert.That(Replaces(search, hold), "a search should interrupt a hold");
-            Assert.That(Replaces(lost, hold), "a lost contact should interrupt a hold");
+            Assert.That(Replaces(order, hold), "an order should interrupt a hold");
+            Assert.That(Replaces(order, sensors), "an order should interrupt handling sensor data");
             Assert.That(Replaces(hold, search), Is.False, "a hold must not interrupt a search");
-            Assert.That(Replaces(lost, search), Is.False, "a lost contact must not interrupt a search");
+            Assert.That(Replaces(order, search), Is.False, "an order must not interrupt a search");
             Assert.That(Replaces(sensors, search), Is.False, "sensor data must not interrupt a search");
             Assert.That(Replaces(hold, cover), Is.False, "a hold must not interrupt covering a locker");
-            Assert.That(Replaces(lost, cover), Is.False, "a lost contact must not interrupt covering a locker");
-            Assert.That(Replaces(hold, lost), Is.False, "a hold must not interrupt a lost contact watch");
-            Assert.That(Replaces(sensors, lost), Is.False, "sensor data must not interrupt a lost contact watch");
+            Assert.That(Replaces(order, cover), Is.False, "an order must not interrupt covering a locker");
+            Assert.That(Replaces(hold, order), Is.False, "a hold must not interrupt an order");
+            Assert.That(Replaces(sensors, order), Is.False, "sensor data must not interrupt an order");
+            Assert.That(orderWithSensors.Tasks.Any(task => task.Operator is GetOrderOperator),
+                $"with both, the order should win, got: {Describe(orderWithSensors)}");
         });
     }
 
@@ -222,9 +263,78 @@ public sealed class KsOperativeHtnRootTest : GameTest
         return false;
     }
 
-    private static bool IsLostContactWatch(HTNPrimitiveTask task)
+    /// <summary>
+    ///     Gives the operative an order by hand, somewhere in its room, with the tactics system paused so it is not
+    ///         taken straight back.
+    /// </summary>
+    private static void StageOrder(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, NpcOrderKind kind)
     {
-        return task.Operator is StaticWaitOperator { DelayKey: "LostContactWatchTime" };
+        var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+        tacticsSystem.UpdatesPaused = true;
+        tacticsSystem.IssueOrder(mobUid, kind, new EntityCoordinates(gridUid, new System.Numerics.Vector2(2.5f, 2.5f)));
+    }
+
+    /// <summary>
+    ///     A running order is dropped the moment the order changes, and the operative replans onto the new one:
+    ///         every task carrying out an order rechecks that it is still current. Without that, the old plan would
+    ///         carry on - a replan onto the same branch never beats it.
+    /// </summary>
+    [Test]
+    public async Task TestOrderChangeIsActedOnAtOnce()
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var (entManager, mobUid) = await SetUpOperativeInRoom();
+        var htnSystem = entManager.System<HTNSystem>();
+        var npcSystem = entManager.System<NPCSystem>();
+        var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+        EntityUid gridUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            gridUid = entManager.GetComponent<TransformComponent>(mobUid).ParentUid;
+            tacticsSystem.UpdatesPaused = true;
+            tacticsSystem.IssueOrder(mobUid, NpcOrderKind.Watch, new EntityCoordinates(gridUid, new System.Numerics.Vector2(4.5f, 3.5f)));
+
+            // The operative root, not the test mob's idle one; set here rather than in a prototype, which would
+            //      fail to load without the private submodule.
+            var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+            htnComponent.RootTask = new HTNCompoundTask { Task = _operativeRoot };
+            htnComponent.Blackboard.SetValue(EnsureVirtualMarkerOperator.MarkerSet, new HashSet<string> { CombatMarker });
+            htnSystem.SetHTNEnabled((mobUid, htnComponent), true);
+            npcSystem.WakeNPC(mobUid, htnComponent);
+        });
+
+        // Long enough to plan and start waiting on the first order.
+        await Pair.RunTicksSync(60);
+
+        var firstId = 0;
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(tacticsSystem.TryGetOrder(mobUid, out var firstOrder));
+            firstId = firstOrder.Id;
+
+            var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+            Assert.That(blackboard.TryGetValue<int>("OrderId", out var plannedId, entManager) && plannedId == firstId,
+                "the operative should be carrying out its first order");
+
+            tacticsSystem.IssueOrder(mobUid, NpcOrderKind.Watch, new EntityCoordinates(gridUid, new System.Numerics.Vector2(1.5f, 1.5f)));
+        });
+
+        // A replan happens every 0.45s anyway, and lands on the same branch: only the recheck makes it give way.
+        await Pair.RunTicksSync(60);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(tacticsSystem.TryGetOrder(mobUid, out var secondOrder) && secondOrder.Id != firstId);
+
+            var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+            blackboard.TryGetValue<int>("OrderId", out var plannedId, entManager);
+            Assert.That(plannedId, Is.EqualTo(secondOrder.Id),
+                $"the operative should have dropped its old order (id {firstId}) for the new one");
+        });
     }
 
     /// <summary>

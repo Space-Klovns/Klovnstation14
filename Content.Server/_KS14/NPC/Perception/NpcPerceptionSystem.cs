@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.Server._KS14.NPC.HTN.Preconditions;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Mobs.Systems;
@@ -37,12 +38,11 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
+    [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcLightDetectionSystem _npcLightDetectionSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
-    [Dependency] private OccluderSystem _occluderSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
-    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStealthSystem _stealthSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -51,8 +51,8 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
     [Dependency] private EntityQuery<EntityStorageComponent> _entityStorageQuery = default!;
     [Dependency] private EntityQuery<StealthComponent> _stealthQuery = default!;
-    [Dependency] private EntityQuery<OccluderComponent> _occluderQuery = default!;
-    [Dependency] private EntityQuery<OccluderTreeComponent> _occluderTreeQuery = default!;
+    [Dependency] private EntityQuery<NPCSteeringComponent> _steeringQuery = default!;
+    [Dependency] private EntityQuery<NPCJukeComponent> _jukeQuery = default!;
 
     /// <summary>
     ///     Hostiles the NPC could possibly see this update: alive, uncontained, in range.
@@ -63,6 +63,12 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     ///     Every hostile to look at this update: the candidates, plus everything already remembered.
     /// </summary>
     private readonly HashSet<EntityUid> _targets = new();
+
+    /// <summary>
+    ///     Hostiles out of sight whose reaction came due this update: glimpsed, then gone before the NPC got round
+    ///         to reacting. Called out like ones in sight, since the squad cannot hear about them any other way.
+    /// </summary>
+    private readonly List<EntityUid> _newlyReactedUnseen = new();
 
     public override void Update(float frameTime)
     {
@@ -134,6 +140,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
         var replan = false;
         var newlyReacted = false;
+        _newlyReactedUnseen.Clear();
 
         // Contacts is written to from here on, but never enumerated again until the next update.
         foreach (var targetUid in _targets)
@@ -186,6 +193,19 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
             if (!hasContact)
                 continue;
 
+            // Noticed, then out of sight before the reaction came: the NPC still reacts, just to where it was.
+            if (!contact.Reacted &&
+                contact.State != NpcContactState.Reported &&
+                contact.ReactAt != default &&
+                now >= contact.ReactAt)
+            {
+                contact = contact with { Reacted = true };
+                entity.Comp.Contacts[targetUid] = contact;
+                _newlyReactedUnseen.Add(targetUid);
+                replan = true;
+                newlyReacted = true;
+            }
+
             replan |= UpdateUnseen(entity, targetUid, contact, observerMapCoordinates, range, now);
         }
 
@@ -196,9 +216,14 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Records that the target is in sight right now, starting a new sighting - and a new reaction time, unless
-    ///         it was only out of view for a moment - if it was not already.
+    ///     Records that the target is in sight right now, starting a new sighting if it was not already. A new
+    ///         sighting starts the reaction clock - unless the NPC had already reacted to it, or already noticed it,
+    ///         a moment ago: a target that ducks in and out of view is the same target, not a new surprise each time.
     /// </summary>
+    /// <remarks>
+    ///     The reaction time is a delay, not an exposure requirement. The clock starts the moment the target is
+    ///         noticed and runs out whether or not it is still in sight then; see <see cref="NpcContact.ReactAt"/>.
+    /// </remarks>
     private NpcContact Sight(Entity<NpcPerceptionComponent> entity,
         EntityUid targetUid,
         NpcContact? previous,
@@ -209,27 +234,37 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     {
         TimeSpan firstSeen;
         TimeSpan lastConspicuous;
+        TimeSpan reactAt;
         bool reacted;
 
         if (previous is { State: NpcContactState.Visible } visible)
         {
             firstSeen = visible.FirstSeen;
             lastConspicuous = conspicuous ? now : visible.LastConspicuous;
+            reactAt = visible.ReactAt;
             reacted = visible.Reacted;
+        }
+        else if (previous is { State: not NpcContactState.Reported } seenBefore &&
+            (seenBefore.Reacted || seenBefore.ReactAt != default) &&
+            now - seenBefore.LastSeen <= entity.Comp.ReactionForgetTime)
+        {
+            // Only out of view for a moment: still the same target, so its reaction - done or under way - carries
+            //      on. A callout is not a sighting, so a Reported contact never gets here.
+            firstSeen = seenBefore.FirstSeen;
+            lastConspicuous = now;
+            reactAt = seenBefore.ReactAt;
+            reacted = seenBefore.Reacted;
         }
         else
         {
-            // Only out of view for a moment: still the same fight, so no fresh reaction. A callout is not a sighting.
-            var keepReaction = previous is { Reacted: true, State: not NpcContactState.Reported } seenBefore &&
-                now - seenBefore.LastSeen <= entity.Comp.ReactionForgetTime;
-
-            firstSeen = keepReaction ? previous!.Value.FirstSeen : now;
+            firstSeen = now;
             lastConspicuous = now;
-            reacted = keepReaction;
+            reactAt = alert ? now : now + GetReactionTime(entity, targetUid);
+            reacted = false;
         }
 
         if (!reacted)
-            reacted = alert || now - firstSeen >= GetReactionTime(entity, targetUid);
+            reacted = alert || now >= reactAt;
 
         return new NpcContact(NpcContactState.Visible,
             firstSeen,
@@ -238,7 +273,8 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
             _transformSystem.GetMoverCoordinates(targetUid),
             targetVelocity,
             ContainerUid: null,
-            reacted);
+            reacted,
+            reactAt);
     }
 
     /// <summary>
@@ -274,6 +310,9 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         }
     }
 
+    /// <summary>
+    ///     Drops the target from memory. Returns whether it was in sight, which is worth replanning for.
+    /// </summary>
     private bool Forget(Entity<NpcPerceptionComponent> entity, EntityUid targetUid)
     {
         return entity.Comp.Contacts.Remove(targetUid, out var contact) && contact.State == NpcContactState.Visible;
@@ -305,6 +344,17 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     }
 
     #region Public API
+
+    /// <summary>
+    ///     Makes <paramref name="observer"/> give up on <paramref name="targetUid"/>, as when a search for it has come
+    ///         up empty. It is noticed afresh, reaction time and all, if it shows itself again.
+    /// </summary>
+    public void ForgetContact(Entity<NpcPerceptionComponent?> observer, EntityUid targetUid)
+    {
+        if (_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false) &&
+            observer.Comp.Contacts.Remove(targetUid))
+            _npcSensorSystem.RequestReplan(observer.Owner);
+    }
 
     public bool TryGetContact(Entity<NpcPerceptionComponent?> observer, EntityUid targetUid, out NpcContact contact)
     {
@@ -358,6 +408,75 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         foreach (var contact in observer.Comp.Contacts.Values)
         {
             if (states.Contains(contact.State) && (maxAge is not { } age || now - contact.LastSeen <= age))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="observer"/> can see any hostile it has reacted to: it is in a fight.
+    /// </summary>
+    public bool InCombatContact(Entity<NpcPerceptionComponent?> observer)
+    {
+        if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false))
+            return false;
+
+        foreach (var contact in observer.Comp.Contacts.Values)
+        {
+            if (contact is { State: NpcContactState.Visible, Reacted: true })
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     The hostile <paramref name="observer"/> lost sight of most recently, of those it had reacted to and lost no
+    ///         longer than <paramref name="maxAge"/> ago.
+    /// </summary>
+    public bool TryGetLatestLostContact(Entity<NpcPerceptionComponent?> observer,
+        TimeSpan maxAge,
+        out EntityUid targetUid,
+        out NpcContact contact)
+    {
+        targetUid = default;
+        contact = default;
+
+        if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false))
+            return false;
+
+        var now = _gameTiming.CurTime;
+        var found = false;
+
+        foreach (var (candidateUid, candidate) in observer.Comp.Contacts)
+        {
+            if (candidate is not { State: NpcContactState.Lost, Reacted: true } ||
+                now - candidate.LastSeen > maxAge ||
+                found && candidate.LastSeen <= contact.LastSeen)
+                continue;
+
+            targetUid = candidateUid;
+            contact = candidate;
+            found = true;
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="observer"/> has seen, or been told of, any hostile within <paramref name="maxAge"/>.
+    /// </summary>
+    public bool HasRecentContact(Entity<NpcPerceptionComponent?> observer, TimeSpan maxAge)
+    {
+        if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false))
+            return false;
+
+        var now = _gameTiming.CurTime;
+
+        foreach (var contact in observer.Comp.Contacts.Values)
+        {
+            if (now - contact.LastSeen <= maxAge)
                 return true;
         }
 

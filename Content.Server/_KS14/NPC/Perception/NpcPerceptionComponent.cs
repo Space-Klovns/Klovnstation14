@@ -30,7 +30,8 @@ public sealed partial class NpcPerceptionComponent : Component
     #region Reaction
 
     /// <summary>
-    ///     How long a hostile has to be in sight before a calm NPC reacts to it.
+    ///     How long a calm NPC takes to react to a hostile after noticing it. The hostile does not have to stay in
+    ///         sight meanwhile: a glimpse is noticed, and reacted to this long after.
     /// </summary>
     [DataField]
     public TimeSpan ReactionTime = TimeSpan.FromSeconds(0.6);

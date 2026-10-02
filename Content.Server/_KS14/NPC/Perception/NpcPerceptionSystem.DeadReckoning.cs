@@ -1,7 +1,6 @@
 using Content.Shared._KS14.NPC;
 using Content.Shared.Physics;
 using Robust.Shared.Map;
-using Robust.Shared.Physics;
 
 namespace Content.Server._KS14.NPC.Perception;
 
@@ -42,16 +41,9 @@ public sealed partial class NpcPerceptionSystem
 
         var lastKnownMapCoordinates = _transformSystem.ToMapCoordinates(contact.LastKnownCoordinates);
         var direction = offset / distance;
-        var ray = new CollisionRay(lastKnownMapCoordinates.Position, direction, (int)CollisionGroup.Impassable);
 
-        // Every hit, not the first: the first is the first the broadphase came across, not the nearest.
-        var nearestHit = distance + DeadReckoningWallMargin;
-        foreach (var hit in _physicsSystem.IntersectRay(lastKnownMapCoordinates.MapId, ray, distance, returnOnFirstHit: false))
-        {
-            nearestHit = MathF.Min(nearestHit, hit.Distance);
-        }
-
-        distance = MathF.Max(0f, MathF.Min(distance, nearestHit - DeadReckoningWallMargin));
+        var clearDistance = _npcLineOfSightSystem.GetClearDistance(lastKnownMapCoordinates, direction, distance + DeadReckoningWallMargin, (int)CollisionGroup.Impassable);
+        distance = MathF.Max(0f, MathF.Min(distance, clearDistance - DeadReckoningWallMargin));
 
         var predictedMapCoordinates = lastKnownMapCoordinates.Offset(direction * distance);
         predictedCoordinates = _transformSystem.ToCoordinates(contact.LastKnownCoordinates.EntityId, predictedMapCoordinates);

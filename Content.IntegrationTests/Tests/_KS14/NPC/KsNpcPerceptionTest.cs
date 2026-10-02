@@ -553,6 +553,7 @@ public sealed class KsNpcPerceptionTest : GameTest
     {
         var scene = await SetUpScene(targetTile: (9, 4));
         var (entManager, perceptionSystem) = (scene.EntManager, scene.PerceptionSystem);
+        var lineOfSightSystem = entManager.System<NpcLineOfSightSystem>();
         var examineSystem = entManager.System<Content.Shared.Examine.ExamineSystemShared>();
         var transformSystem = entManager.System<SharedTransformSystem>();
 
@@ -586,7 +587,7 @@ public sealed class KsNpcPerceptionTest : GameTest
                 var range = i % 4 == 0 ? 6f : 30f;
 
                 var expected = examineSystem.InRangeUnOccluded(from, to, range, null);
-                Assert.That(perceptionSystem.InLineOfSight(from, to, range), Is.EqualTo(expected),
+                Assert.That(lineOfSightSystem.InLineOfSight(from, to, range), Is.EqualTo(expected),
                     $"from {from.Position} to {to.Position} within {range}");
 
                 if (!expected)

@@ -48,6 +48,13 @@ public sealed partial class NpcSquadMemberComponent : Component
     public NpcSquadCoverSettings Cover = new();
 
     /// <summary>
+    ///     How this NPC's squad hunts hostiles it has lost, and regroups, while it leads - or how it does on its own.
+    ///         See <see cref="Tactics.NpcSquadTacticsSystem"/>.
+    /// </summary>
+    [DataField]
+    public Tactics.NpcSquadTacticsSettings Tactics = new();
+
+    /// <summary>
     ///     The value each shared blackboard key was last given by this NPC's leader. A key the NPC no longer has,
     ///         whose leader value still matches this, was dropped by the NPC on purpose - it dealt with it - and is
     ///         not handed back.
@@ -67,4 +74,11 @@ public sealed partial class NpcSquadMemberComponent : Component
     /// </summary>
     [ViewVariables]
     public EntityUid? Squad;
+
+    /// <summary>
+    ///     The squad this NPC was in when it went down, so that dying after going critical is still reported against
+    ///         the squad it went down with. See <see cref="NpcSquadMemberDownedEvent"/>.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? LastSquad;
 }

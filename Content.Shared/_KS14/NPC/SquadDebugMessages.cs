@@ -54,6 +54,33 @@ public sealed class SquadDebugSquad
     ///     What each member believes about each hostile it knows of.
     /// </summary>
     public List<SquadDebugContact> Contacts = new();
+
+    /// <summary>
+    ///     How far along the squad's hunt for a hostile it lost is, if it is on one.
+    /// </summary>
+    public NpcHuntPhase? HuntPhase;
+
+    /// <summary>
+    ///     Where the hunted hostile should have got to.
+    /// </summary>
+    public NetCoordinates? HuntPredicted;
+
+    /// <summary>
+    ///     Where members wait outside each way into the hunted room.
+    /// </summary>
+    public List<NetCoordinates> HuntEntrances = new();
+
+    public List<SquadDebugSearchPoint> SearchPoints = new();
+
+    /// <summary>
+    ///     Each member's order, if it has one.
+    /// </summary>
+    public List<SquadDebugOrder> Orders = new();
+
+    /// <summary>
+    ///     Every meter each member has a reading for - caution, say - with its current value.
+    /// </summary>
+    public List<SquadDebugMeter> Meters = new();
 }
 
 [Serializable, NetSerializable]
@@ -65,3 +92,21 @@ public readonly record struct SquadDebugAssignment(NetCoordinates Member, NetCoo
 /// </summary>
 [Serializable, NetSerializable]
 public readonly record struct SquadDebugContact(NetCoordinates Member, NetCoordinates Believed, NpcContactState State, NetCoordinates? Predicted);
+
+/// <summary>
+///     One member's reading on one meter.
+/// </summary>
+[Serializable, NetSerializable]
+public readonly record struct SquadDebugMeter(NetCoordinates Member, string Meter, float Value, float Max);
+
+/// <summary>
+///     One spot a hunt means to check, and whether it has been.
+/// </summary>
+[Serializable, NetSerializable]
+public readonly record struct SquadDebugSearchPoint(NetCoordinates Coordinates, bool Cleared, bool Locker);
+
+/// <summary>
+///     One member's order: where the member is, and where it was told to go.
+/// </summary>
+[Serializable, NetSerializable]
+public readonly record struct SquadDebugOrder(NetCoordinates Member, NetCoordinates Target, NpcOrderKind Kind);

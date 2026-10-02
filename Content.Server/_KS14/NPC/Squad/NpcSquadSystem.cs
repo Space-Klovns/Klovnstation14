@@ -210,9 +210,26 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnMobStateChanged(Entity<NpcSquadMemberComponent> entity, ref MobStateChangedEvent args)
     {
+        if (args.NewMobState == MobState.Alive)
+        {
+            // Back on its feet: whatever happens to it now is news for the squad it ends up in, not the old one.
+            entity.Comp.LastSquad = null;
+            return;
+        }
+
+        // Told while it is still in the squad, so whoever reacts sees the squad it went down with. One that dies
+        //      after going critical has left already: it is reported against the squad it was in, if that is still
+        //      about.
+        var squadUid = entity.Comp.Squad ?? entity.Comp.LastSquad;
+        if (squadUid is { } downedInUid && _squadQuery.HasComp(downedInUid))
+        {
+            var ev = new NpcSquadMemberDownedEvent(downedInUid, entity.Owner, args.NewMobState);
+            RaiseLocalEvent(ref ev);
+        }
+
         // Succession has to be immediate: a leaderless squad would otherwise hold for up to a whole update.
-        if (args.NewMobState != MobState.Alive)
-            RemoveFromSquad(entity);
+        entity.Comp.LastSquad = entity.Comp.Squad ?? entity.Comp.LastSquad;
+        RemoveFromSquad(entity);
     }
 
     [SubscribeLocalEvent]

@@ -41,6 +41,8 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     /// </summary>
     private static readonly TimeSpan NoRoomLifetime = TimeSpan.FromSeconds(5);
 
+    private readonly List<Vector2i> _roomExposureTiles = new();
+
     /// <summary>
     ///     Returns <paramref name="memberUid"/>'s cover assignment, working out the squad's plan first if it is
     ///         missing or stale. False if the member has no squad, or the squad is not in a room.
@@ -162,13 +164,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
         var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
 
-        var (collisionLayer, collisionMask) = _fixturesQuery.TryComp(leaderUid, out var fixturesComponent)
-            ? _physicsSystem.GetHardCollision(leaderUid, fixturesComponent)
-            : (0, 0);
-
-        // With nothing to collide with, every wall would count as floor and the whole grid as one room.
-        if (collisionLayer == 0 && collisionMask == 0)
-            (collisionLayer, collisionMask) = ((int)CollisionGroup.MobLayer, (int)CollisionGroup.MobMask);
+        var (collisionLayer, collisionMask) = GetRoomCollision(leaderUid);
 
         // Go to the threat, if the squad knows of one on this grid; otherwise hold where the leader is.
         var leaderTile = _mapSystem.TileIndicesFor(gridEntity, leaderTransform.Coordinates);
@@ -198,6 +194,55 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         plan.HasRoom = true;
         plan.ExpiresAt = now + TimeSpan.FromSeconds(settings.PlanLifetime);
         return plan;
+    }
+
+    /// <summary>
+    ///     The collision <paramref name="uid"/> walks with, which decides what counts as a wall when finding rooms.
+    /// </summary>
+    private (int Layer, int Mask) GetRoomCollision(EntityUid uid)
+    {
+        var (collisionLayer, collisionMask) = _fixturesQuery.TryComp(uid, out var fixturesComponent)
+            ? _physicsSystem.GetHardCollision(uid, fixturesComponent)
+            : (0, 0);
+
+        // With nothing to collide with, every wall would count as floor and the whole grid as one room.
+        if (collisionLayer == 0 && collisionMask == 0)
+            (collisionLayer, collisionMask) = ((int)CollisionGroup.MobLayer, (int)CollisionGroup.MobMask);
+
+        return (collisionLayer, collisionMask);
+    }
+
+    /// <summary>
+    ///     Finds the room around <paramref name="seedCoordinates"/>, as <paramref name="walkerUid"/> would walk it,
+    ///         filling <paramref name="room"/>'s grid, tiles and thresholds - and nothing else: no cover is assigned.
+    ///         For squad tactics, which need to know the shape of the room a hostile was lost in.
+    /// </summary>
+    /// <param name="awayFromCoordinates">See <see cref="TryAnalyseRoom"/>'s <c>awayFromTile</c>.</param>
+    internal bool TryFindRoom(EntityUid walkerUid,
+        EntityCoordinates seedCoordinates,
+        EntityCoordinates awayFromCoordinates,
+        NpcSquadCoverSettings settings,
+        NpcSquadCoverPlan room)
+    {
+        if (_transformSystem.GetGrid(seedCoordinates) is not { } gridUid ||
+            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            return false;
+
+        var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
+
+        var seedTile = _mapSystem.TileIndicesFor(gridEntity, seedCoordinates);
+        var awayFromTile = _transformSystem.GetGrid(awayFromCoordinates) == gridUid
+            ? _mapSystem.TileIndicesFor(gridEntity, awayFromCoordinates)
+            : seedTile;
+
+        _roomExposureTiles.Clear();
+        if (TryAnalyseRoom(gridEntity, seedTile, awayFromTile, collisionLayer, collisionMask, settings, room, _roomExposureTiles))
+            return true;
+
+        room.RoomTiles.Clear();
+        room.Thresholds.Clear();
+        return false;
     }
 
     #region Assignment

@@ -1,4 +1,5 @@
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Squad.Tactics;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN.PrimitiveTasks;
 using Robust.Shared.Map;
@@ -8,17 +9,19 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Squad;
 /// <summary>
 ///     Tells the owner's squad about a threat the owner has just learned of, at <see cref="CoordinatesKey"/>: the
 ///         squad goes to it, and does not stand down while it is recent. With <see cref="Contact"/>, the owner has
-///         the hostile in its sights, which also makes the rest of the squad alert.
+///         the hostile in its sights, which also makes the rest of the squad alert. Without, it is a disturbance,
+///         and squad tactics hear of it too: a cautious squad hunts it instead of walking up to it.
 /// </summary>
 /// <remarks>
 ///     Put it where the information arrives - the sensor branch - not somewhere that runs again and again on old
 ///         information, since every report counts as fresh. Sightings need no operator: NpcPerceptionSystem reports
-///         those itself. Reports when it runs, not when planned: planning has no side effects (CONTRIBUTING.md).
+///         those itself. Reports when it runs, not when planned: planning has no side effects (the npc-htn skill).
 /// </remarks>
 public sealed partial class ReportSquadThreatOperator : HTNOperator
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private NpcSquadTacticsSystem _npcSquadTacticsSystem = default!;
 
     [DataField] public string CoordinatesKey = "TargetCoordinates";
 
@@ -37,8 +40,13 @@ public sealed partial class ReportSquadThreatOperator : HTNOperator
         var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
 
         if (Contact)
+        {
             _npcSquadSystem.ReportContact(ownerUid, coordinates);
-        else
-            _npcSquadSystem.ReportThreat(ownerUid, coordinates);
+            return;
+        }
+
+        // Something heard, nobody seen: a disturbance, which a cautious squad hunts rather than walks up to.
+        _npcSquadSystem.ReportThreat(ownerUid, coordinates);
+        _npcSquadTacticsSystem.NoteDisturbance(ownerUid, coordinates);
     }
 }

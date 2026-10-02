@@ -31,7 +31,7 @@ public sealed partial class SquadCoverOperator : HTNOperator
     ///         (<see cref="NpcSquadSystem.RepeatThreat"/>): whatever set it reported it fresh when it did.
     /// </summary>
     /// <remarks>
-    ///     The one sanctioned side effect in a <c>Plan</c> (see CONTRIBUTING.md): the assignment this returns is read
+    ///     The one sanctioned side effect in a <c>Plan</c> (see the npc-htn skill): the assignment this returns is read
     ///         from the plan the squad builds around that threat, so the threat has to be in before it is read. A
     ///         repeat only moves a threat that has moved, so planning this again and again changes nothing.
     /// </remarks>

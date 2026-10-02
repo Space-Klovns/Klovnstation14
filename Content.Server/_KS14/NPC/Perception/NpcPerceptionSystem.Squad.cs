@@ -28,7 +28,9 @@ public sealed partial class NpcPerceptionSystem
 
         foreach (var (targetUid, contact) in entity.Comp.Contacts)
         {
-            if (contact.State != NpcContactState.Visible || !contact.Reacted)
+            // In sight, or only just reacted to after slipping out of it: either way, news the squad needs.
+            if (!contact.Reacted ||
+                contact.State != NpcContactState.Visible && !_newlyReactedUnseen.Contains(targetUid))
                 continue;
 
             foreach (var memberUid in squadEntity.Value.Comp.Members)
@@ -67,7 +69,7 @@ public sealed partial class NpcPerceptionSystem
 
     /// <summary>
     ///     The contact the NPC is fighting: its current target, if it can see it, otherwise the nearest hostile it
-    ///         can see and has reacted to.
+    ///         can see and has reacted to. Failing those, one it has only just reacted to out of sight.
     /// </summary>
     private bool TryGetPrimaryContact(Entity<NpcPerceptionComponent> entity, out NpcContact primaryContact)
     {
@@ -99,6 +101,9 @@ public sealed partial class NpcPerceptionSystem
             primaryContact = contact;
             found = true;
         }
+
+        if (!found && _newlyReactedUnseen.Count > 0)
+            found = entity.Comp.Contacts.TryGetValue(_newlyReactedUnseen[0], out primaryContact);
 
         return found;
     }
