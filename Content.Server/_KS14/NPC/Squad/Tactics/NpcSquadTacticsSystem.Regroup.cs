@@ -52,7 +52,7 @@ public sealed partial class NpcSquadTacticsSystem
             // A member with a spot in the squad's cover of the leader's room is already with the squad, however far
             //      that spot is from the leader. Regrouping it would walk it in to the leader, and its hold straight back
             //      out to the spot, round and round.
-            if (_npcSquadCoverSystem.TryGetAssignment(memberUid, out _))
+            if (_npcSquadCoverSystem.TryGetCurrentAssignment(memberUid, out _))
             {
                 ClearOrder(memberUid, issuerUid);
                 continue;

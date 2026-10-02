@@ -35,4 +35,14 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<bool> NpcLightDetection =
         CVarDef.Create("klovn.npc.light_detection", false, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How many line of sight checks NPCs may spend per tick weighing how exposed a spot is (see
+    ///         <c>NpcExposureSystem</c>), across every NPC. A check costs about 2µs, so the default 600 is about 1.2ms, under
+    ///         4% of a 30 TPS tick. A search that would go over waits for a later tick, or does without, as it is set up
+    ///         to. 0 turns exposure off.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<int> NpcExposureRayBudget =
+        CVarDef.Create("klovn.npc.exposure_ray_budget", 600, CVar.SERVERONLY);
 }

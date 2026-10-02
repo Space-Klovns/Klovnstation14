@@ -326,7 +326,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 if (!due)
                 {
                     var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
-                    entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("RepositionedAt", now);
+                    entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("RepositionDueAt", now + System.TimeSpan.FromSeconds(4));
                 }
             });
 
@@ -336,6 +336,31 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 $"expected the operative to shoot, got: {Describe(plan)}");
             Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "FiringPosition" }), Is.EqualTo(due),
                 due ? $"expected a spot to fight from, got: {Describe(plan)}" : $"a spot was only just found, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     With this tick's budget for exposure checks spent, a spot that is due is not searched for: the operative
+    ///         shoots from where it is, and tries again on a later replan.
+    /// </summary>
+    [Test]
+    public async Task TestFiringSpotWaitsForBudget()
+    {
+        await OverrideCVar(Content.IntegrationTests.Fixtures.Attributes.Side.Server, Content.Shared._KS14.CCVar.KsCCVars.NpcExposureRayBudget, 0);
+
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat.Ranged.GunOperator),
+                $"expected the operative to shoot anyway, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "FiringPosition" }), Is.False,
+                $"with no budget left, the spot search should wait, got: {Describe(plan)}");
         });
     }
 
@@ -375,13 +400,13 @@ public sealed class KsOperativeHtnRootTest : GameTest
         await Pair.Server.WaitAssertion(() =>
         {
             var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
-            Assert.That(blackboard.TryGetValue<System.TimeSpan>("RepositionedAt", out first, entManager),
+            Assert.That(blackboard.TryGetValue<System.TimeSpan>("RepositionDueAt", out first, entManager),
                 "the operative should have picked a spot to fight from");
         });
 
-        // Past the four seconds a spot is kept for, with the magazine kept topped up: a pistol empties in about that
-        //      long, and running dry ends the fight for reasons of its own.
-        for (var i = 0; i < 10; i++)
+        // Past the five seconds at most a spot is kept for, with the magazine kept topped up: a pistol empties in about
+        //      that long, and running dry ends the fight for reasons of its own.
+        for (var i = 0; i < 14; i++)
         {
             await Pair.RunTicksSync(15);
             await Pair.Server.WaitPost(() => KeepLoaded(entManager, mobUid));
@@ -390,8 +415,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
         await Pair.Server.WaitAssertion(() =>
         {
             var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
-            Assert.That(blackboard.TryGetValue<System.TimeSpan>("RepositionedAt", out var latest, entManager) && latest > first,
-                $"the operative should have looked for a new spot since {first}, at {timing.CurTime}");
+            Assert.That(blackboard.TryGetValue<System.TimeSpan>("RepositionDueAt", out var latest, entManager) && latest > first,
+                $"the operative should have looked for a new spot when one came due at {first}; it is {timing.CurTime}");
         });
     }
 

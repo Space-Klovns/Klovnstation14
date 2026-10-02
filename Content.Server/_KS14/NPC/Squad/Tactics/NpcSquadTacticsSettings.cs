@@ -71,7 +71,16 @@ public sealed partial class NpcSquadTacticsSettings
     ///     A way in further than this from a member, in tiles walked round the room, is not one it is sent to.
     /// </summary>
     [DataField]
-    public int MaxStageDistance = 40;
+    public int MaxStageDistance = 16;
+
+    /// <summary>
+    ///     How much members prefer ways in near where the hostile, or the disturbance, should be: each tile further from
+    ///         it a way in is counts as this many more tiles of walking to get there. Members still spread out across
+    ///         every way in before any gets a second; this decides who goes where, and which ways in get someone when
+    ///         there are more of them than members. 0: the shortest walk wins outright.
+    /// </summary>
+    [DataField]
+    public float EntranceTargetPreference = 2f;
 
     /// <summary>
     ///     How far into the room, past the way in, members go when they breach.

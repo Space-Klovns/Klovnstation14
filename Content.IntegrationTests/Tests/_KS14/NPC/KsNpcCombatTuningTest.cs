@@ -144,6 +144,42 @@ public sealed class KsNpcCombatTuningTest : GameTest
     }
 
     /// <summary>
+    ///     A time set with an offset and jitter lands anywhere within the jitter of the offset, and not at the same
+    ///         point every time - so NPCs that set it together do not all come due together.
+    /// </summary>
+    [Test]
+    public async Task TestSetTimeJitters()
+    {
+        var (entManager, gridUid) = await SetUpOpenGrid();
+        var setTimeOperator = new Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Time.SetTimeOperator
+        {
+            Key = "KsTestDueAt",
+            Offset = System.TimeSpan.FromSeconds(4),
+            Jitter = System.TimeSpan.FromSeconds(1),
+        };
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(setTimeOperator, oneOff: true);
+            var now = Pair.Server.ResolveDependency<Robust.Shared.Timing.IGameTiming>().CurTime;
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, SpawnAt(entManager, SyndicateMob, gridUid, 0, 0));
+
+            var times = new System.Collections.Generic.HashSet<System.TimeSpan>();
+            for (var i = 0; i < 50; i++)
+            {
+                setTimeOperator.Update(blackboard, 0f);
+                var time = blackboard.GetValue<System.TimeSpan>("KsTestDueAt");
+                Assert.That(time, Is.InRange(now + System.TimeSpan.FromSeconds(3), now + System.TimeSpan.FromSeconds(5)));
+                times.Add(time);
+            }
+
+            Assert.That(times, Has.Count.GreaterThan(10), "the times should be spread out, not one value");
+        });
+    }
+
+    /// <summary>
     ///     A dive goes towards where the NPC is heading, no further than it can jump, and stops short of anything in
     ///         the way. With a wall too close to get anywhere, or no dive to do, it does not dive at all.
     /// </summary>

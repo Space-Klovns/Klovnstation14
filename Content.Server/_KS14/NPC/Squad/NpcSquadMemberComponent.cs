@@ -42,16 +42,18 @@ public sealed partial class NpcSquadMemberComponent : Component
 
     /// <summary>
     ///     How this NPC's squad covers rooms while it leads. Read from the leader only, so a squad always
-    ///         works to one set of numbers.
+    ///         works to one set of numbers. A child prototype's settings merge into its parent's, so it only needs to
+    ///         list what it changes.
     /// </summary>
-    [DataField]
+    [DataField, AlwaysPushInheritance]
     public NpcSquadCoverSettings Cover = new();
 
     /// <summary>
     ///     How this NPC's squad hunts hostiles it has lost, and regroups, while it leads - or how it does on its own.
-    ///         See <see cref="Tactics.NpcSquadTacticsSystem"/>.
+    ///         See <see cref="Tactics.NpcSquadTacticsSystem"/>. A child prototype's settings merge into its parent's,
+    ///         as <see cref="Cover"/>'s do.
     /// </summary>
-    [DataField]
+    [DataField, AlwaysPushInheritance]
     public Tactics.NpcSquadTacticsSettings Tactics = new();
 
     /// <summary>

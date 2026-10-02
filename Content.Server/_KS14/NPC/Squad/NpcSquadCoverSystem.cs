@@ -60,6 +60,24 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     }
 
     /// <summary>
+    ///     <paramref name="memberUid"/>'s cover assignment, if its squad has a current plan already - without working
+    ///         one out. For asking whether a member is holding cover right now: a squad that has not asked for a plan
+    ///         lately is not holding anything, and building one just to ask would build them for every squad, all
+    ///         the time, and cache them before they are wanted.
+    /// </summary>
+    public bool TryGetCurrentAssignment(EntityUid memberUid, out NpcSquadCoverAssignment assignment)
+    {
+        assignment = default;
+
+        return _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) &&
+            squadEntity.Value.Comp.Leader is { } leaderUid &&
+            _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
+            squadEntity.Value.Comp.CoverPlan is { HasRoom: true } plan &&
+            !IsStale(squadEntity.Value, leaderUid, plan, leaderSquadMemberComponent.Cover) &&
+            plan.Assignments.TryGetValue(memberUid, out assignment);
+    }
+
+    /// <summary>
     ///     Where <paramref name="memberUid"/>'s squad should hold when it has no room to cover: the threat it is
     ///         going to, if there is one, otherwise its leader. The member's own position if it has no squad.
     /// </summary>

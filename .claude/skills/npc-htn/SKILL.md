@@ -104,13 +104,14 @@ forever and only ever ends through its recheck.
 **A rechecked precondition must also hold while planning.** The planner checks it like any other precondition, and
 at plan time nothing earlier in the plan has *run*: only plan effects exist. So "until a cooldown that an earlier task
 starts runs out" never plans, because the cooldown has not started yet. Write the moment as a plan effect instead:
-`SetTimeOperator { key }` (its `Plan` returns the time as an effect), then recheck
-`KeyTimePassedPrecondition { key, delay, invert: true }`. That holds while planning and stops holding `delay` later.
+`SetTimeOperator { key, offset }` (its `Plan` returns the time as an effect), then recheck
+`KeyTimePassedPrecondition { key, invert: true }`. That holds while planning and stops holding `offset` later.
 
 **Giving way on a timer.** That is also how a long-running task makes room for a newer version of its own plan,
 which a replan onto the same branch never replaces. Fighting from cover (`gun.yml`) keeps a firing spot for 4s this
 way. The gun task's recheck ends it, the next plan picks a new spot, and the branch is gated on the same time, so the
-costly spot search only runs when one is due.
+costly spot search only runs when one is due. Give such a timer a `jitter`: NPCs that start together otherwise stay
+in step for good, and their costly searches all land on the same tick.
 
 ## The planner: what wins
 
@@ -219,6 +220,18 @@ is hidden from all of it. `TacticalPositionOperator` opts in with `exposureRefer
 probes, radius and a curve), working the probes out once per plan rather than per candidate. Retreats use it to find
 real cover. The gun branch uses it to pick firing spots that see the target from as few of its angles as possible.
 
+It is the dearest consideration by far (a line of sight check per probe per candidate, about 2µs each), so it is
+kept in check two ways:
+- **Pruned.** Exposure can only lower a score, so the operator scores every candidate on everything else first, then
+  weighs exposure best first and stops once no candidate left could beat the best so far.
+- **Budgeted.** Every check comes out of a budget shared by all NPCs and refilled each tick
+  (`klovn.npc.exposure_ray_budget`). A search that runs out part way keeps its best so far. One that cannot afford
+  even one candidate either fails, to be tried on a later replan (`deferWhenOverBudget`, for searches that can wait),
+  or picks without exposure (for ones that cannot, like a retreat).
+
+The same shape - prune what cannot win, cap what is left per tick - fits any new on-demand query that is cheap alone
+and dear in bulk.
+
 ## Voice sets
 
 `SpeakOperator` speaks from the line set its task names, through the speaker's voice set if it has one:
@@ -256,6 +269,9 @@ straight-line distance).
   A world-targeted jump (`KsGravityJumpWorldEvent`) throws the performer all the way to its target, uncapped, so
   clamp the target yourself (see `DiveOperator`). Gate "only some NPCs do this" on the action existing
   (`TryGetValidAction` in `Plan`), not on a blackboard flag.
+- **Settings blocks on components** (a class of `[DataField]`s held in one field, like `NpcSquadMemberComponent.Cover`)
+  get `[AlwaysPushInheritance]`. Without it, a child prototype that sets one field of the block replaces the parent's
+  whole block, and every field it left out silently goes back to the C# default.
 - **Throttled systems:** spread first updates across the interval at `MapInit`, so NPCs spawned together do not all
   update on one tick. Keep scratch collections as fields and reuse them; a system running per NPC several times a
   second should allocate nothing in steady state.

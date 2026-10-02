@@ -233,10 +233,11 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     Spreads members across the ways in, so that with several they come at it from more than one side at once,
-    ///         each the closest pairing first. Distance is measured walking round the room, and a way in a member
-    ///         cannot reach without crossing the room is not one it is given: stacking up on the far door by walking
-    ///         past the hostile to get there gives the game away. Members left over once every reachable way in has
-    ///         someone stack up on whichever is nearest them.
+    ///         each the cheapest pairing first. The cost is the walk round the room - a way in a member cannot reach
+    ///         without crossing the room is not one it is given: stacking up on the far door by walking past the hostile
+    ///         to get there gives the game away - plus how far the way in is from where the hostile should be, weighted
+    ///         by <see cref="NpcSquadTacticsSettings.EntranceTargetPreference"/>, so the ways in nearest it are taken
+    ///         first. Members left over once every reachable way in has someone stack up on whichever costs least.
     /// </summary>
     private void AssignEntrances(NpcHunt hunt, NpcSquadTacticsSettings settings)
     {
@@ -253,6 +254,14 @@ public sealed partial class NpcSquadTacticsSystem
 
         // Every member's way round to every entrance, once: a handful of each, and only when a hunt sets up.
         var routes = new (List<Vector2i> Waypoints, int Length)?[_members.Count, hunt.Entrances.Count];
+
+        // How far in from each way in the hostile should be, counted as extra walking.
+        var entranceCosts = new float[hunt.Entrances.Count];
+        for (var e = 0; e < hunt.Entrances.Count; e++)
+        {
+            if (hunt.Entrances[e].BreachCoordinates.TryDistance(EntityManager, _transformSystem, hunt.PredictedCoordinates, out var toTarget))
+                entranceCosts[e] = toTarget * settings.EntranceTargetPreference;
+        }
 
         for (var m = 0; m < _members.Count; m++)
         {
@@ -285,8 +294,8 @@ public sealed partial class NpcSquadTacticsSystem
 
         while (_freeMembers.Count > 0)
         {
-            if (!TryPickEntrance(hunt, routes, unusedOnly: true, out var memberIndex, out var entranceIndex) &&
-                !TryPickEntrance(hunt, routes, unusedOnly: false, out memberIndex, out entranceIndex))
+            if (!TryPickEntrance(hunt, routes, entranceCosts, unusedOnly: true, out var memberIndex, out var entranceIndex) &&
+                !TryPickEntrance(hunt, routes, entranceCosts, unusedOnly: false, out memberIndex, out entranceIndex))
                 break;
 
             var staging = new NpcHuntStaging { EntranceIndex = entranceIndex };
@@ -298,17 +307,19 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     The shortest walk, among members still to be placed, to a way in they can reach round the room.
+    ///     The cheapest pairing, among members still to be placed, with a way in they can reach round the room: the
+    ///         walk, plus <paramref name="entranceCosts"/> for the way in.
     /// </summary>
     private bool TryPickEntrance(NpcHunt hunt,
         (List<Vector2i> Waypoints, int Length)?[,] routes,
+        float[] entranceCosts,
         bool unusedOnly,
         out int memberIndex,
         out int entranceIndex)
     {
         memberIndex = -1;
         entranceIndex = -1;
-        var bestLength = int.MaxValue;
+        var bestCost = float.MaxValue;
 
         for (var e = 0; e < hunt.Entrances.Count; e++)
         {
@@ -317,10 +328,14 @@ public sealed partial class NpcSquadTacticsSystem
 
             for (var f = 0; f < _freeMembers.Count; f++)
             {
-                if (routes[_members.IndexOf(_freeMembers[f]), e] is not { } route || route.Length >= bestLength)
+                if (routes[_members.IndexOf(_freeMembers[f]), e] is not { } route)
                     continue;
 
-                bestLength = route.Length;
+                var cost = route.Length + entranceCosts[e];
+                if (cost >= bestCost)
+                    continue;
+
+                bestCost = cost;
                 memberIndex = f;
                 entranceIndex = e;
             }

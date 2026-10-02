@@ -134,6 +134,107 @@ public sealed class KsNpcExposureTest : GameTest
     }
 
     /// <summary>
+    ///     Exposure checks come out of a budget shared by every NPC and refilled each tick: what one search spends, the
+    ///         next on the same tick does not have.
+    /// </summary>
+    [Test]
+    public async Task TestExposureBudgetIsSpentAndRefilled()
+    {
+        await OverrideCVar(Content.IntegrationTests.Fixtures.Attributes.Side.Server, Content.Shared._KS14.CCVar.KsCCVars.NpcExposureRayBudget, 30);
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var exposureSystem = entManager.System<NpcExposureSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var probes = new List<MapCoordinates>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            exposureSystem.GetApproachProbes(walkerUid, new EntityCoordinates(gridUid, ThreatPosition), reach: 4, maxProbes: 12, probes);
+            var spot = transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, DeepCover));
+
+            Assert.That(exposureSystem.CanAfford(24), "a fresh tick has the whole budget");
+            exposureSystem.GetExposure(spot, probes, 15f);
+            exposureSystem.GetExposure(spot, probes, 15f);
+            Assert.Multiple(() =>
+            {
+                Assert.That(exposureSystem.GetRaysLeft(), Is.EqualTo(6), "two spots, twelve probes each");
+                Assert.That(exposureSystem.CanAfford(12), Is.False, "not enough left for a third");
+            });
+        });
+
+        await Pair.RunTicksSync(1);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(exposureSystem.GetRaysLeft(), Is.EqualTo(30), "the next tick has the whole budget again"));
+    }
+
+    /// <summary>
+    ///     A search weighing exposure with no budget left either gives up, to try again later, or picks without
+    ///         weighing it - the nearest hidden spot, round the corner - as it is set up to.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestOverBudgetSearchDefersOrDoesWithout(bool defer)
+    {
+        await OverrideCVar(Content.IntegrationTests.Fixtures.Attributes.Side.Server, Content.Shared._KS14.CCVar.KsCCVars.NpcExposureRayBudget, 0);
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var tacticalPositionOperator = new TacticalPositionOperator
+        {
+            ReferenceCoordinatesKey = "KsTestReference",
+            MaxRange = 6f,
+            AvoidFireLanes = false,
+            LosReferenceCoordinatesKey = "KsTestThreat",
+            LosRadius = 15f,
+            LosCurve = new InverseBoolCurve(),
+            ExposureReferenceCoordinatesKey = "KsTestThreat",
+            ExposureCurve = new QuadraticCurve { Exponent = 2f },
+            DistanceCurve = new QuadraticCurve { Slope = -1f, Exponent = 1f, YOffset = 1f },
+            DeferWhenOverBudget = defer,
+        };
+
+        System.Threading.Tasks.Task<(bool Valid, Dictionary<string, object>? Effects)> planTask = default!;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(tacticalPositionOperator, oneOff: true);
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, walkerUid);
+            blackboard.SetValue("VisionRadius", 10f);
+            blackboard.SetValue("KsTestReference", new EntityCoordinates(gridUid, RoundTheCorner));
+            blackboard.SetValue("KsTestThreat", new EntityCoordinates(gridUid, ThreatPosition));
+            planTask = tacticalPositionOperator.Plan(blackboard, default);
+        });
+
+        for (var i = 0; i < 120 && !planTask.IsCompleted; i++)
+        {
+            await Pair.RunTicksSync(1);
+        }
+
+        Assert.That(planTask.IsCompletedSuccessfully, "the position search never finished");
+        var (valid, effects) = await planTask;
+
+        if (defer)
+        {
+            Assert.That(valid, Is.False, "a search that can wait should give up for now");
+            return;
+        }
+
+        Assert.That(valid, "a search that cannot wait should still pick somewhere");
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var exposureSystem = entManager.System<NpcExposureSystem>();
+            var transformSystem = entManager.System<SharedTransformSystem>();
+            var chosen = (EntityCoordinates) effects![tacticalPositionOperator.KeyCoordinates];
+
+            var probes = new List<MapCoordinates>();
+            exposureSystem.GetApproachProbes(walkerUid, new EntityCoordinates(gridUid, ThreatPosition), reach: 4, maxProbes: 12, probes);
+            Assert.That(exposureSystem.GetExposure(transformSystem.ToMapCoordinates(chosen), probes, 15f), Is.GreaterThan(0f),
+                $"without exposure weighed, the nearest hidden spot - round the corner - should win, not {chosen.Position}");
+        });
+    }
+
+    /// <summary>
     ///     Open floor with a wall along y = 0 from x = -9 to 0, and a mob to walk and plan as, parked out of the way.
     /// </summary>
     private async Task<(IEntityManager EntManager, EntityUid GridUid, EntityUid WalkerUid)> SetUpWall()

@@ -1,8 +1,11 @@
 using System.Numerics;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
+using Content.Shared._KS14.CCVar;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.Exposure;
 
@@ -16,6 +19,12 @@ namespace Content.Server._KS14.NPC.Exposure;
 /// <remarks>
 ///     For on-demand use while planning (<c>TacticalPositionOperator</c>), not kept up to date: work out the probes
 ///         once, with <see cref="GetApproachProbes"/>, then score as many spots against them as needed.
+///     <para>
+///         Every check is counted against a budget shared by all NPCs and reset each tick
+///         (<see cref="KsCCVars.NpcExposureRayBudget"/>). Each search costs well under a tick's worth, but searches
+///         bunch up: a squad that opens fire together picks its spots together. A caller asks
+///         <see cref="CanAfford"/> before a search, and waits for a later tick or does without when it cannot.
+///     </para>
 /// </remarks>
 public sealed partial class NpcExposureSystem : EntitySystem
 {
@@ -23,10 +32,45 @@ public sealed partial class NpcExposureSystem : EntitySystem
     [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
+    private int _rayBudget;
+    private GameTick _budgetTick;
+    private int _raysSpent;
+
     private readonly Dictionary<Vector2i, int> _floodSteps = new();
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.NpcExposureRayBudget, value => _rayBudget = value, true);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="rays"/> more checks fit in what is left of this tick's budget.
+    /// </summary>
+    public bool CanAfford(int rays)
+    {
+        return rays <= GetRaysLeft();
+    }
+
+    /// <summary>
+    ///     How many checks are left in this tick's budget.
+    /// </summary>
+    public int GetRaysLeft()
+    {
+        if (_budgetTick != _gameTiming.CurTick)
+        {
+            _budgetTick = _gameTiming.CurTick;
+            _raysSpent = 0;
+        }
+
+        return Math.Max(0, _rayBudget - _raysSpent);
+    }
     private readonly List<(Vector2i Tile, int Steps)> _floodTiles = new();
 
     /// <summary>
@@ -85,12 +129,16 @@ public sealed partial class NpcExposureSystem : EntitySystem
 
     /// <summary>
     ///     The share of <paramref name="probes"/>, from 0 to 1, with a clear line to <paramref name="position"/> within
-    ///         <paramref name="range"/>. 0 with no probes.
+    ///         <paramref name="range"/>. 0 with no probes. Spends one check from this tick's budget per probe, whether
+    ///         or not it can afford them: ask <see cref="CanAfford"/> first.
     /// </summary>
     public float GetExposure(MapCoordinates position, List<MapCoordinates> probes, float range)
     {
         if (probes.Count == 0)
             return 0f;
+
+        GetRaysLeft(); // moves the budget on to this tick
+        _raysSpent += probes.Count;
 
         var seen = 0;
         foreach (var probe in probes)

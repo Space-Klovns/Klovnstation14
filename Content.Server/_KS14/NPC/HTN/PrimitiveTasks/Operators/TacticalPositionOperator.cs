@@ -140,10 +140,23 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public IUtilityCurve ExposureCurve = new QuadraticCurve();
 
     /// <summary>
+    ///     What to do when weighing exposure would go over this tick's budget for it, shared by every NPC (see
+    ///         <see cref="NpcExposureSystem.CanAfford"/>). True: fail the plan, so whatever comes next plans instead
+    ///         and this is tried again on a later replan - for a search that can wait, like a new spot to shoot from.
+    ///         False: pick without weighing exposure - for one that cannot, like a retreat.
+    /// </summary>
+    [DataField] public bool DeferWhenOverBudget;
+
+    /// <summary>
     ///     The threat's approach, worked out once per plan and scored against for every candidate. Scoring runs
     ///         without awaiting anything, so plans sharing this operator cannot interleave over it.
     /// </summary>
     private readonly List<MapCoordinates> _exposureProbes = new();
+
+    /// <summary>
+    ///     Candidates still in the running, with their score before exposure. Reused, as above.
+    /// </summary>
+    private readonly List<(PathPoly Candidate, float Score)> _scoredCandidates = new();
 
     /// <summary>
     /// Blackboard float key read at claim time to size the claim's TTL (e.g. CampingTime/AdvanceTime).
@@ -210,10 +223,59 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             blackboard.TryGetValue<EntityCoordinates>(ExposureReferenceCoordinatesKey, out var exposureReference, _entityManager))
             _npcExposureSystem.GetApproachProbes(owner, exposureReference, ExposureReach, ExposureProbes, _exposureProbes);
 
+        // Not even one candidate's worth of this tick's budget left: the search waits, or does without.
+        if (_exposureProbes.Count > 0 && !_npcExposureSystem.CanAfford(_exposureProbes.Count))
+        {
+            if (DeferWhenOverBudget)
+                return (false, null);
+
+            _exposureProbes.Clear();
+        }
+
+        var considerationCount = GetConsiderationCount();
+
+        // Exposure is by far the dearest consideration, and can only lower a score. So every candidate is scored on the
+        //      rest first, and exposure is then weighed best first, until no candidate left could beat the best so far
+        //      even unexposed - or this tick's budget runs out, when the best so far stands. Usually only the top few
+        //      candidates are weighed at all.
+        _scoredCandidates.Clear();
         foreach (var candidate in candidates)
         {
-            var score = ScoreCandidate(blackboard, owner, candidate, reference);
+            var score = ScoreCandidate(blackboard, owner, candidate, reference, considerationCount);
+            if (score > 0f)
+                _scoredCandidates.Add((candidate, score));
+            else
+                debugCandidates?.Add(new TacticalPositionDebugCandidate(_entityManager.GetNetCoordinates(candidate.Coordinates), 0f));
+        }
+
+        if (_exposureProbes.Count > 0)
+            _scoredCandidates.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+        var weighing = _exposureProbes.Count > 0;
+        foreach (var (candidate, scoreWithoutExposure) in _scoredCandidates)
+        {
+            var score = scoreWithoutExposure;
+            var weighed = false;
+
+            if (weighing)
+            {
+                if (scoreWithoutExposure <= bestScore || !_npcExposureSystem.CanAfford(_exposureProbes.Count))
+                {
+                    weighing = false; // nothing further down can win, or there is no budget left to tell
+                }
+                else
+                {
+                    score *= GetExposureFactor(candidate, considerationCount);
+                    weighed = true;
+                }
+            }
+
+            // Candidates never weighed show their score without exposure: the most they could have scored.
             debugCandidates?.Add(new TacticalPositionDebugCandidate(_entityManager.GetNetCoordinates(candidate.Coordinates), score));
+
+            // An unweighed score cannot be compared with weighed ones.
+            if (_exposureProbes.Count > 0 && !weighed)
+                continue;
 
             if (score > bestScore)
             {
@@ -252,18 +314,38 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         return new TacticalPositionDebugClaim(_entityManager.GetNetCoordinates(claim.Coordinates), claim.ClearanceRadius);
     }
 
-    private float ScoreCandidate(NPCBlackboard blackboard, EntityUid owner, PathPoly candidate, EntityCoordinates reference)
+    /// <summary>
+    ///     How many considerations a candidate is scored on, which <see cref="NPCUtilitySystem.GetAdjustedScore"/>
+    ///         needs to make scores with different numbers of them comparable.
+    /// </summary>
+    private int GetConsiderationCount()
     {
-        var avoidFireLanes = AvoidFireLanes && _npcSquadFireLaneSystem.Enabled;
-
-        var considerationCount = 1 // distance, always applied
-            + (avoidFireLanes ? 1 : 0)
+        return 1 // distance, always applied
+            + (AvoidFireLanes && _npcSquadFireLaneSystem.Enabled ? 1 : 0)
             + (LosReferenceCoordinatesKey is not null ? 1 : 0)
             + (FovReferenceCoordinatesKey is not null ? 1 : 0)
             + (RandomProbability > 0f ? 1 : 0)
             + (KillZoneAvoidance > 0f ? 1 : 0)
             + (_exposureProbes.Count > 0 ? 1 : 0)
             + 1; // claim penalty, always applied
+    }
+
+    /// <summary>
+    ///     What exposure multiplies <paramref name="candidate"/>'s score by, at most 1. Spends a check per probe from this
+    ///         tick's budget.
+    /// </summary>
+    private float GetExposureFactor(PathPoly candidate, int considerationCount)
+    {
+        var hiddenRaw = 1f - _npcExposureSystem.GetExposure(_transformSystem.ToMapCoordinates(candidate.Coordinates), _exposureProbes, ExposureRadius);
+        return _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(ExposureCurve, hiddenRaw), considerationCount);
+    }
+
+    /// <summary>
+    ///     <paramref name="candidate"/>'s score on everything but exposure, which <see cref="Plan"/> weighs separately.
+    /// </summary>
+    private float ScoreCandidate(NPCBlackboard blackboard, EntityUid owner, PathPoly candidate, EntityCoordinates reference, int considerationCount)
+    {
+        var avoidFireLanes = AvoidFireLanes && _npcSquadFireLaneSystem.Enabled;
 
         var score = 1f;
 
@@ -329,15 +411,6 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         {
             var danger = _npcKillZoneSystem.GetDanger(owner, candidate.Coordinates);
             score *= _npcUtilitySystem.GetAdjustedScore(Math.Clamp(1f - KillZoneAvoidance * danger, 0f, 1f), considerationCount);
-
-            if (score <= 0f)
-                return 0f;
-        }
-
-        if (_exposureProbes.Count > 0)
-        {
-            var hiddenRaw = 1f - _npcExposureSystem.GetExposure(_transformSystem.ToMapCoordinates(candidate.Coordinates), _exposureProbes, ExposureRadius);
-            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(ExposureCurve, hiddenRaw), considerationCount);
 
             if (score <= 0f)
                 return 0f;

@@ -40,6 +40,9 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     private const string CautiousMob = "KsTacticsTestMobCautious";
     private const string Caution = "KsTacticsTestCaution";
 
+    // Not static: the YAML linter validates every static ProtoId field, and this one is in the private submodule.
+    private readonly Robust.Shared.Prototypes.ProtoId<Content.Shared.Humanoid.Prototypes.RandomHumanoidSettingsPrototype> _operativeNt = "KsOperativeNt";
+
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -86,7 +89,100 @@ public sealed class KsNpcSquadTacticsTest : GameTest
       cautiousHuntThreshold: 30
       regroupDistance: 8
       cautiousRegroupDistance: 3
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsTacticsTestMobInheritParent
+  components:
+  - type: NpcSquadMember
+    cover:
+      wallPreference: 0.3
+      killZoneAvoidance: 0.7
+    tactics:
+      watchTime: 7s
+      huntTimeout: 33s
+
+- type: entity
+  parent: KsTacticsTestMobInheritParent
+  id: KsTacticsTestMobInheritChild
+  components:
+  - type: NpcSquadMember
+    cover:
+      wallPreference: 0.9
+    tactics:
+      watchTime: 1s
 ";
+
+    /// <summary>
+    ///     A child prototype that changes one cover or tactics setting keeps the rest of its parent's: the settings
+    ///         merge, rather than the child's replacing the parent's outright and resetting what it left out.
+    /// </summary>
+    [Test]
+    public async Task TestSquadSettingsMergeWithParent()
+    {
+        var entManager = Pair.Server.ResolveDependency<IEntityManager>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var childUid = entManager.SpawnEntity("KsTacticsTestMobInheritChild", MapCoordinates.Nullspace);
+            var squadMemberComponent = entManager.GetComponent<NpcSquadMemberComponent>(childUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(squadMemberComponent.Cover.WallPreference, Is.EqualTo(0.9f), "the child's own cover setting");
+                Assert.That(squadMemberComponent.Cover.KillZoneAvoidance, Is.EqualTo(0.7f), "the parent's, which the child left alone");
+                Assert.That(squadMemberComponent.Tactics.WatchTime, Is.EqualTo(System.TimeSpan.FromSeconds(1)), "the child's own tactics setting");
+                Assert.That(squadMemberComponent.Tactics.HuntTimeout, Is.EqualTo(System.TimeSpan.FromSeconds(33)), "the parent's, which the child left alone");
+            });
+
+            entManager.DeleteEntity(childUid);
+        });
+    }
+
+    /// <summary>
+    ///     The operatives' squad settings come out of their several parents as intended: NT operatives always clear a
+    ///         disturbance methodically, Syndicate ones only once cautious, elites keep everything they do not change
+    ///         from the regular operative, and only elites lead. The operative prototypes are in the private submodule.
+    /// </summary>
+    [Test]
+    public async Task TestOperativeSquadSettings()
+    {
+        var protoManager = Pair.Server.ResolveDependency<Robust.Shared.Prototypes.IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeNt))
+            Assert.Ignore("the operative prototypes are in the private _KsModule submodule, which is not present");
+
+        var factory = Pair.Server.ResolveDependency<IComponentFactory>();
+
+        NpcSquadMemberComponent Read(string id)
+        {
+            var settings = protoManager.Index<Content.Shared.Humanoid.Prototypes.RandomHumanoidSettingsPrototype>(id);
+            return (NpcSquadMemberComponent) settings.Components![factory.GetComponentName<NpcSquadMemberComponent>()].Component;
+        }
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var regularNt = Read("KsOperativeNt");
+            var eliteNt = Read("KsEliteOperativeNt");
+            var regularSyndicate = Read("KsOperativeSyn");
+            var eliteSyndicate = Read("KsEliteOperativeSyn");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(regularNt.Tactics.CautiousHuntThreshold, Is.Zero, "NT always clears disturbances");
+                Assert.That(eliteNt.Tactics.CautiousHuntThreshold, Is.Zero, "NT elites too");
+                Assert.That(regularSyndicate.Tactics.CautiousHuntThreshold, Is.EqualTo(30f), "Syndicate only once cautious");
+                Assert.That(eliteSyndicate.Tactics.CautiousHuntThreshold, Is.EqualTo(30f), "Syndicate elites too");
+
+                Assert.That(eliteNt.Tactics.WatchTime, Is.EqualTo(System.TimeSpan.FromSeconds(2)), "NT elites keep the elite watch");
+                Assert.That(regularNt.Tactics.WatchTime, Is.EqualTo(System.TimeSpan.FromSeconds(4)), "regular NT keep the regular watch");
+                Assert.That(eliteSyndicate.Tactics.CautionMeter?.Id, Is.EqualTo("KsCaution"), "elites keep the regular operative's caution meter");
+                Assert.That(eliteSyndicate.Cover.KillZoneAvoidance, Is.EqualTo(0.8f), "elites keep the regular operative's cover");
+
+                Assert.That(eliteNt.CanLead && eliteSyndicate.CanLead, "elites lead");
+                Assert.That(regularNt.CanLead || regularSyndicate.CanLead, Is.False, "regulars do not");
+            });
+        });
+    }
 
     /// <summary>
     ///     Just lost: a member that was on the move goes after it, to where it should be by now; one that was holding
@@ -155,6 +251,45 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Breach), "with everyone in place, they should go in");
             Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out leaderOrder) && leaderOrder.Kind == NpcOrderKind.Breach);
             Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out memberOrder) && memberOrder.Kind == NpcOrderKind.Breach);
+        });
+    }
+
+    /// <summary>
+    ///     With more ways in than members, the ones taken are those nearest where the hostile should be - within reason
+    ///         of the walk there. Both members come up to a three-door room from the north: one takes the north door,
+    ///         right in front of them, and the other the west or east door, whichever the hostile is nearer. Without a
+    ///         preference, east wins either way, being a tile less to walk.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestEntrancesNearTheTargetArePreferred(bool targetWest)
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: NoWatchMob, squadAt: [new Vector2i(3, 9), new Vector2i(4, 9)], northDoor: true);
+        var targetCoordinates = new EntityCoordinates(scene.GridUid, targetWest ? new Vector2(0.5f, 2.5f) : new Vector2(5.5f, 3.5f));
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.PerceptionSystem.SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, targetCoordinates, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false));
+            }
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt?.Phase, Is.EqualTo(NpcHuntPhase.Stage), "the squad should be stacking up");
+            Assert.That(hunt!.Entrances, Has.Count.EqualTo(3), "the room has three ways in");
+
+            var taken = hunt.StagedMembers.Values.Select(staging => hunt.Entrances[staging.EntranceIndex].StageCoordinates.Position).ToList();
+            Assert.Multiple(() =>
+            {
+                Assert.That(taken.Select(position => position).Distinct().Count(), Is.EqualTo(2), "the two should still split up");
+                Assert.That(taken.Any(position => position.Y > 6f), "one should take the north door, right in front of them");
+                Assert.That(taken.Any(position => targetWest ? position.X < 0f : position.X > 7f),
+                    $"the other should take the {(targetWest ? "west" : "east")} door, nearer the hostile; took {string.Join(", ", taken)}");
+            });
         });
     }
 
@@ -648,7 +783,7 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     ///     The room, a squad of two waiting just outside its west airlock, a hostile far away, and the tactics system
     ///         paused. Optionally an NPC on its own, which never joins a squad and skips the watch.
     /// </summary>
-    private async Task<Scene> SetUpSquadOutsideRoom(string squadMob = SyndicateMob, Vector2i? lonerAt = null)
+    private async Task<Scene> SetUpSquadOutsideRoom(string squadMob = SyndicateMob, Vector2i? lonerAt = null, Vector2i[]? squadAt = null, bool northDoor = false)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -674,13 +809,15 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                     if (x is > -1 and < 7 && y is > -1 and < 6)
                         continue;
 
-                    var door = x == -1 && y == 2 || x == 7 && y == 3;
+                    var door = x == -1 && y == 2 || x == 7 && y == 3 || northDoor && x == 3 && y == 6;
                     SpawnAt(entManager, door ? "Airlock" : "WallSolid", gridUid, x, y);
                 }
             }
 
-            firstUid = SpawnAt(entManager, squadMob, gridUid, -4, 2);
-            secondUid = SpawnAt(entManager, squadMob, gridUid, -4, 3);
+            var firstTile = squadAt?[0] ?? new Vector2i(-4, 2);
+            var secondTile = squadAt?[1] ?? new Vector2i(-4, 3);
+            firstUid = SpawnAt(entManager, squadMob, gridUid, firstTile.X, firstTile.Y);
+            secondUid = SpawnAt(entManager, squadMob, gridUid, secondTile.X, secondTile.Y);
 
             if (lonerAt is { } lonerTile)
                 lonerUid = SpawnAt(entManager, NoWatchLonerMob, gridUid, lonerTile.X, lonerTile.Y);
