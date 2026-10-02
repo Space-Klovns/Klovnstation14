@@ -122,6 +122,53 @@ public sealed partial class NpcSquadCoverSystem
         return true;
     }
 
+    /// <summary>
+    ///     Floods out from <paramref name="startTile"/> over floor <paramref name="walkerUid"/> could walk, up to
+    ///         <paramref name="maxSteps"/> steps, filling <paramref name="steps"/> with how many steps each tile reached
+    ///         took. Never through a wall. With <paramref name="stopAtDoors"/>, a doorway is reached but not gone
+    ///         through, so a flood stays in the room or corridor it started in; without, doors are floor like any
+    ///         other. The start is always included, even if it is not floor.
+    /// </summary>
+    internal void FloodTiles(EntityUid walkerUid,
+        Entity<MapGridComponent> grid,
+        Vector2i startTile,
+        int maxSteps,
+        Dictionary<Vector2i, int> steps,
+        bool stopAtDoors = true)
+    {
+        var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
+        var analysis = new RoomAnalysis
+        {
+            Grid = grid,
+            CollisionLayer = collisionLayer,
+            CollisionMask = collisionMask,
+        };
+
+        _routeFrontier.Clear();
+        steps[startTile] = 0;
+        _routeFrontier.Enqueue(startTile);
+
+        while (_routeFrontier.TryDequeue(out var tile))
+        {
+            var tileSteps = steps[tile];
+
+            // A doorway is the edge of the flood, unless it is where it started.
+            if (tileSteps >= maxSteps || stopAtDoors && tile != startTile && GetTileKind(analysis, tile) == TileKind.Door)
+                continue;
+
+            foreach (var offset in CardinalOffsets)
+            {
+                var neighbourTile = tile + offset;
+                if (steps.ContainsKey(neighbourTile) ||
+                    GetTileKind(analysis, neighbourTile) is not (TileKind.Walkable or TileKind.Door))
+                    continue;
+
+                steps[neighbourTile] = tileSteps + 1;
+                _routeFrontier.Enqueue(neighbourTile);
+            }
+        }
+    }
+
     private bool IsRoutable(RoomAnalysis analysis, Vector2i tile, HashSet<Vector2i> avoidTiles)
     {
         return !avoidTiles.Contains(tile) && GetTileKind(analysis, tile) is TileKind.Walkable or TileKind.Door;

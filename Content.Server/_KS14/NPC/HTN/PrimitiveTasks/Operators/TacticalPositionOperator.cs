@@ -2,6 +2,8 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Examine;
+using Content.Server._KS14.NPC.Exposure;
+using Content.Server._KS14.NPC.KillZones;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.NPC;
@@ -36,6 +38,8 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private NPCUtilitySystem _npcUtilitySystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
+    [Dependency] private NpcKillZoneSystem _npcKillZoneSystem = default!;
+    [Dependency] private NpcExposureSystem _npcExposureSystem = default!;
     [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
     [Dependency] private ExamineSystem _examineSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -99,6 +103,49 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public bool AvoidFireLanes = true;
 
     /// <summary>
+    ///     How much to shun kill zones - spots where the owner's own have recently gone down (see
+    ///         <see cref="NpcKillZoneSystem"/>) - from 0, not at all, to 1, never stand at a zone's centre. A
+    ///         candidate's score is scaled by <c>1 - this × danger</c>.
+    /// </summary>
+    [DataField] public float KillZoneAvoidance;
+
+    /// <summary>
+    ///     If set, scores how well hidden a candidate is from the threat at this key - not only from where it stands
+    ///         (which <see cref="LosReferenceCoordinatesKey"/> covers), but from floor it could step to within
+    ///         <see cref="ExposureReach"/> steps. A spot just round a corner is hidden from where the threat is, and
+    ///         seen the moment it takes a step; this tells the two apart. See <see cref="NpcExposureSystem"/>.
+    /// </summary>
+    [DataField] public string? ExposureReferenceCoordinatesKey;
+
+    /// <summary>
+    ///     How many steps of the threat's approach count. See <see cref="ExposureReferenceCoordinatesKey"/>.
+    /// </summary>
+    [DataField] public int ExposureReach = 4;
+
+    /// <summary>
+    ///     How many places along the threat's approach are checked, its own position included. Each candidate costs a
+    ///         line of sight check per probe.
+    /// </summary>
+    [DataField] public int ExposureProbes = 12;
+
+    /// <summary>
+    ///     How far a probe can see, in tiles.
+    /// </summary>
+    [DataField] public float ExposureRadius = 15f;
+
+    /// <summary>
+    ///     Curve over how hidden a candidate is: the share of probes that cannot see it, from 0 (seen from everywhere)
+    ///         to 1 (from nowhere). Linear by default.
+    /// </summary>
+    [DataField] public IUtilityCurve ExposureCurve = new QuadraticCurve();
+
+    /// <summary>
+    ///     The threat's approach, worked out once per plan and scored against for every candidate. Scoring runs
+    ///         without awaiting anything, so plans sharing this operator cannot interleave over it.
+    /// </summary>
+    private readonly List<MapCoordinates> _exposureProbes = new();
+
+    /// <summary>
     /// Blackboard float key read at claim time to size the claim's TTL (e.g. CampingTime/AdvanceTime).
     /// </summary>
     [DataField] public string ClaimDurationKey = "CampingTime";
@@ -158,6 +205,11 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             ? new List<TacticalPositionDebugCandidate>(candidates.Count)
             : null;
 
+        _exposureProbes.Clear();
+        if (ExposureReferenceCoordinatesKey is not null &&
+            blackboard.TryGetValue<EntityCoordinates>(ExposureReferenceCoordinatesKey, out var exposureReference, _entityManager))
+            _npcExposureSystem.GetApproachProbes(owner, exposureReference, ExposureReach, ExposureProbes, _exposureProbes);
+
         foreach (var candidate in candidates)
         {
             var score = ScoreCandidate(blackboard, owner, candidate, reference);
@@ -209,6 +261,8 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             + (LosReferenceCoordinatesKey is not null ? 1 : 0)
             + (FovReferenceCoordinatesKey is not null ? 1 : 0)
             + (RandomProbability > 0f ? 1 : 0)
+            + (KillZoneAvoidance > 0f ? 1 : 0)
+            + (_exposureProbes.Count > 0 ? 1 : 0)
             + 1; // claim penalty, always applied
 
         var score = 1f;
@@ -266,6 +320,24 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
             var fireLanePenalty = _npcSquadFireLaneSystem.GetFireLanePenalty(owner, _transformSystem.ToMapCoordinates(candidate.Coordinates), aim);
             score *= _npcUtilitySystem.GetAdjustedScore(fireLanePenalty, considerationCount);
+
+            if (score <= 0f)
+                return 0f;
+        }
+
+        if (KillZoneAvoidance > 0f)
+        {
+            var danger = _npcKillZoneSystem.GetDanger(owner, candidate.Coordinates);
+            score *= _npcUtilitySystem.GetAdjustedScore(Math.Clamp(1f - KillZoneAvoidance * danger, 0f, 1f), considerationCount);
+
+            if (score <= 0f)
+                return 0f;
+        }
+
+        if (_exposureProbes.Count > 0)
+        {
+            var hiddenRaw = 1f - _npcExposureSystem.GetExposure(_transformSystem.ToMapCoordinates(candidate.Coordinates), _exposureProbes, ExposureRadius);
+            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(ExposureCurve, hiddenRaw), considerationCount);
 
             if (score <= 0f)
                 return 0f;

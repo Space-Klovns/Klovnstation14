@@ -45,6 +45,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     private readonly ProtoId<HTNCompoundPrototype> _operativeRoot = "KsOperativeCombatCompound";
 
     private const string HandsMob = "KsOperativeRootTestMobWithHands";
+    private const string FakerMob = "KsOperativeRootTestMobFaker";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -53,6 +54,21 @@ public sealed class KsOperativeHtnRootTest : GameTest
   id: KsOperativeRootTestMobWithHands
   components:
   - type: Hands
+  - type: CombatMode
+
+- type: npcMeter
+  id: KsOperativeRootTestCaution
+  max: 100
+  decayPerSecond: 0
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsOperativeRootTestMobFaker
+  components:
+  - type: NpcPlayDead
+    meter: KsOperativeRootTestCaution
+    threshold: 95
+    chance: 1
 ";
 
     private const string CombatMarker = "OpInCombat";
@@ -195,6 +211,241 @@ public sealed class KsOperativeHtnRootTest : GameTest
             });
 
         Assert.That(plan.Tasks.Any(task => task.Operator is OpenEntityStorageOperator), $"expected the locker to be opened, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     An operative playing dead does nothing else: its branch is the first in the root, so not even healing or a
+    ///         target in reach gets it up early.
+    /// </summary>
+    [Test]
+    public async Task TestPlayingDeadComesFirst()
+    {
+        var plan = await PlanOperative(pendingSensorData: true, recentlyFought: true, mobPrototype: FakerMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                entManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>().Set(mobUid, "KsOperativeRootTestCaution", 100f);
+                var playDeadSystem = entManager.System<Content.Server._KS14.NPC.PlayDead.NpcPlayDeadSystem>();
+                playDeadSystem.UpdateNow(mobUid);
+                Assert.That(playDeadSystem.IsPlayingDead(mobUid), "a rattled operative on its own should be playing dead");
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.BranchTraversalRecord[0], Is.Zero, "playing dead should be the root's first branch");
+            Assert.That(plan.Tasks.Single().Operator, Is.TypeOf<Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.PlayDead.PlayDeadOperator>(),
+                $"expected only playing dead, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     A live grenade in sight is run from, in combat or out of it - and so is anything else primed and ticking,
+    ///         like a C4 charge, which is no hand grenade.
+    /// </summary>
+    [TestCase(true, "ExGrenade")]
+    [TestCase(false, "ExGrenade")]
+    [TestCase(true, "C4")]
+    public async Task TestLiveGrenadeIsFled(bool inCombat, string explosive)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: inCombat, inCombat: inCombat,
+            stage: (entManager, _, gridUid) =>
+            {
+                var grenadeUid = SpawnAt(entManager, explosive, gridUid, 2, 3);
+                Assert.That(entManager.System<Content.Shared.Trigger.Systems.TriggerSystem>().ActivateTimerTrigger(grenadeUid),
+                    "the grenade should be primed");
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is UtilityOperator { Prototype.Id: "KsOperativeNearbyGrenades" }),
+            $"expected the grenade to be fled, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     As <see cref="TestLiveGrenadeIsFled"/>, but live: an operative already carrying out a plan (holding its room)
+    ///         drops it for the grenade within a replan or two.
+    /// </summary>
+    [Test]
+    public async Task TestLiveGrenadeInterruptsRunningPlan()
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var (entManager, mobUid) = await SetUpOperativeInRoom();
+        var htnSystem = entManager.System<HTNSystem>();
+        var npcSystem = entManager.System<NPCSystem>();
+        var timing = Pair.Server.ResolveDependency<IGameTiming>();
+        EntityUid grenadeUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+            htnComponent.RootTask = new HTNCompoundTask { Task = _operativeRoot };
+            htnComponent.Blackboard.SetValue(EnsureVirtualMarkerOperator.MarkerSet, new HashSet<string> { CombatMarker });
+            htnComponent.Blackboard.SetValue(CombatTimeKey, timing.CurTime);
+            htnSystem.SetHTNEnabled((mobUid, htnComponent), true);
+            npcSystem.WakeNPC(mobUid, htnComponent);
+        });
+
+        await Pair.RunTicksSync(60);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Assert.That(entManager.GetComponent<HTNComponent>(mobUid).Plan, Is.Not.Null, "the operative should be busy with something");
+
+            var gridUid = entManager.GetComponent<TransformComponent>(mobUid).ParentUid;
+            grenadeUid = SpawnAt(entManager, "ExGrenade", gridUid, 2, 3);
+            entManager.System<Content.Shared.Trigger.Systems.TriggerSystem>().ActivateTimerTrigger(grenadeUid);
+        });
+
+        await Pair.RunTicksSync(45);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+            var describe = htnComponent.Plan is { } plan ? Describe(plan) : "nothing";
+            entManager.DeleteEntity(grenadeUid);
+
+            Assert.That(htnComponent.Blackboard.ContainsKey("GrenadeTarget"),
+                $"the operative should have run from the grenade, but is doing: {describe}");
+        });
+    }
+
+    /// <summary>
+    ///     An armed operative with a hostile in plain view, due a new spot to fight from, finds one; one that has just
+    ///         found one shoots from where it is, closing in as before, until the next is due. Either way it shoots.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestFightsFromCoverWhenDue(bool due)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+
+                if (!due)
+                {
+                    var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+                    entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("RepositionedAt", now);
+                }
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat.Ranged.GunOperator),
+                $"expected the operative to shoot, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "FiringPosition" }), Is.EqualTo(due),
+                due ? $"expected a spot to fight from, got: {Describe(plan)}" : $"a spot was only just found, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     Live: a fighting operative does not keep its first spot for the whole fight. Its shooting gives way when a
+    ///         new spot is due, and it looks for one again - without that, a replan onto the same branch never beats
+    ///         the running plan, and it would stay put until the target dropped or vanished.
+    /// </summary>
+    [Test]
+    public async Task TestFightingOperativeLooksForNewSpots()
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var (entManager, mobUid) = await SetUpOperativeInRoom(HandsMob);
+        var htnSystem = entManager.System<HTNSystem>();
+        var npcSystem = entManager.System<NPCSystem>();
+        var timing = Pair.Server.ResolveDependency<IGameTiming>();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var gridUid = entManager.GetComponent<TransformComponent>(mobUid).ParentUid;
+            StageArmed(entManager, mobUid);
+            StageVisibleHostile(entManager, mobUid, gridUid);
+
+            var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+            htnComponent.RootTask = new HTNCompoundTask { Task = _operativeRoot };
+            htnComponent.Blackboard.SetValue(EnsureVirtualMarkerOperator.MarkerSet, new HashSet<string> { CombatMarker });
+            htnSystem.SetHTNEnabled((mobUid, htnComponent), true);
+            npcSystem.WakeNPC(mobUid, htnComponent);
+        });
+
+        await Pair.RunTicksSync(30);
+
+        var first = System.TimeSpan.Zero;
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+            Assert.That(blackboard.TryGetValue<System.TimeSpan>("RepositionedAt", out first, entManager),
+                "the operative should have picked a spot to fight from");
+        });
+
+        // Past the four seconds a spot is kept for, with the magazine kept topped up: a pistol empties in about that
+        //      long, and running dry ends the fight for reasons of its own.
+        for (var i = 0; i < 10; i++)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() => KeepLoaded(entManager, mobUid));
+        }
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+            Assert.That(blackboard.TryGetValue<System.TimeSpan>("RepositionedAt", out var latest, entManager) && latest > first,
+                $"the operative should have looked for a new spot since {first}, at {timing.CurTime}");
+        });
+    }
+
+    /// <summary>
+    ///     Puts a loaded pistol, a round chambered, in the operative's hand.
+    /// </summary>
+    private static void StageArmed(IEntityManager entManager, EntityUid mobUid)
+    {
+        var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+        handsSystem.AddHand(mobUid, "right", Content.Shared.Hands.Components.HandLocation.Right);
+
+        var gunUid = entManager.SpawnEntity("WeaponPistolMk58", entManager.GetComponent<TransformComponent>(mobUid).Coordinates);
+        Assert.That(handsSystem.TryPickup(mobUid, gunUid, "right"), "the operative should be holding the pistol");
+
+        // What the operative prototypes put on the blackboard for fighting with it, which the test mob lacks.
+        var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+        blackboard.SetValue("VisionRadius", 17.5f);
+        blackboard.SetValue("AggroVisionRadius", 25f);
+        blackboard.SetValue("RangedRange", 9f);
+        blackboard.SetValue("MaxFiringDistance", 9f);
+        blackboard.SetValue("CampingRange", 0.75f);
+        blackboard.SetValue("RetreatClaimDuration", 10f);
+
+        // Chamber a round, as racking would.
+        entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().UseChambered(gunUid,
+            entManager.GetComponent<Content.Shared.Weapons.Ranged.Components.ChamberMagazineAmmoProviderComponent>(gunUid), mobUid);
+    }
+
+    /// <summary>
+    ///     Refills the magazine of the gun the operative holds.
+    /// </summary>
+    private static void KeepLoaded(IEntityManager entManager, EntityUid mobUid)
+    {
+        var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+        if (!handsSystem.TryGetHeldItem(mobUid, "right", out var gunUid) ||
+            !entManager.System<Robust.Shared.Containers.SharedContainerSystem>().TryGetContainer(gunUid.Value, "gun_magazine", out var magazineContainer) ||
+            magazineContainer.ContainedEntities.Count == 0)
+            return;
+
+        var magazineUid = magazineContainer.ContainedEntities[0];
+        var ballisticComponent = entManager.GetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(magazineUid);
+        entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().SetBallisticUnspawned((magazineUid, ballisticComponent), ballisticComponent.Capacity);
+    }
+
+    /// <summary>
+    ///     A hostile in the operative's room, in plain view, seen and reacted to.
+    /// </summary>
+    private static void StageVisibleHostile(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
+    {
+        var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 0, 0);
+        entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid); // a fight that lasts
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Visible,
+            now, now, now, entManager.GetComponent<TransformComponent>(hostileUid).Coordinates, default, null, Reacted: true));
     }
 
     /// <summary>

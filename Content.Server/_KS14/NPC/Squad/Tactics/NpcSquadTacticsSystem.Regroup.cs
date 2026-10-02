@@ -6,7 +6,8 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 /// <summary>
 ///     Getting back together. A member that has strayed from its leader - left behind covering a door, sent to the
 ///         far end of a search - and has nothing going on goes back to it, so the squad moves on as a squad. In a
-///         fight or out of one: what matters is that nothing is happening right now.
+///         fight or out of one: what matters is that nothing is happening right now. A member holding its spot in the
+///         squad's cover of the leader's room is with the squad wherever that spot is, and is left there.
 /// </summary>
 public sealed partial class NpcSquadTacticsSystem
 {
@@ -43,6 +44,15 @@ public sealed partial class NpcSquadTacticsSystem
             if (memberUid == leader ||
                 memberMapCoordinates.MapId != leaderMapCoordinates.MapId ||
                 _npcPerceptionSystem.HasRecentContact(memberUid, settings.RegroupQuietTime))
+            {
+                ClearOrder(memberUid, issuerUid);
+                continue;
+            }
+
+            // A member with a spot in the squad's cover of the leader's room is already with the squad, however far
+            //      that spot is from the leader. Regrouping it would walk it in to the leader, and its hold straight back
+            //      out to the spot, round and round.
+            if (_npcSquadCoverSystem.TryGetAssignment(memberUid, out _))
             {
                 ClearOrder(memberUid, issuerUid);
                 continue;

@@ -23,6 +23,7 @@ public sealed class KsNpcCombatTuningTest : GameTest
 
     private const string Diver = "KsCombatTuningTestDiver";
     private const string DiveAction = "KsCombatTuningTestDiveAction";
+    private const string Shooter = "KsCombatTuningTestShooter";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -45,6 +46,16 @@ public sealed class KsNpcCombatTuningTest : GameTest
   - type: TargetAction
   - type: WorldTargetAction
     event: !type:KsGravityJumpWorldEvent
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsCombatTuningTestShooter
+  components:
+  - type: InputMover
+  - type: MobMover
+  - type: MovementSpeedModifier
+  - type: Hands
+  - type: CombatMode
 ";
 
     /// <summary>
@@ -70,6 +81,66 @@ public sealed class KsNpcCombatTuningTest : GameTest
 
             Assert.That(entManager.GetComponent<NPCJukeComponent>(npcUid).KsMaxFiringDistance, Is.EqualTo(capped ? 6f : null));
         });
+    }
+
+    /// <summary>
+    ///     A ranged NPC far enough from its target not to back off sidesteps across its line of fire when told to
+    ///         strafe, and stands still to shoot when not.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestStrafesAcrossLineOfFire(bool strafe)
+    {
+        var (entManager, gridUid) = await SetUpOpenGrid();
+        var jukeOperator = new JukeOperator
+        {
+            JukeType = JukeType.Away,
+            MaxFiringDistanceKey = "MaxFiringDistance",
+            StrafeDuration = strafe ? 0.6f : null,
+        };
+        EntityUid shooterUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(jukeOperator, oneOff: true);
+
+            shooterUid = SpawnAt(entManager, Shooter, gridUid, 0, 0);
+            var targetUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 10, 0);
+            entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(targetUid);
+
+            var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+            handsSystem.AddHand(shooterUid, "right", Content.Shared.Hands.Components.HandLocation.Right);
+            var gunUid = entManager.SpawnEntity("WeaponPistolMk58", entManager.GetComponent<TransformComponent>(shooterUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(shooterUid, gunUid, "right"));
+
+            // Ten tiles off, past the six it would back off to: nothing to back away from.
+            entManager.EnsureComponent<NPCRangedCombatComponent>(shooterUid).Target = targetUid;
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, shooterUid);
+            blackboard.SetValue("MaxFiringDistance", 6f);
+            jukeOperator.Startup(blackboard);
+
+            // Steering to where it already stands, as when it has closed in and is shooting.
+            entManager.System<Content.Server.NPC.Systems.NPCSteeringSystem>().Register(shooterUid, entManager.GetComponent<TransformComponent>(shooterUid).Coordinates).Range = 0.75f;
+            entManager.System<Content.Server.NPC.Systems.NPCSystem>().WakeNPC(shooterUid);
+        });
+
+        var furthestAcross = 0f;
+        for (var i = 0; i < 20; i++)
+        {
+            await Pair.RunTicksSync(5);
+            await Pair.Server.WaitPost(() =>
+            {
+                var position = entManager.GetComponent<TransformComponent>(shooterUid).LocalPosition;
+                furthestAcross = System.MathF.Max(furthestAcross, System.MathF.Abs(position.Y - 0.5f));
+            });
+        }
+
+        if (strafe)
+            Assert.That(furthestAcross, Is.GreaterThan(0.3f), "a strafing NPC should have stepped across its line of fire");
+        else
+            Assert.That(furthestAcross, Is.LessThan(0.1f), "an NPC told not to strafe should stand and shoot");
     }
 
     /// <summary>

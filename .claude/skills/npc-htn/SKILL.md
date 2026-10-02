@@ -101,6 +101,17 @@ Typical uses: `GunOperator` rechecks `ContactVisiblePrecondition` and stops shoo
 of sight; every order task rechecks `OrderCurrentPrecondition`; `WaitForOrderChangeOperator` returns `Continuing`
 forever and only ever ends through its recheck.
 
+**A rechecked precondition must also hold while planning.** The planner checks it like any other precondition, and
+at plan time nothing earlier in the plan has *run*: only plan effects exist. So "until a cooldown that an earlier task
+starts runs out" never plans, because the cooldown has not started yet. Write the moment as a plan effect instead:
+`SetTimeOperator { key }` (its `Plan` returns the time as an effect), then recheck
+`KeyTimePassedPrecondition { key, delay, invert: true }`. That holds while planning and stops holding `delay` later.
+
+**Giving way on a timer.** That is also how a long-running task makes room for a newer version of its own plan,
+which a replan onto the same branch never replaces. Fighting from cover (`gun.yml`) keeps a firing spot for 4s this
+way. The gun task's recheck ends it, the next plan picks a new spot, and the branch is gated on the same time, so the
+costly spot search only runs when one is due.
+
 ## The planner: what wins
 
 ### First branch that plans, top to bottom
@@ -149,16 +160,17 @@ Consequences:
 
 `Resources/Prototypes/_KsModule/NPCs/Operative/root.yml` (private submodule) runs:
 
-1. Healing
-2. Grenades
-3. Ranged, then Melee
-4. Follow
-5. Search open, then Search cover
-6. Orders: Investigate, Watch, Stage, Breach, Search locker, Search spot, Hold area, Regroup
-7. Sensors
-8. Join squad
-9. Disengage
-10. Squad hold
+1. Play dead
+2. Healing
+3. Grenades
+4. Ranged, then Melee
+5. Follow
+6. Search open, then Search cover
+7. Orders: Investigate, Watch, Stage, Breach, Search locker, Search spot, Hold area, Regroup
+8. Sensors
+9. Join squad
+10. Disengage
+11. Squad hold
 
 The header of that file lists every blackboard key and who writes it. Keep it current when you add one.
 
@@ -187,6 +199,25 @@ A new source of a meter is a component and a system that call `NpcMeterSystem.Ad
 down goes through `NpcSquadMemberDownedEvent`, which the squad system raises before it takes the member out. Don't
 subscribe to `MobStateChangedEvent` on squad members yourself: the squad system already does, and only one system
 may. `ks_squaddebug` draws every meter a member has as a bar under it.
+
+## Kill zones
+
+`NpcKillZoneSystem` remembers where NPCs' own went down, per faction, on the grid it happened on. A zone is flooded
+once when it is made (`NpcSquadCoverSystem.FloodTiles`: walkable tiles, never through walls, stopping at doorways),
+so reading one is a tile lookup with no distance maths, and it covers the room someone fell in and not the next.
+`NpcKillZoneOnDown` on a mob makes zones. Anything picking a position opts in to avoiding them by scaling its score
+with `GetDanger`: `TacticalPositionOperator.killZoneAvoidance` and the squad `cover:` setting of the same name. Expired
+zones are skipped on read and pruned on the next add, so nothing ticks them.
+
+## Exposure
+
+`NpcExposureSystem` answers how hidden a spot is from a threat's **approach**, not just from where the threat stands.
+`GetApproachProbes` samples the approach once: the threat's position, and floor it could walk to within a few steps
+(`FloodTiles` with `stopAtDoors: false`), spread from near to far. `GetExposure` is the share of those probes with a
+line of sight to a spot. A spot just round a corner is hidden from the threat and seen from one step on; deep cover
+is hidden from all of it. `TacticalPositionOperator` opts in with `exposureReferenceCoordinatesKey` (plus reach,
+probes, radius and a curve), working the probes out once per plan rather than per candidate. Retreats use it to find
+real cover. The gun branch uses it to pick firing spots that see the target from as few of its angles as possible.
 
 ## Voice sets
 
@@ -251,7 +282,14 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
 - **`[Access]` reaches through members.** Writing `component.Tactics.WatchTime` from a test is an `RA0002` write to
   `Tactics`. Use a test prototype with the setting instead.
 - **Components a system silently requires:** NPC ranged combat skips any NPC without `CombatMode`. Opening a locker
-  needs `Hands` (`CanOpen` returns false without them).
+  needs `Hands` (`CanOpen` returns false without them). Steering, and so juking and moving at all, only runs for NPCs
+  with `InputMover`. The shared test mobs have none of these, so a live test of movement or shooting needs its own.
+- **Test mobs lack the operative blackboard.** Without `VisionRadius`/`AggroVisionRadius`, `TacticalPositionOperator`
+  scores every candidate's distance as the far end of its curve, which with a near-preferring curve is 0: no spot
+  is ever found. Stage the keys the branch reads (`KsOperativeHtnRootTest.StageArmed`).
+- **A live fight ends for its own reasons.** A pistol empties in about four seconds, and an NPC out of ammo plans
+  something else entirely. A test of what happens later in a fight has to keep the gun loaded (`KeepLoaded`) and
+  the target alive (godmode).
 - **Pathfinding ignores unanchored entities.** A free-standing locker sits on a room tile. A wall locker (anchored,
   on the wall's tile) does not. Test the case your rule is actually for.
 - **Prove the test fails.** Break the rule it covers, rebuild, and watch it go red, one test per run. In a batch
@@ -267,6 +305,9 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
   thorough search from a shallow one; `KsNpcSquadTacticsTest` uses an L-shaped room entered along its long side. A
   facing test must turn the grid *before* the order is given as well as after, or a world-space facing issued at 0°
   passes too.
+- **When `bin/` is locked** (a client or server running from it), build and test into another folder two levels
+  under the repo, where the content root is still found as `../../`:
+  `dotnet test ... -c Debug -p:OutputPath="<repo>/bin/kstest/"`.
 - **Measure allocations** with `GC.GetAllocatedBytesForCurrentThread()` around a few hundred updates after a
   warm-up, and assert a bound. To find *what* allocates, see the `EventListener` approach in CONTRIBUTING.md §6.
 - **Build `Release` too.** A member named like an inherited one (`Paused` on an `EntitySystem`) is only a warning in
@@ -286,6 +327,9 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
 Like `ks_tacticalposdebug`, it builds nothing on its own. `NpcSquadTacticsSystem` asks `NpcHuntDebugSystem.IsTracking`
 after updating a hunt, and hands over a frame of what it just computed only if someone is watching. A new debug view
 of NPC reasoning should work the same way, intercepting the real computation rather than recomputing it on a timer.
+
+`ks_setmeter <NPC> <meter> <value>` sets a meter on an NPC and everyone in its squad, to see how they act at a value
+without having to get them there.
 
 `ks_squaddebug` draws (and every meter a member has, as a labelled bar under it):
 

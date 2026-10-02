@@ -80,4 +80,12 @@ public sealed partial class NpcSquadCoverSettings
     /// </summary>
     [DataField]
     public float ThreatObjectiveLifetime = 40f;
+
+    /// <summary>
+    ///     How much cover positions in kill zones - spots where the squad's own have recently gone down - are
+    ///         avoided, from 0, not at all, to 1, never at a zone's centre. See
+    ///         <see cref="KillZones.NpcKillZoneSystem"/>.
+    /// </summary>
+    [DataField]
+    public float KillZoneAvoidance;
 }

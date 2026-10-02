@@ -43,12 +43,16 @@ ks-operative-nt-line-disturbancecombat-3 = Repositioning.
 ks-operative-nt-line-disturbance-1 = Disturbance detected.
 ks-operative-nt-line-disturbance-2 = Investigating anomaly.
 
+ks-operative-nt-line-getaway-1 = Halt or be neutralised.
+ks-operative-nt-line-getaway-2 = This is your only warning.
+ks-operative-nt-line-getaway-3 = Noncompliance will be met with lethal force.
+
 ks-operative-nt-line-alert-grenade-1 = Ordnance!
 ks-operative-nt-line-alert-grenade-2 = Explosive!
 ks-operative-nt-line-alert-grenade-3 = Grenade!
 
 ks-operative-nt-line-standdown-1 = Sector secure.
-ks-operative-nt-line-standdown-2 = Threat neutralized.
+ks-operative-nt-line-standdown-2 = Threat neutralised.
 ks-operative-nt-line-standdown-3 = Area clear.
 
 ks-operative-nt-line-standdownack-1 = Acknowledged.

@@ -20,6 +20,7 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private NpcMeterSystem _npcMeterSystem = default!;
+    [Dependency] private KillZones.NpcKillZoneSystem _npcKillZoneSystem = default!;
     [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private NpcSquadTacticsSystem _npcSquadTacticsSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -139,9 +140,41 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
             message.Squads.Add(loner);
         }
 
+        AddKillZones(message);
+
         foreach (var session in _debuggingSessions)
         {
             RaiseNetworkEvent(message, session.Channel);
+        }
+    }
+
+    private readonly List<(Vector2i Center, IReadOnlyDictionary<Vector2i, float> Tiles, float SecondsLeft)> _killZones = new();
+
+    private void AddKillZones(SquadDebugDataMessage message)
+    {
+        var enumerator = EntityQueryEnumerator<KillZones.NpcKillZonesComponent>();
+        while (enumerator.MoveNext(out var gridUid, out _))
+        {
+            _killZones.Clear();
+            _npcKillZoneSystem.GetZones(gridUid, _killZones);
+
+            foreach (var (center, tiles, secondsLeft) in _killZones)
+            {
+                var zone = new SquadDebugKillZone
+                {
+                    Grid = GetNetEntity(gridUid),
+                    Center = center,
+                    SecondsLeft = secondsLeft,
+                };
+
+                foreach (var (tile, danger) in tiles)
+                {
+                    zone.Tiles.Add(tile);
+                    zone.Danger.Add(danger);
+                }
+
+                message.KillZones.Add(zone);
+            }
         }
     }
 

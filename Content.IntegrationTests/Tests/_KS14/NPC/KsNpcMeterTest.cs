@@ -148,6 +148,53 @@ public sealed class KsNpcMeterTest : GameTest
     }
 
     /// <summary>
+    ///     <c>ks_setmeter</c> sets a meter on the NPC named and everyone in its squad, clamped to the meter's range; on an
+    ///         NPC with no squad, on it alone.
+    /// </summary>
+    [Test]
+    public async Task TestSetMeterCommandSetsWholeSquad()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var meterSystem = entManager.System<NpcMeterSystem>();
+        var squadSystem = entManager.System<NpcSquadSystem>();
+        var consoleHost = Pair.Server.ResolveDependency<Robust.Server.Console.IServerConsoleHost>();
+        EntityUid firstUid = default, secondUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            firstUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0);
+            secondUid = SpawnAt(entManager, SyndicateMob, gridUid, 1, 0);
+        });
+
+        await Pair.RunTicksSync(90);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(squadSystem.TryGetSquad(firstUid, out var squadEntity) && squadEntity.Value.Comp.Members.Count == 2,
+                "the two should be in one squad");
+
+            consoleHost.ExecuteCommand($"ks_setmeter {entManager.GetNetEntity(firstUid)} {SteadyMeter} 60");
+            Assert.Multiple(() =>
+            {
+                Assert.That(meterSystem.GetValue(firstUid, SteadyMeter), Is.EqualTo(60f).Within(0.01f), "the NPC named");
+                Assert.That(meterSystem.GetValue(secondUid, SteadyMeter), Is.EqualTo(60f).Within(0.01f), "the rest of its squad");
+            });
+
+            consoleHost.ExecuteCommand($"ks_setmeter {entManager.GetNetEntity(secondUid)} {SteadyMeter} 500");
+            Assert.That(meterSystem.GetValue(firstUid, SteadyMeter), Is.EqualTo(100f).Within(0.01f), "clamped to the maximum");
+
+            var lonerUid = SpawnAt(entManager, SyndicateMob, gridUid, 10, 10);
+            entManager.RemoveComponent<NpcSquadMemberComponent>(lonerUid);
+            consoleHost.ExecuteCommand($"ks_setmeter {entManager.GetNetEntity(lonerUid)} {SteadyMeter} 20");
+            Assert.Multiple(() =>
+            {
+                Assert.That(meterSystem.GetValue(lonerUid, SteadyMeter), Is.EqualTo(20f).Within(0.01f), "an NPC with no squad");
+                Assert.That(meterSystem.GetValue(firstUid, SteadyMeter), Is.EqualTo(100f).Within(0.01f), "nobody else");
+            });
+        });
+    }
+
+    /// <summary>
     ///     A mob with a voice set speaks the set's replacement for a line set it lists, the line set itself for one it
     ///         does not, and nothing at all for one it silences. A mob without a voice set speaks every line set as it
     ///         is.

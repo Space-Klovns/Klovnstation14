@@ -264,7 +264,8 @@ public sealed partial class NPCJukeSystem : EntitySystem
                 }
 
                 // If no or barely any juking was done, don't cancel seeking
-                if (!anythingDone)
+                if (!anythingDone &&
+                    !KsTryStrafe(component, ref args, targetUnitDirection, new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID))) // KS14: sidestep instead of standing still
                     return;
             }
             // KS14: ANK end

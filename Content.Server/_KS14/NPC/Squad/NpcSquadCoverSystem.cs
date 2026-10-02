@@ -24,6 +24,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private KillZones.NpcKillZoneSystem _npcKillZoneSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -263,7 +264,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         var candidatesPerThreshold = new List<(Vector2i Tile, float Score)>[plan.Thresholds.Count];
         for (var i = 0; i < plan.Thresholds.Count; i++)
         {
-            candidatesPerThreshold[i] = ScoreCandidates(gridEntity, plan, plan.Thresholds[i], settings, exposureTiles);
+            candidatesPerThreshold[i] = ScoreCandidates(squadEntity.Comp.Leader, gridEntity, plan, plan.Thresholds[i], settings, exposureTiles);
         }
 
         var thresholdOrder = GetThresholdPriority(squadEntity, gridEntity, plan);
@@ -401,7 +402,9 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     ///     Scores every room tile as a place to cover <paramref name="threshold"/> from, before claims. Tiles
     ///         without line of sight to it, or outside the standoff band, are left out.
     /// </summary>
+    /// <param name="observerUid">Whose kill zones count: the squad's leader.</param>
     private List<(Vector2i Tile, float Score)> ScoreCandidates(
+        EntityUid? observerUid,
         Entity<MapGridComponent> gridEntity,
         NpcSquadCoverPlan plan,
         NpcSquadThreshold threshold,
@@ -424,6 +427,10 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
                 (plan.IsHallway ? 1f : ScoreAngle(offset / distance, threshold.InwardNormal, settings)) *
                 ScoreExposure(position, gridEntity, exposureTiles, settings) *
                 ScoreWalls(plan, tile, settings);
+
+            // Not where one of us has just been gunned down.
+            if (settings.KillZoneAvoidance > 0f && observerUid is { } observer)
+                score *= Math.Clamp(1f - settings.KillZoneAvoidance * _npcKillZoneSystem.GetDanger(observer, new EntityCoordinates(gridEntity, position)), 0f, 1f);
 
             if (score <= 0f)
                 continue;

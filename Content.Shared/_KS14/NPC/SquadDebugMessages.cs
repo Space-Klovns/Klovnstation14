@@ -21,6 +21,34 @@ public sealed class SquadDebugStateMessage : EntityEventArgs
 public sealed class SquadDebugDataMessage : EntityEventArgs
 {
     public List<SquadDebugSquad> Squads = new();
+
+    /// <summary>
+    ///     Every kill zone still in force: where NPCs' own went down, and they now keep out of.
+    /// </summary>
+    public List<SquadDebugKillZone> KillZones = new();
+}
+
+/// <summary>
+///     One kill zone: the tiles it covers on its grid, each with how dangerous it is.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class SquadDebugKillZone
+{
+    public NetEntity Grid;
+
+    public Vector2i Center;
+
+    public List<Vector2i> Tiles = new();
+
+    /// <summary>
+    ///     How dangerous each of <see cref="Tiles"/> is, in the same order, from 1 down towards 0.
+    /// </summary>
+    public List<float> Danger = new();
+
+    /// <summary>
+    ///     How long until NPCs stop avoiding it.
+    /// </summary>
+    public float SecondsLeft;
 }
 
 [Serializable, NetSerializable]

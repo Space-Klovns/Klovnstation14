@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Content.Client._KS14.NPC;
 
@@ -31,6 +32,8 @@ public sealed partial class SquadDebugOverlay : Overlay
     private const float MeterOffset = 0.6f;
 
     private Font? _font;
+
+    private static readonly Color KillZoneColor = Color.Crimson;
 
     private const float LeaderRadius = 0.55f;
     private const float MemberRadius = 0.4f;
@@ -64,6 +67,7 @@ public sealed partial class SquadDebugOverlay : Overlay
         }
 
         DrawMeterBars(args.WorldHandle, data, args.MapId);
+        DrawKillZones(args.WorldHandle, data, args.MapId);
 
         var worldHandle = args.WorldHandle;
 
@@ -92,17 +96,22 @@ public sealed partial class SquadDebugOverlay : Overlay
 
             foreach (var threshold in squad.Thresholds)
             {
-                if (!TryGetPosition(threshold, args.MapId, out var thresholdPosition))
+                if (!TryGetPosition(threshold, args.MapId, out var thresholdPosition, out var thresholdRotation))
                     continue;
 
-                var halfSize = new Vector2(ThresholdHalfSize, ThresholdHalfSize);
-                worldHandle.DrawRect(new Box2(thresholdPosition - halfSize, thresholdPosition + halfSize), color, false);
+                worldHandle.SetTransform(GetMarkerTransform(thresholdPosition, thresholdRotation));
+                worldHandle.DrawRect(Square(ThresholdHalfSize), color, filled: false);
+                worldHandle.SetTransform(Matrix3x2.Identity);
             }
 
-            if (squad.Threat is { } threat && TryGetPosition(threat, args.MapId, out var threatPosition))
+            if (squad.Threat is { } threat && TryGetPosition(threat, args.MapId, out var threatPosition, out var threatRotation))
             {
-                worldHandle.DrawLine(threatPosition - new Vector2(ThreatHalfSize, ThreatHalfSize), threatPosition + new Vector2(ThreatHalfSize, ThreatHalfSize), color);
-                worldHandle.DrawLine(threatPosition - new Vector2(ThreatHalfSize, -ThreatHalfSize), threatPosition + new Vector2(ThreatHalfSize, -ThreatHalfSize), color);
+                var diagonal = new Vector2(ThreatHalfSize, ThreatHalfSize);
+                var antiDiagonal = new Vector2(ThreatHalfSize, -ThreatHalfSize);
+                worldHandle.SetTransform(GetMarkerTransform(threatPosition, threatRotation));
+                worldHandle.DrawLine(-diagonal, diagonal, color);
+                worldHandle.DrawLine(-antiDiagonal, antiDiagonal, color);
+                worldHandle.SetTransform(Matrix3x2.Identity);
             }
 
             foreach (var assignment in squad.Assignments)
@@ -133,43 +142,46 @@ public sealed partial class SquadDebugOverlay : Overlay
     {
         if (squad.HuntPhase is { } phase &&
             squad.HuntPredicted is { } predicted &&
-            TryGetPosition(predicted, mapId, out var predictedPosition))
+            TryGetPosition(predicted, mapId, out var predictedPosition, out var predictedRotation))
         {
             var size = ThreatHalfSize;
-            _shape[0] = predictedPosition + new Vector2(0, size);
-            _shape[1] = predictedPosition + new Vector2(size, 0);
-            _shape[2] = predictedPosition + new Vector2(0, -size);
-            _shape[3] = predictedPosition + new Vector2(-size, 0);
+            _shape[0] = new Vector2(0, size);
+            _shape[1] = new Vector2(size, 0);
+            _shape[2] = new Vector2(0, -size);
+            _shape[3] = new Vector2(-size, 0);
+            worldHandle.SetTransform(GetMarkerTransform(predictedPosition, predictedRotation));
             DrawLoop(worldHandle, 4, GetPhaseColor(phase));
+            worldHandle.SetTransform(Matrix3x2.Identity);
         }
 
         foreach (var entrance in squad.HuntEntrances)
         {
-            if (!TryGetPosition(entrance, mapId, out var entrancePosition))
+            if (!TryGetPosition(entrance, mapId, out var entrancePosition, out var entranceRotation))
                 continue;
 
-            _shape[0] = entrancePosition + new Vector2(0, EntranceSize);
-            _shape[1] = entrancePosition + new Vector2(EntranceSize, -EntranceSize);
-            _shape[2] = entrancePosition + new Vector2(-EntranceSize, -EntranceSize);
+            _shape[0] = new Vector2(0, EntranceSize);
+            _shape[1] = new Vector2(EntranceSize, -EntranceSize);
+            _shape[2] = new Vector2(-EntranceSize, -EntranceSize);
+            worldHandle.SetTransform(GetMarkerTransform(entrancePosition, entranceRotation));
             DrawLoop(worldHandle, 3, squadColor);
+            worldHandle.SetTransform(Matrix3x2.Identity);
         }
 
         foreach (var point in squad.SearchPoints)
         {
-            if (!TryGetPosition(point.Coordinates, mapId, out var pointPosition))
+            if (!TryGetPosition(point.Coordinates, mapId, out var pointPosition, out var pointRotation))
                 continue;
 
             var pointColor = point.Cleared ? squadColor.WithAlpha(0.4f) : squadColor;
 
             if (point.Locker)
             {
-                var halfSize = new Vector2(SearchPointRadius, SearchPointRadius);
-                worldHandle.DrawRect(new Box2(pointPosition - halfSize, pointPosition + halfSize), pointColor, filled: !point.Cleared);
+                worldHandle.SetTransform(GetMarkerTransform(pointPosition, pointRotation));
+                worldHandle.DrawRect(Square(SearchPointRadius), pointColor, filled: !point.Cleared);
+                worldHandle.SetTransform(Matrix3x2.Identity);
             }
             else
-            {
                 worldHandle.DrawCircle(pointPosition, SearchPointRadius, pointColor, filled: !point.Cleared);
-            }
         }
 
         foreach (var order in squad.Orders)
@@ -222,7 +234,7 @@ public sealed partial class SquadDebugOverlay : Overlay
 
     /// <summary>
     ///     A bar under each member per meter it has a reading for - caution, say - filled to its share of the maximum,
-    ///         stacked downwards in the order they arrive.
+    ///         stacked downwards in the order they arrive. "Under" is towards the grid's bottom, not the map's.
     /// </summary>
     private void DrawMeterBars(DrawingHandleWorld worldHandle, SquadDebugDataMessage data, MapId mapId)
     {
@@ -236,16 +248,50 @@ public sealed partial class SquadDebugOverlay : Overlay
                 row = meter.Member.Equals(lastMember) ? row + 1 : 0;
                 lastMember = meter.Member;
 
-                if (!TryGetPosition(meter.Member, mapId, out var memberPosition))
+                if (!TryGetPosition(meter.Member, mapId, out var memberPosition, out var gridRotation))
                     continue;
 
-                var topLeft = memberPosition + new Vector2(-MeterWidth / 2f, -MeterOffset - row * MeterSpacing);
+                var topLeft = new Vector2(-MeterWidth / 2f, -MeterOffset - row * MeterSpacing);
                 var fraction = meter.Max > 0f ? Math.Clamp(meter.Value / meter.Max, 0f, 1f) : 0f;
                 var color = GetMeterColor(meter.Meter);
 
+                worldHandle.SetTransform(GetMarkerTransform(memberPosition, gridRotation));
                 worldHandle.DrawRect(new Box2(topLeft - new Vector2(0f, MeterHeight), topLeft + new Vector2(MeterWidth, 0f)), color.WithAlpha(0.25f));
                 worldHandle.DrawRect(new Box2(topLeft - new Vector2(0f, MeterHeight), topLeft + new Vector2(MeterWidth * fraction, 0f)), color);
+                worldHandle.SetTransform(Matrix3x2.Identity);
             }
+        }
+    }
+
+    /// <summary>
+    ///     Each kill zone's tiles shaded red, deeper where it is more dangerous, on the grid as it is now, with a cross on
+    ///         the tile where someone went down.
+    /// </summary>
+    private void DrawKillZones(DrawingHandleWorld worldHandle, SquadDebugDataMessage data, MapId mapId)
+    {
+        foreach (var zone in data.KillZones)
+        {
+            if (!_entityManager.TryGetEntity(zone.Grid, out var gridUid) ||
+                !_entityManager.TryGetComponent(gridUid, out MapGridComponent? mapGridComponent) ||
+                !_entityManager.TryGetComponent(gridUid, out TransformComponent? gridTransform) ||
+                gridTransform.MapID != mapId)
+                continue;
+
+            var tileSize = mapGridComponent.TileSize;
+            worldHandle.SetTransform(_transformSystem.GetWorldMatrix(gridUid.Value));
+
+            for (var i = 0; i < zone.Tiles.Count; i++)
+            {
+                var tile = zone.Tiles[i];
+                var box = new Box2(tile.X * tileSize, tile.Y * tileSize, (tile.X + 1) * tileSize, (tile.Y + 1) * tileSize);
+                worldHandle.DrawRect(box, KillZoneColor.WithAlpha(0.1f + 0.35f * zone.Danger[i]));
+            }
+
+            var centerBox = new Box2(zone.Center.X * tileSize, zone.Center.Y * tileSize, (zone.Center.X + 1) * tileSize, (zone.Center.Y + 1) * tileSize);
+            worldHandle.DrawLine(centerBox.BottomLeft, centerBox.TopRight, KillZoneColor);
+            worldHandle.DrawLine(centerBox.TopLeft, centerBox.BottomRight, KillZoneColor);
+
+            worldHandle.SetTransform(Matrix3x2.Identity);
         }
     }
 
@@ -255,6 +301,18 @@ public sealed partial class SquadDebugOverlay : Overlay
     private void DrawMeterLabels(in OverlayDrawArgs args, SquadDebugDataMessage data)
     {
         _font ??= new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 9);
+
+        foreach (var zone in data.KillZones)
+        {
+            if (!_entityManager.TryGetEntity(zone.Grid, out var gridUid) ||
+                !_entityManager.TryGetComponent(gridUid, out MapGridComponent? mapGridComponent))
+                continue;
+
+            var center = new EntityCoordinates(gridUid.Value, new Vector2(zone.Center.X + 0.5f, zone.Center.Y + 0.5f) * mapGridComponent.TileSize);
+            var centerMap = _transformSystem.ToMapCoordinates(center);
+            if (centerMap.MapId == args.MapId)
+                args.ScreenHandle.DrawString(_font, _eyeManager.WorldToScreen(centerMap.Position) + new Vector2(6f, 6f), $"kill zone {zone.SecondsLeft:F0}s", KillZoneColor);
+        }
 
         foreach (var squad in data.Squads)
         {
@@ -266,10 +324,12 @@ public sealed partial class SquadDebugOverlay : Overlay
                 row = meter.Member.Equals(lastMember) ? row + 1 : 0;
                 lastMember = meter.Member;
 
-                if (!TryGetPosition(meter.Member, args.MapId, out var memberPosition))
+                if (!TryGetPosition(meter.Member, args.MapId, out var memberPosition, out var gridRotation))
                     continue;
 
-                var barRight = memberPosition + new Vector2(MeterWidth / 2f + 0.1f, -MeterOffset - row * MeterSpacing);
+                // The label is screen-space text, which no transform turns: only where it starts follows the bar.
+                var barRight = Vector2.Transform(new Vector2(MeterWidth / 2f + 0.1f, -MeterOffset - row * MeterSpacing),
+                    GetMarkerTransform(memberPosition, gridRotation));
                 var screenPosition = _eyeManager.WorldToScreen(barRight) - new Vector2(0f, 7f);
                 args.ScreenHandle.DrawString(_font, screenPosition, $"{meter.Meter} {meter.Value:F0}/{meter.Max:F0}", GetMeterColor(meter.Meter));
             }
@@ -331,17 +391,51 @@ public sealed partial class SquadDebugOverlay : Overlay
 
     private bool TryGetPosition(NetCoordinates netCoordinates, MapId mapId, out Vector2 position)
     {
+        return TryGetPosition(netCoordinates, mapId, out position, out _);
+    }
+
+    /// <summary>
+    ///     Where <paramref name="netCoordinates"/> are on the map, and the world rotation of the grid they are on (none
+    ///         off a grid). Markers with corners are drawn in a frame turned by that rotation (see
+    ///         <see cref="GetMarkerTransform"/>), so they sit square to the grid they mark rather than to the map.
+    /// </summary>
+    private bool TryGetPosition(NetCoordinates netCoordinates, MapId mapId, out Vector2 position, out Angle gridRotation)
+    {
         position = default;
+        gridRotation = Angle.Zero;
 
         if (!_entityManager.TryGetEntity(netCoordinates.NetEntity, out _))
             return false;
 
-        var mapCoordinates = _transformSystem.ToMapCoordinates(_entityManager.GetCoordinates(netCoordinates));
+        var coordinates = _entityManager.GetCoordinates(netCoordinates);
+        var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
         if (mapCoordinates.MapId != mapId)
             return false;
 
         position = mapCoordinates.Position;
+        if (_transformSystem.GetGrid(coordinates) is { } gridUid)
+            gridRotation = _transformSystem.GetWorldRotation(gridUid);
+
         return true;
+    }
+
+    /// <summary>
+    ///     A marker's own frame: its origin at <paramref name="position"/>, its axes along its grid's. Set it on the
+    ///         handle with <c>SetTransform</c>, draw the marker around <see cref="Vector2.Zero"/>, and set
+    ///         <see cref="Matrix3x2.Identity"/> back after. Clyde applies the model transform to vertices as they are
+    ///         queued, so changing it per marker is cheap.
+    /// </summary>
+    private static Matrix3x2 GetMarkerTransform(Vector2 position, Angle gridRotation)
+    {
+        return Matrix3Helpers.CreateTransform(position, gridRotation);
+    }
+
+    /// <summary>
+    ///     A square of <paramref name="halfSize"/> around a marker's origin.
+    /// </summary>
+    private static Box2 Square(float halfSize)
+    {
+        return Box2.CenteredAround(Vector2.Zero, new Vector2(halfSize * 2f, halfSize * 2f));
     }
 
     /// <summary>

@@ -893,3 +893,12 @@ inside anything. A test built on those passes with the bug present. Instead, com
 with room to spare: `Measure` it with unlimited height (and unlimited width, for anything that can't wrap), then check
 its shown size against that. `KsVoiceLinkWindowTests` does this. Layout runs in the headless client with real font
 metrics, so this works in an ordinary integration test.
+
+### World-space overlays draw square to the map, not the grid
+
+A `Box2`, or an offset like `position + new Vector2(0, size)`, is aligned to the map's axes. On a turned grid, a
+marker built that way sits at a slant to the grid it marks, and any text placed next to it ends up in the wrong spot.
+Draw in the grid's frame instead. Call `SetTransform` with the grid's world matrix for tiles, or with
+`Matrix3Helpers.CreateTransform(position, gridRotation)` for a marker drawn around the origin, and set
+`Matrix3x2.Identity` back afterwards. Clyde applies the transform to vertices as it queues them, so setting it per
+marker is cheap. Circles and screen-space text are unaffected. `SquadDebugOverlay` does both.

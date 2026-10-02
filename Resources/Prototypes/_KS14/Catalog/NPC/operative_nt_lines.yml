@@ -6,11 +6,8 @@
 
 # NT Paramilitary's voice: the same moments as the standard operative lines, said colder - designations, status,
 #   procedure. Applied by giving the mob NpcVoiceSet with this set; anything not listed is spoken as normal.
-#   No warnings: NPCs have nothing non-lethal to back one up with, so NT holds its fire in silence instead.
 - type: npcVoiceSet
   id: KsOperativeNt
-  silenced:
-  - KsOperativeGetAway
   replacements:
     KsOperativeAdvancing: KsOperativeNtAdvancing
     KsOperativeContact: KsOperativeNtContact
@@ -21,6 +18,7 @@
     KsOperativeHoldingPosition: KsOperativeNtHoldingPosition
     KsOperativeDisturbanceCombat: KsOperativeNtDisturbanceCombat
     KsOperativeDisturbance: KsOperativeNtDisturbance
+    KsOperativeGetAway: KsOperativeNtGetAway
     KsOperativeAlertGrenade: KsOperativeNtAlertGrenade
     KsOperativeStandDown: KsOperativeNtStandDown
     KsOperativeStandDownAcknowledge: KsOperativeNtStandDownAcknowledge
@@ -86,6 +84,12 @@
   values:
     prefix: ks-operative-nt-line-disturbance-
     count: 2
+
+- type: localizedDataset
+  id: KsOperativeNtGetAway
+  values:
+    prefix: ks-operative-nt-line-getaway-
+    count: 3
 
 - type: localizedDataset
   id: KsOperativeNtAlertGrenade

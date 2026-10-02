@@ -18,6 +18,7 @@ public sealed partial class JukeOperator : HTNOperator, IHtnConditionalShutdown
         var juke = _entManager.EnsureComponent<NPCJukeComponent>(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
         juke.JukeType = JukeType;
         KsApplyMaxFiringDistance(blackboard, juke); // KS14
+        KsApplyStrafe(juke); // KS14
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)

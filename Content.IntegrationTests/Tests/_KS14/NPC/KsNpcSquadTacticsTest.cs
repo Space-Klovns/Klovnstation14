@@ -509,6 +509,35 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     }
 
     /// <summary>
+    ///     A member holding its spot in the squad's cover of the leader's room is not regrouped, however far that spot is
+    ///         from the leader and however cautious the member: otherwise it walks in to the leader, the hold sends it
+    ///         back out, and round it goes.
+    /// </summary>
+    [Test]
+    public async Task TestMemberHoldingCoverIsNotRegrouped()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: CautiousMob);
+        var meterSystem = scene.EntManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>();
+        var coverSystem = scene.EntManager.System<NpcSquadCoverSystem>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            // The leader in a corner of the room, the member out at its spot covering one of the doors.
+            scene.TransformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(0.5f, 0.5f)));
+            Assert.That(coverSystem.TryGetAssignment(scene.MemberUid, out var assignment), "the member should have a spot covering the room");
+            scene.TransformSystem.SetCoordinates(scene.MemberUid, assignment.Coordinates);
+
+            meterSystem.Set(scene.MemberUid, Caution, 100f);
+            var spotDistance = (scene.TransformSystem.GetWorldPosition(scene.MemberUid) - scene.TransformSystem.GetWorldPosition(scene.LeaderUid)).Length();
+            Assert.That(spotDistance, Is.GreaterThan(3f), "the spot should be further from the leader than a cautious member strays");
+
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out _), Is.False,
+                "a member holding its spot in the room is with the squad, and should be left there");
+        });
+    }
+
+    /// <summary>
     ///     An update with nothing to hunt allocates nothing: it runs for every squad twice a second.
     /// </summary>
     [Test]
