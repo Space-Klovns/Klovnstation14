@@ -8,7 +8,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Orders;
 
 /// <summary>
 ///     Writes the owner's current order (see <see cref="NpcSquadTacticsSystem"/>) to the blackboard: where to go, how
-///         close counts, the locker to open if there is one, and the order's id - which <c>OrderCurrentPrecondition</c>
+///         close counts, what it is about if anything (a locker to open, a door to force) and what to force it
+///         with, and the order's id - which <c>OrderCurrentPrecondition</c>
 ///         compares against, to drop the plan the moment the order changes. Fails if the owner has no order.
 /// </summary>
 /// <remarks>
@@ -23,7 +24,9 @@ public sealed partial class GetOrderOperator : HTNOperator
 
     [DataField] public string RangeKey = "OrderRange";
 
-    [DataField] public string StorageKey = "OrderStorage";
+    [DataField] public string TargetKey = "OrderTarget";
+
+    [DataField] public string ToolKey = "OrderTool";
 
     [DataField] public string IdKey = "OrderId";
 
@@ -39,8 +42,11 @@ public sealed partial class GetOrderOperator : HTNOperator
             { IdKey, order.Id },
         };
 
-        if (order.StorageUid is { } storageUid)
-            effects[StorageKey] = storageUid;
+        if (order.TargetUid is { } targetUid)
+            effects[TargetKey] = targetUid;
+
+        if (order.ToolUid is { } toolUid)
+            effects[ToolKey] = toolUid;
 
         return (true, effects);
     }

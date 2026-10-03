@@ -133,7 +133,7 @@ public sealed partial class HuntDebugOverlay : Overlay
         foreach (var entrance in frame.Entrances)
         {
             if (!TryGetPosition(entrance.Stage, mapId, out var stagePosition, out var stageRotation) ||
-                !TryGetPosition(entrance.Breach, mapId, out var breachPosition))
+                !TryGetPosition(entrance.Entry, mapId, out var entryPosition))
                 continue;
 
             _shape[0] = new Vector2(0, MarkerSize);
@@ -143,8 +143,8 @@ public sealed partial class HuntDebugOverlay : Overlay
             DrawLoop(worldHandle, 3, EntranceColor);
             worldHandle.SetTransform(Matrix3x2.Identity);
 
-            worldHandle.DrawLine(stagePosition, breachPosition, EntranceColor.WithAlpha(0.5f));
-            worldHandle.DrawCircle(breachPosition, MarkerSize * 0.5f, EntranceColor, filled: false);
+            worldHandle.DrawLine(stagePosition, entryPosition, EntranceColor.WithAlpha(0.5f));
+            worldHandle.DrawCircle(entryPosition, MarkerSize * 0.5f, EntranceColor, filled: false);
         }
     }
 

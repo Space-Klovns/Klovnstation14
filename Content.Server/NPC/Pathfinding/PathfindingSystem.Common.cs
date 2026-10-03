@@ -48,6 +48,11 @@ public sealed partial class PathfindingSystem
             return 0f;
         }
 
+        // KS14 start: a door this NPC has found it cannot get through is a wall to it
+        if (request.AvoidedTiles != null && IsAvoided(request.AvoidedTiles, end))
+            return 0f;
+        // KS14 end
+
         if ((request.CollisionLayer & end.Data.CollisionMask) != 0x0 ||
             (request.CollisionMask & end.Data.CollisionLayer) != 0x0)
         {
@@ -55,9 +60,19 @@ public sealed partial class PathfindingSystem
             var isAccess = (end.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimb = (end.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
 
+            // KS14 start: a bolted or welded door opens for nobody and pries for nothing; only smashing it is a way
+            var isShut = (end.Data.Flags & (PathfindingBreadcrumbFlag.Bolted | PathfindingBreadcrumbFlag.Welded)) != 0x0;
+            if (isDoor && isShut)
+            {
+                if ((request.Flags & PathFlags.Smashing) == 0x0 || end.Data.Damage <= 0f)
+                    return 0f;
+
+                modifier += 10f + end.Data.Damage / 10f;
+            }
+            // KS14 end
             // TODO: Handling power + door prying
             // Door we should be able to open
-            if (isDoor)
+            else /* KS14: added else */ if (isDoor)
             {
                 if (!isAccess && (request.Flags & PathFlags.Interact) != 0x0)
                     modifier += 0.5f;

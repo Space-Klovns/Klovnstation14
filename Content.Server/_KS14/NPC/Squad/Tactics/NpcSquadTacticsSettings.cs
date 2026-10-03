@@ -40,7 +40,13 @@ public sealed partial class NpcSquadTacticsSettings
     ///     How long members have to get into the room once they go in, before searching wherever they got to.
     /// </summary>
     [DataField]
-    public TimeSpan BreachTimeout = TimeSpan.FromSeconds(5);
+    public TimeSpan EntryTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///     Longest the squad waits for its doors to be forced before going in anyway, through whichever are open.
+    /// </summary>
+    [DataField]
+    public TimeSpan BreachTimeout = TimeSpan.FromSeconds(10);
 
     /// <summary>
     ///     How long members hold the area once the search comes up empty, before standing down.
@@ -53,7 +59,7 @@ public sealed partial class NpcSquadTacticsSettings
     ///         several. Only ever done with at least two members.
     /// </summary>
     [DataField]
-    public bool CanBreach = true;
+    public bool CanStackUp = true;
 
     /// <summary>
     ///     How far outside a way in, in tiles, members wait before going in.
@@ -83,10 +89,10 @@ public sealed partial class NpcSquadTacticsSettings
     public float EntranceTargetPreference = 2f;
 
     /// <summary>
-    ///     How far into the room, past the way in, members go when they breach.
+    ///     How far into the room, past the way in, members go when they go in.
     /// </summary>
     [DataField]
-    public float BreachDepth = 1.5f;
+    public float EntryDepth = 1.5f;
 
     /// <summary>
     ///     With no room to search, lockers within this many tiles of where the hostile was lost are searched.
@@ -133,7 +139,7 @@ public sealed partial class NpcSquadTacticsSettings
     public ProtoId<NpcMeterPrototype>? CautionMeter;
 
     /// <summary>
-    ///     With the leader's caution at least this high, the squad hunts a disturbance - stacks up, breaches, sweeps
+    ///     With the leader's caution at least this high, the squad hunts a disturbance - stacks up, goes in, sweeps
     ///         the room - rather than walking up to it.
     /// </summary>
     [DataField]

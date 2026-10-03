@@ -227,6 +227,10 @@ public sealed partial class NPCSteeringSystem
                         return false;
                     case SteeringObstacleStatus.Continuing:
                         CheckPath(uid, steering, xform, needsPath, targetDistance);
+                        // KS14 start: stand still while forcing a door; prying stops if it moves. See NpcDoorSystem.
+                        if (_npcDoorSystem.IsBreaching(uid))
+                            return false;
+                        // KS14 end
                         return true;
                     default:
                         throw new ArgumentOutOfRangeException();

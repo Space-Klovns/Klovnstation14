@@ -55,7 +55,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     [Dependency] private EntityQuery<NPCJukeComponent> _jukeQuery = default!;
 
     /// <summary>
-    ///     Hostiles the NPC could possibly see this update: alive, uncontained, in range.
+    ///     Hostiles the NPC could possibly see this update: in range, dead or alive.
     /// </summary>
     private readonly HashSet<EntityUid> _candidates = new();
 
@@ -145,11 +145,21 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         // Contacts is written to from here on, but never enumerated again until the next update.
         foreach (var targetUid in _targets)
         {
-            if (TerminatingOrDeleted(targetUid) || _mobStateSystem.IsDead(targetUid))
+            if (TerminatingOrDeleted(targetUid))
             {
                 replan |= Forget(entity, targetUid);
                 continue;
             }
+
+            // Dead: known only once seen, or told. See NpcPerceptionSystem.Deaths.cs.
+            if (_mobStateSystem.IsDead(targetUid))
+            {
+                replan |= UpdateDead(entity, targetUid, observerMapCoordinates, range, now);
+                continue;
+            }
+
+            // Alive after all: brought back since.
+            entity.Comp.KnownDead.Remove(targetUid);
 
             var hasContact = entity.Comp.Contacts.TryGetValue(targetUid, out var contact);
             var wasVisible = hasContact && contact.State == NpcContactState.Visible;

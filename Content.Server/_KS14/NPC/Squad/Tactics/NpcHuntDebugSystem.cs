@@ -133,6 +133,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
                 NpcHuntPhase.Watch => settings.WatchTime,
                 NpcHuntPhase.Stage => settings.StageTimeout,
                 NpcHuntPhase.Breach => settings.BreachTimeout,
+                NpcHuntPhase.Entry => settings.EntryTimeout,
                 NpcHuntPhase.Exhausted => settings.HoldAreaTime,
                 _ => TimeSpan.Zero,
             }).TotalSeconds,
@@ -151,7 +152,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
 
         foreach (var entrance in hunt.Entrances)
         {
-            message.Entrances.Add(new HuntDebugEntrance(GetNetCoordinates(entrance.StageCoordinates), GetNetCoordinates(entrance.BreachCoordinates)));
+            message.Entrances.Add(new HuntDebugEntrance(GetNetCoordinates(entrance.StageCoordinates), GetNetCoordinates(entrance.EntryCoordinates)));
         }
 
         if (hunt.GridUid is { } routeGridUid)

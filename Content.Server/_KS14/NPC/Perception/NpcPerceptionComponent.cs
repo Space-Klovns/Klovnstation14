@@ -133,4 +133,19 @@ public sealed partial class NpcPerceptionComponent : Component
     /// </summary>
     [ViewVariables]
     public Dictionary<EntityUid, NpcContact> Contacts = new();
+
+    /// <summary>
+    ///     Hostiles the NPC knows to be dead - it saw the body, saw it die, killed it, or a squadmate told it - and
+    ///         when it stops remembering that (after <see cref="MemoryTime"/>). A hostile that died where nobody saw
+    ///         is not in here: as far as anyone knows, it is still out there. See <c>NpcPerceptionSystem.ConfirmDead</c>.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, TimeSpan> KnownDead = new();
+
+    /// <summary>
+    ///     When this NPC confirmed a death its squad cared about, if it has not called it out yet. See
+    ///         <c>TargetDownPrecondition</c>.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan? ConfirmedKillAt;
 }

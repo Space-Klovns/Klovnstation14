@@ -10,6 +10,8 @@ using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC.Systems;
 using Content.Shared.Stealth;
 using Content.Shared.Stealth.Components;
@@ -454,6 +456,137 @@ public sealed class KsNpcPerceptionTest : GameTest
                     "the threat should stay on the nearest hostile");
             });
         }
+    }
+
+    #endregion
+
+    #region Deaths
+
+    /// <summary>
+    ///     A hostile seen dying is known dead, by the one that saw it and by its squad: nobody remembers it as a hostile
+    ///         any more - not even the squadmate that was only told of it - and the one that saw it has news to call out.
+    /// </summary>
+    [Test]
+    public async Task TestDeathInSightIsConfirmedAndRelayed()
+    {
+        var (entManager, spotterUid, listenerUid, targetUid, _) = await SetUpSquad(secondTarget: false);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+
+        await Pair.Server.WaitPost(() => perceptionSystem.UpdateNow(spotterUid));
+        await Pair.RunTicksSync(24); // past the reaction time: only reacted-to hostiles are called out
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            perceptionSystem.UpdateNow(spotterUid);
+            Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out _), "the squadmate should have been told of it");
+
+            entManager.System<MobStateSystem>().ChangeMobState(targetUid, MobState.Dead);
+            perceptionSystem.UpdateNow(spotterUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(perceptionSystem.IsKnownDead(spotterUid, targetUid), "the one that saw it die should know");
+                Assert.That(perceptionSystem.TryGetContact(spotterUid, targetUid, out _), Is.False, "and no longer count it a hostile");
+                Assert.That(perceptionSystem.HasPendingKillCallout(spotterUid, System.TimeSpan.FromSeconds(5)), "and say so");
+                Assert.That(perceptionSystem.IsKnownDead(listenerUid, targetUid), "its squadmate should know too");
+                Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out _), Is.False,
+                    "and no longer believe in the hostile it was told of");
+                Assert.That(perceptionSystem.HasPendingKillCallout(listenerUid, System.TimeSpan.FromSeconds(5)), Is.False,
+                    "only the one that saw it says so");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A hostile that dies out of sight is not known dead: as far as the NPC knows it is where it was last seen, and
+    ///         it stays a lost hostile - until the NPC sees the body.
+    /// </summary>
+    [Test]
+    public async Task TestDeathOutOfSightIsKnownOnlyOnceTheBodyIsSeen()
+    {
+        var scene = await SetUpScene(targetTile: (5, 0));
+        var (entManager, perceptionSystem) = (scene.EntManager, scene.PerceptionSystem);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+            MoveOutOfSight(entManager, scene);
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+
+            entManager.System<MobStateSystem>().ChangeMobState(scene.TargetUid, MobState.Dead);
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(perceptionSystem.IsKnownDead(scene.ObserverUid, scene.TargetUid), Is.False, "nobody saw it die");
+                Assert.That(perceptionSystem.TryGetContact(scene.ObserverUid, scene.TargetUid, out var contact) && contact.State == NpcContactState.Lost,
+                    "it should still be a lost hostile");
+            });
+
+            // The body turns up in plain sight.
+            entManager.System<SharedTransformSystem>().SetCoordinates(scene.TargetUid, new EntityCoordinates(scene.GridUid, new Vector2(5.5f, 0.5f)));
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(perceptionSystem.IsKnownDead(scene.ObserverUid, scene.TargetUid), "the body is seen: now it knows");
+                Assert.That(perceptionSystem.TryGetContact(scene.ObserverUid, scene.TargetUid, out _), Is.False, "and stops looking");
+                Assert.That(perceptionSystem.HasPendingKillCallout(scene.ObserverUid, System.TimeSpan.FromSeconds(5)), "and says so");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Whoever killed a hostile knows it did, wherever the body fell.
+    /// </summary>
+    [Test]
+    public async Task TestKillerKnowsWithoutSeeing()
+    {
+        var scene = await SetUpScene(targetTile: (5, 0));
+        var (entManager, perceptionSystem) = (scene.EntManager, scene.PerceptionSystem);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+            MoveOutOfSight(entManager, scene);
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+
+            entManager.System<MobStateSystem>().ChangeMobState(scene.TargetUid, MobState.Dead, origin: scene.ObserverUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(perceptionSystem.IsKnownDead(scene.ObserverUid, scene.TargetUid), "it killed it: it knows");
+                Assert.That(perceptionSystem.HasPendingKillCallout(scene.ObserverUid, System.TimeSpan.FromSeconds(5)), "and says so");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Brought back to life, a hostile known dead is a hostile again.
+    /// </summary>
+    [Test]
+    public async Task TestRevivedTargetIsHostileAgain()
+    {
+        var scene = await SetUpScene(targetTile: (5, 0));
+        var (entManager, perceptionSystem) = (scene.EntManager, scene.PerceptionSystem);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var mobStateSystem = entManager.System<MobStateSystem>();
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+            mobStateSystem.ChangeMobState(scene.TargetUid, MobState.Dead);
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+            Assert.That(perceptionSystem.IsKnownDead(scene.ObserverUid, scene.TargetUid));
+
+            mobStateSystem.ChangeMobState(scene.TargetUid, MobState.Alive);
+            perceptionSystem.UpdateNow(scene.ObserverUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(perceptionSystem.IsKnownDead(scene.ObserverUid, scene.TargetUid), Is.False, "it is not dead any more");
+                Assert.That(perceptionSystem.IsVisible(scene.ObserverUid, scene.TargetUid), "and is a hostile in sight again");
+            });
+        });
     }
 
     #endregion

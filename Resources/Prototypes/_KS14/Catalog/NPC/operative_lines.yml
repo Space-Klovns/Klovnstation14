@@ -118,6 +118,18 @@
   id: KsOperativeBreaching
   values:
     prefix: ks-operative-line-breaching-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeDoorLocked
+  values:
+    prefix: ks-operative-line-door-locked-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeEntering
+  values:
+    prefix: ks-operative-line-entering-
     count: 4
 
 - type: localizedDataset
@@ -131,3 +143,9 @@
   values:
     prefix: ks-operative-line-regrouping-
     count: 3
+
+- type: localizedDataset
+  id: KsOperativeTargetDown
+  values:
+    prefix: ks-operative-line-target-down-
+    count: 4

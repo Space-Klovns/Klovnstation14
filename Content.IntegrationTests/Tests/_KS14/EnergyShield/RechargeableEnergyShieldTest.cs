@@ -43,6 +43,7 @@ public sealed class RechargeableEnergyShieldTest : GameTest
     maxCharge: 100
     startingCharge: 100
   - type: RechargeableEnergyShield
+    damageToChargeRatio: 1
 
 # Drains twice as fast, so the ratio datafield is exercised rather than assumed to be one.
 - type: entity

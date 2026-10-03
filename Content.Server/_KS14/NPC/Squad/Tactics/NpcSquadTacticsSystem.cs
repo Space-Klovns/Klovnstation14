@@ -1,7 +1,9 @@
+using Content.Server._KS14.NPC.Doors;
 using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Doors.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC;
@@ -43,6 +45,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private NpcDoorSystem _npcDoorSystem = default!;
     [Dependency] private SharedEntityStorageSystem _entityStorageSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -54,6 +57,8 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     [Dependency] private EntityQuery<NpcPerceptionComponent> _perceptionQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<EntityStorageComponent> _entityStorageQuery = default!;
+    [Dependency] private EntityQuery<DoorComponent> _doorQuery = default!;
+    [Dependency] private EntityQuery<AirlockComponent> _airlockQuery = default!;
 
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(0.5);
 
@@ -180,7 +185,8 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         _huntQuery.TryComp(issuerUid, out var huntComponent);
         var hunt = huntComponent?.Hunt;
 
-        if (hunt?.TargetUid is { } huntedUid && (TerminatingOrDeleted(huntedUid) || _mobStateSystem.IsDead(huntedUid)))
+        // Over once one of them knows it is dead - not the moment it dies, out of sight, where none of them could know.
+        if (hunt?.TargetUid is { } huntedUid && (TerminatingOrDeleted(huntedUid) || AnyoneKnowsDead(huntedUid)))
         {
             EndHunt(issuerUid);
             hunt = null;
@@ -201,6 +207,17 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         }
 
         UpdateRegroup(issuerUid, leaderUid, settings, now);
+    }
+
+    private bool AnyoneKnowsDead(EntityUid targetUid)
+    {
+        foreach (var memberUid in _members)
+        {
+            if (_npcPerceptionSystem.IsKnownDead(memberUid, targetUid))
+                return true;
+        }
+
+        return false;
     }
 
     #region Orders
@@ -251,9 +268,13 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     ///     Gives <paramref name="memberUid"/> an order from itself, as if it had worked it out on its own. For tests;
     ///         <see cref="UpdatesPaused"/> keeps it from being cleared again.
     /// </summary>
-    internal void IssueOrder(EntityUid memberUid, NpcOrderKind kind, EntityCoordinates coordinates, EntityUid? storageUid = null)
+    internal void IssueOrder(EntityUid memberUid,
+        NpcOrderKind kind,
+        EntityCoordinates coordinates,
+        EntityUid? targetUid = null,
+        EntityUid? toolUid = null)
     {
-        SetOrder(memberUid, memberUid, kind, coordinates, Angle.Zero, OrderRange, storageUid, _gameTiming.CurTime);
+        SetOrder(memberUid, memberUid, kind, coordinates, Angle.Zero, OrderRange, targetUid, _gameTiming.CurTime, toolUid: toolUid);
     }
 
     /// <summary>
@@ -266,21 +287,23 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         EntityCoordinates coordinates,
         Angle facing,
         float range,
-        EntityUid? storageUid,
-        TimeSpan now)
+        EntityUid? targetUid,
+        TimeSpan now,
+        EntityUid? toolUid = null)
     {
         var orderComponent = EnsureComp<NpcOrderComponent>(memberUid);
 
         if (orderComponent.Order is { } existing &&
             existing.Kind == kind &&
             existing.IssuerUid == issuerUid &&
-            existing.StorageUid == storageUid &&
+            existing.TargetUid == targetUid &&
+            existing.ToolUid == toolUid &&
             Math.Abs(Angle.ShortestDistance(existing.Facing, facing).Degrees) < OrderTurnTolerance &&
             existing.Coordinates.TryDistance(EntityManager, _transformSystem, coordinates, out var moved) &&
             moved < OrderMoveTolerance)
             return;
 
-        orderComponent.Order = new NpcOrder(++_lastOrderId, kind, issuerUid, coordinates, facing, range, storageUid, now);
+        orderComponent.Order = new NpcOrder(++_lastOrderId, kind, issuerUid, coordinates, facing, range, targetUid, now, toolUid);
         _npcSensorSystem.RequestReplan(memberUid);
     }
 

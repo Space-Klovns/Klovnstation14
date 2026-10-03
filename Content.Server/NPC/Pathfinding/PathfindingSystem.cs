@@ -59,6 +59,8 @@ namespace Content.Server.NPC.Pathfinding
         [Dependency] private EntityQuery<AccessReaderComponent> _accessReaderQuery = default!;
         [Dependency] private EntityQuery<DestructibleComponent> _destructibleQuery = default!;
         [Dependency] private EntityQuery<DoorComponent> _doorQuery = default!;
+        [Dependency] private EntityQuery<DoorBoltComponent> _doorBoltQuery = default!; // KS14
+        [Dependency] private EntityQuery<AirlockComponent> _airlockQuery = default!; // KS14
         [Dependency] private EntityQuery<ClimbableComponent> _climbableQuery = default!;
         [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
         [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
@@ -437,7 +439,13 @@ namespace Content.Server.NPC.Pathfinding
                 (layer, mask) = _physics.GetHardCollision(entity, fixtures);
             }
 
-            return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken);
+            // KS14 start: round the doors this NPC has found it cannot get through
+            return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken)
+            {
+                AvoidedTiles = GetAvoidedTiles(entity),
+            };
+            // KS14 end
+            /* return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken); */ // KS14: replaced above
         }
 
         public PathFlags GetFlags(EntityUid uid)

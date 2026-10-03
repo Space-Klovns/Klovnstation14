@@ -2,6 +2,9 @@
 using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.NPC.Doors;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Squad.Tactics;
@@ -39,6 +42,9 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     private const string HastyLonerMob = "KsTacticsTestMobHastyLoner";
     private const string CautiousMob = "KsTacticsTestMobCautious";
     private const string Caution = "KsTacticsTestCaution";
+    private const string SecurityMob = "KsTacticsTestMobSecurity";
+    private const string SecurityDoor = "AirlockSecurityLocked";
+    private const string CommandDoor = "AirlockCommandLocked";
 
     // Not static: the YAML linter validates every static ProtoId field, and this one is in the private submodule.
     private readonly Robust.Shared.Prototypes.ProtoId<Content.Shared.Humanoid.Prototypes.RandomHumanoidSettingsPrototype> _operativeNt = "KsOperativeNt";
@@ -53,6 +59,7 @@ public sealed class KsNpcSquadTacticsTest : GameTest
   - type: NpcSquadMember
     tactics:
       watchTime: 0
+      maxStageDistance: 40 # the walk round the test room to its far door is about 21 tiles
 
 - type: entity
   parent: KsTacticsTestMobNoWatch
@@ -89,6 +96,14 @@ public sealed class KsNpcSquadTacticsTest : GameTest
       cautiousHuntThreshold: 30
       regroupDistance: 8
       cautiousRegroupDistance: 3
+
+- type: entity
+  parent: KsTacticsTestMobNoWatch
+  id: KsTacticsTestMobSecurity
+  components:
+  - type: Access
+    tags:
+    - Security
 
 - type: entity
   parent: KsSquadTestMobSyndicate
@@ -214,7 +229,7 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     ///         so they come at it from both sides - and only goes in once everyone is in place.
     /// </summary>
     [Test]
-    public async Task TestSquadFlanksThenBreachesTogether()
+    public async Task TestSquadFlanksThenGoesInTogether()
     {
         var scene = await SetUpSquadOutsideRoom(squadMob: NoWatchMob);
 
@@ -248,9 +263,9 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             //      back to a turn it no longer needs.
             scene.TransformSystem.SetCoordinates(scene.MemberUid, memberSpot);
             scene.TacticsSystem.UpdateNow();
-            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Breach), "with everyone in place, they should go in");
-            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out leaderOrder) && leaderOrder.Kind == NpcOrderKind.Breach);
-            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out memberOrder) && memberOrder.Kind == NpcOrderKind.Breach);
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Entry), "with everyone in place, they should go in");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out leaderOrder) && leaderOrder.Kind == NpcOrderKind.Enter);
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out memberOrder) && memberOrder.Kind == NpcOrderKind.Enter);
         });
     }
 
@@ -291,6 +306,242 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                     $"the other should take the {(targetWest ? "west" : "east")} door, nearer the hostile; took {string.Join(", ", taken)}");
             });
         });
+    }
+
+    /// <summary>
+    ///     A member is only sent to lead a way in it can get through. With the west door asking for security access and
+    ///         the east for command, the member with security access leads the west door, and the one with no access at
+    ///         all stacks up behind it rather than at the east door it could never open.
+    /// </summary>
+    [Test]
+    public async Task TestMemberWithoutAccessStacksBehindOneWithIt()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (securityUid, plainUid) = SplitBySecurity(scene);
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt?.Phase, Is.EqualTo(NpcHuntPhase.Stage), "the squad should be stacking up");
+
+            var securityStaging = hunt!.StagedMembers[securityUid];
+            var plainStaging = hunt.StagedMembers[plainUid];
+            Assert.Multiple(() =>
+            {
+                Assert.That(securityStaging.IsLead, "the member with the access should lead");
+                Assert.That(hunt.Entrances[securityStaging.EntranceIndex].StageCoordinates.Position.X, Is.LessThan(0f), "at the west door, which it can open");
+                Assert.That(plainStaging.IsLead, Is.False, "the member without access leads nothing");
+                Assert.That(plainStaging.EntranceIndex, Is.EqualTo(securityStaging.EntranceIndex), "and stacks up behind the one that can get it open");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A member carrying jaws of life leads the door nobody can open, and forces it once everyone is in place: it is
+    ///         ordered to breach that door with them, while the rest wait. Once the door is open - or gone, destroyed by
+    ///         somebody else - they all go in, and nobody is left trying to force it.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestToolBearerForcesTheDoorNobodyCanOpen(bool destroyed)
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+        EntityUid jawsUid = default;
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (securityUid, plainUid) = SplitBySecurity(scene);
+            jawsUid = GiveInHand(scene.EntManager, plainUid, TestJawsOfLife);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            var plainStaging = hunt.StagedMembers[plainUid];
+            var eastEntrance = hunt.Entrances[plainStaging.EntranceIndex];
+            Assert.Multiple(() =>
+            {
+                Assert.That(plainStaging.IsLead && plainStaging.Method == NpcBreachMethod.Pry, "the member with the jaws should lead, prying");
+                Assert.That(eastEntrance.StageCoordinates.Position.X, Is.GreaterThan(6f), "at the east door, which nobody can open");
+                Assert.That(hunt.StagedMembers[securityUid].Method, Is.EqualTo(NpcBreachMethod.None), "the other opens its door by hand");
+            });
+
+            // Everyone in place: the jaws come out.
+            scene.TransformSystem.SetCoordinates(securityUid, hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].StageCoordinates);
+            scene.TransformSystem.SetCoordinates(plainUid, eastEntrance.StageCoordinates);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Breach), "with a door to force, they should breach first");
+            Assert.Multiple(() =>
+            {
+                Assert.That(scene.TacticsSystem.TryGetOrder(plainUid, out var breachOrder) && breachOrder.Kind == NpcOrderKind.Breach &&
+                    breachOrder.TargetUid == eastEntrance.DoorUid && breachOrder.ToolUid == jawsUid,
+                    "the member with the jaws should be told to force the east door with them");
+                Assert.That(scene.TacticsSystem.TryGetOrder(securityUid, out var waitOrder) && waitOrder.Kind == NpcOrderKind.Stage,
+                    "the other should wait");
+            });
+
+            if (destroyed)
+                scene.EntManager.DeleteEntity(eastEntrance.DoorUid!.Value);
+            else
+                scene.EntManager.System<Content.Shared.Doors.Systems.SharedDoorSystem>().StartOpening(eastEntrance.DoorUid!.Value);
+
+            scene.TacticsSystem.UpdateNow();
+            Assert.Multiple(() =>
+            {
+                Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Entry), destroyed ? "with the door gone, they should go in" : "with the door forced, they should go in");
+                Assert.That(scene.TacticsSystem.TryGetOrder(plainUid, out var enterOrder) && enterOrder.Kind == NpcOrderKind.Enter,
+                    "the one with the jaws should go in too, not keep at the door");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A room nobody can get into - every door asks for access none of them have, and none of them carries anything
+    ///         to force one - is not stacked up on at all: the squad gives up on it. That holds with an open firelock
+    ///         under each door too: the airlock is what stands in the way, not the firelock.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestNoWayInGivesUp(bool firelocks)
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: NoWatchMob, westDoor: CommandDoor, eastDoor: CommandDoor, firelocks: firelocks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid)?.Phase, Is.EqualTo(NpcHuntPhase.Exhausted),
+                "with no way in, the squad should give up rather than stack up on doors it cannot open");
+        });
+    }
+
+    /// <summary>
+    ///     A lead found its door will not open for it after all - it was fooled - so the ways in are handed out again:
+    ///         the member with the jaws now leads, and the one that was fooled stacks up behind it.
+    /// </summary>
+    [Test]
+    public async Task TestFooledLeadIsReplaced()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (securityUid, plainUid) = SplitBySecurity(scene);
+            GiveInHand(scene.EntManager, plainUid, TestJawsOfLife);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            var westDoorUid = hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].DoorUid!.Value;
+
+            scene.EntManager.System<NpcDoorSystem>().ReportRefused(securityUid, westDoorUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(hunt.ReassignedForDoors, "the ways in should have been handed out again");
+                Assert.That(hunt.StagedMembers[securityUid].IsLead, Is.False, "the fooled member has no way in of its own any more");
+                Assert.That(hunt.StagedMembers[plainUid].IsLead && hunt.StagedMembers[plainUid].Method == NpcBreachMethod.Pry,
+                    "the member with the jaws should lead, prying");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A hunted hostile that dies where none of the squad can see is still hunted: they cannot know. Once one of them
+    ///         sees the body, the hunt is over.
+    /// </summary>
+    [Test]
+    public async Task TestHuntEndsOnlyOnceTheDeathIsKnown()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: NoWatchMob);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt, Is.Not.Null, "the squad should be hunting");
+
+            // Dies in the far corner, out of everyone's sight.
+            scene.EntManager.System<MobStateSystem>().ChangeMobState(scene.TargetUid, MobState.Dead);
+            scene.PerceptionSystem.UpdateNow(scene.LeaderUid);
+            scene.PerceptionSystem.UpdateNow(scene.MemberUid);
+            scene.TacticsSystem.UpdateNow();
+            // The same hunt, carrying on - not ended and started afresh from the contacts they still have.
+            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid), Is.SameAs(hunt), "nobody saw it die: the hunt goes on");
+
+            // One of them comes across the body.
+            var targetCoordinates = scene.EntManager.GetComponent<TransformComponent>(scene.TargetUid).Coordinates;
+            scene.TransformSystem.SetCoordinates(scene.MemberUid, targetCoordinates.Offset(new Vector2(-1f, 0f)));
+            scene.PerceptionSystem.UpdateNow(scene.MemberUid);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid), Is.Null, "with the body found, the hunt should be over");
+        });
+    }
+
+    /// <summary>
+    ///     A lead that is already through its door is not replaced when the door turns on it afterwards: it got in, so
+    ///         the ways in stay as they are.
+    /// </summary>
+    [Test]
+    public async Task TestLeadAlreadyInsideIsNotReplaced()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (securityUid, plainUid) = SplitBySecurity(scene);
+            GiveInHand(scene.EntManager, plainUid, TestJawsOfLife);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            var westDoorUid = hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].DoorUid!.Value;
+
+            // Through the door and into the room, and then the door refuses it.
+            scene.TransformSystem.SetCoordinates(securityUid, new EntityCoordinates(scene.GridUid, new Vector2(1.5f, 2.5f)));
+            scene.EntManager.System<NpcDoorSystem>().ReportRefused(securityUid, westDoorUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(hunt.ReassignedForDoors, Is.False, "a lead already inside should not have the ways in handed out again");
+                Assert.That(hunt.StagedMembers[securityUid].IsLead, "it should still lead");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     The scene's two squad members, the one with security access first.
+    /// </summary>
+    private static (EntityUid SecurityUid, EntityUid PlainUid) SplitBySecurity(Scene scene)
+    {
+        return scene.EntManager.HasComponent<Content.Shared.Access.Components.AccessComponent>(scene.LeaderUid)
+            ? (scene.LeaderUid, scene.MemberUid)
+            : (scene.MemberUid, scene.LeaderUid);
+    }
+
+    private static EntityUid GiveInHand(IEntityManager entManager, EntityUid npcUid, string prototype)
+    {
+        var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+        handsSystem.AddHand(npcUid, "right", Content.Shared.Hands.Components.HandLocation.Right);
+        var itemUid = entManager.SpawnEntity(prototype, entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
+        Assert.That(handsSystem.TryPickup(npcUid, itemUid, "right"), $"it should be holding the {prototype}");
+        return itemUid;
     }
 
     /// <summary>
@@ -367,8 +618,8 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             Assert.That(scene.TacticsSystem.TryGetOrder(nearUid, out var order) && order.Kind == NpcOrderKind.Stage);
 
             var stageWorld = scene.TransformSystem.ToMapCoordinates(entrance.StageCoordinates).Position;
-            var breachWorld = scene.TransformSystem.ToMapCoordinates(entrance.BreachCoordinates).Position;
-            var intoRoom = (breachWorld - stageWorld).ToWorldAngle();
+            var entryWorld = scene.TransformSystem.ToMapCoordinates(entrance.EntryCoordinates).Position;
+            var intoRoom = (entryWorld - stageWorld).ToWorldAngle();
             var worldFacing = order.Facing + scene.TransformSystem.GetWorldRotation(order.Coordinates.EntityId);
 
             Assert.That(System.Math.Abs(Angle.ShortestDistance(worldFacing, intoRoom).Degrees), Is.LessThan(1),
@@ -476,7 +727,7 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             Assert.That(hunt.SearchPoints[0].Cleared, Is.False, "a closed locker is not searched by looking at it");
 
             // The member nearest the locker is sent to open it.
-            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order) && order.Kind == NpcOrderKind.Search && order.StorageUid == lockerUid,
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order) && order.Kind == NpcOrderKind.Search && order.TargetUid == lockerUid,
                 $"the member nearest the locker should be sent to open it, but has {order.Kind}");
 
             scene.EntManager.System<SharedEntityStorageSystem>().OpenStorage(lockerUid);
@@ -754,7 +1005,10 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                     if (longSide || IsInLeg(new Vector2i(x, y)))
                         continue;
 
-                    SpawnAt(entManager, x == 2 && y == -1 ? "Airlock" : "WallSolid", gridUid, x, y);
+                    if (x == 2 && y == -1)
+                        SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, y);
+                    else
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
                 }
             }
 
@@ -783,7 +1037,14 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     ///     The room, a squad of two waiting just outside its west airlock, a hostile far away, and the tactics system
     ///         paused. Optionally an NPC on its own, which never joins a squad and skips the watch.
     /// </summary>
-    private async Task<Scene> SetUpSquadOutsideRoom(string squadMob = SyndicateMob, Vector2i? lonerAt = null, Vector2i[]? squadAt = null, bool northDoor = false)
+    private async Task<Scene> SetUpSquadOutsideRoom(string squadMob = SyndicateMob,
+        Vector2i? lonerAt = null,
+        Vector2i[]? squadAt = null,
+        bool northDoor = false,
+        string westDoor = "Airlock",
+        string eastDoor = "Airlock",
+        string? secondMob = null,
+        bool firelocks = false)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -809,15 +1070,25 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                     if (x is > -1 and < 7 && y is > -1 and < 6)
                         continue;
 
-                    var door = x == -1 && y == 2 || x == 7 && y == 3 || northDoor && x == 3 && y == 6;
-                    SpawnAt(entManager, door ? "Airlock" : "WallSolid", gridUid, x, y);
+                    var door = x == -1 && y == 2 ? westDoor
+                        : x == 7 && y == 3 ? eastDoor
+                        : northDoor && x == 3 && y == 6 ? "Airlock"
+                        : null;
+                    // A firelock under a door, as on a station: spawned first, so it is the first door found there.
+                    if (door != null && firelocks)
+                        SpawnAt(entManager, "Firelock", gridUid, x, y);
+
+                    if (door != null)
+                        SpawnPoweredDoorAt(entManager, door, gridUid, x, y);
+                    else
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
                 }
             }
 
             var firstTile = squadAt?[0] ?? new Vector2i(-4, 2);
             var secondTile = squadAt?[1] ?? new Vector2i(-4, 3);
             firstUid = SpawnAt(entManager, squadMob, gridUid, firstTile.X, firstTile.Y);
-            secondUid = SpawnAt(entManager, squadMob, gridUid, secondTile.X, secondTile.Y);
+            secondUid = SpawnAt(entManager, secondMob ?? squadMob, gridUid, secondTile.X, secondTile.Y);
 
             if (lonerAt is { } lonerTile)
                 lonerUid = SpawnAt(entManager, NoWatchLonerMob, gridUid, lonerTile.X, lonerTile.Y);

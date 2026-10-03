@@ -14,7 +14,9 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 ///     to - the grid, usually - and not to the world, so that it still means "into the room" on a grid that has
 ///     turned since. See <c>RotateToOrderFacingOperator</c>.</param>
 /// <param name="Range">How close to <paramref name="Coordinates"/> counts as there.</param>
-/// <param name="StorageUid">The locker to open, for a <see cref="NpcOrderKind.Search"/> of one.</param>
+/// <param name="TargetUid">What the order is about: the locker to open, for a <see cref="NpcOrderKind.Search"/> of
+///     one; the door to force, for a <see cref="NpcOrderKind.Breach"/>.</param>
+/// <param name="ToolUid">What to force the door with, for a <see cref="NpcOrderKind.Breach"/>.</param>
 public readonly record struct NpcOrder(
     int Id,
     NpcOrderKind Kind,
@@ -22,5 +24,6 @@ public readonly record struct NpcOrder(
     EntityCoordinates Coordinates,
     Angle Facing,
     float Range,
-    EntityUid? StorageUid,
-    TimeSpan IssuedAt);
+    EntityUid? TargetUid,
+    TimeSpan IssuedAt,
+    EntityUid? ToolUid = null);

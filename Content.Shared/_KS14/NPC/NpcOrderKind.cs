@@ -27,9 +27,15 @@ public enum NpcOrderKind : byte
     Stage,
 
     /// <summary>
-    ///     Go in, all at once.
+    ///     Force a door that will not open by hand, with a tool: a crowbar, jaws of life, an access breaker. Then put
+    ///         the tool away, weapon back in hand, and wait to go in.
     /// </summary>
     Breach,
+
+    /// <summary>
+    ///     Go in, all at once.
+    /// </summary>
+    Enter,
 
     /// <summary>
     ///     Check one spot the hostile could be hiding: a locker, a corner, where it was last seen.
@@ -64,9 +70,14 @@ public enum NpcHuntPhase : byte
     Stage,
 
     /// <summary>
-    ///     Members going in together.
+    ///     Members with tools forcing the doors that will not open for anyone by hand, the rest waiting.
     /// </summary>
     Breach,
+
+    /// <summary>
+    ///     Members going in together.
+    /// </summary>
+    Entry,
 
     /// <summary>
     ///     Members checking every spot it could be hiding.

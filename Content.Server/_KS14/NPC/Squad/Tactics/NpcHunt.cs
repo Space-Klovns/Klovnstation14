@@ -72,20 +72,28 @@ public sealed class NpcHunt
     ///     The unseen tile each searching member is heading for, once the lockers and spots are all taken.
     /// </summary>
     public readonly Dictionary<EntityUid, NpcHuntSweep> Sweeps = new();
+
+    /// <summary>
+    ///     Whether the ways in have already been handed out again, after one turned out not to open for the member
+    ///         leading it. Only once a hunt, so a squad that keeps being refused does not go round in circles.
+    /// </summary>
+    public bool ReassignedForDoors;
 }
 
 /// <summary>
 ///     A way into the hunted room.
 /// </summary>
 /// <param name="StageCoordinates">Just outside it, where members wait to go in.</param>
-/// <param name="BreachCoordinates">Just inside it, where members go when they go in.</param>
+/// <param name="EntryCoordinates">Just inside it, where members go when they go in.</param>
 /// <param name="StageTile">The tile <paramref name="StageCoordinates"/> is on.</param>
 /// <param name="LocalFacing">Into the room, relative to the grid.</param>
+/// <param name="DoorUid">The door in it, if there is one: none for an archway or a gap in the wall.</param>
 public readonly record struct NpcHuntEntrance(
     EntityCoordinates StageCoordinates,
-    EntityCoordinates BreachCoordinates,
+    EntityCoordinates EntryCoordinates,
     Vector2i StageTile,
-    Angle LocalFacing);
+    Angle LocalFacing,
+    EntityUid? DoorUid);
 
 /// <summary>
 ///     One member's way to its waiting spot outside the room, round the room rather than through it.
@@ -93,6 +101,23 @@ public readonly record struct NpcHuntEntrance(
 public sealed class NpcHuntStaging
 {
     public required int EntranceIndex;
+
+    /// <summary>
+    ///     Whether this member gets the way in open for the others stacked up on it - by opening its door, or by forcing
+    ///         it with <see cref="ToolUid"/>. One per way in; the rest wait behind it.
+    /// </summary>
+    public bool IsLead;
+
+    /// <summary>
+    ///     How the lead gets the door open: <see cref="Doors.NpcBreachMethod.None"/> when it opens it by hand, or there
+    ///         is no door.
+    /// </summary>
+    public Doors.NpcBreachMethod Method;
+
+    /// <summary>
+    ///     What the lead forces the door with.
+    /// </summary>
+    public EntityUid? ToolUid;
 
     /// <summary>
     ///     The turns along the way, in order, not counting the waiting spot itself.

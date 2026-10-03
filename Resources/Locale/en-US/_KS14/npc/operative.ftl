@@ -82,10 +82,18 @@ ks-operative-line-staging-1 = Stack up on the door.
 ks-operative-line-staging-2 = Flank them. Cover every way in.
 ks-operative-line-staging-3 = Get in position.
 ks-operative-line-staging-4 = Surround the room.
-ks-operative-line-breaching-1 = Go, go, go!
-ks-operative-line-breaching-2 = Breach!
-ks-operative-line-breaching-3 = Moving in!
-ks-operative-line-breaching-4 = Now! In, in, in!
+ks-operative-line-breaching-1 = Breaching!
+ks-operative-line-breaching-2 = Popping the door.
+ks-operative-line-breaching-3 = Forcing it.
+
+ks-operative-line-door-locked-1 = Door's locked!
+ks-operative-line-door-locked-2 = It won't open!
+ks-operative-line-door-locked-3 = Access is out, need a breacher.
+
+ks-operative-line-entering-1 = Go, go, go!
+ks-operative-line-entering-2 = In we go!
+ks-operative-line-entering-3 = Moving in!
+ks-operative-line-entering-4 = Now! In, in, in!
 ks-operative-line-searchingarea-1 = Check the lockers.
 ks-operative-line-searchingarea-2 = Checking corners.
 ks-operative-line-searchingarea-3 = Search everything.
@@ -94,3 +102,8 @@ ks-operative-line-searchingarea-5 = They're here somewhere.
 ks-operative-line-regrouping-1 = Regrouping.
 ks-operative-line-regrouping-2 = Falling back to you.
 ks-operative-line-regrouping-3 = Coming to you.
+
+ks-operative-line-target-down-1 = Target down!
+ks-operative-line-target-down-2 = Got 'em!
+ks-operative-line-target-down-3 = Tango down.
+ks-operative-line-target-down-4 = They're dead. Moving on.

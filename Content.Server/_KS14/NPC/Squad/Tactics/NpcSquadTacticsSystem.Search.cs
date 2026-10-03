@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Doors.Components;
 using Content.Shared.Storage.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -66,9 +67,10 @@ public sealed partial class NpcSquadTacticsSystem
                 var stagePosition = threshold.Center - threshold.InwardNormal * settings.StageDistance;
                 hunt.Entrances.Add(new NpcHuntEntrance(
                     new EntityCoordinates(room.GridUid, stagePosition),
-                    new EntityCoordinates(room.GridUid, threshold.Center + threshold.InwardNormal * settings.BreachDepth),
+                    new EntityCoordinates(room.GridUid, threshold.Center + threshold.InwardNormal * settings.EntryDepth),
                     _mapSystem.TileIndicesFor(grid.Value, new EntityCoordinates(room.GridUid, stagePosition)),
-                    threshold.InwardNormal.ToWorldAngle()));
+                    threshold.InwardNormal.ToWorldAngle(),
+                    FindDoor(grid.Value, threshold.Tiles)));
             }
         }
 
@@ -82,7 +84,15 @@ public sealed partial class NpcSquadTacticsSystem
 
         // Stacking up is for a team going into a room they are not in yet. Anyone already inside, or anyone on their
         //      own, just starts looking.
-        if (settings.CanBreach && _members.Count >= 2 && hunt.Entrances.Count > 0 && !anyoneInside)
+        // A room every way into is shut to all of them - no access, nothing to force it with - is not getting
+        //      searched: they hold outside it and give up.
+        if (!anyoneInside && hunt.Entrances.Count > 0 && !CanAnyoneGetIn(hunt))
+        {
+            Exhaust(leaderUid, hunt, now);
+            return;
+        }
+
+        if (settings.CanStackUp && _members.Count >= 2 && hunt.Entrances.Count > 0 && !anyoneInside)
         {
             SetPhase(hunt, NpcHuntPhase.Stage, now);
             AssignEntrances(hunt, settings);
@@ -92,6 +102,55 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         SetPhase(hunt, NpcHuntPhase.Search, now);
+    }
+
+    /// <summary>
+    ///     The door anchored in a doorway that stands in the way, if it has one: an archway or a gap in the wall has
+    ///         none. A doorway often holds more than one - an airlock over a firelock, shutters - so a shut one is
+    ///         taken over an open one, and an airlock over anything else: a firelock is usually open, and an airlock
+    ///         that is open now shuts itself again.
+    /// </summary>
+    private EntityUid? FindDoor(Entity<MapGridComponent> grid, List<Vector2i> tiles)
+    {
+        EntityUid? bestUid = null;
+        var bestRank = -1;
+
+        foreach (var tile in tiles)
+        {
+            var anchoredEnumerator = _mapSystem.GetAnchoredEntitiesEnumerator(grid, grid.Comp, tile);
+            while (anchoredEnumerator.MoveNext(out var anchoredUid))
+            {
+                if (!_doorQuery.TryComp(anchoredUid.Value, out var doorComponent))
+                    continue;
+
+                var rank = (doorComponent.State is DoorState.Open or DoorState.Opening ? 0 : 2) +
+                    (_airlockQuery.HasComp(anchoredUid.Value) ? 1 : 0);
+                if (rank <= bestRank)
+                    continue;
+
+                bestUid = anchoredUid.Value;
+                bestRank = rank;
+            }
+        }
+
+        return bestUid;
+    }
+
+    /// <summary>
+    ///     Whether any member can get through any way in - by hand, or forcing it with what it carries.
+    /// </summary>
+    private bool CanAnyoneGetIn(NpcHunt hunt)
+    {
+        foreach (var memberUid in _members)
+        {
+            foreach (var entrance in hunt.Entrances)
+            {
+                if (GetEntryMethod(memberUid, entrance).Usable)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

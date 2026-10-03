@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Shared.Doors.Components; // KS14
 using Content.Shared.NPC;
 using Content.Shared.Physics;
 using Robust.Shared.Collections;
@@ -464,6 +465,7 @@ public sealed partial class PathfindingSystem
                         var collisionMask = 0x0;
                         var collisionLayer = 0x0;
                         var damage = 0f;
+                        var blockedBesidesDoors = false; // KS14: see below
 
                         foreach (var ent in tileEntities)
                         {
@@ -516,10 +518,11 @@ public sealed partial class PathfindingSystem
                             // KS14 start: flag only readers that actually restrict. An airlock's own reader is empty
                             //      and defers to its door electronics board, which decides - unless the door's own
                             //      reader is switched off (access wire cut), which lets anyone through whatever the
-                            //      board says. An emag clears the board's lists instead. Both rebuild the chunk: see
-                            //      PathfindingSystem.Klovn.Access.cs
+                            //      board says. An emag clears the board's lists instead, and emergency access lets
+                            //      everyone through. All of them rebuild the chunk: see PathfindingSystem.Klovn.Access.cs
                             if (_accessReaderQuery.TryGetComponent(ent, out var ownAccessReaderComponent) &&
                                 ownAccessReaderComponent.Enabled &&
+                                !(_airlockQuery.TryGetComponent(ent, out var airlockComponent) && airlockComponent.EmergencyAccess) &&
                                 _accessReaderSystem.GetMainAccessReader(ent, out var mainAccessReader) &&
                                 mainAccessReader.Value.Comp.Enabled &&
                                 (mainAccessReader.Value.Comp.AccessKeys.Count > 0 || mainAccessReader.Value.Comp.AccessLists.Count > 0))
@@ -528,9 +531,23 @@ public sealed partial class PathfindingSystem
                                 flags |= PathfindingBreadcrumbFlag.Access;
                             }
 
-                            if (_doorQuery.HasComponent(ent))
+                            // KS14 start: something anchored and solid here that is not a door - a window under its
+                            //      shutters, a grille - so opening every door here still leaves no way through
+                            if (!_doorQuery.HasComponent(ent) && Transform(ent).Anchored)
+                                blockedBesidesDoors = true;
+                            // KS14 end
+
+                            if (_doorQuery.TryGetComponent(ent, out var doorComponent)) // KS14: HasComponent -> TryGetComponent
                             {
                                 flags |= PathfindingBreadcrumbFlag.Door;
+
+                                // KS14 start: doors nobody can get through
+                                if (_doorBoltQuery.TryGetComponent(ent, out var doorBoltComponent) && doorBoltComponent.BoltsDown)
+                                    flags |= PathfindingBreadcrumbFlag.Bolted;
+
+                                if (doorComponent.State == DoorState.Welded)
+                                    flags |= PathfindingBreadcrumbFlag.Welded;
+                                // KS14 end
                             }
 
                             if (_climbableQuery.HasComponent(ent))
@@ -543,6 +560,18 @@ public sealed partial class PathfindingSystem
                                 damage += _destructible.DestroyedAt(ent, damageable).Float();
                             }
                         }
+
+                        // KS14 start: not a doorway, however many doors it has: just in the way. Door costs, and
+                        //      squad tactics' rooms, which take their doorways from this flag, would otherwise treat
+                        //      shutters over a window as a way in
+                        if (blockedBesidesDoors)
+                        {
+                            flags &= ~(PathfindingBreadcrumbFlag.Door |
+                                PathfindingBreadcrumbFlag.Access |
+                                PathfindingBreadcrumbFlag.Bolted |
+                                PathfindingBreadcrumbFlag.Welded);
+                        }
+                        // KS14 end
 
                         /*This is causing too many issues and I'd rather just ignore it until pathfinder refactor
                           to just get tiles at runtime.

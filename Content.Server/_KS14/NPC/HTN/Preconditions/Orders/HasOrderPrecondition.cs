@@ -16,9 +16,9 @@ public sealed partial class HasOrderPrecondition : HTNPrecondition
     [DataField] public List<NpcOrderKind> Kinds = new();
 
     /// <summary>
-    ///     If set, also whether the order comes with a locker to open, or does not.
+    ///     If set, also whether the order is about something - a locker to open, a door to force - or is not.
     /// </summary>
-    [DataField] public bool? WithStorage;
+    [DataField] public bool? WithTarget;
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
@@ -26,6 +26,6 @@ public sealed partial class HasOrderPrecondition : HTNPrecondition
             Kinds.Count > 0 && !Kinds.Contains(order.Kind))
             return false;
 
-        return WithStorage is not { } withStorage || (order.StorageUid != null) == withStorage;
+        return WithTarget is not { } withTarget || (order.TargetUid != null) == withTarget;
     }
 }

@@ -23,12 +23,15 @@ Each NPC feature is split four ways, and each part has one job:
 ### Worked examples
 
 - **`NpcPerceptionSystem`** (`Content.Server/_KS14/NPC/Perception/`) decides what each operative can see, has lost,
-  or believes is hiding in a locker, and keeps it in `NpcPerceptionComponent.Contacts`. It asks for a replan when a
+  or believes is hiding in a locker, and keeps it in `NpcPerceptionComponent.Contacts`. Deaths are beliefs too
+  (`NpcPerceptionSystem.Deaths.cs`): a hostile is known dead (`KnownDead`) only once seen dead, killed by this NPC,
+  or reported by a squadmate that knows, so nothing should test `MobStateSystem.IsDead` on a hostile to decide what
+  an NPC knows. Ask `IsKnownDead`. It asks for a replan when a
   target appears, vanishes, is reacted to or is called out. HTN reads it through `PerceivedContactsQuery`,
   `HasContactPrecondition` and `ContactVisiblePrecondition`. No operator ever raycasts for sight itself.
 - **`NpcSquadTacticsSystem`** (`Content.Server/_KS14/NPC/Squad/Tactics/`) is the same shape one level up. It reads
   every member's perception, decides what each should do about a hostile the squad has lost (watch, stack up,
-  breach, search, hold) or about nothing happening (regroup), and keeps the answer in `NpcOrderComponent`. HTN enters
+  go in, search, hold) or about nothing happening (regroup), and keeps the answer in `NpcOrderComponent`. HTN enters
   an order through `HasOrderPrecondition`, reads it with `GetOrderOperator`, and every task carrying it out rechecks
   `OrderCurrentPrecondition`. A changed order gets a new id and a `RequestReplan`, so it is taken up on the next tick.
 - **`NpcSquadCoverSystem`** works out which member covers which way into a room. **`NpcLineOfSightSystem`** is the
@@ -81,8 +84,8 @@ the grid. Put them into world space only at the moment of use, with the grid's c
 Nothing removes a key when the plan that wrote it ends, unless an operator does so in `TaskShutdown`. So
 `KeyExistsPrecondition` on a key some earlier plan wrote can pass on a leftover value. Two ways out:
 
-- Gate on the system's state instead of a key. `HasOrderPrecondition { withStorage: true }` reads the order itself,
-  rather than checking whether `OrderStorage` happens to be on the blackboard.
+- Gate on the system's state instead of a key. `HasOrderPrecondition { withTarget: true }` reads the order itself,
+  rather than checking whether `OrderTarget` happens to be on the blackboard.
 - Fold "work out the value" and "act on it" into one operator that writes the key in `Plan` and removes it in
   `TaskShutdown`. `DiveOperator` replaced a `GetDivePoint` → `DoWorldAction` chain for exactly this reason.
 
@@ -164,14 +167,16 @@ Consequences:
 1. Play dead
 2. Healing
 3. Grenades
-4. Ranged, then Melee
-5. Follow
-6. Search open, then Search cover
-7. Orders: Investigate, Watch, Stage, Breach, Search locker, Search spot, Hold area, Regroup
-8. Sensors
-9. Join squad
-10. Disengage
-11. Squad hold
+4. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
+5. Ranged, then Melee
+6. Follow
+7. Search open, then Search cover
+8. Door refused (a one-line callout; see Doors below)
+9. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
+10. Sensors
+11. Join squad
+12. Disengage
+13. Squad hold
 
 The header of that file lists every blackboard key and who writes it. Keep it current when you add one.
 
@@ -242,6 +247,53 @@ altogether. The task then succeeds without a word.
 
 Server-only prototype types (`npcMeter`, `npcVoiceSet`, `htnCompound`, ...) must be ignored on the client
 (`RegisterIgnore` in `Content.Client/Entry/EntryPoint.cs`), since the client loads the same prototype files.
+
+## Doors
+
+`NpcDoorSystem` keeps two things apart: what an NPC **believes** about a door, and what the door would **do**.
+- **Belief** (`GetDoorAccess`) goes by what anyone can see: the access list the door was built with
+  (`AccessReaderComponent.AccessListsOriginal`, what examining shows), emergency access, bolts, a weld, power. So a
+  door whose access was changed behind the NPC's back fools it.
+- **Forcing** (`TryGetBreachTool`) uses the game's own checks: `BeforePryEvent` raised on the door for prying tools,
+  and the access breaker's charges and cooldown.
+- **Being fooled** is noticed where it happens: steering's door handling (`NPCSteeringSystem.Obstacles.cs`) asks for
+  the belief before `TryOpen`, and reports a failure on a door it believed `Openable` (`ReportRefused`). The door
+  becomes a no-go in each squad member's own `NpcDoorUserComponent`, never on the squad.
+
+**Words.** "Breach" means forcing a door with a tool and nothing else; going in is "entry" (`NpcHuntPhase.Entry`,
+`NpcOrderKind.Enter`). Keep them apart in new code.
+
+**Speaking from a system.** A line the system wants said at once can't go through sensors: sensor data reaches the
+blackboard only when the sensors branch runs, and that is below orders. Do it like perception instead: a flag on a
+component (`NpcDoorUserComponent.RefusedAt`), a precondition reading it (`DoorRefusedPrecondition`), a root
+branch placed where it should interrupt, and an operator clearing it in `Startup` (`AcknowledgeDoorRefusedOperator`).
+
+**Taking something out.** Use `NpcHandsSystem` (`CanTakeOut`, `TryTakeOut`, `PutBack`); don't write your own. A
+hand holding a virtual item counts as free, because wielding fills the other hand with one. Freeing it means
+*dropping* the virtual item, which empties the hand at once. Unwielding instead only queues the virtual item's
+deletion for the end of the tick, so a following `TryGetEmptyHand` finds nothing. That is how a breacher used to
+unwield and wield again every tick without drawing, and was left with an orphaned virtual item and no plan that could
+run.
+
+**Tools in hand.** A breach is one job owned by `NpcDoorSystem` (`TryStartBreach`, `StopBreach`), with its progress
+on `NpcBreachingComponent`: draw and use, then the system's `Update` ends it when the door opens, the tool fails or time
+runs out, and puts the tool back with the weapon in hand. Two things start one: `BreachDoorOperator` for a Breach
+order (it stops the breach in `TaskShutdown` if cut short), and steering, for a door in the way that will not open
+(`TryBreachBlockingDoor`, off with `NpcDoorUser.breachWhenBlocked: false`); a breach steering started also ends when
+steering does. Not a chain of draw, use and stow tasks: one cut short halfway would leave the tool in hand with nothing
+to put it away. Note `TrySetActiveHand` returns false for a hand that is already active.
+
+**Pathfinding** flags bolted and welded doors (`PathfindingBreadcrumbFlag.Bolted`, `.Welded`) as walls, and rebuilds
+the chunk when bolts, welds or emergency access change (`PathfindingSystem.Klovn.Access.cs`). A crumb where a door
+shares the space with anything else anchored and solid (a window under shutters) loses its door flags, so it isn't a
+doorway to paths or to room detection, which takes doorways from `Door`. The navmesh is shared, so per-NPC knowledge
+goes on the request instead. When steering gives up at a door it could neither open nor force, it reports it
+(`NpcDoorSystem.ReportBlocked`), and that NPC's later path requests carry the door's tile as a wall
+(`PathRequest.AvoidedTiles`, `PathfindingSystem.Klovn.Avoid.cs`). Path requests run on worker threads, so anything
+`GetTileCost` reads has to be captured on the request when it is made.
+
+**Testing doors.** Test grids have no power, and an unpowered airlock opens for nobody by hand: spawn doors with
+`SpawnPoweredDoorAt`. A wall meant to force a path through a door has to run the whole width of the grid.
 
 ## Moving somewhere without going through somewhere
 
@@ -334,7 +386,7 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
 `ks_huntdebug [squad or NPC]` shows what squad tactics work out for a hunt, as they work it out:
 - the room's floor, red where unseen and green once seen;
 - its doorways;
-- each door's waiting spot and breach point;
+- each door's waiting spot and entry point;
 - each stager's route round the room;
 - lockers and spots to check, and who is on each;
 - sweep targets and orders;

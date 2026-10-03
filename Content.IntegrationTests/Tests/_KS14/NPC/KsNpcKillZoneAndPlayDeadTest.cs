@@ -61,6 +61,7 @@ public sealed class KsNpcKillZoneAndPlayDeadTest : GameTest
     meter: KsPlayDeadTestCaution
     threshold: 95
     chance: 1
+    maxDuration: 120
 
 - type: entity
   parent: KsPlayDeadTestFaker

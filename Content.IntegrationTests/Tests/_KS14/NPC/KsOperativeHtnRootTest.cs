@@ -69,6 +69,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     meter: KsOperativeRootTestCaution
     threshold: 95
     chance: 1
+    maxDuration: 120
 ";
 
     private const string CombatMarker = "OpInCombat";
@@ -176,6 +177,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     [TestCase(NpcOrderKind.Watch)]
     [TestCase(NpcOrderKind.Stage)]
     [TestCase(NpcOrderKind.Breach)]
+    [TestCase(NpcOrderKind.Enter)]
     [TestCase(NpcOrderKind.Search)]
     [TestCase(NpcOrderKind.HoldArea)]
     [TestCase(NpcOrderKind.Regroup)]
@@ -189,6 +191,94 @@ public sealed class KsOperativeHtnRootTest : GameTest
             Assert.That(plan.Tasks.Any(task => task.Operator is GetOrderOperator), $"expected the order to be read, got: {Describe(plan)}");
             Assert.That(plan.Tasks.Any(task => task.Operator is WaitForOrderChangeOperator), $"expected the order to be carried out, got: {Describe(plan)}");
             Assert.That(plan.Tasks.Any(task => task.Operator is OpenEntityStorageOperator), Is.False, $"only a locker search opens anything, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     A breach order forces the door it names: the plan includes forcing it, and still ends waiting for the next
+    ///         order.
+    /// </summary>
+    [Test]
+    public async Task TestBreachOrderForcesTheDoor()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Breach));
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Doors.BreachDoorOperator),
+            $"expected the door to be forced, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     An operative a door has just refused says so: above orders, so a hunt does not swallow the line, but below a
+    ///         fight, which it never interrupts.
+    /// </summary>
+    [Test]
+    public async Task TestRefusedDoorIsCalledOut()
+    {
+        static void Refuse(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
+        {
+            var doorUid = SpawnAt(entManager, "Airlock", gridUid, 2, 2);
+            entManager.System<Content.Server._KS14.NPC.Doors.NpcDoorSystem>().ReportRefused(mobUid, doorUid);
+        }
+
+        var refused = await PlanOperative(pendingSensorData: false, recentlyFought: true, stage: Refuse);
+        var refusedWithOrder = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                Refuse(entManager, mobUid, gridUid);
+                StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Stage);
+            });
+        var order = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Stage));
+        var search = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) => StageHidden(entManager, mobUid, gridUid, welded: false));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(refused.Tasks.Any(task => task.Operator is Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Doors.AcknowledgeDoorRefusedOperator),
+                $"expected the refusal to be called out, got: {Describe(refused)}");
+            Assert.That(refusedWithOrder.Tasks.Any(task => task.Operator is Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Doors.AcknowledgeDoorRefusedOperator),
+                $"with an order too, the callout should come first, got: {Describe(refusedWithOrder)}");
+            Assert.That(Replaces(refused, order), "a refusal should interrupt an order, to be said at the time");
+            Assert.That(Replaces(refused, search), Is.False, "but not a search, let alone a fight");
+        });
+    }
+
+    /// <summary>
+    ///     An operative that has just killed a hostile says so, even mid-fight with another: the line interrupts the
+    ///         fight for a moment, rather than coming after it, by which time it would mean nothing.
+    /// </summary>
+    [Test]
+    public async Task TestTargetDownIsCalledOut()
+    {
+        static void Kill(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
+        {
+            var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 3, 3);
+            var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+            entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Lost,
+                now, now, now, entManager.GetComponent<TransformComponent>(hostileUid).Coordinates, default, null, Reacted: true));
+            entManager.System<Content.Shared.Mobs.Systems.MobStateSystem>().ChangeMobState(hostileUid, Content.Shared.Mobs.MobState.Dead, origin: mobUid);
+        }
+
+        var downMidFight = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+                Kill(entManager, mobUid, gridUid);
+            });
+        var fight = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(downMidFight.Tasks.Any(task => task.Operator is Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Perception.AcknowledgeTargetDownOperator),
+                $"expected the kill to be called out, got: {Describe(downMidFight)}");
+            Assert.That(Replaces(downMidFight, fight), "the callout should interrupt the fight, to be said at the time");
         });
     }
 

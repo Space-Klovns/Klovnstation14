@@ -120,4 +120,16 @@ public enum PathfindingBreadcrumbFlag : ushort
     /// Is there climbing involved
     /// </summary>
     Climb = 1 << 4,
+
+    // KS14 start
+    /// <summary>
+    ///     A door with its bolts down: nobody opens it, and nothing pries it.
+    /// </summary>
+    Bolted = 1 << 5,
+
+    /// <summary>
+    ///     A door welded shut: nobody opens it, and nothing pries it.
+    /// </summary>
+    Welded = 1 << 6,
+    // KS14 end
 }

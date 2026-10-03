@@ -27,7 +27,10 @@
     KsOperativeLostContact: KsOperativeNtLostContact
     KsOperativeInvestigating: KsOperativeNtInvestigating
     KsOperativeStaging: KsOperativeNtStaging
+    KsOperativeEntering: KsOperativeNtEntering
     KsOperativeBreaching: KsOperativeNtBreaching
+    KsOperativeDoorLocked: KsOperativeNtDoorLocked
+    KsOperativeTargetDown: KsOperativeNtTargetDown
     KsOperativeSearchingArea: KsOperativeNtSearchingArea
     KsOperativeRegrouping: KsOperativeNtRegrouping
 
@@ -143,6 +146,18 @@
   id: KsOperativeNtBreaching
   values:
     prefix: ks-operative-nt-line-breaching-
+    count: 2
+
+- type: localizedDataset
+  id: KsOperativeNtDoorLocked
+  values:
+    prefix: ks-operative-nt-line-door-locked-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtEntering
+  values:
+    prefix: ks-operative-nt-line-entering-
     count: 3
 
 - type: localizedDataset
@@ -156,3 +171,9 @@
   values:
     prefix: ks-operative-nt-line-regrouping-
     count: 2
+
+- type: localizedDataset
+  id: KsOperativeNtTargetDown
+  values:
+    prefix: ks-operative-nt-line-target-down-
+    count: 3

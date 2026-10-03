@@ -36,6 +36,15 @@ public abstract class PathRequest
     public readonly int CollisionLayer;
     public readonly int CollisionMask;
 
+    // KS14 start
+    /// <summary>
+    ///     Door tiles this request's NPC has found it cannot get through, by grid: walls, as far as it is concerned. Built
+    ///         on the main thread when the request is made and only read after, so the worker threads may share it.
+    ///         Null when there are none. See <c>PathfindingSystem.Klovn.Avoid.cs</c>.
+    /// </summary>
+    public HashSet<(EntityUid Grid, Vector2i Tile)>? AvoidedTiles;
+    // KS14 end
+
     #endregion
 
     public PathRequest(EntityCoordinates start, PathFlags flags, int layer, int mask, CancellationToken cancelToken)

@@ -79,9 +79,16 @@ ks-operative-nt-line-staging-1 = Take positions.
 ks-operative-nt-line-staging-2 = Seal the exits.
 ks-operative-nt-line-staging-3 = Stack up.
 
-ks-operative-nt-line-breaching-1 = Breach.
-ks-operative-nt-line-breaching-2 = Execute.
-ks-operative-nt-line-breaching-3 = Entering.
+ks-operative-nt-line-breaching-1 = Forcing entry.
+ks-operative-nt-line-breaching-2 = Breaching.
+
+ks-operative-nt-line-door-locked-1 = Entry denied.
+ks-operative-nt-line-door-locked-2 = Door unresponsive.
+ks-operative-nt-line-door-locked-3 = Access revoked. Breach required.
+
+ks-operative-nt-line-entering-1 = Move in.
+ks-operative-nt-line-entering-2 = Execute.
+ks-operative-nt-line-entering-3 = Entering.
 
 ks-operative-nt-line-searchingarea-1 = Sweeping.
 ks-operative-nt-line-searchingarea-2 = Clearing.
@@ -90,3 +97,7 @@ ks-operative-nt-line-searchingarea-4 = Corner clear.
 
 ks-operative-nt-line-regrouping-1 = Rejoining squad.
 ks-operative-nt-line-regrouping-2 = Returning to squad.
+
+ks-operative-nt-line-target-down-1 = Target neutralized.
+ks-operative-nt-line-target-down-2 = Hostile down.
+ks-operative-nt-line-target-down-3 = Threat eliminated.

@@ -93,7 +93,7 @@ public sealed class HuntDebugEndedMessage : EntityEventArgs
 }
 
 [Serializable, NetSerializable]
-public readonly record struct HuntDebugEntrance(NetCoordinates Stage, NetCoordinates Breach);
+public readonly record struct HuntDebugEntrance(NetCoordinates Stage, NetCoordinates Entry);
 
 [Serializable, NetSerializable]
 public sealed class HuntDebugRoute
