@@ -477,6 +477,17 @@ public sealed partial class NpcDoorSystem : EntitySystem
         RemComp<NpcBreachingComponent>(npcUid);
     }
 
+    /// <summary>
+    ///     Steering has stopped for <paramref name="npcUid"/>: a breach it started on the way ends with it, at once. Left
+    ///         to <see cref="Update"/>, whatever the NPC does next - a plan that replaced the one it was walking for -
+    ///         would start with the tool still in its hand, and could drop it.
+    /// </summary>
+    public void StopSteeringBreach(EntityUid npcUid)
+    {
+        if (_breachingQuery.TryComp(npcUid, out var breachingComponent) && breachingComponent.FromSteering)
+            StopBreach(npcUid);
+    }
+
     public override void Update(float frameTime)
     {
         base.Update(frameTime);

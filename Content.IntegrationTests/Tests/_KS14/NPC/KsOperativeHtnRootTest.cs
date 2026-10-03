@@ -69,7 +69,6 @@ public sealed class KsOperativeHtnRootTest : GameTest
     meter: KsOperativeRootTestCaution
     threshold: 95
     chance: 1
-    maxDuration: 120
 ";
 
     private const string CombatMarker = "OpInCombat";

@@ -97,7 +97,6 @@ public sealed class KsNpcCombatTuningTest : GameTest
             JukeType = JukeType.Away,
             MaxFiringDistanceKey = "MaxFiringDistance",
             StrafeDuration = strafe ? 0.6f : null,
-            StrafePause = 0.4f,
         };
         EntityUid shooterUid = default;
 
@@ -190,7 +189,7 @@ public sealed class KsNpcCombatTuningTest : GameTest
     public async Task TestDiveStopsShortOfWalls(int? wallTiles, float? expectedDistance)
     {
         var (entManager, gridUid) = await SetUpOpenGrid();
-        var diveOperator = new DiveOperator { Id = DiveAction, MaxDistance = 3.5f, MinDistance = 1.5f, ObstacleMargin = 0.6f };
+        var diveOperator = new DiveOperator { Id = DiveAction };
         EntityUid diverUid = default;
 
         await Pair.Server.WaitPost(() =>
@@ -236,7 +235,7 @@ public sealed class KsNpcCombatTuningTest : GameTest
     public async Task TestNpcWithoutDiveDoesNotDive()
     {
         var (entManager, gridUid) = await SetUpOpenGrid();
-        var diveOperator = new DiveOperator { Id = DiveAction, MaxDistance = 3.5f, MinDistance = 1.5f, ObstacleMargin = 0.6f };
+        var diveOperator = new DiveOperator { Id = DiveAction };
 
         await Pair.Server.WaitAssertion(() =>
         {

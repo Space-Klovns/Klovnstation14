@@ -67,75 +67,9 @@ public static class KsNpcSquadTestHelpers
   - type: NpcFactionMember
     factions:
     - Syndicate
-  # Every setting spelled out, not left to its default: a test must not change meaning because a default did.
-  #   AlwaysPushInheritance on cover and tactics means a test mob overriding one of them keeps the rest.
   - type: NpcSquadMember
-    maxSquadSize: 4
-    assimilationThreshold: 2
-    joinRange: 12
-    canLead: true
-    cover:
-      maxRoomTiles: 150
-      hallwayWidth: 3
-      minStandoff: 1.5
-      idealStandoff: 3
-      maxStandoff: 6
-      funnelAngle: 15
-      minPreferredAngle: 25
-      maxPreferredAngle: 65
-      exposureAvoidRange: 2.5
-      wallPreference: 0.25
-      planLifetime: 15
-      threatMoveTolerance: 3
-      claimClearanceRadius: 1.5
-      threatObjectiveLifetime: 40
-      killZoneAvoidance: 0
-    tactics:
-      huntStartAge: 6
-      watchTime: 4
-      huntTimeout: 25
-      stageTimeout: 6
-      entryTimeout: 5
-      breachTimeout: 10
-      holdAreaTime: 8
-      canStackUp: true
-      stageDistance: 1.5
-      stageArriveRange: 1
-      maxStageDistance: 16
-      entranceTargetPreference: 2
-      entryDepth: 1.5
-      searchRadius: 6
-      maxSearchPoints: 10
-      searchCoverage: 1
-      clearRange: 7
-      searchPointTimeout: 12
-      cautiousHuntThreshold: 30
-      cautiousRegroupDistance: 3.5
-      regroupDistance: 8
-      regroupRange: 2.5
-      regroupQuietTime: 20
   - type: NpcSensors
   - type: NpcPerception
-    updateInterval: 0.2
-    memoryTime: 30
-    concealedMemoryTime: 60
-    reactionTime: 0.6
-    reactionForgetTime: 2
-    darknessReactionScale: 1
-    alertMarker: OpInCombat
-    squadAlertWindow: 20
-    proximityRange: 2.5
-    minimumLightLevel: 0.03
-    revealSpeed: 4
-    darkTrackTime: 2.5
-    trackSpeed: 0.5
-    deadReckoningTime: 3
-    suspicionRange: 1.25
-    calloutInterval: 1
-  - type: NpcDoorUser
-    breachWhenBlocked: true
-    forgetAfter: 120
-    blockedForgetAfter: 30
 
 - type: entity
   id: KsSquadTestMobLoner
@@ -168,26 +102,6 @@ public static class KsNpcSquadTestHelpers
     factions:
     - Syndicate
   - type: NpcPerception
-    updateInterval: 0.2
-    memoryTime: 30
-    concealedMemoryTime: 60
-    reactionTime: 0.6
-    reactionForgetTime: 2
-    darknessReactionScale: 1
-    alertMarker: OpInCombat
-    squadAlertWindow: 20
-    proximityRange: 2.5
-    minimumLightLevel: 0.03
-    revealSpeed: 4
-    darkTrackTime: 2.5
-    trackSpeed: 0.5
-    deadReckoningTime: 3
-    suspicionRange: 1.25
-    calloutInterval: 1
-  - type: NpcDoorUser
-    breachWhenBlocked: true
-    forgetAfter: 120
-    blockedForgetAfter: 30
 
 - type: entity
   parent: KsSquadTestMobSyndicate
@@ -228,16 +142,14 @@ public static class KsNpcSquadTestHelpers
     cover:
       wallPreference: -1
 
-# Real tools, with what the door tests rely on about them spelled out: what pries what, how fast, how many charges.
+# Real tools, with what the door tests' assertions rely on about them spelled out: which doors each one pries, and
+#   that the breaker breaks access.
 - type: entity
   parent: Crowbar
   id: KsTestCrowbar
   components:
   - type: Prying
-    enabled: true
     pryPowered: false
-    force: false
-    speedModifier: 1
 
 - type: entity
   parent: JawsOfLife
@@ -245,8 +157,6 @@ public static class KsNpcSquadTestHelpers
   components:
   - type: Prying
     pryPowered: true
-    force: false
-    speedModifier: 1.5
 
 - type: entity
   parent: AccessBreaker
@@ -254,11 +164,6 @@ public static class KsNpcSquadTestHelpers
   components:
   - type: Emag
     emagType: Access
-    emagImmuneTag: AccessBreakerImmune
-  - type: LimitedCharges
-    maxCharges: 3
-  - type: AutoRecharge
-    rechargeDuration: 90
 ";
 
     /// <summary>

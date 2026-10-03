@@ -327,12 +327,7 @@ public sealed class KsNpcDoorTest : GameTest
     public async Task TestBreachDrawsUsesAndStowsTheTool(bool finish)
     {
         var (entManager, gridUid) = await SetUpGrid();
-        var breachDoorOperator = new BreachDoorOperator
-        {
-            DoorKey = "OrderTarget",
-            ToolKey = "OrderTool",
-            Timeout = System.TimeSpan.FromSeconds(10),
-        };
+        var breachDoorOperator = new BreachDoorOperator();
         EntityUid doorUid = default, npcUid = default, crowbarUid = default, beltUid = default;
         var blackboard = new NPCBlackboard();
 
@@ -599,6 +594,68 @@ public sealed class KsNpcDoorTest : GameTest
             Assert.That(entManager.GetComponent<DoorComponent>(doorUid).State, Is.EqualTo(DoorState.Closed), "the door never opened");
             Assert.That(entManager.GetComponent<TransformComponent>(walkerUid).LocalPosition.X, Is.GreaterThan(3f),
                 "it should have gone round, through the gap");
+        });
+    }
+
+    /// <summary>
+    ///     A breach steering started for a door in the way ends the moment steering does - the walk replaced by something
+    ///         more pressing - with the tool back on the belt there and then. Left to the end of the tick, whatever came
+    ///         next ran its first tasks with the tool still in hand, and could drop it.
+    /// </summary>
+    [Test]
+    public async Task TestSteeringBreachEndsWithSteering()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var doorSystem = entManager.System<NpcDoorSystem>();
+        EntityUid walkerUid = default, crowbarUid = default, beltUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            for (var y = -6; y <= 6; y++)
+            {
+                if (y == 0)
+                    SpawnAt(entManager, SecurityDoor, gridUid, 2, 0); // unpowered: a crowbar pries it
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
+            handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
+            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
+            crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false));
+        });
+
+        await Pair.RunTicksSync(90); // navmesh
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var htnComponent = entManager.GetComponent<HTNComponent>(walkerUid);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavInteract, true);
+            entManager.System<NPCSteeringSystem>().Register(walkerUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            entManager.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
+        });
+
+        var breaching = false;
+        for (var i = 0; i < 240 && !breaching; i++)
+        {
+            await Pair.RunTicksSync(1);
+            await Pair.Server.WaitPost(() => breaching = doorSystem.IsBreaching(walkerUid));
+        }
+
+        Assert.That(breaching, "it should have started forcing the door on its way");
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            entManager.System<NPCSteeringSystem>().Unregister(walkerUid);
+            Assert.Multiple(() =>
+            {
+                Assert.That(doorSystem.IsBreaching(walkerUid), Is.False, "the breach should end with the walk, at once");
+                Assert.That(entManager.GetComponent<StorageComponent>(beltUid).Container.Contains(crowbarUid), "with the crowbar back in the belt");
+            });
         });
     }
 

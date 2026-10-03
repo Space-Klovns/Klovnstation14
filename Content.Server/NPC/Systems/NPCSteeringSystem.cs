@@ -222,6 +222,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         component.PathfindToken?.Cancel();
         component.PathfindToken = null;
         RemComp<NPCSteeringComponent>(uid);
+        _npcDoorSystem.StopSteeringBreach(uid); // KS14: a door it was forcing on the way: the tool goes back now, not after whatever comes next has run with it in hand
     }
 
     public override void Update(float frameTime)

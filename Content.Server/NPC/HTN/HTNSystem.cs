@@ -400,6 +400,7 @@ public sealed partial class HTNSystem : EntitySystem
                 case HTNOperatorStatus.Failed:
                     ShutdownTask(currentOperator, blackboard, status);
                     ShutdownPlan(component);
+                    KsDiscardStalePlanning(component); // KS14
                     break;
                 // Operator completed so go to the next one.
                 case HTNOperatorStatus.Finished:
@@ -410,6 +411,7 @@ public sealed partial class HTNSystem : EntitySystem
                     if (component.Plan.Tasks.Count <= component.Plan.Index)
                     {
                         ShutdownPlan(component);
+                        KsDiscardStalePlanning(component); // KS14
                         break;
                     }
 
