@@ -3,12 +3,12 @@ using Content.Server.NPC.Pathfinding;
 namespace Content.Server._KS14.NPC.Pathfinding;
 
 /// <summary>
-///     The open set of a <see cref="TacticalPathRequest"/>'s flood: a binary min-heap of polys by cost so far, cheapest
-///         first. Exists so it can be pooled - the engine's <c>PriorityQueue</c> reallocates its array on
-///         <c>Clear</c> and on shrinking, and .NET's is not allowed by the sandbox - and <see cref="Clear"/> here
-///         keeps its capacity, so a pooled one stops allocating once it has grown to fit a flood.
+///     The open set of a pathfinding search - an A* path or a tactical flood: a binary min-heap of polys by cost,
+///         cheapest first. Exists so it can be pooled: the engine's <c>PriorityQueue</c> reallocates its array on
+///         <c>Clear</c> and on shrinking, while <see cref="Clear"/> here keeps its capacity, so a pooled one stops
+///         allocating once it has grown to fit a search.
 /// </summary>
-public sealed class TacticalFrontier
+public sealed class PathPolyFrontier
 {
     private readonly List<(float Cost, PathPoly Poly)> _heap = new();
 

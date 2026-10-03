@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Server._KS14.NPC.Perception;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Doors.Components;
 using Content.Shared.Storage.Components;
@@ -34,6 +35,11 @@ public sealed partial class NpcSquadTacticsSystem
     private readonly HashSet<Entity<EntityStorageComponent>> _nearbyStorages = new();
     private readonly List<(EntityUid StorageUid, float DistanceSquared)> _lockers = new();
     private readonly List<Vector2i> _newlySeenTiles = new();
+
+    /// <summary>
+    ///     What one member can see from where it stands, rebuilt for each member in turn. Reused.
+    /// </summary>
+    private readonly NpcSightField _coverageSightField = new();
 
     #region Setting up
 
@@ -308,6 +314,10 @@ public sealed partial class NpcSquadTacticsSystem
             var memberMapCoordinates = _transformSystem.GetMapCoordinates(memberUid);
             var memberLocalPosition = Vector2.Transform(memberMapCoordinates.Position, invWorldMatrix);
 
+            // One gathering of what could block the member's sight, then a few tests a tile, rather than a tile walk
+            //      a tile: the same answers, for a fraction of the work over a room.
+            _npcLineOfSightSystem.BuildSightField(memberMapCoordinates, settings.ClearRange, _coverageSightField);
+
             foreach (var tile in hunt.UnseenTiles)
             {
                 var tileLocalPosition = _mapSystem.TileCenterToVector(grid, tile);
@@ -315,7 +325,7 @@ public sealed partial class NpcSquadTacticsSystem
                     continue;
 
                 var tileMapCoordinates = new MapCoordinates(Vector2.Transform(tileLocalPosition, worldMatrix), memberMapCoordinates.MapId);
-                if (_npcLineOfSightSystem.InLineOfSight(memberMapCoordinates, tileMapCoordinates, settings.ClearRange))
+                if (_npcLineOfSightSystem.InLineOfSight(_coverageSightField, tileMapCoordinates))
                     _newlySeenTiles.Add(tile);
             }
         }

@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices; // KS14
+using Content.Server._KS14.NPC.Pathfinding; // KS14
 using Content.Shared.NPC;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
@@ -20,23 +22,25 @@ public sealed partial class PathfindingSystem
 
         // TODO: Need partial planning that uses best node.
         PathPoly? currentNode = null;
+        var firstSlice = !request.Started; // KS14
 
         // First run
         if (!request.Started)
         {
-            request.Frontier = new PriorityQueue<(float, PathPoly)>(PathPolyComparer);
+            /* request.Frontier = new PriorityQueue<(float, PathPoly)>(PathPolyComparer); */ // KS14: pooled frontier, rented when queued
+            request.PolyFrontier ??= new PathPolyFrontier(); // KS14
             request.Started = true;
         }
         // Re-validate nodes
         else
         {
             // Theoretically this shouldn't be happening, but practically...
-            if (request.Frontier.Count == 0)
+            if (request.PolyFrontier! /* KS14: Frontier -> PolyFrontier */.Count == 0)
             {
                 return PathResult.NoPath;
             }
 
-            (_, currentNode) = request.Frontier.Peek();
+            currentNode = request.PolyFrontier.Peek(); // KS14: (_, currentNode) = request.Frontier.Peek() -> PolyFrontier
 
             if (!currentNode.IsValid())
             {
@@ -62,35 +66,64 @@ public sealed partial class PathfindingSystem
         }
 
         currentNode = startNode;
-        request.Frontier.Add((0.0f, startNode));
-        request.CostSoFar[startNode] = 0.0f;
+
+        // KS14 start: seeded on the first slice only. A search too slow for one tick carries on where it left off;
+        //      seeding it again re-expanded everything from the start on every slice
+        if (firstSlice)
+        {
+            request.PolyFrontier.Add(0.0f, startNode);
+            request.CostSoFar[startNode] = 0.0f;
+        }
+        // KS14 end
+        /* request.Frontier.Add((0.0f, startNode)); */ // KS14: moved above
+        /* request.CostSoFar[startNode] = 0.0f; */ // KS14: moved above
         var count = 0;
         var arrived = false;
 
-        while (request.Frontier.Count > 0 && count < NodeLimit)
+        // KS14 start: where the end is, in the end poly's grid, worked out once a slice rather than resolving both
+        //      sets of coordinates through their transforms for every node expanded
+        var endLocalPosition = request.End.EntityId == endNode.GraphUid
+            ? request.End.Position
+            : _transform.WithEntityId(request.End, endNode.GraphUid).Position;
+        var arrivalDistanceSquared = request.Distance * request.Distance;
+        // KS14 end
+
+        while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && count < NodeLimit)
         {
             // Handle whether we need to pause if we've taken too long
             if (count % 20 == 0 && count > 0 && request.Stopwatch.Elapsed > PathTime)
             {
                 // I had this happen once in testing but I don't think it should be possible?
-                DebugTools.Assert(request.Frontier.Count > 0);
+                DebugTools.Assert(request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0);
                 return PathResult.Continuing;
             }
 
             count++;
 
             // Actual pathfinding here
-            (_, currentNode) = request.Frontier.Take();
+            currentNode = request.PolyFrontier.Take(); // KS14: (_, currentNode) = request.Frontier.Take() -> PolyFrontier
 
             // If we're inside the required distance OR we're at the end node.
+            // KS14 start: against the end worked out above where the node is on the same grid; through the transforms
+            //      only for one on another, past a portal
+            if ((request.Distance > 0f &&
+                (currentNode.GraphUid == endNode.GraphUid
+                    ? (currentNode.Box.Center - endLocalPosition).LengthSquared() <= arrivalDistanceSquared
+                    : currentNode.Coordinates.TryDistance(EntityManager, request.End, out var distance) && distance <= request.Distance)) ||
+                ReferenceEquals(currentNode, endNode))
+            // KS14 end
+            /*
             if ((request.Distance > 0f &&
                 currentNode.Coordinates.TryDistance(EntityManager, request.End, out var distance) &&
                 distance <= request.Distance) ||
                 currentNode.Equals(endNode))
+            */
             {
                 arrived = true;
                 break;
             }
+
+            var currentCost = request.CostSoFar[currentNode]; // KS14: read once a node, not once a neighbour
 
             foreach (var neighbor in currentNode.Neighbors)
             {
@@ -104,14 +137,27 @@ public sealed partial class PathfindingSystem
                 // f = g + h
                 // gScore is distance to the start node
                 // hScore is distance to the end node
-                var gScore = request.CostSoFar[currentNode] + tileCost;
-                if (request.CostSoFar.TryGetValue(neighbor, out var nextValue) && gScore >= nextValue)
+                var gScore = currentCost /* KS14: request.CostSoFar[currentNode] -> currentCost */ + tileCost;
+
+                // KS14 start: one lookup, not a read and then a write
+                ref var neighborCost = ref CollectionsMarshal.GetValueRefOrAddDefault(request.CostSoFar, neighbor, out var reached);
+                if (reached && gScore >= neighborCost)
                 {
                     continue;
                 }
 
+                neighborCost = gScore;
+                // KS14 end
+                // KS14: replaced above
+                /*
+                if (request.CostSoFar.TryGetValue(neighbor, out var nextValue) && gScore >= nextValue)
+                {
+                    continue;
+                }
+                */
+
                 request.CameFrom[neighbor] = currentNode;
-                request.CostSoFar[neighbor] = gScore;
+                /* request.CostSoFar[neighbor] = gScore; */ // KS14: set above
                 // pFactor is tie-breaker where the fscore is otherwise equal.
                 // See http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#breaking-ties
                 // There's other ways to do it but future consideration
@@ -120,7 +166,7 @@ public sealed partial class PathfindingSystem
                 // Can use hierarchical pathfinder or whatever to improve the heuristic but this is fine for now.
                 var hScore = OctileDistance(endNode, neighbor) * (1.0f + 1.0f / 1000.0f);
                 var fScore = gScore + hScore;
-                request.Frontier.Add((fScore, neighbor));
+                request.PolyFrontier.Add(fScore, neighbor); // KS14: request.Frontier.Add((fScore, neighbor)) -> PolyFrontier
             }
         }
 
@@ -130,7 +176,7 @@ public sealed partial class PathfindingSystem
         }
 
         var route = ReconstructPath(request.CameFrom, currentNode);
-        var path = new Queue<EntityCoordinates>(route.Count);
+        /* var path = new Queue<EntityCoordinates>(route.Count); */ // KS14: built and never read
 
         foreach (var node in route)
         {
@@ -140,7 +186,7 @@ public sealed partial class PathfindingSystem
                 return PathResult.NoPath;
             }
 
-            path.Enqueue(node.Coordinates);
+            /* path.Enqueue(node.Coordinates); */ // KS14: see above
         }
 
         DebugTools.Assert(route.Count > 0);

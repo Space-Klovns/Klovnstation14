@@ -225,6 +225,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // Just keep moving in the background and let the other tasks handle it.
         if ((ShutdownState == HTNPlanState.PlanFinished || ShutdownState == HTNPlanState.Never /* KS14: ANK: include Never */) && steering.Status == SteeringStatus.Moving)
         {
+            _entManager.EnsureComponent<NpcBackgroundMoveComponent>(owner); // KS14: later tasks run with its hands now; see the component
             return HTNOperatorStatus.Finished;
         }
 

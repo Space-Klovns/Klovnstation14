@@ -1,9 +1,9 @@
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Content.Server.Examine;
 using Content.Server._KS14.NPC.Exposure;
 using Content.Server._KS14.NPC.KillZones;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.NPC;
@@ -40,8 +40,8 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private NpcKillZoneSystem _npcKillZoneSystem = default!;
     [Dependency] private NpcExposureSystem _npcExposureSystem = default!;
+    [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
-    [Dependency] private ExamineSystem _examineSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     /// <summary>
@@ -94,6 +94,14 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public float RandomProbability;
 
     [DataField] public float ClaimClearanceRadius = 2.5f;
+
+    /// <summary>
+    ///     Whether anywhere within <see cref="ClaimClearanceRadius"/> of a spot another NPC has claimed is ruled out,
+    ///         rather than only scored down the nearer it gets. For spots only one may hold - peeking a corner, say -
+    ///         where a second NPC taking the next best spot beside the first is the thing to prevent. The owner's own
+    ///         claim never rules out its own spot.
+    /// </summary>
+    [DataField] public bool ExclusiveClaims;
 
     /// <summary>
     ///     Whether to keep out of squadmates' lines of fire, and them out of ours - the line from a candidate to
@@ -362,11 +370,10 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         if (LosReferenceCoordinatesKey is not null &&
             blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var losReference, _entityManager))
         {
-            var losRaw = _examineSystem.InRangeUnOccluded(
+            var losRaw = _npcLineOfSightSystem.InLineOfSight(
                 _transformSystem.ToMapCoordinates(candidate.Coordinates),
                 _transformSystem.ToMapCoordinates(losReference),
-                LosRadius + 0.5f,
-                null) ? 1f : 0f;
+                LosRadius + 0.5f) ? 1f : 0f;
 
             score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(LosCurve, losRaw), considerationCount);
 
@@ -416,8 +423,16 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
                 return 0f;
         }
 
-        var claimPenalty = _npcTacticalPositionClaimSystem.GetClaimPenalty(candidate.Coordinates, ClaimClearanceRadius);
-        score *= _npcUtilitySystem.GetAdjustedScore(claimPenalty, considerationCount);
+        if (ExclusiveClaims)
+        {
+            if (_npcTacticalPositionClaimSystem.GetClaimPenalty(candidate.Coordinates, ClaimClearanceRadius, ignoreClaimantUid: owner) < 1f)
+                return 0f;
+        }
+        else
+        {
+            var claimPenalty = _npcTacticalPositionClaimSystem.GetClaimPenalty(candidate.Coordinates, ClaimClearanceRadius);
+            score *= _npcUtilitySystem.GetAdjustedScore(claimPenalty, considerationCount);
+        }
 
         return score;
     }

@@ -125,6 +125,33 @@ public sealed class KsNpcDoorTest : GameTest
     size: Large
   - type: Wieldable
 
+- type: htnCompound
+  id: KsDoorTestBackgroundMoveRoot
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        shutdownState: PlanFinished
+        pathfindInPlanning: false
+        removeKeyOnFinish: false
+        targetKey: KsDoorTestTarget
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: KsDoorTestWait
+
+- type: htnCompound
+  id: KsDoorTestForegroundMoveRoot
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        pathfindInPlanning: false
+        removeKeyOnFinish: false
+        targetKey: KsDoorTestTarget
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: KsDoorTestWait
+
 - type: entity
   parent: KsDoorTestMobBlockedWalker
   id: KsDoorTestMobPatientWalker
@@ -458,6 +485,210 @@ public sealed class KsNpcDoorTest : GameTest
                 Assert.That(entManager.GetComponent<StorageComponent>(beltUid).Container.Contains(crowbarUid), "and put the crowbar back");
                 Assert.That(entManager.HasComponent<NpcBreachingComponent>(walkerUid), Is.False, "with nothing left over");
             });
+        });
+    }
+
+    /// <summary>
+    ///     A door shut to the NPC is a shortcut, not the only way: there is a way round, longer than the door is worth to
+    ///         the pathfinder, so its first path runs through the door. It goes round rather than force the door, which
+    ///         stays shut, with the crowbar still on its belt. <see cref="TestBlockedWayIsForced"/> is the other half:
+    ///         with no way round, it forces the door.
+    /// </summary>
+    [Test]
+    public async Task TestShortcutDoorIsGoneRoundNotForced()
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, doorUid = default, walkerUid = default, crowbarUid = default, beltUid = default;
+
+        await server.WaitPost(() =>
+        {
+            // Small, so the pathfinder's node limit is not what decides it.
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-3, -1), new Vector2i(7, 13)).Owner;
+
+            // A wall up the grid: the door at the bottom, a gap at the top - round by the gap is far longer.
+            for (var y = -1; y <= 12; y++)
+            {
+                if (y == 0)
+                    doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 2, 0);
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
+
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
+            handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
+            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
+            crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false), "the crowbar should go in the belt");
+        });
+
+        await Pair.RunTicksSync(90); // navmesh
+
+        await server.WaitPost(() =>
+        {
+            var htnComponent = entManager.GetComponent<HTNComponent>(walkerUid);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavInteract, true);
+            entManager.System<NPCSteeringSystem>().Register(walkerUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            entManager.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
+        });
+
+        await Pair.RunTicksSync(900);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.GetComponent<DoorComponent>(doorUid).State, Is.EqualTo(DoorState.Closed),
+                    "with a way round, it should have left the door shut");
+                Assert.That(entManager.GetComponent<StorageComponent>(beltUid).Container.Contains(crowbarUid),
+                    "and never taken the crowbar out");
+                Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f),
+                    "it should have got there the long way");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A move that is the plan's task at hand forces the door in its way. One carried on in the background - while a
+    ///         later task, a wait standing in for a reload, has the NPC's hands - does not: forcing it there takes the tool
+    ///         out under the reload, which throws it on the floor.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestOnlyAForegroundMoveForcesTheDoor(bool background)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid doorUid = default, walkerUid = default, crowbarUid = default, beltUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            for (var y = -6; y <= 6; y++)
+            {
+                if (y == 0)
+                    doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 2, 0); // unpowered: a crowbar pries it
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
+
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
+            handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
+            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
+            crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false), "the crowbar should go in the belt");
+        });
+
+        await Pair.RunTicksSync(90); // navmesh
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var htnComponent = entManager.GetComponent<HTNComponent>(walkerUid);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavInteract, true);
+            htnComponent.Blackboard.SetValue("KsDoorTestTarget", new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            htnComponent.Blackboard.SetValue("KsDoorTestWait", 60f);
+            htnComponent.RootTask = new HTNCompoundTask { Task = background ? "KsDoorTestBackgroundMoveRoot" : "KsDoorTestForegroundMoveRoot" };
+            entManager.System<HTNSystem>().SetHTNEnabled((walkerUid, htnComponent), true);
+            entManager.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
+        });
+
+        await Pair.RunTicksSync(240);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var doorState = entManager.GetComponent<DoorComponent>(doorUid).State;
+            Assert.Multiple(() =>
+            {
+                if (background)
+                {
+                    Assert.That(entManager.HasComponent<Content.Server.NPC.Components.NPCSteeringComponent>(walkerUid), Is.True,
+                        "it should still be trying to get there in the background, or the move ended for some other reason");
+                    Assert.That(doorState, Is.EqualTo(DoorState.Closed), "moving in the background, it should have left the door shut");
+                }
+                else
+                {
+                    Assert.That(doorState, Is.AnyOf(DoorState.Opening, DoorState.Open), "with the move its task, it should have forced the door");
+                }
+
+                Assert.That(entManager.GetComponent<StorageComponent>(beltUid).Container.Contains(crowbarUid), "the crowbar should be in the belt either way");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A powered door forced open with jaws of life shuts again behind the NPC. Walking back the way it came, it
+    ///         forces it again, rather than bumping into it until it gives up.
+    /// </summary>
+    [Test]
+    public async Task TestDoorForcedOnTheWayInIsForcedOnTheWayBack()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid doorUid = default, walkerUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            for (var y = -6; y <= 6; y++)
+            {
+                if (y == 0)
+                    doorUid = SpawnPoweredDoorAt(entManager, SecurityDoor, gridUid, 2, 0); // powered: only jaws of life pry it
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
+
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
+            handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
+            var beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
+            var jawsUid = entManager.SpawnEntity("KsTestJawsOfLife", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, jawsUid, out _, playSound: false), "the jaws should go in the belt");
+        });
+
+        await Pair.RunTicksSync(90); // navmesh, and the door powered
+
+        var steeringSystem = entManager.System<NPCSteeringSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var htnComponent = entManager.GetComponent<HTNComponent>(walkerUid);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavInteract, true);
+            steeringSystem.Register(walkerUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            entManager.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
+        });
+
+        await Pair.RunTicksSync(600); // jaws of life take a while on a powered door
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(transformSystem.GetWorldPosition(walkerUid).X, Is.GreaterThan(3f), "it should have forced its way through");
+            steeringSystem.Unregister(walkerUid);
+        });
+
+        // Until the door has shut behind it.
+        for (var i = 0; i < 40 && entManager.GetComponent<DoorComponent>(doorUid).State != DoorState.Closed; i++)
+        {
+            await Pair.RunTicksSync(30);
+        }
+
+        Assert.That(entManager.GetComponent<DoorComponent>(doorUid).State, Is.EqualTo(DoorState.Closed), "the door should have shut again");
+
+        await Pair.Server.WaitPost(() => steeringSystem.Register(walkerUid, new EntityCoordinates(gridUid, new Vector2(-0.5f, 0.5f))));
+        await Pair.RunTicksSync(600);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(transformSystem.GetWorldPosition(walkerUid).X, Is.LessThan(1f), "it should have forced its way back through");
         });
     }
 

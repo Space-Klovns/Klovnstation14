@@ -5,6 +5,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Exposure;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server._KS14.NPC.Perception;
+using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Curves;
 using Robust.Shared.GameObjects;
@@ -131,6 +132,56 @@ public sealed class KsNpcExposureTest : GameTest
             else
                 Assert.That(exposure, Is.GreaterThan(0f), $"without exposure, the nearest hidden spot - round the corner - should win, not {chosen.Position}");
         });
+    }
+
+    /// <summary>
+    ///     <see cref="TacticalPositionOperator.ExclusiveClaims"/>: every spot within reach lies inside one claim. A
+    ///         squadmate's claim rules them all out, so no spot is found; a soft claim only marks them down, and one is.
+    ///         The searcher's own claim never rules out its own spots.
+    /// </summary>
+    [TestCase(true, false, false)]
+    [TestCase(false, false, true)]
+    [TestCase(true, true, true)]
+    public async Task TestExclusiveClaimRulesOutClaimedSpots(bool exclusive, bool ownClaim, bool expectSpot)
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var tacticalPositionOperator = new TacticalPositionOperator
+        {
+            ReferenceCoordinatesKey = "KsTestReference",
+            MaxRange = 1.5f, // a few tiles round the walker, all inside the claim
+            AvoidFireLanes = false,
+            ClaimClearanceRadius = 3f,
+            ExclusiveClaims = exclusive,
+            DistanceCurve = new QuadraticCurve { Slope = -1f, Exponent = 1f, YOffset = 1f },
+        };
+
+        System.Threading.Tasks.Task<(bool Valid, Dictionary<string, object>? Effects)> planTask = default!;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(tacticalPositionOperator, oneOff: true);
+
+            var walkerCoordinates = entManager.GetComponent<TransformComponent>(walkerUid).Coordinates;
+            var claimantUid = ownClaim ? walkerUid : SpawnAt(entManager, SyndicateMob, gridUid, 6, 6);
+            entManager.System<NpcTacticalPositionClaimSystem>().Claim(claimantUid, walkerCoordinates, System.TimeSpan.FromSeconds(30), clearanceRadius: 3f);
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, walkerUid);
+            blackboard.SetValue("VisionRadius", 10f);
+            blackboard.SetValue("KsTestReference", walkerCoordinates);
+            planTask = tacticalPositionOperator.Plan(blackboard, default);
+        });
+
+        for (var i = 0; i < 120 && !planTask.IsCompleted; i++)
+        {
+            await Pair.RunTicksSync(1);
+        }
+
+        Assert.That(planTask.IsCompletedSuccessfully, "the position search never finished");
+        var (valid, _) = await planTask;
+        Assert.That(valid, Is.EqualTo(expectSpot), expectSpot
+            ? "a spot should be found: only marked down, or claimed by the searcher itself"
+            : "every spot in reach is inside a squadmate's exclusive claim, so none should be found");
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 using System.Numerics;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Pathfinding;
-using Content.Shared.Examine;
 using Content.Shared.Physics;
 using Content.Shared.Tag;
 using Robust.Shared.Map;
@@ -21,7 +21,7 @@ namespace Content.Server._KS14.NPC.Squad;
 public sealed partial class NpcSquadCoverSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private ExamineSystemShared _examineSystem = default!;
+    [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private KillZones.NpcKillZoneSystem _npcKillZoneSystem = default!;
@@ -454,7 +454,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
                 continue;
 
             var positionMap = _transformSystem.ToMapCoordinates(new EntityCoordinates(gridEntity, position));
-            if (!_examineSystem.InRangeUnOccluded(positionMap, aimMap, settings.MaxStandoff + 1f, null))
+            if (!_npcLineOfSightSystem.InLineOfSight(positionMap, aimMap, settings.MaxStandoff + 1f))
                 continue;
 
             candidates.Add((tile, score));

@@ -174,9 +174,11 @@ namespace Content.Server.NPC.Pathfinding
                         offset--;
                         path.Tcs.SetResult(result);
                         SendRoute(path);
-                        // KS14 start: last thing to touch a finished tactical request's search state
+                        // KS14 start: last thing to touch a finished request's search state
                         if (path is TacticalPathRequest tacticalRequest)
                             ReturnTacticalSearchState(tacticalRequest);
+                        else if (path is AStarPathRequest aStarRequest)
+                            ReturnAStarSearchState(aStarRequest);
                         // KS14 end
                         break;
                     default:
@@ -490,6 +492,11 @@ namespace Content.Server.NPC.Pathfinding
         {
             // We could maybe try an initial quick run to avoid forcing time-slicing over ticks.
             // For now it seems okay and it shouldn't block on 1 NPC anyway.
+
+            // KS14 start: search state from the pools, given back once the request has finished
+            if (request is AStarPathRequest aStarRequest)
+                RentAStarSearchState(aStarRequest);
+            // KS14 end
 
             if (safe)
             {

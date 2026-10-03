@@ -37,6 +37,13 @@ public sealed partial class NpcDoorUserComponent : Component
     public TimeSpan BlockedForgetAfter = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    ///     How long it keeps going round a door it could force (see <see cref="DetourDoors"/>), and how long a door found
+    ///         to be the only way stays one it forces (see <see cref="ForceableDoors"/>).
+    /// </summary>
+    [DataField]
+    public TimeSpan DetourForgetAfter = TimeSpan.FromSeconds(30);
+
+    /// <summary>
     ///     Each no-go door, and when it stops being one.
     /// </summary>
     [ViewVariables]
@@ -50,6 +57,21 @@ public sealed partial class NpcDoorUserComponent : Component
     /// </summary>
     [ViewVariables]
     public Dictionary<EntityUid, TimeSpan> BlockedDoors = new();
+
+    /// <summary>
+    ///     Doors shut to it that it could force, which it is going round instead - forcing a door is loud, and spends
+    ///         an access breaker's charges - and until when. Its paths avoid them, like <see cref="BlockedDoors"/>. Moved
+    ///         to <see cref="ForceableDoors"/> if that leaves no way at all. See
+    ///         <see cref="NpcDoorSystem.TryDetourAroundDoor"/>.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, TimeSpan> DetourDoors = new();
+
+    /// <summary>
+    ///     Doors found to be the only way, which it forces rather than tries to go round again, and until when.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, TimeSpan> ForceableDoors = new();
 
     /// <summary>
     ///     When this NPC was last refused by a door it believed it could open, if it has not yet said so. See

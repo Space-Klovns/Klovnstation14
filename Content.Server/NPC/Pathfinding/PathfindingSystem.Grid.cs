@@ -405,7 +405,8 @@ public sealed partial class PathfindingSystem
         sw.Start();
         var points = chunk.Points;
         var gridOrigin = chunk.Origin * ChunkSize;
-        var tileEntities = new ValueList<EntityUid>();
+        var tileEntities = new ValueList<TileEntity>(); // KS14: EntityUid -> TileEntity
+        var intersectingEntities = new HashSet<EntityUid>(); // KS14: one set a chunk, not one a tile
         var chunkPolys = chunk.BufferPolygons;
 
         for (var i = 0; i < chunkPolys.Length; i++)
@@ -430,6 +431,34 @@ public sealed partial class PathfindingSystem
                 var flags = tile.Tile.IsEmpty ? PathfindingBreadcrumbFlag.Space : PathfindingBreadcrumbFlag.None;
                 // var isBorder = x < 0 || y < 0 || x == ChunkSize - 1 || y == ChunkSize - 1;
 
+                // KS14 start: into one set reused across the chunk rather than a new one each tile, and each entity's part
+                //      in the tile's points worked out once here, see PathfindingSystem.Klovn.Breadcrumbs.cs
+                tileEntities.Clear();
+                intersectingEntities.Clear();
+                _lookup.GetLocalEntitiesIntersecting(grid.Owner, tilePos, intersectingEntities, flags: LookupFlags.Dynamic | LookupFlags.Static, gridComp: grid.Comp);
+
+                foreach (var ent in intersectingEntities)
+                {
+                    // Irrelevant for pathfinding
+                    if (!_fixturesQuery.TryGetComponent(ent, out var fixtures) ||
+                        !IsBodyRelevant(fixtures))
+                    {
+                        continue;
+                    }
+
+                    var xform = Transform(ent);
+
+                    if (xform.ParentUid != grid.Owner ||
+                        _maps.LocalToTile(grid.Owner, grid.Comp, xform.Coordinates) != tilePos)
+                    {
+                        continue;
+                    }
+
+                    tileEntities.Add(GetTileEntity(ent, fixtures, xform));
+                }
+                // KS14 end
+                // KS14: replaced above
+/*
                 tileEntities.Clear();
                 var available = _lookup.GetLocalEntitiesIntersecting(tile, flags: LookupFlags.Dynamic | LookupFlags.Static);
 
@@ -453,6 +482,8 @@ public sealed partial class PathfindingSystem
                     tileEntities.Add(ent);
                 }
 
+*/
+
                 for (var subX = 0; subX < SubStep; subX++)
                 {
                     for (var subY = 0; subY < SubStep; subY++)
@@ -467,6 +498,56 @@ public sealed partial class PathfindingSystem
                         var damage = 0f;
                         var blockedBesidesDoors = false; // KS14: see below
 
+                        // KS14 start: only whether each entity covers this point is worked out per point; what it adds to a point it
+                        //      covers was worked out once for the tile, in GetTileEntity
+                        foreach (var tileEntity in tileEntities)
+                        {
+                            var colliding = false;
+
+                            foreach (var fixture in tileEntity.Fixtures.Fixtures.Values)
+                            {
+                                // Don't need to re-do it.
+                                if (!fixture.Hard ||
+                                    (collisionMask & fixture.CollisionMask) == fixture.CollisionMask &&
+                                    (collisionLayer & fixture.CollisionLayer) == fixture.CollisionLayer)
+                                {
+                                    continue;
+                                }
+
+                                // Do an AABB check first as it's probably faster, then do an actual point check.
+                                var intersects = false;
+
+                                foreach (var proxy in fixture.Proxies)
+                                {
+                                    if (!proxy.AABB.Contains(localPos))
+                                        continue;
+
+                                    intersects = true;
+                                    break;
+                                }
+
+                                if (!intersects ||
+                                    !_fixtures.TestPoint(fixture.Shape, tileEntity.LocalTransform, localPos))
+                                {
+                                    continue;
+                                }
+
+                                collisionLayer |= fixture.CollisionLayer;
+                                collisionMask |= fixture.CollisionMask;
+                                colliding = true;
+                            }
+
+                            // If entity doesn't intersect this node (e.g. thindows) then ignore it.
+                            if (!colliding)
+                                continue;
+
+                            flags |= tileEntity.Flags;
+                            blockedBesidesDoors |= tileEntity.BlockedBesidesDoors;
+                            damage += tileEntity.Damage;
+                        }
+                        // KS14 end
+                        // KS14: replaced above
+/*
                         foreach (var ent in tileEntities)
                         {
                             if (!_fixturesQuery.TryGetComponent(ent, out var fixtures))
@@ -560,6 +641,8 @@ public sealed partial class PathfindingSystem
                                 damage += _destructible.DestroyedAt(ent, damageable).Float();
                             }
                         }
+
+*/
 
                         // KS14 start: not a doorway, however many doors it has: just in the way. Door costs, and
                         //      squad tactics' rooms, which take their doorways from this flag, would otherwise treat

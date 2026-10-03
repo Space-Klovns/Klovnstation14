@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Interactions;
@@ -560,6 +561,126 @@ public sealed class KsOperativeHtnRootTest : GameTest
         var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
         entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Visible,
             now, now, now, entManager.GetComponent<TransformComponent>(hostileUid).Coordinates, default, null, Reacted: true));
+    }
+
+    /// <summary>
+    ///     In combat, with nothing in its own sight but a hostile a squadmate is calling out round the corner - outside
+    ///         the room, seen only through its open doorway, and not from where the operative stands - it goes to peek
+    ///         it: to a spot that sees where it was called out. Without this it held back behind the corner, guarding,
+    ///         while the squadmate fought alone.
+    /// </summary>
+    [Test]
+    public async Task TestCalledOutHostileIsPeeked()
+    {
+        IEntityManager entManager = default!;
+        EntityUid gridUid = default;
+
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (stagedEntManager, mobUid, stagedGridUid) =>
+            {
+                entManager = stagedEntManager;
+                gridUid = stagedGridUid;
+                StageArmed(entManager, mobUid);
+                StageCalledOutRoundTheCorner(entManager, mobUid, gridUid);
+            });
+
+        var peekIndex = plan.Tasks.FindIndex(task => task.Operator is TacticalPositionOperator { Key: "PeekPosition" });
+        Assert.That(peekIndex, Is.Not.Negative, $"expected the operative to look for a spot to peek from, got: {Describe(plan)}");
+        Assert.That(plan.Effects[peekIndex]?.TryGetValue("PeekPositionCoordinates", out var peekObject) == true, "the peek spot should be on the blackboard");
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var transformSystem = entManager.System<SharedTransformSystem>();
+            var peekCoordinates = (EntityCoordinates) plan.Effects[peekIndex]!["PeekPositionCoordinates"];
+            Assert.That(entManager.System<NpcLineOfSightSystem>().InLineOfSight(
+                    transformSystem.ToMapCoordinates(peekCoordinates),
+                    transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, CalledOutPosition)),
+                    15f),
+                $"the spot it picked, {peekCoordinates.Position}, should see the hostile");
+        });
+    }
+
+    /// <summary>
+    ///     One to a corner, live: with a squadmate already peeking from beside the best spot, an operative peeks from
+    ///         somewhere clear of the squadmate's claim, or pushes up instead. That a claim rules spots out rather than
+    ///         scoring them down is <c>KsNpcExposureTest.TestExclusiveClaimRulesOutClaimedSpots</c>'s to show.
+    /// </summary>
+    [Test]
+    public async Task TestPeekSpotIsNotShared()
+    {
+        Vector2 firstSpot = default;
+        var first = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCalledOutRoundTheCorner(entManager, mobUid, gridUid);
+            });
+
+        var firstIndex = first.Tasks.FindIndex(task => task.Operator is TacticalPositionOperator { Key: "PeekPosition" });
+        Assert.That(firstIndex, Is.Not.Negative, $"expected a peek, got: {Describe(first)}");
+        firstSpot = ((EntityCoordinates) first.Effects[firstIndex]!["PeekPositionCoordinates"]).Position;
+
+        var second = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCalledOutRoundTheCorner(entManager, mobUid, gridUid);
+
+                // A squadmate already peeking from beside it.
+                var squadmateUid = SpawnAt(entManager, SyndicateMob, gridUid, 4, 1);
+                entManager.System<NpcTacticalPositionClaimSystem>().Claim(squadmateUid, new EntityCoordinates(gridUid, firstSpot + ClaimOffset),
+                    System.TimeSpan.FromSeconds(30), clearanceRadius: 3f);
+            });
+
+        var secondIndex = second.Tasks.FindIndex(task => task.Operator is TacticalPositionOperator { Key: "PeekPosition" });
+        if (secondIndex < 0)
+        {
+            Assert.That(second.Tasks.Any(task => task.Operator is MoveToOperator { TargetKey: "SupportTargetCoordinates" }),
+                $"with the peek spot taken and no other, it should push up instead, got: {Describe(second)}");
+            return;
+        }
+
+        var secondSpot = ((EntityCoordinates) second.Effects[secondIndex]!["PeekPositionCoordinates"]).Position;
+        Assert.That((secondSpot - (firstSpot + ClaimOffset)).Length(), Is.GreaterThanOrEqualTo(3f),
+            $"it should not peek from {secondSpot}, within the squadmate's claim on {firstSpot + ClaimOffset}");
+    }
+
+    /// <summary>
+    ///     Where <see cref="TestPeekSpotIsNotShared"/>'s squadmate claims, from the best peek spot.
+    /// </summary>
+    private static readonly Vector2 ClaimOffset = new(1.5f, 0f);
+
+    /// <summary>
+    ///     Where <see cref="StageCalledOutRoundTheCorner"/> puts the hostile: outside the room, south-west of its airlock.
+    /// </summary>
+    private static readonly Vector2 CalledOutPosition = new(-3.5f, 0.5f);
+
+    /// <summary>
+    ///     A hostile a squadmate can see and is calling out, outside the room past its airlock, which is open: seen
+    ///         through the doorway from spots further into the room, but not from where the operative stands.
+    /// </summary>
+    private static void StageCalledOutRoundTheCorner(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
+    {
+        var transformSystem = entManager.System<SharedTransformSystem>();
+
+        // The open doorway: an open door occludes nothing.
+        var doorEnumerator = entManager.EntityQueryEnumerator<Content.Shared.Doors.Components.DoorComponent, OccluderComponent>();
+        while (doorEnumerator.MoveNext(out var doorUid, out _, out var occluderComponent))
+        {
+            entManager.System<OccluderSystem>().SetEnabled(doorUid, false, occluderComponent);
+        }
+
+        var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, -4, 0);
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Reported,
+            now, now, default, new EntityCoordinates(gridUid, CalledOutPosition), default, null, Reacted: false));
+
+        Assert.That(entManager.System<NpcLineOfSightSystem>().InLineOfSight(
+                transformSystem.GetMapCoordinates(mobUid),
+                transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, CalledOutPosition)),
+                15f),
+            Is.False,
+            "the operative should not see the hostile from where it stands, or there is nothing to peek round");
     }
 
     /// <summary>

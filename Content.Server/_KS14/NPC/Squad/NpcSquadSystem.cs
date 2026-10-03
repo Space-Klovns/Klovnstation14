@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
-using Content.Shared.Examine;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -30,11 +30,11 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
-    [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private MobThresholdSystem _mobThresholdSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
+    [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -411,7 +411,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
             var otherDistance = (otherCoordinates.Position - memberCoordinates.Position).Length();
 
             if (otherDistance >= distance ||
-                !_examineSystem.InRangeUnOccluded(memberEntity.Owner, otherEntity.Owner, memberEntity.Comp.JoinRange))
+                !_npcLineOfSightSystem.InLineOfSight(memberCoordinates, otherCoordinates, memberEntity.Comp.JoinRange))
                 continue;
 
             squadUid = otherSquadUid;

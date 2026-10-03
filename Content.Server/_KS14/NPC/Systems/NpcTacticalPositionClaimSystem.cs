@@ -59,16 +59,19 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
     /// <summary>
     /// Returns a penalty multiplier in [0, 1] for how "claimed" the given candidate position is, considering
     /// every live claim on the same grid within its (or the caller's) clearance radius. 1 = unclaimed/clear,
-    /// 0 = coincides with a live claim.
+    /// 0 = coincides with a live claim. <paramref name="ignoreClaimantUid"/>'s own claim, if given, is left out.
     /// </summary>
-    public float GetClaimPenalty(EntityCoordinates candidate, float clearanceRadius)
+    public float GetClaimPenalty(EntityCoordinates candidate, float clearanceRadius, EntityUid? ignoreClaimantUid = null)
     {
         var candidateMap = _transformSystem.ToMapCoordinates(candidate);
         var penalty = 1f;
 
         var query = EntityQueryEnumerator<NpcTacticalPositionClaimComponent>();
-        while (query.MoveNext(out _, out var claim))
+        while (query.MoveNext(out var claimantUid, out var claim))
         {
+            if (claimantUid == ignoreClaimantUid)
+                continue;
+
             var claimMap = _transformSystem.ToMapCoordinates(claim.Coordinates);
 
             if (claimMap.MapId != candidateMap.MapId)

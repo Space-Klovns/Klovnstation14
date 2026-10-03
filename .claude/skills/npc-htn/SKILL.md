@@ -36,7 +36,15 @@ Each NPC feature is split four ways, and each part has one job:
   `OrderCurrentPrecondition`. A changed order gets a new id and a `RequestReplan`, so it is taken up on the next tick.
 - **`NpcSquadCoverSystem`** works out which member covers which way into a room. **`NpcLineOfSightSystem`** is the
   one allocation-free line-of-sight check that perception and tactics share, so they never disagree about what can
-  be seen.
+  be seen. Use it for every NPC sight check, never `ExamineSystem.InRangeUnOccluded`: it walks the tiles a ray
+  crosses and reads the occluders anchored there live, about three times faster than the occluder tree, and it is
+  right about rays lying exactly along a tile edge, which the tree finds blocked by any wall on that line. Occluders
+  the walk cannot find (unanchored, or wider than their tile) carry `NpcIrregularOccluderComponent` and are tested on
+  their own. `KsNpcLineOfSightTest` checks it against the tree on thousands of rays across a real station. To check
+  many targets from one viewpoint, build an `NpcSightField` (`BuildSightField`) and ask it instead: it gathers the
+  occluders in range once, by direction, and gives the same answers as rays. It pays off for a short range and many
+  targets (a room sweep at 7 tiles: about three times faster), not for a long range and few targets (exposure at 15
+  tiles with 32 spots is slower than rays).
 
 When a new feature needs the NPC to *know* something, it gets a system and a component. When it needs the NPC to
 *do* something, it gets operators. When it needs a *decision* spanning several NPCs, it gets a system that writes
@@ -116,6 +124,15 @@ way. The gun task's recheck ends it, the next plan picks a new spot, and the bra
 costly spot search only runs when one is due. Give such a timer a `jitter`: NPCs that start together otherwise stay
 in step for good, and their costly searches all land on the same tick.
 
+### A background move shares the NPC with the tasks after it
+
+A `MoveToOperator` with `shutdownState: PlanFinished` or `Never` reports itself finished at once and keeps steering
+while the plan carries on: shooting while closing in, reloading while retreating. Anything steering does on its own -
+opening, prying or forcing a door - then happens while those tasks use the same hands, and the two fight over them: an
+access breaker came out mid-reload and was dropped by the reload. The operator marks such a move with
+`NpcBackgroundMoveComponent`; check it (`NpcDoorSystem.IsMovingInForeground`) before steering takes anything into its
+hands, and leave hand work to moves that are the task at hand.
+
 ## The planner: what wins
 
 ### First branch that plans, top to bottom
@@ -169,14 +186,15 @@ Consequences:
 3. Grenades
 4. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
 5. Ranged, then Melee
-6. Follow
-7. Search open, then Search cover
-8. Door refused (a one-line callout; see Doors below)
-9. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
-10. Sensors
-11. Join squad
-12. Disengage
-13. Squad hold
+6. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
+7. Follow
+8. Search open, then Search cover
+9. Door refused (a one-line callout; see Doors below)
+10. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
+11. Sensors
+12. Join squad
+13. Disengage
+14. Squad hold
 
 The header of that file lists every blackboard key and who writes it. Keep it current when you add one.
 

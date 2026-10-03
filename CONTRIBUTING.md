@@ -902,3 +902,23 @@ Draw in the grid's frame instead. Call `SetTransform` with the grid's world matr
 `Matrix3Helpers.CreateTransform(position, gridRotation)` for a marker drawn around the origin, and set
 `Matrix3x2.Identity` back afterwards. Clyde applies the transform to vertices as it queues them, so setting it per
 marker is cheap. Circles and screen-space text are unaffected. `SquadDebugOverlay` does both.
+
+### Occluder ray queries along a tile edge report walls that are not there
+
+The occluder tree's ray queries (`OccluderSystem.IntersectRay`, and everything built on them) test each box with
+`Ray.Intersects`. For a ray parallel to an axis lying exactly on a box's edge, as one along a tile edge does, that
+returns a NaN or zero distance for every box on the line, including those behind the ray's start and past its end.
+A NaN never compares greater than the maximum length, so every wall in line with the ray counts as in the way. It
+only happens for exact edges, so it hides well: a random-position test almost never lands on one.
+
+Throw out hits the segment cannot reach before trusting them, with `KsSegmentBounds.Touches` against the occluder's
+world bounds:
+
+```csharp
+// as ExamineSystemShared.Klovn.Occlusion.cs does - only ever removes impossible hits, so normal rays are unchanged
+if (!KsSegmentBounds.Touches(start, end, worldBounds.Enlarged(0.01f)))
+    continue;
+```
+
+`ExamineSystemShared.InRangeUnOccluded`, `NpcLineOfSightSystem` and `KsLosSensorSystem` all do this. The engine's own
+`OccluderSystem.InRangeUnoccluded` does not, so use the examine one.

@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Components; // KS14
 using Content.Server.Administration.Managers;
 using Content.Server.Destructible;
 using Content.Server.DoAfter;
@@ -186,6 +187,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
         ResetStuck(component, Transform(uid).Coordinates);
         component.Coordinates = coordinates;
+        RemComp<NpcBackgroundMoveComponent>(uid); // KS14: a new move is the task at hand until its operator says otherwise
         return component;
     }
 
@@ -222,6 +224,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         component.PathfindToken?.Cancel();
         component.PathfindToken = null;
         RemComp<NPCSteeringComponent>(uid);
+        RemComp<NpcBackgroundMoveComponent>(uid); // KS14
         _npcDoorSystem.StopSteeringBreach(uid); // KS14: a door it was forcing on the way: the tool goes back now, not after whatever comes next has run with it in hand
     }
 
@@ -464,6 +467,13 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         if (result.Result == PathResult.NoPath)
         {
             steering.CurrentPath.Clear();
+
+            // KS14 start: no way round the doors it was going round rather than forcing: they are the only way, so it
+            //      asks again, through them. Not a failure
+            if (_npcDoorSystem.GiveUpDetours(uid))
+                return;
+            // KS14 end
+
             steering.FailedPathCount++;
 
             if (steering.FailedPathCount >= NPCSteeringComponent.FailedPathLimit)

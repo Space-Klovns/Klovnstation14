@@ -235,6 +235,11 @@ namespace Content.Shared.Examine
                     return false;
                 }
 
+                // KS14 start: along a tile edge, the tree reports every occluder on the line, even ones the ray never reaches
+                if (KsIsUnreachableOccluderHit(occluder, xform, origin.Position, origin.Position + ray.Direction * length))
+                    continue;
+                // KS14 end
+
                 if (_occluder.ContainsPoint(occluder, xform, origin.Position) ||
                     _occluder.ContainsPoint(occluder, xform, other.Position))
                 {

@@ -145,6 +145,22 @@ public sealed partial class NPCSteeringSystem
 
         // Grab the target position, either the next path node or our end goal..
         var targetCoordinates = GetTargetCoordinates(steering);
+        var needsPath = false; // KS14: moved up from below
+
+        // KS14 start: nodes a navmesh rebuild has invalidated are dropped, and a new path asked for, before giving up.
+        //      This was below the NoPath check, so it never ran: a door opening rebuilds its chunk, and every NPC whose
+        //      path went through it - one that had just forced it, say - gave up on the spot
+        while (!targetCoordinates.IsValid(EntityManager) &&
+            steering.CurrentPath.TryPeek(out var invalidPoly) &&
+            !invalidPoly.IsValid())
+        {
+            steering.CurrentPath.Dequeue();
+            // Try to get the next node temporarily.
+            targetCoordinates = GetTargetCoordinates(steering);
+            needsPath = true;
+            ResetStuck(steering, ourCoordinates);
+        }
+        // KS14 end
 
         if (!targetCoordinates.IsValid(EntityManager))
         {
@@ -152,8 +168,10 @@ public sealed partial class NPCSteeringSystem
             return false;
         }
 
-        var needsPath = false;
+        /* var needsPath = false; */ // KS14: moved up
 
+        // KS14: unreachable here, below the NoPath check above; done before it instead
+        /*
         // If the next node is invalid then get new ones
         if (!targetCoordinates.IsValid(EntityManager))
         {
@@ -167,6 +185,7 @@ public sealed partial class NPCSteeringSystem
                 ResetStuck(steering, ourCoordinates);
             }
         }
+        */
 
         // Check if mapids match.
         var targetMap = _transform.ToMapCoordinates(targetCoordinates);

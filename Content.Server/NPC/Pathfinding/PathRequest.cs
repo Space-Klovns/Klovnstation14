@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Pathfinding; // KS14
 using Content.Shared.NPC;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
@@ -25,8 +26,8 @@ public abstract class PathRequest
 
     public readonly Stopwatch Stopwatch = new();
     public PriorityQueue<ValueTuple<float, PathPoly>> Frontier = default!;
-    public /* KS14: readonly removed, tactical requests swap in a pooled one */ Dictionary<PathPoly, float> CostSoFar = new();
-    public readonly Dictionary<PathPoly, PathPoly> CameFrom = new();
+    public /* KS14: readonly removed, tactical requests swap in a pooled one */ Dictionary<PathPoly, float> CostSoFar = PathfindingSystem.NewPolyDictionary<float>() /* KS14: new() -> keyed by identity */;
+    public /* KS14: readonly removed, A* requests swap in a pooled one */ Dictionary<PathPoly, PathPoly> CameFrom = PathfindingSystem.NewPolyDictionary<PathPoly>() /* KS14: new() -> keyed by identity */;
 
     #endregion
 
@@ -65,6 +66,14 @@ public sealed class AStarPathRequest : PathRequest
     /// How close we need to be to the end node to be considered as arrived.
     /// </summary>
     public float Distance;
+
+    // KS14 start
+    /// <summary>
+    ///     The search's open set, used in place of <see cref="PathRequest.Frontier"/> so it can be pooled. Rented with
+    ///         the rest of the search state when the request is queued, or made on the first slice if it was not.
+    /// </summary>
+    public PathPolyFrontier? PolyFrontier;
+    // KS14 end
 
     public AStarPathRequest(
         EntityCoordinates start,

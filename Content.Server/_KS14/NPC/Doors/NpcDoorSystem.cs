@@ -2,6 +2,7 @@ using Content.Server._KS14.NPC.Hands;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
+using Content.Server._KS14.NPC.Components;
 using Content.Shared.Access;
 using Content.Shared.Access.Systems;
 using Content.Shared.Charges.Components;
@@ -61,6 +62,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     [Dependency] private EntityQuery<DoorBoltComponent> _doorBoltQuery = default!;
     [Dependency] private EntityQuery<DoorComponent> _doorQuery = default!;
     [Dependency] private EntityQuery<EmagComponent> _emagQuery = default!;
+    [Dependency] private EntityQuery<NpcBackgroundMoveComponent> _backgroundMoveQuery = default!;
     [Dependency] private EntityQuery<MultipleToolComponent> _multipleToolQuery = default!;
     [Dependency] private EntityQuery<NpcBreachingComponent> _breachingQuery = default!;
     [Dependency] private EntityQuery<NpcDoorUserComponent> _doorUserQuery = default!;
@@ -361,6 +363,72 @@ public sealed partial class NpcDoorSystem : EntitySystem
             if (expiresAt > now && !TerminatingOrDeleted(doorUid))
                 doorUids.Add(doorUid);
         }
+
+        // And the ones it is going round rather than forcing.
+        foreach (var (doorUid, expiresAt) in doorUserComponent.DetourDoors)
+        {
+            if (expiresAt > now && !TerminatingOrDeleted(doorUid))
+                doorUids.Add(doorUid);
+        }
+    }
+
+    /// <summary>
+    ///     Steering's first answer to a door in its way that is shut to <paramref name="npcUid"/> and that it could
+    ///         force: go round it instead, if there is a way round. Forcing a door is loud and spends an access breaker's
+    ///         charges, and the pathfinder sends an NPC through any door needing access whenever that saves enough
+    ///         walking - it does not know who has the access - so without this, every shortcut through maintenance got
+    ///         forced. Returns whether it is now going round: its paths avoid the door (see
+    ///         <see cref="GetBlockedDoors"/>), and steering drops its path for one that does. If there is none, steering
+    ///         says so with <see cref="GiveUpDetours"/>, the door becomes the only way, and the next time it is in the
+    ///         way it is forced.
+    /// </summary>
+    public bool TryDetourAroundDoor(EntityUid npcUid, EntityUid doorUid)
+    {
+        if (!CanForceFromSteering(npcUid, doorUid, out _))
+            return false;
+
+        var doorUserComponent = EnsureComp<NpcDoorUserComponent>(npcUid);
+        var now = _gameTiming.CurTime;
+
+        if (IsRemembered(doorUserComponent.ForceableDoors, doorUid, now) ||
+            IsRemembered(doorUserComponent.DetourDoors, doorUid, now))
+            return false;
+
+        Prune(doorUserComponent.DetourDoors, now);
+        doorUserComponent.DetourDoors[doorUid] = now + doorUserComponent.DetourForgetAfter;
+        return true;
+    }
+
+    /// <summary>
+    ///     Steering found no path for <paramref name="npcUid"/>. If it was going round doors it could force, they are
+    ///         the only way: it stops going round them and forces them instead. Returns whether it was, in which case
+    ///         steering asks again, through them.
+    /// </summary>
+    public bool GiveUpDetours(EntityUid npcUid)
+    {
+        if (!_doorUserQuery.TryComp(npcUid, out var doorUserComponent) || doorUserComponent.DetourDoors.Count == 0)
+            return false;
+
+        var now = _gameTiming.CurTime;
+        var gaveUp = false;
+        Prune(doorUserComponent.ForceableDoors, now);
+
+        foreach (var (doorUid, expiresAt) in doorUserComponent.DetourDoors)
+        {
+            if (expiresAt <= now)
+                continue;
+
+            doorUserComponent.ForceableDoors[doorUid] = now + doorUserComponent.DetourForgetAfter;
+            gaveUp = true;
+        }
+
+        doorUserComponent.DetourDoors.Clear();
+        return gaveUp;
+    }
+
+    private static bool IsRemembered(Dictionary<EntityUid, TimeSpan> doors, EntityUid doorUid, TimeSpan now)
+    {
+        return doors.TryGetValue(doorUid, out var expiresAt) && expiresAt > now;
     }
 
     private void Remember(EntityUid npcUid, EntityUid doorUid)
@@ -410,15 +478,41 @@ public sealed partial class NpcDoorSystem : EntitySystem
     ///         does. The pathfinder only sends it through a door it cannot open when that is the way there - any other
     ///         is longer by more than the door costs, or there is none. Returns whether it started.
     /// </summary>
+    /// <remarks>
+    ///     Only while getting there is what the NPC is doing (see <see cref="IsMovingInForeground"/>). Movement carried
+    ///         on in the background - a retreat while it reloads, closing in while it shoots - comes with plan tasks
+    ///         using its hands at the same time, and taking a tool out under them ends with the tool on the floor: a
+    ///         reload's drop, or the gun branch finding no gun in hand, throws it away.
+    /// </remarks>
     public bool TryBreachBlockingDoor(EntityUid npcUid, EntityUid doorUid)
     {
+        return CanForceFromSteering(npcUid, doorUid, out var toolUid) &&
+            TryStartBreach(npcUid, doorUid, toolUid, DefaultBreachTimeout, fromSteering: true);
+    }
+
+    /// <summary>
+    ///     Whether steering may force <paramref name="doorUid"/> for <paramref name="npcUid"/> on its own, and with what:
+    ///         it does that at all, the move is its task at hand, and it carries something that forces the door.
+    /// </summary>
+    private bool CanForceFromSteering(EntityUid npcUid, EntityUid doorUid, out EntityUid toolUid)
+    {
+        toolUid = default;
         var breachWhenBlocked = _doorUserQuery.TryComp(npcUid, out var doorUserComponent)
             ? doorUserComponent.BreachWhenBlocked
             : NpcDoorUserComponent.DefaultBreachWhenBlocked;
 
         return breachWhenBlocked &&
-            TryGetBreachTool(npcUid, doorUid, out var toolUid, out _) &&
-            TryStartBreach(npcUid, doorUid, toolUid, DefaultBreachTimeout, fromSteering: true);
+            IsMovingInForeground(npcUid) &&
+            TryGetBreachTool(npcUid, doorUid, out toolUid, out _);
+    }
+
+    /// <summary>
+    ///     Whether moving is what <paramref name="npcUid"/> is doing right now, rather than something it carries on with
+    ///         in the background while later tasks run. See <see cref="NpcBackgroundMoveComponent"/>.
+    /// </summary>
+    public bool IsMovingInForeground(EntityUid npcUid)
+    {
+        return !_backgroundMoveQuery.HasComp(npcUid);
     }
 
     /// <summary>
