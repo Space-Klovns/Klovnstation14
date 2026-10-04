@@ -335,7 +335,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 
     private bool TileBlocks(Entity<MapGridComponent> grid, Vector2i tile, Ray ray, float length, Vector2 origin, Vector2 other)
     {
-        var anchoredEnumerator = _mapSystem.GetAnchoredEntitiesEnumerator(grid.Owner, grid.Comp, tile);
+        var anchoredEnumerator = _mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, tile);
         while (anchoredEnumerator.MoveNext(out var anchoredUid))
         {
             // In the grid's tree is what the tree query would have found: enabled, and with its last move applied.
@@ -497,7 +497,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         {
             for (var y = firstTile.Y; y <= lastTile.Y; y++)
             {
-                var anchoredEnumerator = _mapSystem.GetAnchoredEntitiesEnumerator(gridUid, mapGridComponent, new Vector2i(x, y));
+                var anchoredEnumerator = _mapSystem.GetAnchoredEntities(gridUid, mapGridComponent, new Vector2i(x, y));
                 while (anchoredEnumerator.MoveNext(out var anchoredUid))
                 {
                     // The same occluders, by the same test, as the tile walk.

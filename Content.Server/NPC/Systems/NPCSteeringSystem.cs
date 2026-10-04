@@ -487,6 +487,16 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         var targetPos = _transform.ToMapCoordinates(steering.Coordinates);
         var ourPos = _transform.GetMapCoordinates(uid, xform: xform);
 
+        // KS14 start: going round doors it could force, a way round that needs another door forced, or is far longer,
+        //      is no way round: it forces the door instead, asking again for a path through it
+        if (!_npcDoorSystem.IsDetourWorthTaking(uid, ourPos, result.Path, targetPos))
+        {
+            steering.CurrentPath.Clear();
+            _npcDoorSystem.GiveUpDetours(uid);
+            return;
+        }
+        // KS14 end
+
         PrunePath(uid, ourPos, targetPos.Position - ourPos.Position, result.Path);
         steering.CurrentPath = new Queue<PathPoly>(result.Path);
     }

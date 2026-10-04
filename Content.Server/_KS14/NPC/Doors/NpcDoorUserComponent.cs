@@ -44,6 +44,20 @@ public sealed partial class NpcDoorUserComponent : Component
     public TimeSpan DetourForgetAfter = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    ///     How much further, in tiles, the way round a door it could force may be than the way through it, and still be
+    ///         taken. Past this, it forces the door. See <see cref="NpcDoorSystem.IsDetourWorthTaking"/>.
+    /// </summary>
+    [DataField]
+    public float MaxDetourExtraDistance = 15f;
+
+    /// <summary>
+    ///     How far it had left to go, through the door, when it first turned to go round one. What a way round is
+    ///         measured against.
+    /// </summary>
+    [ViewVariables]
+    public float DetourBaseDistance;
+
+    /// <summary>
     ///     Each no-go door, and when it stops being one.
     /// </summary>
     [ViewVariables]

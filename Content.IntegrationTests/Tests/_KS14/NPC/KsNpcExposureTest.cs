@@ -135,6 +135,93 @@ public sealed class KsNpcExposureTest : GameTest
     }
 
     /// <summary>
+    ///     A firing-spot search, as the operative's: out in the open, east of the wall's end with the threat to the
+    ///         west, every spot that sees the threat is seen from almost all of its approach, so exposure alone keeps it
+    ///         where it stands. Weighing <see cref="TacticalPositionOperator.CoverStepCurve"/>, it takes a spot at the
+    ///         wall's end that still sees the threat, with floor out of its sight a step away.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestFiringSpotTakesTheCorner(bool coverStep)
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var standing = new Vector2(4.5f, -3.5f);
+        var tacticalPositionOperator = new TacticalPositionOperator
+        {
+            ReferenceCoordinatesKey = "KsTestReference",
+            MaxRange = 6f,
+            MaxCandidates = 48,
+            AvoidFireLanes = false,
+            DistanceCurve = new QuadraticCurve { Slope = -1f, Exponent = 1f, YOffset = 1f },
+            LosReferenceCoordinatesKey = "KsTestThreat",
+            LosRadius = 9f,
+            LosCurve = new BoolCurve(),
+            CoverStepCurve = coverStep ? new QuadraticCurve { Slope = 0.7f, YOffset = 0.3f } : null,
+            ExposureReferenceCoordinatesKey = "KsTestThreat",
+            ExposureReach = 3,
+            ExposureProbes = 10,
+            ExposureCurve = new QuadraticCurve { Slope = 0.7f, YOffset = 0.3f },
+            ClaimClearanceRadius = 1.5f,
+        };
+
+        System.Threading.Tasks.Task<(bool Valid, Dictionary<string, object>? Effects)> planTask = default!;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(tacticalPositionOperator, oneOff: true);
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, walkerUid);
+            blackboard.SetValue("VisionRadius", 17.5f);
+            blackboard.SetValue("KsTestReference", new EntityCoordinates(gridUid, standing));
+            blackboard.SetValue("KsTestThreat", new EntityCoordinates(gridUid, ThreatPosition));
+            planTask = tacticalPositionOperator.Plan(blackboard, default);
+        });
+
+        for (var i = 0; i < 120 && !planTask.IsCompleted; i++)
+        {
+            await Pair.RunTicksSync(1);
+        }
+
+        Assert.That(planTask.IsCompletedSuccessfully, "the position search never finished");
+        var (valid, effects) = await planTask;
+        Assert.That(valid, "a position should be found");
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var lineOfSightSystem = entManager.System<NpcLineOfSightSystem>();
+            var transformSystem = entManager.System<SharedTransformSystem>();
+            var chosen = ((EntityCoordinates) effects![tacticalPositionOperator.KeyCoordinates]).Position;
+            var threatMapCoordinates = transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, ThreatPosition));
+
+            Assert.That(lineOfSightSystem.InLineOfSight(transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, chosen)), threatMapCoordinates, 9.5f),
+                $"{chosen} should see the threat");
+
+            // Floor next to it, out of the threat's sight. The wall is the only thing on the grid.
+            var coverAStepAway = false;
+            var chosenTile = new Vector2i((int) MathF.Floor(chosen.X), (int) MathF.Floor(chosen.Y));
+            for (var x = -1; x <= 1; x++)
+            {
+                for (var y = -1; y <= 1; y++)
+                {
+                    var tile = chosenTile + new Vector2i(x, y);
+                    if (tile == chosenTile || tile.Y == 0 && tile.X is >= -9 and <= 0)
+                        continue;
+
+                    var tileCentre = new Vector2(tile.X + 0.5f, tile.Y + 0.5f);
+                    coverAStepAway |= !lineOfSightSystem.InLineOfSight(
+                        transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, tileCentre)), threatMapCoordinates, 15f);
+                }
+            }
+
+            if (coverStep)
+                Assert.That(coverAStepAway, $"weighing cover a step away, it should take the corner, not {chosen}");
+            else
+                Assert.That(coverAStepAway, Is.False, $"without it, nothing near is much better than where it stands, yet it picked {chosen}");
+        });
+    }
+
+    /// <summary>
     ///     <see cref="TacticalPositionOperator.ExclusiveClaims"/>: every spot within reach lies inside one claim. A
     ///         squadmate's claim rules them all out, so no spot is found; a soft claim only marks them down, and one is.
     ///         The searcher's own claim never rules out its own spots.

@@ -16,6 +16,7 @@ using Content.Server.NPC.Queries;
 using Content.Server.NPC.Queries.Curves;
 using Content.Server.NPC.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Random;
 using Robust.Shared.Prototypes;
@@ -42,6 +43,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private NpcExposureSystem _npcExposureSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     /// <summary>
@@ -77,6 +79,33 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public float LosRadius = 10f;
 
     [DataField] public IUtilityCurve LosCurve = new BoolCurve();
+
+    /// <summary>
+    ///     If set, scores whether a candidate is a step from cover from <see cref="LosReferenceCoordinatesKey"/>: whether
+    ///         a free floor tile next to it is out of that one's sight. For a spot that sees the target, that makes it a
+    ///         corner - one step from out of the fight - rather than open floor, which the threat's whole approach sees
+    ///         alike, so exposure alone barely tells them apart. The curve runs over 0 (no cover a step away) and 1.
+    ///         Needs <see cref="LosReferenceCoordinatesKey"/>.
+    /// </summary>
+    [DataField] public IUtilityCurve? CoverStepCurve;
+
+    private static readonly Vector2i[] CoverStepOffsets =
+    [
+        new(1, 0), new(-1, 0), new(0, 1), new(0, -1),
+        new(1, 1), new(1, -1), new(-1, 1), new(-1, -1),
+    ];
+
+    /// <summary>
+    ///     What <see cref="LosReferenceCoordinatesKey"/> can see, built once per plan for <see cref="CoverStepCurve"/>.
+    ///         Scoring runs without awaiting anything, so plans sharing this operator cannot interleave over it.
+    /// </summary>
+    private readonly NpcSightField _coverStepSightField = new();
+
+    /// <summary>
+    ///     Whether this plan's candidates are scored on <see cref="CoverStepCurve"/>: set up in <see cref="Plan"/>, with
+    ///         <see cref="_coverStepSightField"/>.
+    /// </summary>
+    private bool _scoreCoverStep;
 
     /// <summary>
     /// If set, adds a directional-cone consideration (owner facing this coordinates key, is the candidate
@@ -240,6 +269,19 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             _exposureProbes.Clear();
         }
 
+        // Built after the search's await, as the exposure probes are: see _coverStepSightField.
+        _scoreCoverStep = false;
+        if (CoverStepCurve is not null &&
+            LosReferenceCoordinatesKey is not null &&
+            blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var coverStepReference, _entityManager))
+        {
+            _scoreCoverStep = true;
+            // Past the candidates' own reach by a step, so every tile next to one is in range.
+            _npcLineOfSightSystem.BuildSightField(_transformSystem.ToMapCoordinates(coverStepReference),
+                LosRadius + 2f,
+                _coverStepSightField);
+        }
+
         var considerationCount = GetConsiderationCount();
 
         // Exposure is by far the dearest consideration, and can only lower a score. So every candidate is scored on the
@@ -331,6 +373,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         return 1 // distance, always applied
             + (AvoidFireLanes && _npcSquadFireLaneSystem.Enabled ? 1 : 0)
             + (LosReferenceCoordinatesKey is not null ? 1 : 0)
+            + (CoverStepCurve is not null && LosReferenceCoordinatesKey is not null ? 1 : 0)
             + (FovReferenceCoordinatesKey is not null ? 1 : 0)
             + (RandomProbability > 0f ? 1 : 0)
             + (KillZoneAvoidance > 0f ? 1 : 0)
@@ -376,6 +419,15 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
                 LosRadius + 0.5f) ? 1f : 0f;
 
             score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(LosCurve, losRaw), considerationCount);
+
+            if (score <= 0f)
+                return 0f;
+        }
+
+        if (_scoreCoverStep)
+        {
+            var coverStepRaw = HasCoverAStepAway(candidate) ? 1f : 0f;
+            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(CoverStepCurve!, coverStepRaw), considerationCount);
 
             if (score <= 0f)
                 return 0f;
@@ -435,6 +487,37 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         }
 
         return score;
+    }
+
+    /// <summary>
+    ///     Whether a free floor tile next to <paramref name="candidate"/>'s, diagonals included, is out of sight of
+    ///         <see cref="LosReferenceCoordinatesKey"/>. See <see cref="CoverStepCurve"/>.
+    /// </summary>
+    private bool HasCoverAStepAway(PathPoly candidate)
+    {
+        var gridUid = candidate.GraphUid;
+        if (!_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var mapGridComponent))
+            return false;
+
+        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var tile = _mapSystem.TileIndicesFor(grid, candidate.Coordinates);
+
+        foreach (var offset in CoverStepOffsets)
+        {
+            var neighbourCoordinates = new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector(grid, tile + offset));
+
+            // Somewhere it can stand: no wall, door, table or anything else the navmesh has there.
+            if (_pathfindingSystem.GetPoly(neighbourCoordinates) is not { } neighbourPoly ||
+                !neighbourPoly.Data.IsFreeSpace ||
+                neighbourPoly.Data.CollisionLayer != 0 ||
+                neighbourPoly.Data.CollisionMask != 0)
+                continue;
+
+            if (!_npcLineOfSightSystem.InLineOfSight(_coverStepSightField, _transformSystem.ToMapCoordinates(neighbourCoordinates)))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>

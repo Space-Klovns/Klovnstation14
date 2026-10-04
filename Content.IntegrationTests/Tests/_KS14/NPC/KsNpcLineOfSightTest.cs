@@ -298,7 +298,7 @@ public sealed class KsNpcLineOfSightTest : GameTest
 
             foreach (var tileRef in mapSystem.GetAllTiles(station, station.Comp))
             {
-                if (!mapSystem.GetAnchoredEntitiesEnumerator(station, station.Comp, tileRef.GridIndices).MoveNext(out _))
+                if (!mapSystem.GetAnchoredEntities(station, station.Comp, tileRef.GridIndices).MoveNext(out _))
                     floorTiles.Add(tileRef.GridIndices);
             }
         });

@@ -123,7 +123,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var tile in tiles)
         {
-            var anchoredEnumerator = _mapSystem.GetAnchoredEntitiesEnumerator(grid, grid.Comp, tile);
+            var anchoredEnumerator = _mapSystem.GetAnchoredEntities(grid, grid.Comp, tile);
             while (anchoredEnumerator.MoveNext(out var anchoredUid))
             {
                 if (!_doorQuery.TryComp(anchoredUid.Value, out var doorComponent))

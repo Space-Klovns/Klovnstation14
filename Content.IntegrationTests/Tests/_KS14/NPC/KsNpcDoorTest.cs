@@ -47,6 +47,7 @@ public sealed class KsNpcDoorTest : GameTest
     private const string BreacherMob = "KsDoorTestMobBreacher";
     private const string BlockedWalkerMob = "KsDoorTestMobBlockedWalker";
     private const string PatientWalkerMob = "KsDoorTestMobPatientWalker";
+    private const string RoundaboutWalkerMob = "KsDoorTestMobRoundaboutWalker";
     private const string DressedBreacherMob = "KsDoorTestMobDressedBreacher";
     private const string Wieldable = "KsDoorTestWieldable";
     private const string EmptyHandedWalkerMob = "KsDoorTestMobEmptyHandedWalker";
@@ -151,6 +152,13 @@ public sealed class KsNpcDoorTest : GameTest
     - !type:HTNPrimitiveTask
       operator: !type:StaticWaitOperator
         key: KsDoorTestWait
+
+- type: entity
+  parent: KsDoorTestMobBlockedWalker
+  id: KsDoorTestMobRoundaboutWalker
+  components:
+  - type: NpcDoorUser
+    maxDetourExtraDistance: 60
 
 - type: entity
   parent: KsDoorTestMobBlockedWalker
@@ -492,32 +500,102 @@ public sealed class KsNpcDoorTest : GameTest
     ///     A door shut to the NPC is a shortcut, not the only way: there is a way round, longer than the door is worth to
     ///         the pathfinder, so its first path runs through the door. It goes round rather than force the door, which
     ///         stays shut, with the crowbar still on its belt. <see cref="TestBlockedWayIsForced"/> is the other half:
-    ///         with no way round, it forces the door.
+    ///         with no way round, it forces the door. This walker goes further out of its way than most, as the way round
+    ///         here is long; see <see cref="TestLongWayRoundIsNotTaken"/>.
     /// </summary>
     [Test]
     public async Task TestShortcutDoorIsGoneRoundNotForced()
+    {
+        var (entManager, walkerUid, crowbarUid, beltUid, doorUids) = await WalkPastWall(RoundaboutWalkerMob, doorRows: [0]);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.GetComponent<DoorComponent>(doorUids[0]).State, Is.EqualTo(DoorState.Closed),
+                    "with a way round, it should have left the door shut");
+                Assert.That(entManager.GetComponent<StorageComponent>(beltUid).Container.Contains(crowbarUid),
+                    "and never taken the crowbar out");
+                Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f),
+                    "it should have got there the long way");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     The same wall, walked by an NPC that goes no more than 15 tiles out of its way: round by the gap is further
+    ///         than that, so it forces the door.
+    /// </summary>
+    [Test]
+    public async Task TestLongWayRoundIsNotTaken()
+    {
+        var (entManager, walkerUid, _, _, doorUids) = await WalkPastWall(BlockedWalkerMob, doorRows: [0]);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.GetComponent<DoorComponent>(doorUids[0]).State, Is.Not.EqualTo(DoorState.Closed),
+                    "the way round is too long: it should have forced the door");
+                Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f),
+                    "and got there through it");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A way round that runs through another door shut to the NPC is no way round: it forces the door in its way,
+    ///         not the other. Going round that one as well used to walk it from door to door until there was nothing
+    ///         left to go round, and then it forced whichever it was standing at.
+    /// </summary>
+    [Test]
+    public async Task TestWayRoundThroughAnotherShutDoorIsNotTaken()
+    {
+        var (entManager, walkerUid, _, _, doorUids) = await WalkPastWall(RoundaboutWalkerMob, doorRows: [0, 4]);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.GetComponent<DoorComponent>(doorUids[0]).State, Is.Not.EqualTo(DoorState.Closed),
+                    "it should have forced the door in its way");
+                Assert.That(entManager.GetComponent<DoorComponent>(doorUids[1]).State, Is.EqualTo(DoorState.Closed),
+                    "and not the one on the way round");
+                Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f),
+                    "and got there through it");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     An NPC with a crowbar on its belt walks from one side of a wall up a small grid to the other. The wall has
+    ///         unpowered security doors in it at <paramref name="doorRows"/>, and a gap at the top, round which is far
+    ///         longer.
+    /// </summary>
+    private async Task<(IEntityManager EntManager, EntityUid WalkerUid, EntityUid CrowbarUid, EntityUid BeltUid, List<EntityUid> DoorUids)>
+        WalkPastWall(string walkerMob, int[] doorRows)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
         var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
         var map = await Pair.CreateTestMap();
-        EntityUid gridUid = default, doorUid = default, walkerUid = default, crowbarUid = default, beltUid = default;
+        var doorUids = new List<EntityUid>();
+        EntityUid gridUid = default, walkerUid = default, crowbarUid = default, beltUid = default;
 
         await server.WaitPost(() =>
         {
             // Small, so the pathfinder's node limit is not what decides it.
             gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-3, -1), new Vector2i(7, 13)).Owner;
 
-            // A wall up the grid: the door at the bottom, a gap at the top - round by the gap is far longer.
             for (var y = -1; y <= 12; y++)
             {
-                if (y == 0)
-                    doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 2, 0);
+                if (System.Array.IndexOf(doorRows, y) >= 0)
+                    doorUids.Add(SpawnAt(entManager, SecurityDoor, gridUid, 2, y));
                 else
                     SpawnAt(entManager, "WallSolid", gridUid, 2, y);
             }
 
-            walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
+            walkerUid = SpawnAt(entManager, walkerMob, gridUid, 0, 0);
 
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
@@ -539,19 +617,7 @@ public sealed class KsNpcDoorTest : GameTest
         });
 
         await Pair.RunTicksSync(900);
-
-        await server.WaitAssertion(() =>
-        {
-            Assert.Multiple(() =>
-            {
-                Assert.That(entManager.GetComponent<DoorComponent>(doorUid).State, Is.EqualTo(DoorState.Closed),
-                    "with a way round, it should have left the door shut");
-                Assert.That(entManager.GetComponent<StorageComponent>(beltUid).Container.Contains(crowbarUid),
-                    "and never taken the crowbar out");
-                Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f),
-                    "it should have got there the long way");
-            });
-        });
+        return (entManager, walkerUid, crowbarUid, beltUid, doorUids);
     }
 
     /// <summary>

@@ -135,7 +135,7 @@ public class NpcNavigationBenchmark
         var floorTiles = new List<Vector2i>();
         foreach (var tileRef in mapSystem.GetAllTiles(_grid, _grid.Comp))
         {
-            if (!mapSystem.GetAnchoredEntitiesEnumerator(_grid, _grid.Comp, tileRef.GridIndices).MoveNext(out _))
+            if (!mapSystem.GetAnchoredEntities(_grid, _grid.Comp, tileRef.GridIndices).MoveNext(out _))
                 floorTiles.Add(tileRef.GridIndices);
         }
 

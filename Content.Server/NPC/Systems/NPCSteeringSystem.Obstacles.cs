@@ -155,7 +155,7 @@ public sealed partial class NPCSteeringSystem
 
                     // Shut to it, and the way it is going: go round it if there is a way round, and force it with
                     //      something it carries, if it does that, only when there is not. See NpcDoorSystem.
-                    if (_npcDoorSystem.TryDetourAroundDoor(uid, obstacleUid))
+                    if (_npcDoorSystem.TryDetourAroundDoor(uid, obstacleUid, component))
                     {
                         component.CurrentPath.Clear();
                         return SteeringObstacleStatus.Continuing;
