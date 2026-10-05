@@ -79,6 +79,8 @@ public static class KsProcgenPortNetworkAnalyzer
         IReadOnlySet<Vector2i>? proceduralWalkableCells,
         int maxNodes)
     {
+        if (shape?.EntranceContract != null)
+            return Failure(KsProcgenPortNetworkStatus.InvalidInput, "UnsupportedEntranceAwarePortNetwork");
         if (shape == null || packing == null || inspectedExistingPassages == null || roots == null ||
             packing.Status != KsProcgenPackingStatus.GeometryReady ||
             packing.ResidualRouting?.Status != KsProcgenResidualStatus.PreliminaryReady ||

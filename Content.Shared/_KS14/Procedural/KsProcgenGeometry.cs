@@ -29,6 +29,8 @@ public sealed class KsProcgenNormalizedShape
     public IReadOnlyList<Vector2i> VoidCells { get; }
     public IReadOnlyList<KsProcgenConstantRegion> ConstantRegions { get; }
     public ulong ConstantContractHash { get; }
+    public IReadOnlyList<KsProcgenAreaEntrance> Entrances { get; internal set; } = [];
+    public KsProcgenEntranceConnectionContract? EntranceContract { get; internal set; }
 
     internal KsProcgenNormalizedShape(
         HashSet<Vector2i> targetSet,
@@ -117,7 +119,8 @@ public static class KsProcgenGeometry
         shape = null;
         issue = null;
 
-        if (request == null || string.IsNullOrWhiteSpace(request.RequestId) || request.Shape == null || request.Limits == null)
+        if (request == null || string.IsNullOrWhiteSpace(request.RequestId) || request.Shape == null ||
+            request.Limits == null || request.FallbackPolicy == null)
         {
             issue = new KsProcgenIssue("InvalidRequest", "A request ID, shape, and limits are required.");
             return false;
@@ -395,8 +398,12 @@ public static class KsProcgenGeometry
             return false;
         }
 
-        shape = new KsProcgenNormalizedShape(targetSet, envelopeSet, preservedSet, voidSet,
-            constantRegions);
+        var normalizedShape = new KsProcgenNormalizedShape(targetSet, envelopeSet, preservedSet, voidSet, constantRegions);
+        if (!KsProcgenEntranceRequestAdapter.Normalize(request, normalizedShape, out var entrances, out var contract, out issue))
+            return false;
+        normalizedShape.Entrances = entrances;
+        normalizedShape.EntranceContract = contract;
+        shape = normalizedShape;
         return true;
     }
 

@@ -15,7 +15,8 @@ public sealed record KsProcgenThemeSelection(
     string? LightingPackId,
     string? LightFixtureId,
     string? DominantEntityPackId,
-    IReadOnlyList<string> SupportingEntityPackIds);
+    IReadOnlyList<string> SupportingEntityPackIds,
+    float FurnishingDensity = 0.2f);
 
 public static class KsProcgenThemeSelector
 {
@@ -96,7 +97,8 @@ public static class KsProcgenThemeSelector
         }
 
         selection = new KsProcgenThemeSelection(themeId, tilePackRef, paletteId,
-            wallPackRef, wallFamilyId, lightingPackId, lightFixtureId, dominantId, supportingIds);
+            wallPackRef, wallFamilyId, lightingPackId, lightFixtureId, dominantId, supportingIds,
+            theme.Goals.FurnishingDensity);
         issue = null;
         return true;
     }

@@ -248,23 +248,7 @@ public static class KsProcgenThemeValidator
         IPrototypeManager manager,
         out KsProcgenIssue? issue)
     {
-        issue = null;
-        if (!ValidateChoices(pack.Entries.Select(e => (e.Id, e.Weight)), out issue)) return false;
-        foreach (var entry in pack.Entries)
-        {
-            if (!ExistsEntity(manager, entry.Entity) || !Enum.IsDefined(entry.Role) ||
-                !Enum.IsDefined(entry.Movement) || entry.Footprint.Count == 0 ||
-                entry.Footprint.Distinct().Count() != entry.Footprint.Count ||
-                entry.AllowedQuarterTurns.Count == 0 ||
-                entry.AllowedQuarterTurns.Any(turn => turn < 0 || turn > 3) ||
-                entry.AllowedQuarterTurns.Distinct().Count() != entry.AllowedQuarterTurns.Count)
-            {
-                issue = new KsProcgenIssue("InvalidEntityEntry", $"Entity pack {pack.ID} has an invalid entry.");
-                return false;
-            }
-        }
-
-        return true;
+        return KsProcgenAssemblyCompiler.TryResolvePack(manager, pack, out _, out issue);
     }
 
     private static bool ValidateChoices(

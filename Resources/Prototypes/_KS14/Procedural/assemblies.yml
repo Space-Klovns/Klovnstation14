@@ -1,0 +1,258 @@
+- type: ksProcgenAssembly
+  id: KsProcgenRelationalFixture
+  anchorMember: Table
+  members:
+  - id: Table
+    entity: Table
+    role: PrimaryFurniture
+    movement: VaultRequired
+  - id: Device
+    binding: DeviceEntity
+    role: Equipment
+    rotationMode: Independent
+    requiresInteractionApproach: true
+  - id: Seat
+    entity: ChairOfficeLight
+    role: Seat
+    movement: Clear
+    rotationMode: Independent
+    minimumCount: 0
+    maximumCount: 2
+  relations:
+  - id: DeviceSupport
+    subject: Device
+    target: Table
+    kind: OnSurface
+  - id: DeviceFront
+    subject: Device
+    kind: FacingOpenSpace
+  - id: SeatPosition
+    subject: Seat
+    target: Table
+    kind: AdjacentTo
+    maximumDistance: 1
+  - id: SeatDirection
+    subject: Seat
+    target: Table
+    kind: FacingTarget
+  - id: CornerPreference
+    subject: Table
+    kind: AtCorner
+    severity: Preferred
+  variants:
+  - id: Standing
+    anchorMember: Device
+    members:
+    - id: Device
+      binding: DeviceEntity
+      role: Equipment
+      rotationMode: Independent
+      requiresInteractionApproach: true
+    relations:
+    - id: DeviceFront
+      subject: Device
+      kind: FacingOpenSpace
+
+- type: ksProcgenEntityPack
+  id: KsProcgenRelationalPackFixture
+  assemblies:
+  - id: TableDevice
+    assembly: KsProcgenRelationalFixture
+    bindings:
+      DeviceEntity: ComputerAlert
+    minimumCount: 1
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenRelationalThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenRelationalPackFixture
+    minimumCount: 1
+  goals:
+    furnishingDensity: 0
+
+- type: ksProcgenEntityPack
+  id: KsProcgenIndependentCoresFixture
+  entries:
+  - id: LargeTable
+    entity: Table
+    movement: VaultRequired
+    footprint:
+    - 0,0
+    - 4,0
+  - id: SmallTable
+    entity: Table
+    movement: VaultRequired
+    minimumCount: 1
+
+- type: ksProcgenEntityPack
+  id: KsProcgenCoreMinimumFixture
+  entries:
+  - id: SmallTable
+    entity: Table
+    movement: VaultRequired
+    minimumCount: 3
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenIndependentCoresThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenIndependentCoresFixture
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenCoreMinimumThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenCoreMinimumFixture
+
+- type: ksProcgenAssembly
+  id: KsProcgenUnsupportedSurfaceFixture
+  anchorMember: Table
+  members:
+  - id: Table
+    entity: Table
+    movement: VaultRequired
+  - id: Device
+    entity: ComputerAlert
+  relations:
+  - id: Support
+    subject: Device
+    kind: OnSurface
+    target: Table
+
+- type: ksProcgenEntityPack
+  id: KsProcgenUnsupportedSurfacePackFixture
+  assemblies:
+  - id: SurfaceCore
+    assembly: KsProcgenUnsupportedSurfaceFixture
+    minimumCount: 1
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenUnsupportedSurfaceThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenUnsupportedSurfacePackFixture
+
+- type: ksProcgenAssembly
+  id: KsProcgenPreferredCornerFixture
+  anchorMember: Table
+  members:
+  - id: Table
+    entity: Table
+    role: PrimaryFurniture
+    movement: VaultRequired
+    rotationMode: Independent
+  relations:
+  - id: Corner
+    subject: Table
+    kind: AtCorner
+    severity: Preferred
+
+- type: ksProcgenAssembly
+  id: KsProcgenRequiredCornerFixture
+  anchorMember: Table
+  members:
+  - id: Table
+    entity: Table
+    role: PrimaryFurniture
+    movement: VaultRequired
+    rotationMode: Independent
+  relations:
+  - id: Corner
+    subject: Table
+    kind: AtCorner
+
+- type: ksProcgenEntityPack
+  id: KsProcgenPreferredCornerPackFixture
+  assemblies:
+  - id: CornerTable
+    assembly: KsProcgenPreferredCornerFixture
+    minimumCount: 1
+
+- type: ksProcgenEntityPack
+  id: KsProcgenRequiredCornerPackFixture
+  assemblies:
+  - id: CornerTable
+    assembly: KsProcgenRequiredCornerFixture
+    minimumCount: 1
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenPreferredCornerThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenPreferredCornerPackFixture
+  goals:
+    furnishingDensity: 0
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenRequiredCornerThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenRequiredCornerPackFixture
+  goals:
+    furnishingDensity: 0
+
+- type: ksProcgenAssembly
+  id: KsProcgenNearFixture
+  anchorMember: Table
+  members:
+  - id: Table
+    entity: Table
+    role: PrimaryFurniture
+    movement: VaultRequired
+    rotationMode: Independent
+    allowedQuarterTurns:
+    - 0
+    approachLanding: 0,-1
+  - id: Console
+    entity: ComputerAlert
+    role: Equipment
+    requiresInteractionApproach: true
+    rotationMode: Independent
+  relations:
+  - id: ConsoleNearTable
+    subject: Console
+    target: Table
+    kind: Near
+    minimumDistance: 0
+    maximumDistance: 3
+
+- type: ksProcgenEntityPack
+  id: KsProcgenNearPackFixture
+  compatibleSupportTags:
+  - officeStorage
+  assemblies:
+  - id: NearCore
+    assembly: KsProcgenNearFixture
+    minimumCount: 1
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenNearThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenNearPackFixture
+    minimumCount: 1
+  - pack: KsProcgenOfficeStorage
+  goals:
+    furnishingDensity: 0

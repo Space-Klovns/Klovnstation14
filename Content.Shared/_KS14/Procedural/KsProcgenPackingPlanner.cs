@@ -73,6 +73,13 @@ public static class KsProcgenPackingPlanner
         if (!KsProcgenGeometry.TryNormalize(request, out var shape, out var issue))
             return new KsProcgenPackingResult { Status = KsProcgenPackingStatus.InvalidInput, Issue = issue };
 
+        if (shape!.EntranceContract != null || request.ConnectivityPolicy == KsProcgenConnectivityPolicy.DeclaredNetworks)
+            return new()
+            {
+                Status = KsProcgenPackingStatus.InvalidInput,
+                Issue = new("UnsupportedEntranceAwarePacking", "Group-aware carving/partitioning must replace legacy routing before generation."),
+            };
+
         if (request.RootCells.Any(root => !shape!.ContainsTarget(root)) ||
             inspectedExistingPassages.Any(cell => !shape!.ContainsTarget(cell)))
         {

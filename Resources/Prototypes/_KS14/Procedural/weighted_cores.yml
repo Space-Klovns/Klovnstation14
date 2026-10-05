@@ -1,0 +1,48 @@
+- type: ksProcgenEntityPack
+  id: KsProcgenWeightedCoresFixture
+  entries:
+  - id: AlphaLight
+    entity: Table
+    weight: 1
+  - id: ZHeavy
+    entity: Table
+    weight: 1000000
+  - id: Disabled
+    entity: Table
+    weight: 0
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenWeightedCoresThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenWeightedCoresFixture
+  goals:
+    furnishingDensity: 0
+
+- type: ksProcgenEntityPack
+  id: KsProcgenWeightedRetryFixture
+  entries:
+  - id: TooWide
+    entity: Table
+    weight: 1000000
+    footprint:
+    - 0,0
+    - 8,0
+  - id: Small
+    entity: Table
+    weight: 1
+    minimumCount: 1
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenWeightedRetryThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenWeightedRetryFixture
+  goals:
+    furnishingDensity: 0.08

@@ -125,6 +125,7 @@ public sealed partial class KsProcgenEntityEntry
     [DataField(required: true)] public string Entity = string.Empty;
     [DataField] public float Weight = 1f;
     [DataField] public KsProcgenEntityRole Role;
+    [DataField] public int MinimumCount;
     [DataField] public KsProcgenMovementClass Movement = KsProcgenMovementClass.Blocks;
     [DataField] public List<Vector2i> Footprint = [new(0, 0)];
     [DataField] public List<int> AllowedQuarterTurns = [0, 1, 2, 3];
@@ -138,5 +139,6 @@ public sealed partial class KsProcgenEntityPackPrototype : IPrototype
     [DataField] public List<string> Tags = new();
     [DataField] public List<string> ActivityTags = new();
     [DataField] public List<string> CompatibleSupportTags = new();
-    [DataField(required: true)] public List<KsProcgenEntityEntry> Entries = new();
+    [DataField] public List<KsProcgenEntityEntry> Entries = new();
+    [DataField] public List<KsProcgenAssemblyReference> Assemblies = new();
 }

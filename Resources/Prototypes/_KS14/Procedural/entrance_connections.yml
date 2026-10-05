@@ -1,0 +1,30 @@
+- type: ksProcgenEntranceConnections
+  id: KsProcgenServiceConnections
+  configurations:
+  - id: ServiceAndStorage
+    groups:
+    - id: Service
+      ports:
+      - '1'
+      - '3'
+      - '4'
+    - id: Storage
+      ports:
+      - '9'
+      - '8'
+  - id: CrossService
+    groups:
+    - id: Service
+      ports:
+      - '1'
+      - '8'
+    - id: Storage
+      ports:
+      - '3'
+      - '4'
+      - '9'
+
+- type: ksProcgenAreaProfile
+  id: KsProcgenServiceArea
+  theme: KsProcgenSimpleOffice
+  entranceConnections: KsProcgenServiceConnections

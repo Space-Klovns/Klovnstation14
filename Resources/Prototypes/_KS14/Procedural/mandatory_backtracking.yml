@@ -1,0 +1,70 @@
+- type: ksProcgenAssembly
+  id: KsProcgenMandatoryFlexibleFixture
+  anchorMember: Table
+  members:
+  - id: Table
+    entity: Table
+    allowedQuarterTurns:
+    - 0
+    footprint:
+    - 0,0
+    - 1,0
+    rotationMode: Independent
+    approachLanding: 0,-1
+
+- type: ksProcgenEntityPack
+  id: KsProcgenMandatoryFlexiblePackFixture
+  assemblies:
+  - id: Flexible
+    assembly: KsProcgenMandatoryFlexibleFixture
+    minimumCount: 1
+
+- type: ksProcgenEntityPack
+  id: KsProcgenMandatoryCoreChoiceFixture
+  entries:
+  - id: Wide
+    entity: Table
+    weight: 1000000
+    footprint:
+    - 0,0
+    - 1,0
+  - id: Small
+    entity: Table
+
+- type: ksProcgenAssembly
+  id: KsProcgenMandatoryVariantFixture
+  anchorMember: Table
+  members:
+  - id: Table
+    entity: Table
+    allowedQuarterTurns:
+    - 0
+    footprint:
+    - 0,0
+    - 1,0
+    rotationMode: Independent
+  variants:
+  - id: Compact
+    anchorMember: Table
+    members:
+    - id: Table
+      entity: Table
+      allowedQuarterTurns:
+      - 0
+      rotationMode: Independent
+
+- type: ksProcgenEntityPack
+  id: KsProcgenMandatoryVariantPackFixture
+  assemblies:
+  - id: VariantCore
+    assembly: KsProcgenMandatoryVariantFixture
+
+- type: ksProcgenEntityPack
+  id: KsProcgenMandatoryDepthFixture
+  entries:
+  - id: Many
+    entity: Table
+    minimumCount: 64
+  - id: Extra
+    entity: Table
+    minimumCount: 1

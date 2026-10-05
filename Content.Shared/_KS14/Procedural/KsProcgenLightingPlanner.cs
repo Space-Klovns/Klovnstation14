@@ -54,7 +54,7 @@ public static class KsProcgenLightingPlanner
         var floor = new HashSet<Vector2i>(region.FloorCells);
         if (floor.Count == 0 || floor.Count != region.FloorCells.Count ||
             furnishings.ProtectedPassageCells.Any(cell => !floor.Contains(cell)) ||
-            furnishings.Entities.Any(entity => !floor.Contains(entity.Cell)))
+            furnishings.Entities.Any(entity => entity.OccupiedCells.Any(cell => !floor.Contains(cell))))
             return Failure(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingFloor");
 
         if (region.Theme.LightingPackId == null || region.Theme.LightFixtureId == null)
@@ -82,13 +82,13 @@ public static class KsProcgenLightingPlanner
             };
 
         var unavailable = new HashSet<Vector2i>(furnishings.ProtectedPassageCells);
-        unavailable.UnionWith(furnishings.Entities.Select(entity => entity.Cell));
+        unavailable.UnionWith(furnishings.Entities.SelectMany(entity => entity.OccupiedCells));
         unavailable.UnionWith(furnishings.Entities.Where(entity => entity.InteractionApproach.HasValue)
             .Select(entity => entity.InteractionApproach!.Value));
         // Conservatively treat fixture proposals as blocking, as the example floor post is solid.
         var blocked = new HashSet<Vector2i>(furnishings.Entities
             .Where(entity => entity.Movement != KsProcgenMovementClass.Clear)
-            .Select(entity => entity.Cell));
+            .SelectMany(entity => entity.OccupiedCells));
         var candidates = KsProcgenGeometry.SortCells(floor.Where(cell => !unavailable.Contains(cell)));
         var radius = Math.Max(1, fixture.PreferredSpacing / 2);
         var footprints = candidates.ToDictionary(cell => cell, cell => EstimateReach(cell, floor, radius));

@@ -39,6 +39,8 @@ public static class KsProcgenResidualConnector
         int maxExpandedCells = 100_000,
         bool requireAllProceduralConnected = false)
     {
+        if (shape.EntranceContract != null)
+            return Invalid("UnsupportedEntranceAwareResidual", "Legacy residual routing cannot consume declared entrance groups.");
         if (packing.Status != KsProcgenPackingStatus.GeometryReady ||
             maxExpandedCells <= 0 || maxExpandedCells > 1_000_000 ||
             roots.Any(root => !shape.ContainsTarget(root)) ||

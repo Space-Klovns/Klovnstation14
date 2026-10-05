@@ -1,0 +1,25 @@
+- type: ksProcgenEntityPack
+  id: KsProcgenMandatorySupportCoreFixture
+  entries:
+  - id: RequiredStorage
+    entity: Table
+    minimumCount: 1
+
+- type: ksProcgenEntityPack
+  id: KsProcgenMandatorySupportChoiceFixture
+  entries:
+  - id: TooWide
+    entity: Table
+    weight: 1000000
+    footprint:
+    - 0,0
+    - 8,0
+  - id: Small
+    entity: Table
+
+- type: ksProcgenEntityPack
+  id: KsProcgenImpossibleSupportCoreFixture
+  entries:
+  - id: RequiredStorage
+    entity: Table
+    minimumCount: 2

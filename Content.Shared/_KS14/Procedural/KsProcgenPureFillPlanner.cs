@@ -52,6 +52,8 @@ public static class KsProcgenPureFillPlanner
         int maxProceduralCells = 65_536,
         IReadOnlyList<KsProcgenRoomSizeGoal>? sizeMix = null)
     {
+        if (shape?.EntranceContract != null)
+            return Failure(KsProcgenPureFillStatus.InvalidInput, "UnsupportedEntranceAwarePureFill");
         if (shape == null || packing == null || packing.Status != KsProcgenPackingStatus.GeometryReady ||
             packing.CellClaims.Count != shape.TargetCells.Count ||
             preferredMaxRoomCells < minimumRoomCells || minimumRoomCells < 1 ||

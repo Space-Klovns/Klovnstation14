@@ -107,6 +107,46 @@ public sealed class KsProcgenInteractionFacingPlannerTests
         });
     }
 
+    [Test]
+    public void MultiCellMachineUsesReachableFrontEdgeAndAssociatedChair()
+    {
+        var floor = Rect(0, 0, 4, 3);
+        var footprint = new[] { new Vector2i(0, 0), new Vector2i(1, 0) };
+        var chair = new Vector2i(2, 0);
+        var result = KsProcgenInteractionFacingPlanner.ChooseMachineFacing(new Vector2i(1, 1),
+            floor, new HashSet<Vector2i>(), new HashSet<Vector2i>(),
+            new HashSet<Vector2i> { chair }, new HashSet<Vector2i> { new(0, 0) },
+            [0], 7, "WideConsole", chair, footprint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Status, Is.EqualTo(KsProcgenInteractionStatus.Ready));
+            Assert.That(result.Facing?.Approach, Is.EqualTo(chair));
+            Assert.That(result.Facing?.Facing, Is.EqualTo(new Vector2i(0, -1)));
+            Assert.That(result.Facing?.CleanPath[^1], Is.EqualTo(chair));
+        });
+    }
+
+    [Test]
+    public void MultiCellMachineRotatesWhenOnlyOneFootprintOrientationFits()
+    {
+        var floor = Rect(0, 0, 2, 3);
+        var footprint = new[] { new Vector2i(0, 0), new Vector2i(1, 0) };
+        var result = KsProcgenInteractionFacingPlanner.ChooseMachineFacing(new Vector2i(1, 1),
+            floor, new HashSet<Vector2i>(), new HashSet<Vector2i>(),
+            new HashSet<Vector2i>(), new HashSet<Vector2i> { new(0, 0) },
+            [0, 1, 2, 3], 7, "RotatedWideConsole", localFootprint: footprint);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Status, Is.EqualTo(KsProcgenInteractionStatus.Ready));
+            Assert.That(result.Facing?.QuarterTurns, Is.EqualTo(1));
+            Assert.That(result.Facing?.Facing, Is.EqualTo(new Vector2i(-1, 0)));
+            Assert.That(result.Facing?.Approach.X, Is.EqualTo(0));
+            Assert.That(result.Facing?.CleanPath, Is.Not.Empty);
+        });
+    }
+
     private static HashSet<Vector2i> Rect(int minX, int minY, int maxX, int maxY) =>
         Enumerable.Range(minX, maxX - minX).SelectMany(x => Enumerable.Range(minY, maxY - minY)
             .Select(y => new Vector2i(x, y))).ToHashSet();

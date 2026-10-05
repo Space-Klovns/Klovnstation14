@@ -42,6 +42,40 @@
     preferredSpacing: 6
     supply: SelfContained
 
+- type: ksProcgenAssembly
+  id: KsProcgenOfficeWorkstationAssembly
+  anchorMember: Desk
+  members:
+  - id: Desk
+    entity: Table
+    role: PrimaryFurniture
+    movement: VaultRequired
+    rotationMode: Independent
+  - id: Chair
+    entity: ChairOfficeLight
+    role: Seat
+    movement: Clear
+    rotationMode: Independent
+  - id: Console
+    entity: ComputerAlert
+    role: Equipment
+    requiresInteractionApproach: true
+    rotationMode: Independent
+  relations:
+  - id: ChairBesideDesk
+    subject: Chair
+    kind: AdjacentTo
+    target: Desk
+  - id: ChairFacesConsole
+    subject: Chair
+    kind: FacingTarget
+    target: Console
+  - id: ConsoleUsesChair
+    subject: Console
+    kind: UsesSeat
+    target: Chair
+    approachPolicy: EmptyOrAssociatedSeat
+
 - type: ksProcgenEntityPack
   id: KsProcgenOfficeWorkstations
   tags:
@@ -51,19 +85,9 @@
   - officeWork
   compatibleSupportTags:
   - officeStorage
-  entries:
-  - id: Desk
-    entity: Table
-    role: PrimaryFurniture
-    movement: VaultRequired
-  - id: Chair
-    entity: ChairOfficeLight
-    role: Seat
-    movement: Clear
-  - id: Console
-    entity: ComputerAlert
-    role: Equipment
-    requiresInteractionApproach: true
+  assemblies:
+  - id: Workstation
+    assembly: KsProcgenOfficeWorkstationAssembly
 
 - type: ksProcgenEntityPack
   id: KsProcgenOfficeStorage
@@ -111,3 +135,47 @@
   - pack: KsProcgenOfficeTiles
   wallPacks:
   - pack: KsProcgenNoDoorWallsFixture
+
+- type: ksProcgenEntityPack
+  id: KsProcgenLongTableFixture
+  entries:
+  - id: LongTable
+    entity: Table
+    role: PrimaryFurniture
+    movement: VaultRequired
+    footprint:
+    - 0,0
+    - 1,0
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenLongTableThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  lightingPacks:
+  - pack: KsProcgenOfficeLights
+  entityPacks:
+  - pack: KsProcgenLongTableFixture
+    minimumCount: 1
+
+- type: ksProcgenEntityPack
+  id: KsProcgenWideConsoleFixture
+  entries:
+  - id: WideConsole
+    entity: ComputerAlert
+    role: Equipment
+    requiresInteractionApproach: true
+    footprint:
+    - 0,0
+    - 1,0
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenWideConsoleThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenWideConsoleFixture
+    minimumCount: 1

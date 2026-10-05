@@ -1,0 +1,124 @@
+- type: entity
+  parent: CoordinatesDisk
+  id: KsProcgenInitializingDiskFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: RandomSpawner
+    chance: 1
+    prototypes:
+    - CoordinatesDisk
+
+- type: Tag
+  id: KsProcgenBlockedStorageFixture
+
+- type: entity
+  parent: ComputerShuttle
+  id: KsProcgenFilteredComputerFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: ItemSlots
+    slots:
+      disk_slot:
+        whitelist:
+          components:
+          - ShuttleDestinationCoordinates
+        blacklist:
+          tags:
+          - KsProcgenBlockedStorageFixture
+
+- type: entity
+  parent: Table
+  id: KsProcgenTrackedSurfaceFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: PlaceableSurface
+    placeCentered: true
+    positionOffset: 0.25,0
+  - type: ItemPlacer
+    maxEntities: 1
+    whitelist:
+      components:
+      - ShuttleDestinationCoordinates
+
+- type: entity
+  parent: KitchenMicrowave
+  id: KsProcgenRotatableMicrowaveFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Transform
+    noRot: false
+
+- type: entity
+  parent: CoordinatesDisk
+  id: KsProcgenSurfaceTaggedDiskFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Tag
+    tags:
+    - KsProcgenBlockedStorageFixture
+
+- type: entity
+  parent: KsProcgenTrackedSurfaceFixture
+  id: KsProcgenTaggedSurfaceFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: ItemPlacer
+    whitelist:
+      requireAll: true
+      components:
+      - ShuttleDestinationCoordinates
+      tags:
+      - KsProcgenBlockedStorageFixture
+
+- type: entity
+  parent: ChemistryHotplate
+  id: KsProcgenUnlimitedHotplateFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: ItemPlacer
+    maxEntities: 0
+
+- type: entity
+  parent: ChemistryHotplate
+  id: KsProcgenHardContactHotplateFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Fixtures
+    fixtures:
+      itemcollide:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.14,-0.05,0.15,0.25"
+        layer:
+        - HighImpassable
+        hard: true
+
+- type: entity
+  parent: ChemistryHotplate
+  id: KsProcgenCircleSensorFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Fixtures
+    fixtures:
+      itemcollide:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.5
+        layer:
+        - HighImpassable
+        hard: false
+
+- type: entity
+  parent: Beaker
+  id: KsProcgenCircleBeakerFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.5
+        mask:
+        - ItemMask
+        hard: true

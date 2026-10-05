@@ -14,6 +14,7 @@ public enum KsProcgenGeometryPipelineStatus : byte
     ThemeRejected,
     ContentUnmet,
     WindowTargetUnmet,
+    FallbackDisallowed,
 }
 
 public sealed record KsProcgenFurnishedRegion(string RegionId, KsProcgenFurnishingResult Proposal);
@@ -47,6 +48,8 @@ public sealed class KsProcgenGeometryPipelineResult
     public bool HasUnverifiedConstantRegions { get; init; }
     public bool HasUnverifiedHardWindowGoal { get; init; }
     public bool HasUnplacedRequiredEntityPacks { get; init; }
+    public KsProcgenPlanningReport Summarize(KsProcgenRequest request, int maxEntries = 4_096) =>
+        KsProcgenPlanningReportBuilder.Build(request, this, maxEntries);
 }
 
 /// <summary>
@@ -151,6 +154,17 @@ public static class KsProcgenGeometryPipeline
                 Themes = themes,
                 Materials = materials,
             };
+        if (!request.FallbackPolicy.AllowMergedPartition &&
+            partition.Status is KsProcgenPartitionStatus.MergedFallback or KsProcgenPartitionStatus.OpenFallback)
+            return new KsProcgenGeometryPipelineResult
+            {
+                Status = KsProcgenGeometryPipelineStatus.FallbackDisallowed,
+                Issue = new KsProcgenIssue("PartitionFallbackDisallowed",
+                    "The proposed partition requires merging or open-floor fallback."),
+                Packing = packing,
+                PureFill = fill,
+                Partition = partition,
+            };
 
         var portNetwork = shape!.TargetCells.Count == 0 ? null : KsProcgenPortNetworkAnalyzer.AnalyzePartitioned(
             shape, packing, partition, inspectedExistingPassages ?? new HashSet<Vector2i>(), request.RootCells);
@@ -211,6 +225,23 @@ public static class KsProcgenGeometryPipeline
 
         var furnishings = new List<KsProcgenFurnishedRegion>();
         var finalSizeMix = KsProcgenSizeMixAnalyzer.Analyze(request.SizeMix, themes.Regions);
+        if (!request.FallbackPolicy.AllowRoomSizeShortfall &&
+            finalSizeMix.Any(item => item.AchievedCount < item.RequestedCount))
+            return new KsProcgenGeometryPipelineResult
+            {
+                Status = KsProcgenGeometryPipelineStatus.FallbackDisallowed,
+                Issue = new KsProcgenIssue("RoomSizeShortfallDisallowed",
+                    "The final partition cannot meet every requested room-size count."),
+                Packing = packing,
+                PortNetwork = portNetwork,
+                PureFill = fill,
+                Partition = partition,
+                Themes = themes,
+                Materials = materials,
+                HullBoundary = hullBoundary,
+                Windows = windows,
+                FinalSizeMixOutcomes = finalSizeMix,
+            };
         var usedFurnishingProbes = 0;
         foreach (var region in themes.Regions)
         {
@@ -238,6 +269,24 @@ public static class KsProcgenGeometryPipeline
                 region, partition, request.Seed, maxCandidateProbes: remaining);
             furnishings.Add(new KsProcgenFurnishedRegion(region.Id, proposed));
             usedFurnishingProbes += proposed.CandidateProbes;
+            if (proposed.Status == KsProcgenFurnishingStatus.Sparse &&
+                !request.FallbackPolicy.AllowSparseFurnishing)
+                return new KsProcgenGeometryPipelineResult
+                {
+                    Status = KsProcgenGeometryPipelineStatus.FallbackDisallowed,
+                    Issue = new KsProcgenIssue("SparseFurnishingDisallowed",
+                        $"Room {region.Id} needs an optional furnishing omission."),
+                    Packing = packing,
+                    PortNetwork = portNetwork,
+                    PureFill = fill,
+                    Partition = partition,
+                    Themes = themes,
+                    Materials = materials,
+                    HullBoundary = hullBoundary,
+                    Windows = windows,
+                    Furnishings = furnishings,
+                    FinalSizeMixOutcomes = finalSizeMix,
+                };
             if (proposed.Status is KsProcgenFurnishingStatus.Proposed or KsProcgenFurnishingStatus.Sparse)
                 continue;
             return new KsProcgenGeometryPipelineResult
@@ -291,6 +340,25 @@ public static class KsProcgenGeometryPipeline
                 furnished.Proposal, request.Seed, maxFixtures: remaining);
             lighting.Add(new KsProcgenLitRegion(region.Id, proposed));
             usedLightingFixtures += proposed.Lights.Count;
+            if (proposed.Status == KsProcgenLightingPlanStatus.Sparse &&
+                !request.FallbackPolicy.AllowSparseLighting)
+                return new KsProcgenGeometryPipelineResult
+                {
+                    Status = KsProcgenGeometryPipelineStatus.FallbackDisallowed,
+                    Issue = new KsProcgenIssue("SparseLightingDisallowed",
+                        $"Region {region.Id} needs sparse provisional lighting."),
+                    Packing = packing,
+                    PortNetwork = portNetwork,
+                    PureFill = fill,
+                    Partition = partition,
+                    Themes = themes,
+                    Materials = materials,
+                    HullBoundary = hullBoundary,
+                    Windows = windows,
+                    Furnishings = furnishings,
+                    Lighting = lighting,
+                    FinalSizeMixOutcomes = finalSizeMix,
+                };
             if (proposed.Status is KsProcgenLightingPlanStatus.Proposed or
                 KsProcgenLightingPlanStatus.Sparse or KsProcgenLightingPlanStatus.NotRequested)
                 continue;
@@ -359,12 +427,16 @@ public static class KsProcgenGeometryPipeline
         IReadOnlyList<KsProcgenSizeMixOutcome> finalSizeMix)
     {
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-geometry-plan-v12");
+        hash.AddString("ks-procgen-geometry-plan-v20");
         hash.AddString(request.RequestId);
         hash.AddInt(request.Seed);
         hash.AddInt((int) request.Mode);
         hash.AddInt((int) request.GeometryMode);
         hash.AddInt((int) request.ConnectivityPolicy);
+        hash.AddInt(request.FallbackPolicy.AllowMergedPartition ? 1 : 0);
+        hash.AddInt(request.FallbackPolicy.AllowRoomSizeShortfall ? 1 : 0);
+        hash.AddInt(request.FallbackPolicy.AllowSparseFurnishing ? 1 : 0);
+        hash.AddInt(request.FallbackPolicy.AllowSparseLighting ? 1 : 0);
         hash.AddInt(request.RootCells.Count);
         foreach (var root in request.RootCells.OrderBy(cell => cell.Y).ThenBy(cell => cell.X))
         {
@@ -530,6 +602,7 @@ public static class KsProcgenGeometryPipeline
             hash.AddString(region.Theme.LightingPackId ?? "");
             hash.AddString(region.Theme.LightFixtureId ?? "");
             hash.AddString(region.Theme.DominantEntityPackId ?? "");
+            hash.AddInt(BitConverter.SingleToInt32Bits(region.Theme.FurnishingDensity));
             hash.AddInt(region.Theme.SupportingEntityPackIds.Count);
             foreach (var support in region.Theme.SupportingEntityPackIds.OrderBy(id => id, StringComparer.Ordinal))
                 hash.AddString(support);
@@ -644,10 +717,26 @@ public static class KsProcgenGeometryPipeline
             {
                 hash.AddString(entity.PackId);
                 hash.AddString(entity.EntryId);
+                hash.AddString(entity.CoreId ?? string.Empty);
+                hash.AddString(entity.AssemblyId ?? string.Empty);
+                hash.AddString(entity.VariantId ?? string.Empty);
                 hash.AddString(entity.EntityId);
                 hash.AddInt(entity.Cell.X);
                 hash.AddInt(entity.Cell.Y);
+                hash.AddInt(entity.OccupiedCells.Count);
+                foreach (var occupiedCell in entity.OccupiedCells)
+                {
+                    hash.AddInt(occupiedCell.X);
+                    hash.AddInt(occupiedCell.Y);
+                }
                 hash.AddInt(entity.QuarterTurns);
+                hash.AddInt(entity.ClusterIndex);
+                hash.AddInt(entity.DeclaredApproachLanding.HasValue ? 1 : 0);
+                if (entity.DeclaredApproachLanding.HasValue)
+                {
+                    hash.AddInt(entity.DeclaredApproachLanding.Value.X);
+                    hash.AddInt(entity.DeclaredApproachLanding.Value.Y);
+                }
                 hash.AddInt((int) entity.Movement);
                 hash.AddInt(entity.InteractionApproach.HasValue ? 1 : 0);
                 if (entity.InteractionApproach.HasValue)
@@ -657,6 +746,60 @@ public static class KsProcgenGeometryPipeline
                 }
             }
             hash.AddInt(furnished.Proposal.Omissions.Count);
+            hash.AddInt(furnished.Proposal.PreferenceSearchTruncated ? 1 : 0);
+            hash.AddInt(furnished.Proposal.RelationPathSearchTruncated ? 1 : 0);
+            hash.AddInt(furnished.Proposal.RelationWitnesses.Count);
+            foreach (var witness in furnished.Proposal.RelationWitnesses
+                         .OrderBy(item => item.PackId, StringComparer.Ordinal)
+                         .ThenBy(item => item.CoreId, StringComparer.Ordinal)
+                         .ThenBy(item => item.ClusterIndex)
+                         .ThenBy(item => item.RelationId, StringComparer.Ordinal))
+            {
+                hash.AddString(witness.PackId);
+                hash.AddString(witness.CoreId);
+                hash.AddString(witness.AssemblyId);
+                hash.AddString(witness.VariantId);
+                hash.AddInt(witness.ClusterIndex);
+                hash.AddString(witness.RelationId);
+                hash.AddString(witness.SubjectId);
+                hash.AddString(witness.TargetId ?? string.Empty);
+                hash.AddInt((int) witness.Kind);
+                hash.AddInt((int) witness.Severity);
+                hash.AddInt((int) witness.State);
+                hash.AddString(witness.ReasonCode ?? string.Empty);
+                foreach (var distance in new[] { witness.MinimumDistance, witness.MaximumDistance, witness.PathDistance })
+                {
+                    hash.AddInt(distance.HasValue ? 1 : 0);
+                    if (distance.HasValue)
+                        hash.AddInt(distance.Value);
+                }
+                hash.AddInt(witness.CleanPath.Cells.Count);
+                foreach (var cell in witness.CleanPath.Cells)
+                {
+                    hash.AddInt(cell.X);
+                    hash.AddInt(cell.Y);
+                }
+                hash.AddInt(witness.SubjectCell.HasValue ? 1 : 0);
+                if (witness.SubjectCell.HasValue)
+                {
+                    hash.AddInt(witness.SubjectCell.Value.X);
+                    hash.AddInt(witness.SubjectCell.Value.Y);
+                }
+                hash.AddInt(witness.TargetCell.HasValue ? 1 : 0);
+                if (witness.TargetCell.HasValue)
+                {
+                    hash.AddInt(witness.TargetCell.Value.X);
+                    hash.AddInt(witness.TargetCell.Value.Y);
+                }
+                foreach (var cell in new[] { witness.FirstBackingWall, witness.SecondBackingWall, witness.InteractionApproach })
+                {
+                    hash.AddInt(cell.HasValue ? 1 : 0);
+                    if (!cell.HasValue)
+                        continue;
+                    hash.AddInt(cell.Value.X);
+                    hash.AddInt(cell.Value.Y);
+                }
+            }
             foreach (var omission in furnished.Proposal.Omissions.OrderBy(item => item.PackId, StringComparer.Ordinal))
             {
                 hash.AddString(omission.PackId);

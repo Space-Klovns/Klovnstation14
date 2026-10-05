@@ -19,6 +19,7 @@ public enum KsProcgenConnectivityPolicy : byte
 {
     SingleNetwork,
     PerIsland,
+    DeclaredNetworks,
 }
 
 public enum KsProcgenStatus : byte
@@ -113,6 +114,19 @@ public sealed partial class KsProcgenWindowGoal
 }
 
 /// <summary>
+/// Permission for existing bounded, soft planning fallbacks. Disabling a permission promotes that
+/// outcome to a planning failure; it does not relax an immutable or request-hard constraint.
+/// </summary>
+[DataDefinition]
+public sealed partial class KsProcgenFallbackPolicy
+{
+    [DataField] public bool AllowMergedPartition = true;
+    [DataField] public bool AllowRoomSizeShortfall = true;
+    [DataField] public bool AllowSparseFurnishing = true;
+    [DataField] public bool AllowSparseLighting = true;
+}
+
+/// <summary>
 /// Phase A request contract. Later phases add library, theme, port, and constant-region fields.
 /// </summary>
 [DataDefinition]
@@ -127,8 +141,10 @@ public sealed partial class KsProcgenRequest
     [DataField] public KsProcgenLimits Limits = new();
     [DataField] public List<Vector2i> RootCells = new();
     [DataField] public List<KsProcgenConstantRegionSpec> ConstantRegions = new();
+    [DataField] public KsProcgenEntranceRequestSpec? EntranceDomain;
     [DataField] public List<KsProcgenRoomSizeGoal> SizeMix = new();
     [DataField] public KsProcgenWindowGoal WindowGoal = new();
+    [DataField] public KsProcgenFallbackPolicy FallbackPolicy = new();
 }
 
 public sealed record KsProcgenIssue(string Code, string Message);
