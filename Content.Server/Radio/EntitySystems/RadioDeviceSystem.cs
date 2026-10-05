@@ -155,7 +155,7 @@ public sealed partial class RadioDeviceSystem : SharedRadioDeviceSystem
 
         var channel = ProtoMan.Index<RadioChannelPrototype>(component.BroadcastChannel)!;
         if (_recentlySent.Add((args.Message, args.Source, channel)))
-            _radio.SendRadioMessage(args.Source, args.Message, channel, uid, ksLanguage: args.KsLanguage /* KS14 */);
+            _radio.SendRadioMessage(args.Source, args.Message, channel, uid, ksLanguage: args.KsLanguage, ksTranslationText: args.KsTranslationText /* KS14 */);
     }
 
     private void OnAttemptListen(EntityUid uid, RadioMicrophoneComponent component, ListenAttemptEvent args)

@@ -1007,6 +1007,7 @@ public sealed partial class ChatUIController : UIController
 
             stored.Message = translated;
             stored.WrappedMessage = rebuilt;
+            UpdateTranslatedSpeechBubbles(stored); // KS14: refresh already visible bubbles; queued bubbles share this message.
             // KS14: re-render only this one line, not the whole history. A full Repopulate() here is
             // O(History) markup-parse + relayout per swap, and History is uncapped over a round.
             ReplaceMessage(i);

@@ -334,9 +334,10 @@ public sealed partial class KsTranslationSystem : EntitySystem
         if (ctx is null)
             return shared;
 
-        // Translate exactly what this reader will see: if the jammer already swapped in a garbled clone,
-        // this keys off that garbled text (harmless) rather than leaking the clear original onto it.
-        var id = TryReader(shared.Message.Message, ctx, reader.Channel);
+        // Clear broadcasts use the text before accents. A jammer's garbled clone must never
+        // receive a translation of the clear original.
+        var plain = shared.Message.Message == ctx.RadioMessage ? ctx.Text : shared.Message.Message;
+        var id = TryReader(plain, ctx, reader.Channel);
         if (id is not { } messageId)
             return shared;
 
@@ -480,6 +481,9 @@ public sealed class KsTranslationContext
 
     /// <summary>The plain message text, letting a same-text companion line or repeat bypass the cooldown.</summary>
     public string Text = "";
+
+    /// <summary>The clear radio broadcast after accents, used to detect jammed deliveries.</summary>
+    public string? RadioMessage;
 
     /// <summary>The unbilled DeepL context hint (setting hint + recent channel lines) for this message.</summary>
     public string Context = "";

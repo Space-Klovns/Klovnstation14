@@ -47,7 +47,7 @@ public sealed partial class RadioSystem : EntitySystem
     {
         if (args.Channel != null && component.Channels.Contains(args.Channel.ID))
         {
-            SendRadioMessage(uid, args.Message, args.Channel, uid, ksLanguage: args.KsLanguage /* KS14 */);
+            SendRadioMessage(uid, args.Message, args.Channel, uid, ksLanguage: args.KsLanguage, ksTranslationText: args.KsTranslationText /* KS14 */);
             args.Channel = null; // prevent duplicate messages from other listeners.
         }
     }
@@ -61,9 +61,9 @@ public sealed partial class RadioSystem : EntitySystem
     /// <summary>
     /// Send radio message to all active radio listeners
     /// </summary>
-    public void SendRadioMessage(EntityUid messageSource, string message, ProtoId<RadioChannelPrototype> channel, EntityUid radioSource, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */)
+    public void SendRadioMessage(EntityUid messageSource, string message, ProtoId<RadioChannelPrototype> channel, EntityUid radioSource, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */, string? ksTranslationText = null /* KS14: text before accents */)
     {
-        SendRadioMessage(messageSource, message, ProtoMan.Index(channel), radioSource, escapeMarkup: escapeMarkup, ksLanguage: ksLanguage /* KS14 */);
+        SendRadioMessage(messageSource, message, ProtoMan.Index(channel), radioSource, escapeMarkup: escapeMarkup, ksLanguage: ksLanguage, ksTranslationText: ksTranslationText /* KS14 */);
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public sealed partial class RadioSystem : EntitySystem
     /// </summary>
     /// <param name="messageSource">Entity that spoke the message</param>
     /// <param name="radioSource">Entity that picked up the message and will send it, e.g. headset</param>
-    public void SendRadioMessage(EntityUid messageSource, string message, RadioChannelPrototype channel, EntityUid radioSource, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */)
+    public void SendRadioMessage(EntityUid messageSource, string message, RadioChannelPrototype channel, EntityUid radioSource, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */, string? ksTranslationText = null /* KS14: text before accents */)
     {
         // TODO if radios ever garble / modify messages, feedback-prevention needs to be handled better than this.
         if (!_messages.Add(message))
@@ -156,7 +156,11 @@ public sealed partial class RadioSystem : EntitySystem
         // KS14 End
 
         // KS14: begin per-reader translation once for the whole broadcast (gating + cooldown are message-level).
-        _translation.TryBeginLocal(ChatChannel.Radio, message, messageSource, out var translation);
+        // KS14 start: translate pre-accent text, but retain the broadcast text to detect jammed deliveries.
+        _translation.TryBeginLocal(ChatChannel.Radio, ksTranslationText ?? message, messageSource, out var translation);
+        if (translation != null)
+            translation.RadioMessage = message;
+        // KS14 end
 
         var ev = new RadioReceiveEvent(message, messageSource, channel, radioSource, chatMsg, translation /* KS14 */, ksLanguage /* KS14 */, ksObfuscatedChatMsg /* KS14 */);
 
