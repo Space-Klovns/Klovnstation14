@@ -2174,3 +2174,11 @@ Entries:
         `klovn.voice.public_path`.
   id: 224
   time: '2026-09-30T10:32:46.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Chat translation not affecting speech bubbles.
+    - type: Fix
+      message: Chat translation using speech with accents applied.
+  id: 225
+  time: '2026-10-05T21:50:46.0000000+00:00'
