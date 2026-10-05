@@ -1,4 +1,5 @@
 using System.Globalization;
+using Content.Shared.Localizations;
 using Robust.Shared.Localization;
 
 namespace Content.Server._KS14.Localization;
@@ -14,7 +15,7 @@ public sealed class KsExamineLocaleScope : IDisposable
     public KsExamineLocaleScope(ILocalizationManager localizationManager, CultureInfo culture)
     {
         _localizationManager = localizationManager;
-        _previousCulture = localizationManager.DefaultCulture ?? CultureInfo.GetCultureInfo("en-US");
+        _previousCulture = localizationManager.DefaultCulture ?? CultureInfo.GetCultureInfo(ContentLocalizationManager.DefaultCultureName);
         localizationManager.SetCulture(culture);
     }
 

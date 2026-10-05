@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq;
 using Content.Shared.Chat;
 using Robust.Shared.Prototypes;
@@ -11,9 +12,24 @@ public static class KsRadioLocalization
         if (culture == null)
             return null;
 
-        var locales = prototypeManager.EnumeratePrototypes<KsRadioLocalePrototype>();
-        return locales.FirstOrDefault(locale => locale.Culture.Equals(culture, StringComparison.OrdinalIgnoreCase))
-            ?? locales.FirstOrDefault(locale => locale.Culture.Equals(culture.Split('-')[0], StringComparison.OrdinalIgnoreCase));
+        CultureInfo cultureInfo;
+        try
+        {
+            cultureInfo = CultureInfo.GetCultureInfo(culture);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+        var locales = prototypeManager.EnumeratePrototypes<KsRadioLocalePrototype>().ToArray();
+        while (cultureInfo.Name.Length > 0)
+        {
+            var locale = locales.FirstOrDefault(locale => locale.Culture.Equals(cultureInfo.Name, StringComparison.OrdinalIgnoreCase));
+            if (locale != null)
+                return locale;
+            cultureInfo = cultureInfo.Parent;
+        }
+        return null;
     }
 
     public static char GetLocalizedKey(IPrototypeManager prototypeManager, string? culture, char canonicalKey)

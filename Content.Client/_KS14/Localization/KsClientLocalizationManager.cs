@@ -22,16 +22,18 @@ public sealed partial class KsClientLocalizationManager
 
     private void ApplyLocale(string locale)
     {
-        var culture = CultureInfo.GetCultureInfo(locale == "ru-RU" ? "ru-RU" : "en-US");
-        var englishCulture = CultureInfo.GetCultureInfo("en-US");
+        var culture = _contentLocalizationManager.ResolveCulture(locale);
+        var englishCulture = CultureInfo.GetCultureInfo(ContentLocalizationManager.DefaultCultureName);
         _contentLocalizationManager.LoadAdditionalCulture(culture);
         _localizationManager.SetFallbackCulture(englishCulture);
 
-        if (_localizationManager.DefaultCulture?.Name == culture.Name)
-            return;
-
-        _localizationManager.SetCulture(culture);
-        // SetCulture alone does not invalidate the engine's prototype-name cache.
-        _localizationManager.ReloadLocalizations();
+        if (_localizationManager.DefaultCulture?.Name != culture.Name)
+        {
+            _localizationManager.SetCulture(culture);
+            // SetCulture alone does not invalidate the engine's prototype-name cache.
+            _localizationManager.ReloadLocalizations();
+        }
+        if (locale != culture.Name)
+            _configurationManager.SetCVar(KsCCVars.ClientLocale, culture.Name);
     }
 }

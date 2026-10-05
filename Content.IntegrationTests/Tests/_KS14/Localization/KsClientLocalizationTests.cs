@@ -1,3 +1,4 @@
+using System.Linq;
 using Content.Client.Options.UI;
 using Content.Client.Options.UI.Tabs;
 using Content.Client.Guidebook;
@@ -14,6 +15,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Utility;
 
 namespace Content.IntegrationTests.Tests._KS14.Localization;
 
@@ -31,6 +33,8 @@ public sealed class KsClientLocalizationTests : GameTest
         var restoredName = "";
         var formattedEnergy = "";
         var localeOptionCount = 0;
+        var installedCultureCount = 0;
+        string[] installedCultures = [];
 
         await Client.WaitPost(() =>
         {
@@ -46,6 +50,9 @@ public sealed class KsClientLocalizationTests : GameTest
                 Does.Contain("Вт"));
             var tab = new Ks14Tab();
             localeOptionCount = tab.FindControl<OptionDropDown>("DropDownClientLocale").Button.ItemCount;
+            installedCultureCount = Client.ResolveDependency<ContentLocalizationManager>().GetAvailableCultures().Count;
+            installedCultures = Client.ResolveDependency<ContentLocalizationManager>().GetAvailableCultures()
+                .Select(culture => culture.Name).ToArray();
             configurationManager.SetCVar(KsCCVars.ClientLocale, "en-US");
             restoredName = localizationManager.GetEntityData("Wrench").Name;
         });
@@ -56,9 +63,131 @@ public sealed class KsClientLocalizationTests : GameTest
             Assert.That(russianName, Is.Not.Empty.And.Not.EqualTo(englishName));
             Assert.That(restoredName, Is.EqualTo(englishName), "changing culture must invalidate entity-name caches");
             Assert.That(formattedEnergy, Does.Contain("Вт"), "content formatting functions must be registered for Russian");
-            Assert.That(localeOptionCount, Is.EqualTo(2));
+            Assert.That(localeOptionCount, Is.EqualTo(installedCultureCount));
+            Assert.That(installedCultures, Does.Not.Contain("pt-BR").And.Not.Contain("nl-NL"));
             Assert.That(Server.ResolveDependency<ILocalizationManager>().DefaultCulture?.Name, Is.EqualTo("en-US"));
         });
+    }
+
+    [Test]
+    public async Task AddedCultureWorksInSettingsFormattingGuidebookAndServerExamine()
+    {
+        const string frenchOptions = "ks-ui-options-client-locale = Langue du client";
+        const string frenchLocale = """
+            ent-Wrench = clé
+                .desc = Une clé française.
+            ent-BulletLaserSpreadNarrow = rafale laser létale
+                .desc = { "" }
+            gun-set-fire-mode-examine = Mode choisi : { $mode }.
+            ks-test-locale-number = { NATURALFIXED($value, 2) }
+            """;
+        var serverResources = new MemoryContentRoot();
+        var clientResources = new MemoryContentRoot();
+        var testMap = await Pair.CreateTestMap();
+        var gunNetEntity = NetEntity.Invalid;
+        ExamineSystemMessages.ExamineInfoResponseMessage? response = null;
+        EventHandler<object> capture = (_, message) =>
+        {
+            if (message is ExamineSystemMessages.ExamineInfoResponseMessage examineResponse)
+                response = examineResponse;
+        };
+        var configurationManager = Client.ResolveDependency<IConfigurationManager>();
+        var localizationManager = Client.ResolveDependency<ILocalizationManager>();
+        var contentLocalizationManager = Client.ResolveDependency<ContentLocalizationManager>();
+        var selectedCulture = "";
+        var canonicalSetting = "";
+        var wrenchName = "";
+        var formattedNumber = "";
+        var optionCount = 0;
+        var installedCount = 0;
+        var guideText = "";
+        var rejectedClientCulture = "";
+        var restoredServerCulture = "";
+        try
+        {
+            await Server.WaitPost(() =>
+            {
+                serverResources.AddOrUpdateFile(new ResPath("Locale/fr-FR/test.ftl"), frenchLocale);
+                serverResources.AddOrUpdateFile(new ResPath("Locale/fr-FR/_KS14/Localization/options.ftl"), frenchOptions);
+                Server.ResolveDependency<IResourceManager>().AddRoot(new ResPath("/"), serverResources);
+                Server.ResolveDependency<ContentLocalizationManager>().RefreshAvailableCultures();
+                var observerUid = SEntMan.SpawnEntity("MobObserver", testMap.GridCoords);
+                Server.PlayerMan.SetAttachedEntity(ServerSession!, observerUid);
+                var gunUid = SEntMan.SpawnEntity("WeaponEnergyShotgun", testMap.GridCoords);
+                gunNetEntity = SEntMan.GetNetEntity(gunUid);
+                Server.ResolveDependency<ILocalizationManager>().GetEntityData("BulletLaserSpreadNarrow");
+            });
+            await RunUntilSynced();
+            await Client.WaitPost(() =>
+            {
+                clientResources.AddOrUpdateFile(new ResPath("Locale/fr-FR/test.ftl"), frenchLocale);
+                clientResources.AddOrUpdateFile(new ResPath("Locale/fr-FR/_KS14/Localization/options.ftl"), frenchOptions);
+                var power = Client.ResolveDependency<IPrototypeManager>().Index<GuideEntryPrototype>("Power");
+                var relative = power.Text.ToString().TrimStart('/')[11..];
+                clientResources.AddOrUpdateFile(new ResPath($"ServerInfo/_KS14/Guidebook/fr/{relative}"), "<Document># Électricité</Document>");
+                Client.ResolveDependency<IResourceManager>().AddRoot(new ResPath("/"), clientResources);
+                contentLocalizationManager.RefreshAvailableCultures();
+                configurationManager.SetCVar(KsCCVars.ClientLocale, "fr-fr");
+                selectedCulture = localizationManager.DefaultCulture!.Name;
+                canonicalSetting = configurationManager.GetCVar(KsCCVars.ClientLocale);
+                wrenchName = localizationManager.GetEntityData("Wrench").Name;
+                formattedNumber = localizationManager.GetString("ks-test-locale-number", ("value", 1234.5));
+                var tab = new Ks14Tab();
+                optionCount = tab.FindControl<OptionDropDown>("DropDownClientLocale").Button.ItemCount;
+                installedCount = contentLocalizationManager.GetAvailableCultures().Count;
+                var path = Client.ResolveDependency<DocumentParsingManager>().GetLocalizedDocumentPath(power.Text);
+                using var reader = Client.ResolveDependency<IResourceManager>().ContentFileReadText(path);
+                guideText = reader.ReadToEnd();
+                CEntMan.EntityNetManager.ReceivedSystemMessage += capture;
+                CEntMan.EntityNetManager.SendSystemNetworkMessage(new ExamineSystemMessages.RequestExamineInfoMessage(gunNetEntity, 1234)
+                {
+                    ClientLocale = "fr-FR",
+                });
+            });
+            await Pair.RunTicksSync(10);
+            Assert.Multiple(() =>
+            {
+                Assert.That(selectedCulture, Is.EqualTo("fr-FR"));
+                Assert.That(canonicalSetting, Is.EqualTo("fr-FR"));
+                Assert.That(wrenchName, Is.EqualTo("clé"));
+                Assert.That(formattedNumber, Does.Contain(",5"));
+                Assert.That(optionCount, Is.EqualTo(installedCount).And.GreaterThanOrEqualTo(3));
+                Assert.That(guideText, Does.Contain("Électricité"));
+                Assert.That(response, Is.Not.Null);
+                Assert.That(response!.Message.ToString(), Does.Contain("Mode choisi : rafale laser létale"));
+            });
+            await Client.WaitPost(() =>
+            {
+                response = null;
+                CEntMan.EntityNetManager.SendSystemNetworkMessage(new ExamineSystemMessages.RequestExamineInfoMessage(gunNetEntity, 1235)
+                {
+                    ClientLocale = "../../ru-RU",
+                });
+                configurationManager.SetCVar(KsCCVars.ClientLocale, "../../ru-RU");
+                rejectedClientCulture = configurationManager.GetCVar(KsCCVars.ClientLocale);
+            });
+            await Pair.RunTicksSync(10);
+            await Server.WaitPost(() => restoredServerCulture = Server.ResolveDependency<ILocalizationManager>().DefaultCulture!.Name);
+            Assert.That(rejectedClientCulture, Is.EqualTo("en-US"));
+            Assert.That(restoredServerCulture, Is.EqualTo("en-US"));
+            Assert.That(response, Is.Not.Null);
+            Assert.That(response!.Message.ToString(), Does.Contain("lethal laser barrage").And.Not.Contain("rafale laser létale"));
+        }
+        finally
+        {
+            await Client.WaitPost(() =>
+            {
+                CEntMan.EntityNetManager.ReceivedSystemMessage -= capture;
+                configurationManager.SetCVar(KsCCVars.ClientLocale, "en-US");
+                clientResources.Clear();
+                contentLocalizationManager.RefreshAvailableCultures();
+            });
+            await Server.WaitPost(() =>
+            {
+                serverResources.Clear();
+                Server.ResolveDependency<ContentLocalizationManager>().RefreshAvailableCultures();
+            });
+        }
     }
 
     [Test]

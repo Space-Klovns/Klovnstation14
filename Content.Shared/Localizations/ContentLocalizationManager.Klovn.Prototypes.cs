@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Text.RegularExpressions;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -9,7 +8,6 @@ namespace Content.Shared.Localizations;
 
 public sealed partial class ContentLocalizationManager
 {
-    [Dependency] private IResourceManager _prototypeLocaleResourceManager = default!;
     [Dependency] private IPrototypeManager _prototypeLocalePrototypeManager = default!;
 
     private readonly Dictionary<string, HashSet<string>> _prototypeNameMessages = new();
@@ -33,20 +31,21 @@ public sealed partial class ContentLocalizationManager
     /// </summary>
     public string GetLocalizedPrototypeName(EntityPrototype prototype)
     {
-        var culture = _loc.DefaultCulture?.Name ?? "en-US";
-        if (culture == "en-US")
+        var culture = _loc.DefaultCulture?.Name ?? DefaultCultureName;
+        if (culture == DefaultCultureName)
             return prototype.Name;
 
         if (!_prototypeNameMessages.TryGetValue(culture, out var namedMessages))
         {
             namedMessages = new HashSet<string>();
-            var files = _prototypeLocaleResourceManager.ContentFindFiles($"/Locale/{culture}")
-                .Concat(_prototypeLocaleResourceManager.ContentFindFiles("/Uploaded")
+            var files = _localizationResourceManager.ContentFindFiles($"/Locale/{culture}")
+                .Concat(_localizationResourceManager.ContentFindFiles("/Uploaded")
                     .Where(path => path.ToString().Contains($"/Locale/{culture}/", StringComparison.Ordinal)))
-                .Where(path => path.Filename.EndsWith(".ftl", StringComparison.OrdinalIgnoreCase));
+                .Where(path => path.Filename.EndsWith(".ftl", StringComparison.OrdinalIgnoreCase))
+                .ToArray(); // Release content-root enumeration locks before opening files.
             foreach (var path in files)
             {
-                using var reader = _prototypeLocaleResourceManager.ContentFileReadText(path);
+                using var reader = _localizationResourceManager.ContentFileReadText(path);
                 // Index only whether a name value exists. The engine still parses and
                 // formats its Fluent pattern; attribute-only entries inherit their name.
                 foreach (Match match in PrototypeNamePattern.Matches(reader.ReadToEnd()))

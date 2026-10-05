@@ -15,7 +15,7 @@ public sealed partial class ExamineSystem
 
     private IDisposable BeginExamineLocale(string requestedLocale)
     {
-        var culture = CultureInfo.GetCultureInfo(requestedLocale == "ru-RU" ? "ru-RU" : "en-US");
+        var culture = _contentLocalizationManager.ResolveCulture(requestedLocale);
         // Prototype metadata caches belong to the server's ordinary culture. Populate
         // them before temporarily formatting the response in another language.
         if (!_localizationManager.HasCulture(culture))
@@ -24,7 +24,7 @@ public sealed partial class ExamineSystem
                 _localizationManager.GetEntityData(prototype.ID);
         }
         _contentLocalizationManager.LoadAdditionalCulture(culture);
-        _localizationManager.SetFallbackCulture(CultureInfo.GetCultureInfo("en-US"));
+        _localizationManager.SetFallbackCulture(CultureInfo.GetCultureInfo(ContentLocalizationManager.DefaultCultureName));
         return new KsExamineLocaleScope(_localizationManager, culture);
     }
 
