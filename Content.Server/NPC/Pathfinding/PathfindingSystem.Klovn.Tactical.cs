@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server._KS14.NPC.Pathfinding;

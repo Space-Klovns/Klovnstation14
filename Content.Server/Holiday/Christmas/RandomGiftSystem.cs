@@ -43,7 +43,7 @@ public sealed partial class RandomGiftSystem : EntitySystem
         if (_whitelistSystem.IsWhitelistFail(component.ContentsViewers, args.Examiner) || component.SelectedEntity is null)
             return;
 
-        var name = ProtoMan.Index<EntityPrototype>(component.SelectedEntity).Name;
+        var name = _contentLocalizationManager.GetLocalizedPrototypeName(ProtoMan.Index<EntityPrototype>(component.SelectedEntity)); // KS14: active response culture
         args.PushText(Loc.GetString("gift-packin-contains", ("name", name)));
     }
 

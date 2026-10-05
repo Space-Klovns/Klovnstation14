@@ -1,4 +1,5 @@
 using Content.Client.Administration.Managers;
+using Content.Client._KS14.Localization; // KS14
 using Content.Client.Changelog;
 using Content.Client.Chat.Managers;
 using Content.Client.DebugMon;
@@ -97,6 +98,7 @@ namespace Content.Client.Entry
             Dependencies.InjectDependencies(this);
 
             _contentLoc.Initialize();
+            Dependencies.Resolve<KsClientLocalizationManager>().Initialize(); // KS14: apply the saved client locale before UI creation
             _componentFactory.DoAutoRegistrations();
             _componentFactory.IgnoreMissingComponents();
 

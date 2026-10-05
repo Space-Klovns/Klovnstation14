@@ -1,0 +1,35 @@
+ent-BaseCodeObjective = { ent-BaseObjective }
+    .desc = { ent-BaseObjective.desc }
+
+ent-BaseCounterObjective = { ent-BaseObjective }
+    .desc = Нас интересует корреспонденция Nanotrasen. Инструмент для вскрытия писем не прилагается.
+
+ent-BaseFreeObjective = { ent-BaseObjective }
+    .desc = { ent-BaseObjective.desc }
+
+ent-BaseHelpProgressObjective = { ent-BaseSocialObjective }
+    .desc = { ent-BaseSocialObjective.desc }
+
+ent-BaseKeepAliveObjective = { ent-BaseSocialObjective }
+    .desc = { ent-BaseSocialObjective.desc }
+
+ent-BaseKillObjective = { ent-BaseTargetObjective }
+    .desc = { ent-BaseTargetObjective.desc }
+
+ent-BaseLivingObjective = { ent-BaseObjective }
+    .desc = { ent-BaseObjective.desc }
+
+ent-BaseObjective = { "" }
+    .desc = { "" }
+
+ent-BaseSocialObjective = { ent-BaseTargetObjective }
+    .desc = { ent-BaseTargetObjective.desc }
+
+ent-BaseStealObjective = { ent-BaseLivingObjective }
+    .desc = { ent-BaseLivingObjective.desc }
+
+ent-BaseSurviveObjective = { ent-BaseObjective }
+    .desc = { ent-BaseObjective.desc }
+
+ent-BaseTargetObjective = { ent-BaseObjective }
+    .desc = { ent-BaseObjective.desc }

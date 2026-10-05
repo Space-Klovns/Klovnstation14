@@ -122,7 +122,7 @@ public sealed partial class LockSystem : EntitySystem
         args.PushMarkup(Loc.GetString(lockComp.Locked
                 ? "lock-comp-on-examined-is-locked"
                 : "lock-comp-on-examined-is-unlocked",
-            ("entityName", Identity.Name(uid, EntityManager))));
+            ("entityName", _contentLocalizationManager.GetLocalizedEntityName(uid, EntityManager, Identity.Name(uid, EntityManager)) /* KS14: active response culture */)));
     }
 
     /// <summary>

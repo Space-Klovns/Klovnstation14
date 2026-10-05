@@ -1,4 +1,4 @@
-﻿using Content.Shared.Database;
+using Content.Shared.Database;
 using Content.Shared.Examine;
 using Content.Shared.Lock;
 using Content.Shared.Popups;
@@ -39,7 +39,7 @@ public abstract partial class SharedEmitterSystem : EntitySystem
             {
                 Priority = 1,
                 Category = VerbCategory.SelectType,
-                Text = proto.Name,
+                Text = _contentLocalizationManager.GetLocalizedPrototypeName(proto), // KS14: active client culture
                 Disabled = type == ent.Comp.BoltType,
                 Impact = LogImpact.Medium,
                 DoContactInteraction = true,
@@ -47,7 +47,7 @@ public abstract partial class SharedEmitterSystem : EntitySystem
                 {
                     ent.Comp.BoltType = type;
                     Dirty(ent);
-                    _popup.PopupClient(Loc.GetString("emitter-component-type-set", ("type", proto.Name)), ent.Owner);
+                    _popup.PopupClient(Loc.GetString("emitter-component-type-set", ("type", _contentLocalizationManager.GetLocalizedPrototypeName(proto) /* KS14: active response culture */)), ent.Owner);
                 },
             };
             args.Verbs.Add(v);
@@ -60,6 +60,6 @@ public abstract partial class SharedEmitterSystem : EntitySystem
             return;
 
         var proto = ProtoMan.Index(ent.Comp.BoltType);
-        args.PushMarkup(Loc.GetString("emitter-component-current-type", ("type", proto.Name)));
+        args.PushMarkup(Loc.GetString("emitter-component-current-type", ("type", _contentLocalizationManager.GetLocalizedPrototypeName(proto) /* KS14: active response culture */)));
     }
 }

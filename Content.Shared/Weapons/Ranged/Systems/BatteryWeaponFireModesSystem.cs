@@ -35,7 +35,7 @@ public sealed partial class BatteryWeaponFireModesSystem : EntitySystem
         if (!ProtoMan.TryIndex<EntityPrototype>(fireMode.Prototype, out var proto))
             return;
 
-        args.PushMarkup(Loc.GetString("gun-set-fire-mode-examine", ("mode", proto.Name)));
+        args.PushMarkup(Loc.GetString("gun-set-fire-mode-examine", ("mode", _contentLocalizationManager.GetLocalizedPrototypeName(proto) /* KS14: active response culture */)));
     }
 
     private BatteryWeaponFireMode GetMode(BatteryWeaponFireModesComponent component)
@@ -64,7 +64,7 @@ public sealed partial class BatteryWeaponFireModesSystem : EntitySystem
             {
                 Priority = 1,
                 Category = VerbCategory.SelectType,
-                Text = entProto.Name,
+                Text = _contentLocalizationManager.GetLocalizedPrototypeName(entProto), // KS14: active client culture
                 Disabled = i == component.CurrentFireMode,
                 Impact = LogImpact.Medium,
                 DoContactInteraction = true,
@@ -121,7 +121,7 @@ public sealed partial class BatteryWeaponFireModesSystem : EntitySystem
                 _appearanceSystem.SetData(ent, BatteryWeaponFireModeVisuals.State, prototype.ID, appearance);
 
             if (user != null)
-                _popupSystem.PopupClient(Loc.GetString("gun-set-fire-mode-popup", ("mode", prototype.Name)), ent, user.Value);
+                _popupSystem.PopupClient(Loc.GetString("gun-set-fire-mode-popup", ("mode", _contentLocalizationManager.GetLocalizedPrototypeName(prototype) /* KS14: active client culture */)), ent, user.Value);
         }
 
         if (TryComp(ent, out BatteryAmmoProviderComponent? batteryAmmoProviderComponent))

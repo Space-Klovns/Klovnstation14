@@ -4,7 +4,8 @@ Coding conventions for this repo. Written for coding agents first, humans second
 
 **Quick reference:**
 - New code → `Content.<project>/_KS14/<Feature>/...` (see §2).
-- Editing or adding a file *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
+- Fork-owned files (`_KS14/`, `.Klovn`/`.Ks` filenames, or `Ks`/`KS14` namespaces/types) need no provenance headers (see §3).
+- Editing existing upstream code *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
 - **Marking a change on a single line → `/* KS14: ... */` sitting at the change itself**, not a trailing `//` at the end of the line (see §3).
 - Otherwise follow upstream SS14 conventions, plus the local rules in §4.
 - Before you ship: the traps in §6 that fail *silently* — no build error, no log, no failing test.
@@ -71,13 +72,13 @@ namespace Content.<project>._KS14.<Feature>.<Sub>;
 
 ## 3. Upstream edits: the `// KS14:` marker
 
-When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 / other forks / `_Manifest` / `_sin` / etc.), mark Klovnstation 14's provenance inline:
+When you edit an **existing upstream file outside** `_KS14/` (in upstream SS14 / other forks / `_Manifest` / `_sin` / etc.), mark each logical change inline:
 
 - **Edits to an existing upstream file** — mark every logical change inline (forms below).
 - **Adding methods/members to an existing class** — make the class partial (comment why), and add the members in a same-folder file named `*.Klovn.Feature.cs`.
-- **New files added OUTSIDE `_KS14/`** — first-line header `// KS14: added in this fork` (`# KS14: added in this fork` for YAML/FTL/shell). Prefer `_KS14/`; only do this when extending an upstream tree is genuinely the right home (e.g. filling translation gaps in `Resources/Locale/en-US/_Goobstation/`).
+- **Fork-owned files need no provenance headers.** This includes files under `_KS14/`, files named `*.Klovn.*` or `*.Ks.*` (case-insensitive), and files whose names or declared namespaces/types use the fork's `Ks`/`KS14` prefix. Their location, name, or namespace already identifies them. Do not add generic fork-origin comments to these files. New files outside `_KS14/` also need no blanket provenance header; prefer `_KS14/` unless extending an existing upstream class or tree is the appropriate home.
 
-Both forms make our changes easy to spot on the next upstream merge. Always preserve the original upstream value in the comment: swap `100 -> 50` today, and a later change to that same line becomes `100 -> 30` (not `50 -> 30`). Swap `KS14` for another fork's tag (e.g. `Goobstation`) when porting from that fork instead of writing net-new code.
+Inline markers in existing upstream files make our changes easy to spot on the next upstream merge. Always preserve the original upstream value in the comment: swap `100 -> 50` today, and a later change to that same line becomes `100 -> 30` (not `50 -> 30`). Swap `KS14` for another fork's tag (e.g. `Goobstation`) when porting from that fork instead of writing net-new code.
 
 **Put the marker where the change is.** `/* KS14: ... */` is the default for anything that happens on a single line, because it points at the exact token that moved. A trailing `// KS14:` says only "something on this line changed" — on a line with several things, the next person merging upstream has to diff to find out which. Reach for a trailing `//` only when the marker genuinely cannot sit at the change site: a whole added line, or a value swap where the marker would land mid-expression and wreck the line.
 

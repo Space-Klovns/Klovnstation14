@@ -161,18 +161,17 @@ public sealed partial class RCDSystem : EntitySystem
         var prototype = component.CachedPrototype;
         // Starlight edit End
 
-        var msg = Loc.GetString("rcd-component-examine-mode-details", ("mode", Loc.GetString(prototype.SetName)));
-
+        // KS14 start: resolve nested construction names in the response's culture
+        string msg;
         if (prototype.Mode == RcdMode.ConstructTile || prototype.Mode == RcdMode.ConstructObject)
         {
-            var name = Loc.GetString(prototype.SetName);
-
-            if (prototype.Prototype != null &&
-                ProtoMan.TryIndex(prototype.Prototype, out var proto)) // don't use Resolve because this can be a tile
-                name = proto.Name;
-
-            msg = Loc.GetString("rcd-component-examine-build-details", ("name", name));
+            msg = Loc.GetString("rcd-component-examine-build-details", ("name", GetLocalizedConstructionName(prototype)));
         }
+        else
+        {
+            msg = Loc.GetString("rcd-component-examine-mode-details", ("mode", Loc.GetString(prototype.SetName)));
+        }
+        // KS14 end
 
         args.PushMarkup(msg);
 

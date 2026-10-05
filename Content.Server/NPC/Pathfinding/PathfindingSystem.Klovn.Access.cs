@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Shared.Access.Components;
 
 namespace Content.Server.NPC.Pathfinding;

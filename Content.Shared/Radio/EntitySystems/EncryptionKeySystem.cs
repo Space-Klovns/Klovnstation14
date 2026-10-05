@@ -215,7 +215,7 @@ public sealed partial class EncryptionKeySystem : EntitySystem
 
             var key = id == SharedChatSystem.CommonChannel
                 ? SharedChatSystem.RadioCommonPrefix.ToString()
-                : $"{SharedChatSystem.RadioChannelPrefix}{proto.KeyCode}";
+                : $"{SharedChatSystem.RadioChannelPrefix}{proto.LocalizedKeyCode /* KS14: KeyCode -> localized display key */}";
 
             examineEvent.PushMarkup(Loc.GetString(channelFTLPattern,
                 ("color", proto.Color),
@@ -229,7 +229,7 @@ public sealed partial class EncryptionKeySystem : EntitySystem
             if (HasComp<HeadsetComponent>(examineEvent.Examined))
             {
                 var msg = Loc.GetString("examine-headset-default-channel",
-                ("prefix", SharedChatSystem.DefaultChannelPrefix),
+                ("prefix", RadioChannelPrototype.LocalizedDefaultChannelPrefix /* KS14: localized department shortcut */),
                 ("channel", proto.LocalizedName),
                 ("color", proto.Color));
                 examineEvent.PushMarkup(msg);

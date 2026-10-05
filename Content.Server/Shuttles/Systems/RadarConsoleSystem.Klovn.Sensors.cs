@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Shared.Shuttles.BUIStates;
 using Content.Shared.Shuttles.Components;
 

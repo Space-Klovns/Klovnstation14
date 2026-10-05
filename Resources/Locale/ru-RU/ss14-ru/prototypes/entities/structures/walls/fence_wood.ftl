@@ -1,0 +1,34 @@
+# KS14: ported locale; references to unavailable source content pruned.
+
+ent-BaseFenceWood = деревянный забор
+    .desc = Часть деревянного забора. Надеюсь, за ним находится бабушкин сад.
+ent-BaseFenceWoodSmall = небольшой деревянный забор
+    .desc = Часть небольшого деревянного забора. Лучшее средство для ограждения частной территории!
+ent-FenceWoodHighCorner =
+    .suffix = Угол
+    .desc = { "" }
+ent-FenceWoodHighEnd =
+    .suffix = Конец
+    .desc = { "" }
+ent-FenceWoodHighGate = ворота деревянного забора
+    .desc = Имеешь ли ты представление, что ждёт тебя за этими воротами? Это может быть как туалет, так и роскошный особняк. А ты продолжай любить своих эмобоев.
+ent-FenceWoodHighStraight =
+    .suffix = Прямой
+    .desc = { "" }
+ent-FenceWoodHighTJunction =
+    .suffix = Т-образный
+    .desc = { "" }
+ent-FenceWoodSmallCorner = { ent-BaseFenceWoodSmall }
+    .desc = { ent-BaseFenceWoodSmall.desc }
+    .suffix = Угол
+ent-FenceWoodSmallEnd = { ent-BaseFenceWoodSmall }
+    .desc = { ent-BaseFenceWoodSmall.desc }
+    .suffix = Конец
+ent-FenceWoodSmallGate = ворота деревянного забора
+    .desc = Глядя на эти ворота, в голове всплывает знакомый образ. Где мой поросёнок?
+ent-FenceWoodSmallStraight = { ent-BaseFenceWoodSmall }
+    .desc = { ent-BaseFenceWoodSmall.desc }
+    .suffix = Прямой
+ent-FenceWoodSmallTJunction = { ent-BaseFenceWoodSmall }
+    .desc = { ent-BaseFenceWoodSmall.desc }
+    .suffix = Т-образный

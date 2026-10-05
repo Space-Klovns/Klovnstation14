@@ -1,0 +1,3 @@
+histamine-effect-heavy-itchiness = Вы чувствуете НАСТОЯЩИЙ зуд!
+
+histamine-effect-light-itchiness = Вы чувствуете лёгкий зуд...

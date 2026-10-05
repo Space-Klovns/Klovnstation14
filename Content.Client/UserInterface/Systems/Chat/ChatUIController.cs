@@ -729,6 +729,8 @@ public sealed partial class ChatUIController : UIController
         if (text.Length == 0)
             return (ChatSelectChannel.None, text, null);
 
+        text = NormalizeLocalizedRadioPrefix(text); // KS14: resolve locale-specific radio aliases before preview and transmission
+
         // We only cut off prefix only if it is not a radio or local channel, which both map to the same /say command
         // because ????????
 

@@ -419,7 +419,12 @@ namespace Content.Client.Examine
                 {
                     _idCounter += 1;
                 }
-                RaiseNetworkEvent(new ExamineSystemMessages.RequestExamineInfoMessage(GetNetEntity(entity), _idCounter, true));
+                // KS14 start: request authoritative examine text in the client's language
+                RaiseNetworkEvent(new ExamineSystemMessages.RequestExamineInfoMessage(GetNetEntity(entity), _idCounter, getVerbs: true)
+                {
+                    ClientLocale = Loc.DefaultCulture?.Name ?? "en-US",
+                });
+                // KS14 end
             }
 
             RaiseLocalEvent(entity, new ClientExaminedEvent(entity, playerEnt.Value));
