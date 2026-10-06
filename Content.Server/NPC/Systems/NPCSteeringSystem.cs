@@ -73,7 +73,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private SharedCombatModeSystem _combat = default!;
-    [Dependency] private AccessReaderSystem _accessReaderSystem = default!; // KS14: ANK
+    /* [Dependency] private AccessReaderSystem _accessReaderSystem = default!; */ // KS14: ANK; removed again, steering goes by what the NPC believes about a door now, see NpcDoorSystem
 
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<MovementSpeedModifierComponent> _modifierQuery = default!;

@@ -1,4 +1,5 @@
 // KS14: added in this fork
+using Content.Server._KS14.NPC.Pushing;
 using Content.Shared.Doors.Components;
 using Content.Shared.NPC;
 using Robust.Shared.Physics;
@@ -8,6 +9,15 @@ namespace Content.Server.NPC.Pathfinding;
 
 public sealed partial class PathfindingSystem
 {
+    [Dependency] private NpcPushSystem _npcPushSystem = default!;
+
+    /// <summary>
+    /// What crossing a tile blocked only by things that can be pushed out of the way costs, on top of walking it, for a
+    /// path that may push (<see cref="PathFlags.Pushing"/>): about as far again as is worth walking round instead. A shove
+    /// is on a cooldown and often fails, so clearing the way takes a few seconds.
+    /// </summary>
+    private const float PushCost = 8f;
+
     /// <summary>
     /// What an entity on a tile adds to every point of the tile it collides with. Worked out once per tile, where it was
     /// worked out again for each of the tile's <see cref="SharedPathfindingSystem.SubStep"/> squared points: only
@@ -18,7 +28,8 @@ public sealed partial class PathfindingSystem
         Transform LocalTransform,
         PathfindingBreadcrumbFlag Flags,
         bool BlockedBesidesDoors,
-        float Damage);
+        float Damage,
+        bool Pushable);
 
     /// <summary>
     /// How many points across, of a tile's <see cref="SharedPathfindingSystem.SubStep"/>, a mob needs to get through:
@@ -43,6 +54,7 @@ public sealed partial class PathfindingSystem
         var blocker = new PathfindingData(PathfindingBreadcrumbFlag.None, 0, 0, 0f);
         var anyBlocked = false;
         var anyFree = false;
+        var allPushable = true;
 
         for (var x = 0; x < SubStep; x++)
         {
@@ -59,6 +71,7 @@ public sealed partial class PathfindingSystem
                     return;
 
                 anyBlocked = true;
+                allPushable &= (data.Flags & PathfindingBreadcrumbFlag.Pushable) != 0x0;
                 blocker.Flags |= data.Flags;
                 blocker.CollisionLayer |= data.CollisionLayer;
                 blocker.CollisionMask |= data.CollisionMask;
@@ -77,6 +90,10 @@ public sealed partial class PathfindingSystem
                     return;
             }
         }
+
+        // Pushing the closet aside clears the tile only if nothing fixed is blocking any of it too.
+        if (!allPushable)
+            blocker.Flags &= ~PathfindingBreadcrumbFlag.Pushable;
 
         // One poly for the whole tile, rather than one for what was blocked and more for what was too narrow.
         for (var x = 0; x < SubStep; x++)
@@ -152,10 +169,14 @@ public sealed partial class PathfindingSystem
             ? _destructible.DestroyedAt(uid, destructibleComponent).Float()
             : 0f;
 
+        // Loose, and nothing says it cannot be pushed: see NpcPushSystem. Doors are anchored, so never are.
+        var pushable = !transformComponent.Anchored && _npcPushSystem.IsPushable(uid, pusherUid: null);
+
         return new TileEntity(fixturesComponent,
             new Transform(transformComponent.LocalPosition, transformComponent.LocalRotation),
             flags,
             blockedBesidesDoors,
-            damage);
+            damage,
+            pushable);
     }
 }

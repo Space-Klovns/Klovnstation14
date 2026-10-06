@@ -476,8 +476,10 @@ public sealed partial class NpcSquadTacticsSystem
     /// <summary>
     ///     A lead's door turned out not to open for it after all - it was refused, and now knows the door for a no-go (see
     ///         <see cref="NpcDoorSystem.ReportRefused"/>) - so the ways in are handed out again, once a hunt: a squadmate
-    ///         with a tool, or another door, gets a go. With nobody able to get in any more, the hunt gives up. Returns
-    ///         whether it handed them out again.
+    ///         with a tool, or another door, gets a go. If none is near enough to stack up on - the others only reached
+    ///         through another room, say - but one can still be got through, they go in and search, each making its own
+    ///         way there. Only with no way in left at all does the hunt give up. Returns whether it handed them out
+    ///         again.
     /// </summary>
     private bool TryReassignForDoors(EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
@@ -505,10 +507,12 @@ public sealed partial class NpcSquadTacticsSystem
         hunt.ReassignedForDoors = true;
         AssignEntrances(hunt, settings);
 
-        if (hunt.StagedMembers.Count == 0)
-            Exhaust(leaderUid, hunt, now);
-        else
+        if (hunt.StagedMembers.Count > 0)
             SetPhase(hunt, NpcHuntPhase.Stage, now);
+        else if (CanAnyoneGetIn(hunt))
+            SetPhase(hunt, NpcHuntPhase.Search, now);
+        else
+            Exhaust(leaderUid, hunt, now);
 
         return true;
     }

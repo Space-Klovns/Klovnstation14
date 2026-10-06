@@ -29,4 +29,11 @@ public enum PathFlags : byte
     /// Can we open stuff that requires interaction (e.g. click-open doors).
     /// </summary>
     Interact = 1 << 4,
+
+    // KS14 start
+    /// <summary>
+    ///     Can we push loose things - closets, crates - out of the way. See <c>NpcPushSystem</c>.
+    /// </summary>
+    Pushing = 1 << 5,
+    // KS14 end
 }

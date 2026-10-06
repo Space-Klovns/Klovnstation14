@@ -54,6 +54,7 @@ public sealed class KsNpcDoorTest : GameTest
     private const string DressedBreacherMob = "KsDoorTestMobDressedBreacher";
     private const string Wieldable = "KsDoorTestWieldable";
     private const string EmptyHandedWalkerMob = "KsDoorTestMobEmptyHandedWalker";
+    private const string EngineerWalkerMob = "KsDoorTestMobEngineerWalker";
     private const string SecurityDoor = "AirlockSecurityLocked";
 
     [TestPrototypes]
@@ -174,6 +175,19 @@ public sealed class KsNpcDoorTest : GameTest
   parent: KsDoorTestMobBlockedWalker
   id: KsDoorTestMobRoundaboutWalker
   components:
+  - type: NpcDoorUser
+    maxDetourExtraDistance: 60
+
+- type: entity
+  parent: KsDoorTestMobNoAccess
+  id: KsDoorTestMobEngineerWalker
+  components:
+  - type: Access
+    tags:
+    - Engineering
+  - type: InputMover
+  - type: MobMover
+  - type: MovementSpeedModifier
   - type: NpcDoorUser
     maxDetourExtraDistance: 60
 
@@ -400,6 +414,73 @@ public sealed class KsNpcDoorTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
             Assert.That(doorSystem.IsNoGo(walkerUid, doorUid), "walking into the door should have shown it up as a no-go"));
+    }
+
+    /// <summary>
+    ///     The other way round from being fooled: a security door changed to let engineers through still shows security
+    ///         access, so an engineer believes it is locked to it. With a way round, it goes round, never having tried the
+    ///         door - it cannot know it would open. With none, the door is the only way: it tries it, and gets through.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestNewlyGrantedAccessIsFoundOutByTrying(bool wayRound)
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, walkerUid = default, doorUid = default;
+
+        await server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-3, -1), new Vector2i(7, 13)).Owner;
+
+            for (var y = -1; y <= (wayRound ? 12 : 13); y++)
+            {
+                if (y == 0)
+                    doorUid = SpawnPoweredDoorAt(entManager, SecurityDoor, gridUid, 2, 0);
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            walkerUid = SpawnAt(entManager, EngineerWalkerMob, gridUid, 0, 0);
+        });
+
+        await Pair.RunTicksSync(90); // power and navmesh
+
+        await server.WaitPost(() =>
+        {
+            var accessReaderSystem = entManager.System<AccessReaderSystem>();
+            accessReaderSystem.GetMainAccessReader(doorUid, out var readerEntity);
+            accessReaderSystem.TrySetAccesses(readerEntity!.Value, new List<ProtoId<AccessLevelPrototype>> { "Engineering" });
+            Assert.That(accessReaderSystem.IsAllowed(walkerUid, doorUid), "the door should let it through now");
+            Assert.That(entManager.System<NpcDoorSystem>().GetDoorAccess(walkerUid, doorUid), Is.EqualTo(NpcDoorAccess.Locked),
+                "but it should not know that");
+
+            var htnComponent = entManager.GetComponent<HTNComponent>(walkerUid);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavInteract, true);
+            entManager.System<NPCSteeringSystem>().Register(walkerUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            entManager.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
+        });
+
+        // Tracked as it goes: the door shuts again behind it.
+        var doorOpened = false;
+        for (var i = 0; i < 30; i++)
+        {
+            await Pair.RunTicksSync(30);
+            await server.WaitPost(() => doorOpened |= entManager.GetComponent<DoorComponent>(doorUid).State != DoorState.Closed);
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(doorOpened, Is.EqualTo(!wayRound),
+                    wayRound ? "with a way round, it should never have tried the door" : "with no way round, it should have tried the door");
+                Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f),
+                    "it should have got there");
+            });
+        });
     }
 
     /// <summary>
@@ -884,8 +965,8 @@ public sealed class KsNpcDoorTest : GameTest
 
     /// <summary>
     ///     Live: the shortest way runs through a door that will not open for it - unpowered - and it has nothing to force
-    ///         it with. It finds that out at the door, and goes the long way round rather than walking back into the same
-    ///         door for ever: the door is a wall to its own paths for a while.
+    ///         it with. It sees that at the door, and goes the long way round rather than walking back into the same door
+    ///         for ever: the door is a wall to its own paths for a while.
     /// </summary>
     [Test]
     public async Task TestDoorThatBeatItIsGoneRound()
@@ -918,15 +999,21 @@ public sealed class KsNpcDoorTest : GameTest
             entManager.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
         });
 
-        // Steering gives up at the door.
+        // Steering takes the door out of its paths at the door.
         var reachedDoor = false;
+        var avoidedDoorUids = new List<EntityUid>();
         for (var i = 0; i < 300 && !reachedDoor; i++)
         {
             await Pair.RunTicksSync(1);
-            await Pair.Server.WaitPost(() => reachedDoor = doorSystem.IsBlocked(walkerUid, doorUid));
+            await Pair.Server.WaitPost(() =>
+            {
+                avoidedDoorUids.Clear();
+                doorSystem.GetBlockedDoors(walkerUid, avoidedDoorUids);
+                reachedDoor = avoidedDoorUids.Contains(doorUid);
+            });
         }
 
-        Assert.That(reachedDoor, "it should have found the door would not let it through");
+        Assert.That(reachedDoor, "it should have seen the door would not let it through");
 
         // Off again, as a fresh move would: steering that has given up stays given up.
         await Pair.Server.WaitPost(() =>

@@ -94,6 +94,12 @@ public sealed partial class PathfindingSystem
                     // Last ditch—try to bump the door if it's the only feasible option.
                     modifier += 20f;
             }
+            // KS14 start: pushing a closet aside is quicker, and quieter, than smashing it
+            else if ((flags & PathFlags.Pushing) != 0x0 && (end.Data.Flags & PathfindingBreadcrumbFlag.Pushable) != 0x0)
+            {
+                modifier += PushCost;
+            }
+            // KS14 end
             else if ((flags /* KS14: request.Flags -> flags */ & PathFlags.Smashing) != 0x0 && end.Data.Damage > 0f)
             {
                 // Breaking stuff should be usually last resort, especially because we WILL try to punch walls.

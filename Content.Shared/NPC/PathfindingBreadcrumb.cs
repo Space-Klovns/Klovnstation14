@@ -131,5 +131,11 @@ public enum PathfindingBreadcrumbFlag : ushort
     ///     A door welded shut: nobody opens it, and nothing pries it.
     /// </summary>
     Welded = 1 << 6,
+
+    /// <summary>
+    ///     Blocked only by loose things that can be pushed out of the way - a closet, a crate - and nothing fixed. See
+    ///         <c>NpcPushSystem</c>.
+    /// </summary>
+    Pushable = 1 << 7,
     // KS14 end
 }

@@ -81,7 +81,7 @@ public sealed partial class NpcDoorUserComponent : Component
 
     /// <summary>
     ///     Doors shut to it that it could force, which it is going round instead - forcing a door is loud, and spends
-    ///         an access breaker's charges - and until when. Its paths avoid them, like <see cref="BlockedDoors"/>. Moved
+    ///         an access breaker's charges - or that it believes are locked to it, and until when. Its paths avoid them, like <see cref="BlockedDoors"/>. Moved
     ///         to <see cref="ForceableDoors"/> if that leaves no way at all. See
     ///         <see cref="NpcDoorSystem.TryDetourAroundDoor"/>.
     /// </summary>
@@ -89,7 +89,8 @@ public sealed partial class NpcDoorUserComponent : Component
     public Dictionary<EntityUid, TimeSpan> DetourDoors = new();
 
     /// <summary>
-    ///     Doors found to be the only way, which it forces rather than tries to go round again, and until when.
+    ///     Doors found to be the only way, which it tries, and forces if they will not open, rather than tries to go
+    ///         round again, and until when.
     /// </summary>
     [ViewVariables]
     public Dictionary<EntityUid, TimeSpan> ForceableDoors = new();

@@ -26,6 +26,14 @@ public sealed partial class NpcSquadMemberComponent : Component
     public float JoinRange = 12f;
 
     /// <summary>
+    ///     How far this NPC may have to walk, in tiles, to a member of a squad it joins or merges into: round walls and
+    ///         through doors, never through a wall. A squad it can see through a window, but not get to within this, is
+    ///         not one it joins - it could not keep up with it.
+    /// </summary>
+    [DataField]
+    public int JoinWalkDistance = 18;
+
+    /// <summary>
     ///     Whether this NPC can lead a squad. Only NPCs that can lead found squads or take over a squad whose leader
     ///         falls; the rest only ever join one, and on their own they stay disorganised. A squad left with nobody
     ///         able to lead breaks up.

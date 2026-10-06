@@ -486,6 +486,11 @@ namespace Content.Server.NPC.Pathfinding
                 flags |= PathFlags.Interact;
             }
 
+            // KS14 start
+            if (blackboard.TryGetValue<bool>(NPCBlackboard.NavPush, out var push, EntityManager) && push)
+                flags |= PathFlags.Pushing;
+            // KS14 end
+
             return flags;
         }
 

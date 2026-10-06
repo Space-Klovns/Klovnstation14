@@ -502,6 +502,7 @@ public sealed partial class PathfindingSystem
                         var collisionLayer = 0x0;
                         var damage = 0f;
                         var blockedBesidesDoors = false; // KS14: see below
+                        var blockedUnpushable = false; // KS14: see below
 
                         // KS14 start: only whether each entity covers this point is worked out per point; what it adds to a point it
                         //      covers was worked out once for the tile, in GetTileEntity
@@ -514,7 +515,8 @@ public sealed partial class PathfindingSystem
                                 // Don't need to re-do it.
                                 if (!fixture.Hard ||
                                     (collisionMask & fixture.CollisionMask) == fixture.CollisionMask &&
-                                    (collisionLayer & fixture.CollisionLayer) == fixture.CollisionLayer)
+                                    (collisionLayer & fixture.CollisionLayer) == fixture.CollisionLayer &&
+                                    (tileEntity.Pushable || blockedUnpushable) /* KS14: unless it is what makes the point more than pushable */)
                                 {
                                     continue;
                                 }
@@ -548,6 +550,7 @@ public sealed partial class PathfindingSystem
 
                             flags |= tileEntity.Flags;
                             blockedBesidesDoors |= tileEntity.BlockedBesidesDoors;
+                            blockedUnpushable |= !tileEntity.Pushable;
                             damage += tileEntity.Damage;
                         }
                         // KS14 end
@@ -659,6 +662,11 @@ public sealed partial class PathfindingSystem
                                 PathfindingBreadcrumbFlag.Bolted |
                                 PathfindingBreadcrumbFlag.Welded);
                         }
+                        // KS14 end
+
+                        // KS14 start: blocked, and only by things that can be pushed out of the way. See NpcPushSystem
+                        if ((collisionLayer != 0x0 || collisionMask != 0x0) && !blockedUnpushable)
+                            flags |= PathfindingBreadcrumbFlag.Pushable;
                         // KS14 end
 
                         /*This is causing too many issues and I'd rather just ignore it until pathfinder refactor

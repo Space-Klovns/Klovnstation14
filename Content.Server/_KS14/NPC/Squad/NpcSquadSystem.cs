@@ -12,6 +12,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.Squad;
@@ -19,7 +20,8 @@ namespace Content.Server._KS14.NPC.Squad;
 /// <summary>
 ///     Groups NPCs with <see cref="NpcSquadMemberComponent"/> into squads with exactly one leader each.
 ///
-///     Unassigned NPCs join the nearest friendly squad in range and line of sight that has room, or, if they can
+///     Unassigned NPCs join the nearest friendly squad in range, in line of sight and within a short walk that has room,
+///         or, if they can
 ///         lead, found their own. Squads that drop below their assimilation threshold merge into a nearby one. When
 ///         a leader dies, the healthiest remaining member that can lead takes over; a squad with nobody left who can
 ///         lead breaks up, and one with no members at all is deleted. Leaders hand their
@@ -36,11 +38,14 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
+    [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<NpcSquadComponent> _squadQuery = default!;
     [Dependency] private EntityQuery<NpcSquadMemberComponent> _squadMemberQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
+    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
     [Dependency] private EntityQuery<NPCRangedCombatComponent> _rangedCombatQuery = default!;
@@ -58,6 +63,11 @@ public sealed partial class NpcSquadSystem : EntitySystem
     private readonly HashSet<Entity<NpcSquadMemberComponent>> _nearbyMembers = new();
     private readonly List<EntityUid> _scratchMembers = new();
     private readonly List<(EntityUid From, EntityUid Into)> _pendingMerges = new();
+
+    /// <summary>
+    ///     How far each tile is to walk from the NPC looking for a squad to join. See <see cref="CanWalkTo"/>.
+    /// </summary>
+    private readonly Dictionary<Vector2i, int> _joinWalkSteps = new();
 
     public override void Update(float frameTime)
     {
@@ -400,7 +410,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
     /// <summary>
     ///     Finds the squad with a member nearest to <paramref name="memberEntity"/> that is in range, in line of
-    ///         sight, friendly, and has room for <paramref name="extraMembers"/> more.
+    ///         sight, within a short walk (<see cref="NpcSquadMemberComponent.JoinWalkDistance"/>), friendly, and has
+    ///         room for <paramref name="extraMembers"/> more.
     /// </summary>
     private bool TryFindJoinableSquad(
         Entity<NpcSquadMemberComponent> memberEntity,
@@ -413,6 +424,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
         distance = float.MaxValue;
 
         var memberCoordinates = _transformSystem.GetMapCoordinates(memberEntity.Owner);
+        var walked = false;
 
         _nearbyMembers.Clear();
         _entityLookupSystem.GetEntitiesInRange(memberCoordinates, memberEntity.Comp.JoinRange, _nearbyMembers);
@@ -431,7 +443,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
             var otherDistance = (otherCoordinates.Position - memberCoordinates.Position).Length();
 
             if (otherDistance >= distance ||
-                !_npcLineOfSightSystem.InLineOfSight(memberCoordinates, otherCoordinates, memberEntity.Comp.JoinRange))
+                !_npcLineOfSightSystem.InLineOfSight(memberCoordinates, otherCoordinates, memberEntity.Comp.JoinRange) ||
+                !CanWalkTo(memberEntity, otherEntity.Owner, ref walked))
                 continue;
 
             squadUid = otherSquadUid;
@@ -439,6 +452,39 @@ public sealed partial class NpcSquadSystem : EntitySystem
         }
 
         return squadUid is not null;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberEntity"/> can walk to <paramref name="otherUid"/> within its
+    ///         <see cref="NpcSquadMemberComponent.JoinWalkDistance"/>. Line of sight is not enough: a window lets it see
+    ///         a squad it cannot get to. Floods out from it once a call, the first time this is asked
+    ///         (<paramref name="walked"/>), and only for squads already in sight, so most calls flood nothing. Two NPCs
+    ///         off any grid, floating in space, have nothing to walk on: sight is all there is.
+    /// </summary>
+    private bool CanWalkTo(Entity<NpcSquadMemberComponent> memberEntity, EntityUid otherUid, ref bool walked)
+    {
+        var memberTransformComponent = Transform(memberEntity.Owner);
+        var otherTransformComponent = Transform(otherUid);
+
+        if (memberTransformComponent.GridUid is not { } gridUid)
+            return otherTransformComponent.GridUid == null;
+
+        if (otherTransformComponent.GridUid != gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            return false;
+
+        if (!walked)
+        {
+            _joinWalkSteps.Clear();
+            _npcSquadCoverSystem.FloodTiles(memberEntity.Owner,
+                (gridUid, mapGridComponent),
+                _mapSystem.TileIndicesFor(gridUid, mapGridComponent, memberTransformComponent.Coordinates),
+                memberEntity.Comp.JoinWalkDistance,
+                _joinWalkSteps,
+                stopAtDoors: false);
+            walked = true;
+        }
+
+        return _joinWalkSteps.ContainsKey(_mapSystem.TileIndicesFor(gridUid, mapGridComponent, otherTransformComponent.Coordinates));
     }
 
     private bool IsFriendly(EntityUid uid, EntityUid otherUid)

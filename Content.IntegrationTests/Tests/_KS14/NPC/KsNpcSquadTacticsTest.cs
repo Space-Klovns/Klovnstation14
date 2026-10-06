@@ -43,6 +43,8 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     private const string CautiousMob = "KsTacticsTestMobCautious";
     private const string Caution = "KsTacticsTestCaution";
     private const string SecurityMob = "KsTacticsTestMobSecurity";
+    private const string NearStagingMob = "KsTacticsTestMobNearStaging";
+    private const string NearStagingSecurityMob = "KsTacticsTestMobNearStagingSecurity";
     private const string SecurityDoor = "AirlockSecurityLocked";
     private const string CommandDoor = "AirlockCommandLocked";
 
@@ -109,6 +111,23 @@ public sealed class KsNpcSquadTacticsTest : GameTest
 - type: entity
   parent: KsTacticsTestMobNoWatch
   id: KsTacticsTestMobSecurity
+  components:
+  - type: Access
+    tags:
+    - Security
+
+- type: entity
+  parent: KsTacticsTestMobNoWatch
+  id: KsTacticsTestMobNearStaging
+  components:
+  - type: NpcSquadMember
+    tactics:
+      watchTime: 0
+      maxStageDistance: 16 # as operatives: the far door, round through another room, is out of reach
+
+- type: entity
+  parent: KsTacticsTestMobNearStaging
+  id: KsTacticsTestMobNearStagingSecurity
   components:
   - type: Access
     tags:
@@ -463,6 +482,36 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                 Assert.That(hunt.StagedMembers[plainUid].IsLead && hunt.StagedMembers[plainUid].Method == NpcBreachMethod.Pry,
                     "the member with the jaws should lead, prying");
             });
+        });
+    }
+
+    /// <summary>
+    ///     A lead found its door will not open for it, and nobody has anything to force it with. The room's other way in
+    ///         is through a room of its own, too far round to stack up on (<see cref="NpcSquadTacticsSettings.MaxStageDistance"/>
+    ///         as operatives have it). That is no reason to give up on the room: with no way in left to stack up on,
+    ///         they go in and search it, each its own way.
+    /// </summary>
+    [Test]
+    public async Task TestFooledWithAWayInFarRoundStillSearches()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: NearStagingSecurityMob, secondMob: NearStagingMob, westDoor: SecurityDoor, eastDoor: "Airlock", eastAntechamber: true);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (securityUid, _) = SplitBySecurity(scene);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Stage), "the squad should be stacking up on the west door");
+            var westDoorUid = hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].DoorUid!.Value;
+
+            scene.EntManager.System<NpcDoorSystem>().ReportRefused(securityUid, westDoorUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "with a way in left, the squad should search the room, not give up");
         });
     }
 
@@ -1155,7 +1204,8 @@ public sealed class KsNpcSquadTacticsTest : GameTest
         string westDoor = "Airlock",
         string eastDoor = "Airlock",
         string? secondMob = null,
-        bool firelocks = false)
+        bool firelocks = false,
+        bool eastAntechamber = false)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -1193,6 +1243,26 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                         SpawnPoweredDoorAt(entManager, door, gridUid, x, y);
                     else
                         SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
+
+            // The east door opens into a room of its own, three tiles wide, entered from the north through an airlock:
+            //      getting to it means going round the room and through that one.
+            if (eastAntechamber)
+            {
+                for (var y = -1; y <= 7; y++)
+                {
+                    SpawnAt(entManager, "WallSolid", gridUid, 11, y);
+                }
+
+                for (var x = 8; x <= 10; x++)
+                {
+                    SpawnAt(entManager, "WallSolid", gridUid, x, -1);
+
+                    if (x == 9)
+                        SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, 7);
+                    else
+                        SpawnAt(entManager, "WallSolid", gridUid, x, 7);
                 }
             }
 

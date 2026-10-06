@@ -2,6 +2,8 @@
 using System.Numerics;
 using System.Threading;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Shared.CCVar;
 using Content.Server.NPC.Pathfinding;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -25,14 +27,22 @@ public sealed class KsNavmeshNarrowGapTest : GameTest
     /// <summary>
     ///     The only way through a wall is one tile wide, walked through from below. With a closet in it, centred or
     ///         pushed a little to one side - which leaves half a tile free beside it, too narrow for a mob - there is no
-    ///         way through. With a thin window along one side of it, or nothing, there is.
+    ///         way through, unless the path may push it out of the way (<see cref="PathFlags.Pushing"/>), and it is not
+    ///         bolted to the floor. With a thin window along one side of it, or nothing, there is. So there is with a mob
+    ///         standing in it, mob pushing on or not: mobs move, and the navmesh does not count them.
     /// </summary>
-    [TestCase(null, 0f, true)]
-    [TestCase("ClosetSteelBase", 0f, false)]
-    [TestCase("ClosetSteelBase", 0.15f, false)]
-    [TestCase("WindowDirectional", 0f, true)]
-    public async Task TestPartlyBlockedGap(string? obstacle, float offsetX, bool expectPath)
+    [TestCase(null, 0f, false, PathFlags.None, true)]
+    [TestCase("ClosetSteelBase", 0f, false, PathFlags.None, false)]
+    [TestCase("ClosetSteelBase", 0.15f, false, PathFlags.None, false)]
+    [TestCase("ClosetSteelBase", 0f, false, PathFlags.Pushing, true)]
+    [TestCase("ClosetSteelBase", 0.15f, false, PathFlags.Pushing, true)]
+    [TestCase("ClosetSteelBase", 0f, true, PathFlags.Pushing, false)]
+    [TestCase("WindowDirectional", 0f, true, PathFlags.None, true)]
+    [TestCase("MobHuman", 0f, false, PathFlags.None, true)]
+    public async Task TestPartlyBlockedGap(string? obstacle, float offsetX, bool anchored, PathFlags flags, bool expectPath)
     {
+        await OverrideCVar(Side.Server, CCVars.MovementMobPushing, true);
+
         var tileDefinitionManager = Server.ResolveDependency<ITileDefinitionManager>();
         var pathfindingSystem = SEntMan.System<PathfindingSystem>();
         var map = await Pair.CreateTestMap();
@@ -52,10 +62,15 @@ public sealed class KsNavmeshNarrowGapTest : GameTest
                 return;
 
             var obstacleUid = SEntMan.SpawnEntity(obstacle, new EntityCoordinates(gridUid, new Vector2(Gap.X + 0.5f + offsetX, Gap.Y + 0.5f)));
+            var transformSystem = SEntMan.System<SharedTransformSystem>();
 
             // Along the side of the tile, the way through, rather than across it.
             if (obstacle == "WindowDirectional")
-                SEntMan.System<SharedTransformSystem>().SetLocalRotation(obstacleUid, Angle.FromDegrees(90));
+                transformSystem.SetLocalRotation(obstacleUid, Angle.FromDegrees(90));
+
+            if (anchored && !SEntMan.GetComponent<TransformComponent>(obstacleUid).Anchored)
+                transformSystem.AnchorEntity(obstacleUid);
+            Assert.That(SEntMan.GetComponent<TransformComponent>(obstacleUid).Anchored, Is.EqualTo(anchored));
         });
 
         await Pair.RunTicksSync(90); // navmesh
@@ -66,7 +81,8 @@ public sealed class KsNavmeshNarrowGapTest : GameTest
             0f,
             PathfindingSystem.PathfindingCollisionLayer,
             PathfindingSystem.PathfindingCollisionMask,
-            CancellationToken.None));
+            CancellationToken.None,
+            flags));
 
         for (var i = 0; i < 120 && !pathTask.IsCompleted; i++)
         {

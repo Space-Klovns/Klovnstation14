@@ -292,6 +292,10 @@ Server-only prototype types (`npcMeter`, `npcVoiceSet`, `htnCompound`, ...) must
 - **Being fooled** is noticed where it happens: steering's door handling (`NPCSteeringSystem.Obstacles.cs`) asks for
   the belief before `TryOpen`, and reports a failure on a door it believed `Openable` (`ReportRefused`). The door
   becomes a no-go in each squad member's own `NpcDoorUserComponent`, never on the squad.
+- **The other way round:** a door it believes is locked is only tried once it is the only way. Until then steering goes
+  round it as it would a really locked door (`TryDetourAroundDoor` with `believedLocked`), so access added behind its
+  back is found out by trying the door, never known. Nothing in steering may ask the door itself (`IsAllowed`): collision
+  avoidance goes by `HasAdvertisedAccess` too.
 
 **Words.** "Breach" means forcing a door with a tool and nothing else; going in is "entry" (`NpcHuntPhase.Entry`,
 `NpcOrderKind.Enter`). Keep them apart in new code.
@@ -343,6 +347,24 @@ walk longer than it thinks, so it stays a lower bound and paths stay the shortes
 navmesh without marking the chunk dirty, which the pathfinder misses with or without the coarse maps. Deleting a wall
 used to be one: its move to nullspace was looked up on the grid it had already left. Note that an unanchored wall still
 blocks its tile: the navmesh counts any hard body there, anchored or not.
+
+## Loose things in the way
+
+An NPC with `NavPush` on its blackboard shoves loose things - closets, crates - out of its way (`NpcPushSystem`). It is
+asked twice whether something can be pushed, with the pure `NpcPushableAttemptEvent`:
+
+- **When the navmesh is built, with no pusher.** A tile blocked only by things that can be pushed gets
+  `PathfindingBreadcrumbFlag.Pushable`, and pushing paths cross it at a cost. Not during the path search: searches run on
+  worker threads, where raising events is unsafe, and would ask again at every expansion.
+- **When the NPC reaches it, with the NPC.** If it cannot push it (a handler says no, or it has no shove), it remembers
+  the thing (`NpcPusherComponent`) and drops its path for one round it.
+
+To push, steering raises `NpcPushObstacleEvent` on the thing. Unhandled, the NPC shoves it the way a player would,
+away from itself, which needs combat mode that can disarm. Steering's free-space check counts dynamic bodies on a
+pushable tile only, so it doesn't walk into the closet as if the tile were empty.
+
+What it does not do: choose which way to shove (always straight on, so a closet in a long corridor is shoved down it),
+or notice a handler's answer changing without the tile being rebuilt.
 
 ## Moving somewhere without going through somewhere
 
@@ -410,7 +432,9 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
 - **Loose things block paths as anchored ones do.** The navmesh counts every hard body that blocks mobs, anchored or
   not, on the tile its centre is on, and blocks a whole tile one leaves too narrow for a mob
   (`PathfindingSystem.BlockNarrowGaps`). So a free-standing locker blocks a floor tile, and a wall locker (anchored, on
-  the wall's tile) blocks nothing new. Test the case your rule is actually for.
+  the wall's tile) blocks nothing new. Unless the NPC pushes (`NavPush`, see "Loose things in the way"), when it shoves
+  the free-standing one aside. Mobs never block: the navmesh skips them, `movement.mob_pushing` or not. Test the case your
+  rule is actually for.
 - **Prove the test fails.** Break the rule it covers, rebuild, and watch it go red, one test per run. In a batch
   run, a test that fails inside `WaitAssertion` after another test dirtied its pooled pair can be reported as
   "NotExecuted: Test was dirty-disposed" rather than failed. The pool's `Assert.Warn` replaces the outcome, and
