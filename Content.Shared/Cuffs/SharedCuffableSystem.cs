@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.ActionBlocker;
@@ -141,7 +142,7 @@ namespace Content.Shared.Cuffs
 
             if (args.Cancelled)
             {
-                _popup.PopupClient(Loc.GetString("cuffable-component-cannot-interact-message"), args.Target, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-cannot-interact-message"), args.Target, args.User);
             }
         }
 
@@ -213,8 +214,8 @@ namespace Content.Shared.Cuffs
                 return;
 
             var message = buckling
-                ? Loc.GetString("handcuff-component-cuff-interrupt-buckled-message")
-                : Loc.GetString("handcuff-component-cuff-interrupt-unbuckled-message");
+                ? KsPopupMessage.Create /* KS14: defer popup translation */("handcuff-component-cuff-interrupt-buckled-message")
+                : KsPopupMessage.Create /* KS14: defer popup translation */("handcuff-component-cuff-interrupt-unbuckled-message");
 
             _popup.PopupClient(message, ent, user);
         }
@@ -303,7 +304,7 @@ namespace Content.Shared.Cuffs
             }
             else
             {
-                _popup.PopupClient(Loc.GetString("cuffable-component-remove-cuffs-fail-message"), user, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-remove-cuffs-fail-message"), user, user);
             }
         }
 
@@ -314,7 +315,7 @@ namespace Content.Shared.Cuffs
 
             if (!args.CanReach)
             {
-                _popup.PopupClient(Loc.GetString("handcuff-component-too-far-away-error"), args.User, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-too-far-away-error"), args.User, args.User);
                 return;
             }
 
@@ -352,22 +353,22 @@ namespace Content.Shared.Cuffs
                 var popupText = (user == target)
                     ? "handcuff-component-cuff-self-observer-success-message"
                     : "handcuff-component-cuff-observer-success-message";
-                _popup.PopupEntity(Loc.GetString(popupText,
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(popupText,
                         ("user", Identity.Name(user, EntityManager)), ("target", Identity.Entity(target, EntityManager))),
                     target, Filter.Pvs(target, entityManager: EntityManager)
                         .RemoveWhere(e => e.AttachedEntity == target || e.AttachedEntity == user), true);
 
                 if (target == user)
                 {
-                    _popup.PopupClient(Loc.GetString("handcuff-component-cuff-self-success-message"), user, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-cuff-self-success-message"), user, user);
                     _adminLog.Add(LogType.Action, LogImpact.Medium,
                         $"{ToPrettyString(user):player} has cuffed himself");
                 }
                 else
                 {
-                    _popup.PopupClient(Loc.GetString("handcuff-component-cuff-other-success-message",
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-cuff-other-success-message",
                         ("otherName", Identity.Name(target, EntityManager, user))), user, user);
-                    _popup.PopupClient(Loc.GetString("handcuff-component-cuff-by-other-success-message",
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-cuff-by-other-success-message",
                         ("otherName", Identity.Name(user, EntityManager, target))), target, target);
                     _adminLog.Add(LogType.Action, LogImpact.High,
                         $"{ToPrettyString(user):player} has cuffed {ToPrettyString(target):player}");
@@ -377,16 +378,16 @@ namespace Content.Shared.Cuffs
             {
                 if (target == user)
                 {
-                    _popup.PopupClient(Loc.GetString("handcuff-component-cuff-interrupt-self-message"), user, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-cuff-interrupt-self-message"), user, user);
                 }
                 else
                 {
                     // TODO Fix popup message wording
                     // This message assumes that the user being handcuffed is the one that caused the handcuff to fail.
 
-                    _popup.PopupClient(Loc.GetString("handcuff-component-cuff-interrupt-message",
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-cuff-interrupt-message",
                         ("targetName", Identity.Name(target, EntityManager, user))), user, user);
-                    _popup.PopupClient(Loc.GetString("handcuff-component-cuff-interrupt-other-message",
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-cuff-interrupt-other-message",
                         ("otherName", Identity.Name(user, EntityManager, target)),
                         ("otherEnt", user)), target, target);
                 }
@@ -504,21 +505,21 @@ namespace Content.Shared.Cuffs
 
             if (!TryComp<HandsComponent>(target, out var hands))
             {
-                _popup.PopupClient(Loc.GetString("handcuff-component-target-has-no-hands-error",
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-target-has-no-hands-error",
                     ("targetName", Identity.Name(target, EntityManager, user))), user, user);
                 return true;
             }
 
             if (cuffable.CuffedHandCount >= hands.Count)
             {
-                _popup.PopupClient(Loc.GetString("handcuff-component-target-has-no-free-hands-error",
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-target-has-no-free-hands-error",
                     ("targetName", Identity.Name(target, EntityManager, user))), user, user);
                 return true;
             }
 
             if (!_hands.CanDrop(user, handcuff))
             {
-                _popup.PopupClient(Loc.GetString("handcuff-component-cannot-drop-cuffs", ("target", Identity.Name(target, EntityManager, user))), user, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-cannot-drop-cuffs", ("target", Identity.Name(target, EntityManager, user))), user, user);
                 return false;
             }
 
@@ -545,20 +546,20 @@ namespace Content.Shared.Cuffs
             var popupText = (user == target)
                 ? "handcuff-component-start-cuffing-self-observer"
                 : "handcuff-component-start-cuffing-observer";
-            _popup.PopupEntity(Loc.GetString(popupText,
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(popupText,
                     ("user", Identity.Name(user, EntityManager)), ("target", Identity.Entity(target, EntityManager))),
                 target, Filter.Pvs(target, entityManager: EntityManager)
                     .RemoveWhere(e => e.AttachedEntity == target || e.AttachedEntity == user), true);
 
             if (target == user)
             {
-                _popup.PopupClient(Loc.GetString("handcuff-component-target-self"), user, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-target-self"), user, user);
             }
             else
             {
-                _popup.PopupClient(Loc.GetString("handcuff-component-start-cuffing-target-message",
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-start-cuffing-target-message",
                     ("targetName", Identity.Name(target, EntityManager, user))), user, user);
-                _popup.PopupEntity(Loc.GetString("handcuff-component-start-cuffing-by-other-message",
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handcuff-component-start-cuffing-by-other-message",
                     ("otherName", Identity.Name(user, EntityManager, target))), target, target);
             }
 
@@ -625,7 +626,7 @@ namespace Content.Shared.Cuffs
 
             if (!isOwner && !_interaction.InRangeUnobstructed(user, target.Owner))
             {
-                _popup.PopupClient(Loc.GetString("cuffable-component-cannot-remove-cuffs-too-far-message"), user, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-cannot-remove-cuffs-too-far-message"), user, user);
                 return;
             }
 
@@ -663,7 +664,7 @@ namespace Content.Shared.Cuffs
                 ? "cuffable-component-start-uncuffing-self-observer"
                 : "cuffable-component-start-uncuffing-observer";
             _popup.PopupEntity(
-                Loc.GetString(popupText,
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */(popupText,
                     ("user", Identity.Name(user, EntityManager)),
                     ("target", Identity.Entity(target, EntityManager))),
                 target,
@@ -673,15 +674,15 @@ namespace Content.Shared.Cuffs
 
             if (isOwner)
             {
-                _popup.PopupClient(Loc.GetString("cuffable-component-start-uncuffing-self"), user, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-start-uncuffing-self"), user, user);
             }
             else
             {
-                _popup.PopupClient(Loc.GetString("cuffable-component-start-uncuffing-target-message",
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-start-uncuffing-target-message",
                     ("targetName", Identity.Name(target, EntityManager, user))),
                     user,
                     user);
-                _popup.PopupEntity(Loc.GetString("cuffable-component-start-uncuffing-by-other-message",
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-start-uncuffing-by-other-message",
                     ("otherName", Identity.Name(user, EntityManager, target))),
                     target,
                     target);
@@ -742,20 +743,20 @@ namespace Content.Shared.Cuffs
                 {
                     if (shoved)
                     {
-                        _popup.PopupClient(Loc.GetString("cuffable-component-remove-cuffs-push-success-message",
+                        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-remove-cuffs-push-success-message",
                             ("otherName", Identity.Name(user.Value, EntityManager, user))),
                             user.Value,
                             user.Value);
                     }
                     else
                     {
-                        _popup.PopupClient(Loc.GetString("cuffable-component-remove-cuffs-success-message"), user.Value, user.Value);
+                        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-remove-cuffs-success-message"), user.Value, user.Value);
                     }
                 }
 
                 if (target != user && user != null)
                 {
-                    _popup.PopupEntity(Loc.GetString("cuffable-component-remove-cuffs-by-other-success-message",
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-remove-cuffs-by-other-success-message",
                         ("otherName", Identity.Name(user.Value, EntityManager, user))), target, target);
                     _adminLog.Add(LogType.Action, LogImpact.High,
                         $"{ToPrettyString(user):player} has successfully uncuffed {ToPrettyString(target):player}");
@@ -770,17 +771,17 @@ namespace Content.Shared.Cuffs
             {
                 if (user != target)
                 {
-                    _popup.PopupClient(Loc.GetString("cuffable-component-remove-cuffs-partial-success-message",
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-remove-cuffs-partial-success-message",
                         ("cuffedHandCount", cuffable.CuffedHandCount),
                         ("otherName", Identity.Name(user.Value, EntityManager, user.Value))), user.Value, user.Value);
-                    _popup.PopupEntity(Loc.GetString(
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(
                         "cuffable-component-remove-cuffs-by-other-partial-success-message",
                         ("otherName", Identity.Name(user.Value, EntityManager, user.Value)),
                         ("cuffedHandCount", cuffable.CuffedHandCount)), target, target);
                 }
                 else
                 {
-                    _popup.PopupClient(Loc.GetString("cuffable-component-remove-cuffs-partial-success-message",
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cuffable-component-remove-cuffs-partial-success-message",
                         ("cuffedHandCount", cuffable.CuffedHandCount)), user.Value, user.Value);
                 }
             }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Database;
 using Content.Shared.Examine;
 using Content.Shared.Lock;
@@ -31,6 +32,7 @@ public abstract partial class SharedEmitterSystem : EntitySystem
         if (ent.Comp.SelectableTypes.Count < 2)
             return;
 
+        var userUid = args.User; // KS14: retain the popup recipient for the verb callback
         foreach (var type in ent.Comp.SelectableTypes)
         {
             var proto = ProtoMan.Index(type);
@@ -47,7 +49,7 @@ public abstract partial class SharedEmitterSystem : EntitySystem
                 {
                     ent.Comp.BoltType = type;
                     Dirty(ent);
-                    _popup.PopupClient(Loc.GetString("emitter-component-type-set", ("type", _contentLocalizationManager.GetLocalizedPrototypeName(proto) /* KS14: active response culture */)), ent.Owner);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emitter-component-type-set", ("type", new KsPopupPrototypeName(proto.ID) /* KS14: defer selected prototype */)), ent.Owner, userUid);
                 },
             };
             args.Verbs.Add(v);

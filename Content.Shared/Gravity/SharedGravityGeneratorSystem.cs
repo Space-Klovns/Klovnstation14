@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Popups;
 using Content.Shared.Construction.Components;
 
@@ -22,7 +23,7 @@ public abstract partial class SharedGravityGeneratorSystem : EntitySystem
         if (!ent.Comp.GravityActive)
             return;
 
-        _popupSystem.PopupClient(Loc.GetString("gravity-generator-unanchoring-failed"), ent.Owner, args.User, PopupType.Medium);
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("gravity-generator-unanchoring-failed"), ent.Owner, args.User, PopupType.Medium);
 
         args.Cancel();
     }

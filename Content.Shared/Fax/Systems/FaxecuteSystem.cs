@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Damage.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Fax.Components;
@@ -27,7 +28,7 @@ public sealed partial class FaxecuteSystem : EntitySystem
 
         var damageSpec = faxecute.Damage;
         _damageable.ChangeDamage(sendEntity.Value, damageSpec);
-        _popupSystem.PopupEntity(Loc.GetString("fax-machine-popup-error", ("target", uid)), uid, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("fax-machine-popup-error", ("target", uid)), uid, PopupType.LargeCaution);
         return;
 
     }

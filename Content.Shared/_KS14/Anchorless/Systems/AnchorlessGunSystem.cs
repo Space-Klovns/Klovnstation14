@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Anchorless.Components;
 using Content.Shared.Flash;
 using Content.Shared.Weapons.Ranged.Events;
@@ -16,6 +17,6 @@ public sealed partial class AnchorlessGunSystem : EntitySystem
         // we don't cancel shooting the gun, we just make it impossible for the anchorless to use guns effectively
         _flash.Flash(ent.Owner, null, null, ent.Comp.GunFlashDuration, ent.Comp.GunFlashSlowdown, false, false, null, true);
 
-        _popup.PopupClient(Loc.GetString("anchorless-gun-flash-message"), ent, ent);
+        _popup.PopupClient(KsPopupMessage.Create("anchorless-gun-flash-message"), ent, ent);
     }
 }

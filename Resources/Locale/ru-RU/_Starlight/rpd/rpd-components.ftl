@@ -1,7 +1,8 @@
 # KS14: automatically translated; see _KS14/Localization/translation-review.tsv.
 
 rcd-component-examine-rpd-mode = Текущий режим: { "[" }color=cyan{ "]" }{ $mode }{ "[" }/color{ "]" }
-rcd-component-sensors-monitors = Датчики и мониторы
+# KS14: match the RPD radial menu's message ID.
+rpd-component-sensors-monitors = Датчики и мониторы
 rcd-item-status-mode = Режим: { $mode }
 rcd-rpd-mode-free = Свободный
 rcd-rpd-mode-primary = Основной слой

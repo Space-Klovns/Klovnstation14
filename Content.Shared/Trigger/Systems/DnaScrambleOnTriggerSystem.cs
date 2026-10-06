@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Body;
 using Content.Shared.DetailExaminable;
 using Content.Shared.Forensics.Systems;
@@ -45,7 +46,7 @@ public sealed partial class DnaScrambleOnTriggerSystem : XOnTriggerSystem<DnaScr
         _identity.QueueIdentityUpdate(target); // manually queue identity update since we don't raise the event
 
         // Can't use PopupClient or PopupPredicted because the trigger might be unpredicted.
-        _popup.PopupEntity(Loc.GetString("scramble-on-trigger-popup"), target, target);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("scramble-on-trigger-popup"), target, target);
 
         var ev = new DnaScrambledEvent(target);
         RaiseLocalEvent(target, ref ev, true);

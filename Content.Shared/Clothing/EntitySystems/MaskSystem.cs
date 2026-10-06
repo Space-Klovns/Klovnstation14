@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Foldable;
@@ -57,7 +58,7 @@ public sealed partial class MaskSystem : EntitySystem
 
         var dir = mask.IsToggled ? "down" : "up";
         var msg = $"action-mask-pull-{dir}-popup-message";
-        _popupSystem.PopupClient(Loc.GetString(msg, ("mask", uid)), args.Performer, args.Performer);
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(msg, ("mask", uid)), args.Performer, args.Performer);
     }
 
     private void OnGotUnequipped(EntityUid uid, MaskComponent mask, GotUnequippedEvent args)

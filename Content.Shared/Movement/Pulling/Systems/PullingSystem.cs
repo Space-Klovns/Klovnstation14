@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Alert;
@@ -590,7 +591,7 @@ public sealed partial class PullingSystem : EntitySystem
         Dirty(pullableUid, pullableComp);
 
         var pullingMessage =
-            Loc.GetString("getting-pulled-popup", ("puller", Identity.Entity(pullerUid, EntityManager)));
+            KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("getting-pulled-popup", ("puller", Identity.Entity(pullerUid, EntityManager)));
         _popup.PopupEntity(pullingMessage, pullableUid, pullableUid);
 
         _adminLogger.Add(LogType.Action, LogImpact.Low,

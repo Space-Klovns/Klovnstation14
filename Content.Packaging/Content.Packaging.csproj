@@ -7,6 +7,11 @@
 
   <Import Project="../MSBuild/Content.props" />
 
+  <ItemGroup>
+    <ProjectReference Include="../Content.Shared/Content.Shared.csproj" /> <!-- KS14: packaged localization cache format -->
+    <PackageReference Include="Linguini.Bundle" /> <!-- KS14: compile Fluent patterns during packaging -->
+  </ItemGroup>
+
   <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />
 
   <Import Project="..\RobustToolbox\Imports\Shared.props" />

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Buckle;
 using Content.Shared.Buckle.Components;
 using Content.Shared.Construction.EntitySystems;
@@ -101,9 +102,9 @@ public sealed partial class FoldableSystem : EntitySystem
         if (!result && folder != null)
         {
             if (comp.IsFolded)
-                _popup.PopupPredicted(Loc.GetString("foldable-unfold-fail", ("object", uid)), uid, folder.Value);
+                _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("foldable-unfold-fail", ("object", uid)), uid, folder.Value);
             else
-                _popup.PopupPredicted(Loc.GetString("foldable-fold-fail", ("object", uid)), uid, folder.Value);
+                _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("foldable-fold-fail", ("object", uid)), uid, folder.Value);
         }
         return result;
     }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Access.Components;
 using Content.Shared.Administration.Logs;
 using Content.Shared.CartridgeLoader;
@@ -50,7 +51,7 @@ public sealed partial class LogProbeCartridgeSystem : EntitySystem
 
         //Play scanning sound with slightly randomized pitch
         _audio.PlayEntity(ent.Comp.SoundScan, args.InteractEvent.User, target);
-        _popup.PopupCursor(Loc.GetString("log-probe-scan", ("device", target)), args.InteractEvent.User);
+        _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("log-probe-scan", ("device", target)), args.InteractEvent.User);
 
         ent.Comp.EntityName = Name(target);
         ent.Comp.PulledAccessLogs.Clear();

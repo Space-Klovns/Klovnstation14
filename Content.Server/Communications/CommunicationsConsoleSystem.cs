@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.AlertLevel;
 using Content.Server.Chat.Systems;
@@ -215,7 +216,7 @@ namespace Content.Server.Communications
 
             if (!CanUse(mob, uid))
             {
-                _popupSystem.PopupCursor(Loc.GetString("comms-console-permission-denied"), message.Actor, PopupType.Medium);
+                _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comms-console-permission-denied"), message.Actor, PopupType.Medium);
                 return;
             }
 
@@ -251,7 +252,7 @@ namespace Content.Server.Communications
 
                 if (!CanUse(mob, uid))
                 {
-                    _popupSystem.PopupEntity(Loc.GetString("comms-console-permission-denied"), uid, message.Actor);
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comms-console-permission-denied"), uid, message.Actor);
                     return;
                 }
 
@@ -309,7 +310,7 @@ namespace Content.Server.Communications
 
             if (!CanUse(mob, uid))
             {
-                _popupSystem.PopupEntity(Loc.GetString("comms-console-permission-denied"), uid, message.Actor);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comms-console-permission-denied"), uid, message.Actor);
                 return;
             }
 
@@ -317,7 +318,12 @@ namespace Content.Server.Communications
             RaiseLocalEvent(ref ev);
             if (ev.Cancelled)
             {
-                _popupSystem.PopupEntity(ev.Reason ?? Loc.GetString("comms-console-shuttle-unavailable"), uid, message.Actor);
+                // KS14 start: defer the default popup while preserving custom error text
+                if (ev.Reason == null)
+                    _popupSystem.PopupEntity(KsPopupMessage.Create("comms-console-shuttle-unavailable"), uid, message.Actor);
+                else
+                    _popupSystem.PopupEntity(ev.Reason, uid, message.Actor);
+                // KS14 end
                 return;
             }
 
@@ -334,7 +340,7 @@ namespace Content.Server.Communications
 
             if (!CanUse(mob, uid))
             {
-                _popupSystem.PopupEntity(Loc.GetString("comms-console-permission-denied"), uid, message.Actor);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comms-console-permission-denied"), uid, message.Actor);
                 return;
             }
 

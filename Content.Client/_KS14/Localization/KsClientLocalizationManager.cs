@@ -32,6 +32,7 @@ public sealed partial class KsClientLocalizationManager
             _localizationManager.SetCulture(culture);
             // SetCulture alone does not invalidate the engine's prototype-name cache.
             _localizationManager.ReloadLocalizations();
+            _contentLocalizationManager.OnClientCultureChanged();
         }
         if (locale != culture.Name)
             _configurationManager.SetCVar(KsCCVars.ClientLocale, culture.Name);

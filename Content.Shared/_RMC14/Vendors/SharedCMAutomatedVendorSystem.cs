@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Hands;
@@ -261,7 +262,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 {
                     // FIXME
                     ResetChoices();
-                    _popup.PopupEntity(Loc.GetString("cm-vending-machine-specialist-max"), vendor, actor);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cm-vending-machine-specialist-max"), vendor, actor);
                     return;
                 }
 
@@ -286,7 +287,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 if (allVendorsTotal >= globalLimit)
                 {
                     ResetChoices();
-                    _popup.PopupEntity(Loc.GetString("cm-vending-machine-specialist-max"), vendor.Owner, actor);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cm-vending-machine-specialist-max"), vendor.Owner, actor);
                     return;
                 }
 

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server._KS14.Sensors; // KS14
 using Content.Server.Power.EntitySystems;
 using Content.Server.Shuttles.Components;
@@ -355,7 +356,7 @@ public sealed partial class ShuttleConsoleSystem : SharedShuttleConsoleSystem
 
         _alertsSystem.ClearAlert(pilotUid, pilotComponent.PilotingAlert);
 
-        _popup.PopupEntity(Loc.GetString("shuttle-pilot-end"), pilotUid, pilotUid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-pilot-end"), pilotUid, pilotUid);
 
         if (pilotComponent.LifeStage < ComponentLifeStage.Stopping)
             RemComp<PilotComponent>(pilotUid);

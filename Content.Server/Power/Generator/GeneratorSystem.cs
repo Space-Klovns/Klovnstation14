@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using System.Linq;
 using Content.Server.Audio;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Materials;
@@ -219,7 +220,7 @@ public sealed partial class GeneratorSystem : SharedGeneratorSystem
 
             if (GetIsClogged(uid))
             {
-                _popup.PopupEntity(Loc.GetString("generator-clogged", ("generator", uid)), uid, PopupType.SmallCaution);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("generator-clogged", ("generator", uid)), uid, PopupType.SmallCaution);
                 SetFuelGeneratorOn(uid, false, gen);
                 continue;
             }

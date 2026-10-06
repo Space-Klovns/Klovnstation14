@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.UserInterface;
 using Content.Shared.Eye.Blinding.Components;
 using Content.Shared.Popups;
@@ -25,7 +26,7 @@ public sealed partial class ActivatableUIRequiresVisionSystem : EntitySystem
         if (TryComp<BlindableComponent>(args.User, out var blindable) && blindable.IsBlind)
         {
             if (!args.Silent)
-                _popupSystem.PopupClient(Loc.GetString("blindness-fail-attempt"), args.User, Shared.Popups.PopupType.MediumCaution);
+                _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("blindness-fail-attempt"), args.User, Shared.Popups.PopupType.MediumCaution);
             args.Cancel();
         }
     }

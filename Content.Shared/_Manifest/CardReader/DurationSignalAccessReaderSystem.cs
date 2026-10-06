@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Access.Systems;
 using Content.Shared.DeviceLinking;
 using Content.Shared.DoAfter;
@@ -145,9 +146,9 @@ public abstract partial class SharedDurationSignalAccessReaderSystem : EntitySys
             if (readerComponent.RepeatPopupSelf is { } selfRepeatLoc && _gameTiming.IsFirstTimePredicted)
             {
                 if (readerComponent.RepeatPopupOthers is { } othersRepeatLoc)
-                    _sharedPopupSystem.PopupPredicted(Loc.GetString(selfRepeatLoc), Loc.GetString(othersRepeatLoc, ("name", Identity.Entity(args.User, EntityManager))), reader, args.User, PopupType.SmallCaution);
+                    _sharedPopupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(selfRepeatLoc), KsPopupMessage.Create(othersRepeatLoc, ("name", Identity.Entity(args.User, EntityManager))), reader, args.User, PopupType.SmallCaution);
                 else
-                    _sharedPopupSystem.PopupPredicted(Loc.GetString(selfRepeatLoc), reader, args.User, PopupType.SmallCaution);
+                    _sharedPopupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(selfRepeatLoc), reader, args.User, PopupType.SmallCaution);
             }
 
             args.Repeat = true;

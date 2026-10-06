@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -148,7 +149,7 @@ public sealed partial class GasTankSystem : SharedGasTankSystem
 
         ToggleValve(entity);
         if (entity.Comp.SafetyAlert != null)
-            _popup.PopupEntity(Loc.GetString(entity.Comp.SafetyAlert), entity, PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(entity.Comp.SafetyAlert), entity, PopupType.LargeCaution);
 
         Dirty(entity);
     }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -101,12 +102,12 @@ public sealed partial class StethoscopeSystem : EntitySystem
             _mobState.IsDead(target, mobState) ||
             !_damageable.GetAllDamage(target).DamageDict.TryGetValue(DamageToListenFor, out var asphyxDmg))
         {
-            _popup.PopupPredicted(Loc.GetString("stethoscope-nothing"), target, user);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("stethoscope-nothing"), target, user);
             stethoscope.Comp.LastMeasuredDamage = null;
             return;
         }
 
-        var absString = GetAbsoluteDamageString(asphyxDmg);
+        var absString = GetAbsoluteDamageMessage(asphyxDmg);
 
         // Don't show the change if this is the first time listening.
         if (stethoscope.Comp.LastMeasuredDamage == null)
@@ -115,14 +116,14 @@ public sealed partial class StethoscopeSystem : EntitySystem
         }
         else
         {
-            var deltaString = GetDeltaDamageString(stethoscope.Comp.LastMeasuredDamage.Value, asphyxDmg);
-            _popup.PopupPredicted(Loc.GetString("stethoscope-combined-status", ("absolute", absString), ("delta", deltaString)), target, user);
+            var deltaString = GetDeltaDamageMessage(stethoscope.Comp.LastMeasuredDamage.Value, asphyxDmg);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("stethoscope-combined-status", ("absolute", absString), ("delta", deltaString)), target, user);
         }
 
         stethoscope.Comp.LastMeasuredDamage = asphyxDmg;
     }
 
-    private string GetAbsoluteDamageString(FixedPoint2 asphyxDmg)
+    private KsPopupMessage /* KS14: defer status label */ GetAbsoluteDamageMessage(FixedPoint2 asphyxDmg)
     {
         var msg = (int)asphyxDmg switch
         {
@@ -132,16 +133,16 @@ public sealed partial class StethoscopeSystem : EntitySystem
             < 80 => "stethoscope-irregular",
             _ => "stethoscope-fucked",
         };
-        return Loc.GetString(msg);
+        return KsPopupMessage.Create /* KS14: defer status label */(msg);
     }
 
-    private string GetDeltaDamageString(FixedPoint2 lastDamage, FixedPoint2 currentDamage)
+    private KsPopupMessage /* KS14: defer status label */ GetDeltaDamageMessage(FixedPoint2 lastDamage, FixedPoint2 currentDamage)
     {
         if (lastDamage > currentDamage)
-            return Loc.GetString("stethoscope-delta-improving");
+            return KsPopupMessage.Create /* KS14: defer status label */("stethoscope-delta-improving");
         if (lastDamage < currentDamage)
-            return Loc.GetString("stethoscope-delta-worsening");
-        return Loc.GetString("stethoscope-delta-steady");
+            return KsPopupMessage.Create /* KS14: defer status label */("stethoscope-delta-worsening");
+        return KsPopupMessage.Create /* KS14: defer status label */("stethoscope-delta-steady");
     }
 
 }

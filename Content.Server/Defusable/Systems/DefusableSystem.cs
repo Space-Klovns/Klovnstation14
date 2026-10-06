@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Defusable.Components;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Popups;
@@ -113,7 +114,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
         if (!component.Bolted)
             return false;
 
-        var msg = Loc.GetString("defusable-popup-cant-anchor", ("name", uid));
+        var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("defusable-popup-cant-anchor", ("name", uid));
         _popup.PopupEntity(msg, uid, args.User);
 
         return true;
@@ -127,7 +128,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
     {
         if (!comp.Usable)
         {
-            _popup.PopupEntity(Loc.GetString("defusable-popup-fried", ("name", uid)), uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-fried", ("name", uid)), uid);
             return;
         }
 
@@ -138,7 +139,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
         SetBolt(comp, true);
         SetActivated(comp, true);
 
-        _popup.PopupEntity(Loc.GetString("defusable-popup-begun", ("name", uid)), uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-begun", ("name", uid)), uid);
         if (TryComp<TimerTriggerComponent>(uid, out var timerTrigger))
         {
             _trigger.ActivateTimerTrigger((uid, timerTrigger));
@@ -157,7 +158,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
         if (!comp.Activated)
             return;
 
-        _popup.PopupEntity(Loc.GetString("defusable-popup-boom", ("name", uid)), uid, PopupType.LargeCaution);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-boom", ("name", uid)), uid, PopupType.LargeCaution);
 
         RaiseLocalEvent(uid, new BombDetonatedEvent(uid));
 
@@ -172,7 +173,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
         if (!comp.Activated)
             return;
 
-        _popup.PopupEntity(Loc.GetString("defusable-popup-defuse", ("name", uid)), uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-defuse", ("name", uid)), uid);
         SetActivated(comp, false);
 
         var xform = Transform(uid);
@@ -240,7 +241,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
             return;
 
         _trigger.TryDelay(wire.Owner, TimeSpan.FromSeconds(30));
-        _popup.PopupEntity(Loc.GetString("defusable-popup-wire-chirp", ("name", wire.Owner)), wire.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-wire-chirp", ("name", wire.Owner)), wire.Owner);
         comp.DelayWireUsed = true;
     }
 
@@ -249,7 +250,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
         if (comp is not { Activated: true, ProceedWireCut: false })
             return true;
 
-        _popup.PopupEntity(Loc.GetString("defusable-popup-wire-proceed-pulse", ("name", wire.Owner)), wire.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-wire-proceed-pulse", ("name", wire.Owner)), wire.Owner);
         SetDisplayTime(comp, false);
 
         comp.ProceedWireCut = true;
@@ -264,7 +265,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
             _trigger.TryDelay(wire.Owner, TimeSpan.FromSeconds(-15));
         }
 
-        _popup.PopupEntity(Loc.GetString("defusable-popup-wire-proceed-pulse", ("name", wire.Owner)), wire.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-wire-proceed-pulse", ("name", wire.Owner)), wire.Owner);
     }
 
     public bool ActivateWireCut(EntityUid user, Wire wire, DefusableComponent comp)
@@ -292,7 +293,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
             if (!comp.ActivatedWireUsed)
             {
                 _trigger.TryDelay(wire.Owner, TimeSpan.FromSeconds(30));
-                _popup.PopupEntity(Loc.GetString("defusable-popup-wire-chirp", ("name", wire.Owner)), wire.Owner);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-wire-chirp", ("name", wire.Owner)), wire.Owner);
                 comp.ActivatedWireUsed = true;
             }
         }
@@ -340,7 +341,7 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
 
         SetBolt(comp, true);
         _audio.PlayPvs(comp.BoltSound, wire.Owner);
-        _popup.PopupEntity(Loc.GetString("defusable-popup-wire-bolt-pulse", ("name", wire.Owner)), wire.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-wire-bolt-pulse", ("name", wire.Owner)), wire.Owner);
 
         return true;
     }
@@ -352,14 +353,14 @@ public sealed partial class DefusableSystem : SharedDefusableSystem
 
         SetBolt(comp, false);
         _audio.PlayPvs(comp.BoltSound, wire.Owner);
-        _popup.PopupEntity(Loc.GetString("defusable-popup-wire-bolt-pulse", ("name", wire.Owner)), wire.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-wire-bolt-pulse", ("name", wire.Owner)), wire.Owner);
 
         return true;
     }
 
     public void BoltWirePulse(EntityUid user, Wire wire, DefusableComponent comp)
     {
-        _popup.PopupEntity(Loc.GetString("defusable-popup-wire-bolt-pulse", ("name", wire.Owner)), wire.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("defusable-popup-wire-bolt-pulse", ("name", wire.Owner)), wire.Owner);
     }
 
     #endregion

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Botany.Components;
 using Content.Server.Botany.Systems;
 using Content.Server.Popups;
@@ -18,7 +19,7 @@ public sealed partial class PlantRestoreSeedsEntityEffectSystem : EntityEffectSy
         if (!entity.Comp.Seed.Seedless)
             return;
 
-        _popup.PopupEntity(Loc.GetString("botany-plant-seedsrestored"), entity);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("botany-plant-seedsrestored"), entity);
         entity.Comp.Seed.Seedless = false;
     }
 }

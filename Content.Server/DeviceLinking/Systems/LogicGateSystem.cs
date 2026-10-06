@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.DeviceLinking.Components;
 using Content.Server.DeviceNetwork;
 using Content.Shared.DeviceLinking;
@@ -87,7 +88,7 @@ public sealed partial class LogicGateSystem : EntitySystem
 
         // notify the user
         _audio.PlayPvs(comp.CycleSound, uid);
-        var msg = Loc.GetString("logic-gate-cycle", ("gate", comp.Gate.ToString().ToUpper()));
+        var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("logic-gate-cycle", ("gate", comp.Gate.ToString().ToUpper()));
         _popup.PopupEntity(msg, uid, args.User);
         _appearance.SetData(uid, LogicGateVisuals.Gate, comp.Gate);
     }

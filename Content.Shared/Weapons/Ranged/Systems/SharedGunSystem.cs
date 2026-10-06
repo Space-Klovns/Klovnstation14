@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 // <Trauma>
 using Content.Shared.Weapons.Hitscan.Events;
 using Content.Shared._Trauma.Projectiles;
@@ -432,11 +433,16 @@ public abstract partial class SharedGunSystem : EntitySystem
             // If they're firing an existing clip then don't play anything.
             if (shots > 0)
             {
-                PopupSystem.PopupCursor(ev.Reason ?? Loc.GetString("gun-magazine-fired-empty"), user);
+                // KS14 start: keep the default empty-gun message unformatted for the recipient.
+                if (ev.Reason == null)
+                    PopupSystem.PopupCursor(KsPopupMessage.Create("gun-magazine-fired-empty"), user);
+                else
+                    PopupSystem.PopupCursor(ev.Reason, user);
+                // KS14 end
 
                 // MNET14: ent-popup
                 if (gun.Comp.EmptyFireLoc is { } emptyFireLoc)
-                    PopupSystem.PopupPredicted(Loc.GetString(emptyFireLoc), user, user);
+                    PopupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(emptyFireLoc), user, user);
 
                 // Don't spam safety sounds at gun fire rate, play it at a reduced rate.
                 // May cause prediction issues? Needs more tweaking

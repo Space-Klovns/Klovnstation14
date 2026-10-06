@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Examine;
@@ -153,7 +154,7 @@ public abstract partial class SharedGunSystem
             CycleCartridge(uid, component, user, appearance);
 
             if (user != null)
-                PopupSystem.PopupClient(Loc.GetString("gun-chamber-bolt-closed"), uid, user.Value);
+                PopupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("gun-chamber-bolt-closed"), uid, user.Value);
 
             if (slots != null)
             {
@@ -174,7 +175,7 @@ public abstract partial class SharedGunSystem
             }
 
             if (user != null)
-                PopupSystem.PopupClient(Loc.GetString("gun-chamber-bolt-opened"), uid, user.Value);
+                PopupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("gun-chamber-bolt-opened"), uid, user.Value);
 
             if (slots != null)
             {

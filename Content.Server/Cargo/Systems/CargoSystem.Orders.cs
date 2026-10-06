@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server.Cargo.Components;
@@ -147,7 +148,7 @@ namespace Content.Server.Cargo.Systems
 
             if (!_accessReaderSystem.IsAllowed(player, uid))
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-order-not-allowed"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-order-not-allowed"));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -159,7 +160,7 @@ namespace Content.Server.Cargo.Systems
                 !TryComp(station, out StationDataComponent? stationData) ||
                 !TryGetOrderDatabase(station, out var orderDatabase))
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-station-not-found"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-station-not-found"));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -174,7 +175,7 @@ namespace Content.Server.Cargo.Systems
             // Invalid order
             if (!ProtoMan.Resolve(order.Product, out var product))
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-invalid-product"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-invalid-product"));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -185,7 +186,7 @@ namespace Content.Server.Cargo.Systems
             // Too many orders, avoid them getting spammed in the UI.
             if (amount >= capacity)
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-too-many"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-too-many"));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -196,7 +197,7 @@ namespace Content.Server.Cargo.Systems
             if (cappedAmount != order.OrderQuantity)
             {
                 order.OrderQuantity = cappedAmount;
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-snip-snip"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-snip-snip"));
                 PlayDenySound(uid, component);
             }
 
@@ -206,7 +207,7 @@ namespace Content.Server.Cargo.Systems
             // Not enough balance
             if (cost > accountBalance)
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-insufficient-funds", ("cost", cost)));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-insufficient-funds", ("cost", cost)));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -221,7 +222,7 @@ namespace Content.Server.Cargo.Systems
 
                 if (ev.FulfillmentEntity == null)
                 {
-                    ConsolePopup(args.Actor, Loc.GetString("cargo-console-unfulfilled"));
+                    ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-unfulfilled"));
                     PlayDenySound(uid, component);
                     return;
                 }
@@ -244,7 +245,7 @@ namespace Content.Server.Cargo.Systems
                     _radio.SendRadioMessage(uid, message, CargoOrderConsoleComponent.BaseAnnouncementChannel, uid, escapeMarkup: false);
             }
 
-            ConsolePopup(args.Actor, Loc.GetString("cargo-console-trade-station", ("destination", MetaData(ev.FulfillmentEntity.Value).EntityName)));
+            ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-trade-station", ("destination", MetaData(ev.FulfillmentEntity.Value).EntityName)));
 
             // Log order approval
             _adminLogger.Add(LogType.Action,
@@ -447,7 +448,7 @@ namespace Content.Server.Cargo.Systems
             return ourOrders.Concat(otherOrders).ToList();
         }
 
-        private void ConsolePopup(EntityUid actor, string text)
+        private void ConsolePopup(EntityUid actor, KsPopupMessage /* KS14: keep helper messages deferred */ text)
         {
             _popup.PopupCursor(text, actor);
         }

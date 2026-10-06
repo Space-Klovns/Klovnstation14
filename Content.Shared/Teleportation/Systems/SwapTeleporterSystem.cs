@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Examine;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
@@ -59,13 +60,13 @@ public sealed partial class SwapTeleporterSystem : EntitySystem
 
         if (comp.LinkedEnt != null)
         {
-            _popup.PopupClient(Loc.GetString("swap-teleporter-popup-link-fail-already"), uid, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-link-fail-already"), uid, args.User);
             return;
         }
 
         if (targetComp.LinkedEnt != null)
         {
-            _popup.PopupClient(Loc.GetString("swap-teleporter-popup-link-fail-already-other"), uid, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-link-fail-already-other"), uid, args.User);
             return;
         }
 
@@ -75,7 +76,7 @@ public sealed partial class SwapTeleporterSystem : EntitySystem
         Dirty(target, targetComp);
         _appearance.SetData(uid, SwapTeleporterVisuals.Linked, true);
         _appearance.SetData(target, SwapTeleporterVisuals.Linked, true);
-        _popup.PopupClient(Loc.GetString("swap-teleporter-popup-link-create"), uid, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-link-create"), uid, args.User);
     }
 
     private void OnGetAltVerb(Entity<SwapTeleporterComponent> ent, ref GetVerbsEvent<AlternativeVerb> args)
@@ -111,7 +112,7 @@ public sealed partial class SwapTeleporterSystem : EntitySystem
 
         if (comp.LinkedEnt == null)
         {
-            _popup.PopupClient(Loc.GetString("swap-teleporter-popup-teleport-cancel-link"), ent, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-teleport-cancel-link"), ent, user);
             return;
         }
 
@@ -124,7 +125,7 @@ public sealed partial class SwapTeleporterSystem : EntitySystem
 
         if (_timing.CurTime < comp.NextTeleportUse)
         {
-            _popup.PopupClient(Loc.GetString("swap-teleporter-popup-teleport-cancel-time"), ent, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-teleport-cancel-time"), ent, user);
             return;
         }
 
@@ -154,7 +155,7 @@ public sealed partial class SwapTeleporterSystem : EntitySystem
 
         if (!CanSwapTeleport((teleEnt, teleXform), (otherTeleEnt, otherTeleXform)))
         {
-            _popup.PopupEntity(Loc.GetString("swap-teleporter-popup-teleport-fail",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-teleport-fail",
                 ("entity", Identity.Entity(linkedEnt, EntityManager))),
                 teleEnt,
                 teleEnt,
@@ -162,7 +163,7 @@ public sealed partial class SwapTeleporterSystem : EntitySystem
             return;
         }
 
-        _popup.PopupClient(Loc.GetString("swap-teleporter-popup-teleport-other",
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-teleport-other",
             ("entity", Identity.Entity(linkedEnt, EntityManager))),
             teleEnt,
             otherTeleEnt,
@@ -205,9 +206,9 @@ public sealed partial class SwapTeleporterSystem : EntitySystem
         Dirty(ent, ent.Comp);
 
         if (user != null)
-            _popup.PopupClient(Loc.GetString("swap-teleporter-popup-link-destroyed"), ent, user.Value);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-link-destroyed"), ent, user.Value);
         else
-            _popup.PopupEntity(Loc.GetString("swap-teleporter-popup-link-destroyed"), ent);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("swap-teleporter-popup-link-destroyed"), ent);
 
         if (linkedNullable is { } linked)
             DestroyLink(linked, user); // the linked one is shown globally

@@ -22,10 +22,16 @@ public sealed partial class ContentLocalizationManager
     /// </summary>
     public IReadOnlyList<CultureInfo> RefreshAvailableCultures()
     {
+        var refreshing = _availableCultures != null;
+        if (refreshing)
+            _packagedCultures = null;
         var cultures = new Dictionary<string, CultureInfo>(StringComparer.OrdinalIgnoreCase)
         {
             [DefaultCultureName] = CultureInfo.GetCultureInfo(DefaultCultureName),
         };
+        // Packaging merges Fluent directories, so registrations come from the compiled artifact.
+        foreach (var name in GetPackagedCultureNames())
+            cultures.TryAdd(name, CultureInfo.GetCultureInfo(name));
         var paths = _localizationResourceManager.ContentFindFiles("/Locale")
             .Concat(_localizationResourceManager.ContentFindFiles("/Uploaded"));
         foreach (var path in paths)
@@ -51,7 +57,8 @@ public sealed partial class ContentLocalizationManager
         }
         _availableCultures = cultures.Values.OrderBy(culture => culture.Name != DefaultCultureName)
             .ThenBy(culture => culture.NativeName, StringComparer.Ordinal).ToArray();
-        _prototypeNameMessages.Clear();
+        if (refreshing)
+            InvalidatePrototypeNameCache();
         return _availableCultures;
     }
 

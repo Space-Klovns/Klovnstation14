@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Botany.Components;
 using Content.Server.Materials.Components;
@@ -46,7 +47,7 @@ public sealed partial class ProduceMaterialExtractorSystem : EntitySystem
 
         if (changed == 0)
         {
-            _popup.PopupEntity(Loc.GetString("material-extractor-comp-wrongreagent", ("used", args.Used)), args.User, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("material-extractor-comp-wrongreagent", ("used", args.Used)), args.User, args.User);
             return;
         }
 

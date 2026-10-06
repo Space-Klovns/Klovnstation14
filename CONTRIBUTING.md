@@ -9,6 +9,7 @@ Coding conventions for this repo. Written for coding agents first, humans second
 - **Marking a change on a single line → `/* KS14: ... */` sitting at the change itself**, not a trailing `//` at the end of the line (see §3).
 - Otherwise follow upstream SS14 conventions, plus the local rules in §4.
 - Before you ship: the traps in §6 that fail *silently* — no build error, no log, no failing test.
+- Client-culture popups and prototype names/descriptions → use the KS localisation APIs in §7; defer popup arguments until the recipient formats them.
 
 ## 1. Project lineage
 
@@ -892,3 +893,289 @@ inside anything. A test built on those passes with the bug present. Instead, com
 with room to spare: `Measure` it with unlimited height (and unlimited width, for anything that can't wrap), then check
 its shown size against that. `KsVoiceLinkWindowTests` does this. Layout runs in the headless client with real font
 metrics, so this works in an ordinary integration test.
+
+## 7. KS client localisation: popups and prototype metadata
+
+The server normally runs in `en-US`, while each client selects its own culture through
+the KS14 settings tab (`klovn.client_locale`). **Formatting a string on the server does
+not make it follow the recipient's language.** Two content systems handle this:
+`KsPopupMessage` carries unformatted popup messages to clients, and
+`ContentLocalizationManager` resolves prototype names and descriptions in the active
+localisation culture. Use both when a popup contains a prototype name.
+
+Keep fixes in content; do not modify `RobustToolbox` to work around the engine's
+metadata cache. The implementation and further context are in
+[client_localization.md](Klovn/Docs/client_localization.md), with an
+[popup audit and manual checks](Klovn/Docs/popup_localization_audit.md).
+
+### Popups: carry the message key and its arguments
+
+Import `Content.Shared._KS14.PopupLocalization`, inject `SharedPopupSystem`, and pass
+`KsPopupMessage.Create(...)` to the ordinary popup methods. The argument names must
+match the Fluent variables. Add the Fluent message to English and the supported
+translated locales, following the feature's existing file layout.
+
+```csharp
+using Content.Shared._KS14.PopupLocalization;
+using Content.Shared.Popups;
+
+[Dependency] private SharedPopupSystem _popupSystem = default!;
+
+// Only the user receives this message.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("anchorless-convert-begin-message"),
+    entityUid, userUid, type: PopupType.Small);
+
+// Entity arguments retain the information needed by Fluent's entity functions.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("gun-ballistic-transfer-invalid",
+        ("ammoEntity", ammoUid), ("targetEntity", targetUid)),
+    targetUid, userUid, type: PopupType.Small);
+```
+
+Do **not** pass `Loc.GetString(...)` to a popup intended to follow the client's
+culture. That selects the legacy string overload, which sends the already formatted
+text. String overloads remain appropriate for literal text and player-authored text.
+Likewise, do not call `message.Format(...)` before handing the message to the popup
+system. Keep custom events, helpers, and intermediate variables typed as
+`KsPopupMessage` if they carry a translated popup. A helper taking `string` cannot
+recover the original key or arguments after formatting.
+
+The complete argument tree must remain deferred, including the values inserted into
+an otherwise localised outer message:
+
+```csharp
+// A nested Fluent label.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("gun-selected-mode",
+        ("mode", KsPopupMessage.Create("gun-SemiAuto"))),
+    weaponUid, userUid);
+
+// A prototype name, such as the energy shotgun's selected projectile.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("gun-set-fire-mode-popup",
+        ("mode", new KsPopupPrototypeName(projectilePrototype.ID))),
+    weaponUid, userUid);
+```
+
+`KsPopupPrototypeName` resolves the ID through `ContentLocalizationManager` **at the
+recipient**, for both local prediction and authoritative network messages. It uses
+the prototype name table and its inheritance rules. An unknown prototype ID displays
+the ID as a fallback. Do not replace it with `prototype.Name`, an eagerly formatted
+`GetLocalizedPrototypeName(...)`, or `KsPopupMessage.Create("ent-" + prototype.ID)`:
+the first two freeze the sender's language; the last bypasses prototype inheritance
+and custom `localizationId` handling.
+
+Use these argument forms:
+
+| Value needed by the message | Argument to pass |
+| --- | --- |
+| Live entity, including Fluent entity grammar | `EntityUid` or `Entity<T>`; avoid preformatted `Name(...)` |
+| Prototype name without a live entity | `new KsPopupPrototypeName(prototype.ID)` |
+| Another translated label | `KsPopupMessage.Create(labelKey, ...)` |
+| Several translated labels joined into one argument | `new KsPopupMessageList(separator, messages)`; each element is a deferred `KsPopupMessage` |
+| Number, boolean, time, literal/player text | The original value; let Fluent format numbers |
+| Colour or enum | `Color` or enum; the payload converts them to hex or lowercase invariant text |
+
+The payload also unwraps `LocValueString` and `LocValueNumber`. Other arbitrary
+objects fall back to `ToString()` when sent, so do not pass components, prototypes,
+custom localisation values, or custom objects expecting their behaviour to survive
+the network. Add an explicit supported argument representation and tests if a new
+kind is needed. Live entity arguments must be available to the receiving client;
+they are transported as `NetEntity`, not as a snapshot of their name.
+
+`KsPopupMessage.ToLower()` defers lowercasing until after formatting. It currently
+uses ordinary `string.ToLower()` and therefore the thread's casing rules; do not
+assume it implements the selected game culture's grammatical inflections. Prefer
+appropriately written Fluent messages when casing or inflection matters.
+
+### Popup audience, prediction, and network flow
+
+The KS overloads preserve the ordinary popup API's audience rules:
+
+| Call | Audience |
+| --- | --- |
+| `PopupEntity(message, entityUid)` | Players in the entity's PVS |
+| `PopupEntity(message, entityUid, recipientUid)` | That recipient only |
+| `PopupEntity(message, entityUid, recipientSession)` | That session only |
+| `PopupEntity(message, entityUid, filter, recordReplay)` | The supplied filter |
+| `PopupCoordinates(message, coordinates)` | Players in the coordinates' PVS |
+| `PopupCursor(message, recipientUid)` | That recipient only |
+
+Entity and coordinate methods also accept explicit filters and sessions. The two
+message `PopupEntity` overload sends one message to the recipient and another to
+nearby observers. Both translated messages must be `KsPopupMessage`; the mixed
+overload permits a literal observer message or `null` to suppress it. Preserve the
+existing filter, popup type, replay recording choice, coordinates, and prediction
+key when migrating a call.
+
+The KS `PopupClient` / `PopupPredicted` aliases exist for old call sites. Prefer
+`PopupEntity`, `PopupCoordinates`, and `PopupCursor` in new code. As explained in
+§4, the old three-argument `PopupPredicted(message, uid, recipient)` broadcasts;
+its `recipient` argument does not restrict the audience. Do not accidentally turn
+a private `PopupClient` call into a PVS broadcast.
+
+On the server, `PopupSystem.Klovn.Localization.cs` serialises a `KsPopupPayload`
+inside `KsLocalizedPopupEvent`, including its location, popup type, game tick, and
+coordinate prediction key. It does not format the text or send separate copies for
+each language. On the client, `PopupSystem.Klovn.Localization.cs` formats the payload
+in the client's current culture, then feeds the ordinary popup event handlers.
+Shared prediction formats the original arguments locally on the first predicted
+execution, without a network conversion round trip.
+
+Formatting before the ordinary prediction match allows the predicted and confirmed
+text to agree even when the server uses English and the client uses another language.
+**Use the same key, argument values, audience, and prediction identity on both paths.**
+This preserves the engine's existing duplicate suppression; it does not deduplicate
+arbitrary messages with different ticks, locations, keys, or arguments. Do not fix
+duplicates by adding a second popup send or a separate language-specific broadcast.
+
+### Prototype names and descriptions: use the content manager
+
+Import `Content.Shared.Localizations` and inject `ContentLocalizationManager` in a
+system that needs prototype metadata for the active culture:
+
+```csharp
+[Dependency] private ContentLocalizationManager _contentLocalizationManager = default!;
+
+var prototype = ProtoMan.Index<EntityPrototype>(prototypeId);
+var localisedName = _contentLocalizationManager.GetLocalizedPrototypeName(prototype);
+var localisedDescription = _contentLocalizationManager.GetLocalizedPrototypeDescription(prototype);
+
+// Preserve a live item's custom name rather than replacing it with the prototype's name.
+var metadataComponent = MetaData(itemUid);
+var displayName = _contentLocalizationManager.GetLocalizedEntityName(
+    itemUid, EntityManager, metadataComponent.EntityName);
+
+// An examine response is formatted now, inside the request's existing culture scope.
+args.PushMarkup(Loc.GetString("gun-set-fire-mode-examine", ("mode", localisedName)));
+```
+
+These methods use the **active** localisation culture, not an entity's owner or an
+implicitly inferred recipient. Client calls use the selected client culture. Server
+examine and verb request handlers already enter a validated synchronous
+`BeginCultureScope(requestedCulture)` for that request. Code adding another
+authoritative response path must carry and validate the client's requested culture
+and scope its formatting with the same manager:
+
+```csharp
+using (_contentLocalizationManager.BeginCultureScope(requestedCulture))
+{
+    // Format only this synchronous response here.
+}
+```
+
+The scope temporarily changes the localisation manager's default culture and restores
+it on disposal. Never retain it across `await`, background work, queued callbacks,
+or an unrelated gameplay action. Verb actions execute after their validation scope
+has been disposed. Popups use deferred messages instead of a server culture scope.
+
+The engine's entity metadata localisation cache is warmed in the normal server
+culture at startup. Do not rely on `prototype.Name`, `prototype.Description`, or
+`Loc.GetEntityData(...)` switching with each client's request, and do not clear or
+rewrite global engine metadata to translate one response. That causes mixed-language
+or Russian-then-English examine results and can affect other players. The server's
+base examine description uses `GetLocalizedPrototypeDescription` only while the
+live description still equals its prototype description; deliberate runtime changes
+are preserved. Follow that distinction when adding another description path.
+
+### Translation files and inheritance
+
+Prototype translations normally use `ent-<ExactPrototypeID>` for the name and its
+`.desc` attribute for the description. A prototype's `localizationId`, including an
+inherited one, overrides that key. Keep prototype IDs case-sensitive. Put fork
+translations under `Resources/Locale/<culture>/_KS14/` and mirror the corresponding
+prototype paths; do not collect an entire module's prototypes in one giant FTL file.
+Follow existing translated upstream trees when extending their translations.
+
+```ftl
+ent-KsExampleDevice = пример устройства
+    .desc = Описание устройства.
+```
+
+Names and descriptions resolve independently. `KsPrototypeLocalizationResolver`
+shares the following policy between runtime and packaging:
+
+1. Check the prototype's native translated field, then traverse parents breadth
+   first in their declared order, including abstract parents.
+2. A concrete prototype's distinct literal field stops inheritance when reached.
+   A child with its own English name therefore needs its own translation; do not
+   expect an unrelated translated parent name to replace it.
+3. A native inherited translation takes precedence over a fallback English Fluent
+   field when no distinct concrete literal stops that traversal.
+4. If nothing suitable is found, use the prototype's English Fluent field, its
+   resolved literal field, or an empty string. An explicitly empty translated
+   description (`.desc = { "" }`) is a valid override, not a missing translation.
+
+The English name API retains the engine's ordinary `prototype.Name` behaviour.
+Do not implement another parent walk or use fallback-aware `Loc.HasString(...)`
+as a test for a *native* translation: an English fallback can hide a missing native
+field. `KsFluentMessageIndex` records native message/attribute presence for the shared
+resolver. Prototype metadata is resolved as static text; put per-use variables and
+state in a separate Fluent examine/popup message rather than a cached name or `.desc`.
+
+### Cache generation, cultures, reloads, and performance
+
+`MSBuild/KsLocalizationCache.targets` runs the packaging compiler after normal client
+and server builds. It produces `Resources/Localization/_KS14/prototype-names.bin`
+with per-culture name and description tables and the registered culture list. The
+artifact and input fingerprint are Git-ignored; do not hand-edit or commit them.
+Unchanged inputs skip regeneration. `-p:SkipKsLocalizationCache=true` skips this build
+hook for tooling; it is not a replacement for shipping a current cache.
+
+Packaging recompiles from the package's exact prototype and locale inputs, including
+prototype replacements, and includes the result in client/server resource packages
+and automatic ACZ client packages. Clients receive it with the ordinary resource
+download. There is no separate cache transfer during gameplay.
+
+`KsEntryPoint.PostInit()` loads the artifact and initialises registered cultures after
+prototype replacement. The compiled tables use frozen dictionaries: ordinary
+lookups do not enumerate Fluent files, walk inheritance, or rebuild tables. Language
+switching retains loaded compiled tables. Keep the expensive work in compilation,
+initialisation, or explicit reload paths; do not add resource scans, whole-prototype
+loops, culture switches, or per-recipient cache rebuilding to popup/examine lookups.
+Popup formatting still performs Fluent work and allocates arguments when needed;
+it is not an allocation-free API. Keep argument trees small and send only to the
+intended audience.
+
+Without an artifact, or for a runtime culture absent from it, the manager builds a
+runtime table on demand and retains it. Abstract prototype requests outside the
+concrete tables use memoised runtime translations. Runtime and packaging must keep
+the same resolver and native-presence rules; changing one side alone can make a
+development run and a packaged build translate differently.
+
+Add future cultures under `Resources/Locale/<canonical-culture>/` and translate
+`_KS14/Localization/options.ftl` there to register them as selectable game languages.
+Use `GetAvailableCultures()` / `ResolveCulture(...)`, not a hardcoded English/Russian
+branch. English is the fallback for unknown culture requests and missing messages.
+Both client and server need the resources for authoritative responses. All registered
+cultures and their content formatting functions load at startup.
+
+For a resource pack mounted at runtime, call `RefreshAvailableCultures()` and reopen
+settings to refresh the choices. Prototype reloads invalidate the prototype tables
+automatically. Content language refreshes also invalidate them. If code calls the
+engine's `ReloadLocalizations()` directly, it must also call
+`InvalidatePrototypeNameCache()` because the engine exposes no reload notification
+for this cache. Rebuild or repackage to update the persistent artifact. Do not
+invalidate the cache on every ordinary lookup or every popup.
+
+### Localisation verification
+
+Use the tests under `Content.IntegrationTests/Tests/_KS14/Localization/`:
+
+- `KsPopupLocalizationTests`: recipient cultures, energy shotgun's nested prototype
+  labels, prediction confirmation, and payload formatting/serialization measurements.
+- `KsPrototypeNameCacheTests`: packaged/runtime parity and resolver behaviour.
+- `KsClientLocalizationTests`: culture discovery/switching, prototype metadata,
+  nested examine text, and other client localisation regressions.
+- `KsVerbLocalizationTests`: authoritative verb labels and action culture boundaries.
+- `Content.IntegrationTests.Tests.Utility.SandboxTest`: shared/client API legality,
+  required when adding new argument types or cache APIs.
+
+For a changed message, check an English server with clients in two different
+cultures, including a predicted action and its authoritative confirmation. Verify
+the nested label, private/broadcast audience, custom item names/descriptions, and
+fallback for a missing translation. Check packaged resources as well as the runtime
+fallback when changing cache resolution. Use the manual checks linked above for
+the popup pass. Do not infer whole-round CPU or network overhead from the
+popup microbenchmarks; they measure individual components and serialized payloads.

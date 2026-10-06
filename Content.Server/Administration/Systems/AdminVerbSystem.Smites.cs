@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -151,10 +152,10 @@ public sealed partial class AdminVerbSystem
                 _sharedGodmodeSystem.EnableGodmode(args.Target); // So they don't suffocate.
                 EnsureComp<TabletopDraggableComponent>(args.Target);
                 var xform = Transform(args.Target);
-                _popupSystem.PopupEntity(Loc.GetString("admin-smite-chess-self"), args.Target,
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-chess-self"), args.Target,
                     args.Target, PopupType.LargeCaution);
                 _popupSystem.PopupCoordinates(
-                    Loc.GetString("admin-smite-chess-others", ("name", args.Target)), xform.Coordinates,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-chess-others", ("name", args.Target)), xform.Coordinates,
                     Filter.PvsExcept(args.Target), true, PopupType.MediumCaution);
                 var board = Spawn("ChessBoard", xform.Coordinates);
                 var session = _tabletopSystem.EnsureSession(Comp<TabletopGameComponent>(board));
@@ -180,9 +181,9 @@ public sealed partial class AdminVerbSystem
                     flammable.FireStacks = flammable.MaximumFireStacks;
                     _flammableSystem.Ignite(args.Target, args.User);
                     var xform = Transform(args.Target);
-                    _popupSystem.PopupEntity(Loc.GetString("admin-smite-set-alight-self"), args.Target,
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-set-alight-self"), args.Target,
                         args.Target, PopupType.LargeCaution);
-                    _popupSystem.PopupCoordinates(Loc.GetString("admin-smite-set-alight-others", ("name", args.Target)), xform.Coordinates,
+                    _popupSystem.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-set-alight-others", ("name", args.Target)), xform.Coordinates,
                         Filter.PvsExcept(args.Target), true, PopupType.MediumCaution);
                 },
                 Impact = LogImpact.Extreme,
@@ -300,9 +301,9 @@ public sealed partial class AdminVerbSystem
                 {
                     _bloodstreamSystem.SpillAllSolutions((args.Target, bloodstream));
                     var xform = Transform(args.Target);
-                    _popupSystem.PopupEntity(Loc.GetString("admin-smite-remove-blood-self"), args.Target,
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-remove-blood-self"), args.Target,
                         args.Target, PopupType.LargeCaution);
-                    _popupSystem.PopupCoordinates(Loc.GetString("admin-smite-remove-blood-others", ("name", args.Target)), xform.Coordinates,
+                    _popupSystem.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-remove-blood-others", ("name", args.Target)), xform.Coordinates,
                         Filter.PvsExcept(args.Target), true, PopupType.MediumCaution);
                 },
                 Impact = LogImpact.Extreme,
@@ -332,9 +333,9 @@ public sealed partial class AdminVerbSystem
                         _transformSystem.PlaceNextTo((organ.Owner, organ.Comp), (args.Target, baseXform));
                     }
 
-                    _popupSystem.PopupEntity(Loc.GetString("admin-smite-vomit-organs-self"), args.Target,
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-vomit-organs-self"), args.Target,
                         args.Target, PopupType.LargeCaution);
-                    _popupSystem.PopupCoordinates(Loc.GetString("admin-smite-vomit-organs-others", ("name", args.Target)), baseXform.Coordinates,
+                    _popupSystem.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-vomit-organs-others", ("name", args.Target)), baseXform.Coordinates,
                         Filter.PvsExcept(args.Target), true, PopupType.MediumCaution);
                 },
                 Impact = LogImpact.Extreme,
@@ -357,9 +358,9 @@ public sealed partial class AdminVerbSystem
                     {
                         _transformSystem.AttachToGridOrMap(organ);
                     }
-                    _popupSystem.PopupEntity(Loc.GetString("admin-smite-remove-hands-self"), args.Target,
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-remove-hands-self"), args.Target,
                         args.Target, PopupType.LargeCaution);
-                    _popupSystem.PopupCoordinates(Loc.GetString("admin-smite-remove-hands-other", ("name", args.Target)), baseXform.Coordinates,
+                    _popupSystem.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-remove-hands-other", ("name", args.Target)), baseXform.Coordinates,
                         Filter.PvsExcept(args.Target), true, PopupType.Medium);
                 },
                 Impact = LogImpact.Extreme,
@@ -383,9 +384,9 @@ public sealed partial class AdminVerbSystem
                         _transformSystem.AttachToGridOrMap(organ);
                         break;
                     }
-                    _popupSystem.PopupEntity(Loc.GetString("admin-smite-remove-hands-self"), args.Target,
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-remove-hands-self"), args.Target,
                         args.Target, PopupType.LargeCaution);
-                    _popupSystem.PopupCoordinates(Loc.GetString("admin-smite-remove-hands-other", ("name", args.Target)), baseXform.Coordinates,
+                    _popupSystem.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-remove-hands-other", ("name", args.Target)), baseXform.Coordinates,
                         Filter.PvsExcept(args.Target), true, PopupType.Medium);
                 },
                 Impact = LogImpact.Extreme,
@@ -407,7 +408,7 @@ public sealed partial class AdminVerbSystem
                         QueueDel(entity.Owner);
                     }
 
-                    _popupSystem.PopupEntity(Loc.GetString("admin-smite-stomach-removal-self"), args.Target,
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-stomach-removal-self"), args.Target,
                         args.Target, PopupType.LargeCaution);
                 },
                 Impact = LogImpact.Extreme,
@@ -429,7 +430,7 @@ public sealed partial class AdminVerbSystem
                         QueueDel(entity.Owner);
                     }
 
-                    _popupSystem.PopupEntity(Loc.GetString("admin-smite-lung-removal-self"), args.Target,
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-lung-removal-self"), args.Target,
                         args.Target, PopupType.LargeCaution);
                 },
                 Impact = LogImpact.Extreme,
@@ -673,7 +674,7 @@ public sealed partial class AdminVerbSystem
             {
                 QueueDel(args.Target);
                 Spawn("Ash", Transform(args.Target).Coordinates);
-                _popupSystem.PopupEntity(Loc.GetString("admin-smite-turned-ash-other", ("name", args.Target)), args.Target, PopupType.LargeCaution);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-turned-ash-other", ("name", args.Target)), args.Target, PopupType.LargeCaution);
             },
             Impact = LogImpact.Extreme,
             Message = string.Join(": ", dustName, Loc.GetString("admin-smite-dust-description"))
@@ -846,7 +847,7 @@ public sealed partial class AdminVerbSystem
 
                 Dirty(args.Target, movementSpeed);
 
-                _popupSystem.PopupEntity(Loc.GetString("admin-smite-run-walk-swap-prompt"), args.Target,
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-run-walk-swap-prompt"), args.Target,
                     args.Target, PopupType.LargeCaution);
             },
             Impact = LogImpact.Extreme,
@@ -895,7 +896,7 @@ public sealed partial class AdminVerbSystem
                 var movementSpeed = EnsureComp<MovementSpeedModifierComponent>(args.Target);
                 _movementSpeedModifierSystem?.ChangeBaseSpeed(args.Target, 400, 8000, 40, movementSpeed);
 
-                _popupSystem.PopupEntity(Loc.GetString("admin-smite-super-speed-prompt"), args.Target,
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-super-speed-prompt"), args.Target,
                     args.Target, PopupType.LargeCaution);
             },
             Impact = LogImpact.Extreme,
@@ -1030,7 +1031,7 @@ public sealed partial class AdminVerbSystem
                 if (_mindSystem.TryGetMind(args.Target, out var mindId, out _))
                     _role.MindAddRole(mindId, _siliconMindRole);
 
-                _popupSystem.PopupEntity(Loc.GetString("admin-smite-silicon-laws-bound-self"), args.Target,
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-smite-silicon-laws-bound-self"), args.Target,
                     args.Target, PopupType.LargeCaution);
             },
             Impact = LogImpact.Extreme,

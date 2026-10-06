@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
@@ -45,7 +46,7 @@ public sealed partial class MechEquipmentSystem : EntitySystem
         if (_whitelistSystem.IsWhitelistFail(mechComp.EquipmentWhitelist, args.Used))
             return;
 
-        _popup.PopupEntity(Loc.GetString("mech-equipment-begin-install", ("item", uid)), mech);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("mech-equipment-begin-install", ("item", uid)), mech);
 
         var doAfterEventArgs = new DoAfterArgs(EntityManager, args.User, component.InstallDuration, new InsertEquipmentEvent(), uid, target: mech, used: uid)
         {
@@ -60,7 +61,7 @@ public sealed partial class MechEquipmentSystem : EntitySystem
         if (args.Handled || args.Cancelled || args.Args.Target == null)
             return;
 
-        _popup.PopupEntity(Loc.GetString("mech-equipment-finish-install", ("item", uid)), args.Args.Target.Value);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("mech-equipment-finish-install", ("item", uid)), args.Args.Target.Value);
         _mech.InsertEquipment(args.Args.Target.Value, uid);
 
         args.Handled = true;

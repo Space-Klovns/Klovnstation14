@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -240,9 +241,9 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
             // Only the burned entity can see the popup.
             // TODO: Make the PopupSystem API more sane so that this is handled by a single method.
             if (args.Origin == ent.Owner) // predict the popup on the client if they caused damage to themselves
-                _popup.PopupClient(Loc.GetString("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
             else
-                _popup.PopupEntity(Loc.GetString("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
             _audio.PlayPredicted(ent.Comp.BloodHealedSound, ent, args.Origin);
         }
     }

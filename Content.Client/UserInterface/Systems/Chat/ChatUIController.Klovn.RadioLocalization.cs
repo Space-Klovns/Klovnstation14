@@ -5,8 +5,10 @@ namespace Content.Client.UserInterface.Systems.Chat;
 
 public sealed partial class ChatUIController
 {
+    [Dependency] private KsRadioLocalization _radioLocalization = default!;
+
     private string NormalizeLocalizedRadioPrefix(string text)
     {
-        return KsRadioLocalization.NormalizePrefix(_prototypeManager, _config.GetCVar(KsCCVars.ClientLocale), text);
+        return _radioLocalization.NormalizePrefix(_config.GetCVar(KsCCVars.ClientLocale), text);
     }
 }

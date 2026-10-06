@@ -10,7 +10,7 @@ encryption-keys-no-keys = В этом устройстве нет ключей �
 
 encryption-keys-panel-locked = Сначала откройте техническую панель.
 
-examine-encryption-channel = [color={ $color }]{ $key } для канала {$id} ({$freq})[/color]
+examine-encryption-channel = [color={ $color }]{ $key } для канала { $id } ({ NATURALFIXED($freq, 1) })[/color]
 
 examine-encryption-channels-prefix = Доступные частоты:
 

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.ParticleAccelerator.Components;
 using Content.Server.ParticleAccelerator.EntitySystems;
 using Content.Server.Popups;
@@ -58,7 +59,7 @@ public sealed partial class ParticleAcceleratorLimiterWireAction : ComponentWire
     {
         EntityManager.System<PopupSystem>()
             .PopupEntity(
-            Loc.GetString("particle-accelerator-control-box-component-wires-update-limiter-on-pulse"),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("particle-accelerator-control-box-component-wires-update-limiter-on-pulse"),
             user,
             PopupType.SmallCaution
         );

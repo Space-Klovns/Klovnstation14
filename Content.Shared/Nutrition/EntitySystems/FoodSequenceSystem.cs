@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using System.Text;
 using Content.Shared.Chemistry.EntitySystems;
@@ -124,7 +125,7 @@ public sealed partial class FoodSequenceSystem : SharedFoodSequenceSystem
         if (start.Comp.FoodLayers.Count >= start.Comp.MaxLayers && !elementIndexed.Final || start.Comp.Finished)
         {
             if (user is not null)
-                _popup.PopupClient(Loc.GetString("food-sequence-no-space"), start, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("food-sequence-no-space"), start, user.Value);
             return false;
         }
 

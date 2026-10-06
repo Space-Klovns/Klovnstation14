@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Antag;
 using Content.Server._KS14.GameTicking.Rules.Components;
 using Content.Shared._KS14.Anchorless.Components;
@@ -35,7 +36,7 @@ public sealed partial class AnchorlessConversionSystem : EntitySystem
 
         args.Handled = true;
         _audio.PlayPvs(new SoundCollectionSpecifier("ChangelingDevourWindup", AudioParams.Default.WithMaxDistance(6)), ent);
-        _popup.PopupEntity(Loc.GetString("anchorless-convert-begin-message"), ent.Owner, PopupType.LargeCaution);
+        _popup.PopupEntity(KsPopupMessage.Create("anchorless-convert-begin-message"), ent.Owner, PopupType.LargeCaution);
 
         _doAfter.TryStartDoAfter(new DoAfterArgs(EntityManager, ent.Owner, ent.Comp.ConversionDuration,
             new AnchorlessConvertDoAfterEvent(), ent.Owner, target: args.Target, used: ent.Owner)
@@ -63,8 +64,8 @@ public sealed partial class AnchorlessConversionSystem : EntitySystem
         RaiseLocalEvent(ref convertedEvent);
 
         _audio.PlayPvs(new SoundCollectionSpecifier("ChangelingDevourConsume", AudioParams.Default.WithMaxDistance(6)), ent);
-        _popup.PopupEntity(Loc.GetString("anchorless-devour-message"), ent.Owner, ent.Owner, PopupType.Medium);
-        _popup.PopupEntity(Loc.GetString("anchorless-devoured-message"), target, target, PopupType.Medium);
+        _popup.PopupEntity(KsPopupMessage.Create("anchorless-devour-message"), ent.Owner, ent.Owner, PopupType.Medium);
+        _popup.PopupEntity(KsPopupMessage.Create("anchorless-devoured-message"), target, target, PopupType.Medium);
     }
 
     private bool CanConvert(EntityUid target)

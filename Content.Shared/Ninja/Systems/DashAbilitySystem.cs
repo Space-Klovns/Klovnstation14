@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Charges.Systems;
 using Content.Shared.Hands.EntitySystems;
@@ -57,7 +58,7 @@ public sealed partial class DashAbilitySystem : EntitySystem
 
         if (!_hands.IsHolding(user, uid, out var _))
         {
-            _popup.PopupClient(Loc.GetString("dash-ability-not-held", ("item", uid)), user, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("dash-ability-not-held", ("item", uid)), user, user);
             return;
         }
 
@@ -66,13 +67,13 @@ public sealed partial class DashAbilitySystem : EntitySystem
         if (!_examine.InRangeUnOccluded(origin, target, SharedInteractionSystem.MaxRaycastRange, null))
         {
             // can only dash if the destination is visible on screen
-            _popup.PopupClient(Loc.GetString("dash-ability-cant-see", ("item", uid)), user, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("dash-ability-cant-see", ("item", uid)), user, user);
             return;
         }
 
         if (!_sharedCharges.TryUseCharge(uid))
         {
-            _popup.PopupClient(Loc.GetString("dash-ability-no-charges", ("item", uid)), user, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("dash-ability-no-charges", ("item", uid)), user, user);
             return;
         }
 

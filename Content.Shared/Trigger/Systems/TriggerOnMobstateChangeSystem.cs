@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Implants;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory; // KS14: MOBSTATERELAY
@@ -67,7 +68,7 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
         if (!component.PreventSuicide)
             return;
 
-        _popup.PopupClient(Loc.GetString("suicide-prevented"), args.Victim);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("suicide-prevented"), args.Victim);
         args.Handled = true;
     }
 
@@ -79,7 +80,7 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
         if (!component.PreventSuicide)
             return;
 
-        _popup.PopupClient(Loc.GetString("suicide-prevented"), args.Args.Victim);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("suicide-prevented"), args.Args.Victim);
         args.Args.Handled = true;
     }
 }

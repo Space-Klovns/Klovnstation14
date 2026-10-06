@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Chat.Systems;
 using Content.Shared._KS14.Packets.BUI;
@@ -36,8 +37,8 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         ent.Comp.Mode = 1 - ent.Comp.Mode;
 
         _sharedPopupSystem.PopupEntity(ent.Comp.Mode == ConfiguratorMode.Probe
-                ? Loc.GetString("packet-configurator-switch-probe")
-                : Loc.GetString("packet-configurator-switch-save"),
+                ? KsPopupMessage.Create("packet-configurator-switch-probe")
+                : KsPopupMessage.Create("packet-configurator-switch-save"),
             ent,
             user);
     }
@@ -64,7 +65,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
             if (_packetSystem.GetFrequency(receiver.Comp.Frequency) != ent.Comp.Frequency)
             {
                 check = false;
-                _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-network-fail"), ent, ev.User);
+                _sharedPopupSystem.PopupEntity(KsPopupMessage.Create("packet-configurator-network-fail"), ent, ev.User);
                 break;
             }
         }
@@ -104,7 +105,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         if (!TryComp<PacketNetworkComponent>(target, out var packetNetwork)
             || _packetSystem.GetFrequency(packetNetwork.Frequency) != ent.Comp.Frequency)
             {
-                _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-no-signal"), ent, ev.User);
+                _sharedPopupSystem.PopupEntity(KsPopupMessage.Create("packet-configurator-no-signal"), ent, ev.User);
                 return;
             }
 
@@ -168,7 +169,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
 
     private void OnSaveInteract(Entity<PacketNetworkConfiguratorComponent> ent, Entity<PacketNetworkComponent> target, EntityUid user)
     {
-        _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-save"), user, user);
+        _sharedPopupSystem.PopupEntity(KsPopupMessage.Create("packet-configurator-save"), user, user);
         ent.Comp.Addresses.Add(target.Comp.Address);
     }
 
@@ -177,7 +178,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         if (!int.TryParse(paper.Content, out var freq))
             return;
 
-        _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-frequency-save"), ent, user);
+        _sharedPopupSystem.PopupEntity(KsPopupMessage.Create("packet-configurator-frequency-save"), ent, user);
         ent.Comp.Frequency = freq;
     }
 }

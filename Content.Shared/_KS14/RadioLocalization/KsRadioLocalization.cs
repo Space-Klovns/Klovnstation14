@@ -1,16 +1,48 @@
 using System.Globalization;
-using System.Linq;
 using Content.Shared.Chat;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.RadioLocalization;
 
-public static class KsRadioLocalization
+public sealed partial class KsRadioLocalization
 {
-    private static KsRadioLocalePrototype? GetLocale(IPrototypeManager prototypeManager, string? culture)
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+
+    private readonly Dictionary<string, RadioMap> _cultures = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, RadioMap?> _resolvedCultures = new(StringComparer.OrdinalIgnoreCase);
+
+    public void Initialize()
+    {
+        RebuildMaps();
+        _prototypeManager.PrototypesReloaded += OnPrototypesReloaded;
+    }
+
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
+    {
+        if (args.WasModified<KsRadioLocalePrototype>())
+            RebuildMaps();
+    }
+
+    private void RebuildMaps()
+    {
+        _cultures.Clear();
+        _resolvedCultures.Clear();
+        foreach (var locale in _prototypeManager.EnumeratePrototypes<KsRadioLocalePrototype>())
+        {
+            var forward = new Dictionary<char, char>(locale.Keys);
+            var reverse = new Dictionary<char, char>();
+            foreach (var (canonical, localized) in forward)
+                reverse.TryAdd(char.ToLowerInvariant(localized), canonical);
+            _cultures.Add(CultureInfo.GetCultureInfo(locale.Culture).Name, new RadioMap(forward, reverse));
+        }
+    }
+
+    private RadioMap? GetLocale(string? culture)
     {
         if (culture == null)
             return null;
+        if (_resolvedCultures.TryGetValue(culture, out var cached))
+            return cached;
 
         CultureInfo cultureInfo;
         try
@@ -19,42 +51,38 @@ public static class KsRadioLocalization
         }
         catch (ArgumentException)
         {
+            _resolvedCultures[culture] = null;
             return null;
         }
-        var locales = prototypeManager.EnumeratePrototypes<KsRadioLocalePrototype>().ToArray();
         while (cultureInfo.Name.Length > 0)
         {
-            var locale = locales.FirstOrDefault(locale => locale.Culture.Equals(cultureInfo.Name, StringComparison.OrdinalIgnoreCase));
-            if (locale != null)
+            if (_cultures.TryGetValue(cultureInfo.Name, out var locale))
+            {
+                _resolvedCultures[culture] = locale;
                 return locale;
+            }
             cultureInfo = cultureInfo.Parent;
         }
+        _resolvedCultures[culture] = null;
         return null;
     }
 
-    public static char GetLocalizedKey(IPrototypeManager prototypeManager, string? culture, char canonicalKey)
+    public char GetLocalizedKey(string? culture, char canonicalKey)
     {
-        var localePrototype = GetLocale(prototypeManager, culture);
-        return localePrototype?.Keys.GetValueOrDefault(canonicalKey, canonicalKey) ?? canonicalKey;
+        return GetLocale(culture)?.Forward.GetValueOrDefault(canonicalKey, canonicalKey) ?? canonicalKey;
     }
 
-    public static string NormalizePrefix(IPrototypeManager prototypeManager, string? culture, string text)
+    public string NormalizePrefix(string? culture, string text)
     {
         if (text.Length < 2 || (text[0] != SharedChatSystem.RadioChannelPrefix
                               && text[0] != SharedChatSystem.RadioChannelAltPrefix))
             return text;
 
-        var localePrototype = GetLocale(prototypeManager, culture);
-        if (localePrototype == null)
-            return text;
-
-        var localizedKey = char.ToLowerInvariant(text[1]);
-        foreach (var (canonicalKey, mappedKey) in localePrototype.Keys)
-        {
-            if (mappedKey == localizedKey)
-                return $"{text[0]}{canonicalKey}{text[2..]}";
-        }
-
+        var locale = GetLocale(culture);
+        if (locale != null && locale.Reverse.TryGetValue(char.ToLowerInvariant(text[1]), out var canonicalKey))
+            return $"{text[0]}{canonicalKey}{text[2..]}";
         return text;
     }
+
+    private sealed record RadioMap(Dictionary<char, char> Forward, Dictionary<char, char> Reverse);
 }

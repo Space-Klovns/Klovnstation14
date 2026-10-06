@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -36,7 +37,7 @@ public sealed partial class KsScanDiscoverableSystem : EntitySystem
         if (entity.Comp.DiscoveryPopupLoc is { } popupLoc)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString(popupLoc, ("name", entity.Comp.TrueName)),
+                KsPopupMessage.Create(popupLoc, ("name", entity.Comp.TrueName)),
                 entity,
                 args.User,
                 Filter.PvsExcept(args.User),

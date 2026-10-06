@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
@@ -70,8 +71,8 @@ public sealed partial class HealingSystem : EntitySystem
             if (isBleeding != bloodstream.BleedAmount > 0)
             {
                 var popup = (args.User == target.Owner)
-                    ? Loc.GetString("medical-item-stop-bleeding-self")
-                    : Loc.GetString("medical-item-stop-bleeding", ("target", Identity.Entity(target.Owner, EntityManager)));
+                    ? KsPopupMessage.Create /* KS14: defer popup translation */("medical-item-stop-bleeding-self")
+                    : KsPopupMessage.Create /* KS14: defer popup translation */("medical-item-stop-bleeding", ("target", Identity.Entity(target.Owner, EntityManager)));
                 _popupSystem.PopupClient(popup, target, args.User);
             }
         }
@@ -118,7 +119,7 @@ public sealed partial class HealingSystem : EntitySystem
 
         if (!args.Repeat)
         {
-            _popupSystem.PopupClient(Loc.GetString("medical-item-finished-using", ("item", args.Used)), target.Owner, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("medical-item-finished-using", ("item", args.Used)), target.Owner, args.User);
             return;
         }
 
@@ -200,7 +201,7 @@ public sealed partial class HealingSystem : EntitySystem
 
         if (!HasDamage(healing, target!))
         {
-            _popupSystem.PopupClient(Loc.GetString("medical-item-cant-use", ("item", healing.Owner)), healing, user);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("medical-item-cant-use", ("item", healing.Owner)), healing, user);
             return false;
         }
 
@@ -210,7 +211,7 @@ public sealed partial class HealingSystem : EntitySystem
 
         if (isNotSelf)
         {
-            var msg = Loc.GetString("medical-item-popup-target", ("user", Identity.Entity(user, EntityManager)), ("item", healing.Owner));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("medical-item-popup-target", ("user", Identity.Entity(user, EntityManager)), ("item", healing.Owner));
             _popupSystem.PopupEntity(msg, target, target, PopupType.Medium);
         }
 

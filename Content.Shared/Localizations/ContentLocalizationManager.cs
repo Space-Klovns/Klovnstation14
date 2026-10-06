@@ -28,6 +28,7 @@ namespace Content.Shared.Localizations
             var culture = new CultureInfo(Culture);
 
             LoadAdditionalCulture(culture); // KS14: shared formatting registration for every culture
+            InitializePrototypeNameCache(); // KS14: invalidate translated names on prototype reloads
         }
 
         private ILocValue FormatMany(LocArgs args)
