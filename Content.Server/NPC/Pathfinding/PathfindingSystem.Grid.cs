@@ -213,8 +213,13 @@ public sealed partial class PathfindingSystem
                 chunkA.PortalPolys.TryAdd(portal, polyA);
                 chunkB.PortalPolys.TryAdd(portal, polyB);
                 AddNeighbors(polyA, polyB);
+                // KS14 start: the portal changed what both ends border
+                chunkA.KsAbstractions = null;
+                chunkB.KsAbstractions = null;
+                // KS14 end
             }
 
+            DropAbstractions(pathfinding, dirt); // KS14
             comp.DirtyChunks.Clear();
         }
     }
@@ -281,7 +286,7 @@ public sealed partial class PathfindingSystem
         var gridUid = ev.Component.GridUid;
         var oldGridUid = ev.OldPosition.EntityId == ev.NewPosition.EntityId
             ? gridUid
-            : _transform.GetGrid((ev.Entity.Owner, ev.Component));
+            : _transform.GetGrid(ev.OldPosition); // KS14: (ev.Entity.Owner, ev.Component) -> ev.OldPosition, the transform is already where it moved to, so a wall deleted (detached to nullspace) never cleared its tile
 
         if (oldGridUid != null && oldGridUid != gridUid)
         {
@@ -673,6 +678,8 @@ public sealed partial class PathfindingSystem
                         points[xOffset, yOffset] = crumb;
                     }
                 }
+
+                BlockNarrowGaps(points, x, y); // KS14: a tile left too narrow to get through by something on it is blocked whole
 
                 // Now we got tile data and we can get the polys
                 var data = points[x * SubStep, y * SubStep].Data;

@@ -1,5 +1,4 @@
 using Content.Shared._KS14.NPC;
-using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Perception;
 
@@ -18,7 +17,7 @@ public sealed partial class NpcPerceptionSystem
 
         entity.Comp.NextCallout = now + entity.Comp.CalloutInterval;
 
-        if (!_npcSquadSystem.TryGetSquad(entity.Owner, out var squadEntity))
+        if (!entity.Comp.CallsOutContacts || !_npcSquadSystem.TryGetSquad(entity.Owner, out _))
             return;
 
         // One threat report per caller per callout, for its main target: several members each reporting every
@@ -33,38 +32,37 @@ public sealed partial class NpcPerceptionSystem
                 contact.State != NpcContactState.Visible && !_newlyReactedUnseen.Contains(targetUid))
                 continue;
 
-            foreach (var memberUid in squadEntity.Value.Comp.Members)
-            {
-                if (memberUid != entity.Owner)
-                    Hear(memberUid, targetUid, contact.LastKnownCoordinates, now);
-            }
+            var ev = new NpcContactCalloutEvent(entity.Owner, targetUid, contact.LastKnownCoordinates);
+            _npcSquadSystem.CallOut(entity.Owner, ref ev);
         }
     }
 
     /// <summary>
-    ///     A squadmate called out <paramref name="targetUid"/> at <paramref name="coordinates"/>. Only news if the
-    ///         listener cannot see it itself: what it sees beats what it is told.
+    ///     A squadmate called out a hostile. Only news if the listener cannot see it itself: what it sees beats what it
+    ///         is told.
     /// </summary>
-    private void Hear(EntityUid listenerUid, EntityUid targetUid, EntityCoordinates coordinates, TimeSpan now)
+    [SubscribeLocalEvent]
+    private void OnContactCallout(Entity<NpcPerceptionComponent> entity, ref NpcContactCalloutEvent args)
     {
-        if (!_perceptionQuery.TryComp(listenerUid, out var listenerComponent))
+        if (!entity.Comp.HearsCallouts)
             return;
 
-        var known = listenerComponent.Contacts.TryGetValue(targetUid, out var contact);
+        var known = entity.Comp.Contacts.TryGetValue(args.TargetUid, out var contact);
         if (known && contact.State == NpcContactState.Visible)
             return;
 
-        listenerComponent.Contacts[targetUid] = new NpcContact(NpcContactState.Reported,
+        var now = _gameTiming.CurTime;
+        entity.Comp.Contacts[args.TargetUid] = new NpcContact(NpcContactState.Reported,
             FirstSeen: now,
             LastSeen: now,
             LastConspicuous: default,
-            coordinates,
+            args.Coordinates,
             LastKnownVelocity: default,
             ContainerUid: null,
             Reacted: false);
 
         if (!known || contact.State != NpcContactState.Reported)
-            _npcSensorSystem.RequestReplan(listenerUid);
+            _npcSensorSystem.RequestReplan(entity.Owner);
     }
 
     /// <summary>

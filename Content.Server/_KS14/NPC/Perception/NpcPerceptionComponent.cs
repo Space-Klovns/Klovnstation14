@@ -122,6 +122,33 @@ public sealed partial class NpcPerceptionComponent : Component
 
     #endregion
 
+    #region Squad talk
+
+    /// <summary>
+    ///     Whether it tells its squad what it sees: squadmates that cannot see a hostile it can learn where it is, and
+    ///         its main target becomes the squad's threat. Off, nothing it sees reaches its squad - it fights alone
+    ///         until they see the hostile for themselves.
+    /// </summary>
+    [DataField]
+    public bool CallsOutContacts = true;
+
+    /// <summary>
+    ///     Whether it takes in what squadmates call out. Off, it knows only what it sees itself: it carries on as it
+    ///         was while a squadmate fights round the corner, and hunts a hostile its squad killed until it sees the
+    ///         body.
+    /// </summary>
+    [DataField]
+    public bool HearsCallouts = true;
+
+    /// <summary>
+    ///     Whether a death it confirms is passed on to its squad, so they stop counting the hostile as one. Off, each
+    ///         squadmate finds out for itself, by seeing the body, and hunts it until then.
+    /// </summary>
+    [DataField]
+    public bool SharesKills = true;
+
+    #endregion
+
     [ViewVariables]
     public TimeSpan NextUpdate;
 

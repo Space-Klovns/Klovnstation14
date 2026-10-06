@@ -45,4 +45,28 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<int> NpcExposureRayBudget =
         CVarDef.Create("klovn.npc.exposure_ray_budget", 600, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How many navmesh polys an NPC's path search may expand before giving up and reporting no path. Steered by
+    ///         <see cref="NpcPathHierarchical"/>, a search walks almost straight down its path: on Box, no path took more
+    ///         than 238, at any distance. What the limit still bounds is a search the coarse maps steer badly - an NPC
+    ///         going round doors it has found it cannot get through, which the maps do not know about. Without
+    ///         <see cref="NpcPathHierarchical"/>, upstream's 512 finds most paths up to 15 tiles, about half from 15 to
+    ///         30, a quarter from 30 to 50 and none further, and a search for somewhere that cannot be reached runs to the
+    ///         limit every time.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<int> NpcPathNodeLimit =
+        CVarDef.Create("klovn.npc.path_node_limit", 512, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Whether NPC path searches are steered by coarse maps of the navmesh, one per 8x8 chunk: what each part of the
+    ///         station costs to walk to the goal from, worked out before the search. With it, a search walks almost
+    ///         straight down the path, so long paths fit in <see cref="NpcPathNodeLimit"/>, and a goal that cannot be
+    ///         reached is given up on at once. Off, searches go by straight-line distance alone, as upstream. The paths
+    ///         are the same either way, where both find one.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> NpcPathHierarchical =
+        CVarDef.Create("klovn.npc.path_hierarchical", true, CVar.SERVERONLY);
 }

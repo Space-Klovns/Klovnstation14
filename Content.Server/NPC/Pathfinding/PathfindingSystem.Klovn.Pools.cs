@@ -61,6 +61,8 @@ public sealed partial class PathfindingSystem
         if (request.PolyFrontier != null)
             _polyFrontierPool.Return(request.PolyFrontier);
 
+        ReturnHeuristic(request);
+
         request.CostSoFar = default!;
         request.CameFrom = default!;
         request.PolyFrontier = null;

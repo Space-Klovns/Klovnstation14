@@ -41,6 +41,12 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private readonly NpcSightField _coverageSightField = new();
 
+    /// <summary>
+    ///     What each member can see from where it stands, by its index in <see cref="_members"/>, for
+    ///         <see cref="NpcSquadTacticsSettings.SearchCohesion"/>. Grown as needed and reused.
+    /// </summary>
+    private readonly List<NpcSightField> _cohesionSightFields = new();
+
     #region Setting up
 
     /// <summary>
@@ -530,7 +536,8 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     Sends every member with nothing else to check towards the nearest unseen tile, keeping clear of the tiles the
-    ///         others are sweeping towards where it can.
+    ///         others are sweeping towards where it can. With <see cref="NpcSquadTacticsSettings.SearchCohesion"/>, a
+    ///         tile no squadmate can see counts as that much further, so they sweep in sight of each other.
     /// </summary>
     private void AssignSweeps(NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
@@ -540,45 +547,95 @@ public sealed partial class NpcSquadTacticsSystem
             return;
 
         var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-        var invWorldMatrix = _transformSystem.GetInvWorldMatrix(gridUid);
+        var (_, _, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(gridUid);
+        var cohesive = settings.SearchCohesion > 0f && _members.Count > 1;
+        var cohesionFieldsBuilt = false;
 
-        foreach (var memberUid in _members)
+        for (var memberIndex = 0; memberIndex < _members.Count; memberIndex++)
         {
+            var memberUid = _members[memberIndex];
             if (hunt.Sweeps.ContainsKey(memberUid) || TryGetAssignedPoint(hunt, memberUid, out _))
                 continue;
 
-            var memberLocalPosition = Vector2.Transform(_transformSystem.GetMapCoordinates(memberUid).Position, invWorldMatrix);
+            // Only once some member needs a sweep, and then once for all of them.
+            if (cohesive && !cohesionFieldsBuilt)
+            {
+                BuildCohesionSightFields(settings);
+                cohesionFieldsBuilt = true;
+            }
+
+            var memberMapCoordinates = _transformSystem.GetMapCoordinates(memberUid);
+            var memberLocalPosition = Vector2.Transform(memberMapCoordinates.Position, invWorldMatrix);
             Vector2i? best = null;
             Vector2i? bestCrowded = null;
-            var bestDistanceSquared = float.MaxValue;
-            var bestCrowdedDistanceSquared = float.MaxValue;
+            var bestDistance = float.MaxValue;
+            var bestCrowdedDistance = float.MaxValue;
 
             foreach (var tile in hunt.UnseenTiles)
             {
                 var tilePosition = _mapSystem.TileCenterToVector(grid, tile);
-                var distanceSquared = (tilePosition - memberLocalPosition).LengthSquared();
+                var distance = (tilePosition - memberLocalPosition).Length();
+
+                if (cohesive)
+                {
+                    var tileMapCoordinates = new MapCoordinates(Vector2.Transform(tilePosition, worldMatrix), memberMapCoordinates.MapId);
+                    if (!InSquadmatesSight(memberIndex, tileMapCoordinates))
+                        distance += settings.SearchCohesion;
+                }
 
                 if (IsNearOtherSweep(hunt, grid, tilePosition))
                 {
-                    if (distanceSquared < bestCrowdedDistanceSquared)
+                    if (distance < bestCrowdedDistance)
                     {
-                        bestCrowdedDistanceSquared = distanceSquared;
+                        bestCrowdedDistance = distance;
                         bestCrowded = tile;
                     }
 
                     continue;
                 }
 
-                if (distanceSquared >= bestDistanceSquared)
+                if (distance >= bestDistance)
                     continue;
 
-                bestDistanceSquared = distanceSquared;
+                bestDistance = distance;
                 best = tile;
             }
 
             if ((best ?? bestCrowded) is { } chosen)
                 hunt.Sweeps[memberUid] = new NpcHuntSweep(chosen, now);
         }
+    }
+
+    /// <summary>
+    ///     Fills <see cref="_cohesionSightFields"/>: what each member can see, out to
+    ///         <see cref="NpcSquadTacticsSettings.SearchCohesionRange"/>.
+    /// </summary>
+    private void BuildCohesionSightFields(NpcSquadTacticsSettings settings)
+    {
+        while (_cohesionSightFields.Count < _members.Count)
+        {
+            _cohesionSightFields.Add(new NpcSightField());
+        }
+
+        for (var i = 0; i < _members.Count; i++)
+        {
+            _npcLineOfSightSystem.BuildSightField(_transformSystem.GetMapCoordinates(_members[i]), settings.SearchCohesionRange, _cohesionSightFields[i]);
+        }
+    }
+
+    /// <summary>
+    ///     Whether any member but the one at <paramref name="memberIndex"/> can see <paramref name="coordinates"/>, as
+    ///         <see cref="BuildCohesionSightFields"/> last worked out.
+    /// </summary>
+    private bool InSquadmatesSight(int memberIndex, MapCoordinates coordinates)
+    {
+        for (var i = 0; i < _members.Count; i++)
+        {
+            if (i != memberIndex && _npcLineOfSightSystem.InLineOfSight(_cohesionSightFields[i], coordinates))
+                return true;
+        }
+
+        return false;
     }
 
     private bool IsNearOtherSweep(NpcHunt hunt, Entity<MapGridComponent> grid, Vector2 tilePosition)

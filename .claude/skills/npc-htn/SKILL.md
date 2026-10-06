@@ -97,6 +97,21 @@ Nothing removes a key when the plan that wrote it ends, unless an operator does 
 - Fold "work out the value" and "act on it" into one operator that writes the key in `Plan` and removes it in
   `TaskShutdown`. `DiveOperator` replaced a `GetDivePoint` → `DoWorldAction` chain for exactly this reason.
 
+### Everything NPCs tell each other has a switch
+
+How smart a squad is should be tunable per NPC, and most of what makes one smart is what its members pass on. So each
+way an NPC shares something with its squad gets a `[DataField]` bool on the component of the NPC doing the telling or
+the listening, defaulting to on: `NpcPerception.callsOutContacts`, `hearsCallouts` and `sharesKills`, and
+`NpcDoorUser.warnsSquad`. Acting on what it was told gets its own switch on the listener
+(`NpcSquadMember.respondsToCallouts`, `calloutResponseRange`, read by `AnswersCalloutPrecondition`). A new way of
+sharing gets the same treatment, and a row in the operative README's *Squad talk* table.
+
+Sharing is an event. The caller checks its own switch, builds a `[ByRefEvent]` and hands it to
+`NpcSquadSystem.CallOut`, which raises it on every other member. Each listening system subscribes to it and checks
+the listener's switch (`NpcContactCalloutEvent`, `NpcKillCalloutEvent`, `NpcDoorRefusedCalloutEvent`). Nothing loops
+over squad members by hand to tell them something. The same event instance goes to each member in turn, so a handler
+can leave an answer on it for the caller, as `NpcKillCalloutEvent.News` does.
+
 ### A running task does not notice the world change unless it asks
 
 Preconditions are checked when a task is planned, never while it runs, and a plan only ends early if a replan beats
@@ -313,6 +328,22 @@ goes on the request instead. When steering gives up at a door it could neither o
 **Testing doors.** Test grids have no power, and an unpowered airlock opens for nobody by hand: spawn doors with
 `SpawnPoweredDoorAt`. A wall meant to force a path through a door has to run the whole width of the grid.
 
+## Long paths
+
+A* runs out of nodes (`klovn.npc.path_node_limit`) long before a path across a station when it only knows the
+straight-line distance. `PathfindingSystem.Klovn.Hierarchy.cs` gives it a far better estimate: per 8x8 navmesh chunk
+and per path profile (collision and `PathFlags`), a coarse map of its walkable regions and the polys on the chunk's
+edge, with what it costs to walk between them. Each request searches back from its goal over those, towards its
+start, before A* begins, which says what is left to walk from anywhere near the way. So A* walks almost straight down
+its path (at most 238 expansions on Box), and a goal that cannot be reached is given up on without searching. Coarse
+maps are built when first needed and dropped when their chunk or a neighbour is rebuilt.
+
+Two things it does not know: an NPC's own avoided tiles (doors it has found it cannot get through), which only make the
+walk longer than it thinks, so it stays a lower bound and paths stay the shortest; and anything that changes the
+navmesh without marking the chunk dirty, which the pathfinder misses with or without the coarse maps. Deleting a wall
+used to be one: its move to nullspace was looked up on the grid it had already left. Note that an unanchored wall still
+blocks its tile: the navmesh counts any hard body there, anchored or not.
+
 ## Moving somewhere without going through somewhere
 
 The pathfinder only knows the shortest way, and it cannot be told to avoid a set of tiles: the `HtnPathfindingModifier`
@@ -376,8 +407,10 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
 - **A live fight ends for its own reasons.** A pistol empties in about four seconds, and an NPC out of ammo plans
   something else entirely. A test of what happens later in a fight has to keep the gun loaded (`KeepLoaded`) and
   the target alive (godmode).
-- **Pathfinding ignores unanchored entities.** A free-standing locker sits on a room tile. A wall locker (anchored,
-  on the wall's tile) does not. Test the case your rule is actually for.
+- **Loose things block paths as anchored ones do.** The navmesh counts every hard body that blocks mobs, anchored or
+  not, on the tile its centre is on, and blocks a whole tile one leaves too narrow for a mob
+  (`PathfindingSystem.BlockNarrowGaps`). So a free-standing locker blocks a floor tile, and a wall locker (anchored, on
+  the wall's tile) blocks nothing new. Test the case your rule is actually for.
 - **Prove the test fails.** Break the rule it covers, rebuild, and watch it go red, one test per run. In a batch
   run, a test that fails inside `WaitAssertion` after another test dirtied its pooled pair can be reported as
   "NotExecuted: Test was dirty-disposed" rather than failed. The pool's `Assert.Warn` replaces the outcome, and

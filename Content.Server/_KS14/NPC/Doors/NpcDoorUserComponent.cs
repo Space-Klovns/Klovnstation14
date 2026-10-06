@@ -30,6 +30,13 @@ public sealed partial class NpcDoorUserComponent : Component
     public TimeSpan ForgetAfter = TimeSpan.FromSeconds(120);
 
     /// <summary>
+    ///     Whether a door that fooled it becomes a no-go for its whole squad, not just for it. Off, each squadmate has
+    ///         to be refused by the door itself.
+    /// </summary>
+    [DataField]
+    public bool WarnsSquad = true;
+
+    /// <summary>
     ///     How long a door it walked up to and could not get through by any means stays out of its paths. See
     ///         <see cref="BlockedDoors"/>.
     /// </summary>

@@ -34,6 +34,23 @@ public sealed partial class NpcSquadMemberComponent : Component
     public bool CanLead = true;
 
     /// <summary>
+    ///     Whether it goes to back up a squadmate calling out a hostile it cannot see itself, when it has nothing of
+    ///         its own to fight. Off, it only fights what it sees, and leaves a squadmate in trouble to it. See
+    ///         <c>AnswersCalloutPrecondition</c>.
+    /// </summary>
+    [DataField]
+    public bool RespondsToCallouts = true;
+
+    /// <summary>
+    ///     How far, in tiles, it goes to back up a squadmate's callout: a hostile called out further away than this is
+    ///         left to whoever is nearer. 0 for any distance, so a member ambushed on its own across the station still
+    ///         gets help. Getting there is still up to the pathfinder, which gives up on long paths: see
+    ///         <c>klovn.npc.path_node_limit</c>.
+    /// </summary>
+    [DataField]
+    public float CalloutResponseRange;
+
+    /// <summary>
     ///     Blackboard keys this NPC hands down while it leads: any member with no value at one of these keys gets
     ///         the leader's. What the leader knows - where the threat is, say - becomes what the squad knows.
     /// </summary>

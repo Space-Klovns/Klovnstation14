@@ -127,6 +127,22 @@ public sealed partial class NpcSquadTacticsSettings
     [DataField]
     public TimeSpan SearchPointTimeout = TimeSpan.FromSeconds(12);
 
+    /// <summary>
+    ///     How much members sweeping a room keep in sight of each other: a stretch of floor no squadmate can see, from
+    ///         within <see cref="SearchCohesionRange"/>, counts as this many tiles further to walk to. 0: each goes for
+    ///         whatever unseen floor is nearest, and in a big room they soon lose sight of each other. Around the size of
+    ///         the room: they clear it in sight of each other, splitting up only for what nobody can see otherwise.
+    /// </summary>
+    [DataField]
+    public float SearchCohesion;
+
+    /// <summary>
+    ///     How far, in tiles, a squadmate can be and still count as keeping a member in sight while sweeping. See
+    ///         <see cref="SearchCohesion"/>.
+    /// </summary>
+    [DataField]
+    public float SearchCohesionRange = 12f;
+
     #endregion
 
     #region Caution

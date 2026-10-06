@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.NPC.HTN.Preconditions.Squad;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
@@ -66,6 +67,41 @@ public sealed class KsNpcPerceptionTest : GameTest
         key: KsRecheckTestKey
       operator: !type:StaticWaitOperator
         key: KsRecheckTestWait
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsPerceptionTestMobMute
+  components:
+  - type: NpcPerception
+    callsOutContacts: false
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsPerceptionTestMobDeaf
+  components:
+  - type: NpcPerception
+    hearsCallouts: false
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsPerceptionTestMobTightLipped
+  components:
+  - type: NpcPerception
+    sharesKills: false
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsPerceptionTestMobNearResponder
+  components:
+  - type: NpcSquadMember
+    calloutResponseRange: 5
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsPerceptionTestMobNonResponder
+  components:
+  - type: NpcSquadMember
+    respondsToCallouts: false
 
 - type: entity
   parent: KsSquadTestMobLoner
@@ -406,13 +442,10 @@ public sealed class KsNpcPerceptionTest : GameTest
         var squadSystem = entManager.System<NpcSquadSystem>();
         var transformSystem = entManager.System<SharedTransformSystem>();
 
-        await Pair.Server.WaitPost(() => perceptionSystem.UpdateNow(spotterUid));
-        await Pair.RunTicksSync(24); // past the reaction time: only reacted-to hostiles are called out
+        await SpotAndCallOut(perceptionSystem, spotterUid);
 
         await Pair.Server.WaitAssertion(() =>
         {
-            perceptionSystem.UpdateNow(spotterUid);
-
             Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out var heard), "the squadmate should have heard the callout");
             Assert.That(squadSystem.TryGetSquad(spotterUid, out var squadEntity));
 
@@ -424,6 +457,59 @@ public sealed class KsNpcPerceptionTest : GameTest
                     Is.EqualTo(transformSystem.GetMapCoordinates(targetUid).Position).Using(VectorComparer),
                     "the squad's threat should be the sighting");
             });
+        });
+    }
+
+    /// <summary>
+    ///     Callouts can be switched off at either end: one that does not call out tells its squad nothing - not even
+    ///         the squad's threat - and one that does not listen learns nothing from a squadmate's callout.
+    /// </summary>
+    [TestCase("KsPerceptionTestMobMute", SyndicateMob)]
+    [TestCase(SyndicateMob, "KsPerceptionTestMobDeaf")]
+    public async Task TestCalloutsCanBeSwitchedOff(string spotterMob, string listenerMob)
+    {
+        var (entManager, spotterUid, listenerUid, targetUid, _) = await SetUpSquad(secondTarget: false, spotterMob, listenerMob);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+
+        await SpotAndCallOut(perceptionSystem, spotterUid);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(perceptionSystem.IsVisible(spotterUid, targetUid), "the spotter should see the hostile");
+            Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out _), Is.False, "its squadmate should have learned nothing of it");
+
+            if (spotterMob != SyndicateMob)
+            {
+                entManager.System<NpcSquadSystem>().TryGetSquad(spotterUid, out var squadEntity);
+                Assert.That(squadEntity!.Value.Comp.ThreatCoordinates, Is.Null, "nor should the squad have a threat from it");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Whether a squadmate goes to help with a callout: by default from any distance; within its response range
+    ///         only, when it has one; and never, when it does not respond to callouts at all.
+    /// </summary>
+    [TestCase(SyndicateMob, true)]
+    [TestCase("KsPerceptionTestMobNearResponder", false)]
+    [TestCase("KsPerceptionTestMobNonResponder", false)]
+    public async Task TestCalloutResponseRange(string listenerMob, bool expectAnswer)
+    {
+        var (entManager, spotterUid, listenerUid, targetUid, _) = await SetUpSquad(secondTarget: false, SyndicateMob, listenerMob);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+        var precondition = new AnswersCalloutPrecondition { MaxAge = System.TimeSpan.FromSeconds(5) };
+
+        await SpotAndCallOut(perceptionSystem, spotterUid);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out var heard) && heard.State == NpcContactState.Reported,
+                "the squadmate should have heard the callout, 11 tiles off");
+
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(precondition, oneOff: true);
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, listenerUid);
+            Assert.That(precondition.IsMet(blackboard), Is.EqualTo(expectAnswer));
         });
     }
 
@@ -472,12 +558,10 @@ public sealed class KsNpcPerceptionTest : GameTest
         var (entManager, spotterUid, listenerUid, targetUid, _) = await SetUpSquad(secondTarget: false);
         var perceptionSystem = entManager.System<NpcPerceptionSystem>();
 
-        await Pair.Server.WaitPost(() => perceptionSystem.UpdateNow(spotterUid));
-        await Pair.RunTicksSync(24); // past the reaction time: only reacted-to hostiles are called out
+        await SpotAndCallOut(perceptionSystem, spotterUid);
 
         await Pair.Server.WaitAssertion(() =>
         {
-            perceptionSystem.UpdateNow(spotterUid);
             Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out _), "the squadmate should have been told of it");
 
             entManager.System<MobStateSystem>().ChangeMobState(targetUid, MobState.Dead);
@@ -493,6 +577,39 @@ public sealed class KsNpcPerceptionTest : GameTest
                     "and no longer believe in the hostile it was told of");
                 Assert.That(perceptionSystem.HasPendingKillCallout(listenerUid, System.TimeSpan.FromSeconds(5)), Is.False,
                     "only the one that saw it says so");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Kills go unshared from either end: one that keeps them to itself knows the hostile is dead, but its squadmate
+    ///         does not, and still counts it a hostile; and one that does not listen is not told.
+    /// </summary>
+    [TestCase("KsPerceptionTestMobTightLipped", SyndicateMob)]
+    [TestCase(SyndicateMob, "KsPerceptionTestMobDeaf")]
+    public async Task TestKillSharingCanBeSwitchedOff(string spotterMob, string listenerMob)
+    {
+        var (entManager, spotterUid, listenerUid, targetUid, _) = await SetUpSquad(secondTarget: false, spotterMob, listenerMob);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+        var listenerHears = listenerMob == SyndicateMob;
+
+        await SpotAndCallOut(perceptionSystem, spotterUid);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            if (listenerHears)
+                Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out _), "the squadmate should have been told of it");
+
+            entManager.System<MobStateSystem>().ChangeMobState(targetUid, MobState.Dead);
+            perceptionSystem.UpdateNow(spotterUid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(perceptionSystem.IsKnownDead(spotterUid, targetUid), "the one that saw it die should know");
+                Assert.That(perceptionSystem.IsKnownDead(listenerUid, targetUid), Is.False, "its squadmate should not have been told");
+
+                if (listenerHears)
+                    Assert.That(perceptionSystem.TryGetContact(listenerUid, targetUid, out _), "and still count it a hostile");
             });
         });
     }
@@ -813,10 +930,23 @@ public sealed class KsNpcPerceptionTest : GameTest
     }
 
     /// <summary>
+    ///     Has <paramref name="spotterUid"/> see what it can, react to it, and call it out: only reacted-to hostiles are
+    ///         called out.
+    /// </summary>
+    private async Task SpotAndCallOut(NpcPerceptionSystem perceptionSystem, EntityUid spotterUid)
+    {
+        await Pair.Server.WaitPost(() => perceptionSystem.UpdateNow(spotterUid));
+        await Pair.RunTicksSync(24); // past the reaction time
+        await Pair.Server.WaitPost(() => perceptionSystem.UpdateNow(spotterUid));
+    }
+
+    /// <summary>
     ///     Two squadmates four tiles apart - a spotter and a listener - asleep, with the squad formed, and a hostile
     ///         only the spotter is close enough to see. Optionally a second, further one.
     /// </summary>
-    private async Task<(IEntityManager EntManager, EntityUid SpotterUid, EntityUid ListenerUid, EntityUid TargetUid, EntityUid? SecondTargetUid)> SetUpSquad(bool secondTarget)
+    private async Task<(IEntityManager EntManager, EntityUid SpotterUid, EntityUid ListenerUid, EntityUid TargetUid, EntityUid? SecondTargetUid)> SetUpSquad(bool secondTarget,
+        string spotterMob = SyndicateMob,
+        string listenerMob = SyndicateMob)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -832,8 +962,8 @@ public sealed class KsNpcPerceptionTest : GameTest
         await server.WaitPost(() =>
         {
             gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-8, -5), new Vector2i(10, 5)).Owner;
-            spotterUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0);
-            listenerUid = SpawnAt(entManager, SyndicateMob, gridUid, -4, 0);
+            spotterUid = SpawnAt(entManager, spotterMob, gridUid, 0, 0);
+            listenerUid = SpawnAt(entManager, listenerMob, gridUid, -4, 0);
         });
 
         await Pair.RunTicksSync(90);

@@ -96,13 +96,11 @@ public sealed partial class NpcPerceptionSystem
     {
         var news = LearnDead(entity, targetUid, now);
 
-        if (_npcSquadSystem.TryGetSquad(entity.Owner, out var squadEntity))
+        if (entity.Comp.SharesKills)
         {
-            foreach (var memberUid in squadEntity.Value.Comp.Members)
-            {
-                if (memberUid != entity.Owner && _perceptionQuery.TryComp(memberUid, out var memberComponent))
-                    news |= LearnDead((memberUid, memberComponent), targetUid, now);
-            }
+            var ev = new NpcKillCalloutEvent(entity.Owner, targetUid);
+            _npcSquadSystem.CallOut(entity.Owner, ref ev);
+            news |= ev.News;
         }
 
         if (news)
@@ -110,6 +108,16 @@ public sealed partial class NpcPerceptionSystem
             entity.Comp.ConfirmedKillAt = now;
             _npcSensorSystem.RequestReplan(entity.Owner);
         }
+    }
+
+    /// <summary>
+    ///     A squadmate knows a hostile is dead, so now this one does too - if it is listening.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnKillCallout(Entity<NpcPerceptionComponent> entity, ref NpcKillCalloutEvent args)
+    {
+        if (entity.Comp.HearsCallouts)
+            args.News |= LearnDead(entity, args.TargetUid, _gameTiming.CurTime);
     }
 
     /// <summary>

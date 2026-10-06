@@ -73,6 +73,17 @@ public sealed class AStarPathRequest : PathRequest
     ///         the rest of the search state when the request is queued, or made on the first slice if it was not.
     /// </summary>
     public PathPolyFrontier? PolyFrontier;
+
+    /// <summary>
+    ///     The coarse maps' estimate of what is left to walk, worked out on the first slice. Null when there is none, and
+    ///         A* uses the straight-line distance. See <c>PathfindingSystem.Klovn.Hierarchy.cs</c>.
+    /// </summary>
+    public PathHeuristic? KsHeuristic;
+
+    /// <summary>
+    ///     How many polys the search has expanded, over all its slices. For tests and benchmarks.
+    /// </summary>
+    public int KsExpansions;
     // KS14 end
 
     public AStarPathRequest(

@@ -40,6 +40,23 @@ public sealed partial class PathfindingSystem
 
     private float GetTileCost(PathRequest request, PathPoly start, PathPoly end)
     {
+        // KS14 start: what it costs to step onto a poly is split out below, for the coarse maps
+        //      (PathfindingSystem.Klovn.Hierarchy.cs), which have no request; only the avoided tiles are the request's own
+        // A door this NPC has found it cannot get through is a wall to it
+        if (request.AvoidedTiles != null && IsAvoided(request.AvoidedTiles, end))
+            return 0f;
+
+        var modifier = GetTileModifier(request.Flags, request.CollisionLayer, request.CollisionMask, end);
+        return modifier.Equals(0f) ? 0f : modifier * OctileDistance(end, start);
+    }
+
+    /// <summary>
+    /// What stepping onto <paramref name="end"/> costs per unit of distance for a request with these flags and
+    /// collision, or 0 if it cannot.
+    /// </summary>
+    internal static float GetTileModifier(PathFlags flags, int collisionLayer, int collisionMask, PathPoly end)
+    {
+        // KS14 end
         var modifier = 1f;
 
         // TODO
@@ -48,13 +65,8 @@ public sealed partial class PathfindingSystem
             return 0f;
         }
 
-        // KS14 start: a door this NPC has found it cannot get through is a wall to it
-        if (request.AvoidedTiles != null && IsAvoided(request.AvoidedTiles, end))
-            return 0f;
-        // KS14 end
-
-        if ((request.CollisionLayer & end.Data.CollisionMask) != 0x0 ||
-            (request.CollisionMask & end.Data.CollisionLayer) != 0x0)
+        if ((collisionLayer /* KS14: request.CollisionLayer -> collisionLayer */ & end.Data.CollisionMask) != 0x0 ||
+            (collisionMask /* KS14: request.CollisionMask -> collisionMask */ & end.Data.CollisionLayer) != 0x0)
         {
             var isDoor = (end.Data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0;
             var isAccess = (end.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
@@ -64,7 +76,7 @@ public sealed partial class PathfindingSystem
             var isShut = (end.Data.Flags & (PathfindingBreadcrumbFlag.Bolted | PathfindingBreadcrumbFlag.Welded)) != 0x0;
             if (isDoor && isShut)
             {
-                if ((request.Flags & PathFlags.Smashing) == 0x0 || end.Data.Damage <= 0f)
+                if ((flags /* KS14: request.Flags -> flags */ & PathFlags.Smashing) == 0x0 || end.Data.Damage <= 0f)
                     return 0f;
 
                 modifier += 10f + end.Data.Damage / 10f;
@@ -74,20 +86,20 @@ public sealed partial class PathfindingSystem
             // Door we should be able to open
             else /* KS14: added else */ if (isDoor)
             {
-                if (!isAccess && (request.Flags & PathFlags.Interact) != 0x0)
+                if (!isAccess && (flags /* KS14: request.Flags -> flags */ & PathFlags.Interact) != 0x0)
                     modifier += 0.5f;
-                else if (isAccess && (request.Flags & PathFlags.Prying) != 0x0)
+                else if (isAccess && (flags /* KS14: request.Flags -> flags */ & PathFlags.Prying) != 0x0)
                     modifier += 10f;
                 else
                     // Last ditch—try to bump the door if it's the only feasible option.
                     modifier += 20f;
             }
-            else if ((request.Flags & PathFlags.Smashing) != 0x0 && end.Data.Damage > 0f)
+            else if ((flags /* KS14: request.Flags -> flags */ & PathFlags.Smashing) != 0x0 && end.Data.Damage > 0f)
             {
                 // Breaking stuff should be usually last resort, especially because we WILL try to punch walls.
                 modifier += 10f + end.Data.Damage / 10f;
             }
-            else if (isClimb && (request.Flags & PathFlags.Climbing) != 0x0)
+            else if (isClimb && (flags /* KS14: request.Flags -> flags */ & PathFlags.Climbing) != 0x0)
             {
                 modifier += 0.5f;
             }
@@ -97,7 +109,7 @@ public sealed partial class PathfindingSystem
             }
         }
 
-        return modifier * OctileDistance(end, start);
+        return modifier; // KS14: modifier * OctileDistance(end, start) -> modifier, see GetTileCost
     }
 
     #region Simplifier

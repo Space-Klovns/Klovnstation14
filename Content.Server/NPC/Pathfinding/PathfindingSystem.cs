@@ -85,6 +85,8 @@ namespace Content.Server.NPC.Pathfinding
             base.Initialize();
             _playerManager.PlayerStatusChanged += OnPlayerChange;
             InitializeGrid();
+            InitializeKlovnNodeLimit(); // KS14
+            InitializeKlovnHierarchy(); // KS14
             SubscribeNetworkEvent<RequestPathfindingDebugMessage>(OnBreadcrumbs);
         }
 
@@ -487,7 +489,7 @@ namespace Content.Server.NPC.Pathfinding
             return flags;
         }
 
-        private async Task<PathResultEvent> GetPath(
+        internal /* KS14: private -> internal, for tests */ async Task<PathResultEvent> GetPath(
             PathRequest request, bool safe = false)
         {
             // We could maybe try an initial quick run to avoid forcing time-slicing over ticks.

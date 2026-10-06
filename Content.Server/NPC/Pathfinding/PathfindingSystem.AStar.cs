@@ -86,9 +86,17 @@ public sealed partial class PathfindingSystem
             ? request.End.Position
             : _transform.WithEntityId(request.End, endNode.GraphUid).Position;
         var arrivalDistanceSquared = request.Distance * request.Distance;
+
+        // The coarse maps' estimate, worked out before searching, over as many slices as it takes. A goal they show
+        //      cannot be reached is given up on now, rather than after searching to the node limit. See
+        //      PathfindingSystem.Klovn.Hierarchy.cs.
+        if (UpdateHeuristic(request, startNode, endNode, endLocalPosition, firstSlice) is { } heuristicResult)
+            return heuristicResult;
+
+        var heuristic = request.KsHeuristic;
         // KS14 end
 
-        while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && count < NodeLimit)
+        while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && count < _aStarNodeLimit /* KS14: NodeLimit -> cvar */)
         {
             // Handle whether we need to pause if we've taken too long
             if (count % 20 == 0 && count > 0 && request.Stopwatch.Elapsed > PathTime)
@@ -99,6 +107,7 @@ public sealed partial class PathfindingSystem
             }
 
             count++;
+            request.KsExpansions++; // KS14
 
             // Actual pathfinding here
             currentNode = request.PolyFrontier.Take(); // KS14: (_, currentNode) = request.Frontier.Take() -> PolyFrontier
@@ -164,7 +173,15 @@ public sealed partial class PathfindingSystem
                 // The closer the fScore is to the actual distance then the better the pathfinder will be
                 // (i.e. somewhere between 1 and infinite)
                 // Can use hierarchical pathfinder or whatever to improve the heuristic but this is fine for now.
-                var hScore = OctileDistance(endNode, neighbor) * (1.0f + 1.0f / 1000.0f);
+                // KS14 start: the coarse maps' estimate where there is one. A poly they show cannot reach the goal is
+                //      not worth queueing
+                var estimate = heuristic == null ? -1f : EstimateRemaining(heuristic, neighbor);
+                if (float.IsPositiveInfinity(estimate))
+                    continue;
+
+                var hScore = (estimate >= 0f ? estimate : OctileDistance(endNode, neighbor)) * (1.0f + 1.0f / 1000.0f);
+                // KS14 end
+                /* var hScore = OctileDistance(endNode, neighbor) * (1.0f + 1.0f / 1000.0f); */ // KS14: replaced above
                 var fScore = gScore + hScore;
                 request.PolyFrontier.Add(fScore, neighbor); // KS14: request.Frontier.Add((fScore, neighbor)) -> PolyFrontier
             }

@@ -20,6 +20,93 @@ public sealed partial class PathfindingSystem
         bool BlockedBesidesDoors,
         float Damage);
 
+    /// <summary>
+    /// How many points across, of a tile's <see cref="SharedPathfindingSystem.SubStep"/>, a mob needs to get through:
+    /// three quarters of a tile, for a mob about 0.7 tiles across.
+    /// </summary>
+    private const int MobWidthInPoints = 3;
+
+    /// <summary>
+    /// Blocks the rest of a tile that something only partly blocks, if what it leaves free is too narrow for a mob. A
+    /// closet - half a tile wide, and loose, so pushed about - a little off the middle of its tile leaves half a tile
+    /// beside it, which the navmesh kept as floor: paths ran past the closet there, where no mob fits, and NPCs walked
+    /// into it, stuck, until they gave up. (Centred, it leaves a quarter of a tile either side, too thin for the navmesh
+    /// to link to the next tile anyway.) A tile is left as it is if any <see cref="MobWidthInPoints"/> square of its
+    /// points is free, as a thin window along one edge leaves it; and if what blocks it is a door, which steering opens
+    /// or forces on its own terms. Only within the tile: a gap made by things on two tiles next to each other is not seen,
+    /// nor the part of something that reaches into the next tile, as only the tile its centre is on counts it.
+    /// </summary>
+    private static void BlockNarrowGaps(PathfindingBreadcrumb[,] points, int tileX, int tileY)
+    {
+        var originX = tileX * SubStep;
+        var originY = tileY * SubStep;
+        var blocker = new PathfindingData(PathfindingBreadcrumbFlag.None, 0, 0, 0f);
+        var anyBlocked = false;
+        var anyFree = false;
+
+        for (var x = 0; x < SubStep; x++)
+        {
+            for (var y = 0; y < SubStep; y++)
+            {
+                var data = points[originX + x, originY + y].Data;
+                if (!IsBlocked(data))
+                {
+                    anyFree = true;
+                    continue;
+                }
+
+                if ((data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0)
+                    return;
+
+                anyBlocked = true;
+                blocker.Flags |= data.Flags;
+                blocker.CollisionLayer |= data.CollisionLayer;
+                blocker.CollisionMask |= data.CollisionMask;
+                blocker.Damage = MathF.Max(blocker.Damage, data.Damage);
+            }
+        }
+
+        if (!anyBlocked || !anyFree)
+            return;
+
+        for (var x = 0; x + MobWidthInPoints <= SubStep; x++)
+        {
+            for (var y = 0; y + MobWidthInPoints <= SubStep; y++)
+            {
+                if (IsFreeSquare(points, originX + x, originY + y))
+                    return;
+            }
+        }
+
+        // One poly for the whole tile, rather than one for what was blocked and more for what was too narrow.
+        for (var x = 0; x < SubStep; x++)
+        {
+            for (var y = 0; y < SubStep; y++)
+            {
+                points[originX + x, originY + y].Data = blocker;
+            }
+        }
+    }
+
+    private static bool IsBlocked(PathfindingData data)
+    {
+        return data.CollisionLayer != 0 || data.CollisionMask != 0;
+    }
+
+    private static bool IsFreeSquare(PathfindingBreadcrumb[,] points, int cornerX, int cornerY)
+    {
+        for (var x = 0; x < MobWidthInPoints; x++)
+        {
+            for (var y = 0; y < MobWidthInPoints; y++)
+            {
+                if (IsBlocked(points[cornerX + x, cornerY + y].Data))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     private TileEntity GetTileEntity(EntityUid uid, FixturesComponent fixturesComponent, TransformComponent transformComponent)
     {
         var flags = PathfindingBreadcrumbFlag.None;
@@ -47,8 +134,11 @@ public sealed partial class PathfindingSystem
         {
             flags |= PathfindingBreadcrumbFlag.Door;
 
-            // Doors nobody can get through.
-            if (_doorBoltQuery.TryGetComponent(uid, out var doorBoltComponent) && doorBoltComponent.BoltsDown)
+            // Doors nobody can get through: bolted shut. Not one bolted on its way open - an access breaker drops the
+            //      bolts as the door starts opening, while it is still solid, and a rebuild then walled off the way an
+            //      NPC had just forced, sending it off the other way until the door had opened and the next rebuild.
+            if (_doorBoltQuery.TryGetComponent(uid, out var doorBoltComponent) && doorBoltComponent.BoltsDown &&
+                doorComponent!.State is not (DoorState.Emagging or DoorState.Opening or DoorState.Open))
                 flags |= PathfindingBreadcrumbFlag.Bolted;
 
             if (doorComponent!.State == DoorState.Welded)

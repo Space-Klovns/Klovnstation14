@@ -406,18 +406,31 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
     /// <summary>
     ///     Whether <paramref name="observer"/> knows of any hostile in one of <paramref name="states"/>, last seen (or
-    ///         called out) no longer than <paramref name="maxAge"/> ago, if given.
+    ///         called out) no longer than <paramref name="maxAge"/> ago, if given, and believed within
+    ///         <paramref name="maxDistance"/> tiles of it, if above 0.
     /// </summary>
-    public bool HasContact(Entity<NpcPerceptionComponent?> observer, List<NpcContactState> states, TimeSpan? maxAge)
+    public bool HasContact(Entity<NpcPerceptionComponent?> observer,
+        List<NpcContactState> states,
+        TimeSpan? maxAge,
+        float maxDistance = 0f)
     {
         if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false))
             return false;
 
         var now = _gameTiming.CurTime;
+        var observerMapCoordinates = maxDistance > 0f ? _transformSystem.GetMapCoordinates(observer.Owner) : MapCoordinates.Nullspace;
 
         foreach (var contact in observer.Comp.Contacts.Values)
         {
-            if (states.Contains(contact.State) && (maxAge is not { } age || now - contact.LastSeen <= age))
+            if (!states.Contains(contact.State) || maxAge is { } age && now - contact.LastSeen > age)
+                continue;
+
+            if (maxDistance <= 0f)
+                return true;
+
+            var contactMapCoordinates = _transformSystem.ToMapCoordinates(contact.LastKnownCoordinates);
+            if (contactMapCoordinates.MapId == observerMapCoordinates.MapId &&
+                (contactMapCoordinates.Position - observerMapCoordinates.Position).LengthSquared() <= maxDistance * maxDistance)
                 return true;
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.NPC.Doors;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Doors;
 using Content.Server._KS14.NPC.Squad;
@@ -9,6 +10,7 @@ using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
+using Content.Shared._KS14.CCVar;
 using Content.Shared.Access;
 using Content.Shared.Access.Systems;
 using Content.Shared.Charges.Systems;
@@ -48,6 +50,7 @@ public sealed class KsNpcDoorTest : GameTest
     private const string BlockedWalkerMob = "KsDoorTestMobBlockedWalker";
     private const string PatientWalkerMob = "KsDoorTestMobPatientWalker";
     private const string RoundaboutWalkerMob = "KsDoorTestMobRoundaboutWalker";
+    private const string SecretiveMob = "KsDoorTestMobSecretive";
     private const string DressedBreacherMob = "KsDoorTestMobDressedBreacher";
     private const string Wieldable = "KsDoorTestWieldable";
     private const string EmptyHandedWalkerMob = "KsDoorTestMobEmptyHandedWalker";
@@ -76,6 +79,13 @@ public sealed class KsNpcDoorTest : GameTest
   components:
   - type: NpcDoorUser
     forgetAfter: 1s
+
+- type: entity
+  parent: KsDoorTestMobSecurity
+  id: KsDoorTestMobSecretive
+  components:
+  - type: NpcDoorUser
+    warnsSquad: false
 
 - type: entity
   parent: KsDoorTestMobSecurity
@@ -152,6 +162,13 @@ public sealed class KsNpcDoorTest : GameTest
     - !type:HTNPrimitiveTask
       operator: !type:StaticWaitOperator
         key: KsDoorTestWait
+
+- type: entity
+  parent: Airlock
+  id: KsDoorTestSlowAirlock
+  components:
+  - type: Door
+    openTimeOne: 5
 
 - type: entity
   parent: KsDoorTestMobBlockedWalker
@@ -305,6 +322,39 @@ public sealed class KsNpcDoorTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
             Assert.That(doorSystem.IsNoGo(firstUid, doorUid), Is.False, "the memory should fade"));
+    }
+
+    /// <summary>
+    ///     One that does not warn its squad keeps a door that fooled it to itself: its squadmate still counts on it.
+    /// </summary>
+    [Test]
+    public async Task TestDoorWarningCanBeSwitchedOff()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var doorSystem = entManager.System<NpcDoorSystem>();
+        EntityUid doorUid = default, firstUid = default, secondUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            doorUid = SpawnPoweredDoorAt(entManager, SecurityDoor, gridUid, 3, 0);
+            firstUid = SpawnAt(entManager, SecretiveMob, gridUid, 0, 0);
+            secondUid = SpawnAt(entManager, SecurityMob, gridUid, 0, 1);
+        });
+
+        await Pair.RunTicksSync(90); // for the squad to form
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.System<NpcSquadSystem>().TryGetSquad(firstUid, out var squadEntity) && squadEntity.Value.Comp.Members.Count == 2,
+                "the two should be in one squad");
+
+            doorSystem.ReportRefused(firstUid, doorUid);
+            Assert.Multiple(() =>
+            {
+                Assert.That(doorSystem.IsNoGo(firstUid, doorUid), "the one refused should remember the door");
+                Assert.That(doorSystem.IsNoGo(secondUid, doorUid), Is.False, "its squadmate should not have been told");
+            });
+        });
     }
 
     /// <summary>
@@ -546,12 +596,13 @@ public sealed class KsNpcDoorTest : GameTest
     /// <summary>
     ///     A way round that runs through another door shut to the NPC is no way round: it forces the door in its way,
     ///         not the other. Going round that one as well used to walk it from door to door until there was nothing
-    ///         left to go round, and then it forced whichever it was standing at.
+    ///         left to go round, and then it forced whichever it was standing at. No gap at the top: the pathfinder
+    ///         would rather walk round it than through a door it has to pry, so the other door would never be offered.
     /// </summary>
     [Test]
     public async Task TestWayRoundThroughAnotherShutDoorIsNotTaken()
     {
-        var (entManager, walkerUid, _, _, doorUids) = await WalkPastWall(RoundaboutWalkerMob, doorRows: [0, 4]);
+        var (entManager, walkerUid, _, _, doorUids) = await WalkPastWall(RoundaboutWalkerMob, doorRows: [0, 4], gapAtTop: false);
 
         await Pair.Server.WaitAssertion(() =>
         {
@@ -569,11 +620,11 @@ public sealed class KsNpcDoorTest : GameTest
 
     /// <summary>
     ///     An NPC with a crowbar on its belt walks from one side of a wall up a small grid to the other. The wall has
-    ///         unpowered security doors in it at <paramref name="doorRows"/>, and a gap at the top, round which is far
-    ///         longer.
+    ///         unpowered security doors in it at <paramref name="doorRows"/>, and with <paramref name="gapAtTop"/>, a gap
+    ///         at the top, round which is far longer.
     /// </summary>
     private async Task<(IEntityManager EntManager, EntityUid WalkerUid, EntityUid CrowbarUid, EntityUid BeltUid, List<EntityUid> DoorUids)>
-        WalkPastWall(string walkerMob, int[] doorRows)
+        WalkPastWall(string walkerMob, int[] doorRows, bool gapAtTop = true)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -587,7 +638,7 @@ public sealed class KsNpcDoorTest : GameTest
             // Small, so the pathfinder's node limit is not what decides it.
             gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-3, -1), new Vector2i(7, 13)).Owner;
 
-            for (var y = -1; y <= 12; y++)
+            for (var y = -1; y <= (gapAtTop ? 12 : 13); y++)
             {
                 if (System.Array.IndexOf(doorRows, y) >= 0)
                     doorUids.Add(SpawnAt(entManager, SecurityDoor, gridUid, 2, y));
@@ -1168,6 +1219,77 @@ public sealed class KsNpcDoorTest : GameTest
         await Pair.RunTicksSync(30);
 
         Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid), Is.EqualTo(PathResult.Path), "bolted open, it should be a way through");
+    }
+
+    /// <summary>
+    ///     An access breaker bolts the door it forces as it starts to open, while it is still solid. A navmesh rebuild
+    ///         then - one is due every time anything changes on the grid, so often enough - must not make it a wall: it
+    ///         sent the NPC that had just forced it off through some other door, until the door opened and the navmesh
+    ///         was rebuilt again. This door stays solid for 5s once it starts opening, so the rebuild lands in that time.
+    /// </summary>
+    [Test]
+    public async Task TestDoorBoltedOnItsWayOpenIsNoWall()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var pathfindingSystem = entManager.System<PathfindingSystem>();
+        EntityUid doorUid = default, npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            for (var y = -6; y <= 6; y++)
+            {
+                if (y == 0)
+                    doorUid = SpawnPoweredDoorAt(entManager, "KsDoorTestSlowAirlock", gridUid, 2, 0);
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            npcUid = SpawnAt(entManager, SecurityMob, gridUid, 0, 0);
+        });
+
+        await Pair.RunTicksSync(90);
+
+        // As an access breaker does it.
+        await Pair.Server.WaitPost(() => Assert.That(entManager.System<SharedDoorSystem>().TryOpenAndBolt(doorUid), "the door should start to give"));
+        await Pair.RunTicksSync(60);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.GetComponent<DoorComponent>(doorUid).State, Is.EqualTo(DoorState.Opening), "it should still be opening");
+            Assert.That(entManager.GetComponent<DoorBoltComponent>(doorUid).BoltsDown, "and bolted");
+        });
+
+        Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid), Is.EqualTo(PathResult.Path),
+            "a door on its way open should be a way through, bolted or not");
+    }
+
+    /// <summary>
+    ///     <c>klovn.npc.path_node_limit</c> sets how far a path search goes before giving up. At 1 it gives up at once,
+    ///         even across a few tiles, and at the default the same path is found.
+    /// </summary>
+    [TestCase(1, false)]
+    [TestCase(512, true)]
+    public async Task TestPathNodeLimitIsSetByCvar(int nodeLimit, bool expectPath)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var pathfindingSystem = entManager.System<PathfindingSystem>();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            // A wall in the way, with a gap at its top end: no straight line, so the search has to look round.
+            for (var y = -6; y <= 4; y++)
+            {
+                SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            npcUid = SpawnAt(entManager, SecurityMob, gridUid, 0, 0);
+        });
+
+        await Pair.RunTicksSync(90);
+        await OverrideCVar(Side.Server, KsCCVars.NpcPathNodeLimit, nodeLimit);
+
+        Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid), Is.EqualTo(expectPath ? PathResult.Path : PathResult.NoPath));
     }
 
     private async Task<PathResult> FindPath(IEntityManager entManager, PathfindingSystem pathfindingSystem, EntityUid npcUid, EntityUid gridUid)

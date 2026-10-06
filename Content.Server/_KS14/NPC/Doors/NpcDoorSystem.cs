@@ -283,8 +283,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     public bool IsNoGo(EntityUid npcUid, EntityUid doorUid)
     {
         return _doorUserQuery.TryComp(npcUid, out var doorUserComponent) &&
-            doorUserComponent.NoGoDoors.TryGetValue(doorUid, out var expiresAt) &&
-            expiresAt > _gameTiming.CurTime;
+            IsRemembered(doorUserComponent.NoGoDoors, doorUid, _gameTiming.CurTime);
     }
 
     /// <summary>
@@ -299,17 +298,26 @@ public sealed partial class NpcDoorSystem : EntitySystem
 
         Remember(npcUid, doorUid);
 
-        if (_npcSquadSystem.TryGetSquad(npcUid, out var squadEntity))
+        // Remember made sure it has one.
+        var doorUserComponent = _doorUserQuery.Comp(npcUid);
+        if (doorUserComponent.WarnsSquad)
         {
-            foreach (var memberUid in squadEntity.Value.Comp.Members)
-            {
-                if (memberUid != npcUid)
-                    Remember(memberUid, doorUid);
-            }
+            var ev = new NpcDoorRefusedCalloutEvent(npcUid, doorUid);
+            _npcSquadSystem.CallOut(npcUid, ref ev);
         }
 
-        EnsureComp<NpcDoorUserComponent>(npcUid).RefusedAt = _gameTiming.CurTime;
+        doorUserComponent.RefusedAt = _gameTiming.CurTime;
         _npcSensorSystem.RequestReplan(npcUid);
+    }
+
+    /// <summary>
+    ///     A squadmate was refused by a door: this one remembers it as a no-go too. On the squad member, not the door
+    ///         user component, which a squadmate that never met a door has not got yet.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnDoorRefusedCallout(Entity<NpcSquadMemberComponent> entity, ref NpcDoorRefusedCalloutEvent args)
+    {
+        Remember(entity.Owner, args.DoorUid);
     }
 
     /// <summary>
@@ -340,9 +348,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     public void ReportBlocked(EntityUid npcUid, EntityUid doorUid)
     {
         var doorUserComponent = EnsureComp<NpcDoorUserComponent>(npcUid);
-        var now = _gameTiming.CurTime;
-        Prune(doorUserComponent.BlockedDoors, now);
-        doorUserComponent.BlockedDoors[doorUid] = now + doorUserComponent.BlockedForgetAfter;
+        Remember(doorUserComponent.BlockedDoors, doorUid, _gameTiming.CurTime, doorUserComponent.BlockedForgetAfter);
     }
 
     /// <summary>
@@ -352,8 +358,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     public bool IsBlocked(EntityUid npcUid, EntityUid doorUid)
     {
         return _doorUserQuery.TryComp(npcUid, out var doorUserComponent) &&
-            doorUserComponent.BlockedDoors.TryGetValue(doorUid, out var expiresAt) &&
-            expiresAt > _gameTiming.CurTime;
+            IsRemembered(doorUserComponent.BlockedDoors, doorUid, _gameTiming.CurTime);
     }
 
     /// <summary>
@@ -366,14 +371,15 @@ public sealed partial class NpcDoorSystem : EntitySystem
             return;
 
         var now = _gameTiming.CurTime;
-        foreach (var (doorUid, expiresAt) in doorUserComponent.BlockedDoors)
-        {
-            if (expiresAt > now && !TerminatingOrDeleted(doorUid))
-                doorUids.Add(doorUid);
-        }
+        AddRemembered(doorUserComponent.BlockedDoors, now, doorUids);
 
         // And the ones it is going round rather than forcing.
-        foreach (var (doorUid, expiresAt) in doorUserComponent.DetourDoors)
+        AddRemembered(doorUserComponent.DetourDoors, now, doorUids);
+    }
+
+    private void AddRemembered(Dictionary<EntityUid, TimeSpan> doors, TimeSpan now, List<EntityUid> doorUids)
+    {
+        foreach (var (doorUid, expiresAt) in doors)
         {
             if (expiresAt > now && !TerminatingOrDeleted(doorUid))
                 doorUids.Add(doorUid);
@@ -404,15 +410,14 @@ public sealed partial class NpcDoorSystem : EntitySystem
             return false;
 
         // The way through is what any way round is held to; the first door's, for a way round several.
-        Prune(doorUserComponent.DetourDoors, now);
-        if (doorUserComponent.DetourDoors.Count == 0)
+        if (!AnyRemembered(doorUserComponent.DetourDoors, now))
         {
             doorUserComponent.DetourBaseDistance = GetPathDistance(_transformSystem.GetMapCoordinates(npcUid),
                 steeringComponent.CurrentPath,
                 _transformSystem.ToMapCoordinates(steeringComponent.Coordinates));
         }
 
-        doorUserComponent.DetourDoors[doorUid] = now + doorUserComponent.DetourForgetAfter;
+        Remember(doorUserComponent.DetourDoors, doorUid, now, doorUserComponent.DetourForgetAfter);
         return true;
     }
 
@@ -533,9 +538,17 @@ public sealed partial class NpcDoorSystem : EntitySystem
     private void Remember(EntityUid npcUid, EntityUid doorUid)
     {
         var doorUserComponent = EnsureComp<NpcDoorUserComponent>(npcUid);
-        var now = _gameTiming.CurTime;
-        Prune(doorUserComponent.NoGoDoors, now);
-        doorUserComponent.NoGoDoors[doorUid] = now + doorUserComponent.ForgetAfter;
+        Remember(doorUserComponent.NoGoDoors, doorUid, _gameTiming.CurTime, doorUserComponent.ForgetAfter);
+    }
+
+    /// <summary>
+    ///     Remembers <paramref name="doorUid"/> in <paramref name="doors"/> for <paramref name="forgetAfter"/>, dropping
+    ///         the ones already forgotten.
+    /// </summary>
+    private static void Remember(Dictionary<EntityUid, TimeSpan> doors, EntityUid doorUid, TimeSpan now, TimeSpan forgetAfter)
+    {
+        Prune(doors, now);
+        doors[doorUid] = now + forgetAfter;
     }
 
     /// <summary>

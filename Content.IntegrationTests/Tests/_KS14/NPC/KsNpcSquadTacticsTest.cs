@@ -63,6 +63,15 @@ public sealed class KsNpcSquadTacticsTest : GameTest
 
 - type: entity
   parent: KsTacticsTestMobNoWatch
+  id: KsTacticsTestMobCohesive
+  components:
+  - type: NpcSquadMember
+    tactics:
+      searchCohesion: 10
+      searchCohesionRange: 16
+
+- type: entity
+  parent: KsTacticsTestMobNoWatch
   id: KsTacticsTestMobNoWatchLoner
   components:
   - type: NpcSquadMember
@@ -685,6 +694,108 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             Assert.That(hunt.UnseenTiles, Is.Not.Empty, "the leg is still out of sight");
             Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted), "having seen 60% of the room is enough for this one");
         });
+    }
+
+    /// <summary>
+    ///     Sweeping a long hall with a nook off it, the nook out of sight of everyone and nearer than the far end of the
+    ///         hall. Each member goes for the nearest unseen floor, so the nook gets someone, out of the other's sight. With <see cref="NpcSquadTacticsSettings.SearchCohesion"/>, both carry on down the hall, which the
+    ///         other can see.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestCohesiveSquadSweepsInSightOfEachOther(bool cohesive)
+    {
+        var scene = await SetUpSquadInHallWithNook(cohesive ? "KsTacticsTestMobCohesive" : NoWatchMob);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            StageLost(scene, scene.LeaderUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "already inside, the squad should search at once");
+            Assert.That(hunt.UnseenTiles.Any(IsInNook), "the back of the nook should be out of sight");
+            Assert.That(hunt.Sweeps, Has.Count.EqualTo(2), "both should be sweeping");
+
+            var intoTheNook = hunt.Sweeps.Values.Count(sweep => IsInNook(sweep.Tile));
+            if (cohesive)
+                Assert.That(intoTheNook, Is.Zero, "keeping in sight of each other, neither should go into the nook yet");
+            else
+                Assert.That(intoTheNook, Is.Positive, "each for the nearest unseen floor, the nook should get someone");
+        });
+    }
+
+    /// <summary>
+    ///     The nook off the hall in <see cref="SetUpSquadInHallWithNook"/>, past the opening: out of sight of the hall.
+    /// </summary>
+    private static bool IsInNook(Vector2i tile)
+    {
+        return tile.X is >= 7 and <= 11 && tile.Y is >= 4 and <= 6;
+    }
+
+    /// <summary>
+    ///     A hall 21 tiles by 3 with an airlock at its west end, and a nook off its north side: a two-wide opening at
+    ///         x 5-6 into a space running east behind the hall's wall. A squad of two inside the hall, at its west end
+    ///         and below the opening, a hostile far away, and the tactics system paused.
+    /// </summary>
+    private async Task<Scene> SetUpSquadInHallWithNook(string squadMob)
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+        var map = await Pair.CreateTestMap();
+
+        EntityUid gridUid = default, firstUid = default, secondUid = default, targetUid = default;
+
+        await server.WaitPost(() =>
+        {
+            tacticsSystem.UpdatesPaused = true;
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-12, -12), new Vector2i(24, 12)).Owner;
+
+            for (var x = -1; x <= 21; x++)
+            {
+                for (var y = -1; y <= 7; y++)
+                {
+                    var hall = x is >= 0 and <= 20 && y is >= 0 and <= 2;
+                    var opening = x is >= 5 and <= 6 && y == 3;
+                    var nook = x is >= 5 and <= 11 && y is >= 4 and <= 6;
+                    if (hall || opening || nook)
+                        continue;
+
+                    if (x == -1 && y == 1)
+                        SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, y);
+                    else
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
+
+            firstUid = SpawnAt(entManager, squadMob, gridUid, 0, 1);
+            secondUid = SpawnAt(entManager, squadMob, gridUid, 5, 1);
+            targetUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 11, -11);
+        });
+
+        await Pair.RunTicksSync(150);
+
+        EntityUid squadUid = default, leaderUid = default;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.System<NpcSquadSystem>().TryGetSquad(firstUid, out var squadEntity), "the two should form a squad");
+            squadUid = squadEntity!.Value.Owner;
+            leaderUid = squadEntity.Value.Comp.Leader!.Value;
+        });
+
+        return new Scene(entManager,
+            tacticsSystem,
+            entManager.System<NpcPerceptionSystem>(),
+            entManager.System<SharedTransformSystem>(),
+            gridUid,
+            squadUid,
+            leaderUid,
+            leaderUid == firstUid ? secondUid : firstUid,
+            LonerUid: default,
+            targetUid,
+            new EntityCoordinates(gridUid, new Vector2(3.5f, 1.5f)));
     }
 
     /// <summary>

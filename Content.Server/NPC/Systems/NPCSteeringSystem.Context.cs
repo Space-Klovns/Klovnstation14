@@ -308,6 +308,10 @@ public sealed partial class NPCSteeringSystem
                 // TODO: Blacklist nodes (pathfinder factor wehn)
                 // TODO: This should be a warning but
                 // A) NPCs get stuck on non-anchored static bodies still (e.g. closets)
+                // KS14: closets are dynamic bodies, not static. The navmesh counts them, anchored or not, and blocks a
+                //      tile one leaves too narrow to get through (PathfindingSystem.BlockNarrowGaps), so paths no longer
+                //      run past them. Left: one reaching into the next tile, which only the tile its centre is on counts,
+                //      or one pushed since its chunk was last rebuilt
                 // B) NPCs still try to move in locked containers (e.g. cow, hamster)
                 // and I don't want to spam grafana even harder than it gets spammed rn.
                 Log.Debug($"NPC {ToPrettyString(uid)} found stuck at {ourCoordinates}");
@@ -509,6 +513,7 @@ public sealed partial class NPCSteeringSystem
 
     /// <summary>
     /// Tries to avoid static blockers such as walls.
+    /// KS14: and loose ones - closets, crates - as it looks up dynamic bodies too.
     /// </summary>
     private void CollisionAvoidance(
         EntityUid uid,

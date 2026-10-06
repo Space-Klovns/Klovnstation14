@@ -96,6 +96,26 @@ public sealed partial class NpcSquadSystem : EntitySystem
     }
 
     /// <summary>
+    ///     <paramref name="callerUid"/> tells its squad something: raises <paramref name="ev"/> on each other member,
+    ///         however far away. The same event goes to each in turn, so a handler can leave an answer on it for the
+    ///         caller. Whether the caller speaks up, and whether a member listens, is for the caller and the handlers.
+    ///         Handlers must not change who is in the squad. Returns whether the caller has a squad.
+    /// </summary>
+    public bool CallOut<TEvent>(EntityUid callerUid, ref TEvent ev) where TEvent : notnull
+    {
+        if (!TryGetSquad(callerUid, out var squadEntity))
+            return false;
+
+        foreach (var memberUid in squadEntity.Value.Comp.Members)
+        {
+            if (memberUid != callerUid)
+                RaiseLocalEvent(memberUid, ref ev);
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Records <paramref name="threatCoordinates"/> as the latest known hostile position for
     ///         <paramref name="memberUid"/>'s whole squad, from something the member has only just learned - a
     ///         hostile sighted, a disturbance heard. Always counts as fresh, even at the same spot as before: a
