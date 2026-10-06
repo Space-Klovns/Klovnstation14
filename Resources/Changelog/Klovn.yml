@@ -2182,3 +2182,11 @@ Entries:
       message: Chat translation using speech with accents applied.
   id: 225
   time: '2026-10-05T21:50:46.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Russian localisation.
+    - type: Fix
+      message: Guidebook visuals.
+  id: 226
+  time: '2026-10-06T17:58:21.0000000+00:00'
