@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using System.Threading;
 using Content.Server.Administration.Logs;
@@ -70,7 +71,7 @@ namespace Content.Server.Singularity.EntitySystems
 
             if (TryComp(uid, out LockComponent? lockComp) && lockComp.Locked)
             {
-                _popup.PopupEntity(Loc.GetString("comp-emitter-access-locked",
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-emitter-access-locked",
                     ("target", uid)), uid, args.User);
                 return;
             }
@@ -80,13 +81,13 @@ namespace Content.Server.Singularity.EntitySystems
                 if (!component.IsOn)
                 {
                     SwitchOn(uid, component);
-                    _popup.PopupEntity(Loc.GetString("comp-emitter-turned-on",
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-emitter-turned-on",
                         ("target", uid)), uid, args.User);
                 }
                 else
                 {
                     SwitchOff(uid, component);
-                    _popup.PopupEntity(Loc.GetString("comp-emitter-turned-off",
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-emitter-turned-off",
                         ("target", uid)), uid, args.User);
                 }
 
@@ -98,7 +99,7 @@ namespace Content.Server.Singularity.EntitySystems
             }
             else
             {
-                _popup.PopupEntity(Loc.GetString("comp-emitter-not-anchored",
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-emitter-not-anchored",
                     ("target", uid)), uid, args.User);
             }
         }

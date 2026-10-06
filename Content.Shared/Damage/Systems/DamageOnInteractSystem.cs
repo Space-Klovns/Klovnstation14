@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage.Components;
 using Content.Shared.Database;
@@ -88,7 +89,7 @@ public sealed partial class DamageOnInteractSystem : EntitySystem
             _audioSystem.PlayPredicted(entity.Comp.InteractSound, args.Target, args.User);
 
             if (entity.Comp.PopupText != null)
-                _popupSystem.PopupClient(Loc.GetString(entity.Comp.PopupText), args.User, args.User);
+                _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(entity.Comp.PopupText), args.User, args.User);
 
             // Attempt to paralyze the user after they have taken damage
             if (_random.Prob(entity.Comp.StunChance))

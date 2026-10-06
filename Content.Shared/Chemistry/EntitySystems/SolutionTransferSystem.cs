@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Chemistry.Components;
@@ -78,7 +79,7 @@ public sealed partial class SolutionTransferSystem : EntitySystem
             {
                 ent.Comp.TransferAmount = amount;
 
-                _popup.PopupClient(Loc.GetString("comp-solution-transfer-set-amount", ("amount", amount)), ent.Owner, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-solution-transfer-set-amount", ("amount", amount)), ent.Owner, user);
 
                 Dirty(ent.Owner, ent.Comp);
             };
@@ -97,7 +98,7 @@ public sealed partial class SolutionTransferSystem : EntitySystem
         ent.Comp.TransferAmount = newTransferAmount;
 
         if (message.Actor is { Valid: true } user)
-            _popup.PopupClient(Loc.GetString("comp-solution-transfer-set-amount", ("amount", newTransferAmount)), ent.Owner, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-solution-transfer-set-amount", ("amount", newTransferAmount)), ent.Owner, user);
 
         Dirty(ent.Owner, ent.Comp);
     }
@@ -274,7 +275,7 @@ public sealed partial class SolutionTransferSystem : EntitySystem
         if (transferred <= 0)
             return;
 
-        var message = Loc.GetString("comp-solution-transfer-transfer-solution", ("amount", transferred), ("target", data.TargetEntity));
+        var message = KsPopupMessage.Create /* KS14: defer popup translation */("comp-solution-transfer-transfer-solution", ("amount", transferred), ("target", data.TargetEntity));
         _popup.PopupClient(message, data.SourceEntity, data.User);
     }
 
@@ -296,7 +297,7 @@ public sealed partial class SolutionTransferSystem : EntitySystem
             ? "comp-solution-transfer-fill-fully"
             : "comp-solution-transfer-fill-normal";
 
-        _popup.PopupClient(Loc.GetString(msg, ("owner", data.SourceEntity), ("amount", transferred), ("target", data.TargetEntity)), data.TargetEntity, data.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(msg, ("owner", data.SourceEntity), ("amount", transferred), ("target", data.TargetEntity)), data.TargetEntity, data.User);
     }
 
     /// <summary>
@@ -345,7 +346,7 @@ public sealed partial class SolutionTransferSystem : EntitySystem
         var sourceSolution = data.Source.Comp.Solution;
         if (sourceSolution.Volume == 0)
         {
-            _popup.PopupClient(Loc.GetString("comp-solution-transfer-is-empty", ("target", data.SourceEntity)), data.SourceEntity, data.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-solution-transfer-is-empty", ("target", data.SourceEntity)), data.SourceEntity, data.User);
             return false;
         }
 
@@ -360,7 +361,7 @@ public sealed partial class SolutionTransferSystem : EntitySystem
         var targetSolution = data.Target.Comp.Solution;
         if (targetSolution.AvailableVolume == 0)
         {
-            _popup.PopupClient(Loc.GetString("comp-solution-transfer-is-full", ("target", data.TargetEntity)), data.TargetEntity, data.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-solution-transfer-is-full", ("target", data.TargetEntity)), data.TargetEntity, data.User);
             return false;
         }
 

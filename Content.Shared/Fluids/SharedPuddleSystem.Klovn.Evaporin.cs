@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Shared._KS14.Fluids.Components;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;

@@ -1,4 +1,5 @@
-﻿using Content.Server.Administration;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Server.Administration;
 using Content.Server.Chat.Systems;
 using Content.Server.Popups;
 using Content.Shared.Chat;
@@ -50,7 +51,7 @@ public sealed partial class CritMobActionsSystem : EntitySystem
 
         if (HasComp<MutedComponent>(uid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("fake-death-muted"), uid, uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("fake-death-muted"), uid, uid);
             return;
         }
 

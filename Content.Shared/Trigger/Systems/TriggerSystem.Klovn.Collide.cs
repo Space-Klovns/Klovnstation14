@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Shared.Trigger.Components.Triggers;
 using Robust.Shared.Physics.Dynamics;
 

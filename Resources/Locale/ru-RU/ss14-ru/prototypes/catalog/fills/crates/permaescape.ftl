@@ -1,0 +1,34 @@
+# KS14: ported locale; references to unavailable source content pruned.
+
+ent-CratePermaEscapeBureaucracy = { ent-CrateGenericSteel }
+    .suffix = Бюрократия
+    .desc = { "" }
+ent-CratePermaEscapeComs = { ent-CrateGenericSteel }
+    .suffix = Коммуникация
+    .desc = { "" }
+ent-CratePermaEscapeDigging = { ent-CrateGenericSteel }
+    .suffix = Копание
+    .desc = { "" }
+ent-CratePermaEscapeEVA = { ent-CrateGenericSteel }
+    .suffix = ВКД
+    .desc = { "" }
+ent-CratePermaEscapeGiftsFromSyndicate = { ent-CrateGenericSteel }
+    .suffix = Подарки Синдиката
+    .desc = { "" }
+ent-CratePermaEscapeGun = { ent-CrateGenericSteel }
+    .suffix = Огнестрел
+    .desc = { "" }
+ent-CratePermaEscapeLights = { ent-CrateGenericSteel }
+    .suffix = Химсвет
+    .desc = { "" }
+ent-CratePermaEscapeMats = { ent-CrateGenericSteel }
+    .suffix = Материалы
+    .desc = { "" }
+ent-CratePermaEscapeMerc = { ent-CrateGenericSteel }
+    .suffix = Наёмническое
+    .desc = { "" }
+ent-CratePermaEscapeSpawner = Perma Escape Crate Spawner
+    .desc = { ent-CrateEmptySpawner.desc }
+ent-CratePermaEscapeTowercap = { ent-CrateGenericSteel }
+    .suffix = Грибошляпник
+    .desc = { "" }

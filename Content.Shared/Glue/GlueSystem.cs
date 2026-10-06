@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Database;
@@ -74,7 +75,7 @@ public sealed partial class GlueSystem : EntitySystem
         // This effectively means any unremoveable item could be removed with a bottle of glue.
         if (HasComp<GluedComponent>(target) || !HasComp<ItemComponent>(target) || HasComp<UnremoveableComponent>(target))
         {
-            _popup.PopupClient(Loc.GetString("glue-failure", ("target", target)), actor, actor, PopupType.Medium);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("glue-failure", ("target", target)), actor, actor, PopupType.Medium);
             return false;
         }
 
@@ -84,7 +85,7 @@ public sealed partial class GlueSystem : EntitySystem
             if (quantity > 0)
             {
                 _audio.PlayPredicted(entity.Comp.Squeeze, entity.Owner, actor);
-                _popup.PopupClient(Loc.GetString("glue-success", ("target", target)), actor, actor, PopupType.Medium);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("glue-success", ("target", target)), actor, actor, PopupType.Medium);
                 _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(actor):actor} glued {ToPrettyString(target):subject} with {ToPrettyString(entity.Owner):tool}");
                 var gluedComp = EnsureComp<GluedComponent>(target);
                 gluedComp.Duration = quantity.Double() * entity.Comp.DurationPerUnit;
@@ -93,7 +94,7 @@ public sealed partial class GlueSystem : EntitySystem
             }
         }
 
-        _popup.PopupClient(Loc.GetString("glue-failure", ("target", target)), actor, actor, PopupType.Medium);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("glue-failure", ("target", target)), actor, actor, PopupType.Medium);
         return false;
     }
 

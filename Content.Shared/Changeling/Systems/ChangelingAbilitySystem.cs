@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using System.Linq;
 using Content.Shared.Actions;
 using Content.Shared.Atmos.Rotting;
 using Content.Shared.Changeling.Components;
@@ -80,7 +81,7 @@ public sealed partial class ChangelingAbilitySystem : EntitySystem
         if (!_changelingDevour.CanDevour(ent.Owner, args.Target, checkDead: false, checkProtected: false))
             return;
 
-        _popup.PopupClient(Loc.GetString("changeling-sting-success", ("target", Identity.Entity(args.Target, EntityManager))), args.Target, ent.Owner, PopupType.Medium);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("changeling-sting-success", ("target", Identity.Entity(args.Target, EntityManager))), args.Target, ent.Owner, PopupType.Medium);
         _changelingIdentity.GrantIdentity(ent, args.Target);
 
         args.Handled = true;

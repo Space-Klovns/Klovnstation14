@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Popups;
 using Content.Shared.UserInterface;
 using Content.Shared.Access.Components;
@@ -25,7 +26,7 @@ public sealed partial class ActivatableUIRequiresAccessSystem : EntitySystem
         {
             args.Cancel();
             if (activatableUI.Comp.PopupMessage != null && !args.Silent)
-                _popup.PopupClient(Loc.GetString(activatableUI.Comp.PopupMessage), activatableUI, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(activatableUI.Comp.PopupMessage), activatableUI, args.User);
         }
     }
 }

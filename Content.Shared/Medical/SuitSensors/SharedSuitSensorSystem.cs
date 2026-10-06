@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Numerics;
 using Content.Shared.Access.Systems;
 using Content.Shared.ActionBlocker;
@@ -240,26 +241,9 @@ public abstract partial class SharedSuitSensorSystem : EntitySystem
 
     public string GetModeName(SuitSensorMode mode)
     {
-        string name;
-        switch (mode)
-        {
-            case SuitSensorMode.SensorOff:
-                name = "suit-sensor-mode-off";
-                break;
-            case SuitSensorMode.SensorBinary:
-                name = "suit-sensor-mode-binary";
-                break;
-            case SuitSensorMode.SensorVitals:
-                name = "suit-sensor-mode-vitals";
-                break;
-            case SuitSensorMode.SensorCords:
-                name = "suit-sensor-mode-cords";
-                break;
-            default:
-                return "";
-        }
-
-        return Loc.GetString(name);
+        // KS14: share keys with deferred popup formatting.
+        var localizationId = GetModeLocalizationId(mode);
+        return localizationId == null ? "" : Loc.GetString(localizationId);
     }
 
     /// <summary>
@@ -315,7 +299,7 @@ public abstract partial class SharedSuitSensorSystem : EntitySystem
 
         if (userUid != null)
         {
-            var msg = Loc.GetString("suit-sensor-mode-state", ("mode", GetModeName(mode)));
+            var msg = KsPopupMessage.Create /* KS14: defer sensor mode label */("suit-sensor-mode-state", ("mode", KsPopupMessage.Create(GetModeLocalizationId(mode)!)));
             _popupSystem.PopupClient(msg, sensors, userUid.Value);
         }
     }

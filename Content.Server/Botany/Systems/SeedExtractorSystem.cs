@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Botany.Components;
 using Content.Server.Popups;
 using Content.Server.Power.EntitySystems;
@@ -29,12 +30,12 @@ public sealed partial class SeedExtractorSystem : EntitySystem
             return;
         if (!_botanySystem.TryGetSeed(produce, out var seed) || seed.Seedless)
         {
-            _popupSystem.PopupCursor(Loc.GetString("seed-extractor-component-no-seeds", ("name", args.Used)),
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("seed-extractor-component-no-seeds", ("name", args.Used)),
                 args.User, PopupType.MediumCaution);
             return;
         }
 
-        _popupSystem.PopupCursor(Loc.GetString("seed-extractor-component-interact-message", ("name", args.Used)),
+        _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("seed-extractor-component-interact-message", ("name", args.Used)),
             args.User, PopupType.Medium);
 
         QueueDel(args.Used);

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Shared.Administration.Logs;
 using Content.Shared.UserInterface;
@@ -119,7 +120,7 @@ public sealed partial class PaperSystem : EntitySystem
             {
                 if (entity.Comp.EditingDisabled)
                 {
-                    var paperEditingDisabledMessage = Loc.GetString("paper-tamper-proof-modified-message");
+                    var paperEditingDisabledMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("paper-tamper-proof-modified-message");
                     _popupSystem.PopupClient(paperEditingDisabledMessage, entity, args.User);
 
                     args.Handled = true;
@@ -132,7 +133,7 @@ public sealed partial class PaperSystem : EntitySystem
                 {
                     if (ev.FailReason is not null)
                     {
-                        var fileWriteMessage = Loc.GetString(ev.FailReason);
+                        var fileWriteMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(ev.FailReason);
                         _popupSystem.PopupClient(fileWriteMessage, entity.Owner, args.User);
                     }
 
@@ -155,13 +156,13 @@ public sealed partial class PaperSystem : EntitySystem
         if (TryComp<StampComponent>(args.Used, out var stampComp) && TryStamp(entity, GetStampInfo(stampComp), stampComp.StampState))
         {
             // successfully stamped, play popup
-            var stampPaperOtherMessage = Loc.GetString("paper-component-action-stamp-paper-other",
+            var stampPaperOtherMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("paper-component-action-stamp-paper-other",
                     ("user", args.User),
                     ("target", args.Target),
                     ("stamp", args.Used));
 
             _popupSystem.PopupEntity(stampPaperOtherMessage, args.User, Filter.PvsExcept(args.User, entityManager: EntityManager), true);
-            var stampPaperSelfMessage = Loc.GetString("paper-component-action-stamp-paper-self",
+            var stampPaperSelfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("paper-component-action-stamp-paper-self",
                     ("target", args.Target),
                     ("stamp", args.Used));
             _popupSystem.PopupClient(stampPaperSelfMessage, args.User, args.User);

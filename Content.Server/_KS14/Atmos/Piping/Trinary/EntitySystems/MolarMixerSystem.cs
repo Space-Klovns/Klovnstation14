@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Administration.Logs;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
@@ -134,7 +135,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             }
             else
             {
-                _popup.PopupCursor(Loc.GetString("comp-gas-mixer-ui-needs-anchor"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create("comp-gas-mixer-ui-needs-anchor"), args.User);
             }
 
             args.Handled = true;

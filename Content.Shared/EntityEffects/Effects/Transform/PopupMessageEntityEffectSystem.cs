@@ -1,4 +1,5 @@
-﻿using Content.Shared.Popups;
+using Content.Shared._KS14.PopupLocalization; // KS14
+using Content.Shared.Popups;
 using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization;
@@ -21,7 +22,7 @@ public sealed partial class PopupMessageEntityEffectSystem : EntityEffectSystem<
         if (_net.IsClient)
             return;
 
-        var msg = Loc.GetString(_random.Pick(args.Effect.Messages), ("entity", entity));
+        var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(_random.Pick(args.Effect.Messages), ("entity", entity));
 
         switch ((args.Effect.Method, args.Effect.Type))
         {

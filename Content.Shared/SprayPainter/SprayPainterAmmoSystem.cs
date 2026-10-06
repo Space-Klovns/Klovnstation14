@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
 using Content.Shared.Examine;
@@ -38,11 +39,11 @@ public sealed partial class SprayPainterAmmoSystem : EntitySystem
         var count = Math.Min(charges.MaxCharges - charges.LastCharges, ent.Comp.Charges);
         if (count <= 0)
         {
-            _popup.PopupClient(Loc.GetString("spray-painter-ammo-after-interact-full"), target, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spray-painter-ammo-after-interact-full"), target, user);
             return;
         }
 
-        _popup.PopupClient(Loc.GetString("spray-painter-ammo-after-interact-refilled"), target, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spray-painter-ammo-after-interact-refilled"), target, user);
         _charges.AddCharges(target, count);
         ent.Comp.Charges -= count;
         Dirty(ent, ent.Comp);

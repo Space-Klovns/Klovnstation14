@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.Components;
 using Content.Shared.DoAfter;
 using Content.Shared.IdentityManagement;
@@ -89,7 +90,7 @@ public sealed partial class ReactionMixerSystem : EntitySystem
             return;
 
         _popup.PopupClient(
-            Loc.GetString(ent.Comp.MixMessage,
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.MixMessage,
                 ("mixed", Identity.Entity(args.Target.Value, EntityManager)),
                 ("mixer", Identity.Entity(ent.Owner, EntityManager))),
             args.User,

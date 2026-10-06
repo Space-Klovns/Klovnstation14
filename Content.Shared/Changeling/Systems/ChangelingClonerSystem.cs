@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body;
 using Content.Shared.Changeling.Components;
@@ -147,8 +148,8 @@ public sealed partial class ChangelingClonerSystem : EntitySystem
 
         var userIdentity = Identity.Entity(user, EntityManager);
         var targetIdentity = Identity.Entity(target, EntityManager);
-        var userMsg = Loc.GetString("changeling-cloner-component-draw-user", ("user", userIdentity), ("target", targetIdentity));
-        var targetMsg = Loc.GetString("changeling-cloner-component-draw-target", ("user", userIdentity), ("target", targetIdentity));
+        var userMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("changeling-cloner-component-draw-user", ("user", userIdentity), ("target", targetIdentity));
+        var targetMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("changeling-cloner-component-draw-target", ("user", userIdentity), ("target", targetIdentity));
         _popup.PopupClient(userMsg, target, user);
 
         if (user != target) // don't show the warning if using the item on yourself
@@ -183,8 +184,8 @@ public sealed partial class ChangelingClonerSystem : EntitySystem
 
         var userIdentity = Identity.Entity(user, EntityManager);
         var targetIdentity = Identity.Entity(target, EntityManager);
-        var userMsg = Loc.GetString("changeling-cloner-component-inject-user", ("user", userIdentity), ("target", targetIdentity));
-        var targetMsg = Loc.GetString("changeling-cloner-component-inject-target", ("user", userIdentity), ("target", targetIdentity));
+        var userMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("changeling-cloner-component-inject-user", ("user", userIdentity), ("target", targetIdentity));
+        var targetMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("changeling-cloner-component-inject-target", ("user", userIdentity), ("target", targetIdentity));
         _popup.PopupClient(userMsg, target, user);
 
         if (user != target) // don't show the warning if using the item on yourself
@@ -282,7 +283,7 @@ public sealed partial class ChangelingClonerSystem : EntitySystem
         if (user == null)
             return;
 
-        _popup.PopupClient(Loc.GetString("changeling-cloner-component-reset-popup"), user.Value, user.Value);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("changeling-cloner-component-reset-popup"), user.Value, user.Value);
     }
 }
 

@@ -1,0 +1,58 @@
+<Document>
+  # Атмосферные системы
+  Атмос предлагает широкий ассортимент устройств, предназначенных для перемещения, управления и манипулирования газом.
+  Эти устройства часто работают вместе, чтобы поддерживать безопасную, пригодную для дыхания атмосферу для экипажа или для выполнения общей задачи.
+
+  В этом разделе рассматриваются различные системы, имеющиеся в распоряжении атмосов, способы их взаимодействия и оптимальные методы использования.
+
+
+  <Box>
+    <GuideEntityEmbed Entity="GasPipeStraight" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeHalf" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeBend" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeTJunction" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeFourway" Caption=""/>
+    <GuideEntityEmbed Entity="GasPressurePump" Caption=""/>
+    <GuideEntityEmbed Entity="GasVolumePump" Caption=""/>
+  </Box>
+  <Box>
+    ## Сеть труб
+  </Box>
+  <Box>
+    [color=#999999][italic]Взаимосвязанные трубы, выполняющие одну и ту же задачу, обычно называются сетью труб[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="ComputerAlert" Caption=""/>
+    <GuideEntityEmbed Entity="AirAlarm" Caption=""/>
+  </Box>
+  <Box>
+    ## Мониторинг и управление устройствами
+  </Box>
+  <Box>
+    [color=#999999][italic]Мониторинг и управление устройствами, которые регулируют локальную атмосферу[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="Firelock" Caption=""/>
+    <GuideEntityEmbed Entity="FireAlarm" Caption=""/>
+  </Box>
+  <Box>
+    ## Сдерживание огня и газов
+  </Box>
+  <Box>
+    [color=#999999][italic]Устройства для контроля и предотвращения утечек газа и пожаров[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="GasMinerOxygenStation" Caption=""/>
+    <GuideEntityEmbed Entity="AirCanister" Caption=""/>
+  </Box>
+  <Box>
+    ## Добыча и хранение газов
+  </Box>
+  <Box>
+    [color=#999999][italic] Устройства для добычи нового газа для использования/хранения на станции [italic][/color]
+  </Box>
+
+</Document>

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Server.Power.Components;
 using Content.Server.Power.Pow3r;
@@ -87,7 +88,7 @@ public sealed partial class ApcSystem : EntitySystem
         RaiseLocalEvent(uid, ref attemptEv);
         if (attemptEv.Cancelled)
         {
-            _popup.PopupCursor(Loc.GetString("apc-component-on-toggle-cancel"),
+            _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("apc-component-on-toggle-cancel"),
                 args.Actor, PopupType.Medium);
             return;
         }
@@ -98,7 +99,7 @@ public sealed partial class ApcSystem : EntitySystem
         }
         else
         {
-            _popup.PopupCursor(Loc.GetString("apc-component-insufficient-access"),
+            _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("apc-component-insufficient-access"),
                 args.Actor, PopupType.Medium);
         }
     }

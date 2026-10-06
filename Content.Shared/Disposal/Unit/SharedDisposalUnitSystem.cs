@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
@@ -506,7 +507,7 @@ public abstract partial class SharedDisposalUnitSystem : EntitySystem
 
         if (userId.HasValue && !HasComp<HandsComponent>(userId) && toInsertId != userId) // Mobs like mouse can Jump inside even with no hands
         {
-            _popupSystem.PopupEntity(Loc.GetString("disposal-unit-no-hands"), userId.Value, userId.Value, PopupType.SmallCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disposal-unit-no-hands"), userId.Value, userId.Value, PopupType.SmallCaution);
             return false;
         }
 
@@ -518,7 +519,7 @@ public abstract partial class SharedDisposalUnitSystem : EntitySystem
         var delay = insertingSelf ? unit.EntryDelay : unit.DraggedEntryDelay;
 
         if (userId != null && !insertingSelf)
-            _popupSystem.PopupEntity(Loc.GetString("disposal-unit-being-inserted", ("user", Identity.Entity((EntityUid)userId, EntityManager))), toInsertId, toInsertId, PopupType.Large);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disposal-unit-being-inserted", ("user", Identity.Entity((EntityUid)userId, EntityManager))), toInsertId, toInsertId, PopupType.Large);
 
         if (delay <= 0 || userId == null)
         {

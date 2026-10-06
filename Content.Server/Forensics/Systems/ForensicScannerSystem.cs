@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Text;
 using Content.Server.Popups;
@@ -153,7 +154,7 @@ namespace Content.Server.Forensics
                 if (fiber == pad.Sample)
                 {
                     _audioSystem.PlayPvs(component.SoundMatch, uid);
-                    _popupSystem.PopupEntity(Loc.GetString("forensic-scanner-match-fiber"), uid, args.User);
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("forensic-scanner-match-fiber"), uid, args.User);
                     return;
                 }
             }
@@ -163,13 +164,13 @@ namespace Content.Server.Forensics
                 if (fingerprint == pad.Sample)
                 {
                     _audioSystem.PlayPvs(component.SoundMatch, uid);
-                    _popupSystem.PopupEntity(Loc.GetString("forensic-scanner-match-fingerprint"), uid, args.User);
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("forensic-scanner-match-fingerprint"), uid, args.User);
                     return;
                 }
             }
 
             _audioSystem.PlayPvs(component.SoundNoMatch, uid);
-            _popupSystem.PopupEntity(Loc.GetString("forensic-scanner-match-none"), uid, args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("forensic-scanner-match-none"), uid, args.User);
         }
 
         private void OnBeforeActivatableUIOpen(EntityUid uid, ForensicScannerComponent component, BeforeActivatableUIOpenEvent args)
@@ -192,7 +193,7 @@ namespace Content.Server.Forensics
             {
                 // This shouldn't occur due to the UI guarding against it, but
                 // if it does, tell the user why nothing happened.
-                _popupSystem.PopupEntity(Loc.GetString("forensic-scanner-printer-not-ready"), uid, user);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("forensic-scanner-printer-not-ready"), uid, user);
                 return;
             }
 

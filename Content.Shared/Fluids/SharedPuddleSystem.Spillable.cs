@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
@@ -170,14 +171,14 @@ public abstract partial class SharedPuddleSystem
 
             Reactive.DoEntityReaction(hit, splitSolution, ReactionMethod.Touch);
 
-            Popups.PopupClient(Loc.GetString("spill-melee-hit-attacker",
+            Popups.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spill-melee-hit-attacker",
                     ("amount", totalSplit / hitCount),
                     ("spillable", entity.Owner),
                     ("target", Identity.Entity(hit, EntityManager, args.User))),
                 hit,
                 args.User);
             Popups.PopupEntity(
-                Loc.GetString("spill-melee-hit-others",
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */("spill-melee-hit-others",
                     ("attacker", Identity.Entity(args.User, EntityManager)),
                     ("spillable", entity.Owner),
                     ("target", Identity.Entity(hit, EntityManager))),

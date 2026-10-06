@@ -1,0 +1,86 @@
+<Document>
+  # Генераторы
+  Генераторы — это устройства, обеспечивающие станцию энергией. Они различаются по размеру и мощности, и у каждого есть свои особенности и требования.
+
+  Инженеры должны устанавливать генераторы низкого уровня, такие как солнечные батареи и AME, в начале смены, чтобы оставить достаточно времени для установки генераторов более высокого уровня, таких как двигатель «Сингулярность», которые обеспечат стабильное энергоснабжение на оставшуюся часть смены.
+
+  <Box>
+    <GuideEntityEmbed Entity="SingularityGenerator" Caption=""/>
+    <GuideEntityEmbed Entity="TeslaGenerator" Caption=""/>
+  </Box>
+  <Box>
+    ## Сингулярность и двигатель Теслы
+  </Box>
+  <Box>
+    [color=#999999][italic]Устройства, способные генерировать бесконечное количество энергии — и обладающие огромным разрушительным потенциалом[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="AmeController" Caption=""/>
+    <GuideEntityEmbed Entity="AmePartFlatpack" Caption=""/>
+  </Box>
+  <Box>
+    ## Двигатель на антиматерии
+  </Box>
+  <Box>
+    [color=#999999][italic]Генератор краткосрочного питания для станции[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="TegCirculator" Rotation="180" Caption="" Margin="0"/>
+    <GuideEntityEmbed Entity="TegCenter" Rotation="90" Caption="" Margin="0"/>
+    <GuideEntityEmbed Entity="TegCirculator" Caption="" Margin="0"/>
+  </Box>
+  <Box>
+    ## Термоэлектрический генератор
+  </Box>
+  <Box>
+    [color=#999999][italic]Усовершенствованный генератор атмосферных явлений, использующий энергию газов[italic][/color]
+  </Box>
+
+  <Box>
+	  <GuideEntityEmbed Entity="BaseNuclearReactor" Caption=""/>
+	  <GuideEntityEmbed Entity="Turbine" Caption=""/>
+  </Box>
+  <Box>
+    ## Ядерный генератор
+  </Box>
+  <Box>
+    [color=#999999][italic]Использует энергию ядерного деления для обеспечения станции энергией.[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="SolarPanel" Caption=""/>
+    <GuideEntityEmbed Entity="SolarPanel" Caption=""/>
+    <GuideEntityEmbed Entity="SolarPanel" Caption=""/>
+  </Box>
+  <Box>
+    ## Солнечные панели
+  </Box>
+  <Box>
+    [color=#999999][italic]Пассивный источник энергии, не требующий особого обслуживания[italic][/color]
+  </Box>
+
+
+  <Box>
+    <GuideEntityEmbed Entity="PortableGeneratorJrPacman" Caption="" />
+    <GuideEntityEmbed Entity="PortableGeneratorPacman" Caption="" />
+    <GuideEntityEmbed Entity="PortableGeneratorSuperPacman" Caption="" />
+  </Box>
+  <Box>
+    ## Переносные генераторы
+  </Box>
+  <Box>
+    [color=#999999][italic]Переносные генераторы для нужд экипажа и аварийного электроснабжения[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="GeneratorRTG" Caption="" />
+  </Box>
+  <Box>
+    ## Радиоизотопный термоэлектрический генератор
+  </Box>
+  <Box>
+    [color=#999999][italic]Пассивный источник энергии, не требующий обслуживания[italic][/color]
+  </Box>
+</Document>

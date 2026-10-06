@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Emag.Systems;
 using Content.Shared.IdentityManagement;
@@ -131,13 +132,13 @@ public abstract partial class SharedNuclearReactorSystem : EntitySystem
 
         if (!silencedAnything)
         {
-            _popupSystem.PopupClient(Loc.GetString("reactor-alarms-silence-failed"), args.Actor);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("reactor-alarms-silence-failed"), args.Actor);
             return;
         }
 
         // self message
         _popupSystem.PopupClient(
-            Loc.GetString("reactor-alarms-silenced-message-self"),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("reactor-alarms-silenced-message-self"),
             args.Actor,
             args.Actor,
             PopupType.MediumCaution
@@ -145,7 +146,7 @@ public abstract partial class SharedNuclearReactorSystem : EntitySystem
 
         // others message
         _popupSystem.PopupEntity(
-            Loc.GetString("reactor-alarms-silenced-message-others", ("user", Identity.Entity(args.Actor, EntityManager))),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("reactor-alarms-silenced-message-others", ("user", Identity.Entity(args.Actor, EntityManager))),
             args.Actor,
             Filter.PvsExcept(args.Actor),
             true,
@@ -186,7 +187,7 @@ public abstract partial class SharedNuclearReactorSystem : EntitySystem
         if (isNowSmoking == true)
         {
             comp.isSmoking = true;
-            _popupSystem.PopupClient(Loc.GetString("reactor-smoke-start", ("owner", uid)), uid, uid, PopupType.MediumCaution);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("reactor-smoke-start", ("owner", uid)), uid, uid, PopupType.MediumCaution);
 
             if (proper)
                 SendEngiRadio(ent, Loc.GetString("reactor-smoke-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
@@ -197,7 +198,7 @@ public abstract partial class SharedNuclearReactorSystem : EntitySystem
         else if (isNowSmoking == false)
         {
             comp.isSmoking = false;
-            _popupSystem.PopupClient(Loc.GetString("reactor-smoke-stop", ("owner", uid)), uid, uid, PopupType.Medium);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("reactor-smoke-stop", ("owner", uid)), uid, uid, PopupType.Medium);
 
             if (proper)
                 SendEngiRadio(ent, Loc.GetString("reactor-smoke-stop-message", ("owner", uid)));
@@ -208,7 +209,7 @@ public abstract partial class SharedNuclearReactorSystem : EntitySystem
         if (isNowBurning == true)
         {
             comp.isBurning = true;
-            _popupSystem.PopupClient(Loc.GetString("reactor-fire-start", ("owner", uid)), uid, uid, PopupType.MediumCaution);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("reactor-fire-start", ("owner", uid)), uid, uid, PopupType.MediumCaution);
 
             if (proper)
                 SendEngiRadio(ent, Loc.GetString("reactor-fire-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
@@ -219,7 +220,7 @@ public abstract partial class SharedNuclearReactorSystem : EntitySystem
         else if (isNowBurning == false)
         {
             comp.isBurning = false;
-            _popupSystem.PopupClient(Loc.GetString("reactor-fire-stop", ("owner", uid)), uid, uid, PopupType.Medium);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("reactor-fire-stop", ("owner", uid)), uid, uid, PopupType.Medium);
 
             if (proper)
                 SendEngiRadio(ent, Loc.GetString("reactor-fire-stop-message", ("owner", uid)));

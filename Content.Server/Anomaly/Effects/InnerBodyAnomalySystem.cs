@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Administration.Logs;
 using Content.Server.Body.Systems;
 using Content.Server.Chat.Managers;
@@ -106,7 +107,8 @@ public sealed partial class InnerBodyAnomalySystem : SharedInnerBodyAnomalySyste
             _mind.TryGetMind(ent, out _, out var mindComponent) &&
             _player.TryGetSessionById(mindComponent.UserId, out var session))
         {
-            var message = Loc.GetString(ent.Comp.StartMessage);
+            var popupMessageId = ent.Comp.StartMessage; // KS14: retain the key for recipient popup formatting
+            var message = Loc.GetString(popupMessageId);
             var wrappedMessage = Loc.GetString("chat-manager-server-wrap-message", ("message", message));
             _chat.ChatMessageToOne(ChatChannel.Server,
                 message,
@@ -116,7 +118,7 @@ public sealed partial class InnerBodyAnomalySystem : SharedInnerBodyAnomalySyste
                 session.Channel,
                 _messageColor);
 
-            _popup.PopupEntity(message, ent, ent, PopupType.MediumCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: defer popup independently of chat */(popupMessageId), ent, ent, PopupType.MediumCaution);
 
             _adminLog.Add(LogType.Anomaly, LogImpact.Medium, $"{ToPrettyString(ent)} became anomaly host.");
         }
@@ -140,32 +142,33 @@ public sealed partial class InnerBodyAnomalySystem : SharedInnerBodyAnomalySyste
             !_player.TryGetSessionById(mindComponent.UserId, out var session))
             return;
 
-        var message = string.Empty;
+        string? popupMessageId = null; // KS14: retain the key for recipient popup formatting
 
         if (args.Severity >= 0.5 && ent.Comp.LastSeverityInformed < 0.5)
         {
             ent.Comp.LastSeverityInformed = 0.5f;
-            message = Loc.GetString("inner-anomaly-severity-info-50");
+            popupMessageId = "inner-anomaly-severity-info-50"; /* KS14: keep popup deferred */
         }
         if (args.Severity >= 0.75 && ent.Comp.LastSeverityInformed < 0.75)
         {
             ent.Comp.LastSeverityInformed = 0.75f;
-            message = Loc.GetString("inner-anomaly-severity-info-75");
+            popupMessageId = "inner-anomaly-severity-info-75"; /* KS14: keep popup deferred */
         }
         if (args.Severity >= 0.9 && ent.Comp.LastSeverityInformed < 0.9)
         {
             ent.Comp.LastSeverityInformed = 0.9f;
-            message = Loc.GetString("inner-anomaly-severity-info-90");
+            popupMessageId = "inner-anomaly-severity-info-90"; /* KS14: keep popup deferred */
         }
         if (args.Severity >= 1 && ent.Comp.LastSeverityInformed < 1)
         {
             ent.Comp.LastSeverityInformed = 1f;
-            message = Loc.GetString("inner-anomaly-severity-info-100");
+            popupMessageId = "inner-anomaly-severity-info-100"; /* KS14: keep popup deferred */
         }
 
-        if (message == string.Empty)
+        if (popupMessageId == null) /* KS14: no severity notification selected */
             return;
 
+        var message = Loc.GetString(popupMessageId); // KS14: format chat separately
         var wrappedMessage = Loc.GetString("chat-manager-server-wrap-message", ("message", message));
         _chat.ChatMessageToOne(ChatChannel.Server,
             message,
@@ -175,7 +178,7 @@ public sealed partial class InnerBodyAnomalySystem : SharedInnerBodyAnomalySyste
             session.Channel,
             _messageColor);
 
-        _popup.PopupEntity(message, ent, ent, PopupType.MediumCaution);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: defer popup independently of chat */(popupMessageId), ent, ent, PopupType.MediumCaution);
     }
 
     private void OnMobStateChanged(Entity<InnerBodyAnomalyComponent> ent, ref MobStateChangedEvent args)
@@ -216,7 +219,8 @@ public sealed partial class InnerBodyAnomalySystem : SharedInnerBodyAnomalySyste
             _mind.TryGetMind(ent, out _, out var mindComponent) &&
             _player.TryGetSessionById(mindComponent.UserId, out var session))
         {
-            var message = Loc.GetString(ent.Comp.EndMessage);
+            var popupMessageId = ent.Comp.EndMessage; // KS14: retain the key for recipient popup formatting
+            var message = Loc.GetString(popupMessageId);
             var wrappedMessage = Loc.GetString("chat-manager-server-wrap-message", ("message", message));
             _chat.ChatMessageToOne(ChatChannel.Server,
                 message,
@@ -227,7 +231,7 @@ public sealed partial class InnerBodyAnomalySystem : SharedInnerBodyAnomalySyste
                 _messageColor);
 
 
-            _popup.PopupEntity(message, ent, ent, PopupType.MediumCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: defer popup independently of chat */(popupMessageId), ent, ent, PopupType.MediumCaution);
 
             _adminLog.Add(LogType.Anomaly, LogImpact.Medium, $"{ToPrettyString(ent)} is no longer a host for the anomaly.");
         }

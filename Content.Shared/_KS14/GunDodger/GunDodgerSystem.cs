@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Numerics;
 using Content.Shared._KS14.DodgingEffect;
 using Content.Shared._KS14.Random.Helpers;
@@ -113,7 +114,7 @@ public sealed partial class GunDodgerSystem : EntitySystem
         Dirty(dodgerEntity.Owner, dodgerEntity.Comp);
 
         // Everyone who can see the dodger, predicted for whoever fired.
-        _popupSystem.PopupEntity(Loc.GetString(PopupLocId, ("name", Identity.Name(dodgerEntity.Owner, EntityManager))), dodgerEntity.Owner, type: PopupType.Small);
+        _popupSystem.PopupEntity(KsPopupMessage.Create(PopupLocId, ("name", Identity.Entity(dodgerEntity.Owner, EntityManager))), dodgerEntity.Owner, type: PopupType.Small);
         _dodgingEffectSystem.AddEffect(dodgerEntity.Owner, TimeSpan.FromSeconds(0.01d), TimeSpan.FromSeconds(0.7d));
 
         // only dodge perpendicularly to the shooting direction. The normal has to be transformed because LocalNormal

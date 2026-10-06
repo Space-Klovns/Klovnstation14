@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ninja.Events;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Ninja.Components;
@@ -32,7 +33,7 @@ public sealed partial class ItemCreatorSystem : SharedItemCreatorSystem
         var user = args.Performer;
         if (!_battery.TryUseCharge(battery, comp.Charge))
         {
-            _popup.PopupEntity(Loc.GetString(comp.NoPowerPopup), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.NoPowerPopup), user, user);
             return;
         }
 

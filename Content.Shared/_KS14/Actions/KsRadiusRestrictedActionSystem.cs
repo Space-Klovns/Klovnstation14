@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Linq;
 using Content.Shared.Actions.Events;
 using Content.Shared.Popups;
@@ -23,7 +24,7 @@ public sealed partial class KsRadiusRestrictedActionSystem : EntitySystem
             return;
 
         args.Cancelled = true;
-        _popup.PopupClient(Loc.GetString(entity.Comp.Popup), args.User, args.User, PopupType.MediumCaution);
+        _popup.PopupClient(KsPopupMessage.Create(entity.Comp.Popup), args.User, args.User, PopupType.MediumCaution);
     }
 
     private bool FoundInRange(Entity<KsRadiusRestrictedActionComponent> entity, EntityUid userUid)

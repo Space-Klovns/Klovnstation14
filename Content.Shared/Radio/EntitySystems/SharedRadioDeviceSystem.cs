@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Popups;
 using Content.Shared.Radio.Components;
 
@@ -37,8 +38,8 @@ public abstract partial class SharedRadioDeviceSystem : EntitySystem
 
         if (!quiet && user != null)
         {
-            var state = Loc.GetString(component.Enabled ? "handheld-radio-component-on-state" : "handheld-radio-component-off-state");
-            var message = Loc.GetString("handheld-radio-component-on-use", ("radioState", state));
+            var state = KsPopupMessage.Create /* KS14: defer nested popup label */(component.Enabled ? "handheld-radio-component-on-state" : "handheld-radio-component-off-state");
+            var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("handheld-radio-component-on-use", ("radioState", state));
             _popup.PopupEntity(message, user.Value, user.Value);
         }
 

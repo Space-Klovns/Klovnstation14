@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Actions;
 using Content.Server.Humanoid;
 using Content.Server.Inventory;
@@ -205,7 +206,7 @@ public sealed partial class PolymorphSystem : EntitySystem
         var child = Spawn(configuration.Entity, _transform.GetMapCoordinates(uid, targetTransformComp), rotation: _transform.GetWorldRotation(uid));
 
         if (configuration.PolymorphPopup != null)
-            _popup.PopupEntity(Loc.GetString(configuration.PolymorphPopup,
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(configuration.PolymorphPopup,
                 ("parent", Identity.Entity(uid, EntityManager)),
                 ("child", Identity.Entity(child, EntityManager))),
                 child);
@@ -370,7 +371,7 @@ public sealed partial class PolymorphSystem : EntitySystem
             SpawnAttachedTo(component.Configuration.EffectProto, parent.ToCoordinates());
 
         if (component.Configuration.ExitPolymorphPopup != null)
-            _popup.PopupEntity(Loc.GetString(component.Configuration.ExitPolymorphPopup,
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.Configuration.ExitPolymorphPopup,
                 ("parent", Identity.Entity(uid, EntityManager)),
                 ("child", Identity.Entity(parent, EntityManager))),
                 parent);

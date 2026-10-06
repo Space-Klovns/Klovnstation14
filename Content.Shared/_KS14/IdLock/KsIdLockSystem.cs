@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Access.Systems;
 using Content.Shared.Interaction;
 using Content.Shared.Lock;
@@ -47,7 +48,7 @@ public sealed partial class KsIdLockSystem : EntitySystem
     cancel:
         if (!args.Silent &&
             entity.Comp.ToggleLockDeniedPopupLoc is { } toggleLockDeniedPopupLoc)
-            _popupSystem.PopupClient(Loc.GetString(toggleLockDeniedPopupLoc), entity, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create(toggleLockDeniedPopupLoc), entity, args.User);
 
         args.Cancelled = true;
         return;
@@ -96,7 +97,7 @@ public sealed partial class KsIdLockSystem : EntitySystem
         args.Handled = true;
 
         if (entity.Comp.ClaimPopupLoc is { } claimPopupLoc)
-            _popupSystem.PopupClient(Loc.GetString(claimPopupLoc), args.Target, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create(claimPopupLoc), args.Target, args.User);
     }
 
     [SubscribeLocalEvent]
@@ -124,6 +125,6 @@ public sealed partial class KsIdLockSystem : EntitySystem
 
         var inheritedCount = otherKeyComponent.AttachedUids.Count - originalAccessCount;
         if (entity.Comp.InheritPopupLoc is { } inheritPopupLoc)
-            _popupSystem.PopupClient(Loc.GetString(inheritPopupLoc, ("count", inheritedCount)), args.User, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create(inheritPopupLoc, ("count", inheritedCount)), args.User, args.User);
     }
 }

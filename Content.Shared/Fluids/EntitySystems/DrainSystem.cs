@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Audio;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Database;
@@ -90,7 +91,7 @@ public sealed partial class DrainSystem : EntitySystem
         if (!_solutionContainerSystem.TryGetDrainableSolution(container, out var containerSoln, out var containerSolution) || containerSolution.Volume == FixedPoint2.Zero)
         {
             _popup.PopupClient(
-                Loc.GetString("drain-component-empty-verb-using-is-empty-message", ("object", container)),
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */("drain-component-empty-verb-using-is-empty-message", ("object", container)),
                 ent.Owner,
                 user);
             return;
@@ -119,7 +120,7 @@ public sealed partial class DrainSystem : EntitySystem
             var solutionToSpill = _solutionContainerSystem.SplitSolution(containerSoln.Value, amountToSpillOnGround);
             _puddle.TrySpillAt(Transform(ent.Owner).Coordinates, solutionToSpill, out _);
             _popup.PopupClient(
-                Loc.GetString("drain-component-empty-verb-target-is-full-message", ("object", ent.Owner)),
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */("drain-component-empty-verb-target-is-full-message", ("object", ent.Owner)),
                 ent.Owner,
                 user);
         }
@@ -221,7 +222,7 @@ public sealed partial class DrainSystem : EntitySystem
 
         if (drainSolution.AvailableVolume > 0)
         {
-            _popup.PopupPredicted(Loc.GetString("drain-component-unclog-notapplicable", ("object", args.Target.Value)), args.Target.Value, args.User);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("drain-component-unclog-notapplicable", ("object", args.Target.Value)), args.Target.Value, args.User);
             return;
         }
 
@@ -244,7 +245,7 @@ public sealed partial class DrainSystem : EntitySystem
 
         if (!SharedRandomExtensions.PredictedProb(_timing, ent.Comp.UnclogProbability, GetNetEntity(ent)))
         {
-            _popup.PopupPredicted(Loc.GetString("drain-component-unclog-fail", ("object", args.Target.Value)), args.Target.Value, args.User);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("drain-component-unclog-fail", ("object", args.Target.Value)), args.Target.Value, args.User);
             return;
         }
 
@@ -253,7 +254,7 @@ public sealed partial class DrainSystem : EntitySystem
 
         _solutionContainerSystem.RemoveAllSolution(ent.Comp.Solution.Value);
         _audio.PlayPredicted(ent.Comp.UnclogSound, args.Target.Value, args.User);
-        _popup.PopupPredicted(Loc.GetString("drain-component-unclog-success", ("object", args.Target.Value)), args.Target.Value, args.User);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("drain-component-unclog-success", ("object", args.Target.Value)), args.Target.Value, args.User);
     }
 
     // Prevent a debug assert.

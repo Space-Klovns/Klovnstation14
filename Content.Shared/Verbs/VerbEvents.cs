@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 namespace Content.Shared.Verbs
 {
     [Serializable, NetSerializable]
-    public sealed class RequestServerVerbsEvent : EntityEventArgs
+    public sealed partial /* KS14: per-client culture */ class RequestServerVerbsEvent : EntityEventArgs
     {
         public readonly NetEntity EntityUid;
 
@@ -55,7 +55,7 @@ namespace Content.Shared.Verbs
     }
 
     [Serializable, NetSerializable]
-    public sealed class ExecuteVerbEvent : EntityEventArgs
+    public sealed partial /* KS14: per-client culture */ class ExecuteVerbEvent : EntityEventArgs
     {
         public readonly NetEntity Target;
         public readonly Verb RequestedVerb;

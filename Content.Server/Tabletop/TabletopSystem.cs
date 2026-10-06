@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Hands.Systems;
 using Content.Server.Popups;
 using Content.Server.Tabletop.Components;
@@ -61,7 +62,7 @@ namespace Content.Server.Tabletop
 
             if (!TryComp(entity, out TabletopHologramComponent? hologram))
             {
-                _popupSystem.PopupEntity(Loc.GetString("tabletop-error-remove-non-hologram"), table, args.SenderSession);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("tabletop-error-remove-non-hologram"), table, args.SenderSession);
                 return;
             }
 
@@ -102,7 +103,7 @@ namespace Content.Server.Tabletop
             EnsureComp<TabletopHologramComponent>(hologram);
             session.Entities.Add(hologram);
 
-            _popupSystem.PopupEntity(Loc.GetString("tabletop-added-piece"), uid, args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("tabletop-added-piece"), uid, args.User);
         }
 
         protected override void OnTabletopMove(TabletopMoveEvent msg, EntitySessionEventArgs args)

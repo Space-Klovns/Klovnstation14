@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Shared.Storage.Components;
 using Content.Shared.ActionBlocker;
@@ -40,7 +41,7 @@ public sealed partial class EscapeInventorySystem : EntitySystem
         // Make sure there's nothing stopped the removal (like being glued)
         if (!_containerSystem.CanRemove(uid, container))
         {
-            _popupSystem.PopupEntity(Loc.GetString("escape-inventory-component-failed-resisting"), uid, uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("escape-inventory-component-failed-resisting"), uid, uid);
             return;
         }
 
@@ -71,8 +72,8 @@ public sealed partial class EscapeInventorySystem : EntitySystem
         if (!_doAfterSystem.TryStartDoAfter(doAfterEventArgs, out component.DoAfter))
             return;
 
-        _popupSystem.PopupEntity(Loc.GetString("escape-inventory-component-start-resisting"), user, user);
-        _popupSystem.PopupEntity(Loc.GetString("escape-inventory-component-start-resisting-target"), container, container);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("escape-inventory-component-start-resisting"), user, user);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("escape-inventory-component-start-resisting-target"), container, container);
     }
 
     private void OnEscape(EntityUid uid, CanEscapeInventoryComponent component, EscapeInventoryEvent args)

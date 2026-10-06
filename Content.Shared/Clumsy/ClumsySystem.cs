@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.CCVar;
 using Content.Shared.Chemistry.Events;
 using Content.Shared.Climbing.Components;
@@ -93,8 +94,8 @@ public sealed partial class ClumsySystem : EntitySystem
         if (_net.IsClient)
             return;
 
-        var selfMessage = Loc.GetString(ent.Comp.CatchingFailedMessageSelf, ("item", ent.Owner), ("catcher", Identity.Entity(ent.Owner, EntityManager)));
-        var othersMessage = Loc.GetString(ent.Comp.CatchingFailedMessageOthers, ("item", ent.Owner), ("catcher", Identity.Entity(ent.Owner, EntityManager)));
+        var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(ent.Comp.CatchingFailedMessageSelf, ("item", ent.Owner), ("catcher", Identity.Entity(ent.Owner, EntityManager)));
+        var othersMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(ent.Comp.CatchingFailedMessageOthers, ("item", ent.Owner), ("catcher", Identity.Entity(ent.Owner, EntityManager)));
         _popup.PopupEntity(selfMessage, ent.Owner, ent.Owner);
         _popup.PopupEntity(othersMessage, ent.Owner, Filter.PvsExcept(ent.Owner), true);
         _audio.PlayPvs(ent.Comp.ClumsySound, ent);
@@ -123,7 +124,7 @@ public sealed partial class ClumsySystem : EntitySystem
         _audio.PlayPvs(ent.Comp.GunShootFailSound, ent);
         _audio.PlayPvs(ent.Comp.ClumsySound, ent);
 
-        _popup.PopupEntity(Loc.GetString(ent.Comp.GunFailedMessage), ent, ent);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.GunFailedMessage), ent, ent);
         args.Cancel();
     }
 
@@ -150,8 +151,8 @@ public sealed partial class ClumsySystem : EntitySystem
         {
             // You are slamming yourself onto the table.
             _popup.PopupPredicted(
-                Loc.GetString(ent.Comp.VaulingFailedMessageSelf, ("bonkable", args.BeingClimbedOn)),
-                Loc.GetString(ent.Comp.VaulingFailedMessageOthers, ("victim", gettingPutOnTableName), ("bonkable", args.BeingClimbedOn)),
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.VaulingFailedMessageSelf, ("bonkable", args.BeingClimbedOn)),
+                KsPopupMessage.Create(ent.Comp.VaulingFailedMessageOthers, ("victim", gettingPutOnTableName), ("bonkable", args.BeingClimbedOn)),
                 ent,
                 ent);
         }
@@ -160,7 +161,7 @@ public sealed partial class ClumsySystem : EntitySystem
             // Someone else slamed you onto the table.
             // This is only run in server so you need to use popup entity.
             _popup.PopupPredicted(
-                Loc.GetString(ent.Comp.VaulingFailedMessageForced,
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.VaulingFailedMessageForced,
                     ("bonker", puttingOnTableName),
                     ("victim", gettingPutOnTableName),
                     ("bonkable", args.BeingClimbedOn)),

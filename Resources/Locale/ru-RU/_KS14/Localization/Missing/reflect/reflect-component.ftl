@@ -1,0 +1,1 @@
+reflect-component-kinetic = кинетический

@@ -1,4 +1,5 @@
-﻿using Content.Server.Anomaly.Components;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Server.Anomaly.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Anomaly;
 using Content.Shared.Anomaly.Components;
@@ -67,7 +68,7 @@ public sealed partial class AnomalySystem
         anomalyComponent.ConnectedVessel = uid;
         _radiation.SetSourceEnabled(uid, true);
         UpdateVesselAppearance(uid,  component);
-        Popup.PopupEntity(Loc.GetString("anomaly-vessel-component-anomaly-assigned"), uid);
+        Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anomaly-vessel-component-anomaly-assigned"), uid);
     }
 
     private void OnVesselGetPointsPerSecond(EntityUid uid, AnomalyVesselComponent component, ref ResearchServerGetPointsPerSecondEvent args)

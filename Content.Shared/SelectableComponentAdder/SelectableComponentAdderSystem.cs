@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Popups;
 using Content.Shared.Verbs;
 using Robust.Shared.Prototypes;
@@ -38,7 +39,7 @@ public sealed partial class SelectableComponentAdderSystem : EntitySystem
                     Dirty(ent);
                     if (entry.Popup == null)
                         return;
-                    var message = Loc.GetString(entry.Popup.Value, ("target", target));
+                    var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(entry.Popup.Value, ("target", target));
                     _popup.PopupClient(message, target, user);
                 },
                 Text = Loc.GetString(entry.VerbName),

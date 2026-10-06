@@ -1,4 +1,3 @@
-﻿// KS14: added in this fork
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

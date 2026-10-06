@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
@@ -151,7 +152,7 @@ public abstract partial class SharedFlashSystem : EntitySystem
         {
             _appearance.SetData(ent.Owner, FlashVisuals.Burnt, true); // TODO: Reset if charges are refilled.
             _tag.AddTag(ent.Owner, TrashTag);
-            _popup.PopupClient(Loc.GetString("flash-component-becomes-empty"), user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flash-component-becomes-empty"), user);
         }
 
         return true;
@@ -198,7 +199,7 @@ public abstract partial class SharedFlashSystem : EntitySystem
 
         if (displayPopup && user != null && target != user && Exists(user.Value))
         {
-            _popup.PopupEntity(Loc.GetString("flash-component-user-blinds-you",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flash-component-user-blinds-you",
                 ("user", Identity.Entity(user.Value, EntityManager))), target, target);
         }
 

@@ -1,4 +1,4 @@
-<!-- KS14: added in this fork. Concentus (a pure C# libopus port), vendored as its own content assembly; see README.md. -->
+<!-- Concentus (a pure C# libopus port), vendored as its own content assembly; see README.md. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

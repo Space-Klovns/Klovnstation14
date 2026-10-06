@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.DeviceLinking.Systems;
@@ -169,7 +170,7 @@ public sealed partial class NetworkConfiguratorSystem : SharedNetworkConfigurato
             // the map after it being saved, are cleared upon mapinit.
             if (MetaData(targetUid.Value).EntityLifeStage == EntityLifeStage.MapInitialized)
             {
-                _popupSystem.PopupCursor(Loc.GetString("network-configurator-device-failed", ("device", targetUid)),
+                _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("network-configurator-device-failed", ("device", targetUid)),
                     userUid);
                 return;
             }
@@ -179,13 +180,13 @@ public sealed partial class NetworkConfiguratorSystem : SharedNetworkConfigurato
 
         if (configurator.Devices.ContainsValue(targetUid.Value))
         {
-            _popupSystem.PopupCursor(Loc.GetString("network-configurator-device-already-saved", ("device", targetUid)), userUid);
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("network-configurator-device-already-saved", ("device", targetUid)), userUid);
             return;
         }
 
         device.Configurators.Add(configuratorUid);
         configurator.Devices.Add(address, targetUid.Value);
-        _popupSystem.PopupCursor(Loc.GetString("network-configurator-device-saved", ("address", device.Address), ("device", targetUid)),
+        _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("network-configurator-device-saved", ("address", device.Address), ("device", targetUid)),
             userUid, PopupType.Medium);
 
         _adminLogger.Add(LogType.DeviceLinking, LogImpact.Low, $"{ToPrettyString(userUid):actor} saved {ToPrettyString(targetUid.Value):subject} to {ToPrettyString(configuratorUid):tool}");
@@ -200,7 +201,7 @@ public sealed partial class NetworkConfiguratorSystem : SharedNetworkConfigurato
 
         if (configurator.ActiveDeviceLink == target)
         {
-            _popupSystem.PopupEntity(Loc.GetString("network-configurator-link-mode-stopped"), target.Value, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("network-configurator-link-mode-stopped"), target.Value, user);
             configurator.ActiveDeviceLink = null;
             return;
         }
@@ -219,7 +220,7 @@ public sealed partial class NetworkConfiguratorSystem : SharedNetworkConfigurato
             || HasComp<DeviceLinkSinkComponent>(target) && HasComp<DeviceLinkSinkComponent>(configurator.ActiveDeviceLink))
             return;
 
-        _popupSystem.PopupEntity(Loc.GetString("network-configurator-link-mode-started", ("device", Name(target.Value))), target.Value, user);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("network-configurator-link-mode-started", ("device", target.Value /* KS14: defer device name */)), target.Value, user);
         configurator.ActiveDeviceLink = target;
     }
 
@@ -251,7 +252,7 @@ public sealed partial class NetworkConfiguratorSystem : SharedNetworkConfigurato
             return true;
 
         _audioSystem.PlayPvs(component.SoundNoAccess, user.Value, AudioParams.Default.WithVolume(-2f).WithPitchScale(1.2f));
-        _popupSystem.PopupEntity(Loc.GetString("network-configurator-device-access-denied"), target, user.Value);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("network-configurator-device-access-denied"), target, user.Value);
 
         return false;
     }
@@ -814,14 +815,19 @@ public sealed partial class NetworkConfiguratorSystem : SharedNetworkConfigurato
                 break;
         }
 
+        // KS14 start: preserve result keys until recipient formatting; keep the literal error fallback
         var resultText = result switch
         {
-            DeviceListUpdateResult.TooManyDevices => Loc.GetString("network-configurator-too-many-devices"),
-            DeviceListUpdateResult.UpdateOk => Loc.GetString("network-configurator-update-ok"),
-            _ => "error"
+            DeviceListUpdateResult.TooManyDevices => "network-configurator-too-many-devices",
+            DeviceListUpdateResult.UpdateOk => "network-configurator-update-ok",
+            _ => null,
         };
 
-        _popupSystem.PopupCursor(Loc.GetString(resultText), args.Actor, PopupType.Medium);
+        if (resultText == null)
+            _popupSystem.PopupCursor("error", args.Actor, type: PopupType.Medium);
+        else
+            _popupSystem.PopupCursor(KsPopupMessage.Create(resultText), args.Actor, type: PopupType.Medium);
+        // KS14 end
         _uiSystem.SetUiState(
             uid,
             NetworkConfiguratorUiKey.Configure,

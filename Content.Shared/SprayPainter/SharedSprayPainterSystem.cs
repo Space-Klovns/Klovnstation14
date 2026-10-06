@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Administration.Logs;
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
@@ -190,14 +191,14 @@ public abstract partial class SharedSprayPainterSystem : EntitySystem
         if (TryComp<LimitedChargesComponent>(args.Used, out var charges)
             && Charges.GetCurrentCharges((args.Used, charges)) < targetGroup.Cost)
         {
-            var msg = Loc.GetString("spray-painter-interact-no-charges");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("spray-painter-interact-no-charges");
             _popup.PopupClient(msg, args.User, args.User);
             return;
         }
 
         if (!targetGroup.Styles.TryGetValue(selectedStyle, out var proto))
         {
-            var msg = Loc.GetString("spray-painter-style-not-available");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("spray-painter-style-not-available");
             _popup.PopupClient(msg, args.User, args.User);
             return;
         }
