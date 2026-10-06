@@ -25,7 +25,6 @@ namespace Content.IntegrationTests.Tests._KS14.Localization;
 public sealed class KsClientLocalizationTests : GameTest
 {
     private static readonly EntProtoId WrenchPrototype = "Wrench";
-    private static readonly EntProtoId CacheTestPrototype = "KsLocaleCacheTest";
     private static readonly EntProtoId GasPipePrototype = "GasPipeStraight";
     private static readonly ProtoId<GuideEntryPrototype> PowerGuidePrototype = "Power";
     private static readonly ProtoId<GuideEntryPrototype> AnchorlessGuidePrototype = "Anchorless";
@@ -397,6 +396,7 @@ public sealed class KsClientLocalizationTests : GameTest
     [Test]
     public async Task PrototypeReloadInvalidatesLocalizedNames()
     {
+        EntProtoId cacheTestPrototype = "KsLocaleCacheTest";
         var originalName = "";
         var changedName = "";
         await Server.WaitPost(() =>
@@ -404,6 +404,11 @@ public sealed class KsClientLocalizationTests : GameTest
             var prototypeManager = Server.ResolveDependency<IPrototypeManager>();
             var localizationManager = Server.ResolveDependency<ILocalizationManager>();
             var contentLocalizationManager = Server.ResolveDependency<ContentLocalizationManager>();
+            var prototypes = prototypeManager.EnumeratePrototypeKinds().ToDictionary(
+                kind => kind,
+                kind => prototypeManager.EnumeratePrototypes(kind).Select(prototype => prototype.ID).ToHashSet());
+            Assert.That(prototypeManager.ValidateStaticFields(
+                typeof(KsClientLocalizationTests), prototypes), Is.Empty);
             var changes = new Dictionary<Type, HashSet<string>>();
             prototypeManager.LoadString("""
                 - type: entity
@@ -419,7 +424,7 @@ public sealed class KsClientLocalizationTests : GameTest
             using (new Content.Server._KS14.Localization.KsExamineLocaleScope(localizationManager, culture))
             {
                 originalName = contentLocalizationManager.GetLocalizedPrototypeName(
-                    prototypeManager.Index(CacheTestPrototype));
+                    prototypeManager.Index(cacheTestPrototype));
             }
 
             changes = new Dictionary<Type, HashSet<string>>();
@@ -435,7 +440,7 @@ public sealed class KsClientLocalizationTests : GameTest
             using (new Content.Server._KS14.Localization.KsExamineLocaleScope(localizationManager, culture))
             {
                 changedName = contentLocalizationManager.GetLocalizedPrototypeName(
-                    prototypeManager.Index(CacheTestPrototype));
+                    prototypeManager.Index(cacheTestPrototype));
             }
         });
         Assert.That(originalName, Is.EqualTo("original test name"));
