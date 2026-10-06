@@ -36,7 +36,15 @@ public sealed partial class PopupSystem
     [SubscribeNetworkEvent]
     private void OnLocalizedPopup(KsLocalizedPopupEvent ev)
     {
-        var text = ev.Message.Format(EntityManager);
+        // Popups may arrive after deletion or before their entities enter the client's PVS.
+        // Match the ordinary handler's target check before evaluating entity grammar.
+        if (ev.Kind == KsPopupKind.Entity && !HasComp<TransformComponent>(GetEntity(ev.Entity)))
+            return;
+        if (ev.Kind == KsPopupKind.Coordinates
+            && !HasComp<TransformComponent>(GetEntity(ev.Coordinates.NetEntity)))
+            return;
+        if (!ev.Message.TryFormat(EntityManager, out var text))
+            return;
         // Formatting before matching makes the authoritative message identical to
         // the recipient's predicted one, regardless of the server's culture.
         switch (ev.Kind)

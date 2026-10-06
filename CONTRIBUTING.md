@@ -1022,6 +1022,11 @@ in the client's current culture, then feeds the ordinary popup event handlers.
 Shared prediction formats the original arguments locally on the first predicted
 execution, without a network conversion round trip.
 
+Before formatting a network popup, the client checks that its entity or coordinate
+anchor is available. `KsPopupPayload.TryFormat` also rejects missing or terminating
+entity arguments, including those in nested messages and lists. Such stale popups
+are discarded; never pass `EntityUid.Invalid` to Fluent entity grammar functions.
+
 Formatting before the ordinary prediction match allows the predicted and confirmed
 text to agree even when the server uses English and the client uses another language.
 **Use the same key, argument values, audience, and prediction identity on both paths.**

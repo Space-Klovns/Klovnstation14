@@ -70,26 +70,53 @@ public sealed class KsPopupPayload(string id, Dictionary<string, object>? argume
     public bool LowerCase = lowerCase;
 
     public string Format(IEntityManager entities)
+        => TryFormat(entities, out var text) ? text : "";
+
+    /// <summary>Do not pass missing network entities to Fluent's entity grammar functions.</summary>
+    public bool TryFormat(IEntityManager entities, out string text)
     {
+        text = "";
         if (Arguments == null)
         {
             var literal = Loc.GetString(Id);
-            return LowerCase ? literal.ToLower() : literal;
+            text = LowerCase ? literal.ToLower() : literal;
+            return true;
         }
         var arguments = new (string, object)[Arguments.Count];
         var index = 0;
         foreach (var (name, value) in Arguments)
         {
-            arguments[index++] = (name, value switch
+            object formatted;
+            switch (value)
             {
-                NetEntity entity => entities.GetEntity(entity),
-                KsPopupPayload nested => nested.Format(entities),
-                KsPopupPrototypeName prototype => prototype.Format(),
-                KsPopupPayloadList list => list.Format(entities),
-                _ => value,
-            });
+                case NetEntity entity:
+                    if (!entities.TryGetEntityData(entity, out var uid, out var metadata)
+                        || metadata.EntityLifeStage >= EntityLifeStage.Terminating)
+                        return false;
+                    formatted = uid.Value;
+                    break;
+                case KsPopupPayload nested:
+                    if (!nested.TryFormat(entities, out var nestedText))
+                        return false;
+                    formatted = nestedText;
+                    break;
+                case KsPopupPayloadList list:
+                    if (!list.TryFormat(entities, out var listText))
+                        return false;
+                    formatted = listText;
+                    break;
+                case KsPopupPrototypeName prototype:
+                    formatted = prototype.Format();
+                    break;
+                default:
+                    formatted = value;
+                    break;
+            }
+            arguments[index++] = (name, formatted);
         }
-        var text = Loc.GetString(Id, arguments);
-        return LowerCase ? text.ToLower() : text;
+        text = Loc.GetString(Id, arguments);
+        if (LowerCase)
+            text = text.ToLower();
+        return true;
     }
 }

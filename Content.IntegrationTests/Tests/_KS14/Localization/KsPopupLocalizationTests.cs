@@ -33,6 +33,56 @@ public sealed class KsPopupLocalizationTests : GameTest
 
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
+    [TestCase("direct")]
+    [TestCase("nested")]
+    [TestCase("list")]
+    public async Task UnresolvedEntityArgumentsAreNotFormatted(string nesting)
+    {
+        KsPopupPayload payload = null!;
+        await Server.WaitPost(() =>
+        {
+            // A nullspace entity is known to the server but never enters the client's PVS.
+            var entity = SEntMan.SpawnEntity("Wrench", Robust.Shared.Map.MapCoordinates.Nullspace);
+            var message = KsPopupMessage.Create("zombie-transform", ("target", entity));
+            message = nesting switch
+            {
+                "nested" => KsPopupMessage.Create("gun-selected-mode", ("mode", message)),
+                "list" => KsPopupMessage.Create("gun-selected-mode",
+                    ("mode", new KsPopupMessageList(", ", [message]))),
+                _ => message,
+            };
+            payload = message.ToPayload(SEntMan);
+        });
+        await Client.WaitPost(() => Assert.That(payload.TryFormat(CEntMan, out _), Is.False));
+    }
+
+    [Test]
+    public async Task DeletedEntityArgumentsAreNotFormatted()
+    {
+        await Client.WaitPost(() =>
+        {
+            var entity = CEntMan.SpawnEntity("Wrench", Robust.Shared.Map.MapCoordinates.Nullspace);
+            var payload = KsPopupMessage.Create("zombie-transform", ("target", entity)).ToPayload(CEntMan);
+            Assert.That(payload.TryFormat(CEntMan, out var text), Is.True);
+            Assert.That(text, Is.Not.Empty);
+            CEntMan.DeleteEntity(entity);
+            Assert.That(payload.TryFormat(CEntMan, out _), Is.False);
+        });
+    }
+
+    [TestCase(KsPopupKind.Entity)]
+    [TestCase(KsPopupKind.Coordinates)]
+    public async Task MissingPopupTargetIsCheckedBeforeFormatting(KsPopupKind kind)
+    {
+        // An invalid message ID would log an error if the undrawable popup were formatted.
+        await Server.WaitPost(() => SEntMan.EntityNetManager.SendSystemNetworkMessage(new KsLocalizedPopupEvent(
+            new KsPopupPayload("ks-test-must-not-be-formatted", null), kind,
+            PopupType.Small, default, NetEntity.Invalid, default, 0), ServerSession!.Channel));
+        await Pair.RunTicksSync(5);
+        await Client.WaitPost(() => Assert.That(CEntMan.System<Content.Client.Popups.PopupSystem>().WorldLabels,
+            Is.Empty));
+    }
+
     [TestCase("sensor", "ClothingUniformJumpsuitEngineering")]
     [TestCase("radio", "RadioHandheld")]
     [TestCase("injector", "Syringe")]

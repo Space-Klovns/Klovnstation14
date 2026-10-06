@@ -30,10 +30,18 @@ public sealed class KsPopupPayloadList(string separator, KsPopupPayload[] messag
     public KsPopupPayload[] Messages = messages;
 
     public string Format(IEntityManager entities)
+        => TryFormat(entities, out var text) ? text : "";
+
+    public bool TryFormat(IEntityManager entities, out string text)
     {
+        text = "";
         var values = new string[Messages.Length];
         for (var index = 0; index < Messages.Length; index++)
-            values[index] = Messages[index].Format(entities);
-        return string.Join(Separator, values);
+        {
+            if (!Messages[index].TryFormat(entities, out values[index]))
+                return false;
+        }
+        text = string.Join(Separator, values);
+        return true;
     }
 }
