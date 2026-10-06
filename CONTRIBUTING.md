@@ -230,6 +230,91 @@ This earns its keep when one thing exists in several forms in the same scope —
 
 Exceptions, all conventional: the primary subject of a handler or method may stay bare — `entity`, `ent`, `uid` — and a locally-built event is just `ev`. As soon as a second thing of the same kind enters scope, go back to suffixes.
 
+**`Entity<T>`, not a uid and a component side by side (C#)** — an entity and its component travel together as one `Entity<T>`, never as an `EntityUid` parameter next to a component parameter. The pair can't drift apart (a component handed in with the wrong uid), and the call site reads as one thing:
+```csharp
+// do this
+[SubscribeLocalEvent]
+private void OnShutdown(Entity<NpcHolderComponent> entity, ref ComponentShutdown args) { }
+
+public bool TryStartAttack(Entity<NpcHolderComponent?> entity, string attackId)
+{
+    if (!_holderQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false))
+        return false;
+    // ...entity.Comp from here on
+}
+
+// not this
+private void OnShutdown(EntityUid uid, NpcHolderComponent component, ComponentShutdown args) { }
+public bool TryStartAttack(EntityUid uid, string attackId, NpcHolderComponent? component = null) { }
+```
+- **A component the caller may not have** is `Entity<T?>`, resolved inside. A bare `EntityUid` converts to it implicitly, so callers that only have the uid still just pass it.
+- **Several components** are `Entity<T1, T2>` (up to the arity the engine provides), not one in the entity and the rest as extra parameters.
+- **A method that never touches a component** takes a plain `EntityUid`: an `Entity<T>` there promises a dependency that isn't real.
+- **Handlers for by-value events** (a `class` event, not a `[ByRefEvent]` struct, e.g. `DamageChangedEvent`) are the
+  exception: the engine only has an `Entity<T>` handler for `ref` events, and the generator rejects anything else
+  (`RA0054`). Keep `(EntityUid uid, TComp component, TEvent args)` there, say why in a comment, and pass the pair on
+  as an `Entity<T>` from the first call.
+- **Upstream signatures** stay as they are unless you're already changing them (see the note on relocating upstream code in §4).
+
+Its members, so you don't need to go and read `RobustToolbox/Robust.Shared/GameObjects/Entity.cs`. Every arity, from
+`Entity<T>` to `Entity<T1, …, T8>`, is a mutable `record struct`:
+
+| Member | `Entity<T>` | `Entity<T1, T2, …>` |
+| --- | --- | --- |
+| The uid | `.Owner` | `.Owner` |
+| A component | `.Comp` | `.Comp1`, `.Comp2`, … (no `.Comp`) |
+| Deconstruct | `var (uid, component) = entity;` | `var (uid, component1, component2) = entity;` |
+| Build one | `(uid, component)`, or `new Entity<T>(uid, component)` | `(uid, component1, component2)` |
+| As `T?` | `entity.AsNullable()` | `entity.AsNullable()`, which makes every component nullable |
+
+Conversions are implicit:
+- **To `EntityUid`**, so an `Entity<T>` passes straight to anything that takes a uid. Write `entity.Owner` anyway
+  where the call would otherwise read ambiguously.
+- **To each component type**: `TComp component = entity;` works, but `entity.Comp` says what you mean.
+- **From `EntityUid` to the all-nullable form** (`Entity<T?>`, `Entity<T1?, T2?>`), with the components left null for
+  the callee to resolve.
+- **Between arities:** `Entity<T1, T2>` narrows to `Entity<T1>`, dropping the rest, and `Entity<T1>` widens to
+  `Entity<T1, T2?>`, with the added component null.
+
+Resolve a nullable one in place. An `EntityQuery<T>` takes the whole entity by `ref`; `EntitySystem.Resolve` has no
+such overload, so pass the fields, which are fields and so take `ref`:
+```csharp
+if (!_holderQuery.Resolve(ref entity, logMissing: false))   // same as Resolve(entity.Owner, ref entity.Comp, ...)
+    return false;
+
+if (!Resolve(entity.Owner, ref entity.Comp1, ref entity.Comp2))
+    return false;
+```
+
+Because it's a struct, a copy of it is independent. Assigning `.Comp` on a copy changes nothing for the caller,
+though the component it points to is still the same object.
+
+**Finding engine code:** everything under `Robust.{Shared,Client,Server}/GameObjects/`, subfolders included, is in
+the flat namespace `Robust.{Shared,Client,Server}.GameObjects` (see the `!NO_FOLDER_NAMESPACES` file there). So a
+type's namespace says nothing about its folder: search by type name, not path.
+
+**Engine helpers whose behaviour isn't in their name** — each of these took reading the engine to find out:
+- **`Resolve` logs by default.** `logMissing` defaults to `true`, and a miss logs an *error* with a stack trace
+  (`EntitySystem.Resolve.cs`). An integration test fails on an error log, so pass `logMissing: false` wherever the
+  component is legitimately optional. On `EntityQuery<T>`, `CompOrNull(uid)` is the null-returning form, and
+  `Comp(uid)` throws.
+- **`EntityQueryEnumerator` skips paused entities; `AllEntityQueryEnumerator` doesn't.** Anything on a paused map
+  (mapping, a test map not yet initialised) is invisible to the first. Pick by whether a paused entity should be
+  touched, not by which name you saw last.
+- **Read a prototype's component without spawning it** with
+  `ProtoMan.Index(id).TryComp<TComp>(out var component, Factory)`. The instance is the prototype's own, shared by
+  every reader, so treat it as read-only.
+- **A `TimeSpan` `[DataField]` reads a plain number as seconds** (`cooldown: 2.5`), or one number with a single
+  unit suffix: `s`, `m`, `h` (`1.5m`). There is no `ms`, and no combining (`1h30m` fails); use `0.25` instead.
+  See `TimeSpanExt.TryTimeSpan`.
+- **`[AutoPausedField]`** (with `[AutoGenerateComponentPause]` on the component) shifts the field forward by however
+  long the entity was paused. It takes `TimeSpan`, `TimeSpan?` and `Dictionary<TKey, TimeSpan>`, and on a field
+  that's also `[AutoNetworkedField]` it dirties the component for you. Use it on every absolute end time, or a
+  paused entity's timers expire the moment it unpauses.
+- **`ValueList<T>`** (`Robust.Shared.Collections`) is a `List<T>` held in a struct, for scratch lists that live in a
+  method. Two traps follow from it being a struct: a copy shares the backing array but not the count, so pass it by
+  `ref`; and it doesn't throw if changed while being enumerated, unlike `List<T>`.
+
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
 **`TryGet`/`Resolve`/`Ensure` naming (C#)** — `TryGet...` implies a pure lookup: it either finds the thing or it doesn't, with no side effects either way. If a "`TryGet`" actually creates the thing when it's missing, name it `Resolve...` or `Ensure...` instead — whichever reads better for the case — not `TryGet...`:

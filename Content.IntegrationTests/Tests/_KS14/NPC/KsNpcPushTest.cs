@@ -23,6 +23,7 @@ public sealed class KsNpcPushTest : GameTest
 
     private const string ShoverMob = "KsPushTestMobShover";
     private const string HandsOffMob = "KsPushTestMobHandsOff";
+    private const string FeebleMob = "KsPushTestMobFeeble";
     private const string Closet = "ClosetSteelBase";
 
     private const int WallY = 3;
@@ -37,6 +38,8 @@ public sealed class KsNpcPushTest : GameTest
   - type: InputMover
   - type: MobMover
   - type: MovementSpeedModifier
+  - type: NpcPusher
+    forgetAfter: 120s # outlasts the walk, so it can be checked at the end
 
 - type: entity
   parent: KsPushTestMobHandsOff
@@ -50,6 +53,20 @@ public sealed class KsNpcPushTest : GameTest
     damage:
       types:
         Blunt: 1
+
+- type: entity
+  parent: KsPushTestMobShover
+  id: KsPushTestMobFeeble
+  components:
+  - type: MeleeWeapon
+    pushForce: 0 # its shoves land, and move nothing
+    attackRate: 1
+    damage:
+      types:
+        Blunt: 1
+  - type: NpcPusher
+    giveUpAfter: 2s
+    forgetAfter: 120s # outlasts the walk, so it can be checked at the end
 ";
 
     /// <summary>
@@ -104,6 +121,92 @@ public sealed class KsNpcPushTest : GameTest
             SEntMan.System<NpcPushSystem>().GetUnpushable(walkerUid, unpushableUids);
             Assert.That(unpushableUids, Does.Contain(closetUid));
         });
+    }
+
+    /// <summary>
+    ///     An NPC whose shoves get the closet nowhere - here, by having no strength in them; on a station, a closet
+    ///         wedged against a wall - does not stand at it for ever: after a while it gives up on it, and goes the long
+    ///         way round.
+    /// </summary>
+    [Test]
+    public async Task TestPushThatGetsNowhereIsGivenUp()
+    {
+        var (_, walkerUid, closetUid) = await WalkThroughDoorway(FeebleMob, navPush: true, otherWayX: 13);
+        var target = new Vector2(6.5f, 7.5f);
+        var walkerPosition = Vector2.Zero;
+        var unpushableUids = new List<EntityUid>();
+
+        await Server.WaitPost(() =>
+        {
+            walkerPosition = SEntMan.GetComponent<TransformComponent>(walkerUid).LocalPosition;
+            SEntMan.System<NpcPushSystem>().GetUnpushable(walkerUid, unpushableUids);
+        });
+
+        Assert.That((walkerPosition - target).Length(), Is.LessThan(1f), $"the NPC should have given up and gone round, but is at {walkerPosition}");
+        Assert.That(unpushableUids, Does.Contain(closetUid), "and remember the closet as something it cannot push");
+    }
+
+    /// <summary>
+    ///     A maintenance corridor one tile wide and seven long, barricaded with two closets, is the only way through. An
+    ///         NPC that pushes gets through, shoving the closets ahead of it and out into the room at the far end - each
+    ///         shove puts one onto a tile ahead that was free when the path was made - and gets there in good time.
+    /// </summary>
+    [Test]
+    public async Task TestBarricadedCorridorIsPushedThrough()
+    {
+        var tileDefinitionManager = Server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, walkerUid = default;
+        var target = new Vector2(6.5f, 12.5f);
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(SEntMan, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(0, 0), new Vector2i(8, 14)).Owner;
+
+            for (var y = 3; y <= 9; y++)
+            {
+                for (var x = 0; x <= 8; x++)
+                {
+                    if (x != DoorwayX)
+                        SpawnAt(SEntMan, "WallSolid", gridUid, x, y);
+                }
+            }
+
+            // And round the room at the end, so nothing is shoved off the grid.
+            for (var x = 0; x <= 8; x++)
+            {
+                SpawnAt(SEntMan, "WallSolid", gridUid, x, 14);
+            }
+
+            SpawnAt(SEntMan, Closet, gridUid, DoorwayX, 4);
+            SpawnAt(SEntMan, Closet, gridUid, DoorwayX, 6);
+            walkerUid = SpawnAt(SEntMan, ShoverMob, gridUid, DoorwayX, 0);
+        });
+
+        await Pair.RunTicksSync(90); // navmesh
+
+        await Server.WaitPost(() =>
+        {
+            var htnComponent = SEntMan.GetComponent<HTNComponent>(walkerUid);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavPush, true);
+            SEntMan.System<NPCSteeringSystem>().Register(walkerUid, new EntityCoordinates(gridUid, target));
+            SEntMan.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
+        });
+
+        // A few seconds, pushing as it goes. Taking the closets for free floor - walking into one, waiting to be found
+        //      stuck, asking for a path again - it was not through in a minute.
+        var arrivedAfter = -1;
+        for (var second = 1; second <= 20 && arrivedAfter < 0; second++)
+        {
+            await Pair.RunTicksSync(30);
+            await Server.WaitPost(() =>
+            {
+                if ((SEntMan.GetComponent<TransformComponent>(walkerUid).LocalPosition - target).Length() < 1f)
+                    arrivedAfter = second;
+            });
+        }
+
+        Assert.That(arrivedAfter, Is.GreaterThan(0), "the NPC should have pushed its way through the corridor within 20 seconds");
     }
 
     /// <summary>

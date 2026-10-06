@@ -45,6 +45,12 @@ public sealed partial class NPCSteeringSystem
 
     private SteeringObstacleStatus TryHandleFlags(EntityUid uid, NPCSteeringComponent component, PathPoly poly)
     {
+        // KS14 start: loose things in the way, pushed out of it, before anything else here: the navmesh may not have
+        //      known of them when the path was made. See NPCSteeringSystem.Klovn.Pushing.cs
+        if (IsPushThrough(component, poly) || HasLooseBlocker(uid, component, poly))
+            return TryPushObstacles(uid, component, poly);
+        // KS14 end
+
         DebugTools.Assert(!poly.Data.IsFreeSpace);
         // TODO: Store PathFlags on the steering comp
         // and be able to re-check it.
@@ -78,11 +84,6 @@ public sealed partial class NPCSteeringSystem
                 case DoAfterStatus.Cancelled:
                     return SteeringObstacleStatus.Failed;
             }
-
-            // KS14 start: only loose things in the way, and it pushes them out of it. See NPCSteeringSystem.Klovn.Pushing.cs
-            if (IsPushThrough(component, poly))
-                return TryPushObstacles(uid, component, poly, mask, layer);
-            // KS14 end
 
             var obstacleEnts = new List<EntityUid>();
 
@@ -152,8 +153,10 @@ public sealed partial class NPCSteeringSystem
 
                         // Only tried if it thinks it opens for it, or it is the only way. A door it thinks is locked is
                         //      gone round like a locked one, so its access being added later does not let it through
-                        //      without it ever having tried the door.
-                        if (believedOpenable || _npcDoorSystem.IsOnlyWay(uid, obstacleUid))
+                        //      without it ever having tried the door. Not by an NPC that pries or smashes its way
+                        //      through: a locked door is no reason for it to go round.
+                        var breaksThrough = (component.Flags & (PathFlags.Prying | PathFlags.Smashing)) != 0x0;
+                        if (believedOpenable || breaksThrough || _npcDoorSystem.IsOnlyWay(uid, obstacleUid))
                         {
                             if (_doorSystem.TryOpen(obstacleUid, doorComponent, uid, quiet: true))
                                 return SteeringObstacleStatus.Continuing;

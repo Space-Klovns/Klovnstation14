@@ -27,6 +27,7 @@ public sealed partial class NpcPushSystem : EntitySystem
     [Dependency] private SharedCombatModeSystem _combatModeSystem = default!;
     [Dependency] private SharedInteractionSystem _interactionSystem = default!;
     [Dependency] private SharedMeleeWeaponSystem _meleeWeaponSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<CombatModeComponent> _combatModeQuery = default!;
     [Dependency] private EntityQuery<NpcPusherComponent> _pusherQuery = default!;
@@ -54,13 +55,42 @@ public sealed partial class NpcPushSystem : EntitySystem
     }
 
     /// <summary>
+    ///     How long a push may lapse and still be the same push. See <see cref="NpcPusherComponent.PushingUid"/>.
+    /// </summary>
+    private static readonly TimeSpan PushLapse = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     How far, in tiles, what it pushes must have moved for the push to count as getting somewhere. See
+    ///         <see cref="NpcPusherComponent.GiveUpAfter"/>.
+    /// </summary>
+    private const float PushProgress = 0.5f;
+
+    /// <summary>
     ///     <paramref name="npcUid"/> pushes <paramref name="obstacleUid"/> away from itself, or keeps trying: something
     ///         else may move it instead (<see cref="NpcPushObstacleEvent"/>), and a shove waits out its cooldown, may
     ///         fail, and needs the NPC within reach. Returns false if it cannot shove at all - no combat mode that
-    ///         disarms, or nothing to shove with - so steering can give up on it.
+    ///         disarms, or nothing to shove with - or has pushed it for <see cref="NpcPusherComponent.GiveUpAfter"/>
+    ///         without it budging, so steering can give up on it.
     /// </summary>
     public bool TryPush(EntityUid npcUid, EntityUid obstacleUid)
     {
+        var pusherComponent = EnsureComp<NpcPusherComponent>(npcUid);
+        var now = _gameTiming.CurTime;
+
+        var obstaclePosition = _transformSystem.GetWorldPosition(obstacleUid);
+        if (pusherComponent.PushingUid != obstacleUid ||
+            now - pusherComponent.LastPushedAt > PushLapse ||
+            (obstaclePosition - pusherComponent.PushingFrom).LengthSquared() > PushProgress * PushProgress)
+        {
+            pusherComponent.PushingUid = obstacleUid;
+            pusherComponent.PushingFrom = obstaclePosition;
+            pusherComponent.PushingSince = now;
+        }
+
+        pusherComponent.LastPushedAt = now;
+        if (now - pusherComponent.PushingSince > pusherComponent.GiveUpAfter)
+            return false;
+
         var ev = new NpcPushObstacleEvent(npcUid);
         RaiseLocalEvent(obstacleUid, ref ev);
 
@@ -73,7 +103,7 @@ public sealed partial class NpcPushSystem : EntitySystem
             return false;
 
         // Swung too soon, or out of reach, a shove still spends its cooldown: hold it until it can land.
-        if (meleeWeaponComponent.NextAttack > _gameTiming.CurTime ||
+        if (meleeWeaponComponent.NextAttack > now ||
             !_interactionSystem.InRangeUnobstructed(npcUid, obstacleUid, meleeWeaponComponent.Range))
             return true;
 
@@ -100,6 +130,7 @@ public sealed partial class NpcPushSystem : EntitySystem
         }
 
         pusherComponent.Unpushable[obstacleUid] = now + pusherComponent.ForgetAfter;
+        pusherComponent.PushingUid = null;
     }
 
     /// <summary>

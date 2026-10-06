@@ -1,7 +1,9 @@
 // KS14: added in this fork
+using System.Numerics;
 using Content.Server._KS14.NPC.Pushing;
 using Content.Shared.Doors.Components;
 using Content.Shared.NPC;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 
@@ -17,6 +19,41 @@ public sealed partial class PathfindingSystem
     /// is on a cooldown and often fails, so clearing the way takes a few seconds.
     /// </summary>
     private const float PushCost = 8f;
+
+    /// <summary>
+    /// The loose bodies in the chunks being rebuilt that anyone could push out of the way. Filled by
+    /// <see cref="CollectPushableBodies"/> on the main thread, and only read while the chunks are built, in parallel:
+    /// asking means raising an event, which is not safe off the main thread.
+    /// </summary>
+    private readonly HashSet<EntityUid> _pushableBodies = new();
+
+    private readonly HashSet<EntityUid> _pushableCandidates = new();
+
+    /// <summary>
+    /// Asks, for every loose body in <paramref name="chunks"/> that matters to pathfinding, whether anyone could push it
+    /// out of the way (<see cref="NpcPushSystem.IsPushable"/>), ahead of building them. See <see cref="_pushableBodies"/>.
+    /// </summary>
+    private void CollectPushableBodies(Entity<MapGridComponent> grid, GridPathfindingChunk[] chunks)
+    {
+        _pushableBodies.Clear();
+
+        foreach (var chunk in chunks)
+        {
+            var origin = new Vector2(chunk.Origin.X, chunk.Origin.Y) * ChunkSize;
+            _pushableCandidates.Clear();
+            _lookup.GetLocalEntitiesIntersecting(grid.Owner, new Box2(origin, origin + ChunkSizeVec), _pushableCandidates, flags: LookupFlags.Dynamic);
+
+            foreach (var candidateUid in _pushableCandidates)
+            {
+                if (_fixturesQuery.TryGetComponent(candidateUid, out var fixturesComponent) &&
+                    IsBodyRelevant(fixturesComponent) &&
+                    _npcPushSystem.IsPushable(candidateUid, pusherUid: null))
+                {
+                    _pushableBodies.Add(candidateUid);
+                }
+            }
+        }
+    }
 
     /// <summary>
     /// What an entity on a tile adds to every point of the tile it collides with. Worked out once per tile, where it was
@@ -169,8 +206,9 @@ public sealed partial class PathfindingSystem
             ? _destructible.DestroyedAt(uid, destructibleComponent).Float()
             : 0f;
 
-        // Loose, and nothing says it cannot be pushed: see NpcPushSystem. Doors are anchored, so never are.
-        var pushable = !transformComponent.Anchored && _npcPushSystem.IsPushable(uid, pusherUid: null);
+        // Loose, and nothing says it cannot be pushed: see NpcPushSystem. Doors are anchored, so never are. Asked ahead,
+        //      on the main thread: see CollectPushableBodies.
+        var pushable = !transformComponent.Anchored && _pushableBodies.Contains(uid);
 
         return new TileEntity(fixturesComponent,
             new Transform(transformComponent.LocalPosition, transformComponent.LocalRotation),

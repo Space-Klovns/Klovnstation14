@@ -292,7 +292,11 @@ Server-only prototype types (`npcMeter`, `npcVoiceSet`, `htnCompound`, ...) must
 - **Being fooled** is noticed where it happens: steering's door handling (`NPCSteeringSystem.Obstacles.cs`) asks for
   the belief before `TryOpen`, and reports a failure on a door it believed `Openable` (`ReportRefused`). The door
   becomes a no-go in each squad member's own `NpcDoorUserComponent`, never on the squad.
-- **The other way round:** a door it believes is locked is only tried once it is the only way. Until then steering goes
+- **The other way round:** a door it believes is locked is only tried once it is the only way, except by an NPC that
+  pries or smashes (`PathFlags.Prying`/`Smashing`), which goes through as it always has.
+- **Standing still:** steering stops the NPC while it forces a door with a tool, and while its own steering do-after runs
+  (prying with its own claws, climbing). Those do-afters break on moving, and walking on into the door it was prying
+  used to cancel the pry every time, so NPCs that pry for themselves gave up at every locked door. Until then steering goes
   round it as it would a really locked door (`TryDetourAroundDoor` with `believedLocked`), so access added behind its
   back is found out by trying the door, never known. Nothing in steering may ask the door itself (`IsAllowed`): collision
   avoidance goes by `HasAdvertisedAccess` too.
@@ -354,14 +358,27 @@ An NPC with `NavPush` on its blackboard shoves loose things - closets, crates - 
 asked twice whether something can be pushed, with the pure `NpcPushableAttemptEvent`:
 
 - **When the navmesh is built, with no pusher.** A tile blocked only by things that can be pushed gets
-  `PathfindingBreadcrumbFlag.Pushable`, and pushing paths cross it at a cost. Not during the path search: searches run on
-  worker threads, where raising events is unsafe, and would ask again at every expansion.
+  `PathfindingBreadcrumbFlag.Pushable`, and pushing paths cross it at a cost. Not during the path search, which would
+  ask again at every expansion. Both the search and the navmesh build run on worker threads, where raising events is
+  unsafe, so the answers are collected on the main thread just before the build (`CollectPushableBodies`), and the build
+  only reads them. Anything else the build wants to ask a system belongs there too.
 - **When the NPC reaches it, with the NPC.** If it cannot push it (a handler says no, or it has no shove), it remembers
   the thing (`NpcPusherComponent`) and drops its path for one round it.
 
 To push, steering raises `NpcPushObstacleEvent` on the thing. Unhandled, the NPC shoves it the way a player would,
-away from itself, which needs combat mode that can disarm. Steering's free-space check counts dynamic bodies on a
-pushable tile only, so it doesn't walk into the closet as if the tile were empty.
+away from itself, which needs combat mode that can disarm.
+
+For an NPC that pushes, steering looks at what is on the next tile of its path when it gets there
+(`HasLooseBlocker`), not only at the navmesh's flags. What it pushes moves on ahead of it: down a one-tile maintenance
+corridor barricaded with closets, every shove puts one on a tile that was free when the path was made. Going by the
+navmesh, it walked into them and waited to be found stuck at each one, and did not get through a seven-tile corridor
+with two closets in a minute; looking, it takes a few seconds (`KsNpcPushTest.TestBarricadedCorridorIsPushedThrough`).
+`TryHandleFlags` deals with that before anything else, as its navmesh data may say the tile is free.
+
+It gives up on one thing after `NpcPusher.giveUpAfter` (10s) of pushing it without it budging, as on something it
+cannot push. Steering doesn't count an NPC handling an obstacle as stuck, so without that a closet wedged against a wall
+would hold it for ever. Each time the thing moves, the wait starts again, so a closet pushed steadily down a long
+corridor is not given up on.
 
 What it does not do: choose which way to shove (always straight on, so a closet in a long corridor is shoved down it),
 or notice a handler's answer changing without the tile being rebuilt.
@@ -395,6 +412,10 @@ straight-line distance).
 - **Settings blocks on components** (a class of `[DataField]`s held in one field, like `NpcSquadMemberComponent.Cover`)
   get `[AlwaysPushInheritance]`. Without it, a child prototype that sets one field of the block replaces the parent's
   whole block, and every field it left out silently goes back to the C# default.
+- **No loop where none is needed:** something that only expires - a cooldown, a claim, a remembered door - is checked
+  against its end time when read, and dropped when the next is written (`NpcGenericCooldownSystem`,
+  `NpcTacticalPositionClaimSystem`). Something that must act on a timer gets a component that exists only while it is
+  in progress, and the loop runs over that (`NpcActiveRangedAttackComponent`), not over every NPC that could.
 - **Throttled systems:** spread first updates across the interval at `MapInit`, so NPCs spawned together do not all
   update on one tick. Keep scratch collections as fields and reuse them; a system running per NPC several times a
   second should allocate nothing in steady state.

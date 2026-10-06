@@ -12,16 +12,13 @@ public sealed partial class NPCAngerModifierSystem : EntitySystem
     [Dependency] private DamageableSystem _damageable = default!;
 
     [SubscribeLocalEvent]
+    // A by-value event: there is no Entity<T> form of handler for one.
     private void OnDamageChanged(EntityUid uid, NpcAngerModifierComponent component, DamageChangedEvent args)
     {
-        if (!TryComp<DamageableComponent>(uid, out var damageable))
+        if (!TryComp<DamageableComponent>(uid, out var damageableComponent))
             return;
 
-        // Get total damage using DamageableSystem
-        var totalDamage = _damageable.GetTotalDamage((uid, damageable));
-        var damageTaken = (float)totalDamage;
-
-        // Calculate anger based on damage taken
+        var damageTaken = (float) _damageable.GetTotalDamage((uid, damageableComponent));
         component.AngerModifier = Math.Clamp(damageTaken / component.DamagePerAnger, 0f, component.MaxAnger);
     }
 

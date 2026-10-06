@@ -100,7 +100,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnOccluderMapInit(Entity<OccluderComponent> entity, ref MapInitEvent args)
     {
-        UpdateIrregular(entity.Owner, entity.Comp, Transform(entity));
+        UpdateIrregular((entity.Owner, entity.Comp, Transform(entity)));
     }
 
     [SubscribeLocalEvent]
@@ -109,7 +109,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         if (args.Detaching)
             return;
 
-        UpdateIrregular(entity.Owner, entity.Comp, args.Transform);
+        UpdateIrregular((entity.Owner, entity.Comp, args.Transform));
     }
 
     private void OnGlobalMove(ref MoveEvent args)
@@ -119,18 +119,18 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         if (!args.Component.Anchored || !_occluderQuery.TryComp(args.Sender, out var occluderComponent))
             return;
 
-        UpdateIrregular(args.Sender, occluderComponent, args.Component);
+        UpdateIrregular((args.Sender, occluderComponent, args.Component));
     }
 
-    private void UpdateIrregular(EntityUid uid, OccluderComponent occluderComponent, TransformComponent transformComponent)
+    private void UpdateIrregular(Entity<OccluderComponent, TransformComponent> occluder)
     {
-        if (TerminatingOrDeleted(uid))
+        if (TerminatingOrDeleted(occluder))
             return;
 
-        if (!transformComponent.Anchored || !FitsOwnTile(occluderComponent, transformComponent))
-            EnsureComp<NpcIrregularOccluderComponent>(uid);
-        else if (_irregularOccluderQuery.HasComp(uid))
-            RemComp<NpcIrregularOccluderComponent>(uid);
+        if (!occluder.Comp2.Anchored || !FitsOwnTile(occluder.Comp1, occluder.Comp2))
+            EnsureComp<NpcIrregularOccluderComponent>(occluder);
+        else if (_irregularOccluderQuery.HasComp(occluder))
+            RemComp<NpcIrregularOccluderComponent>(occluder);
     }
 
     /// <summary>
@@ -275,7 +275,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
                 if (distance > state.MaxLength ||
                     state.DiscardUnreachable &&
                     !SegmentTouches(state.Ray, state.MaxLength, GetTreeBounds(value.Component, value.Transform.LocalPosition, value.Transform.LocalRotation)) ||
-                    !state.System.Blocks(value.Uid, value.Component, state.Origin, state.Other))
+                    !state.System.Blocks((value.Uid, value.Component), state.Origin, state.Other))
                     return true;
 
                 state.Blocked = true;
@@ -346,7 +346,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 
             var bounds = GetTreeBounds(occluderComponent, occluderTransform.LocalPosition, occluderTransform.LocalRotation);
             if (SegmentTouches(ray, length, bounds) &&
-                Blocks(anchoredUid.Value, occluderComponent, origin, other))
+                Blocks((anchoredUid.Value, occluderComponent), origin, other))
                 return true;
         }
 
@@ -376,7 +376,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 
                 var bounds = GetTreeBounds(occluderComponent, position, rotation);
                 if (SegmentTouches(treeRay.Ray, length, bounds) &&
-                    Blocks(occluderUid, occluderComponent, origin, other))
+                    Blocks((occluderUid, occluderComponent), origin, other))
                     return true;
             }
         }
@@ -414,13 +414,13 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     ///     Whether an occluder a ray crosses blocks it. As the examine check: one does not block a ray that starts or
     ///         ends inside it.
     /// </summary>
-    private bool Blocks(EntityUid occluderUid, OccluderComponent occluderComponent, Vector2 origin, Vector2 other)
+    private bool Blocks(Entity<OccluderComponent> occluder, Vector2 origin, Vector2 other)
     {
-        if (!_transformQuery.TryComp(occluderUid, out var occluderTransform))
+        if (!_transformQuery.TryComp(occluder, out var occluderTransform))
             return true;
 
-        return !_occluderSystem.ContainsPoint(occluderComponent, occluderTransform, origin) &&
-            !_occluderSystem.ContainsPoint(occluderComponent, occluderTransform, other);
+        return !_occluderSystem.ContainsPoint(occluder.Comp, occluderTransform, origin) &&
+            !_occluderSystem.ContainsPoint(occluder.Comp, occluderTransform, other);
     }
 
     #region Sight fields
@@ -690,7 +690,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     private bool SightFieldOccluderBlocks(NpcSightField field, int index, Ray gridRay, float length, Vector2 other)
     {
         var (uid, occluderComponent, bounds) = field.Occluders[index];
-        return SegmentTouches(gridRay, length, bounds) && Blocks(uid, occluderComponent, field.Origin.Position, other);
+        return SegmentTouches(gridRay, length, bounds) && Blocks((uid, occluderComponent), field.Origin.Position, other);
     }
 
     #endregion

@@ -674,7 +674,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
         var tookOut = _npcHandsSystem.TryTakeOut(npcUid, toolUid, out var takenOut);
         breachingComponent.TakenOut = takenOut;
 
-        if (!tookOut || !UseTool(npcUid, breachingComponent))
+        if (!tookOut || !UseTool((npcUid, breachingComponent)))
         {
             StopBreach(npcUid);
             return false;
@@ -721,7 +721,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
         var breachingEnumerator = EntityQueryEnumerator<NpcBreachingComponent>();
         while (breachingEnumerator.MoveNext(out var npcUid, out var breachingComponent))
         {
-            if (!IsBreachUnderway(npcUid, breachingComponent, now))
+            if (!IsBreachUnderway((npcUid, breachingComponent), now))
                 _endedBreaches.Add(npcUid);
         }
 
@@ -731,8 +731,10 @@ public sealed partial class NpcDoorSystem : EntitySystem
         }
     }
 
-    private bool IsBreachUnderway(EntityUid npcUid, NpcBreachingComponent breachingComponent, TimeSpan now)
+    private bool IsBreachUnderway(Entity<NpcBreachingComponent> breaching, TimeSpan now)
     {
+        var breachingComponent = breaching.Comp;
+
         // Open: done. Gone: nothing to do.
         if (!_doorQuery.TryComp(breachingComponent.DoorUid, out var doorComponent) ||
             doorComponent.State is DoorState.Open or DoorState.Opening ||
@@ -740,7 +742,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
             return false;
 
         // Steering has moved on: so does it.
-        if (breachingComponent.FromSteering && !_steeringQuery.HasComp(npcUid))
+        if (breachingComponent.FromSteering && !_steeringQuery.HasComp(breaching))
             return false;
 
         // Prying is a do-after: once it has ended with the door still shut, it failed. An access breaker sets the door
@@ -750,17 +752,17 @@ public sealed partial class NpcDoorSystem : EntitySystem
             : doorComponent.State == DoorState.Emagging;
     }
 
-    private bool UseTool(EntityUid npcUid, NpcBreachingComponent breachingComponent)
+    private bool UseTool(Entity<NpcBreachingComponent> breaching)
     {
-        var toolUid = breachingComponent.ToolUid;
-        var doorUid = breachingComponent.DoorUid;
+        var toolUid = breaching.Comp.ToolUid;
+        var doorUid = breaching.Comp.DoorUid;
 
-        if (breachingComponent.Method == NpcBreachMethod.AccessBreaker)
-            return _emagSystem.TryEmagEffect(toolUid, npcUid, doorUid);
+        if (breaching.Comp.Method == NpcBreachMethod.AccessBreaker)
+            return _emagSystem.TryEmagEffect(toolUid, breaching, doorUid);
 
-        SwitchToPrying(npcUid, toolUid);
-        var started = _pryingSystem.TryPry(doorUid, npcUid, out var doAfterId, toolUid);
-        breachingComponent.DoAfterId = doAfterId;
+        SwitchToPrying(breaching, toolUid);
+        var started = _pryingSystem.TryPry(doorUid, breaching, out var doAfterId, toolUid);
+        breaching.Comp.DoAfterId = doAfterId;
         return started;
     }
 

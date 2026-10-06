@@ -1,11 +1,9 @@
-using System.Numerics;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
 using Content.Server.Chat.Systems;
 using Content.Shared.Chat;
 using Content.Server._KS14.NPC.Systems;
-using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Combat;
 
@@ -17,9 +15,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Combat;
 [DataDefinition]
 public sealed partial class RangedOperator : HTNOperator
 {
-    [Dependency] private IEntityManager _entMan = default!;
-    [Dependency] private IGameTiming _timing = default!;
     [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private NpcCombatRangedPatternSystem _npcCombatRangedPatternSystem = default!;
 
     /// <summary>
     /// Explicit attack to execute. Leave blank to pull the attack id from the
@@ -82,7 +79,6 @@ public sealed partial class RangedOperator : HTNOperator
         if (blackboard.ContainsKey("Target"))
             target = blackboard.GetValue<EntityUid>("Target");
 
-        var attackSystem = _entMan.System<NPCCombatRangedPatternSystem>();
         var attackId = blackboard.ContainsKey(ResolvedKey)
             ? blackboard.GetValue<string>(ResolvedKey)
             : "";
@@ -96,7 +92,7 @@ public sealed partial class RangedOperator : HTNOperator
 
         if (!executed)
         {
-            if (!attackSystem.ExecuteAttack(owner, attackId, target))
+            if (!_npcCombatRangedPatternSystem.TryStartAttack(owner, attackId, target))
                 return HTNOperatorStatus.Failed;   // on cooldown -> branch fails -> move branch
 
             if (!string.IsNullOrEmpty(Speech))
@@ -109,11 +105,11 @@ public sealed partial class RangedOperator : HTNOperator
             blackboard.SetValue(ExecutedKey, true);
 
             // Don't wait for the cooldown - finish immediately so the planner can
-            // pick movement or another attack on the next replan. ExecuteAttack's
+            // pick movement or another attack on the next replan. TryStartAttack's
             // cooldown guard prevents double-firing.
             return HTNOperatorStatus.Finished;
         }
-        if (attackSystem.IsAttackActive(owner))
+        if (_npcCombatRangedPatternSystem.IsAttackActive(owner))
             return HTNOperatorStatus.Continuing;
 
 

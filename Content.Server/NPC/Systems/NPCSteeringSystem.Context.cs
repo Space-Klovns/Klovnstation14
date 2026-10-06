@@ -6,6 +6,7 @@ using Content.Server.NPC.Pathfinding;
 using Content.Server.Power.EntitySystems; // KS14
 using Content.Shared.Climbing.Components;
 using Content.Shared.CombatMode;
+using Content.Shared.DoAfter; // KS14
 using Content.Shared.Doors.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Movement.Components;
@@ -46,6 +47,13 @@ public sealed partial class NPCSteeringSystem
         NPCSteeringComponent steering,
         PathPoly node)
     {
+        // KS14 start: something loose on it that it pushes out of the way, whatever the navmesh said when the path was
+        //      made - a closet shoved on ahead of it, down a corridor, onto a tile that was free. See
+        //      NPCSteeringSystem.Klovn.Pushing.cs
+        if (HasLooseBlocker(uid, steering, node))
+            return false;
+        // KS14 end
+
         if (node.Data.IsFreeSpace)
         {
             return true;
@@ -61,7 +69,7 @@ public sealed partial class NPCSteeringSystem
 
         // TODO: Ideally for "FreeSpace" we check all entities on the tile and build flags dynamically (pathfinder refactor in future).
         var ents = _entSetPool.Get();
-        _lookup.GetLocalEntitiesIntersecting(node.GraphUid, node.Box.Enlarged(-0.04f), ents, flags: LookupFlags.Static | (IsPushThrough(steering, node) ? LookupFlags.Dynamic : 0) /* KS14: and loose things, on a tile to push them off, see NPCSteeringSystem.Klovn.Pushing.cs */);
+        _lookup.GetLocalEntitiesIntersecting(node.GraphUid, node.Box.Enlarged(-0.04f), ents, flags: LookupFlags.Static);
         var result = true;
 
         if (ents.Count > 0)
@@ -247,7 +255,9 @@ public sealed partial class NPCSteeringSystem
                     case SteeringObstacleStatus.Continuing:
                         CheckPath(uid, steering, xform, needsPath, targetDistance);
                         // KS14 start: stand still while forcing a door; prying stops if it moves. See NpcDoorSystem.
-                        if (_npcDoorSystem.IsBreaching(uid))
+                        //      So does prying with its own claws, or climbing: their do-afters break on moving too,
+                        //      and walking on into the door it is prying cancelled it, and steering gave up
+                        if (_npcDoorSystem.IsBreaching(uid) || _doAfter.GetStatus(steering.DoAfterId) == DoAfterStatus.Running)
                             return false;
                         // KS14 end
                         return true;
@@ -598,7 +608,7 @@ public sealed partial class NPCSteeringSystem
         var checkClimbs = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0 &&
                           (ent.Comp.Flags & PathFlags.Climbing) != 0x0 &&
                           climbing != null;
-        var checkPush = IsPushThrough(ent.Comp, poly); // KS14
+        var checkPush = (ent.Comp.Flags & PathFlags.Pushing) != 0x0; // KS14
         var checkSmash = (ent.Comp.Flags & PathFlags.Smashing) != 0x0 &&
                          combatMode != null &&
                          _melee.TryGetWeapon(ent, out _, out var weapon) &&
@@ -631,9 +641,12 @@ public sealed partial class NPCSteeringSystem
             else if (checkClimbs &&
                      CanHandleClimb((ent, climbing!), nearbyEnt, out _))
                 nearbyEntities.Remove(nearbyEnt);
-            // KS14 start: something loose it is going to push out of the way
+            // KS14 start: something loose it is going to push out of the way, on the tile it is pushing through
             else if (checkPush &&
-                     otherBody.BodyType == BodyType.Dynamic)
+                     otherBody.BodyType == BodyType.Dynamic &&
+                     _xformQuery.GetComponent(nearbyEnt) is var nearbyTransform &&
+                     nearbyTransform.ParentUid == poly.GraphUid &&
+                     poly.Box.Enlarged(0.5f).Contains(nearbyTransform.LocalPosition))
                 nearbyEntities.Remove(nearbyEnt);
             // KS14 end
             // Check if we can smash. Should also check if we can even damage the entity at some point.
@@ -655,7 +668,7 @@ public sealed partial class NPCSteeringSystem
             return true;
 
         var isAccessRequired = (flags & PathfindingBreadcrumbFlag.Access) != 0x0 &&
-            !_npcDoorSystem.HasAdvertisedAccess /* KS14: _accessReaderSystem.IsAllowed -> what it believes, see NpcDoorSystem.GetDoorAccess */(ent, doorUid);
+            _npcDoorSystem.RequiresAccess(doorUid) && !_npcDoorSystem.HasAdvertisedAccess(ent, doorUid); // KS14: !_accessReaderSystem.IsAllowed(ent, doorUid) -> what it believes, as NpcDoorSystem.GetDoorAccess
         var canInteract = (ent.Comp.Flags & PathFlags.Interact) != 0x0 &&
             this.IsPowered(doorUid, EntityManager); // KS14: ANK: check if it's powered first; otherwise, don't
 

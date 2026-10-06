@@ -9,31 +9,15 @@ namespace Content.Server._KS14.NPC.Systems;
 /// from converging on the same dynamically-picked camping/retreat/advance position. Backed by
 /// <see cref="NpcTacticalPositionClaimComponent"/> rather than a system-owned lookup table: a claim is then
 /// entity-lifetime-bound for free (deleting the owning NPC removes its claim automatically, no leak to sweep),
-/// and reading every live claim reuses the same query enumerator every other NPC subsystem iterates with.
+/// and reading every live claim reuses the same query enumerator every other NPC subsystem iterates with. Nothing
+/// ticks them: a claim past its expiry is skipped wherever claims are read, and replaced or removed by the next
+/// <see cref="Claim"/> or <see cref="ReleaseClaim"/>.
 /// </summary>
 public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
-
-    public override void Update(float frameTime)
-    {
-        base.Update(frameTime);
-
-        var now = _gameTiming.CurTime;
-        var query = EntityQueryEnumerator<NpcTacticalPositionClaimComponent>();
-
-        // Removing the current entity's own component mid-iteration is safe here: RemComp marks it Deleted
-        // rather than mutating the backing dictionary, so the enumerator just skips it on the next MoveNext.
-        // Same pattern as NPCPerceptionSystem.RecentlyInjected.cs's TTL sweep.
-        while (query.MoveNext(out var uid, out var claim))
-        {
-            if (now < claim.ExpiresAt)
-                continue;
-
-            RemComp<NpcTacticalPositionClaimComponent>(uid);
-        }
-    }
+    [Dependency] private EntityQuery<NpcTacticalPositionClaimComponent> _claimQuery = default!;
 
     /// <summary>
     /// Registers (or refreshes) a claim on behalf of <paramref name="owner"/>.
@@ -48,12 +32,30 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
 
     /// <summary>
     /// Releases <paramref name="owner"/>'s claim early, if any. Called from
-    /// <see cref="Content.Server.NPC.HTN.IHtnConditionalShutdown"/>/<c>TaskShutdown</c> as a fast path on top
-    /// of the TTL sweep in <see cref="Update"/>.
+    /// <see cref="Content.Server.NPC.HTN.IHtnConditionalShutdown"/>/<c>TaskShutdown</c>; one never released just
+    /// expires.
     /// </summary>
     public void ReleaseClaim(EntityUid owner)
     {
         RemComp<NpcTacticalPositionClaimComponent>(owner);
+    }
+
+    /// <summary>
+    /// Where <paramref name="owner"/> has claimed, if its claim has not expired.
+    /// </summary>
+    public bool TryGetClaim(Entity<NpcTacticalPositionClaimComponent?> owner, out EntityCoordinates coordinates)
+    {
+        coordinates = default;
+        if (!_claimQuery.Resolve(owner.Owner, ref owner.Comp, logMissing: false) || !IsLive(owner.Comp))
+            return false;
+
+        coordinates = owner.Comp.Coordinates;
+        return true;
+    }
+
+    private bool IsLive(NpcTacticalPositionClaimComponent claim)
+    {
+        return _gameTiming.CurTime < claim.ExpiresAt;
     }
 
     /// <summary>
@@ -69,7 +71,7 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
         var query = EntityQueryEnumerator<NpcTacticalPositionClaimComponent>();
         while (query.MoveNext(out var claimantUid, out var claim))
         {
-            if (claimantUid == ignoreClaimantUid)
+            if (claimantUid == ignoreClaimantUid || !IsLive(claim))
                 continue;
 
             var claimMap = _transformSystem.ToMapCoordinates(claim.Coordinates);
@@ -104,7 +106,8 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
 
         while (query.MoveNext(out _, out var claim))
         {
-            claims.Add((claim.Coordinates, claim.ClearanceRadius));
+            if (IsLive(claim))
+                claims.Add((claim.Coordinates, claim.ClearanceRadius));
         }
 
         return claims;

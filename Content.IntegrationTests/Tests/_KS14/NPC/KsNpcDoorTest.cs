@@ -55,6 +55,7 @@ public sealed class KsNpcDoorTest : GameTest
     private const string Wieldable = "KsDoorTestWieldable";
     private const string EmptyHandedWalkerMob = "KsDoorTestMobEmptyHandedWalker";
     private const string EngineerWalkerMob = "KsDoorTestMobEngineerWalker";
+    private const string PryingWalkerMob = "KsDoorTestMobPryingWalker";
     private const string SecurityDoor = "AirlockSecurityLocked";
 
     [TestPrototypes]
@@ -190,6 +191,19 @@ public sealed class KsNpcDoorTest : GameTest
   - type: MovementSpeedModifier
   - type: NpcDoorUser
     maxDetourExtraDistance: 60
+
+- type: entity
+  parent: KsDoorTestMobNoAccess
+  id: KsDoorTestMobPryingWalker
+  components:
+  - type: InputMover
+  - type: MobMover
+  - type: MovementSpeedModifier
+  - type: DoAfter
+  - type: Prying
+    speedModifier: 10
+  - type: NpcDoorUser
+    maxDetourExtraDistance: 60 # would go round, if going round were for it
 
 - type: entity
   parent: KsDoorTestMobBlockedWalker
@@ -480,6 +494,62 @@ public sealed class KsNpcDoorTest : GameTest
                 Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f),
                     "it should have got there");
             });
+        });
+    }
+
+    /// <summary>
+    ///     An NPC that pries its way through - a xeno, say, with <c>NavPry</c> - is not put off by a door it believes is
+    ///         locked: it pries it, as it always has, rather than taking the long way round.
+    /// </summary>
+    [Test]
+    public async Task TestPryingNpcDoesNotGoRoundALockedDoor()
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, walkerUid = default, doorUid = default;
+
+        await server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-3, -1), new Vector2i(7, 13)).Owner;
+
+            // A gap at the top, round which is far longer.
+            for (var y = -1; y <= 12; y++)
+            {
+                if (y == 0)
+                    doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 2, 0); // unpowered: pried by anything that pries
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            walkerUid = SpawnAt(entManager, PryingWalkerMob, gridUid, 0, 0);
+        });
+
+        await Pair.RunTicksSync(90); // navmesh
+
+        await server.WaitPost(() =>
+        {
+            Assert.That(entManager.System<NpcDoorSystem>().GetDoorAccess(walkerUid, doorUid), Is.EqualTo(NpcDoorAccess.Locked));
+
+            var htnComponent = entManager.GetComponent<HTNComponent>(walkerUid);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavInteract, true);
+            htnComponent.Blackboard.SetValue(NPCBlackboard.NavPry, true);
+            entManager.System<NPCSteeringSystem>().Register(walkerUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            entManager.System<NPCSystem>().WakeNPC(walkerUid, htnComponent);
+        });
+
+        var doorOpened = false;
+        for (var i = 0; i < 20; i++)
+        {
+            await Pair.RunTicksSync(30);
+            await server.WaitPost(() => doorOpened |= entManager.GetComponent<DoorComponent>(doorUid).State != DoorState.Closed);
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(doorOpened, "it should have pried the door, not gone round");
+            Assert.That(entManager.System<SharedTransformSystem>().GetWorldPosition(walkerUid).X, Is.GreaterThan(3f), "and got there through it");
         });
     }
 
