@@ -29,6 +29,8 @@ namespace Content.IntegrationTests.Tests._KS14.Localization;
 
 public sealed class KsPopupLocalizationTests : GameTest
 {
+    private static readonly ProtoId<InjectorModePrototype> SyringeInjectModePrototype = "SyringeInjectMode";
+
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     [TestCase("sensor", "ClothingUniformJumpsuitEngineering")]
@@ -83,7 +85,7 @@ public sealed class KsPopupLocalizationTests : GameTest
                     break;
                 case "injector":
                     SEntMan.System<InjectorSystem>().ToggleMode((device, SEntMan.GetComponent<InjectorComponent>(device)),
-                        actor, Server.ResolveDependency<IPrototypeManager>().Index<InjectorModePrototype>("SyringeInjectMode"));
+                        actor, Server.ResolveDependency<IPrototypeManager>().Index(SyringeInjectModePrototype));
                     break;
                 case "flavours":
                     SEntMan.System<Content.Server.Popups.PopupSystem>().PopupEntity(

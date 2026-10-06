@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -23,6 +24,12 @@ namespace Content.IntegrationTests.Tests._KS14.Localization;
 
 public sealed class KsClientLocalizationTests : GameTest
 {
+    private static readonly EntProtoId WrenchPrototype = "Wrench";
+    private static readonly EntProtoId CacheTestPrototype = "KsLocaleCacheTest";
+    private static readonly EntProtoId GasPipePrototype = "GasPipeStraight";
+    private static readonly ProtoId<GuideEntryPrototype> PowerGuidePrototype = "Power";
+    private static readonly ProtoId<GuideEntryPrototype> AnchorlessGuidePrototype = "Anchorless";
+
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     [TestCase("en-US", "145.9")]
@@ -182,7 +189,7 @@ public sealed class KsClientLocalizationTests : GameTest
             {
                 clientResources.AddOrUpdateFile(new ResPath("Locale/fr-FR/test.ftl"), frenchLocale);
                 clientResources.AddOrUpdateFile(new ResPath("Locale/fr-FR/_KS14/Localization/options.ftl"), frenchOptions);
-                var power = Client.ResolveDependency<IPrototypeManager>().Index<GuideEntryPrototype>("Power");
+                var power = Client.ResolveDependency<IPrototypeManager>().Index(PowerGuidePrototype);
                 var relative = power.Text.ToString().TrimStart('/')[11..];
                 clientResources.AddOrUpdateFile(new ResPath($"ServerInfo/_KS14/Guidebook/fr/{relative}"), "<Document># Électricité</Document>");
                 Client.ResolveDependency<IResourceManager>().AddRoot(new ResPath("/"), clientResources);
@@ -227,9 +234,9 @@ public sealed class KsClientLocalizationTests : GameTest
                 localizationManager.ReloadLocalizations();
                 contentLocalizationManager.RefreshAvailableCultures();
                 reloadedName = contentLocalizationManager.GetLocalizedPrototypeName(
-                    Client.ResolveDependency<IPrototypeManager>().Index<EntityPrototype>("Wrench"));
+                    Client.ResolveDependency<IPrototypeManager>().Index(WrenchPrototype));
                 reloadedDescription = contentLocalizationManager.GetLocalizedPrototypeDescription(
-                    Client.ResolveDependency<IPrototypeManager>().Index<EntityPrototype>("Wrench"));
+                    Client.ResolveDependency<IPrototypeManager>().Index(WrenchPrototype));
             });
             Assert.That(reloadedName, Is.EqualTo("clé mise à jour"), "refresh must discard previously formatted names");
             Assert.That(reloadedDescription, Is.EqualTo("Une description mise à jour."),
@@ -330,7 +337,7 @@ public sealed class KsClientLocalizationTests : GameTest
         {
             var localizationManager = Server.ResolveDependency<ILocalizationManager>();
             var contentLocalizationManager = Server.ResolveDependency<ContentLocalizationManager>();
-            var prototype = Server.ResolveDependency<IPrototypeManager>().Index<EntityPrototype>("Wrench");
+            var prototype = Server.ResolveDependency<IPrototypeManager>().Index(WrenchPrototype);
             var englishName = prototype.Name;
             var itemUid = SEntMan.SpawnEntity("Wrench", Robust.Shared.Map.MapCoordinates.Nullspace);
             var russianCulture = System.Globalization.CultureInfo.GetCultureInfo("ru-RU");
@@ -412,7 +419,7 @@ public sealed class KsClientLocalizationTests : GameTest
             using (new Content.Server._KS14.Localization.KsExamineLocaleScope(localizationManager, culture))
             {
                 originalName = contentLocalizationManager.GetLocalizedPrototypeName(
-                    prototypeManager.Index<EntityPrototype>("KsLocaleCacheTest"));
+                    prototypeManager.Index(CacheTestPrototype));
             }
 
             changes = new Dictionary<Type, HashSet<string>>();
@@ -428,7 +435,7 @@ public sealed class KsClientLocalizationTests : GameTest
             using (new Content.Server._KS14.Localization.KsExamineLocaleScope(localizationManager, culture))
             {
                 changedName = contentLocalizationManager.GetLocalizedPrototypeName(
-                    prototypeManager.Index<EntityPrototype>("KsLocaleCacheTest"));
+                    prototypeManager.Index(CacheTestPrototype));
             }
         });
         Assert.That(originalName, Is.EqualTo("original test name"));
@@ -448,7 +455,7 @@ public sealed class KsClientLocalizationTests : GameTest
             var prototypeManager = Server.ResolveDependency<IPrototypeManager>();
             foreach (var entityPrototype in prototypeManager.EnumeratePrototypes<EntityPrototype>())
                 localizationManager.GetEntityData(entityPrototype.ID);
-            var prototype = prototypeManager.Index<EntityPrototype>("GasPipeStraight");
+            var prototype = prototypeManager.Index(GasPipePrototype);
             var culture = System.Globalization.CultureInfo.GetCultureInfo("ru-RU");
             contentLocalizationManager.LoadAdditionalCulture(culture);
             using var scope = new Content.Server._KS14.Localization.KsExamineLocaleScope(localizationManager, culture);
@@ -611,10 +618,10 @@ public sealed class KsClientLocalizationTests : GameTest
                 using var reader = resourceManager.ContentFileReadText(path);
                 Assert.That(parser.TryAddMarkup(new Document(), reader.ReadToEnd()), Is.True, guidePrototype.ID);
             }
-            var power = prototypeManager.Index<GuideEntryPrototype>("Power");
+            var power = prototypeManager.Index(PowerGuidePrototype);
             using var powerReader = resourceManager.ContentFileReadText(parser.GetLocalizedDocumentPath(power.Text));
             Assert.That(powerReader.ReadToEnd(), Does.Contain("Электропитание"));
-            var anchorless = prototypeManager.Index<GuideEntryPrototype>("Anchorless");
+            var anchorless = prototypeManager.Index(AnchorlessGuidePrototype);
             using var anchorlessReader = resourceManager.ContentFileReadText(parser.GetLocalizedDocumentPath(anchorless.Text));
             var anchorlessText = anchorlessReader.ReadToEnd();
             Assert.That(anchorlessText, Does.Contain("# Безъякорные").And.Not.Contain("Anchorless"));
