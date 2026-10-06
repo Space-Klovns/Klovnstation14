@@ -67,9 +67,6 @@ Code that calls the engine's `ReloadLocalizations()` directly must also call
 `ContentLocalizationManager.InvalidatePrototypeNameCache()`; the engine exposes no
 localization reload event for content to subscribe to.
 
-Use the [popup audit and manual checks](popup_localization_audit.md) to check
-recipient languages, nested labels, prediction, and popup audiences.
-
 Translated popups use `KsPopupMessage.Create` from
 `Content.Shared._KS14.PopupLocalization` with the existing popup methods. The
 server sends the Fluent key and arguments; each client formats them in its own

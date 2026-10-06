@@ -904,9 +904,8 @@ not make it follow the recipient's language.** Two content systems handle this:
 localisation culture. Use both when a popup contains a prototype name.
 
 Keep fixes in content; do not modify `RobustToolbox` to work around the engine's
-metadata cache. The implementation and further context are in
-[client_localization.md](Klovn/Docs/client_localization.md), with an
-[popup audit and manual checks](Klovn/Docs/popup_localization_audit.md).
+metadata cache. Further culture, guidebook, and radio setup details are in
+[client_localization.md](Klovn/Docs/client_localization.md).
 
 ### Popups: carry the message key and its arguments
 
@@ -1176,6 +1175,5 @@ For a changed message, check an English server with clients in two different
 cultures, including a predicted action and its authoritative confirmation. Verify
 the nested label, private/broadcast audience, custom item names/descriptions, and
 fallback for a missing translation. Check packaged resources as well as the runtime
-fallback when changing cache resolution. Use the manual checks linked above for
-the popup pass. Do not infer whole-round CPU or network overhead from the
+fallback when changing cache resolution. Do not infer whole-round CPU or network overhead from the
 popup microbenchmarks; they measure individual components and serialized payloads.
