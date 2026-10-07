@@ -1,5 +1,13 @@
-﻿- type: decal
+# KS14 start: mapping editor overhaul port
+- type: decal
+  id: MiniTileSteel
+  parent: MiniTile
+  abstract: true
+
+- type: decal
+# KS14 end
   id: MiniTileSteelBox
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -7,6 +15,7 @@
 
 - type: decal
   id: MiniTileSteelCornerNe
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -14,6 +23,7 @@
 
 - type: decal
   id: MiniTileSteelCornerSe
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -21,6 +31,7 @@
 
 - type: decal
   id: MiniTileSteelCornerNw
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -28,6 +39,7 @@
 
 - type: decal
   id: MiniTileSteelCornerSw
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -35,6 +47,7 @@
 
 - type: decal
   id: MiniTileSteelInnerNe
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -42,6 +55,7 @@
 
 - type: decal
   id: MiniTileSteelInnerSe
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -49,6 +63,7 @@
 
 - type: decal
   id: MiniTileSteelInnerNw
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -56,6 +71,7 @@
 
 - type: decal
   id: MiniTileSteelInnerSw
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -63,6 +79,7 @@
 
 - type: decal
   id: MiniTileSteelEndN
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -70,6 +87,7 @@
 
 - type: decal
   id: MiniTileSteelEndE
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -77,6 +95,7 @@
 
 - type: decal
   id: MiniTileSteelEndS
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -84,6 +103,7 @@
 
 - type: decal
   id: MiniTileSteelEndW
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -91,6 +111,7 @@
 
 - type: decal
   id: MiniTileSteelLineN
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -98,6 +119,7 @@
 
 - type: decal
   id: MiniTileSteelLineE
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -105,6 +127,7 @@
 
 - type: decal
   id: MiniTileSteelLineS
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
@@ -112,6 +135,7 @@
 
 - type: decal
   id: MiniTileSteelLineW
+  parent: MiniTileSteel # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/minitile.rsi
