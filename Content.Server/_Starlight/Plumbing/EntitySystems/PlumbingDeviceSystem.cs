@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Popups;
@@ -123,12 +124,12 @@ public sealed partial class PlumbingDeviceSystem : EntitySystem
 
         if (totalDrained > 0)
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-drain-success", ("amount", totalDrained)), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-drain-success", ("amount", totalDrained)), ent.Owner, args.User);
             _audio.PlayPvs(ent.Comp.DrainSound, ent.Owner);
         }
         else
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-drain-empty"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-drain-empty"), ent.Owner, args.User);
         }
 
         args.Handled = true;

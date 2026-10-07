@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Clothing.Components;
 using Content.Shared.DoAfter;
@@ -112,7 +113,7 @@ public sealed partial class ToggleableClothingSystem : EntitySystem
 
         if (!stealth)
         {
-            var popup = Loc.GetString("strippable-component-alert-owner-interact", ("user", Identity.Entity(user, EntityManager)), ("item", item));
+            var popup = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("strippable-component-alert-owner-interact", ("user", Identity.Entity(user, EntityManager)), ("item", item));
             _popupSystem.PopupEntity(popup, wearer, wearer, PopupType.Large);
         }
     }
@@ -244,7 +245,7 @@ public sealed partial class ToggleableClothingSystem : EntitySystem
             _inventorySystem.TryUnequip(user, parent, component.Slot, force: true);
         else if (_inventorySystem.TryGetSlotEntity(parent, component.Slot, out var existing))
         {
-            _popupSystem.PopupClient(Loc.GetString("toggleable-clothing-remove-first", ("entity", existing)),
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("toggleable-clothing-remove-first", ("entity", existing)),
                 user, user);
         }
         else

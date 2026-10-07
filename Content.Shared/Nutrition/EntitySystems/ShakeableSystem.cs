@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.DoAfter;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.IdentityManagement;
@@ -84,8 +85,8 @@ public sealed partial class ShakeableSystem : EntitySystem
         var userName = Identity.Entity(user, EntityManager);
         var shakeableName = Identity.Entity(entity, EntityManager);
 
-        var selfMessage = Loc.GetString(entity.Comp.ShakePopupMessageSelf, ("user", userName), ("shakeable", shakeableName));
-        var othersMessage = Loc.GetString(entity.Comp.ShakePopupMessageOthers, ("user", userName), ("shakeable", shakeableName));
+        var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(entity.Comp.ShakePopupMessageSelf, ("user", userName), ("shakeable", shakeableName));
+        var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */(entity.Comp.ShakePopupMessageOthers, ("user", userName), ("shakeable", shakeableName));
         _popup.PopupPredicted(selfMessage, othersMessage, user, user);
 
         _audio.PlayPredicted(entity.Comp.ShakeSound, entity, user);

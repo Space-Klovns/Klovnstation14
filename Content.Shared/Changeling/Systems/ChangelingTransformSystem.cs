@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body;
@@ -113,7 +114,7 @@ public sealed partial class ChangelingTransformSystem : EntitySystem
         if (!_changelingIdentity.TryGetDataFromIdentity((ent.Owner, identity), targetIdentity.Value, out _))
             return; // this identity does not belong to this player
 
-        _popup.PopupClient(Loc.GetString("changeling-transform-bui-drop-identity-entity-popup", ("entity", targetIdentity.Value)), ent.Owner, PopupType.Large);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("changeling-transform-bui-drop-identity-entity-popup", ("entity", targetIdentity.Value)), ent.Owner, PopupType.Large);
         _changelingIdentity.DropStoredIdentity(ent.Owner, targetIdentity.Value);
     }
 
@@ -127,8 +128,8 @@ public sealed partial class ChangelingTransformSystem : EntitySystem
         if (!Resolve(ent, ref ent.Comp))
             return;
 
-        var selfMessage = Loc.GetString("changeling-transform-attempt-self", ("user", Identity.Entity(ent.Owner, EntityManager)));
-        var othersMessage = Loc.GetString("changeling-transform-attempt-others", ("user", Identity.Entity(ent.Owner, EntityManager)));
+        var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("changeling-transform-attempt-self", ("user", Identity.Entity(ent.Owner, EntityManager)));
+        var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */("changeling-transform-attempt-others", ("user", Identity.Entity(ent.Owner, EntityManager)));
         _popup.PopupPredicted(
             selfMessage,
             othersMessage,

@@ -2174,3 +2174,25 @@ Entries:
         `klovn.voice.public_path`.
   id: 224
   time: '2026-09-30T10:32:46.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Chat translation not affecting speech bubbles.
+    - type: Fix
+      message: Chat translation using speech with accents applied.
+  id: 225
+  time: '2026-10-05T21:50:46.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Russian localisation.
+    - type: Fix
+      message: Guidebook visuals.
+  id: 226
+  time: '2026-10-06T17:58:21.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Potentially fixed the lag in the lobby fade-out when spawning.
+  id: 227
+  time: '2026-10-07T06:46:25.0000000+00:00'

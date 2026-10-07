@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Examine;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Popups;
@@ -78,7 +79,7 @@ public abstract partial class SharedDiceSystem : EntitySystem
         var roll = rand.Next(1, entity.Comp.Sides + 1);
         SetCurrentSide(entity, roll);
 
-        var popupString = Loc.GetString("dice-component-on-roll-land",
+        var popupString = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("dice-component-on-roll-land",
             ("die", entity),
             ("currentSide", entity.Comp.CurrentValue));
         _popup.PopupPredicted(popupString, entity, user);

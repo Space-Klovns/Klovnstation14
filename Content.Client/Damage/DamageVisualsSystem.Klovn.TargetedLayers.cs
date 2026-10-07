@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Client._KS14.Damage; // KS14
 using Content.Shared.Damage.Components;
 using Content.Shared.FixedPoint; // KS14

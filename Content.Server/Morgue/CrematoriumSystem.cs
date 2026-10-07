@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ghost;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction.Events;
@@ -31,11 +32,11 @@ public sealed partial class CrematoriumSystem : SharedCrematoriumSystem
 
             if (mind.OwnedEntity is { Valid: true } entity)
             {
-                Popup.PopupEntity(Loc.GetString("crematorium-entity-storage-component-suicide-message"), entity);
+                Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("crematorium-entity-storage-component-suicide-message"), entity);
             }
         }
 
-        Popup.PopupEntity(Loc.GetString("crematorium-entity-storage-component-suicide-message-others",
+        Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("crematorium-entity-storage-component-suicide-message-others",
             ("victim", Identity.Entity(victim, EntityManager))),
             victim,
             Filter.PvsExcept(victim),

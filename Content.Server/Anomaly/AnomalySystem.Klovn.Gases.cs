@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Shared.Anomaly.Components; // KS14
 using Content.Shared._KS14.Anomaly.Components;
 using Content.Shared._KS14.Anomaly.Prototypes;

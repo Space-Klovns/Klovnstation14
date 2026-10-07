@@ -1,0 +1,69 @@
+<Document>
+  # Перепад давления
+  Перепад давления, или ΔP, — это разница давления между двумя зонами.
+  Эта разница давления может оказывать силу на объекты, находящиеся между двумя зонами, нанося [bold]повреждения от давления[/bold] некоторым объектам, находящимся на его пути.
+
+  Различные объекты из стекла, такие как окна, стеклянные двери и жалюзи, могут получить повреждения от давления, если разница давлений (ΔP) между двумя сторонами достаточно высока.
+  Эти повреждения могут привести к разбиванию объектов, что позволит газу свободно проникать между двумя зонами.
+
+  Различные типы объектов имеют разные пороговые значения ΔP, которые они могут выдержать перед разрушением.
+  Как правило, чем прочнее стекло, тем выше пороговое значение. У тонких объектов пороговое значение также будет ниже.
+
+  На такие объекты, как стены, шлюзы и противопожарные перегородки, ΔP не влияет.
+
+  ## Стандартное стекло и объекты
+  <Box>
+    <GuideEntityEmbed Entity="Window" Caption=""/>
+    <GuideEntityEmbed Entity="WindowDirectional" Caption=""/>
+    <GuideEntityEmbed Entity="Windoor" Caption=""/>
+    <GuideEntityEmbed Entity="ShuttersWindow" Caption=""/>
+    <GuideEntityEmbed Entity="InflatableWall" Caption=""/>
+  </Box>
+
+  Стандартное полноразмерное стекло и другие хрупкие объекты могут выдерживать перепад давления (ΔP) до [color=orange][protodata="Window" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] перед началом взлома.
+
+  Стекло размером с четверть, например, в ориентированных окнах, может выдерживать перепад давления (ΔP) до [color=orange][protodata="WindowDirectional" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] Перед началом взлома.
+
+  ## Армированное стекло и объекты
+  <Box>
+    <GuideEntityEmbed Entity="ReinforcedWindow" Caption=""/>
+    <GuideEntityEmbed Entity="WindowReinforcedDirectional" Caption=""/>
+    <GuideEntityEmbed Entity="WindoorSecure" Caption=""/>
+    <GuideEntityEmbed Entity="ShuttleWindow" Caption=""/>
+  </Box>
+
+  Усиленное стекло полного размера выдерживает перепад давления (ΔP) до [color=orange][protodata="ReinforcedWindow" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] перед началом взлома.
+
+  Усиленное стекло размером с четверть может выдерживать перепад давления (ΔP) до [color=orange][protodata="WindowReinforcedDirectional" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] Перед началом взлома.
+
+  ## Плазменное/урановое стекло
+  <Box>
+    <GuideEntityEmbed Entity="PlasmaWindow" Caption=""/>
+    <GuideEntityEmbed Entity="PlasmaWindowDirectional" Caption=""/>
+    <GuideEntityEmbed Entity="WindoorPlasma" Caption=""/>
+    <GuideEntityEmbed Entity="UraniumWindow" Caption=""/>
+    <GuideEntityEmbed Entity="UraniumWindowDirectional" Caption=""/>
+    <GuideEntityEmbed Entity="WindoorUranium" Caption=""/>
+  </Box>
+
+  Плазменное стекло и урановое стекло выдерживают перепад давления (ΔP) до [color=orange][protodata="PlasmaWindow" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] Перед началом взлома.
+
+  Плазменное стекло и стекло размером с четверть монеты, содержащее уран, могут выдерживать перепад давления (ΔP) до [color=orange][protodata="PlasmaWindowDirectional" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] Перед началом взлома.
+
+  ## Усиленное плазменное/урановое стекло
+
+  <Box>
+    <GuideEntityEmbed Entity="ReinforcedPlasmaWindow" Caption=""/>
+    <GuideEntityEmbed Entity="PlasmaReinforcedWindowDirectional" Caption=""/>
+    <GuideEntityEmbed Entity="WindoorSecurePlasma" Caption=""/>
+    <GuideEntityEmbed Entity="ReinforcedUraniumWindow" Caption=""/>
+    <GuideEntityEmbed Entity="UraniumReinforcedWindowDirectional" Caption=""/>
+    <GuideEntityEmbed Entity="WindoorSecureUranium" Caption=""/>
+
+  </Box>
+
+  Усиленное плазменное стекло и урановое стекло способны выдерживать перепад давления (ΔP) до [color=orange][protodata="ReinforcedPlasmaWindow" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] Перед началом взлома.
+
+  Усиленное стекло из плазмы и урана размером с четверть может выдерживать перепад давления (ΔP) до [color=orange][protodata="PlasmaReinforcedWindowDirectional" comp="DeltaPressure" member="MinPressureDelta"/] кПа[/color] Перед началом взлома.
+
+</Document>

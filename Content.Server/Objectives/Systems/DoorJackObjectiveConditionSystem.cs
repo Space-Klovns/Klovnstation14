@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Objectives.Components;
 using Content.Shared.Doors.Components;
 using Content.Shared.IdentityManagement;
@@ -31,7 +32,7 @@ public sealed partial class DoorJackObjectiveConditionSystem : EntitySystem
 
         // this popup is serverside since door emag logic is serverside (power funnies)
         _popupSystem.PopupEntity(
-            Loc.GetString("ninja-doorjack-success", ("target", Identity.Entity(args.Target, EntityManager))),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("ninja-doorjack-success", ("target", Identity.Entity(args.Target, EntityManager))),
             uid,
             uid,
             PopupType.Medium);

@@ -1,0 +1,10 @@
+cmd-hungry-desc = вызывает аппетит
+cmd-hungry-help = устанавливает ваш уровень голода на «голодающий»
+cmd-nutrition-error-component = У вашего объекта нет { $comp } компонент.
+cmd-nutrition-error-entity = Эту команду нельзя использовать без объекта.
+cmd-nutrition-error-player = Вы не можете использовать эту команду, если вы не являетесь игроком.
+cmd-setnutrit-desc = изменить показатели голода и жажды
+cmd-setnutrit-error-invalid-threshold = неверно { $thresholdType } `{ $thresholdString }`
+cmd-setnutrit-help = установите уровень голода или жажды на один из встроенных пороговых значений
+cmd-thirsty-desc = заставляет хотеть пить
+cmd-thirsty-help = устанавливает уровень жажды на «утолен»

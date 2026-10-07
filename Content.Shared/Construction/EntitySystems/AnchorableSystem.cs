@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Examine;
@@ -139,7 +140,7 @@ public sealed partial class AnchorableSystem : EntitySystem
         _transformSystem.Unanchor(uid, xform);
         RaiseLocalEvent(uid, new UserUnanchoredEvent(args.User, used));
 
-        _popup.PopupClient(Loc.GetString("anchorable-unanchored"), uid, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anchorable-unanchored"), uid, args.User);
 
         _adminLogger.Add(
             LogType.Unanchor,
@@ -157,7 +158,7 @@ public sealed partial class AnchorableSystem : EntitySystem
         if (TryComp<PhysicsComponent>(uid, out var anchorBody) &&
             !TileFree(xform.Coordinates, anchorBody))
         {
-            _popup.PopupClient(Loc.GetString("anchorable-occupied"), uid, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anchorable-occupied"), uid, args.User);
             return;
         }
 
@@ -177,7 +178,7 @@ public sealed partial class AnchorableSystem : EntitySystem
 
             if (AnyUnstackable(uid, coordinates))
             {
-                _popup.PopupClient(Loc.GetString("construction-step-condition-no-unstackable-in-tile"), uid, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-step-condition-no-unstackable-in-tile"), uid, args.User);
                 return;
             }
 
@@ -191,7 +192,7 @@ public sealed partial class AnchorableSystem : EntitySystem
 
         RaiseLocalEvent(uid, new UserAnchoredEvent(args.User, used));
 
-        _popup.PopupClient(Loc.GetString("anchorable-anchored"), uid, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anchorable-anchored"), uid, args.User);
 
         _adminLogger.Add(
             LogType.Anchor,
@@ -246,7 +247,7 @@ public sealed partial class AnchorableSystem : EntitySystem
         if (!Valid(uid, userUid, usingUid, true, out var failMessage, anchorable, usingTool))
         {
             if (failMessage != null)
-                _popup.PopupClient(Loc.GetString(failMessage), uid, userUid);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(failMessage), uid, userUid);
             return;
         }
 
@@ -258,7 +259,7 @@ public sealed partial class AnchorableSystem : EntitySystem
 
         if (AnyUnstackable(uid, transform.Coordinates))
         {
-            _popup.PopupClient(Loc.GetString("construction-step-condition-no-unstackable-in-tile"), uid, userUid);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-step-condition-no-unstackable-in-tile"), uid, userUid);
             return;
         }
 
@@ -317,7 +318,7 @@ public sealed partial class AnchorableSystem : EntitySystem
         if (TileFree(coordinates, entity.Comp))
             return true;
 
-        _popup.PopupClient(Loc.GetString("anchorable-occupied"), entity, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anchorable-occupied"), entity, user);
         return false;
     }
 

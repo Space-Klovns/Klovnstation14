@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System;
 using System.Collections.Generic;
 using System.Numerics;

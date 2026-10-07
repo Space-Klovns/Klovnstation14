@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Access.Components;
 using Content.Shared.Access.Systems;
 using Content.Shared.CCVar;
@@ -81,7 +82,7 @@ public abstract partial class SharedGenpopSystem : EntitySystem
 
         if (!_accessReader.IsAllowed(user, ent))
         {
-            _popup.PopupClient(Loc.GetString("lock-comp-has-user-access-fail"), user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("lock-comp-has-user-access-fail"), user);
             return;
         }
 
@@ -106,7 +107,7 @@ public abstract partial class SharedGenpopSystem : EntitySystem
         if (!_accessReader.FindPotentialAccessItems(args.User).Contains(ent.Comp.LinkedId.Value))
         {
             if (!args.Silent)
-                _popup.PopupClient(Loc.GetString("lock-comp-has-user-access-fail"), ent, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("lock-comp-has-user-access-fail"), ent, args.User);
             args.Cancelled = true;
             return;
         }
@@ -115,7 +116,7 @@ public abstract partial class SharedGenpopSystem : EntitySystem
             !expireIdCard.Expired)
         {
             if (!args.Silent)
-                _popup.PopupClient(Loc.GetString("genpop-prisoner-id-popup-not-served"), ent, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("genpop-prisoner-id-popup-not-served"), ent, args.User);
             args.Cancelled = true;
         }
     }

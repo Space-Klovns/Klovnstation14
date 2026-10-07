@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Shared.DoAfter;
 using Content.Shared.IdentityManagement;
@@ -95,12 +96,12 @@ public sealed partial class ParcelWrappingSystem
         // In case the target is a player inform them with a popup.
         if (target == user)
         {
-            var selfMsg = Loc.GetString("parcel-wrap-popup-being-wrapped-self");
+            var selfMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("parcel-wrap-popup-being-wrapped-self");
             _popup.PopupClient(selfMsg, user, user);
         }
         else
         {
-            var othersMsg = Loc.GetString(
+            var othersMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(
                 "parcel-wrap-popup-being-wrapped",
                 ("user", Identity.Entity(user, EntityManager))
             );

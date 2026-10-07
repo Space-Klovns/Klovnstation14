@@ -1,4 +1,5 @@
-﻿using Content.Server.NodeContainer.EntitySystems;
+using Content.Shared._KS14.PopupLocalization; // KS14
+using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.Popups;
 using Content.Server.Power.Components;
 using Content.Server.Power.Nodes;
@@ -66,7 +67,7 @@ public sealed partial class PowerSwitchableSystem : SharedPowerSwitchableSystem
             _nodeGroup.QueueReflood(node);
         }
 
-        var popup = Loc.GetString(comp.SwitchText, ("voltage", VoltageString(voltage)));
+        var popup = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(comp.SwitchText, ("voltage", VoltageString(voltage)));
         _popup.PopupEntity(popup, uid, user);
 
         _audio.PlayPvs(comp.SwitchSound, uid);

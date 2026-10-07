@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Collections.Frozen;
 using Content.Shared._KS14.Chat; // KS14
 using Content.Shared.Chat.Prototypes;
@@ -246,9 +247,9 @@ public abstract partial class SharedChatSystem
             if (beforeEv.Blocker != null)
             {
                 _popup.PopupEntity(
-                    Loc.GetString(
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */(
                         "chat-system-emote-cancelled-blocked",
-                        ("emote", Loc.GetString(proto.Name).ToLower()),
+                        ("emote", KsPopupMessage.Create(proto.Name).ToLower()),
                         ("blocker", beforeEv.Blocker.Value)
                     ),
                     uid,
@@ -258,8 +259,8 @@ public abstract partial class SharedChatSystem
             else
             {
                 _popup.PopupEntity(
-                    Loc.GetString("chat-system-emote-cancelled-generic",
-                        ("emote", Loc.GetString(proto.Name).ToLower())),
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("chat-system-emote-cancelled-generic",
+                        ("emote", KsPopupMessage.Create(proto.Name).ToLower())),
                     uid,
                     uid
                 );

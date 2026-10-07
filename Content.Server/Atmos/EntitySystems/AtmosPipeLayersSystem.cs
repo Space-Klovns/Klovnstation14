@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.Components;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.NodeGroups;
@@ -76,6 +77,6 @@ public sealed partial class AtmosPipeLayersSystem : SharedAtmosPipeLayersSystem
         _xform.Unanchor(ent, xform);
         RaiseLocalEvent(ent, new UserUnanchoredEvent(user.Value, used.Value));
 
-        _popup.PopupEntity(Loc.GetString("pipe-restrict-overlap-popup-blocked", ("pipe", ent)), ent, user.Value);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pipe-restrict-overlap-popup-blocked", ("pipe", ent)), ent, user.Value);
     }
 }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.DeviceLinking.Systems;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Elevators;
@@ -46,13 +47,13 @@ public sealed partial class ZLevelElevatorSystem
 
         if (!TryGetElevatorZLevel(entity.Owner, out var zLevelEntity))
         {
-            _popupSystem.PopupEntity(Loc.GetString("zlevel-elevator-call-no-shaft"), entity.Owner, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("zlevel-elevator-call-no-shaft"), entity.Owner, user);
             return true;
         }
 
         if (!TryResolveElevator(entity.Owner, entity.Comp.ShaftId, out var elevatorEntity))
         {
-            _popupSystem.PopupEntity(Loc.GetString("zlevel-elevator-call-no-shaft"), entity.Owner, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("zlevel-elevator-call-no-shaft"), entity.Owner, user);
             return true;
         }
 
@@ -67,7 +68,7 @@ public sealed partial class ZLevelElevatorSystem
             TryGetElevatorZLevel(elevatorEntity.Value.Owner, out var elevatorZLevelEntity) &&
             elevatorZLevelEntity.Value.Owner == zLevelEntity.Value.Owner)
         {
-            _popupSystem.PopupEntity(Loc.GetString("zlevel-elevator-call-already-here"), entity.Owner, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("zlevel-elevator-call-already-here"), entity.Owner, user);
             _useDelaySystem.TryResetDelay(entity.Owner);
             return true;
         }
@@ -76,11 +77,11 @@ public sealed partial class ZLevelElevatorSystem
 
         if (!TryCallToZLevel(elevatorEntity.Value, zLevelEntity.Value.Owner))
         {
-            _popupSystem.PopupEntity(Loc.GetString("zlevel-elevator-call-no-shaft"), entity.Owner, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("zlevel-elevator-call-no-shaft"), entity.Owner, user);
             return true;
         }
 
-        _popupSystem.PopupEntity(Loc.GetString("zlevel-elevator-call-called"), entity.Owner, user);
+        _popupSystem.PopupEntity(KsPopupMessage.Create("zlevel-elevator-call-called"), entity.Owner, user);
         return true;
     }
 

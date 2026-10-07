@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Popups;
 using Content.Shared.Damage;
 using Content.Shared.Revenant;
@@ -110,7 +111,7 @@ public sealed partial class RevenantSystem
         if (!_doAfter.TryStartDoAfter(searchDoAfter))
             return;
 
-        _popup.PopupEntity(Loc.GetString("revenant-soul-searching", ("target", target)), uid, uid, PopupType.Medium);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("revenant-soul-searching", ("target", target)), uid, uid, PopupType.Medium);
     }
 
     private void OnSoulSearch(EntityUid uid, RevenantComponent component, SoulEvent args)
@@ -135,7 +136,7 @@ public sealed partial class RevenantSystem
                 message = "revenant-soul-yield-average";
                 break;
         }
-        _popup.PopupEntity(Loc.GetString(message, ("target", args.Args.Target)), args.Args.Target.Value, uid, PopupType.Medium);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(message, ("target", args.Args.Target)), args.Args.Target.Value, uid, PopupType.Medium);
 
         args.Handled = true;
     }
@@ -144,19 +145,19 @@ public sealed partial class RevenantSystem
     {
         if (essence.Harvested)
         {
-            _popup.PopupEntity(Loc.GetString("revenant-soul-harvested"), target, uid, PopupType.SmallCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("revenant-soul-harvested"), target, uid, PopupType.SmallCaution);
             return;
         }
 
         if (_mobStateQuery.TryComp(target, out var mobstate) && mobstate.CurrentState == MobState.Alive && !HasComp<SleepingComponent>(target))
         {
-            _popup.PopupEntity(Loc.GetString("revenant-soul-too-powerful"), target, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("revenant-soul-too-powerful"), target, uid);
             return;
         }
 
         if (_physics.GetEntitiesIntersectingBody(uid, (int)CollisionGroup.Impassable).Count > 0)
         {
-            _popup.PopupEntity(Loc.GetString("revenant-in-solid"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("revenant-in-solid"), uid, uid);
             return;
         }
 
@@ -173,7 +174,7 @@ public sealed partial class RevenantSystem
 
         _appearance.SetData(uid, RevenantVisuals.Harvesting, true);
 
-        _popup.PopupEntity(Loc.GetString("revenant-soul-begin-harvest", ("target", target)),
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("revenant-soul-begin-harvest", ("target", target)),
             target, PopupType.Large);
 
         TryUseAbility(uid, revenant, 0, revenant.HarvestDebuffs);
@@ -195,7 +196,7 @@ public sealed partial class RevenantSystem
         if (!TryComp<EssenceComponent>(args.Args.Target, out var essence))
             return;
 
-        _popup.PopupEntity(Loc.GetString("revenant-soul-finish-harvest", ("target", args.Args.Target)),
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("revenant-soul-finish-harvest", ("target", args.Args.Target)),
             args.Args.Target.Value, PopupType.LargeCaution);
 
         essence.Harvested = true;
@@ -208,7 +209,7 @@ public sealed partial class RevenantSystem
 
         if (_mobState.IsAlive(args.Args.Target.Value) || _mobState.IsCritical(args.Args.Target.Value))
         {
-            _popup.PopupEntity(Loc.GetString("revenant-max-essence-increased"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("revenant-max-essence-increased"), uid, uid);
             component.EssenceRegenCap += component.MaxEssenceUpgradeAmount;
         }
 

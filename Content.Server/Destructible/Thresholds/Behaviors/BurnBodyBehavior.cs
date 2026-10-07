@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Body.Components;
 using Content.Shared.Destructible;
 using Content.Shared.Destructible.Thresholds.Behaviors;
@@ -34,7 +35,7 @@ public sealed partial class BurnBodyBehavior : IThresholdBehavior
         }
 
         var bodyIdentity = Identity.Entity(bodyId, system.EntityManager);
-        sharedPopupSystem.PopupCoordinates(Loc.GetString(PopupMessage, ("name", bodyIdentity)), transformSystem.GetMoverCoordinates(bodyId), PopupType.LargeCaution);
+        sharedPopupSystem.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */(PopupMessage, ("name", bodyIdentity)), transformSystem.GetMoverCoordinates(bodyId), PopupType.LargeCaution);
 
         system.EntityManager.QueueDeleteEntity(bodyId);
     }

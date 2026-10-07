@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Server.Storage.EntitySystems;
 using Content.Shared.DoAfter;
@@ -62,7 +63,7 @@ public sealed partial class ResistLockerSystem : EntitySystem
             return;
 
         resistLockerComponent.IsResisting = true;
-        _popupSystem.PopupEntity(Loc.GetString("resist-locker-component-start-resisting"), user, user, PopupType.Large);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("resist-locker-component-start-resisting"), user, user, PopupType.Large);
     }
 
     private void OnDoAfter(EntityUid uid, ResistLockerComponent component, DoAfterEvent args)
@@ -70,7 +71,7 @@ public sealed partial class ResistLockerSystem : EntitySystem
         if (args.Cancelled)
         {
             component.IsResisting = false;
-            _popupSystem.PopupEntity(Loc.GetString("resist-locker-component-resist-interrupted"), args.Args.User, args.Args.User, PopupType.Medium);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("resist-locker-component-resist-interrupted"), args.Args.User, args.Args.User, PopupType.Medium);
             return;
         }
 

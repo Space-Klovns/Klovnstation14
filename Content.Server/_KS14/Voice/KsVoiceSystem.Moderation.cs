@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Administration.Managers;
 using Content.Shared._KS14.Voice;
 using Content.Shared.Administration;
@@ -65,7 +66,7 @@ public sealed partial class KsVoiceSystem
             $"{adminSession?.Name ?? "Server"} voice-muted {targetName} ({length}): {reason}");
 
         if (targetSession?.AttachedEntity is { } attachedUid)
-            _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-muted"), attachedUid, targetSession, type: PopupType.MediumCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-voice-popup-muted"), attachedUid, targetSession, type: PopupType.MediumCaution);
 
         RefreshPageState(userId);
     }
@@ -116,7 +117,7 @@ public sealed partial class KsVoiceSystem
             ("seconds", (int)_autoMuteSeconds)));
 
         if (session.AttachedEntity is { } attachedUid)
-            _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-auto-muted"), attachedUid, session, type: PopupType.MediumCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-voice-popup-auto-muted"), attachedUid, session, type: PopupType.MediumCaution);
 
         return true;
     }

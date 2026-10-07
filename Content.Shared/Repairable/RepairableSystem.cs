@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -50,7 +51,7 @@ public sealed partial class RepairableSystem : EntitySystem
 
         if (!args.Repeat)
         {
-            var str = Loc.GetString("comp-repairable-repair", ("target", ent.Owner), ("tool", args.Used!));
+            var str = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-repairable-repair", ("target", ent.Owner), ("tool", args.Used!));
             _popup.PopupClient(str, ent.Owner, args.User);
 
             var ev = new RepairedEvent(ent, args.User);

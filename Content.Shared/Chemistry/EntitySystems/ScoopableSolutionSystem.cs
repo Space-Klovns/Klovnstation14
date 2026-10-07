@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -40,7 +41,7 @@ public sealed partial class ScoopableSolutionSystem : EntitySystem
         if (scooped == 0)
             return false;
 
-        _popup.PopupClient(Loc.GetString(ent.Comp.Popup, ("scooped", ent.Owner), ("beaker", beaker)), user, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.Popup, ("scooped", ent.Owner), ("beaker", beaker)), user, user);
 
         if (srcSolution.Volume == 0 && ent.Comp.Delete)
         {

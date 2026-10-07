@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Chat.Systems;
 using Content.Server.Interaction;
@@ -119,8 +120,10 @@ public sealed partial class RadioDeviceSystem : SharedRadioDeviceSystem
 
         if (!quiet && user != null)
         {
-            var state = Loc.GetString(component.Enabled ? "handheld-radio-component-on-state" : "handheld-radio-component-off-state");
-            var message = Loc.GetString("handheld-radio-component-on-use", ("radioState", state));
+            // KS14 start: localize the popup and its state on the recipient.
+            var state = KsPopupMessage.Create(component.Enabled ? "handheld-radio-component-on-state" : "handheld-radio-component-off-state");
+            var message = KsPopupMessage.Create("handheld-radio-component-on-use", ("radioState", state));
+            // KS14 end
             _popup.PopupEntity(message, user.Value, user.Value);
         }
 
@@ -155,7 +158,7 @@ public sealed partial class RadioDeviceSystem : SharedRadioDeviceSystem
 
         var channel = ProtoMan.Index<RadioChannelPrototype>(component.BroadcastChannel)!;
         if (_recentlySent.Add((args.Message, args.Source, channel)))
-            _radio.SendRadioMessage(args.Source, args.Message, channel, uid, ksLanguage: args.KsLanguage /* KS14 */);
+            _radio.SendRadioMessage(args.Source, args.Message, channel, uid, ksLanguage: args.KsLanguage, ksTranslationText: args.KsTranslationText /* KS14 */);
     }
 
     private void OnAttemptListen(EntityUid uid, RadioMicrophoneComponent component, ListenAttemptEvent args)

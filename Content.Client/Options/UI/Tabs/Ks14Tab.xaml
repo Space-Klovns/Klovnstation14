@@ -8,6 +8,11 @@
             <BoxContainer Orientation="Vertical"
                           Margin="8 8 8 8"
                           VerticalExpand="True">
+                <!-- KS14: select the client interface language independently of chat translation -->
+                <ui:OptionDropDown Name="DropDownClientLocale"
+                                   Title="{Loc 'ks-ui-options-client-locale'}"/>
+                <Label Text="{Loc 'ks-ui-options-client-locale-hint'}"
+                       StyleClasses="LabelSubText"/>
                 <CheckBox Name="SlurFilterEnabled"
                           Text="{Loc 'ks-ui-options-slurfilter'}"/>
                 <CheckBox Name="ActionFoldersEnabled"

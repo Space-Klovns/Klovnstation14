@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Cargo;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
@@ -138,7 +139,7 @@ public sealed partial class TechnologyDiskSystem : EntitySystem
                 _research.AddLatheRecipe(target, recipe, database);
             }
         }
-        _popup.PopupClient(Loc.GetString("tech-disk-inserted"), target, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("tech-disk-inserted"), target, args.User);
         PredictedQueueDel(ent.Owner);
         args.Handled = true;
     }

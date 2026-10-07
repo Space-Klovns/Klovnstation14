@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Database;
@@ -53,7 +54,7 @@ public sealed partial class RehydratableSystem : EntitySystem
         var target = Spawn(randomMob, Transform(uid).Coordinates);
         _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(ent.Owner)} has been hydrated correctly and spawned: {ToPrettyString(target)}.");
 
-        _popup.PopupEntity(Loc.GetString("rehydratable-component-expands-message", ("owner", uid)), target);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rehydratable-component-expands-message", ("owner", uid)), target);
 
         _xform.AttachToGridOrMap(target);
         var ev = new GotRehydratedEvent(target);

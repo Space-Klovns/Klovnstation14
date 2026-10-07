@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Xenoarchaeology.Artifact.XAE.Components;
 using Content.Shared.Popups;
 using Content.Shared.Xenoarchaeology.Artifact;
@@ -44,7 +45,7 @@ public sealed partial class XAETelepathicSystem : BaseXAESystem<XAETelepathicCom
 
             // pick a random message
             var msgId = _random.Pick(msgArr);
-            var msg = Loc.GetString(msgId);
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(msgId);
 
             // show it as a popup, but only for the victim
             _popupSystem.PopupEntity(msg, victimUid, victimUid);

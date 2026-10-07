@@ -24,6 +24,8 @@ public sealed partial class Ks14Tab : Control
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
 
+        AddClientLocaleOption(); // KS14
+
         Control.AddOptionCheckBox(KsCCVars.SlurFilterEnabled, SlurFilterEnabled);
         Control.AddOptionCheckBox(KsCCVars.ActionFoldersEnabled, ActionFoldersEnabled);
         Control.AddOptionCheckBox(KsCCVars.ActionLayoutPersistenceEnabled, ActionLayoutPersistenceEnabled);

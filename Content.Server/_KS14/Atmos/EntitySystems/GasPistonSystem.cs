@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos.Components;
@@ -171,7 +172,7 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
         if (AnyAnchoredEntities((entity, transformComponent), blockedTileOffsetInteger))
         {
             _audioSystem.PlayPvs(entity.Comp.BlockedSound, entity.Owner);
-            PopupSystem.PopupEntity(Loc.GetString("gas-piston-popup-obstructed"), entity.Owner, type: PopupType.MediumCaution);
+            PopupSystem.PopupEntity(KsPopupMessage.Create("gas-piston-popup-obstructed"), entity.Owner, type: PopupType.MediumCaution);
         }
         else
         {

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Anomaly.Components;
 using Content.Shared.DeviceLinking;
@@ -89,7 +90,7 @@ public sealed partial class AnomalySynchronizerSystem : EntitySystem
     {
         if (!_power.IsPowered(ent.Owner))
         {
-            _popup.PopupClient(Loc.GetString("base-computer-ui-component-not-powered", ("machine", ent)), ent, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("base-computer-ui-component-not-powered", ("machine", ent)), ent, user);
             return false;
         }
 
@@ -98,7 +99,7 @@ public sealed partial class AnomalySynchronizerSystem : EntitySystem
 
         if (anomaly.Owner is { Valid: false }) // no anomaly in range
         {
-            _popup.PopupClient(Loc.GetString("anomaly-sync-no-anomaly"), ent, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anomaly-sync-no-anomaly"), ent, user);
             return false;
         }
 
@@ -168,7 +169,7 @@ public sealed partial class AnomalySynchronizerSystem : EntitySystem
         if (ent.Comp.PulseOnConnect)
             _anomaly.DoAnomalyPulse(anomaly, anomaly);
 
-        _popup.PopupPredicted(Loc.GetString("anomaly-sync-connected"), ent, user, PopupType.Medium);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anomaly-sync-connected"), ent, user, PopupType.Medium);
         _audio.PlayPredicted(ent.Comp.ConnectedSound, ent, user);
     }
 
@@ -184,7 +185,7 @@ public sealed partial class AnomalySynchronizerSystem : EntitySystem
             _anomaly.DoAnomalyPulse(ent.Comp.ConnectedAnomaly.Value, anomaly);
         }
 
-        _popup.PopupPredicted(Loc.GetString("anomaly-sync-disconnected"), ent, user, PopupType.Large);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anomaly-sync-disconnected"), ent, user, PopupType.Large);
         _audio.PlayPredicted(ent.Comp.DisconnectedSound, ent, user);
 
         ent.Comp.ConnectedAnomaly = null;

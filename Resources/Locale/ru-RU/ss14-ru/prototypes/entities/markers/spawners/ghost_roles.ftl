@@ -1,0 +1,67 @@
+ent-BaseAntagSpawner = спавнер роли призрак
+    .desc = { ent-MarkerBase.desc }
+
+ent-SpawnPointGhostCerberus = спавнер роли призрак
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Цербер
+
+ent-SpawnPointGhostDerelictCyborg = { ent-BaseAntagSpawner }
+    .desc = { ent-BaseAntagSpawner.desc }
+
+ent-SpawnPointGhostDerelictEngineeringCyborg = { ent-SpawnPointGhostDerelictCyborg }
+    .desc = { ent-SpawnPointGhostDerelictCyborg.desc }
+
+ent-SpawnPointGhostDerelictJanitorCyborg = { ent-SpawnPointGhostDerelictCyborg }
+    .desc = { ent-SpawnPointGhostDerelictCyborg.desc }
+
+ent-SpawnPointGhostDerelictMedicalCyborg = { ent-SpawnPointGhostDerelictCyborg }
+    .desc = { ent-SpawnPointGhostDerelictCyborg.desc }
+
+ent-SpawnPointGhostDerelictMiningCyborg = { ent-SpawnPointGhostDerelictCyborg }
+    .desc = { ent-SpawnPointGhostDerelictCyborg.desc }
+
+ent-SpawnPointGhostDerelictSyndicateAssaultCyborg = { ent-SpawnPointGhostDerelictCyborg }
+    .desc = { ent-SpawnPointGhostDerelictCyborg.desc }
+
+ent-SpawnPointGhostDragon = { ent-BaseAntagSpawner }
+    .desc = { ent-BaseAntagSpawner.desc }
+
+ent-SpawnPointGhostNukeOperative = спавнер роли призрак
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Ядерный Оперативник
+
+ent-SpawnPointGhostParadoxClone = { ent-BaseAntagSpawner }
+    .desc = { ent-BaseAntagSpawner.desc }
+
+ent-SpawnPointGhostRatKing = спавнер роли призрак
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Крысиный король
+
+ent-SpawnPointGhostRemilia = спавнер роли призрак
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Ремилия
+
+ent-SpawnPointGhostRoleMothershipCore = { ent-BaseAntagSpawner }
+    .desc = { ent-BaseAntagSpawner.desc }
+
+ent-SpawnPointGhostRoleXenoborg = { ent-BaseAntagSpawner }
+    .desc = { ent-BaseAntagSpawner.desc }
+
+ent-SpawnPointGhostSpaceNinja = { ent-BaseAntagSpawner }
+    .desc = { ent-BaseAntagSpawner.desc }
+
+ent-SpawnPointGhostWizard = спавнер роли призрак
+    .desc = { ent-BaseAntagSpawner.desc }
+    .suffix = волшебник
+
+ent-SpawnPointLoneNukeOperative = { ent-BaseAntagSpawner }
+    .desc = { ent-BaseAntagSpawner.desc }
+
+ent-SpawnPointNukeopsCommander = { ent-SpawnPointLoneNukeOperative }
+    .desc = { ent-SpawnPointLoneNukeOperative.desc }
+
+ent-SpawnPointNukeopsMedic = { ent-SpawnPointLoneNukeOperative }
+    .desc = { ent-SpawnPointLoneNukeOperative.desc }
+
+ent-SpawnPointNukeopsOperative = { ent-SpawnPointLoneNukeOperative }
+    .desc = { ent-SpawnPointLoneNukeOperative.desc }

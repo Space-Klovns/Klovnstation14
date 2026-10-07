@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Popups;
 using Content.Shared.DoAfter;
@@ -52,7 +53,7 @@ public sealed partial class ImplanterSystem : SharedImplanterSystem
 
                 // show popup to the user saying implant failed
                 var name = Identity.Name(target, EntityManager, args.User);
-                var msg = Loc.GetString("implanter-component-implant-failed", ("implant", implant), ("target", name));
+                var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("implanter-component-implant-failed", ("implant", implant), ("target", name));
                 _popup.PopupEntity(msg, target, args.User);
                 // prevent further interaction since popup was shown
                 args.Handled = true;
@@ -88,10 +89,10 @@ public sealed partial class ImplanterSystem : SharedImplanterSystem
         if (!_doAfter.TryStartDoAfter(args))
             return;
 
-        _popup.PopupEntity(Loc.GetString("injector-component-needle-injecting-user"), target, user);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("injector-component-needle-injecting-user"), target, user);
 
         var userName = Identity.Entity(user, EntityManager);
-        _popup.PopupEntity(Loc.GetString("implanter-component-implanting-target", ("user", userName)), user, target, PopupType.LargeCaution);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("implanter-component-implanting-target", ("user", userName)), user, target, PopupType.LargeCaution);
     }
 
     /// <summary>
@@ -112,7 +113,7 @@ public sealed partial class ImplanterSystem : SharedImplanterSystem
         };
 
         if (_doAfter.TryStartDoAfter(args))
-            _popup.PopupEntity(Loc.GetString("injector-component-needle-injecting-user"), target, user);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("injector-component-needle-injecting-user"), target, user);
 
     }
 

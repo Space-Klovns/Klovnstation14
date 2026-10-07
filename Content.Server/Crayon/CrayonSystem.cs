@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Numerics;
 using Content.Server.Administration.Logs;
@@ -57,7 +58,7 @@ public sealed partial class CrayonSystem : SharedCrayonSystem
             if (component.DeleteEmpty)
                 UseUpCrayon(uid, args.User);
             else
-                _popup.PopupEntity(Loc.GetString("crayon-interact-not-enough-left-text"), uid, args.User);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("crayon-interact-not-enough-left-text"), uid, args.User);
 
             args.Handled = true;
             return;
@@ -65,7 +66,7 @@ public sealed partial class CrayonSystem : SharedCrayonSystem
 
         if (!args.ClickLocation.IsValid(EntityManager))
         {
-            _popup.PopupEntity(Loc.GetString("crayon-interact-invalid-location"), uid, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("crayon-interact-invalid-location"), uid, args.User);
             args.Handled = true;
             return;
         }
@@ -130,7 +131,7 @@ public sealed partial class CrayonSystem : SharedCrayonSystem
 
     private void UseUpCrayon(EntityUid uid, EntityUid user)
     {
-        _popup.PopupEntity(Loc.GetString("crayon-interact-used-up-text", ("owner", uid)), user, user);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("crayon-interact-used-up-text", ("owner", uid)), user, user);
         QueueDel(uid);
     }
 }

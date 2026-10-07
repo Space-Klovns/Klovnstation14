@@ -1,0 +1,19 @@
+<!-- KS14: humans, dwarves and vox ONLY -->
+<Document>
+  # Виды
+
+  В компании «Нанотразен» работают люди, гномы и вокс.
+
+  <Box>
+    <GuideEntityEmbed Entity="MobHuman" Caption="Человек"/>
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="MobDwarf" Caption="Карлик"/>
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="MobVox" Caption="Vox"/>
+  </Box>
+
+  </Document>

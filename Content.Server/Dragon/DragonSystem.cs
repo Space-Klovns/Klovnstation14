@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Objectives.Components;
 using Content.Server.Objectives.Systems;
@@ -126,19 +127,19 @@ public sealed partial class DragonSystem : EntitySystem
     {
         if (component.Weakened)
         {
-            _popup.PopupEntity(Loc.GetString("carp-rift-weakened"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("carp-rift-weakened"), uid, uid);
             return;
         }
 
         if (component.Rifts.Count >= RiftsAllowed)
         {
-            _popup.PopupEntity(Loc.GetString("carp-rift-max"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("carp-rift-max"), uid, uid);
             return;
         }
 
         if (component.Rifts.Count > 0 && TryComp<DragonRiftComponent>(component.Rifts[^1], out var rift) && rift.State != DragonRiftState.Finished)
         {
-            _popup.PopupEntity(Loc.GetString("carp-rift-duplicate"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("carp-rift-duplicate"), uid, uid);
             return;
         }
 
@@ -147,7 +148,7 @@ public sealed partial class DragonSystem : EntitySystem
         // Have to be on a grid fam
         if (!TryComp<MapGridComponent>(xform.GridUid, out var grid))
         {
-            _popup.PopupEntity(Loc.GetString("carp-rift-anchor"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("carp-rift-anchor"), uid, uid);
             return;
         }
 
@@ -156,7 +157,7 @@ public sealed partial class DragonSystem : EntitySystem
         {
             if (_transform.InRange(riftXform.Coordinates, xform.Coordinates, RiftRange))
             {
-                _popup.PopupEntity(Loc.GetString("carp-rift-proximity", ("proximity", RiftRange)), uid, uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("carp-rift-proximity", ("proximity", RiftRange)), uid, uid);
                 return;
             }
         }
@@ -167,7 +168,7 @@ public sealed partial class DragonSystem : EntitySystem
             if (!_turf.IsSpace(tile))
                 continue;
 
-            _popup.PopupEntity(Loc.GetString("carp-rift-space-proximity", ("proximity", RiftTileRadius)), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("carp-rift-space-proximity", ("proximity", RiftTileRadius)), uid, uid);
             return;
         }
 
@@ -281,6 +282,6 @@ public sealed partial class DragonSystem : EntitySystem
         // We can't predict the rift being destroyed anyway so no point adding weakened to shared.
         comp.WeakenedAccumulator = comp.WeakenedDuration;
         _movement.RefreshMovementSpeedModifiers(uid);
-        _popup.PopupEntity(Loc.GetString("carp-rift-destroyed"), uid, uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("carp-rift-destroyed"), uid, uid);
     }
 }

@@ -1,0 +1,15 @@
+ent-ClosetMaintenanceFilledRandom = { ent-ClosetMaintenance }
+    .desc = { ent-ClosetMaintenance.desc }
+    .suffix = Заполненный, Случайный
+
+ent-ClosetWallMaintenanceFilledRandom = { ent-ClosetWall }
+    .desc = { ent-ClosetWall.desc }
+    .suffix = Заполненный, Случайный
+
+ent-LockerSyndicatePersonalFilled = { ent-LockerSyndicatePersonal }
+    .desc = Это личное хранилище для рабочего снаряжения.
+    .suffix = Заполненный
+
+ent-LockerSyndicateWallFilled = { ent-LockerWallSyndicate }
+    .desc = { ent-LockerSyndicatePersonalFilled.desc }
+    .suffix = Ядерные Оперативники, Заполненный

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Body;
 using Content.Shared.Popups;
 using Content.Shared.Rejuvenate;
@@ -66,7 +67,7 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
 
             // bruh
             if (_netManager.IsServer)
-                _popupSystem.PopupEntity(Loc.GetString(PopupLocId, ("name", Name(spawnedUid))), bodyEntity.Owner, bodyEntity.Owner);
+                _popupSystem.PopupEntity(KsPopupMessage.Create(PopupLocId, ("name", new KsPopupPrototypeName(datum.Entity))), bodyEntity.Owner, bodyEntity.Owner);
 
             if (maxCount is { } &&
                 --maxCount == 0)
