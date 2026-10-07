@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Server._KS14.NPC.Components;
+using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.CCVar;
 using Robust.Shared.Configuration;
 using Robust.Shared.Map;
@@ -20,9 +21,8 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
-
-    [Dependency] private EntityQuery<NpcTacticalPositionClaimComponent> _claimQuery = default!;
 
     /// <summary>
     ///     Score multiplier for a spot that crosses a line of fire. Soft rather than zero: a crossed line beats
@@ -76,8 +76,8 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
                 continue;
 
             // Where a teammate is headed matters more than where it happens to be right now.
-            var memberMap = _claimQuery.TryComp(memberUid, out var claimComponent)
-                ? _transformSystem.ToMapCoordinates(claimComponent.Coordinates)
+            var memberMap = _npcTacticalPositionClaimSystem.TryGetClaim(memberUid, out var claimCoordinates)
+                ? _transformSystem.ToMapCoordinates(claimCoordinates)
                 : _transformSystem.GetMapCoordinates(memberUid);
 
             if (memberMap.MapId != candidate.MapId)

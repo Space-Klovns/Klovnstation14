@@ -21,6 +21,15 @@ public static class KsNpcSquadTestHelpers
     public const string SharingLeaderMob = "KsSquadTestMobSharingLeader";
     public const string SharedKey = "KsSquadTestSharedKey";
     public const string OpenFloorMob = "KsSquadTestMobOpenFloor";
+    public const string TestCrowbar = "KsTestCrowbar";
+    public const string TestJawsOfLife = "KsTestJawsOfLife";
+    public const string TestAccessBreaker = "KsTestAccessBreaker";
+
+    /// <summary>
+    ///     A Syndicate mob with perception but no squad, so nothing a squadmate sees makes it alert: for testing its
+    ///         own reaction time.
+    /// </summary>
+    public const string LonerMob = "KsSquadTestMobLoner";
 
     /// <summary>
     ///     HTN is present but disabled: squads require an NPC, but these must stay exactly where they are put.
@@ -60,7 +69,39 @@ public static class KsNpcSquadTestHelpers
     - Syndicate
   - type: NpcSquadMember
   - type: NpcSensors
-  - type: NpcReactionTime
+  - type: NpcPerception
+
+- type: entity
+  id: KsSquadTestMobLoner
+  components:
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.35
+        density: 185
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+  - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Critical
+      200: Dead
+  - type: Damageable
+    damageContainer: Biological
+  - type: HTN
+    enabled: false
+    rootTask:
+      task: IdleCompound
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+  - type: NpcPerception
 
 - type: entity
   parent: KsSquadTestMobSyndicate
@@ -100,6 +141,29 @@ public static class KsNpcSquadTestHelpers
   - type: NpcSquadMember
     cover:
       wallPreference: -1
+
+# Real tools, with what the door tests' assertions rely on about them spelled out: which doors each one pries, and
+#   that the breaker breaks access.
+- type: entity
+  parent: Crowbar
+  id: KsTestCrowbar
+  components:
+  - type: Prying
+    pryPowered: false
+
+- type: entity
+  parent: JawsOfLife
+  id: KsTestJawsOfLife
+  components:
+  - type: Prying
+    pryPowered: true
+
+- type: entity
+  parent: AccessBreaker
+  id: KsTestAccessBreaker
+  components:
+  - type: Emag
+    emagType: Access
 ";
 
     /// <summary>
@@ -135,5 +199,16 @@ public static class KsNpcSquadTestHelpers
     public static EntityUid SpawnAt(IEntityManager entManager, string prototype, EntityUid gridUid, int x, int y)
     {
         return entManager.SpawnEntity(prototype, new EntityCoordinates(gridUid, new Vector2(x + 0.5f, y + 0.5f)));
+    }
+
+    /// <summary>
+    ///     Spawns a door that runs without a power network, as a door on a powered station would: test grids have no
+    ///         power, and an unpowered airlock opens for nobody by hand. Powered within a tick or two.
+    /// </summary>
+    public static EntityUid SpawnPoweredDoorAt(IEntityManager entManager, string prototype, EntityUid gridUid, int x, int y)
+    {
+        var doorUid = SpawnAt(entManager, prototype, gridUid, x, y);
+        entManager.System<Content.Shared.Power.EntitySystems.SharedPowerReceiverSystem>().SetNeedsPower(doorUid, false);
+        return doorUid;
     }
 }

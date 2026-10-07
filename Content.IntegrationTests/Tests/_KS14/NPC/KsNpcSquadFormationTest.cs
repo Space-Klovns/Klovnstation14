@@ -138,7 +138,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
     [Test]
     public async Task TestUndersizedSquadAssimilates()
     {
-        var squads = await RunAssimilation(wallBetween: false);
+        var squads = await RunAssimilation(barrier: null);
         Assert.That(squads, Is.EqualTo(new[] { 4 }));
     }
 
@@ -149,7 +149,18 @@ public sealed class KsNpcSquadFormationTest : GameTest
     [Test]
     public async Task TestAssimilationNeedsLineOfSight()
     {
-        var squads = await RunAssimilation(wallBetween: true);
+        var squads = await RunAssimilation(barrier: "WallSolid");
+        Assert.That(squads, Is.EqualTo(new[] { 1, 3 }));
+    }
+
+    /// <summary>
+    ///     The same squads with a window between them, which they see through but cannot cross, stay apart too: a squad
+    ///         is one its members can get to, not just see.
+    /// </summary>
+    [Test]
+    public async Task TestAssimilationNeedsAWayThere()
+    {
+        var squads = await RunAssimilation(barrier: "Window");
         Assert.That(squads, Is.EqualTo(new[] { 1, 3 }));
     }
 
@@ -464,9 +475,10 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
     /// <summary>
     ///     Forms a squad of three and a lone NPC far apart, then brings the lone one close, optionally with a
-    ///         wall in the way, and returns the resulting squad sizes in ascending order.
+    ///         <paramref name="barrier"/> - a wall, a window - all the way across between them, and returns the
+    ///         resulting squad sizes in ascending order.
     /// </summary>
-    private async Task<int[]> RunAssimilation(bool wallBetween)
+    private async Task<int[]> RunAssimilation(string? barrier)
     {
         var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(40, 5));
         var transformSystem = entManager.System<SharedTransformSystem>();
@@ -481,12 +493,12 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
             loneUid = SpawnAt(entManager, SyndicateMob, gridUid, 35, 0);
 
-            if (!wallBetween)
+            if (barrier == null)
                 return;
 
             for (var y = -5; y <= 5; y++)
             {
-                SpawnAt(entManager, "WallSolid", gridUid, 4, y);
+                SpawnAt(entManager, barrier, gridUid, 4, y);
             }
         });
 

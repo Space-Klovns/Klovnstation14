@@ -6,6 +6,7 @@ using Content.Shared.Destructible;
 using Content.Shared.DoAfter;
 using Content.Shared.Doors.Components;
 using Content.Shared.Doors.Systems; // KS14
+using Content.Server._KS14.NPC.Doors; // KS14
 using Content.Shared.NPC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -37,12 +38,19 @@ public sealed partial class NPCSteeringSystem
      */
 
     [Dependency] private SharedDoorSystem _doorSystem = default!; // KS14
+    [Dependency] private NpcDoorSystem _npcDoorSystem = default!; // KS14
     [Dependency] private EntityQuery<DoorComponent> _doorQuery = default!;
     [Dependency] private EntityQuery<ClimbableComponent> _climbableQuery = default!;
     [Dependency] private EntityQuery<DestructibleComponent /* Trauma/KS14: moved DestructibleComponent to shared */> _destructibleQuery = default!;
 
     private SteeringObstacleStatus TryHandleFlags(EntityUid uid, NPCSteeringComponent component, PathPoly poly)
     {
+        // KS14 start: loose things in the way, pushed out of it, before anything else here: the navmesh may not have
+        //      known of them when the path was made. See NPCSteeringSystem.Klovn.Pushing.cs
+        if (IsPushThrough(component, poly) || HasLooseBlocker(uid, component, poly))
+            return TryPushObstacles(uid, component, poly);
+        // KS14 end
+
         DebugTools.Assert(!poly.Data.IsFreeSpace);
         // TODO: Store PathFlags on the steering comp
         // and be able to re-check it.
@@ -111,27 +119,74 @@ public sealed partial class NPCSteeringSystem
                 // If we get to here then didn't succeed for reasons.
             }
             */
+            // A shut door here it could neither open nor force, if any: reported if nothing else gets it through.
+            EntityUid? shutDoorUid = null;
+
             if (isDoor && (component.Flags & PathFlags.Interact) != 0x0)
             {
                 foreach (var obstacleUid in obstacleEnts)
                 {
-                    // Only doors a person could open by hand. Shutters and blast doors open from their buttons.
-                    if (!_doorQuery.TryGetComponent(obstacleUid, out var doorComponent) ||
-                        !(doorComponent.ClickOpen || doorComponent.BumpOpen))
+                    if (!_doorQuery.TryGetComponent(obstacleUid, out var doorComponent))
                         continue;
+
+                    // Forcing it already: wait for it to give.
+                    if (_npcDoorSystem.IsBreaching(uid, obstacleUid))
+                        return SteeringObstacleStatus.Continuing;
+
+                    // Shutters and blast doors open from their buttons, never by hand. Prying is all that is left.
+                    var openByHand = doorComponent.ClickOpen || doorComponent.BumpOpen;
 
                     // Opening or open: the navmesh still shows it shut until its chunk is rebuilt. Closing or
                     //      denying: it will be closed, and openable again, in a moment. Either way, wait rather
                     //      than fall through to prying or smashing it.
-                    if (doorComponent.State is DoorState.Opening or DoorState.Open or DoorState.Closing or DoorState.Denying)
+                    if (doorComponent.State is DoorState.Opening or DoorState.Open ||
+                        openByHand && doorComponent.State is DoorState.Closing or DoorState.Denying)
                         return SteeringObstacleStatus.Continuing;
 
-                    if (doorComponent.State == DoorState.Closed &&
-                        _doorSystem.TryOpen(obstacleUid, doorComponent, uid, quiet: true))
+                    if (doorComponent.State != DoorState.Closed)
+                        continue;
+
+                    if (openByHand)
+                    {
+                        // Asked before trying: trying may change what it would say.
+                        var believedOpenable = _npcDoorSystem.GetDoorAccess(uid, obstacleUid) == NpcDoorAccess.Openable;
+
+                        // Only tried if it thinks it opens for it, or it is the only way. A door it thinks is locked is
+                        //      gone round like a locked one, so its access being added later does not let it through
+                        //      without it ever having tried the door. Not by an NPC that pries or smashes its way
+                        //      through: a locked door is no reason for it to go round.
+                        var breaksThrough = (component.Flags & (PathFlags.Prying | PathFlags.Smashing)) != 0x0;
+                        if (believedOpenable || breaksThrough || _npcDoorSystem.IsOnlyWay(uid, obstacleUid))
+                        {
+                            if (_doorSystem.TryOpen(obstacleUid, doorComponent, uid, quiet: true))
+                                return SteeringObstacleStatus.Continuing;
+
+                            // Thought it could get through, and could not: it was fooled. See NpcDoorSystem.
+                            if (believedOpenable)
+                                _npcDoorSystem.ReportRefused(uid, obstacleUid);
+                        }
+                        else if (_npcDoorSystem.TryDetourAroundDoor(uid, obstacleUid, component, believedLocked: true))
+                        {
+                            component.CurrentPath.Clear();
+                            return SteeringObstacleStatus.Continuing;
+                        }
+                    }
+
+                    // Shut to it, and the way it is going: go round it if there is a way round, and force it with
+                    //      something it carries, if it does that, only when there is not. See NpcDoorSystem.
+                    if (_npcDoorSystem.TryDetourAroundDoor(uid, obstacleUid, component))
+                    {
+                        component.CurrentPath.Clear();
                         return SteeringObstacleStatus.Continuing;
+                    }
+
+                    if (_npcDoorSystem.TryBreachBlockingDoor(uid, obstacleUid))
+                        return SteeringObstacleStatus.Continuing;
+
+                    shutDoorUid ??= obstacleUid;
                 }
 
-                // Locked to us, bolted, unpowered or welded: fall through to prying or smashing.
+                // Locked to us, bolted, unpowered or welded, with nothing to force it: fall through to prying or smashing.
             }
             // KS14 end
 
@@ -209,7 +264,7 @@ public sealed partial class NPCSteeringSystem
 
                     // Blocked or the likes?
                     if (!attackResult)
-                        return SteeringObstacleStatus.Failed;
+                        return FailAtDoor(uid, shutDoorUid); // KS14: Failed -> FailAtDoor
 
                     if (obstacleEnts.Count == 0)
                         return SteeringObstacleStatus.Completed;
@@ -218,11 +273,25 @@ public sealed partial class NPCSteeringSystem
                 }
             }
 
-            return SteeringObstacleStatus.Failed;
+            return FailAtDoor(uid, shutDoorUid); // KS14: Failed -> FailAtDoor
         }
 
         return SteeringObstacleStatus.Completed;
     }
+
+    // KS14 start
+    /// <summary>
+    ///     Gives up on the way through, remembering the door that stopped it, if one did, so that its next path goes
+    ///         round that door rather than back into it. See <see cref="NpcDoorSystem.ReportBlocked"/>.
+    /// </summary>
+    private SteeringObstacleStatus FailAtDoor(EntityUid uid, EntityUid? shutDoorUid)
+    {
+        if (shutDoorUid is { } doorUid)
+            _npcDoorSystem.ReportBlocked(uid, doorUid);
+
+        return SteeringObstacleStatus.Failed;
+    }
+    // KS14 end
 
     private void GetObstacleEntities(PathPoly poly, int mask, int layer, List<EntityUid> ents)
     {

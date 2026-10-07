@@ -1,9 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Server._KS14.NPC.Perception;
+using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
-using Content.Shared.Examine;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -11,6 +12,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.Squad;
@@ -18,7 +20,8 @@ namespace Content.Server._KS14.NPC.Squad;
 /// <summary>
 ///     Groups NPCs with <see cref="NpcSquadMemberComponent"/> into squads with exactly one leader each.
 ///
-///     Unassigned NPCs join the nearest friendly squad in range and line of sight that has room, or, if they can
+///     Unassigned NPCs join the nearest friendly squad in range, in line of sight and within a short walk that has room,
+///         or, if they can
 ///         lead, found their own. Squads that drop below their assimilation threshold merge into a nearby one. When
 ///         a leader dies, the healthiest remaining member that can lead takes over; a squad with nobody left who can
 ///         lead breaks up, and one with no members at all is deleted. Leaders hand their
@@ -28,18 +31,21 @@ public sealed partial class NpcSquadSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
-    [Dependency] private HTNSystem _htnSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
-    [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private MobThresholdSystem _mobThresholdSystem = default!;
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
+    [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
+    [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
+    [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<NpcSquadComponent> _squadQuery = default!;
     [Dependency] private EntityQuery<NpcSquadMemberComponent> _squadMemberQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
+    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
     [Dependency] private EntityQuery<NPCRangedCombatComponent> _rangedCombatQuery = default!;
@@ -57,6 +63,11 @@ public sealed partial class NpcSquadSystem : EntitySystem
     private readonly HashSet<Entity<NpcSquadMemberComponent>> _nearbyMembers = new();
     private readonly List<EntityUid> _scratchMembers = new();
     private readonly List<(EntityUid From, EntityUid Into)> _pendingMerges = new();
+
+    /// <summary>
+    ///     How far each tile is to walk from the NPC looking for a squad to join. See <see cref="CanWalkTo"/>.
+    /// </summary>
+    private readonly Dictionary<Vector2i, int> _joinWalkSteps = new();
 
     public override void Update(float frameTime)
     {
@@ -95,6 +106,26 @@ public sealed partial class NpcSquadSystem : EntitySystem
     }
 
     /// <summary>
+    ///     <paramref name="callerUid"/> tells its squad something: raises <paramref name="ev"/> on each other member,
+    ///         however far away. The same event goes to each in turn, so a handler can leave an answer on it for the
+    ///         caller. Whether the caller speaks up, and whether a member listens, is for the caller and the handlers.
+    ///         Handlers must not change who is in the squad. Returns whether the caller has a squad.
+    /// </summary>
+    public bool CallOut<TEvent>(EntityUid callerUid, ref TEvent ev) where TEvent : notnull
+    {
+        if (!TryGetSquad(callerUid, out var squadEntity))
+            return false;
+
+        foreach (var memberUid in squadEntity.Value.Comp.Members)
+        {
+            if (memberUid != callerUid)
+                RaiseLocalEvent(memberUid, ref ev);
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Records <paramref name="threatCoordinates"/> as the latest known hostile position for
     ///         <paramref name="memberUid"/>'s whole squad, from something the member has only just learned - a
     ///         hostile sighted, a disturbance heard. Always counts as fresh, even at the same spot as before: a
@@ -106,7 +137,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
         if (!TryGetSquad(memberUid, out var squadEntity))
             return;
 
-        squadEntity.Value.Comp.ThreatCoordinates = threatCoordinates;
+        squadEntity.Value.Comp.ThreatCoordinates = Snapshot(threatCoordinates);
         squadEntity.Value.Comp.ThreatReportedAt = _gameTiming.CurTime;
     }
 
@@ -145,13 +176,38 @@ public sealed partial class NpcSquadSystem : EntitySystem
     ///     Records that <paramref name="memberUid"/> has a hostile in its sights at
     ///         <paramref name="threatCoordinates"/>: the squad is in contact, and that is its threat.
     /// </summary>
+    /// <remarks>
+    ///     Members in contact report every second or so, so the threat position only moves once the new one is
+    ///         <see cref="ThreatRefreshDistance"/> from it - otherwise a hostile shuffling on the spot would rebuild
+    ///         the squad's cover plan with every report. The report itself is always fresh: the hostile is there.
+    /// </remarks>
     public void ReportContact(EntityUid memberUid, EntityCoordinates threatCoordinates)
     {
         if (!TryGetSquad(memberUid, out var squadEntity))
             return;
 
-        squadEntity.Value.Comp.LastContactAt = _gameTiming.CurTime;
-        ReportThreat(memberUid, threatCoordinates);
+        var squadComponent = squadEntity.Value.Comp;
+        var now = _gameTiming.CurTime;
+
+        squadComponent.LastContactAt = now;
+        squadComponent.ThreatReportedAt = now;
+
+        var snapshot = Snapshot(threatCoordinates);
+        if (squadComponent.ThreatCoordinates is { } existingCoordinates &&
+            existingCoordinates.TryDistance(EntityManager, _transformSystem, snapshot, out var distance) &&
+            distance < ThreatRefreshDistance)
+            return;
+
+        squadComponent.ThreatCoordinates = snapshot;
+    }
+
+    /// <summary>
+    ///     <paramref name="coordinates"/> relative to the grid or map rather than to whatever they were relative to,
+    ///         so a threat position given relative to a hostile stays where it was rather than following them about.
+    /// </summary>
+    private EntityCoordinates Snapshot(EntityCoordinates coordinates)
+    {
+        return TerminatingOrDeleted(coordinates.EntityId) ? coordinates : _transformSystem.GetMoverCoordinates(coordinates);
     }
 
     /// <summary>
@@ -184,9 +240,26 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnMobStateChanged(Entity<NpcSquadMemberComponent> entity, ref MobStateChangedEvent args)
     {
+        if (args.NewMobState == MobState.Alive)
+        {
+            // Back on its feet: whatever happens to it now is news for the squad it ends up in, not the old one.
+            entity.Comp.LastSquad = null;
+            return;
+        }
+
+        // Told while it is still in the squad, so whoever reacts sees the squad it went down with. One that dies
+        //      after going critical has left already: it is reported against the squad it was in, if that is still
+        //      about.
+        var squadUid = entity.Comp.Squad ?? entity.Comp.LastSquad;
+        if (squadUid is { } downedInUid && _squadQuery.HasComp(downedInUid))
+        {
+            var ev = new NpcSquadMemberDownedEvent(downedInUid, entity.Owner, args.NewMobState);
+            RaiseLocalEvent(ref ev);
+        }
+
         // Succession has to be immediate: a leaderless squad would otherwise hold for up to a whole update.
-        if (args.NewMobState != MobState.Alive)
-            RemoveFromSquad(entity);
+        entity.Comp.LastSquad = entity.Comp.Squad ?? entity.Comp.LastSquad;
+        RemoveFromSquad(entity);
     }
 
     [SubscribeLocalEvent]
@@ -337,7 +410,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
     /// <summary>
     ///     Finds the squad with a member nearest to <paramref name="memberEntity"/> that is in range, in line of
-    ///         sight, friendly, and has room for <paramref name="extraMembers"/> more.
+    ///         sight, within a short walk (<see cref="NpcSquadMemberComponent.JoinWalkDistance"/>), friendly, and has
+    ///         room for <paramref name="extraMembers"/> more.
     /// </summary>
     private bool TryFindJoinableSquad(
         Entity<NpcSquadMemberComponent> memberEntity,
@@ -350,6 +424,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
         distance = float.MaxValue;
 
         var memberCoordinates = _transformSystem.GetMapCoordinates(memberEntity.Owner);
+        var walked = false;
 
         _nearbyMembers.Clear();
         _entityLookupSystem.GetEntitiesInRange(memberCoordinates, memberEntity.Comp.JoinRange, _nearbyMembers);
@@ -368,7 +443,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
             var otherDistance = (otherCoordinates.Position - memberCoordinates.Position).Length();
 
             if (otherDistance >= distance ||
-                !_examineSystem.InRangeUnOccluded(memberEntity.Owner, otherEntity.Owner, memberEntity.Comp.JoinRange))
+                !_npcLineOfSightSystem.InLineOfSight(memberCoordinates, otherCoordinates, memberEntity.Comp.JoinRange) ||
+                !CanWalkTo(memberEntity, otherEntity.Owner, ref walked))
                 continue;
 
             squadUid = otherSquadUid;
@@ -376,6 +452,39 @@ public sealed partial class NpcSquadSystem : EntitySystem
         }
 
         return squadUid is not null;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberEntity"/> can walk to <paramref name="otherUid"/> within its
+    ///         <see cref="NpcSquadMemberComponent.JoinWalkDistance"/>. Line of sight is not enough: a window lets it see
+    ///         a squad it cannot get to. Floods out from it once a call, the first time this is asked
+    ///         (<paramref name="walked"/>), and only for squads already in sight, so most calls flood nothing. Two NPCs
+    ///         off any grid, floating in space, have nothing to walk on: sight is all there is.
+    /// </summary>
+    private bool CanWalkTo(Entity<NpcSquadMemberComponent> memberEntity, EntityUid otherUid, ref bool walked)
+    {
+        var memberTransformComponent = Transform(memberEntity.Owner);
+        var otherTransformComponent = Transform(otherUid);
+
+        if (memberTransformComponent.GridUid is not { } gridUid)
+            return otherTransformComponent.GridUid == null;
+
+        if (otherTransformComponent.GridUid != gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            return false;
+
+        if (!walked)
+        {
+            _joinWalkSteps.Clear();
+            _npcSquadCoverSystem.FloodTiles(memberEntity.Owner,
+                (gridUid, mapGridComponent),
+                _mapSystem.TileIndicesFor(gridUid, mapGridComponent, memberTransformComponent.Coordinates),
+                memberEntity.Comp.JoinWalkDistance,
+                _joinWalkSteps,
+                stopAtDoors: false);
+            walked = true;
+        }
+
+        return _joinWalkSteps.ContainsKey(_mapSystem.TileIndicesFor(gridUid, mapGridComponent, otherTransformComponent.Coordinates));
     }
 
     private bool IsFriendly(EntityUid uid, EntityUid otherUid)
@@ -522,7 +631,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
                 }
 
                 if (shared)
-                    _htnSystem.Replan(memberHtnComponent);
+                    _npcSensorSystem.RequestReplan(memberUid);
             }
         }
     }

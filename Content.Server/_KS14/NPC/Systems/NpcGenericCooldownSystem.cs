@@ -3,54 +3,45 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.Systems;
 
+/// <summary>
+///     Named cooldowns on an NPC, for HTN to set (<c>CooldownOperator</c>) and check (<c>CooldownPrecondition</c>).
+///         Nothing ticks them: a key is on cooldown while its end time is still to come, and ended ones are dropped when
+///         the next is set.
+/// </summary>
 public sealed partial class NpcGenericCooldownSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private EntityQuery<NpcGenericCooldownComponent> _cooldownQuery = default!;
 
-    public override void Update(float frameTime)
+    public void SetCooldown(EntityUid uid, string stringKey, TimeSpan endTime)
     {
-        base.Update(frameTime);
-
-        var eqe = EntityQueryEnumerator<NpcActiveGenericCooldownComponent, NpcGenericCooldownComponent>();
-        var curTime = _gameTiming.CurTime;
-
-        while (eqe.MoveNext(out var uid, out var activeComponent, out var cooldownComponent))
-        {
-            foreach (var (id, endTime) in cooldownComponent.CooldownEndTimes)
-            {
-                if (curTime < endTime)
-                    continue;
-
-                cooldownComponent.CooldownEndTimes.Remove(id);
-            }
-
-            if (cooldownComponent.CooldownEndTimes.Count == 0)
-                RemComp(uid, activeComponent);
-        }
+        SetCooldown(uid, stringKey.GetHashCode(), endTime);
     }
 
-    public void SetCooldown(Entity<NpcGenericCooldownComponent?> entity, string stringKey, TimeSpan endTime)
-        => SetCooldown(entity, stringKey.GetHashCode(), endTime);
-
-    public void SetCooldown(Entity<NpcGenericCooldownComponent?> entity, int stringKeyHash, TimeSpan endTime)
+    public void SetCooldown(EntityUid uid, int stringKeyHash, TimeSpan endTime)
     {
-        if (!_cooldownQuery.TryGetComponent(entity, out var genericCooldownComponent))
-            genericCooldownComponent = EnsureComp<NpcGenericCooldownComponent>(entity);
+        var cooldownComponent = EnsureComp<NpcGenericCooldownComponent>(uid);
+        var now = _gameTiming.CurTime;
 
-        genericCooldownComponent.CooldownEndTimes[stringKeyHash] = endTime;
-        EnsureComp<NpcActiveGenericCooldownComponent>(entity);
+        // Removing while enumerating is allowed for a Dictionary.
+        foreach (var (keyHash, keyEndTime) in cooldownComponent.CooldownEndTimes)
+        {
+            if (keyEndTime <= now)
+                cooldownComponent.CooldownEndTimes.Remove(keyHash);
+        }
+
+        cooldownComponent.CooldownEndTimes[stringKeyHash] = endTime;
     }
 
     public bool IsKeyOnCooldown(Entity<NpcGenericCooldownComponent?> entity, string stringKey)
-        => IsKeyOnCooldown(entity, stringKey.GetHashCode());
+    {
+        return IsKeyOnCooldown(entity, stringKey.GetHashCode());
+    }
 
     public bool IsKeyOnCooldown(Entity<NpcGenericCooldownComponent?> entity, int stringKeyHash)
     {
-        if (!_cooldownQuery.Resolve(ref entity, logMissing: false) ||
-            !entity.Comp!.CooldownEndTimes.TryGetValue(stringKeyHash, out var cooldownEndTime))
-            return false;
-
-        return _gameTiming.CurTime < cooldownEndTime;
+        return _cooldownQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false) &&
+            entity.Comp.CooldownEndTimes.TryGetValue(stringKeyHash, out var cooldownEndTime) &&
+            _gameTiming.CurTime < cooldownEndTime;
     }
 }

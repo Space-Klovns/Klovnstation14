@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Pathfinding; // KS14
 using Content.Shared.NPC;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
@@ -25,8 +26,8 @@ public abstract class PathRequest
 
     public readonly Stopwatch Stopwatch = new();
     public PriorityQueue<ValueTuple<float, PathPoly>> Frontier = default!;
-    public /* KS14: readonly removed, tactical requests swap in a pooled one */ Dictionary<PathPoly, float> CostSoFar = new();
-    public readonly Dictionary<PathPoly, PathPoly> CameFrom = new();
+    public /* KS14: readonly removed, tactical requests swap in a pooled one */ Dictionary<PathPoly, float> CostSoFar = PathfindingSystem.NewPolyDictionary<float>() /* KS14: new() -> keyed by identity */;
+    public /* KS14: readonly removed, A* requests swap in a pooled one */ Dictionary<PathPoly, PathPoly> CameFrom = PathfindingSystem.NewPolyDictionary<PathPoly>() /* KS14: new() -> keyed by identity */;
 
     #endregion
 
@@ -35,6 +36,15 @@ public abstract class PathRequest
     public readonly PathFlags Flags;
     public readonly int CollisionLayer;
     public readonly int CollisionMask;
+
+    // KS14 start
+    /// <summary>
+    ///     Door tiles this request's NPC has found it cannot get through, by grid: walls, as far as it is concerned. Built
+    ///         on the main thread when the request is made and only read after, so the worker threads may share it.
+    ///         Null when there are none. See <c>PathfindingSystem.Klovn.Avoid.cs</c>.
+    /// </summary>
+    public HashSet<(EntityUid Grid, Vector2i Tile)>? AvoidedTiles;
+    // KS14 end
 
     #endregion
 
@@ -56,6 +66,25 @@ public sealed class AStarPathRequest : PathRequest
     /// How close we need to be to the end node to be considered as arrived.
     /// </summary>
     public float Distance;
+
+    // KS14 start
+    /// <summary>
+    ///     The search's open set, used in place of <see cref="PathRequest.Frontier"/> so it can be pooled. Rented with
+    ///         the rest of the search state when the request is queued, or made on the first slice if it was not.
+    /// </summary>
+    public PathPolyFrontier? PolyFrontier;
+
+    /// <summary>
+    ///     The coarse maps' estimate of what is left to walk, worked out on the first slice. Null when there is none, and
+    ///         A* uses the straight-line distance. See <c>PathfindingSystem.Klovn.Hierarchy.cs</c>.
+    /// </summary>
+    public PathHeuristic? KsHeuristic;
+
+    /// <summary>
+    ///     How many polys the search has expanded, over all its slices. For tests and benchmarks.
+    /// </summary>
+    public int KsExpansions;
+    // KS14 end
 
     public AStarPathRequest(
         EntityCoordinates start,

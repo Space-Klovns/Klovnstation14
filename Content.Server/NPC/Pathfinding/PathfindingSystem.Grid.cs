@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Shared.Doors.Components; // KS14
 using Content.Shared.NPC;
 using Content.Shared.Physics;
 using Robust.Shared.Collections;
@@ -136,6 +137,8 @@ public sealed partial class PathfindingSystem
             // TODO: Inflate grid bounds slightly and get chunks.
             // This is for map <> grid pathfinding
 
+            CollectPushableBodies((uid, mapGridComp), dirt); // KS14: asked here, on the main thread, as the build below is not
+
             // Without parallel this is roughly 3x slower on my desktop.
             Parallel.For(0, dirt.Length, options, i =>
             {
@@ -212,8 +215,13 @@ public sealed partial class PathfindingSystem
                 chunkA.PortalPolys.TryAdd(portal, polyA);
                 chunkB.PortalPolys.TryAdd(portal, polyB);
                 AddNeighbors(polyA, polyB);
+                // KS14 start: the portal changed what both ends border
+                chunkA.KsAbstractions = null;
+                chunkB.KsAbstractions = null;
+                // KS14 end
             }
 
+            DropAbstractions(pathfinding, dirt); // KS14
             comp.DirtyChunks.Clear();
         }
     }
@@ -280,7 +288,7 @@ public sealed partial class PathfindingSystem
         var gridUid = ev.Component.GridUid;
         var oldGridUid = ev.OldPosition.EntityId == ev.NewPosition.EntityId
             ? gridUid
-            : _transform.GetGrid((ev.Entity.Owner, ev.Component));
+            : _transform.GetGrid(ev.OldPosition); // KS14: (ev.Entity.Owner, ev.Component) -> ev.OldPosition, the transform is already where it moved to, so a wall deleted (detached to nullspace) never cleared its tile
 
         if (oldGridUid != null && oldGridUid != gridUid)
         {
@@ -404,7 +412,8 @@ public sealed partial class PathfindingSystem
         sw.Start();
         var points = chunk.Points;
         var gridOrigin = chunk.Origin * ChunkSize;
-        var tileEntities = new ValueList<EntityUid>();
+        var tileEntities = new ValueList<TileEntity>(); // KS14: EntityUid -> TileEntity
+        var intersectingEntities = new HashSet<EntityUid>(); // KS14: one set a chunk, not one a tile
         var chunkPolys = chunk.BufferPolygons;
 
         for (var i = 0; i < chunkPolys.Length; i++)
@@ -429,6 +438,34 @@ public sealed partial class PathfindingSystem
                 var flags = tile.Tile.IsEmpty ? PathfindingBreadcrumbFlag.Space : PathfindingBreadcrumbFlag.None;
                 // var isBorder = x < 0 || y < 0 || x == ChunkSize - 1 || y == ChunkSize - 1;
 
+                // KS14 start: into one set reused across the chunk rather than a new one each tile, and each entity's part
+                //      in the tile's points worked out once here, see PathfindingSystem.Klovn.Breadcrumbs.cs
+                tileEntities.Clear();
+                intersectingEntities.Clear();
+                _lookup.GetLocalEntitiesIntersecting(grid.Owner, tilePos, intersectingEntities, flags: LookupFlags.Dynamic | LookupFlags.Static, gridComp: grid.Comp);
+
+                foreach (var ent in intersectingEntities)
+                {
+                    // Irrelevant for pathfinding
+                    if (!_fixturesQuery.TryGetComponent(ent, out var fixtures) ||
+                        !IsBodyRelevant(fixtures))
+                    {
+                        continue;
+                    }
+
+                    var xform = Transform(ent);
+
+                    if (xform.ParentUid != grid.Owner ||
+                        _maps.LocalToTile(grid.Owner, grid.Comp, xform.Coordinates) != tilePos)
+                    {
+                        continue;
+                    }
+
+                    tileEntities.Add(GetTileEntity(ent, fixtures, xform));
+                }
+                // KS14 end
+                // KS14: replaced above
+/*
                 tileEntities.Clear();
                 var available = _lookup.GetLocalEntitiesIntersecting(tile, flags: LookupFlags.Dynamic | LookupFlags.Static);
 
@@ -452,6 +489,8 @@ public sealed partial class PathfindingSystem
                     tileEntities.Add(ent);
                 }
 
+*/
+
                 for (var subX = 0; subX < SubStep; subX++)
                 {
                     for (var subY = 0; subY < SubStep; subY++)
@@ -464,7 +503,61 @@ public sealed partial class PathfindingSystem
                         var collisionMask = 0x0;
                         var collisionLayer = 0x0;
                         var damage = 0f;
+                        var blockedBesidesDoors = false; // KS14: see below
+                        var blockedUnpushable = false; // KS14: see below
 
+                        // KS14 start: only whether each entity covers this point is worked out per point; what it adds to a point it
+                        //      covers was worked out once for the tile, in GetTileEntity
+                        foreach (var tileEntity in tileEntities)
+                        {
+                            var colliding = false;
+
+                            foreach (var fixture in tileEntity.Fixtures.Fixtures.Values)
+                            {
+                                // Don't need to re-do it.
+                                if (!fixture.Hard ||
+                                    (collisionMask & fixture.CollisionMask) == fixture.CollisionMask &&
+                                    (collisionLayer & fixture.CollisionLayer) == fixture.CollisionLayer &&
+                                    (tileEntity.Pushable || blockedUnpushable) /* KS14: unless it is what makes the point more than pushable */)
+                                {
+                                    continue;
+                                }
+
+                                // Do an AABB check first as it's probably faster, then do an actual point check.
+                                var intersects = false;
+
+                                foreach (var proxy in fixture.Proxies)
+                                {
+                                    if (!proxy.AABB.Contains(localPos))
+                                        continue;
+
+                                    intersects = true;
+                                    break;
+                                }
+
+                                if (!intersects ||
+                                    !_fixtures.TestPoint(fixture.Shape, tileEntity.LocalTransform, localPos))
+                                {
+                                    continue;
+                                }
+
+                                collisionLayer |= fixture.CollisionLayer;
+                                collisionMask |= fixture.CollisionMask;
+                                colliding = true;
+                            }
+
+                            // If entity doesn't intersect this node (e.g. thindows) then ignore it.
+                            if (!colliding)
+                                continue;
+
+                            flags |= tileEntity.Flags;
+                            blockedBesidesDoors |= tileEntity.BlockedBesidesDoors;
+                            blockedUnpushable |= !tileEntity.Pushable;
+                            damage += tileEntity.Damage;
+                        }
+                        // KS14 end
+                        // KS14: replaced above
+/*
                         foreach (var ent in tileEntities)
                         {
                             if (!_fixturesQuery.TryGetComponent(ent, out var fixtures))
@@ -516,10 +609,11 @@ public sealed partial class PathfindingSystem
                             // KS14 start: flag only readers that actually restrict. An airlock's own reader is empty
                             //      and defers to its door electronics board, which decides - unless the door's own
                             //      reader is switched off (access wire cut), which lets anyone through whatever the
-                            //      board says. An emag clears the board's lists instead. Both rebuild the chunk: see
-                            //      PathfindingSystem.Klovn.Access.cs
+                            //      board says. An emag clears the board's lists instead, and emergency access lets
+                            //      everyone through. All of them rebuild the chunk: see PathfindingSystem.Klovn.Access.cs
                             if (_accessReaderQuery.TryGetComponent(ent, out var ownAccessReaderComponent) &&
                                 ownAccessReaderComponent.Enabled &&
+                                !(_airlockQuery.TryGetComponent(ent, out var airlockComponent) && airlockComponent.EmergencyAccess) &&
                                 _accessReaderSystem.GetMainAccessReader(ent, out var mainAccessReader) &&
                                 mainAccessReader.Value.Comp.Enabled &&
                                 (mainAccessReader.Value.Comp.AccessKeys.Count > 0 || mainAccessReader.Value.Comp.AccessLists.Count > 0))
@@ -528,9 +622,23 @@ public sealed partial class PathfindingSystem
                                 flags |= PathfindingBreadcrumbFlag.Access;
                             }
 
-                            if (_doorQuery.HasComponent(ent))
+                            // KS14 start: something anchored and solid here that is not a door - a window under its
+                            //      shutters, a grille - so opening every door here still leaves no way through
+                            if (!_doorQuery.HasComponent(ent) && Transform(ent).Anchored)
+                                blockedBesidesDoors = true;
+                            // KS14 end
+
+                            if (_doorQuery.TryGetComponent(ent, out var doorComponent)) // KS14: HasComponent -> TryGetComponent
                             {
                                 flags |= PathfindingBreadcrumbFlag.Door;
+
+                                // KS14 start: doors nobody can get through
+                                if (_doorBoltQuery.TryGetComponent(ent, out var doorBoltComponent) && doorBoltComponent.BoltsDown)
+                                    flags |= PathfindingBreadcrumbFlag.Bolted;
+
+                                if (doorComponent.State == DoorState.Welded)
+                                    flags |= PathfindingBreadcrumbFlag.Welded;
+                                // KS14 end
                             }
 
                             if (_climbableQuery.HasComponent(ent))
@@ -543,6 +651,25 @@ public sealed partial class PathfindingSystem
                                 damage += _destructible.DestroyedAt(ent, damageable).Float();
                             }
                         }
+
+*/
+
+                        // KS14 start: not a doorway, however many doors it has: just in the way. Door costs, and
+                        //      squad tactics' rooms, which take their doorways from this flag, would otherwise treat
+                        //      shutters over a window as a way in
+                        if (blockedBesidesDoors)
+                        {
+                            flags &= ~(PathfindingBreadcrumbFlag.Door |
+                                PathfindingBreadcrumbFlag.Access |
+                                PathfindingBreadcrumbFlag.Bolted |
+                                PathfindingBreadcrumbFlag.Welded);
+                        }
+                        // KS14 end
+
+                        // KS14 start: blocked, and only by things that can be pushed out of the way. See NpcPushSystem
+                        if ((collisionLayer != 0x0 || collisionMask != 0x0) && !blockedUnpushable)
+                            flags |= PathfindingBreadcrumbFlag.Pushable;
+                        // KS14 end
 
                         /*This is causing too many issues and I'd rather just ignore it until pathfinder refactor
                           to just get tiles at runtime.
@@ -561,6 +688,8 @@ public sealed partial class PathfindingSystem
                         points[xOffset, yOffset] = crumb;
                     }
                 }
+
+                BlockNarrowGaps(points, x, y); // KS14: a tile left too narrow to get through by something on it is blocked whole
 
                 // Now we got tile data and we can get the polys
                 var data = points[x * SubStep, y * SubStep].Data;

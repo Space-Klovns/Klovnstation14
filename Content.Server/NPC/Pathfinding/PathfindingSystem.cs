@@ -59,6 +59,8 @@ namespace Content.Server.NPC.Pathfinding
         [Dependency] private EntityQuery<AccessReaderComponent> _accessReaderQuery = default!;
         [Dependency] private EntityQuery<DestructibleComponent> _destructibleQuery = default!;
         [Dependency] private EntityQuery<DoorComponent> _doorQuery = default!;
+        [Dependency] private EntityQuery<DoorBoltComponent> _doorBoltQuery = default!; // KS14
+        [Dependency] private EntityQuery<AirlockComponent> _airlockQuery = default!; // KS14
         [Dependency] private EntityQuery<ClimbableComponent> _climbableQuery = default!;
         [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
         [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
@@ -83,6 +85,8 @@ namespace Content.Server.NPC.Pathfinding
             base.Initialize();
             _playerManager.PlayerStatusChanged += OnPlayerChange;
             InitializeGrid();
+            InitializeKlovnNodeLimit(); // KS14
+            InitializeKlovnHierarchy(); // KS14
             SubscribeNetworkEvent<RequestPathfindingDebugMessage>(OnBreadcrumbs);
         }
 
@@ -172,9 +176,11 @@ namespace Content.Server.NPC.Pathfinding
                         offset--;
                         path.Tcs.SetResult(result);
                         SendRoute(path);
-                        // KS14 start: last thing to touch a finished tactical request's search state
+                        // KS14 start: last thing to touch a finished request's search state
                         if (path is TacticalPathRequest tacticalRequest)
                             ReturnTacticalSearchState(tacticalRequest);
+                        else if (path is AStarPathRequest aStarRequest)
+                            ReturnAStarSearchState(aStarRequest);
                         // KS14 end
                         break;
                     default:
@@ -437,7 +443,13 @@ namespace Content.Server.NPC.Pathfinding
                 (layer, mask) = _physics.GetHardCollision(entity, fixtures);
             }
 
-            return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken);
+            // KS14 start: round the doors this NPC has found it cannot get through
+            return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken)
+            {
+                AvoidedTiles = GetAvoidedTiles(entity),
+            };
+            // KS14 end
+            /* return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken); */ // KS14: replaced above
         }
 
         public PathFlags GetFlags(EntityUid uid)
@@ -474,14 +486,24 @@ namespace Content.Server.NPC.Pathfinding
                 flags |= PathFlags.Interact;
             }
 
+            // KS14 start
+            if (blackboard.TryGetValue<bool>(NPCBlackboard.NavPush, out var push, EntityManager) && push)
+                flags |= PathFlags.Pushing;
+            // KS14 end
+
             return flags;
         }
 
-        private async Task<PathResultEvent> GetPath(
+        internal /* KS14: private -> internal, for tests */ async Task<PathResultEvent> GetPath(
             PathRequest request, bool safe = false)
         {
             // We could maybe try an initial quick run to avoid forcing time-slicing over ticks.
             // For now it seems okay and it shouldn't block on 1 NPC anyway.
+
+            // KS14 start: search state from the pools, given back once the request has finished
+            if (request is AStarPathRequest aStarRequest)
+                RentAStarSearchState(aStarRequest);
+            // KS14 end
 
             if (safe)
             {

@@ -385,7 +385,13 @@ public sealed partial class HTNSystem : EntitySystem
                 component.CheckServices = false;
             }
 
-            status = currentOperator.Update(blackboard, frameTime);
+            // KS14 start: a task that asked for it stops as soon as its preconditions no longer hold, and replans at once
+            var preconditionsBroken = currentTask.RecheckPreconditions && !currentTask.PreconditionsStillMet(blackboard);
+            if (preconditionsBroken)
+                component.PlanAccumulator = 0f;
+            // KS14 end
+
+            status = preconditionsBroken ? HTNOperatorStatus.Failed /* KS14: precondition recheck */ : currentOperator.Update(blackboard, frameTime);
 
             switch (status)
             {
@@ -394,6 +400,7 @@ public sealed partial class HTNSystem : EntitySystem
                 case HTNOperatorStatus.Failed:
                     ShutdownTask(currentOperator, blackboard, status);
                     ShutdownPlan(component);
+                    KsDiscardStalePlanning(component); // KS14
                     break;
                 // Operator completed so go to the next one.
                 case HTNOperatorStatus.Finished:
@@ -404,6 +411,7 @@ public sealed partial class HTNSystem : EntitySystem
                     if (component.Plan.Tasks.Count <= component.Plan.Index)
                     {
                         ShutdownPlan(component);
+                        KsDiscardStalePlanning(component); // KS14
                         break;
                     }
 

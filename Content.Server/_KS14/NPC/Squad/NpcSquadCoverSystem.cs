@@ -1,7 +1,7 @@
 using System.Numerics;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Pathfinding;
-using Content.Shared.Examine;
 using Content.Shared.Physics;
 using Content.Shared.Tag;
 using Robust.Shared.Map;
@@ -21,9 +21,10 @@ namespace Content.Server._KS14.NPC.Squad;
 public sealed partial class NpcSquadCoverSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private ExamineSystemShared _examineSystem = default!;
+    [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private KillZones.NpcKillZoneSystem _npcKillZoneSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -41,6 +42,8 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     /// </summary>
     private static readonly TimeSpan NoRoomLifetime = TimeSpan.FromSeconds(5);
 
+    private readonly List<Vector2i> _roomExposureTiles = new();
+
     /// <summary>
     ///     Returns <paramref name="memberUid"/>'s cover assignment, working out the squad's plan first if it is
     ///         missing or stale. False if the member has no squad, or the squad is not in a room.
@@ -54,6 +57,24 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
             return false;
 
         return plan.Assignments.TryGetValue(memberUid, out assignment);
+    }
+
+    /// <summary>
+    ///     <paramref name="memberUid"/>'s cover assignment, if its squad has a current plan already - without working
+    ///         one out. For asking whether a member is holding cover right now: a squad that has not asked for a plan
+    ///         lately is not holding anything, and building one just to ask would build them for every squad, all
+    ///         the time, and cache them before they are wanted.
+    /// </summary>
+    public bool TryGetCurrentAssignment(EntityUid memberUid, out NpcSquadCoverAssignment assignment)
+    {
+        assignment = default;
+
+        return _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) &&
+            squadEntity.Value.Comp.Leader is { } leaderUid &&
+            _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
+            squadEntity.Value.Comp.CoverPlan is { HasRoom: true } plan &&
+            !IsStale(squadEntity.Value, leaderUid, plan, leaderSquadMemberComponent.Cover) &&
+            plan.Assignments.TryGetValue(memberUid, out assignment);
     }
 
     /// <summary>
@@ -162,13 +183,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
         var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
 
-        var (collisionLayer, collisionMask) = _fixturesQuery.TryComp(leaderUid, out var fixturesComponent)
-            ? _physicsSystem.GetHardCollision(leaderUid, fixturesComponent)
-            : (0, 0);
-
-        // With nothing to collide with, every wall would count as floor and the whole grid as one room.
-        if (collisionLayer == 0 && collisionMask == 0)
-            (collisionLayer, collisionMask) = ((int)CollisionGroup.MobLayer, (int)CollisionGroup.MobMask);
+        var (collisionLayer, collisionMask) = GetRoomCollision(leaderUid);
 
         // Go to the threat, if the squad knows of one on this grid; otherwise hold where the leader is.
         var leaderTile = _mapSystem.TileIndicesFor(gridEntity, leaderTransform.Coordinates);
@@ -200,6 +215,55 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         return plan;
     }
 
+    /// <summary>
+    ///     The collision <paramref name="uid"/> walks with, which decides what counts as a wall when finding rooms.
+    /// </summary>
+    private (int Layer, int Mask) GetRoomCollision(EntityUid uid)
+    {
+        var (collisionLayer, collisionMask) = _fixturesQuery.TryComp(uid, out var fixturesComponent)
+            ? _physicsSystem.GetHardCollision(uid, fixturesComponent)
+            : (0, 0);
+
+        // With nothing to collide with, every wall would count as floor and the whole grid as one room.
+        if (collisionLayer == 0 && collisionMask == 0)
+            (collisionLayer, collisionMask) = ((int)CollisionGroup.MobLayer, (int)CollisionGroup.MobMask);
+
+        return (collisionLayer, collisionMask);
+    }
+
+    /// <summary>
+    ///     Finds the room around <paramref name="seedCoordinates"/>, as <paramref name="walkerUid"/> would walk it,
+    ///         filling <paramref name="room"/>'s grid, tiles and thresholds - and nothing else: no cover is assigned.
+    ///         For squad tactics, which need to know the shape of the room a hostile was lost in.
+    /// </summary>
+    /// <param name="awayFromCoordinates">See <see cref="TryAnalyseRoom"/>'s <c>awayFromTile</c>.</param>
+    internal bool TryFindRoom(EntityUid walkerUid,
+        EntityCoordinates seedCoordinates,
+        EntityCoordinates awayFromCoordinates,
+        NpcSquadCoverSettings settings,
+        NpcSquadCoverPlan room)
+    {
+        if (_transformSystem.GetGrid(seedCoordinates) is not { } gridUid ||
+            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            return false;
+
+        var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
+
+        var seedTile = _mapSystem.TileIndicesFor(gridEntity, seedCoordinates);
+        var awayFromTile = _transformSystem.GetGrid(awayFromCoordinates) == gridUid
+            ? _mapSystem.TileIndicesFor(gridEntity, awayFromCoordinates)
+            : seedTile;
+
+        _roomExposureTiles.Clear();
+        if (TryAnalyseRoom(gridEntity, seedTile, awayFromTile, collisionLayer, collisionMask, settings, room, _roomExposureTiles))
+            return true;
+
+        room.RoomTiles.Clear();
+        room.Thresholds.Clear();
+        return false;
+    }
+
     #region Assignment
 
     private void AssignCover(
@@ -218,7 +282,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         var candidatesPerThreshold = new List<(Vector2i Tile, float Score)>[plan.Thresholds.Count];
         for (var i = 0; i < plan.Thresholds.Count; i++)
         {
-            candidatesPerThreshold[i] = ScoreCandidates(gridEntity, plan, plan.Thresholds[i], settings, exposureTiles);
+            candidatesPerThreshold[i] = ScoreCandidates(squadEntity.Comp.Leader, gridEntity, plan, plan.Thresholds[i], settings, exposureTiles);
         }
 
         var thresholdOrder = GetThresholdPriority(squadEntity, gridEntity, plan);
@@ -356,7 +420,9 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     ///     Scores every room tile as a place to cover <paramref name="threshold"/> from, before claims. Tiles
     ///         without line of sight to it, or outside the standoff band, are left out.
     /// </summary>
+    /// <param name="observerUid">Whose kill zones count: the squad's leader.</param>
     private List<(Vector2i Tile, float Score)> ScoreCandidates(
+        EntityUid? observerUid,
         Entity<MapGridComponent> gridEntity,
         NpcSquadCoverPlan plan,
         NpcSquadThreshold threshold,
@@ -380,11 +446,15 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
                 ScoreExposure(position, gridEntity, exposureTiles, settings) *
                 ScoreWalls(plan, tile, settings);
 
+            // Not where one of us has just been gunned down.
+            if (settings.KillZoneAvoidance > 0f && observerUid is { } observer)
+                score *= Math.Clamp(1f - settings.KillZoneAvoidance * _npcKillZoneSystem.GetDanger(observer, new EntityCoordinates(gridEntity, position)), 0f, 1f);
+
             if (score <= 0f)
                 continue;
 
             var positionMap = _transformSystem.ToMapCoordinates(new EntityCoordinates(gridEntity, position));
-            if (!_examineSystem.InRangeUnOccluded(positionMap, aimMap, settings.MaxStandoff + 1f, null))
+            if (!_npcLineOfSightSystem.InLineOfSight(positionMap, aimMap, settings.MaxStandoff + 1f))
                 continue;
 
             candidates.Add((tile, score));

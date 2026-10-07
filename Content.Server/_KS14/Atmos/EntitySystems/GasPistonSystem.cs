@@ -223,7 +223,7 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
             return false;
 
         var tileIndices = _mapSystem.CoordinatesToTile(gridUid, grid: gridComponent, coords: entity.Comp.Coordinates) + tileOffset;
-        var enumerator = _mapSystem.GetAnchoredEntitiesEnumerator(gridUid, gridComponent, tileIndices);
+        var enumerator = _mapSystem.GetAnchoredEntities(gridUid, gridComponent, tileIndices);
 
         while (enumerator.MoveNext(out var otherUid))
         {

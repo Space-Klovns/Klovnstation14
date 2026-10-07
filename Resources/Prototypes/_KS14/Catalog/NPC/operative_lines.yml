@@ -83,3 +83,69 @@
   values:
     prefix: ks-operative-line-standdownack-
     count: 4
+
+- type: localizedDataset
+  id: KsOperativeSearching
+  values:
+    prefix: ks-operative-line-searching-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeCalloutReceived
+  values:
+    prefix: ks-operative-line-calloutreceived-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeLostContact
+  values:
+    prefix: ks-operative-line-lostcontact-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeInvestigating
+  values:
+    prefix: ks-operative-line-investigating-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeStaging
+  values:
+    prefix: ks-operative-line-staging-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeBreaching
+  values:
+    prefix: ks-operative-line-breaching-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeDoorLocked
+  values:
+    prefix: ks-operative-line-door-locked-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeEntering
+  values:
+    prefix: ks-operative-line-entering-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeSearchingArea
+  values:
+    prefix: ks-operative-line-searchingarea-
+    count: 5
+
+- type: localizedDataset
+  id: KsOperativeRegrouping
+  values:
+    prefix: ks-operative-line-regrouping-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeTargetDown
+  values:
+    prefix: ks-operative-line-target-down-
+    count: 4

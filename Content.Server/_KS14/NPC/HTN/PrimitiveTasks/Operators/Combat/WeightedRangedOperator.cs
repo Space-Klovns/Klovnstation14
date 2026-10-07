@@ -15,9 +15,10 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Combat;
 [DataDefinition]
 public sealed partial class WeightedRangedOperator : HTNOperator
 {
-    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private NPCAngerModifierSystem _npcAngerModifierSystem = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private NpcCombatRangedPatternSystem _npcCombatRangedPatternSystem = default!;
 
     /// <summary>Attack id -> base weight.</summary>
     [DataField("weights")] public Dictionary<string, float> Weights = new();
@@ -47,7 +48,6 @@ public sealed partial class WeightedRangedOperator : HTNOperator
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
-        var attackSystem = _entMan.System<NPCCombatRangedPatternSystem>();
 
         // Already fired this plan - fire-and-forget.
         if (blackboard.ContainsKey(ExecutedKey) && blackboard.GetValue<bool>(ExecutedKey))
@@ -68,7 +68,7 @@ public sealed partial class WeightedRangedOperator : HTNOperator
         if (attackId == null)
             return HTNOperatorStatus.Failed;
 
-        if (!attackSystem.ExecuteAttack(owner, attackId, target))
+        if (!_npcCombatRangedPatternSystem.TryStartAttack(owner, attackId, target))
             return HTNOperatorStatus.Failed; // on cooldown -> plan fails -> replan later
 
         if (Speeches.TryGetValue(attackId, out var speech))
@@ -92,7 +92,7 @@ public sealed partial class WeightedRangedOperator : HTNOperator
     private string? PickWeighted(EntityUid owner)
     {
         var anger = UseAngerModifier
-            ? _entMan.System<NPCAngerModifierSystem>().GetAngerModifier(owner)
+            ? _npcAngerModifierSystem.GetAngerModifier(owner)
             : 0f;
 
         var keys = new string?[Weights.Count];

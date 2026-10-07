@@ -28,7 +28,7 @@ public sealed class TacticalPathRequest : PathRequest
     /// The flood's open set, used in place of <see cref="PathRequest.Frontier"/> so it can be pooled. Rented with the
     /// rest of the search state, see <see cref="PathfindingSystem.RentTacticalSearchState"/>.
     /// </summary>
-    public TacticalFrontier TacticalFrontier = default!;
+    public PathPolyFrontier TacticalFrontier = default!;
 
     /// <summary>
     /// How many polys the flood has expanded so far, over every tick it has run for.
