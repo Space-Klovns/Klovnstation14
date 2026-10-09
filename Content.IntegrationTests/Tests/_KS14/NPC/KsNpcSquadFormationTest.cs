@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.NPC.HTN;
@@ -28,7 +29,8 @@ public sealed class KsNpcSquadFormationTest : GameTest
     public override PoolSettings PoolSettings => PsDisconnected;
 
     /// <summary>
-    ///     A squad update is once a second; this is comfortably more than two.
+    ///     A squad update is once a second (30 ticks) on a free-running timer: one to form squads and more to merge
+    ///         undersized ones, so this allows three after the navmesh exists.
     /// </summary>
     private const int SquadUpdateTicks = 90;
 
@@ -57,23 +59,33 @@ public sealed class KsNpcSquadFormationTest : GameTest
         await Pair.Server.WaitAssertion(() =>
         {
             var squads = GetSquads(entManager, gridUid);
+            var diagnostics = DescribeSquads(entManager, squads, mobUids);
 
-            Assert.That(squads, Has.Count.EqualTo(2));
-            Assert.That(squads.Select(squad => squad.Comp.Members.Count).OrderBy(count => count),
-                Is.EqualTo(new[] { 2, 4 }));
-
-            foreach (var squad in squads)
+            Assert.Multiple(() =>
             {
-                Assert.That(squad.Comp.Leader, Is.Not.Null);
-                Assert.That(squad.Comp.Members, Does.Contain(squad.Comp.Leader!.Value), "the leader counts as a member");
-            }
+                Assert.That(squads, Has.Count.EqualTo(2), $"six mobs should make two squads\n{diagnostics}");
+                Assert.That(squads.Select(squad => squad.Comp.Members.Count).OrderBy(count => count),
+                    Is.EqualTo(new[] { 2, 4 }),
+                    $"squads should be sized 2 and 4\n{diagnostics}");
 
-            foreach (var mobUid in mobUids)
-            {
-                var squadUid = entManager.GetComponent<NpcSquadMemberComponent>(mobUid).Squad;
-                Assert.That(squadUid, Is.Not.Null, "every NPC should have self-assigned");
-                Assert.That(entManager.GetComponent<NpcSquadComponent>(squadUid!.Value).Members, Does.Contain(mobUid));
-            }
+                foreach (var squad in squads)
+                {
+                    Assert.That(squad.Comp.Leader, Is.Not.Null, $"{entManager.ToPrettyString(squad.Owner)} needs a leader\n{diagnostics}");
+                    Assert.That(squad.Comp.Members, Does.Contain(squad.Comp.Leader!.Value),
+                        $"the leader of {entManager.ToPrettyString(squad.Owner)} counts as a member\n{diagnostics}");
+                }
+
+                foreach (var mobUid in mobUids)
+                {
+                    var squadUid = entManager.GetComponent<NpcSquadMemberComponent>(mobUid).Squad;
+                    Assert.That(squadUid, Is.Not.Null,
+                        $"{entManager.ToPrettyString(mobUid)} should have self-assigned\n{diagnostics}");
+
+                    if (squadUid is { } assignedSquadUid)
+                        Assert.That(entManager.GetComponent<NpcSquadComponent>(assignedSquadUid).Members, Does.Contain(mobUid),
+                            $"{entManager.ToPrettyString(mobUid)} is not listed in its own squad {entManager.ToPrettyString(assignedSquadUid)}\n{diagnostics}");
+                }
+            });
         });
     }
 
@@ -519,6 +531,31 @@ public sealed class KsNpcSquadFormationTest : GameTest
         });
 
         return sizes;
+    }
+
+    /// <summary>
+    ///     One line per squad (leader and members) and per mob (its squad, or null), plus the current tick, for
+    ///         assertion messages.
+    /// </summary>
+    private string DescribeSquads(IEntityManager entManager, List<Entity<NpcSquadComponent>> squads, List<EntityUid> mobUids)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"tick {Pair.Server.Timing.CurTick}, {squads.Count} squad(s):");
+
+        foreach (var squad in squads)
+        {
+            var leader = squad.Comp.Leader is { } leaderUid ? entManager.ToPrettyString(leaderUid).ToString() : "null";
+            var members = string.Join(", ", squad.Comp.Members.Select(uid => entManager.ToPrettyString(uid).ToString()));
+            builder.AppendLine($"  {entManager.ToPrettyString(squad.Owner)} leader {leader}, {squad.Comp.Members.Count} member(s): {members}");
+        }
+
+        foreach (var mobUid in mobUids)
+        {
+            var squadUid = entManager.GetComponent<NpcSquadMemberComponent>(mobUid).Squad;
+            builder.AppendLine($"  {entManager.ToPrettyString(mobUid)} -> {(squadUid is { } uid ? entManager.ToPrettyString(uid).ToString() : "null")}");
+        }
+
+        return builder.ToString();
     }
 
     private async Task<(IEntityManager EntManager, EntityUid GridUid)> SetUpGrid(Vector2i min, Vector2i max)
