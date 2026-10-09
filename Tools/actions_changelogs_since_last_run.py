@@ -8,6 +8,7 @@ Automatically figures out the last run and changelog contents with the GitHub AP
 
 import itertools
 import os
+from datetime import datetime  # KS14
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -29,6 +30,10 @@ TYPES_TO_EMOJI = {"Fix": "⚒️", "Add": "✅", "Remove": "❌", "Tweak": "😂
 
 ChangelogEntry = dict[str, Any]
 
+# KS14 start: max entries to send in one run
+MAX_NEW_ENTRIES = int(os.environ.get("CHANGELOG_MAX_NEW_ENTRIES", "10"))
+# KS14 end
+
 
 def main():
     if not DISCORD_WEBHOOK_URL:
@@ -43,14 +48,34 @@ def main():
         # when running this normally in a GitHub actions workflow,
         # it will get the old changelog from the GitHub API
         last_changelog_stream = get_last_changelog()
+        # KS14 start: skip sending when no baseline exists
+        if last_changelog_stream is None:
+            return
+        # KS14 end
 
     last_changelog = yaml.safe_load(last_changelog_stream)
     with open(CHANGELOG_FILE, "r") as f:
         cur_changelog = yaml.safe_load(f)
 
     diff = diff_changelog(last_changelog, cur_changelog)
+    # KS14 start: safety backstop against a wrong baseline
+    diff = cap_entries(list(diff))
+    # KS14 end
     message_lines = changelog_entries_to_message_lines(diff)
     send_message_lines(message_lines)
+
+
+# KS14 start: cap helper
+def cap_entries(entries: list[ChangelogEntry]) -> list[ChangelogEntry]:
+    if len(entries) <= MAX_NEW_ENTRIES:
+        return entries
+    print(
+        f"WARNING: {len(entries)} new changelog entries exceeds the limit of {MAX_NEW_ENTRIES}; "
+        f"the baseline run is probably wrong. Sending only the newest {MAX_NEW_ENTRIES}."
+    )
+    entries = sorted(entries, key=lambda e: e["id"])
+    return entries[-MAX_NEW_ENTRIES:]
+# KS14 end
 
 
 def get_most_recent_workflow(
@@ -58,12 +83,25 @@ def get_most_recent_workflow(
 ) -> Any:
     workflow_run = get_current_run(sess, github_repository, github_run)
     past_runs = get_past_runs(sess, workflow_run)
-    for run in past_runs["workflow_runs"]:
-        # First past successful run that isn't our current run.
-        if run["id"] == workflow_run["id"]:
-            continue
+    # KS14 start: do not trust API order; pick the newest run strictly before the current one
+    current_created = parse_iso(workflow_run["created_at"])
+    candidates = [
+        run
+        for run in past_runs["workflow_runs"]
+        if run["id"] != workflow_run["id"]
+        and parse_iso(run["created_at"]) < current_created
+    ]
+    print(f"Considered {len(past_runs['workflow_runs'])} successful runs, {len(candidates)} predate the current run")
+    if not candidates:
+        return None
+    return max(candidates, key=lambda run: parse_iso(run["created_at"]))
+    # KS14 end
 
-        return run
+
+# KS14 start: ISO-8601 parse helper
+def parse_iso(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+# KS14 end
 
 
 def get_current_run(
@@ -80,13 +118,19 @@ def get_past_runs(sess: requests.Session, current_run: Any) -> Any:
     """
     Get all successful workflow runs before our current one.
     """
-    params = {"status": "success", "created": f"<={current_run['created_at']}"}
+    # KS14 start: dropped the created filter (flaky ordering); filter by branch instead
+    params = {
+        "status": "success",
+        "branch": current_run["head_branch"],
+        "per_page": 100,
+    }
+    # KS14 end
     resp = sess.get(f"{current_run['workflow_url']}/runs", params=params)
     resp.raise_for_status()
     return resp.json()
 
 
-def get_last_changelog() -> str:
+def get_last_changelog() -> str | None:  # KS14: may return None
     github_repository = os.environ["GITHUB_REPOSITORY"]
     github_run = os.environ["GITHUB_RUN_ID"]
     github_token = os.environ["GITHUB_TOKEN"]
@@ -97,6 +141,11 @@ def get_last_changelog() -> str:
     session.headers["X-GitHub-Api-Version"] = "2022-11-28"
 
     most_recent = get_most_recent_workflow(session, github_repository, github_run)
+    # KS14 start: no predecessor found
+    if most_recent is None:
+        print("No previous successful run found, skipping")
+        return None
+    # KS14 end
     last_sha = most_recent["head_commit"]["id"]
     print(f"Last successful publish job was {most_recent['id']}: {last_sha}")
     last_changelog_stream = get_last_changelog_by_sha(
