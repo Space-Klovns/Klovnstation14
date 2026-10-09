@@ -1,6 +1,8 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Numerics;
+using Content.Server.NPC.Pathfinding;
+using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -194,6 +196,57 @@ public static class KsNpcSquadTestHelpers
 
         mapSystem.SetTiles(grid.Owner, grid.Comp, tiles);
         return grid;
+    }
+
+    /// <summary>
+    ///     Runs ticks until the pathfinding navmesh covers every tile of the rectangle, inclusive. A new grid's
+    ///         navmesh is only built on the pathfinding system's own cooldown (about half a second), and until then
+    ///         <c>GetPoly</c> is null everywhere on it, which room analysis reads as walls all round: an NPC spawned
+    ///         early cannot see that any squad is within walking distance. Fails the test if it never appears.
+    /// </summary>
+    public static async Task WaitForNavmesh(Content.IntegrationTests.Pair.TestPair pair, EntityUid gridUid, Vector2i min, Vector2i max, int maxTicks = 300)
+    {
+        var entManager = pair.Server.ResolveDependency<IEntityManager>();
+        var pathfindingSystem = entManager.System<PathfindingSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var missingTile = min;
+
+        bool Covered()
+        {
+            if (!entManager.TryGetComponent<MapGridComponent>(gridUid, out var gridComponent))
+                return false;
+
+            for (var x = min.X; x <= max.X; x++)
+            {
+                for (var y = min.Y; y <= max.Y; y++)
+                {
+                    var tile = new Vector2i(x, y);
+                    var coordinates = new EntityCoordinates(gridUid, mapSystem.TileCenterToVector((gridUid, gridComponent), tile));
+
+                    if (pathfindingSystem.GetPoly(coordinates) != null)
+                        continue;
+
+                    missingTile = tile;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        for (var i = 0; i < maxTicks; i++)
+        {
+            var covered = false;
+            await pair.Server.WaitPost(() => covered = Covered());
+
+            if (covered)
+                return;
+
+            await pair.RunTicksSync(1);
+        }
+
+        Assert.Fail($"the navmesh of {entManager.ToPrettyString(gridUid)} still had no poly at tile {missingTile} " +
+            $"after {maxTicks} ticks (tick {pair.Server.Timing.CurTick})");
     }
 
     public static EntityUid SpawnAt(IEntityManager entManager, string prototype, EntityUid gridUid, int x, int y)
