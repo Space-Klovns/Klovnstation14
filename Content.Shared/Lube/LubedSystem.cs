@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Hands;
 using Content.Shared.IdentityManagement;
 using Content.Shared.NameModifier.EntitySystems;
@@ -42,7 +43,7 @@ public sealed partial class LubedSystem : EntitySystem
             _transform.SetCoordinates(ent, Transform(user).Coordinates);
             _transform.AttachToGridOrMap(ent);
             _throwing.TryThrow(ent, _random.NextVector2(), baseThrowSpeed: ent.Comp.SlipStrength);
-            _popup.PopupEntity(Loc.GetString("lube-slip", ("target", Identity.Entity(ent, EntityManager))), user, user, PopupType.MediumCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("lube-slip", ("target", Identity.Entity(ent, EntityManager))), user, user, PopupType.MediumCaution);
         }
 
         ent.Comp.SlipsLeft--;

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.OreVent.Drone;
 using Content.Shared._KS14.OreWell;
 using Content.Shared._KS14.ScanDiscoverable.Base;
@@ -43,7 +44,7 @@ public sealed partial class OreVentSystem : EntitySystem
         if (entity.Comp.Tapped)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString("ks-specific-orevent-alreadytapped"), entity, args.User, Filter.PvsExcept(args.User), true);
+                KsPopupMessage.Create("ks-specific-orevent-alreadytapped"), entity, args.User, Filter.PvsExcept(args.User), true);
 
             return;
         }
@@ -54,7 +55,7 @@ public sealed partial class OreVentSystem : EntitySystem
         if (entity.Comp.BeingTapped)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString("ks-specific-orevent-whatareyoudoing"), entity, args.User, Filter.PvsExcept(args.User), true, type: PopupType.SmallCaution);
+                KsPopupMessage.Create("ks-specific-orevent-whatareyoudoing"), entity, args.User, Filter.PvsExcept(args.User), true, type: PopupType.SmallCaution);
 
             return;
         }
@@ -79,10 +80,10 @@ public sealed partial class OreVentSystem : EntitySystem
 
         if (_netManager.IsClient)
             _popupSystem.PopupClient(
-                Loc.GetString("ks-specific-orevent-startingextraction-user", ("vent", entity.Owner)), entity, args.User, type: PopupType.LargeCaution);
+                KsPopupMessage.Create("ks-specific-orevent-startingextraction-user", ("vent", entity.Owner)), entity, args.User, type: PopupType.LargeCaution);
         else
             _popupSystem.PopupEntity(
-                Loc.GetString("ks-specific-orevent-startingextraction-others", ("vent", entity.Owner), ("user", Identity.Name(args.User, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.User), true, type: PopupType.MediumCaution);
+                KsPopupMessage.Create("ks-specific-orevent-startingextraction-others", ("vent", entity.Owner), ("user", Identity.Name(args.User, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.User), true, type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]

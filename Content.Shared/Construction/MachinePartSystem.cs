@@ -32,11 +32,11 @@ namespace Content.Shared.Construction
                 foreach (var (material, amount) in component.StackRequirements)
                 {
                     var stack = ProtoMan.Index(material);
-                    var name = ProtoMan.Index(stack.Spawn).Name;
+                    var name = _contentLocalizationManager.GetLocalizedPrototypeName(ProtoMan.Index(stack.Spawn)); // KS14: active response culture
 
                     args.PushMarkup(Loc.GetString("machine-board-component-required-element-entry-text",
                         ("amount", amount),
-                        ("requiredElement", Loc.GetString(name))));
+                        ("requiredElement", name /* KS14: already localized */)));
                 }
 
                 foreach (var (_, info) in component.ComponentRequirements)

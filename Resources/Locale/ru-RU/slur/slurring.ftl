@@ -1,0 +1,3 @@
+slur-accent-burp = *РРЫГ*.
+
+slur-accent-confused = ...ээммэээ...

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared._KS14.Random.Helpers; // KS14 Addition
 using Content.Shared._KS14.Sparks; // KS14 Addition
@@ -218,7 +219,7 @@ public abstract partial class SharedPortalSystem : EntitySystem
     {
         if (HasComp<BodyComponent>(hitUid))
         {
-            _popup.PopupEntity(Loc.GetString("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), hitUid, type: PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), hitUid, type: PopupType.LargeCaution);
             _gibbingSystem.Gib(hitUid, dropGiblets: true);
             return false;
         }
@@ -248,10 +249,10 @@ public abstract partial class SharedPortalSystem : EntitySystem
             if (_netMan.IsClient)
                 return;
 
-            _popup.PopupCoordinates(Loc.GetString("portal-component-invalid-configuration-fizzle"),
+            _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-invalid-configuration-fizzle"),
                 ourCoords, Filter.Pvs(ourCoords, entityMan: EntityManager), true);
 
-            _popup.PopupCoordinates(Loc.GetString("portal-component-invalid-configuration-fizzle"),
+            _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-invalid-configuration-fizzle"),
                 target, Filter.Pvs(target, entityMan: EntityManager), true);
 
             QueueDel(ent);

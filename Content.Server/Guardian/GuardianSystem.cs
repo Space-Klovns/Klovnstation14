@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Shared.Actions;
 using Content.Shared.Damage.Systems;
@@ -82,7 +83,7 @@ namespace Content.Server.Guardian
 
             if (_container.IsEntityInContainer(uid))
             {
-                _popupSystem.PopupEntity(Loc.GetString("guardian-inside-container"), uid, uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-inside-container"), uid, uid);
                 return;
             }
 
@@ -114,7 +115,7 @@ namespace Content.Server.Guardian
                 return;
             }
 
-            _popupSystem.PopupEntity(Loc.GetString("guardian-available"), host.Value, host.Value);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-available"), host.Value, host.Value);
         }
 
         private void OnHostInit(EntityUid uid, GuardianHostComponent component, ComponentInit args)
@@ -143,7 +144,7 @@ namespace Content.Server.Guardian
                 return;
 
             // why is this server side code? This should be in shared
-            _popupSystem.PopupCursor(Loc.GetString("guardian-attack-host"), uid, PopupType.LargeCaution);
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-attack-host"), uid, PopupType.LargeCaution);
             args.Cancel();
         }
 
@@ -152,7 +153,7 @@ namespace Content.Server.Guardian
             if (args.Args.Cancelled)
                 return;
 
-            _popupSystem.PopupCursor(Loc.GetString("guardian-attack-host"), args.Args.Attacker, PopupType.LargeCaution);
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-attack-host"), args.Args.Attacker, PopupType.LargeCaution);
 
             args.Args.Cancelled = true;
         }
@@ -192,14 +193,14 @@ namespace Content.Server.Guardian
         {
             if (component.Used)
             {
-                _popupSystem.PopupEntity(Loc.GetString("guardian-activator-empty-invalid-creation"), user, user);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-activator-empty-invalid-creation"), user, user);
                 return;
             }
 
             // Can only inject things with the component...
             if (!HasComp<CanHostGuardianComponent>(target))
             {
-                var msg = Loc.GetString("guardian-activator-invalid-target", ("entity", Identity.Entity(target, EntityManager, user)));
+                var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("guardian-activator-invalid-target", ("entity", Identity.Entity(target, EntityManager, user)));
 
                 _popupSystem.PopupEntity(msg, user, user);
                 return;
@@ -208,7 +209,7 @@ namespace Content.Server.Guardian
             // If user is already a host don't duplicate.
             if (HasComp<GuardianHostComponent>(target))
             {
-                _popupSystem.PopupEntity(Loc.GetString("guardian-already-present-invalid-creation"), user, user);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-already-present-invalid-creation"), user, user);
                 return;
             }
 
@@ -240,7 +241,7 @@ namespace Content.Server.Guardian
             {
                 guardianComp.Host = args.Args.Target.Value;
                 _audio.PlayPvs(guardianComp.InjectSound, args.Args.Target.Value);
-                _popupSystem.PopupEntity(Loc.GetString("guardian-created"), args.Args.Target.Value, args.Args.Target.Value);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-created"), args.Args.Target.Value, args.Args.Target.Value);
                 // Exhaust the activator
                 component.Used = true;
             }
@@ -265,7 +266,7 @@ namespace Content.Server.Guardian
 
             if (args.NewMobState == MobState.Critical)
             {
-                _popupSystem.PopupEntity(Loc.GetString("guardian-host-critical-warn"), component.HostedGuardian.Value, component.HostedGuardian.Value);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-host-critical-warn"), component.HostedGuardian.Value, component.HostedGuardian.Value);
                 if (guardianComp != null)
                     _audio.PlayPvs(guardianComp.CriticalSound, component.HostedGuardian.Value);
             }
@@ -291,7 +292,7 @@ namespace Content.Server.Guardian
                 origin: args.Origin,
                 ignoreResistances: true,
                 interruptsDoAfters: false);
-            _popupSystem.PopupEntity(Loc.GetString("guardian-entity-taking-damage"), component.Host.Value, component.Host.Value);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-entity-taking-damage"), component.Host.Value, component.Host.Value);
 
         }
 
@@ -381,7 +382,7 @@ namespace Content.Server.Guardian
 
             _container.Insert(guardian, hostComponent.GuardianContainer);
             DebugTools.Assert(hostComponent.GuardianContainer.Contains(guardian));
-            _popupSystem.PopupEntity(Loc.GetString("guardian-entity-recall"), host);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("guardian-entity-recall"), host);
             guardianComponent.GuardianLoose = false;
         }
     }

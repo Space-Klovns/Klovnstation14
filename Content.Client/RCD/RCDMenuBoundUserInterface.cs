@@ -129,20 +129,17 @@ public sealed partial class RCDMenuBoundUserInterface : BoundUserInterface
         if (_playerManager.LocalSession?.AttachedEntity == null)
             return;
 
-        var msg = Loc.GetString("rcd-component-change-mode", ("mode", Loc.GetString(proto.SetName)));
-
+        // KS14 start: localize construction names once, including unnamed RPLD modes
+        string msg;
         if (proto.Mode is RcdMode.ConstructTile or RcdMode.ConstructObject)
         {
-            var name = Loc.GetString(proto.SetName);
-
-            if (proto.Prototype != null &&
-                _prototypeManager.TryIndex(proto.Prototype, out var entProto)) // don't use Resolve because this can be a tile
-            {
-                name = entProto.Name;
-            }
-
-            msg = Loc.GetString("rcd-component-change-build-mode", ("name", name));
+            msg = Loc.GetString("rcd-component-change-build-mode", ("name", GetLocalizedConstructionName(proto)));
         }
+        else
+        {
+            msg = Loc.GetString("rcd-component-change-mode", ("mode", Loc.GetString(proto.SetName)));
+        }
+        // KS14 end
 
         // Popup message
         var popup = EntMan.System<PopupSystem>();
@@ -157,7 +154,7 @@ public sealed partial class RCDMenuBoundUserInterface : BoundUserInterface
             && proto.Prototype != null
             && _prototypeManager.TryIndex(proto.Prototype, out var entProto)) // don't use Resolve because this can be a tile
         {
-            tooltip = Loc.GetString(entProto.Name);
+            tooltip = _contentLocalizationManager.GetLocalizedPrototypeName(entProto); // KS14: resolve name directly, not a second Loc lookup of rendered text
         }
         else
         {

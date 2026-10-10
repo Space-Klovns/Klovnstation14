@@ -1,18 +1,23 @@
 using System.Text;
 using Content.Server.AlertLevel;
+using Content.Server.DeviceNetwork.Components;
+using Content.Server.DeviceNetwork.Systems;
 using Content.Server.GameTicking;
+using Content.Server.Medical.CrewMonitoring;
 using Content.Server.RoundEnd;
 using Content.Server.Shuttles.Systems;
 using Content.Server.Station.Systems;
-using Content.Shared.Mobs.Components;
-using Content.Shared.Mobs.Systems;
-using Robust.Shared.Player;
 
 namespace Content.Server._KS14.Llm.Tools;
 
 /// <summary>
-///     Read-only: reports the sender station's name, round time, alert level, crew and evacuation state.
+///     Read-only: reports the sender station's name, round time, alert level, crew vitals and evacuation state.
 /// </summary>
+/// <remarks>
+///     Crew figures come from the station's crew monitoring server - the same suit sensor data its crew
+///         monitoring consoles show - not from anything Central Command could not plausibly know. Sensors that
+///         are off, or not reaching a working server, simply are not counted.
+/// </remarks>
 public sealed partial class KsLlmStationStatusToolEffect : KsLlmToolEffect
 {
     public override KsLlmToolOutcome Execute(in KsLlmToolContext context)
@@ -21,23 +26,6 @@ public sealed partial class KsLlmStationStatusToolEffect : KsLlmToolEffect
         if (context.StationUid is not { } stationUid || !entityManager.EntityExists(stationUid))
             return KsLlmToolOutcome.Error("the sending fax does not belong to any station.");
 
-        var stationSystem = entityManager.System<StationSystem>();
-        var mobStateSystem = entityManager.System<MobStateSystem>();
-
-        var aliveCrew = 0;
-        var deadCrew = 0;
-        var actorQuery = entityManager.EntityQueryEnumerator<ActorComponent, MobStateComponent, TransformComponent>();
-        while (actorQuery.MoveNext(out var actorUid, out _, out var mobStateComponent, out var transformComponent))
-        {
-            if (stationSystem.GetOwningStation(actorUid, transformComponent) != stationUid)
-                continue;
-
-            if (mobStateSystem.IsDead(actorUid, mobStateComponent))
-                deadCrew++;
-            else
-                aliveCrew++;
-        }
-
         var roundDuration = entityManager.System<GameTicker>().RoundDuration();
         var alertLevel = entityManager.System<AlertLevelSystem>().GetLevel(stationUid);
 
@@ -45,10 +33,46 @@ public sealed partial class KsLlmStationStatusToolEffect : KsLlmToolEffect
         builder.AppendLine($"Station: {entityManager.GetComponent<MetaDataComponent>(stationUid).EntityName}");
         builder.AppendLine($"Shift time elapsed: {(int)roundDuration.TotalHours:D2}:{roundDuration.Minutes:D2}");
         builder.AppendLine($"Alert level: {(string.IsNullOrEmpty(alertLevel) ? "none" : alertLevel)}");
-        builder.AppendLine($"Crew aboard (connected players): {aliveCrew} alive, {deadCrew} dead");
+        builder.AppendLine($"Crew monitoring: {DescribeCrewMonitoring(entityManager, stationUid)}");
         builder.Append($"Evacuation: {DescribeEvacuation(entityManager)}");
 
         return KsLlmToolOutcome.Ok(builder.ToString());
+    }
+
+    private static string DescribeCrewMonitoring(IEntityManager entityManager, EntityUid stationUid)
+    {
+        var stationSystem = entityManager.System<StationSystem>();
+        var singletonServerSystem = entityManager.System<SingletonDeviceNetServerSystem>();
+
+        // Read-only on purpose: SingletonDeviceNetServerSystem's own lookup connects servers as a side effect.
+        var serverQuery = entityManager.EntityQueryEnumerator<CrewMonitoringServerComponent, SingletonDeviceNetServerComponent>();
+        while (serverQuery.MoveNext(out var serverUid, out var crewMonitoringServerComponent, out var singletonServerComponent))
+        {
+            if (!singletonServerComponent.Available
+                || !singletonServerSystem.IsActiveServer(serverUid, singletonServerComponent)
+                || stationSystem.GetOwningStation(serverUid) != stationUid)
+                continue;
+
+            var alive = 0;
+            var critical = 0;
+            var dead = 0;
+            foreach (var sensorStatus in crewMonitoringServerComponent.SensorStatus.Values)
+            {
+                if (!sensorStatus.IsAlive)
+                    dead++;
+                else if (sensorStatus.DamagePercentage >= 1f)
+                    critical++;
+                else
+                    alive++;
+            }
+
+            var reporting = crewMonitoringServerComponent.SensorStatus.Count;
+            return reporting == 0
+                ? "online, but no suit sensors are reporting"
+                : $"{reporting} suit sensors reporting: {alive} alive, {critical} in critical condition, {dead} dead. Crew with sensors off are not counted.";
+        }
+
+        return "no data - the station's crew monitoring server is offline or missing";
     }
 
     private static string DescribeEvacuation(IEntityManager entityManager)

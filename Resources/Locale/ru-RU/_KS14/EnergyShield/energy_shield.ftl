@@ -1,0 +1,3 @@
+# KS14: automatically translated; see _KS14/Localization/translation-review.tsv.
+
+rechargeable-energy-shield-insufficient-charge = Недостаточный заряд...

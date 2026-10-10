@@ -1,6 +1,8 @@
 using System.IO;
 using System.Linq;
 using Content.Shared._KS14.IoC;
+using Content.Shared._KS14.RadioLocalization;
+using Content.Shared.Localizations;
 using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Prototypes;
@@ -47,6 +49,10 @@ public sealed partial class KsEntryPoint : GameShared
 
         foreach (var replacementDirectory in _replacementDirectories)
             DoPrototypeReplacements(replacementDirectory);
+
+        Dependencies.Resolve<ContentLocalizationManager>().InitializePrototypeNameCaches();
+        Dependencies.Resolve<ContentLocalizationManager>().InitializeCultures();
+        Dependencies.Resolve<KsRadioLocalization>().Initialize();
     }
 
     public override void Shutdown()

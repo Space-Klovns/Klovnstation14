@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Atmos.Components;
 using Content.Shared.Construction.Components;
 using Content.Shared.Popups;
@@ -19,7 +20,7 @@ public abstract partial class SharedGasPistonSystem : EntitySystem
             return;
 
         args.Cancel();
-        PopupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, args.User);
+        PopupSystem.PopupPredicted(KsPopupMessage.Create("gas-piston-popup-retractfirst"), entity.Owner, args.User);
     }
 
     [SubscribeLocalEvent]
@@ -34,6 +35,6 @@ public abstract partial class SharedGasPistonSystem : EntitySystem
         args.Cancelled = true;
 
         if (args.User is { } userUid)
-            PopupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, userUid);
+            PopupSystem.PopupPredicted(KsPopupMessage.Create("gas-piston-popup-retractfirst"), entity.Owner, userUid);
     }
 }

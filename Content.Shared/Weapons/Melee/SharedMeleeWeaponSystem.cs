@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -879,7 +880,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         //     {
         //         // Notify disarmable
         //         if (HasComp<MobStateComponent>(target.Value))
-        //             PopupSystem.PopupClient(Loc.GetString("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
+        //             PopupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
 
         //         return false;
         //     }
@@ -983,12 +984,12 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var targetEnt = Identity.Entity(target.Value, EntityManager);
         var userEnt = Identity.Entity(user, EntityManager);
 
-        var msgOther = Loc.GetString(
+        var msgOther = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(
             eventArgs.PopupPrefix + "popup-message-other-clients",
             ("performerName", userEnt),
             ("targetName", targetEnt));
 
-        var msgUser = Loc.GetString(eventArgs.PopupPrefix + "popup-message-cursor", ("targetName", targetEnt));
+        var msgUser = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(eventArgs.PopupPrefix + "popup-message-cursor", ("targetName", targetEnt));
 
         var filterOther = Filter.PvsExcept(user, entityManager: EntityManager);
 
@@ -998,7 +999,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         if (eventArgs.IsStunned)
         {
 
-            PopupSystem.PopupEntity(Loc.GetString("stunned-component-disarm-success-others", ("source", userEnt), ("target", targetEnt)), targetEnt, Filter.PvsExcept(user), true, PopupType.LargeCaution);
+            PopupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("stunned-component-disarm-success-others", ("source", userEnt), ("target", targetEnt)), targetEnt, Filter.PvsExcept(user), true, PopupType.LargeCaution);
             PopupSystem.PopupPredictedCursor/* KS14: use predicted variant */(Loc.GetString("stunned-component-disarm-success", ("target", targetEnt)), user, PopupType.Large);
 
             AdminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium, $"{ToPrettyString(user):user} knocked down {ToPrettyString(target):target}");

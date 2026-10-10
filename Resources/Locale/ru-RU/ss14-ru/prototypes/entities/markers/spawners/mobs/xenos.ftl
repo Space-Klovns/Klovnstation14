@@ -1,0 +1,31 @@
+ent-SpawnMobXenoBurrower = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Бурильщик
+
+ent-SpawnMobXenoDrone = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Дрон
+
+ent-SpawnMobXenoLonePraetorian = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Одинокий Преторианец, Exo Station
+
+ent-SpawnMobXenoPraetorian = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Преторианец
+
+ent-SpawnMobXenoQueen = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Королева
+
+ent-SpawnMobXenoRavager = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Разрушитель
+
+ent-SpawnMobXenoRunner = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Бегун
+
+ent-SpawnMobXenoSpitter = спавнер ксено
+    .desc = { ent-MarkerBase.desc }
+    .suffix = Плевальщик

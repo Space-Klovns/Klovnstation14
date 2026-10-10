@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ghost.Roles.Components;
 using Content.Shared.Examine;
 using Content.Shared.Interaction.Events;
@@ -37,15 +38,15 @@ public sealed partial class ToggleableGhostRoleSystem : EntitySystem
         // check if a mind is present
         if (TryComp<MindContainerComponent>(uid, out var mind) && mind.HasMind)
         {
-            _popup.PopupEntity(Loc.GetString(component.ExamineTextMindPresent), uid, args.User, PopupType.Large);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.ExamineTextMindPresent), uid, args.User, PopupType.Large);
             return;
         }
         if (HasComp<GhostTakeoverAvailableComponent>(uid))
         {
-            _popup.PopupEntity(Loc.GetString(component.ExamineTextMindSearching), uid, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.ExamineTextMindSearching), uid, args.User);
             return;
         }
-        _popup.PopupEntity(Loc.GetString(component.BeginSearchingText), uid, args.User);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.BeginSearchingText), uid, args.User);
 
         UpdateAppearance(uid, ToggleableGhostRoleStatus.Searching);
 
@@ -123,7 +124,7 @@ public sealed partial class ToggleableGhostRoleSystem : EntitySystem
                     // Wiping device :(
                     // The shutdown of the Mind should cause automatic reset of the pAI during OnMindRemoved
                     _mind.TransferTo(mindId, null, mind: mind);
-                    _popup.PopupEntity(Loc.GetString(component.WipeVerbPopup), uid, args.User, PopupType.Large);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.WipeVerbPopup), uid, args.User, PopupType.Large);
                 }
             };
             args.Verbs.Add(verb);
@@ -140,7 +141,7 @@ public sealed partial class ToggleableGhostRoleSystem : EntitySystem
 
                     RemCompDeferred<GhostTakeoverAvailableComponent>(uid);
                     RemCompDeferred<GhostRoleComponent>(uid);
-                    _popup.PopupEntity(Loc.GetString(component.StopSearchVerbPopup), uid, args.User);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.StopSearchVerbPopup), uid, args.User);
                     UpdateAppearance(uid, ToggleableGhostRoleStatus.Off);
                 }
             };

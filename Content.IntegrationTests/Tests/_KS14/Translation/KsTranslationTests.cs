@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.Translation;
+using Content.Server.Chat.Systems;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Chat;
+using Robust.Shared.GameObjects;
 
 namespace Content.IntegrationTests.Tests._KS14.Translation;
 
@@ -18,6 +20,68 @@ public sealed class KsTranslationTests : GameTest
 {
     // We mutate the live server system (swap the translator), so the pooled server must not be recycled.
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
+
+    [TestCase(InGameICChatType.Speak, ChatChannel.Local)]
+    [TestCase(InGameICChatType.Whisper, ChatChannel.Whisper)]
+    public async Task TranslationContextUsesTextBeforeAccents(InGameICChatType type, ChatChannel channel)
+    {
+        var map = await Pair.CreateTestMap();
+        await OverrideCVar(Side.Server, KsCCVars.TranslateEnabled, true);
+        await OverrideCVar(Side.Client, KsCCVars.TranslateLanguage, "EN");
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitPost(() =>
+        {
+            var translation = Server.System<KsTranslationSystem>();
+            translation.Translator = new FakeKsTranslator();
+            var dwarf = SEntMan.SpawnEntity("MobDwarf", map.GridCoords);
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, dwarf);
+            var chat = Server.System<ChatSystem>();
+            const string original = "I like mining.";
+            Assert.That(chat.TransformSpeech(dwarf, original), Is.Not.EqualTo(original),
+                "the regression requires an accent that changes the input");
+
+            chat.TrySendInGameICMessage(dwarf, original, type, hideChat: false, hideLog: true,
+                checkRadioPrefix: false, ignoreActionBlocker: true);
+            Assert.That(translation.TryBeginSession(channel, "next message", ServerSession!, out var ctx), Is.True);
+            Assert.That(ctx!.Context, Does.EndWith("\n" + original),
+                "translation history must contain the text before the dwarf accent");
+        });
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task RadioTranslatesOriginalUnlessJammed(bool jammed)
+    {
+        var fake = new FakeKsTranslator();
+        await OverrideCVar(Side.Client, KsCCVars.TranslateLanguage, "DE");
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitPost(() =>
+        {
+            var sys = Server.System<KsTranslationSystem>();
+            sys.Translator = fake;
+            var ctx = new KsTranslationContext
+            {
+                SpeakerBase = "EN",
+                Speaker = ServerSession!.UserId,
+                Text = "I like mining.",
+                RadioMessage = "Ah like mining.",
+            };
+            var delivered = jammed ? "A# l$ke mi@ing." : ctx.RadioMessage;
+            var shared = new MsgChatMessage
+            {
+                Message = new ChatMessage(ChatChannel.Radio, delivered, "wrapped", NetEntity.Invalid, null),
+            };
+            var result = sys.ApplyRadioReader(shared, ctx, ServerSession!);
+            Assert.That(result.Message.MessageId, Is.Not.Null);
+            Assert.That(shared.Message.MessageId, Is.Null);
+        });
+        await Pair.RunTicksSync(10);
+
+        Assert.That(fake.Requests, Has.Count.EqualTo(1));
+        Assert.That(fake.Requests[0].Text, Is.EqualTo(jammed ? "A# l$ke mi@ing." : "I like mining."));
+    }
 
     [Test]
     public async Task DisabledByDefault()

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
@@ -251,9 +252,9 @@ public sealed partial class IngestionSystem : EntitySystem
                 return;
 
             if (forceFed)
-                _popup.PopupClient(Loc.GetString("ingestion-cant-digest-other", ("target", entity), ("entity", food)), entity, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-cant-digest-other", ("target", entity), ("entity", food)), entity, args.User);
             else
-                _popup.PopupClient(Loc.GetString("ingestion-cant-digest", ("entity", food)), entity, entity);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-cant-digest", ("entity", food)), entity, entity);
 
             return;
         }
@@ -278,7 +279,7 @@ public sealed partial class IngestionSystem : EntitySystem
         if (forceFed)
         {
             var userName = Identity.Entity(args.User, EntityManager);
-            _popup.PopupEntity(Loc.GetString("edible-force-feed", ("user", userName), ("verb", GetEdibleVerb(food))), args.User, entity);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("edible-force-feed", ("user", userName), ("verb", GetEdiblePopupVerb(food) /* KS14: defer verb */)), args.User, entity);
 
             // logging
             _adminLogger.Add(LogType.ForceFeed, LogImpact.Medium, $"{ToPrettyString(args.User):user} is forcing {ToPrettyString(entity):target} to eat {ToPrettyString(food):food} {SharedSolutionContainerSystem.ToPrettyString(foodSolution)}");
@@ -333,11 +334,11 @@ public sealed partial class IngestionSystem : EntitySystem
         if (stomachToUse == null)
         {
             // Very long
-            _popup.PopupClient(Loc.GetString("ingestion-you-cannot-ingest-any-more", ("verb", GetEdibleVerb(food))), entity, entity);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-you-cannot-ingest-any-more", ("verb", GetEdiblePopupVerb(food) /* KS14: defer verb */)), entity, entity);
             if (!forceFed)
                 return;
 
-            _popup.PopupClient(Loc.GetString("ingestion-other-cannot-ingest-any-more", ("target", entity), ("verb", GetEdibleVerb(food))), args.Target.Value, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-other-cannot-ingest-any-more", ("target", entity), ("verb", GetEdiblePopupVerb(food) /* KS14: defer verb */)), args.Target.Value, args.User);
             return;
         }
 
@@ -348,11 +349,11 @@ public sealed partial class IngestionSystem : EntitySystem
         if (beforeEv.Cancelled || beforeEv.Min > beforeEv.Max)
         {
             // Very long x2
-            _popup.PopupClient(Loc.GetString("ingestion-you-cannot-ingest-any-more", ("verb", GetEdibleVerb(food))), entity, entity);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-you-cannot-ingest-any-more", ("verb", GetEdiblePopupVerb(food) /* KS14: defer verb */)), entity, entity);
             if (!forceFed)
                 return;
 
-            _popup.PopupClient(Loc.GetString("ingestion-other-cannot-ingest-any-more", ("target", entity), ("verb", GetEdibleVerb(food))), args.Target.Value, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-other-cannot-ingest-any-more", ("target", entity), ("verb", GetEdiblePopupVerb(food) /* KS14: defer verb */)), args.Target.Value, args.User);
             return;
         }
 
@@ -462,15 +463,15 @@ public sealed partial class IngestionSystem : EntitySystem
 
         _audio.PlayPredicted(entity.Comp.UseSound ?? edible.UseSound, args.Target, args.User);
 
-        var flavors = _flavorProfile.GetLocalizedFlavorsMessage(entity.Owner, args.Target, args.Split);
+        var flavors = _flavorProfile.GetFlavorsPopupMessage(entity.Owner, args.Target, args.Split) /* KS14: defer flavours */;
 
         if (args.ForceFed)
         {
             var targetName = Identity.Entity(args.Target, EntityManager);
             var userName = Identity.Entity(args.User, EntityManager);
-            _popup.PopupEntity(Loc.GetString("edible-force-feed-success", ("user", userName), ("verb", edible.Verb), ("flavors", flavors), ("satiated", args.Satiated)), entity, entity);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("edible-force-feed-success", ("user", userName), ("verb", KsPopupMessage.Create(edible.Verb) /* KS14: defer verb */), ("flavors", flavors), ("satiated", args.Satiated)), entity, entity);
 
-            _popup.PopupClient(Loc.GetString("edible-force-feed-success-user", ("target", targetName), ("verb", edible.Verb)), args.User, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("edible-force-feed-success-user", ("target", targetName), ("verb", KsPopupMessage.Create(edible.Verb) /* KS14: defer verb */)), args.User, args.User);
 
             // log successful forced feeding
             // TODO: Use correct verb
@@ -480,12 +481,12 @@ public sealed partial class IngestionSystem : EntitySystem
         {
             // KS14 - Start
             var message = args.Chug
-                ? Loc.GetString("edible-chug", ("food", entity.Owner), ("flavors", flavors), ("satiated", args.Satiated))
-                : Loc.GetString(edible.Message, ("food", entity.Owner), ("flavors", flavors), ("satiated", args.Satiated));
+                ? KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("edible-chug", ("food", entity.Owner), ("flavors", flavors), ("satiated", args.Satiated))
+                : KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(edible.Message, ("food", entity.Owner), ("flavors", flavors), ("satiated", args.Satiated));
 
             var otherMessage = args.Chug
-                ? Loc.GetString("edible-chug-other", ("user", Identity.Entity(args.User, EntityManager)), ("food", entity.Owner))
-                : Loc.GetString(edible.OtherMessage);
+                ? KsPopupMessage.Create /* KS14: defer popup argument translation */("edible-chug-other", ("user", Identity.Entity(args.User, EntityManager)), ("food", entity.Owner))
+                : KsPopupMessage.Create /* KS14: defer popup argument translation */(edible.OtherMessage);
 
             _popup.PopupPredicted(message, otherMessage, args.User, args.User);
             // KS14 - End

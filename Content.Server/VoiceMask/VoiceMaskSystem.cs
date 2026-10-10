@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Speech;
 using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
@@ -195,7 +196,7 @@ public sealed partial class VoiceMaskSystem : EntitySystem
         entity.Comp.VoiceMaskSpeechVerb = msg.Verb;
         // verb is only important to metagamers so no need to log as opposed to name
 
-        _popupSystem.PopupEntity(Loc.GetString("voice-mask-popup-success"), entity, msg.Actor);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("voice-mask-popup-success"), entity, msg.Actor);
 
         UpdateUI(entity);
     }
@@ -204,7 +205,7 @@ public sealed partial class VoiceMaskSystem : EntitySystem
     {
         if (message.Name.Length > _maxNameLength || message.Name.Length <= 0)
         {
-            _popupSystem.PopupEntity(Loc.GetString("voice-mask-popup-failure"), entity, message.Actor, PopupType.SmallCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("voice-mask-popup-failure"), entity, message.Actor, PopupType.SmallCaution);
             return;
         }
 
@@ -217,14 +218,14 @@ public sealed partial class VoiceMaskSystem : EntitySystem
         entity.Comp.VoiceMaskName = message.Name;
         _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(message.Actor):player} set voice of {ToPrettyString(entity):mask}: {entity.Comp.VoiceMaskName}");
 
-        _popupSystem.PopupEntity(Loc.GetString("voice-mask-popup-success"), entity, message.Actor);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("voice-mask-popup-success"), entity, message.Actor);
 
         UpdateUI(entity);
     }
 
     private void OnToggle(Entity<VoiceMaskComponent> entity, ref VoiceMaskToggleMessage args)
     {
-        _popupSystem.PopupEntity(Loc.GetString("voice-mask-popup-toggle"), entity, args.Actor);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("voice-mask-popup-toggle"), entity, args.Actor);
         entity.Comp.Active = !entity.Comp.Active;
 
         var ev = new VoiceMaskToggledEvent(entity.Owner, args.Actor, entity.Comp.Active);
@@ -238,7 +239,7 @@ public sealed partial class VoiceMaskSystem : EntitySystem
 
     private void OnAccentToggle(Entity<VoiceMaskComponent> entity, ref VoiceMaskAccentToggleMessage args)
     {
-        _popupSystem.PopupEntity(Loc.GetString("voice-mask-popup-accent-toggle"), entity, args.Actor);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("voice-mask-popup-accent-toggle"), entity, args.Actor);
         entity.Comp.AccentHide = !entity.Comp.AccentHide;
         UpdateUI(entity);
     }

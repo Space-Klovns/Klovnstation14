@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Linq;
 using Content.Shared._Mono.Overlays;
 using Content.Shared.Flash;
@@ -26,6 +27,6 @@ public sealed partial class PhosphorNightVisionRecipientSystem : EntitySystem
             return;
 
         // anything but relaying events
-        _popupSystem.PopupClient(Loc.GetString("ks-phosphor-nightvision-popup-flash"), entity, entity);
+        _popupSystem.PopupClient(KsPopupMessage.Create("ks-phosphor-nightvision-popup-flash"), entity, entity);
     }
 }

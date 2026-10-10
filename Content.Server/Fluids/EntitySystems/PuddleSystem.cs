@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Fluids.Components;
 using Content.Server.Spreader;
 using Content.Shared.Atmos;
@@ -260,7 +261,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
                 out var solution))
             return;
 
-        Popups.PopupEntity(Loc.GetString("puddle-component-slipped-touch-reaction", ("puddle", entity.Owner)),
+        Popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("puddle-component-slipped-touch-reaction", ("puddle", entity.Owner)),
             args.Slipped, args.Slipped, PopupType.SmallCaution);
 
         // Take 15% of the puddle solution
@@ -431,7 +432,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
             targets.Add(owner);
             Reactive.DoEntityReaction(owner, splitSolution, ReactionMethod.Touch);
-            Popups.PopupEntity(Loc.GetString("spill-land-spilled-on-other",
+            Popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spill-land-spilled-on-other",
                     ("spillable", entity),
                     ("target", Identity.Entity(owner, EntityManager))),
                 owner,

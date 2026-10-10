@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Server._KS14.Atmos.TileFire;
 using Content.Shared.Atmos.Components;
 

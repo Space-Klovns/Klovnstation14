@@ -4,10 +4,12 @@ Coding conventions for this repo. Written for coding agents first, humans second
 
 **Quick reference:**
 - New code → `Content.<project>/_KS14/<Feature>/...` (see §2).
-- Editing or adding a file *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
+- Fork-owned files (`_KS14/`, `.Klovn`/`.Ks` filenames, or `Ks`/`KS14` namespaces/types) need no provenance headers (see §3).
+- Editing existing upstream code *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
 - **Marking a change on a single line → `/* KS14: ... */` sitting at the change itself**, not a trailing `//` at the end of the line (see §3).
 - Otherwise follow upstream SS14 conventions, plus the local rules in §4.
 - Before you ship: the traps in §6 that fail *silently* — no build error, no log, no failing test.
+- Client-culture popups and prototype names/descriptions → use the KS localisation APIs in §7; defer popup arguments until the recipient formats them.
 
 ## 1. Project lineage
 
@@ -71,13 +73,13 @@ namespace Content.<project>._KS14.<Feature>.<Sub>;
 
 ## 3. Upstream edits: the `// KS14:` marker
 
-When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 / other forks / `_Manifest` / `_sin` / etc.), mark Klovnstation 14's provenance inline:
+When you edit an **existing upstream file outside** `_KS14/` (in upstream SS14 / other forks / `_Manifest` / `_sin` / etc.), mark each logical change inline:
 
 - **Edits to an existing upstream file** — mark every logical change inline (forms below).
 - **Adding methods/members to an existing class** — make the class partial (comment why), and add the members in a same-folder file named `*.Klovn.Feature.cs`.
-- **New files added OUTSIDE `_KS14/`** — first-line header `// KS14: added in this fork` (`# KS14: added in this fork` for YAML/FTL/shell). Prefer `_KS14/`; only do this when extending an upstream tree is genuinely the right home (e.g. filling translation gaps in `Resources/Locale/en-US/_Goobstation/`).
+- **Fork-owned files need no provenance headers.** This includes files under `_KS14/`, files named `*.Klovn.*` or `*.Ks.*` (case-insensitive), and files whose names or declared namespaces/types use the fork's `Ks`/`KS14` prefix. Their location, name, or namespace already identifies them. Do not add generic fork-origin comments to these files. New files outside `_KS14/` also need no blanket provenance header; prefer `_KS14/` unless extending an existing upstream class or tree is the appropriate home.
 
-Both forms make our changes easy to spot on the next upstream merge. Always preserve the original upstream value in the comment: swap `100 -> 50` today, and a later change to that same line becomes `100 -> 30` (not `50 -> 30`). Swap `KS14` for another fork's tag (e.g. `Goobstation`) when porting from that fork instead of writing net-new code.
+Inline markers in existing upstream files make our changes easy to spot on the next upstream merge. Always preserve the original upstream value in the comment: swap `100 -> 50` today, and a later change to that same line becomes `100 -> 30` (not `50 -> 30`). Swap `KS14` for another fork's tag (e.g. `Goobstation`) when porting from that fork instead of writing net-new code.
 
 **Put the marker where the change is.** `/* KS14: ... */` is the default for anything that happens on a single line, because it points at the exact token that moved. A trailing `// KS14:` says only "something on this line changed" — on a line with several things, the next person merging upstream has to diff to find out which. Reach for a trailing `//` only when the marker genuinely cannot sit at the change site: a whole added line, or a value swap where the marker would land mid-expression and wreck the line.
 
@@ -230,6 +232,91 @@ This earns its keep when one thing exists in several forms in the same scope —
 
 Exceptions, all conventional: the primary subject of a handler or method may stay bare — `entity`, `ent`, `uid` — and a locally-built event is just `ev`. As soon as a second thing of the same kind enters scope, go back to suffixes.
 
+**`Entity<T>`, not a uid and a component side by side (C#)** — an entity and its component travel together as one `Entity<T>`, never as an `EntityUid` parameter next to a component parameter. The pair can't drift apart (a component handed in with the wrong uid), and the call site reads as one thing:
+```csharp
+// do this
+[SubscribeLocalEvent]
+private void OnShutdown(Entity<NpcHolderComponent> entity, ref ComponentShutdown args) { }
+
+public bool TryStartAttack(Entity<NpcHolderComponent?> entity, string attackId)
+{
+    if (!_holderQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false))
+        return false;
+    // ...entity.Comp from here on
+}
+
+// not this
+private void OnShutdown(EntityUid uid, NpcHolderComponent component, ComponentShutdown args) { }
+public bool TryStartAttack(EntityUid uid, string attackId, NpcHolderComponent? component = null) { }
+```
+- **A component the caller may not have** is `Entity<T?>`, resolved inside. A bare `EntityUid` converts to it implicitly, so callers that only have the uid still just pass it.
+- **Several components** are `Entity<T1, T2>` (up to the arity the engine provides), not one in the entity and the rest as extra parameters.
+- **A method that never touches a component** takes a plain `EntityUid`: an `Entity<T>` there promises a dependency that isn't real.
+- **Handlers for by-value events** (a `class` event, not a `[ByRefEvent]` struct, e.g. `DamageChangedEvent`) are the
+  exception: the engine only has an `Entity<T>` handler for `ref` events, and the generator rejects anything else
+  (`RA0054`). Keep `(EntityUid uid, TComp component, TEvent args)` there, say why in a comment, and pass the pair on
+  as an `Entity<T>` from the first call.
+- **Upstream signatures** stay as they are unless you're already changing them (see the note on relocating upstream code in §4).
+
+Its members, so you don't need to go and read `RobustToolbox/Robust.Shared/GameObjects/Entity.cs`. Every arity, from
+`Entity<T>` to `Entity<T1, …, T8>`, is a mutable `record struct`:
+
+| Member | `Entity<T>` | `Entity<T1, T2, …>` |
+| --- | --- | --- |
+| The uid | `.Owner` | `.Owner` |
+| A component | `.Comp` | `.Comp1`, `.Comp2`, … (no `.Comp`) |
+| Deconstruct | `var (uid, component) = entity;` | `var (uid, component1, component2) = entity;` |
+| Build one | `(uid, component)`, or `new Entity<T>(uid, component)` | `(uid, component1, component2)` |
+| As `T?` | `entity.AsNullable()` | `entity.AsNullable()`, which makes every component nullable |
+
+Conversions are implicit:
+- **To `EntityUid`**, so an `Entity<T>` passes straight to anything that takes a uid. Write `entity.Owner` anyway
+  where the call would otherwise read ambiguously.
+- **To each component type**: `TComp component = entity;` works, but `entity.Comp` says what you mean.
+- **From `EntityUid` to the all-nullable form** (`Entity<T?>`, `Entity<T1?, T2?>`), with the components left null for
+  the callee to resolve.
+- **Between arities:** `Entity<T1, T2>` narrows to `Entity<T1>`, dropping the rest, and `Entity<T1>` widens to
+  `Entity<T1, T2?>`, with the added component null.
+
+Resolve a nullable one in place. An `EntityQuery<T>` takes the whole entity by `ref`; `EntitySystem.Resolve` has no
+such overload, so pass the fields, which are fields and so take `ref`:
+```csharp
+if (!_holderQuery.Resolve(ref entity, logMissing: false))   // same as Resolve(entity.Owner, ref entity.Comp, ...)
+    return false;
+
+if (!Resolve(entity.Owner, ref entity.Comp1, ref entity.Comp2))
+    return false;
+```
+
+Because it's a struct, a copy of it is independent. Assigning `.Comp` on a copy changes nothing for the caller,
+though the component it points to is still the same object.
+
+**Finding engine code:** everything under `Robust.{Shared,Client,Server}/GameObjects/`, subfolders included, is in
+the flat namespace `Robust.{Shared,Client,Server}.GameObjects` (see the `!NO_FOLDER_NAMESPACES` file there). So a
+type's namespace says nothing about its folder: search by type name, not path.
+
+**Engine helpers whose behaviour isn't in their name** — each of these took reading the engine to find out:
+- **`Resolve` logs by default.** `logMissing` defaults to `true`, and a miss logs an *error* with a stack trace
+  (`EntitySystem.Resolve.cs`). An integration test fails on an error log, so pass `logMissing: false` wherever the
+  component is legitimately optional. On `EntityQuery<T>`, `CompOrNull(uid)` is the null-returning form, and
+  `Comp(uid)` throws.
+- **`EntityQueryEnumerator` skips paused entities; `AllEntityQueryEnumerator` doesn't.** Anything on a paused map
+  (mapping, a test map not yet initialised) is invisible to the first. Pick by whether a paused entity should be
+  touched, not by which name you saw last.
+- **Read a prototype's component without spawning it** with
+  `ProtoMan.Index(id).TryComp<TComp>(out var component, Factory)`. The instance is the prototype's own, shared by
+  every reader, so treat it as read-only.
+- **A `TimeSpan` `[DataField]` reads a plain number as seconds** (`cooldown: 2.5`), or one number with a single
+  unit suffix: `s`, `m`, `h` (`1.5m`). There is no `ms`, and no combining (`1h30m` fails); use `0.25` instead.
+  See `TimeSpanExt.TryTimeSpan`.
+- **`[AutoPausedField]`** (with `[AutoGenerateComponentPause]` on the component) shifts the field forward by however
+  long the entity was paused. It takes `TimeSpan`, `TimeSpan?` and `Dictionary<TKey, TimeSpan>`, and on a field
+  that's also `[AutoNetworkedField]` it dirties the component for you. Use it on every absolute end time, or a
+  paused entity's timers expire the moment it unpauses.
+- **`ValueList<T>`** (`Robust.Shared.Collections`) is a `List<T>` held in a struct, for scratch lists that live in a
+  method. Two traps follow from it being a struct: a copy shares the backing array but not the count, so pass it by
+  `ref`; and it doesn't throw if changed while being enumerated, unlike `List<T>`.
+
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
 **`TryGet`/`Resolve`/`Ensure` naming (C#)** — `TryGet...` implies a pure lookup: it either finds the thing or it doesn't, with no side effects either way. If a "`TryGet`" actually creates the thing when it's missing, name it `Resolve...` or `Ensure...` instead — whichever reads better for the case — not `TryGet...`:
@@ -362,6 +449,31 @@ _systemCollectionHookManager.HookAction(dependencyCollection =>
     dependencyCollection.InjectDependencies(overlay, oneOff: true));
 ```
 
+**Per-entity state is a component, not a system dictionary (C#)** — anything a system remembers *about* an entity belongs on that entity, in a component read through an injected `EntityQuery<T>`. A `Dictionary<EntityUid, T>` held by the system is a parallel entity store: nothing removes an entry when its entity is deleted, so it leaks or needs its own cleanup; VV cannot see it; and it has to be cleared, epoch-stamped or pruned by hand. As a component, the data dies with its entity and shows up in VV. `[Access]` the component to the system that owns it (see above).
+
+```csharp
+// not this - a cache of light levels keyed by target, cleared every tick
+private readonly Dictionary<EntityUid, float> _lightLevels = new();
+
+// this - the cache lives on the target; the tick it was computed on says whether it is still good
+[RegisterComponent, Access(typeof(NpcLightDetectionSystem))]
+public sealed partial class NpcLightLevelCacheComponent : Component
+{
+    [ViewVariables] public float Level;
+    [ViewVariables] public GameTick ComputedTick;
+}
+
+[Dependency] private EntityQuery<NpcLightLevelCacheComponent> _lightLevelCacheQuery = default!;
+
+if (_lightLevelCacheQuery.TryComp(targetUid, out var cacheComponent) && cacheComponent.ComputedTick == currentTick)
+    return cacheComponent.Level;
+// ...compute, then EnsureComp<NpcLightLevelCacheComponent>(targetUid) and store it.
+```
+
+This is about state *about* an entity. Two things that look similar are fine as they are:
+- **Transient work lists** — a set of uids queued this tick and drained in `Update`, like the deferred-check set in §6's reparenting entry. It is a to-do list, not state.
+- **Collections on a component** — a `Dictionary<EntityUid, T>` *inside* a component (an NPC's sightings keyed by target) is data belonging to the entity that owns the component, which is what components are for.
+
 **Subscribe with `[SubscribeLocalEvent]`, not a call in `Initialize` (C#)** — the engine generates the subscription from an attribute on the handler, inferring the event (and component) from the handler's signature. The class must be `partial`, because the generator emits an `AutoSubscriptions()` override into it:
 ```csharp
 // old
@@ -413,7 +525,9 @@ _popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
 
 So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
 
-**Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v289.0.3. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
+**NPC behaviour (C#, YAML)** — HTN, and the systems that feed it, have their own conventions, kept in the `npc-htn` agent skill (`.claude/skills/npc-htn/SKILL.md`). Read it before touching NPC behaviour.
+
+**Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
 ## 5. Build configurations, and what each one catches
 
@@ -560,24 +674,21 @@ Sandbox violation: Access to method not allowed:
         System.Collections.Generic.Dictionary`2<!!0, !!1>, !!0, bool&)
 ```
 
-**The cascade is what makes this expensive to diagnose.** One violation takes the assembly down, which
-takes the integration pool down with it, and every unrelated test then fails with:
+**Only one test will tell you** (see `SandboxTest` below): everything else loads content without the check
+and passes. So a violation doesn't break a test run in any way you'd notice. It breaks a real client, at
+connect, with the error above.
 
-```
-SetUp : System.InvalidOperationException : Pool manager has not been initialized
-```
-
-A run that reports a hundred-odd failures across unrelated features, all of them `Pool manager has not
-been initialized`, has **one** cause, and it is not in any of the tests named. Find the single result
-that failed with something else - `TypeCheckFailedException` - and fix that. Running with
-`--logger "trx;LogFileName=..."` and grouping the results by message is the quick way to see that shape;
-`-v q` prints only the total and hides it entirely.
+A related shape: when a run reports a hundred-odd failures across unrelated features, all of them
+`SetUp : System.InvalidOperationException : Pool manager has not been initialized`, something failed while the
+integration pool was being set up, and it has **one** cause that isn't in any of the tests named. Find the single
+result that failed with something else. Running with `--logger "trx;LogFileName=..."` and grouping the results by
+message is the quick way to see that shape; `-v q` prints only the total and hides it entirely.
 
 The offenders are mostly the low-level performance conveniences: `CollectionsMarshal`, `Unsafe`,
 `MemoryMarshal`, most of `System.Runtime.InteropServices`, reflection that writes, and anything
-touching the filesystem or process directly. Plain `Dictionary`, `Span`, `System.Numerics` and
-`MathF` are all fine. If you are reaching for something to avoid a dictionary lookup or a struct copy
-in rendering code, the copy was almost certainly cheaper than finding this out:
+touching the filesystem or process directly. Plain `Dictionary`, `Span`, `MathF` and `System.Numerics`'
+`Vector2`/`Vector3`/`Vector4` are all fine. If you are reaching for something to avoid a dictionary lookup or a
+struct copy in rendering code, the copy was almost certainly cheaper than finding this out:
 
 ```csharp
 // not this - compiles everywhere, refused at load
@@ -590,8 +701,44 @@ entry.Value += 1;
 _map[key] = entry;
 ```
 
-Content.IntegrationTests is the cheapest way to find out, because loading the assemblies is the first
-thing it does - a single test from any fixture is enough to prove the sandbox accepted the build.
+**`SandboxTest` is the check; an ordinary integration test is not.** Pooled test pairs load content through
+`TestingModLoader`, whose `SetEnableSandboxing` does nothing, so every other test passes with a violation in the
+build. A `stackalloc` planted in `Content.Shared` leaves a normal pooled test green. Only
+`Content.IntegrationTests/Tests/Utility/SandboxTest.cs` runs the real checker: it starts its own client and calls
+`CheckSandboxed` on `Content.Client` and `Content.Shared`, which applies the whitelist (`Sandbox.yml`) *and*
+ILVerify. It takes about 20 seconds, so run it whenever you add an API you haven't seen content use before:
+
+```sh
+dotnet test Content.IntegrationTests/Content.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~SandboxTest"
+```
+
+A failure names each problem directly: `Sandbox violation: Access to type not allowed: ...` for the whitelist, and
+`ILVerify: Instruction cannot be verified., method: ..., Offset IL_...` for IL. The whitelist is
+`RobustToolbox/Robust.Shared/ContentPack/Sandbox.yml`, and it's worth a search before you rely on a BCL type.
+
+The rules come from two places, so nothing about a type's namespace predicts them:
+
+- **ILVerify** rejects `stackalloc` (even into a `Span<T>`), `unsafe` code and pointers. Content already notes
+  this (`AtmosphereSystem.Gases.cs`). Use `new T[n]` instead.
+- **The whitelist** is per type and often per member. Besides the ones above, these came up vendoring Concentus
+  (`Content.Klovn.Concentus/README.md`), and none of them warns at build time:
+  - `System.Buffer` (`BlockCopy`): use `Array.Copy`, which counts elements, not bytes.
+  - `System.Diagnostics.Debug` and `ConditionalAttribute`: use `DebugTools.Assert`, as `Solution.cs` notes.
+  - `System.Numerics.Vector<T>`.
+  - `System.Tuple`: value tuples are fine.
+  - `ArgumentNullException`: `ArgumentException` is fine.
+  - A *field* of type `MethodImplOptions`. `[MethodImpl(MethodImplOptions.AggressiveInlining)]` itself is fine,
+    since it compiles to method flags rather than a type reference.
+
+Two more are made by the compiler, so the source never names what it refuses. Both came up in the TTS Opus code
+(`KsTtsOpus.cs`):
+
+- **`"..."u8` literals** fail ILVerify. They compile to a pointer into the assembly's static data (`Found address of
+  '<PrivateImplementationDetails>...', Expected Native Int`). Build the bytes once instead, e.g.
+  `static readonly byte[] Magic = Encoding.ASCII.GetBytes("OggS")`.
+- **A non-empty collection expression that targets `List<T>`** (`Method([item])`, where the parameter is a
+  `List<T>`) compiles to `CollectionsMarshal.SetCount`, which is not whitelisted. Use `new List<T> { item }`.
+  Empty ones (`= []`) and ones that target arrays are fine.
 
 ### Only one system may subscribe to a given component and event pair
 
@@ -754,3 +901,400 @@ _pendingTransitChecks.Clear();
 
 Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
 throws straight out of `Update`.
+
+### `Equals` on an enum boxes it
+
+An enum's `Equals` is inherited from `System.Enum`, a class, and takes an `object`. Calling it boxes both
+sides: two heap allocations, for what `==` does as a single integer compare. It reads identically, compiles
+clean, and returns the right answer, so nothing points at it; it only shows up as garbage.
+
+```csharp
+// not this - two boxes per call
+return Flags.Equals(other.Flags);
+
+// this - an integer compare, no allocation
+return Flags == other.Flags;
+```
+
+It matters wherever the comparison runs in bulk. `PathfindingData.Equals` did this, and it sits under every
+`PathPoly` dictionary lookup, so a single NPC tactical position search allocated about 230 KB of boxed
+`PathfindingBreadcrumbFlag`s - roughly 60% of everything it allocated, on a path every holding NPC runs each
+replan. The same goes for any `IEquatable<T>.Equals` or `GetHashCode` on a struct used as a dictionary key: it
+runs on every lookup, so an allocation in it multiplies by the size of the search.
+
+`==`, `!=` and bitwise tests (`(flags & Flag) != 0`) never box. Nor does `HasFlag` on current .NET, which the
+JIT turns into a bitwise test, but `&` says the same thing without relying on that.
+
+To find allocations like this, measure by type rather than guessing: `GC.GetTotalAllocatedBytes(precise: true)`
+around the work says *how much*, and an `EventListener` on `Microsoft-Windows-DotNETRuntime` (GC keyword `0x1`,
+`Verbose`) receives `GCAllocationTick` events naming the type being allocated, which says *what*. Both work in
+an integration test, which is not sandboxed.
+
+### A window's `MinSize` does not protect contents that wrap
+
+`BaseWindow` clamps a drag to `MinSize` and nothing else. It never asks the contents what they need. A fixed
+`MinSize` is fine for contents whose size doesn't depend on the window's, but wrapping text (`RichTextLabel`, or
+anything word-wrapped) gets *taller* as the window gets narrower. So a window can meet its minimum and still push
+whatever sits below the text out of the bottom. It isn't clipped visibly: those controls are laid out at zero height and
+simply vanish. The voice link window lost its buttons this way, at a size that looked like a sensible minimum when it
+was picked.
+
+Make the minimum follow the contents. The rows that can't wrap set the minimum width, and the minimum height is what
+the contents need *at the current width*. Recompute it on every resize and whenever a row's text changes:
+
+```csharp
+protected override void Resized()
+{
+    base.Resized();
+    UpdateMinimumSize();
+}
+
+private void UpdateMinimumSize()
+{
+    if (RootBox.Size.X <= 0f)
+        return; // not laid out yet
+
+    var marginSize = new Vector2(RootBox.Margin.SumHorizontal, RootBox.Margin.SumVertical);
+    var frameSize = Size - RootBox.Size - marginSize; // title bar and borders
+
+    var widestRow = 0f;
+    foreach (var row in _unwrappableRows) // buttons, single-line labels
+    {
+        row.Measure(Vector2Helpers.Infinity);
+        widestRow = MathF.Max(widestRow, row.DesiredSize.X);
+    }
+
+    // DesiredSize includes the margin.
+    RootBox.Measure(new Vector2(RootBox.Size.X + marginSize.X, float.PositiveInfinity));
+
+    MinSize = new Vector2(frameSize.X + marginSize.X + widestRow, frameSize.Y + RootBox.DesiredSize.Y);
+}
+```
+
+A `MinSize` bigger than the current `SetSize` wins at measure time, so the window grows back to fit by itself. Also set
+`SetSize` to match, so the next drag starts from the size actually shown. See `KsVoiceLinkWindow`.
+
+**Testing it has its own trap.** A squeezed control is laid out *and measured* at the squeezed size, so its `Size` and
+its `DesiredSize` agree with each other at zero. "Is it inside the window?" passes too, because a zero-height box sits
+inside anything. A test built on those passes with the bug present. Instead, compare each control against what it needs
+with room to spare: `Measure` it with unlimited height (and unlimited width, for anything that can't wrap), then check
+its shown size against that. `KsVoiceLinkWindowTests` does this. Layout runs in the headless client with real font
+metrics, so this works in an ordinary integration test.
+
+### World-space overlays draw square to the map, not the grid
+
+A `Box2`, or an offset like `position + new Vector2(0, size)`, is aligned to the map's axes. On a turned grid, a
+marker built that way sits at a slant to the grid it marks, and any text placed next to it ends up in the wrong spot.
+Draw in the grid's frame instead. Call `SetTransform` with the grid's world matrix for tiles, or with
+`Matrix3Helpers.CreateTransform(position, gridRotation)` for a marker drawn around the origin, and set
+`Matrix3x2.Identity` back afterwards. Clyde applies the transform to vertices as it queues them, so setting it per
+marker is cheap. Circles and screen-space text are unaffected. `SquadDebugOverlay` does both.
+
+### Occluder ray queries along a tile edge report walls that are not there
+
+The occluder tree's ray queries (`OccluderSystem.IntersectRay`, and everything built on them) test each box with
+`Ray.Intersects`. For a ray parallel to an axis lying exactly on a box's edge, as one along a tile edge does, that
+returns a NaN or zero distance for every box on the line, including those behind the ray's start and past its end.
+A NaN never compares greater than the maximum length, so every wall in line with the ray counts as in the way. It
+only happens for exact edges, so it hides well: a random-position test almost never lands on one.
+
+Throw out hits the segment cannot reach before trusting them, with `KsSegmentBounds.Touches` against the occluder's
+world bounds:
+
+```csharp
+// as ExamineSystemShared.Klovn.Occlusion.cs does - only ever removes impossible hits, so normal rays are unchanged
+if (!KsSegmentBounds.Touches(start, end, worldBounds.Enlarged(0.01f)))
+    continue;
+```
+
+`ExamineSystemShared.InRangeUnOccluded`, `NpcLineOfSightSystem` and `KsLosSensorSystem` all do this. The engine's own
+`OccluderSystem.InRangeUnoccluded` does not, so use the examine one.
+
+## 7. KS client localisation: popups and prototype metadata
+
+The server normally runs in `en-US`, while each client selects its own culture through
+the KS14 settings tab (`klovn.client_locale`). **Formatting a string on the server does
+not make it follow the recipient's language.** Two content systems handle this:
+`KsPopupMessage` carries unformatted popup messages to clients, and
+`ContentLocalizationManager` resolves prototype names and descriptions in the active
+localisation culture. Use both when a popup contains a prototype name.
+
+Keep fixes in content; do not modify `RobustToolbox` to work around the engine's
+metadata cache. Further culture, guidebook, and radio setup details are in
+[client_localization.md](Klovn/Docs/client_localization.md).
+
+### Popups: carry the message key and its arguments
+
+Import `Content.Shared._KS14.PopupLocalization`, inject `SharedPopupSystem`, and pass
+`KsPopupMessage.Create(...)` to the ordinary popup methods. The argument names must
+match the Fluent variables. Add the Fluent message to English and the supported
+translated locales, following the feature's existing file layout.
+
+```csharp
+using Content.Shared._KS14.PopupLocalization;
+using Content.Shared.Popups;
+
+[Dependency] private SharedPopupSystem _popupSystem = default!;
+
+// Only the user receives this message.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("anchorless-convert-begin-message"),
+    entityUid, userUid, type: PopupType.Small);
+
+// Entity arguments retain the information needed by Fluent's entity functions.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("gun-ballistic-transfer-invalid",
+        ("ammoEntity", ammoUid), ("targetEntity", targetUid)),
+    targetUid, userUid, type: PopupType.Small);
+```
+
+Do **not** pass `Loc.GetString(...)` to a popup intended to follow the client's
+culture. That selects the legacy string overload, which sends the already formatted
+text. String overloads remain appropriate for literal text and player-authored text.
+Likewise, do not call `message.Format(...)` before handing the message to the popup
+system. Keep custom events, helpers, and intermediate variables typed as
+`KsPopupMessage` if they carry a translated popup. A helper taking `string` cannot
+recover the original key or arguments after formatting.
+
+The complete argument tree must remain deferred, including the values inserted into
+an otherwise localised outer message:
+
+```csharp
+// A nested Fluent label.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("gun-selected-mode",
+        ("mode", KsPopupMessage.Create("gun-SemiAuto"))),
+    weaponUid, userUid);
+
+// A prototype name, such as the energy shotgun's selected projectile.
+_popupSystem.PopupEntity(
+    KsPopupMessage.Create("gun-set-fire-mode-popup",
+        ("mode", new KsPopupPrototypeName(projectilePrototype.ID))),
+    weaponUid, userUid);
+```
+
+`KsPopupPrototypeName` resolves the ID through `ContentLocalizationManager` **at the
+recipient**, for both local prediction and authoritative network messages. It uses
+the prototype name table and its inheritance rules. An unknown prototype ID displays
+the ID as a fallback. Do not replace it with `prototype.Name`, an eagerly formatted
+`GetLocalizedPrototypeName(...)`, or `KsPopupMessage.Create("ent-" + prototype.ID)`:
+the first two freeze the sender's language; the last bypasses prototype inheritance
+and custom `localizationId` handling.
+
+Use these argument forms:
+
+| Value needed by the message | Argument to pass |
+| --- | --- |
+| Live entity, including Fluent entity grammar | `EntityUid` or `Entity<T>`; avoid preformatted `Name(...)` |
+| Prototype name without a live entity | `new KsPopupPrototypeName(prototype.ID)` |
+| Another translated label | `KsPopupMessage.Create(labelKey, ...)` |
+| Several translated labels joined into one argument | `new KsPopupMessageList(separator, messages)`; each element is a deferred `KsPopupMessage` |
+| Number, boolean, time, literal/player text | The original value; let Fluent format numbers |
+| Colour or enum | `Color` or enum; the payload converts them to hex or lowercase invariant text |
+
+The payload also unwraps `LocValueString` and `LocValueNumber`. Other arbitrary
+objects fall back to `ToString()` when sent, so do not pass components, prototypes,
+custom localisation values, or custom objects expecting their behaviour to survive
+the network. Add an explicit supported argument representation and tests if a new
+kind is needed. Live entity arguments must be available to the receiving client;
+they are transported as `NetEntity`, not as a snapshot of their name.
+
+`KsPopupMessage.ToLower()` defers lowercasing until after formatting. It currently
+uses ordinary `string.ToLower()` and therefore the thread's casing rules; do not
+assume it implements the selected game culture's grammatical inflections. Prefer
+appropriately written Fluent messages when casing or inflection matters.
+
+### Popup audience, prediction, and network flow
+
+The KS overloads preserve the ordinary popup API's audience rules:
+
+| Call | Audience |
+| --- | --- |
+| `PopupEntity(message, entityUid)` | Players in the entity's PVS |
+| `PopupEntity(message, entityUid, recipientUid)` | That recipient only |
+| `PopupEntity(message, entityUid, recipientSession)` | That session only |
+| `PopupEntity(message, entityUid, filter, recordReplay)` | The supplied filter |
+| `PopupCoordinates(message, coordinates)` | Players in the coordinates' PVS |
+| `PopupCursor(message, recipientUid)` | That recipient only |
+
+Entity and coordinate methods also accept explicit filters and sessions. The two
+message `PopupEntity` overload sends one message to the recipient and another to
+nearby observers. Both translated messages must be `KsPopupMessage`; the mixed
+overload permits a literal observer message or `null` to suppress it. Preserve the
+existing filter, popup type, replay recording choice, coordinates, and prediction
+key when migrating a call.
+
+The KS `PopupClient` / `PopupPredicted` aliases exist for old call sites. Prefer
+`PopupEntity`, `PopupCoordinates`, and `PopupCursor` in new code. As explained in
+§4, the old three-argument `PopupPredicted(message, uid, recipient)` broadcasts;
+its `recipient` argument does not restrict the audience. Do not accidentally turn
+a private `PopupClient` call into a PVS broadcast.
+
+On the server, `PopupSystem.Klovn.Localization.cs` serialises a `KsPopupPayload`
+inside `KsLocalizedPopupEvent`, including its location, popup type, game tick, and
+coordinate prediction key. It does not format the text or send separate copies for
+each language. On the client, `PopupSystem.Klovn.Localization.cs` formats the payload
+in the client's current culture, then feeds the ordinary popup event handlers.
+Shared prediction formats the original arguments locally on the first predicted
+execution, without a network conversion round trip.
+
+Before formatting a network popup, the client checks that its entity or coordinate
+anchor is available. `KsPopupPayload.TryFormat` also rejects missing or terminating
+entity arguments, including those in nested messages and lists. Such stale popups
+are discarded; never pass `EntityUid.Invalid` to Fluent entity grammar functions.
+
+Formatting before the ordinary prediction match allows the predicted and confirmed
+text to agree even when the server uses English and the client uses another language.
+**Use the same key, argument values, audience, and prediction identity on both paths.**
+This preserves the engine's existing duplicate suppression; it does not deduplicate
+arbitrary messages with different ticks, locations, keys, or arguments. Do not fix
+duplicates by adding a second popup send or a separate language-specific broadcast.
+
+### Prototype names and descriptions: use the content manager
+
+Import `Content.Shared.Localizations` and inject `ContentLocalizationManager` in a
+system that needs prototype metadata for the active culture:
+
+```csharp
+[Dependency] private ContentLocalizationManager _contentLocalizationManager = default!;
+
+var prototype = ProtoMan.Index<EntityPrototype>(prototypeId);
+var localisedName = _contentLocalizationManager.GetLocalizedPrototypeName(prototype);
+var localisedDescription = _contentLocalizationManager.GetLocalizedPrototypeDescription(prototype);
+
+// Preserve a live item's custom name rather than replacing it with the prototype's name.
+var metadataComponent = MetaData(itemUid);
+var displayName = _contentLocalizationManager.GetLocalizedEntityName(
+    itemUid, EntityManager, metadataComponent.EntityName);
+
+// An examine response is formatted now, inside the request's existing culture scope.
+args.PushMarkup(Loc.GetString("gun-set-fire-mode-examine", ("mode", localisedName)));
+```
+
+These methods use the **active** localisation culture, not an entity's owner or an
+implicitly inferred recipient. Client calls use the selected client culture. Server
+examine and verb request handlers already enter a validated synchronous
+`BeginCultureScope(requestedCulture)` for that request. Code adding another
+authoritative response path must carry and validate the client's requested culture
+and scope its formatting with the same manager:
+
+```csharp
+using (_contentLocalizationManager.BeginCultureScope(requestedCulture))
+{
+    // Format only this synchronous response here.
+}
+```
+
+The scope temporarily changes the localisation manager's default culture and restores
+it on disposal. Never retain it across `await`, background work, queued callbacks,
+or an unrelated gameplay action. Verb actions execute after their validation scope
+has been disposed. Popups use deferred messages instead of a server culture scope.
+
+The engine's entity metadata localisation cache is warmed in the normal server
+culture at startup. Do not rely on `prototype.Name`, `prototype.Description`, or
+`Loc.GetEntityData(...)` switching with each client's request, and do not clear or
+rewrite global engine metadata to translate one response. That causes mixed-language
+or Russian-then-English examine results and can affect other players. The server's
+base examine description uses `GetLocalizedPrototypeDescription` only while the
+live description still equals its prototype description; deliberate runtime changes
+are preserved. Follow that distinction when adding another description path.
+
+### Translation files and inheritance
+
+Prototype translations normally use `ent-<ExactPrototypeID>` for the name and its
+`.desc` attribute for the description. A prototype's `localizationId`, including an
+inherited one, overrides that key. Keep prototype IDs case-sensitive. Put fork
+translations under `Resources/Locale/<culture>/_KS14/` and mirror the corresponding
+prototype paths; do not collect an entire module's prototypes in one giant FTL file.
+Follow existing translated upstream trees when extending their translations.
+
+```ftl
+ent-KsExampleDevice = пример устройства
+    .desc = Описание устройства.
+```
+
+Names and descriptions resolve independently. `KsPrototypeLocalizationResolver`
+shares the following policy between runtime and packaging:
+
+1. Check the prototype's native translated field, then traverse parents breadth
+   first in their declared order, including abstract parents.
+2. A concrete prototype's distinct literal field stops inheritance when reached.
+   A child with its own English name therefore needs its own translation; do not
+   expect an unrelated translated parent name to replace it.
+3. A native inherited translation takes precedence over a fallback English Fluent
+   field when no distinct concrete literal stops that traversal.
+4. If nothing suitable is found, use the prototype's English Fluent field, its
+   resolved literal field, or an empty string. An explicitly empty translated
+   description (`.desc = { "" }`) is a valid override, not a missing translation.
+
+The English name API retains the engine's ordinary `prototype.Name` behaviour.
+Do not implement another parent walk or use fallback-aware `Loc.HasString(...)`
+as a test for a *native* translation: an English fallback can hide a missing native
+field. `KsFluentMessageIndex` records native message/attribute presence for the shared
+resolver. Prototype metadata is resolved as static text; put per-use variables and
+state in a separate Fluent examine/popup message rather than a cached name or `.desc`.
+
+### Cache generation, cultures, reloads, and performance
+
+`MSBuild/KsLocalizationCache.targets` runs the packaging compiler after normal client
+and server builds. It produces `Resources/Localization/_KS14/prototype-names.bin`
+with per-culture name and description tables and the registered culture list. The
+artifact and input fingerprint are Git-ignored; do not hand-edit or commit them.
+Unchanged inputs skip regeneration. `-p:SkipKsLocalizationCache=true` skips this build
+hook for tooling; it is not a replacement for shipping a current cache.
+
+Packaging recompiles from the package's exact prototype and locale inputs, including
+prototype replacements, and includes the result in client/server resource packages
+and automatic ACZ client packages. Clients receive it with the ordinary resource
+download. There is no separate cache transfer during gameplay.
+
+`KsEntryPoint.PostInit()` loads the artifact and initialises registered cultures after
+prototype replacement. The compiled tables use frozen dictionaries: ordinary
+lookups do not enumerate Fluent files, walk inheritance, or rebuild tables. Language
+switching retains loaded compiled tables. Keep the expensive work in compilation,
+initialisation, or explicit reload paths; do not add resource scans, whole-prototype
+loops, culture switches, or per-recipient cache rebuilding to popup/examine lookups.
+Popup formatting still performs Fluent work and allocates arguments when needed;
+it is not an allocation-free API. Keep argument trees small and send only to the
+intended audience.
+
+Without an artifact, or for a runtime culture absent from it, the manager builds a
+runtime table on demand and retains it. Abstract prototype requests outside the
+concrete tables use memoised runtime translations. Runtime and packaging must keep
+the same resolver and native-presence rules; changing one side alone can make a
+development run and a packaged build translate differently.
+
+Add future cultures under `Resources/Locale/<canonical-culture>/` and translate
+`_KS14/Localization/options.ftl` there to register them as selectable game languages.
+Use `GetAvailableCultures()` / `ResolveCulture(...)`, not a hardcoded English/Russian
+branch. English is the fallback for unknown culture requests and missing messages.
+Both client and server need the resources for authoritative responses. All registered
+cultures and their content formatting functions load at startup.
+
+For a resource pack mounted at runtime, call `RefreshAvailableCultures()` and reopen
+settings to refresh the choices. Prototype reloads invalidate the prototype tables
+automatically. Content language refreshes also invalidate them. If code calls the
+engine's `ReloadLocalizations()` directly, it must also call
+`InvalidatePrototypeNameCache()` because the engine exposes no reload notification
+for this cache. Rebuild or repackage to update the persistent artifact. Do not
+invalidate the cache on every ordinary lookup or every popup.
+
+### Localisation verification
+
+Use the tests under `Content.IntegrationTests/Tests/_KS14/Localization/`:
+
+- `KsPopupLocalizationTests`: recipient cultures, energy shotgun's nested prototype
+  labels, prediction confirmation, and payload formatting/serialization measurements.
+- `KsPrototypeNameCacheTests`: packaged/runtime parity and resolver behaviour.
+- `KsClientLocalizationTests`: culture discovery/switching, prototype metadata,
+  nested examine text, and other client localisation regressions.
+- `KsVerbLocalizationTests`: authoritative verb labels and action culture boundaries.
+- `Content.IntegrationTests.Tests.Utility.SandboxTest`: shared/client API legality,
+  required when adding new argument types or cache APIs.
+
+For a changed message, check an English server with clients in two different
+cultures, including a predicted action and its authoritative confirmation. Verify
+the nested label, private/broadcast audience, custom item names/descriptions, and
+fallback for a missing translation. Check packaged resources as well as the runtime
+fallback when changing cache resolution. Do not infer whole-round CPU or network overhead from the
+popup microbenchmarks; they measure individual components and serialized payloads.

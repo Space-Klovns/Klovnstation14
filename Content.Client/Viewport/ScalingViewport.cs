@@ -19,7 +19,7 @@ namespace Content.Client.Viewport
     /// <summary>
     ///     Viewport control that has a fixed viewport size and scales it appropriately.
     /// </summary>
-    // KS14: made partial, z-level rendering lives in ScalingViewport.Klovn.cs
+    // KS14: made partial, z-level rendering lives in ScalingViewport.Klovn.ZLevel.cs
     public sealed partial class ScalingViewport : Control, IViewportControl
     {
         [Dependency] private IClyde _clyde = default!;

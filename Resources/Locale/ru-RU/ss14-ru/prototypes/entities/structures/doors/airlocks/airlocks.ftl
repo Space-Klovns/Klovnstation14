@@ -1,0 +1,147 @@
+ent-AirlockAtmospherics = { ent-AirlockEngineering }
+    .desc = { ent-AirlockEngineering.desc }
+    .suffix = Атмосферный
+
+ent-AirlockAtmosphericsGlass = { ent-AirlockEngineeringGlass }
+    .desc = { ent-AirlockEngineeringGlass.desc }
+    .suffix = Атмосферный
+
+ent-AirlockCargo = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Снабжение
+
+ent-AirlockCargoGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Снабжение
+
+ent-AirlockCentralCommand = { ent-AirlockCommand }
+    .desc = { ent-AirlockCommand.desc }
+    .suffix = ЦК
+
+ent-AirlockCentralCommandGlass = { ent-AirlockCommandGlass }
+    .desc = { ent-AirlockCommandGlass.desc }
+    .suffix = ЦК
+
+ent-AirlockChemistry = { ent-AirlockMedical }
+    .desc = { ent-AirlockMedical.desc }
+    .suffix = Химия
+
+ent-AirlockChemistryGlass = { ent-AirlockMedicalGlass }
+    .desc = { ent-AirlockMedicalGlass.desc }
+    .suffix = Химия
+
+ent-AirlockCommand = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Командование
+
+ent-AirlockCommandGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Командование
+
+ent-AirlockEngineering = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Инженерный
+
+ent-AirlockEngineeringGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Инженерный
+
+ent-AirlockFreezer = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Холодильник
+
+ent-AirlockGlassXeno = смоляной экзодермический шлюз
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Экзо
+
+ent-AirlockHatch = герметичный люк
+    .desc = { ent-Airlock.desc }
+
+ent-AirlockHatchMaintenance = герметичный люк техобслуживания
+    .desc = { ent-Airlock.desc }
+
+ent-AirlockHatchSyndicate = герметичный люк
+    .desc = { ent-Airlock.desc }
+    .suffix = Синдикат
+
+ent-AirlockHydroponics = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Гидропоника
+
+ent-AirlockHydroponicsGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Гидропоника
+
+ent-AirlockMaint = Техобслуживание
+    .desc = { ent-Airlock.desc }
+
+ent-AirlockMaintGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Техобслуживание
+
+ent-AirlockMedical = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Медицинский
+
+ent-AirlockMedicalGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Медицинский
+
+ent-AirlockMining = { ent-AirlockCargo }
+    .desc = { ent-AirlockCargo.desc }
+    .suffix = Шахтёры (Утилизаторы)
+
+ent-AirlockMiningGlass = { ent-AirlockCargoGlass }
+    .desc = { ent-AirlockCargoGlass.desc }
+    .suffix = Шахтёры (Утилизаторы)
+
+ent-AirlockSalvage = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Утилизаторский
+
+ent-AirlockSalvageGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Утилизаторский
+
+ent-AirlockScience = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Научный
+
+ent-AirlockScienceGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Научный
+
+ent-AirlockSecurity = { ent-Airlock }
+    .desc = { ent-Airlock.desc }
+    .suffix = Служба Безопасности
+
+ent-AirlockSecurityGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Служба Безопасности
+
+ent-AirlockStandardGlass = { ent-AirlockGlass }
+    .desc = { ent-AirlockGlass.desc }
+    .suffix = Сервис
+
+ent-AirlockSyndicate = { ent-AirlockSecurity }
+    .desc = { ent-AirlockSecurity.desc }
+    .suffix = Синдикат
+
+ent-AirlockSyndicateGlass = { ent-AirlockSecurityGlass }
+    .desc = { ent-AirlockSecurityGlass.desc }
+    .suffix = Синдикат
+
+ent-AirlockVirology = { ent-AirlockMedical }
+    .desc = { ent-AirlockMedical.desc }
+    .suffix = Вирусология
+
+ent-AirlockVirologyGlass = { ent-AirlockMedicalGlass }
+    .desc = { ent-AirlockMedicalGlass.desc }
+    .suffix = Вирусология
+
+ent-AirlockXeno = экзодермический шлюз
+    .desc = { ent-Airlock.desc }
+    .suffix = Экзо
+
+ent-AirlockXenoborg = мехадермический шлюз
+    .desc = { ent-Airlock.desc }

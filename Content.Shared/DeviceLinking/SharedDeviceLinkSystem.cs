@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
@@ -275,7 +276,7 @@ public abstract partial class SharedDeviceLinkSystem : EntitySystem
         SaveLinks(userId, sourceUid, sinkUid, defaults, sourceComponent, sinkComponent);
 
         if (userId != null)
-            _popupSystem.PopupCursor(Loc.GetString("signal-linking-verb-success", ("machine", sourceUid)), userId.Value);
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("signal-linking-verb-success", ("machine", sourceUid)), userId.Value);
     }
 
 
@@ -303,7 +304,7 @@ public abstract partial class SharedDeviceLinkSystem : EntitySystem
         if (!InRange(sourceUid, sinkUid, sourceComponent.Range))
         {
             if (userId != null)
-                _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-out-of-range"), userId.Value);
+                _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("signal-linker-component-out-of-range"), userId.Value);
 
             return;
         }
@@ -494,7 +495,7 @@ public abstract partial class SharedDeviceLinkSystem : EntitySystem
         if (checkRange && !InRange(sourceUid, sinkUid, sourceComponent.Range))
         {
             if (userId.HasValue)
-                _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-out-of-range"), userId.Value);
+                _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("signal-linker-component-out-of-range"), userId.Value);
 
             return false;
         }
@@ -504,14 +505,14 @@ public abstract partial class SharedDeviceLinkSystem : EntitySystem
         RaiseLocalEvent(sourceUid, linkAttemptEvent, true);
         if (linkAttemptEvent.Cancelled && userId.HasValue)
         {
-            _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-connection-refused", ("machine", source)), userId.Value);
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("signal-linker-component-connection-refused", ("machine", source)), userId.Value);
             return false;
         }
 
         RaiseLocalEvent(sinkUid, linkAttemptEvent, true);
         if (linkAttemptEvent.Cancelled && userId.HasValue)
         {
-            _popupSystem.PopupCursor(Loc.GetString("signal-linker-component-connection-refused", ("machine", source)), userId.Value);
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("signal-linker-component-connection-refused", ("machine", source)), userId.Value);
             return false;
         }
 
@@ -543,7 +544,7 @@ public abstract partial class SharedDeviceLinkSystem : EntitySystem
 
         var locString = removed ? "signal-linker-component-unlinked-port" : "signal-linker-component-linked-port";
 
-        _popupSystem.PopupCursor(Loc.GetString(locString, ("machine1", sourceUid), ("port1", PortName<SourcePortPrototype>(source)),
+        _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */(locString, ("machine1", sourceUid), ("port1", PortName<SourcePortPrototype>(source)),
                 ("machine2", sinkUid), ("port2", PortName<SinkPortPrototype>(sink))), userId.Value, PopupType.Medium);
     }
     #endregion

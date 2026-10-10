@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Body;
 using Content.Shared.DoAfter;
 using Content.Shared.Humanoid;
@@ -58,8 +59,8 @@ public sealed partial class MagicMirrorSystem : EntitySystem
         {
             _popup.PopupEntity(
                 ent.Comp.Target == args.Actor
-                    ? Loc.GetString("magic-mirror-blocked-by-hat-self")
-                    : Loc.GetString("magic-mirror-blocked-by-hat-self-target", ("target", Identity.Entity(target, EntityManager))),
+                    ? KsPopupMessage.Create /* KS14: defer popup translation */("magic-mirror-blocked-by-hat-self")
+                    : KsPopupMessage.Create /* KS14: defer popup translation */("magic-mirror-blocked-by-hat-self-target", ("target", Identity.Entity(target, EntityManager))),
                 args.Actor,
                 args.Actor,
                 PopupType.Medium);
@@ -92,11 +93,11 @@ public sealed partial class MagicMirrorSystem : EntitySystem
 
         if (target == args.Actor)
         {
-            _popup.PopupEntity(Loc.GetString("magic-mirror-change-slot-self"), target, target, PopupType.Medium);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("magic-mirror-change-slot-self"), target, target, PopupType.Medium);
         }
         else
         {
-            _popup.PopupEntity(Loc.GetString("magic-mirror-change-slot-target", ("user", Identity.Entity(args.Actor, EntityManager))), target, target, PopupType.Medium);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("magic-mirror-change-slot-target", ("user", Identity.Entity(args.Actor, EntityManager))), target, target, PopupType.Medium);
         }
 
         ent.Comp.DoAfter = doAfterId?.Index;

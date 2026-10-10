@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Administration.Logs;
 using Content.Server.Chat.Systems;
 using Content.Server.Popups;
@@ -46,7 +47,7 @@ public sealed partial class WarDeclaratorSystem : EntitySystem
         {
             if (!args.Silent)
             {
-                var msg = Loc.GetString("war-declarator-not-working");
+                var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("war-declarator-not-working");
                 _popupSystem.PopupEntity(msg, ent);
             }
             args.Cancel();

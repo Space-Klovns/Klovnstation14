@@ -3,6 +3,8 @@ using Content.Server._KS14.AnnouncementWebhook;
 using Content.Server._KS14.Antag;
 using Content.Server._KS14.IoC;
 using Content.Server._KS14.Llm;
+using Content.Server._KS14.TTS;
+using Content.Server._KS14.Voice;
 using Content.Shared._KS14.IoC;
 using Content.Shared.CCVar;
 using Robust.Shared.Configuration;
@@ -20,6 +22,9 @@ internal sealed partial class KsEntryPoint : GameServer
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
     [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
     [Dependency] private KsLlmManager _llmManager = default!;
+    [Dependency] private KsVoiceLinkManager _voiceLinkManager = default!;
+    [Dependency] private KsVoiceUplinkManager _voiceUplinkManager = default!;
+    [Dependency] private KsTtsPreviewManager _ttsPreviewManager = default!;
 
     public override void PreInit()
     {
@@ -47,6 +52,9 @@ internal sealed partial class KsEntryPoint : GameServer
         _systemCollectionHookManager.TryInit();
         _adminMusicManager.Initialise();
         _llmManager.Initialize();
+        _voiceLinkManager.Initialize();
+        _voiceUplinkManager.Initialize();
+        _ttsPreviewManager.Initialize();
     }
 
     public override void Update(ModUpdateLevel level, FrameEventArgs frameEventArgs)
@@ -59,6 +67,7 @@ internal sealed partial class KsEntryPoint : GameServer
                 _announcementWebhookManager.Update();
                 _adminMusicManager.Update();
                 _llmManager.Update();
+                _ttsPreviewManager.Update();
                 break;
         }
     }
@@ -68,6 +77,9 @@ internal sealed partial class KsEntryPoint : GameServer
         base.Dispose(disposing);
         _announcementWebhookManager.Shutdown();
         _llmManager.Shutdown();
+        _voiceUplinkManager.Shutdown();
+        _voiceLinkManager.Shutdown();
+        _ttsPreviewManager.Shutdown();
 
         var destinationPath = _configurationManager.GetCVar(CCVars.DestinationFile);
         if (!string.IsNullOrEmpty(destinationPath))

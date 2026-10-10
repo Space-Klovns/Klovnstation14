@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Examine;
@@ -147,7 +148,7 @@ public abstract partial class SharedDeliverySystem : EntitySystem
 
                 if (ent.Comp.ContainedDeliveryAmount == 0)
                 {
-                    _popup.PopupPredicted(Loc.GetString("delivery-teleporter-empty", ("entity", ent)), null, ent, user);
+                    _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("delivery-teleporter-empty", ("entity", ent)), null, ent, user);
                     return;
                 }
 
@@ -184,8 +185,8 @@ public abstract partial class SharedDeliverySystem : EntitySystem
             GrantSpesoReward(ent.AsNullable());
 
         if (!force)
-            _popup.PopupPredicted(Loc.GetString("delivery-unlocked-self", ("delivery", deliveryName)),
-                Loc.GetString("delivery-unlocked-others", ("delivery", deliveryName), ("recipient", Identity.Entity(user, EntityManager)), ("possadj", user)), user, user);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("delivery-unlocked-self", ("delivery", deliveryName)),
+                KsPopupMessage.Create("delivery-unlocked-others", ("delivery", deliveryName), ("recipient", Identity.Entity(user, EntityManager)), ("possadj", user)), user, user);
 
         return true;
     }
@@ -212,8 +213,8 @@ public abstract partial class SharedDeliverySystem : EntitySystem
         DirtyField(ent.Owner, ent.Comp, nameof(DeliveryComponent.IsOpened));
 
         if (!force)
-            _popup.PopupPredicted(Loc.GetString("delivery-opened-self", ("delivery", deliveryName)),
-                Loc.GetString("delivery-opened-others", ("delivery", deliveryName), ("recipient", Identity.Entity(user, EntityManager)), ("possadj", user)), user, user);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("delivery-opened-self", ("delivery", deliveryName)),
+                KsPopupMessage.Create("delivery-opened-others", ("delivery", deliveryName), ("recipient", Identity.Entity(user, EntityManager)), ("possadj", user)), user, user);
 
         if (!_container.TryGetContainer(ent, ent.Comp.Container, out var container))
             return;

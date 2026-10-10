@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Shared.Access.Components;
 using Content.Shared.ActionBlocker;
@@ -201,8 +202,8 @@ public abstract partial class SharedMechSystem : EntitySystem
             : allEquipment[equipmentIndex];
 
         var popupString = component.CurrentSelectedEquipment != null
-            ? Loc.GetString("mech-equipment-select-popup", ("item", component.CurrentSelectedEquipment))
-            : Loc.GetString("mech-equipment-select-none-popup");
+            ? KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("mech-equipment-select-popup", ("item", component.CurrentSelectedEquipment))
+            : KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("mech-equipment-select-none-popup");
 
         if (_net.IsServer)
             _popup.PopupEntity(popupString, uid);

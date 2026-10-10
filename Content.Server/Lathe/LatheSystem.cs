@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server.Administration.Logs;
@@ -255,7 +256,7 @@ namespace Content.Server.Lathe
                     }
                     else
                     {
-                        _popup.PopupEntity(Loc.GetString("lathe-reagent-dispense-no-container", ("name", uid)), uid);
+                        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("lathe-reagent-dispense-no-container", ("name", uid)), uid);
                         _puddle.TrySpillAt(uid, toAdd, out _);
                     }
                 }

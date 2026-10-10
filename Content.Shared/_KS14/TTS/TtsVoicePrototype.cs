@@ -14,4 +14,18 @@ public sealed partial class TtsVoicePrototype : IPrototype
     /// </summary>
     [DataField(required: true)]
     public string Voice = default!;
+
+    /// <summary>
+    ///     What the character editor calls this voice.
+    /// </summary>
+    [DataField(required: true)]
+    public LocId Name;
+
+    /// <summary>
+    ///     Whether a player can pick this voice for their character, and whether it can be handed out at random.
+    ///         Voices reserved for particular entities turn this off and are then only reachable by setting
+    ///         them on that entity directly.
+    /// </summary>
+    [DataField]
+    public bool Selectable = true;
 }

@@ -1,0 +1,29 @@
+ent-APCBasic = { ent-BaseAPC }
+    .desc = { ent-BaseAPC.desc }
+    .suffix = Базовый, 50кДж
+
+ent-APCConstructed = { ent-BaseAPC }
+    .desc = { ent-BaseAPC.desc }
+    .suffix = Открыт
+
+ent-APCFrame = каркас ЛКП
+    .desc = Терминал управления локальными электрическими системами, без электроники.
+
+ent-APCHighCapacity = { ent-BaseAPC }
+    .desc = { ent-BaseAPC.desc }
+    .suffix = Высокая ёмкость, 100кДж
+
+ent-APCHyperCapacity = { ent-BaseAPC }
+    .desc = { ent-BaseAPC.desc }
+    .suffix = Гипер ёмкость, 200кДж
+
+ent-APCSuperCapacity = { ent-BaseAPC }
+    .desc = { ent-BaseAPC.desc }
+    .suffix = Супер ёмкость, 150кДж
+
+ent-APCXenoborg = { ent-BaseAPC }
+    .desc = { ent-BaseAPC.desc }
+    .suffix = Базовый, 50кДж, Ксеноборг
+
+ent-BaseAPC = ЛКП
+    .desc = Терминал управления локальными электрическими системами.

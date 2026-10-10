@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Database;
+using Content.Shared._KS14.TTS; // KS14
 using Content.Shared.Body;
 using Content.Shared.CCVar;
 using Content.Shared.Construction.Prototypes;
@@ -186,7 +187,7 @@ namespace Content.Server.Preferences.Managers
                 antags.ToHashSet(),
                 traits.ToHashSet(),
                 loadouts
-            );
+            ).WithTtsVoice(profile.TtsVoice is { } ttsVoice ? new ProtoId<TtsVoicePrototype>(ttsVoice) : (ProtoId<TtsVoicePrototype>?)null) /* KS14: added */;
         }
 
         private async void HandleSelectCharacterMessage(MsgSelectCharacter message)

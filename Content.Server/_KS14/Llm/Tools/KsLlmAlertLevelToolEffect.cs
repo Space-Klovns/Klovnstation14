@@ -32,6 +32,13 @@ public sealed partial class KsLlmAlertLevelToolEffect : KsLlmToolEffect
         if (alertLevelComponent.IsLevelLocked)
             return KsLlmToolOutcome.Error("the station's alert level is locked and cannot be changed.");
 
+        // Levels outside the list are set by something with more say than this tool - an armed nuke, or a
+        // higher office - and are not the model's to undo.
+        var currentLevel = alertLevelComponent.CurrentLevel;
+        if (!string.IsNullOrEmpty(currentLevel)
+            && !AllowedLevels.Exists(allowed => string.Equals(allowed, currentLevel, StringComparison.OrdinalIgnoreCase)))
+            return KsLlmToolOutcome.Error($"the station is at {currentLevel} alert, which was not set by you and cannot be changed by you.");
+
         if (alertLevelComponent.CurrentLevel == allowedLevel)
             return KsLlmToolOutcome.Ok($"The alert level is already {allowedLevel}.");
 

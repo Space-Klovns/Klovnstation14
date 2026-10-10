@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
@@ -64,7 +65,7 @@ public sealed partial class EmagSystem : EntitySystem
         Entity<LimitedChargesComponent?> chargesEnt = ent.Owner;
         if (_sharedCharges.IsEmpty(chargesEnt))
         {
-            _popup.PopupClient(Loc.GetString("emag-no-charges"), user, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emag-no-charges"), user, user);
             return false;
         }
 
@@ -76,7 +77,7 @@ public sealed partial class EmagSystem : EntitySystem
         if (!emaggedEvent.Handled)
             return false;
 
-        _popup.PopupPredicted(Loc.GetString("emag-success", ("target", Identity.Entity(target, EntityManager))), user, user, PopupType.Medium);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emag-success", ("target", Identity.Entity(target, EntityManager))), user, user, PopupType.Medium);
 
         _audio.PlayPredicted(ent.Comp.EmagSound, ent, ent);
 

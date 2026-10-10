@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Interaction;
@@ -60,14 +61,14 @@ public abstract partial class SharedSolutionContainerMixerSystem : EntitySystem
         if (!HasPower(entity))
         {
             if (user != null)
-                _popup.PopupClient(Loc.GetString("solution-container-mixer-no-power"), entity, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("solution-container-mixer-no-power"), entity, user.Value);
             return;
         }
 
         if (!_container.TryGetContainer(uid, comp.ContainerId, out var container) || container.Count == 0)
         {
             if (user != null)
-                _popup.PopupClient(Loc.GetString("solution-container-mixer-popup-nothing-to-mix"), entity, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("solution-container-mixer-popup-nothing-to-mix"), entity, user.Value);
             return;
         }
 

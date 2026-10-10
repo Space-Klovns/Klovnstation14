@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Server.Speech.EntitySystems;
 using Content.Shared.Abilities.Mime;
@@ -36,10 +37,10 @@ namespace Content.Server.Speech.Muting
                 return;
 
             if (HasComp<MimePowersComponent>(uid))
-                _popupSystem.PopupEntity(Loc.GetString("mime-cant-speak"), uid, uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("mime-cant-speak"), uid, uid);
 
             else
-                _popupSystem.PopupEntity(Loc.GetString("speech-muted"), uid, uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("speech-muted"), uid, uid);
             args.Handled = true;
         }
 
@@ -49,11 +50,11 @@ namespace Content.Server.Speech.Muting
             // TODO something better than this.
 
             if (HasComp<MimePowersComponent>(uid))
-                _popupSystem.PopupEntity(Loc.GetString("mime-cant-speak"), uid, uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("mime-cant-speak"), uid, uid);
             else if (HasComp<VentriloquistPuppetComponent>(uid))
-                _popupSystem.PopupEntity(Loc.GetString("ventriloquist-puppet-cant-speak"), uid, uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ventriloquist-puppet-cant-speak"), uid, uid);
             else
-                _popupSystem.PopupEntity(Loc.GetString("speech-muted"), uid, uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("speech-muted"), uid, uid);
 
             args.Cancel();
         }

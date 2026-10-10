@@ -22,7 +22,7 @@ public sealed partial class GunComponent : Component
 
     // KS14 Addition
     [DataField]
-    public _KS14.Farsound.FarSoundData? FarSoundGunshot = null;
+    public _KS14.FarSound.FarSoundData? FarSoundGunshot = null;
 
     /// <summary>
     /// The sound to use when the gun is fired.

@@ -169,6 +169,7 @@ public sealed partial class AccessReaderSystem : EntitySystem
         accessReader.Value.Comp.AccessLists.Clear();
         accessReader.Value.Comp.AccessLog.Clear();
         Dirty(uid, reader);
+        RaiseLocalEvent(accessReader.Value, new AccessReaderConfigurationChangedEvent()); // KS14: so NPC pathfinding sees the door is open to all
     }
 
     private void OnConfigurationAttempt(Entity<AccessReaderComponent> ent, ref AccessReaderConfigurationAttemptEvent args)
@@ -829,6 +830,7 @@ public sealed partial class AccessReaderSystem : EntitySystem
     {
         ent.Comp.Enabled = enabled;
         Dirty(ent);
+        RaiseLocalEvent(ent, new AccessReaderConfigurationChangedEvent()); // KS14: so NPC pathfinding sees who the door lets through
     }
 
     /// <summary>

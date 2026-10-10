@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Numerics;
 using Content.Server.Administration.Logs;
@@ -127,8 +128,8 @@ namespace Content.Server.Ghost
             }
 
             var str = HasComp<GhostHearingComponent>(uid)
-                ? Loc.GetString("ghost-gui-toggle-hearing-popup-on")
-                : Loc.GetString("ghost-gui-toggle-hearing-popup-off");
+                ? KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ghost-gui-toggle-hearing-popup-on")
+                : KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ghost-gui-toggle-hearing-popup-off");
 
             Popup.PopupEntity(str, uid, uid);
             Dirty(uid, component);
@@ -156,7 +157,7 @@ namespace Content.Server.Ghost
             }
 
             if (booCounter == 0)
-                _popup.PopupEntity(Loc.GetString("ghost-component-boo-action-failed"), uid, uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ghost-component-boo-action-failed"), uid, uid);
 
             args.Handled = true;
         }

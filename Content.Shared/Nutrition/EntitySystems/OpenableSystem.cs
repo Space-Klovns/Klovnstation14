@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
@@ -163,9 +164,9 @@ public sealed partial class OpenableSystem : EntitySystem
         if (user != null)
         {
             if (predicted)
-                _popup.PopupClient(Loc.GetString(comp.ClosedPopup, ("owner", uid)), user.Value, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.ClosedPopup, ("owner", uid)), user.Value, user.Value);
             else
-                _popup.PopupEntity(Loc.GetString(comp.ClosedPopup, ("owner", uid)), user.Value, user.Value);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.ClosedPopup, ("owner", uid)), user.Value, user.Value);
         }
 
         return true;

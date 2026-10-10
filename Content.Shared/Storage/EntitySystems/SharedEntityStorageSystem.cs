@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Numerics;
 using Content.Shared.Destructible;
@@ -149,7 +150,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
 
         if (component.Contents.Contains(args.User))
         {
-            var msg = Loc.GetString("entity-storage-component-already-contains-user-message");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("entity-storage-component-already-contains-user-message");
             Popup.PopupEntity(msg, args.User, args.User);
             args.Cancel();
         }
@@ -420,7 +421,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         if (_weldable.IsWelded(target))
         {
             if (!silent && !component.Contents.Contains(user))
-                Popup.PopupClient(Loc.GetString("entity-storage-component-welded-shut-message"), target, user);
+                Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("entity-storage-component-welded-shut-message"), target, user);
 
             return false;
         }
@@ -432,7 +433,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
             if (!_interaction.InRangeUnobstructed(target, newCoords, 0, collisionMask: component.EnteringOffsetCollisionFlags))
             {
                 if (!silent && _net.IsServer)
-                    Popup.PopupEntity(Loc.GetString("entity-storage-component-cannot-open-no-space"), target);
+                    Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("entity-storage-component-cannot-open-no-space"), target);
                 return false;
             }
         }

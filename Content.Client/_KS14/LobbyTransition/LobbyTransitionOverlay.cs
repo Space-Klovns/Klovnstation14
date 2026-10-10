@@ -6,34 +6,24 @@
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
-using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.LobbyTransition;
 
 [Access(typeof(LobbyTransitionSystem))]
 public sealed partial class LobbyTransitionOverlay : Overlay
 {
-    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IClyde _clyde = default!;
 
     public override OverlaySpace Space => OverlaySpace.ScreenSpace;
     public Texture? ArtTexture = null;
-    public TimeSpan TransitionStartTime = TimeSpan.MinValue;
-    public TimeSpan TransitionFinishTime = TimeSpan.MinValue;
-
-    private TimeSpan _curTime;
+    public float Alpha = 1f;
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
-        => ArtTexture is { } &&
-        (_curTime = _gameTiming.CurTime) < TransitionFinishTime;
+        => ArtTexture is { } && Alpha > 0f;
 
     protected override void Draw(in OverlayDrawArgs args)
     {
-        // fade-out
-        var elapsed = (_curTime - TransitionStartTime).TotalSeconds;
-        var duration = (TransitionFinishTime - TransitionStartTime).TotalSeconds;
-        var alpha = Math.Clamp(1f - (float)(elapsed / duration), 0f, 1f);
-        var modulate = new Color(1f, 1f, 1f, a: alpha);
+        var modulate = new Color(1f, 1f, 1f, a: Math.Clamp(Alpha, 0f, 1f));
 
         // draw according to StretchMode.KeepAspectCovered
         var pixelSize = _clyde.ScreenSize;

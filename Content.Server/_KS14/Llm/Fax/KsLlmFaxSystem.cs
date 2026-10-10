@@ -5,6 +5,8 @@ using Content.Server._KS14.Llm.Prototypes;
 using Content.Server._KS14.Llm.Tools;
 using Content.Server.Administration.Logs;
 using Content.Server.Chat.Managers;
+using Content.Server.Destructible;
+using Content.Server.Explosion.EntitySystems;
 using Content.Server.Fax;
 using Content.Server.Station.Systems;
 using Content.Shared._KS14.CCVar;
@@ -37,6 +39,8 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
     [Dependency] private IChatManager _chatManager = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private ExplosionSystem _explosionSystem = default!;
+    [Dependency] private DestructibleSystem _destructibleSystem = default!;
 
     /// <summary>
     ///     Successful uses of each tool this round, keyed by tool prototype ID.
@@ -58,6 +62,37 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
         Subs.CVar(_configurationManager, KsCCVars.LlmMaxInputChars, value => _maxInputChars = value, invokeImmediately: true);
     }
 
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var closedFaxLineQuery = EntityQueryEnumerator<KsLlmClosedFaxLineComponent>();
+        while (closedFaxLineQuery.MoveNext(out var faxUid, out var closedFaxLineComponent))
+        {
+            if (closedFaxLineComponent.Destroyed
+                || closedFaxLineComponent.DestroyAt is not { } destroyAt
+                || _gameTiming.CurTime < destroyAt)
+                continue;
+
+            // Deletion here is queued, so the component outlives this tick; the flag stops a second go.
+            closedFaxLineComponent.Destroyed = true;
+
+            if (closedFaxLineComponent.ExplosionType is { } explosionType)
+            {
+                _explosionSystem.QueueExplosion(faxUid,
+                    explosionType,
+                    closedFaxLineComponent.ExplosionTotalIntensity,
+                    closedFaxLineComponent.ExplosionSlope,
+                    closedFaxLineComponent.ExplosionMaxTileIntensity,
+                    maxTileBreak: 0,
+                    canCreateVacuum: false);
+            }
+
+            _adminLogManager.Add(LogType.Action, LogImpact.High, $"LLM persona destroyed {ToPrettyString(faxUid):subject} after closing its fax line.");
+            _destructibleSystem.DestroyEntity(faxUid);
+        }
+    }
+
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
@@ -75,10 +110,12 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
         if (_llmManager.State is not (KsLlmState.Ready or KsLlmState.Busy))
             return;
 
-        // Nowhere to send a reply, or a reply from another persona: answering the latter would loop forever.
+        // Nowhere to send a reply, a reply from another persona - answering that would loop forever - or a
+        // line the persona has already closed.
         if (args.FromAddress is not { } fromAddress
             || !TryFindFax(fromAddress, out var senderFaxUid)
-            || HasComp<KsLlmFaxRecipientComponent>(senderFaxUid))
+            || HasComp<KsLlmFaxRecipientComponent>(senderFaxUid)
+            || HasComp<KsLlmClosedFaxLineComponent>(senderFaxUid))
             return;
 
         var recipientFaxUid = entity.Owner;
@@ -143,10 +180,11 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
         IReadOnlyList<StampDisplayInfo> stamps)
     {
         var tool = toolCall.Tool;
-        var outcome = CheckUsage(tool) ?? tool.Effect.Execute(new KsLlmToolContext
+        var outcome = CheckStamps(tool, stamps) ?? CheckUsage(tool) ?? tool.Effect.Execute(new KsLlmToolContext
         {
             EntityManager = EntityManager,
             Localization = Loc,
+            PrototypeManager = ProtoMan,
             Arguments = toolCall.Arguments,
             RecipientFaxUid = recipientFaxUid,
             SenderFaxUid = Exists(senderFaxUid) ? senderFaxUid : null,
@@ -168,6 +206,20 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
             $"LLM tool {tool.Name} for a fax from {ToPrettyString(senderFaxUid):subject} {(outcome.Success ? "succeeded" : "was refused")}: {outcome.Message}");
 
         return outcome;
+    }
+
+    /// <summary>
+    ///     The refusal, if the tool needs a stamp this fax does not bear. Read off the paper itself, so nothing
+    ///         the model says can get past it.
+    /// </summary>
+    private KsLlmToolOutcome? CheckStamps(KsLlmToolPrototype tool, IReadOnlyList<StampDisplayInfo> stamps)
+    {
+        if (tool.RequiredStamps.Count == 0 || stamps.Any(stamp => tool.RequiredStamps.Contains(stamp.StampedName)))
+            return null;
+
+        // Named from the list itself, so the refusal can never disagree with what is actually accepted.
+        var acceptedStamps = string.Join(", ", tool.RequiredStamps.Select(stamp => Loc.TryGetString(stamp, out var name) ? name : stamp));
+        return KsLlmToolOutcome.Error($"refused: '{tool.Name}' requires the fax to bear one of these stamps: {acceptedStamps}. This one does not.");
     }
 
     /// <summary>
@@ -193,6 +245,12 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
         EntityUid senderFaxUid,
         ProtoId<KsLlmPersonaPrototype> persona)
     {
+        // The turn is over, so whatever reply there is to print is about to be queued: start the countdown on a
+        // line this turn closed. A failed turn has nothing to print, and the countdown starts all the same.
+        if (TryComp<KsLlmClosedFaxLineComponent>(senderFaxUid, out var closedFaxLineComponent)
+            && closedFaxLineComponent.DestroyAt == null)
+            closedFaxLineComponent.DestroyAt = _gameTiming.CurTime + closedFaxLineComponent.DestroyDelay;
+
         if (!result.Success || result.Reply is not { } reply)
             return;
 

@@ -37,6 +37,14 @@ public sealed partial class KsLlmToolPrototype : IPrototype
     public int? MaxUsesPerRound;
 
     /// <summary>
+    ///     When non-empty, the tool only runs for a fax bearing at least one of these stamps (by
+    ///         <see cref="Content.Shared.Paper.StampDisplayInfo.StampedName"/>). Enforced in code, and written into
+    ///         the description the model sees, so this list is the one place that says who may use the tool.
+    /// </summary>
+    [DataField]
+    public List<string> RequiredStamps = new();
+
+    /// <summary>
     ///     Minimum time between successful calls.
     /// </summary>
     [DataField]

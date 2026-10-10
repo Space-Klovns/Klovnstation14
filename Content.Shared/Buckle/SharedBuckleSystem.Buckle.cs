@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared.Alert;
@@ -238,7 +239,7 @@ public abstract partial class SharedBuckleSystem
             _whitelistSystem.IsWhitelistPass(strapComp.Blacklist, buckleUid))
         {
             if (popup)
-                _popup.PopupClient(Loc.GetString("buckle-component-cannot-fit-message"), user, PopupType.Medium);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("buckle-component-cannot-fit-message"), user, PopupType.Medium);
 
             return false;
         }
@@ -258,7 +259,7 @@ public abstract partial class SharedBuckleSystem
         if (user != null && !HasComp<HandsComponent>(user))
         {
             if (popup)
-                _popup.PopupClient(Loc.GetString("buckle-component-no-hands-message"), user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("buckle-component-no-hands-message"), user);
 
             return false;
         }
@@ -267,7 +268,7 @@ public abstract partial class SharedBuckleSystem
         {
             if (popup)
             {
-                var message = Loc.GetString(buckleUid == user
+                var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(buckleUid == user
                     ? "buckle-component-already-buckled-message"
                     : "buckle-component-other-already-buckled-message",
                 ("owner", Identity.Entity(buckleUid, EntityManager)));
@@ -290,7 +291,7 @@ public abstract partial class SharedBuckleSystem
 
             if (popup)
             {
-                var message = Loc.GetString(buckleUid == user
+                var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(buckleUid == user
                     ? "buckle-component-cannot-buckle-message"
                     : "buckle-component-other-cannot-buckle-message",
                 ("owner", Identity.Entity(buckleUid, EntityManager)));
@@ -305,7 +306,7 @@ public abstract partial class SharedBuckleSystem
         {
             if (popup)
             {
-                var message = Loc.GetString(buckleUid == user
+                var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(buckleUid == user
                     ? "buckle-component-cannot-buckle-message"
                     : "buckle-component-other-cannot-buckle-message",
                 ("owner", Identity.Entity(buckleUid, EntityManager)));

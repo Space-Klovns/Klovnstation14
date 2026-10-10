@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Atmos.Components;
 using Content.Server.Stunnable;
@@ -185,7 +186,7 @@ namespace Content.Server.Atmos.EntitySystems
             }
             else
             {
-                _popup.PopupEntity(Loc.GetString(component.ExtinguishFailed), uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.ExtinguishFailed), uid);
             }
         }
 
@@ -392,7 +393,7 @@ namespace Content.Server.Atmos.EntitySystems
 
             flammable.ResistCompleteTime = _timing.CurTime + flammable.ResistTime;
 
-            _popup.PopupEntity(Loc.GetString("flammable-component-resist-message"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flammable-component-resist-message"), uid, uid);
             _stunSystem.TryUpdateParalyzeDuration(uid, flammable.ResistTime);
         }
 
