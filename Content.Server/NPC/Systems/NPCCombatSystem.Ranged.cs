@@ -1,3 +1,4 @@
+using System.Numerics; // KS14
 using Content.Server.NPC.Components;
 using Content.Shared.CombatMode;
 using Content.Shared.Interaction;
@@ -52,6 +53,8 @@ public sealed partial class NPCCombatSystem
         {
             _combat.SetInCombatMode(uid, false, combat);
         }
+
+        KsOnRangedShutdown(uid); // KS14: clear lock-on and laser sight
     }
 
     private void UpdateRanged(float frameTime)
@@ -67,6 +70,7 @@ public sealed partial class NPCCombatSystem
             {
                 comp.Status = CombatStatus.TargetUnreachable;
                 comp.ShootAccumulator = 0f;
+                KsStopTargeting(uid); // KS14: drop lock-on and targeting laser
                 continue;
             }
 
@@ -75,6 +79,7 @@ public sealed partial class NPCCombatSystem
             {
                 comp.Status = CombatStatus.TargetUnreachable;
                 comp.ShootAccumulator = 0f;
+                KsStopTargeting(uid); // KS14: drop lock-on and targeting laser
                 continue;
             }
 
@@ -82,6 +87,7 @@ public sealed partial class NPCCombatSystem
             {
                 comp.Status = CombatStatus.TargetUnreachable;
                 comp.ShootAccumulator = 0f;
+                KsStopTargeting(uid); // KS14: drop lock-on and targeting laser
                 continue;
             }
 
@@ -94,6 +100,7 @@ public sealed partial class NPCCombatSystem
             {
                 comp.Status = CombatStatus.NoWeapon;
                 comp.ShootAccumulator = 0f;
+                KsStopTargeting(uid); // KS14: drop lock-on and targeting laser
                 continue;
             }
 
@@ -110,6 +117,7 @@ public sealed partial class NPCCombatSystem
 
                 comp.Status = CombatStatus.Unspecified;
                 comp.ShootAccumulator = 0f;
+                KsStopTargeting(uid); // KS14: drop lock-on and targeting laser
                 continue;
             }
 
@@ -133,6 +141,8 @@ public sealed partial class NPCCombatSystem
                 comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, collisionGroup);
             }
 
+            KsUpdateSight(uid, comp.Target, comp.TargetInLOS); // KS14: lock-on and laser sight
+
             if (!comp.TargetInLOS)
             {
                 comp.ShootAccumulator = 0f;
@@ -153,22 +163,36 @@ public sealed partial class NPCCombatSystem
 
             comp.ShootAccumulator += frameTime;
 
+            // KS14 start: turrets with aim tracking keep aiming while waiting to shoot
+            var ksAimDone = false;
+            var ksAimed = false;
+            var targetSpot = Vector2.Zero;
+
+            if (_aimTrackingQuery.TryComp(uid, out var ksTracking) && ksTracking.RotateWhileWaiting)
+            {
+                ksAimed = KsTryAim(uid, comp, xform, targetBody, targetPos, worldPos, distance, frameTime, out targetSpot);
+                ksAimDone = true;
+            }
+            // KS14 end
+
             if (comp.ShootAccumulator < comp.ShootDelay)
             {
                 continue;
             }
 
-            var mapVelocity = targetBody.LinearVelocity;
-            var targetSpot = targetPos + mapVelocity * distance / ShootSpeed;
+            // KS14: lead the target and rotate (tracking-aware); original inline code moved to KsTryAim
+            // var mapVelocity = targetBody.LinearVelocity;
+            // var targetSpot = targetPos + mapVelocity * distance / ShootSpeed;
+            // var goalRotation = (targetSpot - worldPos).ToWorldAngle();
+            // var rotationSpeed = comp.RotationSpeed;
+            // if (!_rotate.TryRotateTo(uid, goalRotation, frameTime, comp.AccuracyThreshold, rotationSpeed?.Theta ?? double.MaxValue, xform)) continue;
+            // KS14 start
+            if (!ksAimDone)
+                ksAimed = KsTryAim(uid, comp, xform, targetBody, targetPos, worldPos, distance, frameTime, out targetSpot);
 
-            // If we have a max rotation speed then do that.
-            var goalRotation = (targetSpot - worldPos).ToWorldAngle();
-            var rotationSpeed = comp.RotationSpeed;
-
-            if (!_rotate.TryRotateTo(uid, goalRotation, frameTime, comp.AccuracyThreshold, rotationSpeed?.Theta ?? double.MaxValue, xform))
-            {
+            if (!ksAimed)
                 continue;
-            }
+            // KS14 end
 
             // TODO: LOS
             // TODO: Ammo checks
@@ -179,6 +203,9 @@ public sealed partial class NPCCombatSystem
             // TODO: Check if we can face
 
             if (!Enabled || !_gun.CanShoot(gun))
+                continue;
+
+            if (!_lockOnSystem.IsLocked(uid, comp.Target)) // KS14: must finish locking on before firing
                 continue;
 
             EntityCoordinates targetCordinates;

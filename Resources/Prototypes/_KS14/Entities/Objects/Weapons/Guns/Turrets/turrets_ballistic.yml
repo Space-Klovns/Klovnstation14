@@ -25,3 +25,22 @@
   - type: NpcFactionMember
     factions:
     - NanoTrasen
+
+
+- type: entity
+  parent: WeaponTurretSyndicate
+  id: KsWeaponTurretSyndicateTracking
+  suffix: Syndicate, Tracking
+  components:
+  - type: KsLaserSight
+    onlyWhileTargeting: true
+    fadeStart: 0.4
+  - type: KsTargetLockOn
+    lockOnTime: 1.2
+    lockingSound:
+      path: /Audio/Machines/quickbeep.ogg
+    lockedSound:
+      path: /Audio/Machines/twobeep.ogg
+  - type: KsNpcAimTracking
+    accuracyThreshold: 5
+    angularVelocityCompensation: 1

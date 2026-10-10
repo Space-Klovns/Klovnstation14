@@ -525,7 +525,12 @@ _popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
 
 So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
 
-**NPC behaviour (C#, YAML)** — HTN, and the systems that feed it, have their own conventions, kept in the `npc-htn` agent skill (`.claude/skills/npc-htn/SKILL.md`). Read it before touching NPC behaviour.
+**NPC behaviour (C#, YAML)** — HTN, and the systems that feed it, have their own conventions, kept in the `npc-htn` agent skill (`.claude/skills/npc-htn/SKILL.md`). Read it before touching NPC behaviour. Turrets and anything else that shoots are
+covered by `npc-ranged-combat` (`.claude/skills/npc-ranged-combat/SKILL.md`).
+
+**Overlays and lighting (C#)** — read the `overlays` skill (`.claude/skills/overlays/SKILL.md`) before writing or
+changing an `Overlay`, and the `client-lighting` skill (`.claude/skills/client-lighting/SKILL.md`) before making
+anything glow or adding to the light chain.
 
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
@@ -902,6 +907,15 @@ _pendingTransitChecks.Clear();
 Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
 throws straight out of `Update`.
 
+### `IntersectRay` with `returnOnFirstHit: true` is not the nearest hit
+
+The physics ray query's `returnOnFirstHit` stops at whichever fixture the broadphase tree happens to visit first. That is often, but not always, the closest one, so a beam, sight line or "how far can I see" length ends beyond a nearer obstacle only sometimes, which reads as flicker or a rare overshoot. Nothing errors. Use `returnOnFirstHit: false` (the results come back sorted by distance) and take the minimum when you need the nearest:
+
+```csharp
+foreach (var result in _physicsSystem.IntersectRay(mapId, ray, length, ignoredEnt: uid, returnOnFirstHit: false))
+    length = MathF.Min(length, result.Distance);
+```
+
 ### `Equals` on an enum boxes it
 
 An enum's `Equals` is inherited from `System.Enum`, a class, and takes an `object`. Calling it boxes both
@@ -983,12 +997,20 @@ metrics, so this works in an ordinary integration test.
 
 ### World-space overlays draw square to the map, not the grid
 
-A `Box2`, or an offset like `position + new Vector2(0, size)`, is aligned to the map's axes. On a turned grid, a
-marker built that way sits at a slant to the grid it marks, and any text placed next to it ends up in the wrong spot.
+A world handle with the identity transform draws in map space, so every coordinate you hand it is measured along the
+map's axes. That covers far more than `Box2`s. It applies to any shape with corners or a direction: a `Box2` or
+`DrawRect`, a texture drawn with `DrawTextureRect`, `DrawPrimitives` vertices, lines whose ends are built from offsets
+(`position + new Vector2(0, size)`), and anything placed next to something else by such an offset, text labels
+included. On a turned grid, all of these sit at a slant to the grid they mark, and anything placed beside them lands
+in the wrong spot. Only shapes that look the same at any rotation are safe without a transform: a circle, a lone point,
+or a line between two points that were both already worked out in map space. Screen-space text glyphs are always
+upright, but *where* the text starts still has to be worked out in the grid's frame.
+
 Draw in the grid's frame instead. Call `SetTransform` with the grid's world matrix for tiles, or with
-`Matrix3Helpers.CreateTransform(position, gridRotation)` for a marker drawn around the origin, and set
+`Matrix3Helpers.CreateTransform(position, gridRotation)` for a marker drawn around the origin. Set
 `Matrix3x2.Identity` back afterwards. Clyde applies the transform to vertices as it queues them, so setting it per
-marker is cheap. Circles and screen-space text are unaffected. `SquadDebugOverlay` does both.
+marker is cheap. `SquadDebugOverlay` does both (`GetMarkerTransform`), including a label positioned through the
+marker's frame, and `KsLockOnIndicatorOverlay` draws its brackets the same way.
 
 ### Occluder ray queries along a tile edge report walls that are not there
 
