@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Content.Shared.Research.Prototypes;
 
@@ -8,9 +9,9 @@ public sealed class LathePrintMethod : ModuleMethod
 {
     public override PacketModule? Module { get; set; }
 
-    public override Func<int, string, string, int, Task> ModuleExec { get; }
+    public override Action<int, string, string, int> ModuleExec { get; }
 
-    private async Task Func(int frequency, string address, string item, int quantity)
+    private void Func(int frequency, string address, string item, int quantity)
     {
         if (Module is not LathePacketModule module)
             return;
@@ -37,7 +38,7 @@ public sealed class LathePrintMethod : ModuleMethod
             latheSys.TryStartProducing(receiver);
         });
 
-        await Task.Delay(recipe.CompleteTime * quantity);
+        Thread.Sleep(recipe.CompleteTime * quantity);
     }
 
     public LathePrintMethod(PacketModule? module) : base(module)

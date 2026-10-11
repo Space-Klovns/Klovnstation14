@@ -1,5 +1,6 @@
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Modules.Base;
+using Content.Server._KS14.Packet.States;
 using Content.Server.DeviceLinking.Systems;
 using Content.Server.GameTicking.Events;
 using Content.Shared._KS14.Packets.BUI;
@@ -24,11 +25,12 @@ public sealed partial class PacketSystem : EntitySystem
     [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
-    private int _mainThreadId;
+    internal int _mainThreadId;
 
     public override void Initialize()
     {
         _mainThreadId = Environment.CurrentManagedThreadId;
+        DeviceCall._entityManager = EntityManager;
         PreInitJint();
 
         SubscribeLocalEvent<PacketExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
@@ -46,7 +48,6 @@ public sealed partial class PacketSystem : EntitySystem
 
         SubscribeLocalEvent<RoundStartingEvent>(OnRoundStart);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
-
     }
 
     /// <summary>
@@ -65,6 +66,7 @@ public sealed partial class PacketSystem : EntitySystem
                 continue;
 
             _userInterfaceSystem.ServerSendUiMessage(uid.Owner, ExecutorUiKey.Key, new LogExecutorMessage(uid.Comp.Log));
+            Logger.Info(uid.Comp.Log);
             uid.Comp.Log = string.Empty;
         }
     }
@@ -75,7 +77,7 @@ public sealed partial class PacketSystem : EntitySystem
     }
 
     /// <summary>
-    /// On "SAVE" message - receives code from client and loads it into executor's component.
+    /// Receives code from client and loads it into executor's component.
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
@@ -91,6 +93,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// <param name="ev"></param>
     private void OnExecute(Entity<PacketExecutorComponent> ent, ref StartExecutionMessage ev)
     {
+        ent.Comp.Command = ev.Command;
         TryExecute(ent.Comp.Command, ent, ev.Actor);
     }
 

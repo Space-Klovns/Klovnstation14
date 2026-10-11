@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ public sealed partial class PacketSystem
     /// <summary>
     /// Methods that are about to be called next tick
     /// </summary>
-    private Queue<Action> _callQueue = new();
+    private Queue<PacketSystemCall> _callQueue = new();
 
     /// <summary>
     /// Invoke all system calls in call queue
@@ -21,7 +22,10 @@ public sealed partial class PacketSystem
         while (_callQueue.Count > 0)
         {
             var action = _callQueue.Dequeue();
-            action.Invoke();
+            action.Action.Invoke();
+            Logger.Info("Invoking...");
+            action.PauseHandler?.Set();
+            Logger.Info("Thread unpaused!");
         }
     }
 
@@ -46,7 +50,7 @@ public sealed partial class PacketSystem
         return (T) await channel.Reader.ReadAsync();
     }
 
-    public void TryWrapSystemCall(Action action)
+    public void TryWrapSystemCall(Action action, ManualResetEventSlim? pauseHandler = null)
     {
         if (Environment.CurrentManagedThreadId == _mainThreadId)
         {
@@ -54,11 +58,20 @@ public sealed partial class PacketSystem
             return;
         }
 
-        WrapSystemCall(action);
+        Logger.Info("Async execution...");
+
+        WrapSystemCall(action, pauseHandler);
     }
 
-    public void WrapSystemCall(Action action)
+    public void WrapSystemCall(Action action, ManualResetEventSlim? pauseHandler = null)
     {
-        _callQueue.Enqueue(action);
+        _callQueue.Enqueue(new PacketSystemCall(Environment.CurrentManagedThreadId, pauseHandler, action));
+
+        Logger.Info("Pausing thread...");
+        if (pauseHandler != null)
+        {
+            pauseHandler.Reset();
+            pauseHandler.Wait();
+        }
     }
 }

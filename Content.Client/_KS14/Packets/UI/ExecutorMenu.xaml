@@ -34,7 +34,7 @@
             <gfx:StyleBoxFlat BackgroundColor="#000000" />
         </PanelContainer.PanelOverride>
         <PanelContainer SetSize="350, 550" Name="OutputContainer">
-            <Label Name="ExecutorLog" Text="" ClipText="True" VerticalAlignment="Top" Access="Public"></Label>
+            <TextEdit Editable="False" Name="ExecutorLog" VerticalAlignment="Top" Access="Public" />
         </PanelContainer>
     </PanelContainer>
     <PanelContainer Name="StandartInput" SetSize="1085, 60" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="15 10 15 10">

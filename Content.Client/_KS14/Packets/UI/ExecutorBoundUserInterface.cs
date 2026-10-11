@@ -30,18 +30,20 @@ namespace Content.Client._KS14.Packets.UI
 
         protected override void Dispose(bool disposing)
         {
-            _menu?.ExecutorLog.Text = String.Empty;
+            SaveCode();
+
+            _menu?.ExecutorLog.TextRope = Rope.Leaf.Empty;
             base.Dispose(disposing);
         }
 
         private void OnInputExit(GUIMouseHoverEventArgs args)
         {
-            SendMessage(new SaveExecutorCommandMessage(Rope.Collapse(_menu?.Input.TextRope ?? Rope.Leaf.Empty)));
+            SaveCode();
         }
 
         private void OnExecute()
         {
-            SendMessage(new StartExecutionMessage());
+            SendMessage(new StartExecutionMessage(Rope.Collapse(_menu?.Input.TextRope ?? Rope.Leaf.Empty)));
         }
 
         private void OnLoad()
@@ -79,6 +81,11 @@ namespace Content.Client._KS14.Packets.UI
                     _menu.WriteLog(cast.Log);
                     break;
             }
+        }
+
+        private void SaveCode()
+        {
+            SendMessage(new SaveExecutorCommandMessage(Rope.Collapse(_menu?.Input.TextRope ?? Rope.Leaf.Empty)));
         }
     }
 }

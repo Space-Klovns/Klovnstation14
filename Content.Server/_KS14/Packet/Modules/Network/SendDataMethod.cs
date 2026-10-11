@@ -20,7 +20,7 @@ public sealed class SendDataMethod : ModuleMethod
             return;
         }
 
-        packetSys.TryWrapSystemCall(() => packetSys.SendData(data, receiver));
+        packetSys.TryWrapSystemCall(() => packetSys.SendData(data, receiver), null);
     }
 
     public SendDataMethod(PacketModule? module) : base(module)

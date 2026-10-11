@@ -1,3 +1,4 @@
+using System.Threading;
 using Content.Server._KS14.Packet.Components;
 using Robust.Shared.Prototypes;
 
@@ -20,6 +21,8 @@ public abstract class PacketModule
     public EntityManager EntityManager;
     public IPrototypeManager PrototypeManager;
     public PacketSystem PacketSystem;
+
+    public readonly ManualResetEventSlim PauseHandler = new ManualResetEventSlim(true);
 
     public PacketModule(EntityManager manager, IPrototypeManager protoMan, PacketSystem packet)
     {

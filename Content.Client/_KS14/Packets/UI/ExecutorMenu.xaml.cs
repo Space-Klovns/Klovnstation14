@@ -37,7 +37,7 @@ public sealed partial class ExecutorMenu : FancyWindow
 
     public void WriteLog(string log)
     {
-        ExecutorLog.Text += log;
+        ExecutorLog.TextRope = Rope.Concat(ExecutorLog.TextRope, log);
     }
 }
 

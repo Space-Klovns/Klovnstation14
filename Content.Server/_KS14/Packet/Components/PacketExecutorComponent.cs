@@ -88,4 +88,7 @@ public sealed partial class PacketExecutorComponent : Component
     /// </summary>
     [DataField]
     public bool DebugState;
+
+    [DataField]
+    public bool UnloadState;
 }
