@@ -57,6 +57,13 @@ public sealed partial class DamageOverlay : Overlay
         _bruteShader = _prototypeManager.Index(CircleMaskShader).InstanceUnique();
     }
 
+    // KS14 start: not drawn into portal views (viewer state or screen-texture effect)
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        return !Content.Client._KS14.Portal.KsPortalRenderSystem.PassActive;
+    }
+    // KS14 end
+
     protected override void Draw(in OverlayDrawArgs args)
     {
         if (!_entityManager.TryGetComponent(_playerManager.LocalEntity, out EyeComponent? eyeComp))

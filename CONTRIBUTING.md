@@ -140,6 +140,18 @@ Forms, ordered so that they take precedence over those before them:
   ```csharp
   using Content.Shared._KS14.NewFeature; // KS14
   ```
+- **Referencing a type from a new namespace only once** — don't add a `using` for a single reference; write the type fully qualified at the use site instead, with the change marked there. One edit at the point of use is one fewer line to conflict on during upstream merges. Add the `using` (per the form above) only once the namespace is referenced more than once in that file:
+  ```csharp
+  // do this
+  if (Content.Client._KS14.Portal.KsPortalRenderSystem.PassActive /* KS14: added */)
+      return false;
+
+  // not this - a 'using' line for one reference
+  using Content.Client._KS14.Portal; // KS14
+  // ...
+  if (KsPortalRenderSystem.PassActive /* KS14: added */)
+      return false;
+  ```
 
 ### YAML and Fluent (`.ftl`) edits
 
