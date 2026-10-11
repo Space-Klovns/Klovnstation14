@@ -50,7 +50,7 @@ public sealed partial class KsProcgenContainerPreflightSystem : EntitySystem
                 return new(KsProcgenContainerPreflightStatus.Rejected, "ItemSlotContainerMismatch", true, 1);
             if (slot.Locked)
                 return new(KsProcgenContainerPreflightStatus.Rejected, "ItemSlotLocked", true, 1);
-            if (slot.HasItem || slot.ContainerSlot.ExpectedEntities.Count > 0)
+            if (slot.HasItem || slot.ContainerSlot.PvsDetachedEntities.Count > 0)
                 return new(KsProcgenContainerPreflightStatus.Rejected, "ContainerSlotOccupied", true, 1);
             var eligible = _itemSlotsSystem.CanInsert(targetUid, subjectUid, user: null, slot: slot, swap: false);
             return new(eligible ? KsProcgenContainerPreflightStatus.Eligible : KsProcgenContainerPreflightStatus.Rejected,
@@ -60,7 +60,7 @@ public sealed partial class KsProcgenContainerPreflightSystem : EntitySystem
         if (!_containerSystem.TryGetContainer(targetUid, containerId, out var container))
             return new(KsProcgenContainerPreflightStatus.Rejected, "MissingLiveContainer", false, null);
         int? capacity = container is ContainerSlot ? 1 : null;
-        if (capacity == 1 && (container.ContainedEntities.Count > 0 || container.ExpectedEntities.Count > 0))
+        if (capacity == 1 && (container.ContainedEntities.Count > 0 || container.PvsDetachedEntities.Count > 0))
             return new(KsProcgenContainerPreflightStatus.Rejected, "ContainerSlotOccupied", false, capacity);
         var canInsert = _containerSystem.CanInsert(subjectUid, container, assumeEmpty: false);
         return new(canInsert ? KsProcgenContainerPreflightStatus.Eligible : KsProcgenContainerPreflightStatus.Rejected,
@@ -68,7 +68,7 @@ public sealed partial class KsProcgenContainerPreflightSystem : EntitySystem
     }
 
     private bool Ready(EntityUid entityUid) =>
-        TryComp<MetaDataComponent>(entityUid, out var metadataComponent) &&
+        TryComp(entityUid, out MetaDataComponent? metadataComponent) &&
         metadataComponent.EntityLifeStage is >= EntityLifeStage.Initialized and < EntityLifeStage.Terminating &&
         !EntityManager.IsQueuedForDeletion(entityUid);
 }

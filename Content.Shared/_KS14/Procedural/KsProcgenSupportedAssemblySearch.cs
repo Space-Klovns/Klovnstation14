@@ -175,7 +175,7 @@ public static class KsProcgenSupportedAssemblySearch
                 return new()
                 {
                     Status = KsProcgenSupportedAccessStatus.Candidate,
-                    FloorRoots = roots.AsReadOnly(), Orientations = orientations.AsReadOnly(),
+                    FloorRoots = roots.ToReadOnlyList(), Orientations = orientations.ToReadOnlyList(),
                     AssemblyQuarterTurns = acceptedAssemblyTurn, Access = accepted,
                     PlacementProbes = probes, ExpandedCells = expandedCells,
                     LandingProbes = landingProbes,

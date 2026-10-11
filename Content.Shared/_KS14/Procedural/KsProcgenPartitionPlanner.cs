@@ -9,6 +9,7 @@ public enum KsProcgenPartitionStatus : byte
     MergedFallback,
     OpenFallback,
     InvalidInput,
+    BudgetExceeded,
 }
 
 /// <summary>
@@ -31,6 +32,9 @@ public sealed class KsProcgenPartitionResult
     public IReadOnlyList<KsProcgenPartitionDoor> DoorOpenings { get; init; } = [];
     public IReadOnlyList<IReadOnlyList<string>> MergedZoneGroups { get; init; } = [];
     public int RejectedSplits { get; init; }
+    public int ExpandedCells { get; init; }
+    public int SeamProbes { get; init; }
+    public int MergeAttempts { get; init; }
 }
 
 /// <summary>
@@ -44,10 +48,33 @@ public static class KsProcgenPartitionPlanner
     public static KsProcgenPartitionResult Plan(
         KsProcgenPureFillResult fill,
         IReadOnlySet<Vector2i> requiredPassageCells,
-        int maxMergeAttempts = 256)
+        int maxMergeAttempts = 256,
+        IReadOnlySet<Vector2i>? protectedFloorCells = null,
+        KsProcgenPartitionWorkBudget? workBudget = null)
     {
+        var initialExpanded = workBudget?.ExpandedCells ?? 0;
+        var initialProbes = workBudget?.SeamProbes ?? 0;
+        var rejected = 0;
+        KsProcgenPartitionResult Snapshot(KsProcgenPartitionResult outcome) => new()
+        {
+            Status = outcome.Status, Issue = outcome.Issue, FloorCells = outcome.FloorCells,
+            WallCells = outcome.WallCells, DoorOpenings = outcome.DoorOpenings,
+            MergedZoneGroups = outcome.MergedZoneGroups, RejectedSplits = outcome.RejectedSplits,
+            ExpandedCells = (workBudget?.ExpandedCells ?? 0) - initialExpanded,
+            SeamProbes = (workBudget?.SeamProbes ?? 0) - initialProbes, MergeAttempts = rejected,
+        };
+        KsProcgenPartitionResult BudgetFailure() => Snapshot(new()
+        {
+            Status = KsProcgenPartitionStatus.BudgetExceeded,
+            Issue = new(workBudget!.ExhaustedCode!, "Partition work exhausted; no seam proposal is reusable."),
+            RejectedSplits = rejected,
+        });
+        IReadOnlyList<IReadOnlyList<Vector2i>>? Components(IReadOnlySet<Vector2i> cells) => workBudget == null
+            ? KsProcgenGeometry.ConnectedComponents(cells)
+            : workBudget.TryConnectedComponents(cells, out var components) ? components : null;
         if (fill == null || requiredPassageCells == null || fill.Status != KsProcgenPureFillStatus.Proposed ||
-            maxMergeAttempts < 0 || maxMergeAttempts > 65_536)
+            maxMergeAttempts < 0 || maxMergeAttempts > 65_536 || workBudget != null &&
+            (fill.Zones.Count > 256 || fill.ProceduralCells is < 0 or > 65_536))
             return Invalid("InvalidPartitionInput");
 
         var ownerByCell = new Dictionary<Vector2i, KsProcgenZone>();
@@ -56,19 +83,27 @@ public static class KsProcgenPartitionPlanner
         {
             if (string.IsNullOrWhiteSpace(zone.Id) || zone.Cells.Count == 0 ||
                 !Enum.IsDefined(zone.Kind) || !zonesById.TryAdd(zone.Id, zone) ||
-                KsProcgenGeometry.ConnectedComponents(zone.Cells.ToHashSet()).Count != 1)
-                return Invalid("InvalidPartitionZone");
+                workBudget != null && zone.Cells.Count > 65_536)
+                return Snapshot(Invalid("InvalidPartitionZone"));
+            var zoneComponents = Components(zone.Cells.ToHashSet());
+            if (zoneComponents == null)
+                return BudgetFailure();
+            if (zoneComponents.Count != 1)
+                return Snapshot(Invalid("InvalidPartitionZone"));
             foreach (var cell in zone.Cells)
             {
+                if (workBudget != null && !workBudget.Probe())
+                    return BudgetFailure();
                 if (!ownerByCell.TryAdd(cell, zone))
-                    return Invalid("OverlappingPartitionZones");
+                    return Snapshot(Invalid("OverlappingPartitionZones"));
             }
         }
 
         if (ownerByCell.Count != fill.ProceduralCells ||
+            protectedFloorCells != null && protectedFloorCells.Any(cell => !ownerByCell.ContainsKey(cell)) ||
             requiredPassageCells.Any(cell => !ownerByCell.TryGetValue(cell, out var zone) ||
                                              zone.Kind != KsProcgenZoneKind.Passage))
-            return Invalid("InvalidPartitionCoverage");
+            return Snapshot(Invalid("InvalidPartitionCoverage"));
 
         var parent = zonesById.Keys.ToDictionary(id => id, id => id, StringComparer.Ordinal);
         string Root(string id)
@@ -78,13 +113,20 @@ public static class KsProcgenPartitionPlanner
             return id;
         }
 
-        var rejected = 0;
         while (true)
         {
             var groups = fill.Zones.GroupBy(zone => Root(zone.Id))
                 .ToDictionary(group => group.Key, group => group.ToArray(), StringComparer.Ordinal);
-            var groupByCell = ownerByCell.ToDictionary(entry => entry.Key, entry => Root(entry.Value.Id));
-            var interfaces = BuildInterfaces(groupByCell);
+            var groupByCell = new Dictionary<Vector2i, string>();
+            foreach (var (cell, owner) in ownerByCell)
+            {
+                if (workBudget != null && !workBudget.Probe())
+                    return BudgetFailure();
+                groupByCell.Add(cell, Root(owner.Id));
+            }
+            var interfaces = BuildInterfaces(groupByCell, workBudget);
+            if (interfaces == null)
+                return BudgetFailure();
             var walls = new HashSet<Vector2i>();
             var doors = new List<KsProcgenPartitionDoor>();
             var doorThresholds = new HashSet<Vector2i>();
@@ -103,6 +145,8 @@ public static class KsProcgenPartitionPlanner
                 var possibleDoors = new List<KsProcgenPartitionDoor>();
                 foreach (var edge in edges)
                 {
+                    if (workBudget != null && !workBudget.Probe())
+                        return BudgetFailure();
                     var threshold = wallOwner == key.First ? edge.First : edge.Second;
                     var outside = wallOwner == key.First ? edge.Second : edge.First;
                     boundaryCells.Add(threshold);
@@ -119,11 +163,14 @@ public static class KsProcgenPartitionPlanner
                              .ThenBy(choice => choice.OutsideApproach.Y)
                              .ThenBy(choice => choice.OutsideApproach.X))
                 {
+                    if (workBudget != null && !workBudget.Probe())
+                        return BudgetFailure();
                     if (walls.Contains(door.Threshold) || doorThresholds.Contains(door.Threshold))
                         continue;
                     var candidateWalls = new HashSet<Vector2i>(boundaryCells);
                     candidateWalls.Remove(door.Threshold);
                     if (candidateWalls.Count == 0 || candidateWalls.Overlaps(requiredPassageCells) ||
+                        protectedFloorCells != null && candidateWalls.Overlaps(protectedFloorCells) ||
                         candidateWalls.Overlaps(doorThresholds))
                         continue;
                     chosen = door;
@@ -146,11 +193,16 @@ public static class KsProcgenPartitionPlanner
             floor.ExceptWith(walls);
             if (rejectedPair == null)
             {
-                var blockedDoor = doors.FirstOrDefault(door =>
-                    !floor.Contains(door.InsideApproach) || !floor.Contains(door.OutsideApproach) ||
-                    !floor.Contains(door.Threshold));
-                if (blockedDoor != null)
-                    rejectedPair = (blockedDoor.FirstZoneId, blockedDoor.SecondZoneId);
+                foreach (var door in doors)
+                {
+                    if (workBudget != null && !workBudget.Probe())
+                        return BudgetFailure();
+                    if (floor.Contains(door.InsideApproach) && floor.Contains(door.OutsideApproach) &&
+                        floor.Contains(door.Threshold))
+                        continue;
+                    rejectedPair = (door.FirstZoneId, door.SecondZoneId);
+                    break;
+                }
             }
 
             if (rejectedPair == null)
@@ -159,7 +211,10 @@ public static class KsProcgenPartitionPlanner
                 {
                     var usable = new HashSet<Vector2i>(members.SelectMany(zone => zone.Cells));
                     usable.ExceptWith(walls);
-                    if (usable.Count != 0 && KsProcgenGeometry.ConnectedComponents(usable).Count == 1)
+                    var usableComponents = Components(usable);
+                    if (usableComponents == null)
+                        return BudgetFailure();
+                    if (usable.Count != 0 && usableComponents.Count == 1)
                         continue;
                     rejectedPair = FirstInterfaceFor(groupId, interfaces);
                     break;
@@ -168,11 +223,17 @@ public static class KsProcgenPartitionPlanner
 
             if (rejectedPair == null)
             {
-                foreach (var component in KsProcgenGeometry.ConnectedComponents(ownerByCell.Keys.ToHashSet()))
+                var sourceComponents = Components(ownerByCell.Keys.ToHashSet());
+                if (sourceComponents == null)
+                    return BudgetFailure();
+                foreach (var component in sourceComponents)
                 {
                     var componentFloor = new HashSet<Vector2i>(component);
                     componentFloor.IntersectWith(floor);
-                    if (componentFloor.Count != 0 && KsProcgenGeometry.ConnectedComponents(componentFloor).Count == 1)
+                    var floorComponents = Components(componentFloor);
+                    if (floorComponents == null)
+                        return BudgetFailure();
+                    if (componentFloor.Count != 0 && floorComponents.Count == 1)
                         continue;
                     var groupsInComponent = new HashSet<string>(component.Select(cell => groupByCell[cell]));
                     rejectedPair = OrderedInterfaces(interfaces)
@@ -191,7 +252,7 @@ public static class KsProcgenPartitionPlanner
                 var status = rejected == 0 ? KsProcgenPartitionStatus.Proposed :
                     walls.Count == 0 ? KsProcgenPartitionStatus.OpenFallback :
                     KsProcgenPartitionStatus.MergedFallback;
-                return new KsProcgenPartitionResult
+                return Snapshot(new KsProcgenPartitionResult
                 {
                     Status = status,
                     Issue = rejected == 0 ? null : new KsProcgenIssue(
@@ -202,11 +263,11 @@ public static class KsProcgenPartitionPlanner
                     DoorOpenings = doors,
                     MergedZoneGroups = mergedGroups,
                     RejectedSplits = rejected,
-                };
+                });
             }
 
             if (rejected >= maxMergeAttempts || rejectedPair.Value.First == rejectedPair.Value.Second)
-                return Open(ownerByCell.Keys, rejected + 1, "PartitionMergeBudget");
+                return Snapshot(Open(ownerByCell.Keys, rejected + 1, "PartitionMergeBudget"));
 
             // This pair is a cardinal interface, so merging maintains connected groups.
             var firstRoot = Root(rejectedPair.Value.First);
@@ -218,13 +279,15 @@ public static class KsProcgenPartitionPlanner
         }
     }
 
-    private static Dictionary<(string First, string Second), List<(Vector2i First, Vector2i Second)>>
-        BuildInterfaces(IReadOnlyDictionary<Vector2i, string> groupByCell)
+    private static Dictionary<(string First, string Second), List<(Vector2i First, Vector2i Second)>>?
+        BuildInterfaces(IReadOnlyDictionary<Vector2i, string> groupByCell, KsProcgenPartitionWorkBudget? workBudget)
     {
         var interfaces = new Dictionary<(string First, string Second), List<(Vector2i First, Vector2i Second)>>();
         foreach (var (cell, group) in groupByCell)
         foreach (var offset in Cardinal)
         {
+            if (workBudget != null && !workBudget.Probe())
+                return null;
             var neighbor = cell + offset;
             if (!groupByCell.TryGetValue(neighbor, out var other) || group == other ||
                 string.CompareOrdinal(group, other) > 0)

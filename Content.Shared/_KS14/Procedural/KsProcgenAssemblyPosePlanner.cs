@@ -130,7 +130,7 @@ public static class KsProcgenAssemblyPosePlanner
         return new KsProcgenAssemblyPosePlan
         {
             Status = KsProcgenAssemblySupportStatus.NeedsEngineValidation,
-            Members = ordered.AsReadOnly(), SupportPlan = support, PoseHash = hash.Value,
+            Members = ordered.ToReadOnlyList(), SupportPlan = support, PoseHash = hash.Value,
         };
     }
 

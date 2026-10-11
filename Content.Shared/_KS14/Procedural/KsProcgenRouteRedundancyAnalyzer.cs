@@ -66,7 +66,7 @@ public static class KsProcgenRouteRedundancyAnalyzer
         if (walkableCells == null || vaultOnlyCells == null || pairs == null ||
             maxCells <= 0 || maxCells > 8_192 || maxPairs <= 0 || maxPairs > 64 ||
             maxIndependentRoutes <= 0 || maxIndependentRoutes > 8 ||
-            maxExaminedFlowEdges <= 0 || maxExaminedFlowEdges > 8_000_000 ||
+            maxExaminedFlowEdges < 0 || maxExaminedFlowEdges > 8_000_000 ||
             vaultOnlyCells.Any(cell => !walkableCells.Contains(cell)))
             return Failure(KsProcgenRouteRedundancyStatus.InvalidInput,
                 "InvalidRouteRedundancyInput");
@@ -102,7 +102,7 @@ public static class KsProcgenRouteRedundancyAnalyzer
                     maxExaminedFlowEdges, ref examined);
                 if (augment == AugmentStatus.BudgetExceeded)
                     return Failure(KsProcgenRouteRedundancyStatus.BudgetExceeded,
-                        "RouteRedundancyFlowBudget");
+                        "RouteRedundancyFlowBudget", examined: examined);
                 if (augment == AugmentStatus.NoRoute)
                     break;
                 routes++;
@@ -110,7 +110,7 @@ public static class KsProcgenRouteRedundancyAnalyzer
 
             if (routes == 0)
                 return Failure(KsProcgenRouteRedundancyStatus.InvalidInput,
-                    "RoutePairDisconnected");
+                    "RoutePairDisconnected", examined: examined);
             results.Add(new KsProcgenRouteRedundancyPairResult(pair.Id,
                 pair.First, pair.Second, routes, routes == maxIndependentRoutes));
         }
@@ -118,7 +118,7 @@ public static class KsProcgenRouteRedundancyAnalyzer
         return new KsProcgenRouteRedundancyResult
         {
             Status = KsProcgenRouteRedundancyStatus.Complete,
-            Pairs = results,
+            Pairs = KsProcgenReadOnly.Copy(results),
             ExaminedFlowEdges = examined,
         };
     }
@@ -207,9 +207,10 @@ public static class KsProcgenRouteRedundancyAnalyzer
     }
 
     private static KsProcgenRouteRedundancyResult Failure(
-        KsProcgenRouteRedundancyStatus status, string code) => new()
+        KsProcgenRouteRedundancyStatus status, string code, int examined = 0) => new()
     {
         Status = status,
+        ExaminedFlowEdges = examined,
         Issue = new KsProcgenIssue(code,
             "Named route redundancy input or the configured flow work budget is invalid."),
     };

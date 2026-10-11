@@ -135,8 +135,8 @@ public static class KsProcgenAssemblySupportPlanner
         return new KsProcgenAssemblySupportPlan
         {
             Status = KsProcgenAssemblySupportStatus.NeedsEngineValidation,
-            Members = ordered.AsReadOnly(), Reservations = reservations.AsReadOnly(),
-            SupportRelations = witnesses.AsReadOnly(), StructureHash = Hash(assembly, ordered, reservations),
+            Members = ordered.ToReadOnlyList(), Reservations = reservations.ToReadOnlyList(),
+            SupportRelations = witnesses.ToReadOnlyList(), StructureHash = Hash(assembly, ordered, reservations),
         };
     }
 

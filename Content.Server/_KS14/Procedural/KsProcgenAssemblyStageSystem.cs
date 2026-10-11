@@ -365,18 +365,18 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
         foreach (var spawnedUid in stage.SpawnedEntities)
         {
             if (spawnedUid != mapUid && Exists(spawnedUid) &&
-                (!TryComp<TransformComponent>(spawnedUid, out var generatedTransformComponent) || generatedTransformComponent.MapUid != mapUid))
+                (!TryComp(spawnedUid, out TransformComponent? generatedTransformComponent) || generatedTransformComponent.MapUid != mapUid))
                 return "AssemblyStageGeneratedEntityOffMap";
         }
         foreach (var pose in stage.Poses.Members)
         {
             var member = pose.Support;
             var memberUid = stage.Members[member.MemberId];
-            if (!TryComp<MetaDataComponent>(memberUid, out var metadataComponent) ||
+            if (!TryComp(memberUid, out MetaDataComponent? metadataComponent) ||
                 metadataComponent.EntityPrototype?.ID != member.EntityPrototypeId ||
                 metadataComponent.EntityLifeStage != (stage.Phase == KsProcgenAssemblyStagePhase.Initialized ?
                     EntityLifeStage.MapInitialized : EntityLifeStage.Initialized) ||
-                EntityManager.IsQueuedForDeletion(memberUid) || !TryComp<TransformComponent>(memberUid, out var transformComponent))
+                EntityManager.IsQueuedForDeletion(memberUid) || !TryComp(memberUid, out TransformComponent? transformComponent))
                 return "AssemblyStageMemberDrift";
             var parentUid = pose.CoordinateParentMemberId == null ? stage.MapUid : stage.Members[pose.CoordinateParentMemberId];
             if (transformComponent.ParentUid != parentUid || transformComponent.LocalPosition != pose.LocalPosition ||

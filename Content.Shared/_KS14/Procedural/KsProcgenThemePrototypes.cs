@@ -24,7 +24,7 @@ public sealed partial class KsProcgenThemeGoals
 /// <summary>
 /// A reusable interior style. This selects content; it does not prescribe a room shape or fixture location.
 /// </summary>
-[Prototype("ksProcgenRoomTheme")]
+[Prototype]
 public sealed partial class KsProcgenRoomThemePrototype : IPrototype
 {
     [IdDataField] public string ID { get; private set; } = string.Empty;
@@ -49,7 +49,7 @@ public sealed partial class KsProcgenTilePalette
     [DataField] public float Weight = 1f;
 }
 
-[Prototype("ksProcgenTilePack")]
+[Prototype]
 public sealed partial class KsProcgenTilePackPrototype : IPrototype
 {
     [IdDataField] public string ID { get; private set; } = string.Empty;
@@ -68,7 +68,7 @@ public sealed partial class KsProcgenWallFamily
     [DataField] public float Weight = 1f;
 }
 
-[Prototype("ksProcgenWallPack")]
+[Prototype]
 public sealed partial class KsProcgenWallPackPrototype : IPrototype
 {
     [IdDataField] public string ID { get; private set; } = string.Empty;
@@ -92,7 +92,7 @@ public sealed partial class KsProcgenLightFixture
     [DataField] public KsProcgenLightingSupply Supply = KsProcgenLightingSupply.SelfContained;
 }
 
-[Prototype("ksProcgenLightingPack")]
+[Prototype]
 public sealed partial class KsProcgenLightingPackPrototype : IPrototype
 {
     [IdDataField] public string ID { get; private set; } = string.Empty;
@@ -127,12 +127,12 @@ public sealed partial class KsProcgenEntityEntry
     [DataField] public KsProcgenEntityRole Role;
     [DataField] public int MinimumCount;
     [DataField] public KsProcgenMovementClass Movement = KsProcgenMovementClass.Blocks;
-    [DataField] public List<Vector2i> Footprint = [new(0, 0)];
-    [DataField] public List<int> AllowedQuarterTurns = [0, 1, 2, 3];
+    [DataField] public List<Vector2i> Footprint = new() { new(0, 0) };
+    [DataField] public List<int> AllowedQuarterTurns = new() { 0, 1, 2, 3 };
     [DataField] public bool RequiresInteractionApproach;
 }
 
-[Prototype("ksProcgenEntityPack")]
+[Prototype]
 public sealed partial class KsProcgenEntityPackPrototype : IPrototype
 {
     [IdDataField] public string ID { get; private set; } = string.Empty;

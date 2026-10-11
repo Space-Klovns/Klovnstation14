@@ -2,6 +2,60 @@
   id: KsProcgenOfficeArea
   theme: KsProcgenSimpleOffice
 
+# Opt-in example; legacy paint profiles retain caller-selected room sizing.
+- type: ksProcgenAreaProfile
+  id: KsProcgenOfficeSubdivisionArea
+  theme: KsProcgenSimpleOffice
+  roomSubdivision:
+    minimumRoomCells: 4
+    preferredMaximumRoomCells: 4
+    alternativeMaximumRoomCells: [8, 64]
+
+# A required room target triggers complete subdivision retries rather than allowing an early merge.
+- type: ksProcgenAreaProfile
+  id: KsProcgenWholeOfficeArea
+  theme: KsProcgenSimpleOffice
+  roomSubdivision:
+    minimumRoomCells: 4
+    preferredMaximumRoomCells: 4
+    alternativeMaximumRoomCells: [8, 64]
+  generationGoals:
+    sizeMix:
+    - id: WholeRoom
+      minCells: 30
+      maxCells: 30
+      targetCount: 1
+    fallbackPolicy:
+      allowMergedPartition: false
+      allowRoomSizeShortfall: false
+    windowGoal:
+      exteriorWindowFraction: 0.25
+
+# A 9x4 rectangle can contain 16, 9 and 5 floor-cell rooms plus six internal wall tiles.
+- type: ksProcgenAreaProfile
+  id: KsProcgenMixedOfficeArea
+  theme: KsProcgenSimpleOffice
+  roomSubdivision:
+    useSizeGoals: true
+    preferredMaximumRoomCells: 64
+  generationGoals:
+    sizeMix:
+    - id: Large
+      minCells: 16
+      maxCells: 16
+      targetCount: 1
+    - id: Medium
+      minCells: 9
+      maxCells: 9
+      targetCount: 1
+    - id: Small
+      minCells: 5
+      maxCells: 5
+      targetCount: 1
+    fallbackPolicy:
+      allowMergedPartition: false
+      allowRoomSizeShortfall: false
+
 - type: entity
   parent: MarkerBase
   id: KsProcgenAreaCell

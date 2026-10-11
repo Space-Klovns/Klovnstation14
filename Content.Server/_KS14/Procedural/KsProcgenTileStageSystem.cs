@@ -151,7 +151,7 @@ public sealed partial class KsProcgenTileStageSystem : EntitySystem
         if (stage == null || !stage.Active || !_activeStages.TryGetValue(stage.MapId, out var tracked) ||
             !ReferenceEquals(stage, tracked) ||
             !_mapSystem.TryGetMap(stage.MapId, out var mapUid) || mapUid != stage.MapUid ||
-            !EntityManager.TryGetComponent<MapGridComponent>(stage.GridUid, out var grid))
+            !TryComp<MapGridComponent>(stage.GridUid, out var grid))
             return false;
         foreach (var (cell, tileId) in stage.Tiles)
         {

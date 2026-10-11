@@ -91,7 +91,7 @@ public sealed class KsProcgenPrototypeCapabilityTests
     public void LockedReservedOrWrongTypeSlotsAreRejected()
     {
         foreach (var slot in new[] { Slot() with { Locked = true }, Slot() with { StartingItem = "Existing" },
-                     Slot() with { PrototypeContentCount = 1 }, Slot() with { ExpectedContentCount = 1 },
+                     Slot() with { PrototypeContentCount = 1 }, Slot() with { PvsDetachedContentCount = 1 },
                      Slot() with { Kind = KsProcgenDeclaredContainerKind.Container } })
             Assert.That(KsProcgenSupportCapabilityInspector.Inspect(Entity(), Entity() with { Containers = [slot] },
                 KsProcgenRelationKind.InContainer, slotId: "Device").State,

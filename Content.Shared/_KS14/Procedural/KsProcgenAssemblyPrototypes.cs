@@ -43,8 +43,8 @@ public sealed partial class KsProcgenAssemblyMember
     [DataField] public int MaximumCount = 1;
     [DataField] public KsProcgenEntityRole Role;
     [DataField] public KsProcgenMovementClass Movement = KsProcgenMovementClass.Blocks;
-    [DataField] public List<Vector2i> Footprint = [new(0, 0)];
-    [DataField] public List<int> AllowedQuarterTurns = [0, 1, 2, 3];
+    [DataField] public List<Vector2i> Footprint = new() { new(0, 0) };
+    [DataField] public List<int> AllowedQuarterTurns = new() { 0, 1, 2, 3 };
     [DataField] public KsProcgenMemberRotation RotationMode;
     [DataField] public int LocalQuarterTurns;
     [DataField] public bool RequiresInteractionApproach;

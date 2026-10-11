@@ -104,7 +104,7 @@ public static class KsProcgenEntranceSceneAnalyzer
                         if (remaining.Remove(cell + step))
                             queue.Enqueue(cell + step);
                 }
-                result.Add(KsProcgenGeometry.SortCells(component).ToList().AsReadOnly());
+                result.Add(KsProcgenGeometry.SortCells(component).ToReadOnlyList());
             }
             return result;
         }
@@ -170,7 +170,7 @@ public static class KsProcgenEntranceSceneAnalyzer
         if (roots.Any(cell => !localByCell.ContainsKey(cell)))
             return Fail(KsProcgenEntranceSceneStatus.Rejected, "EntranceRequestRootUnreachable");
         var witnesses = localComponents.Select((cells, index) => new KsProcgenEntranceComponentWitness(index, cells,
-            groupsByLocal[index].OrderBy(id => id, StringComparer.Ordinal).ToList().AsReadOnly())).ToList().AsReadOnly();
+            groupsByLocal[index].OrderBy(id => id, StringComparer.Ordinal).ToReadOnlyList())).ToReadOnlyList();
         var hash = KsProcgenStableHash.Create();
         hash.AddString("ks-procgen-entrance-scene-v1");
         hash.AddString(shape.EntranceContract!.ContractHash.ToString(CultureInfo.InvariantCulture));
@@ -207,8 +207,8 @@ public static class KsProcgenEntranceSceneAnalyzer
         return new()
         {
             Status = KsProcgenEntranceSceneStatus.Candidate, ConfigurationId = configurationId,
-            Components = witnesses, Ports = portWitnesses.OrderBy(port => port.PortId, StringComparer.Ordinal).ToList().AsReadOnly(),
-            HostComponents = fullComponents == null ? [] : fullComponents.AsReadOnly(),
+            Components = witnesses, Ports = portWitnesses.OrderBy(port => port.PortId, StringComparer.Ordinal).ToReadOnlyList(),
+            HostComponents = fullComponents == null ? Array.Empty<IReadOnlyList<Vector2i>>() : fullComponents.ToReadOnlyList(),
             SealedPorts = configuration.SealedPorts, ExpandedCells = expanded, SceneHash = hash.Value,
         };
     }

@@ -31,6 +31,7 @@ public sealed class KsProcgenLightingPlanResult
     public int EstimatedCoveredCells { get; init; }
     public int TotalFloorCells { get; init; }
     public float RequestedCoverage { get; init; }
+    public int ExpandedCells { get; init; }
     public bool WorkingCoverageVerified => false;
 }
 
@@ -44,18 +45,27 @@ public static class KsProcgenLightingPlanner
         KsProcgenFurnishingResult furnishings,
         int seed,
         int maxFixtures = 64,
-        int maxRoomCells = 512)
+        int maxRoomCells = 512,
+        int maxExpandedCells = 1_000_000)
     {
+        var expanded = 0;
+        KsProcgenLightingPlanResult Fail(KsProcgenLightingPlanStatus status, string code) => new()
+        {
+            Status = status, Issue = new(code, "Lighting proposal input or budget could not be satisfied."), ExpandedCells = expanded,
+        };
         if (prototypeManager == null || region == null || furnishings == null ||
             furnishings.Status is not (KsProcgenFurnishingStatus.Proposed or KsProcgenFurnishingStatus.Sparse) ||
-            maxFixtures <= 0 || maxFixtures > 4_096 || maxRoomCells <= 0 || maxRoomCells > 65_536)
-            return Failure(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingPlanInput");
+            maxFixtures <= 0 || maxFixtures > 4_096 || maxRoomCells <= 0 || maxRoomCells > 65_536 ||
+            maxExpandedCells is < 0 or > 1_000_000)
+            return Fail(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingPlanInput");
 
         var floor = new HashSet<Vector2i>(region.FloorCells);
         if (floor.Count == 0 || floor.Count != region.FloorCells.Count ||
+            region.ProtectedPassageCells.Any(cell => !floor.Contains(cell) || !furnishings.ProtectedPassageCells.Contains(cell)) ||
             furnishings.ProtectedPassageCells.Any(cell => !floor.Contains(cell)) ||
-            furnishings.Entities.Any(entity => entity.OccupiedCells.Any(cell => !floor.Contains(cell))))
-            return Failure(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingFloor");
+            furnishings.Entities.Any(entity => entity.OccupiedCells.Any(cell => !floor.Contains(cell) ||
+                entity.Movement != KsProcgenMovementClass.Clear && furnishings.ProtectedPassageCells.Contains(cell))))
+            return Fail(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingFloor");
 
         if (region.Theme.LightingPackId == null || region.Theme.LightFixtureId == null)
             return new KsProcgenLightingPlanResult
@@ -68,7 +78,7 @@ public static class KsProcgenLightingPlanner
             !KsProcgenThemeValidator.TryResolve(prototypeManager, region.Theme.ThemeId,
                 out var theme, out _) ||
             pack.Fixtures.FirstOrDefault(item => item.Id == region.Theme.LightFixtureId) is not { } fixture)
-            return Failure(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingFixture");
+            return Fail(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingFixture");
 
         var goal = theme!.Goals.LightingCoverage;
         if (floor.Count > maxRoomCells)
@@ -91,16 +101,30 @@ public static class KsProcgenLightingPlanner
             .SelectMany(entity => entity.OccupiedCells));
         var candidates = KsProcgenGeometry.SortCells(floor.Where(cell => !unavailable.Contains(cell)));
         var radius = Math.Max(1, fixture.PreferredSpacing / 2);
-        var footprints = candidates.ToDictionary(cell => cell, cell => EstimateReach(cell, floor, radius));
+        var footprints = new Dictionary<Vector2i, IReadOnlySet<Vector2i>>();
+        foreach (var cell in candidates)
+        {
+            var reach = EstimateReach(cell, floor, radius, ref expanded, maxExpandedCells);
+            if (reach == null)
+                return Fail(KsProcgenLightingPlanStatus.BudgetExceeded, "LightingExpansionBudget");
+            footprints.Add(cell, reach);
+        }
         var selected = new List<KsProcgenLightProposal>();
         var covered = new HashSet<Vector2i>();
         var remaining = new HashSet<Vector2i>(candidates);
         while (remaining.Count > 0 && selected.Count < maxFixtures &&
                covered.Count < (int) Math.Ceiling(floor.Count * goal))
         {
-            var ranked = remaining.Where(cell => PreservesConnectivity(cell, floor, blocked)).Select(cell =>
-                    (Cell: cell, Gain: footprints[cell].Count(other => !covered.Contains(other)),
-                     Rank: Rank(seed, region.Id, cell)))
+            var safe = new List<(Vector2i Cell, int Gain, ulong Rank)>();
+            foreach (var cell in remaining)
+            {
+                var preserves = PreservesConnectivity(cell, floor, blocked, ref expanded, maxExpandedCells);
+                if (preserves == null)
+                    return Fail(KsProcgenLightingPlanStatus.BudgetExceeded, "LightingExpansionBudget");
+                if (preserves.Value)
+                    safe.Add((cell, footprints[cell].Count(other => !covered.Contains(other)), Rank(seed, region.Id, cell)));
+            }
+            var ranked = safe
                 .OrderByDescending(candidate => candidate.Gain)
                 .ThenBy(candidate => candidate.Rank)
                 .ThenBy(candidate => candidate.Cell.Y)
@@ -118,8 +142,17 @@ public static class KsProcgenLightingPlanner
         }
 
         var reachedEstimate = covered.Count >= (int) Math.Ceiling(floor.Count * goal);
-        var hasFurtherSafeGain = remaining.Any(cell => PreservesConnectivity(cell, floor, blocked) &&
-            footprints[cell].Any(other => !covered.Contains(other)));
+        var hasFurtherSafeGain = false;
+        if (!reachedEstimate && selected.Count >= maxFixtures)
+        foreach (var cell in remaining)
+        {
+            if (!footprints[cell].Any(other => !covered.Contains(other)))
+                continue;
+            var preserves = PreservesConnectivity(cell, floor, blocked, ref expanded, maxExpandedCells);
+            if (preserves == null)
+                return Fail(KsProcgenLightingPlanStatus.BudgetExceeded, "LightingExpansionBudget");
+            if (preserves.Value) { hasFurtherSafeGain = true; break; }
+        }
         return new KsProcgenLightingPlanResult
         {
             Status = reachedEstimate ? KsProcgenLightingPlanStatus.Proposed :
@@ -129,15 +162,16 @@ public static class KsProcgenLightingPlanner
                 selected.Count >= maxFixtures && hasFurtherSafeGain
                     ? "LightingProposalBudget" : "LightingEstimateShortfall",
                 "The geometric light estimate did not reach the requested coverage."),
-            Lights = selected,
+            Lights = selected.ToReadOnlyList(),
+            ExpandedCells = expanded,
             EstimatedCoveredCells = covered.Count,
             TotalFloorCells = floor.Count,
             RequestedCoverage = goal,
         };
     }
 
-    private static bool PreservesConnectivity(Vector2i candidate, IReadOnlySet<Vector2i> floor,
-        IReadOnlySet<Vector2i> blocked)
+    private static bool? PreservesConnectivity(Vector2i candidate, IReadOnlySet<Vector2i> floor,
+        IReadOnlySet<Vector2i> blocked, ref int expanded, int maximumExpandedCells)
     {
         var neighbors = Cardinal.Select(offset => candidate + offset)
             .Where(cell => floor.Contains(cell) && !blocked.Contains(cell)).ToArray();
@@ -151,6 +185,9 @@ public static class KsProcgenLightingPlanner
         queue.Enqueue(neighbors[0]);
         while (queue.TryDequeue(out var current))
         {
+            if (expanded >= maximumExpandedCells)
+                return null;
+            expanded++;
             foreach (var offset in Cardinal)
             {
                 var next = current + offset;
@@ -162,13 +199,17 @@ public static class KsProcgenLightingPlanner
         return neighbors.All(reached.Contains);
     }
 
-    private static IReadOnlySet<Vector2i> EstimateReach(Vector2i origin, IReadOnlySet<Vector2i> floor, int radius)
+    private static IReadOnlySet<Vector2i>? EstimateReach(Vector2i origin, IReadOnlySet<Vector2i> floor, int radius,
+        ref int expanded, int maximumExpandedCells)
     {
         var reached = new HashSet<Vector2i> { origin };
         var queue = new Queue<(Vector2i Cell, int Distance)>();
         queue.Enqueue((origin, 0));
         while (queue.TryDequeue(out var current))
         {
+            if (expanded >= maximumExpandedCells)
+                return null;
+            expanded++;
             if (current.Distance >= radius)
                 continue;
             foreach (var offset in Cardinal)
@@ -193,9 +234,4 @@ public static class KsProcgenLightingPlanner
         return hash.Value;
     }
 
-    private static KsProcgenLightingPlanResult Failure(KsProcgenLightingPlanStatus status, string code) => new()
-    {
-        Status = status,
-        Issue = new KsProcgenIssue(code, "Lighting proposal input or budget could not be satisfied."),
-    };
 }

@@ -266,7 +266,7 @@ public static class KsProcgenAssemblyCompiler
                 relation.Target == null || !byId.TryGetValue(relation.Target, out target))
                 return Fail("InvalidAssemblyRelationTarget", out issue);
             var subjects = bySource.TryGetValue(relation.Subject, out var repeated) ? repeated :
-                byId.TryGetValue(relation.Subject, out var subjectInstance) ? [subjectInstance] : null;
+                byId.TryGetValue(relation.Subject, out var subjectInstance) ? new List<KsProcgenResolvedAssemblyMember> { subjectInstance } : null;
             if (subjects == null || relations.Count + subjects.Count > 256)
                 return Fail("InvalidAssemblyRelationSubject", out issue);
             foreach (var subject in subjects)
@@ -311,7 +311,7 @@ public static class KsProcgenAssemblyCompiler
 
     public static KsProcgenResolvedAssembly CompileSingleton(KsProcgenEntityEntry entry) => new(
         $"Singleton/{entry.Id}", "Base", entry.Id,
-        [new KsProcgenResolvedAssemblyMember(entry.Id, entry.Id, true, new KsProcgenEntityEntry
+        new[] { new KsProcgenResolvedAssemblyMember(entry.Id, entry.Id, true, new KsProcgenEntityEntry
         {
             Id = entry.Id,
             Entity = entry.Entity,
@@ -322,7 +322,7 @@ public static class KsProcgenAssemblyCompiler
             Footprint = entry.Footprint.OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToList(),
             AllowedQuarterTurns = entry.AllowedQuarterTurns.OrderBy(turn => turn).ToList(),
             RequiresInteractionApproach = entry.RequiresInteractionApproach,
-        }, KsProcgenMemberRotation.Independent, 0)], []);
+        }, KsProcgenMemberRotation.Independent, 0) }, Array.Empty<KsProcgenResolvedAssemblyRelation>());
 
     public static bool ValidateEntry(KsProcgenEntityEntry entry, Func<string, bool> entityExists) =>
         entry != null && entry.Footprint != null && entry.AllowedQuarterTurns != null &&

@@ -5,7 +5,11 @@ namespace Content.Shared._KS14.Procedural;
 
 public sealed record KsProcgenAreaProfile(string Id, KsProcgenMode Mode, KsProcgenGeometryMode GeometryMode,
     KsProcgenConnectivityPolicy ConnectivityPolicy, string? Theme, int MaxCells, int MaxAbsoluteCoordinate,
-    string? EntranceConnections = null);
+    string? EntranceConnections = null)
+{
+    public KsProcgenRoomSubdivisionProfile? RoomSubdivision { get; init; }
+    public KsProcgenAreaGoalsProfile? GenerationGoals { get; init; }
+}
 public sealed record KsProcgenAreaMarker(Vector2i Cell, string Channel, string ProfileId, string? BlobId = null);
 
 /// <summary>Exact painted component; it grants no envelope, preserved-content copy or publication rights.</summary>
@@ -13,7 +17,20 @@ public sealed record KsProcgenAreaBlob(string Id, string Channel, KsProcgenAreaP
 {
     public IReadOnlyList<KsProcgenAreaEntrance> Entrances { get; init; } = [];
     public KsProcgenEntranceConnectionContract? ConnectionContract { get; init; }
-    /// <summary>Copies geometry and complete entrance declarations. Theme selection consumes Profile.Theme separately.</summary>
+    /// <summary>Authored room sizes override caller size preferences; every work cap stays caller controlled.</summary>
+    public KsProcgenOwnedPlanBudgets CreateOwnedBudgets(KsProcgenOwnedPlanBudgets? budgets = null)
+    {
+        budgets ??= new();
+        var subdivision = Profile.RoomSubdivision;
+        return subdivision == null ? budgets : budgets with
+        {
+            MinimumRoomCells = subdivision.MinimumRoomCells,
+            PreferredMaximumRoomCells = subdivision.PreferredMaximumRoomCells,
+            AlternativeMaximumRoomCells = KsProcgenReadOnly.Copy(subdivision.AlternativeMaximumRoomCells),
+            UseSizeGoals = subdivision.UseSizeGoals,
+        };
+    }
+    /// <summary>Copies geometry, complete entrances and authored goals. Theme selection consumes Profile.Theme separately.</summary>
     public KsProcgenRequest CreateRequest(int seed)
     {
         return new()
@@ -23,6 +40,9 @@ public sealed record KsProcgenAreaBlob(string Id, string Channel, KsProcgenAreaP
             Shape = new() { Cells = Cells.ToList() },
             Limits = new() { MaxCells = Profile.MaxCells, MaxAbsoluteCoordinate = Profile.MaxAbsoluteCoordinate },
             EntranceDomain = Entrances.Count == 0 && ConnectionContract == null ? null : KsProcgenEntranceRequestAdapter.Copy(this),
+            SizeMix = Profile.GenerationGoals?.SizeMix.Select(goal => goal.Copy()).ToList() ?? new(),
+            FallbackPolicy = Profile.GenerationGoals?.FallbackPolicy.Copy() ?? new(),
+            WindowGoal = Profile.GenerationGoals?.WindowGoal.Copy() ?? new(),
         };
     }
 }
@@ -59,6 +79,13 @@ public static class KsProcgenAreaNormalizer
                 profile.MaxCells is < 1 or > 65_536 || profile.MaxAbsoluteCoordinate is < 1 or > 1_000_000) ||
             profiles.Select(profile => profile.Id).Distinct(StringComparer.Ordinal).Count() != profiles.Count)
             return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaMarkerInput");
+        if (profiles.Any(profile => profile.RoomSubdivision is {} subdivision &&
+            (profile.Mode != KsProcgenMode.Procedural || profile.GeometryMode != KsProcgenGeometryMode.Footprint ||
+             !KsProcgenRoomSubdivision.Valid(subdivision.MinimumRoomCells, subdivision.PreferredMaximumRoomCells,
+                 subdivision.AlternativeMaximumRoomCells))))
+            return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaSubdivisionProfile");
+        if (profiles.Any(profile => profile.GenerationGoals != null && !KsProcgenAreaGoals.Valid(profile.GenerationGoals)))
+            return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaGenerationGoals");
         connectionProfiles ??= new Dictionary<string, IReadOnlyList<KsProcgenEntranceConfigurationSpec>>(StringComparer.Ordinal);
         if (connectionProfiles.Count > 4096 || connectionProfiles.Keys.Any(id => !ValidId(id)) ||
             profiles.Any(profile => profile.EntranceConnections != null && !connectionProfiles.ContainsKey(profile.EntranceConnections)))
@@ -68,7 +95,16 @@ public static class KsProcgenAreaNormalizer
             return Fail(KsProcgenStatus.BudgetExceeded, "AreaMarkerBudget");
         if (keepVoid.Any(cell => !ValidCell(cell, 1_000_000)))
             return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaVoidCell");
-        var definitions = profiles.ToDictionary(profile => profile.Id, StringComparer.Ordinal);
+        var definitions = profiles.Select(profile => profile.RoomSubdivision == null ? profile : profile with
+        {
+            RoomSubdivision = profile.RoomSubdivision with
+            {
+                AlternativeMaximumRoomCells = KsProcgenReadOnly.Copy(profile.RoomSubdivision.AlternativeMaximumRoomCells),
+            },
+        }).Select(profile => profile.GenerationGoals == null ? profile : profile with
+        {
+            GenerationGoals = KsProcgenAreaGoals.Freeze(profile.GenerationGoals),
+        }).ToDictionary(profile => profile.Id, StringComparer.Ordinal);
         var channels = new Dictionary<string, Dictionary<Vector2i, KsProcgenAreaMarker>>(StringComparer.Ordinal);
         foreach (var marker in markers)
         {
@@ -120,7 +156,7 @@ public static class KsProcgenAreaNormalizer
             return new() { Status = entrancePlan.Status, Issue = entrancePlan.Issue, MarkerCount = markers.Count };
         canonical = canonical.Select(blob => blob with
         {
-            Entrances = entrancePlan.Entrances.Where(entrance => entrance.BlobId == blob.Id).ToList().AsReadOnly(),
+            Entrances = entrancePlan.Entrances.Where(entrance => entrance.BlobId == blob.Id).ToReadOnlyList(),
         }).ToList();
         for (var index = 0; index < canonical.Count; index++)
         {
@@ -138,7 +174,7 @@ public static class KsProcgenAreaNormalizer
             canonical[index] = blob with { ConnectionContract = contract };
         }
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-area-snapshot-v2");
+        hash.AddString("ks-procgen-area-snapshot-v5");
         hash.AddString(hostKey);
         AddCells(ref hash, KsProcgenGeometry.SortCells(keepVoid));
         hash.AddInt(canonical.Count);
@@ -154,6 +190,17 @@ public static class KsProcgenAreaNormalizer
             hash.AddString(blob.Profile.EntranceConnections ?? string.Empty);
             hash.AddInt(blob.Profile.MaxCells);
             hash.AddInt(blob.Profile.MaxAbsoluteCoordinate);
+            var subdivision = blob.Profile.RoomSubdivision;
+            hash.AddInt(subdivision == null ? 0 : 1);
+            if (subdivision != null)
+            {
+                hash.AddInt(subdivision.MinimumRoomCells);
+                hash.AddInt(subdivision.PreferredMaximumRoomCells);
+                hash.AddInt(subdivision.UseSizeGoals ? 1 : 0);
+                hash.AddInt(subdivision.AlternativeMaximumRoomCells.Count);
+                foreach (var size in subdivision.AlternativeMaximumRoomCells) hash.AddInt(size);
+            }
+            KsProcgenAreaGoals.AddHash(ref hash, blob.Profile.GenerationGoals);
             AddCells(ref hash, blob.Cells);
             hash.AddString(blob.ConnectionContract?.ContractHash.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty);
         }
@@ -173,7 +220,7 @@ public static class KsProcgenAreaNormalizer
         return new()
         {
             Status = canonical.Count == 0 ? KsProcgenStatus.NoOp : KsProcgenStatus.Success,
-            Blobs = canonical.AsReadOnly(), SnapshotHash = hash.Value, MarkerCount = markers.Count,
+            Blobs = canonical.ToReadOnlyList(), SnapshotHash = hash.Value, MarkerCount = markers.Count,
             Entrances = entrancePlan.Entrances,
         };
     }

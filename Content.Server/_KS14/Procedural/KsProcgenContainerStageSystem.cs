@@ -277,7 +277,7 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
         foreach (var spawnedUid in stage.SpawnedEntities)
         {
             if (spawnedUid != stage.MapUid && Exists(spawnedUid) &&
-                (!TryComp<TransformComponent>(spawnedUid, out var spawnedTransformComponent) ||
+                (!TryComp(spawnedUid, out TransformComponent? spawnedTransformComponent) ||
                     spawnedTransformComponent.MapUid != stage.MapUid))
                 return false;
         }
@@ -288,11 +288,11 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
         foreach (var member in stage.Structure.Members)
         {
             var memberUid = stage.Members[member.MemberId];
-            if (!TryComp<MetaDataComponent>(memberUid, out var metadataComponent) ||
+            if (!TryComp(memberUid, out MetaDataComponent? metadataComponent) ||
                 metadataComponent.EntityPrototype?.ID != member.EntityPrototypeId ||
                 metadataComponent.EntityLifeStage != (stage.Phase == KsProcgenContainerStagePhase.Initialized ?
                     EntityLifeStage.MapInitialized : EntityLifeStage.Initialized) ||
-                EntityManager.IsQueuedForDeletion(memberUid) || !TryComp<TransformComponent>(memberUid, out var transformComponent))
+                EntityManager.IsQueuedForDeletion(memberUid) || !TryComp(memberUid, out TransformComponent? transformComponent))
                 return false;
             if (member.Layer == KsProcgenPlacementLayer.Container)
             {
@@ -316,7 +316,7 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
             (!ReferenceEquals(slot.ContainerSlot, container) ||
                 !_whitelistSystem.CheckBoth(subjectUid, blacklist: slot.Blacklist, whitelist: slot.Whitelist)))
             return false;
-        return TryComp<TransformComponent>(subjectUid, out var transformComponent) && transformComponent.ParentUid == parentUid &&
+        return TryComp(subjectUid, out TransformComponent? transformComponent) && transformComponent.ParentUid == parentUid &&
             transformComponent.LocalPosition == Vector2.Zero && !transformComponent.Anchored;
     }
 

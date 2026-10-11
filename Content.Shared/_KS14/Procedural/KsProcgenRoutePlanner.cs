@@ -77,18 +77,21 @@ public static class KsProcgenRoutePlanner
 
         while (!terminals.IsSubsetOf(tree))
         {
-            var frontier = new PriorityQueue<Vector2i, (long Cost, int Y, int X)>();
+            var frontier = new SortedSet<(long Cost, int Y, int X)>();
             var costs = new Dictionary<Vector2i, long>();
             var parents = new Dictionary<Vector2i, Vector2i>();
             foreach (var cell in KsProcgenGeometry.SortCells(tree))
             {
                 costs.Add(cell, 0);
-                frontier.Enqueue(cell, (0, cell.Y, cell.X));
+                frontier.Add((0, cell.Y, cell.X));
             }
 
             Vector2i? reached = null;
-            while (frontier.TryDequeue(out var cell, out var priority))
+            while (frontier.Count > 0)
             {
+                var priority = frontier.Min;
+                frontier.Remove(priority);
+                var cell = new Vector2i(priority.X, priority.Y);
                 if (priority.Cost != costs[cell])
                     continue;
 
@@ -124,7 +127,7 @@ public static class KsProcgenRoutePlanner
 
                     costs[next] = nextCost;
                     parents[next] = cell;
-                    frontier.Enqueue(next, (nextCost, next.Y, next.X));
+                    frontier.Add((nextCost, next.Y, next.X));
                 }
             }
 

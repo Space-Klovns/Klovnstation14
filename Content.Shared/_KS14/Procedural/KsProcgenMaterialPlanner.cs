@@ -34,17 +34,19 @@ public static class KsProcgenMaterialPlanner
         IPrototypeManager prototypeManager,
         KsProcgenThemeAssignmentResult assignment,
         KsProcgenPartitionResult partition,
-        int seed)
+        int seed,
+        IReadOnlySet<Vector2i>? protectedPrimaryCells = null)
     {
         if (prototypeManager == null || assignment == null || partition == null ||
             assignment.Status != KsProcgenThemeAssignmentStatus.Selected ||
-            partition.Status == KsProcgenPartitionStatus.InvalidInput)
+            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded)
             return Invalid("InvalidMaterialInput");
 
         var expectedFloor = new HashSet<Vector2i>(partition.FloorCells);
         var expectedWalls = new HashSet<Vector2i>(partition.WallCells);
         if (expectedFloor.Count != partition.FloorCells.Count ||
-            expectedWalls.Count != partition.WallCells.Count || expectedFloor.Overlaps(expectedWalls))
+            expectedWalls.Count != partition.WallCells.Count || expectedFloor.Overlaps(expectedWalls) ||
+            protectedPrimaryCells?.Any(cell => !expectedFloor.Contains(cell)) == true)
             return Invalid("InvalidMaterialCoverage");
 
         var doorwayCells = new HashSet<Vector2i>(partition.DoorOpenings.Select(door => door.Threshold));
@@ -89,7 +91,7 @@ public static class KsProcgenMaterialPlanner
             var targetAccents = palette.AccentTile == null || region.Kind == KsProcgenZoneKind.Passage
                 ? 0 : (int) Math.Round(regionFloor.Count * palette.AccentFraction,
                     MidpointRounding.AwayFromZero);
-            var candidates = regionFloor.Where(cell => !doorwayCells.Contains(cell))
+            var candidates = regionFloor.Where(cell => !doorwayCells.Contains(cell) && protectedPrimaryCells?.Contains(cell) != true)
                 .Select(cell => (Cell: cell, Score: AccentScore(seed, region.Id, cell)))
                 .OrderBy(candidate => candidate.Score)
                 .ThenBy(candidate => candidate.Cell.Y)

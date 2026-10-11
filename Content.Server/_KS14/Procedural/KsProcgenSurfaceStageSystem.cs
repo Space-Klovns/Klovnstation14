@@ -263,7 +263,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
         foreach (var spawnedUid in stage.SpawnedEntities)
         {
             if (spawnedUid != stage.MapUid && Exists(spawnedUid) &&
-                (!TryComp<TransformComponent>(spawnedUid, out var generatedTransformComponent) ||
+                (!TryComp(spawnedUid, out TransformComponent? generatedTransformComponent) ||
                     generatedTransformComponent.MapUid != stage.MapUid))
                 return "SurfaceStageGeneratedEntityOffMap";
         }
@@ -280,11 +280,11 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
             null : "SurfaceStageDropOffsetDrift";
 
         bool Member(EntityUid uid, string prototypeId, Vector2 position) =>
-            TryComp<MetaDataComponent>(uid, out var metadataComponent) &&
+            TryComp(uid, out MetaDataComponent? metadataComponent) &&
             metadataComponent.EntityLifeStage == (stage.Phase == KsProcgenSurfaceStagePhase.Initialized ?
                 EntityLifeStage.MapInitialized : EntityLifeStage.Initialized) &&
             metadataComponent.EntityPrototype?.ID == prototypeId && !EntityManager.IsQueuedForDeletion(uid) &&
-            TryComp<TransformComponent>(uid, out var transformComponent) &&
+            TryComp(uid, out TransformComponent? transformComponent) &&
             transformComponent.ParentUid == stage.MapUid && transformComponent.LocalPosition == position;
     }
 

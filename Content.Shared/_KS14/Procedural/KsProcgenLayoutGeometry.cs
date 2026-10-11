@@ -28,8 +28,8 @@ public sealed class KsProcgenRoomShape
     {
         Id = id;
         Cells = KsProcgenGeometry.SortCells(cells.Distinct());
-        ExteriorFacades = Array.AsReadOnly((exteriorFacades ?? []).Distinct().ToArray());
-        Ports = Array.AsReadOnly((ports ?? []).ToArray());
+        ExteriorFacades = KsProcgenReadOnly.Copy((exteriorFacades ?? []).Distinct().ToArray());
+        Ports = KsProcgenReadOnly.Copy((ports ?? []).ToArray());
     }
 }
 
@@ -49,7 +49,7 @@ public sealed class KsProcgenLayoutOption
         Id = id;
         ReservationCells = KsProcgenGeometry.SortCells(reservationCells.Distinct());
         GenerateCells = KsProcgenGeometry.SortCells((generateCells ?? []).Distinct());
-        Rooms = Array.AsReadOnly(rooms.ToArray());
+        Rooms = KsProcgenReadOnly.Copy(rooms.ToArray());
     }
 }
 
@@ -62,8 +62,8 @@ public sealed class KsProcgenLayoutFamily
     public KsProcgenLayoutFamily(string id, IEnumerable<KsProcgenLayoutOption> options, IEnumerable<int>? allowedQuarterTurns = null)
     {
         Id = id;
-        Options = Array.AsReadOnly(options.ToArray());
-        AllowedQuarterTurns = Array.AsReadOnly((allowedQuarterTurns ?? [0]).Distinct().ToArray());
+        Options = KsProcgenReadOnly.Copy(options.ToArray());
+        AllowedQuarterTurns = KsProcgenReadOnly.Copy((allowedQuarterTurns ?? [0]).Distinct().ToArray());
     }
 
     public bool TryValidate(out KsProcgenIssue? issue)
@@ -370,7 +370,7 @@ public static class KsProcgenLayoutGeometry
             transformed = KsProcgenGeometry.TransformCell(cell, default, origin, turn);
             return true;
         }
-        catch (OverflowException)
+        catch (ArgumentException)
         {
             transformed = default;
             return false;

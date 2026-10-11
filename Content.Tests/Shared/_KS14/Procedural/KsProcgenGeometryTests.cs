@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Content.Shared._KS14.Procedural;
 using NUnit.Framework;
@@ -132,6 +134,30 @@ public sealed class KsProcgenGeometryTests
 
         Assert.That(KsProcgenGeometry.TryNormalize(oversized, out shape, out issue), Is.False);
         Assert.That(issue?.Code, Is.EqualTo("CellBudgetExceeded"));
+    }
+
+    [Test]
+    public void TransformCellRejectsOverflowWithoutWrapping()
+    {
+        Assert.Throws<ArgumentException>(() => KsProcgenGeometry.TransformCell(new Vector2i(int.MaxValue, 0),
+            Vector2i.Zero, new Vector2i(1, 0), 0));
+        Assert.Throws<ArgumentException>(() => KsProcgenGeometry.TransformCell(new Vector2i(0, int.MinValue),
+            Vector2i.Zero, Vector2i.Zero, 2));
+        Assert.That(KsProcgenGeometry.TransformCell(new Vector2i(int.MaxValue - 1, int.MinValue + 1),
+            Vector2i.Zero, new Vector2i(1, -1), 0), Is.EqualTo(new Vector2i(int.MaxValue, int.MinValue)));
+    }
+
+    [Test]
+    public void SortedSnapshotIsDetachedAndRejectsMutation()
+    {
+        var source = new List<Vector2i> { new(2, 1), new(0, 0) };
+        var request = new KsProcgenRequest { RequestId = "Snapshot", Shape = new() { Cells = source } };
+        Assert.That(KsProcgenGeometry.TryNormalize(request, out var shape, out _), Is.True);
+        var snapshot = shape!.TargetCells;
+        source.Clear();
+        Assert.That(snapshot, Is.EqualTo(new Vector2i[] { new(0, 0), new(2, 1) }));
+        Assert.Throws<NotSupportedException>(() => ((IList<Vector2i>) snapshot)[0] = new(9, 9));
+        Assert.That(snapshot[0], Is.EqualTo(new Vector2i(0, 0)));
     }
 
     [Test]

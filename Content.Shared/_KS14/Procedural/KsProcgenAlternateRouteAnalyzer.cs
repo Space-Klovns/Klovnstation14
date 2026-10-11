@@ -72,15 +72,14 @@ public static class KsProcgenAlternateRouteAnalyzer
         if (walkableCells == null || vaultOnlyCells == null || pairs == null ||
             nominatedChokes == null || maxCells <= 0 || maxCells > 65_536 ||
             maxPairs <= 0 || maxPairs > 256 || maxChokes <= 0 || maxChokes > 256 ||
-            maxSearches <= 0 || maxSearches > 65_536 ||
-            maxExpandedCells <= 0 || maxExpandedCells > 4_000_000 ||
+            maxSearches < 0 || maxSearches > 65_536 ||
+            maxExpandedCells < 0 || maxExpandedCells > 4_000_000 ||
             vaultOnlyCells.Any(cell => !walkableCells.Contains(cell)))
             return Failure(KsProcgenAlternateRouteStatus.InvalidInput, "InvalidAlternateRouteInput");
 
         var clean = new HashSet<Vector2i>(walkableCells);
         clean.ExceptWith(vaultOnlyCells);
-        if (clean.Count > maxCells || pairs.Count > maxPairs || nominatedChokes.Count > maxChokes ||
-            (long) pairs.Count * (nominatedChokes.Count + 1) > maxSearches)
+        if (clean.Count > maxCells || pairs.Count > maxPairs || nominatedChokes.Count > maxChokes)
             return Failure(KsProcgenAlternateRouteStatus.BudgetExceeded, "AlternateRouteBudget");
         if (pairs.Any(pair => pair == null || string.IsNullOrWhiteSpace(pair.Id) ||
                               pair.First == pair.Second || !clean.Contains(pair.First) ||
@@ -88,6 +87,10 @@ public static class KsProcgenAlternateRouteAnalyzer
             pairs.Select(pair => pair.Id).Distinct(StringComparer.Ordinal).Count() != pairs.Count ||
             nominatedChokes.Any(choke => !clean.Contains(choke)))
             return Failure(KsProcgenAlternateRouteStatus.InvalidInput, "InvalidAlternateRouteContract");
+        // Removed endpoints produce an outcome without a search. Exact replay allowances must
+        // therefore reserve only searches that will actually run.
+        if (pairs.Sum(pair => 1L + nominatedChokes.Count(choke => choke != pair.First && choke != pair.Second)) > maxSearches)
+            return Failure(KsProcgenAlternateRouteStatus.BudgetExceeded, "AlternateRouteBudget");
 
         var orderedChokes = nominatedChokes.OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray();
         var results = new List<KsProcgenAlternateRoutePairResult>();
@@ -100,10 +103,10 @@ public static class KsProcgenAlternateRouteAnalyzer
                 maxExpandedCells, ref expanded, out var baselineSteps);
             if (baselineStatus == SearchStatus.BudgetExceeded)
                 return Failure(KsProcgenAlternateRouteStatus.BudgetExceeded,
-                    "AlternateRouteExpansionBudget");
+                    "AlternateRouteExpansionBudget", searches: searches, expanded: expanded);
             if (baselineStatus == SearchStatus.Disconnected)
                 return Failure(KsProcgenAlternateRouteStatus.InvalidInput,
-                    "RoutePairDisconnected");
+                    "RoutePairDisconnected", searches: searches, expanded: expanded);
 
             var outcomes = new List<KsProcgenChokeRouteOutcome>();
             foreach (var choke in orderedChokes)
@@ -119,18 +122,18 @@ public static class KsProcgenAlternateRouteAnalyzer
                     maxExpandedCells, ref expanded, out var steps);
                 if (status == SearchStatus.BudgetExceeded)
                     return Failure(KsProcgenAlternateRouteStatus.BudgetExceeded,
-                        "AlternateRouteExpansionBudget");
+                        "AlternateRouteExpansionBudget", searches: searches, expanded: expanded);
                 outcomes.Add(new KsProcgenChokeRouteOutcome(choke, false,
                     status == SearchStatus.Connected, steps));
             }
             results.Add(new KsProcgenAlternateRoutePairResult(pair.Id, pair.First,
-                pair.Second, baselineSteps, outcomes));
+                pair.Second, baselineSteps, KsProcgenReadOnly.Copy(outcomes)));
         }
 
         return new KsProcgenAlternateRouteResult
         {
             Status = KsProcgenAlternateRouteStatus.Complete,
-            Pairs = results,
+            Pairs = KsProcgenReadOnly.Copy(results),
             Searches = searches,
             ExpandedCells = expanded,
         };
@@ -187,9 +190,11 @@ public static class KsProcgenAlternateRouteAnalyzer
     }
 
     private static KsProcgenAlternateRouteResult Failure(
-        KsProcgenAlternateRouteStatus status, string code) => new()
+        KsProcgenAlternateRouteStatus status, string code, int searches = 0, int expanded = 0) => new()
     {
         Status = status,
+        Searches = searches,
+        ExpandedCells = expanded,
         Issue = new KsProcgenIssue(code,
             "Named clean routes or the configured alternate-route work budget are invalid."),
     };

@@ -50,7 +50,7 @@ public sealed partial class KsProcgenSurfacePreflightSystem : EntitySystem
         if (_containerSystem.TryGetContainingContainer(subjectUid, out _) ||
             _containerSystem.TryGetContainingContainer(targetUid, out _))
             return Result(KsProcgenSurfacePreflightStatus.Rejected, "SurfaceEntityContained");
-        if (!TryComp<ItemComponent>(subjectUid, out _) || !TryComp<TransformComponent>(subjectUid, out var subjectTransformComponent) ||
+        if (!TryComp<ItemComponent>(subjectUid, out _) || !TryComp(subjectUid, out TransformComponent? subjectTransformComponent) ||
             subjectTransformComponent.Anchored)
             return Result(KsProcgenSurfacePreflightStatus.Rejected, "SurfaceSubjectNotDroppable");
         if (!TryComp<PlaceableSurfaceComponent>(targetUid, out var surfaceComponent))
@@ -76,7 +76,7 @@ public sealed partial class KsProcgenSurfacePreflightSystem : EntitySystem
             "SurfaceDropCandidate" : "TrackedSurfaceCandidate", tracker: trackerComponent, surface: surfaceComponent);
     }
 
-    private bool Ready(EntityUid uid) => TryComp<MetaDataComponent>(uid, out var metadataComponent) &&
+    private bool Ready(EntityUid uid) => TryComp(uid, out MetaDataComponent? metadataComponent) &&
         metadataComponent.EntityLifeStage is >= EntityLifeStage.Initialized and < EntityLifeStage.Terminating &&
         !EntityManager.IsQueuedForDeletion(uid);
 }

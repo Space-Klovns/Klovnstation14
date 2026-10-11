@@ -47,7 +47,7 @@ public sealed class KsProcgenNormalizedShape
         EnvelopeCells = KsProcgenGeometry.SortCells(_envelopeSet);
         PreservedCells = KsProcgenGeometry.SortCells(_preservedSet);
         VoidCells = KsProcgenGeometry.SortCells(_voidSet);
-        ConstantRegions = Array.AsReadOnly(constantRegions.OrderBy(region => region.Id,
+        ConstantRegions = KsProcgenReadOnly.Copy(constantRegions.OrderBy(region => region.Id,
             StringComparer.Ordinal).ToArray());
         _constantOwnerByCell = new Dictionary<Vector2i, string>();
         foreach (var region in ConstantRegions)
@@ -212,53 +212,8 @@ public static class KsProcgenGeometry
             return false;
         }
 
-        if (request.SizeMix == null)
-        {
-            issue = new KsProcgenIssue("InvalidSizeMix", "Size goals cannot be null.");
+        if (!KsProcgenGoalValidation.TryValidate(request.SizeMix, request.WindowGoal, out issue))
             return false;
-        }
-        if (request.WindowGoal == null ||
-            !float.IsFinite(request.WindowGoal.ExteriorWindowFraction) ||
-            request.WindowGoal.ExteriorWindowFraction is < 0f or > 1f ||
-            request.WindowGoal.ToleranceCells is < 0 or > 65_536 ||
-            request.WindowGoal.MinimumCount is < 0 or > 65_536 ||
-            request.WindowGoal.MaximumCount is < 0 or > 65_536 ||
-            request.WindowGoal.MaximumCount.HasValue &&
-            request.WindowGoal.MaximumCount.Value < request.WindowGoal.MinimumCount)
-        {
-            issue = new KsProcgenIssue("InvalidWindowGoal",
-                "Window fraction, tolerance, and count bounds must be finite and supported.");
-            return false;
-        }
-        var sizeIds = new HashSet<string>(StringComparer.Ordinal);
-        var requestedRoomCount = 0L;
-        foreach (var goal in request.SizeMix)
-        {
-            if (goal == null || string.IsNullOrWhiteSpace(goal.Id) || !sizeIds.Add(goal.Id) ||
-                goal.MinCells <= 0 || goal.MaxCells < goal.MinCells ||
-                goal.MaxCells > 65_536 || goal.TargetCount <= 0)
-            {
-                issue = new KsProcgenIssue("InvalidSizeMix",
-                    "Size goals need unique IDs, positive ordered area bounds, and positive counts.");
-                return false;
-            }
-            requestedRoomCount += goal.TargetCount;
-            if (requestedRoomCount > 4_096)
-            {
-                issue = new KsProcgenIssue("SizeMixBudget",
-                    "At most 4096 preliminary room zones may be requested.");
-                return false;
-            }
-        }
-        var orderedSizes = request.SizeMix.OrderBy(goal => goal.MinCells).ToArray();
-        for (var index = 1; index < orderedSizes.Length; index++)
-        {
-            if (orderedSizes[index - 1].MaxCells < orderedSizes[index].MinCells)
-                continue;
-            issue = new KsProcgenIssue("OverlappingSizeMix",
-                "Size bands must not overlap so each final room has one size class.");
-            return false;
-        }
 
         var constantIds = new HashSet<string>(StringComparer.Ordinal);
         var constantRegions = new List<KsProcgenConstantRegion>();
@@ -295,7 +250,7 @@ public static class KsProcgenGeometry
                 {
                     world = TransformCell(local, Vector2i.Zero, constant.Origin, constant.QuarterTurns);
                 }
-                catch (OverflowException)
+                catch (ArgumentException)
                 {
                     issue = new KsProcgenIssue("ConstantTransformOutOfRange",
                         "A constant transform exceeds the supported coordinate range.");
@@ -358,7 +313,7 @@ public static class KsProcgenGeometry
             preservedSet.UnionWith(transformed);
             constantRegions.Add(new KsProcgenConstantRegion(constant.Id, constant.SourceId,
                 constant.ContentFingerprint, constant.Origin, constant.QuarterTurns,
-                SortCells(transformed), Array.AsReadOnly(ports.OrderBy(port => port.Id,
+                SortCells(transformed), KsProcgenReadOnly.Copy(ports.OrderBy(port => port.Id,
                     StringComparer.Ordinal).ToArray())));
         }
 
@@ -423,9 +378,11 @@ public static class KsProcgenGeometry
             _ => (X: -relativeY, Y: relativeX),
         };
 
-        return new Vector2i(
-            checked((int) (targetAnchor.X + transformed.X)),
-            checked((int) (targetAnchor.Y + transformed.Y)));
+        var resultX = targetAnchor.X + transformed.X;
+        var resultY = targetAnchor.Y + transformed.Y;
+        if (resultX is < int.MinValue or > int.MaxValue || resultY is < int.MinValue or > int.MaxValue)
+            throw new ArgumentException("The transformed cell exceeds the integer coordinate range.");
+        return new Vector2i((int) resultX, (int) resultY);
     }
 
     public static IReadOnlyList<IReadOnlyList<Vector2i>> ConnectedComponents(IReadOnlySet<Vector2i> cells)
@@ -460,7 +417,7 @@ public static class KsProcgenGeometry
     }
 
     internal static IReadOnlyList<Vector2i> SortCells(IEnumerable<Vector2i> cells) =>
-        Array.AsReadOnly(cells.OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray());
+        KsProcgenReadOnly.Copy(cells.OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray());
 
     private static bool TryParseText(
         KsProcgenShapeSpec spec,

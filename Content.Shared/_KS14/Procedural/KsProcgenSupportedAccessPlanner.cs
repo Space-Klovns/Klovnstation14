@@ -280,7 +280,7 @@ public static class KsProcgenSupportedAccessPlanner
             return new KsProcgenAssemblyRelationEvaluation
             {
                 RequiredSatisfied = requiredSatisfied, PreferredSatisfied = preferredSatisfied,
-                PreferredApplicable = preferredApplicable, Witnesses = relationWitnesses.AsReadOnly(),
+                PreferredApplicable = preferredApplicable, Witnesses = relationWitnesses.ToReadOnlyList(),
             };
         }
         KsProcgenAssemblyRelationEvaluation? relations = null;
@@ -386,8 +386,8 @@ public static class KsProcgenSupportedAccessPlanner
         return new()
         {
             Status = KsProcgenSupportedAccessStatus.Candidate, Poses = poses,
-            Footprints = footprints.AsReadOnly(), Access = access.AsReadOnly(), AccessHash = hash.Value,
-            Relations = relations.Witnesses.ToList().AsReadOnly(), PreferredRelationsSatisfied = relations.PreferredSatisfied,
+            Footprints = footprints.ToReadOnlyList(), Access = access.ToReadOnlyList(), AccessHash = hash.Value,
+            Relations = relations.Witnesses.ToReadOnlyList(), PreferredRelationsSatisfied = relations.PreferredSatisfied,
             PreferredRelationsApplicable = relations.PreferredApplicable,
             ExpandedCells = budget.ExpandedCells,
             LandingProbes = landingProbes,

@@ -76,7 +76,8 @@ public static class KsProcgenEntranceRequestAdapter
         var configurations = domain.Configurations.Count == 0 ? new List<KsProcgenEntranceConfigurationSpec>
         {
             new() { Id = "KsDefaultAllConnected", Mode = KsProcgenEntranceConnectionMode.RequiredConnections,
-                Groups = [new() { Id = "All", Ports = normalized.Entrances.Select(entrance => entrance.PortId).ToList() }] },
+                Groups = new List<KsProcgenEntranceGroupSpec>
+                    { new() { Id = "All", Ports = normalized.Entrances.Select(entrance => entrance.PortId).ToList() } } },
         } : domain.Configurations;
         var compiled = KsProcgenEntranceConnectionNormalizer.Normalize(request.RequestId, normalized.Entrances,
             configurations, request.ConnectivityPolicy);

@@ -23,7 +23,7 @@ public sealed partial class KsProcgenAreaSnapshotSystem : EntitySystem
         if (maximumMarkers is < 0 or > 65_536 || maximumBlobs is < 0 or > 4096 ||
             maximumScannedMarkers is < 0 or > 131_072 || maximumEntrances is < 0 or > 1024 ||
             !TryComp<MapGridComponent>(gridUid, out var gridComponent) ||
-            !TryComp<TransformComponent>(gridUid, out var gridTransformComponent) ||
+            !TryComp(gridUid, out TransformComponent? gridTransformComponent) ||
             EntityManager.IsQueuedForDeletion(gridUid))
             return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaSnapshotInput");
         if (gridComponent.TileSize != 1)
@@ -33,7 +33,7 @@ public sealed partial class KsProcgenAreaSnapshotSystem : EntitySystem
         var connectionProfiles = new Dictionary<string, IReadOnlyList<KsProcgenEntranceConfigurationSpec>>(StringComparer.Ordinal);
         var scanned = 0;
         // Authoring and private previews can be paused; ordinary system queries exclude them.
-        var query = EntityManager.AllEntityQueryEnumerator<KsProcgenAreaCellComponent, TransformComponent, MetaDataComponent>();
+        var query = AllEntityQuery<KsProcgenAreaCellComponent, TransformComponent, MetaDataComponent>();
         while (query.MoveNext(out var markerUid, out var markerComponent, out var transformComponent, out var metadataComponent))
         {
             if (scanned++ >= maximumScannedMarkers)
@@ -51,10 +51,16 @@ public sealed partial class KsProcgenAreaSnapshotSystem : EntitySystem
             if (!ProtoMan.TryIndex(markerComponent.Profile, out var profilePrototype) || profilePrototype.Limits == null ||
                 profilePrototype.Theme != null && !ProtoMan.HasIndex<KsProcgenRoomThemePrototype>(profilePrototype.Theme))
                 return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaProfileReference");
-            profiles.TryAdd(profilePrototype.ID, new(profilePrototype.ID, profilePrototype.Mode, profilePrototype.GeometryMode,
+            KsProcgenRoomSubdivisionProfile? subdivision = null;
+            if (profilePrototype.RoomSubdivision != null && !KsProcgenRoomSubdivision.TrySnapshot(profilePrototype.RoomSubdivision, out subdivision))
+                return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaSubdivisionProfile");
+            KsProcgenAreaGoalsProfile? goals = null;
+            if (profilePrototype.GenerationGoals != null && !KsProcgenAreaGoals.TrySnapshot(profilePrototype.GenerationGoals, out goals))
+                return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaGenerationGoals");
+            profiles.TryAdd(profilePrototype.ID, new KsProcgenAreaProfile(profilePrototype.ID, profilePrototype.Mode, profilePrototype.GeometryMode,
                 profilePrototype.ConnectivityPolicy, profilePrototype.Theme,
                 profilePrototype.Limits.MaxCells, profilePrototype.Limits.MaxAbsoluteCoordinate,
-                EntranceConnections: profilePrototype.EntranceConnections));
+                EntranceConnections: profilePrototype.EntranceConnections) { RoomSubdivision = subdivision, GenerationGoals = goals });
             if (profilePrototype.EntranceConnections != null)
             {
                 if (!ProtoMan.TryIndex<KsProcgenEntranceConnectionsPrototype>(profilePrototype.EntranceConnections, out var connectionPrototype) ||
@@ -66,7 +72,7 @@ public sealed partial class KsProcgenAreaSnapshotSystem : EntitySystem
                 profilePrototype.ID, markerComponent.BlobId));
         }
         var entrances = new List<KsProcgenEntranceMarker>();
-        var entranceQuery = EntityManager.AllEntityQueryEnumerator<KsProcgenEntranceComponent, TransformComponent, MetaDataComponent>();
+        var entranceQuery = AllEntityQuery<KsProcgenEntranceComponent, TransformComponent, MetaDataComponent>();
         while (entranceQuery.MoveNext(out var markerUid, out var markerComponent, out var transformComponent, out var metadataComponent))
         {
             if (scanned++ >= maximumScannedMarkers)
@@ -103,9 +109,9 @@ public sealed partial class KsProcgenAreaSnapshotSystem : EntitySystem
     public KsProcgenIssue? BindMarkerToGrid(EntityUid gridUid, EntityUid markerUid, Vector2i cell)
     {
         if (!TryComp<MapGridComponent>(gridUid, out var gridComponent) || gridComponent.TileSize != 1 ||
-            !TryComp<TransformComponent>(gridUid, out var gridTransformComponent) ||
-            !TryComp<TransformComponent>(markerUid, out var markerTransformComponent) || markerTransformComponent.Anchored ||
-            !TryComp<MetaDataComponent>(markerUid, out var metadataComponent) || metadataComponent.EntityLifeStage >= EntityLifeStage.Terminating ||
+            !TryComp(gridUid, out TransformComponent? gridTransformComponent) ||
+            !TryComp(markerUid, out TransformComponent? markerTransformComponent) || markerTransformComponent.Anchored ||
+            !TryComp(markerUid, out MetaDataComponent? metadataComponent) || metadataComponent.EntityLifeStage >= EntityLifeStage.Terminating ||
             EntityManager.IsQueuedForDeletion(gridUid) || EntityManager.IsQueuedForDeletion(markerUid) ||
             !(HasComp<KsProcgenAreaCellComponent>(markerUid) || HasComp<KsProcgenEntranceComponent>(markerUid)) ||
             Math.Abs((long) cell.X) > 1_000_000 || Math.Abs((long) cell.Y) > 1_000_000)
@@ -113,7 +119,7 @@ public sealed partial class KsProcgenAreaSnapshotSystem : EntitySystem
         var ancestorUid = gridUid;
         for (var depth = 0; ancestorUid.IsValid(); depth++)
         {
-            if (depth >= 256 || ancestorUid == markerUid || !TryComp<TransformComponent>(ancestorUid, out var ancestorTransformComponent))
+            if (depth >= 256 || ancestorUid == markerUid || !TryComp(ancestorUid, out TransformComponent? ancestorTransformComponent))
                 return new("InvalidAreaMarkerBinding", "Binding would create a transform cycle or exceed the ancestor bound.");
             ancestorUid = ancestorTransformComponent.ParentUid;
         }

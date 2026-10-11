@@ -88,14 +88,14 @@ public static class KsProcgenEntranceNormalizer
                 return Fail("DuplicateEntrancePort", marker: marker);
             if (ordered.Any(cell => !thresholds.Add((domain.Id, cell))))
                 return Fail("OverlappingEntranceThresholds", marker: marker);
-            entrances.Add(new(domain.Id, marker.PortId, marker.Channel, ordered.ToList().AsReadOnly(),
-                Array.AsReadOnly(inside), Array.AsReadOnly(outside), marker.InwardNormal, marker.OptionalSealable));
+            entrances.Add(new(domain.Id, marker.PortId, marker.Channel, ordered.ToReadOnlyList(),
+                KsProcgenReadOnly.Copy(inside), KsProcgenReadOnly.Copy(outside), marker.InwardNormal, marker.OptionalSealable));
         }
         return new()
         {
             Status = entrances.Count == 0 ? KsProcgenStatus.NoOp : KsProcgenStatus.Success,
             Entrances = entrances.OrderBy(entrance => entrance.BlobId, StringComparer.Ordinal)
-                .ThenBy(entrance => entrance.PortId, StringComparer.Ordinal).ToList().AsReadOnly(),
+                .ThenBy(entrance => entrance.PortId, StringComparer.Ordinal).ToReadOnlyList(),
         };
     }
 

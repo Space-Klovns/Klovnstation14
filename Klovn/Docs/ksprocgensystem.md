@@ -1774,7 +1774,7 @@ Update this ledger in the same change as each implementation step. Keep task che
 unchecked until their full exit criteria pass. Each row records concrete work and validation, not
 an estimate. A partial implementation is labeled `In progress`; an untouched task is `Pending`.
 
-**Revision gate (updated 2026-10-05):** R01-R06 are in progress; R07 remains pending. Existing T-row results
+**Revision gate (updated 2026-10-11):** R01-R06 are in progress; R07 remains pending. Existing T-row results
 remain evidence for the older supported subset only. In particular, the 99 focused unit tests and
 loaded fixture do not establish relational stacking, marker ingestion or selectable connection
 groups. No T task may be completed against the revised contract until its mapped rewrite exits
@@ -1787,10 +1787,262 @@ records implemented behavior; schema loading alone does not establish placement 
 | R01 | In progress | `KsProcgenAssemblyPrototypes` and `KsProcgenAssemblyCompiler` implement reusable named members, required/optional multiplicities, entity bindings, complete ordered variants, typed spatial/context/support relations, and normalized core records. Expansion is bounded to 64 members/256 relations, targets must resolve to one instance, support/container cycles and multiple support parents are rejected separately from valid spatial cycles. Theme validation compiles both assemblies and legacy singleton entries; entries and assembly references carry core minima. Loaded fixtures resolve a table/device/optional-chair core and a standing variant. The live office pack now references an explicit desk/seat/console assembly. `KsProcgenPrototypeCapabilityInspector` copies inherited surface, fixture, rotation and container declarations into bounded snapshots and support inspection witnesses; declaration hashes are separate from full content/geometry hashes. Remaining: full schema/replay exit coverage and R02/R06 adapters proving actual placement and insertion; snapshots never certify engine placement. |
 | R02 | In progress | T09a/T15/T15a: normalized floor cores replace whole-pack atomic lists. Mandatory core counts are enforced across all selected packs before optional content, then required pack minima select complete cores. Bounded mandatory continuations revisit earlier poses, whole variants and weighted core choices when later requirements cannot fit, rolling back claims, protected paths, witnesses and copy/anchor metadata. Unrelated optional singletons can be omitted. Office adjacency, chair facing and console seat association are explicit. Required/preferred corner context and clean-path `Near` rules produce persisted geometric witnesses. Authored landings rotate with members and remain root-accessible; accepted Near paths are protected from later furnishing. Floor search revisits member positions, permitted orientations, selected interaction approaches and optional-member omissions. Path searches share a 4096-node room budget. Optional initial cores and repeated density draws use seeded weighted ordering; density placement retries other whole cores when a heavier candidate cannot fit. Semantic hash v20 distinguishes mandatory continuation search. Remaining: joint optional/lighting search and preference optimization, support/container layers, lighting layer checks and engine validation. |
 | R03 | In progress | T01/T02/T03/T04: geometry/theme/entrance profile references, paint and generic/numbered entrance components/prototypes, explicit void-grid host binding, bounded read-only grid snapshot, exact cardinal components, void subtraction, directed wide entrance ownership, scoped labels, conflict checks and stable identity. Geometry-only conversion rejects entrance-bearing blobs. Real doorway/context inspection, constants/envelopes, complete profiles and publication remain pending. |
-| R04 | In progress | Complete configuration contracts, shorthand, request transport, DeclaredNetworks roots and replay identity. A bounded seeded selector checks complete supplied scenes without mixing alternatives. Joint room/carving selection and branch journals remain pending. |
-| R05 | In progress | Component analysis checks local groups, forbidden joins, host bypasses, roots, sealed thresholds and complete floor assignment with shared work limits. The initial procedural footprint adapter constructs separate cardinal trees with wall dispositions and retries whole configurations. Legacy packing/residual/fill/network entry points reject entrance-aware inputs. Joint room fitting, partition/furnishing integration, fallbacks and live validation remain pending. |
+| R04 | In progress | Complete configuration contracts, shorthand, request transport, DeclaredNetworks roots and replay identity. A bounded seeded selector checks complete supplied scenes without mixing alternatives. Complete owned interior search retries ordered subdivision preferences within declared configurations after downstream rejection and retains tagged atomic attempt journals. Configuration and layout caps are separate; all reported pipeline work survives failed layouts. Painted-area profiles transport immutable subdivision preferences, room-size goals, fallback permissions and window goals into explicit owned planning. An opt-in rectangular size-goal strategy precedes scalar attempts, with requested/used strategy diagnostics and protected-floor refusal. Joint route/room/content choice, arbitrary-shape fitting and per-network quota allocation remain pending. |
+| R05 | In progress | Component analysis checks local groups, forbidden joins, host bypasses, roots, sealed thresholds and complete floor assignment with shared work limits. Procedural adapters construct routes, grow owned floor, and partition each network independently. Opt-in rectangular strips fit simultaneous final floor-size bands including wall loss, then use the same protected-route seam solver. Themes, furnishings and bounded lighting retain entrance reservations. A final interior audit checks room-local clean access, interaction/door approaches and the complete post-placement entrance scene; vault-required furniture and floor fixtures are blockers. Local fallback cannot remove inter-network walls. Independently revalidated local tactical queries measure chokes, alternate routes and redundancy with shared budgets; host detours cannot join groups. Owned materials preserve primary entrance tiles and read-only floor, check doors, cover separators and reject shared wall conflicts. Owned hull/window adapters reserve entrance/host spans, retain unknown shell, validate explicit directional exterior facts, count fixed windows without writes and substitute compatible theme prototypes under shared budgets. A complete owned proposal composes these stages atomically; legacy generation entry points reject entrance-aware inputs. Alternate trees, arbitrary-shape/joint room fitting, prefab/hybrid/interior-fill composition, live windows, full-host tactical ownership and engine validation remain pending. |
 | R06 | In progress | T10/T12/T13/T15: `KsProcgenContainerPreflightSystem` delegates live eligibility to engine APIs. `KsProcgenContainerStageSystem` owns disposable paused container-only previews, inserts members in dependency order, checks actual membership/parent transforms and rolls back failures. Explicit initialization verifies selected lifecycle, membership and managed-slot filter compatibility afterward and is idempotent. Insertion-veto fixtures cover preflight, commit and actual container insertion without replaying attempts during verification. Surface/spatial relations remain unsupported there; temporary root coordinates are not validated layout poses. Remaining: full layer-aware staging, surface mounting, operational and connection checks, spawn accounting and rollback before publication. The tile stage still rejects furniture. |
 | R07 | Pending | T03/T14/T16/T19 and all affected fixtures: versioning, hashes, diagnostics, editor examples and regression coverage. |
+
+Latest composition amendment (2026-10-10): R05 now composes a complete procedural entrance-aware
+footprint proposal through `KsProcgenOwnedInteriorPlanner`, sharing reported graph, furnishing
+candidate and lighting fixture allowances, checking fallback permissions and retaining an atomic
+stage journal. It includes exact structure/window choices and a fresh final interior-access audit.
+Its replay identity is owned interior v1. R02 relation-path allowance defaults to 4096 per room but
+may be reduced by the coordinator's remaining reported graph budget. Complete pipeline integration
+in the R05 row still requires downstream retry, prefab/hybrid/interior-fill support, full metering
+and actual staged engine validation/publication; this composition is an unpublished geometric
+candidate. Rough overall completion is 57% (40-60% uncertainty), not a percentage of passed tests.
+
+Latest search amendment (2026-10-11): R04/R05 now retry complete positive-weight declared
+configurations after geometric/content rejection or denied fallback. Shared reported graph, order,
+merge, furnishing and provisional fixture work survives discarded attempts. Invalid input and
+budget exhaustion stop immediately. Attempt journals retain failure reasons and local fallback
+traces; accepted placements and root fallback events belong to one complete candidate. Owned
+interior identity is v2; owned floor selection remains v1 and full geometry v20. Alternate trees,
+room subdivision, optional/lighting optimization, complete CPU metering and live publication
+remain open. Rough overall completion is 58% (40-60% uncertainty).
+
+Latest clean-passage accounting amendment (2026-10-11): the owned interior coordinator now
+charges furnishing terminal routes, machine-facing searches, chair approaches, declared landing
+validation and reserved interaction walkways to the same remaining graph allowance as relational
+paths. Counters distinguish relation and clean-passage expansions; rejected placement branches
+cannot refund either. A dequeued node, including the goal, costs one expansion. Exhaustion returns
+no partial furnishing proposal. Standalone furnishing callers retain relation-only accounting
+unless `meterCleanPaths: true` is supplied. In that mode `maxRelationPathExpandedCells` limits the
+combined work (0-65536 per room); the owned coordinator supplies the lesser of 65536 and its
+remaining request allowance. Partition seam work and non-graph placement/compilation work still
+use separate conservative limits, so `GraphWorkFullyMetered` stays false. Rough overall completion
+is 59% (40-60% uncertainty); engine validation and publication remain incomplete.
+
+Latest partition accounting amendment (2026-10-11): entrance-owned partitions now charge every
+zone/group/source/final-floor connectivity flood to the remaining request graph allowance.
+`KsProcgenPartitionWorkBudget` also meters seam ownership scans, directed cardinal boundary
+queries, interface edges, door candidates and accepted-door approach checks. Its shared seam
+allowance defaults to 262144, accepts 0-1000000, and survives network and configuration retries.
+`MaximumPartitionSeamProbes`, attempt/stage journals and result `PartitionSeamProbes` expose
+that separate work; it is not counted as a graph expansion. `MergeAttempts` counts actual merges,
+including those performed before a later failure, separately from rejected split diagnostics.
+Exhausted work produces no open fallback or reusable partition geometry. Standalone legacy
+partition callers remain unmetered unless a work budget is supplied. These counters do not change
+the fully funded geometry hashes (owned interior v2, floor/partition v1, full geometry v20).
+Allocation, sorting, normalization and content compilation still require complete work accounting;
+`GraphWorkFullyMetered` remains false. Rough overall completion is 60% (40-65% uncertainty).
+
+Latest subdivision search amendment (2026-10-11): the owned interior coordinator can retry
+ordered automatic zoning sizes inside one entrance configuration. Supply the preferred maximum
+room size and optional distinct `AlternativeMaximumRoomCells`; each fresh complete attempt
+shares all request work allowances. `MaximumLayoutProbes` caps attempts independently of the
+configuration cap. A floor rejection skips redundant subdivision attempts; downstream rejection
+or forbidden fallback tries the next size. Stages carry the layout ordinal and size preference.
+Only the accepted attempt supplies artifacts/fallbacks; its semantic identity matches a direct
+attempt producing identical content. This bounded preference search is not exhaustive geometry,
+route-tree or room-size optimization. Marker/profile authoring, automatic size-goal strategies,
+prefab/hybrid search, full work accounting, replay serialization and engine publication remain
+rewrite work. Rough overall completion is 61% (40-65% uncertainty), subject to the gates below.
+
+Example programmatic owned-planner preferences:
+
+```csharp
+var budgets = new KsProcgenOwnedPlanBudgets
+{
+    PreferredMaximumRoomCells = 8,
+    AlternativeMaximumRoomCells = [24, 64],
+    MaximumConfigurationProbes = 4,
+    MaximumLayoutProbes = 12,
+};
+```
+
+For each enabled configuration, try 8, then 24, then 64 only after a complete downstream failure.
+Each attempt spends its own floor and downstream work from the shared request allowance; these
+preferences do not refund route work or permit mixing geometry from attempts. All three sizes
+still use automatic zoning within the painted footprint, subject to existing seam merges.
+
+Latest subdivision authoring amendment (2026-10-11): `ksProcgenAreaProfile.roomSubdivision`
+now serializes minimum/preferred/ordered alternative sizes. Live marker snapshots validate and
+detach these values; authored size preferences override caller size preferences when explicitly
+planning a blob, while every work cap remains caller controlled. Omitting the field preserves
+caller-selected sizing. Snapshot identity is now `ks-procgen-area-snapshot-v3`, including presence,
+minimum, preferred size and ordered alternatives; geometry-derived blob IDs remain v1. Accepted
+owned-interior identity stays v2 and describes final content independently of unused alternatives.
+Declaring subdivision preferences for hybrid or interior-fill profiles fails explicitly pending
+their rewrite. Snapshots still do not allocate interiors, remove markers or publish geometry.
+Automatic size-goal strategies and authored fallback/size-goal transport remain pending.
+Rough overall completion is 62% (40-65% uncertainty); engine validation/publication is incomplete.
+
+```yaml
+- type: ksProcgenAreaProfile
+  id: MyOfficeArea
+  theme: KsProcgenSimpleOffice
+  roomSubdivision:
+    minimumRoomCells: 4
+    preferredMaximumRoomCells: 8
+    alternativeMaximumRoomCells: [24, 64]
+```
+
+Assign `MyOfficeArea` to the `profile` of connected `KsProcgenAreaCell` markers. After a snapshot,
+explicitly call `KsProcgenOwnedInteriorPlanner.Plan` with one blob, seed, inspected host context,
+exterior facts and caller budgets. To customize request goals/fallback permissions, use
+`blob.CreateRequest(seed)` and `blob.CreateOwnedBudgets(budgets: callerBudgets)` with the request
+overload. The blob overload consumes the profile theme and subdivision values automatically.
+
+Latest goal authoring amendment (2026-10-11): area profiles now expose optional `generationGoals`
+with `sizeMix`, `fallbackPolicy` and `windowGoal`, using the existing request definitions. Live
+snapshots validate and copy them to immutable values. Each `blob.CreateRequest(seed)` reconstructs
+fresh mutable request objects; modifying one request or a live prototype cannot change a previous
+snapshot or a later request. Shared `KsProcgenGoalValidation` preserves request validation reason
+codes, area/count/window limits and nonoverlapping size bands. Authoring additionally caps size
+bands at 64 and IDs at 128 printable ASCII characters, matching bounded profile conventions.
+Snapshot identity is now area snapshot v4: it includes goal presence, canonical size bands by ID,
+all four fallback permissions and every window target field. Blob IDs remain v1 and final owned
+interior identity v2. Omission keeps default request goals/policies; an explicit defaults block is
+distinguished in the input snapshot. The explicit blob planner consumes these goals automatically.
+Caller work limits, inspected host/exterior facts and publication authority remain separate.
+
+```yaml
+generationGoals:
+  sizeMix:
+  - id: Medium
+    minCells: 12
+    maxCells: 24
+    targetCount: 2
+  fallbackPolicy:
+    allowMergedPartition: false
+    allowRoomSizeShortfall: false
+    allowSparseFurnishing: true
+    allowSparseLighting: true
+  windowGoal:
+    exteriorWindowFraction: 0.25
+    hardFraction: false
+    toleranceCells: 1
+    minimumCount: 0
+```
+
+Add this block beside `roomSubdivision` in a `ksProcgenAreaProfile`. Size counts apply to final
+themed room interiors after walls/merges; they do not guarantee that any footprint can satisfy the
+target. Disallowed deviation rejects that candidate and tries the next subdivision/configuration;
+allowed fallback can accept the first degraded candidate. Hard window goals still need suitable
+inspected boundary facts and geometry. `KsProcgenWholeOfficeArea` is a concrete loaded example
+with a required 30-cell room and 4/8/64 subdivision preferences. Automatic size-goal-driven zoning,
+joint route/content search, full work accounting, replay serialization and engine publication
+remain rewrite work.
+
+Rough overall completion after goal authoring is 63% (40-65% uncertainty); the geometric
+candidate pipeline still does not certify or publish an engine interior.
+
+Latest size-goal subdivision amendment (2026-10-11): `roomSubdivision.useSizeGoals: true`
+opts a procedural footprint into a bounded rectangular strip strategy before its ordinary
+scalar-size alternatives. `KsProcgenOwnedPlanBudgets.UseSizeGoals` supplies the same preference
+for request callers; an authored subdivision profile overrides this preference, preserving all
+caller work allowances. Omission retains existing behavior. Area input snapshot identity is now
+v5, including the strategy flag; geometry-derived blob IDs remain v1 and accepted owned-interior
+identity remains v2. A discarded strategy or unused preference does not change final identity.
+
+The first strategy targets one connected owned entrance network whose floor exactly fills a
+rectangle. Sort size bands by descending maximum, then ordinal ID; repeat each band by its
+requested count, capped at 256 proposed rooms. Try strips along X, then Y. For cross-section `H`,
+the first room has `width * H` floor cells; each subsequent room has
+`width * H - (H - 1)` floor cells, reserving a wall band with one door opening. Compute each
+strip's feasible integer width interval from the inclusive size band and minimum room size.
+Require at least two columns per strip for a cardinal inside approach. If total minimum/maximum
+widths bracket the available dimension, distribute spare columns in canonical room order.
+This covers the rectangle exactly without an unclassified leftover strip. It neither pads the
+footprint nor changes room-size bands. Ordinal zone IDs are padded to preserve spatial wall
+ownership after the tenth room.
+
+For example, `KsProcgenMixedOfficeArea` declares a 16-cell large room, a 9-cell medium room and
+a 5-cell small room. A 9x4 footprint yields raw strips of 16, 12 and 8 cells; the latter two lose
+three wall tiles each, leaving exactly 16/9/5 floor cells and two doorways. Assign this profile to
+connected area markers and place an entrance at the left edge near the first room. The profile
+selects all sizes together without editing the generated request. Furniture, materials, lighting
+and independent access validation still run on the resulting final interiors.
+
+```yaml
+roomSubdivision:
+  useSizeGoals: true
+  minimumRoomCells: 4
+  preferredMaximumRoomCells: 64
+generationGoals:
+  sizeMix:
+  - id: Large
+    minCells: 16
+    maxCells: 16
+    targetCount: 1
+  - id: Medium
+    minCells: 9
+    maxCells: 9
+    targetCount: 1
+  - id: Small
+    minCells: 5
+    maxCells: 5
+    targetCount: 1
+  fallbackPolicy:
+    allowMergedPartition: false
+    allowRoomSizeShortfall: false
+```
+
+This is a layout proposal, not a promise that protected routes or preserved content permit its
+seams. The existing seam solver, ownership audit and final themed size-count check remain
+authoritative. If either axis cannot fit the size bands, the goal attempt uses ordinary scalar
+zoning. Irregular, one-tile-wide and multiple-network footprints also retain that path; quotas
+above 256 do not expand into an oversized room list. If a proposed seam or downstream content
+fails, the coordinator tries a separate scalar attempt, then its authored scalar alternatives
+and entrance configurations. A goal attempt consumes one layout slot, including when fitting
+falls back internally; denied proposals never refund graph, seam, merge, furnishing or fixture
+work. Floor failures still skip subdivision alternatives. `SizeGoalsRequested` in attempt/stage
+journals identifies the attempted strategy; `Partition.SizeGoalSubdivisionUsed` reports whether
+rectangle fitting actually supplied the zones. Neither flag claims all goals survived merging.
+
+Inspecting goal-strategy witness cells is charged to the shared graph allowance, including failed
+fitting. Partition connectivity and seam work use the existing shared allowances. Bounded width
+arithmetic, rectangle metadata, ordering and zone-list allocation are not completely metered;
+`GraphWorkFullyMetered` remains false. Arbitrary-shape goal search, quota allocation among separate
+networks, alternate feasible width distributions, joint route/content search, replay serialization
+and real engine publication remain open. The orientation retry amendment below supersedes the
+initial strategy's stopping at the first geometrically feasible axis.
+Rough overall completion after this amendment is 64% (40-66% uncertainty).
+
+Latest orientation retry amendment (2026-10-11): rectangular goal fitting now retains both feasible
+X/Y layouts in canonical order. The group partition planner solves their seams independently,
+preferring the first `Proposed` result over a merge/open fallback. A protected wall on the X layout
+can therefore select a Y layout within the same complete goal attempt. If every feasible
+orientation requires a fallback, retain the first fallback and its matching zone assignment.
+Never combine floor, walls, doors or zone membership from different orientations. One-room
+orientations are identical and are proposed once. Legacy scalar/explicit-zone planning is unchanged.
+
+All orientation attempts share the existing graph/seam work object and remaining merge allowance.
+Failed attempts consume actual work, including merges performed before discarding their geometry.
+Budget exhaustion is terminal, even when an earlier valid fallback is available; it cannot be
+converted into that fallback. The final ownership/access scene is checked after selecting one
+whole layout. `SizeGoalAttempts` exposes immutable nonreusable diagnostics: `AcrossX`, partition
+status, reason code, expansions, seam probes and merge attempts. On a direct group failure these
+diagnostics survive with no placement artifacts/hash. On complete owned-planner failures the
+existing stage journal retains total work and the terminal reason; full serialized per-orientation
+replay remains pending. Group totals include discarded orientations; the accepted region's own
+partition counters describe only its selected seam solve. Orientation attempts are bounded at two
+inside one complete `MaximumLayoutProbes` slot, not two complete downstream pipeline attempts.
+
+An abstract 6x6 rectangle with protected floor on X=3 and Y=0 can retain 18/13-cell rooms by turning
+the seam to Y=3 and placing its opening at X=3. This geometric witness does not authorize a new
+door on preserved floor: the full material adapter still rejects a readonly new door threshold.
+The loaded complete-pipeline fixture instead preserves Y=0 and the first three cells of X=3,
+blocking X seams while leaving the alternate doorway writable. It requires exact room counts and
+disallows merged partitions. `KsProcgenEmptyOfficeThemeFixture` requests floor/wall/door materials
+without optional contents or lights, isolating orientation and access from content search. The
+ordinary office theme can produce a disconnected clean pocket for this fixture; the independent
+access audit correctly rejects that candidate. Joint retry of those content choices remains open.
+The loaded empty-theme fixture verifies all pipeline stages, exact allowable budgets and unchanged
+engine entities. Existing area snapshot v5, group partition identity v1 and owned interior
+identity v2 remain unchanged: final selected geometry/membership already describes orientation,
+while discarded diagnostics do not enter accepted semantic identity. Rough completion remains 64%.
 
 Latest surface amendment (2026-10-03): R01 copies optional tracker declarations under capability
 hash v2; R02 includes existing tracked items in finite unnamed support reservations; R06 checks
@@ -1825,8 +2077,8 @@ search, live operating/collision/mount validation, owned settling and publicatio
 | T08 | In progress | `KsProcgenRoutePlanner` builds a bounded least-cost cardinal tree across explicitly writable cells and reusable clean passages for required terminals. `KsProcgenResidualConnector` derives writable residuals from packing claims, validates prefab and declared constant port ownership, matches opposite adjacent ports, and routes exposed entrances to roots through procedural or inspected passage cells. Packing backtracks when this check fails. Pure `SingleNetwork` requires all procedural floor to form one cardinal component. The pipeline additionally checks the combined room/port/passage network against the final proposed partition floor, validates protected passage and door-opening geometry, and returns `NoPreliminaryRoute` for a disconnected `SingleNetwork`; `PerIsland` can retain multiple groups. It reserves no partial route on failure. Remaining: port classes and width, fixed links, optional loops, approved stubs, engine clearance, and final access validation. `PreliminaryReady` is not a playable-map success status. | Focused Debug constant-port and network tests pass for residual connection, blocked neighbor, direct pairing, isolated declared rooms, and root connection. The loaded-server pure and hybrid fixtures pass with the temporary prototype override. |
 | T09 | In progress | `KsProcgenPureFillPlanner` covers each procedural cell with connected zones, protects reserved routes, and treats narrow/tiny components such as 1x3 as passage. Optional nonoverlapping soft size bands request counts of large, medium, and small preliminary rooms in one exact mask; it reports achieved counts and shortfalls without discarding tiny cells. `KsProcgenSizeMixAnalyzer` separately counts final themed room interior areas after partition fallback, excluding passages, and the pipeline exposes final soft shortfalls and hashes both stages. `KsProcgenPartitionPlanner` proposes tile-thick walls and unique door openings with room landings, protected passages, and local/island clean-floor connectivity. Failed interfaces merge their adjacent zones and retry within an explicit merge budget; a budget failure returns open floor without partial walls. `KsProcgenGeometryPipeline` composes packing, material choices, bounded furnishing proposals, and bounded provisional light positions for pure/hybrid requests. `GeometryPlanned` remains a read-only status. A required entity pack that cannot fit returns `ContentUnmet` with no semantic plan hash. Remaining: final port/root access, real wall/door placement and actor/pressure checks, hard room-size feasibility/backtracking, and tile/entity spawning. | Focused Debug tests pass for exact large/medium/small proposal counts, deterministic replay, a tiny 1x3 shortfall with complete coverage, invalid/overlapping bands, and final room-area accounting that excludes passages. Earlier seam/pure-fill tests remain green; 74 focused procgen unit tests and the loaded-server fixture pass with the temporary prototype override. |
 | T09a | In progress | `KsProcgenThemeSelector` chooses deterministic room-scoped palette, wall family, light fixture, and coherent dominant/support packs. `KsProcgenThemeAssignmentPlanner` maps final open/merged zones to one choice per room, strips optional entity packs from passages, rejects mandatory packs there, records unplaced mandatory pack minima in rooms, and owns every partition wall by one region. `KsProcgenMaterialPlanner` resolves exact floor, interior-wall, and required door prototype IDs, assigns a stable rounded accent fraction only inside rooms, protects door thresholds and tiny passages with primary tiles, and rejects a selected wall family without a required door. Remaining: request overrides, hull/shared-seam material compatibility, actual placement, mandatory fixture fulfillment, and operational validation. | Loaded-server integration verifies office workstation/storage grouping, tiny passage without furnishing, exact tile/wall/door choices, a primary door threshold, accent replay, mandatory-pack diagnostics, and missing-door rejection. Selected lights are content choices, not verified working coverage. |
-| T10 | In progress | `KsProcgenHullBoundaryPlanner` inventories every cardinal edge of generated floor against the normalized exact masks and known interior walls. It distinguishes writable envelope cells, preserved/unknown neighbors, explicit void sinks, missing footprint hull, and unknown `InteriorFill` host context. For layouts without prefabs, `KsProcgenGeometryPipeline` exposes and hashes this inventory as a diagnostic; a pure 1x3 footprint reports eight unresolved sides. `KsProcgenGasClosure` separately checks a caller-supplied cardinal gas-adjacency snapshot in a nominated door state. It treats missing edges as unknown, distinguishes explicit vacuum leaks from unknown boundaries, respects blocked edges, validates duplicate/reversed edges and budgets, and returns only `PreliminarilyClosed` when all reachable edges are known and blocked as needed. Neither stage inspects engine gas behavior; both verification flags remain false. Remaining: include prefab/constant floor, plan complete shell and exterior ports without overwriting claims, obtain actual gas edges/door states and host context, run materialized gas flood, and A13-A14. | Seven focused Debug tests pass for thin-envelope inventory, missing footprint/unknown host/void exposure, closed strip, missing edge, explicit leak, blocked door, duplicate/invalid inputs, and budget. All 56 focused procgen unit tests and Shared Release build pass. The loaded-server fixture verifies the pipeline hull diagnostic with the temporary prototype override. |
-| T11 | In progress | `KsProcgenWindowPlanner` accepts explicit hull/engine-classified boundary cells and computes stable eligible, fixed-window, fixed-wall, editable, requested, and achieved counts. It reports a reason for each excluded cell: missing interior/exterior face, unsupported airtight window, corner, doorway, required structure, or author-disabled segment. Fixed eligible windows remain in the denominator. Seeded editable choices clamp a soft fraction to feasible counts, while hard fraction tolerance and minimum/maximum counts can return `HardTargetUnmet`. Zero eligible cells are `NotApplicable` unless a positive hard minimum is requested. The composed pipeline can consume an optional inspected boundary, reject cells outside the normalized target/envelope, expose the provisional window plan, return `WindowTargetUnmet` on a hard miss, and hash the supplied classification. Without inspected boundary input, the hard goal remains unverified. Hull geometry alone cannot certify window eligibility; no map mutation exists yet and `AirtightnessVerified` remains false. Remaining: derive real boundary eligibility from T10 plus engine inspection, room/segment scopes, multi-cell window modules, prototype airtight capability, traversal/pressure rechecks, and A15. | Focused Debug unit tests pass for fixed-window denominator and replay, per-cell exclusions and hard miss, zero eligible cells, impossible minimum, duplicate rejection, and inspected cells outside the shape. All 73 focused procgen unit tests pass. Loaded-server fixture assertions for pipeline selection and hard miss pass with the temporary prototype override. |
+| T10 | In progress | `KsProcgenHullBoundaryPlanner` inventories legacy generated floor; the entrance-aware `KsProcgenGroupHullBoundaryAnalyzer` independently revalidates owned floor, includes preserved/constant floor, reserves complete entrance/host spans and retains unknown boundary kinds. `KsProcgenGroupHullWallPlanner` selects compatible registered hull-wall prototypes only for explicit writable envelope claims. Missing shell cells remain unresolved. `KsProcgenGeometryPipeline` exposes the legacy inventory as a diagnostic for layouts without prefabs; a pure 1x3 footprint reports eight unresolved sides. `KsProcgenGasClosure` separately checks caller-declared cardinal gas edges in one nominated door state; missing edges remain unknown and complete closed snapshots are only `PreliminarilyClosed`. None of these stages inspects live gas behavior. Remaining: integrate owned hull/window choices into the complete pipeline, include copied prefab geometry, obtain actual gas edges/door states and host context, run materialized gas flood, and A13-A14. | Historical thin-envelope/static gas tests and the loaded legacy pipeline fixture pass. Owned boundary and candidate wall verification is recorded under R05; gas and engine verification flags remain false. |
+| T11 | In progress | `KsProcgenWindowPlanner` provides immutable stable eligible/fixed/editable counts, per-cell exclusions, fraction rounding, soft clamping and hard count/tolerance failures. The legacy pipeline accepts optional caller-inspected boundary facts and hashes provisional choices. `KsProcgenGroupWindowBoundaryAnalyzer` independently revalidates owned hull geometry and directional exterior context, includes fixed preserved/constant walls and exposes unclassified cells. `KsProcgenGroupWindowPlanner` resolves incident theme window prototypes and replaces editable wall choices exactly once; entrances, read-only content and unknown shell stay protected. Missing prototype support excludes cells and hard misses discard all earlier artifacts. Neither geometry nor caller-declared airtight support proves live eligibility; verification flags remain false. Remaining: actual exterior/prototype inspection, complete pipeline and room/segment scopes, multi-cell modules, live airtight substitution, movement/pressure rechecks and A15. | Historical fixed-count/exclusion/legacy-pipeline tests pass. New owned face/substitution, fixed ownership, context, shared budget and replay evidence is recorded under R05. |
 | T12 | In progress | `KsProcgenTileStageSystem` provides the first tile-only materialization slice. It preflights a successful, hashed pure plan for exact procedural floor coverage, known tile IDs, and a tile budget; it rejects prefab/constant claims, interior walls and doors, furnishings, lights, and selected windows. Accepted tiles are placed on a new uninitialized, paused map and grid, then can be read back and discarded through an owned stage handle. Bulk cancellation discards all owned stages; round restart and system shutdown invoke it. Map identity is checked before deleting a stage map. This does not establish map visibility isolation or publishability. Remaining: safe prefab and constant copying with authored entity references, entity/material placement, startup side-effect isolation, engine traversal/gas verification, and A16-A17/A20/A24/A40. | The loaded-server fixture stages and verifies a 1x3 floor, detects a deliberately changed tile, discards one stage, bulk-cancels two more with map removal, handles an externally removed map, rejects a two-tile budget and hybrid content, and leaves the plan unpublished. All 78 focused Debug procgen unit tests, the loaded-server fixture, and Server Release build pass with the temporary prototype override. |
 | T13 | Pending | Final engine validation and publication. | Pending. |
 | T14 | In progress | `KsProcgenFallbackPolicy` names four default-permitted planning degradations: merged/open partitions, final room-size shortfalls, sparse optional furnishing, and sparse provisional lighting. Disabling one makes the pipeline return `FallbackDisallowed` with a stable reason and zero semantic hash; immutable coverage and access requirements remain enforced. Policy flags enter the semantic plan hash. `KsProcgenPlanningReportBuilder` produces bounded, deterministic constraint outcomes and a trace of applied fallbacks from a pipeline result, distinguishing proposed/degraded/rejected/no-op planning from publication; window count and fraction are separate hard/soft outcomes, while operational access, gas closure, constant source content, and working light remain unverified. Remaining: request-wide retry budgets, alternative/backtracking fallback order, hard relaxation permissions, per-port and per-cell conflict details, verified content/context hashes, serialized reports, and final publication statuses. | 78 focused Debug procgen unit tests pass, including report degradation, separate hard window count and soft fraction, unverified engine conditions, invalid-request reporting, and truncation. The loaded-server fixture passes for all four policy gates, a policy-sensitive semantic hash, and a degraded unpublished report using the temporary prototype override. |
@@ -1837,10 +2089,10 @@ search, live operating/collision/mount validation, owned settling and publicatio
 | T18 | Pending | Bounded tactical furnishing preferences. | Pending. |
 | T19 | Pending | End-to-end examples and release validation. | Pending. |
 
-### Rough implementation assessment (2026-10-05)
+### Rough implementation assessment (2026-10-10)
 
-The full specified system is approximately **47% implemented**, with an uncertainty range of
-**40-50%**. This is an engineering estimate weighted by the remaining work and acceptance gates,
+The full specified system is approximately **55% implemented**, with an uncertainty range of
+**40-60%**. This is an engineering estimate weighted by the remaining work and acceptance gates,
 not the fraction of files written, tests passing or task rows started. None of the major T/R rows
 has its complete revised exit criteria signed off; a partially working planner is useful progress
 without making its materialization and validation requirements complete.
@@ -2929,17 +3181,32 @@ the responsible stage exists. Never ignore them and run the old behavior success
     per group, 65536 cells per context mask, default 131072 work expansions and maximum 1000000;
     final scene analysis additionally caps its own allowance at 131072. Exhaustion reports
     BudgetExceeded without partial geometry. Retain frozen scene masks and copied sorted route,
-    floor and wall records. Identity versions are `ks-procgen-group-route-v1` and
-    `ks-procgen-group-route-selection-v1`; unused sufficient budgets do not change accepted identity.
-  - Initial constructor boundary: canonical group order and greedy cardinal trees only, without
-    group-order/layout backtracking, room fitting or full floor partitioning. Existing clean components
+    floor and wall records. Current identity versions are `ks-procgen-group-route-v2` and
+    `ks-procgen-group-route-selection-v2`; unused sufficient budgets do not change accepted identity.
+  - [x] Add complete-order `KsProcgenGroupRoutePlanner.Search`. Try canonical group ID order, its
+    reverse, then remaining lexicographic permutations lazily, without repeats or factorial storage.
+    `Plan` optionally accepts an explicit complete unique group-order list; reject unknown, duplicate
+    and missing IDs before carving. Accepted proposals retain a detached immutable `GroupOrder`,
+    included in route identity v2. Retry only order-sensitive routing/forbidden-terminal failures;
+    invalid input, incompatible mandatory/preserved components and final scene failures retain their
+    diagnostic. This does not retry individual tree choices within an order.
+  - [x] Carry search through automatic `Select`, sharing at most 64 group-order probes and the
+    expansion allowance across every complete order and configuration. Count existing-passage scans,
+    failed trees and final scene analysis, including discarded attempts. Configuration probes and
+    group-order probes have separate counters and allowances. Zero order allowance returns
+    BudgetExceeded before any tree. A remaining untried order at the cap is budget exhaustion, not
+    infeasibility; exhausting all permutations reports rejection without accepted geometry. Never
+    restore a rejected order's reservations into the next attempt. Budget/invalid-input failures stop
+    selection. Sufficient unused allowances do not change selected geometry/order identity.
+  - Constructor boundary: greedy cardinal trees within each attempted group order, without alternate
+    tree/layout search, room fitting or full floor partitioning. Existing clean components
     with no group terminals are rejected rather than automatically attached. Host/preserved completeness
     flags are caller declarations, not live inspection or source-fingerprint proof. No actor, fixture,
     vaulting, wall material, room/door/window/hull, pressure or power validation is added. A rejected
     greedy proposal does not prove that every layout for the shape is impossible. EngineAccessVerified
     remains false; generation guards remain active until all downstream stages preserve these groups.
   - [ ] Extend group floor/wall ownership and protected routes into compatible room/prefab/constant
-    selection, partitions and branch journals. Add alternate group-order/layout search where needed.
+    selection, partitions and branch journals. Add alternate tree/layout search where needed.
     Rewrite partition/fallback/theme/furnishing/
     lighting/Near callers to preserve boundaries. Use real actor/door/host graphs for engine validation
     before publication. Rejecting a supplied scene does not prove every scene for that shape impossible.
@@ -2984,6 +3251,964 @@ the responsible stage exists. Never ignore them and run the old behavior success
     This completes the initial constructor subtasks, not R05 or A48-A50: complete pipeline integration,
     room/partition selection and live actor/door/host validation remain required. R01-R06 remain
     in progress; R07 remains pending. Rough full-system completion is 47% (40-50% uncertainty).
+  - Group-order fixtures (2026-10-10): eight unit cases cover an irregular 7x7 mask whose canonical
+    order routes one group then fails, while reverse order constructs two separate networks with
+    twenty-two floor cells; complete rollback, explicit order validation and detached witnesses;
+    exact shared expansion/order limits; all six unique three-group permutations; canonical replay
+    despite reordered declarations; invalid bounds/configurations; and probe/work sharing across
+    a rejected six-order configuration and a minimum-connectivity alternative. A loaded case paints
+    the same irregular blob with four entrance markers, transports its request, retries its order and
+    retains the source entity set and snapshot identity. The standalone constructor remains guarded
+    out of legacy full generation, and EngineAccessVerified remains false.
+  - [x] Restore procgen compatibility after merging current `origin/master` (2026-10-10). Fetch
+    `origin/master` without recursive fetch and merge `eac1062cacf` into `ksprocgen` as `905dd42c6fd`;
+    no merge conflicts. The repository's post-merge BuildChecker hook updates pinned submodules,
+    including RobustToolbox to `3708c7a31094649d60cecdab11a0a6c3aa96223e`. The first Debug build
+    exposes the removed `BaseContainer.ExpectedEntities` API. Update prototype/live slot inspection
+    to `PvsDetachedEntities`, rename snapshot data to `PvsDetachedContentCount`, and bump capability
+    identity to v3. Retain rejection for detached occupancy even when real contained count is zero;
+    loaded item-slot and generic ContainerSlot checks cover rejection and restored eligibility.
+    Detached count is replication occupancy evidence, not proof of a physical occupant on the server.
+    The first warnings-enabled Release build also exposes seven RA0042 errors for redundant explicit
+    prototype type names. Use `[Prototype]` for those matching generated names; YAML type IDs remain
+    the same. Prototype capability inspection now uses the current `TryComp` API. Verify prototype
+    loading again after these declarations change.
+    Warnings-enabled server compilation additionally exposes twenty-four RA0030/RA0045 errors in
+    existing procgen systems. Use typed nongeneric Transform/MetaData TryComp overloads and the
+    EntitySystem TryComp/AllEntityQuery proxies. Preserve AllEntityQuery's paused-entity behavior;
+    no event handlers, cleanup ownership or fixture access policies change in this API migration.
+  - [x] Repair the procgen references rejected by the real client sandbox. Ordinary loaded fixtures
+    had not checked these references. Replace `ReadOnlyCollection` wrappers and inferred conditional
+    wrappers with copied immutable lists through `KsProcgenReadOnly`; source mutation and attempted
+    mutation through IList cannot alter normalized snapshots. Replace BCL PriorityQueue with a
+    SortedSet ordered by the same `(cost, y, x)` keys, retaining route tie behavior and stale-entry
+    checks. Replace compiler-generated nonempty List collection expressions with ordinary list
+    initializers. Replace forbidden ArgumentNullException usage with ArgumentException and explicitly
+    check transformed long coordinates against integer bounds before casting; malformed transforms
+    still reject without wrapped coordinates. Geometry and layout adapters catch that supported
+    exception. No engine sandbox whitelist is relaxed. SandboxTest must remain in future release
+    evidence alongside unit and loaded-server suites when adding unfamiliar shared/client APIs.
+  - Merge/search/compatibility verification (2026-10-10): all 307 focused Debug procedural unit
+    tests and all fifty loaded-server tests across the three procgen fixtures pass. The real client
+    SandboxTest also passes: the final combined integration filter reports 51 passed, zero failed,
+    zero skipped. Unit tests likewise have zero skips. The eleven loaded area cases include the new
+    irregular marker blob and the unchanged legacy generation rejection gate. Server Release passes
+    with warnings enabled and the repository's normal warnings-as-errors settings, without the old
+    WarningLevel=0 workaround. It reports 250 permitted warnings and zero errors in the final build.
+    Sequential fresh Debug integration-project `--no-incremental --no-restore` compilation also
+    passes without a warning-level override (1102 warnings, zero errors), followed by final no-build
+    unit/integration runs. These are focused procgen plus sandbox gates, not the entire repository's
+    integration suite. Existing permitted upstream/other-feature warnings remain.
+    Four independent mutations fail at assertions: stopping after the first order rejects the feasible
+    retry; separately discarding previous-order work accepts an over-budget retry; disabling explicit
+    integer bounds stops throwing for a wrapping transform; ignoring detached slot occupancy admits
+    a reserved item slot. Each source is restored in `finally` before final Release/Debug builds and
+    tests. The sandbox's original red run specifically identifies procgen's forbidden references;
+    the repaired code passes the same real checker. Snapshot immutability and sorted-route behavior
+    pass the complete unit corpus. Scoped diff and all changed/new-file whitespace checks pass.
+    No event subscriptions were introduced. Current identities: area ID v1, area snapshot v2,
+    entrance contract v2, shorthand group v1, entrance scene/selection v1, group route/selection v2,
+    supported access v4, full geometry v20 and capability v3. Existing dated ledgers describe their
+    earlier gates and identities. R01-R06 remain in progress; R07 remains pending. Full room fitting,
+    partitions/furnishing, materialization and live connection/access validation are still required;
+    route-order success is a geometric proposal. Rough full-system completion is 48% (40-50%).
+  - [x] Add the first bounded entrance-aware floor growth adapter, `KsProcgenGroupFloorPlanner`.
+    Route the entire selected configuration first, then use deterministic cardinal growth from all
+    accepted floor seeds. Exact components cannot gain a cardinal edge to another owner; those
+    contested writable cells become separation walls. RequiredConnections may merge floors and
+    retain all group memberships in the resulting connected region. Every initial route/preserved
+    clean cell remains protected, with an immutable per-region subset for future furnishing.
+  - [x] Reserve inspected host components during RequestNetwork exact growth. Components already
+    attached to a seed belong to its owner; unattached read-only host passages can be claimed by
+    the first growing owner. A foreign owner cannot subsequently connect through that passage.
+    DomainLocal intentionally imposes only local separation. This adapter uses caller-declared
+    clean masks and completeness; it never claims live actor or door inspection.
+  - [x] Carry one expansion allowance through route-order search, host ownership inspection,
+    floor growth and independent final component analysis. Complete configuration selection charges
+    rejected proposals and shares order/candidate limits. Failure exposes counters and diagnostics,
+    with no retained routing, regions, scene, masks or hashes. Default allowance is 262144 expansions,
+    bounded at 1000000; each scene analysis remains capped at 131072. Work counters describe these
+    graph operations, not total normalization CPU time.
+  - [x] Preserve write boundaries: sealed thresholds remain blocked, preserved non-floor/void/envelope
+    cells are never converted, and unreachable writable islands remain proposed walls. One-by-three
+    targets work. Regions are entrance-connected floor components, not yet theme-sized rooms or
+    partitions. Stable floor/selection identity uses `ks-procgen-group-floor-v1` and
+    `ks-procgen-group-floor-selection-v1`, including the accepted route and independently analyzed
+    scene identity. Accepted outputs detach from mutable author input.
+  - [x] Add a first bounded owned-network partition/theme/furnishing adapter. Reconstruct ownership
+    from independently revalidated floor connectivity, rather than trusting caller-provided region
+    labels. Validate source scene/floor identity against the current request; reject stale requests,
+    incomplete/overlapping zones and any logical zone spanning different exact networks. Generate
+    connected logical room zones automatically, or accept complete nominated zones for a proposal.
+    Run the seam solver separately per connected network, preserving all route and read-only floor
+    cells. Its merged/open fallback remains inside that network. Preserve separation walls and sealed
+    thresholds, and independently analyze the complete resulting scene before accepting any output.
+  - [x] Extend `KsProcgenPartitionPlanner.Plan` with optional `protectedFloorCells`, independent of
+    passage-zone classification. A room may contain protected walkways and still receive furniture.
+    `KsProcgenGroupThemePlanner` retains network group IDs and each themed region's protected-route
+    subset. `KsProcgenThemedRegion.EntranceGroupIds` and `ProtectedPassageCells` default to empty for
+    legacy callers. Furnishing validates declared protected cells against the room floor, uses them
+    as route terminals, and retains them through atomic core placement, backtracking and access search.
+  - [ ] Complete the main pipeline rewrite, including joint prefab fitting, room size goals,
+    full-host tactical network ownership, fallback policy and live door/access verification. The owned
+    adapter currently bounds source floor to 4096 cells and logical zones to 256, sharing at most
+    64 actual seam merges across all networks. The legacy seam solver's CPU work is bounded by those
+    caps but is not represented in the graph expansion counter. Shared graph work covers source
+    validation, logical zoning and final validation; an accepted open fallback may exhaust its soft
+    merge allowance. Tiny/thin auto-generated networks remain passage zones. This is a conservative
+    geometric proposal, not proof of infeasibility, optimal room sizing or an operational door.
+    Keep the existing full-pipeline rejection gates until downstream materialization and validation
+    preserve the entrance contract. Alternate growth seeds/orders also remain pending.
+  - Floor-growth verification (2026-10-10): twelve new focused unit cases cover a 5x5 exact split
+    into two ten-cell floors separated by a continuous five-cell wall; minimum-connectivity merging;
+    multi-entrance trees and declared roots retained as protected cells; a 1x3 domain and unreachable
+    writable island; preserved/void/envelope masks; sealed thresholds; foreign and initially unowned
+    host passages; exact shared expansion boundaries; complete-configuration retry with candidate
+    and order caps; detached immutable replay; and invalid input with no partial artifacts.
+    A new loaded area fixture paints twenty-five live markers, binds two entrances, constructs the
+    separated floor proposal, and verifies both source entity membership and snapshot identity remain
+    unchanged. It retains the legacy packing rejection and `EngineAccessVerified == false` boundary.
+    The final full focused unit run passes 319 tests; the combined integration run passes all fifty-one
+    loaded-server cases and the real client SandboxTest (52 total), zero failures or skips in either
+    suite. This remains focused verification, not the entire repository integration suite.
+    Three independent mutations disable local separation, foreign-host exclusion and first-owner
+    host claiming. Each fails its expected candidate assertion with `ForbiddenEntranceGroupJoin`
+    from the independent final analyzer. All three sources are restored in `finally` before the final
+    builds and suites. Warnings-enabled Server Release passes with 512 permitted warnings and zero
+    errors; sequential fresh Debug integration `--no-incremental --no-restore` passes with 1102
+    warnings and zero errors. No warning suppression or sandbox whitelist changes are introduced.
+    Tracked diff checks and new-file trailing-whitespace checks pass. No event subscriptions are added.
+    Floor and floor-selection identities are v1; route/route-selection remain v2, capability v3 and
+    full geometry v20. R05 remains in progress, R01-R04/R06 stay in progress and R07 stays pending.
+    Rough full-system implementation is now 49% (40-50% uncertainty); floor proposals alone do not
+    establish playable rooms, collision-free furnishings, live entrance access or spaceproofing.
+  - Owned partition/theme/furnishing verification (2026-10-10): eight new focused unit cases cover
+    automatic logical zones scoped to separate networks, complete nominated room zones with usable
+    cardinal door geometry, fully protected seam fallback without deleting separation walls,
+    RequiredConnections merged memberships, preserved floor, thin passage networks, shared graph
+    allowance boundaries, cross-network/incomplete/duplicate-zone rejection, detached immutable replay
+    and stale request rejection. Accepted network artifacts copy legacy solver collections into
+    immutable snapshots; ownership is reconstructed from the validated graph, not source region labels.
+    A new loaded marker fixture follows an 8x7 blob with four entrances and two declared roots through
+    floor growth, owned partitioning, office themes and floor furniture. Every protected route cell
+    remains reserved; blocker masks include both ordinary movement blockers and vault-required entities,
+    and clean cardinal paths connect each protected terminal after furnishing. Theme membership stays
+    separate. An invalid protected tile rejects furnishing with no entities. A second configuration of
+    the same floor makes the later network a passage with mandatory room content: theme rejection
+    discards earlier network choices. Source entities and marker snapshot identity remain unchanged,
+    and the full geometry pipeline retains its entrance-aware rejection gate before allocation.
+    Two independent mutations fail at expected assertions: dropping the seam solver's protected-floor
+    constraint yields `InvalidOwnedPartitionProposal`; dropping furnishing's entrance-route terminals
+    loses required protected coverage in the loaded fixture. Both sources are restored in `finally`
+    before final builds and tests. Final focused Debug tests pass 327 units and fifty-two loaded-server
+    cases plus the real client SandboxTest (53 combined), zero failures/skips. Warnings-enabled Server
+    Release passes with 512 permitted warnings and zero errors. Sequential fresh Debug integration
+    `--no-incremental --no-restore` passes with 1102 warnings and zero errors, followed by those final
+    no-build test runs. Verification is focused procgen plus sandbox, not the repository's full suite.
+    Scoped tracked diff and new-file whitespace checks pass; no event subscriptions or sandbox
+    exceptions are introduced. Owned partition identity is `ks-procgen-group-partition-v1`; floor and
+    floor selection stay v1, route/route selection v2, capability v3 and full geometry v20.
+    R01-R06 remain in progress and R07 pending. Rough full-system completion is 50% (40-55% uncertainty).
+    The accepted artifacts describe proposed clean masks and floor entities. Actual wall/door/light
+    operation, actor access, pressure/power behavior and publication still need their remaining gates.
+  - [x] Check retained entrance reservations in `KsProcgenLightingPlanner` before fixture selection,
+    including the NotRequested path. Reject furnishing inputs missing the themed region's protected
+    route cells or placing movement blockers on a protected passage. Keep fixtures off reserved
+    routes, entity footprints and operating approaches, and retain the cardinal connectivity guard.
+    Fixture reach remains an estimate through the supplied floor graph; it does not model actual
+    illumination, occlusion, supply, startup or engine fixture footprints.
+  - [x] Bound all lighting reach and connectivity flood expansions with optional `maxExpandedCells`
+    (default and ceiling 1000000). Report actual graph work in `ExpandedCells`. A graph-budget failure
+    returns no partial lights or coverage metrics. Fixture-count exhaustion keeps the existing
+    per-room `LightingProposalBudget` semantics, including its speculative partial fixture list;
+    callers must inspect status. Accepted lists are immutable. Skip unused post-selection connectivity
+    probes when coverage is already met or the fixture cap does not govern the result.
+  - [x] Add `KsProcgenGroupLightingPlanner` for complete room sets: require unique matched region IDs,
+    process rooms canonically, and share both fixture and graph allowances across all rooms. Any later
+    invalid/budget result discards all region proposals while retaining counters and a diagnostic.
+    Successfully bounded sparse estimates stay explicit; NotRequested rooms do not consume fixtures.
+    These per-stage allowances are not yet a single request-wide pipeline work budget.
+  - [x] Add `KsProcgenGroupInteriorAnalyzer` to independently audit complete themed/furnished/lit
+    proposals against the current request and owned partition. Revalidate the source scene; require
+    complete, nonoverlapping floor ownership with matching entrance memberships and route reservations;
+    reject foreign/overlapping footprints and writes on read-only floor. Ordinary movement blockers,
+    anything requiring vaulting, and proposed floor lights are excluded from clean walking. Preserve
+    all protected entrance routes and inspect door/operating approach cells. Flood each themed room
+    separately so access cannot rely on a detour outside that room, then independently analyze the
+    complete final entrance scene, including declared host bypass and sealed-threshold checks.
+    Source validation, room floods and final validation share one graph allowance (default 262144,
+    ceiling 1000000). Scene analyses individually retain their 131072 cap. Limit source floor to
+    4096 cells, rooms to 256, and declared partition doors to 4096; bound entity footprint sizes and
+    proposal lists too. Every failure exposes no scene, blocker mask, analysis or access hash.
+    Accepted scenes/blockers are immutable. `ks-procgen-group-interior-access-v1` identifies the
+    partition, final clean scene and room terminals; it is an access identity, not a full content hash.
+    EngineAccessVerified and WorkingCoverageVerified remain false. Keep the full pipeline allocation
+    rejection until actual door/furniture/light/material validation and ownership are implemented.
+  - Lighting/interior-access verification (2026-10-10): thirteen new focused unit cases verify
+    complete owned interior replay and detached scenes; ordinary, vault-required and traversible
+    movement classes; protected entrance and machine approach exclusion; disconnected room rejection;
+    foreign group metadata, missing reservations, duplicate region records and overlapping/foreign
+    footprints; unexpected NotRequested fixtures; read-only floor writes even for traversible entities;
+    each partition door's threshold and both approaches; and exact shared source/room/final graph
+    allowance boundaries. The existing loaded 8x7 marker case now follows actual office furniture
+    proposals through lighting and the final owned access audit. It checks per-room and aggregate
+    work limits, exact sufficient budgets, shared fixture caps, canonical replay, missing reservation
+    rejection, final two-group connectivity, and exclusion of all fixture cells from protected routes.
+    It still verifies untouched source entity membership/snapshot identity and the main pipeline's
+    allocation rejection. Neither geometric light coverage nor clean access is promoted to engine
+    verification by this fixture.
+    Two independent mutations fail at expected assertions: ignoring vault-required furniture produces
+    zero blockers instead of one; resetting lighting expansion allowances per room accepts a complete
+    aggregate that exceeds its total allowance. Both sources are restored in `finally` before final
+    builds and suites. All 340 focused Debug procedural units pass, along with fifty-two loaded-server
+    cases and the real client SandboxTest (53 combined), zero failures or skips. Warnings-enabled
+    Server Release passes with 512 permitted warnings and zero errors. Sequential fresh Debug
+    integration `--no-incremental --no-restore` passes with 1102 warnings and zero errors, followed
+    by the final no-build suites. These remain focused gates rather than the repository's full suite.
+    Scoped tracked diff and new-file whitespace checks pass. No event subscriptions, warning
+    suppression or sandbox whitelist changes are introduced. Interior access identity is v1;
+    owned partition/floor/floor selection remain v1, route/route selection v2, capability v3 and full
+    geometry v20. R01-R06 stay in progress and R07 pending. Rough full-system completion is 51%
+    (40-55% uncertainty). Main-pipeline integration, tactical ownership, joint content/light search,
+    real doors/actors/materials, operational lighting and publication still require their exit gates.
+  - [x] Add `KsProcgenGroupTacticalAnalyzer.Analyze` over a successful post-furniture/light interior
+    scene. Independently revalidate the current request/configuration and compare scene identity;
+    reconstruct ownership instead of trusting caller-supplied component labels. Reject cross-network
+    terminal pairs, host/out-of-floor query cells and duplicate pair IDs before optional searches.
+    RequiredConnections may measure pairs across group labels only when the validated local graph
+    actually merges those groups. Exact DomainLocal groups remain separate even when host paths
+    join them externally. RequestNetwork isolation still checks those bypasses during revalidation.
+  - [x] Measure articulation cells, bridges and choke-side sizes per permitted local component.
+    Side terminal counts include complete operational inside approaches and declared group/request
+    roots; they do not enumerate engine interaction targets. Nominated choke removal and optional
+    internally cell-disjoint route counts use only that component's post-interior clean cells.
+    Foreign host paths cannot become optional detours. Measurement scope is explicitly DomainLocal,
+    even when the source contract requires RequestNetwork isolation; full-host tactical metrics are
+    still pending an ownership policy. Vision/projectile cover and tactical placement are separate.
+  - [x] Share graph expansions across source revalidation, iterative movement DFS, component/side
+    floods and named alternate-route BFS. Share side-detail, search and flow-edge allowances across
+    all networks. The wrapper accepts at most 4096 clean cells, 64 networks/pairs/nominated chokes,
+    512 detailed chokes, 65536 searches, one million graph expansions, eight million examined flow
+    edges and eight independent routes per pair. A measured route count at the configured cap is
+    a lower bound. Exhaustion discards all network outcomes/hash while preserving actual counters.
+    Side-detail truncation retains every exact articulation/bridge and labels the omitted details.
+  - [x] Make accepted movement/alternate/redundancy collections immutable and guard movement DFS
+    and side floods against integer-overflow adjacency. Preserve alternate/flow failure counters;
+    zero remaining work is a valid exhausted allowance. Removed endpoints require no BFS and do not
+    consume search reservations. Canonical `ks-procgen-group-tactical-v1` identity includes scene,
+    nominated pairs/chokes, actual selected detail cells and redundancy policy/cap. Input order,
+    work counters and unused sufficient allowances do not change it. This is movement measurement
+    identity, not full content identity or a live collision/door/actor proof.
+  - Remaining after tactical ownership: integrate the complete entrance-aware branch into the main
+    pipeline only after its material/hull/access dependencies are proven. Derive live scene and
+    vision/projectile masks, define any full-host tactical ownership policy, and connect bounded
+    tactical furnishing proposals to hard access/pressure revalidation. Keep the existing allocation
+    guard until replacement gates pass. Joint furnishing/light search and request-wide fallback
+    composition remain pending; a later optional analyzer cannot authorize an invalid interior.
+  - Tactical ownership verification (2026-10-10): twelve new focused unit cases cover independent
+    corridor chokes/bridges and entrance/root side counts; outside host bypasses and cross-network
+    pair rejection; RequiredConnections joins across merged labels; exact shared graph/search/flow
+    allowances and atomic failures; capped redundancy lower bounds; shared detail truncation;
+    canonical replay/detached output; stale scenes and forged ownership labels; host/blocked query
+    cells and duplicate IDs; 1x3 networks, removed endpoints and zero-work fallbacks; detailed flood
+    accounting; and extreme-coordinate adjacency. The loaded 8x7 marker/office fixture continues
+    through actual theme/furniture/light proposals to local tactical analysis, exact-allowance replay
+    and foreign-pair rejection, retaining its source entity/snapshot checks. These remain declared
+    geometric proposals; the fixture does not materialize furniture or prove actor/light operation.
+    Three deliberate mutations fail at the expected assertions: resetting each network's graph
+    allowance accepts over-budget results; unchecked neighbor arithmetic invents a bridge between
+    opposite integer limits; ignoring side-flood limits accepts an exhausted detailed analysis.
+    Every source is restored in `finally` before final gates. All 352 focused Debug procedural
+    units and fifty-two loaded-server cases plus the real client SandboxTest (53 combined) pass,
+    with zero failures/skips. Sequential warnings-enabled Server Release and fresh Debug integration
+    `--no-incremental --no-restore` builds pass with 512/1102 permitted warnings respectively and
+    zero errors, followed by final no-build suites. Scoped tracked diff/new-file whitespace checks
+    pass. The four `_KsModule*` worktrees remain clean and match their existing `origin/main` refs
+    (no fetch performed in this batch). No event subscriptions, warning suppression or sandbox
+    whitelist edits are introduced. Tactical measurement identity is v1; owned interior/partition/
+    floor/floor selection remain v1, route/selection v2, capability v3 and full geometry v20.
+    R01-R06 remain in progress and R07 pending. Rough completion is 52% (40-55% uncertainty).
+    Main-pipeline composition, full-host tactical ownership, live materials/actors/doors/lights,
+    joint content/light search and publication still need their documented exit gates.
+  - [x] Add `KsProcgenGroupMaterialPlanner.Plan` as the bounded entrance-aware material prerequisite.
+    Independently revalidate the current request and selected partition scene, reconstruct floor
+    ownership, and check complete writable target-wall disposition. Reject missing/duplicate floor
+    ownership, foreign group metadata, missing protected routes, overlapping theme walls, incomplete
+    network coverage and door thresholds/approaches outside their permitted local component. Door
+    approaches must be opposite cardinal neighbors of a writable threshold; preserve their complete
+    geometry in immutable output. No exterior sealing or operational door behavior is inferred.
+  - [x] Resolve primary/accent tiles and each network's interior wall/door choices independently.
+    Extend the legacy material planner with optional `protectedPrimaryCells`; default callers retain
+    their original choices. Entrance-route and read-only floor cells cannot become accent candidates.
+    Requested accent counts remain rounded from total themed floor; exclusions are reported as soft
+    accent shortfalls. Omit all tile writes to preserved/constant floor. Require actual registered
+    tile definitions and entity prototypes, including wall families selected for rooms without
+    interior seams. A missing later door or prototype discards every earlier material choice.
+  - [x] Flood complete cardinal wall components and inspect incident floor-region and existing
+    themed-wall owners. Require identical interior-wall prototype IDs across every participating
+    family, including junctions; this is a conservative compatibility policy, not proof that two
+    different prototypes cannot work together. Reject conflicts atomically. Preserve authored seam
+    ownership, then assign the remaining wall cells to the first canonical incident region. An
+    unused wall island with no incident room uses the first canonical region's wall prototype and
+    increments `UnattachedWallCells`; it stays wall and gains no invented floor access. The exposed
+    `SeparationWalls` set includes every wall outside logical room seams, including these islands.
+  - [x] Share actual scene-validation and wall-flood expansions, allowing zero exhausted work and
+    at most one million expansions. Bound target geometry to 4096 cells, local networks to 64 and
+    themed rooms to 256; legacy material selection CPU work is bounded by these input caps rather
+    than included in the graph counter. Freeze accepted tiles/walls/doors/openings/separator masks.
+    `ks-procgen-group-material-v1` includes source partition/scene, full door approach geometry,
+    canonical prototype choices/owners, accent flags, separator classifications and fallback counts.
+    Input enumeration order and unused sufficient work allowances do not change identity.
+    `EngineMaterialsVerified` and `GasClosureVerified` remain false. Main-pipeline allocation guards
+    stay in force until hull/window/materialization/actor/pressure gates can preserve the contract.
+  - Owned material verification (2026-10-10): twelve new loaded-server cases exercise complete
+    separated-network coverage; primary route tiles and full-accent shortfalls; canonical ordering,
+    exact sufficient allowances and detached output; preserved floor and declared constant masks;
+    interior door choices/immutable approach geometry and foreign approach rejection; missing later
+    door material with atomic discard; incompatible separator families; shared scene/wall work
+    exhaustion and zero-work failure; missing wall disposition and stale host context; foreign theme
+    group labels/missing reservations; 1x3 passage and unattached wall-island fallback; and actual
+    prototype-reference rechecks for a room without interior walls. Two small valid palette/wall-pack
+    fixtures supply the accent and conflicting-family cases. A temporary missing entity reference is
+    restored in `finally`. The existing live marker/office test now runs owned material planning
+    alongside furnishing/light/tactical stages and retains source entity/snapshot identity checks.
+    Three deliberate mutations fail at their expected assertions: emitting read-only floor choices
+    rejects an otherwise valid preserved-floor plan; ignoring primary reservations turns both
+    protected entrance tiles into accents; and disabling shared-wall compatibility accepts conflicting
+    families. Each source is restored in `finally` before final gates. Warnings-enabled Server Release
+    passes with 512 permitted warnings and zero errors. Sequential fresh Debug integration
+    `--no-incremental --no-restore` passes with 1105 permitted warnings and zero errors. Final no-build
+    runs pass all 352 focused procedural units and sixty-four loaded-server cases plus the real client
+    SandboxTest (65 combined), zero failures/skips. These are focused gates, not the complete repository
+    test suite. Scoped tracked diff and new-file whitespace checks pass; no event subscriptions,
+    warning suppression or sandbox whitelist changes are introduced. Owned material identity is v1;
+    full geometry remains v20. R01-R06 remain in progress and R07 pending. Rough full-system completion
+    is 53% (40-55% uncertainty). Exterior hull/window choices, complete pipeline/fallback composition,
+    joint content/light search, real wall/door placement, actor/pressure/lighting checks and publication
+    still need their documented exit gates. Identical wall IDs here are a conservative planning policy,
+    not verified airtightness, collision behavior or a playable room.
+  - [x] Add `KsProcgenGroupHullBoundaryAnalyzer.Analyze` for the selected owned partition. Normalize
+    the current request, independently reconstruct entrance-scene components and group ownership,
+    compare scene identity, and require unique exact floor and complete writable target-wall
+    disposition. Caller-supplied component/group labels cannot substitute for fresh graph analysis.
+    Inventory every cardinal floor edge, including preserved/constant floor; distinguish target
+    wall proposals, claimable envelope, operational/sealed ports, known clean host openings,
+    movement-blocked context with unknown gas behavior, explicit void, preserved unknown geometry,
+    missing footprint shell and unknown interior host context. No diagonal edge is invented.
+  - [x] Reserve complete entrance threshold, inside and outside spans, known clean host and blocked
+    threshold context before proposing any envelope wall. Handle thresholds both inside and outside
+    target floor and every lane of a multi-cell port. Expose immutable exact claim/reservation masks;
+    no claim overlaps an entrance, host passage, preserved cell or explicit void. An operational or
+    sealed port remains unresolved for pressure: a traversable passage or movement blocker is not a
+    gas-seal witness. `Candidate` means complete geometric inventory, not complete or airtight hull.
+  - [x] Bound inventory inputs to 4096 target/floor/wall cells and 16384 envelope cells; share actual
+    independent scene work and one four-neighbor inventory expansion per floor cell, allowing zero
+    exhausted allowance and at most one million expansions. Fail atomically with empty edges/masks
+    and zero identity. Freeze edges and copied ownership. `ks-procgen-group-hull-boundary-v1` includes
+    fresh scene identity, geometry mode, canonical edges/kinds/ports/groups and envelope reservations.
+    `GasClosureVerified` and `EngineBoundaryVerified` remain false, including known blockers.
+  - [x] Add `KsProcgenGroupHullWallPlanner.Plan` as a candidate envelope-wall adapter. Revalidate
+    interior materials first, then owned boundary geometry under the remaining shared graph budget.
+    For each claimable envelope cell, require every incident themed floor region to nominate the
+    same registered `HullWall` entity prototype; reject missing or conflicting families atomically,
+    including one envelope hole touching otherwise separate entrance networks. Select one wall per
+    claimed cell and assign the first canonical incident region as owner. Retain validated interior
+    choices and the complete boundary inventory; a missing envelope produces no invented walls and
+    retains unresolved edges. `Planned` means this candidate wall list only. Windows, unknown shell
+    repair, actual collision, resting doors and gas closure are not certified by this result.
+  - [x] Charge one additional selection expansion per envelope claim and freeze accepted wall
+    choices. `ks-procgen-group-hull-walls-v1` binds interior material and boundary identities plus
+    canonical hull cells/owners/prototype IDs. Input enumeration order and unused sufficient work
+    allowances do not alter identity. Budget, source or later prototype incompatibility exposes no
+    earlier material/boundary/wall artifacts. `WindowGoalVerified`, `GasClosureVerified` and
+    `EngineMaterialsVerified` remain false. Keep main-pipeline entrance-aware allocation guards.
+  - [ ] Compose owned structure/window adapters with complete request-wide planning, inspect actual
+    hull/door/window gas and collision properties, and implement private materialization plus
+    final actor/atmosphere validation before this adapter can contribute to publication. Shared
+    identical hull IDs are a conservative planning rule, not proof of a sealed or playable room.
+  - Owned hull implementation evidence (2026-10-10): twelve new pure boundary cases cover complete
+    cardinal inventory, operational/sealed entrance reservations, known clean host and unknown
+    blocked context, preserved/constant floor, explicit void/preserved non-floor, missing footprint
+    versus unknown interior host, exact shared graph work and zero exhausted allowance, stale scene
+    and missing target-wall disposition, forged component labels, detached immutable output and
+    every lane of two-cell entrances with thresholds inside or outside target. Four new loaded-server
+    cases cover exact envelope wall/prototype coverage with canonical replay, shared selection work
+    exhaustion and missing later hull families, conflicting hull prototypes on a hole incident to
+    two separate networks, and no invented shell when envelope authorization is absent. A valid
+    alternate hull-family fixture has the same interior wall as the office but a different hull
+    wall, so the conflict case reaches hull compatibility rather than an earlier material gate.
+    The real painted-marker/office fixture now also audits four entrance edges and missing shell
+    authorization, retaining entity and source snapshot identity checks after all planning stages.
+    Three deliberate source mutations fail at their intended assertions: skipping read-only floor
+    gives five boundary edges instead of eight; disabling shared hull-family compatibility returns
+    `Planned` instead of `IncompatibleMaterials`; resetting envelope selection work returns `Planned`
+    instead of `BudgetExceeded`. Each source is restored in `finally` before final fresh builds.
+    Final warnings-enabled Server Release passes with 512 permitted warnings and zero errors;
+    sequential fresh Debug integration `--no-incremental --no-restore` passes with 1107 permitted
+    warnings and zero errors. Final no-build runs pass all 364 focused procedural units and
+    sixty-eight loaded-server cases plus the real client SandboxTest (69 combined), no failures or
+    skips. These are focused gates, not the full repository suite; unsuppressed CI warnings-as-errors
+    remains unverified. Scoped tracked diff and new-file whitespace checks pass. No warning
+    suppression, sandbox whitelist or event subscription changes were added. All four private
+    KS modules are clean and have zero commits ahead/behind their locally recorded `origin/main`;
+    this batch did not fetch remote refs. Owned hull boundary/wall identities are v1; full geometry
+    remains v20. R01-R06 remain in progress and R07 pending. Rough full-system completion is 54%
+    (40-55% uncertainty). Next rewrite work is owned exterior/window eligibility and complete
+    request-wide composition; joint assembly/light search, real materialization, actor/pressure/
+    lighting validation and publication still require their documented exit gates.
+  - [x] Add `KsProcgenGroupWindowBoundaryAnalyzer.Analyze` and typed directional
+    `KsProcgenExteriorWindowFact` snapshots. Independently revalidate the current owned hull before
+    classifying cells. Facts nominate one structural cell and a cardinal outward face with clean
+    domain floor immediately behind it; exterior probes cannot contradict target/envelope structure
+    or known clean/blocked host context. Reject duplicate cells, diagonal/invalid normals, entrances,
+    unknown/nonstructural positions and editable cells claimed as existing windows. Missing exterior
+    context stays explicitly unclassified; absence of a tile is never treated as proof of space.
+  - [x] Admit preserved/constant non-floor boundary cells as fixed walls/windows for counting only.
+    Derive write permission from normalized ownership, never a caller-supplied fixed flag. Require
+    declared existing windows to have supported exterior context. Cells incident to multiple floor
+    faces are conservatively corners and excluded. Known structural cells without facts expose
+    `UnclassifiedStructuralCells`; unknown/missing hull kinds also prevent `ExteriorScopeComplete`.
+    Complete scope means this declared geometric classification, not engine inspection or closure.
+    Accepted snapshots, classifications and masks are immutable. `EngineExteriorVerified` is false.
+  - [x] Add `KsProcgenGroupWindowPlanner.Plan`: revalidate complete owned material/hull choices and
+    independently revalidate window context under the remaining shared graph allowance, checking
+    that the two hull identities agree. Resolve registered window prototypes from incident selected
+    room wall families; missing/unsupported choices exclude editable cells from the denominator.
+    Conservatively require identical window IDs if incident families participate. Preserve corners,
+    required structure and author-disabled cells. Reuse stable legacy fraction rounding, fixed counts,
+    minimum/maximum constraints, hard tolerance and soft clamping. A hard count/fraction miss discards
+    every earlier artifact rather than returning partial structure or window writes.
+  - [x] Emit exact `RemainingWalls` and `Windows` structural candidates: each editable chosen wall
+    becomes one window, and no selected cell retains a wall choice. Fixed windows contribute achieved
+    counts only and are never written. `SourceHull` is diagnostic pre-substitution input, not an
+    additional materialization list. Keep entrance spans and read-only content protected. A valid
+    plan with no declared exterior context emits no windows; an unmet positive hard minimum fails.
+    `WindowGoalVerified`, `GasClosureVerified` and `EngineMaterialsVerified` stay false, even when
+    provisional numeric targets match. Room/segment scope extensions and live substitution remain open.
+  - [x] Bound face input to 16384 cells and all shared graph work to at most one million expansions;
+    include hull source work, one structural classification visit per cell and one prototype visit
+    per classified cell. Bounded fact validation/prototype lookups and deterministic counting/sorting
+    are not graph expansions. Zero exhausted allowances are valid budget failures. Freeze legacy
+    `KsProcgenWindowPlanner` selection/exclusion lists too, preserving its existing choice semantics.
+    `ks-procgen-group-window-boundary-v1` hashes hull identity and complete canonical directional fact
+    snapshots; `ks-procgen-group-windows-v1` binds owned wall/context identities, seed, exact goal,
+    supported/unavailable cells, all eligible prototype IDs, counts and final wall/window choices.
+    Fact/theme enumeration order and unused sufficient allowances do not affect semantic identity.
+  - Owned window implementation evidence (2026-10-10): ten new pure cases exercise directional
+    exterior eligibility, explicit missing context/entrance reservations, fixed preserved/constant
+    windows, malformed/duplicate/foreign/contradictory faces, known host probes, complete non-exterior
+    scope and canonical detached identity, shared classification work/zero allowance, missing shell
+    scope, and concave corner exclusion versus a face pointing through another floor lane. Seven
+    new loaded-server cases exercise exact wall-to-window substitution and replay, immutable selection
+    lists, missing later window families and atomic hard-count misses, absent exterior context,
+    required/disabled/unsupported cells, fixed preserved/constant windows with hard versus soft
+    fraction behavior, exact shared prototype allowance, duplicate facts and stale source rejection.
+    A valid wall-pack fixture supplies hull/interior walls but intentionally has no window choice.
+    The live marker/office fixture now also runs the owned window adapter with no exterior declaration,
+    checks that no windows or complete exterior scope are invented, and retains its final source
+    entity/snapshot identity assertions. This stage consumes caller-declared geometry/support facts;
+    it does not inspect actual station exposure, existing window entities or gas/collision behavior.
+    Four deliberate source mutations fail at their intended assertions: allowing an exterior probe
+    through known host floor returns `Candidate` instead of `InvalidInput`; making fixed walls
+    editable loses preserved/constant ownership; keeping selected wall choices adds nine duplicate
+    structural writes; and resetting prototype work returns `Planned` instead of `BudgetExceeded`.
+    Every source is restored in `finally` before fresh final gates. An initial host mutation that
+    broke nullable-flow compilation was corrected and rerun to produce the intended assertion
+    failure; a build failure alone is not treated as regression evidence.
+    Final warnings-enabled Server Release passes with 512 permitted warnings and zero errors.
+    Sequential fresh Debug integration `--no-incremental --no-restore` passes with 1107 permitted
+    warnings and zero errors. Final no-build suites pass all 374 focused procedural units and
+    seventy-five loaded-server cases plus the real client SandboxTest (76 combined), no failures
+    or skips. These are focused gates, not the full repository suite; unsuppressed CI
+    warnings-as-errors remains unverified. Scoped tracked diff and new-file whitespace checks pass.
+    No warning suppression, event subscription or sandbox whitelist changes were introduced.
+    All four private KS modules are clean and zero commits ahead/behind their locally recorded
+    `origin/main`; no remote fetch was performed. Owned window boundary/proposal identities are v1,
+    and existing full geometry identity stays v20 because legacy choice semantics are unchanged.
+    R01-R06 remain in progress and R07 pending. Rough full-system completion is 55% (40-60%
+    uncertainty). Next rewrite work is complete request-wide stage composition and fallback/report
+    ownership, followed by joint assembly/lighting search and actual materialization/actor/pressure/
+    light validation. Candidate prototype choices and matching counts do not complete those gates.
+  - [x] Add `KsProcgenOwnedInteriorPlanner.Plan` as an atomic composition adapter for procedural
+    footprints with normalized entrance contracts, including read-only constant reservations.
+    Select a complete floor configuration, partition its owned networks, assign their themes,
+    resolve exact materials/hull/window choices, furnish each room, select lights, and independently
+    audit the complete post-content entrance scene. Accept only a complete `Candidate`; on any
+    failure return no floor, partition, theme, structure, furnishing, lighting or access artifacts
+    and no semantic identity. Typed stage outcomes retain actual reported work and the failure
+    reason. These outcomes describe unpublished attempts; they are never partially applied maps.
+  - [x] Share remaining reported graph expansions across floor, partition, structure, relational
+    furnishing paths, lighting and the final independent audit. Share configuration/order/merge,
+    furnishing candidate and fixture allowances across their relevant stages and owned networks.
+    Expose `GraphWorkFullyMetered = false`: legacy furnishing clean-walk/placement and partition
+    seam CPU work remain unmetered, bounded by input/room/probe limits. Do not reinterpret the
+    reported graph counter as a complete CPU bound. Adapter limits include 4096 target cells,
+    64 size bands, 512 content-room cells, and the existing stage-specific caps. Zero reported
+    graph/configuration allowance is a bounded failure. An exhausted furnishing allowance stops
+    before any further room, even if that room might have needed no candidates.
+  - [x] Preserve work on furnishing search failures, including candidate probes, relational-path
+    expansions/truncation and mandatory backtracks. Add an optional named relational path allowance
+    while keeping the legacy default of 4096. Freeze accepted entity/omission/witness lists,
+    occupied footprints, ordered path values and owned theme support-pack IDs so a caller cannot
+    cast those stored snapshots back to mutable arrays/lists. Value comparison stays unchanged.
+  - [x] Reserve every read-only floor cell before furnishing and lighting, in addition to entrance
+    routes and interaction approaches. Use post-window `RemainingWalls` for backing-wall context;
+    remove substituted windows from local partition wall inputs as well. Preserve original owned
+    entrance reservations for the independent final ownership/access audit. No allocations, tile
+    writes, marker edits or publication occur in this adapter.
+  - [x] Apply all four request fallback permissions to actual merged partitions, size-count
+    deviations, sparse furnishings and sparse lights. Report allowed outcomes with their network,
+    room or size-goal ID. A denied outcome has its own incomplete journal entry and stable reason,
+    is not listed as an applied fallback, and discards every stage artifact. Earlier allowed
+    outcomes in a failed attempt remain diagnostic events, not published changes.
+  - [x] Add owned interior semantic identity v1, binding request/seed, floor selection, partition,
+    exact post-window structure, selected theme/packs/density, required pack minima, actual entities
+    and rotations/footprints/approaches, relational witnesses and ordered paths, light choices and
+    estimates, original size-band bounds and achieved counts, permissions and fallback outcomes.
+    Canonical input permutations and unused sufficient allowances preserve the identity. Work
+    counters are diagnostics. Existing full geometry identity stays v20; legacy selection semantics
+    and entrance-aware packing/tile-stage rejection guards remain intact.
+  - Verification (owned composition batch, 2026-10-10): two new focused unit cases prove copied,
+    immutable occupied footprints and ordered relational paths. Sixteen loaded coordinator cases
+    cover complete separated networks, canonical/exact-allowance replay, independent final-audit
+    exhaustion, shared fixture exhaustion, preserved and constant floor, allowed/denied sparse
+    furnishing, size-band identity and denied size deviations, a connected 1x3 passage, zero graph
+    and configuration allowances, unsupported hybrid/interior-fill requests, missing themes,
+    impossible hard window counts, positive exterior substitution, failed mandatory probe counts,
+    and required `Near` relations consuming the remaining request graph allowance. Extend the real
+    painted-marker fixture to compare complete composition to standalone stage results and retain
+    its unchanged marker snapshot/entity inventory. These establish geometric planning only.
+    Four deliberate mutations each produce the intended assertion failure: resetting the remaining
+    graph budget yields `Candidate` instead of `BudgetExceeded`; bypassing sparse permission yields
+    `Candidate` instead of `FallbackDisallowed`; erasing failed furnishing work reports zero probes
+    instead of one; and exposing a path array fails the immutable-snapshot assertion. Restore all
+    mutated sources in `finally` before final builds. No compiler error counts as mutation evidence.
+    Final warnings-enabled Server Release passes with 512 existing permitted warnings and zero
+    errors. Sequential fresh Debug integration `--no-incremental --no-restore` passes with 1107
+    existing permitted warnings and zero errors. Final no-build gates pass 376 focused procedural
+    units and ninety-one loaded-server cases plus the real client SandboxTest (92 combined), no
+    failures or skips. These are focused gates; the full repository suite and unsuppressed CI
+    warnings-as-errors remain unverified. Scoped tracked diff and new-file whitespace checks pass.
+    No warning suppression, event subscription or sandbox whitelist change was introduced. All
+    four private KS modules are clean and zero commits ahead/behind their locally recorded
+    `origin/main`; no remote fetch was performed. R01-R06 remain in progress and R07 pending.
+    Rough full-system completion is 57% (40-60% uncertainty). Next rewrite work is joint request
+    search and complete work metering, followed by actual layer-aware materialization and actor,
+    pressure, lighting and publication validation.
+  - [x] Extend `KsProcgenOwnedInteriorPlanner.Plan` to seeded complete-configuration retry through
+    all interior stages. A rejected floor/content proposal or denied fallback advances to the
+    next positive-weight declared configuration; an invalid input or work exhaustion is terminal.
+    Every attempt owns fresh floor, partition, material, furnishing and lighting proposals. No
+    placement artifact from a rejected configuration is reusable in another alternative. A final
+    miss preserves a specific reason and exposes only diagnostics, never an interior or hash.
+  - [x] Add immutable `KsProcgenOwnedConfigurationAttempt` records with configuration IDs, ordinal,
+    status/reason, actual work and attempt-local fallback traces. Tag every stage row with its
+    configuration ID. Share remaining reported expansions, order probes, partition merges,
+    furnishing probes and provisional fixture selections across discarded and accepted attempts;
+    failed attempts cannot refund work. Result counters and stage journals cover the whole search.
+    Successful result fallback events belong to the accepted attempt; discarded allowed outcomes
+    remain in that attempt's trace. A refusal before another configuration consumes no attempt.
+  - [x] Version owned interior identity to v2 for complete configuration search. Hash selected
+    geometry/content/contract outcomes; diagnostic attempts, spent work and unused sufficient
+    allowances are not output semantics. Reuse the unchanged owned floor selection v1 hash helper.
+    Existing full geometry remains v20 and legacy entrance-aware publication guards remain.
+  - Verification (complete configuration search, 2026-10-11): thirteen added loaded cases cover
+    a geometrically valid first floor rejected for mandatory contents, a rejected floor followed
+    by a viable configuration, disabled alternatives, denied size deviation followed by an
+    allowed candidate, exhausted alternatives, malformed exterior context, canonical/exact-budget
+    replay, shared configuration and order limits, late final-audit exhaustion after retry, and
+    discarded furnishings/lights consuming the same global allowances. The latter fixture fails
+    at sparse-light admission after selecting real prototype candidates, then accepts a joined
+    configuration without carrying forward its rejected fallback events or placements. Exact
+    allowances replay its accepted identity; exhausted furnishing or fixture work stops before
+    unfunded content. Attempt records are frozen and remain intact after source declarations clear.
+    Four deliberate mutations produce assertion failures: stopping on the first rejected attempt
+    yields `Rejected` instead of `Candidate`; refunding graph or order work yields `Candidate`
+    instead of `BudgetExceeded`; refunding fixtures selects four provisional lights against an
+    allowance of two. Restore every source in `finally`. The initial fixture mutation was already
+    caught by the changed early/late failure code; move the work-count assertion ahead of that code
+    check and rerun to verify the actual overconsumption directly. No compilation failure is used
+    as regression evidence. Final warnings-enabled Server Release passes with 512 existing
+    permitted warnings and zero errors. Sequential fresh Debug integration
+    `--no-incremental --no-restore` passes with 1107 existing permitted warnings and zero errors.
+    Final no-build suites pass all 376 focused procedural units and 104 loaded-server cases plus
+    the actual client SandboxTest (105 combined), no failures or skips. Scoped tracked diff and
+    new-file whitespace checks pass. No warning suppression, event subscription or sandbox
+    whitelist change was introduced. The full repository suite and unsuppressed CI
+    warnings-as-errors remain unverified. All four private KS modules are clean and zero commits
+    ahead/behind their locally recorded `origin/main`; no remote fetch was performed. R01-R06
+    remain in progress and R07 pending. Rough full-system completion is 58% (40-60% uncertainty).
+  - [x] Meter every ordinary clean-passage search used by the owned floor furnishing stage:
+    terminal connectivity, machine rotation/ranking and front-edge alternatives, chair approaches,
+    declared operating landings, complete trial validation and accepted walkway reservations.
+    Extend `KsProcgenRelationPathBudget` with opt-in clean-path accounting and separate relation/
+    clean expansion and truncation diagnostics. Share one total allowance across both kinds of
+    query and all placement/mandatory continuation branches. Count every dequeued node, including
+    a root that is already the goal. An invalid endpoint requires no graph work; a fully exhausted
+    queue is a proven miss rather than a truncation, including at the exact allowance.
+  - [x] Return explicit machine/chair `BudgetExceeded` results without earlier successful options
+    when a later query exhausts the allowance. Propagate that stop through floor assembly search
+    and mandatory continuations. Furnishing returns `FurnishingCleanPathBudget` with actual work
+    but no entities, protected walkways or relational witnesses. A failed optional/density search
+    cannot silently convert a clean-path budget stop into sparse admission. Preserve relation-only
+    standalone behavior by default; the owned coordinator explicitly opts in and journals the sum
+    of both expansion counters against its remaining request budget, including discarded attempts.
+    Keep owned interior identity v2, floor selection v1, full geometry v20 and publication guards.
+    Accounting diagnostics do not change a fully funded candidate's semantic identity.
+  - Verification (clean-passage accounting, 2026-10-11): eleven new focused unit cases cover
+    zero/exact/insufficient allowances, goal charging, repeated queries sharing relation work,
+    disconnected and diagonal cells, vault-only blockers, invalid endpoints, atomic chair/machine
+    exhaustion, discarded earlier facing options, canonical multi-root accounting and legacy
+    relation-only compatibility. Four added loaded cases cover office and required `Near` contents
+    with unchanged fully funded placements, exact accounting replay, zero allowance before a
+    placement probe, mandatory backtracking and a final walkway reservation one expansion short,
+    and owned request accounting/exhaustion without artifacts. Update the existing zero remaining
+    request allowance case: terminal connectivity now exhausts first, before required `Near` work,
+    with `FurnishingCleanPathBudget`; fully funded relation witnesses are still independently
+    checked. All eleven focused units and thirty-three furnishing/coordinator cases pass.
+    Three deliberate mutations fail at the intended assertions: disabling clean path charging
+    returns a path against zero/two expansions; removing the facing/chair budget returns `Ready`
+    instead of `BudgetExceeded`; disabling the coordinator opt-in reports zero clean-path work.
+    Restore each source's original bytes in `finally`. Compilation failures are not mutation
+    evidence. Final restored-source Server Release passes with 512 existing permitted warnings
+    and zero errors. Sequential fresh Debug integration `--no-incremental --no-restore` passes
+    with 1107 existing permitted warnings and zero errors. The focused Debug unit suite passes
+    all 387 cases; the final no-build integration suite passes 108 loaded-server cases plus the
+    real client SandboxTest (109 combined), without failures or skips. An initial overlapping
+    Debug build attempt hit a compiler output file lock; rerun builds sequentially, and use only
+    the successful restored-source final gates as evidence. Scoped diff/new-file whitespace checks
+    pass. No warning suppression, event subscription or sandbox whitelist change was introduced.
+    All four private KS modules are clean and zero commits ahead/behind their locally recorded
+    `origin/main`; no remote fetch was performed. The full repository suite and unsuppressed CI
+    warnings-as-errors remain unverified. R01-R06 remain in progress and R07 pending. Rough
+    full-system completion is 59% (40-60% uncertainty). Next rewrite work is partition seam and
+    non-graph placement accounting, alternate layout search within a configuration, diagnostics
+    serialization, then layer-aware materialization and engine validation before publication.
+  - [x] Add `KsProcgenPartitionWorkBudget` for connectivity floods and seam probes, shared across
+    all networks in one owned partition proposal. Charge zone input validation, remaining room
+    connectivity, original island discovery and final floor connectivity one dequeued cell at a
+    time. Charge ownership scans/reconstruction, each directed cardinal interface query, each
+    interface edge, door candidate and accepted-door approach check one seam probe at a time.
+    Retain work spent on rejected splits and repeated rebuilds; graph/seam counters describe
+    separate operations. Standalone callers opt in; metered inputs are capped at 256 zones and
+    65536 declared cells, while the owned adapter retains its tighter 4096-cell limit.
+  - [x] Return partition `BudgetExceeded` with the specific graph/seam reason and work deltas,
+    without floor, walls, doors or merged membership. Distinguish actual `MergeAttempts` from
+    rejected splits; merge-cap fallback still behaves as declared, while graph/probe exhaustion
+    cannot become an open fallback. Freeze per-network work diagnostics with owned artifacts.
+    Meter authored zone connectivity through the remaining request graph allowance as well.
+  - [x] Share `MaximumPartitionSeamProbes` across complete configuration retries. Preserve spent
+    work in immutable attempt/stage journals and root results. Exact sufficient allowances retain
+    semantic identity; unused allowances and work counters are diagnostics. Reject invalid seam
+    limits before work. Keep `GraphWorkFullyMetered` false pending remaining accounting.
+  - [x] Reject partition `BudgetExceeded` in downstream theme, material, furnishing and abstract
+    port-network planners, including forged owned network artifacts. Extend the legacy geometry
+    pipeline's status mapping for the new failure without enabling entrance-aware legacy packing
+    or publication. Preserve existing hashes and successful legacy partition behavior.
+  - Verification (partition accounting, 2026-10-11): thirteen added unit cases establish explicit
+    tiny-passage costs (four connectivity passes, six seam probes per cell), independent zero/
+    exact/insufficient graph and seam limits, monotonic work across two planner calls, failed split
+    rebuild work, actual merge counts versus rejected split diagnostics, unchanged legacy doors/
+    walls/membership, invalid-input work and exact-budget owned network replay. Authored-zone
+    validation and the seam solver share the graph allowance; a later failure exposes no earlier
+    network artifact. Five added loaded cases cover rejected complete configurations retaining
+    seam costs, exact request replay, graph exhaustion inside seam validation, invalid seam limits
+    before any attempt, and forged exhausted partitions rejected by theme, material, furnishing
+    and owned material adapters. Initial focused gates pass 21 partition units and 35 coordinator
+    cases. An initial test compilation needed explicit `KsProcgenZone` construction for the single
+    `params` argument; fix it before recording passing gates.
+    Four deliberate mutations produce assertion failures: allowing one extra graph expansion
+    reports one/twelve cells against zero/eleven allowances; skipping directed boundary probe
+    accounting reports six probes where seventeen/eighteen are required; refunding seam work
+    across configurations consumes 324 probes against an allowance of 323; bypassing furnishing's
+    exhausted-partition guard returns `Proposed` instead of `InvalidInput`. Restore original source
+    bytes in `finally` for every mutation. No compilation failure is used as mutation evidence.
+  - [x] Complete restored-source Release/fresh Debug builds, full focused procedural regressions
+    and the actual client sandbox gate. Final Server Release passes with 265 existing permitted
+    warnings and zero errors (the initial Server Release emitted 512; the final incremental build
+    rebuilt fewer projects). Sequential fresh Debug integration `--no-incremental --no-restore`
+    passes with 1107 existing permitted warnings and zero errors. All 400 focused procedural
+    Debug unit cases pass. Final no-build integration passes 113 loaded-server cases and the real
+    client SandboxTest (114 combined), with no failures or skips. Scoped tracked diff and new-file
+    whitespace checks pass. No warning suppression, event subscription or sandbox whitelist
+    change was introduced. All four private KS modules are clean and zero commits ahead/behind
+    their locally recorded `origin/main`; no remote fetch was performed. The full repository suite
+    and unsuppressed CI warnings-as-errors remain unverified. R01-R06 remain in progress and R07
+    pending. Rough full-system completion is 60% (40-65% uncertainty). Next rewrite work is full
+    normalization/allocation/sorting/content accounting, alternate layout search within one
+    configuration and serialized replay diagnostics, followed by layer-aware materialization and
+    actual actor, support, lighting, pressure and publication validation.
+  - [x] Add bounded subdivision retries inside each entrance configuration (2026-10-11).
+    `KsProcgenOwnedPlanBudgets.AlternativeMaximumRoomCells` supplies up to 63 distinct ordered
+    sizes after `PreferredMaximumRoomCells`. Each size must be between `MinimumRoomCells` and
+    4096, and cannot duplicate another size or the preferred size. Empty alternatives retain the
+    prior one-subdivision behavior. Marker/profile authoring now supplies these preferences through
+    `roomSubdivision`, as detailed below. These sizes are preferences passed to the existing automatic zoning
+    and seam solver, not guaranteed final room areas or exhaustive partition enumeration.
+  - [x] Separate configuration and layout allowances. `MaximumConfigurationProbes` counts
+    entrance configurations actually entered; new `MaximumLayoutProbes` (default 64, range 0-64)
+    counts complete pipeline attempts across every configuration and subdivision. A cap stops
+    with `OwnedLayoutProbeBudget`, diagnostics only, and no reusable artifacts. Invalid limits,
+    null/oversized/duplicate/out-of-range subdivision lists fail before an attempt. A zero layout
+    allowance consumes no configuration probe. Disabled entrance configurations consume neither.
+  - [x] On a downstream rejection or denied fallback, recompute a fresh complete proposal with
+    the next subdivision preference. Retain spent graph expansions, order/seam/merge probes,
+    furnishing probes and provisional light selections in the request-wide ledgers. Input errors
+    and budget exhaustion remain terminal. Floor rejection advances directly to the next entrance
+    configuration because subdivision cannot repair it. The first complete permitted candidate
+    wins; allowed degraded candidates are not superseded by later alternatives.
+  - [x] Journal the selected subdivision preference and global layout ordinal per stage/attempt,
+    and expose separate `ConfigurationProbes` and `LayoutProbes`. Failed attempts expose only
+    immutable diagnostics; final artifacts and fallbacks come solely from the accepted layout.
+    Preserve the existing accepted-candidate semantic hash: unused preferences, failed attempts
+    and work allowances do not change identical final geometry/content. A direct accepted layout
+    and the same layout reached through rejection must have identical semantic identity.
+  - [x] Complete restored-source verification for subdivision retries: loaded refusal of a
+    merged small-room subdivision followed by acceptance of a larger subdivision in the same
+    configuration, shared seam costs and exact-budget replay, layout/configuration cap separation,
+    floor-failure skipping, invalid profile admission, and zero-work cap handling. Prove retry and
+    budget guards with deliberate mutations, then run Release, fresh Debug, focused procedural
+    regressions and the actual client SandboxTest before recording final counts.
+    Fourteen new loaded cases pass: rejected small-room merge fallback followed by an accepted
+    larger layout under one configuration probe; ordered 4/8/64 preferences with unused 128;
+    exact graph/seam/order/layout replay; retained seam costs and atomic one-probe-short failure;
+    independent layout/configuration caps across configurations; redundant subdivision skips on
+    floor failure; permitted merged fallback stopping before alternatives; zero-layout admission;
+    invalid negative/oversized caps and null/duplicate/preferred-size/undersized/oversized/too-many
+    profile lists. Direct and retried accepted layouts have identical semantic/partition hashes.
+    The focused coordinator suite passes all 49 cases. Two deliberate restored-byte mutations
+    produce assertion failures: treating denied fallback as terminal returns `FallbackDisallowed`
+    where `Candidate` is required; permitting one attempt beyond the layout cap returns `Candidate`
+    where `BudgetExceeded` is required for both zero and one-attempt limits. Both mutation builds
+    succeed; no compiler failure is counted as test evidence. Restore source in `finally` and
+    rebuild before recording regression gates.
+  - [x] Finish subdivision-search gates (2026-10-11). Server Release passes with 512 existing
+    permitted warnings and zero errors. Restored-source fresh Debug integration build with
+    `--no-incremental --no-restore` passes with 1107 existing permitted warnings and zero errors.
+    All 400 focused procedural unit cases pass. Final no-build integration passes 127 loaded
+    cases plus the actual client SandboxTest (128 combined), with no failures or skips. Scoped
+    whitespace checks pass. No event subscription, warning suppression or sandbox whitelist
+    changes were introduced. All four KS modules remain clean and zero commits ahead/behind
+    locally recorded `origin/main`; no remote fetch was performed. R01-R06 remain in progress,
+    R07 pending. Rough full-system completion is 61% (40-65% uncertainty). The complete repository
+    suite and unsuppressed CI warning gates remain unverified. Next rewrite work is marker/profile
+    transport and automatic size-goal subdivision strategies, alternative route/content search,
+    full work accounting and replay serialization, then staged engine validation/publication.
+  - [x] Serialize opt-in `KsProcgenRoomSubdivisionSpec` under area profile `roomSubdivision`:
+    `minimumRoomCells` (default 4), `preferredMaximumRoomCells` (default 24) and ordered
+    `alternativeMaximumRoomCells` (default empty). Reuse one bounded validity predicate with the
+    owned request planner, so authoring and planning reject the same size/list errors. Reject
+    declared subdivisions for unsupported hybrid/interior-fill profiles explicitly. Profile omission
+    retains caller preferences, including legacy profiles and tiny passage behavior.
+  - [x] Validate live profile definitions and snapshot an immutable subdivision value. Copy again
+    when normalizing caller-built profile values, so source lists and live prototype edits cannot
+    mutate prior blobs. Hash subdivision presence, minimum, preferred and ordered alternative sizes
+    under area snapshot v3. Preserve geometry-derived area IDs v1 and accepted interior hashes v2.
+    Profile preference/order changes invalidate input snapshots without renaming the painted area.
+  - [x] Add `blob.CreateOwnedBudgets` and an explicit owned planner blob overload. Authored size
+    values override only the three room-sizing preferences; every graph/layout/configuration/order/
+    merge/seam/furnishing/lighting/content cap remains caller controlled. The overload uses the
+    profile theme and a copied request; forged invalid subdivision values return `InvalidInput`
+    before work. Planning and snapshotting allocate no engine interior and preserve markers.
+    Provide `KsProcgenOfficeSubdivisionArea` as a loaded YAML example. Keep explicit request
+    construction available for custom size goals and fallback permissions; those declarations
+    are not yet transported by area profiles.
+  - [x] Finish subdivision-authoring verification: detached size/order/hash tests, caller-cap
+    preservation and invalid serialized/value profile tests; loaded YAML/paint-to-retry coverage,
+    live profile edit isolation and explicit blob planning; deliberate copy/hash/transport mutations;
+    restored Release, fresh Debug, focused procedural tests and the actual client SandboxTest.
+    Thirteen added unit cases pass: immutable ordered snapshot sizes, order/minimum/preferred/
+    presence hash changes with stable blob IDs, unchanged caller work caps, legacy profile
+    omission, detached serialized definitions, eight invalid definition/value variants, and two
+    unsupported profile modes. Two new loaded cases deserialize the YAML example, paint a grid,
+    feed 4/8/64 sizes into complete retries with a required 30-cell room, compare explicit blob/
+    request planning identity, retain old snapshots across live prototype edits, reject malformed
+    live profiles and forged null-alternative blobs, and prove unchanged map entity sets. Initial
+    focused gates pass 13 new units and 64 combined area/coordinator loaded cases.
+    Three deliberate mutations compile and produce assertion failures: retaining the caller's
+    mutable list changes a prior snapshot's first size from 8 to 64; sorting alternative sizes only
+    while hashing makes two different orders share one snapshot hash; dropping the live profile
+    subdivision during transport makes the end-to-end planner use caller size 128 instead of
+    authored size 4. Restore each source file's exact original bytes in `finally`. The first fresh
+    Debug build exposes two new literal prototype-ID analyzer warnings in the added tests; use
+    local ID variables to resolve them, then repeat the fresh build without suppressing warnings.
+  - [x] Finish restored subdivision-authoring gates (2026-10-11). Server Release passes with
+    512 existing permitted warnings and zero errors. Final fresh Debug integration build with
+    `--no-incremental --no-restore` passes with 1107 existing permitted warnings and zero errors.
+    All 413 focused procedural unit cases pass. Final no-build integration passes 129 loaded
+    cases and the actual client SandboxTest (130 combined), with no failures or skips. Scoped
+    tracked/new-file whitespace checks pass. No event subscriptions, warning suppressions,
+    dependency changes or sandbox whitelist edits were introduced. All four KS modules remain
+    clean and zero commits ahead/behind locally recorded `origin/main`; no remote fetch was
+    performed. R01-R06 remain in progress and R07 pending. Rough full-system completion is 62%
+    (40-65% uncertainty). Full repository tests and unsuppressed CI warning gates remain unverified.
+    Next rewrite work is authored goals/fallback transport, automatic size-goal subdivision,
+    alternate route/content search, complete work accounting and replay serialization, followed
+    by staged engine validation/publication.
+  - [x] Add area-profile `generationGoals` authoring for room-size bands, four existing fallback
+    permissions and window targets. Share goal validation with the geometry request normalizer
+    without constructing dummy geometry. Preserve existing request reason codes and supported
+    ranges; cap authored size bands at 64 with bounded unique IDs. Reject null nested definitions,
+    invalid window fields/counts, overlapping bands and excessive total room counts atomically.
+  - [x] Snapshot immutable size/policy/window values, canonicalize goal order by ID, and reconstruct
+    fresh request objects on each blob request. Independently freeze caller-built profile lists.
+    Hash every declared field under area snapshot v4; preserve blob IDs v1 and accepted owned
+    interior hash v2. Validate forged malformed goal values before explicit blob planning. Omitted
+    goals preserve default request behavior. Keep all caller work caps and engine/publication
+    permissions outside authored goal data.
+  - [x] Add `KsProcgenWholeOfficeArea` YAML example combining subdivision preferences, a required
+    final 30-cell room and denied merge/size fallbacks. The explicit blob planner can retry complete
+    layouts from these declarations without manual request edits. Live policy changes affect future
+    snapshots only; minimum window counts can reject complete candidates at the structure stage.
+  - [x] Finish goal-authoring verification: canonical replay, deep request/profile detachment, all
+    fallback/window/size hash fields, invalid authored/value admission, legacy defaults, loaded
+    paint-to-goal retries and window refusal. Prove critical transport/hash guards with deliberate
+    mutations and restore source bytes; run Release, fresh Debug, focused procedural regressions
+    and the actual client sandbox before recording final counts.
+    Twenty-two added unit cases cover immutable authored/value lists, fresh request objects,
+    canonical goal permutations, every size/policy/window hash field, independent permission
+    transport, absent/default blocks, omitted versus explicit zero window maximums, thirteen
+    invalid authored variants and forged invalid value profiles. Existing request geometry cases
+    verify the extracted validator's behavior. Initial focused units pass 35 cases (21 new goals
+    plus 14 existing geometry cases); the final full run also includes the added nullable maximum
+    case. Two new loaded cases exercise the YAML profile and painted 30-cell blob, automatic
+    4/8/64 retries without request edits, required final size counts, permitted fallback stopping
+    at the first candidate after live edits, old-snapshot replay, impossible minimum-window
+    refusal at the structure stage, malformed live/forged goals and unchanged map entity sets.
+    Initial area/coordinator loaded gates pass 66 cases.
+    Four deliberate mutations compile and fail assertions: cross-wiring sparse lighting to the
+    furnishing permission breaks the two independently toggled permissions; dropping minimum
+    window counts from metadata hashes makes changed goals collide; dropping nullable maximum
+    presence makes unlimited and explicit zero collide; dropping generation goals during live
+    snapshot transport accepts size 4 alone where the declared 4/8/64 retry is required. Every
+    mutation restores exact source bytes in `finally`; no compiler failure is used as evidence.
+  - [x] Complete restored goal-authoring gates (2026-10-11). Server Release passes with 512
+    existing permitted warnings and zero errors. Final fresh Debug integration build with
+    `--no-incremental --no-restore` passes with 1107 existing permitted warnings and zero errors.
+    All 435 focused procedural unit cases pass. Final no-build integration passes 131 loaded
+    cases and the real client SandboxTest (132 combined), with no failures or skips. Scoped
+    tracked/new-file whitespace checks pass. No event subscriptions, warning suppressions,
+    dependency changes or sandbox whitelist edits were introduced. All four KS modules remain
+    clean and zero commits ahead/behind locally recorded `origin/main`; no remote fetch was
+    performed. R01-R06 remain in progress and R07 pending. Rough full-system completion is 63%
+    (40-65% uncertainty). Full repository tests and unsuppressed CI warning gates remain unverified.
+    Next rewrite work is automatic size-goal-driven subdivision, joint route/content alternatives,
+    complete work accounting and replay serialization, followed by staged engine validation and
+    publication. Profile authoring now transports the goals and fallback permissions needed to
+    exercise that search directly.
+  - [x] Add opt-in simultaneous size-goal subdivision (2026-10-11). Extend serialized
+    `KsProcgenRoomSubdivisionSpec`, immutable profile snapshots, `CreateOwnedBudgets` and request
+    budgets with `UseSizeGoals`. Hash the authored flag under area snapshot v5, preserving blob
+    IDs v1 and accepted interior identity v2. The authored preference overrides the caller's
+    preference while all caller work caps survive. Default false preserves earlier scalar retries.
+  - [x] Propose bounded rectangular strips from final floor-size bands, accounting for one
+    tile-thick seam minus the doorway for every room after the first. Try X/Y fitting, inclusive
+    width intervals, canonical spare-column distribution and at most 256 requested rooms. Require
+    two columns for door approaches and complete rectangle coverage. Pad zone indices so wall
+    ownership remains spatially consistent beyond ten rooms. Irregular/tiny/multiple-network
+    shapes and infeasible quotas retain ordinary zoning. Explicit zones bypass this strategy.
+  - [x] Integrate goal subdivision as the first complete candidate before scalar alternatives.
+    Count configurations once even when the goal and first scalar attempts share a size ceiling.
+    Retain shared nonrefundable work and independent seam/ownership/content/access validation.
+    Charge inspected witness cells even on fitting failure. Add attempt/stage strategy diagnostics
+    and a partition flag distinguishing requested goals from actual fitted zones. Protected or
+    constant floor cannot become a seam; a denied candidate exposes no reusable placement artifacts.
+  - [x] Add `KsProcgenMixedOfficeArea` as a loaded authoring example. A painted 9x4 blob with an
+    entrance produces final 16/9/5 rooms and two cardinal doors, then passes theme, structure,
+    furniture, lighting and independent abstract access checks without request edits or map writes.
+    A protected whole-floor fixture refuses goal seams and retries the scalar strategy without
+    refunding work; its accepted semantic identity matches direct scalar planning.
+  - [x] Add size-goal regressions: horizontal/vertical rectangles, stable input permutations,
+    exact graph/seam limits, atomic shortfall, inclusive band expansion, twelve-room wall ownership,
+    quotas of 257/4096, malformed fitting, irregular outlines, explicit zones and separate network
+    isolation. Profile tests cover immutable flags, snapshot hash changes and authored precedence.
+    Focused units pass 20 cases initially; the extended full procedural unit run passes 446 cases.
+    Two added loaded cases pass, including exact complete-pipeline budget replay and retry diagnostics.
+  - [x] Prove size-goal regressions with four deliberate, compiling source mutations. Removing
+    wall loss makes both rectangle orientations stop using the goal strategy. Removing ordinal
+    padding makes the twelve-room fixture produce a six-cell room where nine is required.
+    Dropping the strategy bit makes enabled/disabled authored profiles collide in snapshot hash.
+    Dropping the authored flag in `CreateOwnedBudgets` makes the painted profile return
+    `FallbackDisallowed` instead of `Candidate`. All four runs fail assertions, not compilation;
+    restore exact original source bytes in `finally` after each mutation. Diagnostic logs are
+    `.ks_procgen_sizegoals_mutation_{WallLoss,OrdinalOwnership,StrategyHash,StrategyTransport}.log`.
+  - [x] Complete restored size-goal gates (2026-10-11). Server Release passes with 512 existing
+    permitted warnings and zero errors. Fresh Debug integration build with `--no-incremental`
+    passes with 1107 existing permitted warnings and zero errors. Rebuilt procedural units pass
+    all 446 cases; final no-build integration passes 133 loaded cases and the actual real client
+    SandboxTest (134 combined), with no failures or skips. No new warnings in the changed size-goal
+    sources, warning suppressions, subscriptions, dependencies or sandbox whitelist changes.
+    Tracked/new-file whitespace checks pass. All four KS modules remain clean and zero commits
+    ahead/behind locally recorded `origin/main`; no remote fetch was performed. Exact production
+    bytes are restored after all four mutation runs and no test/build processes remain running.
+    Logs: `.ks_procgen_sizegoals_release.log`, `.ks_procgen_sizegoals_final_debug.log`,
+    `.ks_procgen_sizegoals_final_units.log`, `.ks_procgen_sizegoals_final_integration.log`.
+    R01-R06 remain in progress and R07 pending. Rough whole-system completion is 64% (40-66%
+    uncertainty). Full repository tests and unsuppressed CI warning gates remain unverified.
+    Next rewrite tasks: arbitrary-shape/per-network size-goal strategies, joint route/content
+    alternatives, complete work accounting and replay serialization, then real staged validation
+    and publication. The initial rectangular strategy is complete within its documented scope.
+  - [x] Extend size-goal subdivision to retain both feasible X/Y layouts (2026-10-11). Keep
+    canonical orientation order and deduplicate one-room layouts. Run the ordinary seam solver
+    on each complete candidate until an unmerged `Proposed` result is found; protected floor can
+    redirect the selected seam to the other orientation. Retain the first matching fill/partition
+    fallback only if neither candidate succeeds. No cross-orientation placement artifacts survive.
+  - [x] Share graph/seam allowances and actual remaining merge attempts across orientations.
+    Budget exhaustion immediately rejects all placement artifacts, even after a reusable-looking
+    earlier fallback; discarded work is never refunded. Final scene audit runs on selected geometry.
+    Add immutable `KsProcgenSizeGoalPartitionAttempt` diagnostics with axis, status, reason and work
+    totals. Direct group failures retain diagnostics only. Whole-pipeline stages retain aggregate
+    work; complete diagnostic serialization remains pending. Keep existing semantic hash domains.
+  - [x] Add orientation regressions: protected full-column square, zero/one merge allowances,
+    successful other-axis door approaches, exact budgets and input permutations, exhaustion during
+    the second seam/connectivity solve, deterministic first fallback when both axes are blocked,
+    immutable attempt reports and duplicate single-room elimination. Fifteen focused geometry cases
+    pass before adding the immutable-list assertion; final runs verify that assertion too.
+  - [x] Verify loaded strict-goal orientation retry through the complete owned pipeline with
+    `KsProcgenEmptyOfficeThemeFixture`. Protected initial floor blocks the X seam while the Y door
+    remains writable; final 18/13 room counts pass with merged/size fallback disallowed. Discarded
+    merging remains charged, a complete attempt uses one layout slot, exact work-cap replay retains
+    accepted semantic identity, second-orientation seam exhaustion exposes no root artifacts, and
+    engine entities remain unchanged. This fixture explicitly requests no optional content/lights:
+    ordinary office contents can disconnect an unused clean pocket, which the access audit rejects.
+    No existing constant-floor, door-write or clean-access validation was relaxed.
+  - [x] Prove orientation regressions with four deliberate compiling source mutations. Stopping
+    at the first fallback produces 18-cell proposals where the final smaller room must have 13.
+    Omitting discarded seam work reports only 227 probes instead of 455/635 for the zero/one merge
+    fixtures. Reusing a fallback after seam exhaustion returns `Candidate` where `BudgetExceeded`
+    is required. Returning mutable diagnostics allows `Clear()` where `NotSupportedException` is
+    required. Every mutant fails assertions; exact original source bytes are restored in `finally`.
+    The graph-exhaustion variant still rejects under the fallback-reuse mutant because its final
+    audit has no remaining graph allowance; the seam-exhaustion variant specifically proves the
+    erroneous reuse. Logs: `.ks_procgen_axis_mutation_{StopAtFallback,DiscardedSeamWork,
+    ReuseFallbackAtExhaustion,MutableDiagnostics}.log`. No compiler failure is counted as evidence.
+  - [x] Complete restored orientation gates (2026-10-11). Server Release passes with 512
+    existing permitted warnings and zero errors. Fresh `--no-incremental` Debug integration
+    build passes with 1107 existing permitted warnings and zero errors. Rebuilt procedural
+    units pass all 452 cases, including the immutable-list assertion. Final no-build integration
+    passes 134 loaded cases and the actual client SandboxTest (135 combined), with no failures
+    or skips. No new warnings in the changed orientation sources, warning suppressions, event
+    subscriptions, dependencies or sandbox whitelist edits. Tracked/new-file whitespace checks
+    pass. All four KS modules remain clean and zero commits ahead/behind locally recorded
+    `origin/main`; no remote fetch was performed. Exact production bytes are restored after all
+    four mutations; no build/test processes remain running. Logs: `.ks_procgen_axis_release.log`,
+    `.ks_procgen_axis_final_debug.log`, `.ks_procgen_axis_final_units.log`,
+    `.ks_procgen_axis_final_integration.log`. R01-R06 remain in progress and R07 pending. Rough
+    full-system completion remains 64% (40-66% uncertainty). Full repository tests and unsuppressed
+    CI warning gates remain unverified. Next rewrite work: arbitrary-shape/per-network size goals,
+    alternate width distributions and joint route/content search, complete work accounting/replay,
+    then real staged validation and publication. Alternate orientation solving is complete within
+    its documented rectangular, single-network scope.
+  - [ ] Finish joint request-wide search over alternate route trees, room subdivisions and
+    prefab/assembly/light choices within a configuration. The coordinator currently accepts the
+    first complete permitted candidate; it does not globally optimize degradation or retry alternate
+    route trees, arbitrary partition boundaries or content choices after a complete failure. Ordered
+    subdivision-size retries now cover a bounded subset of interior layouts within a configuration.
+    Extend the initial rectangular size-goal strategy to arbitrary shapes and per-network quotas, as well
+    as prefab/hybrid and interior-fill modes,
+    meter remaining normalization and non-graph allocation/sorting/placement/compilation work,
+    reserve fallback passes, serialize replay diagnostics, and connect real staged materialization/
+    publication only after the R06 validation gates pass.
 - [ ] **R06 - Materialize and verify relations and connection configurations.** Extend the planned
   T12 entity stage beyond `KsProcgenTileStageSystem`'s current tile-only support boundary using
   engine-validated surface/container adapters and dependency order. Retain its rejection of unsupported
@@ -3543,8 +4768,11 @@ the responsible stage exists. Never ignore them and run the old behavior success
   - Implemented: exact cardinal boundary inventory for generated floor, distinguishing writable
     envelope cells, explicit void, preserved/unknown neighbors, missing footprint structure, and
     unknown host context. A 1x3 footprint without an envelope reports all eight unresolved sides.
-  - Remaining: complete floor ownership, shell material/port reservations, real gas-blocking
-    inspection, resting door states, and engine atmosphere validation before claiming spaceproofing.
+  - Implemented: R05's independently revalidated owned inventory includes preserved/constant floor,
+    reserves complete entrance/host spans, and selects compatible registered hull-wall prototypes
+    only for explicit writable envelope claims. Missing/unknown shell remains unresolved.
+  - Remaining: complete pipeline composition, window substitution, real gas-blocking inspection,
+    resting door states, and engine atmosphere validation before claiming spaceproofing.
   - Implemented: a separate static gas-graph checker for explicit cardinal edge states in one
     nominated resting door state. Missing edges remain unknown; open edges to declared vacuum
     fail, blocked edges stop reach, and only complete known snapshots can be preliminarily closed.
@@ -3559,8 +4787,12 @@ the responsible stage exists. Never ignore them and run the old behavior success
     caller-inspected boundary facts inside the requested target/envelope, the pipeline exposes
     and hashes a provisional window plan and rejects a missed hard goal. It flags hard window
     goals as unverified until operational placement and airtightness checks exist.
-  - Remaining: T10 boundary classification, scope-aware constraints, real airtight window
-    substitution, and post-placement movement/gas checks. Selection is not closure validation.
+  - Implemented: R05's owned adapter validates explicit directional exterior facts against current
+    hull geometry, tracks missing context, counts preserved/constant windows without writes,
+    resolves theme window prototypes and replaces exact editable wall choices under shared budgets.
+  - Remaining: actual exterior/prototype inspection, complete pipeline and scope-aware constraints,
+    live airtight window substitution, and post-placement movement/gas checks. Selection is not
+    closure validation.
 - [ ] **T12 - Implement safe prefab materialization and staging lifecycle.** Depends on T03-T05/T10.
   Prove supported map copying preserves authored data and entity references; isolate startup side
   effects; support cleanup/cancellation and private validation. Include T05b constant-region copying.
@@ -3638,6 +4870,9 @@ the responsible stage exists. Never ignore them and run the old behavior success
     internally cell-disjoint routes; and reachable protected firing-position candidates with a
     clear sampled shot to a distinct target. Results
     label engine behavior unverified and work-budget failures never return partial tactical outcomes.
+    R05 now supplies independently revalidated local-network ownership for post-interior movement,
+    choke-removal and redundancy queries, shared graph/search/detail/flow budgets and immutable
+    measurement identity. Host paths cannot be used as tactical detours between local groups.
   - Next: derive masks from actual prototype/engine properties, compare with live vision/projectile
     behavior, add narrow-clearance runs and cut witnesses, and exercise A25 engine fixtures.
 - [ ] **T18 - Add bounded tactical furnishing preferences.** Depends on T17. Propose and score cover

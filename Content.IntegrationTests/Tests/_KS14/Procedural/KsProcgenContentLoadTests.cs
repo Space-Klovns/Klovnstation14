@@ -1457,6 +1457,12 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 Assert.That(SEntMan.GetComponent<TransformComponent>(diskUid).Coordinates, Is.EqualTo(beforeCoordinates));
                 Assert.That(itemSlotsSystem.TryGetSlot(shuttleUid, "disk_slot", out var slot), Is.True);
                 Assert.That(slot!.HasItem, Is.False);
+                Assert.That(containerSystem.TryGetContainer(shuttleUid, "disk_slot", out var detachedItemSlot), Is.True);
+                detachedItemSlot.PvsDetachedEntities.Add(SEntMan.GetNetEntity(otherDiskUid));
+                Assert.That(preflightSystem.Check(diskUid, shuttleUid, "disk_slot").Reason,
+                    Is.EqualTo("ContainerSlotOccupied"));
+                Assert.That(slot.HasItem, Is.False, "Detached occupancy must not be mistaken for an empty slot.");
+                detachedItemSlot.PvsDetachedEntities.Clear();
                 Assert.That(preflightSystem.Check(wrongItemUid, shuttleUid, "disk_slot").Reason,
                     Is.EqualTo("ItemSlotInsertionDenied"));
 
@@ -1479,6 +1485,14 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 Assert.That(genericResult.UsesItemSlot, Is.False);
                 Assert.That(genericResult.DeclaredCapacity, Is.Null);
                 Assert.That(generic.ContainedEntities, Is.Empty);
+                var detachedSlot = containerSystem.EnsureContainer<ContainerSlot>(hostUid, "DetachedSlot", out _);
+                detachedSlot.PvsDetachedEntities.Add(SEntMan.GetNetEntity(otherDiskUid));
+                Assert.That(preflightSystem.Check(subjectUid, hostUid, "DetachedSlot").Reason,
+                    Is.EqualTo("ContainerSlotOccupied"));
+                Assert.That(detachedSlot.ContainedEntities, Is.Empty);
+                detachedSlot.PvsDetachedEntities.Clear();
+                Assert.That(preflightSystem.Check(subjectUid, hostUid, "DetachedSlot").Status,
+                    Is.EqualTo(KsProcgenContainerPreflightStatus.Eligible));
                 Assert.That(preflightSystem.Check(hostUid, hostUid, "General").Reason,
                     Is.EqualTo("ContainerSelfInsertion"));
                 Assert.That(preflightSystem.Check(subjectUid, hostUid, "Missing").Reason,

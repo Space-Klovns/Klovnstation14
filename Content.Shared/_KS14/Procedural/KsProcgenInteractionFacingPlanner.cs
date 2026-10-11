@@ -8,6 +8,7 @@ public enum KsProcgenInteractionStatus : byte
     Ready,
     NoCleanApproach,
     InvalidInput,
+    BudgetExceeded,
 }
 
 public sealed record KsProcgenMachineFacing(
@@ -54,7 +55,8 @@ public static class KsProcgenInteractionFacingPlanner
         int seed,
         string instanceId,
         Vector2i? associatedChair = null,
-        IReadOnlyList<Vector2i>? localFootprint = null)
+        IReadOnlyList<Vector2i>? localFootprint = null,
+        KsProcgenRelationPathBudget? pathBudget = null)
     {
         if (roomFloor == null || wallCells == null || blockingCells == null ||
             traversibleChairCells == null || networkCells == null || allowedQuarterTurns == null ||
@@ -90,7 +92,9 @@ public static class KsProcgenInteractionFacingPlanner
                 if (footprint.Contains(approach) || !clean.Contains(approach) ||
                     wallCells.Contains(approach))
                     continue;
-                var path = FindPathFromNetwork(approach, clean, networkCells);
+                var path = FindPathFromNetwork(approach, clean, networkCells, pathBudget);
+                if (pathBudget?.CleanPathSearchTruncated == true)
+                    return MachineFailure(KsProcgenInteractionStatus.BudgetExceeded, "MachineApproachPathBudget");
                 if (path.Count == 0)
                     continue;
                 var chair = traversibleChairCells.Contains(approach);
@@ -130,7 +134,8 @@ public static class KsProcgenInteractionFacingPlanner
         Vector2i chairCell,
         IReadOnlySet<Vector2i> roomFloor,
         IReadOnlySet<Vector2i> blockingCells,
-        IReadOnlySet<Vector2i> networkCells)
+        IReadOnlySet<Vector2i> networkCells,
+        KsProcgenRelationPathBudget? pathBudget = null)
     {
         if (roomFloor == null || blockingCells == null || networkCells == null ||
             !roomFloor.Contains(chairCell) || networkCells.Count == 0 ||
@@ -146,7 +151,9 @@ public static class KsProcgenInteractionFacingPlanner
             var approach = chairCell + face;
             if (!clean.Contains(approach))
                 continue;
-            var path = FindPathFromNetwork(approach, clean, networkCells);
+            var path = FindPathFromNetwork(approach, clean, networkCells, pathBudget);
+            if (pathBudget?.CleanPathSearchTruncated == true)
+                return ChairFailure(KsProcgenInteractionStatus.BudgetExceeded, "ChairApproachPathBudget");
             if (path.Count > 0)
                 paths.Add(path);
         }
@@ -180,7 +187,8 @@ public static class KsProcgenInteractionFacingPlanner
     private static IReadOnlyList<Vector2i> FindPathFromNetwork(
         Vector2i target,
         IReadOnlySet<Vector2i> clean,
-        IReadOnlySet<Vector2i> network)
+        IReadOnlySet<Vector2i> network,
+        KsProcgenRelationPathBudget? pathBudget)
     {
         if (!clean.Contains(target))
             return [];
@@ -195,6 +203,8 @@ public static class KsProcgenInteractionFacingPlanner
 
         while (queue.TryDequeue(out var cell))
         {
+            if (pathBudget != null && !pathBudget.ExpandCleanPath())
+                return [];
             if (cell == target)
             {
                 var path = new List<Vector2i> { cell };

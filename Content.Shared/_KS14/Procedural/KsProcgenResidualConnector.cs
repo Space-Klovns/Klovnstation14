@@ -92,7 +92,7 @@ public static class KsProcgenResidualConnector
                     Status = KsProcgenResidualStatus.PortLandingUnavailable,
                     Issue = new KsProcgenIssue("AmbiguousPortMatch",
                         $"Port {port.Id} has more than one opposite direct partner."),
-                    UnreachablePortIds = [port.Id],
+                    UnreachablePortIds = new[] { port.Id },
                 };
             }
 
@@ -117,7 +117,7 @@ public static class KsProcgenResidualConnector
                 Status = KsProcgenResidualStatus.PortLandingUnavailable,
                 Issue = new KsProcgenIssue("PortLandingUnavailable",
                     $"Port {port.Id} faces a nonprocedural cell without exactly one opposite matched port."),
-                UnreachablePortIds = [port.Id],
+                UnreachablePortIds = new[] { port.Id },
             };
         }
 

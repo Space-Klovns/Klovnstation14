@@ -13,7 +13,7 @@ public static class KsProcgenSizeMixAnalyzer
         IReadOnlyList<KsProcgenThemedRegion> regions)
     {
         if (goals == null || regions == null)
-            throw new ArgumentNullException(goals == null ? nameof(goals) : nameof(regions));
+            throw new ArgumentException(goals == null ? nameof(goals) : nameof(regions));
 
         var roomAreas = regions.Where(region => region.Kind == KsProcgenZoneKind.RoomProposal)
             .Select(region => region.FloorCells.Count).ToArray();

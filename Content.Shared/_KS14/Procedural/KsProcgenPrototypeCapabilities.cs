@@ -35,7 +35,7 @@ public enum KsProcgenDeclaredContainerKind : byte
 public sealed record KsProcgenContainerDeclaration(
     string Id, KsProcgenDeclaredContainerKind Kind, bool HasContainerDeclaration,
     bool HasItemSlotDeclaration, bool Locked, string? StartingItem,
-    int PrototypeContentCount, int ExpectedContentCount,
+    int PrototypeContentCount, int PvsDetachedContentCount,
     KsProcgenSlotFilterDeclaration? Whitelist, KsProcgenSlotFilterDeclaration? Blacklist)
 {
     public int? DeclaredCapacity => Kind == KsProcgenDeclaredContainerKind.Slot ? 1 : null;
@@ -107,7 +107,7 @@ public static class KsProcgenPrototypeCapabilityInspector
                     slotId: relation.Kind == KsProcgenRelationKind.OnSurface ? relation.Slot : relation.ContainerId)));
         }
         report = new KsProcgenAssemblyCapabilityReport(members.Select(pair =>
-            new KsProcgenMemberCapabilityDeclaration(pair.Key, pair.Value)).ToList().AsReadOnly(), witnesses.AsReadOnly());
+            new KsProcgenMemberCapabilityDeclaration(pair.Key, pair.Value)).ToReadOnlyList(), witnesses.ToReadOnlyList());
         return true;
     }
 
@@ -122,13 +122,13 @@ public static class KsProcgenPrototypeCapabilityInspector
             issue = new KsProcgenIssue("UnknownCapabilityPrototype", "The requested entity prototype cannot be inspected.");
             return false;
         }
-        prototype.TryGetComponent<PlaceableSurfaceComponent>(out var surfaceComponent, componentFactory);
-        prototype.TryGetComponent<ItemPlacerComponent>(out var surfaceTrackerComponent, componentFactory);
-        prototype.TryGetComponent<FixturesComponent>(out var fixturesComponent, componentFactory);
-        prototype.TryGetComponent<ContainerManagerComponent>(out var containersComponent, componentFactory);
-        prototype.TryGetComponent<ItemSlotsComponent>(out var slotsComponent, componentFactory);
-        prototype.TryGetComponent<RotatableComponent>(out var rotationComponent, componentFactory);
-        prototype.TryGetComponent<TransformComponent>(out var transformComponent, componentFactory);
+        prototype.TryComp<PlaceableSurfaceComponent>(out var surfaceComponent, componentFactory);
+        prototype.TryComp<ItemPlacerComponent>(out var surfaceTrackerComponent, componentFactory);
+        prototype.TryComp<FixturesComponent>(out var fixturesComponent, componentFactory);
+        prototype.TryComp<ContainerManagerComponent>(out var containersComponent, componentFactory);
+        prototype.TryComp<ItemSlotsComponent>(out var slotsComponent, componentFactory);
+        prototype.TryComp<RotatableComponent>(out var rotationComponent, componentFactory);
+        prototype.TryComp<TransformComponent>(out var transformComponent, componentFactory);
         // Read the slot declarations without invoking methods through the restricted component field.
         var declaredSlots = slotsComponent?.Slots;
         var fixtures = fixturesComponent?.Fixtures.OrderBy(pair => pair.Key, StringComparer.Ordinal)
@@ -158,16 +158,16 @@ public static class KsProcgenPrototypeCapabilityInspector
             };
             containers.Add(new KsProcgenContainerDeclaration(id, kind, container != null, itemSlot != null,
                 itemSlot?.Locked ?? false, itemSlot?.StartingItem?.ToString(),
-                container?.ContainedEntities.Count ?? 0, container?.ExpectedEntities.Count ?? 0,
+                container?.ContainedEntities.Count ?? 0, container?.PvsDetachedEntities.Count ?? 0,
                 CopyFilter(itemSlot?.Whitelist), CopyFilter(itemSlot?.Blacklist)));
         }
         capabilities = new KsProcgenPrototypeCapabilities(prototype.ID, surfaceComponent != null,
             surfaceComponent?.IsPlaceable ?? false, surfaceComponent?.PlaceCentered ?? false,
             surfaceComponent?.PositionOffset ?? Vector2.Zero,
-            prototype.TryGetComponent<ItemComponent>(out _, componentFactory), transformComponent?.Anchored ?? false,
+            prototype.TryComp<ItemComponent>(out _, componentFactory), transformComponent?.Anchored ?? false,
             rotationComponent != null, rotationComponent?.RotateWhileAnchored ?? false,
             rotationComponent?.Increment.Theta ?? 0.0,
-            Array.AsReadOnly(fixtures), containers.AsReadOnly())
+            KsProcgenReadOnly.Copy(fixtures), containers.ToReadOnlyList())
         {
             SurfaceTracker = surfaceTrackerComponent == null ? null : new KsProcgenSurfaceTrackerDeclaration(
                 surfaceTrackerComponent.MaxEntities, surfaceTrackerComponent.PlacedEntities.Count,
@@ -182,12 +182,12 @@ public static class KsProcgenPrototypeCapabilityInspector
         CopyNames(filter.Sizes?.Select(size => size.ToString()) ?? []));
 
     private static IReadOnlyList<string> CopyNames(IEnumerable<string> names) =>
-        Array.AsReadOnly(names.Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray());
+        KsProcgenReadOnly.Copy(names.Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray());
 
     public static ulong Hash(KsProcgenPrototypeCapabilities capabilities)
     {
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-prototype-capabilities-v2");
+        hash.AddString("ks-procgen-prototype-capabilities-v3");
         hash.AddString(capabilities.PrototypeId);
         hash.AddInt(capabilities.HasSurface ? 1 : 0);
         hash.AddInt(capabilities.SurfaceInitiallyEnabled ? 1 : 0);
@@ -226,7 +226,7 @@ public static class KsProcgenPrototypeCapabilityInspector
             hash.AddInt(container.Locked ? 1 : 0);
             hash.AddString(container.StartingItem ?? string.Empty);
             hash.AddInt(container.PrototypeContentCount);
-            hash.AddInt(container.ExpectedContentCount);
+            hash.AddInt(container.PvsDetachedContentCount);
             AddFilter(ref hash, container.Whitelist);
             AddFilter(ref hash, container.Blacklist);
         }
@@ -293,7 +293,7 @@ public static class KsProcgenSupportCapabilityInspector
         if (container.Locked)
             return Result(KsProcgenSupportInspectionState.Rejected, "ItemSlotInitiallyLocked", capacity: container.DeclaredCapacity);
         if (container.StartingItem != null || container.DeclaredCapacity == 1 &&
-            (container.PrototypeContentCount > 0 || container.ExpectedContentCount > 0))
+            (container.PrototypeContentCount > 0 || container.PvsDetachedContentCount > 0))
             return Result(KsProcgenSupportInspectionState.Rejected, "ItemSlotInitiallyReserved", capacity: container.DeclaredCapacity);
         return Result(KsProcgenSupportInspectionState.Unverified, "ContainerInsertionEventsUnverified", capacity: container.DeclaredCapacity);
     }

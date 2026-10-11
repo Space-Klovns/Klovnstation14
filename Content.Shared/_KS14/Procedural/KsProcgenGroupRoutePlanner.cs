@@ -18,6 +18,7 @@ public sealed class KsProcgenGroupRouteSelection
     public KsProcgenIssue? Issue { get; init; }
     public KsProcgenGroupRouteResult? Accepted { get; init; }
     public int CandidateProbes { get; init; }
+    public int GroupOrderProbes { get; init; }
     public int ExpandedCells { get; init; }
     public ulong SelectionHash { get; init; }
 }
@@ -32,6 +33,7 @@ public sealed class KsProcgenGroupRouteResult
     public KsProcgenEntranceScene? Scene { get; init; }
     public KsProcgenEntranceSceneResult? Analysis { get; init; }
     public int RoutedGroups { get; init; }
+    public IReadOnlyList<string> GroupOrder { get; init; } = [];
     public int ExpandedCells { get; init; }
     public ulong RouteHash { get; init; }
     public bool EngineAccessVerified => false;
@@ -41,46 +43,52 @@ public sealed class KsProcgenGroupRouteResult
 /// Greedy group-scoped cardinal trees with separating-cell reservations. Not a room packing,
 /// structural wall materializer or exhaustive feasibility solver. Every failed proposal is atomic.
 /// </summary>
-public static class KsProcgenGroupRoutePlanner
+public static partial class KsProcgenGroupRoutePlanner
 {
     private static readonly Vector2i[] Steps = [new(1, 0), new(0, 1), new(-1, 0), new(0, -1)];
 
     public static KsProcgenGroupRouteSelection Select(KsProcgenRequest request, KsProcgenGroupRouteContext context,
-        int maximumCandidateProbes = 64, int maximumExpandedCells = 131_072)
+        int maximumCandidateProbes = 64, int maximumExpandedCells = 131_072, int maximumGroupOrderProbes = 64)
     {
         var probes = 0;
         var expanded = 0;
+        var orderProbes = 0;
         if (!KsProcgenGeometry.TryNormalize(request, out var shape, out var issue))
             return new() { Status = KsProcgenEntranceSceneStatus.InvalidInput, Issue = issue };
-        if (shape!.EntranceContract == null || maximumCandidateProbes is < 0 or > 64 || maximumExpandedCells is < 0 or > 1_000_000)
+        if (shape!.EntranceContract == null || maximumCandidateProbes is < 0 or > 64 || maximumExpandedCells is < 0 or > 1_000_000 ||
+            maximumGroupOrderProbes is < 0 or > 64)
             return new() { Status = KsProcgenEntranceSceneStatus.InvalidInput, Issue = new("InvalidGroupRouteSelection", "A bounded entrance contract is required.") };
         foreach (var configuration in KsProcgenEntranceConfigurationOrder.Order(shape.EntranceContract.Configurations, request.Seed, request.RequestId))
         {
             if (probes >= maximumCandidateProbes)
                 return new() { Status = KsProcgenEntranceSceneStatus.BudgetExceeded,
                     Issue = new("GroupRouteProbeBudget", "Complete route proposals exhausted their probe allowance."),
-                    CandidateProbes = probes, ExpandedCells = expanded };
+                    CandidateProbes = probes, GroupOrderProbes = orderProbes, ExpandedCells = expanded };
             probes++;
-            var proposal = Plan(request, configuration.Id, context, maximumExpandedCells: maximumExpandedCells - expanded);
-            expanded += proposal.ExpandedCells;
-            if (proposal.Status == KsProcgenEntranceSceneStatus.Rejected)
+            var search = Search(request, configuration.Id, context, maximumOrderProbes: maximumGroupOrderProbes - orderProbes,
+                maximumExpandedCells: maximumExpandedCells - expanded);
+            expanded += search.ExpandedCells;
+            orderProbes += search.OrderProbes;
+            if (search.Status == KsProcgenEntranceSceneStatus.Rejected)
                 continue;
-            if (proposal.Status != KsProcgenEntranceSceneStatus.Candidate)
-                return new() { Status = proposal.Status, Issue = proposal.Issue, CandidateProbes = probes, ExpandedCells = expanded };
+            if (search.Status != KsProcgenEntranceSceneStatus.Candidate)
+                return new() { Status = search.Status, Issue = search.Issue, CandidateProbes = probes,
+                    GroupOrderProbes = orderProbes, ExpandedCells = expanded };
+            var proposal = search.Accepted!;
             var hash = KsProcgenStableHash.Create();
-            hash.AddString("ks-procgen-group-route-selection-v1");
+            hash.AddString("ks-procgen-group-route-selection-v2");
             hash.AddInt(request.Seed);
             hash.AddString(request.RequestId);
             hash.AddString(proposal.RouteHash.ToString(CultureInfo.InvariantCulture));
             return new() { Status = KsProcgenEntranceSceneStatus.Candidate, Accepted = proposal,
-                CandidateProbes = probes, ExpandedCells = expanded, SelectionHash = hash.Value };
+                CandidateProbes = probes, GroupOrderProbes = orderProbes, ExpandedCells = expanded, SelectionHash = hash.Value };
         }
         return new() { Status = KsProcgenEntranceSceneStatus.Rejected, Issue = new("NoGroupRouteProposal", "No attempted greedy route proposal validated."),
-            CandidateProbes = probes, ExpandedCells = expanded };
+            CandidateProbes = probes, GroupOrderProbes = orderProbes, ExpandedCells = expanded };
     }
 
     public static KsProcgenGroupRouteResult Plan(KsProcgenRequest request, string configurationId,
-        KsProcgenGroupRouteContext context, int maximumExpandedCells = 131_072)
+        KsProcgenGroupRouteContext context, int maximumExpandedCells = 131_072, IReadOnlyList<string>? groupOrder = null)
     {
         var expanded = 0;
         var routed = 0;
@@ -107,6 +115,12 @@ public static class KsProcgenGroupRoutePlanner
             return Fail(KsProcgenEntranceSceneStatus.Rejected, "IncompleteGroupRoutePreservedContext");
         if (configuration.Groups.Count > 64)
             return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, "GroupRouteGroupBudget");
+        var groupsById = configuration.Groups.ToDictionary(group => group.Id, StringComparer.Ordinal);
+        if (groupOrder != null && (groupOrder.Count != configuration.Groups.Count ||
+            groupOrder.Any(id => id == null || !groupsById.ContainsKey(id)) ||
+            groupOrder.Distinct(StringComparer.Ordinal).Count() != groupOrder.Count))
+            return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidGroupRouteOrder");
+        var orderedGroups = groupOrder == null ? configuration.Groups : groupOrder.Select(id => groupsById[id]).ToArray();
         var ports = shape.Entrances.ToDictionary(entrance => entrance.PortId, StringComparer.Ordinal);
         var terminals = new Dictionary<string, HashSet<Vector2i>>(StringComparer.Ordinal);
         foreach (var group in configuration.Groups)
@@ -166,7 +180,7 @@ public static class KsProcgenGroupRoutePlanner
         var floor = existing.ToHashSet();
         var claims = new Dictionary<Vector2i, string>();
         var routes = new List<KsProcgenGroupRoute>();
-        foreach (var group in configuration.Groups)
+        foreach (var group in orderedGroups)
         {
             var forbidden = new HashSet<Vector2i>();
             if (exact)
@@ -200,7 +214,7 @@ public static class KsProcgenGroupRoutePlanner
             foreach (var cell in newCells)
                 claims.Add(cell, group.Id);
             floor.UnionWith(route.ReservedCells);
-            routes.Add(new(group.Id, KsProcgenGeometry.SortCells(newCells).ToList().AsReadOnly()));
+            routes.Add(new(group.Id, KsProcgenGeometry.SortCells(newCells).ToReadOnlyList()));
             routed++;
         }
         var scene = new KsProcgenEntranceScene(floor.ToFrozenSet(), context.CleanHostCells.ToFrozenSet(), blocked.ToFrozenSet(),
@@ -212,9 +226,11 @@ public static class KsProcgenGroupRoutePlanner
             return new() { Status = analysis.Status, Issue = analysis.Issue, ExpandedCells = expanded, RoutedGroups = routed };
         var walls = shape.TargetCells.Where(cell => shape.CanWrite(cell) && !floor.Contains(cell)).ToList();
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-group-route-v1");
+        hash.AddString("ks-procgen-group-route-v2");
         hash.AddString(analysis.SceneHash.ToString(CultureInfo.InvariantCulture));
         hash.AddInt(context.PreservedContextComplete ? 1 : 0);
+        foreach (var group in orderedGroups)
+            hash.AddString(group.Id);
         foreach (var route in routes)
         {
             hash.AddString(route.GroupId);
@@ -227,10 +243,11 @@ public static class KsProcgenGroupRoutePlanner
         }
         return new()
         {
-            Status = KsProcgenEntranceSceneStatus.Candidate, Scene = scene, Analysis = analysis, Routes = routes.AsReadOnly(),
-            FloorCells = KsProcgenGeometry.SortCells(floor).ToList().AsReadOnly(),
-            ProposedWallCells = KsProcgenGeometry.SortCells(walls).ToList().AsReadOnly(),
+            Status = KsProcgenEntranceSceneStatus.Candidate, Scene = scene, Analysis = analysis, Routes = routes.ToReadOnlyList(),
+            FloorCells = KsProcgenGeometry.SortCells(floor).ToReadOnlyList(),
+            ProposedWallCells = KsProcgenGeometry.SortCells(walls).ToReadOnlyList(),
             ExpandedCells = expanded, RoutedGroups = routed, RouteHash = hash.Value,
+            GroupOrder = orderedGroups.Select(group => group.Id).ToReadOnlyList(),
         };
     }
 

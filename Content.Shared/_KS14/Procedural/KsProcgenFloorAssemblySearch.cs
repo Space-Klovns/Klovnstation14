@@ -107,50 +107,63 @@ public sealed class KsProcgenFloorAssemblySearch
                 .Select(offset => KsProcgenInteractionFacingPlanner.RotateFootprintOffset(offset, turn))
                 .OrderBy(offset => offset.Y).ThenBy(offset => offset.X))).ToArray();
         foreach (var cell in cells)
-        foreach (var turn in OrderedTurns(member, cell, turns, occupied, blocked, chairs))
         {
-            if (Probes >= _probeLimit)
+            var orderedTurns = OrderedTurns(member, cell, turns, occupied, blocked, chairs).ToArray();
+            if (_pathBudget.CleanPathSearchTruncated)
             {
                 Exhausted = true;
                 return true;
             }
-            Probes++;
-            var footprint = Footprint(cell, turn, member.Entry.Footprint);
-            if (footprint == null || footprint.Any(tile => !_floor.Contains(tile) || _walls.Contains(tile) ||
-                    _protectedCells.Contains(tile) || occupied.Contains(tile)) ||
-                member.Entry.Movement != KsProcgenMovementClass.Clear && _trial.Any(placed =>
-                    placed.DeclaredApproachLanding.HasValue && footprint.Contains(placed.DeclaredApproachLanding.Value)))
-                continue;
-            var landing = KsProcgenAssemblyRelationEvaluator.ResolveDeclaredLanding(cell, turn, member.ApproachLanding);
-            if (member.ApproachLanding.HasValue && (!landing.HasValue || !_floor.Contains(landing.Value) ||
-                blocked.Contains(landing.Value) || member.Entry.Movement != KsProcgenMovementClass.Clear && footprint.Contains(landing.Value)))
-                continue;
-            var proposal = new KsProcgenEntityProposal(_packId, member.Id, member.Entry.Entity,
-                member.Entry.Role, member.Entry.Movement, cell, turn, null, ClusterIndex: _clusterIndex,
-                Footprint: new KsProcgenEntityFootprint(footprint), CoreId: _coreId,
-                AssemblyId: _assembly.AssemblyId, VariantId: _assembly.VariantId, DeclaredApproachLanding: landing);
-            if (!SpatialCompatible(proposal))
-                continue;
-            var firstApproach = true;
-            foreach (var candidate in Approaches(proposal, member, occupied, blocked, chairs))
+            foreach (var turn in orderedTurns)
             {
-                // Alternatives for a multi-cell front edge also consume the shared placement budget.
-                if (!firstApproach)
+                if (Probes >= _probeLimit)
                 {
-                    if (Probes >= _probeLimit)
-                    {
-                        Exhausted = true;
-                        return true;
-                    }
-                    Probes++;
-                }
-                firstApproach = false;
-                _trial.Add(candidate);
-                var stop = Search(memberIndex + 1, anchor);
-                _trial.RemoveAt(_trial.Count - 1);
-                if (stop)
+                    Exhausted = true;
                     return true;
-                Backtracks++;
+                }
+                Probes++;
+                var footprint = Footprint(cell, turn, member.Entry.Footprint);
+                if (footprint == null || footprint.Any(tile => !_floor.Contains(tile) || _walls.Contains(tile) ||
+                        _protectedCells.Contains(tile) || occupied.Contains(tile)) ||
+                    member.Entry.Movement != KsProcgenMovementClass.Clear && _trial.Any(placed =>
+                        placed.DeclaredApproachLanding.HasValue && footprint.Contains(placed.DeclaredApproachLanding.Value)))
+                    continue;
+                var landing = KsProcgenAssemblyRelationEvaluator.ResolveDeclaredLanding(cell, turn, member.ApproachLanding);
+                if (member.ApproachLanding.HasValue && (!landing.HasValue || !_floor.Contains(landing.Value) ||
+                    blocked.Contains(landing.Value) || member.Entry.Movement != KsProcgenMovementClass.Clear && footprint.Contains(landing.Value)))
+                    continue;
+                var proposal = new KsProcgenEntityProposal(_packId, member.Id, member.Entry.Entity,
+                    member.Entry.Role, member.Entry.Movement, cell, turn, null, ClusterIndex: _clusterIndex,
+                    Footprint: new KsProcgenEntityFootprint(footprint), CoreId: _coreId,
+                    AssemblyId: _assembly.AssemblyId, VariantId: _assembly.VariantId, DeclaredApproachLanding: landing);
+                if (!SpatialCompatible(proposal))
+                    continue;
+                var firstApproach = true;
+                foreach (var candidate in Approaches(proposal, member, occupied, blocked, chairs))
+                {
+                    // Alternatives for a multi-cell front edge also consume the shared placement budget.
+                    if (!firstApproach)
+                    {
+                        if (Probes >= _probeLimit)
+                        {
+                            Exhausted = true;
+                            return true;
+                        }
+                        Probes++;
+                    }
+                    firstApproach = false;
+                    _trial.Add(candidate);
+                    var stop = Search(memberIndex + 1, anchor);
+                    _trial.RemoveAt(_trial.Count - 1);
+                    if (stop)
+                        return true;
+                    Backtracks++;
+                }
+                if (_pathBudget.CleanPathSearchTruncated)
+                {
+                    Exhausted = true;
+                    return true;
+                }
             }
         }
         if (!member.Required)
@@ -164,7 +177,8 @@ public sealed class KsProcgenFloorAssemblySearch
     {
         if (proposal.Role == KsProcgenEntityRole.Seat)
         {
-            var result = KsProcgenInteractionFacingPlanner.FindChairApproach(proposal.Cell, _floor, blocked, _protectedCells);
+            var result = KsProcgenInteractionFacingPlanner.FindChairApproach(proposal.Cell, _floor, blocked, _protectedCells,
+                pathBudget: _pathBudget);
             foreach (var approach in result.Approaches)
                 yield return proposal with { InteractionApproach = approach };
             yield break;
@@ -181,7 +195,8 @@ public sealed class KsProcgenFloorAssemblySearch
         facingBlocked.UnionWith(occupied.Where(tile => tile != associatedSeat));
         var resultFacing = KsProcgenInteractionFacingPlanner.ChooseMachineFacing(proposal.Cell, _floor, _walls,
             facingBlocked, chairs, _protectedCells, [proposal.QuarterTurns], _seed,
-            $"{_regionId}/{_packId}/{member.Id}", associatedChair: associatedSeat, localFootprint: member.Entry.Footprint);
+            $"{_regionId}/{_packId}/{member.Id}", associatedChair: associatedSeat,
+            localFootprint: member.Entry.Footprint, pathBudget: _pathBudget);
         foreach (var facing in resultFacing.Options)
         {
             if (seatRelation?.Severity == KsProcgenRelationSeverity.Required && associatedSeat.HasValue &&
@@ -204,7 +219,7 @@ public sealed class KsProcgenFloorAssemblySearch
         facingBlocked.UnionWith(occupied.Where(tile => tile != associatedSeat));
         var facing = KsProcgenInteractionFacingPlanner.ChooseMachineFacing(cell, _floor, _walls,
             facingBlocked, chairs, _protectedCells, turns, _seed, $"{_regionId}/{_packId}/{member.Id}",
-            associatedChair: associatedSeat, localFootprint: member.Entry.Footprint);
+            associatedChair: associatedSeat, localFootprint: member.Entry.Footprint, pathBudget: _pathBudget);
         // Preserve empty-floor, associated-seat and wall-backing preferences while allowing revisits.
         return facing.Options.Select(option => option.QuarterTurns).Concat(turns).Distinct().ToArray();
     }
@@ -237,8 +252,15 @@ public sealed class KsProcgenFloorAssemblySearch
     private bool EvaluateComplete(Vector2i anchor)
     {
         if (!KsProcgenFurnishingPlanner.ValidateTrial(_trial, _members.Select(member => member.Entry).ToArray(),
-                _assembly, _floor, _walls, _protectedCells, _alreadyBlocked, _seed, _regionId))
+                _assembly, _floor, _walls, _protectedCells, _alreadyBlocked, _seed, _regionId, pathBudget: _pathBudget))
+        {
+            if (_pathBudget.CleanPathSearchTruncated)
+            {
+                Exhausted = true;
+                return true;
+            }
             return false;
+        }
         var evaluation = KsProcgenAssemblyRelationEvaluator.Evaluate(_packId, _coreId, _clusterIndex,
             _assembly, _trial, _walls, floor: _floor, blockingCells: _alreadyBlocked, pathBudget: _pathBudget);
         if (evaluation.PathSearchTruncated)

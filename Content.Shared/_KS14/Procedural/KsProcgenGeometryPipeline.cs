@@ -116,11 +116,12 @@ public static class KsProcgenGeometryPipeline
             };
 
         var reserved = packing.ResidualRouting?.ReservedPassageCells ?? new HashSet<Vector2i>();
-        var partition = KsProcgenPartitionPlanner.Plan(fill, reserved, maxPartitionMerges);
-        if (partition.Status == KsProcgenPartitionStatus.InvalidInput)
+        var partition = KsProcgenPartitionPlanner.Plan(fill, reserved, maxMergeAttempts: maxPartitionMerges);
+        if (partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded)
             return new KsProcgenGeometryPipelineResult
             {
-                Status = KsProcgenGeometryPipelineStatus.InvalidInput,
+                Status = partition.Status == KsProcgenPartitionStatus.BudgetExceeded
+                    ? KsProcgenGeometryPipelineStatus.BudgetExceeded : KsProcgenGeometryPipelineStatus.InvalidInput,
                 Issue = partition.Issue,
                 Packing = packing,
                 PureFill = fill,

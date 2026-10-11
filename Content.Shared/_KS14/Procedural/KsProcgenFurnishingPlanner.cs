@@ -16,12 +16,12 @@ public enum KsProcgenFurnishingStatus : byte
 /// <summary>Value-comparable occupied tiles of one proposed entity.</summary>
 public readonly struct KsProcgenEntityFootprint : IEquatable<KsProcgenEntityFootprint>
 {
-    private readonly Vector2i[]? _cells;
+    private readonly IReadOnlyList<Vector2i>? _cells;
     public IReadOnlyList<Vector2i> Cells => _cells ?? [];
 
     public KsProcgenEntityFootprint(IEnumerable<Vector2i> cells)
     {
-        _cells = cells.ToArray();
+        _cells = KsProcgenReadOnly.Copy(cells);
     }
 
     public bool Equals(KsProcgenEntityFootprint other) => Cells.SequenceEqual(other.Cells);
@@ -54,7 +54,7 @@ public sealed record KsProcgenEntityProposal(
     string? VariantId = null,
     Vector2i? DeclaredApproachLanding = null)
 {
-    public IReadOnlyList<Vector2i> OccupiedCells => Footprint.Cells.Count == 0 ? [Cell] : Footprint.Cells;
+    public IReadOnlyList<Vector2i> OccupiedCells => Footprint.Cells.Count == 0 ? new[] { Cell } : Footprint.Cells;
 }
 
 public sealed record KsProcgenPackOmission(string PackId, string Reason);
@@ -73,6 +73,8 @@ public sealed class KsProcgenFurnishingResult
     public bool PreferenceSearchTruncated { get; init; }
     public int RelationPathExpandedCells { get; init; }
     public bool RelationPathSearchTruncated { get; init; }
+    public int CleanPathExpandedCells { get; init; }
+    public bool CleanPathSearchTruncated { get; init; }
     public int MandatoryBacktracks { get; init; }
 }
 
@@ -91,18 +93,21 @@ public static class KsProcgenFurnishingPlanner
         int seed,
         IReadOnlySet<Vector2i>? inspectedWalls = null,
         int maxCandidateProbes = 4_096,
-        int maxRoomCells = 512)
+        int maxRoomCells = 512,
+        int maxRelationPathExpandedCells = 4_096,
+        bool meterCleanPaths = false)
     {
         if (prototypeManager == null || region == null || partition == null ||
-            partition.Status == KsProcgenPartitionStatus.InvalidInput ||
+            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded ||
             maxCandidateProbes <= 0 || maxCandidateProbes > 4_096 ||
-            maxRoomCells <= 0 || maxRoomCells > 65_536 ||
+            maxRoomCells <= 0 || maxRoomCells > 65_536 || maxRelationPathExpandedCells is < 0 or > 65_536 ||
             !float.IsFinite(region.Theme.FurnishingDensity) ||
             region.Theme.FurnishingDensity < 0f || region.Theme.FurnishingDensity > 1f)
             return Failure(KsProcgenFurnishingStatus.InvalidInput, "InvalidFurnishingInput");
 
         var floor = new HashSet<Vector2i>(region.FloorCells);
         if (floor.Count != region.FloorCells.Count || floor.Count == 0 ||
+            region.ProtectedPassageCells.Any(cell => !floor.Contains(cell)) ||
             floor.Any(cell => !partition.FloorCells.Contains(cell)))
             return Failure(KsProcgenFurnishingStatus.InvalidInput, "InvalidFurnishingFloor");
         var selectedPacks = new List<string>();
@@ -145,12 +150,25 @@ public static class KsProcgenFurnishingPlanner
             return new KsProcgenFurnishingResult
             {
                 Status = KsProcgenFurnishingStatus.Sparse,
-                Omissions = skipped,
+                Omissions = KsProcgenReadOnly.Copy(skipped),
                 ProtectedPassageCells = KsProcgenGeometry.SortCells(floor),
             };
         }
 
-        var terminals = new HashSet<Vector2i>();
+        // When enabled, the same allowance funds relation paths and every clean passage search.
+        var relationPathBudget = new KsProcgenRelationPathBudget(
+            maximumExpandedCells: maxRelationPathExpandedCells, meterCleanPaths: meterCleanPaths);
+        var probes = 0;
+        var mandatoryBacktracks = 0;
+        KsProcgenFurnishingResult FailWithWork(KsProcgenFurnishingStatus status, string code) => new()
+        {
+            Status = status, Issue = new(code, "Furnishing could not satisfy this room's content contract."),
+            CandidateProbes = probes, RelationPathExpandedCells = relationPathBudget.RelationExpandedCells,
+            CleanPathExpandedCells = relationPathBudget.CleanPathExpandedCells,
+            CleanPathSearchTruncated = relationPathBudget.CleanPathSearchTruncated,
+            RelationPathSearchTruncated = relationPathBudget.RelationPathSearchTruncated, MandatoryBacktracks = mandatoryBacktracks,
+        };
+        var terminals = new HashSet<Vector2i>(region.ProtectedPassageCells);
         foreach (var door in partition.DoorOpenings)
         {
             if (floor.Contains(door.Threshold)) terminals.Add(door.Threshold);
@@ -164,15 +182,18 @@ public static class KsProcgenFurnishingPlanner
         var root = KsProcgenGeometry.SortCells(terminals)[0];
         foreach (var terminal in KsProcgenGeometry.SortCells(terminals))
         {
-            var path = KsProcgenTraversal.FindCleanPath(root, terminal, floor, new HashSet<Vector2i>());
+            var path = KsProcgenTraversal.FindCleanPath(root, terminal, floor, new HashSet<Vector2i>(),
+                pathBudget: relationPathBudget);
+            if (relationPathBudget.CleanPathSearchTruncated)
+                return FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingCleanPathBudget");
             if (path.Count == 0)
-                return Failure(KsProcgenFurnishingStatus.InvalidInput, "FurnishingRoomRouteUnavailable");
+                return FailWithWork(KsProcgenFurnishingStatus.InvalidInput, "FurnishingRoomRouteUnavailable");
             protectedCells.UnionWith(path);
         }
 
         if (region.UnplacedRequiredPacks.Any(required =>
                 required.MinimumCount != 1 || !selectedPacks.Contains(required.PackId)))
-            return Failure(KsProcgenFurnishingStatus.MandatoryUnmet, "UnsupportedMandatoryPackCount");
+            return FailWithWork(KsProcgenFurnishingStatus.MandatoryUnmet, "UnsupportedMandatoryPackCount");
 
         var walls = new HashSet<Vector2i>(partition.WallCells);
         if (inspectedWalls != null)
@@ -183,8 +204,6 @@ public static class KsProcgenFurnishingPlanner
         var omissions = new List<KsProcgenPackOmission>();
         var relationWitnesses = new List<KsProcgenAssemblyRelationWitness>();
         var preferenceSearchTruncated = false;
-        var relationPathBudget = new KsProcgenRelationPathBudget();
-        var probes = 0;
         Vector2i? dominantAnchor = null;
         var dominantCores = new List<KsProcgenResolvedEntityCore>();
         var dominantAnchors = new List<Vector2i>();
@@ -200,7 +219,7 @@ public static class KsProcgenFurnishingPlanner
         for (var copy = 0; copy < core.MinimumCount; copy++)
         {
             if (mandatoryTasks.Count == 64)
-                return Failure(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingMandatoryDepthBudget");
+                return FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingMandatoryDepthBudget");
             mandatoryTasks.Add((packId, new[] { core }));
         }
 
@@ -209,16 +228,16 @@ public static class KsProcgenFurnishingPlanner
                      !compiledPacks[id].Any(core => core.MinimumCount > 0)))
         {
             if (mandatoryTasks.Count == 64)
-                return Failure(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingMandatoryDepthBudget");
+                return FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingMandatoryDepthBudget");
             mandatoryTasks.Add((packId, KsProcgenCoreSelector.Order(compiledPacks[packId], seed, region.Id, packId, 0)));
         }
         // Bound nested member and mandatory continuations as well as the existing probe/path budgets.
         if (mandatoryTasks.Sum(task => task.Choices.Max(core => core.Variants.Max(variant => variant.Members.Count))) > 256)
-            return Failure(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingMandatoryDepthBudget");
-        var mandatoryBacktracks = 0;
+            return FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingMandatoryDepthBudget");
         KsProcgenFurnishingResult? mandatoryFailure = null;
         if (!SearchMandatory(0))
-            return mandatoryFailure ?? Failure(KsProcgenFurnishingStatus.MandatoryUnmet, "RequiredPackCannotFit");
+            return FailWithWork(mandatoryFailure?.Status ?? KsProcgenFurnishingStatus.MandatoryUnmet,
+                mandatoryFailure?.Issue?.Code ?? "RequiredPackCannotFit");
 
         bool SearchMandatory(int taskIndex)
         {
@@ -269,18 +288,22 @@ public static class KsProcgenFurnishingPlanner
                     [], null, clusterIndex, seed, region.Id, maxCandidateProbes, relationPathBudget, ref probes,
                     out var accepted, out var acceptedAnchor, out var exhausted, out var unsupported, out var acceptedWitnesses,
                     continuation: continuation);
+                if (relationPathBudget.CleanPathSearchTruncated)
+                {
+                    mandatoryFailure = FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingCleanPathBudget");
+                    return false;
+                }
                 if (mandatoryFailure != null)
                     return false;
                 if (unsupported)
                 {
-                    mandatoryFailure = Failure(KsProcgenFurnishingStatus.InvalidInput, "AssemblyPlacementUnsupported");
+                    mandatoryFailure = FailWithWork(KsProcgenFurnishingStatus.InvalidInput, "AssemblyPlacementUnsupported");
                     return false;
                 }
                 if (exhausted && !placed)
                 {
-                    mandatoryFailure = Failure(KsProcgenFurnishingStatus.BudgetExceeded,
-                        relationPathBudget.Truncated ? "FurnishingRelationPathBudget" : "FurnishingCandidateBudget",
-                        relationPathBudget: relationPathBudget);
+                    mandatoryFailure = FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded,
+                        relationPathBudget.Truncated ? "FurnishingRelationPathBudget" : "FurnishingCandidateBudget");
                     return false;
                 }
                 if (!placed)
@@ -319,12 +342,13 @@ public static class KsProcgenFurnishingPlanner
                 occupied, blocked, [], dominantAnchor, clusterIndex, seed, region.Id,
                 maxCandidateProbes, relationPathBudget, ref probes,
                 out var accepted, out var anchor, out var exhausted, out var unsupported, out var witnesses);
+            if (relationPathBudget.CleanPathSearchTruncated)
+                return FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingCleanPathBudget");
             if (unsupported)
-                return Failure(KsProcgenFurnishingStatus.InvalidInput, "AssemblyPlacementUnsupported");
+                return FailWithWork(KsProcgenFurnishingStatus.InvalidInput, "AssemblyPlacementUnsupported");
             if (exhausted && !placed)
-                return Failure(KsProcgenFurnishingStatus.BudgetExceeded,
-                    relationPathBudget.Truncated ? "FurnishingRelationPathBudget" : "FurnishingCandidateBudget",
-                    relationPathBudget: relationPathBudget);
+                return FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded,
+                    relationPathBudget.Truncated ? "FurnishingRelationPathBudget" : "FurnishingCandidateBudget");
             if (!placed)
             {
                 omissions.Add(new KsProcgenPackOmission(packId, $"CoreCannotFit/{core.Id}"));
@@ -353,9 +377,10 @@ public static class KsProcgenFurnishingPlanner
                 if (entity.Movement != KsProcgenMovementClass.Clear)
                     blocked.UnionWith(entity.OccupiedCells);
             }
-            if (!ReserveApproachPaths(accepted, root, floor, blocked, occupied, protectedCells))
-                return Failure(KsProcgenFurnishingStatus.InvalidInput,
-                    "FurnishingApproachRouteUnavailable");
+            if (!ReserveApproachPaths(accepted, root, floor, blocked, occupied, protectedCells, relationPathBudget))
+                return relationPathBudget.CleanPathSearchTruncated
+                    ? FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingCleanPathBudget")
+                    : FailWithWork(KsProcgenFurnishingStatus.InvalidInput, "FurnishingApproachRouteUnavailable");
             foreach (var cell in witnesses.SelectMany(witness => witness.CleanPath.Cells))
                 if (!occupied.Contains(cell))
                     protectedCells.Add(cell);
@@ -384,8 +409,10 @@ public static class KsProcgenFurnishingPlanner
                     seed, region.Id,
                     maxCandidateProbes, relationPathBudget, ref probes, out accepted, out anchor, out exhausted,
                     out var unsupported, out witnesses);
+                if (relationPathBudget.CleanPathSearchTruncated)
+                    return FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingCleanPathBudget");
                 if (unsupported)
-                    return Failure(KsProcgenFurnishingStatus.InvalidInput, "AssemblyPlacementUnsupported");
+                    return FailWithWork(KsProcgenFurnishingStatus.InvalidInput, "AssemblyPlacementUnsupported");
                 if (placed || exhausted)
                     break;
             }
@@ -406,9 +433,10 @@ public static class KsProcgenFurnishingPlanner
                 if (entity.Movement != KsProcgenMovementClass.Clear)
                     blocked.UnionWith(entity.OccupiedCells);
             }
-            if (!ReserveApproachPaths(accepted, root, floor, blocked, occupied, protectedCells))
-                return Failure(KsProcgenFurnishingStatus.InvalidInput,
-                    "FurnishingApproachRouteUnavailable");
+            if (!ReserveApproachPaths(accepted, root, floor, blocked, occupied, protectedCells, relationPathBudget))
+                return relationPathBudget.CleanPathSearchTruncated
+                    ? FailWithWork(KsProcgenFurnishingStatus.BudgetExceeded, "FurnishingCleanPathBudget")
+                    : FailWithWork(KsProcgenFurnishingStatus.InvalidInput, "FurnishingApproachRouteUnavailable");
             foreach (var cell in witnesses.SelectMany(witness => witness.CleanPath.Cells))
                 if (!occupied.Contains(cell))
                     protectedCells.Add(cell);
@@ -419,16 +447,18 @@ public static class KsProcgenFurnishingPlanner
             Status = omissions.Count == 0 && !preferenceSearchTruncated &&
                      relationWitnesses.All(witness => witness.State != KsProcgenConstraintState.Missed)
                 ? KsProcgenFurnishingStatus.Proposed : KsProcgenFurnishingStatus.Sparse,
-            Entities = entities,
-            Omissions = omissions,
+            Entities = KsProcgenReadOnly.Copy(entities),
+            Omissions = KsProcgenReadOnly.Copy(omissions),
             ProtectedPassageCells = KsProcgenGeometry.SortCells(protectedCells),
             CandidateProbes = probes,
             TargetDominantClusters = targetClusters,
             PlacedDominantClusters = dominantAnchors.Count,
-            RelationWitnesses = relationWitnesses,
+            RelationWitnesses = KsProcgenReadOnly.Copy(relationWitnesses),
             PreferenceSearchTruncated = preferenceSearchTruncated,
-            RelationPathExpandedCells = relationPathBudget.ExpandedCells,
-            RelationPathSearchTruncated = relationPathBudget.Truncated,
+            RelationPathExpandedCells = relationPathBudget.RelationExpandedCells,
+            CleanPathExpandedCells = relationPathBudget.CleanPathExpandedCells,
+            CleanPathSearchTruncated = relationPathBudget.CleanPathSearchTruncated,
+            RelationPathSearchTruncated = relationPathBudget.RelationPathSearchTruncated,
             MandatoryBacktracks = mandatoryBacktracks,
         };
     }
@@ -584,7 +614,8 @@ public static class KsProcgenFurnishingPlanner
         IReadOnlySet<Vector2i> protectedCells,
         IReadOnlySet<Vector2i> alreadyBlocked,
         int seed,
-        string regionId)
+        string regionId,
+        KsProcgenRelationPathBudget? pathBudget = null)
     {
         var blocked = new HashSet<Vector2i>(alreadyBlocked);
         blocked.UnionWith(walls);
@@ -597,12 +628,12 @@ public static class KsProcgenFurnishingPlanner
         {
             if (entity.DeclaredApproachLanding is { } landing &&
                 (walls.Contains(landing) || KsProcgenTraversal.FindCleanPath(
-                    KsProcgenGeometry.SortCells(protectedCells)[0], landing, floor, blocked).Count == 0))
+                    KsProcgenGeometry.SortCells(protectedCells)[0], landing, floor, blocked, pathBudget: pathBudget).Count == 0))
                 return false;
             if (entity.Role == KsProcgenEntityRole.Seat)
             {
                 var chair = KsProcgenInteractionFacingPlanner.FindChairApproach(entity.Cell, floor,
-                    blocked, protectedCells);
+                    blocked, protectedCells, pathBudget: pathBudget);
                 if (!entity.InteractionApproach.HasValue || !chair.Approaches.Contains(entity.InteractionApproach.Value))
                     return false;
             }
@@ -619,7 +650,7 @@ public static class KsProcgenFurnishingPlanner
                     floor, walls, withoutSelf, chairs, protectedCells, [entity.QuarterTurns],
                     seed, $"{regionId}/{entity.PackId}/{entity.EntryId}",
                     associatedChair: associatedChair,
-                    localFootprint: entry.Footprint);
+                    localFootprint: entry.Footprint, pathBudget: pathBudget);
                 if (facing.Status != KsProcgenInteractionStatus.Ready ||
                     facing.Options.All(option => option.Approach != entity.InteractionApproach.Value))
                     return false;
@@ -635,7 +666,8 @@ public static class KsProcgenFurnishingPlanner
         IReadOnlySet<Vector2i> floor,
         IReadOnlySet<Vector2i> blocked,
         IReadOnlySet<Vector2i> occupied,
-        HashSet<Vector2i> protectedCells)
+        HashSet<Vector2i> protectedCells,
+        KsProcgenRelationPathBudget pathBudget)
     {
         foreach (var entity in accepted)
         {
@@ -644,7 +676,7 @@ public static class KsProcgenFurnishingPlanner
                 if (!landing.HasValue)
                     continue;
                 var path = KsProcgenTraversal.FindCleanPath(root,
-                    landing.Value, floor, blocked);
+                    landing.Value, floor, blocked, pathBudget: pathBudget);
                 if (path.Count == 0)
                     return false;
                 foreach (var cell in path)
@@ -681,12 +713,9 @@ public static class KsProcgenFurnishingPlanner
         return hash.Value;
     }
 
-    private static KsProcgenFurnishingResult Failure(KsProcgenFurnishingStatus status, string code,
-        KsProcgenRelationPathBudget? relationPathBudget = null) => new()
+    private static KsProcgenFurnishingResult Failure(KsProcgenFurnishingStatus status, string code) => new()
     {
         Status = status,
         Issue = new KsProcgenIssue(code, "Furnishing could not satisfy this room's content contract."),
-        RelationPathExpandedCells = relationPathBudget?.ExpandedCells ?? 0,
-        RelationPathSearchTruncated = relationPathBudget?.Truncated ?? false,
     };
 }

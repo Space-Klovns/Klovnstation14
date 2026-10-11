@@ -1,0 +1,38 @@
+# Isolate room subdivision/material/access checks from optional furniture and fixture choices.
+- type: ksProcgenRoomTheme
+  id: KsProcgenEmptyOfficeThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+
+- type: ksProcgenWallPack
+  id: KsProcgenReinforcedWallsFixture
+  families:
+  - id: Reinforced
+    interiorWall: WallReinforced
+    door: Airlock
+
+- type: ksProcgenTilePack
+  id: KsProcgenAccentTilesFixture
+  palettes:
+  - id: Accent
+    primaryTile: FloorSteel
+    accentTile: FloorSteelCheckerLight
+    accentFraction: 1
+
+- type: ksProcgenWallPack
+  id: KsProcgenAlternateHullFixture
+  families:
+  - id: Alternate
+    interiorWall: WallSolid
+    hullWall: WallSolid
+    door: Airlock
+
+- type: ksProcgenWallPack
+  id: KsProcgenNoWindowsFixture
+  families:
+  - id: NoWindows
+    interiorWall: WallSolid
+    hullWall: WallReinforced
+    door: Airlock

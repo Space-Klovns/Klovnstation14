@@ -56,8 +56,8 @@ public sealed partial class KsProcgenSurfaceContactSystem : EntitySystem
         if (_containerSystem.TryGetContainingContainer(subjectUid, out _) ||
             _containerSystem.TryGetContainingContainer(surfaceUid, out _))
             return Result(KsProcgenSurfaceContactStatus.Rejected, "SurfaceContactContained");
-        if (!TryComp<TransformComponent>(subjectUid, out var subjectTransformComponent) ||
-            !TryComp<TransformComponent>(surfaceUid, out var surfaceTransformComponent) ||
+        if (!TryComp(subjectUid, out TransformComponent? subjectTransformComponent) ||
+            !TryComp(surfaceUid, out TransformComponent? surfaceTransformComponent) ||
             subjectTransformComponent.MapUid == null || subjectTransformComponent.MapUid != surfaceTransformComponent.MapUid)
             return Result(KsProcgenSurfaceContactStatus.Rejected, "SurfaceContactMapMismatch");
         if (!TryComp<PhysicsComponent>(subjectUid, out var subjectPhysicsComponent) || !subjectPhysicsComponent.CanCollide ||
@@ -127,7 +127,7 @@ public sealed partial class KsProcgenSurfaceContactSystem : EntitySystem
         return Result(KsProcgenSurfaceContactStatus.Observed, "SurfaceSoftContactObserved");
     }
 
-    private bool Ready(EntityUid uid) => TryComp<MetaDataComponent>(uid, out var metadataComponent) &&
+    private bool Ready(EntityUid uid) => TryComp(uid, out MetaDataComponent? metadataComponent) &&
         metadataComponent.EntityLifeStage is >= EntityLifeStage.Initialized and < EntityLifeStage.Terminating &&
         !EntityManager.IsQueuedForDeletion(uid);
 }

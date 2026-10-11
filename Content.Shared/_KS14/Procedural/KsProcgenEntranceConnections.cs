@@ -35,7 +35,7 @@ public sealed partial class KsProcgenEntranceConfigurationSpec
     [DataField] public List<string> SealedPorts = [];
 }
 
-[Prototype("ksProcgenEntranceConnections")]
+[Prototype]
 public sealed partial class KsProcgenEntranceConnectionsPrototype : IPrototype
 {
     [IdDataField] public string ID { get; private set; } = string.Empty;
@@ -103,9 +103,9 @@ public static class KsProcgenEntranceConnectionNormalizer
                 rootCount += group.RootCells.Count;
                 if (rootCount > 1024)
                     return Fail("EntranceRootBudget", configurationId: configuration.Id);
-                groups.Add(new(group.Id, group.Ports.OrderBy(port => port, StringComparer.Ordinal).ToList().AsReadOnly())
+                groups.Add(new(group.Id, group.Ports.OrderBy(port => port, StringComparer.Ordinal).ToReadOnlyList())
                 {
-                    RootCells = KsProcgenGeometry.SortCells(group.RootCells).ToList().AsReadOnly(),
+                    RootCells = KsProcgenGeometry.SortCells(group.RootCells).ToReadOnlyList(),
                 });
             }
             foreach (var port in configuration.SealedPorts)
@@ -118,12 +118,12 @@ public static class KsProcgenEntranceConnectionNormalizer
                 configuration.IsolationScope == KsProcgenEntranceIsolationScope.RequestNetwork && groups.Count > 1)
                 return Fail("ContradictoryEntranceNetworks", configurationId: configuration.Id);
             normalized.Add(new(configuration.Id, configuration.Weight == 0f ? 0f : configuration.Weight, configuration.Mode,
-                configuration.IsolationScope, groups.OrderBy(group => group.Id, StringComparer.Ordinal).ToList().AsReadOnly(),
-                configuration.SealedPorts.OrderBy(port => port, StringComparer.Ordinal).ToList().AsReadOnly()));
+                configuration.IsolationScope, groups.OrderBy(group => group.Id, StringComparer.Ordinal).ToReadOnlyList(),
+                configuration.SealedPorts.OrderBy(port => port, StringComparer.Ordinal).ToReadOnlyList()));
         }
         if (!normalized.Any(configuration => configuration.Weight > 0f))
             return Fail("NoEligibleEntranceConfigurations");
-        var ordered = normalized.OrderBy(configuration => configuration.Id, StringComparer.Ordinal).ToList().AsReadOnly();
+        var ordered = normalized.OrderBy(configuration => configuration.Id, StringComparer.Ordinal).ToReadOnlyList();
         var hash = KsProcgenStableHash.Create();
         hash.AddString("ks-procgen-entrance-contract-v2");
         hash.AddString(blobId);
@@ -202,7 +202,7 @@ public static class KsProcgenEntranceShorthand
             imported.Add(new() { Id = configurationIds[index], Mode = mode, IsolationScope = isolationScope,
                 Groups = groups.OrderBy(group => group.Id, StringComparer.Ordinal).ToList() });
         }
-        configurations = imported.AsReadOnly();
+        configurations = imported.ToReadOnlyList();
         issue = null;
         return true;
     }

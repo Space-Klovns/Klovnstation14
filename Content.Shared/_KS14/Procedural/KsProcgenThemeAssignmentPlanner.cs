@@ -24,7 +24,12 @@ public sealed record KsProcgenThemedRegion(
     IReadOnlyList<Vector2i> FloorCells,
     IReadOnlyList<Vector2i> WallCells,
     KsProcgenThemeSelection Theme,
-    IReadOnlyList<KsProcgenPackMinimum> UnplacedRequiredPacks);
+    IReadOnlyList<KsProcgenPackMinimum> UnplacedRequiredPacks)
+{
+    /// <summary>Entrance contract membership retained by the entrance-aware adapter.</summary>
+    public IReadOnlyList<string> EntranceGroupIds { get; init; } = [];
+    public IReadOnlyList<Vector2i> ProtectedPassageCells { get; init; } = [];
+}
 
 public sealed class KsProcgenThemeAssignmentResult
 {
@@ -50,7 +55,7 @@ public static class KsProcgenThemeAssignmentPlanner
     {
         if (prototypeManager == null || fill == null || partition == null ||
             fill.Status != KsProcgenPureFillStatus.Proposed ||
-            partition.Status == KsProcgenPartitionStatus.InvalidInput)
+            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded)
             return Failure(KsProcgenThemeAssignmentStatus.InvalidInput, "InvalidThemeAssignmentInput");
 
         var zoneByCell = new Dictionary<Vector2i, string>();

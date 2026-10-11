@@ -83,8 +83,8 @@ public static class KsProcgenWindowPlanner
     {
         if (goal == null)
             return Failure(KsProcgenWindowPlanStatus.InvalidInput, "InvalidWindowGoal");
-        return Plan(boundary, seed, goal.ExteriorWindowFraction, goal.HardFraction,
-            goal.ToleranceCells, goal.MinimumCount, goal.MaximumCount);
+        return Plan(boundary, seed, exteriorWindowFraction: goal.ExteriorWindowFraction, hardFraction: goal.HardFraction,
+            windowToleranceCells: goal.ToleranceCells, minimumWindowCells: goal.MinimumCount, maximumWindowCells: goal.MaximumCount);
     }
 
     public static KsProcgenWindowPlanResult Plan(
@@ -116,7 +116,7 @@ public static class KsProcgenWindowPlanner
                 eligible.Add(cell);
         }
         var orderedExclusions = excluded.OrderBy(item => item.Cell.Y)
-            .ThenBy(item => item.Cell.X).ToArray();
+            .ThenBy(item => item.Cell.X).ToReadOnlyList();
         if (boundary.Any(cell => cell.Fixed && cell.IsWindow && !eligible.Contains(cell)))
             return Failure(KsProcgenWindowPlanStatus.InvalidInput, "IneligibleFixedWindow");
 
@@ -155,7 +155,7 @@ public static class KsProcgenWindowPlanner
 
         var achieved = Math.Clamp(requested, lower, upper);
         var selected = editable.Take(achieved - fixedWindows)
-            .OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToArray();
+            .OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToReadOnlyList();
         var fractionUnmet = hardFraction && Math.Abs(achieved - requested) > windowToleranceCells;
         return new KsProcgenWindowPlanResult
         {

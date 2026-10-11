@@ -168,7 +168,8 @@ public static class KsProcgenTraversal
         Vector2i start,
         Vector2i goal,
         IReadOnlySet<Vector2i> walkableCells,
-        IReadOnlySet<Vector2i> vaultOnlyCells)
+        IReadOnlySet<Vector2i> vaultOnlyCells,
+        KsProcgenRelationPathBudget? pathBudget = null)
     {
         if (!walkableCells.Contains(start) || !walkableCells.Contains(goal) ||
             vaultOnlyCells.Contains(start) || vaultOnlyCells.Contains(goal))
@@ -181,6 +182,8 @@ public static class KsProcgenTraversal
 
         while (queue.TryDequeue(out var cell))
         {
+            if (pathBudget != null && !pathBudget.ExpandCleanPath())
+                return [];
             if (cell == goal)
             {
                 var path = new List<Vector2i> { goal };
