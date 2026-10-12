@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Bed.Sleep;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction.Components;
@@ -81,7 +82,7 @@ public sealed partial class InteractionPopupSystem : EntitySystem
         // TODO: Should be an attempt event
         // TODO: Need to handle pausing with an accumulator.
 
-        var msg = ""; // Stores the text to be shown in the popup message
+        KsPopupMessage? msg = null; // KS14: keep the optional popup unformatted
         SoundSpecifier? sfx = null; // Stores the filepath of the sound to be played
 
         var predict = component.SuccessChance is 0 or 1
@@ -94,7 +95,7 @@ public sealed partial class InteractionPopupSystem : EntitySystem
         if (_random.Prob(component.SuccessChance))
         {
             if (component.InteractSuccessString != null)
-                msg = Loc.GetString(component.InteractSuccessString, ("target", Identity.Entity(uid, EntityManager))); // Success message (localized).
+                msg = KsPopupMessage.Create /* KS14: defer popup translation */(component.InteractSuccessString, ("target", Identity.Entity(uid, EntityManager))); // Success message (localized).
 
             if (component.InteractSuccessSound != null)
                 sfx = component.InteractSuccessSound;
@@ -108,7 +109,7 @@ public sealed partial class InteractionPopupSystem : EntitySystem
         else
         {
             if (component.InteractFailureString != null)
-                msg = Loc.GetString(component.InteractFailureString, ("target", Identity.Entity(uid, EntityManager))); // Failure message (localized).
+                msg = KsPopupMessage.Create /* KS14: defer popup translation */(component.InteractFailureString, ("target", Identity.Entity(uid, EntityManager))); // Failure message (localized).
 
             if (component.InteractFailureSound != null)
                 sfx = component.InteractFailureSound;
@@ -122,14 +123,15 @@ public sealed partial class InteractionPopupSystem : EntitySystem
 
         if (!string.IsNullOrEmpty(component.MessagePerceivedByOthers))
         {
-            var msgOthers = Loc.GetString(component.MessagePerceivedByOthers,
+            var msgOthers = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(component.MessagePerceivedByOthers,
                 ("user", Identity.Entity(user, EntityManager)), ("target", Identity.Entity(uid, EntityManager)));
             _popupSystem.PopupEntity(msgOthers, uid, Filter.PvsExcept(user, entityManager: EntityManager), true);
         }
 
         if (!predict)
         {
-            _popupSystem.PopupEntity(msg, uid, user);
+            if (msg is { } serverMessage) // KS14: absent message remains silent
+                _popupSystem.PopupEntity(serverMessage, uid, user);
 
             if (component.SoundPerceivedByOthers)
                 _audio.PlayPvs(sfx, target);
@@ -138,7 +140,8 @@ public sealed partial class InteractionPopupSystem : EntitySystem
             return;
         }
 
-        _popupSystem.PopupClient(msg, uid, user);
+        if (msg is { } predictedMessage) // KS14: absent message remains silent
+            _popupSystem.PopupClient(predictedMessage, uid, user);
 
         if (sfx == null)
             return;

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -397,13 +398,13 @@ public sealed partial class WiresSystem : SharedWiresSystem
 
         if (!TryComp(player, out HandsComponent? handsComponent))
         {
-            _popupSystem.PopupEntity(Loc.GetString("wires-component-ui-on-receive-message-no-hands"), uid, player);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-no-hands"), uid, player);
             return;
         }
 
         if (!_interactionSystem.InRangeUnobstructed(player, uid))
         {
-            _popupSystem.PopupEntity(Loc.GetString("wires-component-ui-on-receive-message-cannot-reach"), uid, player);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-cannot-reach"), uid, player);
             return;
         }
 
@@ -635,13 +636,13 @@ public sealed partial class WiresSystem : SharedWiresSystem
             case WiresAction.Cut:
                 if (!Tool.HasQuality(toolEntity, CuttingQuality, tool))
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-need-wirecutters"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-need-wirecutters"), user);
                     return;
                 }
 
                 if (wire.IsCut)
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-cannot-cut-cut-wire"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-cannot-cut-cut-wire"), user);
                     return;
                 }
 
@@ -649,13 +650,13 @@ public sealed partial class WiresSystem : SharedWiresSystem
             case WiresAction.Mend:
                 if (!Tool.HasQuality(toolEntity, CuttingQuality, tool))
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-need-wirecutters"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-need-wirecutters"), user);
                     return;
                 }
 
                 if (!wire.IsCut)
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-cannot-mend-uncut-wire"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-cannot-mend-uncut-wire"), user);
                     return;
                 }
 
@@ -663,13 +664,13 @@ public sealed partial class WiresSystem : SharedWiresSystem
             case WiresAction.Pulse:
                 if (!Tool.HasQuality(toolEntity, PulsingQuality, tool))
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-need-multitool"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-need-multitool"), user);
                     return;
                 }
 
                 if (wire.IsCut)
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-cannot-pulse-cut-wire"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-cannot-pulse-cut-wire"), user);
                     return;
                 }
 
@@ -722,13 +723,13 @@ public sealed partial class WiresSystem : SharedWiresSystem
             case WiresAction.Cut:
                 if (!Tool.HasQuality(toolEntity, CuttingQuality, tool))
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-need-wirecutters"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-need-wirecutters"), user);
                     break;
                 }
 
                 if (wire.IsCut)
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-cannot-cut-cut-wire"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-cannot-cut-cut-wire"), user);
                     break;
                 }
 
@@ -743,13 +744,13 @@ public sealed partial class WiresSystem : SharedWiresSystem
             case WiresAction.Mend:
                 if (!Tool.HasQuality(toolEntity, CuttingQuality, tool))
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-need-wirecutters"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-need-wirecutters"), user);
                     break;
                 }
 
                 if (!wire.IsCut)
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-cannot-mend-uncut-wire"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-cannot-mend-uncut-wire"), user);
                     break;
                 }
 
@@ -764,13 +765,13 @@ public sealed partial class WiresSystem : SharedWiresSystem
             case WiresAction.Pulse:
                 if (!Tool.HasQuality(toolEntity, PulsingQuality, tool))
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-need-multitool"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-need-multitool"), user);
                     break;
                 }
 
                 if (wire.IsCut)
                 {
-                    _popupSystem.PopupCursor(Loc.GetString("wires-component-ui-on-receive-message-cannot-pulse-cut-wire"), user);
+                    _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wires-component-ui-on-receive-message-cannot-pulse-cut-wire"), user);
                     break;
                 }
 

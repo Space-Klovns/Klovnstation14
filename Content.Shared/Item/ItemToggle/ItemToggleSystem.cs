@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Item.ItemToggle.Components;
@@ -234,13 +235,13 @@ public sealed partial class ItemToggleSystem : EntitySystem
         {
             _audio.PlayPredicted(soundToPlay, uid, user);
             if (showPopup && ent.Comp.PopupActivate != null && user != null)
-                _popup.PopupClient(Loc.GetString(ent.Comp.PopupActivate), user.Value, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.PopupActivate), user.Value, user.Value);
         }
         else
         {
             _audio.PlayPvs(soundToPlay, uid);
             if (showPopup && ent.Comp.PopupActivate != null && user != null)
-                _popup.PopupEntity(Loc.GetString(ent.Comp.PopupActivate), user.Value, user.Value);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.PopupActivate), user.Value, user.Value);
         }
 
         comp.Activated = true;
@@ -262,13 +263,13 @@ public sealed partial class ItemToggleSystem : EntitySystem
         {
             _audio.PlayPredicted(soundToPlay, uid, user);
             if (showPopup && ent.Comp.PopupDeactivate != null && user != null)
-                _popup.PopupClient(Loc.GetString(ent.Comp.PopupDeactivate), user.Value, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.PopupDeactivate), user.Value, user.Value);
         }
         else
         {
             _audio.PlayPvs(soundToPlay, uid);
             if (showPopup && ent.Comp.PopupDeactivate != null && user != null)
-                _popup.PopupEntity(Loc.GetString(ent.Comp.PopupDeactivate), user.Value, user.Value);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.PopupDeactivate), user.Value, user.Value);
         }
 
         comp.Activated = false;

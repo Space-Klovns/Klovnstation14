@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Popups;
 using Content.Shared.DoAfter;
@@ -175,6 +176,6 @@ public sealed partial class HandTeleporterSystem : EntitySystem
         _audio.PlayPvs(component.ClearPortalsSound, uid);
 
         if (instability)
-            _popup.PopupEntity(Loc.GetString("handheld-teleporter-instability-fizzle"), uid, user, PopupType.MediumCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("handheld-teleporter-instability-fizzle"), uid, user, PopupType.MediumCaution);
     }
 }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Chemistry.EntitySystems;
 using Content.Server.Gravity;
 using Content.Server.Popups;
@@ -90,7 +91,7 @@ public sealed partial class SpraySystem : SharedSpraySystem
         if (ev.Cancelled)
         {
             if (ev.CancelPopupMessage != null && user != null)
-                _popupSystem.PopupEntity(Loc.GetString(ev.CancelPopupMessage), entity.Owner, user.Value);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ev.CancelPopupMessage), entity.Owner, user.Value);
             return;
         }
 
@@ -100,7 +101,7 @@ public sealed partial class SpraySystem : SharedSpraySystem
         if (solution.Volume <= 0)
         {
             if (user != null)
-                _popupSystem.PopupEntity(Loc.GetString(entity.Comp.SprayEmptyPopupMessage, ("entity", entity)), entity.Owner, user.Value);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(entity.Comp.SprayEmptyPopupMessage, ("entity", entity)), entity.Owner, user.Value);
             return;
         }
 

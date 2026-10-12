@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.RemoteDrone;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking;
@@ -60,7 +61,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
 
         var removedEntities = _containerSystem.EmptyContainer(container, force: true);
         if (removedEntities.Count != 0)
-            _popupSystem.PopupEntity(Loc.GetString("fpv-drone-payload-dropped", ("name", Identity.Name(entity.Owner, EntityManager))), entity.Owner, PopupType.MediumCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("fpv-drone-payload-dropped", ("name", Identity.Entity(entity.Owner, EntityManager))), entity.Owner, PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]

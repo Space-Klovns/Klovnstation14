@@ -2,6 +2,8 @@ using Content.Server.Movement.Components;
 using Content.Server.Movement.Systems;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Projectiles;
+using Content.Shared.Trigger.Components.Triggers;
+using Content.Shared.Trigger.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -37,6 +39,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private FixtureSystem _fixtures = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private TriggerSystem _triggerSystem = default!;
 
     [Dependency] private EntityQuery<LagCompensationComponent> _lagCompensationQuery = default;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery = default;
@@ -88,16 +91,6 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         if (!_playerManager.TryGetSessionByEntity(shooterUid, out var shooterSession))
             return;
 
-        if (!_physicsQuery.TryComp(projectileUid, out var projectilePhysicsComponent) ||
-            !_xformQuery.TryComp(projectileUid, out var projectileTransformComponent))
-        {
-            return;
-        }
-
-        var projectileSpeed = projectilePhysicsComponent.LinearVelocity.Length();
-        if (projectileSpeed <= 0f)
-            return;
-
         // IMPORTANT: a client-sent IGameTiming.CurTime is NOT comparable to the server's. RobustToolbox
         // deliberately runs the client's tick counter (and thus CurTime) ahead of the server's last-confirmed
         // tick, by a margin derived from that same client's ping, purely so predicted input arrives roughly
@@ -109,6 +102,27 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         var lagDuration = TimeSpan.FromMilliseconds(shooterSession.Ping * 1.5); // Use 1.5 due to the trip buffer.
         if (lagDuration > LagCompensationSystem.BufferTime)
             lagDuration = LagCompensationSystem.BufferTime;
+
+        CompensateProjectile(projectileUid, shooterUid, lagDuration);
+    }
+
+    /// <summary>
+    /// Spawns compensation ghosts for <paramref name="projectileUid"/> as though <paramref name="shooterUid"/>
+    /// fired it <paramref name="lagDuration"/> ago. <see cref="OnShotProjectile"/> derives that duration from the
+    /// shooter's ping; this is the entry point for anything that knows it by other means - integration tests
+    /// especially, whose net channels always report a ping of zero and so never reach here on their own.
+    /// </summary>
+    public void CompensateProjectile(EntityUid projectileUid, EntityUid shooterUid, TimeSpan lagDuration)
+    {
+        if (!_physicsQuery.TryComp(projectileUid, out var projectilePhysicsComponent) ||
+            !_xformQuery.TryComp(projectileUid, out var projectileTransformComponent))
+        {
+            return;
+        }
+
+        var projectileSpeed = projectilePhysicsComponent.LinearVelocity.Length();
+        if (projectileSpeed <= 0f)
+            return;
 
         var lagSeconds = (float)lagDuration.TotalSeconds;
         if (lagSeconds <= 0f)
@@ -366,6 +380,25 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
         if (TerminatingOrDeleted(targetUid) || TerminatingOrDeleted(projectileUid) || !CanReallyCollide(projectileUid, targetUid))
             return;
+
+        HitRealTarget(projectileUid, targetUid);
+    }
+
+    /// <summary>
+    /// Does what physics would have done had the projectile touched the real target rather than its ghost.
+    /// The ghost's fixture is soft, so the ghost/projectile contact itself is ignored by every hard-fixture
+    /// collide handler - including <see cref="TriggerOnCollideComponent"/>, which is what detonates rockets.
+    /// Calling only <see cref="PredictedProjectileSystem.DoHit"/> here dealt the impact damage and silently
+    /// skipped the explosion; the trigger goes first, the same order <see cref="TriggerSystem"/>'s
+    /// <c>before:</c> gives it on a real collision.
+    /// </summary>
+    private void HitRealTarget(EntityUid projectileUid, EntityUid targetUid)
+    {
+        if (_fixturesQuery.TryComp(targetUid, out var targetFixturesComponent) &&
+            FindHardFixture(targetFixturesComponent) is { } targetFixture)
+        {
+            _triggerSystem.TryCollideTrigger(projectileUid, targetUid, SharedProjectileSystem.ProjectileFixture, targetFixture);
+        }
 
         _projectile.DoHit(projectileUid, targetUid);
     }

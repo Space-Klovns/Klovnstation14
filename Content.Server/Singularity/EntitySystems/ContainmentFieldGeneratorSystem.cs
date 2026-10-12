@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Popups;
 using Content.Server.Singularity.Events;
@@ -102,7 +103,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
                 TurnOn(generator);
             else if (generator.Comp.Enabled && generator.Comp.IsConnected)
             {
-                _popupSystem.PopupEntity(Loc.GetString("comp-containment-toggle-warning"), args.User, args.User, PopupType.LargeCaution);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-toggle-warning"), args.User, args.User, PopupType.LargeCaution);
                 return;
             }
             else
@@ -127,7 +128,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
     {
         if (component.Enabled || component.IsConnected)
         {
-            _popupSystem.PopupEntity(Loc.GetString("comp-containment-anchor-warning"), args.User, args.User, PopupType.LargeCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-anchor-warning"), args.User, args.User, PopupType.LargeCaution);
             args.Cancel();
         }
     }
@@ -136,14 +137,14 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
     {
         generator.Comp.Enabled = true;
         ChangeFieldVisualizer(generator);
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-turned-on"), generator);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-turned-on"), generator);
     }
 
     private void TurnOff(Entity<ContainmentFieldGeneratorComponent> generator)
     {
         generator.Comp.Enabled = false;
         ChangeFieldVisualizer(generator);
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-turned-off"), generator);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-turned-off"), generator);
     }
 
     private void OnComponentRemoved(Entity<ContainmentFieldGeneratorComponent> generator, ref ComponentRemove args)
@@ -200,7 +201,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
             return;
         }
 
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-disconnected"), uid, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-disconnected"), uid, PopupType.LargeCaution);
 
         if (component.Connections.Count == 0)
         {
@@ -326,7 +327,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
 
         ChangeFieldVisualizer(generator);
         UpdateConnectionLights(generator);
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-connected"), generator);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-connected"), generator);
         return true;
     }
 

@@ -25,7 +25,7 @@ namespace Content.Shared.Atmos.Piping.Unary.Components
             Gas.NitrousOxide,
             Gas.Frezon,
             Gas.Zipion, // KS14
-            Gas.Argon, // KS14
+            Gas.Encalite, // KS14
             Gas.Evaporin // KS14
         };
 

@@ -81,6 +81,9 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         {
             foreach (var consideration in compound.Considerations)
                 consideration.Initialise(dependencyCollection);
+
+            foreach (var query in compound.Query)
+                query.Initialise(dependencyCollection);
         }
     }
 
@@ -518,7 +521,8 @@ public sealed partial class NPCUtilitySystem : EntitySystem
                     break;
                 }
             default:
-                throw new NotImplementedException();
+                query.AddEntities(blackboard, owner, entities); // KS14: custom queries add their own; throw new NotImplementedException() moved into the base
+                break;
         }
     }
 

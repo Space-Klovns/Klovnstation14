@@ -729,6 +729,8 @@ public sealed partial class ChatUIController : UIController
         if (text.Length == 0)
             return (ChatSelectChannel.None, text, null);
 
+        text = NormalizeLocalizedRadioPrefix(text); // KS14: resolve locale-specific radio aliases before preview and transmission
+
         // We only cut off prefix only if it is not a radio or local channel, which both map to the same /say command
         // because ????????
 
@@ -1007,6 +1009,7 @@ public sealed partial class ChatUIController : UIController
 
             stored.Message = translated;
             stored.WrappedMessage = rebuilt;
+            UpdateTranslatedSpeechBubbles(stored); // KS14: refresh already visible bubbles; queued bubbles share this message.
             // KS14: re-render only this one line, not the whole history. A full Repopulate() here is
             // O(History) markup-parse + relayout per swap, and History is uncapped over a round.
             ReplaceMessage(i);

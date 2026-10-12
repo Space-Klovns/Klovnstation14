@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Components;
@@ -476,7 +477,7 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
 
         // KS14: moved ts to shared
         _audio.PlayPredicted(storage.InsertingSound, receiver, user);
-        _popup.PopupPredicted(Loc.GetString("machine-insert-item",
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("machine-insert-item",
                 ("user", user),
                 ("machine", receiver),
                 ("item", Identity.Name(toInsert, EntityManager))),

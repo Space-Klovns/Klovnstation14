@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Hands;
 using Content.Shared.Hands.EntitySystems;
@@ -130,7 +131,7 @@ public abstract partial class SharedVirtualItemSystem : EntitySystem
                     continue;
 
                 if (!silent && !TerminatingOrDeleted(held))
-                    _popup.PopupClient(Loc.GetString("virtual-item-dropped-other", ("dropped", held)), user, user);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("virtual-item-dropped-other", ("dropped", held)), user, user);
 
                 empty = hand;
                 break;

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
 using Content.Shared.Examine;
@@ -47,11 +48,11 @@ public sealed partial class RCDAmmoSystem : EntitySystem
         var count = Math.Min(charges.MaxCharges - current, comp.Charges);
         if (count <= 0)
         {
-            _popup.PopupClient(Loc.GetString("rcd-ammo-component-after-interact-full"), target, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-ammo-component-after-interact-full"), target, user);
             return;
         }
 
-        _popup.PopupClient(Loc.GetString("rcd-ammo-component-after-interact-refilled"), target, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-ammo-component-after-interact-refilled"), target, user);
         _sharedCharges.AddCharges(target, count);
         comp.Charges -= count;
         Dirty(uid, comp);

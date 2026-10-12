@@ -2,7 +2,7 @@ using Content.Shared._KS14.Language; // KS14
 
 namespace Content.Shared.Speech;
 
-public sealed class ListenEvent : EntityEventArgs
+public sealed partial /* KS14: fork translation data lives in a companion file */ class ListenEvent : EntityEventArgs
 {
     public readonly string Message;
     public readonly EntityUid Source;

@@ -4,6 +4,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.Timing;
+using Content.Client._KS14.Portal;
 
 namespace Content.Client._KS14.Explosion.Shockwave;
 
@@ -27,6 +28,10 @@ public sealed partial class KsShockwaveOverlay(ShaderInstance shader) : Overlay
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
     {
+        // Not drawn into portal views: it distorts the screen texture, which in a portal pass is not this view.
+        if (KsPortalRenderSystem.PassActive)
+            return false;
+
         if (args.Viewport.Eye == null)
             return false;
 

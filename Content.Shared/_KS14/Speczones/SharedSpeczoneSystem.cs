@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Sparks;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction.Components;
@@ -79,7 +80,7 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
                 return true;
 
             _popupSystem.PopupEntity(
-                Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(uid, EntityManager))),
+                KsPopupMessage.Create("speczone-invincibility-use-interrupted", ("entity", Identity.Entity(uid, EntityManager))),
                 uid,
                 userUid,
                 PopupType.SmallCaution
@@ -88,7 +89,7 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
         else
         {
             _popupSystem.PopupEntity(
-                Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(uid, EntityManager))),
+                KsPopupMessage.Create("speczone-invincibility-use-interrupted", ("entity", Identity.Entity(uid, EntityManager))),
                 uid,
                 PopupType.SmallCaution
             );

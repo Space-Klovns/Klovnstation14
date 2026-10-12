@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.Station.Systems;
@@ -255,7 +256,7 @@ public sealed partial class CriminalRecordsConsoleSystem : SharedCriminalRecords
 
         if (!_access.IsAllowed(user, ent))
         {
-            _popup.PopupEntity(Loc.GetString("criminal-records-permission-denied"), ent, user);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("criminal-records-permission-denied"), ent, user);
             return false;
         }
 

@@ -6,6 +6,7 @@ using Content.Server.NPC.Pathfinding;
 using Content.Server.Power.EntitySystems; // KS14
 using Content.Shared.Climbing.Components;
 using Content.Shared.CombatMode;
+using Content.Shared.DoAfter; // KS14
 using Content.Shared.Doors.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Movement.Components;
@@ -46,6 +47,13 @@ public sealed partial class NPCSteeringSystem
         NPCSteeringComponent steering,
         PathPoly node)
     {
+        // KS14 start: something loose on it that it pushes out of the way, whatever the navmesh said when the path was
+        //      made - a closet shoved on ahead of it, down a corridor, onto a tile that was free. See
+        //      NPCSteeringSystem.Klovn.Pushing.cs
+        if (HasLooseBlocker(uid, steering, node))
+            return false;
+        // KS14 end
+
         if (node.Data.IsFreeSpace)
         {
             return true;
@@ -145,6 +153,22 @@ public sealed partial class NPCSteeringSystem
 
         // Grab the target position, either the next path node or our end goal..
         var targetCoordinates = GetTargetCoordinates(steering);
+        var needsPath = false; // KS14: moved up from below
+
+        // KS14 start: nodes a navmesh rebuild has invalidated are dropped, and a new path asked for, before giving up.
+        //      This was below the NoPath check, so it never ran: a door opening rebuilds its chunk, and every NPC whose
+        //      path went through it - one that had just forced it, say - gave up on the spot
+        while (!targetCoordinates.IsValid(EntityManager) &&
+            steering.CurrentPath.TryPeek(out var invalidPoly) &&
+            !invalidPoly.IsValid())
+        {
+            steering.CurrentPath.Dequeue();
+            // Try to get the next node temporarily.
+            targetCoordinates = GetTargetCoordinates(steering);
+            needsPath = true;
+            ResetStuck(steering, ourCoordinates);
+        }
+        // KS14 end
 
         if (!targetCoordinates.IsValid(EntityManager))
         {
@@ -152,8 +176,10 @@ public sealed partial class NPCSteeringSystem
             return false;
         }
 
-        var needsPath = false;
+        /* var needsPath = false; */ // KS14: moved up
 
+        // KS14: unreachable here, below the NoPath check above; done before it instead
+        /*
         // If the next node is invalid then get new ones
         if (!targetCoordinates.IsValid(EntityManager))
         {
@@ -167,6 +193,7 @@ public sealed partial class NPCSteeringSystem
                 ResetStuck(steering, ourCoordinates);
             }
         }
+        */
 
         // Check if mapids match.
         var targetMap = _transform.ToMapCoordinates(targetCoordinates);
@@ -227,6 +254,12 @@ public sealed partial class NPCSteeringSystem
                         return false;
                     case SteeringObstacleStatus.Continuing:
                         CheckPath(uid, steering, xform, needsPath, targetDistance);
+                        // KS14 start: stand still while forcing a door; prying stops if it moves. See NpcDoorSystem.
+                        //      So does prying with its own claws, or climbing: their do-afters break on moving too,
+                        //      and walking on into the door it is prying cancelled it, and steering gave up
+                        if (_npcDoorSystem.IsBreaching(uid) || _doAfter.GetStatus(steering.DoAfterId) == DoAfterStatus.Running)
+                            return false;
+                        // KS14 end
                         return true;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -285,6 +318,10 @@ public sealed partial class NPCSteeringSystem
                 // TODO: Blacklist nodes (pathfinder factor wehn)
                 // TODO: This should be a warning but
                 // A) NPCs get stuck on non-anchored static bodies still (e.g. closets)
+                // KS14: closets are dynamic bodies, not static. The navmesh counts them, anchored or not, and blocks a
+                //      tile one leaves too narrow to get through (PathfindingSystem.BlockNarrowGaps), so paths no longer
+                //      run past them. Left: one reaching into the next tile, which only the tile its centre is on counts,
+                //      or one pushed since its chunk was last rebuilt
                 // B) NPCs still try to move in locked containers (e.g. cow, hamster)
                 // and I don't want to spam grafana even harder than it gets spammed rn.
                 Log.Debug($"NPC {ToPrettyString(uid)} found stuck at {ourCoordinates}");
@@ -486,6 +523,7 @@ public sealed partial class NPCSteeringSystem
 
     /// <summary>
     /// Tries to avoid static blockers such as walls.
+    /// KS14: and loose ones - closets, crates - as it looks up dynamic bodies too.
     /// </summary>
     private void CollisionAvoidance(
         EntityUid uid,
@@ -570,6 +608,7 @@ public sealed partial class NPCSteeringSystem
         var checkClimbs = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0 &&
                           (ent.Comp.Flags & PathFlags.Climbing) != 0x0 &&
                           climbing != null;
+        var checkPush = (ent.Comp.Flags & PathFlags.Pushing) != 0x0; // KS14
         var checkSmash = (ent.Comp.Flags & PathFlags.Smashing) != 0x0 &&
                          combatMode != null &&
                          _melee.TryGetWeapon(ent, out _, out var weapon) &&
@@ -602,6 +641,14 @@ public sealed partial class NPCSteeringSystem
             else if (checkClimbs &&
                      CanHandleClimb((ent, climbing!), nearbyEnt, out _))
                 nearbyEntities.Remove(nearbyEnt);
+            // KS14 start: something loose it is going to push out of the way, on the tile it is pushing through
+            else if (checkPush &&
+                     otherBody.BodyType == BodyType.Dynamic &&
+                     _xformQuery.GetComponent(nearbyEnt) is var nearbyTransform &&
+                     nearbyTransform.ParentUid == poly.GraphUid &&
+                     poly.Box.Enlarged(0.5f).Contains(nearbyTransform.LocalPosition))
+                nearbyEntities.Remove(nearbyEnt);
+            // KS14 end
             // Check if we can smash. Should also check if we can even damage the entity at some point.
             else if (checkSmash &&
                      _destructibleQuery.HasComponent(nearbyEnt))
@@ -621,7 +668,7 @@ public sealed partial class NPCSteeringSystem
             return true;
 
         var isAccessRequired = (flags & PathfindingBreadcrumbFlag.Access) != 0x0 &&
-            !_accessReaderSystem.IsAllowed(ent, doorUid);
+            _npcDoorSystem.RequiresAccess(doorUid) && !_npcDoorSystem.HasAdvertisedAccess(ent, doorUid); // KS14: !_accessReaderSystem.IsAllowed(ent, doorUid) -> what it believes, as NpcDoorSystem.GetDoorAccess
         var canInteract = (ent.Comp.Flags & PathFlags.Interact) != 0x0 &&
             this.IsPowered(doorUid, EntityManager); // KS14: ANK: check if it's powered first; otherwise, don't
 

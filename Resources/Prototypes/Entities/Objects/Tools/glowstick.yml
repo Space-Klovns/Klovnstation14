@@ -31,6 +31,13 @@
     sprite: Objects/Misc/glowstick.rsi
     heldPrefix: unlit
   - type: Appearance
+  # KS14 start: the server's view of the light below, which the client animates on its own - see KsExpendableLightMirrorComponent
+  - type: KsExpendableLightMirror
+    litRadius: 5
+    litEnergy: 3 # client: 0 -> 3 while lighting
+    fadingRadius: 3 # client: 5 -> 1.5 while fading
+    fadingEnergy: 1.5 # client: 3 -> 0.2 while fading
+  # KS14 end
   - type: PointLight
     enabled: false
     color: "#F6F7E9"

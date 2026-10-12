@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 // <Trauma>
 using Content.Shared.Audio;
 using Content.Shared.Random.Helpers;
@@ -193,7 +194,7 @@ public sealed partial class ReflectSystem : EntitySystem
         if (_netManager.IsServer || !_timing.IsFirstTimePredicted)
             return;
 
-        _popup.PopupEntity(Loc.GetString("reflect-shot"), user);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("reflect-shot"), user);
         _audio.PlayLocal(reflect.SoundOnReflect, user, null);
         // </Trauma>
     }

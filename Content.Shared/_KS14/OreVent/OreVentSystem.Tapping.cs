@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Numerics;
 using Content.Shared._KS14.OreVent.Drone;
 using Content.Shared.DoAfter;
@@ -28,7 +29,7 @@ public sealed partial class OreVentSystem : EntitySystem
         {
             CancelTapping(entity!);
 
-            _popupSystem.PopupEntity(Loc.GetString("ks-specific-orevent-tapping-failed-destruction", ("vent", entity.Owner)), entity.Owner, type: Popups.PopupType.MediumCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-specific-orevent-tapping-failed-destruction", ("vent", entity.Owner)), entity.Owner, type: Popups.PopupType.MediumCaution);
             ClearAreaAround(entity, entity.Comp.ClearRadius / 2f);
 
             return;

@@ -19,7 +19,7 @@ namespace Content.Client.Viewport
     /// <summary>
     ///     Viewport control that has a fixed viewport size and scales it appropriately.
     /// </summary>
-    // KS14: made partial, z-level rendering lives in ScalingViewport.Klovn.cs
+    // KS14: made partial, z-level rendering lives in ScalingViewport.Klovn.ZLevel.cs
     public sealed partial class ScalingViewport : Control, IViewportControl
     {
         [Dependency] private IClyde _clyde = default!;
@@ -173,11 +173,20 @@ namespace Content.Client.Viewport
 
             // KS14 start: on a z-level stack, every level is drawn as its own pass instead of the single
             //      render below, and that pass loop does its own overlays and blit
-            if (TryDrawZLevels(handle, drawBox, drawBoxGlobal))
-                return;
+            // View portals are rendered first and composited by an overlay during the passes below.
+            DrawPortalPrePass(handle);
+            try
+            {
+                if (TryDrawZLevels(handle, drawBox, drawBoxGlobal))
+                    return;
 
-            _viewport.Eye = _eye;
-            _viewport.Render();
+                _viewport.Eye = _eye;
+                _viewport.Render();
+            }
+            finally
+            {
+                EndPortalPass();
+            }
             // KS14 end
 
             _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
@@ -286,6 +295,7 @@ namespace Content.Client.Viewport
             _viewport = null;
 
             InvalidateZLevelState(); // KS14
+            ReleasePortalViewports(); // KS14: portal views are sized to match the viewport
         }
 
         public MapCoordinates ScreenToMap(Vector2 coords)

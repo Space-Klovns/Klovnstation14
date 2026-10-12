@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.CCVar;
 using Content.Shared.Popups;
 using Content.Shared.Shuttles.Components;
@@ -31,6 +32,6 @@ public abstract partial class SharedEmergencyShuttleSystem : EntitySystem
         args.Cancel();
 
         if (!args.Silent)
-            Popup.PopupClient(Loc.GetString("emergency-shuttle-console-no-early-launches"), ent, args.User);
+            Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emergency-shuttle-console-no-early-launches"), ent, args.User);
     }
 }

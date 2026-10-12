@@ -11,33 +11,33 @@ namespace Content.Server._KS14.NPC.Systems;
 public sealed partial class NpcAggroSystem : EntitySystem
 {
     [SubscribeLocalEvent]
-    private void OnDamaged(EntityUid uid, NpcAggroComponent comp, DamageChangedEvent args)
+    // A by-value event: there is no Entity<T> form of handler for one.
+    private void OnDamaged(EntityUid uid, NpcAggroComponent component, DamageChangedEvent args)
     {
         if (!args.DamageIncreased || args.DamageDelta is not { } delta || delta.GetTotal() <= 0)
             return;
 
-        var source = args.Origin;
-        if (source == null || source == uid)
+        if (args.Origin is not { } originUid || originUid == uid)
             return;
 
-        Aggro(uid, source.Value, comp);
+        Aggro((uid, component), originUid);
     }
 
     /// <summary>
     /// Marks the mob aggroed and locks the attacker as its target.
     /// Idempotent - first aggressor wins.
     /// </summary>
-    public void Aggro(EntityUid uid, EntityUid target, NpcAggroComponent? comp = null)
+    public void Aggro(Entity<NpcAggroComponent?> entity, EntityUid targetUid)
     {
-        if (!Resolve(uid, ref comp) || comp.Aggroed)
+        if (!Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Aggroed)
             return;
 
-        comp.Aggroed = true;
+        entity.Comp.Aggroed = true;
 
-        if (TryComp<HTNComponent>(uid, out var htn))
+        if (TryComp<HTNComponent>(entity, out var htnComponent))
         {
-            htn.Blackboard.SetValue("Aggroed", true);
-            htn.Blackboard.SetValue("Target", target);
+            htnComponent.Blackboard.SetValue("Aggroed", true);
+            htnComponent.Blackboard.SetValue("Target", targetUid);
         }
     }
 

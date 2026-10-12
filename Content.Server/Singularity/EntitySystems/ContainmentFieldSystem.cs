@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Server.Singularity.Events;
 using Content.Shared.Shuttles.Components;
@@ -29,7 +30,7 @@ public sealed partial class ContainmentFieldSystem : EntitySystem
 
         if (component.DestroyGarbage && HasComp<SpaceGarbageComponent>(otherBody))
         {
-            _popupSystem.PopupEntity(Loc.GetString("comp-field-vaporized", ("entity", otherBody)), uid, PopupType.LargeCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-field-vaporized", ("entity", otherBody)), uid, PopupType.LargeCaution);
             QueueDel(otherBody);
         }
 

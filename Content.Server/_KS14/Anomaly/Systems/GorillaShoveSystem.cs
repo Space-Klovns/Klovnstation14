@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Disposal.Unit;
 using Content.Shared.Disposal.Components;
 using Content.Server.Popups;
@@ -42,14 +43,14 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         var slotId = "core_slot";
         if (!_itemSlots.TryGetSlot(ent.Owner, slotId, out var slot) || slot.Item is not { } coreItem)
         {
-            _popup.PopupEntity(Loc.GetString("gorilla-shove-gauntlet-not-active"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-gauntlet-not-active"), user, user);
             return;
         }
 
         // Verify it is an Anomaly Core
         if (!TryComp<AnomalyCoreComponent>(coreItem, out var coreComp))
         {
-            _popup.PopupEntity(Loc.GetString("gorilla-shove-gauntlet-not-active"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-gauntlet-not-active"), user, user);
             return;
         }
 
@@ -57,7 +58,7 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         // If the core is decayed, it has limited charges. If it is 0, we can't use it.
         if (coreComp.IsDecayed && coreComp.Charge <= 0)
         {
-            _popup.PopupEntity(Loc.GetString("gorilla-shove-gauntlet-not-active"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-gauntlet-not-active"), user, user);
             return;
         }
 
@@ -70,7 +71,7 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         // if (targetDisposal == null)
         // {
         //     // No charge consumed yet, just return
-        //     _popup.PopupEntity(Loc.GetString("gorilla-shove-not-disposals"), user, user);
+        //     _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-not-disposals"), user, user);
         //     return;
         // }
 

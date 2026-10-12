@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System.Collections.Generic;
 using Content.Client._KS14.Actions;
 using Content.Client._KS14.Actions.UI;

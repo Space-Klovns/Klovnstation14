@@ -1,4 +1,5 @@
-﻿using Content.Server.Hands.Systems;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Server.Hands.Systems;
 using Content.Server.Popups;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Popups;
@@ -60,7 +61,7 @@ public sealed partial class BalloonPopperSystem : EntitySystem
             return;
 
         _audio.PlayPvs(component.PopSound, balloon);
-        _popup.PopupCoordinates(Loc.GetString("melee-balloon-pop",
+        _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("melee-balloon-pop",
             ("balloon", Identity.Entity(balloon, EntityManager))), Transform(balloon).Coordinates, PopupType.Large);
         QueueDel(balloon);
     }

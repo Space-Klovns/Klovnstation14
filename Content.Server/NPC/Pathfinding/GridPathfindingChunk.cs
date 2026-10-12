@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Pathfinding; // KS14
 using Content.Shared.NPC;
 
 namespace Content.Server.NPC.Pathfinding;
@@ -32,6 +33,15 @@ public sealed class GridPathfindingChunk
     /// </summary>
     [ViewVariables]
     public readonly List<PathPortal> Portals = new();
+
+    // KS14 start
+    /// <summary>
+    /// This chunk's coarse maps, one per path profile, built as searches need them. Dropped whenever it or a neighbour
+    /// is rebuilt. Built and read on the search threads, under a lock on the chunk; dropped on the main thread, when
+    /// no search is running. See PathfindingSystem.Klovn.Hierarchy.cs.
+    /// </summary>
+    public List<PathChunkAbstraction>? KsAbstractions;
+    // KS14 end
 
     public GridPathfindingChunk()
     {

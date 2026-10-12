@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Content.IntegrationTests.Tests.Helpers;
 using Content.Shared._KS14.ZLevel.Physics;
+using Content.Shared.DeviceLinking.Events;
 using Robust.Shared.GameObjects;
 
 namespace Content.IntegrationTests.Tests._KS14.ZLevel;
@@ -27,6 +28,11 @@ public sealed class KsZLevelTestListenerSystem : EntitySystem
     /// </summary>
     public bool AllowMovementInTransit;
 
+    /// <summary>
+    ///     Sink ports that have been invoked on the listener, in the order they fired.
+    /// </summary>
+    public readonly List<string> SignalsReceived = [];
+
     public readonly List<KsZLevelLandEvent> Landings = [];
     public readonly List<KsZLevelChangedEvent> LevelChanges = [];
     public int TransitsStarted;
@@ -36,6 +42,7 @@ public sealed class KsZLevelTestListenerSystem : EntitySystem
     {
         VetoLandingDamage = false;
         AllowMovementInTransit = false;
+        SignalsReceived.Clear();
         Landings.Clear();
         LevelChanges.Clear();
         TransitsStarted = 0;
@@ -52,6 +59,7 @@ public sealed class KsZLevelTestListenerSystem : EntitySystem
         SubscribeLocalEvent<TestListenerComponent, KsZLevelLandAttemptEvent>(OnLandAttempt);
         SubscribeLocalEvent<TestListenerComponent, KsZLevelLandEvent>(OnLand);
         SubscribeLocalEvent<TestListenerComponent, KsZLevelTransitMoveAttemptEvent>(OnMoveAttempt);
+        SubscribeLocalEvent<TestListenerComponent, SignalReceivedEvent>(OnSignalReceived);
     }
 
     private void OnTransitStarted(Entity<TestListenerComponent> entity, ref KsZLevelTransitStartedEvent args)
@@ -84,5 +92,10 @@ public sealed class KsZLevelTestListenerSystem : EntitySystem
     {
         if (AllowMovementInTransit)
             args.Blocked = false;
+    }
+
+    private void OnSignalReceived(Entity<TestListenerComponent> entity, ref SignalReceivedEvent args)
+    {
+        SignalsReceived.Add(args.Port);
     }
 }

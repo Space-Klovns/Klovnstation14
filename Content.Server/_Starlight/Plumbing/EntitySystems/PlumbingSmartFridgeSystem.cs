@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Shared._Starlight.Plumbing;
@@ -97,13 +98,13 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
 
         if (!TryComp<LabelComponent>(args.Used, out var label) || string.IsNullOrEmpty(label.CurrentLabel))
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-no-label"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-no-label"), ent.Owner, args.User);
             return;
         }
 
         if (!TryMatchLabelToReagent(label.CurrentLabel, out var reagentId))
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-no-match"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-no-match"), ent.Owner, args.User);
             return;
         }
 
@@ -115,7 +116,7 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
 
         if (available <= FixedPoint2.Zero)
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-not-in-stock",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-not-in-stock",
                 ("reagent", ProtoMan.Index<ReagentPrototype>(reagentId).LocalizedName)),
                 ent.Owner, args.User);
             return;
@@ -127,7 +128,7 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
         var jugAvailable = jugSolution.AvailableVolume;
         if (jugAvailable <= FixedPoint2.Zero)
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-jug-full"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-jug-full"), ent.Owner, args.User);
             return;
         }
 
@@ -139,7 +140,7 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
             _solutionSystem.TryAddReagent(jugSolnEnt.Value, sourceReagent.Reagent, removed, out _);
 
             var reagentName = ProtoMan.Index<ReagentPrototype>(reagentId).LocalizedName;
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-filled",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-filled",
                 ("reagent", reagentName),
                 ("amount", removed)),
                 ent.Owner, args.User);

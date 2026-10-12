@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using Content.Packaging._KS14.Localization; // KS14
 using Robust.Packaging;
 using Robust.Packaging.AssetProcessing;
 using Robust.Packaging.AssetProcessing.Passes;
@@ -172,6 +173,13 @@ public static class ServerPackaging
         var graph = new RobustServerAssetGraph();
         var passes = graph.AllPasses.ToList();
 
+        // KS14 start: include the same compiled name tables in server resource packages
+        var nameCachePass = new KsPrototypeNameCachePass();
+        nameCachePass.AddDependency(graph.InputResources).AddBefore(graph.PresetPassesResources);
+        graph.PrefixResources.AddDependency(nameCachePass);
+        passes.Add(nameCachePass);
+        // KS14 end
+
         pass.Dependencies.Add(new AssetPassDependency(graph.Output.Name));
 
         // Include a TOML config file - include the ss14 one from Resources if possible, using the RT one as a fallback.
@@ -221,6 +229,8 @@ public static class ServerPackaging
 
         inputPassCore.InjectFinished();
         inputPassResources.InjectFinished();
+        await nameCachePass.FinishedTask.WaitAsync(cancel); // KS14: propagate cache compilation failures to the packaging caller
+        nameCachePass.ThrowIfCompilationFailed(); // KS14
     }
 
     // This returns both content assemblies (e.g. Content.Server.dll) and dependencies (e.g. Npgsql)

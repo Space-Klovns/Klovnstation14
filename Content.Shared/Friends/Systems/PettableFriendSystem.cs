@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Friends.Components;
 using Content.Shared.Interaction.Events;
@@ -36,7 +37,7 @@ public sealed partial class PettableFriendSystem : EntitySystem
         if (!_factionException.IsIgnored(exception, user))
         {
             // you have made a new friend :)
-            _popup.PopupClient(Loc.GetString(comp.SuccessString, ("target", uid)), user, user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.SuccessString, ("target", uid)), user, user);
             _factionException.IgnoreEntity(exception, user);
             args.Handled = true;
             return;
@@ -45,7 +46,7 @@ public sealed partial class PettableFriendSystem : EntitySystem
         if (_useDelayQuery.TryComp(uid, out var useDelay) && !_useDelay.TryResetDelay((uid, useDelay), true))
             return;
 
-        _popup.PopupClient(Loc.GetString(comp.FailureString, ("target", uid)), user, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.FailureString, ("target", uid)), user, user);
     }
 
     private void OnRehydrated(Entity<PettableFriendComponent> ent, ref GotRehydratedEvent args)

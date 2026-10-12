@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
 using Content.Shared.Examine;
@@ -52,14 +53,14 @@ public abstract partial class SharedSignalSpeakerSystem : EntitySystem
 
         if (!TryComp<SpeakOnTriggerComponent>(ent.Owner, out var speakComp))
         {
-            _popupSystem.PopupClient(Loc.GetString("signal-speaker-no-trigger"), user, user);
+            _popupSystem.PopupClient(KsPopupMessage.Create("signal-speaker-no-trigger"), user, user);
             return;
         }
 
         speakComp.NonLocText = ent.Comp.AssignedText;
         Dirty(ent.Owner, speakComp);
 
-        _popupSystem.PopupClient(Loc.GetString("signal-speaker-successfully-applied"), user, user);
+        _popupSystem.PopupClient(KsPopupMessage.Create("signal-speaker-successfully-applied"), user, user);
 
         // Log
         _adminLogger.Add(LogType.Action, LogImpact.Low,

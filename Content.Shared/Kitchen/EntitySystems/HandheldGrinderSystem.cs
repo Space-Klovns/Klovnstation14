@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Destructible;
@@ -110,7 +111,7 @@ internal sealed partial class HandheldGrinderSystem : EntitySystem
         else
             _destructibleSystem.DestroyEntity(item);
 
-        _popup.PopupClient(Loc.GetString(ent.Comp.FinishedPopup, ("item", item)), ent, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.FinishedPopup, ("item", item)), ent, args.User);
     }
 
     /// <summary>

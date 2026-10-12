@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Popups;
 using Content.Shared.Spider;
@@ -61,7 +62,7 @@ public sealed partial class SpiderSystem : SharedSpiderSystem
 
         if (transform.GridUid == null)
         {
-            _popup.PopupEntity(Loc.GetString("spider-web-action-nogrid"), args.Performer, args.Performer);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spider-web-action-nogrid"), args.Performer, args.Performer);
             return;
         }
 
@@ -69,11 +70,11 @@ public sealed partial class SpiderSystem : SharedSpiderSystem
 
         if (result)
         {
-            _popup.PopupEntity(Loc.GetString("spider-web-action-success"), args.Performer, args.Performer);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spider-web-action-success"), args.Performer, args.Performer);
             args.Handled = true;
         }
         else
-            _popup.PopupEntity(Loc.GetString("spider-web-action-fail"), args.Performer, args.Performer);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spider-web-action-fail"), args.Performer, args.Performer);
     }
 
     private bool SpawnWeb(Entity<SpiderComponent> ent, EntityCoordinates coords)

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.IdentityManagement;
 using Content.Shared.Popups;
 using Content.Shared.Trigger.Components.Effects;
@@ -13,14 +14,14 @@ public sealed partial class PopupOnTriggerSystem : XOnTriggerSystem<PopupOnTrigg
 
     protected override void OnTrigger(Entity<PopupOnTriggerComponent> ent, EntityUid target, ref TriggerEvent args)
     {
-        var user = args.User != null ? Identity.Name(args.User.Value, EntityManager) : Loc.GetString("generic-unknown");
+        object user = args.User != null ? Identity.Entity(args.User.Value, EntityManager) /* KS14: defer identity name */ : KsPopupMessage.Create /* KS14: defer popup argument translation */("generic-unknown");
 
         // Popups only play for one entity
         if (ent.Comp.Quiet)
         {
             if (ent.Comp.Predicted)
             {
-                _popup.PopupClient(Loc.GetString(ent.Comp.Text, ("entity", ent), ("user", user)),
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.Text, ("entity", ent), ("user", user)),
                     target,
                     ent.Comp.UserIsRecipient ? args.User : ent.Owner,
                     ent.Comp.PopupType);
@@ -28,7 +29,7 @@ public sealed partial class PopupOnTriggerSystem : XOnTriggerSystem<PopupOnTrigg
 
             else if (args.User != null)
             {
-                _popup.PopupEntity(Loc.GetString(ent.Comp.OtherText ?? ent.Comp.Text, ("entity", ent), ("user", user)),
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.OtherText ?? ent.Comp.Text, ("entity", ent), ("user", user)),
                     target,
                     args.User.Value,
                     ent.Comp.PopupType);
@@ -40,8 +41,8 @@ public sealed partial class PopupOnTriggerSystem : XOnTriggerSystem<PopupOnTrigg
         // Popups play for all entities
         if (ent.Comp.Predicted)
         {
-            _popup.PopupPredicted(Loc.GetString(ent.Comp.Text, ("entity", ent), ("user", user)),
-                Loc.GetString(ent.Comp.OtherText ?? ent.Comp.Text, ("entity", ent), ("user", user)),
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.Text, ("entity", ent), ("user", user)),
+                KsPopupMessage.Create(ent.Comp.OtherText ?? ent.Comp.Text, ("entity", ent), ("user", user)),
                 target,
                 ent.Comp.UserIsRecipient ? args.User : ent.Owner,
                 ent.Comp.PopupType);
@@ -49,7 +50,7 @@ public sealed partial class PopupOnTriggerSystem : XOnTriggerSystem<PopupOnTrigg
 
         else
         {
-            _popup.PopupEntity(Loc.GetString(ent.Comp.OtherText ?? ent.Comp.Text, ("entity", ent), ("user", user)),
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.OtherText ?? ent.Comp.Text, ("entity", ent), ("user", user)),
                 target,
                 ent.Comp.PopupType);
         }

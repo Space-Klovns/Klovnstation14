@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Popups;
 using Content.Shared.Stacks;
 using JetBrains.Annotations;
@@ -289,7 +290,7 @@ namespace Content.Server.Stack
 
             if (amount <= 0)
             {
-                Popup.PopupCursor(Loc.GetString("comp-stack-split-too-small"), user.Owner, PopupType.Medium);
+                Popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-stack-split-too-small"), user.Owner, PopupType.Medium);
                 return;
             }
 
@@ -298,7 +299,7 @@ namespace Content.Server.Stack
 
             Hands.PickupOrDrop(user.Owner, split);
 
-            Popup.PopupCursor(Loc.GetString("comp-stack-split"), user.Owner);
+            Popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-stack-split"), user.Owner);
         }
         #endregion
     }

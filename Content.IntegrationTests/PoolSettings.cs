@@ -46,6 +46,18 @@ public sealed class PoolSettings : PairSettings
     /// </summary>
     public string Map { get; init; } = PoolManager.TestMap;
 
+    // KS14 start: server light tree, for tests that need the server to compute light levels
+    /// <summary>
+    /// Set to true to start the server with <c>lookup.enable_server_light_tree</c> on. The server only reads that
+    /// at startup, so such a pair is always created fresh and never handed to another test.
+    /// </summary>
+    public bool ServerLightTree { get; init; }
+
+    public override bool MustBeNew => base.MustBeNew || ServerLightTree;
+
+    public override bool MustNotBeReused => base.MustNotBeReused || ServerLightTree;
+    // KS14 end
+
     public override bool CanFastRecycle(PairSettings nextSettings)
     {
         if (!base.CanFastRecycle(nextSettings))

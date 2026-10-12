@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Construction;
 using Content.Server.Explosion.EntitySystems;
@@ -304,8 +305,8 @@ namespace Content.Server.Kitchen.EntitySystems
 
             var victim = args.Victim;
 
-            var othersMessage = Loc.GetString("microwave-component-suicide-others-message", ("victim", victim));
-            var selfMessage = Loc.GetString("microwave-component-suicide-message");
+            var othersMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("microwave-component-suicide-others-message", ("victim", victim));
+            var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("microwave-component-suicide-message");
 
             _popupSystem.PopupEntity(othersMessage, victim, Filter.PvsExcept(victim), true);
             _popupSystem.PopupEntity(selfMessage, victim, victim);
@@ -365,13 +366,13 @@ namespace Content.Server.Kitchen.EntitySystems
                 return;
             if (!(TryComp<ApcPowerReceiverComponent>(ent, out var apc) && apc.Powered))
             {
-                _popupSystem.PopupEntity(Loc.GetString("microwave-component-interact-using-no-power"), ent, args.User);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("microwave-component-interact-using-no-power"), ent, args.User);
                 return;
             }
 
             if (ent.Comp.Broken)
             {
-                _popupSystem.PopupEntity(Loc.GetString("microwave-component-interact-using-broken"), ent, args.User);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("microwave-component-interact-using-broken"), ent, args.User);
                 return;
             }
 
@@ -380,20 +381,20 @@ namespace Content.Server.Kitchen.EntitySystems
                 // check if size of an item you're trying to put in is too big
                 if (_item.GetSizePrototype(item.Size) > _item.GetSizePrototype(ent.Comp.MaxItemSize))
                 {
-                    _popupSystem.PopupEntity(Loc.GetString("microwave-component-interact-item-too-big", ("item", args.Used)), ent, args.User);
+                    _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("microwave-component-interact-item-too-big", ("item", args.Used)), ent, args.User);
                     return;
                 }
             }
             else
             {
                 // check if thing you're trying to put in isn't an item
-                _popupSystem.PopupEntity(Loc.GetString("microwave-component-interact-using-transfer-fail"), ent, args.User);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("microwave-component-interact-using-transfer-fail"), ent, args.User);
                 return;
             }
 
             if (ent.Comp.Storage.Count >= ent.Comp.Capacity)
             {
-                _popupSystem.PopupEntity(Loc.GetString("microwave-component-interact-full"), ent, args.User);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("microwave-component-interact-full"), ent, args.User);
                 return;
             }
 

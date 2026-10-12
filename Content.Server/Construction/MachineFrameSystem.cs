@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Construction.Components;
 using Content.Server.Stack;
 using Content.Shared.Construction.Components;
@@ -94,7 +95,7 @@ public sealed partial class MachineFrameSystem : EntitySystem
 
             if (IsComplete(component))
             {
-                _popupSystem.PopupEntity(Loc.GetString("machine-frame-component-on-complete"), uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("machine-frame-component-on-complete"), uid);
                 return;
             }
         }
@@ -127,7 +128,7 @@ public sealed partial class MachineFrameSystem : EntitySystem
 
             if (IsComplete(component))
             {
-                _popupSystem.PopupEntity(Loc.GetString("machine-frame-component-on-complete"), uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("machine-frame-component-on-complete"), uid);
                 return;
             }
         }
@@ -192,7 +193,7 @@ public sealed partial class MachineFrameSystem : EntitySystem
 
         component.MaterialProgress[type] += needed;
         if (IsComplete(component))
-            _popupSystem.PopupEntity(Loc.GetString("machine-frame-component-on-complete"), uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("machine-frame-component-on-complete"), uid);
 
         return true;
     }

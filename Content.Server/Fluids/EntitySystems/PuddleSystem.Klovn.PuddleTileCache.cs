@@ -1,7 +1,6 @@
-// KS14: added in this fork
 
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
 using Content.Shared.GameTicking;
 using Robust.Shared.Map;
@@ -15,31 +14,29 @@ public sealed partial class PuddleSystem
     ///     Kept up to date by <see cref="OnPuddleCacheStartup"/>, <see cref="OnPuddleCacheShutdown"/>
     ///     and <see cref="OnPuddleCacheMove"/>.
     /// </summary>
-    private readonly Dictionary<EntityUid, Dictionary<Vector2i, HashSet<Entity<PuddleComponent>>>> _gridPuddleCache = new();
+    /// <remarks>
+    ///     There is at most one puddle per tile - that is an invariant of the game, enforced by
+    ///     <see cref="TrySpillAt(TileRef, Solution, out EntityUid, bool, bool)"/> merging into the puddle already there,
+    ///     and, for puddles that arrive some other way (map load, direct spawn, moves), by merging the newcomer into the
+    ///     cached puddle in <see cref="ResolvePendingPuddleMerges"/> - so each tile maps to exactly one puddle and
+    ///     callers may rely on it, once the merge has run (the tick after the duplicate appears). Until then the first
+    ///     puddle stays cached and the newcomer is not.
+    /// </remarks>
+    private readonly Dictionary<EntityUid, Dictionary<Vector2i, Entity<PuddleComponent>>> _gridPuddleCache = new();
+
+    /// <summary>
+    ///     Puddles that arrived on an already-occupied tile and are waiting to be merged into the cached one. Filled from
+    ///     engine callbacks, drained in <see cref="Update"/>. Never contains a cached puddle.
+    /// </summary>
+    private readonly HashSet<EntityUid> _pendingPuddleMerges = new();
+
+    private readonly List<EntityUid> _drainedPuddleMerges = new();
 
     /// <summary>
     ///     Where every cached puddle currently is, so that a moved or removed puddle can be pulled out of the tile it
-    ///     used to be on without having to search for it.
+    ///     used to be on without having to search for it. Does not contain puddles that were rejected as duplicates.
     /// </summary>
     private readonly Dictionary<EntityUid, (EntityUid GridUid, Vector2i Indices)> _puddleCacheLocations = new();
-
-    /// <summary>
-    ///     Compares cached puddles by their <see cref="Entity{T}.Owner"/> alone.
-    /// </summary>
-    /// <remarks>
-    ///     <see cref="Entity{T}"/> is a record struct, so its generated equality compares the component too, even
-    ///     though its hashcode is the uid's - without this, removing a puddle by uid alone silently does nothing.
-    /// </remarks>
-    private sealed class PuddleEntityUidComparer : IEqualityComparer<Entity<PuddleComponent>>
-    {
-        public static readonly PuddleEntityUidComparer Instance = new();
-
-        public bool Equals(Entity<PuddleComponent> x, Entity<PuddleComponent> y)
-            => x.Owner == y.Owner;
-
-        public int GetHashCode(Entity<PuddleComponent> entity)
-            => entity.Owner.GetHashCode();
-    }
 
     private void InitialisePuddleTileCache()
     {
@@ -66,6 +63,70 @@ public sealed partial class PuddleSystem
     {
         _gridPuddleCache.Clear();
         _puddleCacheLocations.Clear();
+        _pendingPuddleMerges.Clear();
+    }
+
+    /// <summary>
+    ///     Resolves <see cref="_pendingPuddleMerges"/>. Called from <see cref="Update"/>, clear of any engine callback.
+    ///     Each duplicate puddle's solution is moved into the puddle currently cached on its tile and the duplicate is
+    ///     deleted. If the cached puddle has since gone, the duplicate is promoted to be the tile's cached puddle instead.
+    /// </summary>
+    private void ResolvePendingPuddleMerges()
+    {
+        if (_pendingPuddleMerges.Count == 0)
+            return;
+
+        // Drain first: resolving one entry can raise events that queue into the set.
+        _drainedPuddleMerges.Clear();
+        _drainedPuddleMerges.AddRange(_pendingPuddleMerges);
+        _pendingPuddleMerges.Clear();
+
+        foreach (var newcomerUid in _drainedPuddleMerges)
+        {
+            // QueueDel'd entities are still alive and not terminating, so check for that explicitly.
+            if (TerminatingOrDeleted(newcomerUid) || EntityManager.IsQueuedForDeletion(newcomerUid) ||
+                _puddleCacheLocations.ContainsKey(newcomerUid) ||
+                !_puddleQuery.TryGetComponent(newcomerUid, out var newcomer) ||
+                !TryComp(newcomerUid, out TransformComponent? newcomerTransform) ||
+                newcomerTransform.GridUid is not { } gridUid ||
+                !_transform.TryGetGridTilePosition((newcomerUid, newcomerTransform), out var indices))
+            {
+                continue;
+            }
+
+            if (!TryGetCachedPuddle(gridUid, indices, out Entity<PuddleComponent> existing))
+            {
+                // The puddle that held the tile is gone, so the newcomer takes it over.
+                UpdatePuddleCache(newcomerUid, newcomerTransform);
+                continue;
+            }
+
+            if (existing.Owner == newcomerUid)
+                continue;
+
+            if (TerminatingOrDeleted(existing.Owner) || EntityManager.IsQueuedForDeletion(existing.Owner))
+            {
+                // On its way out but still cached; look again next tick, when it will have left the cache.
+                _pendingPuddleMerges.Add(newcomerUid);
+                continue;
+            }
+
+            if (!_solutionContainerSystem.ResolveSolution(existing.Owner, existing.Comp.SolutionName, ref existing.Comp.Solution) ||
+                !_solutionContainerSystem.ResolveSolution(newcomerUid, newcomer.SolutionName, ref newcomer.Solution, out var newcomerSolution))
+            {
+                continue;
+            }
+
+            if (newcomerSolution.Volume > FixedPoint2.Zero)
+            {
+                var moved = _solutionContainerSystem.SplitSolution(newcomer.Solution.Value, newcomerSolution.Volume);
+                TryAddSolution(existing.Owner, moved, sound: false, puddleComponent: existing.Comp);
+            }
+
+            QueueDel(newcomerUid);
+        }
+
+        _drainedPuddleMerges.Clear();
     }
 
     /// <summary>
@@ -97,34 +158,37 @@ public sealed partial class PuddleSystem
             _gridPuddleCache[gridUid] = tilePuddles;
         }
 
-        if (!tilePuddles.TryGetValue(indices, out var puddleUids))
+        if (tilePuddles.TryGetValue(indices, out var existingPuddle))
         {
-            puddleUids = new(PuddleEntityUidComparer.Instance);
-            tilePuddles[indices] = puddleUids;
+            // Only one puddle may exist per tile. Keep the first, and do not record the newcomer's location, so that
+            //      its removal later cannot evict the puddle that is actually cached. The newcomer is merged into the
+            //      cached puddle later, in Update - this is an engine callback (startup / move), so nothing may be
+            //      transferred or deleted here.
+            Log.Debug($"Puddle {ToPrettyString(puddleUid)} is on tile {indices} of grid {ToPrettyString(gridUid)}, which already has puddle {ToPrettyString(existingPuddle.Owner)}. Queueing a merge.");
+            _pendingPuddleMerges.Add(puddleUid);
+            return;
         }
 
-        puddleUids.Add((puddleUid, puddleComponent));
+        tilePuddles[indices] = (puddleUid, puddleComponent);
         _puddleCacheLocations[puddleUid] = (gridUid, indices);
     }
 
     /// <summary>
-    ///     Drops <paramref name="puddleUid"/> from the cache, pruning any tile and grid entries it leaves empty.
+    ///     Drops <paramref name="puddleUid"/> from the cache, pruning any grid entry it leaves empty. Does nothing to a
+    ///     tile that is cached under a different puddle.
     /// </summary>
     private void RemovePuddleFromCache(EntityUid puddleUid)
     {
+        _pendingPuddleMerges.Remove(puddleUid);
+
         if (!_puddleCacheLocations.Remove(puddleUid, out var location))
             return;
 
         if (!_gridPuddleCache.TryGetValue(location.GridUid, out var tilePuddles))
             return;
 
-        if (tilePuddles.TryGetValue(location.Indices, out var puddleUids))
-        {
-            puddleUids.Remove((puddleUid, default! /* comp is irrelevant, PuddleEntityUidComparer only looks at the uid */));
-
-            if (puddleUids.Count == 0)
-                tilePuddles.Remove(location.Indices);
-        }
+        if (tilePuddles.TryGetValue(location.Indices, out var cachedPuddle) && cachedPuddle.Owner == puddleUid)
+            tilePuddles.Remove(location.Indices);
 
         if (tilePuddles.Count == 0)
             _gridPuddleCache.Remove(location.GridUid);
@@ -133,77 +197,52 @@ public sealed partial class PuddleSystem
     #region Public API
 
     /// <summary>
-    ///     Gets every puddle on a tile. There is normally at most one, so prefer <see cref="TryGetCachedPuddle"/>
-    ///     unless you actually need to handle the several-puddles-on-one-tile case.
-    /// </summary>
-    /// <remarks>
-    ///     The returned set is the cache's own storage - do not hold onto it across anything that could spawn or
-    ///     delete a puddle.
-    /// </remarks>
-    public bool TryGetCachedPuddles(EntityUid gridUid, Vector2i indices, [NotNullWhen(true)] out IReadOnlySet<Entity<PuddleComponent>>? puddleEntities)
-    {
-        puddleEntities = null;
-
-        if (!_gridPuddleCache.TryGetValue(gridUid, out var tilePuddles) ||
-            !tilePuddles.TryGetValue(indices, out var tilePuddleEntities))
-        {
-            return false;
-        }
-
-        puddleEntities = tilePuddleEntities;
-        return true;
-    }
-
-    /// <inheritdoc cref="TryGetCachedPuddles(EntityUid, Vector2i, out IReadOnlySet{EntityUid}?)"/>
-    public bool TryGetCachedPuddles(TileRef tileRef, [NotNullWhen(true)] out IReadOnlySet<Entity<PuddleComponent>>? puddleEntities)
-        => TryGetCachedPuddles(tileRef.GridUid, tileRef.GridIndices, out puddleEntities);
-
-    /// <summary>
-    ///     Gets a puddle on a tile, if there is one. If a tile somehow holds several puddles, which one you get is
-    ///     arbitrary.
+    ///     Gets the puddle on a tile, if there is one. There is never more than one puddle per tile.
     /// </summary>
     public bool TryGetCachedPuddle(EntityUid gridUid, Vector2i indices, out Entity<PuddleComponent> puddleEntity)
     {
+        if (_gridPuddleCache.TryGetValue(gridUid, out var tilePuddles) &&
+            tilePuddles.TryGetValue(indices, out puddleEntity))
+        {
+            return true;
+        }
+
         puddleEntity = (EntityUid.Invalid, default!);
-
-        if (!TryGetCachedPuddles(gridUid, indices, out var puddleEntities))
-            return false;
-
-        puddleEntity = puddleEntities.First();
-        return true;
+        return false;
     }
 
-    /// <inheritdoc cref="TryGetCachedPuddle(EntityUid, Vector2i, out EntityUid)"/>
+    /// <inheritdoc cref="TryGetCachedPuddle(EntityUid, Vector2i, out Entity{PuddleComponent})"/>
     public bool TryGetCachedPuddle(TileRef tileRef, out Entity<PuddleComponent> puddleEntity)
         => TryGetCachedPuddle(tileRef.GridUid, tileRef.GridIndices, out puddleEntity);
 
-    /// <inheritdoc cref="TryGetCachedPuddle(EntityUid, Vector2i, out EntityUid)"/>
+    /// <inheritdoc cref="TryGetCachedPuddle(EntityUid, Vector2i, out Entity{PuddleComponent})"/>
     public bool TryGetCachedPuddle(TileRef tileRef, out EntityUid puddleUid)
     {
-        var result = TryGetCachedPuddle(tileRef.GridUid, tileRef.GridIndices, out var puddleEntity);
+        var result = TryGetCachedPuddle(tileRef.GridUid, tileRef.GridIndices, out Entity<PuddleComponent> puddleEntity);
         puddleUid = puddleEntity.Owner;
 
         return result;
     }
 
     /// <summary>
-    ///     Whether a tile has any puddle on it.
+    ///     Whether a tile has a puddle on it.
     /// </summary>
     public bool HasCachedPuddle(EntityUid gridUid, Vector2i indices)
-        => TryGetCachedPuddles(gridUid, indices, out _);
+        => TryGetCachedPuddle(gridUid, indices, out Entity<PuddleComponent> _);
 
     /// <inheritdoc cref="HasCachedPuddle(EntityUid, Vector2i)"/>
     public bool HasCachedPuddle(TileRef tileRef)
-        => TryGetCachedPuddles(tileRef.GridUid, tileRef.GridIndices, out _);
+        => HasCachedPuddle(tileRef.GridUid, tileRef.GridIndices);
 
     /// <summary>
-    ///     Gets every puddle on a grid, keyed by tile. Returns false for a grid with no puddles on it at all.
+    ///     Gets the puddle on every tile of a grid that has one, keyed by tile. Returns false for a grid with no
+    ///     puddles on it at all.
     /// </summary>
     /// <remarks>
     ///     The returned dictionary is the cache's own storage - do not mutate it, and do not hold onto it across
     ///     anything that could spawn or delete a puddle.
     /// </remarks>
-    public bool TryGetCachedGridPuddles(EntityUid gridUid, [NotNullWhen(true)] out IReadOnlyDictionary<Vector2i, HashSet<Entity<PuddleComponent>>>? tilePuddleEntities)
+    public bool TryGetCachedGridPuddles(EntityUid gridUid, [NotNullWhen(true)] out IReadOnlyDictionary<Vector2i, Entity<PuddleComponent>>? tilePuddleEntities)
     {
         tilePuddleEntities = null;
 
