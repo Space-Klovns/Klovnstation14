@@ -13,14 +13,14 @@ public sealed partial class KsPortalViewSubscriptionsComponent : Component
     ///     The portal this one is linked to, whose surroundings the sessions are sent.
     /// </summary>
     [ViewVariables]
-    public EntityUid Target = EntityUid.Invalid;
+    public EntityUid TargetUid = EntityUid.Invalid;
 
     /// <summary>
-    ///     The entity parented to <see cref="Target"/> that the sessions are actually view-subscribed to. It
+    ///     The entity parented to <see cref="TargetUid"/> that the sessions are actually view-subscribed to. It
     ///         carries an eye with a reduced PVS range, so only a window's worth of the destination is sent.
     /// </summary>
     [ViewVariables]
-    public EntityUid Viewer = EntityUid.Invalid;
+    public EntityUid ViewerUid = EntityUid.Invalid;
 
     [ViewVariables]
     public readonly HashSet<ICommonSession> Sessions = new();

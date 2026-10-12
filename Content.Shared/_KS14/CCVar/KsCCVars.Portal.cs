@@ -42,6 +42,33 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.portal.lighting", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
+    ///     Experimental: whether light reaching a view portal's doorway also shines out of its linked portal's,
+    ///         through client-side stand-in lights at the far doorway.
+    /// </summary>
+    /// <remarks>
+    ///     Server-controlled and replicated rather than a client preference, so everyone in a round sees the
+    ///         same lighting, and an admin can switch the experiment off for everyone at once.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> PortalLightTransfer =
+        CVarDef.Create("klovn.portal.light_transfer", false, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     How many points along a doorway light is carried through at, one stand-in light each per source
+    ///         light. More is smoother and costs a stand-in, and a ray cast, per light per point.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<int> PortalLightTransferSamples =
+        CVarDef.Create("klovn.portal.light_transfer_samples", 3, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     Multiplier on the energy of light carried through a portal; 1 is matched to the source's falloff.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> PortalLightTransferEnergy =
+        CVarDef.Create("klovn.portal.light_transfer_energy", 1f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
     ///     How near, in world units, a player has to be to a view portal to be sent the area around its
     ///         linked portal.
     /// </summary>

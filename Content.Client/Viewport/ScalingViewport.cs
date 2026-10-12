@@ -295,6 +295,7 @@ namespace Content.Client.Viewport
             _viewport = null;
 
             InvalidateZLevelState(); // KS14
+            ReleasePortalViewports(); // KS14: portal views are sized to match the viewport
         }
 
         public MapCoordinates ScreenToMap(Vector2 coords)

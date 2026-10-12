@@ -368,6 +368,53 @@ The defaults are `Self`/`Friend` = `ReadWriteExecute` and `Other` = `Read`, so t
 
 Reach for this whenever a system method exists precisely to keep two things in step — a networked field and an action's toggled state, a list and the index into it, a cached value and the thing it caches. Note that it guards the *member*, not what the member points at: `Other = Read` on a `List<T>` field still lets anyone call `Add` on the list they read.
 
+**Act when a value changes, not every tick in case it did (C#)** — whatever has to follow a value (a fixture sized to a width, a cache, a sprite state) is updated by the code that changes the value: a setter, an event handler, `AfterAutoHandleState`, a cvar subscription. Polling for the change in `Update` costs every tick for every entity, forever, and still reacts a tick late.
+
+```csharp
+// do this - the sensor is resized once, when the width changes
+public void SetWidth(Entity<KsPortalViewComponent?> entity, float width)
+{
+    // ...resolve, set Width, Dirty...
+    RefreshSensor((entity.Owner, entity.Comp));
+}
+
+// not this - every portal's sensor is compared against its width on every tick
+public override void Update(float frameTime)
+{
+    var query = EntityQueryEnumerator<KsPortalViewComponent>();
+    while (query.MoveNext(out var uid, out var viewComponent))
+    {
+        if (!SensorMatches(uid, viewComponent.Width))
+            RefreshSensor((uid, viewComponent));
+    }
+}
+```
+
+This only holds while the setter is the *only* way in: `[Access]` the field to the system (above), and close off VV, the one writer `[Access]` can't stop (below).
+
+**ViewVariables (VV) (C#)** — the engine's live inspector. Admins and developers open any entity, component or system in the VV window, or use `vv`/`vvread`/`vvwrite`, to read and change its fields mid-round. Every `[DataField]` and `[ViewVariables]` member shows up there, writable by default, so VV is a writer of your component that your code does not control. It writes by reflection, so `[Access]` does not stop it, and the server is told nothing beyond the component being dirtied. When a field must only change through a setter:
+
+1. `[ViewVariables(VVAccess.ReadOnly)]` limits the VV window to viewing it. The window writes server components by reflection and ignores custom paths, so read-only is the only way to keep it out.
+2. Register a VV path with the field's name whose setter calls yours. `vvread`/`vvwrite` resolve a registered path before falling back to the field, so the command still works, through your setter.
+
+```csharp
+// The component.
+[DataField, AutoNetworkedField, Access(typeof(KsPortalTravelSystem)), ViewVariables(VVAccess.ReadOnly)]
+public float Width = 1f;
+
+// The system. The path is removed again in Shutdown: the VV manager outlives the system, and its lambdas would keep it alive.
+[Dependency] private IViewVariablesManager _viewVariablesManager = default!;
+
+_viewVariablesManager.GetTypeHandler<KsPortalViewComponent>().AddPath(
+    nameof(KsPortalViewComponent.Width),
+    (_, component) => component.Width,                             // getter: (uid, component)
+    (uid, width, component) => SetWidth((uid, component), width)); // setter: (uid, value, component?) - hence Entity<T?> on SetWidth
+
+_viewVariablesManager.GetTypeHandler<KsPortalViewComponent>().RemovePath(nameof(KsPortalViewComponent.Width));
+```
+
+The command is `vvwrite /entity/<uid>/KsPortalView/Width 3`: the local `EntityUid` number, the component's name without its `Component` suffix, then the path. Upstream registers a path the same way for `EventHorizonComponent.TargetConsumePeriod`, but leaves the field writable in the window, which still bypasses it. Test it by running the command through `IConsoleHost` and asserting on what it keeps in step (`KsPortalTravelTest.TestVvWriteOfWidthResizesTheSensor`).
+
 **Source-gen `[Dependency]` fields (C#)** — on current engine versions, injected `[Dependency]` fields on `EntitySystem` (and the few other injectable types) must be writable, and their owning class must be `partial`:
 ```csharp
 // old

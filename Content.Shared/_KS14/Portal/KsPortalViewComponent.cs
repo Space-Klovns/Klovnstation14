@@ -16,12 +16,17 @@ public sealed partial class KsPortalViewComponent : Component
     ///         an occluder's, from either side; an entity whose centre crosses the segment travels.
     /// </summary>
     /// <remarks>
-    ///     The sensor fixture that nominates travellers is resized to this width by
-    ///         <see cref="KsPortalTravelSystem.RefreshSensor"/> when the portal is map-initialised (server side; the client gets the fixture by state);
-    ///         the 3-wide box in the prototype is only a placeholder for the default width. Changing the width
-    ///         on a live portal needs a call to <see cref="KsPortalTravelSystem.RefreshSensor"/> afterwards.
+    ///     The sensor fixture that nominates travellers has to match this, so it is only ever changed through
+    ///         <see cref="KsPortalTravelSystem.SetWidth"/>, which resizes the sensor with it. Read-only in the VV
+    ///         window for the same reason: it writes by reflection, past <c>[Access]</c>, and nothing hears about
+    ///         it on the server. <c>vvwrite /entity/&lt;uid&gt;/KsPortalView/Width &lt;value&gt;</c> does work,
+    ///         because the system registers that path to go through <see cref="KsPortalTravelSystem.SetWidth"/>.
+    ///     The 3-wide box in the prototype is only a placeholder for the default width; the sensor is sized to the
+    ///         real one when the portal is map-initialised.
     /// </remarks>
     [DataField, AutoNetworkedField]
+    [Access(typeof(KsPortalTravelSystem))]
+    [ViewVariables(VVAccess.ReadOnly)]
     public float Width = 1f;
 
     /// <summary>

@@ -15,6 +15,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Content.Shared._KS14.Portal;
 
@@ -25,7 +26,8 @@ namespace Content.Shared._KS14.Portal;
 /// </summary>
 /// <remarks>
 ///     Candidates are nominated by the portal's sensor fixture (<see cref="SensorFixtureId"/>) and tracked by a
-///         <see cref="KsPortalTravellerComponent"/> that remembers the side of the line the entity was last on.
+///         <see cref="KsPortalTravellerComponent"/> that remembers, for every portal it is near, the side of
+///         that portal's line the entity was last on.
 ///         Crossing is looked for after the physics step, from the side that changed and the position the
 ///         entity had one tick ago, which is its position minus its velocity times the tick. It runs in
 ///         prediction as well, for entities the client predicts. The entity lands past the linked doorway by
@@ -52,6 +54,11 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
     private readonly HashSet<EntityUid> _pendingSensorRefresh = [];
     private readonly List<EntityUid> _drainedSensorRefresh = [];
 
+    /// <summary>
+    ///     A traveller's portals, copied out before they are looked at, since crossing one rewrites them.
+    /// </summary>
+    private readonly List<EntityUid> _travellerPortals = [];
+
     [Dependency] private FixtureSystem _fixtureSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
@@ -61,8 +68,8 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
     [Dependency] private SharedMoverController _moverController = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IViewVariablesManager _viewVariablesManager = default!;
     [Dependency] private EntityQuery<KsPortalViewComponent> _viewQuery = default!;
-    [Dependency] private EntityQuery<KsPortalTravellerComponent> _travellerQuery = default!;
     [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
     [Dependency] private EntityQuery<InputMoverComponent> _moverQuery = default!;
     [Dependency] private EntityQuery<PullableComponent> _pullableQuery = default!;
@@ -75,6 +82,22 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
 
         // The movement and physics of this tick have to be done before a crossing is looked for.
         UpdatesAfter.Add(typeof(SharedPhysicsSystem));
+
+        // VV writes fields by reflection, past [Access], so Width is read-only in the VV window. This path is
+        //      what vvwrite resolves instead of the field, and sends the edit through SetWidth.
+        _viewVariablesManager.GetTypeHandler<KsPortalViewComponent>()
+            .AddPath(
+                nameof(KsPortalViewComponent.Width),
+                (_, component) => component.Width,
+                (uid, width, component) => SetWidth((uid, component), width));
+    }
+
+    public override void Shutdown()
+    {
+        // The VV manager outlives this system, and its handler would keep it alive.
+        _viewVariablesManager.GetTypeHandler<KsPortalViewComponent>().RemovePath(nameof(KsPortalViewComponent.Width));
+
+        base.Shutdown();
     }
 
     [SubscribeLocalEvent]
@@ -85,12 +108,27 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Sizes the portal's sensor fixture to its <see cref="KsPortalViewComponent.Width"/>: the doorway plus
-    ///         <see cref="SensorMargin"/> past each end, and the same to either side. Call it after changing the
-    ///         width at runtime. A portal without a sensor fixture is left alone. Server only: the fixtures
-    ///         reach the client by state, and it must not build its own.
+    ///     Changes the length of a portal's doorway, resizing the sensor that nominates travellers to match.
     /// </summary>
-    public void RefreshSensor(Entity<KsPortalViewComponent> entity)
+    public void SetWidth(Entity<KsPortalViewComponent?> entity, float width)
+    {
+        if (!_viewQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false) ||
+            MathHelper.CloseTo(entity.Comp.Width, width))
+            return;
+
+        entity.Comp.Width = width;
+        Dirty(entity.Owner, entity.Comp);
+
+        RefreshSensor((entity.Owner, entity.Comp));
+    }
+
+    /// <summary>
+    ///     Sizes the portal's sensor fixture to its <see cref="KsPortalViewComponent.Width"/>: the doorway plus
+    ///         <see cref="SensorMargin"/> past each end, and the same to either side. A portal without a sensor
+    ///         fixture is left alone. Server only: the fixtures reach the client by state, and it must not build
+    ///         its own.
+    /// </summary>
+    private void RefreshSensor(Entity<KsPortalViewComponent> entity)
     {
         if (_netManager.IsClient)
             return;
@@ -150,17 +188,11 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
         if (!_transformQuery.TryComp(travellerUid, out var travellerTransform) || travellerTransform.Anchored)
             return;
 
-        if (_travellerQuery.TryComp(travellerUid, out var existingComponent))
-        {
-            // Keep the portal it is already watching unless that one has let go of it.
-            if (existingComponent.Portal == entity.Owner
-                || (existingComponent.Portal is { } existingPortal && IsNear(existingPortal, travellerUid)))
-                return;
-        }
-
         var travellerComponent = EnsureComp<KsPortalTravellerComponent>(travellerUid);
-        travellerComponent.Portal = entity.Owner;
-        travellerComponent.Side = GetSide(entity.Owner, travellerUid);
+        if (travellerComponent.Sides.ContainsKey(entity.Owner))
+            return;
+
+        travellerComponent.Sides[entity.Owner] = GetSide(entity.Owner, travellerUid);
         Dirty(travellerUid, travellerComponent);
     }
 
@@ -190,40 +222,67 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
             if (_netManager.IsClient && !physicsComponent.Predict)
                 continue;
 
-            if (travellerComponent.Portal is not { } portalUid
-                || !_viewQuery.TryComp(portalUid, out var viewComponent)
-                || !_transformQuery.TryComp(portalUid, out var portalTransform)
-                || portalTransform.MapID != travellerTransform.MapID
-                || travellerTransform.Anchored)
+            if (travellerTransform.Anchored)
             {
                 RemCompDeferred<KsPortalTravellerComponent>(travellerUid);
                 continue;
             }
 
-            var (portalPosition, portalRotation) = _transformSystem.GetWorldPositionRotation(portalTransform);
-            var travellerPosition = _transformSystem.GetWorldPosition(travellerTransform);
-            var local = KsPortalTransform.ToPortalFrame(travellerPosition, portalPosition, portalRotation);
-            var halfWidth = viewComponent.Width * 0.5f;
+            _travellerPortals.Clear();
+            _travellerPortals.AddRange(travellerComponent.Sides.Keys);
 
-            if (MathF.Abs(local.Y) > NearDistance || MathF.Abs(local.X) > halfWidth + NearDistance)
+            foreach (var portalUid in _travellerPortals)
             {
+                if (CheckPortal((travellerUid, travellerComponent, travellerTransform, physicsComponent), portalUid, tickSeconds))
+                    break; // Carried through: its portals were replaced by the one it came out of.
+            }
+
+            if (travellerComponent.Sides.Count == 0)
                 RemCompDeferred<KsPortalTravellerComponent>(travellerUid);
-                continue;
-            }
+        }
+    }
 
-            var side = Math.Sign(local.Y);
-            if (side == 0 || side == travellerComponent.Side)
-                continue;
+    /// <summary>
+    ///     Looks for the traveller crossing one portal's doorway since the last tick, and carries it through if it
+    ///         has. Forgets the portal once the traveller is no longer near it.
+    /// </summary>
+    /// <returns>Whether the traveller was carried through.</returns>
+    private bool CheckPortal(
+        Entity<KsPortalTravellerComponent, TransformComponent, PhysicsComponent> traveller,
+        EntityUid portalUid,
+        float tickSeconds)
+    {
+        var travellerComponent = traveller.Comp1;
 
-            if (travellerComponent.Side == 0)
-            {
-                SetSide((travellerUid, travellerComponent), side);
-                continue;
-            }
+        if (!_viewQuery.TryComp(portalUid, out var viewComponent)
+            || !_transformQuery.TryComp(portalUid, out var portalTransform)
+            || portalTransform.MapID != traveller.Comp2.MapID)
+        {
+            ForgetPortal(traveller, portalUid);
+            return false;
+        }
 
-            // The side changed. It only counts as a crossing when it happened through the doorway, between where
-            //      the entity was a tick ago and where it is now.
-            var localVelocity = (-portalRotation).RotateVec(physicsComponent.LinearVelocity);
+        var (portalPosition, portalRotation) = _transformSystem.GetWorldPositionRotation(portalTransform);
+        var travellerPosition = _transformSystem.GetWorldPosition(traveller.Comp2);
+        var local = KsPortalTransform.ToPortalFrame(travellerPosition, portalPosition, portalRotation);
+        var halfWidth = viewComponent.Width * 0.5f;
+
+        if (MathF.Abs(local.Y) > NearDistance || MathF.Abs(local.X) > halfWidth + NearDistance)
+        {
+            ForgetPortal(traveller, portalUid);
+            return false;
+        }
+
+        var side = Math.Sign(local.Y);
+        var lastSide = travellerComponent.Sides[portalUid];
+        if (side == 0 || side == lastSide)
+            return false;
+
+        if (lastSide != 0)
+        {
+            // The side changed. It only counts as a crossing when it happened through the doorway, between
+            //      where the entity was a tick ago and where it is now.
+            var localVelocity = (-portalRotation).RotateVec(traveller.Comp3.LinearVelocity);
             var previous = local - localVelocity * tickSeconds;
 
             var withinDoorway = false;
@@ -237,16 +296,20 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
 
             if (withinDoorway
                 && viewComponent.Enabled
-                && TryTravel(
-                    (travellerUid, travellerComponent, travellerTransform, physicsComponent),
-                    portalUid,
-                    portalPosition,
-                    portalRotation))
-                continue;
-
-            // Around the doorway, or nowhere to go: just remember the new side.
-            SetSide((travellerUid, travellerComponent), side);
+                && TryTravel(traveller, portalUid, portalPosition, portalRotation))
+                return true;
         }
+
+        // Around the doorway, or nowhere to go: just remember the new side.
+        travellerComponent.Sides[portalUid] = side;
+        Dirty(traveller.Owner, travellerComponent);
+        return false;
+    }
+
+    private void ForgetPortal(Entity<KsPortalTravellerComponent> traveller, EntityUid portalUid)
+    {
+        if (traveller.Comp.Sides.Remove(portalUid))
+            Dirty(traveller);
     }
 
     private bool TryTravel(
@@ -270,7 +333,7 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
             return false;
 
         // A destination outside what the client has been sent cannot be predicted; the server will do it.
-        if (_netManager.IsClient && MetaData(destinationUid.Value).Flags.HasFlag(MetaDataFlags.Detached))
+        if (_netManager.IsClient && (MetaData(destinationUid.Value).Flags & MetaDataFlags.Detached) != 0)
             return false;
 
         var (destinationPosition, destinationRotation) = _transformSystem.GetWorldPositionRotation(destinationTransform);
@@ -320,8 +383,10 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
             Dirty(traveller.Owner, moverComponent);
         }
 
-        traveller.Comp1.Portal = destinationUid;
-        traveller.Comp1.Side = GetSide(destinationUid.Value, traveller.Owner);
+        // Every other portal it was near is behind it now. The one it came out of is watched from the side it
+        //      came out on, so it cannot cross straight back.
+        traveller.Comp1.Sides.Clear();
+        traveller.Comp1.Sides[destinationUid.Value] = GetSide(destinationUid.Value, traveller.Owner);
         Dirty(traveller.Owner, traveller.Comp1);
 
         var travelledEvent = new KsPortalTravelledEvent(relativeRotation);
@@ -330,29 +395,12 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
         return true;
     }
 
-    private void SetSide(Entity<KsPortalTravellerComponent> traveller, int side)
-    {
-        if (traveller.Comp.Side == side)
-            return;
-
-        traveller.Comp.Side = side;
-        Dirty(traveller);
-    }
-
     /// <summary>
     ///     Which side of the portal's line the entity is on, as -1, 0 (on the line) or 1.
     /// </summary>
     private int GetSide(EntityUid portalUid, EntityUid travellerUid)
     {
         return TryGetLocal(portalUid, travellerUid, out var local) ? Math.Sign(local.Y) : 0;
-    }
-
-    private bool IsNear(EntityUid portalUid, EntityUid travellerUid)
-    {
-        return _viewQuery.TryComp(portalUid, out var viewComponent)
-               && TryGetLocal(portalUid, travellerUid, out var local)
-               && MathF.Abs(local.Y) <= NearDistance
-               && MathF.Abs(local.X) <= viewComponent.Width * 0.5f + NearDistance;
     }
 
     private bool TryGetLocal(EntityUid portalUid, EntityUid travellerUid, out Vector2 local)

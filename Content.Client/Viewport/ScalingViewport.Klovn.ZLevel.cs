@@ -359,6 +359,7 @@ namespace Content.Client.Viewport
         protected override void Dispose(bool disposing)
         {
             InvalidateZLevelState();
+            ReleasePortalViewports();
 
             if (_gapLevelsCVarHandler != null)
             {
@@ -388,8 +389,6 @@ namespace Content.Client.Viewport
                 capture.Dispose();
 
             _zLightCaptures.Clear();
-
-            ReleasePortalViewports();
         }
 
         /// <summary>

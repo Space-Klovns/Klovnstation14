@@ -18,6 +18,10 @@ namespace Content.Client._KS14.Portal;
 ///     The window (the portal's aperture plus its shadow from the viewer) is masked into the stencil buffer, the capture is drawn only where the stencil matches
 ///         (over the part of the main eye's world area the window touches, which is where its pixels belong),
 ///         and the stencil is cleared again.
+///     The stencil passes only touch a bit of their own (see <c>KsPortalStencilMask</c>). The viewer's FOV pass
+///         has already written 1 over everything it hides by the time this runs, so masking with 1 would let the
+///         capture through wherever the viewer's FOV is dark - the window's whole bounding box, for anyone with
+///         FOV on.
 /// </remarks>
 public sealed partial class KsPortalOverlay : Overlay
 {
@@ -27,9 +31,9 @@ public sealed partial class KsPortalOverlay : Overlay
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ProfManager _prof = default!;
 
-    private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
-    private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "StencilEqualDraw";
-    private static readonly ProtoId<ShaderPrototype> StencilClearShader = "StencilClear";
+    private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "KsPortalStencilMask";
+    private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "KsPortalStencilEqualDraw";
+    private static readonly ProtoId<ShaderPrototype> StencilClearShader = "KsPortalStencilClear";
 
     private readonly ShaderInstance _stencilMaskShader;
     private readonly ShaderInstance _stencilEqualDrawShader;

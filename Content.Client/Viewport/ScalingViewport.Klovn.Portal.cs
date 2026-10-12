@@ -274,7 +274,7 @@ namespace Content.Client.Viewport
             if (!_entityManager.EntityExists(destinationUid) ||
                 !_entityManager.TryGetComponent<TransformComponent>(destinationUid, out var destinationTransform) ||
                 destinationTransform.MapID == MapId.Nullspace ||
-                _entityManager.GetComponent<MetaDataComponent>(destinationUid).Flags.HasFlag(MetaDataFlags.Detached))
+                (_entityManager.GetComponent<MetaDataComponent>(destinationUid).Flags & MetaDataFlags.Detached) != 0)
                 return false;
 
             var (destinationPosition, destinationRotation) =

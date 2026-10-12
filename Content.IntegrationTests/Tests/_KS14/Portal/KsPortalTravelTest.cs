@@ -72,7 +72,13 @@ public sealed class KsPortalTravelTest : GameTest
     private static readonly Vector2 FirstPosition = Vector2.Zero;
     private static readonly Vector2 SecondPosition = new(30f, 5f);
 
-    private async Task<(EntityUid First, EntityUid Second, MapId MapId)> SpawnLinkedPortalsAsync(Angle secondRotation)
+    private Task<(EntityUid First, EntityUid Second, MapId MapId)> SpawnLinkedPortalsAsync(Angle secondRotation)
+        => SpawnLinkedPortalsAsync(FirstPosition, SecondPosition, secondRotation);
+
+    private async Task<(EntityUid First, EntityUid Second, MapId MapId)> SpawnLinkedPortalsAsync(
+        Vector2 firstPosition,
+        Vector2 secondPosition,
+        Angle secondRotation)
     {
         var server = Pair.Server;
         var testMap = await Pair.CreateTestMap();
@@ -81,8 +87,8 @@ public sealed class KsPortalTravelTest : GameTest
         await server.WaitPost(() =>
         {
             var transformSystem = server.EntMan.System<TransformSystem>();
-            first = server.EntMan.SpawnEntity(PortalProto, new MapCoordinates(FirstPosition, testMap.MapId));
-            second = server.EntMan.SpawnEntity(PortalProto, new MapCoordinates(SecondPosition, testMap.MapId));
+            first = server.EntMan.SpawnEntity(PortalProto, new MapCoordinates(firstPosition, testMap.MapId));
+            second = server.EntMan.SpawnEntity(PortalProto, new MapCoordinates(secondPosition, testMap.MapId));
             transformSystem.SetWorldRotation(second, secondRotation);
 
             Assert.That(server.EntMan.System<LinkedEntitySystem>().TryLink(first, second), Is.True);
@@ -176,8 +182,7 @@ public sealed class KsPortalTravelTest : GameTest
             foreach (var portal in new[] { first, second })
             {
                 var view = server.EntMan.GetComponent<KsPortalViewComponent>(portal);
-                view.Width = 20f;
-                travelSystem.RefreshSensor((portal, view));
+                travelSystem.SetWidth((portal, view), 20f);
             }
         });
 
@@ -204,6 +209,61 @@ public sealed class KsPortalTravelTest : GameTest
             {
                 Assert.That(local.X, Is.EqualTo(8.6f).Within(0.05f), $"Lateral offset not kept; the mob is at {position}.");
                 Assert.That(local.Y, Is.GreaterThan(0.5f).And.LessThan(6f), $"The mob did not cross the wide doorway; it is at {position}.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestShortHallwayBetweenLinkedPortalsLoops()
+    {
+        // An "infinite hallway": the north portal leads to the south one, both facing the same way. Short enough
+        //      that walking from one to the other, the traveller is still near the one it just came out of.
+        const float hallwayLength = 2.5f;
+        var (_, _, mapId) = await SpawnLinkedPortalsAsync(Vector2.Zero, new Vector2(0f, -hallwayLength), Angle.Zero);
+
+        var mob = await SpawnMobAsync(new Vector2(0f, -1.5f), new Vector2(0f, Speed), mapId);
+
+        // Long enough to walk the hallway several times over.
+        for (var step = 0; step < 6; step++)
+        {
+            await Pair.RunTicksSync(10);
+
+            await Pair.Server.WaitAssertion(() =>
+            {
+                var (position, velocity) = Sample(mob);
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(position.Y, Is.InRange(-hallwayLength - 0.1f, 0.1f),
+                        $"The traveller walked out of the hallway; it is at {position}.");
+                    Assert.That(velocity.Y, Is.GreaterThan(Speed * 0.5f), "The traveller was turned around.");
+                }
+            });
+        }
+    }
+
+    [Test]
+    public async Task TestVvWriteOfWidthResizesTheSensor()
+    {
+        var (first, _, _) = await SpawnLinkedPortalsAsync(Angle.Zero);
+        var server = Pair.Server;
+
+        // The command an admin would type. Width itself is read-only to VV, so this only lands at all if the
+        //      registered path takes it, and only resizes the sensor if that path goes through SetWidth.
+        var consoleHost = server.ResolveDependency<Robust.Shared.Console.IConsoleHost>();
+        await server.WaitPost(() => consoleHost.ExecuteCommand($"vvwrite /entity/{first.Id}/KsPortalView/Width 20"));
+
+        await server.WaitAssertion(() =>
+        {
+            var view = server.EntMan.GetComponent<KsPortalViewComponent>(first);
+            var fixture = server.EntMan.System<FixtureSystem>().GetFixtureOrNull(first, KsPortalTravelSystem.SensorFixtureId);
+            Assert.That(fixture, Is.Not.Null);
+            var extent = fixture!.Shape.ComputeAABB(Robust.Shared.Physics.Transform.Empty, 0);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(view.Width, Is.EqualTo(20f), "vvwrite did not change the width");
+                Assert.That(extent.Right, Is.EqualTo(11.5f).Within(0.05f), "vvwrite changed the width but not the sensor");
             }
         });
     }

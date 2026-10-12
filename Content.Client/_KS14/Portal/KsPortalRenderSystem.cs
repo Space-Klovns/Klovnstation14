@@ -43,7 +43,7 @@ public sealed partial class KsPortalRenderSystem : EntitySystem
     ///     Static so that overlays showing the viewer's own state or re-processing the screen can ask without
     ///         looking a system up: they have no business running in somebody else's view.
     /// </remarks>
-    public static bool PassActive { get; set; }
+    public static bool PassActive { get; internal set; }
 
     public float ResolutionScale { get; private set; } = 0.5f;
     public int FarUpdateInterval { get; private set; } = 1;

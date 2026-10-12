@@ -56,7 +56,7 @@ public sealed partial class KsPortalPvsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnSubscriptionsShutdown(Entity<KsPortalViewSubscriptionsComponent> entity, ref ComponentShutdown args)
     {
-        Unsubscribe(entity.Comp, entity.Comp.Sessions);
+        UnsubscribeAll(entity.Comp);
         DeleteViewer(entity.Comp);
     }
 
@@ -86,13 +86,13 @@ public sealed partial class KsPortalPvsSystem : EntitySystem
         while (query.MoveNext(out var portalUid, out var viewComponent))
         {
             _wanted.Clear();
-            var target = EntityUid.Invalid;
+            var targetUid = EntityUid.Invalid;
 
             if (viewComponent.Enabled
                 && _linkedEntitySystem.GetLink(portalUid, out var linkedUid)
                 && !TerminatingOrDeleted(linkedUid.Value))
             {
-                target = linkedUid.Value;
+                targetUid = linkedUid.Value;
 
                 var portalCoordinates = _transformSystem.GetMapCoordinates(portalUid);
                 foreach (var (session, coordinates) in _viewers)
@@ -103,11 +103,11 @@ public sealed partial class KsPortalPvsSystem : EntitySystem
                 }
             }
 
-            Apply(portalUid, target);
+            Apply(portalUid, targetUid);
         }
     }
 
-    private void Apply(EntityUid portalUid, EntityUid target)
+    private void Apply(EntityUid portalUid, EntityUid targetUid)
     {
         if (!_subscriptionsQuery.TryComp(portalUid, out var subscriptionsComponent))
         {
@@ -118,14 +118,14 @@ public sealed partial class KsPortalPvsSystem : EntitySystem
         }
 
         // Linked to something else now (or nothing): everything on the old target goes.
-        if (subscriptionsComponent.Target != target)
+        if (subscriptionsComponent.TargetUid != targetUid)
         {
-            Unsubscribe(subscriptionsComponent, subscriptionsComponent.Sessions);
+            UnsubscribeAll(subscriptionsComponent);
             DeleteViewer(subscriptionsComponent);
-            subscriptionsComponent.Target = target;
+            subscriptionsComponent.TargetUid = targetUid;
         }
 
-        if (target == EntityUid.Invalid)
+        if (targetUid == EntityUid.Invalid)
             return;
 
         _scratch.Clear();
@@ -144,54 +144,64 @@ public sealed partial class KsPortalPvsSystem : EntitySystem
             return;
         }
 
-        if (subscriptionsComponent.Viewer == EntityUid.Invalid || TerminatingOrDeleted(subscriptionsComponent.Viewer))
+        if (subscriptionsComponent.ViewerUid == EntityUid.Invalid || TerminatingOrDeleted(subscriptionsComponent.ViewerUid))
         {
             // Sessions subscribed to a dead viewer are not subscribed to anything any more.
             subscriptionsComponent.Sessions.Clear();
-            subscriptionsComponent.Viewer = SpawnViewer(target);
+            subscriptionsComponent.ViewerUid = SpawnViewer(targetUid);
         }
 
         foreach (var session in _wanted)
         {
             if (subscriptionsComponent.Sessions.Add(session))
-                _viewSubscriberSystem.AddViewSubscriber(subscriptionsComponent.Viewer, session);
+                _viewSubscriberSystem.AddViewSubscriber(subscriptionsComponent.ViewerUid, session);
         }
     }
 
-    private EntityUid SpawnViewer(EntityUid target)
+    private EntityUid SpawnViewer(EntityUid targetUid)
     {
-        var viewer = Spawn(null, Transform(target).Coordinates);
-        _transformSystem.SetParent(viewer, target);
+        var viewerUid = Spawn(null, Transform(targetUid).Coordinates);
+        _transformSystem.SetParent(viewerUid, targetUid);
 
         // Only the PVS range of the eye is wanted; the entity itself never needs to be seen.
-        EnsureComp<EyeComponent>(viewer);
-        _eyeSystem.SetPvsScale(viewer, _viewPvsScale);
+        EnsureComp<EyeComponent>(viewerUid);
+        _eyeSystem.SetPvsScale(viewerUid, _viewPvsScale);
 
-        return viewer;
+        return viewerUid;
     }
 
     private void DeleteViewer(KsPortalViewSubscriptionsComponent component)
     {
-        if (component.Viewer != EntityUid.Invalid)
-            QueueDel(component.Viewer);
+        if (component.ViewerUid != EntityUid.Invalid)
+            QueueDel(component.ViewerUid);
 
-        component.Viewer = EntityUid.Invalid;
+        component.ViewerUid = EntityUid.Invalid;
     }
 
     /// <summary>
-    ///     Takes the given sessions off the component's target. <paramref name="sessions"/> may be the
-    ///         component's own set, so it is copied before it is changed.
+    ///     Takes the given sessions off the component's viewer. Not for the component's own set, which this
+    ///         changes: use <see cref="UnsubscribeAll"/> for that.
     /// </summary>
-    private void Unsubscribe(KsPortalViewSubscriptionsComponent component, IEnumerable<ICommonSession> sessions)
+    private void Unsubscribe(KsPortalViewSubscriptionsComponent component, List<ICommonSession> sessions)
     {
-        var toRemove = new List<ICommonSession>(sessions);
-
-        foreach (var session in toRemove)
+        foreach (var session in sessions)
         {
             component.Sessions.Remove(session);
-
-            if (component.Viewer != EntityUid.Invalid && !TerminatingOrDeleted(component.Viewer))
-                _viewSubscriberSystem.RemoveViewSubscriber(component.Viewer, session);
+            RemoveViewSubscriber(component, session);
         }
+    }
+
+    private void UnsubscribeAll(KsPortalViewSubscriptionsComponent component)
+    {
+        foreach (var session in component.Sessions)
+            RemoveViewSubscriber(component, session);
+
+        component.Sessions.Clear();
+    }
+
+    private void RemoveViewSubscriber(KsPortalViewSubscriptionsComponent component, ICommonSession session)
+    {
+        if (component.ViewerUid != EntityUid.Invalid && !TerminatingOrDeleted(component.ViewerUid))
+            _viewSubscriberSystem.RemoveViewSubscriber(component.ViewerUid, session);
     }
 }

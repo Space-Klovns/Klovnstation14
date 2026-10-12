@@ -1,7 +1,6 @@
 using Content.Server.Administration;
 using Content.Shared.Administration;
 using Content.Shared._KS14.Portal;
-using Content.Shared.Teleportation.Components;
 using Robust.Shared.Console;
 
 namespace Content.Server._KS14.Portal;
