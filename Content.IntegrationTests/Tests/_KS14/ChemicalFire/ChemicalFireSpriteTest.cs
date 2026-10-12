@@ -33,7 +33,7 @@ public sealed class ChemicalFireSpriteTest : GameTest
                 foreach (var prototype in prototypeManager.EnumeratePrototypes<EntityPrototype>())
                 {
                     if (prototype.Abstract ||
-                        !prototype.TryGetComponent(out ChemicalFireComponent? fireComponent, componentFactory))
+                        !prototype.TryGetComponent(out ChemicalFireComponent fireComponent, componentFactory))
                         continue;
 
                     checkedPrototypes++;
