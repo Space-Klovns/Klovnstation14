@@ -24,7 +24,7 @@ public sealed partial class PacketNetworkConfiguratorComponent : Component
 
     [DataField]
     [AutoNetworkedField]
-    public int ActiveFrequency;
+    public int ActiveFrequency = -1;
 
     [DataField]
     [AutoNetworkedField]

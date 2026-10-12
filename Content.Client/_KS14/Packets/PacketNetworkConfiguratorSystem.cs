@@ -45,9 +45,11 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
             var modeKey = $"packet-configurator-mode-{_configurator.Mode.ToString().ToLowerInvariant()}";
             var modeName = Robust.Shared.Localization.Loc.GetString(modeKey);
 
+            var freqName = _configurator.FrequencyName.Replace("Frequency", "") + " | " + _configurator.ActiveFrequency;
+
             _label.SetMarkup(Robust.Shared.Localization.Loc.GetString("packet-configurator-status-label",
                 ("mode", $"[color=cyan]{modeName}[/color]"),
-                ("frequency", $"[color=orange]{_configurator.FrequencyName}[/color]")));
+                ("frequency", $"[color=orange]{freqName}[/color]")));
         }
     }
 }

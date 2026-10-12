@@ -16,9 +16,9 @@ public sealed class AmeState : DeviceCall
     public int InjectionAmount { get; set; }
     public float Stability { get; set; }
 
-    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, PacketExecutorComponent executor)
+    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {
-        if (!_entityManager.TryGetComponent<AmeControllerComponent>(entity, out var ame))
+        if (!entityMan.TryGetComponent<AmeControllerComponent>(entity, out var ame))
             return;
 
         Injecting = ame.Injecting;

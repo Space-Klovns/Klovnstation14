@@ -95,8 +95,8 @@ public sealed partial class PacketSystem
         _executorEntities.Add(executor, engine);
         InitializeModules(executor);
         SetConstants(executor);
-        LoadMethods(executor);
         LoadTypes(executor, _callTypes);
+        LoadMethods(executor);
         InitializePorts(executor);
 
         return engine;
@@ -169,6 +169,7 @@ public sealed partial class PacketSystem
 
         foreach (var moduleName in ent.Comp.Modules)
         {
+
             if (!TryGetMethods(ent, moduleName, out var methods))
                 return;
 

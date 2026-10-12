@@ -22,8 +22,6 @@ public abstract class PacketModule
     public IPrototypeManager PrototypeManager;
     public PacketSystem PacketSystem;
 
-    public readonly ManualResetEventSlim PauseHandler = new ManualResetEventSlim(true);
-
     public PacketModule(EntityManager manager, IPrototypeManager protoMan, PacketSystem packet)
     {
         EntityManager = manager;

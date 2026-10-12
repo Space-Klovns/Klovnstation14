@@ -6,19 +6,18 @@ namespace Content.Server._KS14.Packet.States;
 
 public abstract class DeviceCall
 {
-    internal static EntityManager _entityManager = null!;
-    internal static PrototypeManager _protoMan = null!;
-
-    public void UpdateCall(EntityUid entity, PacketSystem packetSystem, PacketExecutorComponent executor, ManualResetEventSlim pauseHandler)
+    public void UpdateCall(EntityUid entity,
+        PacketSystem packetSystem,
+        EntityManager entityManager,
+        IPrototypeManager prototypeManager,
+        PacketExecutorComponent executor)
     {
-        packetSystem.TryWrapSystemCall(() =>
-        {
-            GetCall(entity, packetSystem, executor);
-        },
-            pauseHandler);
+        GetCall(entity, packetSystem, entityManager, prototypeManager, executor);
     }
 
     protected abstract void GetCall(EntityUid entity,
         PacketSystem packetSystem,
+        EntityManager entityManager,
+        IPrototypeManager prototypeManager,
         PacketExecutorComponent executor);
 }

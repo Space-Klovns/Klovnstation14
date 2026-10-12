@@ -72,7 +72,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         if (ent.Comp.Frequencies.Count == 0)
             return;
 
-        if (ent.Comp.ActiveFrequency == 0 && ent.Comp.Frequencies.Count != 0)
+        if (ent.Comp.ActiveFrequency == -1)
         {
             ent.Comp.ActiveFrequency = ent.Comp.Frequencies[0];
         }
@@ -80,12 +80,13 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         {
             var index = ent.Comp.Frequencies.IndexOf(ent.Comp.ActiveFrequency);
 
-            ent.Comp.ActiveFrequency = index < ent.Comp.Frequencies.Count
+            ent.Comp.ActiveFrequency = (index + 1) < ent.Comp.Frequencies.Count
                 ? ent.Comp.Frequencies[index + 1]
                 : ent.Comp.Frequencies[0];
         }
 
         ent.Comp.FrequencyName = _packetSystem.GetFrequency(ent.Comp.ActiveFrequency).Id;
+
         Dirty(ent);
     }
 
@@ -193,7 +194,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
             return;
 
         _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-frequency-save"), ent, user);
-        if (!ent.Comp.Frequencies.TryGetValue(freq, out _))
+        if (!ent.Comp.Frequencies.Contains(freq))
             ent.Comp.Frequencies.Add(freq);
 
         Dirty(ent);
@@ -203,7 +204,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
     {
         foreach (var frequency in _packetSystem._frequencies)
         {
-            if (!ent.Comp.Frequencies.TryGetValue(frequency.Value, out _))
+            if (!ent.Comp.Frequencies.Contains(frequency.Value))
                 ent.Comp.Frequencies.Add(frequency.Value);
         }
 

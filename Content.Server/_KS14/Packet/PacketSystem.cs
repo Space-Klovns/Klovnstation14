@@ -1,16 +1,29 @@
+using Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Modules.Base;
 using Content.Server._KS14.Packet.States;
+using Content.Server.Ame.EntitySystems;
+using Content.Server.Atmos.Piping.Binary.EntitySystems;
+using Content.Server.Chat.Systems;
+using Content.Server.Chemistry.EntitySystems;
 using Content.Server.DeviceLinking.Systems;
+using Content.Server.Fax;
 using Content.Server.GameTicking.Events;
+using Content.Server.Lathe;
+using Content.Server.Materials;
+using Content.Server.Radio.EntitySystems;
+using Content.Server.VendingMachines;
 using Content.Shared._KS14.Packets.BUI;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking.Events;
 using Content.Shared.GameTicking;
+using Content.Shared.Lathe;
+using Content.Shared.Materials;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
+using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.Packet;
 
@@ -19,18 +32,27 @@ namespace Content.Server._KS14.Packet;
 /// </summary>
 public sealed partial class PacketSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] internal LatheSystem LatheSystem = default!;
+    [Dependency] internal MaterialStorageSystem MaterialStorageSystem = default!;
+    [Dependency] internal VendingMachineSystem VendingMachineSystem = default!;
+    [Dependency] internal FaxSystem FaxSystem = default!;
+    [Dependency] internal ChatSystem ChatSystem = default!;
+    [Dependency] internal AmeControllerSystem AmeControllerSystem = default!;
+    [Dependency] internal ChemMasterSystem ChemMasterSystem = default!;
+    [Dependency] internal RadioSystem RadioSystem = default!;
+
     [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
     [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
-    internal int _mainThreadId;
+    private int _mainThreadId;
 
     public override void Initialize()
     {
         _mainThreadId = Environment.CurrentManagedThreadId;
-        DeviceCall._entityManager = EntityManager;
         PreInitJint();
 
         SubscribeLocalEvent<PacketExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);

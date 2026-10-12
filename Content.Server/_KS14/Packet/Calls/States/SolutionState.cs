@@ -12,9 +12,9 @@ public sealed class SolutionState : DeviceCall
     public ProtoId<ReagentPrototype>[] Reagents = [];
     public float[] Quantity = [];
 
-    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, PacketExecutorComponent executor)
+    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {
-        if (!_entityManager.TryGetComponent<SolutionComponent>(entity, out var solution))
+        if (!entityMan.TryGetComponent<SolutionComponent>(entity, out var solution))
             return;
 
         for (var i = 0; i < solution.Solution.Contents.Count; i++)

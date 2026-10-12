@@ -6,6 +6,7 @@ using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.EntitySystems;
 using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared.NodeContainer;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Packet.States;
 
@@ -19,9 +20,9 @@ public sealed class GasNodeState : DeviceCall
     public float TotalMoles  { get; set; }
     public float Pressure { get; set; }
 
-    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, PacketExecutorComponent executor)
+    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {
-        if (!_entityManager.TryGetComponent<NodeContainerComponent>(entity, out var nodes))
+        if (!entityMan.TryGetComponent<NodeContainerComponent>(entity, out var nodes))
             return;
 
         if (!nodes.Nodes.TryGetValue(NodeName, out var node) ||

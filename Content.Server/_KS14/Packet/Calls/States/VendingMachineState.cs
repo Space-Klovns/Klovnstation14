@@ -14,9 +14,9 @@ public sealed class VendingMachineState : DeviceCall
     public string[] Items = [];
     public int[] Amount = [];
 
-    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, PacketExecutorComponent executor)
+    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {
-        if (!_entityManager.TryGetComponent<VendingMachineComponent>(entity, out var vend))
+        if (!entityMan.TryGetComponent<VendingMachineComponent>(entity, out var vend))
             return;
 
         for (var i = 0; i < vend.Inventory.Count; i++)

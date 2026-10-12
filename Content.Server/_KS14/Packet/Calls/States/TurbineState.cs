@@ -1,5 +1,7 @@
 using Content.Server._KS14.Packet.Components;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
+using Robust.Shared.Prototypes;
+
 namespace Content.Server._KS14.Packet.States;
 
 public sealed class TurbineState : DeviceCall
@@ -8,9 +10,9 @@ public sealed class TurbineState : DeviceCall
     public float FlowRate { get; set; }
     public float Rpm { get; set; }
 
-    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, PacketExecutorComponent executor)
+    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {
-        if (!_entityManager.TryGetComponent<TurbineComponent>(entity, out var reactor))
+        if (!entityMan.TryGetComponent<TurbineComponent>(entity, out var reactor))
             return;
 
         StatorLoad = reactor.StatorLoad;

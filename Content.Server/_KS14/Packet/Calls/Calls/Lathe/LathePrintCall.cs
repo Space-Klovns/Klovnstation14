@@ -10,17 +10,15 @@ public sealed class LathePrintCall : DeviceCall
     public string[] Recipes = [];
     public int[] Amount = [];
 
-    private static LatheSystem _latheSystem = _entityManager.System<LatheSystem>();
-
-    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, PacketExecutorComponent executor)
+    protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {
         for (var i = 0; i < Recipes.Length; i++)
         {
-            var recipe = _protoMan.Index<LatheRecipePrototype>(Recipes[i]);
+            var recipe = protoMan.Index<LatheRecipePrototype>(Recipes[i]);
 
-            _latheSystem.TryAddToQueue(entity, recipe, Amount[i]);
+            packetSystem.LatheSystem.TryAddToQueue(entity, recipe, Amount[i]);
         }
 
-        _latheSystem.TryStartProducing(entity);
+        packetSystem.LatheSystem.TryStartProducing(entity);
     }
 }

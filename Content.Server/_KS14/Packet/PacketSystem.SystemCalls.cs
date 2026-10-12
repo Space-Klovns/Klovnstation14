@@ -12,7 +12,7 @@ public sealed partial class PacketSystem
     /// <summary>
     /// Methods that are about to be called next tick
     /// </summary>
-    private Queue<PacketSystemCall> _callQueue = new();
+    private Queue<Action> _callQueue = new();
 
     /// <summary>
     /// Invoke all system calls in call queue
@@ -22,10 +22,7 @@ public sealed partial class PacketSystem
         while (_callQueue.Count > 0)
         {
             var action = _callQueue.Dequeue();
-            action.Action.Invoke();
-            Logger.Info("Invoking...");
-            action.PauseHandler?.Set();
-            Logger.Info("Thread unpaused!");
+            action.Invoke();
         }
     }
 
@@ -42,7 +39,7 @@ public sealed partial class PacketSystem
         if (Environment.CurrentManagedThreadId == _mainThreadId)
             return func.Invoke();
 
-        WrapSystemCall(async void () =>
+        await WrapSystemCallAsync(async void () =>
         {
             await channel.Writer.WriteAsync(func.Invoke()!);
         });
@@ -50,7 +47,7 @@ public sealed partial class PacketSystem
         return (T) await channel.Reader.ReadAsync();
     }
 
-    public void TryWrapSystemCall(Action action, ManualResetEventSlim? pauseHandler = null)
+    public void TryWrapSystemCall(Action action)
     {
         if (Environment.CurrentManagedThreadId == _mainThreadId)
         {
@@ -58,20 +55,31 @@ public sealed partial class PacketSystem
             return;
         }
 
-        Logger.Info("Async execution...");
-
-        WrapSystemCall(action, pauseHandler);
+        WrapSystemCall(action);
     }
 
-    public void WrapSystemCall(Action action, ManualResetEventSlim? pauseHandler = null)
+    public async Task TryWrapSystemCallAsync(Action action)
     {
-        _callQueue.Enqueue(new PacketSystemCall(Environment.CurrentManagedThreadId, pauseHandler, action));
-
-        Logger.Info("Pausing thread...");
-        if (pauseHandler != null)
+        if (Environment.CurrentManagedThreadId == _mainThreadId)
         {
-            pauseHandler.Reset();
-            pauseHandler.Wait();
+            action.Invoke();
+            return;
         }
+
+        await WrapSystemCallAsync(action);
+    }
+
+    public void WrapSystemCall(Action action)
+    {
+        _callQueue.Enqueue(action);
+
+        Thread.Sleep(1000 / _gameTiming.TickRate);
+    }
+
+    public async Task WrapSystemCallAsync(Action action)
+    {
+        _callQueue.Enqueue(action);
+
+        await Task.Delay(1000 / _gameTiming.TickRate);
     }
 }

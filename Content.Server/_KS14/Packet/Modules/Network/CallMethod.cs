@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Content.Server._KS14.Packet.States;
 
 namespace Content.Server._KS14.Packet.Modules.Network;
@@ -23,7 +24,7 @@ public sealed class CallMethod : ModuleMethod
             return;
         }
 
-        call.UpdateCall(receiver, module.PacketSystem, module.Executor.Comp1, module.PauseHandler);
+        module.PacketSystem.TryWrapSystemCall(() => call.UpdateCall(receiver, module.PacketSystem, module.EntityManager, module.PrototypeManager, module.Executor.Comp1));
     }
 
     public CallMethod(PacketModule? module) : base(module)
