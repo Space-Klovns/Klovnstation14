@@ -45,7 +45,7 @@ public sealed class PuddleAirHeatExchangeTest : GameTest
 
         var testMap = await pair.CreateTestMap();
 
-        GasMixture? air = null;
+        GasMixture air = null;
         Entity<SolutionComponent> puddleSolution = default;
         float energyBefore = 0f;
         float solutionTemperatureBefore = 0f;
@@ -75,7 +75,7 @@ public sealed class PuddleAirHeatExchangeTest : GameTest
 
             puddleSolution = puddle.Comp.Solution!.Value;
 
-            air = atmosphereSystem.GetTileMixture(new Entity<TransformComponent?>(puddle.Owner, null), excite: false);
+            air = atmosphereSystem.GetTileMixture(new Entity<TransformComponent>(puddle.Owner, null), excite: false);
             Assert.That(air, Is.Not.Null, "Puddle tile has no air.");
             Assert.That(air!.Immutable, Is.False, "Puddle tile air is immutable.");
             air.Temperature = Atmospherics.T20C;

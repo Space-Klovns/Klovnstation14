@@ -44,6 +44,9 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
   - !type:ExtinguishTileReaction {}
 ";
 
+    private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
+    private static readonly ProtoId<ReagentPrototype> GaslessExtinguisherReagent = "KsTestGaslessExtinguisher";
+
     private static readonly Vector2i Tile = Vector2i.Zero;
 
     [Test]
@@ -81,7 +84,7 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
             var air = atmosphereSystem.GetTileMixture(gridUid, null, Tile, true);
             Assert.That(air, Is.Not.Null);
 
-            var reaction = protoMan.Index<ReagentPrototype>("Water").TileReactions
+            var reaction = protoMan.Index(WaterReagent).TileReactions
                 .OfType<ExtinguishTileReaction>().Single();
 
             var reactVolume = FixedPoint2.New(1.67f);
@@ -89,7 +92,7 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
             var temperatureBefore = air!.Temperature;
             Assert.That(temperatureBefore, Is.GreaterThan(900f), "Test tile did not start hot.");
 
-            var used = reaction.TileReact(testMap.Tile, protoMan.Index<ReagentPrototype>("Water"), reactVolume, entityManager, null);
+            var used = reaction.TileReact(testMap.Tile, protoMan.Index(WaterReagent), reactVolume, entityManager, null);
 
             var capacityAfter = atmosphereSystem.GetHeatCapacity(air, applyScaling: true);
             var energyBefore = capacityBefore * temperatureBefore;
@@ -97,7 +100,7 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
 
             // Same target the reaction aims for (default coolingTemperature of 2), whatever HeatScale is.
             // The cooling floor is the reagent's boiling point (Celsius in the prototype).
-            var waterBoilingPoint = protoMan.Index<ReagentPrototype>("Water").BoilingPoint;
+            var waterBoilingPoint = protoMan.Index(WaterReagent).BoilingPoint;
             Assert.That(waterBoilingPoint, Is.Not.Null, "Water has no boiling point.");
             var boilingFloor = waterBoilingPoint!.Value + Atmospherics.T0C;
             var target = MathF.Max(MathF.Min(temperatureBefore - 2000f, temperatureBefore / 2f), boilingFloor);
@@ -170,7 +173,7 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
             var air = atmosphereSystem.GetTileMixture(gridUid, null, Tile, true);
             Assert.That(air, Is.Not.Null);
 
-            var reagent = protoMan.Index<ReagentPrototype>("KsTestGaslessExtinguisher");
+            var reagent = protoMan.Index(GaslessExtinguisherReagent);
             var reaction = reagent.TileReactions.OfType<ExtinguishTileReaction>().Single();
             Assert.That(ExtinguishTileReaction.GetBoiledGas(atmosphereSystem, reagent), Is.Null,
                 "Test reagent unexpectedly has a gas.");

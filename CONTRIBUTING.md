@@ -565,6 +565,17 @@ This bites hardest in integration-test prototypes, where a wrong component combi
 
 The same asymmetry applies to anything a debug assert guards: stack invariants, `Resolve` calls with `logMissing`, and the engine's own transform and physics checks. If a test only ever runs in `Release`, treat its coverage of those as zero.
 
+### Integration-test compile errors CI catches
+
+- **`CS8632`: nullable annotations without `#nullable enable`.** `Content.IntegrationTests` has nullable *disabled* by default, so `GasMixture? air` or `Entity<TransformComponent?>` in a test is a warning, and therefore a CI error. Either drop the `?` (it means nothing there anyway) or put `#nullable enable` at the top of the file and fix whatever new warnings that surfaces.
+- **`RA0033`: `Index`/`TryIndex` forbids literal ids.** `protoMan.Index<ReagentPrototype>("Water")` fails the analyzer. Declare a typed id and index that:
+
+  ```csharp
+  private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
+  // ...
+  var water = protoMan.Index(WaterReagent);
+  ```
+
 ## 6. Cross-codebase pitfalls
 
 Every entry here is something that produced working, compiling, apparently-tested code that was wrong
