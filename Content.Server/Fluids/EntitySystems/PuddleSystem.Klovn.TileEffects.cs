@@ -31,6 +31,7 @@ public sealed partial class PuddleSystem
         base.Update(frameTime);
 
         UpdateAirHeatExchange(); // KS14
+        ResolvePendingPuddleMerges();
 
         var curTime = _gameTiming.CurTime;
         if (curTime < _nextTileEffectUpdate)

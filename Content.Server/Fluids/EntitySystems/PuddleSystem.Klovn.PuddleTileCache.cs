@@ -1,5 +1,6 @@
 
 using System.Diagnostics.CodeAnalysis;
+using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
 using Content.Shared.GameTicking;
 using Robust.Shared.Map;
@@ -15,11 +16,21 @@ public sealed partial class PuddleSystem
     /// </summary>
     /// <remarks>
     ///     There is at most one puddle per tile - that is an invariant of the game, enforced by
-    ///     <see cref="TrySpillAt(TileRef, Solution, out EntityUid, bool, bool)"/> merging into the puddle already there -
-    ///     so each tile maps to exactly one puddle and callers may rely on it. If a second puddle ever shows up on an
-    ///     occupied tile, an error is logged and the first one stays cached.
+    ///     <see cref="TrySpillAt(TileRef, Solution, out EntityUid, bool, bool)"/> merging into the puddle already there,
+    ///     and, for puddles that arrive some other way (map load, direct spawn, moves), by merging the newcomer into the
+    ///     cached puddle in <see cref="ResolvePendingPuddleMerges"/> - so each tile maps to exactly one puddle and
+    ///     callers may rely on it, once the merge has run (the tick after the duplicate appears). Until then the first
+    ///     puddle stays cached and the newcomer is not.
     /// </remarks>
     private readonly Dictionary<EntityUid, Dictionary<Vector2i, Entity<PuddleComponent>>> _gridPuddleCache = new();
+
+    /// <summary>
+    ///     Puddles that arrived on an already-occupied tile and are waiting to be merged into the cached one. Filled from
+    ///     engine callbacks, drained in <see cref="Update"/>. Never contains a cached puddle.
+    /// </summary>
+    private readonly HashSet<EntityUid> _pendingPuddleMerges = new();
+
+    private readonly List<EntityUid> _drainedPuddleMerges = new();
 
     /// <summary>
     ///     Where every cached puddle currently is, so that a moved or removed puddle can be pulled out of the tile it
@@ -52,6 +63,70 @@ public sealed partial class PuddleSystem
     {
         _gridPuddleCache.Clear();
         _puddleCacheLocations.Clear();
+        _pendingPuddleMerges.Clear();
+    }
+
+    /// <summary>
+    ///     Resolves <see cref="_pendingPuddleMerges"/>. Called from <see cref="Update"/>, clear of any engine callback.
+    ///     Each duplicate puddle's solution is moved into the puddle currently cached on its tile and the duplicate is
+    ///     deleted. If the cached puddle has since gone, the duplicate is promoted to be the tile's cached puddle instead.
+    /// </summary>
+    private void ResolvePendingPuddleMerges()
+    {
+        if (_pendingPuddleMerges.Count == 0)
+            return;
+
+        // Drain first: resolving one entry can raise events that queue into the set.
+        _drainedPuddleMerges.Clear();
+        _drainedPuddleMerges.AddRange(_pendingPuddleMerges);
+        _pendingPuddleMerges.Clear();
+
+        foreach (var newcomerUid in _drainedPuddleMerges)
+        {
+            // QueueDel'd entities are still alive and not terminating, so check for that explicitly.
+            if (TerminatingOrDeleted(newcomerUid) || EntityManager.IsQueuedForDeletion(newcomerUid) ||
+                _puddleCacheLocations.ContainsKey(newcomerUid) ||
+                !_puddleQuery.TryGetComponent(newcomerUid, out var newcomer) ||
+                !TryComp(newcomerUid, out TransformComponent? newcomerTransform) ||
+                newcomerTransform.GridUid is not { } gridUid ||
+                !_transform.TryGetGridTilePosition((newcomerUid, newcomerTransform), out var indices))
+            {
+                continue;
+            }
+
+            if (!TryGetCachedPuddle(gridUid, indices, out Entity<PuddleComponent> existing))
+            {
+                // The puddle that held the tile is gone, so the newcomer takes it over.
+                UpdatePuddleCache(newcomerUid, newcomerTransform);
+                continue;
+            }
+
+            if (existing.Owner == newcomerUid)
+                continue;
+
+            if (TerminatingOrDeleted(existing.Owner) || EntityManager.IsQueuedForDeletion(existing.Owner))
+            {
+                // On its way out but still cached; look again next tick, when it will have left the cache.
+                _pendingPuddleMerges.Add(newcomerUid);
+                continue;
+            }
+
+            if (!_solutionContainerSystem.ResolveSolution(existing.Owner, existing.Comp.SolutionName, ref existing.Comp.Solution) ||
+                !_solutionContainerSystem.ResolveSolution(newcomerUid, newcomer.SolutionName, ref newcomer.Solution, out var newcomerSolution))
+            {
+                continue;
+            }
+
+            if (newcomerSolution.Volume > FixedPoint2.Zero)
+            {
+                var moved = _solutionContainerSystem.SplitSolution(newcomer.Solution.Value, newcomerSolution.Volume);
+                TryAddSolution(existing.Owner, moved, sound: false, puddleComponent: existing.Comp);
+            }
+
+            QueueDel(newcomerUid);
+        }
+
+        _drainedPuddleMerges.Clear();
     }
 
     /// <summary>
@@ -86,8 +161,11 @@ public sealed partial class PuddleSystem
         if (tilePuddles.TryGetValue(indices, out var existingPuddle))
         {
             // Only one puddle may exist per tile. Keep the first, and do not record the newcomer's location, so that
-            //      its removal later cannot evict the puddle that is actually cached.
-            Log.Error($"Puddle {ToPrettyString(puddleUid)} is on tile {indices} of grid {ToPrettyString(gridUid)}, which already has puddle {ToPrettyString(existingPuddle.Owner)}. There must only be one puddle per tile.");
+            //      its removal later cannot evict the puddle that is actually cached. The newcomer is merged into the
+            //      cached puddle later, in Update - this is an engine callback (startup / move), so nothing may be
+            //      transferred or deleted here.
+            Log.Debug($"Puddle {ToPrettyString(puddleUid)} is on tile {indices} of grid {ToPrettyString(gridUid)}, which already has puddle {ToPrettyString(existingPuddle.Owner)}. Queueing a merge.");
+            _pendingPuddleMerges.Add(puddleUid);
             return;
         }
 
@@ -101,6 +179,8 @@ public sealed partial class PuddleSystem
     /// </summary>
     private void RemovePuddleFromCache(EntityUid puddleUid)
     {
+        _pendingPuddleMerges.Remove(puddleUid);
+
         if (!_puddleCacheLocations.Remove(puddleUid, out var location))
             return;
 

@@ -10,6 +10,7 @@ using Content.Shared.FixedPoint;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.UnitTesting;
 
 namespace Content.IntegrationTests.Tests._KS14.Atmos;
 
@@ -45,7 +46,10 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
 ";
 
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
-    private static readonly ProtoId<ReagentPrototype> GaslessExtinguisherReagent = "KsTestGaslessExtinguisher";
+
+    // Deliberately NOT static: the YAML linter validates static prototype id fields against the real prototypes,
+    //     and this one only exists in the test YAML above.
+    private readonly ProtoId<ReagentPrototype> _gaslessExtinguisherReagent = "KsTestGaslessExtinguisher";
 
     private static readonly Vector2i Tile = Vector2i.Zero;
 
@@ -129,8 +133,22 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
                 //     before the energy is computed, so this holds to float precision.
                 Assert.That(energyAfter, Is.EqualTo(energyBefore).Within(energyBefore * 1e-3f + 1f),
                     "Thermal energy was not conserved.");
-                Assert.That(atmosphereSystem.IsHotspotActive(gridUid, Tile), Is.False, "Hotspot survived.");
             }
+        });
+
+        await AssertHotspotOutAfterTicks(server, atmosphereSystem, gridUid);
+    }
+
+    /// <summary>
+    ///     The extinguished chemfire is only queued for deletion, so the hotspot is still reported until the next tick.
+    /// </summary>
+    private static async Task AssertHotspotOutAfterTicks(RobustIntegrationTest.ServerIntegrationInstance server, AtmosphereSystem atmosphereSystem, EntityUid gridUid)
+    {
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(atmosphereSystem.IsHotspotActive(gridUid, Tile), Is.False, "Hotspot survived.");
         });
     }
 
@@ -173,7 +191,7 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
             var air = atmosphereSystem.GetTileMixture(gridUid, null, Tile, true);
             Assert.That(air, Is.Not.Null);
 
-            var reagent = protoMan.Index(GaslessExtinguisherReagent);
+            var reagent = protoMan.Index(_gaslessExtinguisherReagent);
             var reaction = reagent.TileReactions.OfType<ExtinguishTileReaction>().Single();
             Assert.That(ExtinguishTileReaction.GetBoiledGas(atmosphereSystem, reagent), Is.Null,
                 "Test reagent unexpectedly has a gas.");
@@ -190,8 +208,9 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
                 Assert.That(air.Temperature, Is.EqualTo(temperatureBefore), "Air temperature changed.");
                 Assert.That(air.TotalMoles, Is.EqualTo(molesBefore), "Air moles changed.");
                 Assert.That(air.GetMoles(Gas.WaterVapor), Is.EqualTo(waterVaporBefore), "Vapor was added.");
-                Assert.That(atmosphereSystem.IsHotspotActive(gridUid, Tile), Is.False, "Hotspot survived.");
             }
         });
+
+        await AssertHotspotOutAfterTicks(server, atmosphereSystem, gridUid);
     }
 }

@@ -219,6 +219,7 @@ var water = protoMan.Index(WaterReagent);
 
 var water = protoMan.Index<ReagentPrototype>("Water");                      // not this
 ```
+For an id that exists only in a test's `[TestPrototypes]` YAML, make that field non-`static` (`private readonly ProtoId<T> _id = "..."`): the YAML linter validates only static id fields against the real prototypes, and an instance field still satisfies `RA0033`.
 
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
@@ -576,7 +577,7 @@ The same asymmetry applies to anything a debug assert guards: stack invariants, 
 ### Integration-test compile errors CI catches
 
 - **`CS8632`: nullable annotations without `#nullable enable`.** `Content.IntegrationTests` has nullable *disabled* by default, so `GasMixture? air` or `Entity<TransformComponent?>` in a test is a warning, and therefore a CI error. Either drop the `?` (it means nothing there anyway) or put `#nullable enable` at the top of the file and fix whatever new warnings that surfaces.
-- **`RA0033`: literal prototype ids.** Tests are not exempt from the no-literal-ids rule in §4 (*Local rules on top of upstream*).
+- **`RA0033`: literal prototype ids.** Tests are not exempt from the no-literal-ids rule in §4 (*Local rules on top of upstream*); ids defined only in `[TestPrototypes]` go in non-static `ProtoId` fields so the YAML linter skips them.
 
 ## 6. Cross-codebase pitfalls
 
@@ -914,6 +915,9 @@ _pendingTransitChecks.Clear();
 
 Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
 throws straight out of `Update`.
+
+`PuddleSystem`'s one-puddle-per-tile invariant is enforced this way: a puddle that starts up or moves onto an
+occupied tile is queued, and merged into the cached puddle (then deleted) in `Update`, never in the callback.
 
 ### `Equals` on an enum boxes it
 
