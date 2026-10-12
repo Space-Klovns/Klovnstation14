@@ -57,6 +57,14 @@ public sealed partial class ChemicalFireComponent : Component
     public float HeatPower = 50_000f;
 
     /// <summary>
+    ///     Fraction (0 to 1) of <see cref="HeatPower"/> poured into the puddle on the chemfire's tile instead of
+    ///         the air, if there is one. The puddle is never warmed past <see cref="Temperature"/>, and whatever it
+    ///         cannot absorb goes to the air instead. Has no effect on chemfires without a puddle under them.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float PuddleHeatFraction = 0.15f;
+
+    /// <summary>
     ///     How often <see cref="ChemicalFireHeatTileEvent"/> is raised on this chemfire.
     /// </summary>
     [DataField, AutoNetworkedField]
