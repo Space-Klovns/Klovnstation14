@@ -366,6 +366,8 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         component.HeatInterval = prototypeComponent.HeatInterval;
         component.EmissionRange = prototypeComponent.EmissionRange;
         component.ConnectionKey = prototypeComponent.ConnectionKey;
+        component.Sprite = prototypeComponent.Sprite;
+        component.SpriteOffset = prototypeComponent.SpriteOffset;
         component.SpriteVariations = prototypeComponent.SpriteVariations;
         component.UnderStatePrefix = prototypeComponent.UnderStatePrefix;
         component.OverStatePrefix = prototypeComponent.OverStatePrefix;
