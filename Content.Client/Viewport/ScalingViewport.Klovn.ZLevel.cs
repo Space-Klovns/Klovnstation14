@@ -5,6 +5,7 @@ using Content.Client._KS14.ZLevel;
 using Content.Client._KS14.ZLevel.Light;
 using Content.Client._KS14.ZLevel.Transit;
 using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Portal;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Physics;
 using Content.Shared._KS14.ZLevel.Transit;
@@ -358,6 +359,7 @@ namespace Content.Client.Viewport
         protected override void Dispose(bool disposing)
         {
             InvalidateZLevelState();
+            ReleasePortalViewports();
 
             if (_gapLevelsCVarHandler != null)
             {
@@ -577,13 +579,15 @@ namespace Content.Client.Viewport
         ///     The world area an eye covers in this viewport, which is what places a capture correctly in a
         ///         pass drawn at a different depth scale.
         /// </summary>
-        private Box2Rotated GetEyeWorldBounds(Robust.Shared.Graphics.Eye eye)
+        private Box2Rotated GetEyeWorldBounds(IEye eye)
         {
-            var eyePosition = eye.Position.Position + eye.Offset;
             var worldSize = (Vector2)_viewport!.Size
                 / (EyeManager.PixelsPerMeter * _viewport.RenderScale * eye.Scale);
 
-            return new Box2Rotated(Box2.CenteredAround(eyePosition, worldSize), eye.Rotation, eyePosition);
+            // Turned by minus the eye's rotation, as the engine's own bounds are. Plus here was wrong for
+            //      any rotated eye, which includes every portal pass whose portals are turned relative to
+            //      each other.
+            return KsPortalTransform.GetEyeWorldBounds(eye.Position.Position + eye.Offset, eye.Rotation, worldSize);
         }
 
         private KsZLevelLightCapture EnsureCapture(MapId mapId)

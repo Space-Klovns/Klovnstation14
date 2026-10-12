@@ -1,0 +1,27 @@
+# Experimental light transfer through view portals (klovn.portal.light_transfer).
+
+# Lit only on the side the mask's top faces, brightest straight out and fading to nothing along the doorway
+# line, so a stand-in at a doorway never lights what is behind its portal.
+- type: lightMask
+  id: KsPortalHalfPlane
+  maskPath: /Textures/_KS14/Effects/LightMasks/portal_half_plane.png
+  lightCones:
+  - direction: 180
+    innerWidth: 90
+    outerWidth: 180
+
+- type: entity
+  id: KsPortalLeakedLight
+  categories: [ HideSpawnMenu ]
+  name: portal light
+  description: A light from the other side of a portal. You should not be able to see this.
+  components:
+  - type: Transform
+  - type: PointLight
+    # Off until the system has actually placed and sized it, so a stand-in never flashes at full radius on the
+    # frame it spawns.
+    enabled: false
+    # PointLightComponent.Rotation is locked to the engine's own light system, so the mask is aimed through
+    # this entity's world rotation instead, which the system can set.
+    autoRot: true
+  - type: KsPortalLeakedLight
