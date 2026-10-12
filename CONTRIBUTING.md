@@ -212,6 +212,14 @@ _entityLookupSystem.FindGridsIntersecting(mapId, bounds, ref _grids, true);
 dependencyCollection.InjectDependencies(overlay, true);
 ```
 
+**No string literals as prototype ids (C#)** — everywhere, integration tests included. The `RA0033` analyzer rejects a literal passed to `Index`/`TryIndex` and similar id parameters. Declare a typed id once and use that:
+```csharp
+private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";   // do this
+var water = protoMan.Index(WaterReagent);
+
+var water = protoMan.Index<ReagentPrototype>("Water");                      // not this
+```
+
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
 [Dependency] TransformSystem _transformSystem;   // not '_xform'
@@ -568,13 +576,7 @@ The same asymmetry applies to anything a debug assert guards: stack invariants, 
 ### Integration-test compile errors CI catches
 
 - **`CS8632`: nullable annotations without `#nullable enable`.** `Content.IntegrationTests` has nullable *disabled* by default, so `GasMixture? air` or `Entity<TransformComponent?>` in a test is a warning, and therefore a CI error. Either drop the `?` (it means nothing there anyway) or put `#nullable enable` at the top of the file and fix whatever new warnings that surfaces.
-- **`RA0033`: `Index`/`TryIndex` forbids literal ids.** `protoMan.Index<ReagentPrototype>("Water")` fails the analyzer. Declare a typed id and index that:
-
-  ```csharp
-  private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
-  // ...
-  var water = protoMan.Index(WaterReagent);
-  ```
+- **`RA0033`: literal prototype ids.** Tests are not exempt from the no-literal-ids rule in §4 (*Local rules on top of upstream*).
 
 ## 6. Cross-codebase pitfalls
 
