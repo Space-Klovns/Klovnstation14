@@ -89,23 +89,39 @@ there is an actual *gas* fire on a tile must use `AtmosphereSystem.HasGasHotspot
 ### Rendering
 
 The art is a 32x48 greyscale RSI split into an `under` and an `over` half, both 5-frame, so flames can render
-both behind and in front of whatever is standing in them:
+both behind and in front of whatever is standing in them. Chemfires have **no sprite component**: both halves
+are drawn by overlays, from the RSI and offset on `ChemicalFireComponent` (`sprite`, `spriteOffset`, a
+quarter tile up by default), modulated with its `Color`, unshaded:
 
-- The `under` half is the entity's own sprite layer (`drawdepth: Objects`, `snapCardinals: true`, offset a
-  quarter tile up), modulated with `ChemicalFireComponent.Color`, unshaded.
-- The `over` half is drawn by `ChemicalFireOverlay` at `DrawDepth.Effects`, unshaded, reading its animation
-  frame straight off the `under` layer so the two halves cannot drift apart.
+- `ChemicalFireUnderOverlay` draws the `under` half at `DrawDepth.Objects`, behind mobs and items.
+- `ChemicalFireOverOverlay` draws the `over` half at `DrawDepth.Overdoors`, in front of mobs and doors but
+  below `DrawDepth.Gasses`.
 - `TileEmissionComponent` is added in shared, coloured to match, for the glow on the tile.
 
-Sprite variation is `HashCode.Combine(gridNetId, tile.X, tile.Y) % SpriteVariations`, so client and server
-agree without networking it. Lateral smoothing picks `-west`/`-east`/`-full` states by looking up the
-neighbouring tiles in the grid cache and comparing connection keys.
+Both halves being overlays is deliberate. With the `under` half as a sprite and the `over` half above gas,
+visible gas drew between them, so the water vapour a chemfire produces, or the plasma a plasma fire burns in,
+hid the `under` half while the `over` half floated on top. Now anything drawn between the two depths treats
+both halves the same way. The overlays share one base, `ChemicalFireOverlay`, and differ only in depth and
+which resolved state they read.
 
-Smoothing follows the **rendered** orientation, not the entity's true rotation. Because the sprite is
-`snapCardinals`, its on-screen orientation is
-`spriteRotation - (spriteRotation + localEyeRotation).Reduced().FlipPositive().RoundToCardinalAngle()`, where
-`localEyeRotation` is the eye rotation plus the grid's world rotation. `ChemicalFireVisualsSystem` replicates
-that maths to work out which tile offset "east" currently points at, and re-dirties every fire when the eye
+Sprite layers only animate while the engine draws them, so the frame comes from time instead: both halves
+read the same clock, plus a per-tile `AnimationPhase`, so they can never drift apart and neighbouring fires
+don't flicker in lockstep. Each overlay y-sorts its fires back to front and pixel-snaps each grid's origin,
+both the way the sprite renderer does, so fires sit still against the floor while the eye moves.
+The trade-off of having no sprite is that anything that only knows about sprites, such as puddle reflections,
+does not see chemfires.
+
+Sprite variation is `HashCode.Combine(gridNetId, tile.X, tile.Y) % SpriteVariations`, and the animation phase
+comes from the same seed, so client and server agree without networking either. Lateral smoothing picks
+`-west`/`-east`/`-full` states by looking up the neighbouring tiles in the grid cache and comparing connection
+keys.
+
+Smoothing follows the **rendered** orientation, not the entity's true rotation. The flame is snapped to the eye
+the way a `snapCardinals` sprite is, so its on-screen orientation is
+`rotation - (rotation + localEyeRotation).Reduced().FlipPositive().RoundToCardinalAngle()`, where
+`localEyeRotation` is the eye rotation plus the grid's world rotation. That is
+`ChemicalFireVisualsSystem.GetDrawRotation`, which the overlays draw with and the smoothing uses to work out
+which tile offset "east" currently points at; the system also re-dirties every fire when the eye
 rotates. Without this, rotating the eye leaves fires smoothing into neighbours that are no longer beside them
 on screen.
 
@@ -170,7 +186,7 @@ broadphase lookup of the tile.
 
 | File | Role |
 |---|---|
-| `Content.Shared/_KS14/Atmos/ChemicalFire/ChemicalFireComponent.cs` | All chemfire tuning: duration, colour, temperature, heat power, connection key, sprite states. |
+| `Content.Shared/_KS14/Atmos/ChemicalFire/ChemicalFireComponent.cs` | All chemfire tuning: duration, colour, temperature, heat power, connection key, RSI, offset and sprite states. |
 | `Content.Shared/_KS14/Atmos/ChemicalFire/ChemicalFireGridComponent.cs` | Per-grid, per-tile cache of live chemfires, keyed by connection key. |
 | `Content.Shared/_KS14/Atmos/ChemicalFire/SharedChemicalFireSystem.cs` | Lifetime, the `SpawnChemicalFire` ensure-semantics API, the grid cache, and the heat tick. |
 | `Content.Shared/_KS14/Atmos/ChemicalFire/SharedChemicalFireSystem.Networking.cs` | Hand-written grid component state - the wire carries `NetEntity`, both sides hold `Entity<ChemicalFireComponent>`. |
@@ -183,8 +199,8 @@ broadphase lookup of the tile.
 | `Content.Server/Atmos/EntitySystems/AtmosphereSystem.Hotspot.cs` | Marked upstream edit: `PerformHotspotExposure` announces through the arbiter. |
 | `Content.Server/Atmos/EntitySystems/AtmosphereSystem.GridAtmosphere.cs` | Marked upstream edit: `GridHotspotExtinguish` calls `ExtinguishTile`. |
 | `Content.Server/Atmos/EntitySystems/AtmosphereSystem.API.cs` | Marked upstream edit: `IsHotspotActiveMethodEvent` made public so chemfires can answer it. |
-| `Content.Client/_KS14/Atmos/ChemicalFire/ChemicalFireVisualsSystem.cs` | Sprite variation, rotation-aware lateral smoothing, dirty-queue resmoothing. |
-| `Content.Client/_KS14/Atmos/ChemicalFire/ChemicalFireOverlay.cs` | Draws the `over` flame half above the effects layer, frame-synced to the entity sprite. |
+| `Content.Client/_KS14/Atmos/ChemicalFire/ChemicalFireVisualsSystem.cs` | Resolves the drawn states: sprite variation, animation phase, rotation-aware lateral smoothing, dirty-queue resmoothing. |
+| `Content.Client/_KS14/Atmos/ChemicalFire/ChemicalFireOverlay.cs` | Draws both flame halves: a shared base plus the `under` (behind mobs) and `over` (in front of mobs, below gas) overlays. |
 | `Resources/Prototypes/_KS14/Entities/Effects/ChemicalFire/` | `BaseChemicalFire` plus the shipped fires (plain, plasma-fed, frost, thermite). |
 | `Content.IntegrationTests/Tests/_KS14/ChemicalFire/ChemicalFireTest.cs` | Duration, stacking, ignition, extinguishing and arbitration, on test-injected prototypes. |
 | `Content.IntegrationTests/Tests/_KS14/ChemicalFire/ChemicalFireEventListenerSystem.cs` | Counts tile fire events per entity; nothing in content otherwise observes `TileExtinguishEvent`. |
