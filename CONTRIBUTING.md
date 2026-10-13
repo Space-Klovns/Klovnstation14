@@ -224,6 +224,15 @@ _entityLookupSystem.FindGridsIntersecting(mapId, bounds, ref _grids, true);
 dependencyCollection.InjectDependencies(overlay, true);
 ```
 
+**No string literals as prototype ids (C#)** — everywhere, integration tests included. The `RA0033` analyzer rejects a literal passed to `Index`/`TryIndex` and similar id parameters. Declare a typed id once and use that:
+```csharp
+private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";   // do this
+var water = protoMan.Index(WaterReagent);
+
+var water = protoMan.Index<ReagentPrototype>("Water");                      // not this
+```
+For an id that exists only in a test's `[TestPrototypes]` YAML, make that field non-`static` (`private readonly ProtoId<T> _id = "..."`): the YAML linter validates only static id fields against the real prototypes, and an instance field still satisfies `RA0033`.
+
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
 [Dependency] TransformSystem _transformSystem;   // not '_xform'
@@ -624,6 +633,11 @@ This bites hardest in integration-test prototypes, where a wrong component combi
 
 The same asymmetry applies to anything a debug assert guards: stack invariants, `Resolve` calls with `logMissing`, and the engine's own transform and physics checks. If a test only ever runs in `Release`, treat its coverage of those as zero.
 
+### Integration-test compile errors CI catches
+
+- **`CS8632`: nullable annotations without `#nullable enable`.** `Content.IntegrationTests` has nullable *disabled* by default, so `GasMixture? air` or `Entity<TransformComponent?>` in a test is a warning, and therefore a CI error. Either drop the `?` (it means nothing there anyway) or put `#nullable enable` at the top of the file and fix whatever new warnings that surfaces.
+- **`RA0033`: literal prototype ids.** Tests are not exempt from the no-literal-ids rule in §4 (*Local rules on top of upstream*); ids defined only in `[TestPrototypes]` go in non-static `ProtoId` fields so the YAML linter skips them.
+
 ## 6. Cross-codebase pitfalls
 
 Every entry here is something that produced working, compiling, apparently-tested code that was wrong
@@ -960,6 +974,9 @@ _pendingTransitChecks.Clear();
 
 Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
 throws straight out of `Update`.
+
+`PuddleSystem`'s one-puddle-per-tile invariant is enforced this way: a puddle that starts up or moves onto an
+occupied tile is queued, and merged into the cached puddle (then deleted) in `Update`, never in the callback.
 
 ### `Equals` on an enum boxes it
 

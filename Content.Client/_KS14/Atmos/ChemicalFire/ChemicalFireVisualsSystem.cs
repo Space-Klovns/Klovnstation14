@@ -1,14 +1,13 @@
 using System.Numerics;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Random.Helpers;
-using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 
 namespace Content.Client._KS14.Atmos.ChemicalFire;
 
 /// <summary>
-///     Resolves a chemfire's sprite variation and its lateral <c>-west</c>/<c>-east</c>/<c>-full</c>
-///         connection state, and pushes the result onto the entity's <c>under</c> sprite layer.
+///     Resolves a chemfire's sprite variation, animation phase and lateral <c>-west</c>/<c>-east</c>/<c>-full</c>
+///         connection state into the RSI states <see cref="ChemicalFireOverlay"/> draws.
 ///     Recalculation is deferred through a dirty queue with a generation guard, exactly like
 ///         <see cref="Client.IconSmoothing.IconSmoothSystem"/>, so a tile changing hands only costs one
 ///         resmooth per affected chemfire per frame.
@@ -16,28 +15,32 @@ namespace Content.Client._KS14.Atmos.ChemicalFire;
 public sealed partial class ChemicalFireVisualsSystem : EntitySystem
 {
     [Dependency] private IEyeManager _eyeManager = default!;
-    [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
 
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
     [Dependency] private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
-    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
     [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
+
+    /// <summary>
+    ///     How finely <see cref="ChemicalFireComponent.AnimationPhase"/> is divided. Prime, so the phase doesn't
+    ///         repeat in step with the variation picked from the same seed.
+    /// </summary>
+    private const uint AnimationPhaseSteps = 997;
 
     private readonly Queue<EntityUid> _dirtyFires = new();
     private int _generation;
 
     /// <summary>
     ///     Eye rotation the chemfires were last resolved against. Connections are expressed in rendered space,
-    ///         so turning the eye far enough to snap the sprites onto a different cardinal invalidates every
+    ///         so turning the eye far enough to snap the flames onto a different cardinal invalidates every
     ///         chemfire at once.
     /// </summary>
     private Angle _lastEyeRotation = Angle.Zero;
 
     /// <summary>
     ///     Every tile a chemfire could possibly smooth into. Which two of these actually count is decided per
-    ///         chemfire at resolve time, since that depends on how its sprite ends up rotated on screen.
+    ///         chemfire at resolve time, since that depends on how it ends up rotated on screen.
     /// </summary>
     private static readonly Vector2i[] NeighbourOffsets =
     [
@@ -66,12 +69,28 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
         ++_generation;
 
         while (_dirtyFires.TryDequeue(out var uid))
-            UpdateSprite(uid);
+            UpdateVisuals(uid);
     }
 
     /// <summary>
-    ///     Chemfire sprites snap to cardinals, so which grid tiles read as left and right on screen moves with
-    ///         the eye. Whenever the eye turns, every chemfire has to reconsider what it connects to.
+    ///     The grid-local rotation a chemfire is drawn at: its own rotation, snapped so that it always faces the
+    ///         nearest cardinal on screen, the way a <c>snapCardinals</c> sprite is.
+    /// </summary>
+    /// <param name="rotation">The chemfire's grid-local rotation.</param>
+    /// <param name="localEyeRotation">The eye's rotation plus the grid's world rotation.</param>
+    public static Angle GetDrawRotation(Angle rotation, Angle localEyeRotation)
+    {
+        var cardinal = (rotation + localEyeRotation)
+            .Reduced()
+            .FlipPositive()
+            .RoundToCardinalAngle();
+
+        return rotation - cardinal;
+    }
+
+    /// <summary>
+    ///     Chemfires snap to cardinals, so which grid tiles read as left and right on screen moves with the eye.
+    ///         Whenever the eye turns, every chemfire has to reconsider what it connects to.
     /// </summary>
     private void DirtyOnEyeRotated()
     {
@@ -114,60 +133,56 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
             _dirtyFires.Enqueue(fire.Owner);
     }
 
-    private void UpdateSprite(EntityUid uid)
+    private void UpdateVisuals(EntityUid uid)
     {
         if (!_chemicalFireQuery.TryGetComponent(uid, out var fireComponent) ||
             !fireComponent.Running ||
-            fireComponent.UpdateGeneration == _generation ||
-            !_spriteQuery.TryGetComponent(uid, out var spriteComponent))
+            fireComponent.UpdateGeneration == _generation)
             return;
 
         fireComponent.UpdateGeneration = _generation;
 
         var fire = new Entity<ChemicalFireComponent>(uid, fireComponent);
-        fireComponent.Variation = GetVariation(fire);
-        fireComponent.Connection = GetConnection(fire, (uid, spriteComponent));
+        var tileSeed = GetTileSeed(fire);
+
+        fireComponent.Variation = fireComponent.SpriteVariations <= 1
+            ? 1
+            : 1 + (int)(tileSeed % (uint)fireComponent.SpriteVariations);
+        fireComponent.AnimationPhase = (float)(tileSeed % AnimationPhaseSteps) / AnimationPhaseSteps;
+        fireComponent.Connection = GetConnection(fire);
 
         var stateSuffix = fireComponent.Variation + GetConnectionSuffix(fireComponent.Connection);
+        fireComponent.UnderState = fireComponent.UnderStatePrefix + stateSuffix;
         fireComponent.OverState = fireComponent.OverStatePrefix + stateSuffix;
-
-        if (!_spriteSystem.LayerMapTryGet((uid, spriteComponent), ChemicalFireVisualLayers.Under, out var layerIndex, false))
-            return;
-
-        _spriteSystem.LayerSetRsiState((uid, spriteComponent), layerIndex, fireComponent.UnderStatePrefix + stateSuffix);
-        _spriteSystem.LayerSetColor((uid, spriteComponent), layerIndex, fireComponent.Color);
     }
 
     /// <summary>
-    ///     Picks the sprite variation deterministically from the grid and tile, so every client (and the
-    ///         server, were it to care) agrees without any of it being networked.
+    ///     A seed derived from the grid and tile, which the sprite variation and animation phase are picked
+    ///         from, so every client (and the server, were it to care) agrees without any of it being networked.
     /// </summary>
-    private int GetVariation(Entity<ChemicalFireComponent> fire)
+    private uint GetTileSeed(Entity<ChemicalFireComponent> fire)
     {
-        if (fire.Comp.SpriteVariations <= 1 ||
-            fire.Comp.LocalGridUid is not { } gridUid)
-            return 1;
+        if (fire.Comp.LocalGridUid is not { } gridUid)
+            return 0;
 
-        var seed = KsSharedRandomExtensions.HashCodeCombine(
+        return (uint)KsSharedRandomExtensions.HashCodeCombine(
             KsSharedRandomExtensions.GetNetId(gridUid, EntityManager),
             fire.Comp.LocalTile.X,
             fire.Comp.LocalTile.Y
         );
-
-        return 1 + (int)((uint)seed % (uint)fire.Comp.SpriteVariations);
     }
 
     /// <remarks>
     ///     Neighbour tiles are keyed by connection key in the grid cache, so this is two dictionary lookups
     ///         rather than an entity lookup.
     /// </remarks>
-    private ChemicalFireConnection GetConnection(Entity<ChemicalFireComponent> fire, Entity<SpriteComponent> sprite)
+    private ChemicalFireConnection GetConnection(Entity<ChemicalFireComponent> fire)
     {
         if (fire.Comp.LocalGridUid is not { } gridUid ||
             !_chemicalFireGridQuery.TryGetComponent(gridUid, out var gridComponent))
             return ChemicalFireConnection.None;
 
-        var eastOffset = GetRenderedEastOffset(fire, sprite, gridUid);
+        var eastOffset = GetRenderedEastOffset(fire, gridUid);
         var connectionKey = _chemicalFireSystem.GetConnectionKey(fire);
         var connection = ChemicalFireConnection.None;
 
@@ -184,29 +199,22 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
         => gridComponent.Tiles.TryGetValue(tile, out var tileData) && tileData.Fires.ContainsKey(connectionKey);
 
     /// <summary>
-    ///     The grid-local tile offset that a chemfire currently renders the east side of its sprite towards.
+    ///     The grid-local tile offset that a chemfire currently renders the east side of its flame towards.
     /// </summary>
     /// <remarks>
     ///     The <c>-west</c>/<c>-east</c>/<c>-full</c> states describe the flame as the player sees it, but
-    ///         <see cref="SpriteComponent.SnapCardinals"/> means the drawn orientation is
-    ///         <c>spriteRotation - cardinal</c> rather than the entity's true rotation, so smoothing against raw
-    ///         grid axes breaks as soon as the eye (or the grid) is turned. This replicates the snapping maths
-    ///         the renderer and <see cref="ChemicalFireOverlay"/> both use, leaving the connection following
-    ///         what is actually on screen.
+    ///         <see cref="GetDrawRotation"/> snaps the drawn orientation to the eye, so smoothing against raw
+    ///         grid axes breaks as soon as the eye (or the grid) is turned. Using the same snapping as
+    ///         <see cref="ChemicalFireOverlay"/> leaves the connection following what is actually on screen.
     /// </remarks>
-    private Vector2i GetRenderedEastOffset(Entity<ChemicalFireComponent> fire, Entity<SpriteComponent> sprite, EntityUid gridUid)
+    private Vector2i GetRenderedEastOffset(Entity<ChemicalFireComponent> fire, EntityUid gridUid)
     {
         var localEyeRotation = _eyeManager.CurrentEye.Rotation + _transformSystem.GetWorldRotation(gridUid);
-        var spriteRotation = _transformQuery.GetComponent(fire.Owner).LocalRotation + sprite.Comp.Rotation;
+        var drawRotation = GetDrawRotation(_transformQuery.GetComponent(fire.Owner).LocalRotation, localEyeRotation);
 
-        var cardinal = (spriteRotation + localEyeRotation)
-            .Reduced()
-            .FlipPositive()
-            .RoundToCardinalAngle();
-
-        // Rounded again because the sprite is only snapped relative to the eye - a grid at some arbitrary
+        // Rounded again because the flame is only snapped relative to the eye - a grid at some arbitrary
         //     angle still leaves a non-cardinal remainder here, which no tile offset could express.
-        var direction = (spriteRotation - cardinal).RoundToCardinalAngle().RotateVec(Vector2.UnitX);
+        var direction = drawRotation.RoundToCardinalAngle().RotateVec(Vector2.UnitX);
 
         return new Vector2i((int)MathF.Round(direction.X), (int)MathF.Round(direction.Y));
     }

@@ -118,6 +118,8 @@ namespace Content.Server.Chemistry.EntitySystems
                     if (vaporComp.PreviousTileRef != null && tile == vaporComp.PreviousTileRef)
                         continue;
 
+                    EqualizeTemperatureWithPuddle((uid, solution), tile); // KS14: puddle heat exchange, before ReactionTile so water still cools the puddle first
+
                     // Iterate over the reagents in the solution
                     // Reason: Each reagent in our solution may have a unique TileReaction
                     // In this instance, we check individually for each reagent's TileReaction

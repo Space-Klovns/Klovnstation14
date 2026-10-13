@@ -54,5 +54,6 @@
     duration: 7
     temperature: 2900
     heatPower: 12000
+    extinguishable: false # thermite burns through a dousing
   - type: SparkOnTrigger
   - type: TriggerOnSpawn
