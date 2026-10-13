@@ -11,11 +11,12 @@ namespace Content.Client._KS14.Portal;
 ///     One portal's captured view, ready to be composited into its window.
 /// </summary>
 /// <param name="Texture">The destination's surroundings, covering the world area of the viewer's main eye.</param>
-/// <param name="Triangles">The visible window in world space (aperture plus shadow), as a triangle list.</param>
-/// <param name="Quad">Where <paramref name="Texture"/>'s <paramref name="SubRegion"/> belongs in the world: the part of the main eye's view the window touches.</param>
-/// <param name="SubRegion">The texture pixels, from the top left, that <paramref name="Quad"/> shows.</param>
+/// <param name="Vertices">
+///     The visible window (aperture plus shadow) as a world-space triangle list, each vertex carrying the point of
+///         <paramref name="Texture"/> that belongs there.
+/// </param>
 /// <param name="MapId">The map the portal (and so its window) is on.</param>
-public readonly record struct KsPortalDraw(Texture Texture, List<Vector2> Triangles, Box2Rotated Quad, UIBox2 SubRegion, MapId MapId);
+public readonly record struct KsPortalDraw(Texture Texture, DrawVertexUV2D[] Vertices, MapId MapId);
 
 /// <summary>
 ///     Settings for view portal rendering, and the hand-off of finished captures from the viewport that

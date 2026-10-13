@@ -35,4 +35,27 @@ public sealed partial class KsPortalViewComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool Enabled = true;
+
+    /// <summary>
+    ///     Whether the doorway has no direction of its own and is instead turned square to whoever uses it: to
+    ///         the viewer when drawn, and to where a traveller first came near it when crossed.
+    /// </summary>
+    /// <remarks>
+    ///     For portals that are always at rotation zero and are walked into from any side, such as the hand
+    ///         teleporter's. Only the doorway turns: where a point ends up still follows the two portals' real
+    ///         rotations, which for a pair of such portals is a plain translation, so the view through it looks
+    ///         right from every side.
+    /// </remarks>
+    [DataField, AutoNetworkedField]
+    [Access(typeof(KsPortalTravelSystem))]
+    public bool FacesViewer;
+
+    /// <summary>
+    ///     Whether a player made this portal, in which case <see cref="Enabled"/> follows
+    ///         <see cref="Content.Shared._KS14.CCVar.KsCCVars.PortalPlayerViews"/>, and the stock portal behaviour takes over while
+    ///         it is off.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    [Access(typeof(KsPortalTravelSystem))]
+    public bool PlayerMade;
 }

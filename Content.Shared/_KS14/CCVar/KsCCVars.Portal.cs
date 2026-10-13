@@ -42,6 +42,18 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.portal.lighting", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
+    ///     Whether portals made by players, such as the hand teleporter's, are view portals: they show what is
+    ///         past the portal they lead to and carry entities through seamlessly. Off, they are stock portals,
+    ///         which teleport whatever touches them to the linked portal's centre.
+    /// </summary>
+    /// <remarks>
+    ///     Applies to existing portals as well as new ones, the moment it changes.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> PortalPlayerViews =
+        CVarDef.Create("klovn.portal.player_views", true, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
     ///     Experimental: whether light reaching a view portal's doorway also shines out of its linked portal's,
     ///         through client-side stand-in lights at the far doorway.
     /// </summary>

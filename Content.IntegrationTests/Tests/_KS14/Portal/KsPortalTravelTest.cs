@@ -44,6 +44,24 @@ public sealed class KsPortalTravelTest : GameTest
         - MidImpassable
         mask:
         - Impassable
+# The stock portal (BasePortal) as the hand teleporter makes it, minus the anchoring, which needs a floor.
+- type: entity
+  id: KsTestPlayerPortal
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      portalFixture:
+        shape:
+          !type:PhysShapeAabb
+          bounds: ""-0.25,-0.48,0.25,0.48""
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+        hard: false
+  - type: Portal
 - type: entity
   id: KsTestTravelMover
   components:
@@ -242,6 +260,46 @@ public sealed class KsPortalTravelTest : GameTest
         }
     }
 
+    [TestCase(2.5f)]
+    [TestCase(6f)]
+    public async Task TestWalkingMoverLoopsAHallway(float hallwayLength)
+    {
+        // The same hallway, walked by an input mover holding north, the way a player walks it.
+        var (_, _, mapId) = await SpawnLinkedPortalsAsync(Vector2.Zero, new Vector2(0f, -hallwayLength), Angle.Zero);
+        var server = Pair.Server;
+
+        EntityUid mob = default;
+        await server.WaitPost(() =>
+        {
+            mob = server.EntMan.SpawnEntity("KsTestTravelMover", new MapCoordinates(new Vector2(0f, -hallwayLength + 0.5f), mapId));
+            var mover = new Entity<InputMoverComponent>(mob, server.EntMan.GetComponent<InputMoverComponent>(mob));
+            server.EntMan.System<SharedMoverController>().SetVelocityDirection(mover, Direction.North, subTick: 0, enabled: true);
+        });
+
+        var crossings = 0;
+        var lastY = float.NaN;
+
+        for (var step = 0; step < 40; step++)
+        {
+            await Pair.RunTicksSync(5);
+
+            await server.WaitAssertion(() =>
+            {
+                var (position, _) = Sample(mob);
+                Assert.That(position.Y, Is.InRange(-hallwayLength - 0.1f, 0.1f),
+                    $"The mover walked out of the hallway; it is at {position}.");
+
+                // Coming out of the south portal shows as a jump backwards.
+                if (!float.IsNaN(lastY) && position.Y < lastY - 1f)
+                    crossings++;
+
+                lastY = position.Y;
+            });
+        }
+
+        Assert.That(crossings, Is.GreaterThanOrEqualTo(2), "The mover did not loop the hallway more than once.");
+    }
+
     [Test]
     public async Task TestVvWriteOfWidthResizesTheSensor()
     {
@@ -421,4 +479,132 @@ public sealed class KsPortalTravelTest : GameTest
             }
         });
     }
+
+    #region Player-made portals
+
+    /// <summary>
+    ///     Two stock portals, unrotated, made into player portals and linked the way the hand teleporter does it.
+    /// </summary>
+    private async Task<(EntityUid First, EntityUid Second, MapId MapId)> SpawnPlayerPortalsAsync()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+
+        EntityUid first = default, second = default;
+        await server.WaitPost(() =>
+        {
+            var travelSystem = server.EntMan.System<KsPortalTravelSystem>();
+            first = server.EntMan.SpawnEntity("KsTestPlayerPortal", new MapCoordinates(FirstPosition, testMap.MapId));
+            travelSystem.MakePlayerPortal(first);
+            second = server.EntMan.SpawnEntity("KsTestPlayerPortal", new MapCoordinates(SecondPosition, testMap.MapId));
+            travelSystem.MakePlayerPortal(second);
+
+            Assert.That(server.EntMan.System<LinkedEntitySystem>().TryLink(first, second, deleteOnEmptyLinks: true), Is.True);
+        });
+
+        return (first, second, testMap.MapId);
+    }
+
+    /// <summary>
+    ///     The component of <paramref name="offset"/> across <paramref name="direction"/>, which a straight crossing
+    ///         keeps and the stock portal's teleport to the linked portal's centre throws away.
+    /// </summary>
+    private static float Across(Vector2 offset, Vector2 direction)
+    {
+        var normal = Vector2.Normalize(direction);
+        return offset.X * -normal.Y + offset.Y * normal.X;
+    }
+
+    [TestCase(1f, 0f)]
+    [TestCase(0f, 1f)]
+    [TestCase(-0.6f, 0.8f)]
+    public async Task TestPlayerPortalIsCrossedStraightFromAnySide(float approachX, float approachY)
+    {
+        var (_, second, mapId) = await SpawnPlayerPortalsAsync();
+        var approach = new Vector2(approachX, approachY);
+        var across = new Vector2(-approach.Y, approach.X) * 0.3f;
+
+        // Off-centre, so a teleport to the linked portal's centre would show as the offset going missing.
+        var mob = await SpawnMobAsync(FirstPosition + approach * 1.5f + across, -approach * Speed, mapId);
+
+        await Pair.RunTicksSync(30);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (position, velocity) = Sample(mob);
+            var offset = position - SecondPosition;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(offset.Length(), Is.LessThan(3f), $"The mob did not come out of the linked portal; it is at {position}.");
+                Assert.That(Vector2.Dot(offset, approach), Is.LessThan(0f), "The mob came out on the side it went in on.");
+                Assert.That(Across(offset, approach), Is.EqualTo(0.3f).Within(0.05f),
+                    "The mob was not carried straight through; it lost its offset from the portal's centre.");
+                // Direction only: the test map slows the mob a little either way.
+                Assert.That(Vector2.Distance(Vector2.Normalize(velocity), -Vector2.Normalize(approach)), Is.LessThan(0.01f),
+                    "The mob was turned by the crossing.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestPlayerPortalIsAStockPortalWhileTheCVarIsOff()
+    {
+        var (first, _, mapId) = await SpawnPlayerPortalsAsync();
+
+        // Switched off after the portals were made, so this also covers existing portals following the setting.
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.PortalPlayerViews, false);
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(SComp<KsPortalViewComponent>(first).Enabled, Is.False, "The portal did not follow the setting."));
+
+        var mob = await SpawnMobAsync(FirstPosition + new Vector2(1.5f, 0.3f), new Vector2(-Speed, 0f), mapId);
+
+        await Pair.RunTicksSync(30);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var offset = Sample(mob).Position - SecondPosition;
+
+            // The stock portal puts whatever touches it on the linked portal's centre, so the offset is gone.
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(offset.Length(), Is.LessThan(3f), "The stock portal did not teleport the mob.");
+                Assert.That(MathF.Abs(offset.Y), Is.LessThan(0.05f), "The mob was carried through as by a view portal.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestPlayerPortalOpenedUnderfootIsOnlyCrossedOnTheWayBack()
+    {
+        var (_, _, mapId) = await SpawnPlayerPortalsAsync();
+
+        // Standing on the portal, as whoever opened it with a hand teleporter is, and walking off it.
+        var mob = await SpawnMobAsync(FirstPosition, new Vector2(Speed, 0f), mapId);
+
+        await Pair.RunTicksSync(20);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var position = Sample(mob).Position;
+            Assert.That(Vector2.Distance(position, FirstPosition), Is.LessThan(3f),
+                $"Walking off the portal it was standing on carried the mob through; it is at {position}.");
+        });
+
+        // Back in again.
+        await SetVelocityAsync(mob, new Vector2(-Speed, 0f));
+        await Pair.RunTicksSync(30);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var offset = Sample(mob).Position - SecondPosition;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(offset.Length(), Is.LessThan(3f), "Walking back into the portal did not carry the mob through.");
+                Assert.That(offset.X, Is.LessThan(0f), "The mob came out on the side it went in on.");
+            }
+        });
+    }
+
+    #endregion
 }

@@ -595,6 +595,10 @@ So when replacing an obsolete call, keep the audience it had: `PopupPredicted(me
 
 **NPC behaviour (C#, YAML)** — HTN, and the systems that feed it, have their own conventions, kept in the `npc-htn` agent skill (`.claude/skills/npc-htn/SKILL.md`). Read it before touching NPC behaviour.
 
+**Rendering (C#)** — how Clyde draws a frame, where lighting and FOV apply, overlay and sprite order, the stencil buffer, and our extra render passes (z-levels, view portals) are in the `rendering` agent skill (`.claude/skills/rendering/SKILL.md`). Read it before writing an overlay or anything drawn in world space.
+
+**Integration tests (C#)** — the `GameTest` fixture, driving players, movers, commands and cvars, and what a headless client can check are in the `integration-testing` agent skill (`.claude/skills/integration-testing/SKILL.md`).
+
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
 ## 5. Build configurations, and what each one catches

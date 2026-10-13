@@ -252,19 +252,33 @@ public sealed partial class KsPortalLightTransferSystem : EntitySystem
                 continue;
 
             var lightPosition = _transformSystem.GetWorldPosition(light.Owner);
-            var lightLocal = KsPortalTransform.ToPortalFrame(lightPosition, portalPosition, portalRotation);
+
+            // A doorway with no direction of its own is turned square to each light in turn, the way it is turned
+            //      to each viewer. The far doorway is the same one carried over, as for a traveller.
+            var doorwayRotation = portalRotation;
+            if (portal.Comp.FacesViewer)
+            {
+                var towardsPortal = portalPosition - lightPosition;
+                if (towardsPortal.Length() < MinimumSideDistance)
+                    continue;
+
+                doorwayRotation = KsPortalTransform.GetFacingRotation(towardsPortal);
+            }
+
+            var destinationDoorwayRotation = doorwayRotation + KsPortalTransform.GetRelativeRotation(portalRotation, destinationRotation);
+            var lightLocal = KsPortalTransform.ToPortalFrame(lightPosition, portalPosition, doorwayRotation);
 
             if (MathF.Abs(lightLocal.Y) < MinimumSideDistance)
                 continue;
 
             // Out of the opposite side to the one the light is on, as if the doorway were a hole.
-            var exitDirection = destinationRotation.RotateVec(new Vector2(0f, -MathF.Sign(lightLocal.Y)));
+            var exitDirection = destinationDoorwayRotation.RotateVec(new Vector2(0f, -MathF.Sign(lightLocal.Y)));
             var maskRotation = KsPortalLightTransfer.GetMaskRotation(exitDirection);
 
             for (var index = 0; index < _samples; index++)
             {
                 var sampleOffset = KsPortalLightTransfer.GetSampleOffset(index, _samples, width);
-                var samplePosition = portalPosition + portalRotation.RotateVec(sampleOffset);
+                var samplePosition = portalPosition + doorwayRotation.RotateVec(sampleOffset);
                 var distance = (samplePosition - lightPosition).Length();
 
                 if (!KsPortalLightTransfer.TryGetTransferredLight(
@@ -288,7 +302,7 @@ public sealed partial class KsPortalLightTransferSystem : EntitySystem
 
                 _wantedStandIns.Add(new WantedStandIn(
                     light.Owner,
-                    destinationPosition + destinationRotation.RotateVec(sampleOffset),
+                    destinationPosition + destinationDoorwayRotation.RotateVec(sampleOffset),
                     maskRotation,
                     transferredRadius,
                     transferredEnergy * _energyMultiplier));

@@ -94,9 +94,11 @@ namespace Content.Client.Viewport
             Vector2 Position,
             Angle Rotation,
             bool Far,
-            List<Vector2> Triangles);
+            List<Vector2> Triangles,
+            DrawVertexUV2D[] Vertices);
 
         private readonly List<List<Vector2>> _portalTrianglePool = [];
+        private readonly List<DrawVertexUV2D[]> _portalVertexPool = [];
         private ExamineSystemShared? _portalExamineSystem;
 
         private void DrawPortalPrePass(IRenderHandle handle)
@@ -208,7 +210,20 @@ namespace Content.Client.Viewport
                     continue;
 
                 var (position, rotation) = _portalTransformSystem!.GetWorldPositionRotation(transformComponent);
-                KsPortalTransform.GetSegment(position, rotation, viewComponent.Width, out var segmentStart, out var segmentEnd);
+
+                // A doorway with no direction of its own is turned square to the viewer. Only the window turns: the
+                //      view through it still follows the portals' real rotations.
+                var doorwayRotation = rotation;
+                if (viewComponent.FacesViewer)
+                {
+                    var towardsPortal = position - viewerPosition;
+                    if (towardsPortal.LengthSquared() < KsPortalTransform.MinimumViewerDistance * KsPortalTransform.MinimumViewerDistance)
+                        continue;
+
+                    doorwayRotation = KsPortalTransform.GetFacingRotation(towardsPortal);
+                }
+
+                KsPortalTransform.GetSegment(position, doorwayRotation, viewComponent.Width, out var segmentStart, out var segmentEnd);
 
                 var segmentBounds = new Box2(
                     Vector2.Min(segmentStart, segmentEnd),
@@ -229,7 +244,10 @@ namespace Content.Client.Viewport
                     continue;
 
                 if (poolIndex == _portalTrianglePool.Count)
+                {
                     _portalTrianglePool.Add([]);
+                    _portalVertexPool.Add(new DrawVertexUV2D[KsPortalTransform.WindowVertexCount]);
+                }
 
                 var triangles = _portalTrianglePool[poolIndex];
 
@@ -248,7 +266,8 @@ namespace Content.Client.Viewport
                     position,
                     rotation,
                     fraction < FarWindowFraction || distanceSquared > farDistanceSquared,
-                    triangles));
+                    triangles,
+                    _portalVertexPool[poolIndex - 1]));
             }
 
             _portalCandidates.Sort(static (first, second) => first.DistanceSquared.CompareTo(second.DistanceSquared));
@@ -321,17 +340,21 @@ namespace Content.Client.Viewport
 
             // The capture covers the main eye's world area, whatever the resolution it was rendered at.
             if (!KsPortalTransform.TryGetWindowRegion(
-                    mainEyeCentre, eye.Rotation, GetPortalWorldSize(eye), candidate.Triangles, out var fullBox, out var region))
+                    mainEyeCentre, eye.Rotation, GetPortalWorldSize(eye), candidate.Triangles, out var fullBox, out _))
                 return wasRendered;
 
-            var texture = entry.Viewport.RenderTarget.Texture;
+            // The window is drawn as its own triangles, each vertex taking the capture's pixel at its place, so
+            //      nothing outside the window can be drawn whatever else is in the stencil buffer.
+            var vertices = candidate.Vertices;
+            for (var index = 0; index < vertices.Length; index++)
+            {
+                var vertex = candidate.Triangles[index];
+                vertices[index] = new DrawVertexUV2D(
+                    vertex,
+                    KsPortalTransform.GetCaptureUV(vertex, mainEyeCentre, eye.Rotation, fullBox));
+            }
 
-            _portalDraws.Add(new KsPortalDraw(
-                texture,
-                candidate.Triangles,
-                new Box2Rotated(region, -eye.Rotation, mainEyeCentre),
-                KsPortalTransform.GetTextureSubRegion(fullBox, region, (Vector2)texture.Size),
-                eye.Position.MapId));
+            _portalDraws.Add(new KsPortalDraw(entry.Viewport.RenderTarget.Texture, vertices, eye.Position.MapId));
 
             return true;
         }
