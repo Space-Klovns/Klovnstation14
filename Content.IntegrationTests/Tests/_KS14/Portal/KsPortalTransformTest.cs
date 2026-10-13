@@ -266,17 +266,29 @@ public sealed class KsPortalTransformTest
     }
 
     [Test]
-    public void TextureSubRegionMapsTheBoxCornersToTheTextureCorners()
+    public void CaptureUVMapsTheViewCornersToTheTextureCorners()
     {
-        var full = Box2.CenteredAround(new Vector2(3f, 4f), new Vector2(10f, 6f));
-        var textureSize = new Vector2(200f, 120f);
+        var centre = new Vector2(3f, 4f);
+        var rotation = new Angle(0.6);
+        var worldSize = new Vector2(10f, 6f);
 
-        var whole = KsPortalTransform.GetTextureSubRegion(full, full, textureSize);
-        Assert.That(whole, Is.EqualTo(new UIBox2(0f, 0f, 200f, 120f)));
+        var triangles = new List<Vector2> { centre, centre + new Vector2(0.5f, 0f), centre + new Vector2(0f, 0.5f) };
+        Assert.That(KsPortalTransform.TryGetWindowRegion(centre, rotation, worldSize, triangles, out var fullBox, out _), Is.True);
 
-        // The top left quarter of the box (world top is the texture's top) is the texture's top left quarter.
-        var quarter = new Box2(full.Left, full.Center.Y, full.Center.X, full.Top);
-        Assert.That(KsPortalTransform.GetTextureSubRegion(full, quarter, textureSize), Is.EqualTo(new UIBox2(0f, 0f, 100f, 60f)));
+        // A corner of the view, in its own frame, taken back out into the world the way the view is turned.
+        Vector2 WorldCorner(Vector2 corner) => centre + (-rotation).RotateVec(corner - centre);
+
+        using (Assert.EnterMultipleScope())
+        {
+            // V runs up from the bottom, as the engine's world-space texture draws have it.
+            AssertClose(KsPortalTransform.GetCaptureUV(WorldCorner(fullBox.TopLeft), centre, rotation, fullBox), new Vector2(0f, 1f));
+            AssertClose(KsPortalTransform.GetCaptureUV(WorldCorner(fullBox.BottomRight), centre, rotation, fullBox), new Vector2(1f, 0f));
+            AssertClose(KsPortalTransform.GetCaptureUV(WorldCorner(fullBox.BottomLeft), centre, rotation, fullBox), new Vector2(0f, 0f));
+            AssertClose(KsPortalTransform.GetCaptureUV(centre, centre, rotation, fullBox), new Vector2(0.5f, 0.5f));
+        }
+
+        static void AssertClose(Vector2 actual, Vector2 expected)
+            => Assert.That(Vector2.Distance(actual, expected), Is.LessThan(1e-4f), $"{actual} is not {expected}");
     }
 
     [Test]

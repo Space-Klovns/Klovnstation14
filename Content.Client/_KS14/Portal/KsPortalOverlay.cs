@@ -3,7 +3,6 @@ using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
 using Robust.Shared.Profiling;
-using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.Portal;
 
@@ -15,39 +14,23 @@ namespace Content.Client._KS14.Portal;
 ///         a second time by the source side.
 ///     Draws nothing unless the viewport being drawn is the one the captures were made for and no portal
 ///         pre-pass is running; that is what stops a portal inside a portal view from showing a nested view.
-///     The window (the portal's aperture plus its shadow from the viewer) is masked into the stencil buffer, the capture is drawn only where the stencil matches
-///         (over the part of the main eye's world area the window touches, which is where its pixels belong),
-///         and the stencil is cleared again.
-///     The stencil passes only touch a bit of their own (see <c>KsPortalStencilMask</c>). The viewer's FOV pass
-///         has already written 1 over everything it hides by the time this runs, so masking with 1 would let the
-///         capture through wherever the viewer's FOV is dark - the window's whole bounding box, for anyone with
-///         FOV on.
+///     The window (the portal's aperture plus its shadow from the viewer) is drawn as its own textured
+///         triangles, each vertex sampling the capture at its own place. That draws the window's shape exactly
+///         without the stencil buffer, which the viewer's FOV pass has already written to by the time
+///         world-space overlays run.
 /// </remarks>
 public sealed partial class KsPortalOverlay : Overlay
 {
     public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
     [Dependency] private IEntityManager _entityManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ProfManager _prof = default!;
-
-    private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "KsPortalStencilMask";
-    private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "KsPortalStencilEqualDraw";
-    private static readonly ProtoId<ShaderPrototype> StencilClearShader = "KsPortalStencilClear";
-
-    private readonly ShaderInstance _stencilMaskShader;
-    private readonly ShaderInstance _stencilEqualDrawShader;
-    private readonly ShaderInstance _stencilClearShader;
 
     private KsPortalRenderSystem? _portalSystem;
 
     public KsPortalOverlay()
     {
         IoCManager.InjectDependencies(this);
-
-        _stencilMaskShader = _prototypeManager.Index(StencilMaskShader).Instance();
-        _stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShader).Instance();
-        _stencilClearShader = _prototypeManager.Index(StencilClearShader).Instance();
     }
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
@@ -66,6 +49,7 @@ public sealed partial class KsPortalOverlay : Overlay
         var worldHandle = args.WorldHandle;
         var draws = _portalSystem!.ActiveDraws;
 
+        worldHandle.UseShader(null);
         worldHandle.SetTransform(Matrix3x2.Identity);
 
         foreach (var draw in draws)
@@ -74,16 +58,7 @@ public sealed partial class KsPortalOverlay : Overlay
             if (draw.MapId != args.MapId)
                 continue;
 
-            worldHandle.UseShader(_stencilMaskShader);
-            worldHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, draw.Triangles, Color.White);
-
-            worldHandle.UseShader(_stencilEqualDrawShader);
-            worldHandle.DrawTextureRectRegion(draw.Texture, draw.Quad, subRegion: draw.SubRegion);
-
-            worldHandle.UseShader(_stencilClearShader);
-            worldHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, draw.Triangles, Color.White);
+            worldHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, draw.Texture, draw.Vertices);
         }
-
-        worldHandle.UseShader(null);
     }
 }

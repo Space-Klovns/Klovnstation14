@@ -242,6 +242,46 @@ public sealed class KsPortalTravelTest : GameTest
         }
     }
 
+    [TestCase(2.5f)]
+    [TestCase(6f)]
+    public async Task TestWalkingMoverLoopsAHallway(float hallwayLength)
+    {
+        // The same hallway, walked by an input mover holding north, the way a player walks it.
+        var (_, _, mapId) = await SpawnLinkedPortalsAsync(Vector2.Zero, new Vector2(0f, -hallwayLength), Angle.Zero);
+        var server = Pair.Server;
+
+        EntityUid mob = default;
+        await server.WaitPost(() =>
+        {
+            mob = server.EntMan.SpawnEntity("KsTestTravelMover", new MapCoordinates(new Vector2(0f, -hallwayLength + 0.5f), mapId));
+            var mover = new Entity<InputMoverComponent>(mob, server.EntMan.GetComponent<InputMoverComponent>(mob));
+            server.EntMan.System<SharedMoverController>().SetVelocityDirection(mover, Direction.North, subTick: 0, enabled: true);
+        });
+
+        var crossings = 0;
+        var lastY = float.NaN;
+
+        for (var step = 0; step < 40; step++)
+        {
+            await Pair.RunTicksSync(5);
+
+            await server.WaitAssertion(() =>
+            {
+                var (position, _) = Sample(mob);
+                Assert.That(position.Y, Is.InRange(-hallwayLength - 0.1f, 0.1f),
+                    $"The mover walked out of the hallway; it is at {position}.");
+
+                // Coming out of the south portal shows as a jump backwards.
+                if (!float.IsNaN(lastY) && position.Y < lastY - 1f)
+                    crossings++;
+
+                lastY = position.Y;
+            });
+        }
+
+        Assert.That(crossings, Is.GreaterThanOrEqualTo(2), "The mover did not loop the hallway more than once.");
+    }
+
     [Test]
     public async Task TestVvWriteOfWidthResizesTheSensor()
     {

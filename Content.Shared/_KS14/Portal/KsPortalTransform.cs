@@ -170,16 +170,18 @@ public static class KsPortalTransform
     }
 
     /// <summary>
-    ///     The texture pixels, from the texture's top left, that <paramref name="region"/> of
-    ///         <paramref name="fullBox"/> corresponds to when the texture is stretched over the whole box.
+    ///     The texture coordinate of a capture that covers <paramref name="fullBox"/> (from
+    ///         <see cref="TryGetWindowRegion"/>) at which a world point appears: U from the left edge, V from the
+    ///         bottom edge, both 0 to 1, as the engine's own world-space texture draws map them.
     /// </summary>
-    public static UIBox2 GetTextureSubRegion(Box2 fullBox, Box2 region, Vector2 textureSize)
+    public static Vector2 GetCaptureUV(Vector2 worldPoint, Vector2 eyeCentre, Angle eyeRotation, Box2 fullBox)
     {
-        return new UIBox2(
-            (region.Left - fullBox.Left) / fullBox.Width * textureSize.X,
-            (fullBox.Top - region.Top) / fullBox.Height * textureSize.Y,
-            (region.Right - fullBox.Left) / fullBox.Width * textureSize.X,
-            (fullBox.Top - region.Bottom) / fullBox.Height * textureSize.Y);
+        // Into the view's own frame, the same way TryGetWindowRegion takes the triangles there.
+        var local = eyeCentre + eyeRotation.RotateVec(worldPoint - eyeCentre);
+
+        return new Vector2(
+            (local.X - fullBox.Left) / fullBox.Width,
+            (local.Y - fullBox.Bottom) / fullBox.Height);
     }
 
     /// <summary>
