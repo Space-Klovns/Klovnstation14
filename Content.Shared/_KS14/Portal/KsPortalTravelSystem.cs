@@ -1,11 +1,14 @@
 using System.Numerics;
+using Content.Shared._KS14.CCVar;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Physics;
 using Content.Shared.Projectiles;
 using Content.Shared.Teleportation.Systems;
 using Content.Shared.Weapons.Misc;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -33,6 +36,10 @@ namespace Content.Shared._KS14.Portal;
 ///         prediction as well, for entities the client predicts. The entity lands past the linked doorway by
 ///         exactly as far as it was past this one, and its side is set relative to that doorway, so it cannot
 ///         cross straight back.
+///     A doorway that faces whoever uses it (<see cref="KsPortalViewComponent.FacesViewer"/>) has a line of its
+///         own for each traveller, turned square to where that traveller first came near, and kept until it leaves.
+///         Player-made portals are these, and while they carry entities the stock portal's touch-to-teleport
+///         stands aside (<see cref="CarriesTravellers"/>).
 /// </remarks>
 public sealed partial class KsPortalTravelSystem : EntitySystem
 {
@@ -51,6 +58,23 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
     /// </summary>
     private const float SensorMargin = 1.5f;
 
+    /// <summary>
+    ///     How far from a <see cref="KsPortalViewComponent.FacesViewer"/> portal's centre an entity has to be before
+    ///         its doorway can be turned to face it. Closer, as when a portal is opened under someone's feet,
+    ///         there is no telling which way it should face, so nothing is crossed until the entity moves away.
+    /// </summary>
+    private const float MinimumFacingDistance = 0.2f;
+
+    /// <summary>
+    ///     What a sensor made in code collides with, for portals that come without one, as
+    ///         <see cref="MakePlayerPortal"/> ones do. The same as the view portal prototype's.
+    /// </summary>
+    private const int SensorLayer = (int)(CollisionGroup.Impassable | CollisionGroup.HighImpassable | CollisionGroup.MidImpassable);
+    private const int SensorMask = (int)(CollisionGroup.Impassable | CollisionGroup.HighImpassable | CollisionGroup.MidImpassable |
+                                         CollisionGroup.LowImpassable | CollisionGroup.BulletImpassable);
+
+    private bool _playerPortalViews;
+
     private readonly HashSet<EntityUid> _pendingSensorRefresh = [];
     private readonly List<EntityUid> _drainedSensorRefresh = [];
 
@@ -67,6 +91,7 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
     [Dependency] private LinkedEntitySystem _linkedEntitySystem = default!;
     [Dependency] private SharedMoverController _moverController = default!;
     [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IViewVariablesManager _viewVariablesManager = default!;
     [Dependency] private EntityQuery<KsPortalViewComponent> _viewQuery = default!;
@@ -90,6 +115,71 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
                 nameof(KsPortalViewComponent.Width),
                 (_, component) => component.Width,
                 (uid, width, component) => SetWidth((uid, component), width));
+
+        Subs.CVar(_configurationManager, KsCCVars.PortalPlayerViews, OnPlayerViewsChanged, true);
+    }
+
+    /// <summary>
+    ///     Switches every player-made portal over at once, so the setting takes effect without new portals.
+    /// </summary>
+    private void OnPlayerViewsChanged(bool value)
+    {
+        _playerPortalViews = value;
+
+        // Enabled is networked; the client is told rather than working it out.
+        if (_netManager.IsClient)
+            return;
+
+        var query = AllEntityQuery<KsPortalViewComponent>();
+        while (query.MoveNext(out var uid, out var viewComponent))
+            ApplyPlayerViews((uid, viewComponent));
+    }
+
+    /// <summary>
+    ///     Brings a player-made portal's <see cref="KsPortalViewComponent.Enabled"/> in line with
+    ///         <see cref="KsCCVars.PortalPlayerViews"/>. Anything else is left alone.
+    /// </summary>
+    private void ApplyPlayerViews(Entity<KsPortalViewComponent> entity)
+    {
+        if (!entity.Comp.PlayerMade || entity.Comp.Enabled == _playerPortalViews)
+            return;
+
+        entity.Comp.Enabled = _playerPortalViews;
+        Dirty(entity);
+    }
+
+    /// <summary>
+    ///     Turns a portal a player has just made, such as one from the hand teleporter, into a view portal whose
+    ///         doorway faces whoever uses it, while <see cref="KsCCVars.PortalPlayerViews"/> is on. Server only.
+    /// </summary>
+    public void MakePlayerPortal(EntityUid portalUid)
+    {
+        if (_netManager.IsClient || TerminatingOrDeleted(portalUid))
+            return;
+
+        var viewComponent = EnsureComp<KsPortalViewComponent>(portalUid);
+        viewComponent.FacesViewer = true;
+        viewComponent.PlayerMade = true;
+        viewComponent.Enabled = _playerPortalViews;
+        Dirty(portalUid, viewComponent);
+
+        // Made after the portal was set up, so the sensor is made now rather than at map init.
+        RefreshSensor((portalUid, viewComponent));
+    }
+
+    /// <summary>
+    ///     Whether this portal carries entities through its doorway itself: it is enabled and leads to another
+    ///         enabled view portal. The stock portal behaviour has to stand aside for such a portal, or touching
+    ///         it would teleport an entity before it reached the doorway.
+    /// </summary>
+    public bool CarriesTravellers(EntityUid portalUid)
+    {
+        return _viewQuery.TryComp(portalUid, out var viewComponent)
+               && viewComponent.Enabled
+               && _linkedEntitySystem.GetLink(portalUid, out var destinationUid)
+               && destinationUid != portalUid
+               && _viewQuery.TryComp(destinationUid, out var destinationView)
+               && destinationView.Enabled;
     }
 
     public override void Shutdown()
@@ -105,6 +195,9 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
     {
         // Not resized in place: fixtures cannot safely be swapped while the entity is still being set up.
         _pendingSensorRefresh.Add(entity.Owner);
+
+        if (_netManager.IsServer)
+            ApplyPlayerViews(entity);
     }
 
     /// <summary>
@@ -124,38 +217,58 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
 
     /// <summary>
     ///     Sizes the portal's sensor fixture to its <see cref="KsPortalViewComponent.Width"/>: the doorway plus
-    ///         <see cref="SensorMargin"/> past each end, and the same to either side. A portal without a sensor
-    ///         fixture is left alone. Server only: the fixtures reach the client by state, and it must not build
-    ///         its own.
+    ///         <see cref="SensorMargin"/> past each end, and the same to either side, or a circle reaching as far
+    ///         for a doorway that faces whoever uses it. A portal without a sensor fixture is given one, if it has a
+    ///         physics body to put it on. Server only: the fixtures reach the client by state, and it must not
+    ///         build its own.
     /// </summary>
     private void RefreshSensor(Entity<KsPortalViewComponent> entity)
     {
         if (_netManager.IsClient)
             return;
 
-        if (_fixtureSystem.GetFixtureOrNull(entity.Owner, SensorFixtureId) is not { } fixture)
+        var fixture = _fixtureSystem.GetFixtureOrNull(entity.Owner, SensorFixtureId);
+        if (fixture == null && !HasComp<PhysicsComponent>(entity.Owner))
             return;
 
         var desired = GetSensorBounds(entity.Comp.Width);
+        var circular = entity.Comp.FacesViewer;
 
-        // Compared by extent, as the shape may be the prototype's box or the polygon this made before.
-        var current = fixture.Shape.ComputeAABB(Robust.Shared.Physics.Transform.Empty, 0);
-        if (MathF.Abs(current.Right - desired.Right) < 0.05f && MathF.Abs(current.Top - desired.Top) < 0.05f)
-            return;
+        if (fixture != null)
+        {
+            // Compared by extent, as the shape may be the prototype's box or the polygon this made before.
+            var current = fixture.Shape.ComputeAABB(Robust.Shared.Physics.Transform.Empty, 0);
+            var expectedTop = circular ? desired.Right : desired.Top;
+            if ((fixture.Shape is PhysShapeCircle) == circular &&
+                MathF.Abs(current.Right - desired.Right) < 0.05f &&
+                MathF.Abs(current.Top - expectedTop) < 0.05f)
+                return;
+        }
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(desired);
+        IPhysShape shape;
+        if (circular)
+        {
+            shape = new PhysShapeCircle(desired.Right);
+        }
+        else
+        {
+            var polygonShape = new PolygonShape();
+            polygonShape.SetAsBox(desired);
+            shape = polygonShape;
+        }
 
-        var layer = fixture.CollisionLayer;
-        var mask = fixture.CollisionMask;
-        var hard = fixture.Hard;
-        var density = fixture.Density;
+        var layer = fixture?.CollisionLayer ?? SensorLayer;
+        var mask = fixture?.CollisionMask ?? SensorMask;
+        var hard = fixture?.Hard ?? false;
+        var density = fixture?.Density ?? 1f;
 
         // Destroying the body's last fixture switches its collision off, and the new one would not be
         //      found by anything until it is switched back on.
         var couldCollide = TryComp<PhysicsComponent>(entity.Owner, out var bodyComponent) && bodyComponent.CanCollide;
 
-        _fixtureSystem.DestroyFixture(entity.Owner, SensorFixtureId, fixture);
+        if (fixture != null)
+            _fixtureSystem.DestroyFixture(entity.Owner, SensorFixtureId, fixture);
+
         _fixtureSystem.TryCreateFixture(
             entity.Owner,
             shape,
@@ -192,7 +305,9 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
         if (travellerComponent.Sides.ContainsKey(entity.Owner))
             return;
 
-        travellerComponent.Sides[entity.Owner] = GetSide(entity.Owner, travellerUid);
+        // A doorway that faces whoever uses it is turned on the first look, in CheckPortal; until then the side
+        //      is not known.
+        travellerComponent.Sides[entity.Owner] = entity.Comp.FacesViewer ? 0 : GetSide(entity.Owner, travellerUid, doorwayRotation: null);
         Dirty(travellerUid, travellerComponent);
     }
 
@@ -264,7 +379,12 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
 
         var (portalPosition, portalRotation) = _transformSystem.GetWorldPositionRotation(portalTransform);
         var travellerPosition = _transformSystem.GetWorldPosition(traveller.Comp2);
-        var local = KsPortalTransform.ToPortalFrame(travellerPosition, portalPosition, portalRotation);
+
+        // Still on the centre of a doorway that faces whoever uses it: there is no telling which way it faces yet.
+        if (!TryGetDoorwayRotation(traveller, portalUid, viewComponent, portalPosition, portalRotation, travellerPosition, out var doorwayRotation))
+            return false;
+
+        var local = KsPortalTransform.ToPortalFrame(travellerPosition, portalPosition, doorwayRotation);
         var halfWidth = viewComponent.Width * 0.5f;
 
         if (MathF.Abs(local.Y) > NearDistance || MathF.Abs(local.X) > halfWidth + NearDistance)
@@ -282,7 +402,7 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
         {
             // The side changed. It only counts as a crossing when it happened through the doorway, between
             //      where the entity was a tick ago and where it is now.
-            var localVelocity = (-portalRotation).RotateVec(traveller.Comp3.LinearVelocity);
+            var localVelocity = (-doorwayRotation).RotateVec(traveller.Comp3.LinearVelocity);
             var previous = local - localVelocity * tickSeconds;
 
             var withinDoorway = false;
@@ -296,7 +416,7 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
 
             if (withinDoorway
                 && viewComponent.Enabled
-                && TryTravel(traveller, portalUid, portalPosition, portalRotation))
+                && TryTravel(traveller, portalUid, portalPosition, portalRotation, doorwayRotation))
                 return true;
         }
 
@@ -306,17 +426,58 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
         return false;
     }
 
+    /// <summary>
+    ///     The rotation of the portal's doorway for this traveller: the portal's own, or, for a doorway that faces
+    ///         whoever uses it, the one it was given when the traveller first came near enough to tell, which is
+    ///         chosen here if it has not been yet.
+    /// </summary>
+    /// <returns>False while the traveller is too close to the centre of a facing doorway for it to face anywhere.</returns>
+    private bool TryGetDoorwayRotation(
+        Entity<KsPortalTravellerComponent, TransformComponent, PhysicsComponent> traveller,
+        EntityUid portalUid,
+        KsPortalViewComponent viewComponent,
+        Vector2 portalPosition,
+        Angle portalRotation,
+        Vector2 travellerPosition,
+        out Angle doorwayRotation)
+    {
+        doorwayRotation = portalRotation;
+        if (!viewComponent.FacesViewer)
+            return true;
+
+        var travellerComponent = traveller.Comp1;
+        if (travellerComponent.DoorwayRotations.TryGetValue(portalUid, out doorwayRotation))
+            return true;
+
+        var offset = travellerPosition - portalPosition;
+        if (offset.Length() < MinimumFacingDistance)
+            return false;
+
+        // Square to the traveller, so its side is known (+1) and walking on in crosses the doorway.
+        doorwayRotation = KsPortalTransform.GetFacingRotation(offset);
+        travellerComponent.DoorwayRotations[portalUid] = doorwayRotation;
+        travellerComponent.Sides[portalUid] = 0;
+        Dirty(traveller.Owner, travellerComponent);
+        return true;
+    }
+
     private void ForgetPortal(Entity<KsPortalTravellerComponent> traveller, EntityUid portalUid)
     {
-        if (traveller.Comp.Sides.Remove(portalUid))
+        var removedSide = traveller.Comp.Sides.Remove(portalUid);
+        var removedRotation = traveller.Comp.DoorwayRotations.Remove(portalUid);
+
+        if (removedSide || removedRotation)
             Dirty(traveller);
     }
 
+    /// <param name="portalRotation">The portal's own rotation, which is what where the traveller lands follows.</param>
+    /// <param name="doorwayRotation">The rotation of the doorway it crossed, which differs for a facing doorway.</param>
     private bool TryTravel(
         Entity<KsPortalTravellerComponent, TransformComponent, PhysicsComponent> traveller,
         EntityUid portalUid,
         Vector2 portalPosition,
-        Angle portalRotation)
+        Angle portalRotation,
+        Angle doorwayRotation)
     {
         if (!_linkedEntitySystem.GetLink(portalUid, out var destinationUid)
             || destinationUid == portalUid
@@ -384,9 +545,19 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
         }
 
         // Every other portal it was near is behind it now. The one it came out of is watched from the side it
-        //      came out on, so it cannot cross straight back.
+        //      came out on, so it cannot cross straight back. A facing doorway there is the one just crossed,
+        //      carried over, so the traveller is past it rather than in front of a freshly turned one.
         traveller.Comp1.Sides.Clear();
-        traveller.Comp1.Sides[destinationUid.Value] = GetSide(destinationUid.Value, traveller.Owner);
+        traveller.Comp1.DoorwayRotations.Clear();
+
+        Angle? destinationDoorwayRotation = null;
+        if (destinationView.FacesViewer)
+        {
+            destinationDoorwayRotation = doorwayRotation + relativeRotation;
+            traveller.Comp1.DoorwayRotations[destinationUid.Value] = destinationDoorwayRotation.Value;
+        }
+
+        traveller.Comp1.Sides[destinationUid.Value] = GetSide(destinationUid.Value, traveller.Owner, destinationDoorwayRotation);
         Dirty(traveller.Owner, traveller.Comp1);
 
         var travelledEvent = new KsPortalTravelledEvent(relativeRotation);
@@ -398,22 +569,20 @@ public sealed partial class KsPortalTravelSystem : EntitySystem
     /// <summary>
     ///     Which side of the portal's line the entity is on, as -1, 0 (on the line) or 1.
     /// </summary>
-    private int GetSide(EntityUid portalUid, EntityUid travellerUid)
+    /// <param name="doorwayRotation">The doorway's rotation, if not the portal's own.</param>
+    private int GetSide(EntityUid portalUid, EntityUid travellerUid, Angle? doorwayRotation)
     {
-        return TryGetLocal(portalUid, travellerUid, out var local) ? Math.Sign(local.Y) : 0;
-    }
-
-    private bool TryGetLocal(EntityUid portalUid, EntityUid travellerUid, out Vector2 local)
-    {
-        local = default;
-
         if (!_transformQuery.TryComp(portalUid, out var portalTransform)
             || !_transformQuery.TryComp(travellerUid, out var travellerTransform)
             || portalTransform.MapID != travellerTransform.MapID)
-            return false;
+            return 0;
 
         var (portalPosition, portalRotation) = _transformSystem.GetWorldPositionRotation(portalTransform);
-        local = KsPortalTransform.ToPortalFrame(_transformSystem.GetWorldPosition(travellerTransform), portalPosition, portalRotation);
-        return true;
+        var local = KsPortalTransform.ToPortalFrame(
+            _transformSystem.GetWorldPosition(travellerTransform),
+            portalPosition,
+            doorwayRotation ?? portalRotation);
+
+        return Math.Sign(local.Y);
     }
 }

@@ -23,6 +23,7 @@ public sealed partial class HandTeleporterSystem : EntitySystem
     [Dependency] private AudioSystem _audio = default!;
     [Dependency] private SharedDoAfterSystem _doafter = default!;
     [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private Content.Shared._KS14.Portal.KsPortalTravelSystem _ksPortalTravelSystem = default!; // KS14
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -102,6 +103,7 @@ public sealed partial class HandTeleporterSystem : EntitySystem
             var timeout = EnsureComp<PortalTimeoutComponent>(user);
             timeout.EnteredPortal = null;
             component.FirstPortal = Spawn(component.FirstPortalPrototype, Transform(user).Coordinates);
+            _ksPortalTravelSystem.MakePlayerPortal(component.FirstPortal.Value); // KS14: a view portal, while klovn.portal.player_views is on
 
             // KS14 - sets FragOnTargetTileOccupied to false
             if (TryComp<PortalComponent>(component.FirstPortal, out var portal))
@@ -132,6 +134,7 @@ public sealed partial class HandTeleporterSystem : EntitySystem
             var timeout = EnsureComp<PortalTimeoutComponent>(user);
             timeout.EnteredPortal = null;
             component.SecondPortal = Spawn(component.SecondPortalPrototype, Transform(user).Coordinates);
+            _ksPortalTravelSystem.MakePlayerPortal(component.SecondPortal.Value); // KS14: a view portal, while klovn.portal.player_views is on
 
             // KS14 - sets FragOnTargetTileOccupied to false
             if (TryComp<PortalComponent>(component.SecondPortal, out var portal))

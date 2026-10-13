@@ -21,4 +21,13 @@ public sealed partial class KsPortalTravellerComponent : Component
     /// </remarks>
     [DataField, AutoNetworkedField]
     public Dictionary<EntityUid, int> Sides = [];
+
+    /// <summary>
+    ///     For each <see cref="KsPortalViewComponent.FacesViewer"/> portal in <see cref="Sides"/>, the rotation its
+    ///         doorway has for this entity: square to where the entity first came near it, and kept until the
+    ///         entity leaves, so that it can be crossed at all. Missing while the entity is still too close to the
+    ///         portal's centre to say which way it is facing.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Dictionary<EntityUid, Angle> DoorwayRotations = [];
 }

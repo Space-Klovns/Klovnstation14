@@ -118,6 +118,23 @@ public sealed class KsPortalTransformTest
         Assert.That(local.Y, Is.EqualTo(0f).Within(1e-3f));
     }
 
+    [TestCase(1f, 0f)]
+    [TestCase(0f, -1f)]
+    [TestCase(-3f, 4f)]
+    public void FacingDoorwayRunsAcrossTheDirectionWithItsNormalAlongIt(float directionX, float directionY)
+    {
+        var direction = new Vector2(directionX, directionY);
+        var rotation = KsPortalTransform.GetFacingRotation(direction);
+
+        // A point further along the direction is straight out on the +Y side, and the doorway runs across it.
+        var local = KsPortalTransform.ToPortalFrame(direction * 2f, Vector2.Zero, rotation);
+        Assert.That(local.X, Is.EqualTo(0f).Within(1e-3f));
+        Assert.That(local.Y, Is.EqualTo(direction.Length() * 2f).Within(1e-3f));
+
+        KsPortalTransform.GetSegment(Vector2.Zero, rotation, 2f, out var start, out var end);
+        Assert.That(Vector2.Dot(end - start, direction), Is.EqualTo(0f).Within(1e-3f));
+    }
+
     private static bool InsideTriangles(List<Vector2> triangles, Vector2 point)
     {
         for (var index = 0; index < triangles.Count; index += 3)
@@ -156,6 +173,26 @@ public sealed class KsPortalTransformTest
         Assert.That(InsideTriangles(triangles, new Vector2(0f, -2f * shadowSign)), Is.False, "between viewer and portal");
         Assert.That(InsideTriangles(triangles, new Vector2(0f, viewerY * 1.5f)), Is.False, "behind the viewer");
         Assert.That(InsideTriangles(triangles, new Vector2(20f, 40f * shadowSign)), Is.False, "outside the wedge");
+    }
+
+    [Test]
+    public void WindowSeenFromNearTheDoorwayLineCoversItsWholeHalfOfTheView()
+    {
+        // Just off the doorway's line and off its centre: the wedge opens to nearly half a turn.
+        var triangles = new List<Vector2>();
+        KsPortalTransform.GetSegment(Vector2.Zero, Angle.Zero, 2f, out var start, out var end);
+        var viewer = new Vector2(0.3f, -0.05f);
+
+        Assert.That(KsPortalTransform.TryGetVisibleWindow(viewer, start, end, 50f, triangles), Is.True);
+
+        using (Assert.EnterMultipleScope())
+        {
+            // A far edge drawn straight between the two extruded corners runs about 3 tiles above the doorway here.
+            Assert.That(InsideTriangles(triangles, new Vector2(10f, 10f)), "well up the view, off to the side");
+            Assert.That(InsideTriangles(triangles, new Vector2(0f, 40f)), "straight up, near the edge of the view");
+            Assert.That(InsideTriangles(triangles, new Vector2(-30f, 20f)), "up and off to the other side");
+            Assert.That(InsideTriangles(triangles, new Vector2(0f, -10f)), Is.False, "the viewer's own half");
+        }
     }
 
     [Test]

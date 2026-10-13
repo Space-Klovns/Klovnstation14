@@ -210,7 +210,20 @@ namespace Content.Client.Viewport
                     continue;
 
                 var (position, rotation) = _portalTransformSystem!.GetWorldPositionRotation(transformComponent);
-                KsPortalTransform.GetSegment(position, rotation, viewComponent.Width, out var segmentStart, out var segmentEnd);
+
+                // A doorway with no direction of its own is turned square to the viewer. Only the window turns: the
+                //      view through it still follows the portals' real rotations.
+                var doorwayRotation = rotation;
+                if (viewComponent.FacesViewer)
+                {
+                    var towardsPortal = position - viewerPosition;
+                    if (towardsPortal.LengthSquared() < KsPortalTransform.MinimumViewerDistance * KsPortalTransform.MinimumViewerDistance)
+                        continue;
+
+                    doorwayRotation = KsPortalTransform.GetFacingRotation(towardsPortal);
+                }
+
+                KsPortalTransform.GetSegment(position, doorwayRotation, viewComponent.Width, out var segmentStart, out var segmentEnd);
 
                 var segmentBounds = new Box2(
                     Vector2.Min(segmentStart, segmentEnd),

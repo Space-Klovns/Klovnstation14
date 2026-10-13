@@ -79,6 +79,15 @@ public static class KsPortalTransform
     }
 
     /// <summary>
+    ///     The rotation of a doorway turned square to <paramref name="direction"/>: its normal (local +Y) points
+    ///         along it, and the doorway runs across it.
+    /// </summary>
+    public static Angle GetFacingRotation(Vector2 direction)
+    {
+        return new Angle(direction) - Angle.FromDegrees(90);
+    }
+
+    /// <summary>
     ///     A point in the portal's own frame: X along the doorway, Y across it (its normal).
     /// </summary>
     public static Vector2 ToPortalFrame(Vector2 worldPoint, Vector2 portalPosition, Angle portalRotation)
@@ -208,9 +217,21 @@ public static class KsPortalTransform
     }
 
     /// <summary>
-    ///     Vertices written by <see cref="TryGetVisibleWindow"/>: the shadow quad of the doorway, as two triangles.
+    ///     How many straight pieces close the far end of a window, along an arc around the viewer.
     /// </summary>
-    public const int WindowVertexCount = 6;
+    /// <remarks>
+    ///     A single straight edge between the two far corners runs almost along the doorway when the viewer stands
+    ///         near the doorway's line, where the wedge opens to nearly half the view, and cuts most of that half
+    ///         off. With four pieces none spans more than 45 degrees, so every part of the far end stays at least
+    ///         cos(22.5 degrees), about 92%, of the extrusion away.
+    /// </remarks>
+    public const int WindowArcSegments = 4;
+
+    /// <summary>
+    ///     Vertices written by <see cref="TryGetVisibleWindow"/>: the doorway and the far arc as a triangle fan,
+    ///         written out as a triangle list.
+    /// </summary>
+    public const int WindowVertexCount = 3 * (WindowArcSegments + 1);
 
     /// <summary>
     ///     A viewer closer than this to the doorway's line has no usable shadow: the wedge has no width.
@@ -223,8 +244,11 @@ public static class KsPortalTransform
     ///         of the doorway sees through it, onto the other side.
     /// </summary>
     /// <remarks>
-    ///     The segment and its two extruded ends form one quad, which covers exactly the segment and the shadow
-    ///         volume behind it, while everything between the viewer and the segment stays outside.
+    ///     The window is the segment, then an arc around the viewer from the ray through the segment's end to the
+    ///         ray through its start, at the extrusion plus the distance to the farther end. Every one of those
+    ///         points lies in the shadow (the wedge between the two rays, past the segment), and the shadow is
+    ///         convex, so the polygon they make is inside it and can be drawn as a fan from the segment's start.
+    ///         Everything between the viewer and the segment stays outside.
     /// </remarks>
     /// <param name="extrusion">How far past the segment the shadow runs; must exceed the view distance.</param>
     /// <param name="triangles">Cleared and filled with <see cref="WindowVertexCount"/> triangle-list vertices.</param>
@@ -242,26 +266,31 @@ public static class KsPortalTransform
         if (distanceToLine < MinimumViewerDistance)
             return false;
 
-        var extrudedStart = Extrude(segmentStart, viewer, extrusion);
-        var extrudedEnd = Extrude(segmentEnd, viewer, extrusion);
+        var toStart = segmentStart - viewer;
+        var toEnd = segmentEnd - viewer;
+        var radius = extrusion + MathF.Max(toStart.Length(), toEnd.Length());
 
-        AddQuad(triangles, segmentStart, segmentEnd, extrudedEnd, extrudedStart);
+        // The wedge is under half a turn (the viewer is off the line), so the short way round is the inside of it.
+        var endAngle = MathF.Atan2(toEnd.Y, toEnd.X);
+        var sweep = MathF.Atan2(toStart.Y, toStart.X) - endAngle;
+        if (sweep > MathF.PI)
+            sweep -= MathF.Tau;
+        else if (sweep < -MathF.PI)
+            sweep += MathF.Tau;
+
+        var previous = segmentEnd;
+        for (var index = 0; index <= WindowArcSegments; index++)
+        {
+            var angle = endAngle + sweep * index / WindowArcSegments;
+            var arcPoint = viewer + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
+
+            triangles.Add(segmentStart);
+            triangles.Add(previous);
+            triangles.Add(arcPoint);
+
+            previous = arcPoint;
+        }
 
         return true;
-    }
-
-    private static Vector2 Extrude(Vector2 corner, Vector2 viewer, float extrusion)
-    {
-        return corner + Vector2.Normalize(corner - viewer) * extrusion;
-    }
-
-    private static void AddQuad(List<Vector2> triangles, Vector2 first, Vector2 second, Vector2 third, Vector2 fourth)
-    {
-        triangles.Add(first);
-        triangles.Add(second);
-        triangles.Add(third);
-        triangles.Add(first);
-        triangles.Add(third);
-        triangles.Add(fourth);
     }
 }

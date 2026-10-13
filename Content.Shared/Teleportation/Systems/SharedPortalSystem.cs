@@ -46,6 +46,7 @@ public abstract partial class SharedPortalSystem : EntitySystem
     [Dependency] private IGameTiming _curTiming = default!; // KS14 Addition
     [Dependency] private GibbingSystem _gibbingSystem = default!; // KS14 Addition
     [Dependency] private ISharedPlayerManager _playerManager = default!; // KS14 Addition
+    [Dependency] private Content.Shared._KS14.Portal.KsPortalTravelSystem _ksPortalTravelSystem = default!; // KS14 Addition
     [Dependency] private SharedJointSystem _joints = default!;
 
     private const string PortalFixture = "portalFixture";
@@ -102,6 +103,12 @@ public abstract partial class SharedPortalSystem : EntitySystem
     {
         if (!ShouldCollide(args.OurFixtureId, args.OtherFixtureId, args.OurFixture, args.OtherFixture))
             return;
+
+        // KS14 start: a view portal carries entities through its doorway itself, and teleporting on touch would
+        //      get there first
+        if (_ksPortalTravelSystem.CarriesTravellers(ent))
+            return;
+        // KS14 end
 
         var subject = args.OtherEntity;
 
