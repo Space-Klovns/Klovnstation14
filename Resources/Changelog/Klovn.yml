@@ -2228,3 +2228,9 @@ Entries:
       message: Thermite fires can no longer be put out with water.
   id: 229
   time: '2026-10-12T17:43:26.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Portals look a bit different now
+  id: 230
+  time: '2026-10-13T18:04:33.0000000+00:00'
