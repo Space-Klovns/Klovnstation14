@@ -8,7 +8,7 @@ namespace Content.Shared._KS14.Procedural;
 /// Fresh closed-shape overlap for circles and bounded convex polygons, including fixture skin radii.
 /// Does not evaluate collision filters, joints, event vetoes, contact freshness or support stability.
 /// </summary>
-public static class KsProcgenConvexShapeOverlap
+public static partial class KsProcgenConvexShapeOverlap
 {
     public static bool TryCheck(IPhysShape shapeA, Transform poseA, IPhysShape shapeB, Transform poseB,
         out bool overlaps, out string? issue)
@@ -25,7 +25,12 @@ public static class KsProcgenConvexShapeOverlap
             issue = "InvalidSurfaceContactShape";
             return false;
         }
-        var radius = (double) shapeA.Radius + (double) shapeB.Radius;
+        overlaps = CheckVertices(verticesA, verticesB, (double) shapeA.Radius + shapeB.Radius);
+        return true;
+    }
+
+    private static bool CheckVertices(Vector2[] verticesA, Vector2[] verticesB, double radius)
+    {
         var distanceSquared = double.MaxValue;
         if (Inside(verticesA[0], verticesB) || Inside(verticesB[0], verticesA))
             distanceSquared = 0.0;
@@ -44,8 +49,7 @@ public static class KsProcgenConvexShapeOverlap
                 distanceSquared = Math.Min(distanceSquared, distance);
             }
         }
-        overlaps = distanceSquared <= radius * radius;
-        return true;
+        return distanceSquared <= radius * radius;
     }
 
     private static bool TryVertices(IPhysShape shape, Transform pose, out Vector2[] vertices)
@@ -105,6 +109,8 @@ public static class KsProcgenConvexShapeOverlap
     {
         if (polygon.Length == 1)
             return point == polygon[0];
+        if (polygon.Length == 2)
+            return PointSegment(point, polygon[0], polygon[1]) == 0.0;
         var sign = 0;
         for (var index = 0; index < polygon.Length; index++)
         {

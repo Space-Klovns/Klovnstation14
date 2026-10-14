@@ -108,6 +108,15 @@ public static class KsProcgenSupportedAssemblySearch
                     if (access.Footprints.Any(footprint => footprint.Cells.Any(cell =>
                             room.Blocking.Contains(cell) || room.Occupied.Contains(cell))))
                         return false;
+                    // Projected surface members may extend beyond their floor root. Only members
+                    // of the same support tree share XY; unrelated roots cannot claim those tiles.
+                    var floorRootsByMember = access.Poses!.Members.ToDictionary(pose => pose.Support.MemberId,
+                        pose => pose.Support.FloorRootMemberId, StringComparer.Ordinal);
+                    var supportTrees = access.Footprints.GroupBy(footprint => floorRootsByMember[footprint.MemberId])
+                        .Select(group => group.SelectMany(footprint => footprint.Cells).ToHashSet()).ToArray();
+                    for (var treeIndex = 0; treeIndex < supportTrees.Length; treeIndex++)
+                    for (var otherIndex = treeIndex + 1; otherIndex < supportTrees.Length; otherIndex++)
+                        if (supportTrees[treeIndex].Overlaps(supportTrees[otherIndex])) return false;
                     accepted = access;
                     acceptedAssemblyTurn = assemblyTurn;
                     return true;

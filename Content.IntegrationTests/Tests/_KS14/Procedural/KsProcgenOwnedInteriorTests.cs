@@ -14,6 +14,252 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     private static readonly KsProcgenOwnedPlanBudgets Budgets = new() { PreferredMaximumRoomCells = 64 };
 
     [Test]
+    public async Task LShapeCompletesStrictSizeGoalsWithoutAddingMissingCornerTiles()
+    {
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var fixture = Fixture(tiny: true);
+            fixture.Request.Shape.Cells = Enumerable.Range(0, 8).SelectMany(x => Enumerable.Range(0, x >= 6 ? 2 : 4)
+                .Select(y => new Vector2i(x, y))).ToList();
+            fixture.Request.SizeMix = new List<KsProcgenRoomSizeGoal>
+            {
+                new() { Id = "Large", MinCells = 16, MaxCells = 16 },
+                new() { Id = "Small", MinCells = 9, MaxCells = 9 },
+            };
+            fixture.Request.FallbackPolicy.AllowMergedPartition = false;
+            fixture.Request.FallbackPolicy.AllowRoomSizeShortfall = false;
+            var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var before = SEntMan.GetEntities().ToHashSet();
+            var themeId = "KsProcgenEmptyOfficeThemeFixture";
+            var budgets = Budgets with { UseSizeGoals = true, MaximumPartitionMerges = 0,
+                MaximumConfigurationProbes = 1, MaximumLayoutProbes = 1 };
+            var result = Plan(manager, fixture, budgets: budgets, themeId: themeId);
+            AssertCandidate(result);
+            Assert.That(result.Partition!.SizeGoalSubdivisionUsed, Is.True);
+            Assert.That(result.Themes!.Regions.Select(region => region.FloorCells.Count).Order(), Is.EqualTo(new[] { 9, 16 }));
+            Assert.That(result.SizeMix.All(outcome => outcome.AchievedCount == outcome.RequestedCount), Is.True);
+            Assert.That(result.Partition.FloorCells.Concat(result.Partition.WallCells).ToHashSet()
+                .SetEquals(fixture.Request.Shape.Cells), Is.True);
+            var exact = Plan(manager, fixture, budgets: budgets with
+            {
+                MaximumReportedGraphExpansions = result.ExpandedCells,
+                MaximumPartitionSeamProbes = result.PartitionSeamProbes,
+                MaximumOrderProbes = result.OrderProbes,
+                MaximumFurnishingProbes = Math.Max(1, result.FurnishingProbes),
+                MaximumLightingFixtures = result.FixtureSelections,
+            }, themeId: themeId);
+            AssertCandidate(exact);
+            Assert.That(exact.SemanticHash, Is.EqualTo(result.SemanticHash));
+            Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));
+        });
+    }
+
+    [Test]
+    public async Task ReflectedSizeGoalsCompleteStrictInteriorAroundProtectedSeams()
+    {
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var fixture = Fixture(tiny: true);
+            fixture.Request.Shape.Cells = Enumerable.Range(0, 10).SelectMany(x => Enumerable.Range(0, 4)
+                .Select(y => new Vector2i(x, y))).ToList();
+            fixture.Request.Shape.PreservedCells = new List<Vector2i>
+                { new(6, 0), new(6, 1), new(7, 0), new(7, 1), new(0, 2), new(1, 2) };
+            fixture.Request.EntranceDomain!.Configurations[0].Groups[0].RootCells = new List<Vector2i>
+                { new(6, 0), new(7, 0), new(0, 2), new(1, 2) };
+            fixture.Request.SizeMix = new List<KsProcgenRoomSizeGoal>
+            {
+                new() { Id = "Large", MinCells = 20, MaxCells = 28 },
+                new() { Id = "Small", MinCells = 5, MaxCells = 13 },
+            };
+            fixture.Request.FallbackPolicy.AllowMergedPartition = false;
+            fixture.Request.FallbackPolicy.AllowRoomSizeShortfall = false;
+            fixture = fixture with { Context = fixture.Context with
+                { ExistingCleanDomainCells = fixture.Request.Shape.PreservedCells.ToHashSet() } };
+            var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var before = SEntMan.GetEntities().ToHashSet();
+            var themeId = "KsProcgenEmptyOfficeThemeFixture";
+            var budgets = Budgets with { UseSizeGoals = true, MaximumPartitionMerges = 0,
+                MaximumConfigurationProbes = 1, MaximumLayoutProbes = 1 };
+            var result = Plan(manager, fixture, budgets: budgets, themeId: themeId);
+            AssertCandidate(result);
+            Assert.That(result.Partition!.SizeGoalAttempts.Last().Reflected, Is.True);
+            Assert.That(result.Partition.SizeGoalAttempts.Last().AcrossX, Is.True);
+            Assert.That(result.Partition.SizeGoalAttempts.Where(attempt => !attempt.Reflected)
+                .All(attempt => attempt.Status == KsProcgenPartitionStatus.OpenFallback), Is.True);
+            Assert.That(result.Themes!.Regions.Select(region => region.FloorCells.Count).Order(), Is.EqualTo(new[] { 12, 25 }));
+            Assert.That(result.SizeMix.All(outcome => outcome.AchievedCount == outcome.RequestedCount), Is.True);
+            Assert.That(fixture.Request.Shape.PreservedCells.All(result.Partition.FloorCells.Contains), Is.True);
+            var exact = Plan(manager, fixture, budgets: budgets with
+            {
+                MaximumReportedGraphExpansions = result.ExpandedCells,
+                MaximumPartitionSeamProbes = result.PartitionSeamProbes,
+                MaximumOrderProbes = result.OrderProbes,
+                MaximumFurnishingProbes = Math.Max(1, result.FurnishingProbes),
+                MaximumLightingFixtures = result.FixtureSelections,
+            }, themeId: themeId);
+            AssertCandidate(exact);
+            Assert.That(exact.SemanticHash, Is.EqualTo(result.SemanticHash));
+            Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));
+        });
+    }
+
+    [Test]
+    public async Task ProtectedNetworkReassignsRoomQuotasBeforeStrictInteriorAudit()
+    {
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var fixture = Fixture(tiny: true);
+            fixture.Request.Shape.Cells = Enumerable.Range(0, 8).Concat(Enumerable.Range(20, 8))
+                .SelectMany(x => Enumerable.Range(0, 4).Select(y => new Vector2i(x, y))).ToList();
+            fixture.Request.Shape.PreservedCells = fixture.Request.Shape.Cells.Where(cell => cell.X >= 20).ToList();
+            fixture.Request.EntranceDomain!.Entrances.Add(new()
+                { PortId = "B1", ThresholdCells = new List<Vector2i> { new(19, 0) }, InwardNormal = new(1, 0) });
+            fixture.Request.EntranceDomain.Configurations[0].Groups.Add(new()
+                { Id = "B", Ports = new List<string> { "B1" } });
+            fixture.Request.SizeMix = new List<KsProcgenRoomSizeGoal>
+                { new() { Id = "Room", MinCells = 4, MaxCells = 64, TargetCount = 3 } };
+            fixture.Request.FallbackPolicy.AllowMergedPartition = false;
+            fixture.Request.FallbackPolicy.AllowRoomSizeShortfall = false;
+            fixture = fixture with { Context = fixture.Context with
+            {
+                ExistingCleanDomainCells = fixture.Request.Shape.PreservedCells.ToHashSet(),
+                CleanHostCells = new HashSet<Vector2i> { new(-1, 0), new(-2, 0), new(19, 0), new(18, 0) },
+            } };
+            var before = SEntMan.GetEntities().ToHashSet();
+            var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var themeId = "KsProcgenEmptyOfficeThemeFixture";
+            var budgets = Budgets with { UseSizeGoals = true, MaximumPartitionMerges = 0,
+                MaximumConfigurationProbes = 1, MaximumLayoutProbes = 1 };
+            var result = Plan(manager, fixture, budgets: budgets, themeId: themeId);
+            AssertCandidate(result);
+            Assert.That(result.LayoutProbes, Is.EqualTo(1));
+            Assert.That(result.Partition!.SizeGoalAllocationAttempts, Is.EqualTo(2));
+            Assert.That(result.Partition.SizeGoalAttempts.Any(attempt => attempt.AllocationOrdinal == 0 &&
+                attempt.Status == KsProcgenPartitionStatus.OpenFallback), Is.True);
+            Assert.That(result.Partition.Regions.All(region => region.Partition.Status == KsProcgenPartitionStatus.Proposed), Is.True);
+            Assert.That(result.Partition.Analysis!.Components.Count, Is.EqualTo(2));
+            Assert.That(result.SizeMix.Single().AchievedCount, Is.EqualTo(3));
+            Assert.That(result.Themes!.Regions.Select(region => region.FloorCells.Count).Order(), Is.EqualTo(new[] { 5, 24, 32 }));
+            Assert.That(fixture.Request.Shape.PreservedCells.All(result.Partition.FloorCells.Contains), Is.True);
+            var exact = Plan(manager, fixture, budgets: budgets with
+            {
+                MaximumReportedGraphExpansions = result.ExpandedCells,
+                MaximumPartitionSeamProbes = result.PartitionSeamProbes,
+                MaximumOrderProbes = result.OrderProbes,
+                MaximumFurnishingProbes = Math.Max(1, result.FurnishingProbes),
+                MaximumLightingFixtures = result.FixtureSelections,
+            }, themeId: themeId);
+            AssertCandidate(exact);
+            Assert.That(exact.SemanticHash, Is.EqualTo(result.SemanticHash));
+            Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));
+        });
+    }
+
+    [Test]
+    public async Task GlobalSizeQuotasCompleteAcrossSeparateEntranceNetworks()
+    {
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var fixture = Fixture(tiny: true);
+            fixture.Request.Shape.Cells = Enumerable.Range(0, 9).Concat(Enumerable.Range(20, 4))
+                .SelectMany(x => Enumerable.Range(0, 4).Select(y => new Vector2i(x, y))).ToList();
+            fixture.Request.EntranceDomain!.Entrances.Add(new()
+                { PortId = "B1", ThresholdCells = new List<Vector2i> { new(19, 0) }, InwardNormal = new(1, 0) });
+            fixture.Request.EntranceDomain.Configurations[0].Groups.Add(new()
+                { Id = "B", Ports = new List<string> { "B1" } });
+            fixture.Request.SizeMix = new List<KsProcgenRoomSizeGoal>
+            {
+                new() { Id = "Large", MinCells = 16, MaxCells = 16, TargetCount = 2 },
+                new() { Id = "Medium", MinCells = 9, MaxCells = 9 },
+                new() { Id = "Small", MinCells = 5, MaxCells = 5 },
+            };
+            fixture.Request.FallbackPolicy.AllowMergedPartition = false;
+            fixture.Request.FallbackPolicy.AllowRoomSizeShortfall = false;
+            fixture = fixture with { Context = fixture.Context with
+                { CleanHostCells = new HashSet<Vector2i> { new(-1, 0), new(-2, 0), new(19, 0), new(18, 0) } } };
+            var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var before = SEntMan.GetEntities().ToHashSet();
+            var themeId = "KsProcgenEmptyOfficeThemeFixture";
+            var budgets = Budgets with { UseSizeGoals = true, MaximumPartitionMerges = 0,
+                MaximumConfigurationProbes = 1, MaximumLayoutProbes = 1 };
+            var result = Plan(manager, fixture, budgets: budgets, themeId: themeId);
+            AssertCandidate(result);
+            Assert.That(result.Partition!.SizeGoalSubdivisionUsed, Is.True);
+            Assert.That(result.Partition.Analysis!.Components.Count, Is.EqualTo(2));
+            Assert.That(result.Partition.SizeGoalAttempts.Select(attempt => attempt.NetworkId).Distinct().Count(), Is.EqualTo(2));
+            Assert.That(result.SizeMix.All(outcome => outcome.AchievedCount == outcome.RequestedCount), Is.True);
+            Assert.That(result.Themes!.Regions.Select(region => region.FloorCells.Count).Order(), Is.EqualTo(new[] { 5, 9, 16, 16 }));
+            var exact = Plan(manager, fixture, budgets: budgets with
+            {
+                MaximumReportedGraphExpansions = result.ExpandedCells,
+                MaximumPartitionSeamProbes = result.PartitionSeamProbes,
+                MaximumOrderProbes = result.OrderProbes,
+                MaximumFurnishingProbes = Math.Max(1, result.FurnishingProbes),
+                MaximumLightingFixtures = result.FixtureSelections,
+            }, themeId: themeId);
+            AssertCandidate(exact);
+            Assert.That(exact.SemanticHash, Is.EqualTo(result.SemanticHash));
+            fixture.Request.SizeMix = new List<KsProcgenRoomSizeGoal>
+                { new() { Id = "OnlyOne", MinCells = 4, MaxCells = 64 } };
+            var denied = Plan(manager, fixture, budgets: budgets with { MaximumLayoutProbes = 2 }, themeId: themeId);
+            AssertFailure(denied, KsProcgenOwnedPlanStatus.FallbackDisallowed, code: "RoomSizeShortfallDisallowed");
+            Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));
+        });
+    }
+
+    [Test]
+    public async Task GoalWidthRetryMovesBoundaryAndCompletesStrictSizeBands()
+    {
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var fixture = Fixture(tiny: true);
+            fixture.Request.Shape.Cells = Enumerable.Range(0, 10).SelectMany(x => Enumerable.Range(0, 4)
+                .Select(y => new Vector2i(x, y))).ToList();
+            fixture.Request.Shape.PreservedCells = fixture.Request.Shape.Cells.Where(cell => cell.X == 7 && cell.Y <= 1).ToList();
+            fixture.Request.EntranceDomain!.Configurations[0].Groups[0].RootCells.Add(new(7, 0));
+            fixture.Request.SizeMix = new List<KsProcgenRoomSizeGoal>
+            {
+                new() { Id = "Large", MinCells = 20, MaxCells = 28 },
+                new() { Id = "Small", MinCells = 5, MaxCells = 13 },
+            };
+            fixture.Request.FallbackPolicy.AllowMergedPartition = false;
+            fixture.Request.FallbackPolicy.AllowRoomSizeShortfall = false;
+            fixture = fixture with { Context = fixture.Context with
+                { ExistingCleanDomainCells = fixture.Request.Shape.PreservedCells.ToHashSet() } };
+            var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var before = SEntMan.GetEntities().ToHashSet();
+            var themeId = "KsProcgenEmptyOfficeThemeFixture";
+            var budgets = Budgets with { UseSizeGoals = true, MaximumPartitionMerges = 0, MaximumConfigurationProbes = 1 };
+            var result = Plan(manager, fixture, budgets: budgets, themeId: themeId);
+            AssertCandidate(result);
+            Assert.That(result.LayoutProbes, Is.EqualTo(1));
+            Assert.That(result.Partition!.SizeGoalAttempts.Select(attempt => attempt.WidthVariant), Is.EqualTo(new[] { 0, 1 }));
+            Assert.That(result.Partition.SizeGoalAttempts.All(attempt => attempt.AcrossX), Is.True);
+            Assert.That(result.SizeMix.All(outcome => outcome.AchievedCount == outcome.RequestedCount), Is.True);
+            Assert.That(result.Themes!.Regions.Select(region => region.FloorCells.Count).Order(), Is.EqualTo(new[] { 13, 24 }));
+            Assert.That(result.Partition.WallCells.All(cell => cell.X == 6), Is.True);
+            Assert.That(fixture.Request.Shape.PreservedCells.All(result.Partition.FloorCells.Contains), Is.True);
+            Assert.That(result.Fallbacks.Select(fallback => fallback.Code), Does.Not.Contain("MergedPartition"));
+            var exact = Plan(manager, fixture, budgets: budgets with
+            {
+                MaximumReportedGraphExpansions = result.ExpandedCells,
+                MaximumPartitionSeamProbes = result.PartitionSeamProbes,
+                MaximumOrderProbes = result.OrderProbes,
+                MaximumFurnishingProbes = Math.Max(1, result.FurnishingProbes),
+                MaximumLightingFixtures = result.FixtureSelections,
+                MaximumLayoutProbes = 1,
+            }, themeId: themeId);
+            AssertCandidate(exact);
+            Assert.That(exact.SemanticHash, Is.EqualTo(result.SemanticHash));
+            var limited = Plan(manager, fixture, budgets: budgets with
+                { MaximumPartitionSeamProbes = result.Partition.SizeGoalAttempts[0].SeamProbes + 1 }, themeId: themeId);
+            AssertFailure(limited, KsProcgenOwnedPlanStatus.BudgetExceeded, code: "PartitionSeamProbeBudget");
+            Assert.That(limited.Stages.Last().Stage, Is.EqualTo(KsProcgenOwnedPlanStage.Partition));
+            Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));
+        });
+    }
+
+    [Test]
     public async Task GoalOrientationRetryPreservesDeclaredFloorAndCompletesStrictSizeGoals()
     {
         await Pair.Server.WaitAssertion(() =>

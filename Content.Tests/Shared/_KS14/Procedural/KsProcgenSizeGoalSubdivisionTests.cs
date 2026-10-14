@@ -9,6 +9,222 @@ namespace Content.Tests.Shared._KS14.Procedural;
 [TestFixture]
 public sealed class KsProcgenSizeGoalSubdivisionTests
 {
+    [Test]
+    public void ReflectedWallLossFitsOtherwiseImpossibleExactBands()
+    {
+        var request = ReflectionRequest(false);
+        request.SizeMix = new List<KsProcgenRoomSizeGoal>
+        {
+            new() { Id = "Large", MinCells = 25, MaxCells = 25 },
+            new() { Id = "Small", MinCells = 12, MaxCells = 12 },
+        };
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, ReflectionFloor(request), useSizeGoals: true,
+            maximumMergeAttempts: 0);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), result.Issue?.Code);
+        Assert.That(result.SizeGoalSubdivisionUsed, Is.True);
+        Assert.That(result.SizeGoalAttempts.Count, Is.EqualTo(1));
+        Assert.That(result.SizeGoalAttempts[0].Reflected, Is.True);
+        Assert.That(Sizes(result), Is.EqualTo(new[] { 12, 25 }));
+        Assert.That(result.Regions.Single().Partition.Status, Is.EqualTo(KsProcgenPartitionStatus.Proposed));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ReflectedRoomsAvoidProtectedCanonicalSeams(bool transpose)
+    {
+        var request = ReflectionRequest(transpose);
+        var floor = ReflectionFloor(request);
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: 0);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), result.Issue?.Code);
+        Assert.That(result.SizeGoalAttempts.Last().Reflected, Is.True);
+        Assert.That(result.SizeGoalAttempts.Last().AcrossX, Is.EqualTo(!transpose));
+        Assert.That(result.SizeGoalAttempts.Where(attempt => !attempt.Reflected)
+            .All(attempt => attempt.Status == KsProcgenPartitionStatus.OpenFallback), Is.True);
+        Assert.That(Sizes(result), Is.EqualTo(new[] { 12, 25 }));
+        Assert.That(result.Regions.Single().Fill.Zones[0].Cells.All(cell => (transpose ? cell.Y : cell.X) < 3), Is.True);
+        Assert.That(result.WallCells.All(cell => (transpose ? cell.Y : cell.X) == 3), Is.True);
+        Assert.That(request.Shape.PreservedCells.All(result.FloorCells.Contains), Is.True);
+        Assert.That(result.SeamProbes, Is.EqualTo(result.SizeGoalAttempts.Sum(attempt => attempt.SeamProbes)));
+        var exact = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: 0,
+            maximumExpandedCells: result.ExpandedCells, maximumSeamProbes: result.SeamProbes);
+        Assert.That(exact.PartitionHash, Is.EqualTo(result.PartitionHash));
+        Assert.That(exact.SizeGoalAttempts, Is.EqualTo(result.SizeGoalAttempts));
+        request.Shape.Cells.Reverse();
+        request.SizeMix.Reverse();
+        Assert.That(KsProcgenGroupPartitionPlanner.Plan(request, ReflectionFloor(request), useSizeGoals: true,
+            maximumMergeAttempts: 0).PartitionHash, Is.EqualTo(result.PartitionHash));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ReflectionSharesBudgetsAndCannotReturnEarlierFallback(bool graphBudget)
+    {
+        var request = ReflectionRequest(false);
+        var floor = ReflectionFloor(request);
+        var full = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: 0);
+        var earlier = full.SizeGoalAttempts.TakeWhile(attempt => !attempt.Reflected).ToArray();
+        var graphLimit = floor.Analysis!.ExpandedCells + floor.FloorCells.Count + earlier.Sum(attempt => attempt.ExpandedCells) + 1;
+        var seamLimit = earlier.Sum(attempt => attempt.SeamProbes) + 1;
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: 0,
+            maximumExpandedCells: graphBudget ? graphLimit : full.ExpandedCells,
+            maximumSeamProbes: graphBudget ? full.SeamProbes : seamLimit);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.BudgetExceeded));
+        Assert.That(result.SizeGoalAttempts.Last().Reflected, Is.True);
+        Assert.That(result.SizeGoalAttempts.Last().Status, Is.EqualTo(KsProcgenPartitionStatus.BudgetExceeded));
+        Assert.That(graphBudget ? result.ExpandedCells : result.SeamProbes, Is.EqualTo(graphBudget ? graphLimit : seamLimit));
+        Assert.That(result.Regions, Is.Empty);
+        Assert.That(result.PartitionHash, Is.Zero);
+    }
+
+    private static KsProcgenRequest ReflectionRequest(bool transpose)
+    {
+        var request = FlexibleRequest();
+        request.Shape.PreservedCells = new List<Vector2i>
+            { new(6, 0), new(6, 1), new(7, 0), new(7, 1), new(0, 2), new(1, 2) };
+        request.EntranceDomain!.Configurations[0].Groups[0].RootCells = new List<Vector2i>
+            { new(6, 0), new(7, 0), new(0, 2), new(1, 2) };
+        if (transpose)
+        {
+            request.Shape.Cells = request.Shape.Cells.Select(cell => new Vector2i(cell.Y, cell.X)).ToList();
+            request.Shape.PreservedCells = request.Shape.PreservedCells.Select(cell => new Vector2i(cell.Y, cell.X)).ToList();
+            var group = request.EntranceDomain.Configurations[0].Groups[0];
+            group.RootCells = group.RootCells.Select(cell => new Vector2i(cell.Y, cell.X)).ToList();
+            request.EntranceDomain.Entrances[0].ThresholdCells = new List<Vector2i> { new(0, -1) };
+            request.EntranceDomain.Entrances[0].InwardNormal = new(0, 1);
+        }
+        return request;
+    }
+
+    private static KsProcgenGroupFloorResult ReflectionFloor(KsProcgenRequest request)
+    {
+        var entrance = request.EntranceDomain!.Entrances[0];
+        var threshold = entrance.ThresholdCells[0];
+        return KsProcgenGroupFloorPlanner.Plan(request, "Connected", new(request.Shape.PreservedCells.ToHashSet(),
+            new HashSet<Vector2i> { threshold, threshold - entrance.InwardNormal }, new HashSet<Vector2i>(), true, true));
+    }
+
+    [TestCase(0)]
+    [TestCase(1)]
+    public void AlternateWidthsMoveSeamAroundProtectedFloor(int merges)
+    {
+        var request = FlexibleRequest();
+        var floor = FlexibleFloor(request);
+        Assert.That(floor.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), floor.Issue?.Code);
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: merges);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), result.Issue?.Code);
+        Assert.That(Sizes(result), Is.EqualTo(new[] { 13, 24 }));
+        Assert.That(result.SizeGoalAttempts.Select(attempt => attempt.AcrossX), Is.EqualTo(new[] { true, true }));
+        Assert.That(result.SizeGoalAttempts.Select(attempt => attempt.WidthVariant), Is.EqualTo(new[] { 0, 1 }));
+        Assert.That(result.SizeGoalAttempts[0].Status, Is.EqualTo(KsProcgenPartitionStatus.OpenFallback));
+        Assert.That(result.SizeGoalAttempts[1].Status, Is.EqualTo(KsProcgenPartitionStatus.Proposed));
+        Assert.That(result.MergeAttempts, Is.EqualTo(merges));
+        Assert.That(result.SeamProbes, Is.EqualTo(result.SizeGoalAttempts.Sum(attempt => attempt.SeamProbes)));
+        Assert.That(result.WallCells.All(cell => cell.X == 6 && cell.Y != 0), Is.True);
+        Assert.That(request.Shape.PreservedCells.All(result.FloorCells.Contains), Is.True);
+        var exact = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: merges,
+            maximumExpandedCells: result.ExpandedCells, maximumSeamProbes: result.SeamProbes);
+        Assert.That(exact.PartitionHash, Is.EqualTo(result.PartitionHash));
+        Assert.That(exact.SizeGoalAttempts, Is.EqualTo(result.SizeGoalAttempts));
+        request.SizeMix.Reverse();
+        request.Shape.Cells.Reverse();
+        Assert.That(KsProcgenGroupPartitionPlanner.Plan(request, FlexibleFloor(request), useSizeGoals: true,
+            maximumMergeAttempts: merges).PartitionHash, Is.EqualTo(result.PartitionHash));
+    }
+
+    [TestCase(30, 4, 16)]
+    [TestCase(20, 20, 32)]
+    public void WidthSearchIsCappedAndRetainsCanonicalFirstFallback(int width, int height, int attempts)
+    {
+        var request = Request();
+        request.Shape.Cells = Enumerable.Range(0, width).SelectMany(x => Enumerable.Range(0, height)
+            .Select(y => new Vector2i(x, y))).ToList();
+        request.Shape.PreservedCells = request.Shape.Cells.ToList();
+        request.SizeMix = new List<KsProcgenRoomSizeGoal>
+            { new() { Id = "Rooms", MinCells = 4, MaxCells = height == 4 ? 64 : 200, TargetCount = 5 } };
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, SquareFloor(request), useSizeGoals: true, maximumMergeAttempts: 0);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), result.Issue?.Code);
+        Assert.That(result.SizeGoalAttempts.Count, Is.EqualTo(attempts));
+        Assert.That(result.SizeGoalAttempts.Count(attempt => attempt.AcrossX), Is.EqualTo(16));
+        Assert.That(result.SizeGoalAttempts.Count(attempt => !attempt.AcrossX), Is.EqualTo(attempts - 16));
+        Assert.That(result.SizeGoalAttempts.Select(attempt => attempt.Reflected),
+            Is.EqualTo(Enumerable.Repeat(false, attempts / 2).Concat(Enumerable.Repeat(true, attempts / 2))));
+        Assert.That(result.SizeGoalAttempts.Select(attempt => attempt.WidthVariant),
+            Is.EqualTo(Enumerable.Range(0, attempts).Select(index => index % 8)));
+        Assert.That(result.SizeGoalAttempts.All(attempt => attempt.Status == KsProcgenPartitionStatus.OpenFallback), Is.True);
+        Assert.That(result.Regions.Single().Fill.Zones.Select(zone => zone.Cells.Count),
+            Is.EqualTo(height == 4 ? new[] { 64, 32, 8, 8, 8 } : new[] { 200, 80, 40, 40, 40 }));
+        Assert.That(result.SeamProbes, Is.EqualTo(result.SizeGoalAttempts.Sum(attempt => attempt.SeamProbes)));
+        Assert.That(result.PartitionHash, Is.Not.Zero);
+    }
+
+    [Test]
+    public void WidthSearchReachesLaterBreadthFirstStates()
+    {
+        var request = FlexibleRequest();
+        request.Shape.Cells.AddRange(Enumerable.Range(0, 4).Select(y => new Vector2i(10, y)));
+        request.Shape.PreservedCells = request.Shape.Cells.Where(cell => cell.X is 7 or 8 && cell.Y <= 1).ToList();
+        request.EntranceDomain!.Configurations[0].Groups[0].RootCells.Add(new(8, 0));
+        request.SizeMix.Single(goal => goal.Id == "Large").MaxCells = 32;
+        request.SizeMix.Single(goal => goal.Id == "Small").MaxCells = 17;
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, FlexibleFloor(request), useSizeGoals: true, maximumMergeAttempts: 0);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), result.Issue?.Code);
+        Assert.That(result.SizeGoalAttempts.Select(attempt => attempt.WidthVariant), Is.EqualTo(new[] { 0, 1, 2 }));
+        Assert.That(result.SizeGoalAttempts.All(attempt => attempt.AcrossX), Is.True);
+        Assert.That(Sizes(result), Is.EqualTo(new[] { 17, 24 }));
+        Assert.That(result.WallCells.All(cell => cell.X == 6), Is.True);
+    }
+
+    [Test]
+    public void WidthBoundsPreventIllegalRoomSizesFromBypassingProtectedSeams()
+    {
+        var request = FlexibleRequest();
+        request.Shape.PreservedCells = request.Shape.Cells.Where(cell => (cell.X is 6 or 7) && cell.Y <= 1).ToList();
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, FlexibleFloor(request), useSizeGoals: true, maximumMergeAttempts: 0);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), result.Issue?.Code);
+        Assert.That(result.SizeGoalAttempts.Select(attempt => attempt.AcrossX), Is.EqualTo(new[] { true, true, false }));
+        Assert.That(Sizes(result), Is.EqualTo(new[] { 11, 20 }));
+        Assert.That(result.SizeGoalAttempts.Last().Status, Is.EqualTo(KsProcgenPartitionStatus.Proposed));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void WidthRetryBudgetExhaustionExposesOnlyDiagnostics(bool seamBudget)
+    {
+        var request = FlexibleRequest();
+        var floor = FlexibleFloor(request);
+        var full = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: 0);
+        var limit = seamBudget ? full.SizeGoalAttempts[0].SeamProbes + 1
+            : floor.Analysis!.ExpandedCells + floor.FloorCells.Count + full.SizeGoalAttempts[0].ExpandedCells + 1;
+        var result = KsProcgenGroupPartitionPlanner.Plan(request, floor, useSizeGoals: true, maximumMergeAttempts: 0,
+            maximumExpandedCells: seamBudget ? 262_144 : limit, maximumSeamProbes: seamBudget ? limit : 262_144);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.BudgetExceeded));
+        Assert.That(result.SizeGoalAttempts.Count, Is.EqualTo(2));
+        Assert.That(result.SizeGoalAttempts[1].WidthVariant, Is.EqualTo(1));
+        Assert.That(result.SizeGoalAttempts[1].Status, Is.EqualTo(KsProcgenPartitionStatus.BudgetExceeded));
+        Assert.That(seamBudget ? result.SeamProbes : result.ExpandedCells, Is.EqualTo(limit));
+        Assert.That(result.Regions, Is.Empty);
+        Assert.That(result.FloorCells, Is.Empty);
+        Assert.That(result.PartitionHash, Is.Zero);
+    }
+
+    private static KsProcgenRequest FlexibleRequest()
+    {
+        var request = Request();
+        request.Shape.Cells.AddRange(Enumerable.Range(0, 4).Select(y => new Vector2i(9, y)));
+        request.Shape.PreservedCells = request.Shape.Cells.Where(cell => cell.X == 7 && cell.Y <= 1).ToList();
+        request.EntranceDomain!.Configurations[0].Groups[0].RootCells.Add(new(7, 0));
+        request.SizeMix = new List<KsProcgenRoomSizeGoal>
+        {
+            new() { Id = "Large", MinCells = 20, MaxCells = 28 },
+            new() { Id = "Small", MinCells = 5, MaxCells = 13 },
+        };
+        return request;
+    }
+
+    private static KsProcgenGroupFloorResult FlexibleFloor(KsProcgenRequest request) =>
+        KsProcgenGroupFloorPlanner.Plan(request, "Connected", new(request.Shape.PreservedCells.ToHashSet(),
+            new HashSet<Vector2i> { new(-1, 0), new(-2, 0) }, new HashSet<Vector2i>(), true, true));
+
     [TestCase(0)]
     [TestCase(1)]
     public void BlockedFirstOrientationRetriesOtherAxisWithoutRefundingWork(int merges)

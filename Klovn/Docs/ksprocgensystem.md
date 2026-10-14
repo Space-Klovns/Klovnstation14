@@ -5,6 +5,11 @@ Status: implementation in progress. This document remains the behavior contract;
 implementation ledger in section 17 records what exists, what has been verified, and what remains.
 An unchecked task is not implemented merely because its API or a partial algorithm exists.
 
+Current overall implementation estimate (2026-10-14): **approximately 75%**. This is weighted
+capability coverage, not production readiness. Section 17's milestone table and detailed rewrite
+ledger record the evidence, uncertainty and remaining exits; earlier percentages are historical
+checkpoints. R01-R07 remain in progress. Engine access certification and publication remain gated.
+
 Contract revision 2026-09-30 adds reusable relational furnishing assemblies, connected area-marker
 blobs, and selectable entrance connection configurations. These are requirements to implement,
 not claims about existing support. Section 17's R01-R07 rewrite checklist takes precedence over
@@ -1787,10 +1792,10 @@ records implemented behavior; schema loading alone does not establish placement 
 | R01 | In progress | `KsProcgenAssemblyPrototypes` and `KsProcgenAssemblyCompiler` implement reusable named members, required/optional multiplicities, entity bindings, complete ordered variants, typed spatial/context/support relations, and normalized core records. Expansion is bounded to 64 members/256 relations, targets must resolve to one instance, support/container cycles and multiple support parents are rejected separately from valid spatial cycles. Theme validation compiles both assemblies and legacy singleton entries; entries and assembly references carry core minima. Loaded fixtures resolve a table/device/optional-chair core and a standing variant. The live office pack now references an explicit desk/seat/console assembly. `KsProcgenPrototypeCapabilityInspector` copies inherited surface, fixture, rotation and container declarations into bounded snapshots and support inspection witnesses; declaration hashes are separate from full content/geometry hashes. Remaining: full schema/replay exit coverage and R02/R06 adapters proving actual placement and insertion; snapshots never certify engine placement. |
 | R02 | In progress | T09a/T15/T15a: normalized floor cores replace whole-pack atomic lists. Mandatory core counts are enforced across all selected packs before optional content, then required pack minima select complete cores. Bounded mandatory continuations revisit earlier poses, whole variants and weighted core choices when later requirements cannot fit, rolling back claims, protected paths, witnesses and copy/anchor metadata. Unrelated optional singletons can be omitted. Office adjacency, chair facing and console seat association are explicit. Required/preferred corner context and clean-path `Near` rules produce persisted geometric witnesses. Authored landings rotate with members and remain root-accessible; accepted Near paths are protected from later furnishing. Floor search revisits member positions, permitted orientations, selected interaction approaches and optional-member omissions. Path searches share a 4096-node room budget. Optional initial cores and repeated density draws use seeded weighted ordering; density placement retries other whole cores when a heavier candidate cannot fit. Semantic hash v20 distinguishes mandatory continuation search. Remaining: joint optional/lighting search and preference optimization, support/container layers, lighting layer checks and engine validation. |
 | R03 | In progress | T01/T02/T03/T04: geometry/theme/entrance profile references, paint and generic/numbered entrance components/prototypes, explicit void-grid host binding, bounded read-only grid snapshot, exact cardinal components, void subtraction, directed wide entrance ownership, scoped labels, conflict checks and stable identity. Geometry-only conversion rejects entrance-bearing blobs. Real doorway/context inspection, constants/envelopes, complete profiles and publication remain pending. |
-| R04 | In progress | Complete configuration contracts, shorthand, request transport, DeclaredNetworks roots and replay identity. A bounded seeded selector checks complete supplied scenes without mixing alternatives. Complete owned interior search retries ordered subdivision preferences within declared configurations after downstream rejection and retains tagged atomic attempt journals. Configuration and layout caps are separate; all reported pipeline work survives failed layouts. Painted-area profiles transport immutable subdivision preferences, room-size goals, fallback permissions and window goals into explicit owned planning. An opt-in rectangular size-goal strategy precedes scalar attempts, with requested/used strategy diagnostics and protected-floor refusal. Joint route/room/content choice, arbitrary-shape fitting and per-network quota allocation remain pending. |
+| R04 | In progress | Complete configuration contracts, shorthand, request transport, DeclaredNetworks roots and replay identity. A bounded seeded selector checks complete supplied scenes without mixing alternatives. Complete owned interior search retries ordered subdivision preferences within declared configurations after downstream rejection and retains tagged atomic attempt journals. Configuration and layout caps are separate; all reported pipeline work survives failed layouts. Painted-area profiles transport immutable subdivision preferences, room-size goals, fallback permissions and window goals into explicit owned planning. An opt-in rectangular size-goal strategy precedes scalar attempts, with requested/used strategy diagnostics and protected-floor refusal. Bounded global quota allocation across separate rectangular networks is implemented. Bounded complete quota retries after protected seams are implemented. Bounded fitting of L-shaped and stepped networks is implemented. Joint route/room/content choice, general shapes with holes and quota reassignment after content failures remain pending. |
 | R05 | In progress | Component analysis checks local groups, forbidden joins, host bypasses, roots, sealed thresholds and complete floor assignment with shared work limits. Procedural adapters construct routes, grow owned floor, and partition each network independently. Opt-in rectangular strips fit simultaneous final floor-size bands including wall loss, then use the same protected-route seam solver. Themes, furnishings and bounded lighting retain entrance reservations. A final interior audit checks room-local clean access, interaction/door approaches and the complete post-placement entrance scene; vault-required furniture and floor fixtures are blockers. Local fallback cannot remove inter-network walls. Independently revalidated local tactical queries measure chokes, alternate routes and redundancy with shared budgets; host detours cannot join groups. Owned materials preserve primary entrance tiles and read-only floor, check doors, cover separators and reject shared wall conflicts. Owned hull/window adapters reserve entrance/host spans, retain unknown shell, validate explicit directional exterior facts, count fixed windows without writes and substitute compatible theme prototypes under shared budgets. A complete owned proposal composes these stages atomically; legacy generation entry points reject entrance-aware inputs. Alternate trees, arbitrary-shape/joint room fitting, prefab/hybrid/interior-fill composition, live windows, full-host tactical ownership and engine validation remain pending. |
-| R06 | In progress | T10/T12/T13/T15: `KsProcgenContainerPreflightSystem` delegates live eligibility to engine APIs. `KsProcgenContainerStageSystem` owns disposable paused container-only previews, inserts members in dependency order, checks actual membership/parent transforms and rolls back failures. Explicit initialization verifies selected lifecycle, membership and managed-slot filter compatibility afterward and is idempotent. Insertion-veto fixtures cover preflight, commit and actual container insertion without replaying attempts during verification. Surface/spatial relations remain unsupported there; temporary root coordinates are not validated layout poses. Remaining: full layer-aware staging, surface mounting, operational and connection checks, spawn accounting and rollback before publication. The tile stage still rejects furniture. |
-| R07 | Pending | T03/T14/T16/T19 and all affected fixtures: versioning, hashes, diagnostics, editor examples and regression coverage. |
+| R06 | In progress | T10/T12/T13/T15: `KsProcgenContainerPreflightSystem` delegates live eligibility to engine APIs. `KsProcgenContainerStageSystem` owns disposable paused container-only previews, inserts members in dependency order, checks actual membership/parent transforms and rolls back failures. Explicit initialization verifies selected lifecycle, membership and managed-slot filter compatibility afterward and is idempotent. Insertion-veto fixtures cover preflight, commit and actual container insertion without replaying attempts during verification. Surface/spatial relations remain unsupported there; temporary root coordinates are not validated layout poses. A joint room-core adapter now owns optional grid floor/wall terrain with detached masks, cumulative allocation/initialization limits and exact frame/terrain verification. Fresh initialized scene inspection rejects foreign entities, unsupported shapes and member/wall hard overlaps; continuous fixed-actor cardinal sweeps enforce conservative floor coverage and declared vault/blocking exclusions without moving the actor. The wall lattice is a permitted structural union. Remaining: primary layered pipeline integration, support settling, actual machine/chair/door operation, gas and working-light checks, side-effect isolation and publication. Verification flags remain false; the standalone tile stage still rejects furniture. |
+| R07 | In progress | Stable declaration/geometry identities, detached versioned JSON diagnostics, exact fresh-report comparison, escaped SVG review samples and a localized Debug paint-snapshot command are implemented. Metadata and geometry truncation are separate; unverified engine claims remain false. Remaining: full request work metering, engine/content replay, richer editor workflows, complete acceptance/release coverage and the parent rewrite exits. |
 
 Latest composition amendment (2026-10-10): R05 now composes a complete procedural entrance-aware
 footprint proposal through `KsProcgenOwnedInteriorPlanner`, sharing reported graph, furnishing
@@ -2044,6 +2049,306 @@ engine entities. Existing area snapshot v5, group partition identity v1 and owne
 identity v2 remain unchanged: final selected geometry/membership already describes orientation,
 while discarded diagnostics do not enter accepted semantic identity. Rough completion remains 64%.
 
+Latest width-search amendment (2026-10-13): rectangular goal subdivision now searches a bounded
+neighborhood of feasible strip widths. The canonical greedy allocation stays first. A breadth-first
+neighbor transfers one column from a donor room above its minimum width to a recipient below its
+maximum width, preserving total footprint length and all inclusive final floor-size bands. Clone
+each width vector before changing it and deduplicate equal vectors. Explore at most eight width
+vectors and 4096 transfer examinations per axis; try all X candidates before Y candidates, for at
+most sixteen internal seam solves per complete goal attempt. Exact size bands often yield only
+one vector. One-room layouts remain deduplicated across axes. This supersedes the earlier two-solve
+orientation bound; it does not add an authored field or grant extra request work allowances.
+
+Each layout is an atomic zone assignment. The seam solver still validates protected floor, door
+approaches and connectivity. It selects the first unmerged candidate; if every permitted solve
+needs a fallback, it retains the first whole fallback. Shared graph/seam/merge allowances include
+every discarded width candidate, and exhaustion remains terminal. `SizeGoalAttempts.WidthVariant`
+identifies the zero-based candidate within its axis; `AcrossX` disambiguates equal indices on the
+other axis. Room IDs stay stable across width changes; selected zone membership and final geometry
+already enter group/interior identity. Discarded ordinals remain diagnostic metadata. Area snapshot
+v5, group partition v1, owned interior v2 and blob IDs v1 remain unchanged.
+
+For a 10x4 rectangle, large-room floor band 20..28 and small-room band 5..13 produce greedy raw
+widths 7/3 (28/9 final floor cells). If protected floor blocks X=7, widths 6/4 move the seam to X=6
+and produce final 24/13 rooms. The loaded fixture preserves two cells on X=7, adds a declared
+entrance-group root at (7,0), and lets routing create the connecting writable walkway. It uses an
+empty room theme to isolate strict room counts, materials and access, requiring a writable new
+door threshold. It passes all owned stages without engine writes and replays at exact graph/seam
+allowances. An 11x4 fixture verifies that the search can move through two successive transfers;
+other cases enforce inclusive bounds, eight/sixteen-candidate caps, input permutations and atomic
+      budget failure during a width retry.
+
+Width arithmetic, vector deduplication, metadata ordering and zone-list allocation remain bounded
+metadata work rather than fully charged request work. `GraphWorkFullyMetered` remains false.
+The capped neighbor search may miss a feasible distribution farther from the greedy vector, and
+it does not retry width choices after a later furnishing/light/access failure. Arbitrary shapes,
+per-network quota allocation, joint route/content search, full work accounting/replay and actual
+engine validation/publication remain rewrite work. Rough full-system completion is now 65%
+(40-67% uncertainty).
+
+Latest network-quota amendment (2026-10-13): `useSizeGoals` can now allocate the request-wide
+room-count goals across multiple independently owned entrance networks. Reconstruct ownership
+from independently inspected component witnesses before allocating; never combine networks,
+duplicate a global quota per network, or replace separation walls to meet a size goal. Sort networks
+by component identity and goals by ordinal ID. Enumerate bounded count vectors, subtract each
+candidate from the remaining request quotas, and backtrack if a later network cannot fit. Every
+network must receive at least one room. The last network receives exactly the remaining counts.
+Accept only a complete allocation whose every network has a feasible rectangular strip proposal.
+
+The allocator supports at most 32 networks and 256 rooms across the entire request. It permits
+4096 count-vector examinations and 64 rectangle-fit calls per group-partition invocation, including
+failed/backtracked allocations. `Partition.SizeGoalQuotaProbes` and `SizeGoalFitProbes` report these counts, including
+on partition failure. This metadata allowance is a fixed implementation cap, not extra graph or
+seam work. Charge each inspected component cell once against the shared graph allowance, even
+when allocation fails or an unsupported input falls back. Explicit supplied zones bypass allocation.
+Single-network planning keeps its existing proposal order and width/orientation behavior.
+
+An infeasible or capped allocation discards all tentative goal layouts and uses scalar subdivision
+for every network; it cannot expose a partially fitted set. Strict final size-goal auditing still
+rejects any deficit or excess. A successful allocation supplies each network's existing bounded
+width/orientation alternatives to its seam solver. All selected and discarded solves share the
+original graph, seam and merge allowances. At most sixteen seam solves per network are permitted,
+with a 512-solve maximum across the supported 32 networks before shared allowances terminate work.
+`SizeGoalAttempts.NetworkId` identifies the owning network alongside `AcrossX` and `WidthVariant`.
+The allocator picks its first geometrically feasible complete quota assignment; it does not retry
+other assignments after protected seams or later furnishings/access reject that choice. Therefore
+this remains a bounded heuristic and may miss an otherwise feasible room distribution.
+
+The loaded strict-count fixture contains disconnected 9x4 and 4x4 networks and requests two
+16-cell rooms, one 9-cell room and one 5-cell room. Allocation gives the first network 16/9/5
+final floors and the second network one 16-cell room. Material, empty-theme content and independent
+access stages complete without engine writes; both entrance networks remain separate. Flexible
+bands also exercise backtracking from two large rooms in the first rectangle, which would leave
+an impossible quota for the second. Existing snapshot v5, group partition v1 and owned interior
+v2 identities remain unchanged: selected region/zone membership and final geometry already encode
+the accepted allocation. Probe counts and rejected alternatives are diagnostics, not semantic hash
+inputs. Arbitrary-shape fitting, quota reassignment after seam/content failure, prefab/hybrid and
+interior-fill goal fitting, full work metering/replay and engine validation/publication remain open.
+Rough full-system completion remains 65% (40-67% uncertainty).
+
+Latest protected-seam quota retry amendment (2026-10-13): after exhausting a network's bounded
+width/orientation candidates, an owned multi-network partition may retry a different complete
+room-quota assignment. This supersedes the first-geometric-allocation restriction above for seam
+fallbacks. Solve every network for an assignment; accept the first assignment whose every network
+has an unmerged `Proposed` partition. If any network needs an open/merged fallback, retain that
+first whole assignment and blacklist its quota identity before searching another one. Never combine
+regions, zones, walls or floors from different assignments, and never combine entrance networks.
+The quota identity uses sorted goal IDs, inspected component IDs and exact count vectors under
+`ks-procgen-size-quota-v1`; it is an internal search key, not accepted map identity.
+
+Retry at most eight complete quota assignments per group-partition invocation. All allocator
+invocations share the original 4096 vector / 64 fit probe caps; reexamined vectors and rejected
+complete assignments count again. Every discarded seam solve shares the original graph, seam and
+merge allowances. Inspect witness cells once before quota search. A graph/seam budget exhaustion
+is terminal and publishes no artifact, even if a previous whole fallback exists. If quota metadata
+caps, the eight-assignment cap or feasible alternatives run out, independently audit and retain the
+first whole fallback with its matching region geometry. The final strict room/fallback policy may
+still reject it. At most 4096 internal seam solves (8 assignments x 32 networks x 16 layouts) are
+possible, and shared request allowances can stop search earlier. No fallback pass is exempt from
+the ordinary work limits.
+
+`Partition.SizeGoalAllocationAttempts` counts begun complete assignments. Frozen
+`SizeGoalAttempts.AllocationOrdinal` tags seam diagnostics alongside `NetworkId`, `AcrossX` and
+`WidthVariant`. Graph/seam/merge totals include failed assignments; accepted network artifacts
+describe only the selected assignment. Quota/fit counters remain cumulative, including failed
+enumeration after the last candidate. Explicit zones, disabled size goals and single-network
+planning retain their existing behavior. These are bounded diagnostics; full request metering and
+serialized replay remain open, and `GraphWorkFullyMetered` remains false. Accepted geometry hashes
+remain group partition v1 / owned interior v2: chosen membership and geometry already encode the
+result, while discarded search ordinals do not enter semantic identity.
+
+The regression fixture has two separate 8x4 rectangles and requests three rooms in band 4..64.
+The second rectangle is preserved floor. The first quota assigns one room to the writable network
+and two to the preserved network; every candidate second-network seam is blocked. The retry
+assigns two rooms to the writable network (24 and 5 final cells) and one 32-cell preserved room.
+Both networks remain separate and all preserved cells remain floor. A loaded empty-theme run
+completes strict counts, forbids merged partitions, replays exact reported work and leaves live
+entities unchanged. If both rectangles are preserved, retain the original whole 1/2-room quota
+fallback, despite fully charging the attempted 2/1-room assignment. Separate cases exhaust graph
+or seam allowance during the retry and verify diagnostic retention without artifacts. Later
+furnishing/light/access failures still require joint quota/content search; arbitrary shape fitting,
+prefab/hybrid and interior-fill modes, engine validation and publication remain pending.
+
+Latest reflected-strip amendment (2026-10-13): opted-in goal subdivision can try the opposite
+edge of the same rectangular entrance network. Keep every existing canonical X then Y candidate
+first, then append reflected X then Y candidates. For a reflected candidate, select cells using
+`length - 1 - coordinate` while preserving the same axis and target rectangle. Room size goals
+stay ordered by descending maximum size and ordinal ID; their spatial order reverses. This is a
+bounded alternative whole layout, not a coordinate transform of authored entities or entrance ports.
+
+Compute wall loss from spatial ownership, not from the goal's original index. The low-coordinate
+room owns no dividing wall; each subsequent room loses one full cross-section minus its single
+door threshold. In reflected order the last goal is that first spatial room. Assign padded zone
+IDs by increasing physical strip order, reverse the goal index for reflected candidates, and sort
+the exposed zone list by those IDs. The seam solver uses that same stable order to decide wall
+ownership. Simply reflecting cells while retaining the original indices or floor arithmetic can
+silently put the dividing wall in the wrong room and violate exact size goals.
+
+Permit eight width vectors and 4096 transfer examinations per axis per direction, for at most
+32 internal seam candidates per network (canonical X/Y plus reflected X/Y). One-room reflections
+are identical and are omitted; one-room axis duplicates are still omitted. This supersedes the
+earlier sixteen-layout bound. A multi-network solve can now attempt at most 8192 seam candidates
+(8 quota assignments x 32 networks x 32 layouts), subject to the unchanged shared request graph,
+seam and merge allowances and unchanged cumulative quota-fit caps. Failure never refunds work
+or grants a fallback an additional allowance. Retain the first complete fallback if all permitted
+directions fail; terminal graph/seam exhaustion still returns diagnostics without artifacts.
+
+Frozen `SizeGoalAttempts.Reflected` disambiguates direction alongside axis, width variant,
+network ID and allocation ordinal. No new authored flag is needed: `useSizeGoals` opts into the
+entire bounded strategy. Explicit zones and disabled goal planning retain their behavior.
+Accepted partition/interior identity remains v1/v2 because chosen cells, zone membership and
+door geometry already encode reflection; search diagnostics are excluded. Width-vector arithmetic,
+ordering and allocation remain bounded metadata work, not fully metered request work.
+
+Regression geometry: a 10x4 rectangle requests large floors in band 20..28 and small floors in
+5..13. Protected pairs on canonical X=6, X=7 and Y=2 seams block all canonical candidates. A
+reflected X candidate puts the small room in columns 0..2 (12 floors), its dividing wall in
+column 3, and the large room in columns 3..9 (25 floors after three wall tiles). Transposing the
+fixture tests reflected Y. Exact 25/12 goals are feasible only in reflected order, independently
+of those blockers, proving the first-spatial-room wall-loss calculation. The loaded empty-theme
+fixture forbids merges and size deviations, independently checks materials/access, replays exact
+reported work and leaves live entities unchanged. Arbitrary-shape fitting, other room-order
+permutations, later quota/content retries, full metering/replay and engine publication remain open.
+
+Latest irregular-strip amendment (2026-10-14): opted-in room-size goals now support a bounded
+subset of nonrectangular entrance networks. Preserve the existing rectangular strategy unchanged.
+When an inspected network does not cover its bounding rectangle, use
+`KsProcgenIrregularSizeGoalSubdivision` to try canonical and reversed goal order on both axes.
+Require every column on the chosen axis to contain one contiguous span, with no missing columns,
+and require adjacent spans to overlap. This supports L shapes, stepped outlines and other shapes
+admitting that strip representation. It does not fill absent corners, holes or exterior cells.
+Shapes unsupported on both axes retain whole scalar fallback and final strict-goal auditing.
+
+Compute prefix floor areas and shared boundary overlaps from inspected witness cells. Enumerate
+cuts in ascending coordinate order, keeping at least two columns per room. The first spatial room
+loses no dividing wall. Each later room loses only the cells shared with the preceding column,
+minus its one door threshold: `rawStripArea - (overlapCount - 1)`. Do not subtract the entire new
+column height when its span extends beyond the previous room. Require a nonempty common span
+across the preceding, boundary and following columns so a cardinal threshold and two approach
+tiles are geometrically possible. The ordinary seam solver still decides protected-floor refusal,
+actual door selection, connectivity, merging and fallback; these metadata predictions do not
+certify engine movement or spaceproofing.
+
+Limit irregular fitting to 64 rooms per network, 4096 columns on either axis, 4096 examined cut
+endpoints and eight completed cut vectors per axis/order. Clone each vector before further search
+and expose frozen zone/layout lists. At most 32 internal layouts can be proposed per network.
+Try canonical X/Y before reversed X/Y, assign padded room IDs by physical strip order, and use
+the existing `AcrossX`, `Reflected` and `WidthVariant` diagnostics; for irregular shapes the latter
+is the deterministic cut-vector ordinal. Deduplicate the one-room axes and omit its reverse order.
+Rectangle limits remain 256 rooms and their existing width-neighbor search. Multi-network quota
+allocation automatically uses the new irregular fitter under its unchanged shared metadata caps;
+all seams, retries and final scene audits use the same request graph/seam/merge allowances.
+
+An 8x4 L shape with the upper-right 2x2 corner absent contains 28 cells. A cut at X=4 assigns a
+16-cell first room and a raw 12-cell second room. Its four-cell shared boundary loses three wall
+tiles, yielding the exact requested 16/9 floors. Transposition verifies the other axis. Flexible
+16..20 and 5..9 bands can retry a protected X=4 seam at X=5, producing 20/5 floors. A reflected
+step with two initial 2-cell columns and six 4-cell columns yields 4/23 floors: the later room
+loses one shared-boundary wall tile, not three full-column tiles. Interior holes unsupported on
+both axes fall back atomically. All-preserved fixtures bound cut vectors and retain the canonical
+whole fallback; graph/seam exhaustion still exposes diagnostics without artifacts.
+
+The loaded L-shaped empty-theme fixture requests exact 16/9 counts, forbids merges and size
+deviations, checks independent materials/interior access, replays exact reported work and leaves
+live entities unchanged. Area snapshot v5, partition v1 and owned interior v2 identities remain
+unchanged: selected cells, membership and doors already encode nonrectangular layouts. Span
+construction, prefix arithmetic, cut enumeration and output allocation remain bounded metadata
+work rather than fully metered request work. General shapes with holes, arbitrary room-order
+permutations, joint content search and real engine validation/publication remain rewrite work.
+The historical checkpoint after this irregular-strip amendment was **66%** (40-68% uncertainty).
+
+Latest room-core amendment (2026-10-14): `KsProcgenRoomAssemblyComposer` namespaces complete
+selected instances into one detached assembly for joint support-aware room pose search. Bound
+composition to 16 instances, 64 total members and 256 total relations. Sort pack/core/copy identity,
+then source member/relation IDs; use short ordinal logical IDs and retain a separate frozen binding
+manifest with source pack, core, copy, assembly, variant and member provenance. Rewrite every
+relation endpoint inside its own instance, retain slot/container declarations and copy mutable
+entry footprint/rotation lists independently for every copy. A malformed reference, duplicate
+copy or exceeded bound returns no partial assembly or manifest. Composition does not authorize
+physical overlap or treat a surface support as a transform parent.
+
+`KsProcgenRoomCoreSearch` enumerates complete submitted variant combinations and calls the
+existing supported pose/rotation/operating-landing search on the entire composed room. It can
+backtrack floor roots across instances because they participate in one search; it cannot scatter
+members from different variants. Enforce declared minimum copies of submitted cores. Share
+variant (at most 64), placement, landing and path budgets across failed combinations; exhausted
+work is terminal and returns diagnostics without a selected composition or pose. `SearchPacks`
+resolves every named pack and includes every authored core minimum. It defaults to one seeded,
+weighted optional core per pack. An explicit optional list, including empty, replaces only that
+default; optional overrides cannot remove required copies. Bound packs to 16 and optional copies
+per core to eight. Optional selection is currently fixed before pose search; trying other optional
+cores, density optimization and all per-core assembly-rotation combinations remain further work.
+
+Projected supported members may extend beyond their floor root's reserved footprint. Strengthen
+the shared supported search to reject overlap between the projected unions of different support
+trees, including unrelated roots within a single core. Members of one support tree may share
+declared XY but still require engine approval. Keep external occupied/blocking masks and protected
+network cells active. Fixed-root regression fixtures demonstrate that a shifted surface item cannot
+claim another root's tile, while a separated root remains feasible.
+
+`KsProcgenAssemblyStageSystem.TrySearchRoomStage` consumes a freshly produced room-search
+witness directly, without resetting its allowance or rerunning geometric paths. Preflight operation,
+retention, cancellation, member and allocation limits; then allocate one owned paused map through
+the existing assembly staging lifecycle. Every source binding still points to its own support
+parent after initialization; generated entities stay captured by the existing owned resource
+budget and disposal. Preserve the existing rejection of spatial engine relations. The primary
+floor furnishing/owned interior pipeline remains unchanged until supported layering and operating
+validation can be consumed there safely. All room search, support, pose and initialized preview
+results still report engine placement as unverified; there is no publication API.
+
+Latest owned room scene amendment (2026-10-14, verified limited scope): the room-core preview
+can allocate declared floor/wall terrain on its own disposable grid using a supplied registered
+tile and wall prototype. Tile centers are `(X+0.5,Y+0.5)`; map-only previews retain their original
+frame. Terrain inputs are detached, floor/wall masks cannot overlap, all allocations share the
+spawn allowance and ownership cleanup, and verification rejects changed/extra/missing tiles,
+walls or grid transforms. The map stays paused before and after explicit initialization.
+`KsProcgenRoomFixtureSystem` reads initialized live hard fixtures and actual transforms, refuses
+foreign entities/unsupported shapes, checks same-scene overlap and models cardinal access for
+an external actor at its fixed current orientation. Each cardinal step uses an exact continuous
+convex translation sweep with skin radii and the engine's bidirectional mask/layer filter rule.
+The actor's entire swept bounds must conservatively remain on declared floor; vault-required or
+normally blocking declared content is excluded even when its physics fixture is soft. Scans,
+fixture pairs, graph expansion and floor probes have separate bounded totals. Internal authored
+wall-wall joins are a permitted structural union; member-member/member-wall collisions are checked,
+and actor sweeps inspect every actual wall shape. Failure returns no
+partial connectivity witness. This adds fresh fixture geometry evidence, not movement simulation,
+door operation, support settling, machine/chair use, gas closure, working lights or publication.
+The existing spatial-relation staging gate remains. Thirteen loaded room-scene cases and eight
+sweep unit cases pass. All 513 focused procgen units and 164 focused integration/client-sandbox
+cases pass with no skips on the final source. Fresh Release and Debug builds have zero errors.
+Deliberate source regressions prove continuous sweep, reverse filtering and terrain tamper checks,
+then restore exact bytes. This verified adapter advances the engine domain from 9 to 13 points;
+the overall capability estimate reaches approximately 75%, while full-system exits remain open.
+
+Latest author diagnostics amendment (2026-10-14): `KsProcgenOwnedDiagnosticReportBuilder`
+creates detached bounded review snapshots of owned plans, including failed stage/configuration
+journals, room-goal cut attempts, retained work totals, fallbacks, requested/selected geometry,
+room ownership, entity pack/core/variant provenance, cardinal doors and proposed approaches.
+Keep metadata and geometry truncation separate. Clone nested attempt fallback lists. A rejected
+or incomplete candidate cannot expose floor/entity artifacts as reusable proposals or retain a
+nonzero accepted hash. Mark engine access, gas closure, working light, full metering and complete
+global search as unverified; a diagnostic report never promotes a proposal to publication.
+
+`KsProcgenDiagnosticExport` writes version-one canonical JSON with stable property/order rules,
+named enum values and bounded output bytes. Byte exhaustion returns no partial data. Exact
+diagnostic replay compares supplied bytes with a freshly built canonical report; changed engine
+claims, metadata or geometry reject. This is neither a content-library fingerprint nor authorization
+to recreate a map. Full request/content/context hashes, validated materialization and broader
+replay compatibility remain separate R07 work. `KsProcgenDiagnosticSvg` renders a static schematic
+of rooms, walls, windows, door thresholds, entrances, protected/preserved cells and proposed
+furniture. Show declared movement classes and facing; clearly label truncated diagnostics and
+unverified engine state. Use XML text/attribute escaping and invariant numeric formatting. Bound
+cell count, details, extent and output bytes; keep user names out of executable markup.
+
+Register the Debug-admin `ksprocgen_snapshot <grid entity> <stable host key>` console command
+with localized descriptions/errors. It reads the existing paused-safe paint snapshot and exports
+connected blobs, profile goals/subdivision preferences and complete entrance configuration/group
+contracts. It does not generate, remove markers, assume live door/landing context or publish.
+Loaded fixture exports are available in `Klovn/Docs/Examples/Procgen/l-shape.json` and `.svg` with
+their review guide. Regeneration requires explicit `KS_PROCGEN_ARTIFACT_DIR`; ordinary tests
+never write workspace samples. Pipeline mutation, engine staging and report export remain separate
+actions so reviewing an artifact cannot accidentally allocate or publish map contents.
+
 Latest surface amendment (2026-10-03): R01 copies optional tracker declarations under capability
 hash v2; R02 includes existing tracked items in finite unnamed support reservations; R06 checks
 live prerequisites and offers owned, bounded two-entity drop-coordinate previews. These
@@ -2133,6 +2438,29 @@ module's `HEAD` still equals `origin/main`, but its `Entities/Mobs/Operative/bas
 is now intentionally modified: the two undefined `NpcSquadMember`/`NpcReactionTime` component
 blocks in each operative prototype are commented out so the loaded-server test can start. This
 temporary local override must be removed after the corresponding code definitions arrive.
+
+### Requested 75% milestone accounting (2026-10-14)
+
+The overall percentage is a coarse capability estimate, not the fraction of checked boxes in this
+historical ledger. Helpers count only within their tested scope; no unverified engine claim receives
+completion credit. The current 75-point assessment uses the following weighting so later changes
+can be reviewed against concrete capabilities rather than inflated by adding tiny checklist items.
+
+| Capability domain | Weight | Implemented points | Evidence and remaining limits |
+| --- | ---: | ---: | --- |
+| Contracts, prototypes and authoring | 20 | 18 | Relational compilation, capability inspection, painted blobs and entrance contracts; remaining library/context inspection and schema exits. |
+| Layout, packing, routing and room partitioning | 25 | 17 | Owned routing, atomic network separation, quota/width/direction retries and bounded irregular strips; general holes, wider layouts and joint prefab/hybrid fitting remain. |
+| Interiors, materials, packs, lighting and tactics | 20 | 16 | Coherent material themes, floor furnishings, joint support-aware core/variant search and geometric tactical metrics; primary layered integration and live lighting remain. |
+| Engine staging, validation and publication | 20 | 13 | Owned grid-backed room/support previews, real insertion, initializer/callback spawn checks, terrain/frame verification, fresh member/wall collision and continuous fixed-actor cardinal clearance; primary pipeline integration, contact stability, operational use, gas/lighting and publication remain. |
+| Diagnostics, replay, author tools and release evidence | 15 | 11 | Detached versioned JSON, exact fresh-report comparison, escaped SVG review examples and localized painted-grid inspection join stable identities and bounded journals; full work metering, engine replay and complete release matrix remain. |
+| **Total** | **100** | **75** | Rough estimate; uncertainty 45-80%. |
+
+The user's approximately 75% milestone is reached after the diagnostic and owned scene exits.
+The engine gain covers combining previously separate previews on real terrain and inspecting
+fresh initialized geometry with continuous actor clearance; it does not award gas, operational
+lighting, movement simulation, prefab/constant copying or publication credit. R01-R07 and the
+full system remain incomplete. Next work should integrate supported cores/terrain into the primary
+owned pipeline, complete joint hybrid fitting, then establish operational and publication gates.
 
 ### Required rewrite checklist for the 2026-09-30 contract
 
@@ -2671,7 +2999,37 @@ the responsible stage exists. Never ignore them and run the old behavior success
     budgets; search forwarding and shared probe telemetry; completely infeasible combinations;
     and canonical replay with a larger sufficient allowance. A loaded-server case checks both
     owned preview entry points reject exhausted/invalid allowances before allocation.
-  - [ ] Extend this selected-variant pose/rotation search into joint room search and engine operating validation.
+  - [x] **Joint selected room cores and owned support preview (2026-10-14).** Compose complete
+    namespaced instances with source bindings, detached entry lists and local-only relation targets.
+    Enumerate whole variant combinations with cumulative work; search all floor/support poses in
+    one shared room mask. Resolve packs without dropping any core minimum, with seeded optional
+    selection or an explicit override. Reject projected overlap between unrelated support trees.
+    Add the owned room-preview bridge using existing fresh capability inspection and lifecycle.
+    Preserve spatial engine gates and the primary floor furnishing path; do not promote geometry
+    or initialization to operational placement or publication.
+    - [x] Unit evidence: repeated same-name cores retain separate parents and provenance;
+      input permutations and detached per-copy lists; foreign targets, duplicate copies and
+      request-wide member bounds reject atomically; shifted support cannot claim another root.
+    - [x] Loaded evidence: two support cores initialize on one disposable map with exact identity
+      replay, correct parents and complete cleanup; unsupported whole variants retry; exhausted
+      budgets allocate nothing; failed poses keep their cost; authored minima survive optional
+      suppression and weighted/explicit optional selection. Required copies cannot disappear.
+    - [x] Record full Release/fresh Debug, focused unit/loaded/actual sandbox gates and deliberate
+      regressions before updating the overall estimate for this capability.
+    - [x] Final room-core gates (2026-10-14): restored production code passes Server Release
+      (512 existing permitted warnings, zero errors), fresh nonincremental integration Debug
+      (1107 existing permitted warnings, zero errors), **498 procgen unit cases**, and **147
+      loaded cases** (146 procgen integration cases plus actual client `SandboxTest`); no skips.
+      Compile-valid mutations caught aliased entry footprints, foreign-instance support parents
+      and a refunded failed-variant placement budget. Original source bytes are restored in
+      `finally`. Logs: `.ks_procgen_room_core_mutation_AliasedEntries.log`,
+      `.ks_procgen_room_core_mutation_ForeignCoreParent.log`,
+      `.ks_procgen_room_core_mutation_ResetBudget.log`, `.ks_procgen_room_core_release.log`,
+      `.ks_procgen_room_core_final_debug.log`, `.ks_procgen_room_core_final_units.log`,
+      `.ks_procgen_room_core_final_integration.log`. Overall estimate advances to **68%**
+      (40-70% uncertainty); the 75% milestone remains active. Primary pipeline integration,
+      spatial/operating engine validation, contact stability and publication remain open.
+  - [ ] Extend joint room search into the primary furnishing pipeline and engine operating validation.
     They do not check actual fixture overlap, interaction reach/direction, all spatial relations,
     network-root connectivity/configuration, optimal preferred-relation choices, initializer-created
     obstructions, lighting, pressure or publication. The supplied mask is declared scene geometry,
@@ -4199,12 +4557,210 @@ the responsible stage exists. Never ignore them and run the old behavior success
     alternate width distributions and joint route/content search, complete work accounting/replay,
     then real staged validation and publication. Alternate orientation solving is complete within
     its documented rectangular, single-network scope.
+  - [x] Add bounded alternate-width generation to rectangular size-goal subdivision (2026-10-13).
+    Start with the unchanged greedy vector, then breadth-first one-column donor/recipient transfers.
+    Enforce minimum/maximum width intervals and total length, copy before mutation, deduplicate
+    vectors and cap at eight vectors/4096 transfer examinations per axis. Preserve one-room
+    deduplication and complete coverage. Canonical X candidates precede Y candidates, at most sixteen
+    seam solves in one complete goal layout slot. No new profile schema or implicit work allowance.
+  - [x] Reuse atomic partition selection and shared work for width alternatives. Failed layouts
+    cannot refund graph, seam or merge work; budget exhaustion cannot return an earlier fallback.
+    Preserve the first whole fallback only after every bounded solve fails to remain unmerged.
+    Extend immutable diagnostics with `WidthVariant`, keeping ordinals out of final semantic hash.
+    Room IDs are stable and selected cell membership carries actual width changes into identity.
+  - [x] Add width-search regressions: protected boundary movement with zero/one merge budgets,
+    successive breadth-first states, upper-band enforcement, eight/sixteen-layout limits and first
+    fallback retention, exact-budget replay, input permutations and atomic exhaustion on the second
+    width solve. All 23 focused geometry cases pass. The loaded strict-band case also passes:
+    raw widths 7/3 fail at protected X=7, widths 6/4 produce final 24/13 rooms and pass materials,
+    empty content/light stages and independent access. Exact root work replay retains semantic
+    identity; seam exhaustion exposes no root artifacts; engine entity sets remain unchanged.
+  - [x] Prove width-search regressions with four deliberate compiling mutations (2026-10-13).
+    Aliasing the current width vector instead of copying it breaks both zero/one merge fixtures,
+    yielding an 11-cell room where 13 is required. Removing the recipient maximum allows an illegal
+    X candidate to bypass protected seams instead of reaching the valid Y candidate. Increasing
+    the vector cap to nine produces nine/eighteen solves where eight/sixteen are required. Dropping
+    `WidthVariant` from diagnostics records zero where the selected retry must be one. All four
+    runs fail assertions; no compiler failure is accepted as evidence. Restore exact original source
+    bytes in `finally` after each mutation. Logs: `.ks_procgen_width_mutation_{AliasedWidths,
+    RecipientMaximum,LayoutCap,VariantDiagnostics}.log`.
+  - [x] Complete restored width-search gates (2026-10-13). Server Release passes with 512
+    existing permitted warnings and zero errors. Fresh `--no-incremental` Debug integration build
+    passes with 1107 existing permitted warnings and zero errors. Rebuilt procedural units pass
+    all 460 cases. Final no-build integration passes 135 loaded cases and the actual client
+    SandboxTest (136 combined), with no failures or skips. No new warnings in the changed width
+    sources, warning suppressions, event subscriptions, dependencies or sandbox whitelist edits.
+    Tracked/new-file whitespace checks pass. All four KS modules remain clean and zero commits
+    ahead/behind locally recorded `origin/main`; no remote fetch was performed. Exact production
+    bytes are restored after all four mutations; no build/test processes remain running. Logs:
+    `.ks_procgen_width_release.log`, `.ks_procgen_width_final_debug.log`,
+    `.ks_procgen_width_final_units.log`, `.ks_procgen_width_final_integration.log`. R01-R06 remain
+    in progress and R07 pending. Rough full-system completion is 65% (40-67% uncertainty). Full
+    repository tests and unsuppressed CI warning gates remain unverified. Next rewrite work:
+    arbitrary-shape/per-network size goals, wider partition and joint route/content search, complete
+    work accounting/replay, then real staged validation and publication. Width retries are complete
+    within their documented rectangular, single-network, bounded-search scope.
+  - [x] **Bounded request-wide room quotas across separate entrance networks (2026-10-13).**
+    Implement `KsProcgenSizeGoalAllocator` before automatic subdivision for opted-in multi-network
+    requests. Sort inspected networks and goals deterministically; enumerate count vectors, debit
+    the remaining global quotas, backtrack failed downstream fits and accept only a complete
+    assignment. Preserve the single-network and explicitly supplied-zone paths. Hard caps are
+    32 networks, 256 total rooms, 4096 vector probes and 64 rectangle-fit calls. Every network needs
+    at least one room; unsupported/capped searches discard all tentative layouts and use the whole
+    scalar fallback. Strict final size-count checks continue to decide whether that fallback is
+    permitted. Charge inspection cells once, preserve shared solve budgets, report allocation
+    probes on failure and tag every size-goal seam attempt with its network identity.
+    - [x] Unit coverage: exact and flexible 16/9/5 bands across separate 9x4 and 4x4 rectangles;
+      no duplicated request counts; input permutations and exact graph/seam replay; backtracking
+      when an early feasible quota strands the next network; atomic fallback for an unsupported
+      later footprint; insufficient global room counts; request-wide 257/4096-room rejection;
+      a 64-fit cap; inspection exhaustion and shared graph/seam exhaustion in the second network
+      without partial artifacts. Revise the older multi-network test to assert successful fitting
+      while preserving both inspected networks and the original separation geometry.
+    - [x] Loaded pipeline fixture: strict counts, disallowed merges, independent materials/access,
+      one complete successful layout, exact reported work replay and an unchanged live engine
+      entity set. Deny an impossible one-room global quota after both permitted goal/scalar
+      attempts; the failure exposes no stage artifacts. Use the existing empty office theme to
+      isolate geometry from content search.
+    - [x] Deliberate compile-valid regression checks (production bytes restored in `finally`):
+      stop debiting remaining quotas and all four exact/flexible permutation cases fail;
+      retain abandoned partial layouts and the later unsupported-network case fails; raise the
+      rectangle-fit cap from 64 to 65 and the hard-cap assertion fails with actual 65. Evidence:
+      `.ks_procgen_allocation_mutation_DuplicatedQuota.log`,
+      `.ks_procgen_allocation_mutation_PartialAllocation.log`,
+      `.ks_procgen_allocation_mutation_FitCap.log`. None relies on compiler errors.
+    - [x] Final gates (2026-10-13): restored production code passes Server Release (512 existing
+      permitted warnings, zero errors), fresh nonincremental integration Debug (1107 existing
+      permitted warnings, zero errors), all **472 procgen unit cases**, and **137 loaded cases**
+      comprising 136 procgen integration cases plus the actual client `SandboxTest`. No skips.
+      The loaded rejection test initially exhausted its one-layout allowance before the existing
+      scalar retry; allow two layouts for that denial check and rebuild the integration tests.
+      All positive fixtures still complete with one layout. No production relaxation was needed.
+      New/tracked-file whitespace checks pass; all three mutation sources are restored exactly.
+      All four KS modules are clean and 0/0 against locally recorded `origin/main` (no fetch).
+      Logs: `.ks_procgen_allocation_release.log`, `.ks_procgen_allocation_final_debug.log`,
+      `.ks_procgen_allocation_test_fix_build.log`, `.ks_procgen_allocation_final_units.log`,
+      `.ks_procgen_allocation_final_integration.log`. R01-R06 remain in progress and R07 pending.
+      Overall estimate remains **65%** (40-67% uncertainty). Full repository tests, unsuppressed
+      CI warning gates, full work metering and live publication remain unverified.
+    - [x] **Retry complete room-quota allocations after protected seams (2026-10-13).** Preserve
+      the first whole fallback, reject its sorted count-vector identity and enumerate a different
+      complete allocation with cumulative metadata caps. Try at most eight assignments. Solve
+      every owned network with the original shared graph/seam/merge budget; never mix assignments
+      or reset any allowance. Terminal solve exhaustion discards all artifacts. If every bounded
+      allocation needs a fallback, restore the first complete regions/walls/floor together and
+      independently audit it. Report begun assignment count and frozen per-solve allocation ordinal.
+      - [x] Unit coverage: a preserved second 8x4 network forces the two-room quota into the first
+        network, producing 24/5/32 floors and exact three-room counts. Preserving both networks
+        retains the canonical first 1/2-room quota fallback. Validate preserved floor, separate
+        ownership, input permutation and exact work replay. Assert cumulative metadata counters
+        (6 fits / 8 vectors for success; 10 fits / 14 vectors for two failed whole assignments),
+        and terminal graph/seam exhaustion during the second assignment without fallback artifacts.
+      - [x] Loaded strict-count fixture: one complete owned layout performs two internal quota
+        assignments, rejects the first protected seam, forbids merges, completes independent
+        material/interior validation, replays exact work and leaves engine entities unchanged.
+      - [x] Final gates (2026-10-13): restored production source passes Server Release (512
+        existing permitted warnings, zero errors), fresh nonincremental integration Debug (1107
+        existing permitted warnings, zero errors), **476 procgen unit cases**, and **138 loaded
+        cases** (137 procgen integration cases plus actual client `SandboxTest`); no skips. The
+        protected-network fixture completes strict counts and exact reported-work replay with no
+        engine writes. Tracked and new-file whitespace checks pass. All four KS modules remain
+        clean and 0/0 against locally recorded `origin/main` (no fetch). No commits, prototype
+        changes, upstream edits, warning suppressions or sandbox whitelist changes were needed.
+        Logs: `.ks_procgen_quota_retry_release.log`, `.ks_procgen_quota_retry_final_debug.log`,
+        `.ks_procgen_quota_retry_final_units.log`, `.ks_procgen_quota_retry_final_integration.log`.
+        R01-R06 remain in progress and R07 pending; rough full-system completion remains **65%**
+        (40-67% uncertainty). Full repository tests, unsuppressed CI warning gates, arbitrary-shape
+        fitting, joint content search, full work metering/replay and engine publication remain open.
+      - [x] Compile-valid regression mutations caught by assertions: returning the last regions
+        instead of restoring the first whole fallback changes the expected first network from
+        one room to two; resetting quota/fit counters between retries reports 4 instead of 10 fit
+        probes for the all-protected fixture; reducing the retry cap to one reports one instead of
+        two attempted assignments. Restore exact original source bytes in `finally` for each run.
+        Evidence: `.ks_procgen_quota_retry_mutation_LastFallback.log`,
+        `.ks_procgen_quota_retry_mutation_ResetMetadata.log`,
+        `.ks_procgen_quota_retry_mutation_NoRetry.log`. Compiler failures are not counted.
+    - [x] **Reflected rectangular room-goal strips (2026-10-13).** Keep canonical axis/width
+      proposals first, then try reflected proposals from the opposite rectangle edge. Recompute
+      first-room wall loss from physical order and assign/sort padded room IDs in that order.
+      Expose a frozen `Reflected` direction tag. Bound each axis/direction to eight vectors and
+      4096 transfer examinations; at most 32 layouts per network. Deduplicate one-room axes and
+      omit one-room reflections. Preserve whole fallback selection and original shared budgets.
+      - [x] Unit fixtures: blocked canonical X/Y seams require 12/25 floors on reflected X and
+        transposed Y; exact 25/12 bands fit only reflected order; input permutations and exact
+        graph/seam replay; graph or seam exhaustion during reflection cannot expose an earlier
+        fallback; all-protected rectangles enforce 16/32 total candidate caps while retaining
+        the original canonical fallback. Existing quota-retry and single-room regressions pass.
+      - [x] Implement loaded strict-count empty-theme fixture with preserved floor, disallowed
+        merges and size deviations, exact reported-work replay and an unchanged engine entity set.
+      - [x] Final gates (2026-10-13): restored production source passes Server Release (512
+        existing permitted warnings, zero errors), fresh nonincremental integration Debug (1107
+        existing permitted warnings, zero errors), **481 procgen unit cases**, and **139 loaded
+        cases** (138 procgen integration cases plus actual client `SandboxTest`), with no skips.
+        Strict reflected interiors complete exact reported-work replay without engine writes.
+        Tracked/new-file whitespace checks pass. All four KS modules are clean and 0/0 against
+        locally recorded `origin/main` (no fetch). No prototype changes, upstream edits, warning
+        suppressions, sandbox whitelist changes or commits were required. Logs:
+        `.ks_procgen_reflection_release.log`, `.ks_procgen_reflection_final_debug.log`,
+        `.ks_procgen_reflection_final_units.log`, `.ks_procgen_reflection_final_integration.log`.
+        R01-R06 remain in progress and R07 pending; full-system estimate remains **65%**
+        (40-67% uncertainty). Arbitrary-shape fitting, wider room-order and joint content search,
+        full work metering/replay and engine validation/publication remain open. Full repository
+        tests and unsuppressed CI warning gates remain unverified.
+      - [x] Compile-valid deliberate regressions caught: charging wall loss by original goal
+        index makes the exact reflected 25/12 case fall back instead of fitting; retaining
+        original indices for spatial IDs puts the wall in the small room and reports 9 instead
+        of 12 floors on both axes; omitting reflected candidates reports 8/16 instead of 16/32
+        attempts for the all-protected cap cases. Restore exact original bytes in `finally` after
+        each mutation. Logs: `.ks_procgen_reflection_mutation_WrongWallLoss.log`,
+        `.ks_procgen_reflection_mutation_WrongSpatialIds.log`,
+        `.ks_procgen_reflection_mutation_NoReflection.log`. No compiler failures are counted.
+    - [x] **Bounded irregular strip fitting (2026-10-14).** Dispatch nonrectangular inspected
+      networks to `KsProcgenIrregularSizeGoalSubdivision`, preserving rectangular candidate order.
+      Validate contiguous column spans and overlaps on each chosen axis; compute prefix areas and
+      actual shared-boundary wall loss; require a possible cardinal door with both approach tiles.
+      Enumerate canonical/reversed goal order and ascending cut coordinates. Bound irregular
+      networks to 64 rooms, 4096 endpoint probes and eight completed vectors per axis/order.
+      Clone cut vectors and freeze results. Reuse the existing shared seam solver, fallback,
+      independent audit, quota allocation and work accounting. Do not extend missing corners.
+      - [x] Ten unit cases: exact 16/9 L-shape floors on both axes, exact replay/input permutation,
+        protected cut retry yielding 20/5, reflected 4/23 shared-boundary loss, bounded cut vectors
+        with whole canonical fallback, 65/256-room cap fallback, unsupported interior holes and
+        atomic graph/seam exhaustion. The protected retry test initially used overlapping bands;
+        correct it to the required disjoint inclusive 16..20 and 5..9 definitions.
+      - [x] Implement loaded L-shape fixture with strict counts, disallowed merges, unchanged
+        footprint coverage, exact reported-work replay and an unchanged live entity set.
+      - [x] Final gates (2026-10-14): restored production code passes Server Release (512 existing
+        permitted warnings, zero errors), fresh nonincremental integration Debug (1107 existing
+        permitted warnings, zero errors), **491 procgen unit cases**, and **140 loaded cases**
+        (139 procgen integration cases plus actual client `SandboxTest`); no skips. The loaded
+        L shape completes strict counts, exact reported-work replay and independent materials/
+        interior checks without engine writes. Tracked/new-file whitespace checks pass. All four
+        KS modules are clean and 0/0 against locally recorded `origin/main` (no fetch). Logs:
+        `.ks_procgen_irregular_release.log`, `.ks_procgen_irregular_final_debug.log`,
+        `.ks_procgen_irregular_final_units.log`, `.ks_procgen_irregular_final_integration.log`.
+        R01-R06 remain in progress and R07 pending. Estimate: **66%** (40-68% uncertainty).
+        Full repository tests and unsuppressed CI warning gates remain unverified. Continue toward
+        the requested 75% milestone through concrete capability/rewrite exits, not checklist inflation.
+      - [x] Compile-valid deliberate regressions caught by assertions: subtracting full column
+        height instead of shared overlap prevents the reflected 4/23 fit; aliasing cut vectors
+        changes the first fallback's third room from 8 to 36 raw cells; raising the vector cap
+        from eight to nine produces 18 rather than 16 attempted layouts. Restore exact source
+        bytes in `finally` after each mutation. Evidence:
+        `.ks_procgen_irregular_mutation_FullColumnLoss.log`,
+        `.ks_procgen_irregular_mutation_AliasedCuts.log`,
+        `.ks_procgen_irregular_mutation_VectorCap.log`. Compiler failures are not counted.
+      - [ ] Extend fitting to holes, disconnected strip spans, arbitrary cuts and wider room-order
+        search while retaining bounded work, complete ownership and clean entrance access.
+    - [ ] Extend quota reassignment to later content failures. Do not globally search the product
+      of quota allocations, routes, widths and content choices without sharing the remaining work
+      allowances. Arbitrary shapes and fully metered metadata/replay remain separate rewrite work.
   - [ ] Finish joint request-wide search over alternate route trees, room subdivisions and
     prefab/assembly/light choices within a configuration. The coordinator currently accepts the
     first complete permitted candidate; it does not globally optimize degradation or retry alternate
     route trees, arbitrary partition boundaries or content choices after a complete failure. Ordered
     subdivision-size retries now cover a bounded subset of interior layouts within a configuration.
-    Extend the initial rectangular size-goal strategy to arbitrary shapes and per-network quotas, as well
+    Extend the rectangular size-goal strategy to arbitrary shapes and quota reassignment after later failures, as well
     as prefab/hybrid and interior-fill modes,
     meter remaining normalization and non-graph allocation/sorting/placement/compilation work,
     reserve fallback passes, serialize replay diagnostics, and connect real staged materialization/
@@ -4652,6 +5208,43 @@ the responsible stage exists. Never ignore them and run the old behavior success
     checks pass. Unsuppressed CI warnings-as-errors remains unverified. These checks establish
     disposable pre-map-init container insertion and ownership cleanup, not usable room placement,
     post-map-init correctness, surface mounting, actor access, visibility isolation or publication.
+  - [x] **Owned grid-backed room scene and fixed-actor clearance (2026-10-14).** Complete this
+    limited R06 adapter for the 75% milestone; retain every existing support/spatial gate.
+    - [x] Allocate detached floor/wall masks on a disposable grid, count grid/wall/generated members
+      in one allowance, preserve container parenting and verify exact terrain/frames/lifecycle.
+    - [x] Implement fresh bounded initialized scene scanning, hard-fixture overlap, foreign entity
+      refusal and fixed-orientation cardinal actor clearance without actor mutation or physics steps.
+    - [x] Implement continuous convex translation sweeps, finite segment containment and radius
+      handling; preserve declared vault/blocking exclusions and conservative floor bounds.
+    - [x] Verify tiny corridor, wall/terrain drift, preallocation failures, exact and exhausted work
+      budgets, missed-endpoint obstacles, reverse filter matches, hard overlaps, foreign entities,
+      unsupported shapes, vault exclusions and unchanged borrowed actor/world state.
+      Thirteen loaded cases and eight sweep units pass on the final source. The terrain case checks
+      detached input masks and member/wall overlap using fresh fixture offsets. Neighboring authored
+      wall skins form a structural union; test wall movement first unanchors through the engine.
+      An initialization spawn-budget failure restores the complete live entity set, including grid,
+      map, original member and newly generated contents. Callback checks stop additional allocation
+      after grid creation, each tile callback and each wall spawn exceeds the shared allowance.
+    - [x] Prove regressions via deliberate source mutations, restore exact source, run final
+      Release/fresh Debug/unit/loaded/client sandbox gates, then reassess engine-domain progress.
+      Deliberate compile-valid regressions have caught omitted sweep endpoints (`True` becomes
+      `False`), ignored reverse mask/layer matches (`Rejected` becomes `Observed`) and bypassed
+      terrain verification (all four tamper cases return `True` instead of `False`). Exact original
+      bytes are restored in `finally`. Evidence: `.ks_procgen_room_scene_mutation_sweep_assertion.log`,
+      `.ks_procgen_room_scene_mutation_filter.log`, `.ks_procgen_room_scene_mutation_terrain_assertion.log`
+      and their assertion-bearing TRX results. A first case-name filter matched no tests and is not
+      counted as evidence; the corrected terrain run executed and failed all four intended cases.
+      Final server Release `--no-incremental` passes with 574 existing warnings and zero errors;
+      integration Debug `--no-incremental` passes with 1,107 existing warnings and zero errors.
+      All 513 procgen unit cases and 164 focused loaded/client-sandbox cases pass, zero skips.
+      No warnings refer to the new scene/sweep sources. Evidence:
+      `.ks_procgen_room_scene_final_release2.log`, `.ks_procgen_room_scene_final_debug2.log`,
+      `.ks_procgen_room_scene_final_units.log`, `.ks_procgen_room_scene_final_integration.log`
+      and `Content.IntegrationTests/TestResults/ks_procgen_scene_final.trx`. Scoped diff/new-file
+      whitespace checks pass. All four KS modules are clean and 0/0 against locally recorded
+      `origin/main`. Full repository tests and unsuppressed warnings-as-errors CI remain unverified.
+      Engine-domain coverage rises from 9 to 13 points; total is approximately 75% (45-80%
+      uncertainty). The requested intermediate milestone is complete; the full R06 rewrite is not.
 - [ ] **R07 - Update identity, diagnostics, author tools and release evidence.** Extend semantic
   hashes and rollback state in `KsProcgenPlan`/`KsProcgenGeometryPipeline`, reports in
   `KsProcgenPlanningReport`, and future T16 tools for blobs, relation/support witnesses and actual
@@ -4661,7 +5254,27 @@ the responsible stage exists. Never ignore them and run the old behavior success
   Add A43-A52 and mutation checks that deliberately join forbidden groups or bypass support/seat
   constraints. Exit: A51-A52 and the affected existing corpus pass, budgets/limitations are recorded,
   and the ledger distinguishes plan-only checks from actual materialization verification.
-
+  - [x] **Bounded author reports, JSON/SVG exports and paint inspection (2026-10-14).** Add
+    detached owned diagnostic snapshots with cumulative work, failed-attempt journals, geometry,
+    room/content provenance and unverified engine constraints. Clone nested lists and enforce
+    separate entry/geometry truncation. Reject incomplete candidate artifacts. Export version-one
+    canonical JSON, verify exact fresh-report bytes and return no partial bytes on exhaustion.
+    Render escaped, invariant SVG schematics with room/door/path/preserved markers, furniture
+    movement labels, facing and truncation warnings. Register/localize the Debug-only paint
+    snapshot command and publish fixture-derived review samples with explicit regeneration.
+    - [x] Seven unit cases cover rejection telemetry, independent truncation and retained totals,
+      incomplete candidate refusal, detached request/nested fallbacks and invalid limits.
+    - [x] Four loaded cases cover exact L-shape export/replay and tamper rejection, culture-neutral
+      bytes, escaped script-like names, atomic byte exhaustion, facing/truncation display and
+      registered/localized paint snapshot export with `planGenerated == false`.
+    - [x] Final Release (512 existing warnings, zero errors), fresh Debug (1,107 existing warnings,
+      zero errors), all 505 procgen units and all 151 focused loaded/client-sandbox cases pass.
+      Three compile-valid deliberate regressions catch aliased nested fallback lists, a false
+      engine-verification claim and a bypassed byte limit; each source is restored in finally.
+      Evidence: `.ks_procgen_diagnostic_release.log`, `.ks_procgen_diagnostic_final_debug.log`,
+      `.ks_procgen_diagnostic_final_units.log`, `.ks_procgen_diagnostic_final_integration.log`
+      and `.ks_procgen_diagnostic_mutation_*.log`. Diagnostics advances from 8 to 11 points;
+      overall estimate is 71% (45-75% uncertainty). The 75% milestone remains active.
 ### Phase A: foundation and geometry
 
 - [ ] **T01 - Freeze contracts and build minimal fixtures.** No dependencies. Define request/result

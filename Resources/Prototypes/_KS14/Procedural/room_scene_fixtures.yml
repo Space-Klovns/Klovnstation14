@@ -1,0 +1,35 @@
+- type: entity
+  id: KsProcgenRoomEmptyFixture
+  categories: [ HideSpawnMenu, Debug ]
+
+- type: entity
+  id: KsProcgenRoomObstacleFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      body:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.15
+        layer: [ HighImpassable ]
+        mask: [ HighImpassable ]
+        hard: true
+
+- type: entity
+  id: KsProcgenRoomActorFixture
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Physics
+    bodyType: Dynamic
+  - type: Fixtures
+    fixtures:
+      body:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.18
+        layer: [ HighImpassable ]
+        mask: [ HighImpassable ]
+        hard: true

@@ -229,10 +229,11 @@ public sealed class KsProcgenGroupPartitionTests
         var result = KsProcgenGroupPartitionPlanner.Plan(request, floor, preferredMaxRoomCells: 64, useSizeGoals: true);
         var legacy = KsProcgenGroupPartitionPlanner.Plan(request, floor, preferredMaxRoomCells: 64);
         Assert.That(result.Status, Is.EqualTo(KsProcgenEntranceSceneStatus.Candidate), result.Issue?.Code);
-        Assert.That(result.SizeGoalSubdivisionUsed, Is.False);
+        Assert.That(result.SizeGoalSubdivisionUsed, Is.True);
         Assert.That(result.Regions.Count, Is.EqualTo(2));
-        Assert.That(result.PartitionHash, Is.EqualTo(legacy.PartitionHash));
-        Assert.That(result.ExpandedCells, Is.EqualTo(legacy.ExpandedCells));
+        Assert.That(result.Regions.Sum(region => region.Fill.Zones.Count), Is.EqualTo(2));
+        Assert.That(result.FloorCells, Is.EqualTo(legacy.FloorCells));
+        Assert.That(result.WallCells, Is.EqualTo(legacy.WallCells));
         Assert.That(result.Analysis!.Components.Count, Is.EqualTo(2));
     }
 

@@ -1,0 +1,635 @@
+{
+  "schemaVersion": 1,
+  "requestId": "LShapeDiagnostic",
+  "seed": -17,
+  "status": "Candidate",
+  "reasonCode": null,
+  "semanticHash": "14769492256893777055",
+  "configurationId": "Connected",
+  "entriesTruncated": false,
+  "geometryTruncated": false,
+  "published": false,
+  "engineAccessVerified": false,
+  "gasClosureVerified": false,
+  "workingLightingVerified": false,
+  "graphWorkFullyMetered": false,
+  "searchComplete": false,
+  "work": {
+    "expandedCells": 689,
+    "furnishingProbes": 0,
+    "orderProbes": 1,
+    "partitionMerges": 0,
+    "partitionSeamProbes": 174,
+    "fixtureSelections": 0,
+    "configurationProbes": 1,
+    "layoutProbes": 1
+  },
+  "constraints": [
+    {
+      "id": "DeclaredShape",
+      "state": "Satisfied",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": null
+    },
+    {
+      "id": "PlannedCleanAccess",
+      "state": "Satisfied",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": null
+    },
+    {
+      "id": "EngineCleanAccess",
+      "state": "Unverified",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "EngineAccessNotVerified"
+    },
+    {
+      "id": "GasClosure",
+      "state": "Unverified",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "GasClosureNotVerified"
+    },
+    {
+      "id": "WorkingLighting",
+      "state": "Unverified",
+      "hard": false,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "WorkingLightingNotVerified"
+    },
+    {
+      "id": "FullWorkAccounting",
+      "state": "Unverified",
+      "hard": false,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "WorkNotFullyMetered"
+    },
+    {
+      "id": "RoomSize/Large",
+      "state": "Satisfied",
+      "hard": false,
+      "requested": "1",
+      "achieved": "1",
+      "reasonCode": null
+    },
+    {
+      "id": "RoomSize/Small",
+      "state": "Satisfied",
+      "hard": false,
+      "requested": "1",
+      "achieved": "1",
+      "reasonCode": null
+    }
+  ],
+  "stages": [
+    {
+      "stage": "Floor",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 90,
+      "candidateProbes": 1,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Partition",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 244,
+      "candidateProbes": 0,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 174
+    },
+    {
+      "stage": "Themes",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 0,
+      "candidateProbes": 0,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Structure",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 215,
+      "candidateProbes": 0,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Furnishing",
+      "regionId": "LShapeDiagnostic/EntranceNetwork/0/SizeGoal/000",
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 8,
+      "candidateProbes": 0,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Furnishing",
+      "regionId": "LShapeDiagnostic/EntranceNetwork/0/SizeGoal/001",
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 3,
+      "candidateProbes": 0,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Lighting",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 0,
+      "candidateProbes": 0,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "InteriorAudit",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 129,
+      "candidateProbes": 0,
+      "configurationId": "Connected",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true,
+      "partitionSeamProbes": 0
+    }
+  ],
+  "attempts": [
+    {
+      "ordinal": 0,
+      "configurationId": "Connected",
+      "status": "Candidate",
+      "reasonCode": null,
+      "expandedCells": 689,
+      "furnishingProbes": 0,
+      "orderProbes": 1,
+      "partitionMerges": 0,
+      "fixtureSelections": 0,
+      "fallbacks": [],
+      "partitionSeamProbes": 174,
+      "preferredMaximumRoomCells": 24,
+      "sizeGoalsRequested": true
+    }
+  ],
+  "sizeGoalAttempts": [
+    {
+      "acrossX": true,
+      "status": "Proposed",
+      "reasonCode": null,
+      "expandedCells": 106,
+      "seamProbes": 174,
+      "mergeAttempts": 0,
+      "widthVariant": 0,
+      "networkId": "LShapeDiagnostic/EntranceNetwork/0",
+      "allocationOrdinal": 0,
+      "reflected": false
+    }
+  ],
+  "fallbacks": [],
+  "sizeMix": [
+    {
+      "goalId": "Large",
+      "requestedCount": 1,
+      "achievedCount": 1
+    },
+    {
+      "goalId": "Small",
+      "requestedCount": 1,
+      "achievedCount": 1
+    }
+  ],
+  "requestedCells": [
+    {
+      "x": 0,
+      "y": 0
+    },
+    {
+      "x": 1,
+      "y": 0
+    },
+    {
+      "x": 2,
+      "y": 0
+    },
+    {
+      "x": 3,
+      "y": 0
+    },
+    {
+      "x": 4,
+      "y": 0
+    },
+    {
+      "x": 5,
+      "y": 0
+    },
+    {
+      "x": 6,
+      "y": 0
+    },
+    {
+      "x": 7,
+      "y": 0
+    },
+    {
+      "x": 0,
+      "y": 1
+    },
+    {
+      "x": 1,
+      "y": 1
+    },
+    {
+      "x": 2,
+      "y": 1
+    },
+    {
+      "x": 3,
+      "y": 1
+    },
+    {
+      "x": 4,
+      "y": 1
+    },
+    {
+      "x": 5,
+      "y": 1
+    },
+    {
+      "x": 6,
+      "y": 1
+    },
+    {
+      "x": 7,
+      "y": 1
+    },
+    {
+      "x": 0,
+      "y": 2
+    },
+    {
+      "x": 1,
+      "y": 2
+    },
+    {
+      "x": 2,
+      "y": 2
+    },
+    {
+      "x": 3,
+      "y": 2
+    },
+    {
+      "x": 4,
+      "y": 2
+    },
+    {
+      "x": 5,
+      "y": 2
+    },
+    {
+      "x": 0,
+      "y": 3
+    },
+    {
+      "x": 1,
+      "y": 3
+    },
+    {
+      "x": 2,
+      "y": 3
+    },
+    {
+      "x": 3,
+      "y": 3
+    },
+    {
+      "x": 4,
+      "y": 3
+    },
+    {
+      "x": 5,
+      "y": 3
+    }
+  ],
+  "floorCells": [
+    {
+      "x": 0,
+      "y": 0
+    },
+    {
+      "x": 1,
+      "y": 0
+    },
+    {
+      "x": 2,
+      "y": 0
+    },
+    {
+      "x": 3,
+      "y": 0
+    },
+    {
+      "x": 4,
+      "y": 0
+    },
+    {
+      "x": 5,
+      "y": 0
+    },
+    {
+      "x": 6,
+      "y": 0
+    },
+    {
+      "x": 7,
+      "y": 0
+    },
+    {
+      "x": 0,
+      "y": 1
+    },
+    {
+      "x": 1,
+      "y": 1
+    },
+    {
+      "x": 2,
+      "y": 1
+    },
+    {
+      "x": 3,
+      "y": 1
+    },
+    {
+      "x": 5,
+      "y": 1
+    },
+    {
+      "x": 6,
+      "y": 1
+    },
+    {
+      "x": 7,
+      "y": 1
+    },
+    {
+      "x": 0,
+      "y": 2
+    },
+    {
+      "x": 1,
+      "y": 2
+    },
+    {
+      "x": 2,
+      "y": 2
+    },
+    {
+      "x": 3,
+      "y": 2
+    },
+    {
+      "x": 5,
+      "y": 2
+    },
+    {
+      "x": 0,
+      "y": 3
+    },
+    {
+      "x": 1,
+      "y": 3
+    },
+    {
+      "x": 2,
+      "y": 3
+    },
+    {
+      "x": 3,
+      "y": 3
+    },
+    {
+      "x": 5,
+      "y": 3
+    }
+  ],
+  "wallCells": [
+    {
+      "x": 4,
+      "y": 1
+    },
+    {
+      "x": 4,
+      "y": 2
+    },
+    {
+      "x": 4,
+      "y": 3
+    }
+  ],
+  "protectedCells": [
+    {
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "preservedCells": [],
+  "voidCells": [],
+  "entranceCells": [
+    {
+      "x": -1,
+      "y": 0
+    }
+  ],
+  "windowCells": [],
+  "doors": [
+    {
+      "firstZoneId": "LShapeDiagnostic/EntranceNetwork/0/SizeGoal/000",
+      "secondZoneId": "LShapeDiagnostic/EntranceNetwork/0/SizeGoal/001",
+      "threshold": {
+        "x": 4,
+        "y": 0
+      },
+      "insideApproach": {
+        "x": 5,
+        "y": 0
+      },
+      "outsideApproach": {
+        "x": 3,
+        "y": 0
+      }
+    }
+  ],
+  "rooms": [
+    {
+      "id": "LShapeDiagnostic/EntranceNetwork/0/SizeGoal/000",
+      "kind": "RoomProposal",
+      "entranceGroups": [
+        "Room"
+      ],
+      "themeId": "KsProcgenEmptyOfficeThemeFixture",
+      "tilePackId": "KsProcgenOfficeTiles",
+      "wallPackId": "KsProcgenOfficeWalls",
+      "lightingPackId": null,
+      "cells": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 1,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 0
+        },
+        {
+          "x": 3,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 3
+        }
+      ]
+    },
+    {
+      "id": "LShapeDiagnostic/EntranceNetwork/0/SizeGoal/001",
+      "kind": "RoomProposal",
+      "entranceGroups": [
+        "Room"
+      ],
+      "themeId": "KsProcgenEmptyOfficeThemeFixture",
+      "tilePackId": "KsProcgenOfficeTiles",
+      "wallPackId": "KsProcgenOfficeWalls",
+      "lightingPackId": null,
+      "cells": [
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
+          "x": 7,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 1
+        },
+        {
+          "x": 6,
+          "y": 1
+        },
+        {
+          "x": 7,
+          "y": 1
+        },
+        {
+          "x": 5,
+          "y": 2
+        },
+        {
+          "x": 5,
+          "y": 3
+        }
+      ]
+    }
+  ],
+  "entities": []
+}

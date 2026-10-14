@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Frozen;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -48,6 +49,11 @@ public sealed class KsProcgenAssemblyStage
 
     public MapId MapId { get; }
     public EntityUid MapUid { get; }
+    public EntityUid? GridUid { get; internal set; }
+    public EntityUid CoordinateFrame => GridUid ?? MapUid;
+    public KsProcgenRoomTerrain? Terrain { get; internal set; }
+    public FrozenSet<Vector2i> DeclaredBlockingCells { get; internal set; } = FrozenSet<Vector2i>.Empty;
+    internal Dictionary<Vector2i, EntityUid> Walls { get; } = new();
     public KsProcgenAssemblyPosePlan Poses { get; }
     /// <summary>Optional declared room geometry, not live engine reach/collision validation.</summary>
     public KsProcgenSupportedAccessPlan? Access { get; }
@@ -197,7 +203,8 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
 
     private KsProcgenAssemblyStageResult StagePrepared(KsProcgenResolvedAssembly assembly,
         IReadOnlyCollection<string> selectedMemberIds, KsProcgenAssemblyPosePlan poses,
-        KsProcgenSupportedAccessPlan? access, CancellationToken cancellationToken, int maxSpawnedEntities)
+        KsProcgenSupportedAccessPlan? access, CancellationToken cancellationToken, int maxSpawnedEntities,
+        KsProcgenRoomTerrain? terrain = null)
     {
         if (assembly.Relations.Any(relation => selectedMemberIds.Contains(relation.Subject) &&
                 relation.Kind is not (KsProcgenRelationKind.OnSurface or KsProcgenRelationKind.InContainer)))
@@ -216,14 +223,42 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
             cancellationToken.ThrowIfCancellationRequested();
             mapUid = _mapSystem.CreateMap(out mapId, runMapInit: false);
             _mapSystem.SetPaused(mapId, true);
+            var frameUid = mapUid;
+            EntityUid? gridUid = null;
+            var walls = new Dictionary<Vector2i, EntityUid>();
+            if (terrain != null)
+            {
+                var grid = _mapSystem.CreateGridEntity(mapId);
+                gridUid = frameUid = grid.Owner;
+                if (spawnedEntities.Count > maxSpawnedEntities)
+                    return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
+                foreach (var cell in terrain.Floor.Concat(terrain.Walls).OrderBy(cell => cell.Y).ThenBy(cell => cell.X))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    _mapSystem.SetTile(grid.Owner, grid.Comp, cell, new Tile(terrain.TileId));
+                    // Tile callbacks can allocate entities; stop before invoking another callback.
+                    if (spawnedEntities.Count > maxSpawnedEntities)
+                        return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
+                }
+                foreach (var cell in terrain.Walls.OrderBy(cell => cell.Y).ThenBy(cell => cell.X))
+                {
+                    if (spawnedEntities.Count >= maxSpawnedEntities)
+                        return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
+                    cancellationToken.ThrowIfCancellationRequested();
+                    walls.Add(cell, Spawn(terrain.WallPrototypeId,
+                        new EntityCoordinates(frameUid, new Vector2(cell.X + 0.5f, cell.Y + 0.5f))));
+                    if (spawnedEntities.Count > maxSpawnedEntities)
+                        return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
+                }
+            }
             foreach (var pose in poses.Members)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (spawnedEntities.Count >= maxSpawnedEntities)
                     return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
                 var member = pose.Support;
-                // All members start as owned map children; insertion establishes container parenting.
-                var memberUid = Spawn(member.EntityPrototypeId, new EntityCoordinates(mapUid, pose.Position));
+                // Members start in the owned map/grid frame; insertion establishes container parenting.
+                var memberUid = Spawn(member.EntityPrototypeId, new EntityCoordinates(frameUid, pose.Position));
                 members.Add(member.MemberId, memberUid);
                 cancellationToken.ThrowIfCancellationRequested();
                 if (spawnedEntities.Count > maxSpawnedEntities)
@@ -258,7 +293,7 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
                             return Failure(preflight.Status == KsProcgenSurfacePreflightStatus.BudgetExceeded ?
                                 KsProcgenAssemblyStageStatus.BudgetExceeded : KsProcgenAssemblyStageStatus.Rejected, preflight.Reason);
                     }
-                    _transformSystem.SetCoordinates(memberUid, new EntityCoordinates(mapUid, pose.LocalPosition));
+                    _transformSystem.SetCoordinates(memberUid, new EntityCoordinates(frameUid, pose.LocalPosition));
                     _transformSystem.SetLocalRotation(memberUid, Angle.FromDegrees((double) pose.LocalQuarterTurns * 90.0));
                 }
             }
@@ -266,6 +301,17 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
             if (spawnedEntities.Count > maxSpawnedEntities)
                 return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
             var stage = new KsProcgenAssemblyStage(mapId, mapUid, poses, members, spawnedEntities, maxSpawnedEntities, access);
+            stage.GridUid = gridUid;
+            stage.Terrain = terrain;
+            if (access != null)
+            {
+                var definitions = assembly.Members.ToDictionary(member => member.Id, StringComparer.Ordinal);
+                stage.DeclaredBlockingCells = access.Footprints.Where(footprint =>
+                    definitions[footprint.MemberId].Entry.Movement != KsProcgenMovementClass.Clear)
+                    .SelectMany(footprint => footprint.Cells).ToFrozenSet();
+            }
+            foreach (var (cell, wallUid) in walls)
+                stage.Walls.Add(cell, wallUid);
             var verificationIssue = ContentsIssue(stage);
             if (verificationIssue != null)
                 return VerificationFailure(verificationIssue);
@@ -362,6 +408,9 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
             EntityManager.IsQueuedForDeletion(stage.MapUid) || !_mapSystem.IsPaused(stage.MapId) ||
             _mapSystem.IsInitialized(stage.MapId) != (stage.Phase == KsProcgenAssemblyStagePhase.Initialized))
             return "AssemblyStageMapDrift";
+        var terrainIssue = TerrainIssue(stage);
+        if (terrainIssue != null)
+            return terrainIssue;
         foreach (var spawnedUid in stage.SpawnedEntities)
         {
             if (spawnedUid != mapUid && Exists(spawnedUid) &&
@@ -378,7 +427,7 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
                     EntityLifeStage.MapInitialized : EntityLifeStage.Initialized) ||
                 EntityManager.IsQueuedForDeletion(memberUid) || !TryComp(memberUid, out TransformComponent? transformComponent))
                 return "AssemblyStageMemberDrift";
-            var parentUid = pose.CoordinateParentMemberId == null ? stage.MapUid : stage.Members[pose.CoordinateParentMemberId];
+            var parentUid = pose.CoordinateParentMemberId == null ? stage.CoordinateFrame : stage.Members[pose.CoordinateParentMemberId];
             if (transformComponent.ParentUid != parentUid || transformComponent.LocalPosition != pose.LocalPosition ||
                 transformComponent.LocalRotation != Angle.FromDegrees((double) pose.LocalQuarterTurns * 90.0))
                 return "AssemblyStagePoseDrift";

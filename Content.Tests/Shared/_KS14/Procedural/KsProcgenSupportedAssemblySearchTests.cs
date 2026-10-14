@@ -11,6 +11,28 @@ namespace Content.Tests.Shared._KS14.Procedural;
 [TestFixture]
 public sealed class KsProcgenSupportedAssemblySearchTests
 {
+    [TestCase(2, KsProcgenSupportedAccessStatus.Rejected)]
+    [TestCase(3, KsProcgenSupportedAccessStatus.Candidate)]
+    public void SurfaceProjectionCannotOverlapAnUnrelatedFloorRoot(int otherX, KsProcgenSupportedAccessStatus expected)
+    {
+        var assembly = Assembly() with { Members = new[] { Member("Root"), Member("Device"), Member("Other") } };
+        foreach (var member in assembly.Members)
+        {
+            member.Entry.RequiresInteractionApproach = false;
+            member.Entry.AllowedQuarterTurns = new List<int> { 0 };
+        }
+        assembly.Members.Single(member => member.Id == "Device").Entry.Movement = KsProcgenMovementClass.Clear;
+        var report = Report(assembly);
+        report = report with { Members = report.Members.Select(member => member.MemberId == "Root"
+            ? member with { Capabilities = member.Capabilities with { SurfaceOffset = new(1f, 0f) } } : member).ToArray() };
+        var room = Corridor() with { Floor = Enumerable.Range(0, 4).Select(x => new Vector2i(x, 0)).ToHashSet(),
+            Walls = new HashSet<Vector2i> { new(4, 0) } };
+        var result = KsProcgenSupportedAssemblySearch.Search(assembly, assembly.Members.Select(member => member.Id).ToArray(),
+            report, room, 0, fixedFloorRoots: [new("Root", new(1f, 0f)), new("Other", new((float) otherX, 0f))]);
+        Assert.That(result.Status, Is.EqualTo(expected), result.Issue?.Code);
+        if (expected == KsProcgenSupportedAccessStatus.Rejected) Assert.That(result.Access, Is.Null);
+    }
+
     [Test]
     public void TinyRightWallPlacementFindsIndependentWestFacingMachine()
     {
