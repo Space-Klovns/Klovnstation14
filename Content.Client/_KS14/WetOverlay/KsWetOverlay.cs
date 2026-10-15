@@ -11,6 +11,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Content.Client._KS14.Portal;
 
 namespace Content.Client._KS14.WetOverlay;
 
@@ -118,6 +119,12 @@ public sealed partial class KsWetOverlay(ShaderInstance shader) : Overlay
 
         for (var i = 0; i < flux; i++)
             _droplets.Add(CreateDroplet(randomY: true));
+    }
+
+    // Not drawn into portal views: the droplets are hitting the viewer, not whatever a portal shows.
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        return !KsPortalRenderSystem.PassActive;
     }
 
     protected override void Draw(in OverlayDrawArgs args)

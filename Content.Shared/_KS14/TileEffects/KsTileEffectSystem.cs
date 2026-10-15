@@ -58,6 +58,9 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             var (reagent, quantity) = solution.Contents[i];
             var reagentPrototype = ProtoMan.Index<ReagentPrototype>(reagent.Prototype);
 
+            // KS14 - RemovedVolume is per reagent; it was carrying over from the previous reagent otherwise.
+            tileEffectReagentData.RemovedVolume = 0f;
+
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
             {
                 if (tileRef is not { })

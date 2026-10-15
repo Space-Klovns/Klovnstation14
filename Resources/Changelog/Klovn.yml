@@ -2202,3 +2202,35 @@ Entries:
       message: Maybe fixed changelogs
   id: 228
   time: '2026-10-09T08:06:56.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Spraying or splashing water on a chemical fire now cools the burning
+        puddle, so it no longer instantly re-ignites.
+    - type: Add
+      message: >-
+        Puddles now slowly heat up or cool down to match the air around them,
+        and chemical fires heat the puddle they burn on.
+    - type: Tweak
+      message: Spraying hot or cold liquids onto a puddle now changes its temperature.
+    - type: Tweak
+      message: >-
+        Extinguishers no longer flash-freeze burning air; very hot fires may
+        need more than one spray.
+    - type: Tweak
+      message: >-
+        Only water cools burning air when sprayed on a fire. Other drinks still
+        put fires out but no longer chill the air.
+    - type: Tweak
+      message: Burning creatures heat up more slowly.
+    - type: Tweak
+      message: Thermite fires can no longer be put out with water.
+  id: 229
+  time: '2026-10-12T17:43:26.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Portals look a bit different now
+  id: 230
+  time: '2026-10-13T18:04:33.0000000+00:00'

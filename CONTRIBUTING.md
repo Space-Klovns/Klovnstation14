@@ -140,6 +140,18 @@ Forms, ordered so that they take precedence over those before them:
   ```csharp
   using Content.Shared._KS14.NewFeature; // KS14
   ```
+- **Referencing a type from a new namespace only once** — don't add a `using` for a single reference; write the type fully qualified at the use site instead, with the change marked there. One edit at the point of use is one fewer line to conflict on during upstream merges. Add the `using` (per the form above) only once the namespace is referenced more than once in that file:
+  ```csharp
+  // do this
+  if (Content.Client._KS14.Portal.KsPortalRenderSystem.PassActive /* KS14: added */)
+      return false;
+
+  // not this - a 'using' line for one reference
+  using Content.Client._KS14.Portal; // KS14
+  // ...
+  if (KsPortalRenderSystem.PassActive /* KS14: added */)
+      return false;
+  ```
 
 ### YAML and Fluent (`.ftl`) edits
 
@@ -211,6 +223,15 @@ dependencyCollection.InjectDependencies(overlay, oneOff: true);
 _entityLookupSystem.FindGridsIntersecting(mapId, bounds, ref _grids, true);
 dependencyCollection.InjectDependencies(overlay, true);
 ```
+
+**No string literals as prototype ids (C#)** — everywhere, integration tests included. The `RA0033` analyzer rejects a literal passed to `Index`/`TryIndex` and similar id parameters. Declare a typed id once and use that:
+```csharp
+private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";   // do this
+var water = protoMan.Index(WaterReagent);
+
+var water = protoMan.Index<ReagentPrototype>("Water");                      // not this
+```
+For an id that exists only in a test's `[TestPrototypes]` YAML, make that field non-`static` (`private readonly ProtoId<T> _id = "..."`): the YAML linter validates only static id fields against the real prototypes, and an instance field still satisfies `RA0033`.
 
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
@@ -355,6 +376,53 @@ public bool InjectionEnabled;
 The defaults are `Self`/`Friend` = `ReadWriteExecute` and `Other` = `Read`, so the attribute alone leaves the member readable everywhere and writable only by the named types — which is what a component whose invariants live in one system wants. Tighten it with `Other = AccessPermissions.None` when even reading a member should go through the system, and put `[Access]` on the individual member instead of the class when only part of a component is restricted.
 
 Reach for this whenever a system method exists precisely to keep two things in step — a networked field and an action's toggled state, a list and the index into it, a cached value and the thing it caches. Note that it guards the *member*, not what the member points at: `Other = Read` on a `List<T>` field still lets anyone call `Add` on the list they read.
+
+**Act when a value changes, not every tick in case it did (C#)** — whatever has to follow a value (a fixture sized to a width, a cache, a sprite state) is updated by the code that changes the value: a setter, an event handler, `AfterAutoHandleState`, a cvar subscription. Polling for the change in `Update` costs every tick for every entity, forever, and still reacts a tick late.
+
+```csharp
+// do this - the sensor is resized once, when the width changes
+public void SetWidth(Entity<KsPortalViewComponent?> entity, float width)
+{
+    // ...resolve, set Width, Dirty...
+    RefreshSensor((entity.Owner, entity.Comp));
+}
+
+// not this - every portal's sensor is compared against its width on every tick
+public override void Update(float frameTime)
+{
+    var query = EntityQueryEnumerator<KsPortalViewComponent>();
+    while (query.MoveNext(out var uid, out var viewComponent))
+    {
+        if (!SensorMatches(uid, viewComponent.Width))
+            RefreshSensor((uid, viewComponent));
+    }
+}
+```
+
+This only holds while the setter is the *only* way in: `[Access]` the field to the system (above), and close off VV, the one writer `[Access]` can't stop (below).
+
+**ViewVariables (VV) (C#)** — the engine's live inspector. Admins and developers open any entity, component or system in the VV window, or use `vv`/`vvread`/`vvwrite`, to read and change its fields mid-round. Every `[DataField]` and `[ViewVariables]` member shows up there, writable by default, so VV is a writer of your component that your code does not control. It writes by reflection, so `[Access]` does not stop it, and the server is told nothing beyond the component being dirtied. When a field must only change through a setter:
+
+1. `[ViewVariables(VVAccess.ReadOnly)]` limits the VV window to viewing it. The window writes server components by reflection and ignores custom paths, so read-only is the only way to keep it out.
+2. Register a VV path with the field's name whose setter calls yours. `vvread`/`vvwrite` resolve a registered path before falling back to the field, so the command still works, through your setter.
+
+```csharp
+// The component.
+[DataField, AutoNetworkedField, Access(typeof(KsPortalTravelSystem)), ViewVariables(VVAccess.ReadOnly)]
+public float Width = 1f;
+
+// The system. The path is removed again in Shutdown: the VV manager outlives the system, and its lambdas would keep it alive.
+[Dependency] private IViewVariablesManager _viewVariablesManager = default!;
+
+_viewVariablesManager.GetTypeHandler<KsPortalViewComponent>().AddPath(
+    nameof(KsPortalViewComponent.Width),
+    (_, component) => component.Width,                             // getter: (uid, component)
+    (uid, width, component) => SetWidth((uid, component), width)); // setter: (uid, value, component?) - hence Entity<T?> on SetWidth
+
+_viewVariablesManager.GetTypeHandler<KsPortalViewComponent>().RemovePath(nameof(KsPortalViewComponent.Width));
+```
+
+The command is `vvwrite /entity/<uid>/KsPortalView/Width 3`: the local `EntityUid` number, the component's name without its `Component` suffix, then the path. Upstream registers a path the same way for `EventHorizonComponent.TargetConsumePeriod`, but leaves the field writable in the window, which still bypasses it. Test it by running the command through `IConsoleHost` and asserting on what it keeps in step (`KsPortalTravelTest.TestVvWriteOfWidthResizesTheSensor`).
 
 **Source-gen `[Dependency]` fields (C#)** — on current engine versions, injected `[Dependency]` fields on `EntitySystem` (and the few other injectable types) must be writable, and their owning class must be `partial`:
 ```csharp
@@ -532,6 +600,10 @@ covered by `npc-ranged-combat` (`.claude/skills/npc-ranged-combat/SKILL.md`).
 changing an `Overlay`, and the `client-lighting` skill (`.claude/skills/client-lighting/SKILL.md`) before making
 anything glow or adding to the light chain.
 
+**Rendering (C#)** — how Clyde draws a frame, where lighting and FOV apply, overlay and sprite order, the stencil buffer, and our extra render passes (z-levels, view portals) are in the `rendering` agent skill (`.claude/skills/rendering/SKILL.md`). Read it before writing an overlay or anything drawn in world space.
+
+**Integration tests (C#)** — the `GameTest` fixture, driving players, movers, commands and cvars, and what a headless client can check are in the `integration-testing` agent skill (`.claude/skills/integration-testing/SKILL.md`).
+
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
 ## 5. Build configurations, and what each one catches
@@ -569,6 +641,11 @@ This bites hardest in integration-test prototypes, where a wrong component combi
 ```
 
 The same asymmetry applies to anything a debug assert guards: stack invariants, `Resolve` calls with `logMissing`, and the engine's own transform and physics checks. If a test only ever runs in `Release`, treat its coverage of those as zero.
+
+### Integration-test compile errors CI catches
+
+- **`CS8632`: nullable annotations without `#nullable enable`.** `Content.IntegrationTests` has nullable *disabled* by default, so `GasMixture? air` or `Entity<TransformComponent?>` in a test is a warning, and therefore a CI error. Either drop the `?` (it means nothing there anyway) or put `#nullable enable` at the top of the file and fix whatever new warnings that surfaces.
+- **`RA0033`: literal prototype ids.** Tests are not exempt from the no-literal-ids rule in §4 (*Local rules on top of upstream*); ids defined only in `[TestPrototypes]` go in non-static `ProtoId` fields so the YAML linter skips them.
 
 ## 6. Cross-codebase pitfalls
 
@@ -907,9 +984,15 @@ _pendingTransitChecks.Clear();
 Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
 throws straight out of `Update`.
 
+`PuddleSystem`'s one-puddle-per-tile invariant is enforced this way: a puddle that starts up or moves onto an
+occupied tile is queued, and merged into the cached puddle (then deleted) in `Update`, never in the callback.
+
 ### `IntersectRay` with `returnOnFirstHit: true` is not the nearest hit
 
-The physics ray query's `returnOnFirstHit` stops at whichever fixture the broadphase tree happens to visit first. That is often, but not always, the closest one, so a beam, sight line or "how far can I see" length ends beyond a nearer obstacle only sometimes, which reads as flicker or a rare overshoot. Nothing errors. Use `returnOnFirstHit: false` (the results come back sorted by distance) and take the minimum when you need the nearest:
+The physics ray query's `returnOnFirstHit` stops at whichever fixture the broadphase tree happens to visit first.
+That is often, but not always, the closest one, so a beam, sight line or "how far can I see" length ends beyond a
+nearer obstacle only sometimes, which reads as flicker or a rare overshoot. Nothing errors. Use
+`returnOnFirstHit: false` (the results come back sorted by distance) and take the minimum when you need the nearest:
 
 ```csharp
 foreach (var result in _physicsSystem.IntersectRay(mapId, ray, length, ignoredEnt: uid, returnOnFirstHit: false))
