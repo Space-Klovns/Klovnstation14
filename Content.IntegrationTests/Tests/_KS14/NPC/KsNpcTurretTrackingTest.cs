@@ -262,11 +262,6 @@ public sealed class KsNpcTurretTrackingTest : GameTest
         });
     }
 
-    private async Task RunSeconds(float seconds)
-    {
-        await Pair.RunTicksSync((int)Math.Ceiling(seconds * Pair.Server.ResolveDependency<IGameTiming>().TickRate));
-    }
-
     private (EntityUid Shooter, EntityUid Target, EntityUid Gun) SpawnArmedShooter(IEntityManager entManager, EntityUid gridUid, string prototype)
     {
         var shooterUid = SpawnAt(entManager, prototype, gridUid, 0, 0);
