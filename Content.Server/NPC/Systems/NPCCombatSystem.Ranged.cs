@@ -64,7 +64,12 @@ public sealed partial class NPCCombatSystem
         while (query.MoveNext(out var uid, out var comp, out var xform))
         {
             if (comp.Status == CombatStatus.Unspecified)
+            {
+                // KS14 start: drop lock-on and targeting laser
+                KsStopTargeting(uid);
+                // KS14 end
                 continue;
+            }
 
             if (_steeringQuery.TryGetComponent(uid, out var steering) && steering.Status == SteeringStatus.NoPath)
             {
@@ -112,6 +117,7 @@ public sealed partial class NPCCombatSystem
                 // Recharging then?
                 if (_rechargeQuery.HasComponent(gun))
                 {
+                    KsUpdateSight(uid, comp.Target, false); // KS14: not shooting, so no visible target: laser off, lock grace applies
                     continue;
                 }
 

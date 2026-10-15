@@ -19,7 +19,6 @@ public sealed partial class KsLaserSightEmissiveOverlay : Overlay
     public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
 
     [Dependency] private IPrototypeManager _prototypeManager = default!;
-    [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private KsLaserSightOverlaySystem _laserSightOverlaySystem = default!;
 
     /// <summary>
@@ -46,7 +45,7 @@ public sealed partial class KsLaserSightEmissiveOverlay : Overlay
         var worldHandle = args.WorldHandle;
         var viewport = args.Viewport;
 
-        var lightOverlay = _overlayManager.GetOverlay<BeforeLightTargetOverlay>();
+        var lightOverlay = OverlayManager.GetOverlay<BeforeLightTargetOverlay>();
         var bounds = lightOverlay.EnlargedBounds;
         var target = lightOverlay.GetCachedForViewport(viewport).EnlargedLightTarget;
 
@@ -94,7 +93,7 @@ public sealed partial class KsLaserSightEmissiveOverlay : Overlay
                 worldHandle.UseShader(null);
                 worldHandle.SetTransform(Matrix3x2.Identity);
             },
-            null);
+            clearColor: null);
     }
 
     protected override void DisposeBehavior()

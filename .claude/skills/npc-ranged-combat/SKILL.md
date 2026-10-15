@@ -34,12 +34,12 @@ component. Steps in order; "exit" means `continue` to the next NPC unless it say
 
 | # | Step | Result / knob |
 | --- | --- | --- |
-| 1 | `Status == Unspecified` | exit. Set at startup when the NPC has no `CombatModeComponent`, and by step 6 (out of ammo). A turret in this state never recovers by itself; `GunOperator` fails and removes the component. |
+| 1 | `Status == Unspecified` | `KsStopTargeting`, exit. Set at startup when the NPC has no `CombatModeComponent`, and by step 6 (out of ammo). A turret in this state never recovers by itself; `GunOperator` fails and removes the component. |
 | 2 | Steering has `NoPath` | `Status = TargetUnreachable`, `ShootAccumulator = 0`, `KsStopTargeting`, exit. |
 | 3 | Target has no transform/physics, or is on another map | same as 2. |
 | 4 | Combat mode forced on (if the NPC has `CombatModeComponent`) | |
 | 5 | `_gun.TryGetGun` fails | `Status = NoWeapon`, `KsStopTargeting`, exit. |
-| 6 | `GetAmmoCountEvent` count 0 | If the gun has `RechargeBasicEntityAmmoComponent`: plain `continue`, **no status change and no `KsStopTargeting`** (lock and laser stay as they were). Otherwise `Status = Unspecified`, `KsStopTargeting`, exit. |
+| 6 | `GetAmmoCountEvent` count 0 | If the gun has `RechargeBasicEntityAmmoComponent`: `KsUpdateSight(uid, target, false)` then `continue` (no status change; laser off and the lock grace applies, as for lost sight). Otherwise `Status = Unspecified`, `KsStopTargeting`, exit. |
 | 7 | LOS cadence: `LOSAccumulator -= frameTime`; when `< 0`, add `UnoccludedCooldown` (const `0.2f`) and re-raycast with `_interaction.InRangeUnobstructed(uid, target, distance + 0.1f, group)` into `comp.TargetInLOS` | Between raycasts the old answer is reused. `group` = `CollisionGroup.Opaque` if `comp.UseOpaqueForLOSChecks` (YAML `opaqueKey: true` on `GunOperator`), else `Impassable \| InteractImpassable` (glass and grilles block). |
 | 8 | `KsUpdateSight(uid, target, TargetInLOS)` | Every tick (not only on raycast ticks): `KsTargetLockOn.UpdateLock`; if `KsLaserSight.OnlyWhileTargeting`, `SetEnabled(TargetInLOS)`; if not in LOS, tracking `LastGoalAngle = null`. |
 | 9 | `!TargetInLOS` | `ShootAccumulator = 0`, `Status = NotInSight`, `steering.ForceMove = true`, exit. |
@@ -212,7 +212,7 @@ Generic: any entity with it draws a beam along its world facing. Not NPC-specifi
 | Field | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `enabled` | bool | `true` | Drawn now. Server-written; use `KsLaserSightSystem.SetEnabled` (early-outs if unchanged, dirties). |
-| `onlyWhileTargeting` | bool | `false` | Pipeline sets `enabled = TargetInLOS` each tick and `false` on stop/shutdown. Starts at the YAML `enabled` until the first update, so set `enabled: false` too if the beam must not show while idle. |
+| `onlyWhileTargeting` | bool | `false` | Pipeline sets `enabled = TargetInLOS` each tick and `false` on stop/shutdown. `KsLaserSightSystem` forces `enabled = false` on `MapInit` when this is set, so the beam is dark while idle; the example prototypes also say `enabled: false` for clarity. |
 | `color` | Color | Red | Beam colour (alpha honoured). |
 | `width` | float | `0.05` | Core width, metres. |
 | `glowWidth` | float | `0.2` | Faint wide quad; `0` disables. |
@@ -227,7 +227,7 @@ Generic: any entity with it draws a beam along its world facing. Not NPC-specifi
 | `blinkFrequency` | float | `6` | Hz. Solid once locked. |
 
 Client side (describe-level only; may be changing): `KsLaserSightOverlaySystem` resolves each enabled laser
-once per frame from these fields (position, facing, offset, length/raycast, blink state from the entity's
+once per frame (culled to the eye's world viewport enlarged by `maxLength`; the obstacle raycast is cached in the client-only `KsLaserSightClientStateComponent` for up to 0.1 s while origin and direction hardly change) from these fields (position, facing, offset, length/raycast, blink state from the entity's
 `KsTargetLockOn`) and feeds two overlays: a world-space coloured beam and an emissive pass (`Emissive` shader) so it
 glows in the dark. `KsLockOnClientSystem` plays `lockingSound` / `lockedSound` to the local player when *they* are the
 `Target`, tracking what has played in the client-only `KsLockOnClientStateComponent`; `KsLockOnIndicatorOverlay` draws
@@ -239,9 +239,8 @@ shooter locking onto them.
 - Pipeline order for one tick of a tracking turret: LOS -> `KsUpdateSight` (lock, laser) -> accumulate -> aim (every
   tick with `rotateWhileWaiting`) -> `ShootDelay` -> `CanShoot` -> `IsLocked` -> fire. A turret can be fully aimed
   and still silent because the lock is unfinished; the laser blinks during exactly that window.
-- `KsStopTargeting` (steps 2, 3, 5, 6-nonrecharge): clears the lock, switches off an `OnlyWhileTargeting` laser, nulls
-  `LastGoalAngle`. It is not called for no-LOS (step 8 handles that through `UpdateLock` grace) and not for the
-  recharging-empty case.
+- `KsStopTargeting` (steps 1, 2, 3, 5, 6-nonrecharge): clears the lock, switches off an `OnlyWhileTargeting` laser, nulls
+  `LastGoalAngle`. It is not called for no-LOS (step 8 handles that through `UpdateLock` grace); the recharging-empty case goes through `KsUpdateSight` with `visible = false`.
 - Dropping the lock on LOS loss is graceful (`loseLockGrace`), the laser is not (it goes off immediately), and the aim
   history resets immediately.
 - Without any KS components, behaviour is identical to upstream except `rotateWhileWaiting` code path being skipped
@@ -346,6 +345,8 @@ Patterns from `KsNpcTurretTrackingTest` (`GameTest`, `PoolSettings => PsDisconne
 - For HTN operators in isolation, construct the operator, `InjectDependencies(op, oneOff: true)`, and drive
   `Startup`/`Update` with a hand-built `NPCBlackboard` (`KsNpcCombatTuningTest`).
 
+`TestLaserLifecycle(true/false)` covers the laser: dark after MapInit, lit with a target, dark and lock cleared after the target is deleted or the combat component removed.
+
 Run: `dotnet test Content.IntegrationTests/Content.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~KsNpcTurretTrackingTest"`.
 
 ### Prove the test fails
@@ -357,6 +358,7 @@ Break the thing, rebuild, see red, restore (CLAUDE.md section 6). Breaks that ea
 | `TestLockOnGatesFiring` | Delete the `IsLocked` gate (step 16) in `UpdateRanged`: the ammo-unchanged assertion at 2.5 s goes red. |
 | `TestLockDroppedAfterGrace` | Make `UpdateLock` ignore `LoseLockGrace` (never clear, or clear immediately): the within-grace or past-grace assertion fails. |
 | `TestAimTrackingKeepsUp(true)` | Zero the compensation in `KsTryAim` (or `angularVelocityCompensation: 0`): `maxError` exceeds the threshold. |
+| `TestLaserLifecycle` | Remove the `MapInit` handler in `KsLaserSightSystem` (idle assert red); remove the laser-off from `KsStopTargeting` and `KsOnRangedShutdown` (end assert red). |
 | `TestAimTrackingKeepsUp(false)` | Give the plain shooter `KsNpcAimTracking`: it no longer falls behind. |
 
 The first three were run when the tests were written and each went red: ammo 16 -> 12 before the lock completed;

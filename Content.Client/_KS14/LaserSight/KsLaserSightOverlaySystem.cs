@@ -36,9 +36,19 @@ public readonly record struct KsLaserSegment(
 public sealed partial class KsLaserSightOverlaySystem : EntitySystem
 {
     /// <summary>
-    ///     Lasers further than this beyond their length from the eye are not worth raycasting.
+    ///     A cached raycast is reused for at most this long, because doors and walls can change under a still beam.
     /// </summary>
-    private const float CullDistance = 60f;
+    private static readonly TimeSpan RaycastReuseTime = TimeSpan.FromSeconds(0.1);
+
+    /// <summary>
+    ///     A cached raycast is reused while the origin moved less than this (metres)...
+    /// </summary>
+    private const float RaycastReuseOriginEpsilon = 0.02f;
+
+    /// <summary>
+    ///     ...and the direction vector differs by less than this.
+    /// </summary>
+    private const float RaycastReuseDirectionEpsilon = 0.005f;
 
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
@@ -47,6 +57,7 @@ public sealed partial class KsLaserSightOverlaySystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private EntityQuery<KsTargetLockOnComponent> _lockOnQuery = default!;
+    [Dependency] private EntityQuery<KsLaserSightClientStateComponent> _clientStateQuery = default!;
 
     private readonly List<KsLaserSegment> _segments = [];
 
@@ -107,7 +118,8 @@ public sealed partial class KsLaserSightOverlaySystem : EntitySystem
         if (eyeMapId == MapId.Nullspace)
             return;
 
-        var eyePosition = eye.Position.Position;
+        // Lasers on other z-level maps sit at the same x/y as the eye, so the main eye's x/y bounds serve them too.
+        var viewBounds = _eyeManager.GetWorldViewport();
         var curTime = _gameTiming.CurTime;
 
         var enumerator = EntityQueryEnumerator<KsLaserSightComponent, TransformComponent>();
@@ -134,7 +146,8 @@ public sealed partial class KsLaserSightOverlaySystem : EntitySystem
             var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
             var origin = KsLaserSightMath.GetOrigin(worldPosition, worldRotation, laserComponent.Offset);
 
-            if (Vector2.Distance(origin, eyePosition) > laserComponent.MaxLength + CullDistance)
+            // The beam cannot reach the screen unless its origin is within MaxLength of the view.
+            if (!viewBounds.Enlarged(laserComponent.MaxLength).Contains(origin))
                 continue;
 
             var beamRotation = worldRotation + laserComponent.AngleOffset;
@@ -142,18 +155,14 @@ public sealed partial class KsLaserSightOverlaySystem : EntitySystem
 
             if (laserComponent.StopAtObstacles && length > 0f)
             {
-                var ray = new CollisionRay(origin, KsLaserSightMath.GetDirection(worldRotation, laserComponent.AngleOffset), (int)CollisionGroup.Opaque);
-                // returnOnFirstHit: true would return whichever fixture the broadphase tree visits first, not the
-                //      nearest, so the beam could run on past a closer obstacle. Take the minimum of every hit.
-                foreach (var result in _physicsSystem.IntersectRay(
-                             transformComponent.MapID,
-                             ray,
-                             length,
-                             ignoredEnt: uid,
-                             returnOnFirstHit: false))
-                {
-                    length = MathF.Min(length, result.Distance);
-                }
+                var direction = KsLaserSightMath.GetDirection(worldRotation, laserComponent.AngleOffset);
+                length = ResolveLength(
+                    uid,
+                    transformComponent.MapID,
+                    origin,
+                    direction,
+                    laserComponent.MaxLength,
+                    curTime);
             }
 
             if (length <= 0f)
@@ -173,6 +182,55 @@ public sealed partial class KsLaserSightOverlaySystem : EntitySystem
                 laserComponent.MaxLength,
                 laserComponent.FadeStart));
         }
+    }
+
+    /// <summary>
+    ///     The beam length cut by the nearest obstacle, reusing the entity's cached raycast while it is still good.
+    /// </summary>
+    private float ResolveLength(
+        EntityUid uid,
+        MapId mapId,
+        Vector2 origin,
+        Vector2 direction,
+        float maxLength,
+        TimeSpan curTime)
+    {
+        if (!_clientStateQuery.TryComp(uid, out var stateComponent))
+            stateComponent = AddComp<KsLaserSightClientStateComponent>(uid);
+
+        if (stateComponent.Valid
+            && stateComponent.MapId == mapId
+            && stateComponent.MaxLength == maxLength
+            && curTime - stateComponent.ResolvedAt < RaycastReuseTime
+            && Vector2.DistanceSquared(stateComponent.Origin, origin) < RaycastReuseOriginEpsilon * RaycastReuseOriginEpsilon
+            && Vector2.DistanceSquared(stateComponent.Direction, direction) < RaycastReuseDirectionEpsilon * RaycastReuseDirectionEpsilon)
+        {
+            return stateComponent.Length;
+        }
+
+        var length = maxLength;
+        var ray = new CollisionRay(origin, direction, (int)CollisionGroup.Opaque);
+        // returnOnFirstHit: true would return whichever fixture the broadphase tree visits first, not the
+        //      nearest, so the beam could run on past a closer obstacle. Take the minimum of every hit.
+        foreach (var result in _physicsSystem.IntersectRay(
+                     mapId,
+                     ray,
+                     length,
+                     ignoredEnt: uid,
+                     returnOnFirstHit: false))
+        {
+            length = MathF.Min(length, result.Distance);
+        }
+
+        stateComponent.MapId = mapId;
+        stateComponent.Origin = origin;
+        stateComponent.Direction = direction;
+        stateComponent.MaxLength = maxLength;
+        stateComponent.Length = length;
+        stateComponent.ResolvedAt = curTime;
+        stateComponent.Valid = true;
+
+        return length;
     }
 
     /// <summary>

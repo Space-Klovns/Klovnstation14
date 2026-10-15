@@ -15,7 +15,6 @@
     layers:
     - state: solar-assembly-part
 
-
 # cant be deconned cause it comes from a flatpack
 - type: entity
   parent: BaseWeaponTurretDisposable
@@ -26,13 +25,13 @@
     factions:
     - NanoTrasen
 
-
 - type: entity
   parent: WeaponTurretSyndicate
   id: KsWeaponTurretSyndicateTracking
   suffix: Syndicate, Tracking
   components:
   - type: KsLaserSight
+    enabled: false
     onlyWhileTargeting: true
     fadeStart: 0.4
   - type: KsTargetLockOn

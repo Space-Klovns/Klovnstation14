@@ -43,13 +43,13 @@
         sound:
           collection: MetalGlassBreak
 
-
 - type: entity
   parent: WeaponTurretSyndicateLaser
   id: KsWeaponTurretSyndicateLaserTracking
   suffix: Syndicate, Laser, Tracking
   components:
   - type: KsLaserSight
+    enabled: false
     onlyWhileTargeting: true
     glowWidth: 0
     width: 0.01

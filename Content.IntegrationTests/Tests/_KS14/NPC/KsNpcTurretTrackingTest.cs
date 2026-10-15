@@ -2,6 +2,7 @@
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.NPC.Components;
+using Content.Shared._KS14.LaserSight;
 using Content.Shared._KS14.LockOn;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
@@ -60,6 +61,13 @@ public sealed class KsNpcTurretTrackingTest : GameTest
   components:
   - type: KsNpcAimTracking
     angularVelocityCompensation: 1
+
+- type: entity
+  parent: KsTurretTestPlainShooter
+  id: KsTurretTestLaserShooter
+  components:
+  - type: KsLaserSight
+    onlyWhileTargeting: true
 ";
 
     /// <summary>
@@ -206,6 +214,52 @@ public sealed class KsNpcTurretTrackingTest : GameTest
             Assert.That(maxError, Is.LessThanOrEqualTo(threshold.Theta), "a tracking shooter should stay on target");
         else
             Assert.That(maxError, Is.GreaterThan(threshold.Theta * 3), "a shooter without tracking should fall behind");
+    }
+
+    /// <summary>
+    ///     An <c>onlyWhileTargeting</c> laser is dark when idle (even though <c>enabled</c> defaults to true), lit while
+    ///         a target is in sight, and dark with the lock cleared once the fight ends, whether the target vanishes or
+    ///         the combat component is removed.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestLaserLifecycle(bool deleteTarget)
+    {
+        var (entManager, gridUid) = await SetUpOpenGrid();
+        EntityUid shooterUid = default;
+        EntityUid targetUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            (shooterUid, targetUid, _) = SpawnArmedShooter(entManager, gridUid, "KsTurretTestLaserShooter");
+            entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(targetUid);
+        });
+
+        await RunSeconds(0.2f);
+        await Pair.Server.WaitPost(() =>
+        {
+            Assert.That(entManager.GetComponent<KsLaserSightComponent>(shooterUid).Enabled, Is.False, "idle laser must be dark");
+            entManager.EnsureComponent<NPCRangedCombatComponent>(shooterUid).Target = targetUid;
+        });
+
+        await RunSeconds(0.5f);
+        await Pair.Server.WaitPost(() =>
+        {
+            Assert.That(entManager.GetComponent<KsLaserSightComponent>(shooterUid).Enabled, Is.True, "laser should be on with a target in sight");
+            Assert.That(entManager.GetComponent<KsTargetLockOnComponent>(shooterUid).Target, Is.EqualTo(targetUid));
+
+            if (deleteTarget)
+                entManager.DeleteEntity(targetUid);
+            else
+                entManager.RemoveComponent<NPCRangedCombatComponent>(shooterUid);
+        });
+
+        await RunSeconds(0.3f);
+        await Pair.Server.WaitPost(() =>
+        {
+            Assert.That(entManager.GetComponent<KsLaserSightComponent>(shooterUid).Enabled, Is.False, "laser should go dark when the fight ends");
+            Assert.That(entManager.GetComponent<KsTargetLockOnComponent>(shooterUid).Target, Is.Null, "the lock should be cleared");
+        });
     }
 
     private async Task RunSeconds(float seconds)
