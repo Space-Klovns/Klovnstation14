@@ -67,7 +67,7 @@ namespace Content.Client.Lobby
                 : lobbyNameCvar;
 
             var width = _cfg.GetCVar(CCVars.ServerLobbyRightPanelWidth);
-            Lobby.RightSide.SetWidth = width;
+            Lobby.RightSide.SetWidth = (float)width * 0.85f /* KS14: client-side 0.85 factor, thinner chat column */;
 
             UpdateLobbyUi();
 
@@ -141,7 +141,7 @@ namespace Content.Client.Lobby
         {
             if (_gameTicker.IsGameStarted)
             {
-                Lobby!.StartTime.Text = string.Empty;
+                Lobby!.KsSetCountdown(null, null); // KS14: StartTime.Text = string.Empty -> hide the countdown block
                 var roundTime = _gameTiming.CurTime.Subtract(_gameTicker.RoundStartTimeSpan);
                 Lobby!.StationTime.Text = Loc.GetString("lobby-state-player-status-round-time", ("hours", roundTime.Hours), ("minutes", roundTime.Minutes));
                 return;
@@ -152,11 +152,11 @@ namespace Content.Client.Lobby
 
             if (_gameTicker.Paused)
             {
-                text = Loc.GetString("lobby-state-paused");
+                text = Loc.GetString("ks-lobby-countdown-paused") /* KS14: lobby-state-paused -> ks-lobby-countdown-paused */;
             }
             else if (_gameTicker.StartTime < _gameTiming.CurTime)
             {
-                Lobby!.StartTime.Text = Loc.GetString("lobby-state-soon");
+                Lobby!.KsSetCountdown(null, Loc.GetString("ks-lobby-countdown-soon")); // KS14: StartTime.Text = lobby-state-soon -> value only
                 return;
             }
             else
@@ -165,7 +165,7 @@ namespace Content.Client.Lobby
                 var seconds = difference.TotalSeconds;
                 if (seconds < 0)
                 {
-                    text = Loc.GetString(seconds < -5 ? "lobby-state-right-now-question" : "lobby-state-right-now-confirmation");
+                    text = Loc.GetString(seconds < -5 ? "ks-lobby-countdown-right-now-question" : "ks-lobby-countdown-right-now") /* KS14: lobby-state-right-now-* -> ks-lobby-countdown-right-now* */;
                 }
                 else if (difference.TotalHours >= 1)
                 {
@@ -177,7 +177,10 @@ namespace Content.Client.Lobby
                 }
             }
 
-            Lobby!.StartTime.Text = Loc.GetString("lobby-state-round-start-countdown-text", ("timeLeft", text));
+            // KS14 start: single "Round starts In: x" line -> caption over big value, which heats up near the start
+            double? secondsLeft = _gameTicker.Paused ? null : (_gameTicker.StartTime - _gameTiming.CurTime).TotalSeconds;
+            Lobby!.KsSetCountdown(Loc.GetString("ks-lobby-countdown-caption"), text, secondsLeft: secondsLeft);
+            // KS14 end
         }
 
         private void LobbyStatusUpdated()
@@ -195,7 +198,7 @@ namespace Content.Client.Lobby
         {
             if (_gameTicker.IsGameStarted)
             {
-                Lobby!.ReadyButton.Text = Loc.GetString("lobby-state-ready-button-join-state");
+                Lobby!.ReadyButton.Text = Loc.GetString("ks-lobby-ready-join") /* KS14: lobby-state-ready-button-join-state -> ks-lobby-ready-join */;
                 Lobby!.ReadyButton.ToggleMode = false;
                 Lobby!.ReadyButton.Pressed = false;
                 Lobby!.ObserveButton.Disabled = false;
@@ -203,9 +206,9 @@ namespace Content.Client.Lobby
             }
             else
             {
-                Lobby!.StartTime.Text = string.Empty;
+                Lobby!.KsSetCountdown(null, null); // KS14: StartTime.Text = string.Empty -> hide the countdown block (FrameUpdate refills it)
                 Lobby!.ReadyButton.Pressed = _gameTicker.AreWeReady;
-                Lobby!.ReadyButton.Text = Loc.GetString(Lobby!.ReadyButton.Pressed ? "lobby-state-player-status-ready" : "lobby-state-player-status-not-ready");
+                Lobby!.ReadyButton.Text = Loc.GetString(Lobby!.ReadyButton.Pressed ? "ks-lobby-ready-ready" /* KS14: lobby-state-player-status-ready -> ks-lobby-ready-ready */ : "ks-lobby-ready-not-ready" /* KS14: lobby-state-player-status-not-ready -> ks-lobby-ready-not-ready */);
                 Lobby!.ReadyButton.ToggleMode = true;
                 Lobby!.ReadyButton.Disabled = false;
                 Lobby!.ObserveButton.Disabled = true;

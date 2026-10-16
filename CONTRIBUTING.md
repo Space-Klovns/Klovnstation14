@@ -340,6 +340,13 @@ type's namespace says nothing about its folder: search by type name, not path.
 
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
+**No `ks`/`Ks` prefix on path-referenced files inside `_KS14/`.** A file found by its path, such as a shader, texture, audio file or font, is already namespaced by the `_KS14/` folder in that path. A prefix on its filename only repeats it:
+```yaml
+path: "/Textures/_KS14/Shaders/lobby_contrast.swsl"     # do this
+path: "/Textures/_KS14/Shaders/ks_lobby_contrast.swsl"  # not this - _KS14/ already says it's ours
+```
+This covers resource files referenced by path and nothing else. Prototype IDs, C# type names (and the `.cs` files named after them), locale keys and style classes still follow the `Ks` prefix rule above, because they share one global namespace with upstream whatever folder they sit in.
+
 **`TryGet`/`Resolve`/`Ensure` naming (C#)** — `TryGet...` implies a pure lookup: it either finds the thing or it doesn't, with no side effects either way. If a "`TryGet`" actually creates the thing when it's missing, name it `Resolve...` or `Ensure...` instead — whichever reads better for the case — not `TryGet...`:
 ```csharp
 // misleading - this can create a new entity as a side effect, which "TryGet" doesn't promise
@@ -596,6 +603,8 @@ So when replacing an obsolete call, keep the audience it had: `PopupPredicted(me
 **NPC behaviour (C#, YAML)** — HTN, and the systems that feed it, have their own conventions, kept in the `npc-htn` agent skill (`.claude/skills/npc-htn/SKILL.md`). Read it before touching NPC behaviour.
 
 **Rendering (C#)** — how Clyde draws a frame, where lighting and FOV apply, overlay and sprite order, the stencil buffer, and our extra render passes (z-levels, view portals) are in the `rendering` agent skill (`.claude/skills/rendering/SKILL.md`). Read it before writing an overlay or anything drawn in world space.
+
+**Client UI (C#, XAML)** — XAML, layout and mouse filtering, the sheetlet stylesheet system and its silent traps (selector specificity, Baron overriding global defaults, dead `StyleNano` classes, button `ModulateSelf` tint), the reusable gradient stylebox, screens, windows and BUIs, and the reworked lobby are in the `ui` agent skill (`.claude/skills/ui/SKILL.md`). Read it before writing or restyling any UI.
 
 **Integration tests (C#)** — the `GameTest` fixture, driving players, movers, commands and cvars, and what a headless client can check are in the `integration-testing` agent skill (`.claude/skills/integration-testing/SKILL.md`).
 

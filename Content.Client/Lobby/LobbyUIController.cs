@@ -179,11 +179,13 @@ public sealed partial class LobbyUIController : UIController, IOnStateEntered<Lo
         {
             PreviewPanel.ProfilePreviewSpriteView.ClearPreview();
             PreviewPanel.SetSummaryText(string.Empty);
+            PreviewPanel.SetCharacterInfo(string.Empty, string.Empty); // KS14
             return;
         }
 
         PreviewPanel.ProfilePreviewSpriteView.LoadPreview(humanoid);
         PreviewPanel.SetSummaryText(humanoid.Summary);
+        PreviewPanel.SetCharacterInfo(humanoid.Name, LobbyCharacterPreviewPanel.GetPreferredJobName(humanoid, _prototypeManager)); // KS14
     }
 
     private void RefreshProfileEditor()

@@ -15,11 +15,14 @@ namespace Content.Client.Lobby.UI
         // KS14: lobbyview addition
         private readonly Robust.Client.Graphics.FixedEye _lobbyEye = new();
 
+        // KS14: used by the backdrop shader in LobbyGui.Klovn.Contrast.cs
+        [Dependency] private Robust.Shared.Prototypes.IPrototypeManager ProtoMan = default!;
+
         public LobbyGui()
         {
             RobustXamlLoader.Load(this);
             IoCManager.InjectDependencies(this);
-            SetAnchorPreset(MainContainer, LayoutPreset.Wide);
+            SetAnchorPreset(KsRoot, LayoutPreset.Wide); // KS14: MainContainer -> KsRoot, bottom bar is full width
             SetAnchorPreset(Background, LayoutPreset.Wide);
 
             // KS14: lobbyview start
@@ -29,7 +32,15 @@ namespace Content.Client.Lobby.UI
 
             KsSetCameraView(null);
             // KS14 end
+            // KS14 start: translucent fades and lobby-only chat background
+            SetAnchorPreset(KsFadeLeft, LayoutPreset.Wide);
+            SetAnchorPreset(KsFadeBottom, LayoutPreset.BottomWide);
+            SetMarginTop(KsFadeBottom, -220);
+            KsInitialiseContrast();
+            Chat.ChatWindowPanel.PanelOverride = new Robust.Client.Graphics.StyleBoxFlat(Color.Black.WithAlpha(0.35f));
+            // KS14 end
 
+            CallVoteButton.Text = Loc.GetString("ks-lobby-chip-vote"); // KS14: uppercase chip, VoteCallMenuButton sets its own text
             LobbySong.SetMarkup(Loc.GetString("lobby-state-song-no-song-text"));
 
             LeaveButton.OnPressed += _ => _consoleHost.ExecuteCommand("disconnect");
@@ -44,15 +55,17 @@ namespace Content.Client.Lobby.UI
         {
             var visible = eye != null;
             KsViewport.Eye = eye ?? _lobbyEye;
-
             KsViewportContainer.Visible = visible;
             Background.Visible = !visible;
+            KsApplyContrastShader(); // adaptive contrast is for the lobby art only, not the camera
         }
 
         public void SwitchState(LobbyGuiState state)
         {
             DefaultState.Visible = false;
             CharacterSetupState.Visible = false;
+
+            KsSetBlurActive(state == LobbyGuiState.CharacterSetup); // KS14: blur the backdrop behind character setup
 
             switch (state)
             {

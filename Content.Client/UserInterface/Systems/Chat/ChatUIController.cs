@@ -286,6 +286,9 @@ public sealed partial class ChatUIController : UIController
 
     private void SetChatWindowOpacity(float opacity)
     {
+        if (UIManager.ActiveScreen is Content.Client.Lobby.UI.LobbyGui) // KS14: lobby chat has its own fixed translucency
+            return;
+
         var chatBox = UIManager.ActiveScreen?.GetWidget<ChatBox>() ?? UIManager.ActiveScreen?.GetWidget<ResizableChatBox>();
 
         var panel = chatBox?.ChatWindowPanel;

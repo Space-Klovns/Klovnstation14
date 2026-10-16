@@ -1,0 +1,18 @@
+// Single-pass disc blur of the texture being drawn. Samples TEXTURE (not SCREEN_TEXTURE), so it works on UI
+// controls, which have no screen texture. 24 Vogel-spiral taps cover a disc of `radius` pixels evenly.
+light_mode unshaded;
+
+uniform highp float radius; // In texels of TEXTURE.
+
+void fragment() {
+    highp vec4 sum = vec4(0.0);
+    for (int i = 0; i < 24; i++)
+    {
+        highp float fi = float(i);
+        highp float r = sqrt((fi + 0.5) / 24.0) * radius;
+        highp float theta = fi * 2.399963; // golden angle
+        highp vec2 offset = vec2(cos(theta), sin(theta)) * r * TEXTURE_PIXEL_SIZE;
+        sum += zTexture(UV + offset);
+    }
+    COLOR = sum / 24.0;
+}
