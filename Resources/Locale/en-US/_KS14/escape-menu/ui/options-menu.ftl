@@ -5,6 +5,7 @@ ks-ui-options-lobby-adaptive-contrast = Dim bright lobby backgrounds behind the 
 ks-ui-options-slurfilter = Enable Slur Filter
 ks-ui-options-action-folders = Enable action folders
 ks-ui-options-action-layout-persistence = Remember action bar layout and folders
+# Unused for now: the lobby font option is commented out in Ks14Tab.xaml(.cs) and may be re-added, so these stay.
 ks-ui-options-lobby-font = Lobby font
 ks-ui-options-lobby-font-bender = Bender
 ks-ui-options-lobby-font-jura = Jura

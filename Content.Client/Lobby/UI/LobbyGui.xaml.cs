@@ -15,14 +15,11 @@ namespace Content.Client.Lobby.UI
         // KS14: lobbyview addition
         private readonly Robust.Client.Graphics.FixedEye _lobbyEye = new();
 
-        // KS14: used by the backdrop shader in LobbyGui.Klovn.Contrast.cs
-        [Dependency] private Robust.Shared.Prototypes.IPrototypeManager ProtoMan = default!;
-
         public LobbyGui()
         {
             RobustXamlLoader.Load(this);
             IoCManager.InjectDependencies(this);
-            SetAnchorPreset(KsRoot, LayoutPreset.Wide); // KS14: MainContainer -> KsRoot, bottom bar is full width
+            SetAnchorPreset(KsRoot /* KS14: MainContainer -> KsRoot, so the bottom bar is full width */, LayoutPreset.Wide);
             SetAnchorPreset(Background, LayoutPreset.Wide);
 
             // KS14: lobbyview start
@@ -55,9 +52,10 @@ namespace Content.Client.Lobby.UI
         {
             var visible = eye != null;
             KsViewport.Eye = eye ?? _lobbyEye;
+
             KsViewportContainer.Visible = visible;
             Background.Visible = !visible;
-            KsApplyContrastShader(); // adaptive contrast is for the lobby art only, not the camera
+            KsApplyContrastShader(); // KS14: adaptive contrast is for the lobby art only, not the camera
         }
 
         public void SwitchState(LobbyGuiState state)

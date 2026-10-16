@@ -27,7 +27,7 @@ public enum KsGradientDirection : byte
 ///     panel.PanelOverride = new KsStyleBoxGradient(KsGradientDirection.TopToBottom,
 ///         (0f, Color.Transparent), (0.6f, Color.Black.WithAlpha(0.3f)), (1f, Color.Black));
 ///     </code>
-///     Then use a plain <c>&lt;PanelContainer Classes="..." MouseFilter="Ignore"/&gt;</c> in xaml.
+///     Then use a plain <c>&lt;PanelContainer StyleClasses="..." MouseFilter="Ignore"/&gt;</c> in xaml.
 /// </example>
 public sealed class KsStyleBoxGradient : StyleBox
 {

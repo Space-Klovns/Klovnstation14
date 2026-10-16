@@ -19,7 +19,6 @@ public static class KsLobbyStyleClasses
 {
     public const string KsLobbyMenuButton = "KsLobbyMenuButton";
     public const string KsLobbyMenuButtonSmall = "KsLobbyMenuButtonSmall";
-    public const string KsLobbyNegative = "KsLobbyNegative";
     public const string KsLobbyBottomBar = "KsLobbyBottomBar";
     public const string KsLobbyGlass = "KsLobbyGlass";
     public const string KsLobbyHairline = "KsLobbyHairline";
@@ -70,7 +69,7 @@ public sealed class KsLobbySheetlet : Sheetlet<PalettedStylesheet>
 
     public const string DefaultFontId = "jura";
 
-    /// <summary>Resolves a cvar value to a family, falling back to Bender for an unknown id.</summary>
+    /// <summary>Resolves a cvar value to a family, falling back to <see cref="DefaultFontId"/> for an unknown id.</summary>
     public static KsLobbyFontFamily ResolveFontFamily(string? id)
     {
         return id != null && FontFamilies.TryGetValue(id, out var family) ? family : FontFamilies[DefaultFontId];
@@ -104,13 +103,11 @@ public sealed class KsLobbySheetlet : Sheetlet<PalettedStylesheet>
             .Prop(BoxContainer.StylePropertySeparation, SmallButtonSeparation));
 
         // AHelpUIController adds StyleClass.Negative to flag an unread message.
-        AddNegativeRules(rules, KsLobbyStyleClasses.KsLobbyMenuButtonSmall, parentClass: null, combine: true);
-        AddNegativeRules(rules, ownClass: null, parentClass: KsLobbyStyleClasses.KsLobbyMenuButtonSmall, combine: true);
+        AddNegativeRules(rules, KsLobbyStyleClasses.KsLobbyMenuButtonSmall, parentClass: null);
+        AddNegativeRules(rules, ownClass: null, parentClass: KsLobbyStyleClasses.KsLobbyMenuButtonSmall);
         // ChangelogButton adds StyleClass.Positive when there are unread entries.
         AddPositiveRules(rules, KsLobbyStyleClasses.KsLobbyMenuButtonSmall, parentClass: null);
         AddPositiveRules(rules, ownClass: null, parentClass: KsLobbyStyleClasses.KsLobbyMenuButtonSmall);
-        // Explicit class for the same look.
-        AddNegativeRules(rules, KsLobbyStyleClasses.KsLobbyNegative, parentClass: null, combine: false);
 
         var regular14 = ResCache.GetFont(regularFontPath, 14);
         var regular16 = ResCache.GetFont(regularFontPath, 16);
@@ -141,7 +138,7 @@ public sealed class KsLobbySheetlet : Sheetlet<PalettedStylesheet>
             E<Label>().Class(KsLobbyStyleClasses.KsLobbyTitle).Font(bold34).FontColor(TextColor),
             E<Label>().Class(KsLobbyStyleClasses.KsLobbySubtitle).Font(regular14).FontColor(DimColor),
             E<Label>().Class(KsLobbyStyleClasses.KsLobbyCountdown).Font(countdownFont).FontColor(AccentColor),
-            // Baron forces its own font on every RichTextLabel; the class (more specific) swaps it for Bender. The
+            // Baron forces its own font on every RichTextLabel; the class (more specific) swaps it for the lobby font. The
             //      parent form covers a label created in code as a child of a classed container (ServerInfo).
             E<RichTextLabel>().Class(KsLobbyStyleClasses.KsLobbyRichText).Font(regular13)
                 .Prop(Control.StylePropertyModulateSelf, RichTextColor),
@@ -232,7 +229,7 @@ public sealed class KsLobbySheetlet : Sheetlet<PalettedStylesheet>
         }
     }
 
-    private static void AddNegativeRules(List<StyleRule> rules, string? ownClass, string? parentClass, bool combine)
+    private static void AddNegativeRules(List<StyleRule> rules, string? ownClass, string? parentClass)
     {
         (string Pseudo, Color Color)[] states =
         [
@@ -244,11 +241,7 @@ public sealed class KsLobbySheetlet : Sheetlet<PalettedStylesheet>
 
         foreach (var (pseudo, color) in states)
         {
-            var button = Button(ownClass, pseudo);
-            if (combine)
-                button = button.Class(StyleClass.Negative);
-
-            rules.Add(LabelOf(button, parentClass).FontColor(color));
+            rules.Add(LabelOf(Button(ownClass, pseudo).Class(StyleClass.Negative), parentClass).FontColor(color));
         }
     }
 

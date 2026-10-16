@@ -1,6 +1,0 @@
-- type: shader
-  id: KsTextureBlur
-  kind: source
-  path: "/Textures/_KS14/Shaders/blur.swsl"
-  params:
-    radius: 12.0

@@ -20,6 +20,7 @@ public sealed partial class LobbyGui
     private const int KsMaxRegions = 4;
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private readonly Robust.Client.Graphics.StyleBoxEmpty _noPanel = new();
     private ShaderInstance? _contrastShader;
@@ -32,7 +33,7 @@ public sealed partial class LobbyGui
 
     private void KsInitialiseContrast()
     {
-        _contrastShader = ProtoMan.Index(KsContrastShaderId).InstanceUnique();
+        _contrastShader = _prototypeManager.Index(KsContrastShaderId).InstanceUnique();
 
         _contrastRegionControls[0] = KsMenuColumn;
         _contrastRegionControls[1] = CharacterPreview;

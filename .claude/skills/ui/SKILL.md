@@ -232,7 +232,8 @@ colours itself (see below), so don't re-solve either.
 - **Sandbox:** no `stackalloc` (CLAUDE.md §6). `SandboxTest` is the only check.
 - **UI has no `SCREEN_TEXTURE`**, so a post-process blur of the UI is impossible. Blurring something in UI means a
   shader that samples `TEXTURE` set on the control that draws the texture (`TextureRect.ShaderOverride`, or
-  `UseShader` around the draw). `KsTextureBlur` (`_KS14/Shaders/blur.swsl`, `radius` uniform in texels) is that shader.
+  `UseShader` around the draw). The lobby's `KsLobbyContrast` (`_KS14/Shaders/lobby_contrast.swsl`) does this with its
+  `blurRadius` uniform (in texels). There is no standalone blur shader: write one only when something needs it.
 
 ## Localisation in UI
 
@@ -322,7 +323,7 @@ Fonts, text and countdown:
   `cvar klovn.lobby.font bender`. The KS14 options dropdown for it is commented out in `Ks14Tab.xaml(.cs)`. Windows holding `SheetSystem` are unaffected.
   Regular for menu items, chips and subtitles, Bold for titles and the character name, Black 44 for the countdown
   (families without a Black use Bold).
-- **Baron forces a font on every `RichTextLabel`.** Give lobby ones `StyleClasses="KsLobbyRichText"` (Bender 13, dim
+- **Baron forces a font on every `RichTextLabel`.** Give lobby ones `StyleClasses="KsLobbyRichText"` (the lobby font at 13, dim
   modulate). The sheetlet also has a direct-child rule, so a class on a parent (`ServerInfo`, whose label is built in
   code) works. Don't class the Chat's own text.
 - **Chips are uppercase through `ks-lobby-chip-*` keys** (`lobby.ftl`), swapped into `LinkBanner`, `DevInfoBanner`,
@@ -358,10 +359,10 @@ Bottom bar and blur:
 - **Backdrop shader** (`LobbyGui.Klovn.Contrast.cs`, `KsLobbyContrast` = `_KS14/Shaders/lobby_contrast.swsl`): one
   `InstanceUnique()` created in the constructor, on `Background.ShaderOverride` and `KsViewport.KsDrawShader` whenever
   the cvar `klovn.lobby.adaptive_contrast` (CLIENTONLY, default on) or the character-setup blur is active, else null.
-  It caps the linear luminance (`maxLuminance` 0.20, about 3.4:1 against #E6E6E6) of bright pixels under up to four
+  It caps the linear luminance (`maxLuminance` 0.07, about 7:1 against #E6E6E6) of bright pixels under up to four
   padded regions (`KsMenuColumn`, `CharacterPreview`, `RightSide`, `CharacterSetupState`, only while visible in the
   tree); dark pixels are untouched. `blurRadius` 14 in `SwitchState(CharacterSetup)` makes it the blur too
-  (`strength` 0 when the cvar is off). `KsTextureBlur` is now unused by the lobby.
+  (`strength` 0 when the cvar is off).
   - Dimming applies to the lobby art only: `strength` is 0 while the lobby-view camera (`KsViewportContainer`) is
     shown, since it shows the live game. Only the blur still reaches the camera.
   - Each region is fully dimmed inside and fades out over `feather` **screen pixels outside** its edge (64 × UI scale).

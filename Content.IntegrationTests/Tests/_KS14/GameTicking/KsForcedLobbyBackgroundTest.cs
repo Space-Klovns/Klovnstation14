@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -22,6 +23,7 @@ public sealed class KsForcedLobbyBackgroundTest : GameTest
 {
     private const string ForcingMapId = "KsForcedLobbyBackgroundTestMap";
     private const string UnforcedMapId = "Empty";
+    private const string ReloadedMapId = "KsForcedLobbyBackgroundTestReloadedMap";
     private const int Cycles = 20;
 
     private readonly ProtoId<LobbyBackgroundPrototype> _forcedBackground = "KsForcedLobbyBackgroundTestBackground";
@@ -39,6 +41,34 @@ public sealed class KsForcedLobbyBackgroundTest : GameTest
   mapPath: /Maps/Test/empty.yml
   minPlayers: 0
   forcedLobbyBackground: KsForcedLobbyBackgroundTestBackground
+  stations:
+    Empty:
+      stationProto: StandardNanotrasenStation
+      components:
+        - type: StationNameSetup
+          mapNameTemplate: ""Empty""
+
+- type: gameMap
+  id: {ReloadedMapId}
+  mapName: {ReloadedMapId}
+  mapPath: /Maps/Test/empty.yml
+  minPlayers: 0
+  stations:
+    Empty:
+      stationProto: StandardNanotrasenStation
+      components:
+        - type: StationNameSetup
+          mapNameTemplate: ""Empty""
+";
+
+    // The reloaded map as it is above, with or without a forced background line inserted.
+    private static string ReloadedMap(string forcedLine) => $@"
+- type: gameMap
+  id: {ReloadedMapId}
+  mapName: {ReloadedMapId}
+  mapPath: /Maps/Test/empty.yml
+  minPlayers: 0
+{forcedLine}
   stations:
     Empty:
       stationProto: StandardNanotrasenStation
@@ -85,5 +115,42 @@ public sealed class KsForcedLobbyBackgroundTest : GameTest
             await Client.WaitAssertion(() =>
                 Assert.That(clientTicker.LobbyBackground, Is.EqualTo(rolledBackground), "the client got the roll"));
         }
+    }
+
+    /// <summary>
+    ///     The map manager keeps the instance it selected, so editing the selected map's forced background through a
+    ///         prototype reload has to be picked up by reading the map afresh, both ways.
+    /// </summary>
+    [Test]
+    public async Task ReloadingSelectedMapAppliesItsForcedBackground()
+    {
+        var configurationManager = Server.Resolve<IConfigurationManager>();
+        var serverTicker = Server.System<GameTicker>();
+        var clientTicker = Client.System<ClientGameTicker>();
+
+        await Server.WaitPost(() => configurationManager.SetCVar(CCVars.GameMap, ReloadedMapId));
+        await Pair.RunTicksSync(5);
+        await Server.WaitAssertion(() =>
+            Assert.That(serverTicker.LobbyBackground, Is.Not.EqualTo(_forcedBackground), "nothing forced yet"));
+
+        await Server.WaitPost(() => ReloadPrototypes(ReloadedMap($"  forcedLobbyBackground: {_forcedBackground.Id}")));
+        await Pair.RunTicksSync(5);
+        await Server.WaitAssertion(() =>
+            Assert.That(serverTicker.LobbyBackground, Is.EqualTo(_forcedBackground), "the reload added it"));
+        await Client.WaitAssertion(() =>
+            Assert.That(clientTicker.LobbyBackground, Is.EqualTo(_forcedBackground), "the client got it"));
+
+        await Server.WaitPost(() => ReloadPrototypes(ReloadedMap(string.Empty)));
+        await Pair.RunTicksSync(5);
+        await Server.WaitAssertion(() =>
+            Assert.That(serverTicker.LobbyBackground, Is.Not.EqualTo(_forcedBackground), "the reload removed it"));
+    }
+
+    private void ReloadPrototypes(string yaml)
+    {
+        var changes = new Dictionary<Type, HashSet<string>>();
+        Server.ProtoMan.LoadString(yaml, overwrite: true, changed: changes);
+        Server.ProtoMan.ResolveResults();
+        Server.ProtoMan.ReloadPrototypes(changes);
     }
 }
