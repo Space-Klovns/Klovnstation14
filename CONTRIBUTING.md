@@ -203,6 +203,39 @@ Summarised from the upstream conventions doc — that page stays the authority; 
 - **Text** — no quotes on `name`/`description` unless punctuation demands it, then single quotes. Every player-facing string is localized.
 - **Abstract prototypes** — no textures in them. Use `suffix` to separate spawn-menu variants instead of baking the distinction into `name`.
 
+### Partial prototypes: change an upstream prototype without editing its file
+
+A partial prototype has the same kind and id as an existing one, and is merged into it instead of failing the load as `Duplicate ID`. It's the way to add to, or take from, an upstream prototype (a sound collection, a loadout group, an entity's components) from a fork-owned file, with no `# KS14:` edit to the upstream file and so nothing to conflict with on the next merge.
+
+**A file is only partial if it's registered.** Anywhere else, a second `LobbyMusic` throws `PrototypeLoadException: Duplicate ID` and the load fails. Register the file, or a whole directory, in `_partialPrototypePaths` in `Content.Shared/_KS14/Entry/KsEntryPoint.cs`, which runs before prototypes load on the client, server and YAML linter alike:
+
+```csharp
+private readonly ResPath[] _partialPrototypePaths = [
+    new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),   // a file
+    new("/Prototypes/_KS14/Partials/"),                       // or a directory, with no extension
+];
+```
+
+Keep the registrations narrow: inside a partial path, an id that *accidentally* matches an existing prototype silently merges into it rather than erroring. Don't register whole trees like `_KS14/` or `_KsModule/`.
+
+Then write only the fields you're changing. Sequences are appended to, mappings are combined key by key, and plain values are replaced:
+
+```yaml
+# adds a track to upstream's collection; every upstream track stays
+- type: !PartialOnly soundCollection
+  id: LobbyMusic
+  files:
+  - /Audio/_KsModule/LobbyMusic/melcom-cyberpunk.ogg
+```
+
+- **`!PartialOnly`** on the `type` — if the original doesn't exist (upstream renamed or removed it), do nothing, instead of quietly creating a new prototype from the fragment. Use it whenever you're modifying something, which is almost always.
+- **`- !Remove X`** in a sequence removes `X`; **`key: !Remove`** removes a mapping key, and **`key: !Remove 1`** removes it only if its value is `1`. **`- !Remove type: SomeComponent`** removes a component from an entity.
+- **`field: !Clear`** empties a sequence or mapping before your entries are added to it.
+- **`- !Index:0 X`** inserts at a position (negative counts from the end, and it's clamped to the list). Combine it with `!Remove` to reorder.
+- **`- !CombineIndex:0 key: value`** merges into the element *already at* that index, rather than adding a new one.
+
+The full list of examples is on `IPrototypeManager.PartialDirectory` (`RobustToolbox/Robust.Shared/Prototypes/IPrototypeManager.cs`). Partials apply after every non-partial file, so it doesn't matter where the original lives. Prefer a partial to a `_KsModule_ReplacedPrototypes` replacement whenever you're changing part of a prototype, since a replacement restates the whole thing and drifts from upstream. Cover a partial with a test that the merged prototype has your change *and* still has upstream's data (`KsLobbyMusicPartialTest`), since a partial that silently stopped applying looks exactly like the unmodified upstream prototype.
+
 **One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't relocate or reformat **upstream** code just to bring it into convention unless you're already changing it for another reason — every such move is a merge conflict waiting for the next upstream pull, paid for nothing. This is about upstream files specifically, not a general licence to leave things alone: fork code under `_KS14/` is ours, merges cleanly, and is fair game to tidy whenever it has drifted from the rules below.
 
 ### Local rules on top of upstream
@@ -339,6 +372,13 @@ type's namespace says nothing about its folder: search by type name, not path.
   `ref`; and it doesn't throw if changed while being enumerated, unlike `List<T>`.
 
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
+
+**No `ks`/`Ks` prefix on path-referenced files inside `_KS14/`.** A file found by its path, such as a shader, texture, audio file or font, is already namespaced by the `_KS14/` folder in that path. A prefix on its filename only repeats it:
+```yaml
+path: "/Textures/_KS14/Shaders/lobby_contrast.swsl"     # do this
+path: "/Textures/_KS14/Shaders/ks_lobby_contrast.swsl"  # not this - _KS14/ already says it's ours
+```
+This covers resource files referenced by path and nothing else. Prototype IDs, C# type names (and the `.cs` files named after them), locale keys and style classes still follow the `Ks` prefix rule above, because they share one global namespace with upstream whatever folder they sit in.
 
 **`TryGet`/`Resolve`/`Ensure` naming (C#)** — `TryGet...` implies a pure lookup: it either finds the thing or it doesn't, with no side effects either way. If a "`TryGet`" actually creates the thing when it's missing, name it `Resolve...` or `Ensure...` instead — whichever reads better for the case — not `TryGet...`:
 ```csharp
@@ -582,8 +622,9 @@ _popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
 
 So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
 
-**Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering and integration testing each have an agent
-skill under `.claude/skills/` (agents see the list automatically). Read the matching one before working in that area.
+**Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering, client UI and integration testing each
+have an agent skill under `.claude/skills/` (agents see the list automatically). Read the matching one before working
+in that area.
 
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 

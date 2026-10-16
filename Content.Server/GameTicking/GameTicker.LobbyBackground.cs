@@ -28,6 +28,9 @@ public sealed partial class GameTicker
             if (!WhitelistedBackgroundExtensions.Contains(ext))
                 continue;
 
+            if (!proto.RandomlySelectable) // KS14: shown only by a map that forces it
+                continue;
+
             //create a protoid and add it to the list
             _lobbyBackgrounds.Add(new ProtoId<LobbyBackgroundPrototype>(proto.ID));
         }
@@ -37,6 +40,9 @@ public sealed partial class GameTicker
 
     private void RandomizeLobbyBackground()
     {
+        if (KsTryApplyForcedLobbyBackground()) // KS14: the selected map can force its background on everyone
+            return;
+
         if (_lobbyBackgrounds != null && _lobbyBackgrounds.Count != 0)
             LobbyBackground = _robustRandom.Pick(_lobbyBackgrounds);
         else

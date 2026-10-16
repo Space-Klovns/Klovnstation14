@@ -15,6 +15,13 @@
                        StyleClasses="LabelSubText"/>
                 <CheckBox Name="SlurFilterEnabled"
                           Text="{Loc 'ks-ui-options-slurfilter'}"/>
+                <!-- KS14: dim bright lobby art behind the lobby text -->
+                <CheckBox Name="LobbyAdaptiveContrast"
+                          Text="{Loc 'ks-ui-options-lobby-adaptive-contrast'}"/>
+                <!-- Lobby font family: disabled, the lobby uses Jura. Re-enable with the block in Ks14Tab.xaml.cs.
+                <ui:OptionDropDown Name="DropDownLobbyFont"
+                                   Title="{Loc 'ks-ui-options-lobby-font'}"/>
+                -->
                 <CheckBox Name="ActionFoldersEnabled"
                           Text="{Loc 'ks-ui-options-action-folders'}"/>
                 <CheckBox Name="ActionLayoutPersistenceEnabled"

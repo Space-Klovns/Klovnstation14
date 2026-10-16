@@ -27,6 +27,15 @@ public sealed partial class Ks14Tab : Control
         AddClientLocaleOption(); // KS14
 
         Control.AddOptionCheckBox(KsCCVars.SlurFilterEnabled, SlurFilterEnabled);
+        Control.AddOptionCheckBox(KsCCVars.LobbyAdaptiveContrast, LobbyAdaptiveContrast); // KS14
+        // Lobby font family, applied live by KsLobbyFontUIController. Disabled: the lobby uses Jura, and the cvar is
+        //      no longer archived. Still switchable from the console with `cvar klovn.lobby.font <id>`.
+        /*
+        var lobbyFontEntries = new List<OptionDropDownCVar<string>.ValueOption>();
+        foreach (var fontId in Content.Client._KS14.Lobby.KsLobbySheetlet.FontFamilies.Keys)
+            lobbyFontEntries.Add(new OptionDropDownCVar<string>.ValueOption(fontId, Loc.GetString($"ks-ui-options-lobby-font-{fontId}")));
+        Control.AddOptionDropDown(KsCCVars.LobbyFont, DropDownLobbyFont, lobbyFontEntries);
+        */
         Control.AddOptionCheckBox(KsCCVars.ActionFoldersEnabled, ActionFoldersEnabled);
         Control.AddOptionCheckBox(KsCCVars.ActionLayoutPersistenceEnabled, ActionLayoutPersistenceEnabled);
 

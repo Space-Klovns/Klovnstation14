@@ -190,7 +190,15 @@ namespace Content.Client.Viewport
             // KS14 end
 
             _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
+            // KS14 start: optional shader over the viewport texture
+            if (KsDrawShader != null)
+                handle.DrawingHandleScreen.UseShader(KsDrawShader);
+            // KS14 end
             handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
+            // KS14 start
+            if (KsDrawShader != null)
+                handle.DrawingHandleScreen.UseShader(null);
+            // KS14 end
             _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
         }
 

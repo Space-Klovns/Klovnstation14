@@ -24,6 +24,15 @@ public sealed partial class KsEntryPoint : GameShared
         new("/_KsModule_ReplacedPrototypes/")
     ];
 
+    /// <summary>
+    ///     Files or directories whose prototypes combine with existing ones of the same id instead of throwing a
+    ///         duplicate-id error (see <see cref="IPrototypeManager.PartialDirectory"/>). Kept narrow on purpose:
+    ///         anywhere listed here, an accidental duplicate id silently merges rather than failing the load.
+    /// </summary>
+    private readonly ResPath[] _partialPrototypePaths = [
+        new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
+    ];
+
     private ISawmill _sawmill = null!;
 
     public override void PreInit()
@@ -39,6 +48,15 @@ public sealed partial class KsEntryPoint : GameShared
         Dependencies.InjectDependencies(this);
 
         _sawmill = Logger.GetSawmill("ks.shared.entrypoint");
+
+        // Before prototypes load, which is the only time the prototype manager reads these.
+        foreach (var partialPath in _partialPrototypePaths)
+        {
+            if (string.IsNullOrEmpty(partialPath.Extension))
+                _prototypeManager.PartialDirectory(partialPath, 0);
+            else
+                _prototypeManager.PartialFile(partialPath, 0);
+        }
     }
 
     public override void PostInit()
