@@ -219,9 +219,16 @@ public sealed class KsLobbySheetlet : Sheetlet<PalettedStylesheet>
             rules.Add(Root(Button(ownClass, pseudo), parentClass)
                 .Box(box)
                 .Prop(Control.StylePropertyModulateSelf, Color.White));
-            rules.Add(LabelOf(Button(ownClass, pseudo), parentClass)
+            var label = LabelOf(Button(ownClass, pseudo), parentClass)
                 .Font(font)
-                .FontColor(color));
+                .FontColor(color);
+            // Menu items read as a left-aligned list, and ButtonSheetlet centres button labels. Pinning the text to
+            //      the left edge also keeps it still when the button's width lags a text change: the engine skips
+            //      re-arranging a button whose label re-measures while the button is itself arranging, so READY or
+            //      JOIN would otherwise sit centred in NOT READY's old width until the next change.
+            if (!chip)
+                label.AlignMode(Label.AlignMode.Left);
+            rules.Add(label);
         }
     }
 

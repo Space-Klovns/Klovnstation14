@@ -203,6 +203,39 @@ Summarised from the upstream conventions doc — that page stays the authority; 
 - **Text** — no quotes on `name`/`description` unless punctuation demands it, then single quotes. Every player-facing string is localized.
 - **Abstract prototypes** — no textures in them. Use `suffix` to separate spawn-menu variants instead of baking the distinction into `name`.
 
+### Partial prototypes: change an upstream prototype without editing its file
+
+A partial prototype has the same kind and id as an existing one, and is merged into it instead of failing the load as `Duplicate ID`. It's the way to add to, or take from, an upstream prototype (a sound collection, a loadout group, an entity's components) from a fork-owned file, with no `# KS14:` edit to the upstream file and so nothing to conflict with on the next merge.
+
+**A file is only partial if it's registered.** Anywhere else, a second `LobbyMusic` throws `PrototypeLoadException: Duplicate ID` and the load fails. Register the file, or a whole directory, in `_partialPrototypePaths` in `Content.Shared/_KS14/Entry/KsEntryPoint.cs`, which runs before prototypes load on the client, server and YAML linter alike:
+
+```csharp
+private readonly ResPath[] _partialPrototypePaths = [
+    new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),   // a file
+    new("/Prototypes/_KS14/Partials/"),                       // or a directory, with no extension
+];
+```
+
+Keep the registrations narrow: inside a partial path, an id that *accidentally* matches an existing prototype silently merges into it rather than erroring. Don't register whole trees like `_KS14/` or `_KsModule/`.
+
+Then write only the fields you're changing. Sequences are appended to, mappings are combined key by key, and plain values are replaced:
+
+```yaml
+# adds a track to upstream's collection; every upstream track stays
+- type: !PartialOnly soundCollection
+  id: LobbyMusic
+  files:
+  - /Audio/_KsModule/LobbyMusic/melcom-cyberpunk.ogg
+```
+
+- **`!PartialOnly`** on the `type` — if the original doesn't exist (upstream renamed or removed it), do nothing, instead of quietly creating a new prototype from the fragment. Use it whenever you're modifying something, which is almost always.
+- **`- !Remove X`** in a sequence removes `X`; **`key: !Remove`** removes a mapping key, and **`key: !Remove 1`** removes it only if its value is `1`. **`- !Remove type: SomeComponent`** removes a component from an entity.
+- **`field: !Clear`** empties a sequence or mapping before your entries are added to it.
+- **`- !Index:0 X`** inserts at a position (negative counts from the end, and it's clamped to the list). Combine it with `!Remove` to reorder.
+- **`- !CombineIndex:0 key: value`** merges into the element *already at* that index, rather than adding a new one.
+
+The full list of examples is on `IPrototypeManager.PartialDirectory` (`RobustToolbox/Robust.Shared/Prototypes/IPrototypeManager.cs`). Partials apply after every non-partial file, so it doesn't matter where the original lives. Prefer a partial to a `_KsModule_ReplacedPrototypes` replacement whenever you're changing part of a prototype, since a replacement restates the whole thing and drifts from upstream. Cover a partial with a test that the merged prototype has your change *and* still has upstream's data (`KsLobbyMusicPartialTest`), since a partial that silently stopped applying looks exactly like the unmodified upstream prototype.
+
 **One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't relocate or reformat **upstream** code just to bring it into convention unless you're already changing it for another reason — every such move is a merge conflict waiting for the next upstream pull, paid for nothing. This is about upstream files specifically, not a general licence to leave things alone: fork code under `_KS14/` is ours, merges cleanly, and is fair game to tidy whenever it has drifted from the rules below.
 
 ### Local rules on top of upstream

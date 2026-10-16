@@ -92,6 +92,18 @@ localisation (§7).
   short of it. `StyleBox.Padding` **throws** if negative, so for edge-to-edge chrome use `KsStyleBoxGradient` (equal
   stops for a flat fill) with `Bleed` toward that edge, as `KsLobbyBottomBar` does. Anything drawn past the window
   edge simply isn't shown.
+- **A control's width can lag its text (stale arrange).** `Control.Arrange` re-measures a child whose measure went invalid
+  (`Control.Layout.cs:649`). If that changes the child's size, `Parent.InvalidateMeasure` → `InvalidateArrange` is
+  dropped because the parent is still arranging (`_arranging`), so the parent ends the pass marked valid at its old
+  size and stays there until something else changes it. The lobby's ready button kept NOT READY's width after
+  switching to JOIN at round start.
+  - It shows only through alignment. `ButtonSheetlet` **centres button labels**, so the new text sat centred in the
+    stale box, about 50px off. Left-aligned text in a left-aligned button looks right at any stale width.
+  - So for a button whose text changes at runtime, don't rely on centring inside a content-sized button. Left-align
+    it (`.AlignMode(Label.AlignMode.Left)` on the label rule), or give it a width that doesn't follow the text
+    (`HorizontalAlignment="Stretch"`, or a `MinWidth` that fits every locale).
+  - It didn't reproduce in a standalone `LobbyGui`, only in the real `LobbyState` screen through an actual round start.
+    Bisect on the real flow.
 
 ## Stylesheets
 
@@ -250,6 +262,16 @@ colours itself (see below), so don't re-solve either.
 - Assert against `Measure(Vector2Helpers.Infinity)`, not a squeezed control's own `DesiredSize` (CLAUDE.md §6), and
   prove the test fails with the fix removed.
 - Lobby smoke tests: `--filter "FullyQualifiedName~Lobby|FullyQualifiedName~SandboxTest"`.
+- **Drive the real screen when standalone doesn't reproduce.** With `PoolSettings { Connected = true, InLobby = true }`,
+  `((LobbyState)Client.Resolve<IStateManager>().CurrentState).Lobby` is the live `LobbyGui`. The server side drives it:
+  `Server.System<GameTicker>().StartRound()` / `RestartRound()`, and `toggleready True` through the client's
+  `IConsoleHost` (pre-round only, so ready up after a restart, not after a round start). Template:
+  `KsLobbyReadyButtonAlignmentTest`.
+- **Probing layout:** record `Size`, `DesiredSize`, `IsMeasureValid` and `IsArrangeValid` up the parent chain once per
+  `Pair.RunTicksSync(1)`, logging only lines that change. A control whose `DesiredSize` differs from its `Size` while
+  both flags say valid is the stale-arrange trap above.
+- **Style results are readable**, even though drawing isn't: `Label.Align` returns the style-resolved alignment
+  (`StylePropertyAlignMode`), not just the value set in code.
 
 ## The lobby
 
@@ -314,8 +336,17 @@ Fonts, text and countdown:
   luminance is eased down to `maxLuminance` 0.07 through a soft knee (starting at 60% of it, never brightening) and
   desaturated 30%. While it is active `RightSide.PanelOverride` is a `StyleBoxEmpty`, so the right fade doesn't
   stack into a stripe; it returns to null otherwise (`KsApplyContrastShader`).
-- `CharacterPreview` is `HorizontalAlignment="Center"` in the free space right of the menu column, so it follows
-  `RightSide` collapsing.
+- `CharacterPreview` is right-aligned (`Margin="0 0 40 0"`) and vertically centred between two `VerticalExpand`
+  spacers, in the free space right of the menu column, so it follows `RightSide` collapsing.
+- **Menu item labels are left-aligned** (`AddButtonRules`, non-chip), overriding `ButtonSheetlet`'s centring. This
+  keeps the ready button's text still across NOT READY / READY / JOIN (see the stale-arrange trap in Layout).
+- **Countdown urgency:** in the last 20s `LobbyGui.KsSetCountdown(..., secondsLeft:)` shifts the value from amber to
+  `#FF5A3C` with a flash on each digit change (`LobbyGui.Klovn.Countdown.cs`). `LobbyState` passes `secondsLeft`,
+  null while paused.
+- **Lobby art is server-picked** and sent to every client in `TickerLobbyStatusEvent`, so everyone sees the same one.
+  A `gameMap` can force one with `forcedLobbyBackground`. A `lobbyBackground` with `randomlySelectable: false` appears
+  only through such a map (`GameTicker.Klovn.ForcedLobbyBackground.cs`). The client only displays
+  `ClientGameTicker.LobbyBackground`; never pick art client-side.
 
 Bottom bar and blur:
 - `LobbyGui` is `KsRoot` (vertical, anchored Wide) holding `MainContainer` (expand) and `KsBottomBar`: a full-width

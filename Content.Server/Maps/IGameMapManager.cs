@@ -9,6 +9,13 @@ public interface IGameMapManager
 {
     void Initialize();
 
+    // KS14 start: lets the game ticker follow the selection (forced lobby backgrounds)
+    /// <summary>
+    /// Raised whenever <see cref="GetSelectedMap"/> starts returning a different map.
+    /// </summary>
+    event Action? KsSelectedMapChanged;
+    // KS14 end
+
     /// <summary>
     /// Returns all maps eligible to be played right now.
     /// </summary>
