@@ -2234,3 +2234,9 @@ Entries:
       message: Portals look a bit different now
   id: 230
   time: '2026-10-13T18:04:33.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Changed lobby UI.
+  id: 231
+  time: '2026-10-16T17:51:51.0000000+00:00'
