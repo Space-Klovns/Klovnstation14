@@ -508,22 +508,11 @@ What each base already gives you, and the name to use:
 
 ```csharp
 // not this - LocalizedEntityCommands already injects EntityManager
+//      (likewise BoundUserInterface -> EntMan, Overlay -> OverlayManager, resolved in its constructor)
 public sealed partial class KsSomeCommand : LocalizedEntityCommands
 {
     [Dependency] private IEntityManager _entityManager = default!;
     // ...then _entityManager.HasComponent<MapGridComponent>(uid)
-}
-
-// not this either - BoundUserInterface already injects EntMan
-public sealed class KsSomeBoundUserInterface : BoundUserInterface
-{
-    [Dependency] private IEntityManager _entityManager = default!;
-}
-
-// nor this - Overlay's constructor resolves OverlayManager itself
-public sealed class KsSomeOverlay : Overlay
-{
-    [Dependency] private IOverlayManager _overlayManager = default!;
 }
 ```
 
@@ -633,13 +622,9 @@ _popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
 
 So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
 
-**NPC behaviour (C#, YAML)** — HTN, and the systems that feed it, have their own conventions, kept in the `npc-htn` agent skill (`.claude/skills/npc-htn/SKILL.md`). Read it before touching NPC behaviour.
-
-**Rendering (C#)** — how Clyde draws a frame, where lighting and FOV apply, overlay and sprite order, the stencil buffer, and our extra render passes (z-levels, view portals) are in the `rendering` agent skill (`.claude/skills/rendering/SKILL.md`). Read it before writing an overlay or anything drawn in world space.
-
-**Client UI (C#, XAML)** — XAML, layout and mouse filtering, the sheetlet stylesheet system and its silent traps (selector specificity, Baron overriding global defaults, dead `StyleNano` classes, button `ModulateSelf` tint), the reusable gradient stylebox, screens, windows and BUIs, and the reworked lobby are in the `ui` agent skill (`.claude/skills/ui/SKILL.md`). Read it before writing or restyling any UI.
-
-**Integration tests (C#)** — the `GameTest` fixture, driving players, movers, commands and cvars, and what a headless client can check are in the `integration-testing` agent skill (`.claude/skills/integration-testing/SKILL.md`).
+**Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering, client UI and integration testing each
+have an agent skill under `.claude/skills/` (agents see the list automatically). Read the matching one before working
+in that area.
 
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
@@ -930,6 +915,37 @@ system as much as a sealed one — the emitted `SubscribeLocalEvent<T>(OnFoo, nu
 `EntityEventRefHandler<T>` overload. The genuine exclusions are the ones listed in §4, and a project
 missing the generator import.
 
+### Map saves: only `[DataField]`s persist, and `UninitializedSaveTest` checks it
+
+A map save writes a component's `[DataField]`s and nothing else. A field that is only `[ViewVariables]`, or plain,
+comes back at its default after a save and load: fine for caches and derived state, a silent bug for state that
+must survive (an owner, a charge, a timer). Two `[DataField]` parameters change this:
+
+| Parameter | Effect | Use for |
+| --- | --- | --- |
+| `readOnly: true` | Read from YAML, **never written**, so never saved. | Setup-only input consumed at init, e.g. `AccessComponent.Groups`, merged into `Tags` at `MapInit`. |
+| `serverOnly: true` | The client neither reads nor writes it (generated code is wrapped in `IsServer`); it stays at its default there. | Server-only types inside shared prototypes or components, e.g. `ReactionPrototype.Impact`. |
+
+Mobs get leeway: by default they are never written into map saves. Still keep mob data as serializable as
+reasonably possible, but compromises are acceptable there.
+
+`PrototypeSaveTest.UninitializedSaveTest` spawns every map-savable prototype on an **uninitialised** map (no
+`MapInit`), saves each component and diffs it against the prototype. Nothing else in the suite checks this, so it is
+the one test people forget to run. Run it after adding or changing a component or prototype:
+
+```sh
+dotnet test Content.IntegrationTests/Content.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~UninitializedSaveTest"
+```
+
+Failure reads `modifies component on spawn: <Comp>. Modified yaml: ...`. Causes and fixes:
+- A `[DataField]` written in `ComponentInit`/`ComponentStartup`/a constructor, or defaulting to something computed
+  (`_random`, `CurTime`): set it in `MapInit` instead, or compute it lazily.
+- Runtime state or a cache as a `[DataField]` that need not survive a save: make it `[ViewVariables]` only.
+- A non-nullable `EntityUid` field written before `MapInit`: make it `EntityUid?`, null until `MapInit`.
+- A component added or removed on spawn: put it in the prototype, or do it in `MapInit`.
+
+The test's own exclusions (`Metadata`/`Transform`/`Fixtures`, test prototypes, `DEBUG` suffix) are not a fix.
+
 ### "Invisible" is usually PVS, and PVS tests are vacuous by default
 
 When something is on the server, in the right place, with the right components, and the client cannot
@@ -1024,6 +1040,18 @@ throws straight out of `Update`.
 `PuddleSystem`'s one-puddle-per-tile invariant is enforced this way: a puddle that starts up or moves onto an
 occupied tile is queued, and merged into the cached puddle (then deleted) in `Update`, never in the callback.
 
+### `IntersectRay` with `returnOnFirstHit: true` is not the nearest hit
+
+The physics ray query's `returnOnFirstHit` stops at whichever fixture the broadphase tree happens to visit first.
+That is often, but not always, the closest one, so a beam, sight line or "how far can I see" length ends beyond a
+nearer obstacle only sometimes, which reads as flicker or a rare overshoot. Nothing errors. Use
+`returnOnFirstHit: false` (the results come back sorted by distance) and take the minimum when you need the nearest:
+
+```csharp
+foreach (var result in _physicsSystem.IntersectRay(mapId, ray, length, ignoredEnt: uid, returnOnFirstHit: false))
+    length = MathF.Min(length, result.Distance);
+```
+
 ### `Equals` on an enum boxes it
 
 An enum's `Equals` is inherited from `System.Enum`, a class, and takes an `object`. Calling it boxes both
@@ -1105,12 +1133,20 @@ metrics, so this works in an ordinary integration test.
 
 ### World-space overlays draw square to the map, not the grid
 
-A `Box2`, or an offset like `position + new Vector2(0, size)`, is aligned to the map's axes. On a turned grid, a
-marker built that way sits at a slant to the grid it marks, and any text placed next to it ends up in the wrong spot.
+A world handle with the identity transform draws in map space, so every coordinate you hand it is measured along the
+map's axes. That covers far more than `Box2`s. It applies to any shape with corners or a direction: a `Box2` or
+`DrawRect`, a texture drawn with `DrawTextureRect`, `DrawPrimitives` vertices, lines whose ends are built from offsets
+(`position + new Vector2(0, size)`), and anything placed next to something else by such an offset, text labels
+included. On a turned grid, all of these sit at a slant to the grid they mark, and anything placed beside them lands
+in the wrong spot. Only shapes that look the same at any rotation are safe without a transform: a circle, a lone point,
+or a line between two points that were both already worked out in map space. Screen-space text glyphs are always
+upright, but *where* the text starts still has to be worked out in the grid's frame.
+
 Draw in the grid's frame instead. Call `SetTransform` with the grid's world matrix for tiles, or with
-`Matrix3Helpers.CreateTransform(position, gridRotation)` for a marker drawn around the origin, and set
+`Matrix3Helpers.CreateTransform(position, gridRotation)` for a marker drawn around the origin. Set
 `Matrix3x2.Identity` back afterwards. Clyde applies the transform to vertices as it queues them, so setting it per
-marker is cheap. Circles and screen-space text are unaffected. `SquadDebugOverlay` does both.
+marker is cheap. `SquadDebugOverlay` does both (`GetMarkerTransform`), including a label positioned through the
+marker's frame, and `KsLockOnIndicatorOverlay` draws its brackets the same way.
 
 ### Occluder ray queries along a tile edge report walls that are not there
 
@@ -1246,11 +1282,10 @@ overload permits a literal observer message or `null` to suppress it. Preserve t
 existing filter, popup type, replay recording choice, coordinates, and prediction
 key when migrating a call.
 
-The KS `PopupClient` / `PopupPredicted` aliases exist for old call sites. Prefer
-`PopupEntity`, `PopupCoordinates`, and `PopupCursor` in new code. As explained in
-§4, the old three-argument `PopupPredicted(message, uid, recipient)` broadcasts;
-its `recipient` argument does not restrict the audience. Do not accidentally turn
-a private `PopupClient` call into a PVS broadcast.
+The KS `PopupClient` / `PopupPredicted` aliases exist for old call sites; new code uses
+`PopupEntity`, `PopupCoordinates` and `PopupCursor`. See §4 (*Popups predict themselves*) for
+the `recipient` trap and how to migrate an obsolete call without turning a private
+`PopupClient` into a PVS broadcast.
 
 On the server, `PopupSystem.Klovn.Localization.cs` serialises a `KsPopupPayload`
 inside `KsLocalizedPopupEvent`, including its location, popup type, game tick, and
