@@ -47,14 +47,20 @@ public sealed partial class KsTargetLockOnComponent : Component
     public Color IndicatorColor = Color.Red;
 
     /// <summary>
-    ///     Played client-side to the target only, when a lock on them starts.
+    ///     Played from the shooter, to everyone in range, when a lock starts.
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField]
     public SoundSpecifier? LockingSound;
 
     /// <summary>
-    ///     Played client-side to the target only, when the lock completes.
+    ///     Played from the shooter, to everyone in range, when the lock completes.
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField]
     public SoundSpecifier? LockedSound;
+
+    /// <summary>
+    ///     Whether <see cref="LockedSound"/> has played for the current lock. Server-only bookkeeping, not networked.
+    /// </summary>
+    [DataField]
+    public bool LockedSoundPlayed;
 }

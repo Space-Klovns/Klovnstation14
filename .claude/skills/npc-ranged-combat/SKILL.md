@@ -194,8 +194,8 @@ only; aiming continues.
 | `lockOnTime` | TimeSpan (seconds number) | `1.5` | Time from acquiring a visible target to being allowed to fire. |
 | `loseLockGrace` | TimeSpan | `0.5` | Sight lost for longer than this clears the lock (full `lockOnTime` again on reacquire); shorter keeps progress. |
 | `indicatorColor` | Color | Red | Reticle colour drawn on the target's screen. |
-| `lockingSound` | SoundSpecifier? | null | Played to the **target** (client-side, local only) when a lock on them starts. |
-| `lockedSound` | SoundSpecifier? | null | Played to the target when the lock completes. |
+| `lockingSound` | SoundSpecifier? | null | Played by the server from the **turret** (`PlayPvs`, so everyone in range hears it) when a lock starts. Not networked. |
+| `lockedSound` | SoundSpecifier? | null | Same, when the lock completes. |
 | `Target`, `LockStartTime`, `LockEndTime` | networked state | | Runtime; times are `[AutoPausedField]`. |
 | `LostSightTime` | TimeSpan? | | Server-only bookkeeping, not networked. |
 
@@ -229,8 +229,8 @@ Generic: any entity with it draws a beam along its world facing. Not NPC-specifi
 Client side (describe-level only; may be changing): `KsLaserSightOverlaySystem` resolves each enabled laser
 once per frame (culled to the eye's world viewport enlarged by `maxLength`; the obstacle raycast is cached in the client-only `KsLaserSightClientStateComponent` for up to 0.1 s while origin and direction hardly change) from these fields (position, facing, offset, length/raycast, blink state from the entity's
 `KsTargetLockOn`) and feeds two overlays: a world-space coloured beam and an emissive pass (`Emissive` shader) so it
-glows in the dark. `KsLockOnClientSystem` plays `lockingSound` / `lockedSound` to the local player when *they* are the
-`Target`, tracking what has played in the client-only `KsLockOnClientStateComponent`; `KsLockOnIndicatorOverlay` draws
+glows in the dark. `SharedKsTargetLockOnSystem.UpdateLock` (server-only caller) plays `lockingSound` / `lockedSound` from the turret with
+`PlayPvs`, once per lock (`LockedSoundPlayed`); `KsLockOnIndicatorOverlay` draws
 shrinking corner brackets (colour `indicatorColor`, progress from `GetLockProgress`) around the local player for each
 shooter locking onto them.
 

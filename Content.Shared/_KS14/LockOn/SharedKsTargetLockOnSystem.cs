@@ -1,3 +1,4 @@
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.LockOn;
@@ -5,9 +6,11 @@ namespace Content.Shared._KS14.LockOn;
 public sealed partial class SharedKsTargetLockOnSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     /// <summary>
     ///     Advances the lock state. Call every tick with the current target and whether it is visible.
+    ///         Only the server calls this, so the lock sounds it plays go out to everyone in range of the shooter.
     /// </summary>
     public void UpdateLock(Entity<KsTargetLockOnComponent> entity, EntityUid? target, bool targetVisible)
     {
@@ -29,11 +32,21 @@ public sealed partial class SharedKsTargetLockOnSystem : EntitySystem
                 lockOn.LockStartTime = curTime;
                 lockOn.LockEndTime = curTime + lockOn.LockOnTime;
                 lockOn.LostSightTime = null;
+                lockOn.LockedSoundPlayed = false;
                 Dirty(entity.Owner, lockOn);
+
+                _audioSystem.PlayPvs(lockOn.LockingSound, entity.Owner);
                 return;
             }
 
             lockOn.LostSightTime = null;
+
+            if (!lockOn.LockedSoundPlayed && curTime >= lockOn.LockEndTime)
+            {
+                lockOn.LockedSoundPlayed = true;
+                _audioSystem.PlayPvs(lockOn.LockedSound, entity.Owner);
+            }
+
             return;
         }
 
