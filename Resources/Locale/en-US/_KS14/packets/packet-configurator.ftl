@@ -13,3 +13,9 @@ packet-configurator-probe-address = Address: {$address}
     Network: {$network}
 
 packet-frequencies-paper-label = [head=1]Frequencies.[/head]
+
+packet-configurator-mode-probe = Probe
+packet-configurator-mode-save = Save
+
+packet-configurator-status-label = Mode: {$mode}
+    Freq: {$frequency}

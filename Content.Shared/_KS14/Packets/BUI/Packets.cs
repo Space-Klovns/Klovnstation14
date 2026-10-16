@@ -9,7 +9,15 @@ namespace Content.Shared._KS14.Packets.BUI
     }
 
     [Serializable, NetSerializable]
-    public sealed class StartExecutionMessage : BoundUserInterfaceMessage;
+    public sealed class StartExecutionMessage : BoundUserInterfaceMessage
+    {
+        public string Command;
+
+        public StartExecutionMessage(string command)
+        {
+            Command = command;
+        }
+    }
 
     [Serializable, NetSerializable]
     public sealed class SendExecutionPacketMessage : BoundUserInterfaceMessage
