@@ -1,5 +1,6 @@
 using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
+using Content.Shared._KS14.Portal; // KS14 Addition
 using Content.Shared._KS14.Random.Helpers; // KS14 Addition
 using Content.Shared._KS14.Sparks; // KS14 Addition
 using Content.Shared.Ghost;
@@ -226,7 +227,18 @@ public abstract partial class SharedPortalSystem : EntitySystem
     {
         if (HasComp<BodyComponent>(hitUid))
         {
-            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), hitUid, type: PopupType.LargeCaution);
+            // KS14 start: one telefrag per victim. Gibbing is server-only, so a predicted victim stays in play on the
+            //      client until the server's deletion reaches it and can be fragged again meanwhile, which stacks the
+            //      popup as "x2, x3, ...".
+            if (TryComp<KsRecentlyTelefraggedComponent>(hitUid, out var recentlyTelefragged) &&
+                _curTiming.CurTime < recentlyTelefragged.Until)
+                return false;
+
+            recentlyTelefragged = EnsureComp<KsRecentlyTelefraggedComponent>(hitUid);
+            recentlyTelefragged.Until = _curTiming.CurTime + KsRecentlyTelefraggedComponent.Window;
+            // KS14 end
+
+            _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), Transform(hitUid).Coordinates /* KS14: PopupEntity -> PopupCoordinates, the victim is gone before clients handle an entity popup */, type: PopupType.LargeCaution);
             _gibbingSystem.Gib(hitUid, dropGiblets: true);
             return false;
         }

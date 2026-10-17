@@ -14,6 +14,12 @@ public sealed partial class ScenarioFactionPrototype : IPrototype
     public string ID { get; private set; } = default!;
 
     /// <summary>
+    ///     Name of this faction, as used in the round end summary of who fought.
+    /// </summary>
+    [DataField(required: true)]
+    public LocId NameLocId;
+
+    /// <summary>
     ///     Loc text to be appended on round end if this
     ///         faction wins.
     /// </summary>
