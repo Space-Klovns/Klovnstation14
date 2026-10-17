@@ -16,13 +16,12 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.Portal;
 
 /// <summary>
-///     A portal that frags what goes through it (<see cref="PortalComponent.FragOnTargetTileOccupied"/>) must show
-///         "gets shredded" once per victim, however often the victim goes back through before it is gone.
+///     A portal that frags what goes through it (<see cref="PortalComponent.FragOnTargetTileOccupied"/>) shows
+///         "gets shredded" from the server only, at the victim's coordinates.
 ///
-///     The client cannot gib (that is server-only), so a predicted victim stays alive and in play on the client
-///         until the server's deletion reaches it, and the same victim can re-enter the portal and be fragged
-///         again in that time. Popups for the same entity at the same spot stack as "x2, x3, ...".
-///         A godmode victim, which survives the gib, is the headless stand-in for that window.
+///     Gibbing is server-only, so a client that predicted the popup would keep the victim alive and could frag it
+///         again before the server's deletion reached it, stacking the popup as "x2, x3, ...". And an entity-anchored
+///         popup never reaches a bystander, as the victim is deleted first.
 /// </summary>
 [TestFixture]
 public sealed class KsPortalTelefragTest : GameTest
@@ -127,29 +126,14 @@ public sealed class KsPortalTelefragTest : GameTest
     }
 
     [Test]
-    public async Task TestVictimGoingBackThroughIsShownShreddedOnce()
+    public async Task TestSurvivorFraggedEachTimeItGoesThroughIsShownEachTime()
     {
+        // The server decides what is a frag, so a victim that survives and goes back through really is fragged again.
         var (mob, grid) = await SetUpAsync();
 
-        for (var round = 0; round < 4; round++)
+        for (var round = 0; round < 3; round++)
             await EnterPortalAsync(mob, grid);
 
-        Assert.That(await TelefragPopupsReceivedAsync(), Is.EqualTo(1),
-            "The same victim was fragged again within moments of the first time, and showed the popup again.");
-    }
-
-    [Test]
-    public async Task TestVictimIsFraggedAgainOnceTheWindowHasPassed()
-    {
-        var (mob, grid) = await SetUpAsync();
-
-        await EnterPortalAsync(mob, grid);
-        Assert.That(await TelefragPopupsReceivedAsync(), Is.EqualTo(1));
-
-        // Well past any window that stands in for the client waiting on the server.
-        await Pair.RunSeconds(4);
-        await EnterPortalAsync(mob, grid);
-
-        Assert.That(await TelefragPopupsReceivedAsync(), Is.EqualTo(2), "The popup was suppressed for good, not just for a moment.");
+        Assert.That(await TelefragPopupsReceivedAsync(), Is.EqualTo(3));
     }
 }
