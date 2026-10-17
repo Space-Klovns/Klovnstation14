@@ -66,6 +66,7 @@
   - type: Lock
     locked: false
     useAccess: false
+  - type: LockedAnchorable
   - type: Computer
     board: KsShuttleConsoleIdLockedCircuitboard
 

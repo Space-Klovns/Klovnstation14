@@ -65,6 +65,13 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
     /// </summary>
     private const float NetUpdateFloatTolerance = 1f;
 
+    // KS14 start
+    /// <summary>
+    ///     The largest control rod step a client may request: the "+ +" / "- -" buttons in NuclearReactorWindow send 0.1.
+    /// </summary>
+    private const float MaxControlRodStep = 0.1f;
+    // KS14 end
+
     public override void Initialize()
     {
         base.Initialize();
@@ -606,6 +613,13 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
     {
         var comp = ent.Comp;
         var pos = args.Position;
+
+        // KS14 start: the position is client-sent, so it must be inside the grid (checked on the doubles, before the int cast)
+        if (pos.X < 0 || pos.Y < 0
+            || pos.X >= comp.ComponentGrid.GetLength(0) || pos.Y >= comp.ComponentGrid.GetLength(1))
+            return;
+        // KS14 end
+
         var part = comp.ComponentGrid[(int)pos.X, (int)pos.Y];
 
         if (comp.PartSlot.Item == null == (part == null))
@@ -645,7 +659,15 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
     }
 
     private void OnControlRodMessage(Entity<NuclearReactorComponent> ent, ref ReactorControlRodModifyMessage args)
-        => ent.Comp.ControlRodInsertion = Math.Clamp(ent.Comp.ControlRodInsertion + args.Change, 0, 2);
+    {
+        // KS14 start: the change is client-sent (infinity survives deserialisation), so cap it to the biggest step the UI offers
+        var change = Math.Clamp(args.Change, -MaxControlRodStep, MaxControlRodStep);
+        ent.Comp.ControlRodInsertion = Math.Clamp(ent.Comp.ControlRodInsertion + change, 0, 2);
+
+        _adminLog.Add(LogType.AtmosVolumeChanged, LogImpact.Medium,
+            $"{ToPrettyString(args.Actor):actor} changed the control rod insertion of {ToPrettyString(ent):target} by {change} to {ent.Comp.ControlRodInsertion}");
+        // KS14 end
+    }
 
     private void UpdateVisuals(Entity<NuclearReactorComponent> ent)
     {
