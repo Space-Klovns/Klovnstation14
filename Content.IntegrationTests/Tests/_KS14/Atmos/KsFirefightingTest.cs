@@ -1,7 +1,11 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
+using KsFoamBlanketPlaceholderComponent = Content.Client._KS14.Atmos.FoamBlanket.KsFoamBlanketPlaceholderComponent;
+using Content.Client._KS14.PredictedSpawning;
 using Content.Server._KS14.Atmos.FoamBlanket;
+using Content.Server._KS14.Atmos.TileFire;
 using ClientPredictedFoamShotSystem = Content.Client._KS14.Atmos.FoamBlanket.KsPredictedFoamShotSystem;
 using ClientBlanketSystem = Content.Client._KS14.Atmos.FoamBlanket.KsFoamBlanketSystem;
 using Content.Server.Atmos.EntitySystems;
@@ -29,6 +33,7 @@ using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -481,6 +486,10 @@ public sealed class KsFirefightingTest : GameTest
                 Assert.That(blanketSystem.TryGetBlanket(gridUid, testMap.Tile.GridIndices, out var blanket), "The blanket vanished.");
                 foamLeft[index] = blanket.Comp.Foam;
             });
+
+            // The pair deletes only the last test map it made, so an earlier one (and its puddle) would outlive the test.
+            if (i < temperatures.Length - 1)
+                await server.WaitPost(() => entityManager.DeleteEntity(testMap.MapUid));
         }
 
         // Whole seconds are updates, so a tick or so either side of the count is allowed for.
@@ -1004,6 +1013,9 @@ public sealed class KsFirefightingTest : GameTest
                     "The blanket is not registered on the grid it moved to.");
             }
         });
+
+        // The pair deletes only the last test map it made, so the first would outlive the test.
+        await server.WaitPost(() => entityManager.DeleteEntity(oldMap.MapUid));
     }
 
     /// <summary>
@@ -1034,13 +1046,16 @@ public sealed class KsFirefightingTest : GameTest
     }
 
     /// <summary>
-    ///     A shot the client predicted lays blankets on the client as it crosses tiles, from the foam its gun carries
-    ///         (the extinguisher is a quarter foam); the server's copy of a shot, which is not a predicted spawn, lays none.
+    ///     Only the shooter's kept copy of a shot lays blankets on the client, as it crosses tiles, from the foam its gun
+    ///         carries (the extinguisher is a quarter foam); a re-predicted throwaway of the shot and the server's copy
+    ///         lay none. Its blankets are the client's own placeholders rather than engine predicted spawns, so no
+    ///         state reset deletes them. When the server's blanket for a tile arrives it takes over, and the placeholder
+    ///         goes; one the server never replaces goes once its time is up.
     /// </summary>
     /// <remarks>
-    ///     Driven by hand inside one client call: the engine deletes every predicted spawn when the next server state
-    ///         is applied, so nothing predicted outlives a tick of the pair. Whether it feels right with real latency
-    ///         is not tested here.
+    ///     The shots are driven by hand inside one client call. The kept copy stands in for the one
+    ///         <c>KsPredictedSpawnSystem</c> keeps for a real shot, which needs a player; see
+    ///         <see cref="KsPredictedFoamShotTest"/> for one fired for real.
     /// </remarks>
     [Test]
     public async Task TestPredictedFoamShotLaysClientBlankets()
@@ -1054,12 +1069,18 @@ public sealed class KsFirefightingTest : GameTest
         await server.WaitPost(() =>
         {
             FloorRow(testMap);
+            // A second row, for the throwaway.
+            var mapSystem = server.EntMan.System<SharedMapSystem>();
+            for (var x = 0; x < RowLength; x++)
+                mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, 1), testMap.Tile.Tile);
+
             extinguisherUid = server.EntMan.SpawnEntity(ExtinguisherPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
         });
         await Pair.RunTicksSync(10);
 
         var clientGridUid = ToClientUid(testMap.Grid.Owner);
         var clientExtinguisherUid = ToClientUid(extinguisherUid);
+        var placeholderUids = new EntityUid[3];
 
         await client.WaitAssertion(() =>
         {
@@ -1068,23 +1089,35 @@ public sealed class KsFirefightingTest : GameTest
             var shotSystem = entityManager.System<ClientPredictedFoamShotSystem>();
             var transformSystem = entityManager.System<SharedTransformSystem>();
 
-            var predictedShot = entityManager.PredictedSpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 0.5f, 0.5f));
-            // A copy of the server's shot as the client holds it: not a predicted spawn.
+            // The shooter's kept copy: client-side, kept, and no longer an engine predicted spawn.
+            var keptShot = entityManager.SpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 0.5f, 0.5f));
+            entityManager.AddComponent<KsKeptPredictedSpawnComponent>(keptShot);
+            // A re-predicted throwaway of the same shot: an engine predicted spawn.
+            var throwawayShot = entityManager.PredictedSpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 0.5f, 1.5f));
+            // The server's copy as the client holds it: neither.
             var serverShot = entityManager.SpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 4.5f, 0.5f));
-            entityManager.GetComponent<ProjectileComponent>(predictedShot).Weapon = clientExtinguisherUid;
-            entityManager.GetComponent<ProjectileComponent>(serverShot).Weapon = clientExtinguisherUid;
-            Assert.That(entityManager.HasComponent<PredictedSpawnComponent>(serverShot), Is.False);
+            foreach (var shotUid in new[] { keptShot, throwawayShot, serverShot })
+                entityManager.GetComponent<ProjectileComponent>(shotUid).Weapon = clientExtinguisherUid;
 
             var foams = new float[3];
             for (var x = 0; x < 3; x++)
             {
-                transformSystem.SetCoordinates(predictedShot, new EntityCoordinates(clientGridUid, x + 0.5f, 0.5f));
+                transformSystem.SetCoordinates(keptShot, new EntityCoordinates(clientGridUid, x + 0.5f, 0.5f));
+                transformSystem.SetCoordinates(throwawayShot, new EntityCoordinates(clientGridUid, x + 0.5f, 1.5f));
                 transformSystem.SetCoordinates(serverShot, new EntityCoordinates(clientGridUid, x + 4.5f, 0.5f));
                 shotSystem.Update(0f);
 
                 Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 0), out var blanket), $"No blanket on tile {x}.");
                 foams[x] = blanket.Comp.Foam;
-                Assert.That(entityManager.HasComponent<PredictedSpawnComponent>(blanket.Owner), "The client's blanket is not a predicted spawn.");
+                placeholderUids[x] = blanket.Owner;
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(entityManager.HasComponent<KsFoamBlanketPlaceholderComponent>(blanket.Owner), "The client's blanket is not a placeholder.");
+                    Assert.That(entityManager.HasComponent<PredictedSpawnComponent>(blanket.Owner), Is.False,
+                        "The client's blanket is an engine predicted spawn, which the next state reset deletes.");
+                    Assert.That(entityManager.IsClientSide(blanket.Owner), "The client's blanket is not client-side.");
+                }
             }
 
             // Staying on a tile lays nothing more.
@@ -1097,14 +1130,282 @@ public sealed class KsFirefightingTest : GameTest
                 Assert.That(foams[0], Is.EqualTo(0.1f).Within(0.001f));
                 Assert.That(foams[1], Is.EqualTo(0.1f).Within(0.001f));
                 Assert.That(foams[2], Is.EqualTo(0.08f).Within(0.011f));
-                Assert.That(entityManager.GetComponent<KsPredictedFoamShotComponent>(predictedShot).Foam, Is.LessThan(0.375f - 0.27f));
+                Assert.That(entityManager.GetComponent<KsPredictedFoamShotComponent>(keptShot).Foam, Is.LessThan(0.375f - 0.27f));
+                for (var x = 0; x < 3; x++)
+                {
+                    Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 1), out _), Is.False,
+                        $"A re-predicted throwaway shot laid a blanket on tile ({x}, 1) on the client.");
+                }
+
                 for (var x = 4; x < 7; x++)
                 {
                     Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 0), out _), Is.False,
                         $"The server's shot laid a blanket on tile {x} on the client.");
                 }
             }
+
+            entityManager.DeleteEntity(keptShot);
+            entityManager.DeleteEntity(serverShot);
         });
+
+        // The server lays its own on the first tile only.
+        EntityUid serverBlanketUid = default;
+        await server.WaitPost(() =>
+        {
+            var serverBlanketSystem = server.EntMan.System<KsFoamBlanketSystem>();
+            Assert.That(serverBlanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f), Is.GreaterThan(0f));
+            Assert.That(serverBlanketSystem.TryGetBlanket(testMap.Grid.Owner, testMap.Tile.GridIndices, out var serverBlanket));
+            serverBlanketUid = serverBlanket.Owner;
+        });
+        await Pair.RunTicksSync(10);
+        var clientServerBlanketUid = ToClientUid(serverBlanketUid);
+
+        await client.WaitAssertion(() =>
+        {
+            var blanketSystem = client.EntMan.System<ClientBlanketSystem>();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(0, 0), out var blanket) && blanket.Owner == clientServerBlanketUid,
+                    "The server's blanket did not take over the tile from the client's.");
+                Assert.That(client.EntMan.EntityExists(placeholderUids[0]), Is.False, "The client's blanket stayed once the server's arrived.");
+                Assert.That(client.EntMan.EntityExists(placeholderUids[1]), "The client's blanket did not wait for the server's.");
+            }
+        });
+
+        // Past the placeholder's lifetime: the server never lays the other two.
+        await Pair.RunTicksSync(TicksPerSecond * 2);
+
+        await client.WaitAssertion(() =>
+        {
+            var blanketSystem = client.EntMan.System<ClientBlanketSystem>();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(client.EntMan.EntityExists(placeholderUids[1]), Is.False, "A client blanket the server never replaced did not time out.");
+                Assert.That(client.EntMan.EntityExists(placeholderUids[2]), Is.False, "A client blanket the server never replaced did not time out.");
+                Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(1, 0), out _), Is.False, "A timed-out client blanket is still on its tile.");
+                // The timed-out ones going must not take the server's off its tile.
+                Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(0, 0), out var blanket) && blanket.Owner == clientServerBlanketUid,
+                    "The server's blanket left the tile.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Something flammable touching a blanket is in foam; touching two and leaving one, it still is; leaving both,
+    ///         or the blanket going (deleted or dissolving), it is not.
+    /// </summary>
+    [Test]
+    public async Task TestInFoamTracksTheBlanketsTouched()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var blanketSystem = entityManager.System<KsFoamBlanketSystem>();
+        var transformSystem = entityManager.System<SharedTransformSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        EntityUid mobUid = default;
+        EntityUid firstBlanketUid = default;
+        EntityUid secondBlanketUid = default;
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+            firstBlanketUid = LayBlanket(testMap, new Vector2i(0, 0));
+            secondBlanketUid = LayBlanket(testMap, new Vector2i(1, 0));
+            mobUid = entityManager.SpawnEntity(_mobPrototype, new EntityCoordinates(gridUid, 4.5f, 0.5f));
+        });
+        await server.WaitRunTicks(5);
+
+        async Task MoveTo(float x)
+        {
+            await server.WaitPost(() =>
+            {
+                transformSystem.SetCoordinates(mobUid, new EntityCoordinates(gridUid, x, 0.5f));
+                // As walking would: physics only updates the contacts of a body that is awake.
+                entityManager.System<SharedPhysicsSystem>().WakeBody(mobUid);
+            });
+            await server.WaitRunTicks(3);
+        }
+
+        HashSet<EntityUid>? Touched() => entityManager.GetComponentOrNull<KsInFoamComponent>(mobUid)?.Blankets.ToHashSet();
+
+        await server.WaitAssertion(() => Assert.That(Touched(), Is.Null, "The mob is in foam before it reached any."));
+
+        // On the seam between the two blankets.
+        await MoveTo(1f);
+        await server.WaitAssertion(() => Assert.That(Touched() ?? [], Is.EquivalentTo(new[] { firstBlanketUid, secondBlanketUid }),
+            "On the seam, the mob is not in both blankets."));
+
+        // Its own fixture off the first blanket, but its wider flammable one still on it: still in both.
+        await MoveTo(1.3f);
+        await server.WaitAssertion(() => Assert.That(Touched() ?? [], Is.EquivalentTo(new[] { firstBlanketUid, secondBlanketUid }),
+            "One of the mob's fixtures leaving a blanket took it out of that blanket while another still touched it."));
+
+        // Only on the second, its own fixture and its flammable one both reaching off the far side.
+        await MoveTo(1.75f);
+        await server.WaitAssertion(() => Assert.That(Touched() ?? [], Is.EquivalentTo(new[] { secondBlanketUid }),
+            "Leaving one of two blankets did not leave the mob in the other alone."));
+
+        await MoveTo(4.5f);
+        await server.WaitAssertion(() => Assert.That(Touched(), Is.Null, "Leaving every blanket did not take the mob out of foam."));
+
+        // Deleted while touched.
+        await MoveTo(0.5f);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(Touched() ?? [], Is.EquivalentTo(new[] { firstBlanketUid }), "The mob did not go back into foam.");
+            entityManager.DeleteEntity(firstBlanketUid);
+            Assert.That(Touched(), Is.Null, "Deleting the blanket the mob was in did not take it out of foam.");
+        });
+        await server.WaitRunTicks(3);
+        await server.WaitAssertion(() => Assert.That(Touched(), Is.Null, "The mob went back into a deleted blanket."));
+
+        // Dissolving while touched.
+        await MoveTo(1.5f);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(Touched() ?? [], Is.EquivalentTo(new[] { secondBlanketUid }), "The mob did not go into the second blanket.");
+            blanketSystem.StartDissolving((secondBlanketUid, entityManager.GetComponent<KsFoamBlanketComponent>(secondBlanketUid)));
+            Assert.That(Touched(), Is.Null, "The blanket the mob was in dissolving did not take it out of foam.");
+        });
+    }
+
+    /// <summary>
+    ///     A burning mob that walks into foam goes out, and cannot be set alight there, neither directly nor by a fire on
+    ///         its tile. Once it walks out again it can.
+    /// </summary>
+    [Test]
+    public async Task TestBurningMobInFoamGoesOutAndStaysOut()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var flammableSystem = entityManager.System<FlammableSystem>();
+        var tileFireSystem = entityManager.System<KsTileFireSystem>();
+        var transformSystem = entityManager.System<SharedTransformSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var foamTile = testMap.Tile.GridIndices;
+        var bareTile = new Vector2i(4, 0);
+        EntityUid mobUid = default;
+
+        bool OnFire() => entityManager.GetComponent<FlammableComponent>(mobUid).OnFire;
+
+        async Task BurnTile(Vector2i tile)
+        {
+            for (var i = 0; i < TicksPerSecond * 2; i++)
+            {
+                await server.WaitPost(() => tileFireSystem.RaiseTileFire(gridUid, tile, 1000f, Atmospherics.CellVolume));
+                await server.WaitRunTicks(1);
+            }
+        }
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+            FillBlanket(testMap.Tile);
+
+            mobUid = entityManager.SpawnEntity(_mobPrototype, new EntityCoordinates(gridUid, bareTile.X + 0.5f, 0.5f));
+            flammableSystem.AdjustFireStacks(mobUid, 5f, ignite: true);
+            Assert.That(OnFire(), "Test mob did not catch fire.");
+        });
+        await server.WaitRunTicks(5);
+
+        await server.WaitPost(() => MoveAwake(mobUid, new EntityCoordinates(gridUid, 0.5f, 0.5f)));
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entityManager.HasComponent<KsInFoamComponent>(mobUid), "The mob on the blanket is not in foam.");
+                Assert.That(OnFire(), Is.False, "Walking into foam did not put the mob out.");
+            }
+
+            flammableSystem.AdjustFireStacks(mobUid, 5f, ignite: true);
+            Assert.That(OnFire(), Is.False, "Adding fire stacks set the mob alight in foam.");
+            flammableSystem.Ignite(mobUid, gridUid);
+            Assert.That(OnFire(), Is.False, "Igniting the mob set it alight in foam.");
+        });
+
+        await BurnTile(foamTile);
+        await server.WaitAssertion(() => Assert.That(OnFire(), Is.False, "A fire on its tile set the mob alight in foam."));
+
+        // Out of the foam again.
+        await server.WaitPost(() => MoveAwake(mobUid, new EntityCoordinates(gridUid, bareTile.X + 0.5f, 0.5f)));
+        await server.WaitRunTicks(3);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.HasComponent<KsInFoamComponent>(mobUid), Is.False, "The mob is still in foam after leaving it.");
+            flammableSystem.Ignite(mobUid, mobUid);
+            Assert.That(OnFire(), "The mob could not be set alight once out of the foam.");
+            flammableSystem.Extinguish(mobUid);
+        });
+
+        await BurnTile(bareTile);
+        await server.WaitAssertion(() => Assert.That(OnFire(), "A fire on its tile did not set the mob alight out of the foam."));
+    }
+
+    /// <summary>
+    ///     Something burning that lands in foam without setting off the blanket's step trigger (a light item, touching
+    ///         it only with a non-hard fixture) still goes out, because it cannot keep burning there.
+    /// </summary>
+    [Test]
+    public async Task TestBurningItemInFoamGoesOut([Values(true, false)] bool blanketed)
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var flammableSystem = entityManager.System<FlammableSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        EntityUid flammableUid = default;
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+            if (blanketed)
+                FillBlanket(testMap.Tile);
+
+            flammableUid = entityManager.SpawnEntity(_flammablePrototype, new EntityCoordinates(gridUid, 4.5f, 0.5f));
+            flammableSystem.AdjustFireStacks(flammableUid, 5f, ignite: true);
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, "Test flammable did not catch fire.");
+        });
+        await server.WaitRunTicks(5);
+
+        await server.WaitPost(() => entityManager.System<SharedTransformSystem>().SetCoordinates(flammableUid, new EntityCoordinates(gridUid, 0.5f, 0.5f)));
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.HasComponent<KsInFoamComponent>(flammableUid), Is.EqualTo(blanketed),
+                blanketed ? "The item on the blanket is not in foam." : "The item is in foam with no blanket.");
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, Is.Not.EqualTo(blanketed),
+                blanketed ? "The item kept burning in foam." : "The item went out without a blanket, so the blanket case proves nothing.");
+        });
+    }
+
+    /// <summary>
+    ///     Moves something and wakes it, as walking would: physics only updates the contacts of a body that is awake.
+    /// </summary>
+    private void MoveAwake(EntityUid uid, EntityCoordinates coordinates)
+    {
+        Pair.Server.EntMan.System<SharedTransformSystem>().SetCoordinates(uid, coordinates);
+        Pair.Server.EntMan.System<SharedPhysicsSystem>().WakeBody(uid);
+    }
+
+    private EntityUid LayBlanket(TestMapData testMap, Vector2i tile)
+    {
+        var blanketSystem = Pair.Server.EntMan.System<KsFoamBlanketSystem>();
+        var tileRef = Pair.Server.EntMan.System<SharedMapSystem>().GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, tile);
+
+        Assert.That(blanketSystem.Deploy(BlanketPrototype, tileRef, 1f), Is.GreaterThan(0f), $"No blanket was laid on {tile}.");
+        Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, tile, out var blanket));
+        return blanket.Owner;
     }
 
     /// <summary>

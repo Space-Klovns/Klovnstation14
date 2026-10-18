@@ -6,7 +6,8 @@ namespace Content.Shared._KS14.Atmos.FoamBlanket;
 /// <summary>
 ///     Marks a gun shot whose client-predicted copy lays foam blankets along its path for the shooter, ahead of the
 ///         server's vapor laying the real ones. Does nothing on the server, and on the client does nothing for a shot
-///         that is not a predicted spawn of its own.
+///         that is not the shooter's own kept copy (a user-mode predicted spawn, see
+///         <c>KsSharedPredictedSpawnSystem</c>).
 /// </summary>
 /// <remarks>
 ///     The shot's own <c>Vapor</c> is what the server lays blankets with, and has no solution on the client, so this

@@ -129,6 +129,15 @@ public sealed partial class KsFoamBlanketComponent : Component
     public SoundSpecifier SmotherSound = new SoundPathSpecifier("/Audio/_KS14/Effects/burn_sizzle.ogg");
 
     /// <summary>
+    ///     Longest the client keeps a blanket it laid itself, ahead of the server's, while it waits for the server's
+    ///         blanket for that tile to arrive; it gives way to the server's as soon as it does. Long enough for a
+    ///         slow round trip, short enough that one the server never lays does not linger. Client-only; unused on
+    ///         the server.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlaceholderLifetime = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>
     ///     Grid the blanket is registered on, cached so it can be deregistered once the transform has moved on.
     /// </summary>
     [ViewVariables]

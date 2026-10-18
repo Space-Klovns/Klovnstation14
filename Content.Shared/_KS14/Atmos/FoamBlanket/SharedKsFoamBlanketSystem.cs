@@ -1,4 +1,5 @@
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared._KS14.Atmos.Flammable;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.FixedPoint;
@@ -7,6 +8,8 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -31,14 +34,18 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<FlammableComponent> _flammableQuery = default!;
+    [Dependency] private EntityQuery<KsFoamBlanketComponent> _blanketQuery = default!;
     [Dependency] private EntityQuery<KsFoamBlanketGridComponent> _blanketGridQuery = default!;
+    [Dependency] private EntityQuery<KsInFoamComponent> _inFoamQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
     private readonly HashSet<Entity<FlammableComponent>> _flammableEntities = [];
     private readonly List<Entity<ChemicalFireComponent>> _smotheredFires = [];
+    private readonly List<EntityUid> _releasedOccupants = [];
 
     /// <summary>
     ///     The blanket on a tile, if there is one.
@@ -70,6 +77,20 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
         => blanket.Comp.DissolveEndTime != null;
 
     /// <summary>
+    ///     Whether the blanket is the one on its tile's cache, which is what lets it act at all: smother what walks
+    ///         onto it, and keep what touches it from burning. A dissolving blanket, one taken off its tile, and one
+    ///         another blanket has replaced on the cache (the client's own, once the server's has arrived) are not.
+    /// </summary>
+    public bool IsActive(Entity<KsFoamBlanketComponent> blanket)
+    {
+        return blanket.Comp.DissolveEndTime == null &&
+               blanket.Comp.LocalGridUid is { } gridUid &&
+               _blanketGridQuery.TryComp(gridUid, out var gridComponent) &&
+               gridComponent.Tiles.TryGetValue(blanket.Comp.LocalTile, out var registeredUid) &&
+               registeredUid == blanket.Owner;
+    }
+
+    /// <summary>
     ///     Starts a blanket whose foam has run out dissolving. It leaves the tile's cache at once, so a new
     ///         blanket can be laid on the tile and chemfires are no longer kept out; it is removed after
     ///         <see cref="KsFoamBlanketComponent.DissolveDuration"/>.
@@ -98,6 +119,13 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     protected virtual bool SmotherTileAtmos(EntityUid gridUid, Vector2i tile) => false;
 
     /// <summary>
+    ///     Spawns a blanket the client lays ahead of the server and keeps until the server's arrives. Only the client
+    ///         has such a thing; anywhere else it is the ordinary predicted spawn.
+    /// </summary>
+    protected virtual EntityUid SpawnPlaceholderBlanket(EntProtoId prototypeId, EntityCoordinates coordinates)
+        => PredictedSpawnAttachedTo(prototypeId, coordinates);
+
+    /// <summary>
     ///     Lays a blanket on a tile, or tops up the one already there, and smothers whatever is burning on it.
     /// </summary>
     /// <param name="availableFoam">Units of foam on offer; at most <see cref="KsFoamBlanketComponent.FoamPerTile"/> of it is used.</param>
@@ -105,8 +133,13 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     ///     Whether to play the smother sound. A client predicting a shot's blankets passes false: the server lays its
     ///         own through the vapor and plays the sizzle to everyone, the shooter included.
     /// </param>
+    /// <param name="placeholder">
+    ///     Whether a new blanket is the client's own placeholder rather than a predicted spawn: the client keeps it
+    ///         until the server's blanket for the tile arrives, instead of losing it at the next state. See
+    ///         <see cref="SpawnPlaceholderBlanket"/>. Only the client passes true.
+    /// </param>
     /// <returns>The units of foam used, floored to the 0.01u a solution stores; zero if no blanket was laid.</returns>
-    public float Deploy(EntProtoId prototypeId, TileRef tileRef, float availableFoam, bool playSound = true)
+    public float Deploy(EntProtoId prototypeId, TileRef tileRef, float availableFoam, bool playSound = true, bool placeholder = false)
     {
         var gridUid = tileRef.GridUid;
         var tile = tileRef.GridIndices;
@@ -124,6 +157,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
             {
                 blanket.Comp.Foam += used;
                 Dirty(blanket);
+                OnBlanketUpdated(blanket);
             }
         }
         else
@@ -139,7 +173,9 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
                 return 0f;
 
             // The engine's predicted spawn: the server's blanket replaces the client's, and outlives it by a long way.
-            var blanketUid = PredictedSpawnAttachedTo(prototypeId, coordinates);
+            var blanketUid = placeholder
+                ? SpawnPlaceholderBlanket(prototypeId, coordinates)
+                : PredictedSpawnAttachedTo(prototypeId, coordinates);
             if (!TryComp<KsFoamBlanketComponent>(blanketUid, out var blanketComponent))
             {
                 Log.Error($"Foam blanket prototype {prototypeId} spawned an entity with no {nameof(KsFoamBlanketComponent)}.");
@@ -217,7 +253,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnStepTriggerAttempt(Entity<KsFoamBlanketComponent> entity, ref StepTriggerAttemptEvent args)
     {
-        args.Continue = entity.Comp.DissolveEndTime == null;
+        args.Continue = IsActive(entity);
     }
 
     /// <summary>
@@ -233,7 +269,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnStepTriggered(Entity<KsFoamBlanketComponent> entity, ref StepTriggeredOffEvent args)
     {
-        if (entity.Comp.DissolveEndTime != null ||
+        if (!IsActive(entity) ||
             !_flammableQuery.TryComp(args.Tripper, out var flammableComponent) ||
             !TryExtinguish((args.Tripper, flammableComponent)))
             return;
@@ -255,6 +291,110 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
             return;
 
         args.Deny();
+    }
+
+    /// <summary>
+    ///     Something flammable that touches an active blanket is in foam until it touches none.
+    /// </summary>
+    /// <remarks>
+    ///     Any of its fixtures counts, not only hard ones as for the step trigger: a flammable entity's own
+    ///         <c>flammable</c> fixture is non-hard, and is what an item lying in the foam touches it with.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnStartCollide(Entity<KsFoamBlanketComponent> entity, ref StartCollideEvent args)
+    {
+        var otherUid = args.OtherEntity;
+        if (!IsActive(entity) || !_flammableQuery.HasComp(otherUid) || TerminatingOrDeleted(otherUid))
+            return;
+
+        EnsureComp<KsInFoamComponent>(otherUid).Blankets.Add(entity.Owner);
+    }
+
+    /// <summary>
+    ///     Leaving a blanket, which for something touching it with several fixtures is when the last of them stops.
+    /// </summary>
+    /// <remarks>
+    ///     Also raised when the contact is destroyed with the blanket still touching, as it is when either entity
+    ///         is deleted or stops colliding (<c>SharedPhysicsSystem.DestroyContact</c>). Removing the component
+    ///         here touches no contacts, so it is safe even inside the client's state reset.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnEndCollide(Entity<KsFoamBlanketComponent> entity, ref EndCollideEvent args)
+    {
+        var otherUid = args.OtherEntity;
+        if (!_inFoamQuery.TryComp(otherUid, out var inFoamComponent) ||
+            !inFoamComponent.Blankets.Contains(entity.Owner) ||
+            IsTouching(otherUid, entity.Owner))
+            return;
+
+        LeaveBlanket((otherUid, inFoamComponent), entity.Owner);
+    }
+
+    /// <summary>
+    ///     Whether any of the entity's contacts, other than ones being destroyed, is touching the blanket.
+    /// </summary>
+    private bool IsTouching(EntityUid uid, EntityUid blanketUid)
+    {
+        var contacts = _physicsSystem.GetContacts(uid);
+        while (contacts.MoveNext(out var contact))
+        {
+            if (contact.IsTouching && (contact.EntityA == blanketUid || contact.EntityB == blanketUid))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void LeaveBlanket(Entity<KsInFoamComponent> entity, EntityUid blanketUid)
+    {
+        if (!entity.Comp.Blankets.Remove(blanketUid) || entity.Comp.Blankets.Count > 0)
+            return;
+
+        RemComp(entity.Owner, entity.Comp);
+    }
+
+    /// <summary>
+    ///     Takes a blanket that has stopped acting out of everything in foam because of it, whether or not they still
+    ///         touch it.
+    /// </summary>
+    private void ReleaseOccupants(EntityUid blanketUid)
+    {
+        // Including contacts being destroyed: this can run while the blanket is being deleted, part way through.
+        _releasedOccupants.Clear();
+        var contacts = _physicsSystem.GetContacts(blanketUid, includeDeleting: true);
+        while (contacts.MoveNext(out var contact))
+            _releasedOccupants.Add(contact.EntityA == blanketUid ? contact.EntityB : contact.EntityA);
+
+        // Collected first: removing a component while walking the contacts is not something to rely on.
+        foreach (var occupantUid in _releasedOccupants)
+        {
+            if (_inFoamQuery.TryComp(occupantUid, out var inFoamComponent))
+                LeaveBlanket((occupantUid, inFoamComponent), blanketUid);
+        }
+
+        _releasedOccupants.Clear();
+    }
+
+    /// <summary>
+    ///     Nothing that can be put out catches fire, or keeps burning, while it is in foam.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnInFoamBurnAttempt(Entity<KsInFoamComponent> entity, ref KsBurnAttemptEvent args)
+    {
+        if (args.Cancelled ||
+            !_flammableQuery.TryComp(entity, out var flammableComponent) ||
+            !flammableComponent.CanExtinguish)
+            return;
+
+        // Checked rather than trusted: a blanket that went without its occupants hearing of it must not keep them out.
+        foreach (var blanketUid in entity.Comp.Blankets)
+        {
+            if (!_blanketQuery.TryComp(blanketUid, out var blanketComponent) || !IsActive((blanketUid, blanketComponent)))
+                continue;
+
+            args.Cancel();
+            return;
+        }
     }
 
     /// <summary>
@@ -325,10 +465,28 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
 
         // Replacing rather than adding: one blanket per tile is kept by whoever lays them, and a stray duplicate
         //     must not wedge the cache.
-        EnsureComp<KsFoamBlanketGridComponent>(gridUid).Tiles[tile] = entity.Owner;
+        var tiles = EnsureComp<KsFoamBlanketGridComponent>(gridUid).Tiles;
+        tiles.TryGetValue(tile, out var previousUid);
+        tiles[tile] = entity.Owner;
 
         entity.Comp.LocalGridUid = gridUid;
         entity.Comp.LocalTile = tile;
+
+        if (previousUid.IsValid() && previousUid != entity.Owner)
+            OnBlanketSuperseded(previousUid);
+    }
+
+    /// <summary>
+    ///     Called when another blanket takes over a tile's cache entry from <paramref name="previousUid"/>, which
+    ///         then stops acting. On the client, this is how its own placeholder gives way to the server's blanket.
+    /// </summary>
+    /// <remarks>
+    ///     Can run during state application, as the server's blanket arrives, so an override must not destroy
+    ///         contacts here (deleting a client-side entity does); defer that.
+    /// </remarks>
+    protected virtual void OnBlanketSuperseded(EntityUid previousUid)
+    {
+        ReleaseOccupants(previousUid);
     }
 
     /// <summary>
@@ -344,6 +502,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
             return;
 
         entity.Comp.LocalGridUid = null;
+        ReleaseOccupants(entity.Owner);
 
         // Only drop the entry if it is still ours: a new blanket may have been laid on the tile since.
         if (_blanketGridQuery.TryComp(gridUid, out var gridComponent) &&

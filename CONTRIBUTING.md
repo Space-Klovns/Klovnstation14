@@ -591,6 +591,8 @@ if (_lightLevelCacheQuery.TryComp(targetUid, out var cacheComponent) && cacheCom
 // ...compute, then EnsureComp<NpcLightLevelCacheComponent>(targetUid) and store it.
 ```
 
+**No `static` mutable state on systems (C#)** — a system is per server (or client), but a `static` field is per process, and integration tests run several pooled servers in one process, each with its own clock. A static timer set by one server holds back every other server's updates. `PuddleSystem`'s `_nextTileEffectUpdate` was static, so in tests a fuel puddle heated past its ignition point never caught fire through the update loop. The existing tests only lit fuel that was spilled already hot, and that path doesn't use the timer, so they passed anyway. `static readonly` constants and shapes are fine. Anything that changes at runtime is an instance field.
+
 This is about state *about* an entity. Two things that look similar are fine as they are:
 - **Transient work lists** — a set of uids queued this tick and drained in `Update`, like the deferred-check set in §6's reparenting entry. It is a to-do list, not state.
 - **Collections on a component** — a `Dictionary<EntityUid, T>` *inside* a component (an NPC's sightings keyed by target) is data belonging to the entity that owns the component, which is what components are for.
@@ -918,6 +920,46 @@ Two ways to end up here that have nothing to do with carelessness:
 When you find a test like this, fix the test in the same change as the bug. Deleting it is better than
 leaving it.
 
+The opposite also happens: a test that *did* fail can be reported as not having run. In a `dotnet test` run with
+several tests, a failed `GameTest` can show as `Skipped` or `NotExecuted`, with only `Test was dirty-disposed.` in the
+trx and the console. Treat that as a failure. Rerun that test alone with `--logger "console;verbosity=detailed"` to see
+the assertion that actually failed.
+
+### Sleeping bodies get no contact updates, so a teleport doesn't end a collision
+
+Physics only updates contacts for awake bodies. Move a sleeping entity with `SetCoordinates` and it keeps every contact
+it had: no `EndCollideEvent` for what it left, and no `StartCollideEvent` for what it's now on top of, until something
+wakes it. Walking wakes a body, so in game this rarely shows. In a test that teleports an entity to check collision
+tracking (the foam's `KsInFoamComponent`, say), it looks exactly like the tracking being broken. Wake the body after
+moving it:
+
+```csharp
+transformSystem.SetCoordinates(mobUid, outsideCoordinates);
+physicsSystem.WakeBody(mobUid);
+```
+
+### An item lying on a puddle isn't touching it
+
+An item's own fixture has mask `ItemMask` and no layer. A puddle's `slipFixture` is on `SlipLayer` with mask `ItemMask`.
+Neither one's mask matches the other's layer, so a dropped item never makes a contact with the puddle under it, and its
+`StartCollideEvent` never comes. A mob does touch it, which makes a test on a mob look like proof that items work.
+
+When a feature needs items to touch puddles, put the fixture on the side the feature is about. For a puddle feature,
+that's a non-hard fixture on the puddle whose layer matches what items collide with, not a fixture added to every item
+that might matter. Keep it separate from `slipFixture` and filter your collide handlers on `args.OurFixtureId`, so each
+toucher is counted once.
+
+Items have no layer, so the fixture can't pick them out by mask. Whatever layer it uses is also hit by anything else that
+masks that layer, and `FlyingMobMask` is exactly `ItemMask`. Step triggers and speed modifiers don't check *which* of the
+puddle's fixtures was touched, only that the other fixture is hard. So without a filter, bats and carp start slipping on
+puddles and getting slowed by sticky ones. `KsPuddleTouchSystem` cancels `PreventCollideEvent` between the touch
+fixture and a mob's hard fixture. A mob still touches the puddle through its non-hard `flammable` fixture, which is all a
+hot-thing check needs.
+
+Items do reach the puddle's step trigger, but `SlipperySystem.CanSlip` rejects anything that can't be stunned, so
+they're never counted. Non-hard fixtures also don't block a tile (`TurfSystem.IsTileBlocked`), and neither ray queries
+nor projectile hits count them.
+
 ### Verifying an attribute subscription actually generated
 
 Related, and the honest way to answer "is this handler wired up?" rather than guessing from the
@@ -1099,6 +1141,22 @@ Three things the client system handles, each of which looks like a working kept 
 - **What the deferrable form does.** It flags the copy during state application and deletes it before the next physics step.
 
 The same applies to anything else a collision handler does that destroys contacts, such as `SetCanCollide(false)`. `KsPredictedSpawnTest.KeptProjectileHitByTheStateReset` reproduces the crash.
+
+**A kept copy's side effects are not re-predicted either.** The engine re-creates its predicted spawns only by
+re-running the code that spawned them, and nothing re-runs a kept copy. So anything a kept copy spawns with the engine's
+`PredictedSpawn*` is deleted by the next state reset and never comes back: the extinguisher shot's foam blankets
+vanished from every tile but the first this way. Anything a kept copy spawns that has to last until the server's own copy
+arrives is a plain client-side entity, together with a handover:
+
+- **Mark it.** The placeholder blanket is a client-side `KsFoamBlanket` with `KsFoamBlanketPlaceholderComponent` and an
+  expiry time, so it behaves as a real blanket for prediction.
+- **Hand over.** When the server's copy arrives, hide the placeholder at once, so the tile never shows two, and delete it
+  outside state application (here in `FrameUpdate`), for the contact reason above.
+- **Time it out.** If the server's copy never comes (the server's shot hit something sooner), the placeholder deletes
+  itself when it expires.
+
+`KsPredictedFoamShotTest.FiredShotLaysBlanketsThatLastUntilTheServersArrive` fails if engine predicted spawns are used,
+or if the handover is missing.
 
 Neither kind of hiding works by sending the client a network event naming the entity: it can arrive before the entity's state does. Put the information on a networked component, as `KsPredictedSpawnComponent.PredictingUser` does. Also, `PredictedDel` of a networked entity on the client is only a predicted detach, which the next state restores, so don't use it to hide one.
 

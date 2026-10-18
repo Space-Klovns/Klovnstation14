@@ -1,9 +1,11 @@
+using Content.Client._KS14.PredictedSpawning;
 using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Projectiles;
 using Content.Shared.Weapons.Ranged.Components;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.Atmos.FoamBlanket;
 
@@ -12,13 +14,18 @@ namespace Content.Client._KS14.Atmos.FoamBlanket;
 ///         a moment later. See <see cref="KsPredictedFoamShotComponent"/>.
 /// </summary>
 /// <remarks>
-///     Runs on every predicted tick, and a re-predicted tick re-creates the shot (the engine deletes every predicted
-///         spawn when a server state is applied) and so redoes this from the start; the blankets it laid are
-///         predicted spawns themselves and are rebuilt with it. That is deliberate, so nothing here is gated on
-///         <c>IsFirstTimePredicted</c>.
+///     Only the shooter's kept copy of the shot lays anything (<see cref="KsKeptPredictedSpawnComponent"/>). The
+///         re-predicted throwaways of the same shot are deleted within their tick, and the server's copy is hidden
+///         here and lays its own blankets on the server.
+///     A kept copy is never re-predicted, so neither is anything it does: it moves once per real tick, on the
+///         first-time-predicted ones, and the blankets it lays would be lost at the next state reset if they were
+///         engine predicted spawns, since nothing would spawn them again. So it checks its tile once per real tick,
+///         after physics has moved it, and lays placeholders the client keeps until the server's blankets arrive
+///         (<see cref="KsFoamBlanketPlaceholderComponent"/>).
 /// </remarks>
 public sealed partial class KsPredictedFoamShotSystem : EntitySystem
 {
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedKsFoamBlanketSystem _foamBlanketSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
@@ -34,13 +41,23 @@ public sealed partial class KsPredictedFoamShotSystem : EntitySystem
     public static float GetTileOffer(float foam, float transferFraction, float minimumTransfer)
         => MathF.Min(MathF.Max(foam * transferFraction, minimumTransfer), foam);
 
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        // After the step, so the tile checked is where this tick has just put the shot.
+        UpdatesAfter.Add(typeof(SharedPhysicsSystem));
+    }
+
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        // Only a predicted spawn of this client is its own; the server's copy of the shot arrives without the
-        //     component, and the server lays that one's blankets.
-        var enumerator = EntityQueryEnumerator<KsPredictedFoamShotComponent, PredictedSpawnComponent, ProjectileComponent, TransformComponent>();
+        // A kept copy only steps on these; on a re-predicted tick it is where the last one left it.
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
+        var enumerator = EntityQueryEnumerator<KsPredictedFoamShotComponent, KsKeptPredictedSpawnComponent, ProjectileComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var shotComponent, out _, out var projectileComponent, out var transformComponent))
         {
             if (shotComponent.State == KsPredictedFoamShotState.Done)
@@ -65,7 +82,7 @@ public sealed partial class KsPredictedFoamShotSystem : EntitySystem
                 continue;
 
             var offer = GetTileOffer(shotComponent.Foam, shotComponent.TransferFraction, shotComponent.MinimumTransfer);
-            var used = _foamBlanketSystem.Deploy(shotComponent.BlanketPrototype, tileRef, offer, playSound: false);
+            var used = _foamBlanketSystem.Deploy(shotComponent.BlanketPrototype, tileRef, offer, playSound: false, placeholder: true);
 
             shotComponent.Foam -= used;
             if (shotComponent.Foam <= 0f)

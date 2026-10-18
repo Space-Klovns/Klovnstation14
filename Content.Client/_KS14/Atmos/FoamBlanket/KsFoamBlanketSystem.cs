@@ -3,13 +3,16 @@ using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Client.DisplacementMap;
 using Robust.Client.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.Atmos.FoamBlanket;
 
 /// <summary>
 ///     Lets the client predict the blanket: it keeps the blanket cache, answers whether something burns from the
-///         appearance data it is sent, and fades the blanket with its foam.
+///         appearance data it is sent, fades the blanket with its foam, and keeps the placeholders its player's own
+///         shots lay until the server's blankets replace them (<see cref="KsFoamBlanketPlaceholderComponent"/>).
 /// </summary>
 public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
 {
@@ -28,6 +31,8 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     [Dependency] private DisplacementMapSystem _displacementMapSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private EntityQuery<KsFoamBlanketDissolveComponent> _dissolveQuery = default!;
+    [Dependency] private EntityQuery<KsFoamBlanketPlaceholderComponent> _placeholderQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     /// <summary>
     ///     The sprite layer the dissolve mask is applied to.
@@ -36,6 +41,39 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
 
     protected override bool IsBurning(Entity<FlammableComponent> flammable)
         => _appearanceSystem.TryGetData<bool>(flammable.Owner, FireVisuals.OnFire, out var onFire) && onFire;
+
+    /// <summary>
+    ///     A plain client-side spawn rather than a predicted one, so the next state reset leaves it alone; see
+    ///         <see cref="KsFoamBlanketPlaceholderComponent"/>.
+    /// </summary>
+    protected override EntityUid SpawnPlaceholderBlanket(EntProtoId prototypeId, EntityCoordinates coordinates)
+    {
+        var blanketUid = SpawnAttachedTo(prototypeId, coordinates);
+
+        var lifetime = TryComp<KsFoamBlanketComponent>(blanketUid, out var blanketComponent)
+            ? blanketComponent.PlaceholderLifetime
+            : TimeSpan.Zero;
+        AddComp(blanketUid, new KsFoamBlanketPlaceholderComponent { ExpiryTime = _gameTiming.CurTime + lifetime });
+
+        return blanketUid;
+    }
+
+    /// <summary>
+    ///     The server's blanket has arrived on a tile, and taken it over from this client's placeholder. Hidden at
+    ///         once, so the tile never shows two; deleted in <see cref="FrameUpdate"/>, because this runs while the
+    ///         state is applied, and deleting a client-side entity destroys its contacts there and then.
+    /// </summary>
+    protected override void OnBlanketSuperseded(EntityUid previousUid)
+    {
+        base.OnBlanketSuperseded(previousUid);
+
+        if (!_placeholderQuery.TryComp(previousUid, out var placeholderComponent))
+            return;
+
+        placeholderComponent.Superseded = true;
+        if (_spriteQuery.TryComp(previousUid, out var spriteComponent))
+            _spriteSystem.SetVisible((previousUid, spriteComponent), false);
+    }
 
     [SubscribeLocalEvent]
     private void OnAfterAutoHandleState(Entity<KsFoamBlanketComponent> entity, ref AfterAutoHandleStateEvent args)
@@ -83,6 +121,14 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         base.FrameUpdate(frameTime);
 
         var curTime = _gameTiming.CurTime;
+
+        // Superseded, or never superseded in time. Out here, clear of state application and of physics.
+        var placeholderEnumerator = EntityQueryEnumerator<KsFoamBlanketPlaceholderComponent>();
+        while (placeholderEnumerator.MoveNext(out var placeholderUid, out var placeholderComponent))
+        {
+            if (placeholderComponent.Superseded || curTime >= placeholderComponent.ExpiryTime)
+                QueueDel(placeholderUid);
+        }
 
         var enumerator = EntityQueryEnumerator<KsFoamBlanketDissolveComponent, SpriteComponent>();
         while (enumerator.MoveNext(out var uid, out var dissolveComponent, out var spriteComponent))
