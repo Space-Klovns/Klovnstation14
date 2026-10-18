@@ -307,8 +307,9 @@ public abstract partial class SharedPortalSystem : EntitySystem
                 OnTelefrag(subject, ent);
         }
 
-        // KS14: Do sparks
-        _sparksSystem.DoSparks(target, minimumSparks: (int)(2f * sparkMultiplier), maximumSparks: (int)(5f * sparkMultiplier), user: subject);
+        // KS14: Do sparks. No user: the teleport is server-only whenever the client can't predict it (an unseen
+        //      or random destination), and the subject is often not a player at all.
+        _sparksSystem.DoSparks(target, minimumSparks: (int)(2f * sparkMultiplier), maximumSparks: (int)(5f * sparkMultiplier));
 
         if (!playSound)
             return;

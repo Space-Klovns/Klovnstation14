@@ -1,7 +1,7 @@
 using Content.Shared._KS14.Atmos.ChemicalFire;
-using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
+using Content.Shared.FixedPoint;
 using Content.Shared.StepTrigger.Systems;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
@@ -28,7 +28,6 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
-    [Dependency] private KsSharedPredictedSpawnSystem _predictedSpawnSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -37,7 +36,6 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     [Dependency] private EntityQuery<FlammableComponent> _flammableQuery = default!;
     [Dependency] private EntityQuery<KsFoamBlanketGridComponent> _blanketGridQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
-    [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
 
     private readonly HashSet<Entity<FlammableComponent>> _flammableEntities = [];
     private readonly List<Entity<ChemicalFireComponent>> _smotheredFires = [];
@@ -121,7 +119,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
 
         if (TryGetBlanket(gridUid, tile, out var blanket))
         {
-            used = FloorToSolutionUnits(MathF.Min(MathF.Min(availableFoam, blanket.Comp.FoamPerTile), blanket.Comp.MaxFoam - blanket.Comp.Foam));
+            used = (float)FixedPoint2.New(MathF.Min(MathF.Min(availableFoam, blanket.Comp.FoamPerTile), blanket.Comp.MaxFoam - blanket.Comp.Foam));
             if (used > 0f)
             {
                 blanket.Comp.Foam += used;
@@ -136,13 +134,12 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
                 return 0f;
             }
 
-            used = FloorToSolutionUnits(MathF.Min(MathF.Min(availableFoam, prototypeComponent.FoamPerTile), prototypeComponent.MaxFoam));
+            used = (float)FixedPoint2.New(MathF.Min(MathF.Min(availableFoam, prototypeComponent.FoamPerTile), prototypeComponent.MaxFoam));
             if (used < prototypeComponent.MinimumFoam)
                 return 0f;
 
-            // No user: that would make the user's client delete and hide the server's blanket, which has to outlive
-            //     the predicted one by a long way.
-            var blanketUid = _predictedSpawnSystem.PredictedSpawnAttachedTo(prototypeId, coordinates);
+            // The engine's predicted spawn: the server's blanket replaces the client's, and outlives it by a long way.
+            var blanketUid = PredictedSpawnAttachedTo(prototypeId, coordinates);
             if (!TryComp<KsFoamBlanketComponent>(blanketUid, out var blanketComponent))
             {
                 Log.Error($"Foam blanket prototype {prototypeId} spawned an entity with no {nameof(KsFoamBlanketComponent)}.");
@@ -152,7 +149,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
 
             // Foam prototypes are anchored, so initialisation has usually already snapped the entity onto its tile;
             //     anchoring it a second time would double-register it in the snap grid cell.
-            var transformComponent = _transformQuery.GetComponent(blanketUid);
+            var transformComponent = EntityManager.TransformQuery.GetComponent(blanketUid);
             if (!transformComponent.Anchored)
                 _transformSystem.AnchorEntity((blanketUid, transformComponent), (gridUid, mapGridComponent), tile);
 
@@ -354,7 +351,4 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
             registeredUid == entity.Owner)
             gridComponent.Tiles.Remove(entity.Comp.LocalTile);
     }
-
-    private static float FloorToSolutionUnits(float units)
-        => MathF.Floor(units * 100f) / 100f;
 }

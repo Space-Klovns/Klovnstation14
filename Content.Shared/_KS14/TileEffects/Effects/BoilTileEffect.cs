@@ -1,6 +1,7 @@
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
+using Content.Shared.FixedPoint;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
@@ -70,7 +71,7 @@ public sealed partial class BoilTileEffect : KsTileEffect
         var boiledByEnergy = excessTemperature * heatCapacity / (LatentHeat + excessTemperature * specificHeat);
 
         // Floored to the 0.01u the solution actually stores, so the energy taken matches the volume removed.
-        var boiled = MathF.Floor(MathF.Min(MathF.Min(available, Rate * scale), boiledByEnergy) * 100f) / 100f;
+        var boiled = (float)FixedPoint2.New(MathF.Min(MathF.Min(available, Rate * scale), boiledByEnergy));
         if (boiled <= 0f)
             return false;
 

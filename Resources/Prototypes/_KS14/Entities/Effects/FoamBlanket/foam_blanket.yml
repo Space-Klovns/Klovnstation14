@@ -11,7 +11,6 @@
   - type: Sprite
     drawdepth: HighFloorObjects # above puddles, below mobs
     sprite: _KS14/Effects/fire_foam.rsi
-    color: "#f2f6ffbb"
     layers:
     - state: foam
       map: [ "foam" ]

@@ -5,14 +5,8 @@ namespace Content.Server._KS14.PredictedSpawning;
 /// <inheritdoc/>
 public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
 {
-    protected override EntityUid FlagPredictedAndReturn(EntityUid uid, EntityUid? user = null)
+    protected override void KeepForUser(EntityUid uid, EntityUid user)
     {
-        if (user is { })
-        {
-            var args = new KsPredictedEntitySpawnedEvent(GetNetEntity(uid));
-            RaiseNetworkEvent(args, user.Value);
-        }
-
-        return base.FlagPredictedAndReturn(uid);
+        SetPredictingUser((uid, EnsureComp<KsPredictedSpawnComponent>(uid)), user);
     }
 }

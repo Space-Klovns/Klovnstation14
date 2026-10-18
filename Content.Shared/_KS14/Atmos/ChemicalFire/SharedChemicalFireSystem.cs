@@ -1,4 +1,3 @@
-using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared.Atmos;
 using Content.Shared.Light.Components;
 using Robust.Shared.Map;
@@ -22,12 +21,10 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
-    [Dependency] private KsSharedPredictedSpawnSystem _predictedSpawnSystem = default!;
 
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
     [Dependency] private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
-    [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
 
     /// <summary>
     ///     One paused, never-map-inited singleton per chemfire prototype that's been sustain-checked so far,
@@ -106,7 +103,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
             PredictedDel(existingFire.Owner);
         }
 
-        var fireUid = _predictedSpawnSystem.PredictedSpawnAttachedTo(prototypeId, _mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile));
+        var fireUid = PredictedSpawnAttachedTo(prototypeId, _mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile));
         if (!_chemicalFireQuery.TryGetComponent(fireUid, out var fireComponent))
         {
             Log.Error($"Prototype {prototypeId} indexed a {nameof(ChemicalFireComponent)} but the spawned entity has none.");
@@ -116,7 +113,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
 
         // Chemfire prototypes are anchored, so initialisation has usually already snapped the entity onto the
         //     tile it spawned on - anchoring it a second time would double-register it in the snap grid cell.
-        var transformComponent = _transformQuery.GetComponent(fireUid);
+        var transformComponent = EntityManager.TransformQuery.GetComponent(fireUid);
         if (!transformComponent.Anchored)
             _transformSystem.AnchorEntity((fireUid, transformComponent), (grid.Owner, grid.Comp), tile);
 
@@ -411,7 +408,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
 
     private void RegisterFire(Entity<ChemicalFireComponent> entity, TransformComponent? transformComponent = null)
     {
-        transformComponent ??= _transformQuery.GetComponent(entity.Owner);
+        transformComponent ??= EntityManager.TransformQuery.GetComponent(entity.Owner);
 
         if (transformComponent.GridUid is not { } gridUid ||
             !_transformSystem.TryGetGridTilePosition((entity.Owner, transformComponent), out var tile))

@@ -246,6 +246,17 @@ var myFloat = (float)GetMyInt();       // do this
 float myFloat = GetMyInt();            // not this
 ```
 
+**Convert to and from `FixedPoint2` with its own conversions (C#)** — reagent quantities are `FixedPoint2`, stored to 0.01u. When a `float` has to become one, or come back, use `FixedPoint2.New(float)` and the explicit `(float)` cast. Don't write a helper that rounds a float to solution precision by hand:
+```csharp
+// do this - FixedPoint2.New truncates to the 0.01u the solution stores
+var used = (float)FixedPoint2.New(MathF.Min(availableFoam, foamPerTile));
+
+// not this - a hand-rolled copy of what FixedPoint2 already does
+private static float FloorToSolutionUnits(float units) => MathF.Floor(units * 100f) / 100f;
+var used = FloorToSolutionUnits(MathF.Min(availableFoam, foamPerTile));
+```
+The same applies in the other direction: `(float)quantity`, not `quantity.Float()`. A copy of the rounding drifts from `FixedPoint2`'s own. `FixedPoint2.New` applies a float epsilon before truncating, and the hand-rolled version doesn't. So the amount taken and the amount that actually lands in the solution can disagree by 0.01u.
+
 **Name every optional argument (C#)** — an optional parameter is always passed with its name, so the call site says what the value *means* instead of making the reader go read the signature. Required parameters stay positional:
 ```csharp
 // do this
@@ -530,6 +541,19 @@ And the table is per base, not universal: only `EntitySystem` has a `ProtoMan`. 
 `IPrototypeManager`, exactly as before.
 
 The rule is "check the base before you declare", not "assume it is there". Nothing in the toolchain catches either mistake — C# allows a derived field to hide a base one of a different name without a whisper, so this is a review-time thing.
+
+**The same goes for the queries `EntityManager` already holds.** `EntityManager` (which every `EntitySystem` has, as above) keeps public `TransformQuery` and `MetaQuery` fields. Use those; don't inject or fetch your own `EntityQuery<TransformComponent>` or `EntityQuery<MetaDataComponent>`:
+
+```csharp
+// do this
+var transformComponent = EntityManager.TransformQuery.GetComponent(uid);
+
+// not this - a second query for the one EntityManager already keeps
+[Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
+var transformComponent = _transformQuery.GetComponent(uid);
+```
+
+`Transform(uid)` and `MetaData(uid)` remain fine where you only need the component; reach for the query when you want `TryComp`, `Resolve` or `HasComp`.
 
 **Inject `EntityQuery<T>`, don't `GetEntityQuery<T>()` (C#)** — the collection that injects into `EntitySystem`s (`IEntitySystemManager.DependencyCollection`) resolves `EntityQuery<T>` and `EntitySystem` as well, unlike the default `IoCManager` one. So declare queries as dependencies:
 ```csharp
@@ -1039,6 +1063,44 @@ throws straight out of `Update`.
 
 `PuddleSystem`'s one-puddle-per-tile invariant is enforced this way: a puddle that starts up or moves onto an
 occupied tile is queued, and merged into the cached puddle (then deleted) in `Update`, never in the callback.
+
+### Two kinds of predicted spawn, and which copy each one keeps
+
+A predicted spawn makes two copies of an entity: one on the predicting client, and the server's. The two spawn APIs differ in **which copy the predicting client ends up showing**. Pick by that, not by name.
+
+| | Engine `PredictedSpawn*` (`EntityManager`/`EntitySystem`) | `KsSharedPredictedSpawnSystem` with a `user` |
+| --- | --- | --- |
+| Client's copy | A stand-in. Deleted on every applied server state (`ClientGameStateManager.ResetPredictedEntities`), re-created only while its tick is still being re-predicted, so gone about one round trip after spawning. | Kept for its whole life, on that user's client only. |
+| Server's copy | Replaces the stand-in for everyone. | Hidden and inert on the user's client (no sprite, light, collisions or predicted physics); shown to everyone else. |
+| Use for | Anything long-lived or that gameplay reads: fires, foam blankets, EMP effects. | Short-lived cosmetic movers the user caused: their own bullets, their own sparks. |
+
+Without a `user`, the KS system is the engine spawn plus predicted physics, which matters only for something that moves (a spark). Anything anchored or static uses the engine's spawn directly.
+
+User mode exists because the engine's handover is a visible jump for fast movers. A lag-compensated bullet's server copy isn't where the client's copy is, so swapping one for the other teleports it. Showing both is a desync.
+
+User mode has rules nothing enforces:
+
+- **Pass `user` only on that user's own predicted path**: the code their client also runs for their own input, such as a shot request. A server-only path with a `user` hides the server's copy from a client that never made one, and the user sees nothing at all. Teleports, damage-driven effects, triggers and spells pass no user. Guns don't pass one per call either. `SharedGunSystem.OnShootRequest` opens a `BeginUserPrediction` scope, and only projectiles spawned inside it are marked. This is because `PlayerShotProjectileEvent` also fires for server-only shots, such as spells and autofire.
+- **The kept copy never hears from the server again.** It can't follow anything the server does to the real one, which is why gameplay-relevant entities don't use this mode.
+- **Gate a kept copy's one-off effects on `KsSharedPredictedSpawnSystem.IsFirstTimePredicted(uid)`, not `IGameTiming.IsFirstTimePredicted`.** Its physics steps only on first-time ticks, but its contacts are found by the next pass, usually a re-predicted tick, so a timing gate drops its impact effect.
+
+Three things the client system handles, each of which looks like a working kept copy until it doesn't:
+- Removing `PredictedSpawnComponent`, so the state reset leaves it alone.
+- Blocking its physics on re-predicted ticks, so it isn't stepped several times per real tick. Nothing rolls a client-only entity back.
+- Restoring its simulated position before each step. The client's transform lerp writes the rendered position over the real one between ticks, and only networked entities get that overwritten by the next reset.
+
+`KsPredictedSpawnTest.KeptCopySurvivesStatesAndMovesAtItsOwnSpeed` fails if any of the three is missing.
+
+**A kept copy that deletes itself from a collision handler uses `PredictedQueueDelDeferrable`, not `PredictedQueueDel`.**
+
+- **Where the events come from.** The state reset raises `StartCollideEvent`/`EndCollideEvent` from a contact list it gathered beforehand (`PhysicsSystem.ResetContacts` → `UpdateIsTouching`, `RobustToolbox/Robust.Client/Physics/PhysicsSystem.Predict.cs`). It never checks whether an earlier event destroyed a later entry.
+- **Why deleting there is fatal.** Queue-deleting a client-side entity destroys its contacts immediately (`SharedPhysicsSystem.OnContactEntityQueueDel`). That returns them to the pool, which clears their entities to `EntityUid.Invalid`. The next entry then throws `KeyNotFoundException: Entity 0 does not have a component of type TransformComponent` from `ResetPredictedEntities`.
+- **Why only kept copies hit it.** Engine predicted spawns are deleted before `ResetContacts` runs, so only a kept copy can be in that list.
+- **What the deferrable form does.** It flags the copy during state application and deletes it before the next physics step.
+
+The same applies to anything else a collision handler does that destroys contacts, such as `SetCanCollide(false)`. `KsPredictedSpawnTest.KeptProjectileHitByTheStateReset` reproduces the crash.
+
+Neither kind of hiding works by sending the client a network event naming the entity: it can arrive before the entity's state does. Put the information on a networked component, as `KsPredictedSpawnComponent.PredictingUser` does. Also, `PredictedDel` of a networked entity on the client is only a predicted detach, which the next state restores, so don't use it to hide one.
 
 ### `IntersectRay` with `returnOnFirstHit: true` is not the nearest hit
 

@@ -14,7 +14,7 @@ public abstract partial class SharedEmpSystem : EntitySystem
 {
     [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
-    [Dependency] private INetManager _net = default!;
+    /* [Dependency] private INetManager _net = default!; */ // KS14: removed, unused since the effect spawns were made predicted
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
 
@@ -52,8 +52,8 @@ public abstract partial class SharedEmpSystem : EntitySystem
             TryEmpEffects(uid, energyConsumption, duration, user);
         }
 
-        // KS14: use _ksPredictedSpawnSystem and make it predicted
-        _ksPredictedSpawnSystem.PredictedSpawn(EmpPulseEffectPrototype, mapCoordinates);
+        // KS14: made predicted, was "if (_net.IsServer) Spawn(EmpPulseEffectPrototype, mapCoordinates);" after "TODO: replace with PredictedSpawn once it works with animated sprites"
+        PredictedSpawn(EmpPulseEffectPrototype, mapCoordinates);
 
         var coordinates = _transform.ToCoordinates(mapCoordinates);
         _audio.PlayPredicted(EmpSound, coordinates, user);
@@ -77,8 +77,8 @@ public abstract partial class SharedEmpSystem : EntitySystem
             TryEmpEffects(uid, energyConsumption, duration, user);
         }
 
-        // KS14: use _ksPredictedSpawnSystem and make it predicted
-        _ksPredictedSpawnSystem.PredictedSpawnAttachedTo(EmpPulseEffectPrototype, coordinates);
+        // KS14: made predicted, was "if (_net.IsServer) Spawn(EmpPulseEffectPrototype, coordinates);" after "TODO: replace with PredictedSpawn once it works with animated sprites"
+        PredictedSpawnAttachedTo(EmpPulseEffectPrototype, coordinates);
 
         if (predicted)
             _audio.PlayPredicted(EmpSound, coordinates, user);
@@ -124,9 +124,9 @@ public abstract partial class SharedEmpSystem : EntitySystem
         var ev = new EmpPulseEvent(energyConsumption * strMultiplier, false, false, duration * durMultiplier, user);
         RaiseLocalEvent(uid, ref ev);
 
-        // KS14: use _ksPredictedSpawnSystem and make it predicted
+        // KS14: made predicted, was "if (ev.Affected && _net.IsServer) Spawn(EmpDisabledEffectPrototype, Transform(uid).Coordinates);" after "TODO: replace with PredictedSpawn once it works with animated sprites"
         if (ev.Affected)
-            _ksPredictedSpawnSystem.PredictedSpawnAttachedTo(EmpPulseEffectPrototype, Transform(uid).Coordinates);
+            PredictedSpawnAttachedTo(EmpDisabledEffectPrototype, Transform(uid).Coordinates);
 
         if (!ev.Disabled)
             return ev.Affected;

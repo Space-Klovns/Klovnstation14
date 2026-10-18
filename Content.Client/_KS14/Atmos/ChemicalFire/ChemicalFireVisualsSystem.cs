@@ -20,7 +20,6 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
 
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
     [Dependency] private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
-    [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
 
     /// <summary>
     ///     How finely <see cref="ChemicalFireComponent.AnimationPhase"/> is divided. Prime, so the phase doesn't
@@ -210,7 +209,7 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
     private Vector2i GetRenderedEastOffset(Entity<ChemicalFireComponent> fire, EntityUid gridUid)
     {
         var localEyeRotation = _eyeManager.CurrentEye.Rotation + _transformSystem.GetWorldRotation(gridUid);
-        var drawRotation = GetDrawRotation(_transformQuery.GetComponent(fire.Owner).LocalRotation, localEyeRotation);
+        var drawRotation = GetDrawRotation(EntityManager.TransformQuery.GetComponent(fire.Owner).LocalRotation, localEyeRotation);
 
         // Rounded again because the flame is only snapped relative to the eye - a grid at some arbitrary
         //     angle still leaves a non-cardinal remainder here, which no tile offset could express.
