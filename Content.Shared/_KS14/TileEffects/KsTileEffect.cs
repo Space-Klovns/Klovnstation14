@@ -26,4 +26,6 @@ public abstract partial class KsTileEffect
     }
 }
 
-public record struct KsTileEffectReagentData(float RemovedVolume, Solution? Solution, List<ReagentData>? ReagentData);
+/// <param name="RemovedVolume">How much of <paramref name="Reagent"/> the effects so far have used up; removed afterwards.</param>
+/// <param name="Reagent">The reagent whose effects are running, when they are running for one in a solution.</param>
+public record struct KsTileEffectReagentData(float RemovedVolume, Solution? Solution, List<ReagentData>? ReagentData, ReagentId? Reagent = null);

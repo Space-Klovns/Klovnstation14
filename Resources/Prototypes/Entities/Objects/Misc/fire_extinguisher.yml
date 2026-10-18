@@ -34,6 +34,31 @@
     verbToggleOn: fire-extinguisher-component-verb-remove
     verbToggleOff: fire-extinguisher-component-verb-engage
   - type: SpraySafety
+  # KS14 start: full-auto in combat mode; a plain click still sprays a burst
+  - type: Gun
+    clumsyProof: true
+    cameraRecoilScalar: 0
+    fireRate: 8
+    projectileSpeed: 7
+    minAngle: 4
+    maxAngle: 16
+    angleIncrease: 1
+    angleDecay: 8
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    soundGunshot:
+      path: /Audio/Effects/extinguish.ogg
+      params:
+        volume: -8
+        variation: 0.15
+  - type: SolutionAmmoProvider
+    solutionId: spray
+    proto: KsBulletExtinguisherShot
+    fireCost: 1.5
+  - type: PacifismAllowedGun
+  - type: KsGunSpraySafety
+  # KS14 end
   - type: Tool
     qualities:
     - Rolling
@@ -81,9 +106,14 @@
   components:
   - type: Solution
     solution:
+      maxVol: 180 # KS14: 120 -> 180, room for full-auto
       reagents:
       - ReagentId: Water
-        Quantity: 120
+        Quantity: 135 # KS14: 120 -> 135, a quarter is foam
+      # KS14 start: firefighting foam, which keeps fuel puddles from relighting
+      - ReagentId: FirefightingFoam
+        Quantity: 45
+      # KS14 end
 
 - type: entity
   parent: [SolutionFireExtinguisherLarge, FireExtinguisher]
@@ -98,9 +128,14 @@
   components:
   - type: Solution
     solution:
+      maxVol: 360 # KS14: 240 -> 360, room for full-auto
       reagents:
       - ReagentId: Water
-        Quantity: 240
+        Quantity: 270 # KS14: 240 -> 270, a quarter is foam
+      # KS14 start: firefighting foam, which keeps fuel puddles from relighting
+      - ReagentId: FirefightingFoam
+        Quantity: 90
+      # KS14 end
 
 - type: entity
   name: extinguisher spray
@@ -153,9 +188,14 @@
   components:
   - type: Solution
     solution:
+      maxVol: 88 # KS14: 60 -> 88, room for full-auto
       reagents:
       - ReagentId: Water
-        Quantity: 60
+        Quantity: 66 # KS14: 60 -> 66, a quarter is foam
+      # KS14 start: firefighting foam, which keeps fuel puddles from relighting
+      - ReagentId: FirefightingFoam
+        Quantity: 22
+      # KS14 end
 
 # used for a engi xenoborg module
 - type: entity

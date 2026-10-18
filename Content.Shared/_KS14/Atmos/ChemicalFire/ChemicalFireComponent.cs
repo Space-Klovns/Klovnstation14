@@ -64,7 +64,7 @@ public sealed partial class ChemicalFireComponent : Component
     ///         cannot absorb goes to the air instead. Has no effect on chemfires without a puddle under them.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public float PuddleHeatFraction = 0.15f;
+    public float PuddleHeatFraction = 0.03f;
 
     /// <summary>
     ///     How often <see cref="ChemicalFireHeatTileEvent"/> is raised on this chemfire.

@@ -347,6 +347,8 @@ public abstract partial class SharedPuddleSystem : EntitySystem
 
     public void DoTileReactions(TileRef tileRef, Solution solution)
     {
+        using var ksTemperatureScope = KsBeginTileReactionTemperature(solution.Temperature); // KS14: tile reactions that spill read the source's temperature
+
         for (var i = solution.Contents.Count - 1; i >= 0; i--)
         {
             var (reagent, quantity) = solution.Contents[i];

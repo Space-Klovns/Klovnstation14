@@ -1,0 +1,23 @@
+# What a fire extinguisher fires in full-auto: a vapor that reacts with every tile it crosses, like the spray's.
+- type: entity
+  parent: BulletWaterShot
+  id: KsBulletExtinguisherShot
+  categories: [ HideSpawnMenu ]
+  name: extinguisher spray
+  components:
+  - type: Sprite
+    sprite: Effects/extinguisherSpray.rsi
+    layers:
+    - state: extinguish
+      map: [ "enum.VaporVisualLayers.Base" ]
+  - type: TimedDespawn
+    lifetime: 0.6
+  - type: Vapor
+    active: true
+    transferAmountPercentage: 0.5
+  - type: VaporVisuals
+    animationTime: 0.6
+    animationState: extinguish
+  # Lays the shooter's own blankets ahead of the server's; keep these in step with the Vapor above.
+  - type: KsPredictedFoamShot
+    transferFraction: 0.5

@@ -1,0 +1,32 @@
+# Firefighting foam. Spends itself laying a blanket over every tile it reaches (KsFoamBlanket), which smothers what
+#     burns there and keeps chemfires from starting under it until it boils away.
+- type: reagent
+  id: FirefightingFoam
+  name: reagent-name-firefighting-foam
+  desc: reagent-desc-firefighting-foam
+  physicalDesc: reagent-physical-desc-foamy
+  flavor: bitter
+  color: "#e8eef2"
+  boilingPoint: 100.0
+  meltingPoint: 0.0
+  evaporationSpeed: 0.1
+  friction: 0.4
+  slipData:
+    requiredSlipSpeed: 3.5
+  reactiveEffects:
+    Extinguish:
+      methods: [ Touch ]
+      effects:
+      - !type:Extinguish
+  tileReactions:
+  - !type:KsDeployFoamBlanketTileReaction { }
+  tileEffects:
+  - !type:BoilTileEffect
+    gas: WaterVapor
+  metabolisms:
+    Digestion:
+      effects:
+      - !type:HealthChange
+        damage:
+          types:
+            Poison: 0.5

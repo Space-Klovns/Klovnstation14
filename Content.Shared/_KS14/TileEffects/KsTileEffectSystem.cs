@@ -60,6 +60,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
 
             // KS14 - RemovedVolume is per reagent; it was carrying over from the previous reagent otherwise.
             tileEffectReagentData.RemovedVolume = 0f;
+            tileEffectReagentData.Reagent = reagent;
 
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
             {

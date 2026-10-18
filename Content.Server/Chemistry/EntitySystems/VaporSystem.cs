@@ -125,6 +125,7 @@ namespace Content.Server.Chemistry.EntitySystems
                     // In this instance, we check individually for each reagent's TileReaction
                     // This is not doing chemical reactions!
                     var contents = solution.Solution;
+                    using var ksTemperatureScope = _puddleSystem.KsBeginTileReactionTemperature(contents.Temperature); // KS14: tile reactions that spill read the vapor's temperature
                     foreach (var reagentQuantity in contents.Contents.ToArray())
                     {
                         // Check if the reagent is empty

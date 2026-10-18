@@ -1,0 +1,43 @@
+# Laid by firefighting foam (KsDeployFoamBlanketTileReaction). Transient, like a chemfire, so never saved.
+- type: entity
+  id: KsFoamBlanket
+  categories: [ HideSpawnMenu ]
+  name: firefighting foam
+  description: A blanket of foam. Nothing that can be put out will burn under it until it boils away.
+  save: false
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    drawdepth: HighFloorObjects # above puddles, below mobs
+    sprite: _KS14/Effects/fire_foam.rsi
+    color: "#f2f6ffbb"
+    layers:
+    - state: foam
+      map: [ "foam" ]
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      blanket:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        hard: false
+        layer:
+        - SlipLayer
+        mask:
+        - ItemMask
+  - type: StepTrigger
+    requiredTriggeredSpeed: 0
+    intersectRatio: 0.1
+  - type: KsFoamBlanket
+    dissolveDisplacement:
+      sizeMaps:
+        32:
+          sprite: _KS14/Effects/foam_dissolve_displacement.rsi
+          state: dissolve
+          loop: false # holds the last frame, which is near-transparent
+    dissolveDuration: 1.2

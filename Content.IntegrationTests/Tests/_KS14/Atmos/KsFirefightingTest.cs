@@ -1,0 +1,1130 @@
+#nullable enable
+using System.Linq;
+using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.Atmos.FoamBlanket;
+using ClientPredictedFoamShotSystem = Content.Client._KS14.Atmos.FoamBlanket.KsPredictedFoamShotSystem;
+using ClientBlanketSystem = Content.Client._KS14.Atmos.FoamBlanket.KsFoamBlanketSystem;
+using Content.Server.Atmos.EntitySystems;
+using Content.Server.Chemistry.Components;
+using Content.Server.Chemistry.TileReactions;
+using Content.Server.Fluids.EntitySystems;
+using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared._KS14.Atmos.FoamBlanket;
+using Content.Shared._KS14.TileEffects;
+using Content.Shared._KS14.TileEffects.Effects;
+using Content.Shared.Atmos;
+using Content.Shared.Atmos.Components;
+using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Chemistry.Reagent;
+using Content.Shared.FixedPoint;
+using Content.Shared.Fluids.Components;
+using Content.Shared.Gravity;
+using Content.Shared.Item.ItemToggle;
+using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Systems;
+using System.Numerics;
+using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+
+namespace Content.IntegrationTests.Tests._KS14.Atmos;
+
+/// <summary>
+///     Fighting a hot fuel puddle: water boiling off a puddle, spray spilling into one, and foam blankets.
+/// </summary>
+[TestFixture]
+[TestOf(typeof(KsFoamBlanketSystem))]
+[TestOf(typeof(BoilTileEffect))]
+[TestOf(typeof(SpillIfPuddlePresentTileReaction))]
+public sealed class KsFirefightingTest : GameTest
+{
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  parent: BaseChemicalFire
+  id: KsTestFirefightingUnextinguishableFire
+  components:
+  - type: ChemicalFire
+    color: '#FF9030'
+    duration: 30
+    heatPower: 0
+    extinguishable: false
+
+- type: reagent
+  id: KsTestFirefightingInertLiquid
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+
+- type: entity
+  id: KsTestFirefightingFlammable
+  name: test flammable
+  components:
+  - type: Physics
+    bodyType: Dynamic
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.25
+        hard: false
+        layer:
+        - MidImpassable
+        mask:
+        - MidImpassable
+  - type: Appearance
+  - type: Flammable
+    fireSpread: false
+    canResistFire: false
+    damage:
+      types:
+        Heat: 1
+
+- type: entity
+  parent: KsFoamBlanket
+  id: KsTestFirefightingSlowBlanket
+  components:
+  - type: KsFoamBlanket
+    dissolveDuration: 30
+
+- type: entity
+  id: KsTestFirefightingMob
+  name: test mob
+  components:
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.25
+        hard: true
+        layer:
+        - MobLayer
+        mask:
+        - MobMask
+  - type: Appearance
+  - type: Flammable
+    fireSpread: false
+    canResistFire: false
+    damage:
+      types:
+        Heat: 1
+";
+
+    private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
+    private static readonly ProtoId<ReagentPrototype> WeldingFuelReagent = "WeldingFuel";
+    private static readonly EntProtoId BlanketPrototype = "KsFoamBlanket";
+    private static readonly EntProtoId ChemicalFirePrototype = "ChemicalFire";
+    private static readonly EntProtoId ExtinguisherPrototype = "FireExtinguisher";
+
+    private const string ExtinguisherSolution = "spray";
+    private const int RowLength = 8;
+
+    // Deliberately NOT static: these only exist in the test YAML above, and the YAML linter validates static ids.
+    private readonly EntProtoId _unextinguishableFirePrototype = "KsTestFirefightingUnextinguishableFire";
+    private readonly ProtoId<ReagentPrototype> _inertLiquidReagent = "KsTestFirefightingInertLiquid";
+    private readonly EntProtoId _flammablePrototype = "KsTestFirefightingFlammable";
+    private readonly EntProtoId _mobPrototype = "KsTestFirefightingMob";
+    private readonly EntProtoId _extinguisherShotPrototype = "KsBulletExtinguisherShot";
+    private readonly EntProtoId _slowBlanketPrototype = "KsTestFirefightingSlowBlanket";
+
+    private const float HotPuddleTemperature = 450f;
+    private const int TicksPerSecond = 30;
+    private const int BoilTestSeconds = 10;
+
+    private async Task<TestMapData> CreateBreathableTestMap()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var testMap = await pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var mixture = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C };
+            mixture.SetMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+            mixture.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+
+            server.EntMan.System<AtmosphereSystem>().SetMapAtmosphere(testMap.MapUid, space: false, mixture);
+            server.EntMan.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner);
+        });
+
+        await server.WaitRunTicks(30);
+        return testMap;
+    }
+
+    private Entity<SolutionComponent> SpillPuddle(TestMapData testMap, ProtoId<ReagentPrototype> reagent, float volume, float temperature, out EntityUid puddleUid)
+    {
+        var entityManager = Pair.Server.EntMan;
+
+        var spilled = new Solution(reagent.Id, FixedPoint2.New(volume)) { Temperature = temperature };
+        Assert.That(entityManager.System<PuddleSystem>().TrySpillAt(testMap.Tile, spilled, out puddleUid, sound: false, tileReact: false),
+            "Puddle failed to spill.");
+
+        var puddleComponent = entityManager.GetComponent<PuddleComponent>(puddleUid);
+        Assert.That(entityManager.System<SharedSolutionContainerSystem>()
+                .ResolveSolution(puddleUid, puddleComponent.SolutionName, ref puddleComponent.Solution, out var solution),
+            "Puddle has no solution.");
+        // Water's own boiling already runs once on the spill, so this is only checked for what does not boil.
+        if (solution!.Temperature < temperature - 0.01f && Pair.Server.ProtoMan.Index(reagent).KsTileEffects.Length == 0)
+            Assert.Fail("Puddle did not keep its temperature.");
+
+        return puddleComponent.Solution!.Value;
+    }
+
+    /// <summary>
+    ///     Lays a blanket and tops it up until it is full, as spraying a tile for a while would.
+    /// </summary>
+    private void FillBlanket(TileRef tileRef)
+    {
+        var blanketSystem = Pair.Server.EntMan.System<KsFoamBlanketSystem>();
+
+        for (var i = 0; i < 1000; i++)
+        {
+            if (blanketSystem.Deploy(BlanketPrototype, tileRef, 1f) <= 0f)
+                return;
+        }
+
+        Assert.Fail("The blanket never filled up.");
+    }
+
+    /// <summary>
+    ///     Floors a row of tiles east of the test map's one tile, for something to be sprayed along.
+    /// </summary>
+    private void FloorRow(TestMapData testMap)
+    {
+        var mapSystem = Pair.Server.EntMan.System<SharedMapSystem>();
+
+        for (var x = 1; x < RowLength; x++)
+            mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, 0), testMap.Tile.Tile);
+    }
+
+    private int CountBlanketedTiles(TestMapData testMap)
+    {
+        var blanketSystem = Pair.Server.EntMan.System<KsFoamBlanketSystem>();
+        var count = 0;
+
+        for (var x = 1; x < RowLength; x++)
+        {
+            if (blanketSystem.TryGetBlanket(testMap.Grid.Owner, new Vector2i(x, 0), out _))
+                count++;
+        }
+
+        return count;
+    }
+
+    private FixedPoint2 SprayVolume(EntityUid extinguisherUid)
+    {
+        Assert.That(Pair.Server.EntMan.System<SharedSolutionContainerSystem>()
+            .TryGetSolution(extinguisherUid, ExtinguisherSolution, out _, out var solution), "Extinguisher has no solution.");
+        return solution!.Volume;
+    }
+
+    [Test]
+    public async Task TestWaterBoilsOffHotPuddleConservingEnergy()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var atmosphereSystem = entityManager.System<AtmosphereSystem>();
+        var protoMan = SProtoMan;
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        await server.WaitAssertion(() =>
+        {
+            var solutionEntity = SpillPuddle(testMap, WaterReagent, 50f, HotPuddleTemperature, out var puddleUid);
+            var solution = solutionEntity.Comp.Solution;
+            // Spilling already boiled it once; heat it back up so the effect under test does the boiling.
+            solution.Temperature = HotPuddleTemperature;
+            var air = atmosphereSystem.GetTileMixture(gridUid, null, testMap.Tile.GridIndices, excite: true)!;
+
+            var boilingPoint = protoMan.Index(WaterReagent).BoilingPoint!.Value + Atmospherics.T0C;
+            var latentHeat = protoMan.Index(WaterReagent).KsTileEffects.OfType<BoilTileEffect>().Single().LatentHeat;
+
+            var volumeBefore = (float)solution.Volume;
+            var energyBefore = solution.GetHeatCapacity(protoMan) * solution.Temperature
+                + atmosphereSystem.GetHeatCapacity(air, applyScaling: true) * air.Temperature;
+            var vaporBefore = air.GetMoles(Gas.WaterVapor);
+
+            entityManager.System<KsTileEffectSystem>().TryUpdateTileEffects(puddleUid, testMap.Tile, solution, scale: 1f);
+
+            var boiled = volumeBefore - (float)solution.Volume;
+            var energyAfter = solution.GetHeatCapacity(protoMan) * solution.Temperature
+                + atmosphereSystem.GetHeatCapacity(air, applyScaling: true) * air.Temperature
+                + boiled * latentHeat;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(boiled, Is.GreaterThan(0f), "No water boiled off a puddle above its boiling point.");
+                Assert.That(air.GetMoles(Gas.WaterVapor), Is.GreaterThan(vaporBefore), "No vapor reached the air.");
+                Assert.That(solution.Temperature, Is.LessThan(HotPuddleTemperature), "The puddle was not cooled.");
+                Assert.That(solution.Temperature, Is.GreaterThanOrEqualTo(boilingPoint - 0.5f), "The puddle was cooled past its boiling point.");
+                Assert.That(energyAfter, Is.EqualTo(energyBefore).Within(energyBefore * 1e-4f), "Thermal energy was not conserved.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestColdWaterPuddleDoesNotBoil()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var solutionEntity = SpillPuddle(testMap, WaterReagent, 50f, Atmospherics.T20C, out var puddleUid);
+            var solution = solutionEntity.Comp.Solution;
+
+            entityManager.System<KsTileEffectSystem>().TryUpdateTileEffects(puddleUid, testMap.Tile, solution, scale: 1f);
+
+            Assert.That(solution.Volume, Is.EqualTo(FixedPoint2.New(50)), "Water below its boiling point boiled.");
+        });
+    }
+
+    /// <summary>
+    ///     Vapor and smoke equalise with a puddle and then open a scope at their (now equal) temperature before reacting
+    ///         with the tile, so the spill must not change the puddle's temperature.
+    /// </summary>
+    [Test]
+    public async Task TestSpillIntoPuddleKeepsItsTemperature()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var protoMan = SProtoMan;
+
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var solutionEntity = SpillPuddle(testMap, _inertLiquidReagent, 50f, HotPuddleTemperature, out _);
+
+            using var temperatureScope = entityManager.System<PuddleSystem>().KsBeginTileReactionTemperature(HotPuddleTemperature);
+            var used = new SpillIfPuddlePresentTileReaction().TileReact(testMap.Tile, protoMan.Index(WaterReagent), FixedPoint2.New(3), entityManager, null);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(used, Is.EqualTo(FixedPoint2.New(3)), "Nothing was spilled.");
+                Assert.That(solutionEntity.Comp.Solution.Temperature, Is.EqualTo(HotPuddleTemperature).Within(0.01f),
+                    "The spill changed the puddle's temperature.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     An ordinary spill (not vapor or smoke) onto a puddle re-spills the water through its tile reaction. The water
+    ///         brings its own heat, so the puddle must end at the heat-capacity-weighted mean, whatever either started at.
+    /// </summary>
+    [Test]
+    public async Task TestSpillOntoWarmPuddleConservesEnergy()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var protoMan = SProtoMan;
+
+        const float puddleTemperature = 340f; // below water's boiling point, so no boil effect muddies the energy
+        const float spilledTemperature = 310f; // neither the puddle's temperature nor the 293.15 K a new solution defaults to
+
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var solutionEntity = SpillPuddle(testMap, _inertLiquidReagent, 50f, puddleTemperature, out var puddleUid);
+            var puddleSolution = solutionEntity.Comp.Solution;
+
+            var spilled = new Solution(WaterReagent.Id, FixedPoint2.New(3)) { Temperature = spilledTemperature };
+            var energyBefore = puddleSolution.GetHeatCapacity(protoMan) * puddleSolution.Temperature
+                + spilled.GetHeatCapacity(protoMan) * spilled.Temperature;
+            var heatCapacityAfter = puddleSolution.GetHeatCapacity(protoMan) + spilled.GetHeatCapacity(protoMan);
+            var expectedTemperature = energyBefore / heatCapacityAfter;
+
+            // False is expected: the water's own spill reaction moves all of it into the puddle first, leaving nothing
+            //     for TrySpillAt to spill itself. The assertions below are on where it ended up.
+            entityManager.System<PuddleSystem>().TrySpillAt(testMap.Tile, spilled, out _, sound: false);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(puddleSolution.Volume, Is.EqualTo(FixedPoint2.New(53)), "The water did not all end up in the puddle.");
+                Assert.That(puddleSolution.Temperature, Is.EqualTo(expectedTemperature).Within(0.05f),
+                    "The puddle did not end at the heat-capacity-weighted mean, so the spill did not conserve energy.");
+                Assert.That(entityManager.System<PuddleSystem>().KsTileReactionSourceTemperature, Is.Null,
+                    "The tile reaction temperature scope leaked.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TestBlanketSmothersAndKeepsChemfiresOut()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var blanketSystem = entityManager.System<KsFoamBlanketSystem>();
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var tile = testMap.Tile.GridIndices;
+
+        EntityUid fireUid = default;
+        EntityUid flammableUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            fireUid = chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile)!.Value.Owner;
+
+            flammableUid = entityManager.SpawnEntity(_flammablePrototype, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+            entityManager.System<FlammableSystem>().AdjustFireStacks(flammableUid, 5f, ignite: true);
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, "Test flammable did not catch fire.");
+
+            Assert.That(SProtoMan.Index(BlanketPrototype).TryComp<KsFoamBlanketComponent>(out var prototypeComponent, entityManager.ComponentFactory));
+            var used = blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 2f);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(used, Is.EqualTo(prototypeComponent!.FoamPerTile).Within(0.001f), "The blanket did not take one tile's worth of foam.");
+                Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out _), "No blanket was laid.");
+                Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, Is.False,
+                    "The blanket did not put out what was burning on it.");
+                Assert.That(chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile), Is.Null,
+                    "A chemfire started under the blanket.");
+                Assert.That(chemicalFireSystem.SpawnChemicalFire(_unextinguishableFirePrototype, (gridUid, null), tile), Is.Not.Null,
+                    "A chemfire that cannot be put out was kept out by the blanket.");
+            }
+        });
+
+        await server.WaitRunTicks(2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.EntityExists(fireUid), Is.False, "The blanket did not put out the chemfire on its tile.");
+
+            Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out var blanket));
+            entityManager.DeleteEntity(blanket.Owner);
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile), Is.Not.Null,
+                "A chemfire could not start once the blanket was gone.");
+        });
+    }
+
+    /// <summary>
+    ///     A welding fuel puddle well above its ignition temperature stays out under a blanket, and lights without one.
+    /// </summary>
+    [Test]
+    public async Task TestHotFuelPuddleStaysOutUnderBlanket([Values(true, false)] bool blanketed)
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var tile = testMap.Tile.GridIndices;
+
+        await server.WaitAssertion(() =>
+        {
+            if (blanketed)
+                FillBlanket(testMap.Tile);
+
+            SpillPuddle(testMap, WeldingFuelReagent, 50f, HotPuddleTemperature, out _);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            var burning = chemicalFireSystem.GetTileChemicalFires((gridUid, null), tile) is { Fires.Count: > 0 };
+            Assert.That(burning, Is.EqualTo(!blanketed),
+                blanketed ? "The fuel puddle lit under the blanket." : "The fuel puddle never lit, so the blanket case proves nothing.");
+        });
+    }
+
+    /// <summary>
+    ///     A blanket over a puddle hotter than the foam's boiling point loses more foam than it does over a cold one,
+    ///         by about what boiling takes: the cold one only drains.
+    /// </summary>
+    [Test]
+    public async Task TestBlanketBoilsOffHotPuddleFaster()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var blanketSystem = entityManager.System<KsFoamBlanketSystem>();
+
+        var foamLeft = new float[2];
+        var temperatures = new[] { Atmospherics.T20C, 600f };
+
+        for (var i = 0; i < temperatures.Length; i++)
+        {
+            var testMap = await CreateBreathableTestMap();
+            var gridUid = testMap.Grid.Owner;
+            var temperature = temperatures[i];
+
+            await server.WaitAssertion(() =>
+            {
+                SpillPuddle(testMap, _inertLiquidReagent, 100f, temperature, out _);
+                FillBlanket(testMap.Tile);
+            });
+
+            await server.WaitRunTicks(TicksPerSecond * BoilTestSeconds);
+
+            var index = i;
+            await server.WaitAssertion(() =>
+            {
+                Assert.That(blanketSystem.TryGetBlanket(gridUid, testMap.Tile.GridIndices, out var blanket), "The blanket vanished.");
+                foamLeft[index] = blanket.Comp.Foam;
+            });
+        }
+
+        // Whole seconds are updates, so a tick or so either side of the count is allowed for.
+        var prototype = server.ProtoMan.Index(BlanketPrototype).Components[server.EntMan.ComponentFactory.GetComponentName<KsFoamBlanketComponent>()].Component as KsFoamBlanketComponent;
+        Assert.That(prototype, Is.Not.Null);
+        var updates = BoilTestSeconds - 1;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(foamLeft[0], Is.EqualTo(prototype!.MaxFoam - prototype.DecayRate * updates).Within(prototype.DecayRate * 2f),
+                "A blanket over a cold puddle lost more than it drains by itself.");
+            Assert.That(foamLeft[1], Is.LessThan(foamLeft[0] - prototype.BoilRate * updates * 0.5f),
+                "The blanket did not boil off faster over a hot puddle.");
+        }
+    }
+
+    /// <summary>
+    ///     One click of an extinguisher lays a blanket on every tile its vapor crosses, not only the first.
+    /// </summary>
+    [Test]
+    public async Task TestSprayBlanketsEveryTileItCrosses()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+
+            var extinguisherUid = entityManager.SpawnEntity(ExtinguisherPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
+            entityManager.System<ItemToggleSystem>().TryActivate(extinguisherUid, user: null);
+
+            var spray = new Entity<SprayComponent>(extinguisherUid, entityManager.GetComponent<SprayComponent>(extinguisherUid));
+            entityManager.System<SpraySystem>().Spray(spray, new MapCoordinates(new Vector2(RowLength + 0.5f, 0.5f), testMap.MapId));
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(CountBlanketedTiles(testMap), Is.GreaterThanOrEqualTo(3),
+                "The spray did not lay a blanket on each tile it crossed.");
+        });
+    }
+
+    /// <summary>
+    ///     The extinguisher is a full-auto gun, and its shots lay blankets along their path as the spray does.
+    /// </summary>
+    /// <remarks>
+    ///     <see cref="SharedGunSystem.AttemptShoot(EntityUid, Entity{GunComponent}, EntityCoordinates, EntityUid?)"/>
+    ///         resets the shot counter after every call, so calling it each tick fires even a semi-auto gun; that a
+    ///         held trigger keeps firing is the gun system's own fire mode handling, so the mode is pinned instead.
+    /// </remarks>
+    [Test]
+    public async Task TestExtinguisherShotsBlanketTheirPath()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var gunSystem = entityManager.System<SharedGunSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        EntityUid extinguisherUid = default;
+        var volumeBefore = FixedPoint2.Zero;
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+
+            extinguisherUid = entityManager.SpawnEntity(ExtinguisherPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
+            entityManager.System<ItemToggleSystem>().TryActivate(extinguisherUid, user: null);
+            volumeBefore = SprayVolume(extinguisherUid);
+
+            Assert.That(entityManager.GetComponent<GunComponent>(extinguisherUid).SelectedMode, Is.EqualTo(SelectiveFire.FullAuto),
+                "The extinguisher is not full-auto.");
+        });
+
+        // A held trigger asks to shoot every tick.
+        var shotTarget = new EntityCoordinates(testMap.Grid.Owner, RowLength + 0.5f, 0.5f);
+        for (var tick = 0; tick < TicksPerSecond; tick++)
+        {
+            await server.WaitPost(() =>
+            {
+                var gun = new Entity<GunComponent>(extinguisherUid, entityManager.GetComponent<GunComponent>(extinguisherUid));
+                gunSystem.AttemptShoot(extinguisherUid, gun, shotTarget);
+            });
+
+            await server.WaitRunTicks(1);
+        }
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(SprayVolume(extinguisherUid), Is.LessThan(volumeBefore - FixedPoint2.New(3)),
+                    "A second of shooting fired no more than a couple of shots.");
+                Assert.That(CountBlanketedTiles(testMap), Is.GreaterThanOrEqualTo(3),
+                    "The shots did not lay a blanket on each tile they crossed.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     With its safety on, an extinguisher does not fire.
+    /// </summary>
+    [Test]
+    public async Task TestExtinguisherSafetyBlocksShooting()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var extinguisherUid = entityManager.SpawnEntity(ExtinguisherPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
+            var volumeBefore = SprayVolume(extinguisherUid);
+
+            var gun = new Entity<GunComponent>(extinguisherUid, entityManager.GetComponent<GunComponent>(extinguisherUid));
+            var shot = entityManager.System<SharedGunSystem>().AttemptShoot(extinguisherUid, gun,
+                new EntityCoordinates(testMap.Grid.Owner, 4.5f, 0.5f));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(shot, Is.False, "The extinguisher fired with its safety on.");
+                Assert.That(SprayVolume(extinguisherUid), Is.EqualTo(volumeBefore), "Foam left an extinguisher with its safety on.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A blanket the server lays reaches the client with its cache entry and its foam.
+    /// </summary>
+    [Test]
+    public async Task TestBlanketReplicatesToClient()
+    {
+        var server = Pair.Server;
+        var client = Pair.Client;
+        var blanketSystem = server.EntMan.System<KsFoamBlanketSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var tile = testMap.Tile.GridIndices;
+
+        await server.WaitPost(() => Assert.That(blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f), Is.GreaterThan(0f)));
+        await Pair.RunTicksSync(10);
+
+        var clientGridUid = ToClientUid(testMap.Grid.Owner);
+        var serverFoam = 0f;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, tile, out var serverBlanket));
+            serverFoam = serverBlanket.Comp.Foam;
+        });
+
+        await client.WaitAssertion(() =>
+        {
+            var clientSystem = client.EntMan.System<ClientBlanketSystem>();
+            Assert.That(clientSystem.TryGetBlanket(clientGridUid, tile, out var clientBlanket),
+                "The client did not register the blanket in its tile cache.");
+            Assert.That(clientBlanket.Comp.Foam, Is.EqualTo(serverFoam).Within(0.0001f), "The foam was not networked.");
+            Assert.That(clientBlanket.Comp.Foam, Is.GreaterThan(0f));
+        });
+
+        // Topping it up must reach the client too.
+        await server.WaitPost(() => blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f));
+        await Pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, tile, out var serverBlanket));
+            serverFoam = serverBlanket.Comp.Foam;
+        });
+        await client.WaitAssertion(() =>
+        {
+            Assert.That(client.EntMan.System<ClientBlanketSystem>().TryGetBlanket(clientGridUid, tile, out var clientBlanket));
+            Assert.That(clientBlanket.Comp.Foam, Is.EqualTo(serverFoam).Within(0.0001f), "A top-up did not reach the client.");
+        });
+    }
+
+    /// <summary>
+    ///     The client refuses to start a chemfire under a blanket it has been sent, as the server does.
+    /// </summary>
+    [Test]
+    public async Task TestClientVetoesChemfireUnderBlanket()
+    {
+        var server = Pair.Server;
+        var client = Pair.Client;
+
+        var testMap = await CreateBreathableTestMap();
+        await server.WaitPost(() => FloorRow(testMap));
+        var tile = testMap.Tile.GridIndices;
+        var controlTile = tile + Vector2i.Right;
+
+        await server.WaitPost(() => FillBlanket(testMap.Tile));
+        await Pair.RunTicksSync(10);
+
+        var clientGridUid = ToClientUid(testMap.Grid.Owner);
+        await client.WaitPost(() =>
+        {
+            var chemicalFireSystem = client.EntMan.System<SharedChemicalFireSystem>();
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (clientGridUid, null), tile), Is.Null,
+                "The client started a chemfire under the blanket.");
+
+            var control = chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (clientGridUid, null), controlTile);
+            Assert.That(control, Is.Not.Null, "The client could not start a chemfire on a bare tile, so the veto proves nothing.");
+            client.EntMan.DeleteEntity(control!.Value.Owner);
+        });
+    }
+
+    /// <summary>
+    ///     Something burning that walks onto a blanket is put out by the step trigger, not by the deploy's smother.
+    /// </summary>
+    [Test]
+    public async Task TestWalkingOntoBlanketExtinguishes([Values(true, false)] bool blanketed)
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        EntityUid mobUid = default;
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+            if (blanketed)
+                FillBlanket(testMap.Tile);
+
+            // Lit after the blanket is laid, and away from it, so only walking on can put it out.
+            mobUid = entityManager.SpawnEntity(_mobPrototype, new EntityCoordinates(gridUid, 4.5f, 0.5f));
+            entityManager.System<FlammableSystem>().AdjustFireStacks(mobUid, 5f, ignite: true);
+            Assert.That(entityManager.GetComponent<FlammableComponent>(mobUid).OnFire, "Test mob did not catch fire.");
+        });
+
+        await server.WaitRunTicks(5);
+
+        await server.WaitPost(() =>
+        {
+            Assert.That(entityManager.GetComponent<FlammableComponent>(mobUid).OnFire, "The mob went out before it reached the blanket.");
+            entityManager.System<SharedTransformSystem>().SetCoordinates(mobUid, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.GetComponent<FlammableComponent>(mobUid).OnFire, Is.Not.EqualTo(blanketed),
+                blanketed ? "Walking onto the blanket did not put the mob out." : "The mob went out without a blanket, so the blanket case proves nothing.");
+        });
+    }
+
+    /// <summary>
+    ///     The client fades a blanket with the foam it holds.
+    /// </summary>
+    [Test]
+    public async Task TestClientBlanketFadesWithFoam()
+    {
+        var server = Pair.Server;
+        var client = Pair.Client;
+        var blanketSystem = server.EntMan.System<KsFoamBlanketSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var tile = testMap.Tile.GridIndices;
+        var clientGridUid = ToClientUid(testMap.Grid.Owner);
+        var alphas = new float[2];
+
+        await server.WaitPost(() => Assert.That(blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f), Is.GreaterThan(0f)));
+        await Pair.RunTicksSync(10);
+        await client.WaitAssertion(() => alphas[0] = ClientBlanketAlpha(clientGridUid, tile));
+
+        await server.WaitPost(() => FillBlanket(testMap.Tile));
+        await Pair.RunTicksSync(10);
+        await client.WaitAssertion(() => alphas[1] = ClientBlanketAlpha(clientGridUid, tile));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(alphas[0], Is.EqualTo(0.35f + 0.5f * (0.1f / 1.5f)).Within(0.02f), "A single dose is not faded to its foam level.");
+            Assert.That(alphas[1], Is.EqualTo(0.85f).Within(0.02f), "A full blanket is not fully opaque.");
+        }
+    }
+
+    /// <summary>
+    ///     A blanket whose foam runs out dissolves instead of vanishing: it stays for its dissolve time, but stops
+    ///         counting as the tile's blanket, and then goes.
+    /// </summary>
+    [Test]
+    public async Task TestBlanketDissolvesWhenFoamRunsOut()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var blanketSystem = entityManager.System<KsFoamBlanketSystem>();
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var tile = testMap.Tile.GridIndices;
+        EntityUid blanketUid = default;
+        EntityUid newBlanketUid = default;
+        TimeSpan dissolveDuration = default;
+
+        await server.WaitPost(() =>
+        {
+            // The least foam a blanket can be laid with, so it drains away within a few seconds.
+            Assert.That(blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 0.04f), Is.GreaterThan(0f));
+            Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out var blanket));
+            blanketUid = blanket.Owner;
+            dissolveDuration = blanket.Comp.DissolveDuration;
+            Assert.That(blanket.Comp.DissolveEndTime, Is.Null, "A new blanket was already dissolving.");
+        });
+
+        // Until it starts dissolving, a tick at a time, so the dissolve is caught while it lasts.
+        for (var i = 0; i < TicksPerSecond * 10; i++)
+        {
+            await server.WaitRunTicks(1);
+            if (!entityManager.TryGetComponent<KsFoamBlanketComponent>(blanketUid, out var drainingComponent) ||
+                drainingComponent.DissolveEndTime != null)
+                break;
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            var blanketComponent = entityManager.GetComponentOrNull<KsFoamBlanketComponent>(blanketUid);
+            Assert.That(blanketComponent, Is.Not.Null, "The blanket vanished as soon as its foam ran out instead of dissolving.");
+            Assert.That(blanketComponent!.DissolveEndTime, Is.Not.Null, "The blanket whose foam ran out is not dissolving.");
+            Assert.That(blanketSystem.IsDissolving((blanketUid, blanketComponent)));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out _), Is.False, "A dissolving blanket is still the tile's blanket.");
+                // TryGetBlanket skips a dissolving blanket by itself, so the cache is read as it is.
+                Assert.That(blanketSystem.IsTileRegistered(gridUid, tile), Is.False,
+                    "A dissolving blanket is still on the tile's cache.");
+                var fire = chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile);
+                Assert.That(fire, Is.Not.Null, "A dissolving blanket still keeps chemfires out.");
+                if (fire != null)
+                    entityManager.DeleteEntity(fire.Value.Owner);
+            }
+
+            // Spraying the tile while the old one dissolves lays a new blanket instead of topping it up.
+            Assert.That(blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f), Is.GreaterThan(0f), "Nothing was laid over a dissolving blanket.");
+            Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out var newBlanket), "The new blanket is not the tile's blanket.");
+            newBlanketUid = newBlanket.Owner;
+            Assert.That(newBlanketUid, Is.Not.EqualTo(blanketUid), "A dissolving blanket was topped up instead of replaced.");
+        });
+
+        // Past the dissolve time, plus a few ticks for the queued deletion.
+        await server.WaitRunTicks((int)Math.Ceiling(dissolveDuration.TotalSeconds * TicksPerSecond) + 5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.EntityExists(blanketUid), Is.False, "The blanket was not removed once it had dissolved.");
+            // The old blanket's removal must not take the new one off the cache.
+            Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out var newBlanket) && newBlanket.Owner == newBlanketUid,
+                "The dissolved blanket's removal unregistered the blanket laid over it.");
+        });
+    }
+
+    /// <summary>
+    ///     A dissolving blanket gets the dissolve mask on its foam layer, before it; a holding one does not.
+    /// </summary>
+    [Test]
+    public async Task TestClientDissolvingBlanketGetsDissolveMask()
+    {
+        var server = Pair.Server;
+        var client = Pair.Client;
+        var blanketSystem = server.EntMan.System<KsFoamBlanketSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var tile = testMap.Tile.GridIndices;
+        EntityUid blanketUid = default;
+
+        await server.WaitPost(() =>
+        {
+            // A prototype that dissolves for 30s, so the blanket outlives however long the state takes to arrive.
+            Assert.That(blanketSystem.Deploy(_slowBlanketPrototype, testMap.Tile, 1f), Is.GreaterThan(0f));
+            Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, tile, out var blanket));
+            blanketUid = blanket.Owner;
+        });
+        await Pair.RunTicksSync(10);
+
+        var clientBlanketUid = ToClientUid(blanketUid);
+        await client.WaitAssertion(() => AssertDissolveMask(clientBlanketUid, expected: false));
+
+        await server.WaitPost(() =>
+        {
+            var blanketComponent = server.EntMan.GetComponent<KsFoamBlanketComponent>(blanketUid);
+            blanketSystem.StartDissolving((blanketUid, blanketComponent));
+        });
+        await Pair.RunTicksSync(30);
+
+        await client.WaitAssertion(() =>
+        {
+            Assert.That(client.EntMan.GetComponent<KsFoamBlanketComponent>(clientBlanketUid).DissolveEndTime, Is.Not.Null,
+                "The dissolve never reached the client.");
+            AssertDissolveMask(clientBlanketUid, expected: true);
+
+            var clientSystem = client.EntMan.System<ClientBlanketSystem>();
+            Assert.That(clientSystem.TryGetBlanket(ToClientUid(testMap.Grid.Owner), tile, out _), Is.False,
+                "The client still has the dissolving blanket in its tile cache.");
+        });
+    }
+
+    private void AssertDissolveMask(EntityUid clientBlanketUid, bool expected)
+    {
+        var entityManager = Pair.Client.EntMan;
+        var spriteSystem = entityManager.System<SpriteSystem>();
+        var spriteComponent = entityManager.GetComponent<SpriteComponent>(clientBlanketUid);
+        var sprite = (clientBlanketUid, spriteComponent);
+
+        Assert.That(spriteSystem.LayerMapTryGet(sprite, "foam", out var foamIndex, logMissing: false), "The blanket has no foam layer.");
+        var hasMask = spriteSystem.LayerMapTryGet(sprite, "foam-displacement", out var maskIndex, logMissing: false);
+        var shader = spriteComponent[foamIndex] is SpriteComponent.Layer layer ? layer.ShaderPrototype?.ToString() : null;
+
+        if (!expected)
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(hasMask, Is.False, "A blanket that is not dissolving has the dissolve mask.");
+                Assert.That(shader, Is.Null.Or.Empty, "A blanket that is not dissolving has a displacement shader.");
+            }
+
+            return;
+        }
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(hasMask, Is.True, "A dissolving blanket has no dissolve mask layer.");
+            Assert.That(shader, Is.EqualTo("DisplacedDraw"), "The foam layer of a dissolving blanket has no displacement shader.");
+            // The engine copies the mask in layer order, so a mask after its target shows a frame late.
+            Assert.That(maskIndex, Is.LessThan(foamIndex), "The mask layer is not before the foam layer it displaces.");
+            Assert.That(spriteComponent[maskIndex] is SpriteComponent.Layer { CopyToShaderParameters.LayerKey: "foam" },
+                "The mask layer does not copy into the foam layer.");
+        }
+    }
+
+    private float ClientBlanketAlpha(EntityUid clientGridUid, Vector2i tile)
+    {
+        Assert.That(Pair.Client.EntMan.System<ClientBlanketSystem>().TryGetBlanket(clientGridUid, tile, out var blanket),
+            "The client has no blanket.");
+        return Pair.Client.EntMan.GetComponent<SpriteComponent>(blanket.Owner).Color.A;
+    }
+
+    /// <summary>
+    ///     A blanket taken off its tile (unanchored, which is also what a tile turning to space does to it) stops
+    ///         counting as that tile's blanket at once, so chemfires start there again, and the server removes it.
+    /// </summary>
+    [Test]
+    public async Task TestUnanchoredBlanketLeavesItsTile()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var blanketSystem = entityManager.System<KsFoamBlanketSystem>();
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var tile = testMap.Tile.GridIndices;
+        EntityUid blanketUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f), Is.GreaterThan(0f));
+            Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out var blanket));
+            blanketUid = blanket.Owner;
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile), Is.Null,
+                "The blanket did not keep a chemfire out to begin with.");
+
+            entityManager.System<SharedTransformSystem>().Unanchor(blanketUid);
+
+            // Before any tick: the old tile must already be free.
+            Assert.That(blanketSystem.TryGetBlanket(gridUid, tile, out _), Is.False, "An unanchored blanket is still on its tile.");
+            var fire = chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile);
+            Assert.That(fire, Is.Not.Null, "An unanchored blanket still keeps chemfires out of its old tile.");
+            if (fire != null)
+                entityManager.DeleteEntity(fire.Value.Owner);
+        });
+
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+            Assert.That(entityManager.EntityExists(blanketUid), Is.False, "The server kept a blanket that is no longer on a tile."));
+    }
+
+    /// <summary>
+    ///     A blanket moved to another grid without being unanchored (as a grid split does) is registered on the grid
+    ///         and tile it is on now, not the one it was laid on.
+    /// </summary>
+    [Test]
+    public async Task TestReparentedBlanketIsRegisteredWhereItIs()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var blanketSystem = entityManager.System<KsFoamBlanketSystem>();
+        var transformSystem = entityManager.System<SharedTransformSystem>();
+
+        var oldMap = await CreateBreathableTestMap();
+        var newMap = await Pair.CreateTestMap();
+        var oldGridUid = oldMap.Grid.Owner;
+        var newGridUid = newMap.Grid.Owner;
+        var oldTile = oldMap.Tile.GridIndices;
+        EntityUid blanketUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(blanketSystem.Deploy(BlanketPrototype, oldMap.Tile, 1f), Is.GreaterThan(0f));
+            Assert.That(blanketSystem.TryGetBlanket(oldGridUid, oldTile, out var blanket));
+            blanketUid = blanket.Owner;
+
+            // Not unanchoring, so only the parent changes.
+            transformSystem.SetCoordinates(
+                new Entity<TransformComponent, MetaDataComponent>(blanketUid, entityManager.GetComponent<TransformComponent>(blanketUid), entityManager.GetComponent<MetaDataComponent>(blanketUid)),
+                new EntityCoordinates(newGridUid, 0.5f, 0.5f), unanchor: false);
+            Assert.That(transformSystem.GetGrid(blanketUid), Is.EqualTo((EntityUid?)newGridUid), "The blanket did not move to the new grid.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(blanketSystem.TryGetBlanket(oldGridUid, oldTile, out _), Is.False, "The blanket is still registered on the grid it left.");
+                Assert.That(blanketSystem.TryGetBlanket(newGridUid, newMap.Tile.GridIndices, out var moved) && moved.Owner == blanketUid,
+                    "The blanket is not registered on the grid it moved to.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     What an offered tile gets from a shot is what the server's vapor offers it: a fraction of what it carries,
+    ///         at least a minimum, and never more than it carries; the shot's data matches the vapor's.
+    /// </summary>
+    [Test]
+    public async Task TestPredictedFoamShotOfferMatchesVapor([Values(0.04f, 0.1f, 0.375f, 1f, 2.5f)] float foam)
+    {
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var shotPrototype = SProtoMan.Index(_extinguisherShotPrototype);
+            Assert.That(shotPrototype.TryComp<VaporComponent>(out var vaporComponent, Pair.Server.EntMan.ComponentFactory));
+            Assert.That(shotPrototype.TryComp<KsPredictedFoamShotComponent>(out var shotComponent, Pair.Server.EntMan.ComponentFactory),
+                "The extinguisher shot does not predict its foam.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(shotComponent!.TransferFraction, Is.EqualTo(vaporComponent!.TransferAmountPercentage), "The shot's fraction is not the vapor's.");
+                Assert.That(shotComponent.MinimumTransfer, Is.EqualTo(vaporComponent.MinimumTransferAmount), "The shot's minimum is not the vapor's.");
+
+                // The vapor's own formula, and the cap that its removing only what a reaction used comes to.
+                var vaporOffer = Math.Max(foam * vaporComponent.TransferAmountPercentage, vaporComponent.MinimumTransferAmount);
+                Assert.That(ClientPredictedFoamShotSystem.GetTileOffer(foam, shotComponent.TransferFraction, shotComponent.MinimumTransfer),
+                    Is.EqualTo(Math.Min(vaporOffer, foam)));
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A shot the client predicted lays blankets on the client as it crosses tiles, from the foam its gun carries
+    ///         (the extinguisher is a quarter foam); the server's copy of a shot, which is not a predicted spawn, lays none.
+    /// </summary>
+    /// <remarks>
+    ///     Driven by hand inside one client call: the engine deletes every predicted spawn when the next server state
+    ///         is applied, so nothing predicted outlives a tick of the pair. Whether it feels right with real latency
+    ///         is not tested here.
+    /// </remarks>
+    [Test]
+    public async Task TestPredictedFoamShotLaysClientBlankets()
+    {
+        var server = Pair.Server;
+        var client = Pair.Client;
+
+        var testMap = await CreateBreathableTestMap();
+        EntityUid extinguisherUid = default;
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+            extinguisherUid = server.EntMan.SpawnEntity(ExtinguisherPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
+        });
+        await Pair.RunTicksSync(10);
+
+        var clientGridUid = ToClientUid(testMap.Grid.Owner);
+        var clientExtinguisherUid = ToClientUid(extinguisherUid);
+
+        await client.WaitAssertion(() =>
+        {
+            var entityManager = client.EntMan;
+            var blanketSystem = entityManager.System<ClientBlanketSystem>();
+            var shotSystem = entityManager.System<ClientPredictedFoamShotSystem>();
+            var transformSystem = entityManager.System<SharedTransformSystem>();
+
+            var predictedShot = entityManager.PredictedSpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 0.5f, 0.5f));
+            // A copy of the server's shot as the client holds it: not a predicted spawn.
+            var serverShot = entityManager.SpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 4.5f, 0.5f));
+            entityManager.GetComponent<ProjectileComponent>(predictedShot).Weapon = clientExtinguisherUid;
+            entityManager.GetComponent<ProjectileComponent>(serverShot).Weapon = clientExtinguisherUid;
+            Assert.That(entityManager.HasComponent<PredictedSpawnComponent>(serverShot), Is.False);
+
+            var foams = new float[3];
+            for (var x = 0; x < 3; x++)
+            {
+                transformSystem.SetCoordinates(predictedShot, new EntityCoordinates(clientGridUid, x + 0.5f, 0.5f));
+                transformSystem.SetCoordinates(serverShot, new EntityCoordinates(clientGridUid, x + 4.5f, 0.5f));
+                shotSystem.Update(0f);
+
+                Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 0), out var blanket), $"No blanket on tile {x}.");
+                foams[x] = blanket.Comp.Foam;
+                Assert.That(entityManager.HasComponent<PredictedSpawnComponent>(blanket.Owner), "The client's blanket is not a predicted spawn.");
+            }
+
+            // Staying on a tile lays nothing more.
+            shotSystem.Update(0f);
+            shotSystem.Update(0f);
+
+            // 1.5u fired, a quarter foam: 0.375u. Each tile takes at most 0.1u, and the third what is left of half of 0.175u.
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(foams[0], Is.EqualTo(0.1f).Within(0.001f));
+                Assert.That(foams[1], Is.EqualTo(0.1f).Within(0.001f));
+                Assert.That(foams[2], Is.EqualTo(0.08f).Within(0.011f));
+                Assert.That(entityManager.GetComponent<KsPredictedFoamShotComponent>(predictedShot).Foam, Is.LessThan(0.375f - 0.27f));
+                for (var x = 4; x < 7; x++)
+                {
+                    Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 0), out _), Is.False,
+                        $"The server's shot laid a blanket on tile {x} on the client.");
+                }
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The partial adding boiling to Water applied, and left upstream's tile reactions in place.
+    /// </summary>
+    [Test]
+    public async Task TestWaterPartialApplied()
+    {
+        var server = Pair.Server;
+
+        await server.WaitAssertion(() =>
+        {
+            var water = SProtoMan.Index(WaterReagent);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(water.KsTileEffects.OfType<BoilTileEffect>().Count(), Is.EqualTo(1), "Water does not boil.");
+                Assert.That(water.TileReactions.OfType<ExtinguishTileReaction>().Any(), "Water lost upstream's extinguish reaction.");
+                Assert.That(water.TileReactions.OfType<SpillIfPuddlePresentTileReaction>().Any(), "Water lost upstream's spill reaction.");
+            }
+        });
+    }
+}
