@@ -96,6 +96,7 @@ public sealed partial class PacketSystem
         InitializeModules(executor);
         SetConstants(executor);
         LoadTypes(executor, _callTypes);
+        LoadTypes(executor, _widgetTypes);
         LoadMethods(executor);
         InitializePorts(executor);
 

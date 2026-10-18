@@ -1,4 +1,6 @@
+using System.Linq;
 using Content.Shared._KS14.Packets.BUI;
+using Content.Shared._KS14.Packets.Widgets;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Utility;
@@ -30,9 +32,19 @@ namespace Content.Client._KS14.Packets.UI
 
         protected override void Dispose(bool disposing)
         {
-            SaveCode();
+            if (_menu is not { } menu)
+                return;
 
-            _menu?.ExecutorLog.TextRope = Rope.Leaf.Empty;
+            SaveCode();
+            menu.ExecutorLog.TextRope = Rope.Leaf.Empty;
+
+            for (int i = menu.ExecutorTabs.Children.Count() - 1; i >= 0; i--)
+            {
+                var child = menu.ExecutorTabs.Children[i];
+                if (child.Name != "Executor")
+                    menu.ExecutorTabs.RemoveChild(child);
+            }
+
             base.Dispose(disposing);
         }
 
@@ -68,6 +80,11 @@ namespace Content.Client._KS14.Packets.UI
                 return;
 
             _menu?.UpdateState(rState);
+
+            foreach (var widget in rState.Widgets)
+            {
+                InitWidget(widget);
+            }
         }
 
         protected override void ReceiveMessage(BoundUserInterfaceMessage message)
@@ -79,6 +96,12 @@ namespace Content.Client._KS14.Packets.UI
             {
                 case LogExecutorMessage cast:
                     _menu.WriteLog(cast.Log);
+                    break;
+                case WidgetSendMessage widget:
+                    InitWidget(widget.Widget);
+                    break;
+                case WidgetUpdateElementMessage update:
+                    UpdateWidgetElement(update.Element);
                     break;
             }
         }

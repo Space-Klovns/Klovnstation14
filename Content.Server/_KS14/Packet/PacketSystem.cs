@@ -1,3 +1,4 @@
+using System.Linq;
 using Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Modules.Base;
@@ -14,6 +15,7 @@ using Content.Server.Materials;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.VendingMachines;
 using Content.Shared._KS14.Packets.BUI;
+using Content.Shared._KS14.Packets.Widgets;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking.Events;
 using Content.Shared.GameTicking;
@@ -40,11 +42,11 @@ public sealed partial class PacketSystem : EntitySystem
     [Dependency] internal AmeControllerSystem AmeControllerSystem = default!;
     [Dependency] internal ChemMasterSystem ChemMasterSystem = default!;
     [Dependency] internal RadioSystem RadioSystem = default!;
+    [Dependency] internal UserInterfaceSystem UserInterfaceSystem = default!;
 
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
-    [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
     [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
@@ -61,6 +63,7 @@ public sealed partial class PacketSystem : EntitySystem
         SubscribeLocalEvent<PacketExecutorComponent, ReloadModulesMessage>(OnModuleReload);
         SubscribeLocalEvent<PacketExecutorComponent, TerminateExecutorMessage>(OnTerminate);
         SubscribeLocalEvent<PacketExecutorComponent, InputExecutorMessage>(OnInput);
+        SubscribeLocalEvent<PacketExecutorComponent, WidgetButtonClickedMessage>(OnWidgetButton);
 
         SubscribeLocalEvent<PacketExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
@@ -87,7 +90,7 @@ public sealed partial class PacketSystem : EntitySystem
             if (uid.Comp.Log == string.Empty)
                 continue;
 
-            _userInterfaceSystem.ServerSendUiMessage(uid.Owner, ExecutorUiKey.Key, new LogExecutorMessage(uid.Comp.Log));
+            UserInterfaceSystem.ServerSendUiMessage(uid.Owner, ExecutorUiKey.Key, new LogExecutorMessage(uid.Comp.Log));
             Logger.Info(uid.Comp.Log);
             uid.Comp.Log = string.Empty;
         }
@@ -152,6 +155,14 @@ public sealed partial class PacketSystem : EntitySystem
         SendData(ev.Input, ent, typeof(InputMethod), "BasePacketModule", ent.Comp);
     }
 
+    private void OnWidgetButton(Entity<PacketExecutorComponent> ent, ref WidgetButtonClickedMessage ev)
+    {
+        if (!TryFindWidgetElement<WidgetButton>(ent, ev.Button,  out var widget))
+            return;
+
+        InvokeAction(widget.MethodName, ent);
+    }
+
     /// <summary>
     /// Processes signals that are registered through SinkListenMethod.
     /// </summary>
@@ -171,7 +182,13 @@ public sealed partial class PacketSystem : EntitySystem
         var maxMemory = ent.Comp.MemoryAllocation;
         var command = ent.Comp.Command;
 
-        _userInterfaceSystem.SetUiState(ent.Owner, ExecutorUiKey.Key, new ExecutorBoundUserInterfaceState(maxStatements, maxMemory, command));
+        UserInterfaceSystem.SetUiState(ent.Owner,
+            ExecutorUiKey.Key,
+            new ExecutorBoundUserInterfaceState(
+                maxStatements,
+                maxMemory,
+                command,
+                [.. ent.Comp.Widgets.Values]));
     }
 
     private void OnRoundStart(RoundStartingEvent ev)

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Packets.Widgets;
 using Content.Shared.DeviceLinking;
 using Jint.Native;
 using Robust.Shared.Audio;
@@ -91,4 +92,10 @@ public sealed partial class PacketExecutorComponent : Component
 
     [DataField]
     public bool UnloadState;
+
+    [DataField]
+    public int MaxWidgetCount = 6;
+
+    [DataField]
+    public Dictionary<string, Widget> Widgets = new();
 }

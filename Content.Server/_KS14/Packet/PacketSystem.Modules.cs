@@ -3,6 +3,7 @@ using System.Linq;
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Modules;
 using Content.Server._KS14.Packet.States;
+using Content.Shared._KS14.Packets.Widgets;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking;
 
@@ -31,6 +32,7 @@ public sealed partial class PacketSystem
     private List<Type> _moduleTypes = [];
     private List<Type> _methodTypes = [];
     private List<Type> _callTypes = [];
+    private List<Type> _widgetTypes = [];
 
     /// <summary>
     /// Loads <see cref="PacketModule"/> and <see cref="ModuleMethod"/> types into lists upon system initialization.
@@ -40,6 +42,7 @@ public sealed partial class PacketSystem
         LoadType(ref _methodTypes, typeof(ModuleMethod));
         LoadType(ref _moduleTypes, typeof(PacketModule));
         LoadType(ref _callTypes, typeof(DeviceCall));
+        LoadType(ref _widgetTypes, typeof(WidgetElement));
     }
 
     private void LoadType(ref List<Type> types, Type loadType)
