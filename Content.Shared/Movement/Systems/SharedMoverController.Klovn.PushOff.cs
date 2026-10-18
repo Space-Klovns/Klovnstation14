@@ -12,9 +12,10 @@ public abstract partial class SharedMoverController
     ///         A body's collision layer and mask are the union of all its fixtures, sensors included, so comparing
     ///         those lets a mover push off something it passes straight through, such as a puddle.
     /// </summary>
-    private bool KsCanPushOff(EntityUid moverUid, EntityUid otherUid)
+    /// <param name="moverLayer">The mover's hard fixtures' layers, from <see cref="GetHardCollisionBits"/>.</param>
+    /// <param name="moverMask">The mover's hard fixtures' masks, from <see cref="GetHardCollisionBits"/>.</param>
+    private bool KsCanPushOff(int moverLayer, int moverMask, EntityUid otherUid)
     {
-        GetHardCollisionBits(moverUid, out var moverLayer, out var moverMask);
         if (moverLayer == 0 && moverMask == 0)
             return false;
 
@@ -33,6 +34,9 @@ public abstract partial class SharedMoverController
         return false;
     }
 
+    /// <summary>
+    ///     The union of the layers and masks of an entity's hard fixtures only.
+    /// </summary>
     private void GetHardCollisionBits(EntityUid uid, out int layer, out int mask)
     {
         layer = 0;

@@ -126,6 +126,15 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
         => PredictedSpawnAttachedTo(prototypeId, coordinates);
 
     /// <summary>
+    ///     A shot laying placeholders has crossed a tile that already has a blanket. If it is the client's own
+    ///         placeholder, it now waits for this shot's server blanket as well as the earlier one's, so the client
+    ///         restarts its expiry. Does nothing anywhere else.
+    /// </summary>
+    protected virtual void OnPlaceholderCrossed(Entity<KsFoamBlanketComponent> blanket)
+    {
+    }
+
+    /// <summary>
     ///     Lays a blanket on a tile, or tops up the one already there, and smothers whatever is burning on it.
     /// </summary>
     /// <param name="availableFoam">Units of foam on offer; at most <see cref="KsFoamBlanketComponent.FoamPerTile"/> of it is used.</param>
@@ -159,6 +168,10 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
                 Dirty(blanket);
                 OnBlanketUpdated(blanket);
             }
+
+            // Even when it is full and takes nothing: the server's vapor for this shot still lays foam here.
+            if (placeholder)
+                OnPlaceholderCrossed(blanket);
         }
         else
         {

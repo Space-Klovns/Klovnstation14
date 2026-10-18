@@ -192,8 +192,15 @@ public sealed class KsHotPuddleTest : GameTest
     private float Temperature(EntityUid puddleUid)
         => PuddleSolution(puddleUid).Temperature;
 
+    /// <summary>
+    ///     The puddles something touches, or null if it touches none. The component outlives the last puddle by up to a
+    ///         check, with an empty set, which counts as touching none.
+    /// </summary>
     private HashSet<EntityUid>? Touched(EntityUid uid)
-        => Pair.Server.EntMan.GetComponentOrNull<KsTouchingPuddleComponent>(uid)?.Puddles.ToHashSet();
+    {
+        var puddles = Pair.Server.EntMan.GetComponentOrNull<KsTouchingPuddleComponent>(uid)?.Puddles;
+        return puddles is { Count: > 0 } ? puddles.ToHashSet() : null;
+    }
 
     /// <summary>
     ///     Moves something and wakes it, as dropping it would: physics only updates the contacts of a body that is awake.
@@ -687,6 +694,62 @@ public sealed class KsHotPuddleTest : GameTest
                     "The puddle was not heated to exactly the source's temperature, and no further.");
             });
         }
+    }
+
+    /// <summary>
+    ///     Stepping out of a puddle and back in does not bring the next check forward: a hot thing that keeps doing
+    ///         it heats the puddle no faster than one that stays.
+    /// </summary>
+    [Test]
+    public async Task TestReenteringDoesNotHeatFaster()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+
+        var testMap = await CreateTestMap(breathable: false);
+        var gridUid = testMap.Grid.Owner;
+        EntityUid puddleUid = default;
+        EntityUid itemUid = default;
+
+        await server.WaitPost(() =>
+        {
+            puddleUid = SpillPuddle(testMap, new Vector2i(0, 0), _inertLiquidReagent, 40f, Atmospherics.T20C);
+            itemUid = entityManager.SpawnEntity(_hotItemPrototype, new EntityCoordinates(gridUid, 4.5f, 0.5f));
+        });
+        await server.WaitRunTicks(5);
+
+        var startEnergy = 0f;
+        var startTime = TimeSpan.Zero;
+        await server.WaitPost(() =>
+        {
+            startEnergy = ThermalEnergy(puddleUid);
+            startTime = server.Timing.CurTime;
+        });
+
+        // In, which heats it once at once, then out and back in three times.
+        await MoveTo(itemUid, testMap, 0.5f);
+        for (var i = 0; i < 3; i++)
+        {
+            await MoveTo(itemUid, testMap, 4.5f);
+            await server.WaitAssertion(() => Assert.That(Touched(itemUid), Is.Null, "The item did not leave the puddle."));
+            await MoveTo(itemUid, testMap, 0.5f);
+            await server.WaitAssertion(() => Assert.That(Touched(itemUid) ?? [], Is.EquivalentTo(new[] { puddleUid }), "The item did not go back into the puddle."));
+        }
+
+        var pulse = KsHotPuddleSystem.HeatPower * (float)KsHotPuddleSystem.CheckInterval.TotalSeconds;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.Timing.CurTime - startTime, Is.LessThan(KsHotPuddleSystem.CheckInterval),
+                "The test took a whole interval, so a second check was due anyway.");
+            Assert.That(ThermalEnergy(puddleUid) - startEnergy, Is.EqualTo(pulse).Within(pulse * 0.01f),
+                "Coming back into the puddle within an interval heated it again.");
+        });
+
+        // Control: once the interval is up, it heats again.
+        await RunPastNextCheck(itemUid);
+        await server.WaitAssertion(() =>
+            Assert.That(ThermalEnergy(puddleUid) - startEnergy, Is.EqualTo(pulse * 2f).Within(pulse * 0.01f),
+                "The item stopped heating the puddle after the interval was up."));
     }
 
     /// <summary>

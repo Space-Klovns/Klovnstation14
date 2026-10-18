@@ -86,7 +86,8 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
         if (!_touchingQuery.TryComp(otherUid, out var touchingComponent))
         {
             touchingComponent = AddComp<KsTouchingPuddleComponent>(otherUid);
-            // Checked as soon as it lands: a lit welder dropped in fuel starts heating it on the next tick.
+            // Checked as soon as it lands: a lit welder dropped in fuel starts heating it on the next tick. One that
+            //     left a puddle less than an interval ago still has its component, and keeps its check time.
             touchingComponent.NextCheck = _gameTiming.CurTime;
         }
 
@@ -156,12 +157,15 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
         return false;
     }
 
+    /// <remarks>
+    ///     The component stays when the last puddle is left, and <see cref="Update"/> removes it once its next check
+    ///         is due. Removing it here would let something that keeps stepping in and out of puddles start a fresh
+    ///         component, checked at once, on every return, and so heat them faster than once per
+    ///         <see cref="CheckInterval"/>.
+    /// </remarks>
     private void LeavePuddle(Entity<KsTouchingPuddleComponent> entity, EntityUid puddleUid)
     {
-        if (!entity.Comp.Puddles.Remove(puddleUid) || entity.Comp.Puddles.Count > 0)
-            return;
-
-        RemComp(entity.Owner, entity.Comp);
+        entity.Comp.Puddles.Remove(puddleUid);
     }
 
     #endregion

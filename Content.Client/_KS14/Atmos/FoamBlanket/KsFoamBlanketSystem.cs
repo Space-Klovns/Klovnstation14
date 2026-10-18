@@ -58,6 +58,16 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         return blanketUid;
     }
 
+    protected override void OnPlaceholderCrossed(Entity<KsFoamBlanketComponent> blanket)
+    {
+        base.OnPlaceholderCrossed(blanket);
+
+        if (!_placeholderQuery.TryComp(blanket.Owner, out var placeholderComponent) || placeholderComponent.Superseded)
+            return;
+
+        placeholderComponent.ExpiryTime = _gameTiming.CurTime + blanket.Comp.PlaceholderLifetime;
+    }
+
     /// <summary>
     ///     The server's blanket has arrived on a tile, and taken it over from this client's placeholder. Hidden at
     ///         once, so the tile never shows two; deleted in <see cref="FrameUpdate"/>, because this runs while the

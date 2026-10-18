@@ -29,6 +29,7 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
 
     private const string Extinguisher = "FireExtinguisher";
     private const int Ticks = 75;
+    private static readonly EntProtoId BlanketPrototype = "KsFoamBlanket";
 
     /// <summary>
     ///     The tiles a shot along +x from the player can cross, given the extinguisher's spread.
@@ -149,6 +150,57 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
                 "No client blanket waited more than a couple of ticks for the server's, so this proves nothing about it outliving states.");
             Assert.That(remainingPlaceholders, Is.Zero, "Client blankets were left behind once the server's had arrived.");
         }
+    }
+
+    /// <summary>
+    ///     A second shot crossing a tile that has this client's placeholder restarts its expiry, since the placeholder
+    ///         now also waits for the second shot's server blanket. It does so even when the placeholder is too full to
+    ///         take any foam.
+    /// </summary>
+    [Test]
+    public async Task CrossingAPlaceholderAgainRestartsItsExpiry()
+    {
+        // Beside the floor the player stands on: a tile on its own would be split off into a grid of its own.
+        var tile = new Vector2i(1, 0);
+        await Server.WaitPost(() => MapSystem.SetTile(MapData.Grid, tile, new Tile(TileMan[Plating].TileId)));
+        await RunTicks(5);
+
+        var clientGridUid = MapData.CGridUid;
+        var firstExpiry = TimeSpan.Zero;
+        var lifetime = TimeSpan.Zero;
+
+        KsFoamBlanketPlaceholderComponent LayPlaceholder(int crossings, out float lastUsed)
+        {
+            var blanketSystem = CEntMan.System<ClientFoamBlanketSystem>();
+            var tileRef = CEntMan.System<SharedMapSystem>().GetTileRef(clientGridUid, CEntMan.GetComponent<MapGridComponent>(clientGridUid), tile);
+            lastUsed = 0f;
+            for (var i = 0; i < crossings; i++)
+                lastUsed = blanketSystem.Deploy(BlanketPrototype, tileRef, 1000f, playSound: false, placeholder: true);
+
+            Assert.That(blanketSystem.TryGetBlanket(clientGridUid, tile, out var blanket), "No blanket was laid.");
+            lifetime = blanket.Comp.PlaceholderLifetime;
+            Assert.That(CEntMan.TryGetComponent<KsFoamBlanketPlaceholderComponent>(blanket.Owner, out var placeholderComponent),
+                "The blanket laid is not a placeholder.");
+            return placeholderComponent!;
+        }
+
+        // Crossed until full, so that the later crossing takes nothing.
+        await Client.WaitAssertion(() =>
+        {
+            firstExpiry = LayPlaceholder(crossings: 30, out var lastUsed).ExpiryTime;
+            Assert.That(lastUsed, Is.Zero, "The placeholder was not filled up.");
+        });
+        await RunTicks(15);
+
+        await Client.WaitAssertion(() =>
+        {
+            var placeholderComponent = LayPlaceholder(crossings: 1, out var used);
+            Assert.That(used, Is.Zero, "The full placeholder took more foam.");
+            Assert.That(placeholderComponent.ExpiryTime, Is.GreaterThan(firstExpiry),
+                "Crossing the placeholder again did not push back its expiry.");
+            Assert.That(placeholderComponent.ExpiryTime, Is.EqualTo(Client.Timing.CurTime + lifetime),
+                "The placeholder's expiry did not restart from the second crossing.");
+        });
     }
 
     /// <summary>

@@ -481,6 +481,7 @@ public abstract partial class SharedMoverController : VirtualController
 
         _aroundColliderSet.Clear();
         lookupSystem.GetEntitiesIntersecting(transform.MapID, enlargedAABB, _aroundColliderSet);
+        GetHardCollisionBits(uid, out var ksMoverLayer, out var ksMoverMask); // KS14: the mover's hard fixtures, once for every candidate
         foreach (var otherEntity in _aroundColliderSet)
         {
             if (otherEntity == uid)
@@ -497,7 +498,7 @@ public abstract partial class SharedMoverController : VirtualController
                 (collider.CollisionMask & otherCollider.CollisionLayer) == 0 &&
                 (otherCollider.CollisionMask & collider.CollisionLayer) == 0 ||
                 */
-                !KsCanPushOff(uid, otherEntity) ||
+                !KsCanPushOff(ksMoverLayer, ksMoverMask, otherEntity) ||
                 // KS14 end
                 PullableQuery.TryComp(otherEntity, out var pullable) && pullable.BeingPulled)
             {
