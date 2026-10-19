@@ -106,13 +106,13 @@
   components:
   - type: Solution
     solution:
-      maxVol: 180 # KS14: 120 -> 180, room for full-auto
+      maxVol: 110 # KS14: 120 -> 110, due to buffs to extinguishers
       reagents:
       - ReagentId: Water
-        Quantity: 135 # KS14: 120 -> 135, a quarter is foam
+        Quantity: 27.5 # KS14: 120 -> 135, a quarter is foam
       # KS14 start: firefighting foam, which keeps fuel puddles from relighting
       - ReagentId: FirefightingFoam
-        Quantity: 45
+        Quantity: 82.5
       # KS14 end
 
 - type: entity
