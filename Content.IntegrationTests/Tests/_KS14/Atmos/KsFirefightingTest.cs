@@ -137,6 +137,8 @@ public sealed class KsFirefightingTest : GameTest
         Quantity: 100
   - type: Spray
     transferAmount: 10
+    spraySound:
+      path: /Audio/Effects/extinguish.ogg
     sprayedPrototype: ExtinguisherSpray
     vaporAmount: 3
     vaporSpread: 90

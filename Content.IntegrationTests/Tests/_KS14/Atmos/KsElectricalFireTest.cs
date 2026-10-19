@@ -11,6 +11,8 @@ using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Construction;
 using Content.Shared.FixedPoint;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -205,6 +207,67 @@ public sealed class KsElectricalFireTest : GameTest
 
         await server.WaitRunTicks(TicksPerSecond * 2);
         await server.WaitAssertion(() => Assert.That(HasElectricalFire(testMap, Centre), Is.False, "Carbon dioxide did not put the electrical fire out."));
+    }
+
+    /// <summary>
+    ///     Whether a sound playing <paramref name="path"/> is on the test map.
+    /// </summary>
+    private bool IsPlaying(TestMapData testMap, string path)
+    {
+        var query = Pair.Server.EntMan.AllEntityQueryEnumerator<AudioComponent, TransformComponent>();
+        while (query.MoveNext(out var audioComponent, out var transformComponent))
+        {
+            if (transformComponent.MapID == testMap.MapId && audioComponent.FileName == path)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Foam on an electrical fire does not sizzle, since it does nothing; the fire roars on instead. Carbon dioxide
+    ///         putting it out does sizzle.
+    /// </summary>
+    [Test]
+    public async Task SoundsSayWhetherItWentOut()
+    {
+        var testMap = await CreateRoom();
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var sizzlePath = string.Empty;
+
+        await server.WaitAssertion(() =>
+        {
+            var fire = entityManager.System<SharedChemicalFireSystem>().SpawnChemicalFire(ElectricalFirePrototype, TileRef(testMap, Centre));
+            Assert.That(fire, Is.Not.Null);
+            sizzlePath = ((SoundPathSpecifier)fire!.Value.Comp.ExtinguishSound!).Path.ToString();
+            var roarPath = ((SoundPathSpecifier)fire.Value.Comp.FoamResistSound!).Path.ToString();
+
+            entityManager.System<KsFoamBlanketSystem>().Deploy(BlanketPrototype, TileRef(testMap, Centre), 1f, playSound: true);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(IsPlaying(testMap, sizzlePath), Is.False, "Foam sizzled on a fire it does nothing to.");
+                Assert.That(IsPlaying(testMap, roarPath), "The fire did not roar on under the foam.");
+            }
+        });
+
+        await server.WaitAssertion(() =>
+            entityManager.System<PuddleSystem>().DoTileReactions(TileRef(testMap, Centre),
+                new Solution(CarbonDioxideReagent.Id, FixedPoint2.New(15)) { Temperature = 194f }));
+
+        var sizzled = false;
+        for (var tick = 0; tick < TicksPerSecond * 2 && !sizzled; tick++)
+        {
+            await server.WaitRunTicks(1);
+            await server.WaitPost(() => sizzled = IsPlaying(testMap, sizzlePath));
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(HasElectricalFire(testMap, Centre), Is.False, "Carbon dioxide did not put the electrical fire out.");
+            Assert.That(sizzled, "Carbon dioxide put the electrical fire out without a sizzle.");
+        });
     }
 
     /// <summary>

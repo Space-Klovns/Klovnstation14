@@ -1,6 +1,7 @@
 using Content.Shared.Atmos;
 using Content.Shared.Light.Components;
 using Content.Shared.Physics;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -23,6 +24,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
@@ -188,8 +190,16 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     /// <summary>
     ///     Puts a chemfire out.
     /// </summary>
-    public void ExtinguishChemicalFire(Entity<ChemicalFireComponent> fire)
-        => PredictedQueueDel(fire.Owner);
+    /// <param name="playSound">Whether to play its <see cref="ChemicalFireComponent.ExtinguishSound"/>.</param>
+    public void ExtinguishChemicalFire(Entity<ChemicalFireComponent> fire, bool playSound = false)
+    {
+        // Only the server plays it: the paths that ask for it (cooling, starving) need the air, which the client
+        //     does not have.
+        if (playSound)
+            _audioSystem.PlayPvs(fire.Comp.ExtinguishSound, Transform(fire.Owner).Coordinates);
+
+        PredictedQueueDel(fire.Owner);
+    }
 
     /// <summary>
     ///     The key a chemfire smooths and deduplicates by, falling back to its prototype id.
@@ -441,6 +451,8 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         component.FoamSmotherResistance = prototypeComponent.FoamSmotherResistance;
         component.FoamHeatFraction = prototypeComponent.FoamHeatFraction;
         component.SmotherRecoveryRate = prototypeComponent.SmotherRecoveryRate;
+        component.ExtinguishSound = prototypeComponent.ExtinguishSound;
+        component.FoamResistSound = prototypeComponent.FoamResistSound;
         component.HeatInterval = prototypeComponent.HeatInterval;
         component.EmissionRange = prototypeComponent.EmissionRange;
         component.ConnectionKey = prototypeComponent.ConnectionKey;

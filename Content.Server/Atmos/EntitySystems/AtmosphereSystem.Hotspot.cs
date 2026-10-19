@@ -148,6 +148,8 @@ public sealed partial class AtmosphereSystem
                     if (otherTile == null)
                         continue;
 
+                    KsRadiateIntoFoam(tile, otherTile); // KS14: a fire next to a foam blanket boils it away
+
                     if (!otherTile.Hotspot.Valid)
                         HotspotExpose(gridAtmosphere, otherTile, radiatedTemperature, Atmospherics.CellVolume / 4);
                 }
@@ -225,7 +227,7 @@ public sealed partial class AtmosphereSystem
             return;
         }
 
-        if (exposedTemperature > Atmospherics.PlasmaMinimumBurnTemperature && isFlammable)
+        if (exposedTemperature > Atmospherics.PlasmaMinimumBurnTemperature && isFlammable && !KsIsSmotheredByFoam(tile) /* KS14: added */)
         {
             if (sparkSourceUid.HasValue)
             {

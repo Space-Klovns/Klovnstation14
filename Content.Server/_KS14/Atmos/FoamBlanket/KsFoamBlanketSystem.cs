@@ -9,7 +9,6 @@ using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Fluids.Components;
 using Content.Shared.Popups;
-using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
@@ -34,27 +33,61 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     [Dependency] private EntityQuery<KsFoamContestComponent> _contestQuery = default!;
 
     /// <summary>
-    ///     How often a chemfire fighting the foam over it hisses.
+    ///     How often a chemfire burning on under foam may play its <see cref="ChemicalFireComponent.FoamResistSound"/>:
+    ///         about the length of the default sound, so that it roars on without piling up.
     /// </summary>
-    private static readonly TimeSpan HissInterval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan ResistSoundInterval = TimeSpan.FromSeconds(2);
 
     /// <summary>
     ///     How often foam landing on a chemfire it does not put out at once may say so.
     /// </summary>
     private static readonly TimeSpan PopupInterval = TimeSpan.FromSeconds(5);
 
-    private static readonly AudioParams HissParams = AudioParams.Default.WithVariation(0.2f).WithVolume(-4f);
-
     protected override bool IsBurning(Entity<FlammableComponent> flammable)
         => flammable.Comp.OnFire && flammable.Comp.CanExtinguish;
 
-    protected override bool SmotherTileAtmos(EntityUid gridUid, Vector2i tile)
+    /// <remarks>
+    ///     Only while the air is cooler than the foam's boiling point (<see cref="HoldsBackGasFire"/>). A gas fire whose
+    ///         air is hotter burns in the air itself, which foam on the floor does nothing about: putting its flame out
+    ///         would only hide it until the air lit it again.
+    /// </remarks>
+    protected override bool SmotherTileAtmos(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile)
     {
-        if (!_atmosphereSystem.IsHotspotActive(gridUid, tile))
+        // Not IsHotspotActive: chemfires answer that for their tiles too, which would sizzle over one the foam cannot
+        //     touch. The chemfires on the tile are the shared system's to deal with.
+        if (!_atmosphereSystem.HasGasHotspot(gridUid, tile) ||
+            !HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false)))
             return false;
 
         _atmosphereSystem.HotspotExtinguish(gridUid, tile);
         return true;
+    }
+
+    /// <summary>
+    ///     Whether the blanket keeps gas from catching fire, and what is in it from burning: only while the air over it
+    ///         is cooler than the foam's boiling point.
+    /// </summary>
+    /// <remarks>
+    ///     Above it, the foam is boiling, and the gas burns by itself: plasma burns from 373 K, the foam's boiling point,
+    ///         without any flame to light it. So a blanket can stop a spark, or a fire spreading onto cool air, but
+    ///         not a fire that has heated the air it burns in. Venting or carbon dioxide is for that.
+    ///     A tile with no air, or air that does not change (space), has nothing to burn, so it does not matter.
+    /// </remarks>
+    private static bool HoldsBackGasFire(KsFoamBlanketComponent component, GasMixture? air)
+        => air == null || air.Temperature < component.BoilingPoint;
+
+    /// <summary>
+    ///     Whether a foam blanket on the tile keeps a gas fire from starting there. See <see cref="HoldsBackGasFire"/>.
+    /// </summary>
+    public bool SmothersIgnition(EntityUid gridUid, Vector2i tile, GasMixture? air)
+        => TryGetBlanket(gridUid, tile, out var blanket) && HoldsBackGasFire(blanket.Comp, air);
+
+    protected override bool ProtectsOccupants(Entity<KsFoamBlanketComponent> blanket)
+    {
+        if (blanket.Comp.LocalGridUid is not { } gridUid)
+            return true;
+
+        return HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetTileMixture((gridUid, null, null), null, blanket.Comp.LocalTile, excite: false));
     }
 
     public override void Update(float frameTime)
@@ -82,6 +115,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
             var seconds = (float)blanketComponent.UpdateInterval.TotalSeconds;
             blanketComponent.Foam -= blanketComponent.DecayRate * seconds;
             Boil((uid, blanketComponent), seconds);
+            BoilFromRadiatedFire((uid, blanketComponent), seconds);
 
             if (blanketComponent.Foam <= 0f)
                 // Dissolves rather than vanishing; removed once the dissolve has played.
@@ -142,7 +176,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (airHeatCapacity < Atmospherics.MinimumHeatCapacity)
             return;
 
-        var airBoiled = MathF.Min(MathF.Min(component.BoilRate * seconds, component.Foam),
+        var airBoiled = MathF.Min(MathF.Min(GetAirBoilRate(component, mixture.Temperature) * seconds, component.Foam),
             (mixture.Temperature - component.BoilingPoint) * airHeatCapacity / energyPerUnit);
         if (airBoiled <= 0f)
             return;
@@ -150,6 +184,80 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         // The air pays before the gas joins it, so the gas is added at the energy it actually carries.
         mixture.Temperature -= airBoiled * energyPerUnit / airHeatCapacity;
         AddBoiledGas(blanket, gridUid, tile, airBoiled);
+    }
+
+    /// <summary>
+    ///     How fast foam may boil off into air at <paramref name="airTemperature"/>: <see cref="KsFoamBlanketComponent.FireBoilRate"/>
+    ///         per 1000 K above the boiling point, but never less than <see cref="KsFoamBlanketComponent.BoilRate"/>.
+    /// </summary>
+    /// <remarks>
+    ///     With the default numbers the two agree 100 K above the boiling point, so foam over air up to that is unchanged,
+    ///         and only air hotter than that, as a gas fire's is, boils it faster.
+    /// </remarks>
+    private static float GetAirBoilRate(KsFoamBlanketComponent component, float airTemperature)
+        => MathF.Max(component.BoilRate, component.FireBoilRate * (airTemperature - component.BoilingPoint) / 1000f);
+
+    /// <summary>
+    ///     A full gas fire on a neighbouring tile is radiating into the blanket here, if there is one. Remembers each such
+    ///         neighbour, at its hottest since the last update, which <see cref="BoilFromRadiatedFire"/> then boils the foam
+    ///         with.
+    /// </summary>
+    /// <remarks>
+    ///     Only remembered here, since a fire radiates once per atmos cycle into each neighbour, and how often that is
+    ///         depends on the server's load. Boiling on the blanket's own update keeps the rate per second.
+    /// </remarks>
+    public void ExposeToRadiatedFire(EntityUid gridUid, Vector2i tile, Vector2i burningTile, float burningTemperature)
+    {
+        if (!TryGetBlanket(gridUid, tile, out var blanket))
+            return;
+
+        var radiatingTiles = blanket.Comp.RadiatingTiles;
+        if (!radiatingTiles.TryGetValue(burningTile, out var temperature) || burningTemperature > temperature)
+            radiatingTiles[burningTile] = burningTemperature;
+    }
+
+    /// <summary>
+    ///     Boils foam off with heat from each gas fire that has radiated into the blanket since the last update, at the
+    ///         rate <see cref="GetAirBoilRate"/> gives for that fire's air now, paid for out of that air, which is never
+    ///         cooled below the boiling point. The vapor joins the blanket's own tile, as <see cref="Boil"/>'s does.
+    /// </summary>
+    /// <remarks>
+    ///     Each neighbour adds its own share, so a blanket with fire on several sides goes faster.
+    /// </remarks>
+    private void BoilFromRadiatedFire(Entity<KsFoamBlanketComponent> blanket, float seconds)
+    {
+        var component = blanket.Comp;
+        if (component.RadiatingTiles.Count == 0)
+            return;
+
+        var energyPerUnit = component.SpecificHeat * (component.BoilingPoint - component.FoamTemperature) + component.LatentHeat;
+        if (component.LocalGridUid is { } gridUid && energyPerUnit > 0f)
+        {
+            foreach (var burningTile in component.RadiatingTiles.Keys)
+            {
+                if (component.Foam <= 0f)
+                    break;
+
+                if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, burningTile, excite: true) is not { Immutable: false } burningAir)
+                    continue;
+
+                var excess = burningAir.Temperature - component.BoilingPoint;
+                var heatCapacity = _atmosphereSystem.GetHeatCapacity(burningAir, applyScaling: true);
+                if (excess <= 0f || heatCapacity < Atmospherics.MinimumHeatCapacity)
+                    continue;
+
+                var boiled = MathF.Min(MathF.Min(GetAirBoilRate(component, burningAir.Temperature) * seconds, component.Foam),
+                    excess * heatCapacity / energyPerUnit);
+                if (boiled <= 0f)
+                    continue;
+
+                // The fire's air pays before the gas joins the blanket's tile, as in Boil.
+                burningAir.Temperature -= boiled * energyPerUnit / heatCapacity;
+                AddBoiledGas(blanket, gridUid, component.LocalTile, boiled);
+            }
+        }
+
+        component.RadiatingTiles.Clear();
     }
 
     private bool AddBoiledGas(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile, float boiled)
@@ -167,12 +275,16 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     /// <summary>
     ///     Foam has landed on a chemfire it does not put out at once: says so, at most every
     ///         <see cref="PopupInterval"/>. One that fights the foam starts losing to it on its next heat tick, through
-    ///         <see cref="ContestFire"/>.
+    ///         <see cref="ContestFire"/>, and roars from there; one the foam cannot touch roars now.
     /// </summary>
     protected override void OnFoamReachedResistingFire(Entity<ChemicalFireComponent> fire)
     {
         var contestComponent = EnsureComp<KsFoamContestComponent>(fire.Owner);
         var curTime = _gameTiming.CurTime;
+
+        if (!fire.Comp.FoamSmotherable)
+            TryPlayResistSound(fire, contestComponent, curTime);
+
         if (curTime < contestComponent.NextPopupTime)
             return;
 
@@ -214,7 +326,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     /// <summary>
     ///     A heat tick of a chemfire that fights foam: a blanket over it adds its foam over the fire's
     ///         <see cref="ChemicalFireComponent.FoamSmotherResistance"/> to the progress, and puts it out once that
-    ///         reaches 1; without one, the fire recovers. The fire hisses for as long as it is under foam.
+    ///         reaches 1; without one, the fire recovers. The fire roars for as long as it is under foam.
     /// </summary>
     /// <remarks>
     ///     Called from <c>ChemicalFireSystem.OnHeatTile</c> rather than subscribed: only one system may take a
@@ -231,22 +343,15 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
             var contestComponent = EnsureComp<KsFoamContestComponent>(fire.Owner);
             contestComponent.Progress += blanket.Comp.Foam * seconds / fire.Comp.FoamSmotherResistance;
 
-            var coordinates = Transform(fire.Owner).Coordinates;
             if (contestComponent.Progress >= 1f)
             {
                 PopupAboutFire(fire, "chemical-fire-foam-smothered");
-                _audioSystem.PlayPvs(blanket.Comp.SmotherSound, coordinates);
+                _audioSystem.PlayPvs(blanket.Comp.SmotherSound, Transform(fire.Owner).Coordinates);
                 _chemicalFireSystem.ExtinguishChemicalFire(fire);
                 return true;
             }
 
-            var curTime = _gameTiming.CurTime;
-            if (curTime >= contestComponent.NextHissTime)
-            {
-                contestComponent.NextHissTime = curTime + HissInterval;
-                _audioSystem.PlayPvs(blanket.Comp.SmotherSound, coordinates, HissParams);
-            }
-
+            TryPlayResistSound(fire, contestComponent, _gameTiming.CurTime);
             _chemicalFireSystem.SetSmotherProgress(fire, contestComponent.Progress);
             return false;
         }
@@ -257,6 +362,19 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         recoveringComponent.Progress = MathF.Max(recoveringComponent.Progress - fire.Comp.SmotherRecoveryRate * seconds, 0f);
         _chemicalFireSystem.SetSmotherProgress(fire, recoveringComponent.Progress);
         return false;
+    }
+
+    /// <summary>
+    ///     Plays the fire's <see cref="ChemicalFireComponent.FoamResistSound"/>, at most every
+    ///         <see cref="ResistSoundInterval"/>: an extinguisher lands foam several times a second.
+    /// </summary>
+    private void TryPlayResistSound(Entity<ChemicalFireComponent> fire, KsFoamContestComponent contestComponent, TimeSpan curTime)
+    {
+        if (curTime < contestComponent.NextResistSoundTime)
+            return;
+
+        contestComponent.NextResistSoundTime = curTime + ResistSoundInterval;
+        _audioSystem.PlayPvs(fire.Comp.FoamResistSound, Transform(fire.Owner).Coordinates);
     }
 
     /// <summary>

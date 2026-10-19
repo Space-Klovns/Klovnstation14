@@ -21,10 +21,10 @@ public sealed partial class KsFoamContestComponent : Component
     public float Progress;
 
     /// <summary>
-    ///     When the fire may next hiss against the foam over it.
+    ///     When the fire may next roar against the foam over it.
     /// </summary>
     [ViewVariables, AutoPausedField]
-    public TimeSpan NextHissTime;
+    public TimeSpan NextResistSoundTime;
 
     /// <summary>
     ///     When foam landing on the fire may next say so in a popup.

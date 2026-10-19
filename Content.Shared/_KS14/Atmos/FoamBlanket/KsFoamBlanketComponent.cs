@@ -55,7 +55,8 @@ public sealed partial class KsFoamBlanketComponent : Component
     public float DecayRate = 0.01f;
 
     /// <summary>
-    ///     Most units per second that may boil off over air hotter than <see cref="BoilingPoint"/>.
+    ///     Most units per second that may boil off over air hotter than <see cref="BoilingPoint"/>, however little
+    ///         hotter. Air hot enough boils it faster, at <see cref="FireBoilRate"/>.
     /// </summary>
     [DataField]
     public float BoilRate = 0.03f;
@@ -67,6 +68,22 @@ public sealed partial class KsFoamBlanketComponent : Component
     /// </summary>
     [DataField]
     public float PuddleBoilRate = 0.2f;
+
+    /// <summary>
+    ///     Most units per second that boil off for every 1000 K the air is above <see cref="BoilingPoint"/>: the air on
+    ///         the blanket's tile, and that of each neighbouring tile burning with a gas fire, each paying for its own
+    ///         share. Never less than <see cref="BoilRate"/> for the blanket's own air. This is how a gas fire burns
+    ///         through a blanket: the hotter, and the more of it around, the sooner.
+    /// </summary>
+    [DataField]
+    public float FireBoilRate = 0.3f;
+
+    /// <summary>
+    ///     The neighbouring tiles that have burnt with a gas fire since the last update, each at the hottest its air
+    ///         was. Server-only; <see cref="FireBoilRate"/> boils the foam with heat from their air on the next update.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<Vector2i, float> RadiatingTiles = [];
 
     /// <summary>
     ///     Temperature, in kelvin, the foam boils at.

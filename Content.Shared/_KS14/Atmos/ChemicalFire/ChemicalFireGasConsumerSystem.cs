@@ -73,7 +73,7 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
             IsStarved(entity.Comp, mixture) &&
             _chemicalFireQuery.TryGetComponent(entity.Owner, out var starvedFireComponent))
         {
-            _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, starvedFireComponent));
+            _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, starvedFireComponent), playSound: true);
             return;
         }
 
@@ -109,6 +109,6 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
             !_chemicalFireQuery.TryGetComponent(entity.Owner, out var fireComponent))
             return;
 
-        _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, fireComponent));
+        _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, fireComponent), playSound: true);
     }
 }

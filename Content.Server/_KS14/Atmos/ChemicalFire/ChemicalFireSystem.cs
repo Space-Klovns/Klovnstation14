@@ -125,7 +125,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
         // Cooled out before it can heat the air back up again.
         if (args.Mixture is { } mixture && IsTooCold(entity.Comp, mixture))
         {
-            ExtinguishChemicalFire(entity);
+            ExtinguishChemicalFire(entity, playSound: true);
             return;
         }
 

@@ -114,10 +114,15 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     protected abstract bool IsBurning(Entity<FlammableComponent> flammable);
 
     /// <summary>
-    ///     Puts out the atmos fire on a tile. Atmos is server-only, so nothing happens by default.
+    ///     Puts out the atmos fire on a blanket's tile. Atmos is server-only, so nothing happens by default.
     /// </summary>
     /// <returns>Whether there was a fire to put out.</returns>
-    protected virtual bool SmotherTileAtmos(EntityUid gridUid, Vector2i tile) => false;
+    protected virtual bool SmotherTileAtmos(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile) => false;
+
+    /// <summary>
+    ///     Whether the blanket keeps what is in it from catching fire. Only the server, which has the air, ever says no.
+    /// </summary>
+    protected virtual bool ProtectsOccupants(Entity<KsFoamBlanketComponent> blanket) => true;
 
     /// <summary>
     ///     Foam has landed on a chemfire it does not put out at once: one that fights it
@@ -230,7 +235,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     /// </summary>
     private void Smother(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile, EntityCoordinates coordinates, bool playSound)
     {
-        var smothered = SmotherTileAtmos(gridUid, tile);
+        var smothered = SmotherTileAtmos(blanket, gridUid, tile);
 
         if (_chemicalFireSystem.GetTileChemicalFires((gridUid, null), tile) is { } tileFires)
         {
@@ -254,7 +259,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
             foreach (var fire in _resistingFires)
             {
                 OnFoamReachedResistingFire(fire);
-                // It hisses against the foam; one that ignores the foam entirely makes no sound.
+                // It hisses against the foam; one that ignores the foam entirely does not, and only roars on.
                 smothered |= fire.Comp.FoamSmotherable;
             }
 
@@ -422,7 +427,8 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Nothing that can be put out catches fire, or keeps burning, while it is in foam.
+    ///     Nothing that can be put out catches fire, or keeps burning, while it is in foam, unless the air over the foam
+    ///         is too hot for it (<see cref="ProtectsOccupants"/>).
     /// </summary>
     [SubscribeLocalEvent]
     private void OnInFoamBurnAttempt(Entity<KsInFoamComponent> entity, ref KsBurnAttemptEvent args)
@@ -435,7 +441,9 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
         // Checked rather than trusted: a blanket that went without its occupants hearing of it must not keep them out.
         foreach (var blanketUid in entity.Comp.Blankets)
         {
-            if (!_blanketQuery.TryComp(blanketUid, out var blanketComponent) || !IsActive((blanketUid, blanketComponent)))
+            if (!_blanketQuery.TryComp(blanketUid, out var blanketComponent) ||
+                !IsActive((blanketUid, blanketComponent)) ||
+                !ProtectsOccupants((blanketUid, blanketComponent)))
                 continue;
 
             args.Cancel();

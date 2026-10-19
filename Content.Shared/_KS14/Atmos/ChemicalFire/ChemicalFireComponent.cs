@@ -1,4 +1,5 @@
 using System.Numerics;
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -135,6 +136,21 @@ public sealed partial class ChemicalFireComponent : Component
     /// </summary>
     [DataField]
     public float SmotherRecoveryRate = 0.25f;
+
+    /// <summary>
+    ///     Played when the chemfire is put out by its air growing too cold, or by running out of what it burns. Foam
+    ///         plays its own sound when it smothers one, and a chemfire that burns out plays none. Null for none.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? ExtinguishSound = new SoundPathSpecifier("/Audio/_KS14/Effects/burn_sizzle.ogg");
+
+    /// <summary>
+    ///     Played while the chemfire burns on under foam: when foam lands on one it cannot smother at all, and every
+    ///         few seconds while one fights the foam over it. Null for none.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? FoamResistSound = new SoundPathSpecifier("/Audio/Effects/fire.ogg",
+        AudioParams.Default.WithVolume(4f).WithVariation(0.15f));
 
     /// <summary>
     ///     How close foam is to smothering this chemfire, from 0 to 1; it goes out at 1. Networked, and only in steps
