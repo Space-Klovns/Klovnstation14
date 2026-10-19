@@ -41,6 +41,7 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
 
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<PuddleComponent> _puddleQuery = default!;
     [Dependency] private EntityQuery<KsTouchingPuddleComponent> _touchingQuery = default!;
 
@@ -138,6 +139,10 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
     /// </remarks>
     public void OnPuddleShutdown(EntityUid puddleUid)
     {
+        // Without fixtures nothing ever touched it, and the physics system cannot list the contacts of what has none.
+        if (!_fixturesQuery.HasComp(puddleUid))
+            return;
+
         _releasedTouchers.Clear();
         var contacts = _physicsSystem.GetContacts(puddleUid, includeDeleting: true);
         while (contacts.MoveNext(out var contact))

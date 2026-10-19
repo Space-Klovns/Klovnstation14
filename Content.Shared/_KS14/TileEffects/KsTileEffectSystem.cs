@@ -64,6 +64,11 @@ public sealed partial class KsTileEffectSystem : EntitySystem
 
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
             {
+                // A prototype reload can hand out new instances without telling this system, so they are checked here,
+                //     where an uninjected one would otherwise throw.
+                if (!tileEffect.IsInitialized)
+                    tileEffect.Initialize(_systemCollectionHookManager.DependencyCollection);
+
                 if (tileRef is not { })
                     tileRef = _mapSystem.GetTileRef((gridUid, gridComponent), entity.Comp.Coordinates);
 

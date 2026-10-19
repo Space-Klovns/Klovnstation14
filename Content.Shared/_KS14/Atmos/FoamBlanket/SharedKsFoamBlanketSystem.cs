@@ -8,6 +8,7 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
@@ -37,6 +38,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<FlammableComponent> _flammableQuery = default!;
     [Dependency] private EntityQuery<KsFoamBlanketComponent> _blanketQuery = default!;
     [Dependency] private EntityQuery<KsFoamBlanketGridComponent> _blanketGridQuery = default!;
@@ -410,6 +412,10 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     /// </summary>
     private void ReleaseOccupants(EntityUid blanketUid)
     {
+        // Without fixtures nothing ever touched it, and the physics system cannot list the contacts of what has none.
+        if (!_fixturesQuery.HasComp(blanketUid))
+            return;
+
         // Including contacts being destroyed: this can run while the blanket is being deleted, part way through.
         _releasedOccupants.Clear();
         var contacts = _physicsSystem.GetContacts(blanketUid, includeDeleting: true);

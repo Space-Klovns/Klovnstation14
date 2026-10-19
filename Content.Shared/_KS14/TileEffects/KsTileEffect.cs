@@ -10,10 +10,20 @@ public abstract partial class KsTileEffect
 {
     [Dependency] protected EntityManager EntityManager = default!;
 
+    /// <summary>
+    ///     Whether <see cref="Initialize"/> has run on this instance. Not a data field, so every instance a prototype
+    ///         load makes starts without it, including ones a reload of some other kind makes (a partial prototype being
+    ///         merged again), which <see cref="KsTileEffectSystem"/> is never told about.
+    /// </summary>
+    public bool IsInitialized => _initialized;
+
+    private bool _initialized;
+
     [MustCallBase]
     public virtual void Initialize(IDependencyCollection dependencyCollection)
     {
         dependencyCollection.InjectDependencies(this);
+        _initialized = true;
     }
 
     // return whether someting happened
