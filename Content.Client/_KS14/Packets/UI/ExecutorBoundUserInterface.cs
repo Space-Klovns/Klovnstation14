@@ -25,7 +25,6 @@ namespace Content.Client._KS14.Packets.UI
             _menu.OnExecutionButton += OnExecute;
             _menu.OnLoadButton += OnLoad;
             _menu.OnTerminateButton += OnTerminate;
-            _menu.OnSendInputButton += OnSendInput;
 
             _menu.Input.OnMouseExited += OnInputExit;
         }
@@ -68,10 +67,6 @@ namespace Content.Client._KS14.Packets.UI
             SendMessage(new TerminateExecutorMessage());
         }
 
-        private void OnSendInput()
-        {
-            SendMessage(new InputExecutorMessage(Rope.Collapse(_menu?.DataInput.TextRope ?? Rope.Leaf.Empty)));
-        }
 
         protected override void UpdateState(BoundUserInterfaceState state)
         {

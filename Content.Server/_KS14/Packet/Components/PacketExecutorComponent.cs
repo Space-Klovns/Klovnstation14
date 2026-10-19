@@ -45,7 +45,7 @@ public sealed partial class PacketExecutorComponent : Component
     /// Maximum amount of characters command can have to be executed or saved.
     /// </summary>
     [DataField]
-    public int MaxCommandLength = 6500;
+    public int MaxCommandLength = 36500;
 
     /// <summary>
     /// Sound that will be played if execution attempt fails (Due to cooldown or code being too long).
@@ -58,13 +58,13 @@ public sealed partial class PacketExecutorComponent : Component
     /// Maximum amount of memory that can be used each execution.
     /// </summary>
     [DataField]
-    public int MemoryAllocation = 1024 * 128; // 128KB
+    public int MemoryAllocation = 1024 * 512; // 512KB
 
     /// <summary>
     /// Maximum amount of statements per execution
     /// </summary>
     [DataField]
-    public int MaximumExecutionStatements = 350;
+    public int MaximumExecutionStatements = 1000;
 
     /// <summary>
     /// Name for sink ports. You should create prototypes for those based on PortCount (SignalPortNaming+PortNumber)
@@ -76,7 +76,7 @@ public sealed partial class PacketExecutorComponent : Component
     /// How much sink ports can executor use?
     /// </summary>
     [DataField]
-    public int PortCount = 5;
+    public int PortCount = 7;
 
     /// <summary>
     /// Ports that executor currently listens to. Contains JS function.

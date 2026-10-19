@@ -52,12 +52,14 @@ namespace Content.Client._KS14.Packets.UI
                 _menu?.ExecutorTabs.RemoveChild(control);
 
             var container = new PanelContainer { Name = widget.Id };
+            container.StyleIdentifier = "executorBorderless";
             SetupChildren(widget, container);
             _menu?.ExecutorTabs.AddChild(container);
         }
 
         private void SetupControlLayout<T>(WidgetElement element, ref T control, PanelContainer widgetContainer) where T : Control
         {
+            control.StyleIdentifier = "executor";
             control.Margin = new Thickness(
                 element.Margin[0],
                 element.Margin[1],
