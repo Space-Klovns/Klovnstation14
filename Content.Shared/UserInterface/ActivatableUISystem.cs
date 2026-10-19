@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Managers;
 using Content.Shared.Ghost;
@@ -217,7 +218,7 @@ public sealed partial class ActivatableUISystem : EntitySystem
 
         if (aui.SingleUser && aui.CurrentSingleUser != null && user != aui.CurrentSingleUser)
         {
-            var message = Loc.GetString("machine-already-in-use", ("machine", uiEntity));
+            var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("machine-already-in-use", ("machine", uiEntity));
             _popupSystem.PopupClient(message, uiEntity, user);
 
             if (_uiSystem.IsUiOpen(uiEntity, aui.Key))

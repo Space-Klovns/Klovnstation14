@@ -1,0 +1,3 @@
+# KS14: automatically translated; see _KS14/Localization/translation-review.tsv.
+
+ks-ghost-respawn-popup-ghostingblocked = Какая-то потусторонная сила препятствует вашему перерождению...

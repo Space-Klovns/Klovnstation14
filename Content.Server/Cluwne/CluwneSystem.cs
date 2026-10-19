@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Chat;
 using Content.Server.Chat.Systems;
 using Content.Server.Emoting.Systems;
@@ -78,7 +79,7 @@ public sealed partial class CluwneSystem : EntitySystem
 
         EnsureComp<ClumsyComponent>(ent.Owner);
 
-        var transformMessage = Loc.GetString(ent.Comp.TransformMessage, ("target", ent.Owner));
+        var transformMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(ent.Comp.TransformMessage, ("target", ent.Owner));
 
         _popupSystem.PopupEntity(transformMessage, ent.Owner, PopupType.LargeCaution);
         _audio.PlayPvs(ent.Comp.SpawnSound, ent.Owner);

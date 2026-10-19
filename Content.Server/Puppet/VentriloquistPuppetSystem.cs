@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ghost.Roles.Components;
 using Content.Server.Popups;
 using Content.Shared.Interaction.Events;
@@ -37,15 +38,15 @@ namespace Content.Server.Puppet
 
             if (!RemComp<MutedComponent>(uid))
             {
-                _popupSystem.PopupEntity(Loc.GetString("ventriloquist-puppet-remove-hand"), uid, args.User);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ventriloquist-puppet-remove-hand"), uid, args.User);
                 MuteDummy(uid, component);
                 return;
             }
 
             // TODO why does this need a combat component???
             EnsureComp<CombatModeComponent>(uid);
-            _popupSystem.PopupEntity(Loc.GetString("ventriloquist-puppet-insert-hand"), uid, args.User);
-            _popupSystem.PopupEntity(Loc.GetString("ventriloquist-puppet-inserted-hand"), uid, uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ventriloquist-puppet-insert-hand"), uid, args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ventriloquist-puppet-inserted-hand"), uid, uid);
 
             if (!HasComp<GhostTakeoverAvailableComponent>(uid))
             {
@@ -66,7 +67,7 @@ namespace Content.Server.Puppet
             if (HasComp<MutedComponent>(uid))
                 return;
 
-            _popupSystem.PopupEntity(Loc.GetString("ventriloquist-puppet-remove-hand"), uid, args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ventriloquist-puppet-remove-hand"), uid, args.User);
             MuteDummy(uid, component);
         }
 
@@ -78,7 +79,7 @@ namespace Content.Server.Puppet
             if (HasComp<MutedComponent>(uid))
                 return;
 
-            _popupSystem.PopupEntity(Loc.GetString("ventriloquist-puppet-remove-hand"), uid, args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ventriloquist-puppet-remove-hand"), uid, args.User);
             MuteDummy(uid, component);
         }
 
@@ -87,7 +88,7 @@ namespace Content.Server.Puppet
         /// </summary>
         private void MuteDummy(EntityUid uid, VentriloquistPuppetComponent component)
         {
-            _popupSystem.PopupEntity(Loc.GetString("ventriloquist-puppet-removed-hand"), uid, uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ventriloquist-puppet-removed-hand"), uid, uid);
             EnsureComp<MutedComponent>(uid);
             RemComp<CombatModeComponent>(uid);
             RemComp<GhostTakeoverAvailableComponent>(uid);

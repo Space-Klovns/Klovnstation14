@@ -1,0 +1,182 @@
+:root {
+    color-scheme: dark;
+    --bg: #1b1b1e;
+    --panel: #25252a;
+    --border: #3b3b44;
+    --text: #e6e6ea;
+    --muted: #9a9aa6;
+    --accent: #3fa35b;
+    --warn: #d0a23a;
+    --bad: #c9474a;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, sans-serif;
+}
+
+main {
+    max-width: 560px;
+    margin: 40px auto;
+    padding: 0 16px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 4px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.language {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+}
+
+.language select {
+    padding: 4px 8px;
+}
+
+.globe {
+    flex: none;
+}
+
+h2 {
+    margin: 0 0 8px;
+    font-size: 17px;
+}
+
+.identity {
+    margin: 0 0 20px;
+    color: var(--muted);
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 150px 1fr auto; /* wide enough for the longer translated labels */
+    align-items: center;
+    gap: 12px;
+    margin: 14px 0;
+}
+
+.row > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+}
+
+button, select {
+    font: inherit;
+    color: var(--text);
+    background: #33333b;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+button:hover:not(:disabled) {
+    background: #3d3d47;
+}
+
+button:disabled, select:disabled {
+    opacity: 0.5;
+}
+
+select {
+    grid-column: 2 / -1;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    background: #1f1f23;
+    font-weight: 600;
+}
+
+.status .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex: none;
+}
+
+.status[data-state="transmitting"] .dot {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+}
+
+.status[data-state="ready"] .dot {
+    background: var(--accent);
+}
+
+.status[data-state="waiting"] .dot {
+    background: var(--warn);
+}
+
+.status[data-state="blocked"] .dot,
+.status[data-state="error"] .dot {
+    background: var(--bad);
+}
+
+.meter {
+    position: relative;
+    grid-column: 2 / -1;
+    height: 10px;
+    border-radius: 5px;
+    background: #1f1f23;
+    overflow: hidden;
+}
+
+.meter-fill {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width 60ms linear;
+}
+
+.meter-gate {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--warn);
+}
+
+.hint {
+    margin: 14px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+code {
+    font-size: 13px;
+}
+
+output {
+    min-width: 4.5em;
+    text-align: right;
+}

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using Content.Shared._KS14.PopupLocalization; // KS14
+using System.Linq;
 using Content.Shared.Actions;
 using Content.Shared.Damage;
 using Content.Shared.Examine;
@@ -147,11 +148,11 @@ public sealed partial class BlockingSystem : EntitySystem
 
         var xform = Transform(user);
 
-        var shieldName = Name(item);
+        var shieldName = item; // KS14: defer shield name
 
         var blockerName = Identity.Entity(user, EntityManager);
-        var msgUser = Loc.GetString("action-popup-blocking-user", ("shield", shieldName));
-        var msgOther = Loc.GetString("action-popup-blocking-other", ("blockerName", blockerName), ("shield", shieldName));
+        var msgUser = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("action-popup-blocking-user", ("shield", shieldName));
+        var msgOther = KsPopupMessage.Create /* KS14: defer popup argument translation */("action-popup-blocking-other", ("blockerName", blockerName), ("shield", shieldName));
 
         //Don't allow someone to block if they're not parented to a grid
         if (xform.GridUid != xform.ParentUid)
@@ -210,13 +211,13 @@ public sealed partial class BlockingSystem : EntitySystem
 
     private void CantBlockError(EntityUid user)
     {
-        var msgError = Loc.GetString("action-popup-blocking-user-cant-block");
+        var msgError = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("action-popup-blocking-user-cant-block");
         _popupSystem.PopupClient(msgError, user, user);
     }
 
     private void TooCloseError(EntityUid user)
     {
-        var msgError = Loc.GetString("action-popup-blocking-user-too-close");
+        var msgError = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("action-popup-blocking-user-too-close");
         _popupSystem.PopupClient(msgError, user, user);
     }
 
@@ -234,11 +235,11 @@ public sealed partial class BlockingSystem : EntitySystem
 
         var xform = Transform(user);
 
-        var shieldName = Name(item);
+        var shieldName = item; // KS14: defer shield name
 
         var blockerName = Identity.Entity(user, EntityManager);
-        var msgUser = Loc.GetString("action-popup-blocking-disabling-user", ("shield", shieldName));
-        var msgOther = Loc.GetString("action-popup-blocking-disabling-other", ("blockerName", blockerName), ("shield", shieldName));
+        var msgUser = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("action-popup-blocking-disabling-user", ("shield", shieldName));
+        var msgOther = KsPopupMessage.Create /* KS14: defer popup argument translation */("action-popup-blocking-disabling-other", ("blockerName", blockerName), ("shield", shieldName));
 
         //If the component blocking toggle isn't null, grab the users SharedBlockingUserComponent and PhysicsComponent
         //then toggle the action to false, unanchor the user, remove the hard fixture

@@ -1,0 +1,25 @@
+uniform sampler2D SCREEN_TEXTURE;
+// How strongly the static covers the screen at full strength. Between 0 and 1.
+uniform highp float intensity;
+// Size of one grain of static, in pixels.
+uniform highp float grainSize;
+// Ratio of the effect's duration still left - 1 when it starts, 0 when it ends. Fades the static out.
+uniform highp float timeLeft;
+// Each grain is a random blend between these two colours.
+uniform highp vec4 colorA;
+uniform highp vec4 colorB;
+
+void fragment() {
+    highp vec2 uv = FRAGCOORD.xy * SCREEN_PIXEL_SIZE;
+    highp vec4 screen = zTextureSpec(SCREEN_TEXTURE, uv);
+
+    // Snap to grains, and reseed every frame so the static crawls.
+    highp vec2 grain = floor(FRAGCOORD.xy / max(grainSize, 1.0));
+    highp vec2 seed = fract(TIME) * vec2(113.0, 71.0);
+    highp float blend = zRandom(grain + seed).x * 0.5 + 0.5;
+
+    highp vec3 staticColor = mix(colorA.rgb, colorB.rgb, blend);
+    highp float strength = clamp(intensity * timeLeft, 0.0, 1.0);
+
+    COLOR = vec4(mix(screen.rgb, staticColor, strength), 1.0);
+}

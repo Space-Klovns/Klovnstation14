@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Chemistry.Components;
 using Content.Server.Popups;
 using Content.Server.Storage.EntitySystems;
@@ -309,14 +310,14 @@ namespace Content.Server.Chemistry.EntitySystems
                     if (solution.Volume == 0)
                     {
                         if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-buffer-empty-text"), uid);
+                            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chem-master-window-buffer-empty-text"), uid);
 
                         return false;
                     }
                     if (neededVolume > solution.Volume)
                     {
                         if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-buffer-low-text"), uid);
+                            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chem-master-window-buffer-low-text"), uid);
 
                         return false;
                     }
@@ -327,7 +328,7 @@ namespace Content.Server.Chemistry.EntitySystems
                     if (_itemSlotsSystem.GetItemOrNull(chemMaster, SharedChemMaster.InputSlotName) is not { } container)
                     {
                         if (user.HasValue)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-no-beaker-text"), user.Value);
+                            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chem-master-window-no-beaker-text"), user.Value);
                         return false;
                     }
 
@@ -337,14 +338,14 @@ namespace Content.Server.Chemistry.EntitySystems
                     if (solution.Volume == 0)
                     {
                         if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-beaker-empty-text"), uid);
+                            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chem-master-window-beaker-empty-text"), uid);
 
                         return false;
                     }
                     if (neededVolume > solution.Volume)
                     {
                         if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-beaker-low-text"), uid);
+                            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("chem-master-window-beaker-low-text"), uid);
 
                         return false;
                     }

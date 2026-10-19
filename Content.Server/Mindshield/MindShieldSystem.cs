@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Mind;
 using Content.Server.Popups;
@@ -45,7 +46,7 @@ public sealed partial class MindShieldSystem : EntitySystem
     {
         if (HasComp<HeadRevolutionaryComponent>(implanted))
         {
-            _popupSystem.PopupEntity(Loc.GetString("head-rev-break-mindshield"), implanted);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("head-rev-break-mindshield"), implanted);
             QueueDel(implant);
             return;
         }

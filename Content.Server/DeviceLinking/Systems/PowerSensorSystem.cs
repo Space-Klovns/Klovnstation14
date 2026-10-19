@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.DeviceLinking.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Server.Power.Nodes;
@@ -79,7 +80,7 @@ public sealed partial class PowerSensorSystem : EntitySystem
 
         // notify the user
         _audio.PlayPvs(comp.SwitchSound, uid);
-        var msg = Loc.GetString("power-sensor-switch", ("output", comp.Output));
+        var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("power-sensor-switch", ("output", comp.Output));
         _popup.PopupEntity(msg, uid, args.User);
     }
 

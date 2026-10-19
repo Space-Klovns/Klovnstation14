@@ -1,0 +1,14 @@
+ent-BaseTowel = базовое полотенце
+    .desc = Если вы хотите выжить здесь, вы должны знать, где находится ваше полотенце.
+
+ent-TowelColorCentcom = полотенце ЦК
+    .desc = { ent-BaseTowel.desc }
+
+ent-TowelColorNT = полотенце марки Nanotrasen
+    .desc = { ent-BaseTowel.desc }
+
+ent-TowelColorSyndicate = полотенце Синдиката
+    .desc = { ent-BaseTowel.desc }
+
+ent-TowelColorWhite = белое полотенце
+    .desc = { ent-BaseTowel.desc }

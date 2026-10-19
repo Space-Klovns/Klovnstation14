@@ -305,13 +305,21 @@ public sealed partial class SmokeSystem : EntitySystem
 
         var tile = _map.GetTileRef(xform.GridUid.Value, mapGrid, xform.Coordinates);
 
+        EqualizeTemperatureWithPuddle(component.Solution!.Value, tile); // KS14: puddle heat exchange, before ReactionTile
+
         foreach (var reagentQuantity in solution.Contents.ToArray())
         {
             if (reagentQuantity.Quantity == FixedPoint2.Zero)
                 continue;
 
             var reagent = ProtoMan.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
-            reagent.ReactionTile(tile, reagentQuantity.Quantity, EntityManager, reagentQuantity.Reagent.Data);
+            /* KS14: was reagent.ReactionTile(...) with the result ignored */
+            var consumed = ReactionTileConsumingExtinguish(tile, reagent, reagentQuantity.Quantity, reagentQuantity.Reagent.Data);
+
+            // KS14 start: water boiled off by an extinguish reaction leaves the smoke
+            if (consumed > FixedPoint2.Zero)
+                _solutionContainerSystem.RemoveReagent(component.Solution!.Value, reagentQuantity.Reagent, FixedPoint2.Min(consumed, reagentQuantity.Quantity));
+            // KS14 end
         }
     }
 

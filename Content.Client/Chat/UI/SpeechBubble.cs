@@ -92,6 +92,7 @@ namespace Content.Client.Chat.UI
         {
             IoCManager.InjectDependencies(this);
             _senderEntity = senderEntity;
+            InitializeTranslation(message, speechStyleClass, fontColor); // KS14: retain message identity and style for translation refreshes.
             _transformSystem = _entityManager.System<SharedTransformSystem>();
 
             // Use text clipping so new messages don't overlap old ones being pushed up.

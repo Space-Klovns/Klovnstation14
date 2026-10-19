@@ -327,6 +327,13 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     /// </summary>
     public const string NavClimb = "NavClimb";
 
+    // KS14 start
+    /// <summary>
+    ///     Can the NPC push loose obstacles out of its way for steering.
+    /// </summary>
+    public const string NavPush = "NavPush";
+    // KS14 end
+
     /// <summary>
     /// Default key storage for a movement pathfind.
     /// </summary>

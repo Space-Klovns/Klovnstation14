@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.ActionBlocker;
 using Content.Shared.Burial.Components;
 using Content.Shared.DoAfter;
@@ -64,7 +65,7 @@ public sealed partial class BurialSystem : EntitySystem
         }
         else
         {
-            _popupSystem.PopupClient(Loc.GetString("grave-digging-requires-tool", ("grave", args.Target)), uid, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("grave-digging-requires-tool", ("grave", args.Target)), uid, args.User);
         }
 
         args.Handled = true;
@@ -85,7 +86,7 @@ public sealed partial class BurialSystem : EntitySystem
         if (args.Handled || !args.Complex)
             return;
 
-        _popupSystem.PopupClient(Loc.GetString("grave-digging-requires-tool", ("grave", args.Target)), uid, args.User);
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("grave-digging-requires-tool", ("grave", args.Target)), uid, args.User);
         args.Handled = true;
     }
 
@@ -116,15 +117,15 @@ public sealed partial class BurialSystem : EntitySystem
     {
         if (used != null)
         {
-            var selfMessage = Loc.GetString("grave-start-digging-user", ("grave", uid), ("tool", used));
-            var othersMessage = Loc.GetString("grave-start-digging-others", ("user", user), ("grave", uid), ("tool", used));
+            var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("grave-start-digging-user", ("grave", uid), ("tool", used));
+            var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */("grave-start-digging-others", ("user", user), ("grave", uid), ("tool", used));
             _popupSystem.PopupPredicted(selfMessage, othersMessage, user, user);
             component.ActiveShovelDigging = true;
             Dirty(uid, component);
         }
         else
         {
-            _popupSystem.PopupClient(Loc.GetString("grave-start-digging-user-trapped", ("grave", uid)), user, user, PopupType.Medium);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("grave-start-digging-user-trapped", ("grave", uid)), user, user, PopupType.Medium);
         }
     }
 

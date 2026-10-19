@@ -1,6 +1,8 @@
+using System.Numerics;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Atmos.ChemicalFire;
 
@@ -57,6 +59,14 @@ public sealed partial class ChemicalFireComponent : Component
     public float HeatPower = 50_000f;
 
     /// <summary>
+    ///     Fraction (0 to 1) of <see cref="HeatPower"/> poured into the puddle on the chemfire's tile instead of
+    ///         the air, if there is one. The puddle is never warmed past <see cref="Temperature"/>, and whatever it
+    ///         cannot absorb goes to the air instead. Has no effect on chemfires without a puddle under them.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float PuddleHeatFraction = 0.15f;
+
+    /// <summary>
     ///     How often <see cref="ChemicalFireHeatTileEvent"/> is raised on this chemfire.
     /// </summary>
     [DataField, AutoNetworkedField]
@@ -98,6 +108,20 @@ public sealed partial class ChemicalFireComponent : Component
     public int SpriteVariations = 2;
 
     /// <summary>
+    ///     RSI both flame halves are drawn from, relative to <c>/Textures</c>. Chemfires have no sprite
+    ///         component: the client's chemfire overlays draw both halves straight from this.
+    /// </summary>
+    [DataField]
+    public ResPath Sprite = new("_KS14/Effects/Fire/chemfire.rsi");
+
+    /// <summary>
+    ///     Where the flame is drawn relative to the tile centre, before snapping to the eye. The RSI is 32x48,
+    ///         so the default lifts it a quarter tile to sit the bottom of the flame on the bottom of the tile.
+    /// </summary>
+    [DataField]
+    public Vector2 SpriteOffset = new(0f, 0.25f);
+
+    /// <summary>
     ///     Prefix of the RSI states this chemfire renders, before the variation number.
     /// </summary>
     [DataField]
@@ -129,10 +153,20 @@ public sealed partial class ChemicalFireComponent : Component
     public ChemicalFireConnection Connection = ChemicalFireConnection.None;
 
     /// <summary>
-    ///     Client-only, derived: the resolved <c>over</c> RSI state the overlay draws for this chemfire.
-    ///         Resolved alongside the <c>under</c> layer so the overlay never has to rebuild the name.
+    ///     Client-only, derived: the resolved <c>under</c> RSI state the overlays draw for this chemfire, so
+    ///         they never have to rebuild the name.
     /// </summary>
+    public string UnderState = string.Empty;
+
+    /// <inheritdoc cref="UnderState"/>
     public string OverState = string.Empty;
+
+    /// <summary>
+    ///     Client-only, derived: how far into its animation this chemfire is offset, as a fraction of the
+    ///         loop. Deterministic per tile like <see cref="Variation"/>, so neighbouring fires don't flicker in
+    ///         lockstep.
+    /// </summary>
+    public float AnimationPhase = 0f;
 
     /// <summary>
     ///     Client-only: dedup guard so a chemfire's visuals are recalculated at most once per frame.

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.ActionBlocker;
 using Content.Shared.Buckle.Components;
 using Content.Shared.Climbing.Components;
@@ -572,7 +573,7 @@ public sealed partial class ClimbSystem : VirtualController
 
         // Not shown to the user, since they already get a 'you climb on the glass table' popup
         _popupSystem.PopupEntity(
-            Loc.GetString("glass-table-shattered-others", ("table", uid), ("climber", Identity.Entity(args.Climber, EntityManager))), args.Climber,
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("glass-table-shattered-others", ("table", uid), ("climber", Identity.Entity(args.Climber, EntityManager))), args.Climber,
             Filter.PvsExcept(args.Climber), true);
     }
 

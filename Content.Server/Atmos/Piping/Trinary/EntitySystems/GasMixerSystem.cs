@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Trinary.Components;
@@ -152,7 +153,7 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
             }
             else
             {
-                _popup.PopupCursor(Loc.GetString("comp-gas-mixer-ui-needs-anchor"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-gas-mixer-ui-needs-anchor"), args.User);
             }
 
             args.Handled = true;

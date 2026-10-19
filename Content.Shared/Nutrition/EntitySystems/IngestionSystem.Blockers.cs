@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using System.Linq;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Clothing;
 using Content.Shared.Containers.ItemSlots;
@@ -83,7 +84,7 @@ public sealed partial class IngestionSystem
         {
             args.Cancelled = true;
 
-            _popup.PopupClient(Loc.GetString("ingestion-try-use-is-empty", ("entity", entity)), entity, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ingestion-try-use-is-empty", ("entity", entity)), entity, args.User);
             return;
         }
 
@@ -101,7 +102,7 @@ public sealed partial class IngestionSystem
 
         args.Cancelled = true;
 
-        _popup.PopupClient(Loc.GetString("edible-has-used-storage", ("food", ent), ("verb", GetEdibleVerb(ent.Owner))), args.User, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("edible-has-used-storage", ("food", ent), ("verb", GetEdiblePopupVerb(ent.Owner) /* KS14: defer edible verb */)), args.User, args.User);
     }
 
     private void OnItemSlotsEdible(Entity<ItemSlotsComponent> ent, ref EdibleEvent args)
@@ -114,7 +115,7 @@ public sealed partial class IngestionSystem
 
         args.Cancelled = true;
 
-        _popup.PopupClient(Loc.GetString("edible-has-used-storage", ("food", ent), ("verb", GetEdibleVerb(ent.Owner))), args.User, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("edible-has-used-storage", ("food", ent), ("verb", GetEdiblePopupVerb(ent.Owner) /* KS14: defer edible verb */)), args.User, args.User);
     }
 
     private void OnOpenableEdible(Entity<OpenableComponent> ent, ref EdibleEvent args)

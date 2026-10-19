@@ -37,6 +37,17 @@
     <PackageReference Include="DeepL.net" />
   </ItemGroup>
 
+  <!-- KS14: decoding Ogg Vorbis TTS clips to transcode them to Opus. The engine already ships it (Robust.Shared's
+       Ogg loader), but only as a private compile dependency; the version comes from RobustToolbox. -->
+  <ItemGroup>
+    <PackageReference Include="VorbisPizza" />
+  </ItemGroup>
+
+  <!-- KS14: voice chat microphone page, served from the status host -->
+  <ItemGroup>
+    <EmbeddedResource Include="_KS14\Voice\Web\*" LogicalName="KsVoice.%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Content.Packaging\Content.Packaging.csproj" />
     <ProjectReference Include="..\Content.Server.Database\Content.Server.Database.csproj" />
@@ -50,4 +61,5 @@
   <Import Project="..\RobustToolbox\Imports\Server.props" />
   <Import Project="..\RobustToolbox\Imports\Shared.props" />
   <Import Project="..\RobustToolbox\Imports\Packaging.props" />
+  <Import Project="../MSBuild/KsLocalizationCache.targets" /> <!-- KS14: generate shared name tables on build -->
 </Project>

@@ -1,0 +1,28 @@
+# Full-screen static, each grain a random blend of colorA and colorB, fading out as timeLeft goes from 1 to 0.
+# For KsShaderStatusEffect - override the colours per effect with !type:KsShaderColor.
+- type: shader
+  id: KsColorStatic
+  kind: source
+  path: "/Textures/_KS14/Shaders/color_static.swsl"
+  params:
+    intensity: 0.6
+    grainSize: 4.0
+    timeLeft: 1.0
+    colorA: '#000000'
+    colorB: '#FFFFFF'
+
+# Full-screen tunnel vision that pulses to a heartbeat: edges close in, colour channels tear apart on each beat,
+#     and grain crawls over it all, fading out as timeLeft goes from 1 to 0.
+# For KsShaderStatusEffect - override the colours per effect with !type:KsShaderColor.
+- type: shader
+  id: KsHeartbeatVignette
+  kind: source
+  path: "/Textures/_KS14/Shaders/heartbeat_vignette.swsl"
+  params:
+    intensity: 0.8
+    timeLeft: 1.0
+    bpm: 90.0
+    aberration: 6.0
+    vignetteColor: '#000000E6'
+    grainSize: 4.0
+    grainColor: '#FFFFFF14'

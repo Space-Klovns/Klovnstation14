@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.ActionBlocker;
 using Content.Shared.Chat;
 using Content.Shared.CombatMode;
@@ -66,7 +67,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         args.Verbs.Add(verb);
     }
 
-    private void TryStartExecutionDoAfter(EntityUid weapon, EntityUid victim, EntityUid attacker, ExecutionComponent comp)
+    public /* KS14: private -> public */ void TryStartExecutionDoAfter(EntityUid weapon, EntityUid victim, EntityUid attacker, ExecutionComponent comp)
     {
         if (!CanBeExecuted(victim, attacker))
             return;
@@ -90,12 +91,23 @@ public sealed partial class SharedExecutionSystem : EntitySystem
                 NeedHand = true
             };
 
+        // KS14 start
+        var executionComponent = EnsureComp<_KS14.Execution.KsActiveExecutionComponent>(attacker);
+        executionComponent.VictimUid = victim;
+        Dirty(attacker, executionComponent);
+        // KS14 end
+
         _doAfter.TryStartDoAfter(doAfter);
 
     }
 
     public bool CanBeExecuted(EntityUid victim, EntityUid attacker)
     {
+        // KS14 start
+        if (HasComp<_KS14.Execution.KsActiveExecutionComponent>(attacker))
+            return false;
+        // KS14 end
+
         // No point executing someone if they can't take damage
         if (!HasComp<DamageableComponent>(victim))
             return false;
@@ -110,7 +122,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         //     return false;
 
         // You must be able to attack people to execute
-        if (!_actionBlocker.CanAttack(attacker, victim))
+        if (!_actionBlocker.CanAttack(attacker, victim, pure: true /* KS14: added arg, a check - also runs for every verb query */))
             return false;
 
         // The victim must be incapacitated to be executed
@@ -156,7 +168,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         if (predict)
         {
             _popup.PopupClient(
-               Loc.GetString(locString, ("attacker", Identity.Entity(attacker, EntityManager)), ("victim", Identity.Entity(victim, EntityManager)), ("weapon", weapon)),
+               KsPopupMessage.Create /* KS14: localize popups on the recipient */(locString, ("attacker", Identity.Entity(attacker, EntityManager)), ("victim", Identity.Entity(victim, EntityManager)), ("weapon", weapon)),
                attacker,
                attacker,
                PopupType.MediumCaution
@@ -165,7 +177,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         else
         {
             _popup.PopupEntity(
-               Loc.GetString(locString, ("attacker", Identity.Entity(attacker, EntityManager)), ("victim", Identity.Entity(victim, EntityManager)), ("weapon", weapon)),
+               KsPopupMessage.Create /* KS14: localize popups on the recipient */(locString, ("attacker", Identity.Entity(attacker, EntityManager)), ("victim", Identity.Entity(victim, EntityManager)), ("weapon", weapon)),
                attacker,
                attacker,
                PopupType.MediumCaution
@@ -176,7 +188,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
     public void ShowExecutionExternalPopup(string locString, EntityUid attacker, EntityUid victim, EntityUid weapon) // Made public by goobstation
     {
         _popup.PopupEntity(
-            Loc.GetString(locString, ("attacker", Identity.Entity(attacker, EntityManager)), ("victim", Identity.Entity(victim, EntityManager)), ("weapon", weapon)),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */(locString, ("attacker", Identity.Entity(attacker, EntityManager)), ("victim", Identity.Entity(victim, EntityManager)), ("weapon", weapon)),
             attacker,
             Filter.PvsExcept(attacker),
             true,
@@ -186,6 +198,8 @@ public sealed partial class SharedExecutionSystem : EntitySystem
 
     private void OnExecutionDoAfter(Entity<ExecutionComponent> entity, ref ExecutionDoAfterEvent args)
     {
+        RemComp<_KS14.Execution.KsActiveExecutionComponent>(args.User); // KS14
+
         if (args.Handled || args.Cancelled || args.Used == null || args.Target == null)
             return;
 

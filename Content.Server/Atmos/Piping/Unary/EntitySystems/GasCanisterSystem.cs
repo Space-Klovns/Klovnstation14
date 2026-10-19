@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.NodeGroups;
@@ -80,7 +81,7 @@ public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
 
         ToggleSafetyValve(entity, open: true);
         if (entity.Comp.SafetyAlert != null)
-            _popup.PopupEntity(Loc.GetString(entity.Comp.SafetyAlert), entity, PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(entity.Comp.SafetyAlert), entity, PopupType.LargeCaution);
     }
 
     private void ToggleSafetyValve(Entity<GasCanisterComponent> entity, bool open)

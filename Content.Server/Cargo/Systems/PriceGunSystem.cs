@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Server.Salvage.JobBoard;
 using Content.Shared.Cargo.Components;
@@ -24,16 +25,16 @@ public sealed partial class PriceGunSystem : SharedPriceGunSystem
         // Check if we're scanning a bounty crate
         if (_bountySystem.IsBountyComplete(target, out _))
         {
-            _popupSystem.PopupEntity(Loc.GetString("price-gun-bounty-complete"), user, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("price-gun-bounty-complete"), user, user);
         }
         else if (_salvageJobBoard.FulfillsSalvageJob(target, null, out _))
         {
-            _popupSystem.PopupEntity(Loc.GetString("price-gun-salvjob-complete"), user, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("price-gun-salvjob-complete"), user, user);
         }
         else // Otherwise appraise the price
         {
             var price = _pricingSystem.GetPrice(target);
-            _popupSystem.PopupEntity(Loc.GetString("price-gun-pricing-result",
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("price-gun-pricing-result",
                     ("object", Identity.Entity(target, EntityManager)),
                     ("price", $"{price:F2}")),
                 user,

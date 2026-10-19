@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Chat.Systems;
@@ -50,7 +51,7 @@ namespace Content.Server.RatKing
             //make sure the hunger doesn't go into the negatives
             if (_hunger.GetHunger(hunger) < component.HungerPerArmyUse)
             {
-                _popup.PopupEntity(Loc.GetString("rat-king-too-hungry"), uid, uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rat-king-too-hungry"), uid, uid);
                 return;
             }
             args.Handled = true;
@@ -80,13 +81,13 @@ namespace Content.Server.RatKing
             //make sure the hunger doesn't go into the negatives
             if (_hunger.GetHunger(hunger) < component.HungerPerDomainUse)
             {
-                _popup.PopupEntity(Loc.GetString("rat-king-too-hungry"), uid, uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rat-king-too-hungry"), uid, uid);
                 return;
             }
             args.Handled = true;
             _hunger.ModifyHunger(uid, -component.HungerPerDomainUse, hunger);
 
-            _popup.PopupEntity(Loc.GetString("rat-king-domain-popup"), uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rat-king-domain-popup"), uid);
             var tileMix = _atmos.GetTileMixture(uid, excite: true);
             tileMix?.AdjustMoles(Gas.Ammonia, component.MolesAmmoniaPerDomain);
         }

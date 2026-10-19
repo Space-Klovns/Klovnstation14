@@ -30,11 +30,11 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
     ///         If specified user is notnull,
     /// </remarks>
     public EntityUid PredictedSpawn(string entityProtoId, ComponentRegistry? componentOverrides = null, bool doMapInit = false, EntityUid? user = null)
-        => FlagPredictedAndReturn(EntityManager.PredictedSpawn(entityProtoId, overrides: componentOverrides, doMapInit: doMapInit), user);
+        => FlagPredictedAndReturn(base.PredictedSpawn(entityProtoId, overrides: componentOverrides, doMapInit: doMapInit), user);
 
     /// <inheritdoc cref="PredictedSpawn(string, ComponentRegistry?, bool)"/>
     public EntityUid PredictedSpawn(string entityProtoId, MapCoordinates coordinates, ComponentRegistry? componentOverrides = null, Angle rotation = default, EntityUid? user = null)
-        => FlagPredictedAndReturn(EntityManager.PredictedSpawn(entityProtoId, coordinates, overrides: componentOverrides, rotation: rotation), user);
+        => FlagPredictedAndReturn(base.PredictedSpawn(entityProtoId, coordinates, overrides: componentOverrides, rotation: rotation), user);
 
     /// <inheritdoc cref="PredictedSpawn(string, ComponentRegistry?, bool)"/>
     public EntityUid PredictedSpawnAttachedTo(string entityProtoId, EntityCoordinates coordinates, ComponentRegistry? componentOverrides = null, Angle rotation = default, EntityUid? user = null)

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Implants.Components;
 using Content.Shared.Store;
 using Content.Shared.Store.Components;
@@ -69,7 +70,7 @@ public sealed partial class StoreSystem : SharedStoreSystem
             return;
 
         if (!args.Silent)
-            Popup.PopupEntity(Loc.GetString("store-not-account-owner", ("store", uid)), uid, args.User);
+            Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("store-not-account-owner", ("store", uid)), uid, args.User);
 
         args.Cancel();
     }

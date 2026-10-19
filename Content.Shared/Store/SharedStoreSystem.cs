@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.FixedPoint;
@@ -83,7 +84,7 @@ public abstract partial class SharedStoreSystem : EntitySystem
             return;
 
         args.Handled = true;
-        var msg = Loc.GetString("store-currency-inserted", ("used", args.Used), ("target", ev.TargetOverride ?? target));
+        var msg = KsPopupMessage.Create /* KS14: defer popup translation */("store-currency-inserted", ("used", args.Used), ("target", ev.TargetOverride ?? target));
         Popup.PopupEntity(msg, target, args.User);
     }
 

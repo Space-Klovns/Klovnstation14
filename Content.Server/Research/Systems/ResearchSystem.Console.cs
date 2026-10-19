@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Power.EntitySystems;
 using Content.Server.Research.Components;
 using Content.Shared.UserInterface;
@@ -41,7 +42,7 @@ public sealed partial class ResearchSystem
 
         if (TryComp<AccessReaderComponent>(uid, out var access) && !_accessReader.IsAllowed(act, uid, access))
         {
-            _popup.PopupEntity(Loc.GetString("research-console-no-access-popup"), act);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("research-console-no-access-popup"), act);
             return;
         }
 

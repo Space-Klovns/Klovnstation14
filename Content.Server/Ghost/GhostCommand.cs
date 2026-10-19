@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Popups;
 using Content.Shared.Administration;
 using Content.Shared.GameTicking;
@@ -39,7 +40,7 @@ namespace Content.Server.Ghost
                 var deniedMessage = Loc.GetString("ghost-command-denied");
                 shell.WriteLine(deniedMessage);
                 _entities.System<PopupSystem>()
-                    .PopupEntity(deniedMessage, frozen, frozen);
+                    .PopupEntity(KsPopupMessage.Create /* KS14: defer popup separately from console output */("ghost-command-denied"), frozen, frozen);
                 return;
             }
 

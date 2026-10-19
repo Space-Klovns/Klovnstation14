@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Cloning.Events;
 using Content.Shared.DoAfter;
@@ -76,7 +77,7 @@ public abstract partial class SharedSericultureSystem : EntitySystem
                 _hungerSystem.GetHunger(hungerComp) - comp.HungerCost,
                 hungerComp))
         {
-            _popupSystem.PopupClient(Loc.GetString(comp.PopupText), uid, uid);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.PopupText), uid, uid);
             return;
         }
 
@@ -104,7 +105,7 @@ public abstract partial class SharedSericultureSystem : EntitySystem
                 _hungerSystem.GetHunger(hungerComp) - comp.HungerCost,
                 hungerComp))
         {
-            _popupSystem.PopupClient(Loc.GetString(comp.PopupText), uid, uid);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.PopupText), uid, uid);
             return;
         }
 

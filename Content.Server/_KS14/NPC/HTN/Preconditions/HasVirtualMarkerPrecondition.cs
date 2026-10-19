@@ -17,10 +17,12 @@ public sealed partial class HasVirtualMarkerPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        if (!blackboard.TryGetValue<HashSet<string>>(EnsureVirtualMarkerOperator.MarkerSet, out var tagSet, _entityManager) ||
-            !tagSet.Contains(Id))
-            return Invert;
+        return HasMarker(blackboard, Id, _entityManager) != Invert;
+    }
 
-        return !Invert;
+    public static bool HasMarker(NPCBlackboard blackboard, string id, IEntityManager entityManager)
+    {
+        return blackboard.TryGetValue<HashSet<string>>(EnsureVirtualMarkerOperator.MarkerSet, out var markerSet, entityManager) &&
+            markerSet.Contains(id);
     }
 }

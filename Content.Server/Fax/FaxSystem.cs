@@ -1,3 +1,5 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Server._KS14.Fax; // KS14
 using Content.Server.Administration;
 using Content.Server.Administration.Managers;
 using Content.Server.Chat.Managers;
@@ -229,13 +231,13 @@ public sealed partial class FaxSystem : EntitySystem
 
             if (newName.Length > 20)
             {
-                _popupSystem.PopupEntity(Loc.GetString("fax-machine-popup-name-long"), uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("fax-machine-popup-name-long"), uid);
                 return;
             }
 
             if (component.KnownFaxes.ContainsValue(newName) && !_emag.CheckFlag(uid, EmagType.Interaction)) // Allow existing names if emagged for fun
             {
-                _popupSystem.PopupEntity(Loc.GetString("fax-machine-popup-name-exist"), uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("fax-machine-popup-name-exist"), uid);
                 return;
             }
 
@@ -243,7 +245,7 @@ public sealed partial class FaxSystem : EntitySystem
                 LogImpact.Low,
                 $"{ToPrettyString(args.User):user} renamed {ToPrettyString(uid):tool} from \"{component.FaxName}\" to \"{newName}\"");
             component.FaxName = newName;
-            _popupSystem.PopupEntity(Loc.GetString("fax-machine-popup-name-set"), uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("fax-machine-popup-name-set"), uid);
             UpdateUserInterface(uid, component);
         });
 
@@ -599,13 +601,18 @@ public sealed partial class FaxSystem : EntitySystem
 
         var faxName = printout.SenderFaxName ?? Loc.GetString("fax-machine-popup-source-unknown");
 
-        _popupSystem.PopupEntity(Loc.GetString("fax-machine-popup-received", ("from", faxName)), uid);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("fax-machine-popup-received", ("from", faxName)), uid);
         _appearanceSystem.SetData(uid, FaxMachineVisuals.VisualState, FaxMachineVisualState.Printing);
 
         if (component.NotifyAdmins)
             NotifyAdmins(faxName);
 
         component.PrintingQueue.Enqueue(printout);
+
+        // KS14 start: let fork systems react to a fax arriving (e.g. an LLM answering Central Command's)
+        var receivedEvent = new KsFaxReceivedEvent(printout, fromAddress);
+        RaiseLocalEvent(uid, ref receivedEvent);
+        // KS14 end
     }
 
     private void SpawnPaperFromQueue(EntityUid uid, FaxMachineComponent? component = null)

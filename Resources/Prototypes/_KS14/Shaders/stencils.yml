@@ -6,3 +6,35 @@
     ref: 1
     op: Keep
     func: Equal
+
+# View portal windows. They use a stencil bit of their own (128) rather than the usual 1, because Clyde's FOV pass
+# writes 1 over everything the viewer cannot see before world-space overlays run: a portal masking with 1 would
+# match every FOV-hidden pixel too, and clearing with 1 would erase the FOV's marks inside the window.
+- type: shader
+  id: KsPortalStencilMask
+  kind: source
+  path: "/Textures/Shaders/stencil_mask.swsl"
+  stencil:
+    ref: 128
+    writeMask: 128
+    op: Replace
+    func: Always
+
+- type: shader
+  id: KsPortalStencilEqualDraw
+  kind: canvas
+  stencil:
+    ref: 128
+    readMask: 128
+    op: Keep
+    func: Equal
+
+- type: shader
+  id: KsPortalStencilClear
+  kind: source
+  path: "/Textures/Shaders/stencil_clear.swsl"
+  stencil:
+    ref: 0
+    writeMask: 128
+    op: Replace
+    func: Always

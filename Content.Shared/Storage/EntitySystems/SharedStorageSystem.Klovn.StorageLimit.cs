@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System.Collections.Generic;
 using Content.Shared.Storage.Components;
 using Robust.Shared.Network;

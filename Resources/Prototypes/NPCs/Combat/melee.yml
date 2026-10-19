@@ -11,7 +11,7 @@
         - !type:HTNPrimitiveTask # KS14: KDA (comment from the future: wtf does KDA mean) # copy target coords
           operator: !type:CopyKeyOperator
             originKey: TargetCoordinates
-            targetKey: LastTargetCoordinates
+            targetKey: LastKnownThreatCoordinates
 
         - !type:HTNPrimitiveTask # KS14: ANK # marker
           operator: !type:EnsureVirtualMarkerOperator

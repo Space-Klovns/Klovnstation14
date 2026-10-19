@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Maps;
 using Content.Shared.Movement.Components;

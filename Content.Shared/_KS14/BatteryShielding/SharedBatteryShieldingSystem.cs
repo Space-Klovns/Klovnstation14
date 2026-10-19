@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Atmos;
 using Content.Shared._KS14.Sparks;
 using Content.Shared.Administration.Logs;
@@ -95,7 +96,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
         Disable(entity, adminReason: "No more power is available");
 
         if (entity.Comp.FailPopupLoc is { } failPopupLocId)
-            _popupSystem.PopupEntity(Loc.GetString(failPopupLocId), entity, type: PopupType.LargeCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create(failPopupLocId), entity, type: PopupType.LargeCaution);
 
         var coordinates = Transform(entity).Coordinates;
         _sparksSystem.DoSpark(coordinates, SharedSparksSystem.DefaultSparkPrototype, soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier);
@@ -149,7 +150,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             return;
 
         if (entity.Comp.FalterPopupLoc is { } falterPopupLocId)
-            _popupSystem.PopupEntity(Loc.GetString(falterPopupLocId), entity, type: PopupType.SmallCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create(falterPopupLocId), entity, type: PopupType.SmallCaution);
 
         args.Cancelled = true;
     }
@@ -180,7 +181,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             _adminLogManager.Add(LogType.Explosion, $"{ToPrettyString(entity.Owner)} is exploding after being emagged and having its battery shielding turned on");
 
             if (entity.Comp.EmagMalfunctionPopupLoc is { } malfPopupLoc)
-                _popupSystem.PopupPredicted(Loc.GetString(malfPopupLoc), entity.Owner, recipient: userUid, type: PopupType.LargeCaution);
+                _popupSystem.PopupPredicted(KsPopupMessage.Create(malfPopupLoc), entity.Owner, recipient: userUid, type: PopupType.LargeCaution);
 
             _audioSystem.PlayPredicted(entity.Comp.EmagMalfunctionSound, entity.Owner, user: userUid);
 

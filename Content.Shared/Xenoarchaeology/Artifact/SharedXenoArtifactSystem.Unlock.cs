@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.Xenoarchaeology.Artifact.Components;
@@ -89,7 +90,7 @@ public abstract partial class SharedXenoArtifactSystem
 
         if (_net.IsServer)
         {
-            _popup.PopupEntity(Loc.GetString(unlockAttemptResultMsg), ent);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(unlockAttemptResultMsg), ent);
             _audio.PlayPvs(soundEffect, ent.Owner);
         }
 

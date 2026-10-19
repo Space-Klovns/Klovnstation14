@@ -1,0 +1,11 @@
+medibot-finish-inject = Готово.
+
+medibot-recently-injected = Пациенту недавно сделали укол.
+
+medibot-start-inject = Пожалуйста, не двигайтесь.
+
+medibot-target-dead = Пациент мёртв.
+
+medibot-target-healthy = Пациент уже здоров.
+
+medibot-target-injected = Пациенту был сделан укол.

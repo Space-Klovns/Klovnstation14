@@ -96,6 +96,12 @@ public sealed class HTNPlanJob : Job<HTNPlan>
                         // Reset method traversal
                         btrIndex = 0;
                     }
+                    // KS14 start: optional compounds are skipped instead of failing their branch
+                    else if (compound.Optional)
+                    {
+                        btrIndex = 0;
+                    }
+                    // KS14 end
                     else
                     {
                         RestoreTolastDecomposedTask(decompHistory, tasksToProcess, appliedStates, finalPlan, ref primitiveCount, ref _blackboard, ref btrIndex);
@@ -107,6 +113,14 @@ public sealed class HTNPlanJob : Job<HTNPlan>
                         primitiveCount++;
                         finalPlan.Add(primitive);
                     }
+                    // KS14 start: optional primitives are skipped instead of failing their branch
+                    else if (primitive.Optional)
+                    {
+                        // PrimitiveConditionMet leaves the blackboard read-only when it fails; a rollback would
+                        //      have replaced it with a writable clone, but a skip keeps using this one.
+                        _blackboard.ReadOnly = false;
+                    }
+                    // KS14 end
                     else
                     {
                         RestoreTolastDecomposedTask(decompHistory, tasksToProcess, appliedStates, finalPlan, ref primitiveCount, ref _blackboard, ref btrIndex);

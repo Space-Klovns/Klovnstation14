@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Server.Atmos.Reactions;
 using Content.Shared._KS14.IoC;
 using Robust.Shared.Prototypes;

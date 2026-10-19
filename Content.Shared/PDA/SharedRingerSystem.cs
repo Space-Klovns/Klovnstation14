@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Mind;
 using Content.Shared.PDA.Ringer;
 using Content.Shared.Popups;
@@ -209,7 +210,7 @@ public abstract partial class SharedRingerSystem : EntitySystem
 
         UpdateRingerUi(ent);
 
-        _popup.PopupPredicted(Loc.GetString("comp-ringer-vibration-popup"),
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-ringer-vibration-popup"),
             ent,
             ent.Owner,
             Filter.Pvs(ent, 0.05f),

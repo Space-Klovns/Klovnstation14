@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Examine;
 using Content.Shared.Hands;
 using Content.Shared.Hands.Components;
@@ -93,7 +94,7 @@ public abstract partial class SharedWieldableSystem : EntitySystem
                 !HasComp<MeleeRequiresWieldComponent>(uid))
             {
                 component.LastPopup = time;
-                var message = Loc.GetString("wieldable-component-requires", ("item", uid));
+                var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("wieldable-component-requires", ("item", uid));
                 _popup.PopupClient(message, args.Used, args.User);
             }
         }
@@ -252,7 +253,7 @@ public abstract partial class SharedWieldableSystem : EntitySystem
         if (!TryComp<HandsComponent>(user, out var hands))
         {
             if (!quiet)
-                _popup.PopupClient(Loc.GetString("wieldable-component-no-hands"), user, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wieldable-component-no-hands"), user, user);
             return false;
         }
 
@@ -260,7 +261,7 @@ public abstract partial class SharedWieldableSystem : EntitySystem
         if (!_hands.IsHolding((user, hands), wieldable, out _))
         {
             if (!quiet)
-                _popup.PopupClient(Loc.GetString("wieldable-component-not-in-hands", ("item", wieldable.Owner)), user, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("wieldable-component-not-in-hands", ("item", wieldable.Owner)), user, user);
             return false;
         }
 
@@ -268,7 +269,7 @@ public abstract partial class SharedWieldableSystem : EntitySystem
         {
             if (!quiet)
             {
-                var message = Loc.GetString("wieldable-component-not-enough-free-hands",
+                var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("wieldable-component-not-enough-free-hands",
                     ("number", wieldable.Comp.FreeHandsRequired), ("item", wieldable.Owner));
                 _popup.PopupClient(message, user, user);
             }
@@ -337,8 +338,8 @@ public abstract partial class SharedWieldableSystem : EntitySystem
             return false;
         }
 
-        var selfMessage = Loc.GetString("wieldable-component-successful-wield", ("item", wieldable.Owner));
-        var othersMessage = Loc.GetString("wieldable-component-successful-wield-other", ("user", Identity.Entity(user, EntityManager)), ("item", wieldable.Owner));
+        var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("wieldable-component-successful-wield", ("item", wieldable.Owner));
+        var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */("wieldable-component-successful-wield-other", ("user", Identity.Entity(user, EntityManager)), ("item", wieldable.Owner));
         _popup.PopupPredicted(selfMessage, othersMessage, user, user);
 
         var ev = new ItemWieldedEvent(user);
@@ -414,8 +415,8 @@ public abstract partial class SharedWieldableSystem : EntitySystem
             if (component.UnwieldSound != null)
                 _audio.PlayPredicted(component.UnwieldSound, uid, user);
 
-            var selfMessage = Loc.GetString("wieldable-component-failed-wield", ("item", uid));
-            var othersMessage = Loc.GetString("wieldable-component-failed-wield-other", ("user", Identity.Entity(args.User, EntityManager)), ("item", uid));
+            var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("wieldable-component-failed-wield", ("item", uid));
+            var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */("wieldable-component-failed-wield-other", ("user", Identity.Entity(args.User, EntityManager)), ("item", uid));
             _popup.PopupPredicted(selfMessage, othersMessage, user, user);
         }
     }

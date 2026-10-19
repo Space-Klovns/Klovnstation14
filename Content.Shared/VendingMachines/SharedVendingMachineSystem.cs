@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Access.Components;
 using Content.Shared.Access.Systems;
@@ -179,7 +180,7 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
         if (_accessReader.IsAllowed(sender, uid, accessReader) || HasComp<EmaggedComponent>(uid))
             return true;
 
-        Popup.PopupClient(Loc.GetString("vending-machine-component-try-eject-access-denied"), uid, sender);
+        Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-component-try-eject-access-denied"), uid, sender);
         Deny((uid, vendComponent), sender);
         return false;
     }
@@ -221,14 +222,14 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
 
         if (string.IsNullOrEmpty(entry?.ID))
         {
-            Popup.PopupClient(Loc.GetString("vending-machine-component-try-eject-invalid-item"), uid);
+            Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-component-try-eject-invalid-item"), uid);
             Deny((uid, vendComponent));
             return;
         }
 
         if (entry.Amount <= 0)
         {
-            Popup.PopupClient(Loc.GetString("vending-machine-component-try-eject-out-of-stock"), uid);
+            Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-component-try-eject-out-of-stock"), uid);
             Deny((uid, vendComponent));
             return;
         }

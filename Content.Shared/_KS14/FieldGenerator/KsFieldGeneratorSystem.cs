@@ -1,4 +1,5 @@
-﻿using Content.Shared.Examine;
+using Content.Shared._KS14.PopupLocalization;
+using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
 using Content.Shared.Power;
@@ -55,7 +56,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         }
 
         _popupSystem.PopupPredicted(
-            Loc.GetString(entity.Comp.Enabled ? "ks-field-generator-enabled" : "ks-field-generator-disabled"),
+            KsPopupMessage.Create(entity.Comp.Enabled ? "ks-field-generator-enabled" : "ks-field-generator-disabled"),
             entity.Owner,
             args.User,
             Filter.Empty(),

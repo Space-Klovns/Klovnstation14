@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Mind;
 using Content.Server.Objectives.Components;
 using Content.Server.Popups;
@@ -45,7 +46,7 @@ public sealed partial class SpiderChargeSystem : SharedSpiderChargeSystem
 
         if (!_role.MindHasRole<NinjaRoleComponent>(mind))
         {
-            _popup.PopupEntity(Loc.GetString("spider-charge-not-ninja"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spider-charge-not-ninja"), user, user);
             args.Cancelled = true;
             return;
         }
@@ -60,7 +61,7 @@ public sealed partial class SpiderChargeSystem : SharedSpiderChargeSystem
         if (locXform.MapID != targetXform.MapID ||
             (_transform.GetWorldPosition(locXform) - _transform.GetWorldPosition(targetXform)).LengthSquared() > comp.Range * comp.Range)
         {
-            _popup.PopupEntity(Loc.GetString("spider-charge-too-far"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spider-charge-too-far"), user, user);
             args.Cancelled = true;
             return;
         }

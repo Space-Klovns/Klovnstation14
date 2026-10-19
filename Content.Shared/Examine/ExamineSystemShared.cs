@@ -235,6 +235,11 @@ namespace Content.Shared.Examine
                     return false;
                 }
 
+                // KS14 start: along a tile edge, the tree reports every occluder on the line, even ones the ray never reaches
+                if (KsIsUnreachableOccluderHit(occluder, xform, origin.Position, origin.Position + ray.Direction * length))
+                    continue;
+                // KS14 end
+
                 if (_occluder.ContainsPoint(occluder, xform, origin.Position) ||
                     _occluder.ContainsPoint(occluder, xform, other.Position))
                 {
@@ -311,7 +316,7 @@ namespace Content.Shared.Examine
             return InRangeUnOccluded(originPos, other, range, predicate);
         }
 
-        public FormattedMessage GetExamineText(EntityUid entity, EntityUid? examiner)
+        public FormattedMessage GetExamineText(EntityUid entity, EntityUid? examiner, string? descriptionOverride = null /* KS14: per-recipient description */)
         {
             var message = new FormattedMessage();
 
@@ -322,11 +327,12 @@ namespace Content.Shared.Examine
 
             var hasDescription = false;
             var metadata = MetaData(entity);
+            var description = descriptionOverride ?? metadata.EntityDescription; // KS14: per-recipient description
 
             //Add an entity description if one is declared
-            if (!string.IsNullOrEmpty(metadata.EntityDescription))
+            if (!string.IsNullOrEmpty(description /* KS14: localized description */))
             {
-                message.AddMarkupOrThrow(metadata.EntityDescription);
+                message.AddMarkupOrThrow(description /* KS14: localized description */);
                 hasDescription = true;
             }
 

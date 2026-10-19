@@ -6,7 +6,8 @@ namespace Content.Server._KS14.NPC.Components;
 /// <summary>
 ///     Marks an NPC as having reserved a dynamically-picked tactical position (camping/retreat/advance
 ///     destination), so other NPCs querying TacticalPositionOperator avoid/discourage nearby candidates.
-///     Added/refreshed by NpcTacticalPositionClaimSystem.Claim and removed on release or TTL expiry.
+///     Added/refreshed by NpcTacticalPositionClaimSystem.Claim and removed on release. Past its TTL it is ignored
+///     wherever claims are read, rather than removed by a sweep.
 /// </summary>
 [RegisterComponent, AutoGenerateComponentPause]
 public sealed partial class NpcTacticalPositionClaimComponent : Component

@@ -348,6 +348,8 @@ namespace Content.Server.Database
 
         [Column("pref_unavailable")] public DbPreferenceUnavailableMode PreferenceUnavailable { get; set; }
 
+        public string? TtsVoice { get; set; } // KS14: null is a random voice
+
         public int PreferenceId { get; set; }
         public Preference Preference { get; set; } = null!;
     }

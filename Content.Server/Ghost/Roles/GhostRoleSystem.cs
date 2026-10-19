@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
@@ -894,7 +895,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         if (userUid != null)
         {
-            var msg = Loc.GetString("ghostrole-spawner-select", ("mode", verbText));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ghostrole-spawner-select", ("mode", KsPopupMessage.Create(prototype.Name) /* KS14: defer role label */));
             _popupSystem.PopupEntity(msg, uid, userUid.Value);
         }
     }

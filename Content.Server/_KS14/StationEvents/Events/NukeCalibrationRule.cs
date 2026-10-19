@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Nuke;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Station.Components;
@@ -51,11 +52,11 @@ public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibra
             component.AffectedNuke = nuke;
 
             if (!nukeComponent.DiskSlot.HasItem)
-                _popups.PopupEntity(Loc.GetString("station-event-nuke-calibration-arm-popup"), nuke, PopupType.LargeCaution);
+                _popups.PopupEntity(KsPopupMessage.Create("station-event-nuke-calibration-arm-popup"), nuke, PopupType.LargeCaution);
             else
             {
                 _transform.SetCoordinates(nukeComponent.DiskSlot.ContainerSlot!.ContainedEntity!.Value, nukeTransform.Coordinates);
-                _popups.PopupEntity(Loc.GetString("station-event-nuke-calibration-arm-and-disk-ejected-popup"), nuke, PopupType.LargeCaution);
+                _popups.PopupEntity(KsPopupMessage.Create("station-event-nuke-calibration-arm-and-disk-ejected-popup"), nuke, PopupType.LargeCaution);
             }
 
             break;

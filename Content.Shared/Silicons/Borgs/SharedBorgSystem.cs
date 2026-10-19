@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Access.Systems;
 using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
@@ -189,7 +190,7 @@ public abstract partial class SharedBorgSystem : EntitySystem
     private void OnMindAdded(Entity<BorgChassisComponent> chassis, ref MindAddedMessage args)
     {
         // Unpredicted because the event is raised on the server.
-        _popup.PopupEntity(Loc.GetString("borg-mind-added", ("name", Identity.Name(chassis.Owner, EntityManager))), chassis.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("borg-mind-added", ("name", Identity.Entity(chassis.Owner, EntityManager) /* KS14: defer chassis name */)), chassis.Owner);
 
         TryActivate(chassis);
 
@@ -200,7 +201,7 @@ public abstract partial class SharedBorgSystem : EntitySystem
     private void OnMindRemoved(Entity<BorgChassisComponent> chassis, ref MindRemovedMessage args)
     {
         // Unpredicted because the event is raised on the server.
-        _popup.PopupEntity(Loc.GetString("borg-mind-removed", ("name", Identity.Name(chassis.Owner, EntityManager))), chassis.Owner);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("borg-mind-removed", ("name", Identity.Entity(chassis.Owner, EntityManager) /* KS14: defer chassis name */)), chassis.Owner);
 
         SetActive(chassis, false);
         // Turn off the light so that the no-player visuals can be seen.
@@ -224,7 +225,7 @@ public abstract partial class SharedBorgSystem : EntitySystem
         {
             if (brain != null || module != null)
             {
-                _popup.PopupClient(Loc.GetString("borg-panel-not-open"), chassis, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("borg-panel-not-open"), chassis, args.User);
             }
             return;
         }
@@ -235,7 +236,7 @@ public abstract partial class SharedBorgSystem : EntitySystem
             if (TryComp<ActorComponent>(used, out var actor) && !CanPlayerBeBorged(actor.PlayerSession))
             {
                 // Don't use PopupClient because CanPlayerBeBorged is not predicted.
-                _popup.PopupEntity(Loc.GetString("borg-player-not-allowed"), used, args.User);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("borg-player-not-allowed"), used, args.User);
                 return;
             }
 
@@ -326,7 +327,7 @@ public abstract partial class SharedBorgSystem : EntitySystem
         if (!CanPlayerBeBorged(session))
         {
             // Don't use PopupClient because MindAddedMessage and CanPlayerBeBorged are not predicted.
-            _popup.PopupEntity(Loc.GetString("borg-player-not-allowed-eject"), brain);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("borg-player-not-allowed-eject"), brain);
             _container.RemoveEntity(borg, brain);
             _throwing.TryThrow(brain, _random.NextVector2() * 5, 5f);
             return;

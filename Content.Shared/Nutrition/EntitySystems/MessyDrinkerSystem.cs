@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Fluids;
 using Content.Shared.Nutrition.Components;
 using Content.Shared.Popups;
@@ -41,7 +42,7 @@ public sealed partial class MessyDrinkerSystem : EntitySystem
             return;
 
         if (ent.Comp.SpillMessagePopup != null)
-            _popup.PopupPredicted(Loc.GetString(ent.Comp.SpillMessagePopup), null, ent, ent, PopupType.MediumCaution);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.SpillMessagePopup), null, ent, ent, PopupType.MediumCaution);
 
         var split = ev.Split.SplitSolution(ent.Comp.SpillAmount);
 

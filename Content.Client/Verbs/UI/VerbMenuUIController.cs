@@ -217,7 +217,7 @@ namespace Content.Client.Verbs.UI
                 return;
             }
 
-            CurrentVerbs.UnionWith(verbs);
+            MergeServerVerbs(verbs); // KS14: keep the server's authoritative state for matching actions
             FillVerbPopup(popup);
         }
 

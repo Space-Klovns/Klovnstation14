@@ -14,11 +14,17 @@ public sealed class PlayTtsEvent : EntityEventArgs
     public byte[] Data;
     public TtsFilteredCategory FilteredCategory = TtsFilteredCategory.DontProcess;
 
-    public PlayTtsEvent(NetEntity source, byte[] data, TtsFilteredCategory category)
+    /// <summary>
+    ///     What <see cref="Data"/> is, and so how the client decodes it.
+    /// </summary>
+    public TtsCodec Codec = TtsCodec.Vorbis;
+
+    public PlayTtsEvent(NetEntity source, byte[] data, TtsFilteredCategory category, TtsCodec codec)
     {
         Source = source;
         Data = data;
         FilteredCategory = category;
+        Codec = codec;
     }
 }
 

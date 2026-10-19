@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Construction.EntitySystems;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Destructible;
@@ -100,7 +101,7 @@ public sealed partial class SecretStashSystem : EntitySystem
         var container = entity.Comp.ItemContainer;
         if (HasItemInside(entity))
         {
-            var popup = Loc.GetString("comp-secret-stash-action-hide-container-not-empty");
+            var popup = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-secret-stash-action-hide-container-not-empty");
             _popupSystem.PopupClient(popup, entity, userUid);
             return false;
         }
@@ -109,8 +110,8 @@ public sealed partial class SecretStashSystem : EntitySystem
         if (_item.GetSizePrototype(itemComp.Size) > _item.GetSizePrototype(entity.Comp.MaxItemSize) ||
             _whitelistSystem.IsWhitelistPass(entity.Comp.Blacklist, itemToHideUid))
         {
-            var msg = Loc.GetString("comp-secret-stash-action-hide-item-too-big",
-                ("item", itemToHideUid), ("stashname", GetStashName(entity)));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-secret-stash-action-hide-item-too-big",
+                ("item", itemToHideUid), ("stashname", GetPopupStashName(entity)));
             _popupSystem.PopupClient(msg, entity, userUid);
             return false;
         }
@@ -120,8 +121,8 @@ public sealed partial class SecretStashSystem : EntitySystem
             return false;
 
         // all done, show success message
-        var successMsg = Loc.GetString("comp-secret-stash-action-hide-success",
-            ("item", itemToHideUid), ("stashname", GetStashName(entity)));
+        var successMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-secret-stash-action-hide-success",
+            ("item", itemToHideUid), ("stashname", GetPopupStashName(entity)));
         _popupSystem.PopupClient(successMsg, entity, userUid);
         return true;
     }
@@ -146,8 +147,8 @@ public sealed partial class SecretStashSystem : EntitySystem
         _handsSystem.PickupOrDrop(userUid, itemInStash.Value, handsComp: handsComp);
 
         // show success message
-        var successMsg = Loc.GetString("comp-secret-stash-action-get-item-found-something",
-            ("stashname", GetStashName(entity)));
+        var successMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-secret-stash-action-get-item-found-something",
+            ("stashname", GetPopupStashName(entity)));
         _popupSystem.PopupClient(successMsg, entity, userUid);
 
         return true;
@@ -233,7 +234,7 @@ public sealed partial class SecretStashSystem : EntitySystem
         var storedInside = _containerSystem.EmptyContainer(entity.Comp.ItemContainer, true, cords);
         if (storedInside != null && storedInside.Count >= 1)
         {
-            var popup = Loc.GetString("comp-secret-stash-on-destroyed-popup", ("stashname", GetStashName(entity)));
+            var popup = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-secret-stash-on-destroyed-popup", ("stashname", GetPopupStashName(entity)));
             _popupSystem.PopupPredicted(popup, storedInside[0], null, PopupType.MediumCaution);
         }
     }

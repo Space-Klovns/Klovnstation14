@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.AlertLevel;
 using Content.Server.Audio;
 using Content.Server.Chat.Systems;
@@ -141,7 +142,7 @@ public sealed partial class NukeSystem : EntitySystem
 
         var seconds = _random.NextGaussian(ent.Comp.MicrowaveMean.TotalSeconds, ent.Comp.MicrowaveStd.TotalSeconds);
         ent.Comp.TimeModifier = TimeSpan.FromSeconds(seconds);
-        _popups.PopupEntity(Loc.GetString("nuke-disk-component-microwave"), ent.Owner, PopupType.Medium);
+        _popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("nuke-disk-component-microwave"), ent.Owner, PopupType.Medium);
     }
 
     private void OnRemove(EntityUid uid, NukeComponent component, ComponentRemove args)
@@ -190,7 +191,7 @@ public sealed partial class NukeSystem : EntitySystem
         // Nuke has to have the disk in it to be moved
         if (!component.DiskSlot.HasItem)
         {
-            var msg = Loc.GetString("nuke-component-cant-anchor-toggle");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("nuke-component-cant-anchor-toggle");
             _popups.PopupEntity(msg, uid, args.Actor, PopupType.MediumCaution);
             return;
         }
@@ -215,7 +216,7 @@ public sealed partial class NukeSystem : EntitySystem
                 if (!_turf.IsSpace(tile))
                     continue;
 
-                var msg = Loc.GetString("nuke-component-cant-anchor-floor");
+                var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("nuke-component-cant-anchor-floor");
                 _popups.PopupEntity(msg, uid, args.Actor, PopupType.MediumCaution);
 
                 return;
@@ -685,7 +686,7 @@ public sealed partial class NukeSystem : EntitySystem
         if (!_doAfter.TryStartDoAfter(doAfter))
             return;
 
-        _popups.PopupEntity(Loc.GetString("nuke-component-doafter-warning"),
+        _popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("nuke-component-doafter-warning"),
             user,
             user,
             PopupType.LargeCaution);

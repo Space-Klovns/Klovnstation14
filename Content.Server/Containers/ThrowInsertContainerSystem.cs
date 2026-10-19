@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Shared.Containers;
 using Content.Shared.Database;
@@ -40,7 +41,7 @@ public sealed partial class ThrowInsertContainerSystem : EntitySystem
         if (!_random.Prob(ent.Comp.Probability))
         {
             _audio.PlayPvs(ent.Comp.MissSound, ent);
-            _popup.PopupEntity(Loc.GetString(ent.Comp.MissLocString), ent);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.MissLocString), ent);
             return;
         }
 

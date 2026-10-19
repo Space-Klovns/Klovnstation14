@@ -1,0 +1,14 @@
+ent-LightPostSmall = фонарный столб
+    .desc = Всегда работающий светильник.
+    .suffix = Всегда запитанный
+
+ent-PoweredLEDLightPostSmall = фонарный столб
+    .desc = { ent-PoweredLightPostSmallEmpty.desc }
+    .suffix = LED, Светодиод
+
+ent-PoweredLightPostSmall = фонарный столб
+    .desc = { ent-PoweredLightPostSmallEmpty.desc }
+
+ent-PoweredLightPostSmallEmpty = фонарный столб
+    .desc = Осветительный прибор. Потребляет энергию и излучает свет, если оснащён лампой-трубкой.
+    .suffix = Пустой
