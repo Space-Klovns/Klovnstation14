@@ -628,6 +628,18 @@ public sealed class KsHotPuddleTest : GameTest
             entityManager.DeleteEntity(secondPuddleUid);
             Assert.That(Touched(itemUid), Is.Null, "Deleting the last puddle the item touched did not take it out of puddles.");
         });
+
+        // A puddle that stops being one without being deleted is left as well: the release is on the component's
+        //     shutdown, not on the entity's deletion.
+        EntityUid thirdPuddleUid = default;
+        await server.WaitPost(() => thirdPuddleUid = SpillPuddle(testMap, new Vector2i(2, 0), _inertLiquidReagent, 40f, Atmospherics.T20C));
+        await MoveTo(itemUid, testMap, 2.5f);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(Touched(itemUid) ?? [], Is.EquivalentTo(new[] { thirdPuddleUid }), "The item is not in the third puddle.");
+            entityManager.RemoveComponent<PuddleComponent>(thirdPuddleUid);
+            Assert.That(Touched(itemUid), Is.Null, "Removing the puddle's PuddleComponent did not take the item out of it.");
+        });
     }
 
     /// <summary>

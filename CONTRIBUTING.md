@@ -898,6 +898,26 @@ Where several *unrelated* systems genuinely need the same moment, the component'
 as an event of its own — see `KsZLevelTransitEvents.cs`, which exists because `KsZLevelPhysicsSystem`
 had already taken `KsZLevelTransitComponent`'s `ComponentStartup` and `ComponentShutdown`.
 
+### Clean up on `ComponentShutdown`, not `EntityTerminatingEvent`
+
+`EntityTerminatingEvent` is raised only when the entity is deleted. When just the component is removed, it never
+fires. `ComponentShutdown` covers both cases, because deleting an entity shuts down each of its components in turn.
+So cleanup that undoes what a component set up goes on its shutdown. If part of that cleanup is pointless when the
+whole entity is going, skip that part with `Terminating(uid)`, the `EntitySystem` proxy for the entity's life stage.
+
+```csharp
+// not this - removing PuddleComponent alone leaves every toucher still holding the puddle
+[SubscribeLocalEvent]
+private void OnPuddleTerminating(Entity<PuddleComponent> entity, ref EntityTerminatingEvent args)
+
+// this - runs on removal and on deletion alike
+[SubscribeLocalEvent]
+private void OnPuddleShutdown(Entity<PuddleComponent> entity, ref ComponentShutdown args)
+```
+
+If another system already has that component's shutdown, call into yours from its handler (see above), as
+`PuddleSystem.OnPuddleCacheShutdown` does for `KsHotPuddleSystem`.
+
 ### A test that never fails is worse than no test
 
 Two separate bugs in one feature were each "covered" by a test that passed with the bug present. The

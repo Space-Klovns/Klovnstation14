@@ -116,22 +116,25 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
     }
 
     /// <summary>
-    ///     A puddle on its way out (evaporated, mopped up, or merged into the one already on its tile) is left by
-    ///         everything touching it, before its contacts go.
+    ///     A puddle's <see cref="PuddleComponent"/> is shutting down, because it was removed or because the puddle is
+    ///         being deleted (evaporated, mopped up, or merged into the one already on its tile). Everything touching
+    ///         it leaves it, before its contacts go.
     /// </summary>
-    [SubscribeLocalEvent]
-    private void OnPuddleTerminating(Entity<PuddleComponent> entity, ref EntityTerminatingEvent args)
+    /// <remarks>
+    ///     Called from <c>PuddleSystem.OnPuddleCacheShutdown</c> rather than subscribed: that system already takes
+    ///         <see cref="PuddleComponent"/>'s <see cref="ComponentShutdown"/>, and only one system may.
+    /// </remarks>
+    public void OnPuddleShutdown(EntityUid puddleUid)
     {
-        // Collected first: removing a component while walking the contacts is not something to rely on.
         _releasedTouchers.Clear();
-        var contacts = _physicsSystem.GetContacts(entity.Owner, includeDeleting: true);
+        var contacts = _physicsSystem.GetContacts(puddleUid, includeDeleting: true);
         while (contacts.MoveNext(out var contact))
-            _releasedTouchers.Add(contact.EntityA == entity.Owner ? contact.EntityB : contact.EntityA);
+            _releasedTouchers.Add(contact.EntityA == puddleUid ? contact.EntityB : contact.EntityA);
 
         foreach (var toucherUid in _releasedTouchers)
         {
             if (_touchingQuery.TryComp(toucherUid, out var touchingComponent))
-                LeavePuddle((toucherUid, touchingComponent), entity.Owner);
+                LeavePuddle((toucherUid, touchingComponent), puddleUid);
         }
 
         _releasedTouchers.Clear();

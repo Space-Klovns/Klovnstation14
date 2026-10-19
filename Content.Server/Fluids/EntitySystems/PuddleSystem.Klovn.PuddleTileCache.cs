@@ -3,12 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
 using Content.Shared.GameTicking;
+using Content.Server._KS14.Fluids.HotPuddle;
 using Robust.Shared.Map;
 
 namespace Content.Server.Fluids.EntitySystems;
 
 public sealed partial class PuddleSystem
 {
+    [Dependency] private KsHotPuddleSystem _ksHotPuddleSystem = default!;
+
     /// <summary>
     ///     Every live puddle, keyed by the grid it is on and then by the tile it sits on.
     ///     Kept up to date by <see cref="OnPuddleCacheStartup"/>, <see cref="OnPuddleCacheShutdown"/>
@@ -50,7 +53,11 @@ public sealed partial class PuddleSystem
         => UpdatePuddleCache(entity.Owner);
 
     private void OnPuddleCacheShutdown(Entity<PuddleComponent> entity, ref ComponentShutdown args)
-        => RemovePuddleFromCache(entity.Owner);
+    {
+        RemovePuddleFromCache(entity.Owner);
+        // Called here because this system holds the puddle's only ComponentShutdown subscription.
+        _ksHotPuddleSystem.OnPuddleShutdown(entity.Owner);
+    }
 
     /// <remarks>
     ///     Puddles are anchored, so this only ever fires when one is spawned, parented to a different grid, or
