@@ -11,6 +11,7 @@
     temperature: 3200
     exposedVolume: 50
     heatPower: 3000 # insanely weak
+    extinguishable: false # no water, foam or blanket puts it out: it only burns out, as its puddle burns away
   - type: TileEntityEffect
     effects:
     - !type:Flammable

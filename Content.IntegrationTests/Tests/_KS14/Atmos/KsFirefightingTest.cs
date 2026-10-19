@@ -129,6 +129,8 @@ public sealed class KsFirefightingTest : GameTest
     private static readonly EntProtoId BlanketPrototype = "KsFoamBlanket";
     private static readonly EntProtoId ChemicalFirePrototype = "ChemicalFire";
     private static readonly EntProtoId ExtinguisherPrototype = "FireExtinguisher";
+    private static readonly EntProtoId KlovnideFirePrototype = "ChemicalFireSuspendedKlovnideTrioxide";
+    private static readonly ProtoId<ReagentPrototype> KlovnideReagent = "SuspendedKlovnideTrioxide";
 
     private const string ExtinguisherSolution = "spray";
     private const int RowLength = 8;
@@ -1406,6 +1408,106 @@ public sealed class KsFirefightingTest : GameTest
         Assert.That(blanketSystem.Deploy(BlanketPrototype, tileRef, 1f), Is.GreaterThan(0f), $"No blanket was laid on {tile}.");
         Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, tile, out var blanket));
         return blanket.Owner;
+    }
+
+    /// <summary>
+    ///     Nothing puts a suspended klovnide-trioxide fire out: not an extinguisher's water, nor a blanket laid over it,
+    ///         and a blanket doesn't keep a new one from starting. An ordinary chemfire on the same tile goes out, which
+    ///         shows each of these reached the tile.
+    /// </summary>
+    [Test]
+    public async Task TestKlovnideTrioxideFireCannotBePutOut()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var tile = testMap.Tile.GridIndices;
+
+        EntityUid klovnideFireUid = default;
+        EntityUid ordinaryFireUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            klovnideFireUid = chemicalFireSystem.SpawnChemicalFire(KlovnideFirePrototype, (gridUid, null), tile, duration: TimeSpan.FromSeconds(30d))!.Value.Owner;
+            ordinaryFireUid = chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile, duration: TimeSpan.FromSeconds(30d))!.Value.Owner;
+        });
+
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            entityManager.System<PuddleSystem>().DoTileReactions(testMap.Tile, new Solution(WaterReagent.Id, FixedPoint2.New(100)));
+        });
+
+        // Putting a fire out queues its deletion.
+        await server.WaitRunTicks(2);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entityManager.EntityExists(ordinaryFireUid), Is.False, "The water did not put out the ordinary chemfire.");
+                Assert.That(entityManager.EntityExists(klovnideFireUid), "The water put out the klovnide-trioxide fire.");
+            }
+
+            ordinaryFireUid = chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile, duration: TimeSpan.FromSeconds(30d))!.Value.Owner;
+            FillBlanket(testMap.Tile);
+        });
+
+        await server.WaitRunTicks(2);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entityManager.EntityExists(ordinaryFireUid), Is.False, "The blanket did not put out the ordinary chemfire.");
+                Assert.That(entityManager.EntityExists(klovnideFireUid), "The blanket put out the klovnide-trioxide fire.");
+            }
+
+            entityManager.DeleteEntity(klovnideFireUid);
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(KlovnideFirePrototype, (gridUid, null), tile), Is.Not.Null,
+                "The blanket kept a klovnide-trioxide fire from starting.");
+        });
+    }
+
+    /// <summary>
+    ///     A suspended klovnide-trioxide puddle can't be put out, so it burns itself away, and its fire goes out with it.
+    /// </summary>
+    [Test]
+    public async Task TestKlovnideTrioxidePuddleBurnsItselfOut()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var tile = testMap.Tile.GridIndices;
+
+        EntityUid puddleUid = default;
+        await server.WaitAssertion(() => SpillPuddle(testMap, KlovnideReagent, 3f, Atmospherics.T20C, out puddleUid));
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+            Assert.That(chemicalFireSystem.TryGetChemicalFire((gridUid, null), tile, KlovnideFirePrototype.Id, out _),
+                "The puddle never lit, so its burning out proves nothing."));
+
+        await server.WaitRunTicks(TicksPerSecond * 10);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entityManager.EntityExists(puddleUid) && !entityManager.IsQueuedForDeletion(puddleUid), Is.False,
+                    "The puddle did not burn away.");
+                Assert.That(chemicalFireSystem.GetTileChemicalFires((gridUid, null), tile) is { Fires.Count: > 0 }, Is.False,
+                    "The fire outlasted its puddle.");
+            }
+        });
     }
 
     /// <summary>

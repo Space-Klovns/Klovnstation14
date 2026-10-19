@@ -14,7 +14,7 @@ public abstract partial class SharedEmpSystem : EntitySystem
 {
     [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
-    /* [Dependency] private INetManager _net = default!; */ // KS14: removed, unused since the effect spawns were made predicted
+    [Dependency] private INetManager _net = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
 
@@ -51,9 +51,9 @@ public abstract partial class SharedEmpSystem : EntitySystem
         {
             TryEmpEffects(uid, energyConsumption, duration, user);
         }
-
-        // KS14: made predicted, was "if (_net.IsServer) Spawn(EmpPulseEffectPrototype, mapCoordinates);" after "TODO: replace with PredictedSpawn once it works with animated sprites"
-        PredictedSpawn(EmpPulseEffectPrototype, mapCoordinates);
+        // TODO: replace with PredictedSpawn once it works with animated sprites
+        if (_net.IsServer)
+            Spawn(EmpPulseEffectPrototype, mapCoordinates);
 
         var coordinates = _transform.ToCoordinates(mapCoordinates);
         _audio.PlayPredicted(EmpSound, coordinates, user);
@@ -70,15 +70,21 @@ public abstract partial class SharedEmpSystem : EntitySystem
     /// <param name="predicted">Whether this pulse is being replicated on the client.</param>
     public void EmpPulse(EntityCoordinates coordinates, float range, float energyConsumption, TimeSpan duration, EntityUid? user = null, bool predicted = true)
     {
+        // KS14 start: an unpredicted pulse is the server's alone. The client would otherwise run it again on every
+        //     re-predicted tick, and its PlayPvs below plays locally each time.
+        if (!predicted && _net.IsClient)
+            return;
+        // KS14 end
+
         _entSet.Clear();
         _lookup.GetEntitiesInRange(coordinates, range, _entSet);
         foreach (var uid in _entSet)
         {
             TryEmpEffects(uid, energyConsumption, duration, user);
         }
-
-        // KS14: made predicted, was "if (_net.IsServer) Spawn(EmpPulseEffectPrototype, coordinates);" after "TODO: replace with PredictedSpawn once it works with animated sprites"
-        PredictedSpawnAttachedTo(EmpPulseEffectPrototype, coordinates);
+        // TODO: replace with PredictedSpawn once it works with animated sprites
+        if (_net.IsServer)
+            Spawn(EmpPulseEffectPrototype, coordinates);
 
         if (predicted)
             _audio.PlayPredicted(EmpSound, coordinates, user);
@@ -124,9 +130,9 @@ public abstract partial class SharedEmpSystem : EntitySystem
         var ev = new EmpPulseEvent(energyConsumption * strMultiplier, false, false, duration * durMultiplier, user);
         RaiseLocalEvent(uid, ref ev);
 
-        // KS14: made predicted, was "if (ev.Affected && _net.IsServer) Spawn(EmpDisabledEffectPrototype, Transform(uid).Coordinates);" after "TODO: replace with PredictedSpawn once it works with animated sprites"
-        if (ev.Affected)
-            PredictedSpawnAttachedTo(EmpDisabledEffectPrototype, Transform(uid).Coordinates);
+        // TODO: replace with PredictedSpawn once it works with animated sprites
+        if (ev.Affected && _net.IsServer)
+            Spawn(EmpPulseEffectPrototype /* KS14: EmpDisabledEffectPrototype -> EmpPulseEffectPrototype */, Transform(uid).Coordinates);
 
         if (!ev.Disabled)
             return ev.Affected;

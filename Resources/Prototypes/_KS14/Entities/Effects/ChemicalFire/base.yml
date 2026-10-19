@@ -45,6 +45,7 @@
         variation: 0.3
 
   - type: AlwaysHot
+  - type: KsDecalOnSpawn # a scorch mark, as a tile fire leaves
   - type: StepTrigger
     requiredTriggeredSpeed: 0
     intersectRatio: 0.1

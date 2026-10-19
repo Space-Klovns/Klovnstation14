@@ -2,11 +2,14 @@ using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Tests.Helpers;
 using Content.Server.Atmos.EntitySystems;
+using Content.Server.Decals;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared._KS14.Decals;
 using Content.Shared._KS14.Sparks;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
+using Content.Shared.Decals;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids;
 using Robust.Shared.GameObjects;
@@ -546,6 +549,61 @@ public sealed class ChemicalFireTest : GameTest
     }
 
     #endregion
+
+    #region Burn marks
+
+    /// <summary>
+    ///     A chemfire leaves a scorch mark on its tile as it starts, as a hotspot does, and no more than
+    ///         <see cref="KsDecalTags.DefaultMaxDecals"/> of them build up however often the tile catches.
+    /// </summary>
+    [Test]
+    public async Task TestChemicalFireLeavesBurnMarksUpToTheLimit()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+        var decalSystem = entityManager.System<DecalSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        int CountBurnMarks()
+        {
+            var count = 0;
+            foreach (var (_, decal) in decalSystem.GetDecalsInRange(gridUid, FireTile))
+            {
+                if (server.ProtoMan.Index<DecalPrototype>(decal.Id).Tags.Contains(KsDecalTags.Burnt))
+                    count++;
+            }
+
+            return count;
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(CountBurnMarks(), Is.Zero, "The test tile was scorched before any fire.");
+
+            var fire = chemicalFireSystem.SpawnChemicalFire(FireProto, (gridUid, null), FireTile);
+            Assert.That(fire, Is.Not.Null, "Chemfire failed to spawn.");
+            Assert.That(CountBurnMarks(), Is.EqualTo(1), "The chemfire left no scorch mark.");
+
+            // A new fire each time, as the tile catching again would start.
+            for (var i = 0; i < KsDecalTags.DefaultMaxDecals * 2; i++)
+            {
+                entityManager.DeleteEntity(fire!.Value.Owner);
+                fire = chemicalFireSystem.SpawnChemicalFire(FireProto, (gridUid, null), FireTile);
+                Assert.That(fire, Is.Not.Null, "Chemfire failed to spawn again.");
+            }
+
+            Assert.That(CountBurnMarks(), Is.EqualTo(KsDecalTags.DefaultMaxDecals),
+                "Scorch marks built up past the limit, or stopped short of it.");
+        });
+    }
+
+    #endregion
+
 
     #region Arbitration
 

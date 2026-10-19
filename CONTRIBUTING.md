@@ -1134,9 +1134,11 @@ A predicted spawn makes two copies of an entity: one on the predicting client, a
 | --- | --- | --- |
 | Client's copy | A stand-in. Deleted on every applied server state (`ClientGameStateManager.ResetPredictedEntities`), re-created only while its tick is still being re-predicted, so gone about one round trip after spawning. | Kept for its whole life, on that user's client only. |
 | Server's copy | Replaces the stand-in for everyone. | Hidden and inert on the user's client (no sprite, light, collisions or predicted physics); shown to everyone else. |
-| Use for | Anything long-lived or that gameplay reads: fires, foam blankets, EMP effects. | Short-lived cosmetic movers the user caused: their own bullets, their own sparks. |
+| Use for | Anything long-lived or that gameplay reads: fires, foam blankets. | Short-lived cosmetic movers the user caused: their own bullets, their own sparks. |
 
 Without a `user`, the KS system is the engine spawn plus predicted physics, which matters only for something that moves (a spark). Anything anchored or static uses the engine's spawn directly.
+
+**A one-shot animated effect (an EMP pulse, a flash) is neither.** Each re-creation of an engine stand-in starts its animation again, so it replays on every applied state for a round trip. Spawn it on the server only, as `SharedEmpSystem` does.
 
 User mode exists because the engine's handover is a visible jump for fast movers. A lag-compensated bullet's server copy isn't where the client's copy is, so swapping one for the other teleports it. Showing both is a desync.
 

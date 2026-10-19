@@ -122,21 +122,23 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
             // Overflow to neighbors with remaining space.
             foreach (var (neighborSolution, puddle, neighbor) in resolvedNeighbourSolutions)
             {
+                var ksOverflowVolume = KsGetOverflowVolume(puddle, neighborSolution); // KS14: per-reagent spread volume
+
                 // Water doesn't flow uphill
-                if (neighborSolution.Volume >= (overflow.Volume + puddle.OverflowVolume))
+                if (neighborSolution.Volume >= (overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */))
                 {
                     continue;
                 }
 
                 // Work out how much we could send into this neighbour without overflowing it, and send up to that much
-                var remaining = puddle.OverflowVolume - neighborSolution.Volume;
+                var remaining = ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */ - neighborSolution.Volume;
 
                 // If we can't send anything, then skip this neighbour
                 if (remaining <= FixedPoint2.Zero)
                     continue;
 
                 // We don't want to spill over to make high points either.
-                if (neighborSolution.Volume + remaining >= (overflow.Volume + puddle.OverflowVolume))
+                if (neighborSolution.Volume + remaining >= (overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */))
                 {
                     continue;
                 }
@@ -194,8 +196,10 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
             // Overflow to neighbors with remaining total allowed space (1000u) above the overflow volume (20u).
             foreach (var (neighborSolution, puddle, neighbor) in resolvedNeighbourSolutions)
             {
+                var ksOverflowVolume = KsGetOverflowVolume(puddle, neighborSolution); // KS14: per-reagent spread volume
+
                 // What the source tiles current volume is.
-                var sourceCurrentVolume = overflow.Volume + puddle.OverflowVolume;
+                var sourceCurrentVolume = overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
 
                 // Water doesn't flow uphill
                 if (neighborSolution.Volume >= sourceCurrentVolume)
@@ -205,7 +209,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
                 // We're in the low point in this area, let the neighbour tiles have a chance to spread to us first.
                 var idealAverageVolume =
-                    (totalVolume + overflow.Volume + puddle.OverflowVolume) / (args.Neighbors.Count + 1);
+                    (totalVolume + overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */) / (args.Neighbors.Count + 1);
 
                 if (idealAverageVolume > sourceCurrentVolume)
                 {
@@ -328,7 +332,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         if (!Resolve(uid, ref puddle))
             return false;
 
-        return CurrentVolume(uid, puddle) + solution.Volume > puddle.OverflowVolume;
+        return CurrentVolume(uid, puddle) + solution.Volume > FixedPoint2.Min(KsGetOverflowVolume((uid, puddle)), KsGetOverflowVolume(puddle, solution)) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
     }
 
     /// <summary>
@@ -339,7 +343,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         if (!Resolve(uid, ref puddle))
             return false;
 
-        return CurrentVolume(uid, puddle) > puddle.OverflowVolume;
+        return CurrentVolume(uid, puddle) > KsGetOverflowVolume((uid, puddle)) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
     }
 
     /// <summary>
@@ -354,7 +358,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         }
 
         // TODO: This is going to fail with struct solutions.
-        var remaining = puddle.OverflowVolume;
+        var remaining = KsGetOverflowVolume(puddle, puddle.Solution.Value.Comp.Solution) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
         var split = _solutionContainerSystem.SplitSolution(puddle.Solution.Value,
             CurrentVolume(uid, puddle) - remaining);
         return split;

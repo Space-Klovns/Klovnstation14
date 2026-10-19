@@ -44,7 +44,7 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
     /// <summary>
     ///     How often something touching a puddle is asked whether it is hot.
     /// </summary>
-    public static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(1d);
+    public static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(0.08d);
 
     /// <summary>
     ///     The heat, in watts, that a hot thing puts into the puddles it touches, split between them. A puddle's heat

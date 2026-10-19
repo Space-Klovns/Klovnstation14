@@ -410,8 +410,11 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         CleanupGhosts(projectile);
     }
 
+    /// <summary>
+    /// The shot is gone, or no longer lag-compensated: its ghosts stand in for nothing.
+    /// </summary>
     [SubscribeLocalEvent]
-    private void OnProjectileTerminating(Entity<LagCompensatingProjectileComponent> projectile, ref EntityTerminatingEvent args)
+    private void OnProjectileShutdown(Entity<LagCompensatingProjectileComponent> projectile, ref ComponentShutdown args)
     {
         CleanupGhosts(projectile);
     }

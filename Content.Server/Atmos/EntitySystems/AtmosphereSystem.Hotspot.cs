@@ -33,7 +33,8 @@ public sealed partial class AtmosphereSystem
     /// </summary>
     private static readonly ProtoId<SoundCollectionPrototype> DefaultHotspotSounds = "AtmosHotspot";
 
-    [Dependency] private DecalSystem _decalSystem = default!;
+    /* [Dependency] private DecalSystem _decalSystem = default!; */ // KS14: removed, the burn marks moved to KsDecalOnSpawnSystem
+    [Dependency] private Content.Server._KS14.Decals.KsDecalOnSpawnSystem _ksDecalOnSpawnSystem = default!; // KS14
     [Dependency] private IRobustRandom _random = default!;
 
     /// <summary>
@@ -106,6 +107,9 @@ public sealed partial class AtmosphereSystem
             var gridUid = ent.Owner;
             var tilePos = tile.GridIndices;
 
+            _ksDecalOnSpawnSystem.TryAddBurnDecal(gridUid, tilePos); // KS14: shared with KsDecalOnSpawnComponent, which chemfires use for the same marks
+            // KS14: moved to KsDecalOnSpawnSystem.TryAddBurnDecal
+            /*
             // Get the existing decals on the tile
             var tileDecals = _decalSystem.GetDecalsInRange(gridUid, tilePos);
 
@@ -131,6 +135,7 @@ public sealed partial class AtmosphereSystem
                     out _,
                     cleanable: true);
             }
+            */
 
             if (tile.Air.Temperature > Atmospherics.FireMinimumTemperatureToSpread)
             {
