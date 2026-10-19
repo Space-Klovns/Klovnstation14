@@ -56,6 +56,8 @@ public sealed class KsElectricalFireTest : GameTest
     private readonly EntProtoId _emitterPrototype = "KsTestElectricalFireEmitter";
     private readonly EntProtoId _machinePrototype = "KsTestElectricalFireMachine";
     private readonly EntProtoId _bystanderPrototype = "KsTestElectricalFireBystander";
+    // From KsFirefightingTest's test YAML.
+    private readonly EntProtoId _flammablePrototype = "KsTestFirefightingFlammable";
 
     private static readonly EntProtoId ElectricalFirePrototype = "ChemicalFireElectrical";
     private static readonly EntProtoId ChemicalFirePrototype = "ChemicalFire";
@@ -267,6 +269,44 @@ public sealed class KsElectricalFireTest : GameTest
         {
             Assert.That(HasElectricalFire(testMap, Centre), Is.False, "Carbon dioxide did not put the electrical fire out.");
             Assert.That(sizzled, "Carbon dioxide put the electrical fire out without a sizzle.");
+        });
+    }
+
+    /// <summary>
+    ///     Foam over an electrical fire does not put it out, and does not keep what lies in it safe for long either: the
+    ///         fire boils it off, then sets alight what it was protecting.
+    /// </summary>
+    [Test]
+    public async Task FoamBurnsAwayOverIt()
+    {
+        var testMap = await CreateRoom();
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var blanketSystem = entityManager.System<KsFoamBlanketSystem>();
+        EntityUid flammableUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.System<SharedChemicalFireSystem>().SpawnChemicalFire(ElectricalFirePrototype, TileRef(testMap, Centre)), Is.Not.Null);
+            for (var i = 0; i < 30; i++)
+                blanketSystem.Deploy(BlanketPrototype, TileRef(testMap, Centre), 1f, playSound: false);
+
+            Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, Centre, out var blanket) && blanket.Comp.Foam >= blanket.Comp.MaxFoam - 0.02f,
+                "The blanket did not fill up.");
+            flammableUid = entityManager.SpawnEntity(_flammablePrototype, TileCentre(testMap, Centre));
+        });
+
+        // A full blanket drains by itself in well over a minute.
+        await server.WaitRunTicks(TicksPerSecond * 4);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, Centre, out _), Is.False, "The electrical fire did not burn the foam off.");
+                Assert.That(HasElectricalFire(testMap, Centre), "The foam put the electrical fire out.");
+                Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, "What lay in the foam did not catch fire once it was gone.");
+            }
         });
     }
 

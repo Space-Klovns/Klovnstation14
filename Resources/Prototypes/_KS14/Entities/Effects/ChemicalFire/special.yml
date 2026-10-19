@@ -13,6 +13,9 @@
     heatPower: 3000 # insanely weak
     extinguishable: false # no water, foam or blanket puts it out: it only burns out, as its puddle burns away
     foamSmotherable: false
+    # Burns off foam laid over it rather than lying under it (about 0.75u a second, a full blanket in 2), so foam is no
+    #     way to walk through it unburnt.
+    foamHeatFraction: 1
   - type: TileEntityEffect
     effects:
     - !type:Flammable
@@ -22,7 +25,7 @@
 
 # Started by an arc flash, on whatever threw it and every machine its bolts hit. Burns until put out, and only carbon
 #     dioxide does that: it cools the air below what the fire needs, or pushes out its oxygen. Water cannot cool the air
-#     that far (it stops at its boiling point), and foam does nothing to it.
+#     that far (it stops at its boiling point), and foam does nothing to it but boil away.
 - type: entity
   parent: ChemicalFire
   id: ChemicalFireElectrical
@@ -37,6 +40,9 @@
     minimumAirTemperature: 280
     extinguishable: false
     foamSmotherable: false
+    # Burns off foam laid over it rather than lying under it (about 1u a second, a full blanket in 1.5), so foam is no
+    #     way to walk through it unburnt. More than a sprayer lays (0.8u a second), so even steady spraying loses.
+    foamHeatFraction: 1
   - type: ChemicalFireGasConsumer
     gases:
       Oxygen: 0.1
