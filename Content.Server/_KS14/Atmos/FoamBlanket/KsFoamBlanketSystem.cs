@@ -1,11 +1,16 @@
 using Content.Server._KS14.TileEffects;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
+using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Atmos.FoamBlanket;
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Fluids.Components;
+using Content.Shared.Popups;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
@@ -13,7 +18,7 @@ namespace Content.Server._KS14.Atmos.FoamBlanket;
 
 /// <summary>
 ///     Drains and boils foam blankets off. Laying and smothering is in the shared system; this supplies the atmos and
-///         flammable state only the server has.
+///         flammable state only the server has, and runs the fight between foam and a chemfire that resists it.
 /// </summary>
 public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
 {
@@ -22,6 +27,23 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     [Dependency] private KsTileEffectAtmosSystem _tileEffectAtmosSystem = default!;
     [Dependency] private PuddleSystem _puddleSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+
+    [Dependency] private EntityQuery<KsFoamContestComponent> _contestQuery = default!;
+
+    /// <summary>
+    ///     How often a chemfire fighting the foam over it hisses.
+    /// </summary>
+    private static readonly TimeSpan HissInterval = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     How often foam landing on a chemfire it does not put out at once may say so.
+    /// </summary>
+    private static readonly TimeSpan PopupInterval = TimeSpan.FromSeconds(5);
+
+    private static readonly AudioParams HissParams = AudioParams.Default.WithVariation(0.2f).WithVolume(-4f);
 
     protected override bool IsBurning(Entity<FlammableComponent> flammable)
         => flammable.Comp.OnFire && flammable.Comp.CanExtinguish;
@@ -141,4 +163,116 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         return true;
     }
 
+    #region Fighting a chemfire
+
+    /// <summary>
+    ///     Foam has landed on a chemfire it does not put out at once: says so, at most every
+    ///         <see cref="PopupInterval"/>. One that fights the foam starts losing to it on its next heat tick, through
+    ///         <see cref="ContestFire"/>.
+    /// </summary>
+    protected override void OnFoamReachedResistingFire(Entity<ChemicalFireComponent> fire)
+    {
+        var contestComponent = EnsureComp<KsFoamContestComponent>(fire.Owner);
+        var curTime = _gameTiming.CurTime;
+        if (curTime < contestComponent.NextPopupTime)
+            return;
+
+        contestComponent.NextPopupTime = curTime + PopupInterval;
+        PopupAboutFire(fire, fire.Comp.FoamSmotherable ? "chemical-fire-foam-resisting" : "chemical-fire-foam-immune");
+    }
+
+    /// <summary>
+    ///     Spends heat from a chemfire boiling away the foam blanket over it, if there is one: how a hot fire fights
+    ///         the foam smothering it.
+    /// </summary>
+    /// <remarks>
+    ///     Boiling a unit takes what <see cref="Boil"/> takes from a puddle, and its vapor joins the air the same way.
+    /// </remarks>
+    /// <param name="energy">The most heat, in joules, to spend.</param>
+    /// <returns>The heat actually spent, in joules.</returns>
+    public float HeatBlanket(EntityUid gridUid, Vector2i tile, float energy)
+    {
+        if (energy <= 0f || !TryGetBlanket(gridUid, tile, out var blanket))
+            return 0f;
+
+        var component = blanket.Comp;
+        var energyPerUnit = component.SpecificHeat * (component.BoilingPoint - component.FoamTemperature) + component.LatentHeat;
+        if (energyPerUnit <= 0f)
+            return 0f;
+
+        var boiled = MathF.Min(component.Foam, energy / energyPerUnit);
+        if (boiled <= 0f || !AddBoiledGas(blanket, gridUid, tile, boiled))
+            return 0f;
+
+        if (component.Foam <= 0f)
+            StartDissolving(blanket);
+        else
+            Dirty(blanket);
+
+        return boiled * energyPerUnit;
+    }
+
+    /// <summary>
+    ///     A heat tick of a chemfire that fights foam: a blanket over it adds its foam over the fire's
+    ///         <see cref="ChemicalFireComponent.FoamSmotherResistance"/> to the progress, and puts it out once that
+    ///         reaches 1; without one, the fire recovers. The fire hisses for as long as it is under foam.
+    /// </summary>
+    /// <remarks>
+    ///     Called from <c>ChemicalFireSystem.OnHeatTile</c> rather than subscribed: only one system may take a
+    ///         chemfire's heat tick, and the heat the fire spends on the foam comes out of the same budget.
+    /// </remarks>
+    /// <returns>Whether the foam put the fire out.</returns>
+    public bool ContestFire(Entity<ChemicalFireComponent> fire, EntityUid gridUid, Vector2i tile, float seconds)
+    {
+        if (!fire.Comp.FoamSmotherable || fire.Comp.FoamSmotherResistance <= 0f)
+            return false;
+
+        if (TryGetBlanket(gridUid, tile, out var blanket))
+        {
+            var contestComponent = EnsureComp<KsFoamContestComponent>(fire.Owner);
+            contestComponent.Progress += blanket.Comp.Foam * seconds / fire.Comp.FoamSmotherResistance;
+
+            var coordinates = Transform(fire.Owner).Coordinates;
+            if (contestComponent.Progress >= 1f)
+            {
+                PopupAboutFire(fire, "chemical-fire-foam-smothered");
+                _audioSystem.PlayPvs(blanket.Comp.SmotherSound, coordinates);
+                _chemicalFireSystem.ExtinguishChemicalFire(fire);
+                return true;
+            }
+
+            var curTime = _gameTiming.CurTime;
+            if (curTime >= contestComponent.NextHissTime)
+            {
+                contestComponent.NextHissTime = curTime + HissInterval;
+                _audioSystem.PlayPvs(blanket.Comp.SmotherSound, coordinates, HissParams);
+            }
+
+            _chemicalFireSystem.SetSmotherProgress(fire, contestComponent.Progress);
+            return false;
+        }
+
+        if (!_contestQuery.TryComp(fire.Owner, out var recoveringComponent) || recoveringComponent.Progress <= 0f)
+            return false;
+
+        recoveringComponent.Progress = MathF.Max(recoveringComponent.Progress - fire.Comp.SmotherRecoveryRate * seconds, 0f);
+        _chemicalFireSystem.SetSmotherProgress(fire, recoveringComponent.Progress);
+        return false;
+    }
+
+    /// <summary>
+    ///     A popup over the fire, naming it, for everyone who can see it.
+    /// </summary>
+    private void PopupAboutFire(Entity<ChemicalFireComponent> fire, string messageId)
+    {
+        if (Prototype(fire.Owner) is not { } prototype)
+            return;
+
+        _popupSystem.PopupCoordinates(
+            KsPopupMessage.Create(messageId, ("fire", new KsPopupPrototypeName(prototype.ID))),
+            Transform(fire.Owner).Coordinates,
+            PopupType.SmallCaution);
+    }
+
+    #endregion
 }

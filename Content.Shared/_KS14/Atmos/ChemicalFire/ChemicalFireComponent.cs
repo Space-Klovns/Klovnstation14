@@ -94,6 +94,66 @@ public sealed partial class ChemicalFireComponent : Component
     public bool Extinguishable = true;
 
     /// <summary>
+    ///     Whether this chemfire burns out at <see cref="EndTime"/>. One that does not burns until something puts it
+    ///         out: the air on its tile growing too cold (<see cref="MinimumAirTemperature"/>) or running out of what it
+    ///         burns (<see cref="ChemicalFireGasConsumerComponent"/>).
+    /// </summary>
+    [DataField]
+    public bool BurnsOut = true;
+
+    /// <summary>
+    ///     The coldest the air on the tile may be, in kelvin, for this chemfire to start or keep burning. Null for no
+    ///         limit.
+    /// </summary>
+    [DataField]
+    public float? MinimumAirTemperature;
+
+    /// <summary>
+    ///     Whether a foam blanket smothers this chemfire at all, and keeps it from starting under it.
+    /// </summary>
+    [DataField]
+    public bool FoamSmotherable = true;
+
+    /// <summary>
+    ///     How much smothering the chemfire takes, in units of foam times seconds: a blanket holding <c>f</c> units adds
+    ///         <c>f / resistance</c> to <see cref="SmotherProgress"/> every second it lies over the fire. Zero puts it
+    ///         out the moment foam lands on it.
+    /// </summary>
+    [DataField]
+    public float FoamSmotherResistance;
+
+    /// <summary>
+    ///     Fraction (0 to 1) of <see cref="HeatPower"/> that goes into boiling away the foam blanket over the chemfire,
+    ///         before the puddle and air get any. This is how a hot fire fights the foam smothering it: a blanket left
+    ///         alone may boil away before it is done.
+    /// </summary>
+    [DataField]
+    public float FoamHeatFraction;
+
+    /// <summary>
+    ///     How fast <see cref="SmotherProgress"/> falls back, per second, while no blanket lies over the chemfire.
+    /// </summary>
+    [DataField]
+    public float SmotherRecoveryRate = 0.25f;
+
+    /// <summary>
+    ///     How close foam is to smothering this chemfire, from 0 to 1; it goes out at 1. Networked, and only in steps
+    ///         of <see cref="SmotherProgressStep"/>, so that the client can draw the flames guttering.
+    /// </summary>
+    [ViewVariables, AutoNetworkedField]
+    public float SmotherProgress;
+
+    /// <summary>
+    ///     The steps <see cref="SmotherProgress"/> is networked in.
+    /// </summary>
+    public const float SmotherProgressStep = 1f / 16f;
+
+    /// <summary>
+    ///     How much of its height and glow a chemfire loses as <see cref="SmotherProgress"/> reaches 1.
+    /// </summary>
+    public const float SmotheredShrink = 0.6f;
+
+    /// <summary>
     ///     Chemfires sharing a connection key smooth into each other laterally, and may not share a tile.
     ///         Null falls back to the entity's prototype id, so distinct prototypes are distinct by default.
     /// </summary>

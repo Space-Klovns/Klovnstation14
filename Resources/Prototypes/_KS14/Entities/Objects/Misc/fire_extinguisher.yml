@@ -1,0 +1,22 @@
+# Sprays carbon dioxide cold enough to be solid, which flashes to gas on whatever it hits: it cools the air and any
+#     puddle hard, and shoves the air out of the way, starving fires of oxygen. The only thing that puts out an
+#     electrical fire. Not stocked anywhere.
+- type: entity
+  parent: FireExtinguisher
+  id: KsFireExtinguisherCarbonDioxide
+  name: carbon dioxide fire extinguisher
+  description: It extinguishes fires by smothering and freezing them, electrical ones included. Don't spray it at anyone you like.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/fire_extinguisher.rsi
+    color: "#3a3a3a"
+    layers:
+    - state: fire_extinguisher_closed
+      map: [ "enum.ToggleableVisuals.Layer" ]
+  - type: Solution
+    solution:
+      maxVol: 110
+      temperature: 194 # just under the 194.65 K it sublimes at
+      reagents:
+      - ReagentId: CarbonDioxide
+        Quantity: 110

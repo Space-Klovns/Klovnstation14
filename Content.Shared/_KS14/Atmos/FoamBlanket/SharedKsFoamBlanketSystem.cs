@@ -45,6 +45,7 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
 
     private readonly HashSet<Entity<FlammableComponent>> _flammableEntities = [];
     private readonly List<Entity<ChemicalFireComponent>> _smotheredFires = [];
+    private readonly List<Entity<ChemicalFireComponent>> _resistingFires = [];
     private readonly List<EntityUid> _releasedOccupants = [];
 
     /// <summary>
@@ -117,6 +118,15 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     /// </summary>
     /// <returns>Whether there was a fire to put out.</returns>
     protected virtual bool SmotherTileAtmos(EntityUid gridUid, Vector2i tile) => false;
+
+    /// <summary>
+    ///     Foam has landed on a chemfire it does not put out at once: one that fights it
+    ///         (<see cref="ChemicalFireComponent.FoamSmotherResistance"/>), or one it cannot smother at all
+    ///         (<see cref="ChemicalFireComponent.FoamSmotherable"/>). The server runs the fight and tells whoever can see.
+    /// </summary>
+    protected virtual void OnFoamReachedResistingFire(Entity<ChemicalFireComponent> fire)
+    {
+    }
 
     /// <summary>
     ///     Spawns a blanket the client lays ahead of the server and keeps until the server's arrives. Only the client
@@ -215,6 +225,8 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
 
     /// <summary>
     ///     Puts out the tile's fire and everything burning on it, with a sizzle if there was anything to put out.
+    ///         Chemfires that fight the foam are not put out here, but start losing to it (see
+    ///         <see cref="OnFoamReachedResistingFire"/>).
     /// </summary>
     private void Smother(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile, EntityCoordinates coordinates, bool playSound)
     {
@@ -224,10 +236,13 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
         {
             // Collected first: putting a fire out changes the tile's fire data.
             _smotheredFires.Clear();
+            _resistingFires.Clear();
             foreach (var fire in tileFires.Fires.Values)
             {
-                if (fire.Comp.Extinguishable)
+                if (fire.Comp.FoamSmotherable && fire.Comp.FoamSmotherResistance <= 0f)
                     _smotheredFires.Add(fire);
+                else
+                    _resistingFires.Add(fire);
             }
 
             foreach (var fire in _smotheredFires)
@@ -236,7 +251,15 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
                 smothered = true;
             }
 
+            foreach (var fire in _resistingFires)
+            {
+                OnFoamReachedResistingFire(fire);
+                // It hisses against the foam; one that ignores the foam entirely makes no sound.
+                smothered |= fire.Comp.FoamSmotherable;
+            }
+
             _smotheredFires.Clear();
+            _resistingFires.Clear();
         }
 
         _flammableEntities.Clear();
@@ -294,13 +317,23 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     }
 
     /// <summary>
-    ///     A chemfire that can be put out cannot start, or be refreshed, under a blanket. Thermite and its like
-    ///         burn through one.
+    ///     A chemfire foam can smother cannot start, or be refreshed, under a blanket. One the foam cannot smother at
+    ///         all (an electrical fire) burns under it regardless.
     /// </summary>
+    /// <remarks>
+    ///     A fire that fights the foam (<see cref="ChemicalFireComponent.FoamSmotherResistance"/>) and is already
+    ///         burning on the tile is still refreshed, so that it burns on while the fight lasts, rather than being put
+    ///         out by its own fuel no longer topping it up. Once the foam has won, nothing relights it while the foam
+    ///         holds.
+    /// </remarks>
     [SubscribeLocalEvent]
     private void OnChemicalFireCanSustain(Entity<ChemicalFireComponent> entity, ref ChemicalFireCanSustainEvent args)
     {
-        if (!entity.Comp.Extinguishable || !TryGetBlanket(args.GridUid, args.Tile, out _))
+        if (!entity.Comp.FoamSmotherable || !TryGetBlanket(args.GridUid, args.Tile, out _))
+            return;
+
+        if (entity.Comp.FoamSmotherResistance > 0f &&
+            _chemicalFireSystem.TryGetChemicalFire((args.GridUid, null), args.Tile, _chemicalFireSystem.GetConnectionKey(entity), out _))
             return;
 
         args.Deny();

@@ -32,19 +32,33 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
         if (args.Mixture is not { } mixture)
             return;
 
-        if (mixture.Immutable)
-        {
+        if (mixture.Immutable || IsStarved(entity.Comp, mixture))
             args.Deny();
-            return;
-        }
+    }
 
-        foreach (var gas in entity.Comp.Gases.Keys)
+    /// <summary>
+    ///     Whether the tile has too little of what the chemfire burns: none of its gases above a trace, or less of them
+    ///         together than <see cref="ChemicalFireGasConsumerComponent.MinimumMoleFraction"/>.
+    /// </summary>
+    public static bool IsStarved(ChemicalFireGasConsumerComponent component, GasMixture mixture)
+    {
+        var anyAboveTrace = false;
+        var moles = 0f;
+        foreach (var gas in component.Gases.Keys)
         {
-            if (mixture.GetMoles(gas) >= Atmospherics.Epsilon)
-                return;
+            var gasMoles = mixture.GetMoles(gas);
+            anyAboveTrace |= gasMoles >= Atmospherics.Epsilon;
+            moles += gasMoles;
         }
 
-        args.Deny();
+        if (!anyAboveTrace)
+            return true;
+
+        if (component.MinimumMoleFraction <= 0f)
+            return false;
+
+        var totalMoles = mixture.TotalMoles;
+        return totalMoles <= 0f || moles / totalMoles < component.MinimumMoleFraction;
     }
 
     [SubscribeLocalEvent]
@@ -52,6 +66,16 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     {
         if (args.Mixture is not { } mixture || mixture.Immutable)
             return;
+
+        // Starved before it eats anything this tick: crowded out, rather than burnt through.
+        if (entity.Comp.ExtinguishWhenDepleted &&
+            entity.Comp.MinimumMoleFraction > 0f &&
+            IsStarved(entity.Comp, mixture) &&
+            _chemicalFireQuery.TryGetComponent(entity.Owner, out var starvedFireComponent))
+        {
+            _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, starvedFireComponent));
+            return;
+        }
 
         var consumedAmount = 0f;
         foreach (var (gas, molesPerSecond) in entity.Comp.Gases)

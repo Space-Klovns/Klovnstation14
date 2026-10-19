@@ -188,13 +188,13 @@
   components:
   - type: Solution
     solution:
-      maxVol: 88 # KS14: 60 -> 88, room for full-auto
+      maxVol: 60
       reagents:
       - ReagentId: Water
-        Quantity: 66 # KS14: 60 -> 66, a quarter is foam
+        Quantity: 15 # KS14: 60 -> 15, a quarter is foam
       # KS14 start: firefighting foam, which keeps fuel puddles from relighting
       - ReagentId: FirefightingFoam
-        Quantity: 22
+        Quantity: 45
       # KS14 end
 
 # used for a engi xenoborg module

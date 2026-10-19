@@ -59,6 +59,7 @@ public sealed class KsFirefightingTest : GameTest
     duration: 30
     heatPower: 0
     extinguishable: false
+    foamSmotherable: false
 
 - type: reagent
   id: KsTestFirefightingInertLiquid
@@ -404,7 +405,7 @@ public sealed class KsFirefightingTest : GameTest
                 Assert.That(chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile), Is.Null,
                     "A chemfire started under the blanket.");
                 Assert.That(chemicalFireSystem.SpawnChemicalFire(_unextinguishableFirePrototype, (gridUid, null), tile), Is.Not.Null,
-                    "A chemfire that cannot be put out was kept out by the blanket.");
+                    "A chemfire foam cannot smother was kept out by the blanket.");
             }
         });
 
@@ -1126,13 +1127,26 @@ public sealed class KsFirefightingTest : GameTest
             shotSystem.Update(0f);
             shotSystem.Update(0f);
 
-            // 1.5u fired, a quarter foam: 0.375u. Each tile takes at most 0.1u, and the third what is left of half of 0.175u.
+            // What the shot carries: one shot's worth of the gun's solution, at the solution's share of foam.
+            var shotComponent = entityManager.GetComponent<KsPredictedFoamShotComponent>(keptShot);
+            Assert.That(entityManager.System<SharedSolutionContainerSystem>().TryGetSolution(clientExtinguisherUid, "spray", out _, out var spraySolution));
+            var fireCost = (float)entityManager.GetComponent<SolutionAmmoProviderComponent>(clientExtinguisherUid).FireCost;
+            var carried = fireCost * (float)spraySolution!.GetTotalPrototypeQuantity(shotComponent.FoamReagent) / (float)spraySolution.Volume;
+            Assert.That(SProtoMan.Index(BlanketPrototype).TryComp<KsFoamBlanketComponent>(out var blanketPrototypeComponent, Pair.Server.EntMan.ComponentFactory));
+
+            // Each tile takes what the vapor offers it of what is left, at most one tile's worth.
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(foams[0], Is.EqualTo(0.1f).Within(0.001f));
-                Assert.That(foams[1], Is.EqualTo(0.1f).Within(0.001f));
-                Assert.That(foams[2], Is.EqualTo(0.08f).Within(0.011f));
-                Assert.That(entityManager.GetComponent<KsPredictedFoamShotComponent>(keptShot).Foam, Is.LessThan(0.375f - 0.27f));
+                var left = carried;
+                for (var x = 0; x < 3; x++)
+                {
+                    var offer = ClientPredictedFoamShotSystem.GetTileOffer(left, shotComponent.TransferFraction, shotComponent.MinimumTransfer);
+                    Assert.That(foams[x], Is.EqualTo(MathF.Min(offer, blanketPrototypeComponent!.FoamPerTile)).Within(0.011f),
+                        $"Tile {x} did not take what the vapor would offer it.");
+                    left -= foams[x];
+                }
+
+                Assert.That(shotComponent.Foam, Is.EqualTo(left).Within(0.011f), "The shot did not spend what it laid.");
                 for (var x = 0; x < 3; x++)
                 {
                     Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 1), out _), Is.False,

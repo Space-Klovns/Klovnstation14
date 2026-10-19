@@ -110,13 +110,19 @@ public abstract partial class ChemicalFireOverlay : Overlay
                 // Snapped exactly as a snapCardinals sprite would be, which is also what the lateral smoothing
                 //     in ChemicalFireVisualsSystem assumes the fire looks like on screen.
                 var drawRotation = ChemicalFireVisualsSystem.GetDrawRotation(transformComponent.LocalRotation, localEyeRotation);
-                var origin = position + drawRotation.RotateVec(entity.Comp.SpriteOffset);
+                var size = texture.Size / (float)EyeManager.PixelsPerMeter;
+
+                // Foam smothering the fire squashes the flame down onto its base and fades it.
+                var smothered = ChemicalFireComponent.SmotheredShrink * entity.Comp.SmotherProgress;
+                var height = size.Y * (1f - smothered);
+                var origin = position + drawRotation.RotateVec(entity.Comp.SpriteOffset - new Vector2(0f, (size.Y - height) / 2f));
+                var color = entity.Comp.Color.WithAlpha(entity.Comp.Color.A * (1f - smothered));
 
                 _drawEntries.Add(new DrawEntry(
                     entity.Owner,
                     texture,
-                    new Box2Rotated(Box2.CenteredAround(origin, texture.Size / (float)EyeManager.PixelsPerMeter), drawRotation, origin),
-                    entity.Comp.Color,
+                    new Box2Rotated(Box2.CenteredAround(origin, new Vector2(size.X, height)), drawRotation, origin),
+                    color,
                     localEyeRotation.RotateVec(position).Y
                 ));
             }

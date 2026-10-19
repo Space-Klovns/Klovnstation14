@@ -1,7 +1,9 @@
 using Content.Shared.Atmos;
 using Content.Shared.Light.Components;
+using Content.Shared.Physics;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -23,6 +25,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
 
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
@@ -207,7 +210,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         var enumerator = EntityQueryEnumerator<ChemicalFireComponent>();
         while (enumerator.MoveNext(out var uid, out var fireComponent))
         {
-            if (curTime >= fireComponent.EndTime)
+            if (fireComponent.BurnsOut && curTime >= fireComponent.EndTime)
             {
                 PredictedQueueDel(uid);
                 continue;
@@ -241,7 +244,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
 
         var tileEmissionComponent = EnsureComp<TileEmissionComponent>(entity.Owner);
         tileEmissionComponent.Color = entity.Comp.Color;
-        tileEmissionComponent.Range = entity.Comp.EmissionRange;
+        tileEmissionComponent.Range = GetEmissionRange(entity.Comp);
         Dirty(entity.Owner, tileEmissionComponent);
 
         RegisterFire(entity);
@@ -295,12 +298,81 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         if (!ResolveTemplateFire(prototypeId, out var templateUid))
             return true; // No ChemicalFireComponent to speak of - SpawnChemicalFire's own check already covers this.
 
+        if (IsWall(grid, tile))
+            return false;
+
         var mixture = ResolveTileMixture(grid.Owner, tile, excite: false);
+        if (mixture != null &&
+            _chemicalFireQuery.TryGetComponent(templateUid, out var templateComponent) &&
+            IsTooCold(templateComponent, mixture))
+            return false;
         var ev = new ChemicalFireCanSustainEvent(grid.Owner, tile, mixture);
         RaiseLocalEvent(templateUid, ref ev);
 
         return ev.CanSustain;
     }
+
+    /// <summary>
+    ///     Whether a tile is a wall, or a window: something anchored on it with a hard fixture on the
+    ///         <see cref="CollisionGroup.Impassable"/> layer, which nothing walks through. No chemfire burns inside one.
+    /// </summary>
+    /// <remarks>
+    ///     Only anchored entities are looked at, rather than <c>TurfSystem.IsTileBlocked</c>'s lookup of everything
+    ///         on the tile: walls are always anchored, and this runs on every puddle's tile effect.
+    /// </remarks>
+    public bool IsWall(Entity<MapGridComponent?> grid, Vector2i tile)
+    {
+        if (!_mapGridQuery.Resolve(grid.Owner, ref grid.Comp, false))
+            return false;
+
+        var anchoredEnumerator = _mapSystem.GetAnchoredEntitiesEnumerator(grid.Owner, grid.Comp, tile);
+        while (anchoredEnumerator.MoveNext(out var anchoredUid))
+        {
+            if (!_fixturesQuery.TryGetComponent(anchoredUid, out var fixturesComponent))
+                continue;
+
+            foreach (var fixture in fixturesComponent.Fixtures.Values)
+            {
+                if (fixture.Hard && (fixture.CollisionLayer & (int)CollisionGroup.Impassable) != 0)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether the air is colder than a chemfire's <see cref="ChemicalFireComponent.MinimumAirTemperature"/>.
+    /// </summary>
+    public static bool IsTooCold(ChemicalFireComponent component, GasMixture mixture)
+        => component.MinimumAirTemperature is { } minimumTemperature && mixture.Temperature < minimumTemperature;
+
+    /// <summary>
+    ///     Sets how close foam is to smothering a chemfire, which the client draws as the flames guttering, and dims
+    ///         its glow to match. Only dirties the fire when the networked step changes.
+    /// </summary>
+    public void SetSmotherProgress(Entity<ChemicalFireComponent> fire, float progress)
+    {
+        var stepped = MathF.Floor(Math.Clamp(progress, 0f, 1f) / ChemicalFireComponent.SmotherProgressStep) *
+                      ChemicalFireComponent.SmotherProgressStep;
+        if (stepped == fire.Comp.SmotherProgress)
+            return;
+
+        fire.Comp.SmotherProgress = stepped;
+        Dirty(fire);
+
+        if (TryComp<TileEmissionComponent>(fire.Owner, out var tileEmissionComponent))
+        {
+            tileEmissionComponent.Range = GetEmissionRange(fire.Comp);
+            Dirty(fire.Owner, tileEmissionComponent);
+        }
+    }
+
+    /// <summary>
+    ///     How far a chemfire's tile emission reaches, which shrinks as foam smothers it.
+    /// </summary>
+    public static float GetEmissionRange(ChemicalFireComponent component)
+        => component.EmissionRange * (1f - ChemicalFireComponent.SmotheredShrink * component.SmotherProgress);
 
     /// <summary>
     ///     Gets or lazily creates the paused, nullspace singleton chemfire used to answer sustain checks for a
@@ -363,6 +435,12 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         component.HeatPower = prototypeComponent.HeatPower;
         component.PuddleHeatFraction = prototypeComponent.PuddleHeatFraction;
         component.Extinguishable = prototypeComponent.Extinguishable;
+        component.BurnsOut = prototypeComponent.BurnsOut;
+        component.MinimumAirTemperature = prototypeComponent.MinimumAirTemperature;
+        component.FoamSmotherable = prototypeComponent.FoamSmotherable;
+        component.FoamSmotherResistance = prototypeComponent.FoamSmotherResistance;
+        component.FoamHeatFraction = prototypeComponent.FoamHeatFraction;
+        component.SmotherRecoveryRate = prototypeComponent.SmotherRecoveryRate;
         component.HeatInterval = prototypeComponent.HeatInterval;
         component.EmissionRange = prototypeComponent.EmissionRange;
         component.ConnectionKey = prototypeComponent.ConnectionKey;
@@ -380,7 +458,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         if (TryComp<TileEmissionComponent>(fire.Owner, out var tileEmissionComponent))
         {
             tileEmissionComponent.Color = component.Color;
-            tileEmissionComponent.Range = component.EmissionRange;
+            tileEmissionComponent.Range = GetEmissionRange(component);
             Dirty(fire.Owner, tileEmissionComponent);
         }
 
