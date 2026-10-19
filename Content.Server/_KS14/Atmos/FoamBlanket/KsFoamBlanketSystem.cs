@@ -119,15 +119,13 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (energyPerUnit <= 0f)
             return;
 
-        var maxBoiled = MathF.Min(component.BoilRate * seconds, component.Foam);
-
         // The puddle first: it is what the blanket lies on, and what has to be kept from relighting.
         if (_puddleSystem.TryGetCachedPuddle(gridUid, tile, out Entity<PuddleComponent> puddle) &&
             _solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution) &&
             puddle.Comp.Solution is { } solutionEntity &&
             solution.Temperature > component.BoilingPoint)
         {
-            var boiled = MathF.Min(maxBoiled,
+            var boiled = MathF.Min(MathF.Min(component.PuddleBoilRate * seconds, component.Foam),
                 (solution.Temperature - component.BoilingPoint) * solution.GetHeatCapacity(ProtoMan) / energyPerUnit);
 
             if (boiled > 0f && AddBoiledGas(blanket, gridUid, tile, boiled))
@@ -144,7 +142,8 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (airHeatCapacity < Atmospherics.MinimumHeatCapacity)
             return;
 
-        var airBoiled = MathF.Min(maxBoiled, (mixture.Temperature - component.BoilingPoint) * airHeatCapacity / energyPerUnit);
+        var airBoiled = MathF.Min(MathF.Min(component.BoilRate * seconds, component.Foam),
+            (mixture.Temperature - component.BoilingPoint) * airHeatCapacity / energyPerUnit);
         if (airBoiled <= 0f)
             return;
 

@@ -55,10 +55,18 @@ public sealed partial class KsFoamBlanketComponent : Component
     public float DecayRate = 0.01f;
 
     /// <summary>
-    ///     Most units per second that may boil off over a puddle or air hotter than <see cref="BoilingPoint"/>.
+    ///     Most units per second that may boil off over air hotter than <see cref="BoilingPoint"/>.
     /// </summary>
     [DataField]
     public float BoilRate = 0.03f;
+
+    /// <summary>
+    ///     Most units per second that may boil off over a puddle hotter than <see cref="BoilingPoint"/>. Higher than
+    ///         <see cref="BoilRate"/>: the blanket lies on the puddle, and taking the heat out of it is what keeps it
+    ///         from relighting.
+    /// </summary>
+    [DataField]
+    public float PuddleBoilRate = 0.2f;
 
     /// <summary>
     ///     Temperature, in kelvin, the foam boils at.
@@ -68,10 +76,15 @@ public sealed partial class KsFoamBlanketComponent : Component
 
     /// <summary>
     ///     Energy, in joules, that boiling a unit takes on top of warming it to <see cref="BoilingPoint"/>.
-    ///     Matches <see cref="TileEffects.Effects.BoilTileEffect.LatentHeat"/>, since the foam is mostly water.
     /// </summary>
+    /// <remarks>
+    ///     Far above water's 540 (<see cref="TileEffects.Effects.BoilTileEffect.LatentHeat"/>), as
+    ///         <c>ExtinguishTileReaction</c>'s energy is: a blanket holds 1.5u at most, which at water's latent heat
+    ///         would cool a 100u puddle by 9 K before it was gone. At this, a full blanket takes about 6 kJ out of what
+    ///         it lies on, some 60 K off a 100u puddle.
+    /// </remarks>
     [DataField]
-    public float LatentHeat = 540f;
+    public float LatentHeat = 4000f;
 
     /// <summary>
     ///     Heat capacity of a unit of foam, in J/K, as for a reagent's specific heat.

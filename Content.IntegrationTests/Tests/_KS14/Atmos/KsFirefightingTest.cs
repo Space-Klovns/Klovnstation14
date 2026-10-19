@@ -123,6 +123,24 @@ public sealed class KsFirefightingTest : GameTest
     damage:
       types:
         Heat: 1
+
+# The vapor spray the extinguisher used to have, which firebots still use.
+- type: entity
+  parent: SolutionSpray
+  id: KsTestFirefightingSprayer
+  components:
+  - type: Solution
+    solution:
+      maxVol: 100
+      reagents:
+      - ReagentId: FirefightingFoam
+        Quantity: 100
+  - type: Spray
+    transferAmount: 10
+    sprayedPrototype: ExtinguisherSpray
+    vaporAmount: 3
+    vaporSpread: 90
+    sprayVelocity: 2.0
 ";
 
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
@@ -143,10 +161,11 @@ public sealed class KsFirefightingTest : GameTest
     private readonly EntProtoId _mobPrototype = "KsTestFirefightingMob";
     private readonly EntProtoId _extinguisherShotPrototype = "KsBulletExtinguisherShot";
     private readonly EntProtoId _slowBlanketPrototype = "KsTestFirefightingSlowBlanket";
+    private readonly EntProtoId _sprayerPrototype = "KsTestFirefightingSprayer";
 
     private const float HotPuddleTemperature = 450f;
     private const int TicksPerSecond = 30;
-    private const int BoilTestSeconds = 10;
+    private const int BoilTestSeconds = 4; // short enough that a blanket over a hot puddle is not boiled away
 
     private async Task<TestMapData> CreateBreathableTestMap()
     {
@@ -503,13 +522,48 @@ public sealed class KsFirefightingTest : GameTest
         {
             Assert.That(foamLeft[0], Is.EqualTo(prototype!.MaxFoam - prototype.DecayRate * updates).Within(prototype.DecayRate * 2f),
                 "A blanket over a cold puddle lost more than it drains by itself.");
-            Assert.That(foamLeft[1], Is.LessThan(foamLeft[0] - prototype.BoilRate * updates * 0.5f),
+            Assert.That(foamLeft[1], Is.LessThan(foamLeft[0] - prototype.PuddleBoilRate * updates * 0.5f),
                 "The blanket did not boil off faster over a hot puddle.");
         }
     }
 
     /// <summary>
-    ///     One click of an extinguisher lays a blanket on every tile its vapor crosses, not only the first.
+    ///     A full blanket draws the heat out of the hot puddle it lies on, not just a token amount: 100u at 600 K ends up
+    ///         well over 10 K cooler than the same puddle left to the air alone.
+    /// </summary>
+    [Test]
+    public async Task TestBlanketCoolsTheHotPuddleUnderIt()
+    {
+        var server = Pair.Server;
+
+        // Side by side, on two maps, so that both see exactly the same updates.
+        var bareMap = await CreateBreathableTestMap();
+        var blanketedMap = await CreateBreathableTestMap();
+        Entity<SolutionComponent> bareSolution = default;
+        Entity<SolutionComponent> blanketedSolution = default;
+
+        await server.WaitAssertion(() =>
+        {
+            bareSolution = SpillPuddle(bareMap, _inertLiquidReagent, 100f, 600f, out _);
+            blanketedSolution = SpillPuddle(blanketedMap, _inertLiquidReagent, 100f, 600f, out _);
+            FillBlanket(blanketedMap.Tile);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 4);
+
+        await server.WaitAssertion(() =>
+        {
+            var bare = bareSolution.Comp!.Solution.Temperature;
+            var blanketed = blanketedSolution.Comp!.Solution.Temperature;
+            Assert.That(blanketed, Is.LessThan(bare - 10f), $"The blanketed puddle ended at {blanketed} K, against {bare} K without one.");
+        });
+
+        // The pair deletes only the last test map it made, so the first would outlive the test.
+        await server.WaitPost(() => server.EntMan.DeleteEntity(bareMap.MapUid));
+    }
+
+    /// <summary>
+    ///     One spray of foam vapor, as a firebot's, lays a blanket on every tile it crosses, not only the first.
     /// </summary>
     [Test]
     public async Task TestSprayBlanketsEveryTileItCrosses()
@@ -523,10 +577,9 @@ public sealed class KsFirefightingTest : GameTest
         {
             FloorRow(testMap);
 
-            var extinguisherUid = entityManager.SpawnEntity(ExtinguisherPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
-            entityManager.System<ItemToggleSystem>().TryActivate(extinguisherUid, user: null);
+            var sprayerUid = entityManager.SpawnEntity(_sprayerPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
 
-            var spray = new Entity<SprayComponent>(extinguisherUid, entityManager.GetComponent<SprayComponent>(extinguisherUid));
+            var spray = new Entity<SprayComponent>(sprayerUid, entityManager.GetComponent<SprayComponent>(sprayerUid));
             entityManager.System<SpraySystem>().Spray(spray, new MapCoordinates(new Vector2(RowLength + 0.5f, 0.5f), testMap.MapId));
         });
 
@@ -568,6 +621,8 @@ public sealed class KsFirefightingTest : GameTest
 
             Assert.That(entityManager.GetComponent<GunComponent>(extinguisherUid).SelectedMode, Is.EqualTo(SelectiveFire.FullAuto),
                 "The extinguisher is not full-auto.");
+            Assert.That(entityManager.HasComponent<SprayComponent>(extinguisherUid), Is.False,
+                "The extinguisher still sprays vapor on a click, alongside its shots.");
         });
 
         // A held trigger asks to shoot every tick.

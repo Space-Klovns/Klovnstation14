@@ -33,7 +33,7 @@ public sealed class KsFoamContestTest : GameTest
     heatPower: 12000
     extinguishable: false
     foamSmotherResistance: 6
-    foamHeatFraction: 0.01
+    foamHeatFraction: 0.065
 ";
 
     // Deliberately NOT static: it only exists in the test YAML above, and the YAML linter validates static ids.
@@ -112,11 +112,14 @@ public sealed class KsFoamContestTest : GameTest
 
         var progressSeen = 0f;
         var foamAfterTwoSeconds = 0f;
+        var foamLostAlone = 0f;
         await server.WaitAssertion(() =>
         {
             progressSeen = entityManager.GetComponent<ChemicalFireComponent>(fire.Owner).SmotherProgress;
             Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, testMap.Tile.GridIndices, out var blanket), "The blanket went too soon.");
             foamAfterTwoSeconds = blanket.Comp.Foam;
+            // Left alone, a blanket drains, and boils off over hot air no faster than this.
+            foamLostAlone = 2f * (blanket.Comp.DecayRate + blanket.Comp.BoilRate);
         });
 
         await server.WaitRunTicks(TicksPerSecond * 10);
@@ -126,8 +129,7 @@ public sealed class KsFoamContestTest : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(progressSeen, Is.GreaterThan(0f), "The fire showed no sign of losing to the foam.");
-                // Left alone, a blanket loses 0.01u a second, and boils off no more than 0.03u over hot air.
-                Assert.That(foamAfterTwoSeconds, Is.LessThan(1.5f - 2f * 0.04f), "The fire did not boil the foam away.");
+                Assert.That(foamAfterTwoSeconds, Is.LessThan(1.5f - foamLostAlone), "The fire did not boil the foam away.");
                 Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, testMap.Tile.GridIndices, out _), Is.False,
                     "The fire did not boil the whole blanket away.");
                 Assert.That(entityManager.EntityExists(fire.Owner) && !entityManager.IsQueuedForDeletion(fire.Owner),

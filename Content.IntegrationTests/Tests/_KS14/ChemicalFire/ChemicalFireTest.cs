@@ -3,12 +3,14 @@ using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Tests.Helpers;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Decals;
+using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Decals;
 using Content.Shared._KS14.Sparks;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Decals;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids;
@@ -36,6 +38,17 @@ public sealed class ChemicalFireTest : GameTest
 {
     [TestPrototypes]
     private const string Prototypes = @"
+# Burns as thermite does: a chemfire on its puddle, refreshed by every tile effect update, at the default duration.
+- type: reagent
+  id: KsTestChemicalFireFuel
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  tileEffects:
+  - !type:ChemicalFireTileEffect
+    id: KsTestChemicalFire
+    removed: 0.1
+
 - type: entity
   parent: BaseChemicalFire
   id: KsTestChemicalFire
@@ -130,10 +143,59 @@ public sealed class ChemicalFireTest : GameTest
 
     private static readonly Vector2i FireTile = Vector2i.Zero;
 
+    // Deliberately NOT static: it only exists in the test YAML above, and the YAML linter validates static ids.
+    private readonly ProtoId<ReagentPrototype> _fuelReagent = "KsTestChemicalFireFuel";
+
     /// <summary>One second of simulation, which every duration here is a whole multiple of.</summary>
     private const int TicksPerSecond = 30;
 
     #region Duration
+
+    /// <summary>
+    ///     A puddle's chemfire is the same fire for as long as the puddle keeps it lit: it never runs out between the
+    ///         updates that refresh it, and so never goes out and relights.
+    /// </summary>
+    [Test]
+    public async Task TestPuddleKeepsOneFireLit()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+        var testMap = await Pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        await server.WaitAssertion(() =>
+        {
+            var fuel = new Solution(_fuelReagent.Id, FixedPoint2.New(20));
+            Assert.That(entityManager.System<PuddleSystem>().TrySpillAt(testMap.Tile, fuel, out _, sound: false, tileReact: false));
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        EntityUid fireUid = default;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(chemicalFireSystem.TryGetChemicalFire((gridUid, null), FireTile, FireProto, out var fire), "The puddle did not light.");
+            fireUid = fire.Owner;
+        });
+
+        var changedOnTick = -1;
+        for (var tick = 0; tick < TicksPerSecond * 4 && changedOnTick < 0; tick++)
+        {
+            await server.WaitRunTicks(1);
+
+            var currentTick = tick;
+            await server.WaitPost(() =>
+            {
+                if (!chemicalFireSystem.TryGetChemicalFire((gridUid, null), FireTile, FireProto, out var fire) ||
+                    fire.Owner != fireUid ||
+                    entityManager.IsQueuedForDeletion(fire.Owner))
+                    changedOnTick = currentTick;
+            });
+        }
+
+        Assert.That(changedOnTick, Is.EqualTo(-1), $"The puddle's fire went out, or was replaced, {changedOnTick} ticks in.");
+    }
 
     [Test]
     public async Task TestChemicalFireRespectsItsPrototypeDuration()

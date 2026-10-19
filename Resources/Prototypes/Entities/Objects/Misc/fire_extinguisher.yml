@@ -10,16 +10,17 @@
   - type: SolutionTransfer
     maxTransferAmount: 100
     transferAmount: 100
-  - type: UseDelay
-  - type: Spray
-    transferAmount: 10
-    pushbackAmount: 60
-    spraySound:
-      path: /Audio/Effects/extinguish.ogg
-    sprayedPrototype: ExtinguisherSpray
-    vaporAmount: 3
-    vaporSpread: 90
-    sprayVelocity: 2.0
+  # KS14: removed, the extinguisher fires KsBulletExtinguisherShot through its Gun instead, and a click spraying vapor as well got in its way
+  # - type: UseDelay
+  # - type: Spray
+  #   transferAmount: 10
+  #   pushbackAmount: 60
+  #   spraySound:
+  #     path: /Audio/Effects/extinguish.ogg
+  #   sprayedPrototype: ExtinguisherSpray
+  #   vaporAmount: 3
+  #   vaporSpread: 90
+  #   sprayVelocity: 2.0
   - type: ItemToggle
     soundActivate:
       path: /Audio/Machines/button.ogg
@@ -34,7 +35,7 @@
     verbToggleOn: fire-extinguisher-component-verb-remove
     verbToggleOff: fire-extinguisher-component-verb-engage
   - type: SpraySafety
-  # KS14 start: full-auto in combat mode; a plain click still sprays a burst
+  # KS14 start: full-auto in combat mode
   - type: Gun
     clumsyProof: true
     cameraRecoilScalar: 0
