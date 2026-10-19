@@ -149,9 +149,13 @@ public sealed class KsPuddleSpreadTest : GameTest
         var modifiedTicks = new Dictionary<EntityUid, GameTick>();
         await server.WaitAssertion(() =>
         {
-            var enumerator = entityManager.EntityQueryEnumerator<PuddleComponent>();
-            while (enumerator.MoveNext(out _, out var puddleComponent))
+            // Only this test's: a pooled pair can still hold puddles from an earlier test, on a map it kept.
+            var enumerator = entityManager.EntityQueryEnumerator<PuddleComponent, TransformComponent>();
+            while (enumerator.MoveNext(out _, out var puddleComponent, out var transformComponent))
             {
+                if (transformComponent.GridUid != testMap.Grid.Owner)
+                    continue;
+
                 Assert.That(puddleComponent.Solution, Is.Not.Null);
                 var solutionUid = puddleComponent.Solution.Value.Owner;
                 modifiedTicks[solutionUid] = entityManager.GetComponent<MetaDataComponent>(solutionUid).EntityLastModifiedTick;
@@ -209,7 +213,11 @@ public sealed class KsPuddleSpreadTest : GameTest
             var mapSystem = entityManager.System<SharedMapSystem>();
             var enumerator = entityManager.EntityQueryEnumerator<PuddleComponent, TransformComponent>();
             while (enumerator.MoveNext(out _, out _, out var transformComponent))
-                tiles.Add(mapSystem.CoordinatesToTile(testMap.Grid.Owner, testMap.Grid.Comp, transformComponent.Coordinates));
+            {
+                // Only this test's: a pooled pair can still hold puddles from an earlier test, on a map it kept.
+                if (transformComponent.GridUid == testMap.Grid.Owner)
+                    tiles.Add(mapSystem.CoordinatesToTile(testMap.Grid.Owner, testMap.Grid.Comp, transformComponent.Coordinates));
+            }
         });
 
         return tiles.Count;
