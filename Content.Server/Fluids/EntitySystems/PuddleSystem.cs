@@ -51,7 +51,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PuddleComponent, SpreadNeighborsEvent>(OnPuddleSpread);
+        SubscribeLocalEvent<PuddleComponent, SpreadNeighborsEvent>(KsOnPuddleSpread /* KS14: was OnPuddleSpread, see KsOnPuddleSpread */);
         SubscribeLocalEvent<PuddleComponent, SlipEvent>(OnPuddleSlip);
 
         InitialiseKlovn(); // KS14
@@ -332,7 +332,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         if (!Resolve(uid, ref puddle))
             return false;
 
-        return CurrentVolume(uid, puddle) + solution.Volume > FixedPoint2.Min(KsGetOverflowVolume((uid, puddle)), KsGetOverflowVolume(puddle, solution)) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
+        return CurrentVolume(uid, puddle) + solution.Volume > KsGetMixedOverflowVolume((uid, puddle), solution) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
     }
 
     /// <summary>

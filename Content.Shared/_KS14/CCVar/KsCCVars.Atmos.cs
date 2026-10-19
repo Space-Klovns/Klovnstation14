@@ -42,4 +42,12 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Fun)]
     public static readonly CVarDef<float> AtmosSpacingThrustSmoothing =
         CVarDef.Create("klovn.atmos.spacing_thrust_smoothing", 0.5f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How often, in seconds, something touching a puddle is asked whether it is hot, and so heats the puddle. The
+    ///         heat it puts in scales with the interval, so this sets how smoothly a puddle warms, not how fast.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosHotPuddleCheckInterval =
+        CVarDef.Create("klovn.atmos.hot_puddle_check_interval", 0.08f, CVar.SERVERONLY);
 }

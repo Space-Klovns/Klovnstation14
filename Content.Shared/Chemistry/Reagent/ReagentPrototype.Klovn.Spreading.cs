@@ -5,8 +5,9 @@ namespace Content.Shared.Chemistry.Reagent;
 public sealed partial class ReagentPrototype
 {
     /// <summary>
-    ///     If set, a puddle holding this reagent overflows onto neighbouring tiles above this volume rather than its own
-    ///         <c>PuddleComponent.OverflowVolume</c>, if that is lower. A low value spreads the reagent thin and far.
+    ///     If set and lower than a puddle's own <c>PuddleComponent.OverflowVolume</c>, a puddle of this reagent alone
+    ///         overflows onto neighbouring tiles above this volume instead. A mixture moves towards it by this reagent's
+    ///         share of the puddle. A low value spreads the reagent thin and far.
     /// </summary>
     /// <seealso cref="Content.Shared.Fluids.SharedPuddleSystem.KsGetOverflowVolume"/>
     [DataField("ksSpreadVolume")]

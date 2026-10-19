@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.Fluids.HotPuddle;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Fluids;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -227,7 +229,7 @@ public sealed class KsHotPuddleTest : GameTest
             var touchingComponent = server.EntMan.GetComponent<KsTouchingPuddleComponent>(uid);
             var remaining = touchingComponent.NextCheck - server.Timing.CurTime;
             ticks = Math.Max(1, (int)Math.Ceiling(remaining / server.Timing.TickPeriod) + 1);
-            Assert.That(ticks * server.Timing.TickPeriod, Is.LessThan(KsHotPuddleSystem.CheckInterval * 2),
+            Assert.That(ticks * server.Timing.TickPeriod, Is.LessThan(server.EntMan.System<KsHotPuddleSystem>().CheckInterval * 2),
                 "Running past the next check would run past the one after it as well.");
         });
         await server.WaitRunTicks(ticks);
@@ -684,7 +686,7 @@ public sealed class KsHotPuddleTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var expected = KsHotPuddleSystem.HeatPower * (float)KsHotPuddleSystem.CheckInterval.TotalSeconds / 2f;
+            var expected = KsHotPuddleSystem.HeatPower * (float)server.EntMan.System<KsHotPuddleSystem>().CheckInterval.TotalSeconds / 2f;
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(ThermalEnergy(firstPuddleUid) - energies[0], Is.EqualTo(expected).Within(expected * 0.01f),
@@ -718,6 +720,10 @@ public sealed class KsHotPuddleTest : GameTest
         var server = Pair.Server;
         var entityManager = server.EntMan;
 
+        // Long enough for the item to go in and out several times within one interval: each move takes a few ticks
+        //     of physics, more than the default interval.
+        await OverrideCVar(Side.Server, KsCCVars.AtmosHotPuddleCheckInterval, 1f);
+
         var testMap = await CreateTestMap(breathable: false);
         var gridUid = testMap.Grid.Owner;
         EntityUid puddleUid = default;
@@ -748,10 +754,10 @@ public sealed class KsHotPuddleTest : GameTest
             await server.WaitAssertion(() => Assert.That(Touched(itemUid) ?? [], Is.EquivalentTo(new[] { puddleUid }), "The item did not go back into the puddle."));
         }
 
-        var pulse = KsHotPuddleSystem.HeatPower * (float)KsHotPuddleSystem.CheckInterval.TotalSeconds;
+        var pulse = KsHotPuddleSystem.HeatPower * (float)server.EntMan.System<KsHotPuddleSystem>().CheckInterval.TotalSeconds;
         await server.WaitAssertion(() =>
         {
-            Assert.That(server.Timing.CurTime - startTime, Is.LessThan(KsHotPuddleSystem.CheckInterval),
+            Assert.That(server.Timing.CurTime - startTime, Is.LessThan(server.EntMan.System<KsHotPuddleSystem>().CheckInterval),
                 "The test took a whole interval, so a second check was due anyway.");
             Assert.That(ThermalEnergy(puddleUid) - startEnergy, Is.EqualTo(pulse).Within(pulse * 0.01f),
                 "Coming back into the puddle within an interval heated it again.");

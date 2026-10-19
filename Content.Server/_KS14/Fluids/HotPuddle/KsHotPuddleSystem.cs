@@ -1,8 +1,10 @@
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Fluids;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
 using Content.Shared.Temperature;
+using Robust.Shared.Configuration;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
@@ -22,7 +24,7 @@ namespace Content.Server._KS14.Fluids.HotPuddle;
 ///             rather than setting a temperature, so a big puddle takes longer to heat than a small one.
 ///     </para>
 ///     <para>
-///         The numbers are constants rather than data fields: <see cref="IsHotEvent"/> only says whether something
+///         The power and temperature are constants rather than data fields: <see cref="IsHotEvent"/> only says whether something
 ///             is hot, not how hot, so there is nothing on a source to vary them by, and a field on the puddle would
 ///             mean restating every puddle prototype for the same values.
 ///     </para>
@@ -34,6 +36,7 @@ namespace Content.Server._KS14.Fluids.HotPuddle;
 /// </remarks>
 public sealed partial class KsHotPuddleSystem : EntitySystem
 {
+    [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
@@ -42,9 +45,10 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
     [Dependency] private EntityQuery<KsTouchingPuddleComponent> _touchingQuery = default!;
 
     /// <summary>
-    ///     How often something touching a puddle is asked whether it is hot.
+    ///     How often something touching a puddle is asked whether it is hot: <see cref="KsCCVars.AtmosHotPuddleCheckInterval"/>.
     /// </summary>
-    public static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(0.08d);
+    [ViewVariables]
+    public TimeSpan CheckInterval { get; private set; }
 
     /// <summary>
     ///     The heat, in watts, that a hot thing puts into the puddles it touches, split between them. A puddle's heat
@@ -62,6 +66,14 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
     private readonly List<EntityUid> _staleEntries = [];
     private readonly List<EntityUid> _emptiedTouchers = [];
     private readonly List<EntityUid> _releasedTouchers = [];
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.AtmosHotPuddleCheckInterval,
+            seconds => CheckInterval = TimeSpan.FromSeconds(seconds), invokeImmediately: true);
+    }
 
     #region Contacts
 
