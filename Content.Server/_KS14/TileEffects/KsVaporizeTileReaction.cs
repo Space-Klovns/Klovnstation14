@@ -2,6 +2,7 @@ using Content.Server.Atmos.EntitySystems;
 using Content.Server.Chemistry.TileReactions;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Atmos;
+using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
@@ -15,8 +16,8 @@ namespace Content.Server._KS14.TileEffects;
 ///         <c>ExtinguishTileReaction</c>, it works on any tile, burning or not.
 /// </summary>
 /// <remarks>
-///     Only as much turns to gas as the air can pay for without dropping below the reagent's boiling point; the rest
-///         stays with the spray, for the next tile or a puddle. The gas carries the spray's own temperature, read from
+///     Only as much turns to gas as the air can pay for without dropping below the reagent's boiling point. The rest
+///         stays with the spray, for the next tile, or with <see cref="SpillRemainder"/> lands here as a puddle. The gas carries the spray's own temperature, read from
 ///         <see cref="Shared.Fluids.SharedPuddleSystem.KsTileReactionSourceTemperature"/>. Energy is accounted as
 ///         <see cref="KsTileEffectAtmosSystem.TryChangePhase"/> does it.
 /// </remarks>
@@ -51,6 +52,15 @@ public sealed partial class KsVaporizeTileReaction : ITileReaction
     [DataField]
     public bool Displace;
 
+    /// <summary>
+    ///     Whether what the air cannot turn to gas lands on the tile as a puddle, at the spray's temperature, instead of
+    ///         staying with the spray. For a reagent whose puddle turns to gas by itself as the air warms (a
+    ///         <see cref="Shared._KS14.TileEffects.Effects.BoilTileEffect"/> that sublimates), so that a spray into air
+    ///         already too cold still ends up as gas, later.
+    /// </summary>
+    [DataField]
+    public bool SpillRemainder;
+
     public FixedPoint2 TileReact(TileRef tile,
         ReagentPrototype reagent,
         FixedPoint2 reactVolume,
@@ -80,6 +90,14 @@ public sealed partial class KsVaporizeTileReaction : ITileReaction
             minimumTemperature,
             Displace);
 
-        return FixedPoint2.New(units);
+        var vaporized = FixedPoint2.New(units);
+        if (!SpillRemainder || vaporized >= reactVolume)
+            return vaporized;
+
+        // Not spilled with tile reactions: those are what is running now.
+        var remainder = new Solution(reagent.ID, reactVolume - vaporized, data) { Temperature = sourceTemperature };
+        return entityManager.System<PuddleSystem>().TrySpillAt(tile, remainder, out _, sound: false, tileReact: false)
+            ? reactVolume
+            : vaporized;
     }
 }

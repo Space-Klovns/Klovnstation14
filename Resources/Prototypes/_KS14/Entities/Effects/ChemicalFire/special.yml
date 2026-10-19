@@ -43,3 +43,10 @@
     minimumMoleFraction: 0.15
     producedGasRatios:
       CarbonDioxide: 1
+  - type: AmbientSound
+    volume: -2
+    range: 4.5
+    sound:
+      path: /Audio/Effects/tesla.ogg
+      params:
+        variation: 0.25

@@ -10,7 +10,7 @@
   - type: Sprite
     sprite: _KS14/Objects/Misc/Extinguishers/foam.rsi
     layers:
-    - state: fire_extinguisher_closed
+    - state: closed
       map: [ "enum.ToggleableVisuals.Layer" ]
   - type: Solution
     solution:

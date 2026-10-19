@@ -45,6 +45,7 @@ namespace Content.Server.Chemistry.EntitySystems
             // Check for collision with a impassable object (e.g. wall) and stop
             if ((args.OtherFixture.CollisionLayer & (int)CollisionGroup.Impassable) != 0 && args.OtherFixture.Hard)
             {
+                KsReactRemainder(entity); // KS14: what it still carries lands where it stops, rather than vanishing
                 QueueDel(entity);
             }
         }

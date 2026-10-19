@@ -8,7 +8,7 @@
   },
   "states": [
     {
-      "name": "safe"
+      "name": "closed"
     },
     {
       "name": "open"

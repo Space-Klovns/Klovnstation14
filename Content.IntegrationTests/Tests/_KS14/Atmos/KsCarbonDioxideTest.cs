@@ -44,6 +44,12 @@ public sealed class KsCarbonDioxideTest : GameTest
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private static readonly EntProtoId ExtinguisherPrototype = "KsFireExtinguisherCarbonDioxide";
     private static readonly EntProtoId WallPrototype = "WallSolid";
+    private static readonly EntProtoId ShotPrototype = "KsBulletExtinguisherShot";
+
+    /// <summary>
+    ///     Moles of gas a unit of carbon dioxide becomes, as its reagent sets it.
+    /// </summary>
+    private const float MolesPerUnit = 4f;
 
     private const float SprayTemperature = 194f;
     /// <summary>
@@ -129,6 +135,34 @@ public sealed class KsCarbonDioxideTest : GameTest
         => Pair.Server.EntMan.System<SharedMapSystem>().GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, Centre);
 
     /// <summary>
+    ///     A copy of the reaction that keeps what the air cannot turn to gas, rather than spilling it: for checking the
+    ///         gas alone, since a puddle of carbon dioxide starts turning to gas as soon as it lands.
+    ///         <see cref="SprayIntoColdAirIsNotLost"/> covers the spill.
+    /// </summary>
+    private static KsVaporizeTileReaction WithoutSpilling(KsVaporizeTileReaction reaction)
+        => new()
+        {
+            Gas = reaction.Gas,
+            EnergyPerUnit = reaction.EnergyPerUnit,
+            MolesPerUnit = reaction.MolesPerUnit,
+            Displace = reaction.Displace,
+            SpillRemainder = false,
+        };
+
+    /// <summary>
+    ///     Units of carbon dioxide in the puddle on the centre tile, if there is one: what a spray could not turn to gas.
+    /// </summary>
+    private float PuddleCarbonDioxide(TestMapData testMap)
+    {
+        var entityManager = Pair.Server.EntMan;
+        if (!entityManager.System<PuddleSystem>().TryGetCachedPuddle(CentreTileRef(testMap), out Entity<PuddleComponent> puddle) ||
+            !entityManager.System<SharedSolutionContainerSystem>().ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution))
+            return 0f;
+
+        return (float)solution.GetTotalPrototypeQuantity(CarbonDioxideReagent);
+    }
+
+    /// <summary>
     ///     Carbon dioxide's specific heat is what its gas holds per unit, so the gas comes out at the reagent's
     ///         temperature rather than far colder or hotter.
     /// </summary>
@@ -168,7 +202,7 @@ public sealed class KsCarbonDioxideTest : GameTest
             var entityManager = Pair.Server.EntMan;
             var atmosphereSystem = entityManager.System<AtmosphereSystem>();
             var reagent = SProtoMan.Index(CarbonDioxideReagent);
-            var reaction = reagent.TileReactions.OfType<KsVaporizeTileReaction>().Single();
+            var reaction = WithoutSpilling(reagent.TileReactions.OfType<KsVaporizeTileReaction>().Single());
 
             TileMixture(testMap, Centre).Temperature = 600f;
             var mixtures = RoomMixtures(testMap);
@@ -206,7 +240,7 @@ public sealed class KsCarbonDioxideTest : GameTest
         {
             var entityManager = Pair.Server.EntMan;
             var reagent = SProtoMan.Index(CarbonDioxideReagent);
-            var reaction = reagent.TileReactions.OfType<KsVaporizeTileReaction>().Single();
+            var reaction = WithoutSpilling(reagent.TileReactions.OfType<KsVaporizeTileReaction>().Single());
 
             var mixtures = RoomMixtures(testMap);
             var centre = mixtures[0];
@@ -331,6 +365,45 @@ public sealed class KsCarbonDioxideTest : GameTest
             }
 
             entityManager.DeleteEntity(extinguisherUid);
+        });
+    }
+
+    /// <summary>
+    ///     A shot sprayed into air already too cold to turn it to gas, which hits nothing, is not lost: what the air
+    ///         cannot take lands as a cold puddle, and what the shot still carries when it runs out lands as well. All
+    ///         of it is on the tile in the end, as puddle or gas.
+    /// </summary>
+    [Test]
+    public async Task SprayIntoColdAirIsNotLost()
+    {
+        var testMap = await CreateRoom();
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        const float sprayed = 1.5f;
+
+        await server.WaitPost(() =>
+        {
+            // Barely above where it sublimes, so the air can turn next to none of it to gas.
+            foreach (var tile in RoomTiles())
+                TileMixture(testMap, tile).Temperature = SublimationPoint() + 0.2f;
+
+            var shotUid = entityManager.SpawnEntity(ShotPrototype, new EntityCoordinates(testMap.Grid.Owner, 0.5f, 0.5f));
+            var solutionComponent = entityManager.GetComponent<SolutionComponent>(shotUid);
+            Assert.That(entityManager.System<SharedSolutionContainerSystem>().TryAddSolution((shotUid, solutionComponent),
+                new Solution(CarbonDioxideReagent.Id, FixedPoint2.New(sprayed)) { Temperature = SprayTemperature }));
+        });
+
+        // Past the shot's lifetime.
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            var puddleUnits = PuddleCarbonDioxide(testMap);
+
+            var gasUnits = RoomTiles().Sum(tile => TileMixture(testMap, tile).GetMoles(Gas.CarbonDioxide)) / MolesPerUnit;
+
+            Assert.That(puddleUnits + gasUnits, Is.EqualTo(sprayed).Within(0.05f),
+                $"Of {sprayed}u sprayed, {puddleUnits}u is in a puddle and {gasUnits}u is gas; the rest was lost.");
         });
     }
 }

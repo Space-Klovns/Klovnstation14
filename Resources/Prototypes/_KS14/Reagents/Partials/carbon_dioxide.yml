@@ -13,11 +13,13 @@
   tileReactions:
   # Into a puddle it lands on first, which it then boils out of, cooling it.
   - !type:SpillIfPuddlePresentTileReaction { }
-  # Otherwise straight to gas, cooling the air.
+  # Otherwise straight to gas, cooling the air. Whatever air already too cold cannot turn to gas lands as a cold
+  #     puddle, which sublimes as the air warms (the BoilTileEffect below).
   - !type:KsVaporizeTileReaction
     energyPerUnit: 30000
     molesPerUnit: 4
     displace: true
+    spillRemainder: true
   tileEffects:
   - !type:BoilTileEffect
     gas: CarbonDioxide

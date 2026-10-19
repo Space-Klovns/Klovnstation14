@@ -73,7 +73,7 @@
       enum.ToggleableVisuals.Enabled:
         enum.ToggleableVisuals.Layer: # KS14: use KS sprite states
           True: { state: open }
-          False: { state: safe }
+          False: { state: closed }
 
 - type: entity
   parent: [SolutionFireExtinguisher, BaseFireExtinguisher]
@@ -84,7 +84,7 @@
   - type: Sprite
     sprite: _KS14/Objects/Misc/Extinguishers/fire.rsi # KS14: use KS sprites
     layers:
-    - state: safe # KS14: use KS sprites
+    - state: closed # KS14: use KS sprites
       map: [ "enum.ToggleableVisuals.Layer" ]
   - type: Item
     sprite: Objects/Misc/fire_extinguisher.rsi # KS14 TODO: use /tg/ inhands instead
@@ -165,7 +165,7 @@
   - type: Sprite
     sprite: _KS14/Objects/Misc/Extinguishers/mini.rsi # KS14: use KS sprites
     layers:
-        - state: fire_extinguisher_closed
+        - state: closed # KS14: use KS sprites
           map: [ "enabled" ]
   - type: Item
     sprite: Objects/Misc/fire_extinguisher_mini.rsi # KS14 TODO: use /tg/ inhands instead
