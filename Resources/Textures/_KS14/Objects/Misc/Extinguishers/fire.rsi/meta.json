@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/blob/a7376598997732f18ab472d3585a74b79d1e5d43/icons/obj/tools.dmi",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "safe"
+    },
+    {
+      "name": "open"
+    }
+  ]
+}

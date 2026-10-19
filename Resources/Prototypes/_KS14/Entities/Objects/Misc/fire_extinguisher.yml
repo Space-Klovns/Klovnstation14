@@ -8,8 +8,7 @@
   description: It extinguishes fires by smothering and freezing them, electrical ones included. Don't spray it at anyone you like.
   components:
   - type: Sprite
-    sprite: Objects/Misc/fire_extinguisher.rsi
-    color: "#3a3a3a"
+    sprite: _KS14/Objects/Misc/Extinguishers/foam.rsi
     layers:
     - state: fire_extinguisher_closed
       map: [ "enum.ToggleableVisuals.Layer" ]
@@ -20,3 +19,10 @@
       reagents:
       - ReagentId: CarbonDioxide
         Quantity: 110
+  - type: Gun
+    soundGunshot:
+      path: /Audio/Effects/extinguish.ogg
+      params:
+        volume: -3
+        pitch: 1.8
+        variation: 0.1

@@ -71,9 +71,9 @@
   - type: GenericVisualizer
     visuals:
       enum.ToggleableVisuals.Enabled:
-        enum.ToggleableVisuals.Layer:
-          True: { state: fire_extinguisher_open }
-          False: { state: fire_extinguisher_closed }
+        enum.ToggleableVisuals.Layer: # KS14: use KS sprite states
+          True: { state: open }
+          False: { state: safe }
 
 - type: entity
   parent: [SolutionFireExtinguisher, BaseFireExtinguisher]
@@ -82,12 +82,12 @@
   description: It extinguishes fires.
   components:
   - type: Sprite
-    sprite: Objects/Misc/fire_extinguisher.rsi
+    sprite: _KS14/Objects/Misc/Extinguishers/fire.rsi # KS14: use KS sprites
     layers:
-    - state: fire_extinguisher_closed
+    - state: safe # KS14: use KS sprites
       map: [ "enum.ToggleableVisuals.Layer" ]
   - type: Item
-    sprite: Objects/Misc/fire_extinguisher.rsi
+    sprite: Objects/Misc/fire_extinguisher.rsi # KS14 TODO: use /tg/ inhands instead
     size: Normal
   - type: MeleeWeapon
     wideAnimationRotation: 180
@@ -163,12 +163,12 @@
   description: A light and compact fibreglass-framed model fire extinguisher. It holds less water than its bigger brother.
   components:
   - type: Sprite
-    sprite: Objects/Misc/fire_extinguisher_mini.rsi
+    sprite: _KS14/Objects/Misc/Extinguishers/mini.rsi # KS14: use KS sprites
     layers:
         - state: fire_extinguisher_closed
           map: [ "enabled" ]
   - type: Item
-    sprite: Objects/Misc/fire_extinguisher_mini.rsi
+    sprite: Objects/Misc/fire_extinguisher_mini.rsi # KS14 TODO: use /tg/ inhands instead
     size: Small
   - type: MeleeWeapon
     wideAnimationRotation: 180
