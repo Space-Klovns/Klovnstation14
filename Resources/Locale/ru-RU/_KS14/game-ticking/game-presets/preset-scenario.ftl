@@ -2,6 +2,13 @@
 
 scenario-description = Сразитесь в стиле Battlefield 14 в одном из множества готовых сценариев!
 scenario-lastmanstanding = Вы — последний выживший!
+scenario-roundend-skirmish = Между { $factions } произошла стычка.
+scenario-roundend-skirmish-and = { $others } и { $last }
+scenario-roundend-skirmish-unknown = Произошла стычка.
+scenario-faction-nt = «Нанотрасеном»
+scenario-faction-syndie = «Синдикатом»
+scenario-faction-scav = мародёрами
+scenario-faction-redacted = ████████
 # NT
 scenario-roundend-victory-nt = «Нанотрасен» — победитель.
 scenario-roundend-victory-nt-decimation = «Нанотразен» уничтожил угрозу со стороны повстанческого Синдиката!

@@ -48,8 +48,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         ref RoundEndTextAppendEvent args)
     {
         base.AppendRoundEndText(uid, component, gameRule, ref args);
-        //TODO SOOT: unfuck this and make this actually good
-        args.AddLine("A skirmish between NT and Syndicate forces has transpired.");
+        args.AddLine(GetSkirmishLine());
 
         if (component.WinningFactionId is { } winningFactionId &&
             ProtoMan.TryIndex(winningFactionId, out var winningFaction))
@@ -59,6 +58,46 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             if (winningFaction.WinTypeLocIds.TryGetValue(component.WinType, out var winLoc))
                 args.AddLine(Loc.GetString(winLoc));
         }
+    }
+
+    /// <summary>
+    ///     Builds the opening round-end line from the factions that actually took part:
+    ///         those with a (possibly already captured) objective, and those with members.
+    /// </summary>
+    private string GetSkirmishLine()
+    {
+        var factionIds = new List<ProtoId<ScenarioFactionPrototype>>();
+
+        foreach (var factionId in _activeObjectiveUids.Keys)
+        {
+            if (!factionIds.Contains(factionId))
+                factionIds.Add(factionId);
+        }
+
+        var memberQuery = AllEntityQuery<ScenarioFactionMemberComponent>();
+        while (memberQuery.MoveNext(out _, out var memberComponent))
+        {
+            if (!factionIds.Contains(memberComponent.Id))
+                factionIds.Add(memberComponent.Id);
+        }
+
+        var names = new List<string>();
+        foreach (var factionId in factionIds)
+        {
+            if (ProtoMan.TryIndex(factionId, out var faction))
+                names.Add(Loc.GetString(faction.NameLocId));
+        }
+
+        if (names.Count == 0)
+            return Loc.GetString("scenario-roundend-skirmish-unknown");
+
+        var joinedNames = names.Count == 1
+            ? names[0]
+            : Loc.GetString("scenario-roundend-skirmish-and",
+                ("others", string.Join(", ", names.Take(names.Count - 1))),
+                ("last", names[^1]));
+
+        return Loc.GetString("scenario-roundend-skirmish", ("factions", joinedNames));
     }
 
     protected override void Added(EntityUid uid, ScenarioRuleComponent component, GameRuleComponent gameRule, GameRuleAddedEvent args)
@@ -114,6 +153,18 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         ent.Comp.WinningFactionId = factionId;
     }
 
+    private bool HasWinner()
+    {
+        var query = QueryActiveRules();
+        while (query.MoveNext(out _, out _, out var scenario, out _))
+        {
+            if (scenario.WinningFactionId is { })
+                return true;
+        }
+
+        return false;
+    }
+
     private bool IsRuleActive()
         => EntityQuery<ScenarioRuleComponent>().Any();
 
@@ -138,7 +189,12 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             winningFactionId = factionId;
         }
 
-        SetWinFaction(winningFactionId);
+        // The winner was already decided when the objective was captured (or defended); only fall back to the
+        //      lone remaining faction if nothing decided it, and never overwrite a decided winner with null.
+        if (winningFactionId is { } &&
+            !HasWinner())
+            SetWinFaction(winningFactionId);
+
         SetWinType(ScenarioWinType.Objective);
 
         _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
@@ -196,7 +252,12 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         if (_activeObjectiveUids.TryGetValue(entity.Comp.FactionId, out var factionActiveObjectiveUids))
             factionActiveObjectiveUids.Remove(entity);
 
-        SetWinFaction(entity.Comp.FactionId);
+        // An objective going away with its map or entity (round cleanup, deletion) is not a capture, and
+        //      must neither decide a winner nor end the round. Captures and defences remove the component alone.
+        if (TerminatingOrDeleted(entity))
+            return;
+
+        // The winner is decided by CaptureObjective: the owner of a removed objective is the one that lost it.
         CheckRoundShouldEndViaObjective();
     }
 
@@ -207,24 +268,61 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             !entity.Comp.KeysIn.Contains(key))
             return;
 
-        CaptureObjective(entity);
+        CaptureObjective(entity, args.User);
     }
 
     [SubscribeLocalEvent]
     private void OnObjDefended(Entity<ScenarioObjectiveComponent> entity, ref TimedDespawnEvent args)
     {
-        CaptureObjective(entity);
+        // Nobody took it before the timer ran out, so the owner held it.
+        SetWinFaction(entity.Comp.FactionId);
+        RemComp(entity, entity.Comp);
     }
 
     [SubscribeLocalEvent]
     private void OnObjDestroyed(Entity<ScenarioObjectiveComponent> entity, ref DestructionEventArgs args)
     {
-        CaptureObjective(entity);
+        CaptureObjective(entity, capturerUid: null);
     }
 
-    private void CaptureObjective(Entity<ScenarioObjectiveComponent> entity)
+    /// <summary>
+    ///     The faction that took an objective is the winner, which is never the objective's owner.
+    /// </summary>
+    private void CaptureObjective(Entity<ScenarioObjectiveComponent> entity, EntityUid? capturerUid)
     {
-        SetWinFaction(entity.Comp.FactionId);
+        // Never write a null winner here: an unresolved capturer must not wipe a winner that is already decided.
+        if (ResolveCapturingFaction(entity.Comp.FactionId, capturerUid) is { } capturingFactionId)
+            SetWinFaction(capturingFactionId);
+
         RemComp(entity, entity.Comp);
+    }
+
+    /// <summary>
+    ///     The capturer's own faction when known; otherwise the single living faction other than the owner.
+    ///         Null when that is ambiguous, so that the survivor logic can decide.
+    /// </summary>
+    private ProtoId<ScenarioFactionPrototype>? ResolveCapturingFaction(ProtoId<ScenarioFactionPrototype> ownerId, EntityUid? capturerUid)
+    {
+        if (capturerUid is { } userUid &&
+            TryComp<ScenarioFactionMemberComponent>(userUid, out var userMember) &&
+            userMember.Id != ownerId)
+            return userMember.Id;
+
+        ProtoId<ScenarioFactionPrototype>? otherId = null;
+        var query = EntityQueryEnumerator<ScenarioFactionMemberComponent, MobStateComponent>();
+        while (query.MoveNext(out _, out var memberComponent, out var mobStateComponent))
+        {
+            if (mobStateComponent.CurrentState == MobState.Dead ||
+                memberComponent.Id == ownerId)
+                continue;
+
+            if (otherId is { } &&
+                otherId != memberComponent.Id)
+                return null;
+
+            otherId = memberComponent.Id;
+        }
+
+        return otherId;
     }
 }

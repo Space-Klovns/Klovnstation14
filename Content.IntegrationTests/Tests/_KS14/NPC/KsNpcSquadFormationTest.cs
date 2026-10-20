@@ -571,6 +571,11 @@ public sealed class KsNpcSquadFormationTest : GameTest
             gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, min, max).Owner;
         });
 
+        // Joining a squad needs a walk to it, which needs the navmesh. A squad update before it exists has every NPC
+        //      found its own squad, and those only merge pairwise over later updates, so how many squads a test ends up
+        //      with would depend on where the free-running squad timer happened to fall.
+        await WaitForNavmesh(Pair, gridUid, min, max);
+
         return (entManager, gridUid);
     }
 

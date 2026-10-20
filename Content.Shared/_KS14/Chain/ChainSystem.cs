@@ -52,7 +52,7 @@ public sealed partial class ChainSystem : EntitySystem
     /// <returns>True if this entity is linked to anything.</returns>
     public bool HasAdjacentLink(Entity<ChainLinkComponent?> linkEntity)
     {
-        if (!_linkQuery.Resolve(linkEntity, ref linkEntity.Comp))
+        if (!_linkQuery.Resolve(linkEntity, ref linkEntity.Comp, logMissing: false))
             return false;
 
         return linkEntity.Comp.PreviousLinkUid is { } || linkEntity.Comp.NextLinkUid is { };
@@ -61,7 +61,7 @@ public sealed partial class ChainSystem : EntitySystem
     /// <returns>True if the chain was segmented.</returns>
     public bool TryBreakChainFrom(Entity<ChainLinkComponent?> linkEntity, bool removeJoints = true)
     {
-        if (!_linkQuery.Resolve(linkEntity, ref linkEntity.Comp))
+        if (!_linkQuery.Resolve(linkEntity, ref linkEntity.Comp, logMissing: false))
             return false;
 
         BreakChainFrom(linkEntity!, removeJoints: removeJoints);
@@ -92,8 +92,9 @@ public sealed partial class ChainSystem : EntitySystem
     {
         foreach (var linkUid in entity.Comp.LinkUids)
         {
-            var linkComponent = _linkQuery.GetComponent(linkUid);
-            linkComponent.EdgeUids.Remove(entity.Owner);
+            // The link may already be gone, when a whole chain is deleted at once (a map being deleted)
+            if (_linkQuery.TryGetComponent(linkUid, out var linkComponent))
+                linkComponent.EdgeUids.Remove(entity.Owner);
         }
 
         if (!Terminating(entity.Owner))
@@ -102,9 +103,9 @@ public sealed partial class ChainSystem : EntitySystem
         // Now handle edges
 
         var broken = entity.Comp.Broken;
-        if (entity.Comp.OtherEdgeUid != EntityUid.Invalid)
+        if (entity.Comp.OtherEdgeUid != EntityUid.Invalid &&
+            _edgeQuery.TryGetComponent(entity.Comp.OtherEdgeUid, out var otherEdgeComponent))
         {
-            var otherEdgeComponent = _edgeQuery.GetComponent(entity.Comp.OtherEdgeUid);
             otherEdgeComponent.OtherEdgeUid = EntityUid.Invalid;
 
             if (!broken)
@@ -155,10 +156,16 @@ public sealed partial class ChainSystem : EntitySystem
                 BreakChainBackwards(ourEntity.Owner, ref segmentedEv, removeJoints: false);
                 BreakChainForwards(args.OtherEntity, ref segmentedEv, removeJoints: false);
             }
-            else // We are the backwards link
+            else if (otherComponent.PreviousLinkUid == ourEntity.Owner) // We are the backwards link
             {
                 BreakChainBackwards(args.OtherEntity, ref segmentedEv, removeJoints: false);
                 BreakChainForwards(ourEntity.Owner, ref segmentedEv, removeJoints: false);
+            }
+            else
+            {
+                // Already disconnected (both ends of a joint get this event, the first one handled it).
+                //      Going on would sever links that are still connected to other neighbours.
+                return;
             }
 
             // Update chain edges
@@ -387,6 +394,10 @@ public sealed partial class ChainSystem : EntitySystem
 
         startEdgeComponent.OtherEdgeUid = endUid;
         endEdgeComponent.OtherEdgeUid = startUid;
+
+        // Every link answers to both edges, or breaking the chain would only ever break the start edge
+        foreach (var linkUid in entities)
+            _linkQuery.GetComponent(linkUid).EdgeUids.Add(endUid);
 
         return entities;
     }
