@@ -163,7 +163,7 @@
   desc: reagent-desc-carbon-dioxide
   physicalDesc: reagent-physical-desc-odorless
   flavor: bitter
-  color: "#e8eef0" # KS14: #66ff33 -> #e8eef0, colorless gas (the old value was tritium's green)
+  color: "#e8eef060" # KS14: #66ff33 -> #e8eef0, colorless gas (the old value was tritium's green)
   metabolisms:
     Bloodstream:
       effects:
