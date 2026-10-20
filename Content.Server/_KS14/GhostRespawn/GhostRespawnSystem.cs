@@ -84,10 +84,22 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
             ref var respawnTime = ref CollectionsMarshal.GetValueRefOrNullRef(_respawnTimes, session);
             respawnTime += delta;
 
-            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
+            SendRespawnTime(session, respawnTime);
         }
 
         _respawnCooldown = newTime;
+    }
+
+    /// <summary>
+    ///     Sends the session its respawn time, unless it is disconnected: there is no channel to send on, and the
+    ///         stored time is resent when the session reaches <see cref="SessionStatus.InGame"/> again.
+    /// </summary>
+    private void SendRespawnTime(ICommonSession session, TimeSpan? time)
+    {
+        if (session.Status == SessionStatus.Disconnected)
+            return;
+
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(time), session);
     }
 
     [SubscribeLocalEvent]
@@ -119,7 +131,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         var respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(args.Player);
         _respawnTimes[args.Player] = respawnTime;
 
-        RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), args.Player);
+        SendRespawnTime(args.Player, respawnTime);
     }
 
     [SubscribeLocalEvent]
@@ -136,7 +148,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
                 return;
 
             respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(attachedSession);
-            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), attachedSession);
+            SendRespawnTime(attachedSession, respawnTime);
 
             if (!TerminatingOrDeleted(args.Target))
                 _trackedDeathEntities[args.Target] = attachedSession;
@@ -149,7 +161,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
             return;
 
         _respawnTimes.Remove(session);
-        RaiseNetworkEvent(new GhostRespawnTimeMessage(null), session);
+        SendRespawnTime(session, null);
 
         if (!TerminatingOrDeleted(args.Target))
             _trackedDeathEntities.Remove(args.Target);
@@ -169,7 +181,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
             !_respawnTimes.TryGetValue(args.Session, out var time))
             return;
 
-        RaiseNetworkEvent(new GhostRespawnTimeMessage(time), args.Session);
+        SendRespawnTime(args.Session, time);
     }
 
     [SubscribeNetworkEvent]

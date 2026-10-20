@@ -255,6 +255,15 @@ public abstract partial class BaseHierarchySystem<THierarchyComp, TElementComp> 
     /// </summary>
     protected virtual void UpdateElementEntityHierarchy(Entity<TElementComp> entity) { }
 
+    /// <summary>
+    ///     Puts a newly added element into <see cref="THierarchyComp.RecursiveChildUids"/>. Appends by default; override
+    ///         to keep the list in some order. The only way an element goes in: removals keep the order there is.
+    /// </summary>
+    protected virtual void InsertRecursiveChild(Entity<THierarchyComp> hierarchyEntity, EntityUid addedUid)
+    {
+        hierarchyEntity.Comp.RecursiveChildUids.Add(addedUid);
+    }
+
     [MustCallBase(true)]
     protected virtual void AddElementToHierarchy(Entity<THierarchyComp> hierarchyEntity, Entity<TElementComp> addedEntity)
     {
@@ -265,7 +274,7 @@ public abstract partial class BaseHierarchySystem<THierarchyComp, TElementComp> 
             return;
         }
 
-        hierarchyEntity.Comp.RecursiveChildUids.Add(addedEntity);
+        InsertRecursiveChild(hierarchyEntity, addedEntity);
 
         var addedEv = new HierarchyElementAddedEvent<TElementComp>(addedEntity);
         RaiseLocalEvent(hierarchyEntity, ref addedEv);

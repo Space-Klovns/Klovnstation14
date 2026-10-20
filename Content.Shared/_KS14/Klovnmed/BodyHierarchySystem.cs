@@ -61,6 +61,32 @@ public sealed partial class BodyHierarchySystem : BaseHierarchySystem<BodyCompon
         args.Cancel();
     }
 
+    /// <summary>
+    ///     Keeps <see cref="BodyComponent.RecursiveChildUids"/> sorted by net id. It is not networked: the client rebuilds
+    ///         it from container events, in whatever order its entity states are applied, so appending would leave the
+    ///         two sides with different orders. Anything that picks from the list by index in predicted code, such as
+    ///         which part a dismemberment takes, needs both to agree, and net ids are the one order they share.
+    /// </summary>
+    protected override void InsertRecursiveChild(Entity<BodyComponent> hierarchyEntity, EntityUid addedUid)
+    {
+        var childUids = hierarchyEntity.Comp.RecursiveChildUids;
+        var addedId = GetNetEntity(addedUid).Id;
+
+        // Binary search for the first child with a larger net id.
+        var low = 0;
+        var high = childUids.Count;
+        while (low < high)
+        {
+            var middle = (low + high) / 2;
+            if (GetNetEntity(childUids[middle]).Id < addedId)
+                low = middle + 1;
+            else
+                high = middle;
+        }
+
+        childUids.Insert(low, addedUid);
+    }
+
     protected override void AddElementToHierarchy(Entity<BodyComponent> hierarchyEntity, Entity<OrganComponent> addedEntity)
     {
         base.AddElementToHierarchy(hierarchyEntity, addedEntity);

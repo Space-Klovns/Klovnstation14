@@ -226,7 +226,13 @@ public abstract partial class SharedPortalSystem : EntitySystem
     {
         if (HasComp<BodyComponent>(hitUid))
         {
-            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), hitUid, type: PopupType.LargeCaution);
+            // KS14 start: server only. Gibbing is server-only, so a predicting client keeps the victim alive and can
+            //      frag it again before learning it is gone, which stacked the popup as "x2, x3, ...".
+            if (_netMan.IsServer)
+            {
+                _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), Transform(hitUid).Coordinates /* KS14: PopupEntity -> PopupCoordinates, the victim is gone before clients handle an entity popup */, type: PopupType.LargeCaution);
+            }
+            // KS14 end
             _gibbingSystem.Gib(hitUid, dropGiblets: true);
             return false;
         }

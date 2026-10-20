@@ -606,7 +606,7 @@ dotnet format analyzers Content.Shared/Content.Shared.csproj --diagnostics RA005
 ```
 `RA0056` is the error you get when the containing class isn't `partial`, and `RA0054` when the handler's signature doesn't match a subscribable delegate.
 
-The generator only runs in projects that import it. `Content.Client`, `Content.Server` and `Content.Shared` each carry `<Import Project="..\RobustToolbox\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />` for exactly this reason — without it the attribute still compiles, nothing is generated, and **every converted subscription silently stops firing** with no build error to point at it. Any other project that wants attribute subscriptions needs the same import.
+The generator only runs in projects that import it. `Content.Client`, `Content.Server`, `Content.Shared` and `Content.IntegrationTests` each carry `<Import Project="..\RobustToolbox\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />` for exactly this reason — without it the attribute still compiles, nothing is generated, and **every converted subscription silently stops firing** with no build error to point at it. Any other project that wants attribute subscriptions needs the same import, and `Robust.Shared.Analyzers` imported globally as well (`<Using Include="Robust.Shared.Analyzers" />`, or a `GlobalUsings.cs`): the attributes live there, and the code the generator emits uses `[MustCallBase]` unqualified, so without it that generated file fails to build.
 
 **Popups predict themselves (C#)** — in shared code, call `PopupEntity`, `PopupCoordinates` or `PopupCursor` directly. The predicting client shows the popup the moment it runs, and the server's copy is matched against it rather than shown a second time; everyone else gets the server's. There is no separate "predicted" call to reach for — `PopupPredicted`, `PopupPredictedCursor`, `PopupPredictedCoordinates` and `PopupClient` are `[Obsolete]` wrappers kept for old callers.
 
@@ -843,6 +843,34 @@ Two more are made by the compiler, so the source never names what it refuses. Bo
 - **A non-empty collection expression that targets `List<T>`** (`Method([item])`, where the parameter is a
   `List<T>`) compiles to `CollectionsMarshal.SetCount`, which is not whitelisted. Use `new List<T> { item }`.
   Empty ones (`= []`) and ones that target arrays are fine.
+
+### Client-sent floats: the server flushes NaN, but not everywhere, and never Infinity
+
+`Content.Server/Entry/EntryPoint.cs` sets `IRobustSerializer.FloatFlags = SerializerFloatFlags.RemoveReadNan`.
+From then on the server reads every `float`, `double` and `Half` **field** of an incoming network message (BUI
+messages, network events, anything through `NetSerializer`) with NaN replaced by `0`
+(`RobustToolbox/Robust.Shared/Serialization/SafePrimitives.cs`). So a handler for
+`SetTemperatureMessage(float Temperature)` never sees NaN, and a NaN guard there is dead code. A test that sends NaN
+through the real path proves nothing either: the value arrives as `0`.
+
+What it does **not** cover:
+
+| Not covered | Why | What to do |
+| --- | --- | --- |
+| `±Infinity`, and huge finite values | Only NaN is flushed. | `Math.Clamp` handles both. Clamp a *delta* too (`ControlRodInsertion + args.Change`), or one message jumps the whole range. |
+| `Vector2`/`3`/`4`, `Quaternion`, `Matrix3x2`, `Matrix4x4` | `NetMathSerializer.ReadFloatObject` reads them raw, before the NaN flush. | NaN arrives intact. |
+| ...so `EntityCoordinates`, `MapCoordinates`, `NetCoordinates` | Their position is a `Vector2`. | `SharedTransformSystem.IsValid(coordinates)` rejects non-finite positions. |
+| Fields typed `UnsafeFloat`/`UnsafeHalf`/`UnsafeDouble` | Opt out by design. | Validate them yourself. |
+| NaN made on the server | `0 / 0` from a zero-length direction, for example. | Guard the arithmetic (a throw at your own position has no direction). |
+| Integer conversions | `(int)1e30` and `(int)double.PositiveInfinity` are out of range for any array. | Bounds-check the floating value before casting it to an index. |
+| The client side | The flag is only set on the server. | A server-sent NaN reaches the client unchanged. |
+
+`Vector2d` is two `double` fields and is serialized field by field, so it *is* flushed.
+
+None of this checks *meaning*. A finite value can still be out of range, an index can be past the end of a list,
+and a list the client sends can omit what it should count. The server derives those from its own state. The same
+applies to amounts, cooldowns and limits: enforce them where the server reads the message, never only in the UI that
+sends it.
 
 ### Only one system may subscribe to a given component and event pair
 
