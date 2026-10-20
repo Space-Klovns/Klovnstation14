@@ -11,7 +11,7 @@ namespace Content.IntegrationTests.Tests._KS14.Chain;
 ///     Records the chain events and the triggers that reach a wire end, so tests can count them.
 ///         The test assembly's systems are registered on both sides; only the server half is used.
 /// </summary>
-public sealed class KsChainProbeSystem : EntitySystem
+public sealed partial class KsChainProbeSystem : EntitySystem
 {
     /// <summary>
     ///     Every <see cref="ChainSegmentedEvent"/>, as (link it was raised on, link that broke).
@@ -28,14 +28,6 @@ public sealed class KsChainProbeSystem : EntitySystem
     /// </summary>
     public readonly List<(EntityUid End, string? Key)> EndTriggers = new();
 
-    public override void Initialize()
-    {
-        // The generator is not imported into the test project, so these are subscribed by hand.
-        SubscribeLocalEvent<ChainLinkComponent, ChainSegmentedEvent>(OnSegmented);
-        SubscribeLocalEvent<ChainEdgeComponent, ChainInitiallyBrokenEvent>(OnInitiallyBroken);
-        SubscribeLocalEvent<LinkedChainEndComponent, TriggerEvent>(OnEndTriggered);
-    }
-
     public void Clear()
     {
         Segmented.Clear();
@@ -43,18 +35,21 @@ public sealed class KsChainProbeSystem : EntitySystem
         EndTriggers.Clear();
     }
 
-    private void OnSegmented(EntityUid uid, ChainLinkComponent component, ref ChainSegmentedEvent args)
+    [SubscribeLocalEvent]
+    private void OnSegmented(Entity<ChainLinkComponent> entity, ref ChainSegmentedEvent args)
     {
-        Segmented.Add((uid, args.BrokenEntity.Owner));
+        Segmented.Add((entity.Owner, args.BrokenEntity.Owner));
     }
 
-    private void OnInitiallyBroken(EntityUid uid, ChainEdgeComponent component, ref ChainInitiallyBrokenEvent args)
+    [SubscribeLocalEvent]
+    private void OnInitiallyBroken(Entity<ChainEdgeComponent> entity, ref ChainInitiallyBrokenEvent args)
     {
-        InitiallyBroken.Add((uid, args.BrokenUid));
+        InitiallyBroken.Add((entity.Owner, args.BrokenUid));
     }
 
-    private void OnEndTriggered(EntityUid uid, LinkedChainEndComponent component, ref TriggerEvent args)
+    [SubscribeLocalEvent]
+    private void OnEndTriggered(Entity<LinkedChainEndComponent> entity, ref TriggerEvent args)
     {
-        EndTriggers.Add((uid, args.Key));
+        EndTriggers.Add((entity.Owner, args.Key));
     }
 }
