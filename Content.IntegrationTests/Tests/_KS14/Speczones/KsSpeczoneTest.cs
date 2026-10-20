@@ -1,4 +1,6 @@
 #nullable enable
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -38,15 +40,28 @@ public sealed class KsSpeczoneTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Connected = false, Dirty = true, DummyTicker = true };
 
-    private static readonly ProtoId<SpeczonePrototype> TestSpeczone = "KsTestSpeczone";
+    private readonly ProtoId<SpeczonePrototype> _testSpeczone = "KsTestSpeczone";
     private static readonly EntProtoId Wall = "WallSolid";
 
-    [TestPrototypes]
+    /// <summary>
+    ///     Loaded into this test's own pair rather than through <c>[TestPrototypes]</c>: those are loaded into every pair,
+    ///         and every round any other test starts would then load this speczone's map too, leaving a second grid
+    ///         behind for tests that expect only their own (<c>InteractionTestTests.MapLoadingTest</c>). These tests
+    ///         are dirty, so the pair goes away with it.
+    /// </summary>
     private const string Prototypes = @"
 - type: speczone
   id: KsTestSpeczone
   mapPath: /Maps/Test/_KS14/speczone_test.yml
 ";
+
+    private void LoadTestSpeczonePrototype()
+    {
+        var changes = new Dictionary<Type, HashSet<string>>();
+        SProtoMan.LoadString(Prototypes, overwrite: true, changed: changes);
+        SProtoMan.ResolveResults();
+        SProtoMan.ReloadPrototypes(changes);
+    }
 
     /// <summary>
     ///     Gets rid of any speczones the pair already had, so each test starts from the same "nothing is loaded". The
@@ -56,6 +71,8 @@ public sealed class KsSpeczoneTest : GameTest
     {
         await Server.WaitPost(() =>
         {
+            LoadTestSpeczonePrototype();
+
             var existing = SEntMan.AllEntities<SpeczoneComponent>().Select(speczone => speczone.Owner).ToList();
             foreach (var speczoneUid in existing)
                 SEntMan.DeleteEntity(speczoneUid);
@@ -85,7 +102,7 @@ public sealed class KsSpeczoneTest : GameTest
 
     private Entity<SpeczoneComponent> GetTestSpeczone()
     {
-        Assert.That(Speczones.TryGetSpeczoneEntity(TestSpeczone, out var speczone), Is.True, "the test speczone is loaded");
+        Assert.That(Speczones.TryGetSpeczoneEntity(_testSpeczone, out var speczone), Is.True, "the test speczone is loaded");
         return speczone;
     }
 
@@ -126,7 +143,7 @@ public sealed class KsSpeczoneTest : GameTest
 
         await Server.WaitAssertion(() =>
         {
-            Assert.That(Speczones.TryGetSpeczoneEntity(TestSpeczone, out _), Is.False);
+            Assert.That(Speczones.TryGetSpeczoneEntity(_testSpeczone, out _), Is.False);
             Assert.That(Speczones.GetSpeczoneEntities(), Is.Empty);
             Assert.That(SEntMan.AllEntities<SpeczoneComponent>(), Is.Empty, "no speczone map exists at all");
 

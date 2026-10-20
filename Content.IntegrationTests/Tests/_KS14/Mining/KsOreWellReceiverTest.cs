@@ -39,9 +39,9 @@ public sealed class KsOreWellReceiverTest : GameTest
     private static readonly ProtoId<StackPrototype> SteelOre = "SteelOre";
 
     // One ore type with a fixed rate per second, so what a cycle delivers is a number that can be worked out by hand.
-    private static readonly ProtoId<OreWellSettingPrototype> HalfPerSecond = "KsTestOreWellHalf";
-    private static readonly ProtoId<OreWellSettingPrototype> QuarterPerSecond = "KsTestOreWellQuarter";
-    private static readonly ProtoId<OreWellSettingPrototype> OneAndAHalfPerSecond = "KsTestOreWellOneAndAHalf";
+    private readonly ProtoId<OreWellSettingPrototype> _halfPerSecond = "KsTestOreWellHalf";
+    private readonly ProtoId<OreWellSettingPrototype> _quarterPerSecond = "KsTestOreWellQuarter";
+    private readonly ProtoId<OreWellSettingPrototype> _oneAndAHalfPerSecond = "KsTestOreWellOneAndAHalf";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -163,7 +163,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     public async Task APoweredEnabledReceiverGetsTheWellsRateOverACycle()
     {
         var testMap = await Pair.CreateTestMap();
-        await SpawnWellAsync(testMap.Grid, HalfPerSecond);
+        await SpawnWellAsync(testMap.Grid, _halfPerSecond);
         var receiver = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 0.5f, powered: true);
 
         Assert.That(await RunUntilADeliveryAsync(), Is.True, "a powered, enabled receiver must receive ore");
@@ -180,7 +180,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     public async Task AnUnpoweredReceiverGetsNothingWhileAPoweredOneDoes()
     {
         var testMap = await Pair.CreateTestMap();
-        await SpawnWellAsync(testMap.Grid, HalfPerSecond);
+        await SpawnWellAsync(testMap.Grid, _halfPerSecond);
         var unpowered = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 0.5f, powered: false);
         var powered = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 4.5f, powered: true);
 
@@ -215,7 +215,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     public async Task ASwitchedOffReceiverGetsNothingUntilItIsActivated()
     {
         var testMap = await Pair.CreateTestMap();
-        await SpawnWellAsync(testMap.Grid, HalfPerSecond);
+        await SpawnWellAsync(testMap.Grid, _halfPerSecond);
         var receiver = await SpawnReceiverAsync(testMap.Grid, ReceiverSwitchedOff, 0.5f, powered: true);
 
         await RunTwoCyclesAsync();
@@ -244,7 +244,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     public async Task LosingPowerStopsTheDeliveries()
     {
         var testMap = await Pair.CreateTestMap();
-        await SpawnWellAsync(testMap.Grid, HalfPerSecond);
+        await SpawnWellAsync(testMap.Grid, _halfPerSecond);
         var receiver = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 0.5f, powered: true);
 
         Assert.That(await RunUntilADeliveryAsync(), Is.True, "precondition: it delivers while powered");
@@ -267,7 +267,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     public async Task WhatCouldNotBeSpawnedWholeIsOwedAndPaidNextCycle()
     {
         var testMap = await Pair.CreateTestMap();
-        await SpawnWellAsync(testMap.Grid, QuarterPerSecond);
+        await SpawnWellAsync(testMap.Grid, _quarterPerSecond);
         var receiver = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 0.5f, powered: true);
 
         // 0.25 ore/second is 7.5 per cycle: 7 now, half an ore owed.
@@ -291,7 +291,7 @@ public sealed class KsOreWellReceiverTest : GameTest
     public async Task AFullStackIsNotExceededAndTheRestIsOwed()
     {
         var testMap = await Pair.CreateTestMap();
-        await SpawnWellAsync(testMap.Grid, OneAndAHalfPerSecond);
+        await SpawnWellAsync(testMap.Grid, _oneAndAHalfPerSecond);
         var receiver = await SpawnReceiverAsync(testMap.Grid, ReceiverEnabled, 0.5f, powered: true);
 
         // 1.5 ore/second is 45 per cycle, and a stack of steel ore holds 30.

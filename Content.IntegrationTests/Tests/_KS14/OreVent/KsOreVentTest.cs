@@ -27,11 +27,11 @@ public sealed class KsOreVentTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
-    private static readonly EntProtoId Vent = "KsTestOreVent";
-    private static readonly EntProtoId VentWithDrone = "KsTestOreVentWithDrone";
-    private static readonly EntProtoId UndiscoveredVent = "KsTestOreVentUndiscovered";
-    private static readonly EntProtoId Scanner = "KsTestOreVentScanner";
-    private static readonly EntProtoId NotAScanner = "KsTestOreVentNotAScanner";
+    private readonly EntProtoId _vent = "KsTestOreVent";
+    private readonly EntProtoId _ventWithDrone = "KsTestOreVentWithDrone";
+    private readonly EntProtoId _undiscoveredVent = "KsTestOreVentUndiscovered";
+    private readonly EntProtoId _scanner = "KsTestOreVentScanner";
+    private readonly EntProtoId _notAScanner = "KsTestOreVentNotAScanner";
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId Wall = "WallSolid";
 
@@ -166,7 +166,7 @@ public sealed class KsOreVentTest : GameTest
     public async Task StartingTheTappingMarksTheVentAndSpawnsItsProcessEntity()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
+        var vent = await SpawnVentAsync(_vent);
 
         await StartTappingAsync(vent);
 
@@ -185,7 +185,7 @@ public sealed class KsOreVentTest : GameTest
     public async Task TappingThatRunsItsCourseSucceedsAndCreatesAnOreWell()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
+        var vent = await SpawnVentAsync(_vent);
         await StartTappingAsync(vent);
 
         EntityUid process = default;
@@ -218,7 +218,7 @@ public sealed class KsOreVentTest : GameTest
     public async Task CancellingTheTappingLeavesTheVentUntappedWithNoOreWell()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
+        var vent = await SpawnVentAsync(_vent);
         await StartTappingAsync(vent);
 
         EntityUid process = default;
@@ -243,7 +243,7 @@ public sealed class KsOreVentTest : GameTest
     public async Task ADroneArrivesAndLeavesWhenTappingSucceeds()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(VentWithDrone);
+        var vent = await SpawnVentAsync(_ventWithDrone);
         await StartTappingAsync(vent);
 
         EntityUid drone = default;
@@ -269,7 +269,7 @@ public sealed class KsOreVentTest : GameTest
     public async Task DestroyingTheDroneMidTappingFailsTheTapping()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(VentWithDrone);
+        var vent = await SpawnVentAsync(_ventWithDrone);
         await StartTappingAsync(vent);
 
         EntityUid process = default;
@@ -295,8 +295,8 @@ public sealed class KsOreVentTest : GameTest
     public async Task ScanningADiscoveredVentClearsTheAreaThenTapsIt()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
-        var (user, scanner) = await SpawnUserHoldingAsync(Scanner);
+        var vent = await SpawnVentAsync(_vent);
+        var (user, scanner) = await SpawnUserHoldingAsync(_scanner);
 
         EntityUid wall = default;
         await Server.WaitPost(() => wall = SEntMan.SpawnEntity(Wall, new EntityCoordinates(_grid, new Vector2(1.5f, 0.5f))));
@@ -328,8 +328,8 @@ public sealed class KsOreVentTest : GameTest
     public async Task ScanningFromFarAwayStillClearsOnlyWhatIsNearTheVent()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
-        var (user, scanner) = await SpawnUserHoldingAsync(Scanner);
+        var vent = await SpawnVentAsync(_vent);
+        var (user, scanner) = await SpawnUserHoldingAsync(_scanner);
 
         // Well outside the clear radius of 3.
         EntityUid farWall = default;
@@ -349,8 +349,8 @@ public sealed class KsOreVentTest : GameTest
     public async Task ScanningWithSomethingThatIsNotAScannerDoesNothing()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
-        var (user, notScanner) = await SpawnUserHoldingAsync(NotAScanner);
+        var vent = await SpawnVentAsync(_vent);
+        var (user, notScanner) = await SpawnUserHoldingAsync(_notAScanner);
 
         await UseOnVentAsync(user, notScanner, vent);
         await RunSecondsAsync(1.5f);
@@ -368,8 +368,8 @@ public sealed class KsOreVentTest : GameTest
     public async Task AnUndiscoveredVentCannotBeTappedUntilItIsScannedOnce()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(UndiscoveredVent);
-        var (user, scanner) = await SpawnUserHoldingAsync(Scanner);
+        var vent = await SpawnVentAsync(_undiscoveredVent);
+        var (user, scanner) = await SpawnUserHoldingAsync(_scanner);
 
         // The first scan only discovers it.
         await UseOnVentAsync(user, scanner, vent);
@@ -390,12 +390,12 @@ public sealed class KsOreVentTest : GameTest
     public async Task AnAlreadyTappedVentIsNotTappedAgain()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
+        var vent = await SpawnVentAsync(_vent);
         await StartTappingAsync(vent);
         await RunSecondsAsync(1.5f);
         await Server.WaitAssertion(() => Assert.That(Component(vent).Tapped, Is.True, "precondition"));
 
-        var (user, scanner) = await SpawnUserHoldingAsync(Scanner);
+        var (user, scanner) = await SpawnUserHoldingAsync(_scanner);
         var handled = await UseOnVentAsync(user, scanner, vent);
         await RunSecondsAsync(1f);
 
@@ -411,10 +411,10 @@ public sealed class KsOreVentTest : GameTest
     public async Task AVentThatIsBeingTappedRefusesAnotherScan()
     {
         await SetUpMapAsync();
-        var vent = await SpawnVentAsync(Vent);
+        var vent = await SpawnVentAsync(_vent);
         await StartTappingAsync(vent);
 
-        var (user, scanner) = await SpawnUserHoldingAsync(Scanner);
+        var (user, scanner) = await SpawnUserHoldingAsync(_scanner);
         var handled = await UseOnVentAsync(user, scanner, vent);
         await RunSecondsAsync(0.5f);
 

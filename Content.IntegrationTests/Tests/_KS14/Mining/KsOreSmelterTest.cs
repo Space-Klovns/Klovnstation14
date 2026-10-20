@@ -28,7 +28,7 @@ public sealed class KsOreSmelterTest : GameTest
     public override PoolSettings PoolSettings => PsDisconnected;
 
     private static readonly EntProtoId Smelter = "KsOreSmelter";
-    private static readonly EntProtoId DoublingSmelter = "KsTestOreSmelterDoubling";
+    private readonly EntProtoId _doublingSmelter = "KsTestOreSmelterDoubling";
 
     private static readonly EntProtoId SteelOre = "SteelOre1";
     private static readonly EntProtoId Coal = "Coal1";
@@ -189,7 +189,7 @@ public sealed class KsOreSmelterTest : GameTest
     [TestCase(7, 14)]
     public async Task TheMultiplierScalesTheOutputWhateverTheStackSizes(int oreCount, int expectedSheets)
     {
-        var smelter = await SetUpSmelterAsync(DoublingSmelter);
+        var smelter = await SetUpSmelterAsync(_doublingSmelter);
         var ore = await SpawnStackAsync(SteelOre, oreCount);
 
         Assert.That(await TryProcessAsync(smelter, ore), Is.True);
