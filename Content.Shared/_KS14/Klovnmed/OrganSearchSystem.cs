@@ -63,6 +63,8 @@ public sealed partial class OrganSearchSystem : EntitySystem
     /// <inheritdoc cref="TryGetRandomBodyPartOfType(EntityUid, BodyPartType, out Entity{OrganComponent}?)"/>
     public bool TryGetRandomBodyPartOfType(Entity<BodyComponent> bodyEntity, BodyPartType partType, out System.Random? predictedRandom, [NotNullWhen(true)] out EntityUid? partUid)
     {
+        // RecursiveChildUids is kept in net id order (BodyHierarchySystem.InsertRecursiveChild), so the client builds the
+        //      same list as the server to index into, and predicts the same part.
         var eligible = new List<EntityUid>();
         foreach (var possiblePartUid in bodyEntity.Comp.RecursiveChildUids)
         {
@@ -75,14 +77,6 @@ public sealed partial class OrganSearchSystem : EntitySystem
                 continue;
 
             eligible.Add(possiblePartUid);
-        }
-
-        if (eligible.Count > 1)
-        {
-            // RecursiveChildUids is not networked: the client rebuilds it from container events, in the order its
-            //      entity states happen to be applied, so it need not match the server's. Predicting which part goes
-            //      needs both sides to index the same list, and net ids are the one order they share.
-            eligible.Sort((first, second) => GetNetEntity(first).Id.CompareTo(GetNetEntity(second).Id));
         }
 
         if (eligible.Count == 0)

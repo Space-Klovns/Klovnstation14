@@ -4,6 +4,7 @@ using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.Klovnmed;
 using Content.Shared.Body;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -14,11 +15,11 @@ namespace Content.IntegrationTests.Tests._KS14.Medical;
 /// <summary>
 ///     Which body part a dismemberment takes is rolled on the client for prediction and again on the server.
 ///         The roll indexes a list of the body's parts, so it only agrees if both sides build that list in the
-///         same order, and <see cref="BodyComponent.RecursiveChildUids"/> is not networked, so the client's order
-///         is whatever order its entity states were applied in.
+///         same order. <see cref="BodyComponent.RecursiveChildUids"/> is not networked: the client rebuilds it in
+///         whatever order its entity states are applied, so it is kept sorted by net id on both sides.
 /// </summary>
 [TestFixture]
-[TestOf(typeof(OrganSearchSystem))]
+[TestOf(typeof(OrganSearchSystem)), TestOf(typeof(BodyHierarchySystem))]
 public sealed class KsDismemberPredictionTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
@@ -57,49 +58,78 @@ public sealed class KsDismemberPredictionTest : GameTest
         return chosen;
     }
 
+    /// <summary>
+    ///     An organ spawned before the body, so its net id is lower than every part the body came with, and inserted
+    ///         after: appended, it would sit out of order at the end of the list.
+    /// </summary>
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  id: KsTestLooseOrgan
+  components:
+  - type: Organ
+";
+
+    private readonly EntProtoId _looseOrganProto = "KsTestLooseOrgan";
+
+    private List<int> NetIds(IEntityManager entityManager, EntityUid bodyUid)
+    {
+        return entityManager.GetComponent<BodyComponent>(bodyUid).RecursiveChildUids
+            .Select(uid => entityManager.GetNetEntity(uid).Id)
+            .ToList();
+    }
+
     [Test]
-    public async Task TestClientAndServerChooseTheSamePartWhateverOrderTheClientListsThem()
+    public async Task TestClientAndServerListAndChooseThePartsInTheSameOrder()
     {
         var server = Pair.Server;
         var client = Pair.Client;
         var testMap = await Pair.CreateTestMap();
 
         EntityUid serverBody = default;
-        await server.WaitPost(() => serverBody = SEntMan.SpawnEntity(HumanProto, testMap.GridCoords));
+        EntityUid looseOrgan = default;
+        await server.WaitPost(() =>
+        {
+            looseOrgan = SEntMan.SpawnEntity(_looseOrganProto, testMap.GridCoords);
+            serverBody = SEntMan.SpawnEntity(HumanProto, testMap.GridCoords);
+        });
+        await Pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            var container = SEntMan.System<SharedContainerSystem>().GetContainer(serverBody, BodyHierarchySystem.ConstContainerId);
+            Assert.That(SEntMan.System<SharedContainerSystem>().Insert(looseOrgan, container), Is.True, "precondition: the organ went in");
+        });
         await Pair.RunTicksSync(10);
 
         var clientBody = Pair.ToClientUid(serverBody);
         var serverTiming = server.ResolveDependency<IGameTiming>();
         var clientTiming = client.ResolveDependency<IGameTiming>();
 
+        var serverIds = new List<int>();
         var serverRolls = new List<int>();
         await server.WaitPost(() =>
         {
-            var bodyComponent = SEntMan.GetComponent<BodyComponent>(serverBody);
-            var serverChildren = bodyComponent.RecursiveChildUids;
-            Assert.That(serverChildren, Has.Count.GreaterThan(4), "The body has no parts to choose from.");
+            serverIds = NetIds(SEntMan, serverBody);
             serverRolls = RollOnEachTick(SEntMan, serverTiming, serverBody);
         });
 
-        // Both orders: how the client happens to have them, and the reverse, which a different order of state
-        //      application could just as well have produced.
+        var clientIds = new List<int>();
         var clientRolls = new List<int>();
-        var reversedClientRolls = new List<int>();
         await client.WaitPost(() =>
         {
-            var bodyComponent = CEntMan.GetComponent<BodyComponent>(clientBody);
+            clientIds = NetIds(CEntMan, clientBody);
             clientRolls = RollOnEachTick(CEntMan, clientTiming, clientBody);
-
-            var children = bodyComponent.RecursiveChildUids;
-            children.Reverse();
-            reversedClientRolls = RollOnEachTick(CEntMan, clientTiming, clientBody);
         });
 
         using (Assert.EnterMultipleScope())
         {
+            Assert.That(serverIds, Has.Count.GreaterThan(4), "The body has no parts to choose from.");
+            Assert.That(serverIds, Does.Contain(SEntMan.GetNetEntity(looseOrgan).Id), "The loose organ is not in the body.");
+            Assert.That(serverIds, Is.Ordered, "The server's list is not in net id order.");
+            Assert.That(clientIds, Is.EqualTo(serverIds), "The client lists the body's parts in a different order to the server.");
             Assert.That(serverRolls.Distinct().Count(), Is.GreaterThan(1), "The roll always lands on one part, so this proves nothing.");
             Assert.That(clientRolls, Is.EqualTo(serverRolls), "The client chose different parts to the server.");
-            Assert.That(reversedClientRolls, Is.EqualTo(serverRolls), "Listing the parts in another order changed which one was chosen.");
         }
     }
 }
