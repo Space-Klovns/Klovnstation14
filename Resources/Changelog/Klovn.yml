@@ -2240,3 +2240,33 @@ Entries:
       message: Changed lobby UI.
   id: 231
   time: '2026-10-16T17:51:51.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Locked ID-locked shuttle consoles can no longer be pried apart or
+        unanchored.
+    - type: Fix
+      message: >-
+        Scenario round-end text now credits the faction that actually captured
+        the objective and names the factions that took part.
+    - type: Fix
+      message: >-
+        The portal telefrag message no longer stacks up repeatedly, and
+        bystanders now see it too.
+    - type: Fix
+      message: Dismemberment no longer briefly shows the wrong body part coming off.
+    - type: Fix
+      message: Cutting a chain or wire in the middle now properly breaks both ends.
+    - type: Fix
+      message: >-
+        Pulling ore back out of a smelter before it finishes no longer destroys
+        it.
+    - type: Fix
+      message: >-
+        Reactor control rods can no longer be moved further per click than the
+        console allows.
+    - type: Fix
+      message: Specialist kit limits on RMC vendors can no longer be bypassed.
+  id: 232
+  time: '2026-10-20T19:31:59.0000000+00:00'
