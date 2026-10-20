@@ -1,9 +1,9 @@
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Chemistry.TileReactions;
 using Content.Server.Fluids.EntitySystems;
+using Content.Shared._KS14.TileEffects;
 using Content.Shared.Atmos;
 using Content.Shared.Chemistry.Components;
-using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Map;
@@ -21,9 +21,12 @@ namespace Content.Server._KS14.TileEffects;
 ///         <see cref="Shared.Fluids.SharedPuddleSystem.KsTileReactionSourceTemperature"/>. Energy is accounted as
 ///         <see cref="KsTileEffectAtmosSystem.TryChangePhase"/> does it.
 /// </remarks>
-[DataDefinition]
-public sealed partial class KsVaporizeTileReaction : ITileReaction
+public sealed partial class KsVaporizeTileReaction : KsTileReaction
 {
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private KsTileEffectAtmosSystem _tileEffectAtmosSystem = default!;
+    [Dependency] private PuddleSystem _puddleSystem = default!;
+
     /// <summary>
     ///     The gas the reagent becomes. Null uses the gas whose reagent is this one, and does nothing without one.
     /// </summary>
@@ -61,30 +64,25 @@ public sealed partial class KsVaporizeTileReaction : ITileReaction
     [DataField]
     public bool SpillRemainder;
 
-    public FixedPoint2 TileReact(TileRef tile,
-        ReagentPrototype reagent,
-        FixedPoint2 reactVolume,
-        IEntityManager entityManager,
-        List<ReagentData>? data)
+    protected override FixedPoint2 React(TileRef tile, ReagentPrototype reagent, FixedPoint2 reactVolume, List<ReagentData>? data)
     {
         if (reactVolume <= FixedPoint2.Zero || tile.Tile.IsEmpty)
             return FixedPoint2.Zero;
 
-        var atmosphereSystem = entityManager.System<AtmosphereSystem>();
-        if ((Gas ?? ExtinguishTileReaction.GetBoiledGas(atmosphereSystem, reagent)) is not { } gas)
+        if ((Gas ?? ExtinguishTileReaction.GetBoiledGas(_atmosphereSystem, reagent)) is not { } gas)
             return FixedPoint2.Zero;
 
-        var sourceTemperature = entityManager.System<PuddleSystem>().KsTileReactionSourceTemperature ?? Atmospherics.T20C;
+        var sourceTemperature = _puddleSystem.KsTileReactionSourceTemperature ?? Atmospherics.T20C;
         var minimumTemperature = reagent.BoilingPoint is { } boilingPoint
             ? boilingPoint + Atmospherics.T0C // BoilingPoint is in Celsius
             : Atmospherics.TCMB;
 
-        var units = entityManager.System<KsTileEffectAtmosSystem>().TryChangePhase(
+        var units = _tileEffectAtmosSystem.TryChangePhase(
             tile.GridUid,
             tile.GridIndices,
             gas,
             (float)reactVolume,
-            MolesPerUnit ?? 1f / atmosphereSystem.GasMolarMasses[(int)gas],
+            MolesPerUnit ?? 1f / _atmosphereSystem.GasMolarMasses[(int)gas],
             reagent.SpecificHeat * sourceTemperature,
             EnergyPerUnit,
             minimumTemperature,
@@ -96,7 +94,7 @@ public sealed partial class KsVaporizeTileReaction : ITileReaction
 
         // Not spilled with tile reactions: those are what is running now.
         var remainder = new Solution(reagent.ID, reactVolume - vaporized, data) { Temperature = sourceTemperature };
-        return entityManager.System<PuddleSystem>().TrySpillAt(tile, remainder, out _, sound: false, tileReact: false)
+        return _puddleSystem.TrySpillAt(tile, remainder, out _, sound: false, tileReact: false)
             ? reactVolume
             : vaporized;
     }

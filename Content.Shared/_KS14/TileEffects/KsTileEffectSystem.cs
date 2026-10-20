@@ -28,6 +28,12 @@ public sealed partial class KsTileEffectSystem : EntitySystem
         {
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
                 tileEffect.Initialize(dependencyCollection);
+
+            foreach (var tileReaction in reagentPrototype.TileReactions)
+            {
+                if (tileReaction is KsTileReaction ksTileReaction)
+                    ksTileReaction.Initialize(dependencyCollection);
+            }
         }
     }
 
@@ -41,6 +47,15 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             return;
 
         ReloadReagents(_systemCollectionHookManager.DependencyCollection);
+    }
+
+    /// <summary>
+    ///     Injects <paramref name="tileEffect"/> if nothing has yet.
+    /// </summary>
+    public void EnsureInitialized(KsTileEffect tileEffect)
+    {
+        if (!tileEffect.IsInitialized)
+            tileEffect.Initialize(_systemCollectionHookManager.DependencyCollection);
     }
 
     public bool TryUpdateTileEffects(Entity<TransformComponent?> entity, TileRef? tileRef, Solution solution, float scale = 1f)
@@ -66,8 +81,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             {
                 // A prototype reload can hand out new instances without telling this system, so they are checked here,
                 //     where an uninjected one would otherwise throw.
-                if (!tileEffect.IsInitialized)
-                    tileEffect.Initialize(_systemCollectionHookManager.DependencyCollection);
+                EnsureInitialized(tileEffect);
 
                 if (tileRef is not { })
                     tileRef = _mapSystem.GetTileRef((gridUid, gridComponent), entity.Comp.Coordinates);
