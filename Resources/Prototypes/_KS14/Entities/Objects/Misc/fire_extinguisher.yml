@@ -28,3 +28,7 @@
         volume: -3
         pitch: 1.8
         variation: 0.1
+  - type: Tag
+    tags:
+    - FireExtinguisher
+    - KsExtinguisherAdvanced

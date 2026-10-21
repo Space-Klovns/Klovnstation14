@@ -78,6 +78,7 @@
   - type: Tag
     tags:
     - FireExtinguisher
+    - KsExtinguisherStandard # KS14
   - type: GenericVisualizer
     visuals:
       enum.ToggleableVisuals.Enabled:
@@ -191,6 +192,12 @@
     materialComposition:
       Steel: 50
       Glass: 40
+  # KS14 start: tags
+  - type: Tag
+    tags:
+    - FireExtinguisher
+    - KsExtinguisherMini
+  # KS14 end
 
 - type: entity
   parent: [SolutionSpray, SolutionSmall]
