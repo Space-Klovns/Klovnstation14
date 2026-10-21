@@ -110,6 +110,7 @@ jobs:
         -- NUnit.ConsoleOut=0
 
     - name: Run Content.IntegrationTests (${{ matrix.shard }})
+      id: integration-tests
       shell: pwsh # KS14: Rework command to add `ConsoleOut=0`, `InternalTraceLevel=Off`, `TestOutputXml=`, `--logger "console;verbosity=minimal"` to minimise XML disaster
       run: |
         $env:DOTNET_gcServer=1
@@ -123,6 +124,28 @@ jobs:
           RunConfiguration.TreatNoTestsAsError=true `
           NUnit.ConsoleOut=0 `
           NUnit.InternalTraceLevel=Off `
+          NUnit.MapWarningTo=Failed `
+          NUnit.TestOutputXml= `
+          NUnit.NumberOfTestWorkers=1 `
+          NUnit.AssemblySelectLimit=100000 `
+          "NUnit.Where=${{ matrix.where }}"
+
+    # KS14: The normal shard is intentionally quiet; rerun the entire failed shard with detailed output.
+    - name: Rerun integration-test shard with verbose output
+      if: ${{ failure() && steps.integration-tests.outcome == 'failure' }}
+      shell: pwsh
+      run: |
+        $env:DOTNET_gcServer=1
+
+        dotnet test `
+          --no-build `
+          --configuration DebugOpt `
+          Content.IntegrationTests/Content.IntegrationTests.csproj `
+          --logger "console;verbosity=detailed" `
+          -- `
+          RunConfiguration.TreatNoTestsAsError=true `
+          NUnit.ConsoleOut=1 `
+          NUnit.InternalTraceLevel=Debug `
           NUnit.MapWarningTo=Failed `
           NUnit.TestOutputXml= `
           NUnit.NumberOfTestWorkers=1 `
