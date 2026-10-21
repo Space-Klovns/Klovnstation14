@@ -11,12 +11,12 @@
     - state: extinguish
       map: [ "enum.VaporVisualLayers.Base" ]
   - type: TimedDespawn
-    lifetime: 0.6
+    lifetime: 0.35
   - type: Vapor
     active: true
     transferAmountPercentage: 0.5
   - type: VaporVisuals
-    animationTime: 0.6
+    animationTime: 0.35
     animationState: extinguish
   # Lays the shooter's own blankets ahead of the server's; keep these in step with the Vapor above.
   - type: KsPredictedFoamShot

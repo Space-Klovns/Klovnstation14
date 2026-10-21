@@ -53,12 +53,22 @@
       params:
         volume: -8
         variation: 0.15
+    soundEmpty:
+      path: /Audio/Effects/space_wind.ogg
+      params:
+        volume: -5
+        pitch: 2
+        variation: 0.15
   - type: SolutionAmmoProvider
     solutionId: spray
     proto: KsBulletExtinguisherShot
     fireCost: 1.5
   - type: PacifismAllowedGun
   - type: KsGunSpraySafety
+  # KS14 end
+  # KS14 start: itemtoggle size
+  - type: ItemToggleSize
+    activatedSize: Huge
   # KS14 end
   - type: Tool
     qualities:
@@ -87,7 +97,7 @@
     - state: closed # KS14: use KS sprites
       map: [ "enum.ToggleableVisuals.Layer" ]
   - type: Item
-    sprite: Objects/Misc/fire_extinguisher.rsi # KS14 TODO: use /tg/ inhands instead
+    sprite: _KS14/Objects/Misc/Extinguishers/fire.rsi # KS14: use KS sprites
     size: Normal
   - type: MeleeWeapon
     wideAnimationRotation: 180
@@ -168,7 +178,7 @@
         - state: closed # KS14: use KS sprites
           map: [ "enabled" ]
   - type: Item
-    sprite: Objects/Misc/fire_extinguisher_mini.rsi # KS14 TODO: use /tg/ inhands instead
+    sprite: _KS14/Objects/Misc/Extinguishers/mini.rsi # KS14: use KS sprites
     size: Small
   - type: MeleeWeapon
     wideAnimationRotation: 180

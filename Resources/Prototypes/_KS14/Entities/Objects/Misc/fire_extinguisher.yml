@@ -12,6 +12,8 @@
     layers:
     - state: closed
       map: [ "enum.ToggleableVisuals.Layer" ]
+  - type: Item
+    sprite: _KS14/Objects/Misc/Extinguishers/foam.rsi # KS14: use KS sprites
   - type: Solution
     solution:
       maxVol: 110
