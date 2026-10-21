@@ -36,6 +36,9 @@ namespace Content.IntegrationTests.Tests._KS14.ChemicalFire;
 [TestOf(typeof(SharedChemicalFireSystem))]
 public sealed class ChemicalFireTest : GameTest
 {
+    // These tests reload prototypes and spawn test maps, so clean the pooled pair before it can be reused.
+    public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
+
     [TestPrototypes]
     private const string Prototypes = @"
 # Burns as thermite does: a chemfire on its puddle, refreshed by every tile effect update, at the default duration.
