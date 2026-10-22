@@ -143,6 +143,13 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
         => PredictedSpawnAttachedTo(prototypeId, coordinates);
 
     /// <summary>
+    ///     Whether a blanket is a transient client placeholder that should stay on the cache until the server blanket
+    ///         actually replaces it.
+    /// </summary>
+    protected virtual bool IsPlaceholderBlanket(EntityUid blanketUid)
+        => false;
+
+    /// <summary>
     ///     A shot laying placeholders has crossed a tile that already has a blanket. If it is the client's own
     ///         placeholder, it now waits for this shot's server blanket as well as the earlier one's, so the client
     ///         restarts its expiry. Does nothing anywhere else.
@@ -164,8 +171,13 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     ///         until the server's blanket for the tile arrives, instead of losing it at the next state. See
     ///         <see cref="SpawnPlaceholderBlanket"/>. Only the client passes true.
     /// </param>
+    /// <param name="energy">
+    ///     If specified, this acts as the amount of heat energy in joules that the blanket holds.
+    ///         Overrides the default value of <see cref="KsFoamBlanketComponent.FoamTemperature"/>, deriving it off the values of energy
+    ///         and <see cref="KsFoamBlanketComponent.SpecificHeat"/>.
+    /// </param>
     /// <returns>The units of foam used, floored to the 0.01u a solution stores; zero if no blanket was laid.</returns>
-    public float Deploy(EntProtoId prototypeId, TileRef tileRef, float availableFoam, bool playSound = true, bool placeholder = false)
+    public float Deploy(EntProtoId prototypeId, TileRef tileRef, float availableFoam, bool playSound = true, bool placeholder = false, float? energy = null)
     {
         var gridUid = tileRef.GridUid;
         var tile = tileRef.GridIndices;
@@ -223,6 +235,12 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
             blanketComponent.NextUpdate = _gameTiming.CurTime + blanketComponent.UpdateInterval;
             Dirty(blanketUid, blanketComponent);
             blanket = (blanketUid, blanketComponent);
+        }
+
+        if (energy is { })
+        {
+            blanket.Comp.FoamTemperature = energy.Value / blanket.Comp.SpecificHeat;
+            Dirty(blanket);
         }
 
         // Smothers on a top-up as well: spraying a blanket again is how you put out what rolled back onto it.
@@ -527,14 +545,27 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
         //     must not wedge the cache.
         var tiles = EnsureComp<KsFoamBlanketGridComponent>(gridUid).Tiles;
         tiles.TryGetValue(tile, out var previousUid);
-        tiles[tile] = entity.Owner;
+
+        var shouldReplacePrevious = !previousUid.IsValid() || previousUid == entity.Owner
+            ? true
+            : ShouldSupersedePreviousBlanket(previousUid, entity.Owner);
+
+        if (shouldReplacePrevious)
+            tiles[tile] = entity.Owner;
 
         entity.Comp.LocalGridUid = gridUid;
         entity.Comp.LocalTile = tile;
 
-        if (previousUid.IsValid() && previousUid != entity.Owner)
+        if (shouldReplacePrevious && previousUid.IsValid() && previousUid != entity.Owner)
             OnBlanketSuperseded(previousUid);
     }
+
+    /// <summary>
+    ///     Whether a new blanket on a tile should retire the previous one from the cache. The client keeps its own
+    ///         placeholders alive while another client placeholder is simply a later pass over the same tile.
+    /// </summary>
+    protected virtual bool ShouldSupersedePreviousBlanket(EntityUid previousUid, EntityUid newUid)
+        => true;
 
     /// <summary>
     ///     Called when another blanket takes over a tile's cache entry from <paramref name="previousUid"/>, which

@@ -8,7 +8,7 @@
     duration: 6.5
     temperature: 1500
     exposedVolume: 50
-    heatPower: 7000
+    heatPower: 12000
   - type: ChemicalFireGasConsumer
     gases:
       Oxygen: 3
@@ -53,7 +53,7 @@
     color: "#ffc291"
     duration: 7
     temperature: 2900
-    heatPower: 12000
+    heatPower: 18000
     extinguishable: false # thermite burns through a dousing
     # Foam has to win a fight with it: a blanket smothers it at its foam over 6 a second, while the fire boils the
     #     blanket away with 6.5% of its heat (about 0.2u a second, at the 4080 J a unit of foam takes). One full blanket

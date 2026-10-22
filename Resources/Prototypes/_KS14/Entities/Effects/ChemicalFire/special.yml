@@ -35,7 +35,7 @@
   - type: ChemicalFire
     color: "#9fd8ff"
     temperature: 1000
-    heatPower: 4000
+    heatPower: 7000
     burnsOut: false
     minimumAirTemperature: 280
     extinguishable: false

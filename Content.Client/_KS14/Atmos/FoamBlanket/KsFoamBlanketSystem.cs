@@ -42,6 +42,9 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     protected override bool IsBurning(Entity<FlammableComponent> flammable)
         => _appearanceSystem.TryGetData<bool>(flammable.Owner, FireVisuals.OnFire, out var onFire) && onFire;
 
+    protected override bool IsPlaceholderBlanket(EntityUid blanketUid)
+        => _placeholderQuery.HasComp(blanketUid);
+
     /// <summary>
     ///     A plain client-side spawn rather than a predicted one, so the next state reset leaves it alone; see
     ///         <see cref="KsFoamBlanketPlaceholderComponent"/>.
@@ -73,6 +76,23 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     ///         once, so the tile never shows two; deleted in <see cref="FrameUpdate"/>, because this runs while the
     ///         state is applied, and deleting a client-side entity destroys its contacts there and then.
     /// </summary>
+    protected override bool ShouldSupersedePreviousBlanket(EntityUid previousUid, EntityUid newUid)
+    {
+        var previousIsPlaceholder = _placeholderQuery.HasComp(previousUid);
+        var newIsPlaceholder = _placeholderQuery.HasComp(newUid);
+
+        if (previousIsPlaceholder && newIsPlaceholder)
+            return false;
+
+        if (previousIsPlaceholder)
+            return true;
+
+        if (newIsPlaceholder)
+            return false;
+
+        return base.ShouldSupersedePreviousBlanket(previousUid, newUid);
+    }
+
     protected override void OnBlanketSuperseded(EntityUid previousUid)
     {
         base.OnBlanketSuperseded(previousUid);
@@ -81,6 +101,13 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
             return;
 
         placeholderComponent.Superseded = true;
+
+        if (TryComp<KsFoamBlanketComponent>(previousUid, out var blanketComponent))
+        {
+            blanketComponent.LocalGridUid = null;
+            blanketComponent.LocalTile = default;
+        }
+
         if (_spriteQuery.TryComp(previousUid, out var spriteComponent))
             _spriteSystem.SetVisible((previousUid, spriteComponent), false);
     }

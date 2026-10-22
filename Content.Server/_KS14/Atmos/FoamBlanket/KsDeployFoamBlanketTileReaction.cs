@@ -22,7 +22,8 @@ public sealed partial class KsDeployFoamBlanketTileReaction : KsTileReaction
         if (reactVolume <= FixedPoint2.Zero || tile.Tile.IsEmpty)
             return FixedPoint2.Zero;
 
-        var used = _foamBlanketSystem.Deploy(Prototype, tile, (float)reactVolume);
+        var energyTaken = reagent.SpecificHeat * (float)reactVolume;
+        var used = _foamBlanketSystem.Deploy(Prototype, tile, (float)reactVolume, energy: energyTaken);
         return FixedPoint2.Min(FixedPoint2.New(used), reactVolume);
     }
 }

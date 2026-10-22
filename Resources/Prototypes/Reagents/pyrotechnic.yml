@@ -200,7 +200,7 @@
   - !type:LogicAndTileEffect
     conditions:
     - !type:CheckTemperatureTileEffect
-      minimum: 300
+      minimum: 400
     effects:
     - !type:ChemicalFireTileEffect
       removed: 2

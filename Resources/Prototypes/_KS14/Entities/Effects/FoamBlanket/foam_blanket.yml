@@ -40,3 +40,9 @@
           state: dissolve
           loop: false # holds the last frame, which is near-transparent
     dissolveDuration: 1.2
+    maxFoam: 1.5
+    latentHeat: 12000
+    updateInterval: 0.4
+    # boil rates may be overtuned
+    puddleBoilRate: 0.4
+    fireBoilRate: 0.5

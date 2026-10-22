@@ -49,7 +49,7 @@
   ksSpreadVolume: 0.5 # a film: 100u covers about 200 tiles. Lower means more puddles and fires, each an entity
   tileEffects:
   - !type:ChemicalFireTileEffect
-    removed: 0.5 # u/s: its fire can't be put out, so the puddle has to burn itself away
+    removed: 0.0 # u/s: its fire can't be put out ever
     durationScale: 2
     id: ChemicalFireSuspendedKlovnideTrioxide
   tileReactions:

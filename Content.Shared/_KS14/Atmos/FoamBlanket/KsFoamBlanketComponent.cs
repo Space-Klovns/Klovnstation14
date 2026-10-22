@@ -109,10 +109,11 @@ public sealed partial class KsFoamBlanketComponent : Component
     [DataField]
     public float SpecificHeat = 1f;
 
+    // TODO KS14 CHEMFIRES: add a test to make sure the `energy` override and this both properly work with each other
     /// <summary>
     ///     Temperature, in kelvin, the foam is laid at.
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField]
     public float FoamTemperature = Atmospherics.T20C;
 
     /// <summary>
