@@ -1,0 +1,23 @@
+- type: entity
+  parent: [ BulletKinetic, BaseBulletTrigger ]
+  id: DodgennDeathBolt
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Mobs/Boss/dodgenn.rsi
+    layers:
+    - state: icon
+      scale: 0.75,0.75
+      color: '#ff0000'
+      shader: unshaded
+  - type: TimedDespawn
+    lifetime: 20
+  - type: Projectile
+    impactEffect: BulletImpactEffectKinetic
+    damage:
+      types:
+        Blunt: 10
+  - type: SparkOnTrigger
+  - type: TileEmission
+    color: white
+    radius: 0.3

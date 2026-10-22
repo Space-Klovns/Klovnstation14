@@ -3,7 +3,7 @@ using System.Linq;
 using Content.Shared.Actions.Events;
 using Content.Shared.Popups;
 
-namespace Content.Shared._KS14.Actions;
+namespace Content.Shared._KS14.Actions.RadiusRestricted;
 
 /// <summary>
 /// Handles action priming, confirmation and automatic unpriming.

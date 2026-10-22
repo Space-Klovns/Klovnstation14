@@ -1,0 +1,45 @@
+
+- type: soundCollection
+  id: KsDodgennTalkEntrance
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack1
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack2
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack3
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack4
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack5
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkSummonLauncher
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkUseLauncher
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkGrenade
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg

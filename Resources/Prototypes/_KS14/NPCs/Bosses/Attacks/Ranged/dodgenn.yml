@@ -1,0 +1,74 @@
+# BLATANT COPYPASTA FROM COLOSSUS
+
+# Lament - 23 bursts, 4 projectiles per burst, cardinal then diagonal directions
+- type: entity
+  id: DodgennDirectionalAttack
+  parent: RangedCardinalDirections
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack1
+    burstCount: 23 # was 45 while every burst counted twice, so 23 fired
+    shots: 4
+    shotDelay: 0.3
+    cooldown: 3.0
+
+# Retribution - 1 burst, 8 projectiles (shotgun spread)
+- type: entity
+  id: DodgennShotgunAttack
+  parent: RangedShotgun
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack2
+    burstCount: 1
+    shots: 8
+    shotDelay: 0
+    cooldown: 4.0
+    spread: 30
+
+# Judgement - 72 bursts, 1 projectile per burst (spiral)
+- type: entity
+  id: DodgennSpiralAttack
+  parent: RangedSpiral
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack3
+    burstCount: 512
+    shots: 1
+    shotDelay: 0.04
+    cooldown: 3.0
+    degreesPerShot: 12
+
+# Wrath - 32 bursts, 1 projectile per burst (random directions)
+- type: entity
+  id: DodgennRandomAoeAttack
+  parent: RangedRandomAoe
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack4
+    burstCount: 256
+    shots: 1
+    shotDelay: 0.05
+    cooldown: 2.0
+
+# Die
+- type: entity
+  parent: RangedDoubleSpiral
+  id: DodgennEnragedSpiralAttack
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack5
+    burstCount: 2056
+    shots: 1
+    shotDelay: 0.04
+    cooldown: 3.0
+    degreesPerShot: 10

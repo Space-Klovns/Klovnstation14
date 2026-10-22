@@ -104,8 +104,14 @@ public static class KsPrototypeNameCacheCompiler
                     continue;
                 foreach (var mapping in sequence.Sequence.OfType<MappingDataNode>())
                 {
-                    if (Scalar(mapping, "type") != "entity")
+                    if (!mapping.TryGet("type", out ValueDataNode? typeValueNode) ||
+                        typeValueNode.IsNull)
                         continue;
+
+                    if (typeValueNode.Value != "entity" ||
+                        typeValueNode.Tag == "!PartialOnly" /* TODO KS14 NAMECACHE: Make this less of a hack */)
+                        continue;
+
                     var id = Scalar(mapping, "id") ?? throw new InvalidDataException($"Entity without id in {file.Path}.");
                     var isReplacement = file.Path.StartsWith("_KsModule_ReplacedPrototypes/", StringComparison.Ordinal);
                     if (isReplacement && (!prototypes.TryGetValue(id, out var original) || original.Abstract))

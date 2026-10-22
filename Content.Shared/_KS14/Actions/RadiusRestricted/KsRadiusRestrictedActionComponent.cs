@@ -1,7 +1,7 @@
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
-namespace Content.Shared._KS14.Actions;
+namespace Content.Shared._KS14.Actions.RadiusRestricted;
 
 /// <summary>
 ///     Makes an action only allowed when (not) in radius of an entity with some component.
