@@ -18,7 +18,7 @@ public sealed partial class PuddleSystem
     private static readonly TimeSpan AirHeatExchangeInterval = TimeSpan.FromSeconds(1d);
 
     /// <summary>Thermal conductance between a puddle of at least <see cref="AirHeatExchangeReferenceVolume"/> and its tile's air, in W/K.</summary>
-    private const float AirHeatExchangeConductance = 20f;
+    private const float AirHeatExchangeConductance = 15f;
 
     /// <summary>Puddle volume at and above which the full conductance applies; smaller puddles scale down linearly.</summary>
     private const float AirHeatExchangeReferenceVolume = 20f;

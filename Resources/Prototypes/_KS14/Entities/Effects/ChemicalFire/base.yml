@@ -59,7 +59,7 @@
       multiplierOnExisting: 0.75
     - !type:Ignite
   - type: ChemicalFire
-    puddleHeatFraction: 0.62
+    puddleHeatFraction: 0.6
     duration: 6.5
     temperature: 1500
     exposedVolume: 50

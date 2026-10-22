@@ -19,7 +19,7 @@
       effects:
       - !type:Extinguish
   tileReactions:
-  - !type:KsDeployFoamBlanketTileReaction { }
+  - !type:KsDeployFoamBlanketTileReaction
   tileEffects:
   - !type:BoilTileEffect
     gas: WaterVapor

@@ -40,9 +40,31 @@
           state: dissolve
           loop: false # holds the last frame, which is near-transparent
     dissolveDuration: 1.2
-    maxFoam: 1.5
-    latentHeat: 12000
+    maxFoam: 3.5
+    latentHeat: 45000 # found a good value to be ~38000,
     updateInterval: 0.4
     # boil rates may be overtuned
-    puddleBoilRate: 0.4
-    fireBoilRate: 0.5
+    boilRate: 0.4
+    puddleBoilRate: 0.5
+    fireBoilRate: 0.6
+
+- type: entity
+  parent: KsFoamBlanket
+  id: KsFoamBlanketPowder
+  name: dry powder
+  description: A
+  components:
+  - type: Sprite
+    sprite: Fluids/powder.rsi
+    layers:
+    - state: powder
+      map: [ "foam" ]
+  - type: KsFoamBlanket
+    dissolveDuration: 1.2
+    maxFoam: 4
+    latentHeat: 30000
+    updateInterval: 0.4
+    # boil rates may be overtuned
+    puddleBoilRate: 3
+    fireBoilRate: 3
+    boilingPoint: 463
