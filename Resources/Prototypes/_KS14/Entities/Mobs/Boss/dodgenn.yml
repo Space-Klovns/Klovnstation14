@@ -296,11 +296,20 @@
   - type: Item
     size: Tiny
   - type: Explosive
-    totalIntensity: 50
-    maxIntensity: 50
+    totalIntensity: 5
+    maxIntensity: 5
     intensitySlope: 25
-    explosionType: Default
+    explosionType: FireBomb
     canCreateVacuum: false
+  - type: Solution
+    id: inside
+    solution:
+      maxVol: 15
+      temperature: 600
+      canReact: True
+      reagents:
+      - ReagentId: WeldingFuel
+        Quantity: 15
   - type: Destructible
     thresholds:
     - trigger:
@@ -312,6 +321,8 @@
       - !type:PlaySoundBehavior
         sound:
           path: /Audio/Effects/snap.ogg
+      - !type:SpillBehavior
+        solution: inside
       - !type:ExplodeBehavior
   - type: DamageOnLand
     damage:
