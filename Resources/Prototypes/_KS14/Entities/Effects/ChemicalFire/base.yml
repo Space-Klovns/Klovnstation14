@@ -63,4 +63,3 @@
     duration: 6.5
     temperature: 1500
     exposedVolume: 50
-    minimumAirTemperature: 270 # TODO LCDC CHEMFIRES: is this realistic? i kinda just added this so its easier for CO2 extinguishers to work.

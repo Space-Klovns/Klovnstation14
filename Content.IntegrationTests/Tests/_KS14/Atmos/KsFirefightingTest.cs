@@ -489,6 +489,7 @@ public sealed class KsFirefightingTest : GameTest
 
         var foamLeft = new float[2];
         var temperatures = new[] { Atmospherics.T20C, 600f };
+        var hotPuddleHeatCapacity = 0f;
 
         for (var i = 0; i < temperatures.Length; i++)
         {
@@ -498,7 +499,8 @@ public sealed class KsFirefightingTest : GameTest
 
             await server.WaitAssertion(() =>
             {
-                SpillPuddle(testMap, _inertLiquidReagent, 100f, temperature, out _);
+                var solution = SpillPuddle(testMap, _inertLiquidReagent, 100f, temperature, out _);
+                hotPuddleHeatCapacity = solution.Comp.Solution.GetHeatCapacity(server.ProtoMan);
                 FillBlanket(testMap.Tile);
             });
 
@@ -524,7 +526,11 @@ public sealed class KsFirefightingTest : GameTest
         {
             Assert.That(foamLeft[0], Is.EqualTo(prototype!.MaxFoam - prototype.DecayRate * updates).Within(prototype.DecayRate * 2f),
                 "A blanket over a cold puddle lost more than it drains by itself.");
-            Assert.That(foamLeft[1], Is.LessThan(foamLeft[0] - prototype.PuddleBoilRate * updates * 0.5f),
+            // Whichever runs out first: the rate it may boil at, or the heat the puddle has above the boiling point.
+            var energyPerUnit = prototype.SpecificHeat * (prototype.BoilingPoint - prototype.FoamTemperature) + prototype.LatentHeat;
+            var boilable = MathF.Min(prototype.PuddleBoilRate * updates,
+                (temperatures[1] - prototype.BoilingPoint) * hotPuddleHeatCapacity / energyPerUnit);
+            Assert.That(foamLeft[1], Is.LessThan(foamLeft[0] - boilable * 0.5f),
                 "The blanket did not boil off faster over a hot puddle.");
         }
     }
@@ -648,7 +654,8 @@ public sealed class KsFirefightingTest : GameTest
             {
                 Assert.That(SprayVolume(extinguisherUid), Is.LessThan(volumeBefore - FixedPoint2.New(3)),
                     "A second of shooting fired no more than a couple of shots.");
-                Assert.That(CountBlanketedTiles(testMap), Is.GreaterThanOrEqualTo(3),
+                // Its 0.35 s life carries a shot from the muzzle's tile across the next two.
+                Assert.That(CountBlanketedTiles(testMap), Is.GreaterThanOrEqualTo(2),
                     "The shots did not lay a blanket on each tile they crossed.");
             }
         });
@@ -695,6 +702,11 @@ public sealed class KsFirefightingTest : GameTest
         var testMap = await CreateBreathableTestMap();
         var tile = testMap.Tile.GridIndices;
 
+        // The blanket decays every update, and the client may be one state behind the server's latest.
+        var prototype = (KsFoamBlanketComponent)server.ProtoMan.Index(BlanketPrototype)
+            .Components[server.EntMan.ComponentFactory.GetComponentName<KsFoamBlanketComponent>()].Component;
+        var tolerance = prototype.DecayRate * (float)prototype.UpdateInterval.TotalSeconds + 0.0001f;
+
         await server.WaitPost(() => Assert.That(blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f), Is.GreaterThan(0f)));
         await Pair.RunTicksSync(10);
 
@@ -711,7 +723,7 @@ public sealed class KsFirefightingTest : GameTest
             var clientSystem = client.EntMan.System<ClientBlanketSystem>();
             Assert.That(clientSystem.TryGetBlanket(clientGridUid, tile, out var clientBlanket),
                 "The client did not register the blanket in its tile cache.");
-            Assert.That(clientBlanket.Comp.Foam, Is.EqualTo(serverFoam).Within(0.0001f), "The foam was not networked.");
+            Assert.That(clientBlanket.Comp.Foam, Is.EqualTo(serverFoam).Within(tolerance), "The foam was not networked.");
             Assert.That(clientBlanket.Comp.Foam, Is.GreaterThan(0f));
         });
 
@@ -727,7 +739,7 @@ public sealed class KsFirefightingTest : GameTest
         await client.WaitAssertion(() =>
         {
             Assert.That(client.EntMan.System<ClientBlanketSystem>().TryGetBlanket(clientGridUid, tile, out var clientBlanket));
-            Assert.That(clientBlanket.Comp.Foam, Is.EqualTo(serverFoam).Within(0.0001f), "A top-up did not reach the client.");
+            Assert.That(clientBlanket.Comp.Foam, Is.EqualTo(serverFoam).Within(tolerance), "A top-up did not reach the client.");
         });
     }
 
@@ -1545,10 +1557,11 @@ public sealed class KsFirefightingTest : GameTest
     }
 
     /// <summary>
-    ///     A suspended klovnide-trioxide puddle can't be put out, so it burns itself away, and its fire goes out with it.
+    ///     A suspended klovnide-trioxide puddle's fire can't be put out, and it does not burn its puddle away either: both
+    ///         are still there long after it lit.
     /// </summary>
     [Test]
-    public async Task TestKlovnideTrioxidePuddleBurnsItselfOut()
+    public async Task TestKlovnideTrioxidePuddleBurnsOn()
     {
         var server = Pair.Server;
         var entityManager = server.EntMan;
@@ -1565,7 +1578,7 @@ public sealed class KsFirefightingTest : GameTest
 
         await server.WaitAssertion(() =>
             Assert.That(chemicalFireSystem.TryGetChemicalFire((gridUid, null), tile, KlovnideFirePrototype.Id, out _),
-                "The puddle never lit, so its burning out proves nothing."));
+                "The puddle never lit, so its burning on proves nothing."));
 
         await server.WaitRunTicks(TicksPerSecond * 10);
 
@@ -1573,10 +1586,10 @@ public sealed class KsFirefightingTest : GameTest
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(entityManager.EntityExists(puddleUid) && !entityManager.IsQueuedForDeletion(puddleUid), Is.False,
-                    "The puddle did not burn away.");
-                Assert.That(chemicalFireSystem.GetTileChemicalFires((gridUid, null), tile) is { Fires.Count: > 0 }, Is.False,
-                    "The fire outlasted its puddle.");
+                Assert.That(entityManager.EntityExists(puddleUid) && !entityManager.IsQueuedForDeletion(puddleUid), Is.True,
+                    "The puddle burnt away.");
+                Assert.That(chemicalFireSystem.TryGetChemicalFire((gridUid, null), tile, KlovnideFirePrototype.Id, out _), Is.True,
+                    "The fire went out.");
             }
         });
     }

@@ -101,8 +101,9 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
                 {
                     if (!blanketSystem.TryGetBlanket(clientGridUid, tile, out var blanket))
                     {
-                        // Whatever kind it was: an engine predicted spawn would go at the next state.
-                        if (blanketSince.ContainsKey(tile))
+                        // Whatever kind it was, until the server's took over: an engine predicted spawn would go at
+                        //      the next state. The server's own blanket boiling away afterwards is not a loss.
+                        if (blanketSince.ContainsKey(tile) && !serverSince.ContainsKey(tile))
                             lostOn.TryAdd(tile, currentTick);
                         continue;
                     }
@@ -184,10 +185,14 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
             return placeholderComponent!;
         }
 
-        // Crossed until full, so that the later crossing takes nothing.
+        // Crossed until full, so that the later crossing takes nothing: one crossing more than the blanket's own
+        //      capacity needs, so that a retuned blanket is still filled.
         await Client.WaitAssertion(() =>
         {
-            firstExpiry = LayPlaceholder(crossings: 30, out var lastUsed).ExpiryTime;
+            Assert.That(Client.ResolveDependency<IPrototypeManager>().Index(BlanketPrototype)
+                .TryGetComponent<KsFoamBlanketComponent>(out var prototypeComponent, CEntMan.ComponentFactory));
+            var crossingsToFill = (int)MathF.Ceiling(prototypeComponent!.MaxFoam / prototypeComponent.FoamPerTile) + 1;
+            firstExpiry = LayPlaceholder(crossings: crossingsToFill, out var lastUsed).ExpiryTime;
             Assert.That(lastUsed, Is.Zero, "The placeholder was not filled up.");
         });
         await RunTicks(15);

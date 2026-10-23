@@ -69,8 +69,9 @@ public sealed class KsFoamContestTest : GameTest
     private void FillBlanket(TestMapData testMap)
     {
         var blanketSystem = Pair.Server.EntMan.System<KsFoamBlanketSystem>();
-        for (var i = 0; i < 30; i++)
-            blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f, playSound: false);
+        for (var i = 0; i < 1000 && blanketSystem.Deploy(BlanketPrototype, testMap.Tile, 1f, playSound: false) > 0f; i++)
+        {
+        }
     }
 
     [Test]
@@ -113,13 +114,16 @@ public sealed class KsFoamContestTest : GameTest
         var progressSeen = 0f;
         var foamAfterTwoSeconds = 0f;
         var foamLostAlone = 0f;
+        var maxFoam = 0f;
         await server.WaitAssertion(() =>
         {
             progressSeen = entityManager.GetComponent<ChemicalFireComponent>(fire.Owner).SmotherProgress;
             Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, testMap.Tile.GridIndices, out var blanket), "The blanket went too soon.");
             foamAfterTwoSeconds = blanket.Comp.Foam;
-            // Left alone, a blanket drains, and boils off over hot air no faster than this.
-            foamLostAlone = 2f * (blanket.Comp.DecayRate + blanket.Comp.BoilRate);
+            maxFoam = blanket.Comp.MaxFoam;
+            // Left alone in room air, a blanket only drains. Not its boil rate over hot air: that is a separate
+            //      floor, which a retuning can put above what this fire boils off in its first seconds.
+            foamLostAlone = 2f * blanket.Comp.DecayRate;
         });
 
         await server.WaitRunTicks(TicksPerSecond * 10);
@@ -129,7 +133,7 @@ public sealed class KsFoamContestTest : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(progressSeen, Is.GreaterThan(0f), "The fire showed no sign of losing to the foam.");
-                Assert.That(foamAfterTwoSeconds, Is.LessThan(1.5f - foamLostAlone), "The fire did not boil the foam away.");
+                Assert.That(foamAfterTwoSeconds, Is.LessThan(maxFoam - foamLostAlone), "The fire did not boil the foam away.");
                 Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, testMap.Tile.GridIndices, out _), Is.False,
                     "The fire did not boil the whole blanket away.");
                 Assert.That(entityManager.EntityExists(fire.Owner) && !entityManager.IsQueuedForDeletion(fire.Owner),

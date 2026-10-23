@@ -5,6 +5,7 @@ using Content.Server._KS14.Atmos.FoamBlanket;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
@@ -288,16 +289,25 @@ public sealed class KsElectricalFireTest : GameTest
         await server.WaitAssertion(() =>
         {
             Assert.That(entityManager.System<SharedChemicalFireSystem>().SpawnChemicalFire(ElectricalFirePrototype, TileRef(testMap, Centre)), Is.Not.Null);
-            for (var i = 0; i < 30; i++)
-                blanketSystem.Deploy(BlanketPrototype, TileRef(testMap, Centre), 1f, playSound: false);
+            // Until it takes no more, however much the blanket holds.
+            for (var i = 0; i < 1000 && blanketSystem.Deploy(BlanketPrototype, TileRef(testMap, Centre), 1f, playSound: false) > 0f; i++)
+            {
+            }
 
             Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, Centre, out var blanket) && blanket.Comp.Foam >= blanket.Comp.MaxFoam - 0.02f,
                 "The blanket did not fill up.");
             flammableUid = entityManager.SpawnEntity(_flammablePrototype, TileCentre(testMap, Centre));
         });
 
-        // A full blanket drains by itself in well over a minute.
-        await server.WaitRunTicks(TicksPerSecond * 4);
+        // As long as the fire's heat takes to boil a full blanket, and half again; a blanket drains by itself in well
+        //      over a minute, so this is the fire's doing.
+        var factory = entityManager.ComponentFactory;
+        Assert.That(server.ProtoMan.Index(BlanketPrototype).TryGetComponent<KsFoamBlanketComponent>(out var blanketPrototype, factory));
+        Assert.That(server.ProtoMan.Index(ElectricalFirePrototype).TryGetComponent<ChemicalFireComponent>(out var firePrototype, factory));
+        var energyPerUnit = blanketPrototype!.SpecificHeat * (blanketPrototype.BoilingPoint - blanketPrototype.FoamTemperature) + blanketPrototype.LatentHeat;
+        var boilSeconds = blanketPrototype.MaxFoam * energyPerUnit / (firePrototype!.HeatPower * firePrototype.FoamHeatFraction);
+        Assert.That(boilSeconds, Is.LessThan(30f), "The electrical fire takes so long to boil a full blanket off that foam keeps what lies in it safe.");
+        await server.WaitRunTicks((int)MathF.Ceiling(boilSeconds * 1.5f + 1f) * TicksPerSecond);
 
         await server.WaitAssertion(() =>
         {

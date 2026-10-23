@@ -19,9 +19,12 @@ namespace Content.Client._KS14.Atmos.FoamBlanket;
 ///         here and lays its own blankets on the server.
 ///     A kept copy is never re-predicted, so neither is anything it does: it moves once per real tick, on the
 ///         first-time-predicted ones, and the blankets it lays would be lost at the next state reset if they were
-///         engine predicted spawns, since nothing would spawn them again. So it checks its tile once per real tick,
-///         after physics has moved it, and lays placeholders the client keeps until the server's blankets arrive
+///         engine predicted spawns, since nothing would spawn them again. So it checks its tile once per real tick
+///         and lays placeholders the client keeps until the server's blankets arrive
 ///         (<see cref="KsFoamBlanketPlaceholderComponent"/>).
+///     It checks before physics steps, as the server's vapor does: a tile entered on a step reacts on the next tick,
+///         so a shot that despawns on the tick it enters a tile never lays anything there on the server, and must not
+///         here either, or that tile's placeholder waits for a blanket that never comes.
 /// </remarks>
 public sealed partial class KsPredictedFoamShotSystem : EntitySystem
 {
@@ -45,15 +48,17 @@ public sealed partial class KsPredictedFoamShotSystem : EntitySystem
     {
         base.Initialize();
 
-        // After the step, so the tile checked is where this tick has just put the shot.
-        UpdatesAfter.Add(typeof(SharedPhysicsSystem));
+        // Before the step, as the server's vapor reacts: the tile checked is where the last tick left the shot. After
+        //      the kept copy's simulated position is restored, so that is not the rendered, interpolated one.
+        UpdatesAfter.Add(typeof(KsPredictedSpawnSystem));
+        UpdatesBefore.Add(typeof(SharedPhysicsSystem));
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        // A kept copy only steps on these; on a re-predicted tick it is where the last one left it.
+        // A kept copy only steps on these, so checking on any other would check the same place again.
         if (!_gameTiming.IsFirstTimePredicted)
             return;
 

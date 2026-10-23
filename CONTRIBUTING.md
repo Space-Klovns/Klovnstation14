@@ -973,6 +973,49 @@ several tests, a failed `GameTest` can show as `Skipped` or `NotExecuted`, with 
 trx and the console. Treat that as a failure. Rerun that test alone with `--logger "console;verbosity=detailed"` to see
 the assertion that actually failed.
 
+### A test bound to today's tuning breaks on the next balance pass
+
+A test that copies a prototype's numbers into itself (a loop count, a wait, a threshold) is checking those numbers, not
+the mechanic. When someone retunes the prototype, it fails with no bug present, or, worse, it keeps passing while no
+longer exercising what it is named for. One balance pass on the foam blanket (`maxFoam` 1.5 → 3.5, `latentHeat` 12000
+→ 45000) and a shorter shot lifetime broke six tests this way:
+
+- `for (var i = 0; i < 30; i++) Deploy(...)` filled a 1.5u blanket and no longer filled a 3.5u one.
+- `WaitRunTicks(TicksPerSecond * 4)` was enough for a fire to boil a full blanket off, until it took 17 seconds.
+- "Boils at least half its `PuddleBoilRate`" assumed the rate was the limit; with more latent heat, the puddle's
+  spare heat ran out first.
+
+Derive what the test depends on from the prototype it spawns, and state the mechanism as the bound:
+
+```csharp
+// do this - fills the blanket whatever it holds
+for (var i = 0; i < 1000 && blanketSystem.Deploy(BlanketPrototype, tileRef, 1f) > 0f; i++)
+{
+}
+
+// and this - waits as long as the fire's heat takes, from the prototypes' own values
+ProtoMan.Index(BlanketPrototype).TryGetComponent<KsFoamBlanketComponent>(out var blanketPrototype, Factory);
+var boilSeconds = blanketPrototype.MaxFoam * energyPerUnit / (firePrototype.HeatPower * firePrototype.FoamHeatFraction);
+await server.WaitRunTicks((int)MathF.Ceiling(boilSeconds * 1.5f + 1f) * TicksPerSecond);
+
+// not this - true for one tuning
+for (var i = 0; i < 30; i++)
+    blanketSystem.Deploy(BlanketPrototype, tileRef, 1f);
+await server.WaitRunTicks(TicksPerSecond * 4);
+```
+
+- **Bound by every limit the code applies, not only the obvious one.** If the code takes the minimum of a rate and an
+  energy budget, so does the expected value.
+- **Tolerances come from the mechanism too:** a value that changes every update and reaches the client a state later is
+  compared within one update's change (`DecayRate * UpdateInterval`), not `0.0001f`.
+- **Assert the design limit separately** where it matters ("boiling a full blanket off takes under 30 s"), so a tuning
+  that breaks the *gameplay* still fails, with a message saying so, rather than the test silently stretching to fit.
+- **A hard-coded number is fine** when it's the test's own setup (a `[TestPrototypes]` entity, a spilled volume), not a
+  copy of a production prototype's value.
+
+When a test does fail after a balance change, first check whether the change made the test's own arithmetic wrong.
+Only then go looking for a bug, and update the test to derive the value rather than to match the new constant.
+
 ### Sleeping bodies get no contact updates, so a teleport doesn't end a collision
 
 Physics only updates contacts for awake bodies. Move a sleeping entity with `SetCoordinates` and it keeps every contact
