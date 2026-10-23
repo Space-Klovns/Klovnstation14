@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
-using KsFoamBlanketPlaceholderComponent = Content.Client._KS14.Atmos.FoamBlanket.KsFoamBlanketPlaceholderComponent;
 using Content.Client._KS14.PredictedSpawning;
 using Content.Server._KS14.Atmos.FoamBlanket;
 using Content.Server._KS14.Atmos.TileFire;
-using ClientPredictedFoamShotSystem = Content.Client._KS14.Atmos.FoamBlanket.KsPredictedFoamShotSystem;
 using ClientBlanketSystem = Content.Client._KS14.Atmos.FoamBlanket.KsFoamBlanketSystem;
 using Content.Server.Atmos.EntitySystems;
-using Content.Server.Chemistry.Components;
 using Content.Server.Chemistry.TileReactions;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
@@ -147,6 +144,7 @@ public sealed class KsFirefightingTest : GameTest
 
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private static readonly ProtoId<ReagentPrototype> WeldingFuelReagent = "WeldingFuel";
+    private static readonly ProtoId<ReagentPrototype> FirefightingFoamReagent = "FirefightingFoam";
     private static readonly EntProtoId BlanketPrototype = "KsFoamBlanket";
     private static readonly EntProtoId ChemicalFirePrototype = "ChemicalFire";
     private static readonly EntProtoId ExtinguisherPrototype = "FireExtinguisher";
@@ -1091,35 +1089,51 @@ public sealed class KsFirefightingTest : GameTest
     }
 
     /// <summary>
-    ///     What an offered tile gets from a shot is what the server's vapor offers it: a fraction of what it carries,
-    ///         at least a minimum, and never more than it carries; the shot's data matches the vapor's.
+    ///     The client reads a reagent's tile reactions from the same entries the server does, but keeps only those it
+    ///         predicts, in the server's order: for every reagent, its list is the server's with the rest left out.
     /// </summary>
     [Test]
-    public async Task TestPredictedFoamShotOfferMatchesVapor([Values(0.04f, 0.1f, 0.375f, 1f, 2.5f)] float foam)
+    public async Task TestClientReadsOnlyThePredictedTileReactions()
     {
-        await Pair.Server.WaitAssertion(() =>
+        var predictedReactionNames = new HashSet<string>
         {
-            var shotPrototype = SProtoMan.Index(_extinguisherShotPrototype);
-            Assert.That(shotPrototype.TryComp<VaporComponent>(out var vaporComponent, Pair.Server.EntMan.ComponentFactory));
-            Assert.That(shotPrototype.TryComp<KsPredictedFoamShotComponent>(out var shotComponent, Pair.Server.EntMan.ComponentFactory),
-                "The extinguisher shot does not predict its foam.");
+            "SpillTileReaction",
+            "SpillIfPuddlePresentTileReaction",
+            nameof(KsDeployFoamBlanketTileReaction),
+        };
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(shotComponent!.TransferFraction, Is.EqualTo(vaporComponent!.TransferAmountPercentage), "The shot's fraction is not the vapor's.");
-                Assert.That(shotComponent.MinimumTransfer, Is.EqualTo(vaporComponent.MinimumTransferAmount), "The shot's minimum is not the vapor's.");
-
-                // The vapor's own formula, and the cap that its removing only what a reaction used comes to.
-                var vaporOffer = Math.Max(foam * vaporComponent.TransferAmountPercentage, vaporComponent.MinimumTransferAmount);
-                Assert.That(ClientPredictedFoamShotSystem.GetTileOffer(foam, shotComponent.TransferFraction, shotComponent.MinimumTransfer),
-                    Is.EqualTo(Math.Min(vaporOffer, foam)));
-            }
+        var serverReactions = new Dictionary<string, List<string>>();
+        await Pair.Server.WaitPost(() =>
+        {
+            foreach (var reagent in SProtoMan.EnumeratePrototypes<ReagentPrototype>())
+                serverReactions[reagent.ID] = reagent.TileReactions.Select(reaction => reaction.GetType().Name).ToList();
         });
+
+        var clientReactions = new Dictionary<string, List<string>>();
+        await Pair.Client.WaitPost(() =>
+        {
+            foreach (var reagent in Pair.Client.ProtoMan.EnumeratePrototypes<ReagentPrototype>())
+                clientReactions[reagent.ID] = reagent.TileReactions.Select(reaction => reaction.GetType().Name).ToList();
+        });
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(serverReactions[FirefightingFoamReagent.Id], Does.Contain(nameof(KsDeployFoamBlanketTileReaction)),
+                "Foam lays no blankets, so this proves nothing about it.");
+            Assert.That(serverReactions.Values.Any(names => names.Any(name => !predictedReactionNames.Contains(name))),
+                "The server has no reactions the client leaves out, so this proves nothing about leaving them out.");
+
+            foreach (var (reagentId, names) in serverReactions)
+            {
+                Assert.That(clientReactions[reagentId], Is.EqualTo(names.Where(predictedReactionNames.Contains).ToList()),
+                    $"The client's tile reactions for {reagentId} are not the server's predicted ones.");
+            }
+        }
     }
 
     /// <summary>
-    ///     Only the shooter's kept copy of a shot lays blankets on the client, as it crosses tiles, from the foam its gun
-    ///         carries (the extinguisher is a quarter foam); a re-predicted throwaway of the shot and the server's copy
+    ///     Only the shooter's kept copy of a shot lays blankets on the client, through the shared vapor code, as it
+    ///         crosses tiles, from what the gun filled it with; a re-predicted throwaway of the shot and the server's copy
     ///         lay none. Its blankets are the client's own placeholders rather than engine predicted spawns, so no
     ///         state reset deletes them. When the server's blanket for a tile arrives it takes over, and the placeholder
     ///         goes; one the server never replaces goes once its time is up.
@@ -1158,7 +1172,8 @@ public sealed class KsFirefightingTest : GameTest
         {
             var entityManager = client.EntMan;
             var blanketSystem = entityManager.System<ClientBlanketSystem>();
-            var shotSystem = entityManager.System<ClientPredictedFoamShotSystem>();
+            var vaporSystem = entityManager.System<SharedVaporSystem>();
+            var solutionContainerSystem = entityManager.System<SharedSolutionContainerSystem>();
             var transformSystem = entityManager.System<SharedTransformSystem>();
 
             // The shooter's kept copy: client-side, kept, and no longer an engine predicted spawn.
@@ -1168,8 +1183,16 @@ public sealed class KsFirefightingTest : GameTest
             var throwawayShot = entityManager.PredictedSpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 0.5f, 1.5f));
             // The server's copy as the client holds it: neither.
             var serverShot = entityManager.SpawnAtPosition(_extinguisherShotPrototype, new EntityCoordinates(clientGridUid, 4.5f, 0.5f));
+
+            // Each filled with a shot's worth of the gun's solution, as the gun fills its shots.
+            var fireCost = entityManager.GetComponent<SolutionAmmoProviderComponent>(clientExtinguisherUid).FireCost;
+            Assert.That(solutionContainerSystem.TryGetSolution(clientExtinguisherUid, "spray", out var spraySolution, out _));
             foreach (var shotUid in new[] { keptShot, throwawayShot, serverShot })
-                entityManager.GetComponent<ProjectileComponent>(shotUid).Weapon = clientExtinguisherUid;
+                Assert.That(vaporSystem.TryAddSolution(shotUid, spraySolution!.Value, fireCost), "The shot was not filled.");
+
+            var shotSolution = entityManager.GetComponent<SolutionComponent>(keptShot).Solution;
+            var carried = (float)shotSolution.GetTotalPrototypeQuantity(FirefightingFoamReagent);
+            Assert.That(carried, Is.GreaterThan(0f), "The shot carries no foam.");
 
             var foams = new float[3];
             for (var x = 0; x < 3; x++)
@@ -1177,7 +1200,7 @@ public sealed class KsFirefightingTest : GameTest
                 transformSystem.SetCoordinates(keptShot, new EntityCoordinates(clientGridUid, x + 0.5f, 0.5f));
                 transformSystem.SetCoordinates(throwawayShot, new EntityCoordinates(clientGridUid, x + 0.5f, 1.5f));
                 transformSystem.SetCoordinates(serverShot, new EntityCoordinates(clientGridUid, x + 4.5f, 0.5f));
-                shotSystem.Update(0f);
+                vaporSystem.Update(0f);
 
                 Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 0), out var blanket), $"No blanket on tile {x}.");
                 foams[x] = blanket.Comp.Foam;
@@ -1185,7 +1208,7 @@ public sealed class KsFirefightingTest : GameTest
 
                 using (Assert.EnterMultipleScope())
                 {
-                    Assert.That(entityManager.HasComponent<KsFoamBlanketPlaceholderComponent>(blanket.Owner), "The client's blanket is not a placeholder.");
+                    Assert.That(entityManager.HasComponent<KsTilePlaceholderComponent>(blanket.Owner), "The client's blanket is not a placeholder.");
                     Assert.That(entityManager.HasComponent<PredictedSpawnComponent>(blanket.Owner), Is.False,
                         "The client's blanket is an engine predicted spawn, which the next state reset deletes.");
                     Assert.That(entityManager.IsClientSide(blanket.Owner), "The client's blanket is not client-side.");
@@ -1193,14 +1216,10 @@ public sealed class KsFirefightingTest : GameTest
             }
 
             // Staying on a tile lays nothing more.
-            shotSystem.Update(0f);
-            shotSystem.Update(0f);
+            vaporSystem.Update(0f);
+            vaporSystem.Update(0f);
 
-            // What the shot carries: one shot's worth of the gun's solution, at the solution's share of foam.
-            var shotComponent = entityManager.GetComponent<KsPredictedFoamShotComponent>(keptShot);
-            Assert.That(entityManager.System<SharedSolutionContainerSystem>().TryGetSolution(clientExtinguisherUid, "spray", out _, out var spraySolution));
-            var fireCost = (float)entityManager.GetComponent<SolutionAmmoProviderComponent>(clientExtinguisherUid).FireCost;
-            var carried = fireCost * (float)spraySolution!.GetTotalPrototypeQuantity(shotComponent.FoamReagent) / (float)spraySolution.Volume;
+            var vaporComponent = entityManager.GetComponent<VaporComponent>(keptShot);
             Assert.That(SProtoMan.Index(BlanketPrototype).TryComp<KsFoamBlanketComponent>(out var blanketPrototypeComponent, Pair.Server.EntMan.ComponentFactory));
 
             // Each tile takes what the vapor offers it of what is left, at most one tile's worth.
@@ -1209,13 +1228,14 @@ public sealed class KsFirefightingTest : GameTest
                 var left = carried;
                 for (var x = 0; x < 3; x++)
                 {
-                    var offer = ClientPredictedFoamShotSystem.GetTileOffer(left, shotComponent.TransferFraction, shotComponent.MinimumTransfer);
+                    var offer = Math.Max(left * vaporComponent.TransferAmountPercentage, vaporComponent.MinimumTransferAmount);
                     Assert.That(foams[x], Is.EqualTo(MathF.Min(offer, blanketPrototypeComponent!.FoamPerTile)).Within(0.011f),
-                        $"Tile {x} did not take what the vapor would offer it.");
+                        $"Tile {x} did not take what the vapor offered it.");
                     left -= foams[x];
                 }
 
-                Assert.That(shotComponent.Foam, Is.EqualTo(left).Within(0.011f), "The shot did not spend what it laid.");
+                Assert.That((float)shotSolution.GetTotalPrototypeQuantity(FirefightingFoamReagent), Is.EqualTo(left).Within(0.011f),
+                    "The shot did not spend what it laid.");
                 for (var x = 0; x < 3; x++)
                 {
                     Assert.That(blanketSystem.TryGetBlanket(clientGridUid, new Vector2i(x, 1), out _), Is.False,

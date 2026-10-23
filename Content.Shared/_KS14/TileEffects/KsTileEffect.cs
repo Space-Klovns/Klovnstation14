@@ -9,6 +9,7 @@ namespace Content.Shared._KS14.TileEffects;
 public abstract partial class KsTileEffect
 {
     [Dependency] protected EntityManager EntityManager = default!;
+    [Dependency] private KsTileEffectSystem _tileEffectSystem = default!;
 
     /// <summary>
     ///     Whether <see cref="Initialize"/> has run on this instance. Not a data field, so every instance a prototype
@@ -16,6 +17,14 @@ public abstract partial class KsTileEffect
     ///         merged again), which <see cref="KsTileEffectSystem"/> is never told about.
     /// </summary>
     public bool IsInitialized => _initialized;
+
+    /// <summary>
+    ///     Whether this was injected with the systems <paramref name="tileEffectSystem"/> belongs to. A client makes its
+    ///         systems anew on every connection, while its prototypes, and the effects on them, stay: one injected
+    ///         before that still holds the old systems, and acts on nothing.
+    /// </summary>
+    public bool IsInitializedFor(KsTileEffectSystem tileEffectSystem)
+        => _initialized && ReferenceEquals(_tileEffectSystem, tileEffectSystem);
 
     private bool _initialized;
 

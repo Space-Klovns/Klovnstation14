@@ -1,3 +1,4 @@
+using Content.Client._KS14.PredictedSpawning;
 using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -11,8 +12,8 @@ namespace Content.Client._KS14.Atmos.FoamBlanket;
 
 /// <summary>
 ///     Lets the client predict the blanket: it keeps the blanket cache, answers whether something burns from the
-///         appearance data it is sent, fades the blanket with its foam, and keeps the placeholders its player's own
-///         shots lay until the server's blankets replace them (<see cref="KsFoamBlanketPlaceholderComponent"/>).
+///         appearance data it is sent, fades the blanket with its foam, and hands the tile over to the server's
+///         blanket from the placeholder its player's own vapor laid there (<see cref="KsTilePlaceholderComponent"/>).
 /// </summary>
 public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
 {
@@ -31,7 +32,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     [Dependency] private DisplacementMapSystem _displacementMapSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private EntityQuery<KsFoamBlanketDissolveComponent> _dissolveQuery = default!;
-    [Dependency] private EntityQuery<KsFoamBlanketPlaceholderComponent> _placeholderQuery = default!;
+    [Dependency] private KsTilePlaceholderSystem _tilePlaceholderSystem = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     /// <summary>
@@ -43,43 +44,31 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         => _appearanceSystem.TryGetData<bool>(flammable.Owner, FireVisuals.OnFire, out var onFire) && onFire;
 
     protected override bool IsPlaceholderBlanket(EntityUid blanketUid)
-        => _placeholderQuery.HasComp(blanketUid);
+        => _tilePlaceholderSystem.IsPlaceholder(blanketUid);
 
-    /// <summary>
-    ///     A plain client-side spawn rather than a predicted one, so the next state reset leaves it alone; see
-    ///         <see cref="KsFoamBlanketPlaceholderComponent"/>.
-    /// </summary>
     protected override EntityUid SpawnPlaceholderBlanket(EntProtoId prototypeId, EntityCoordinates coordinates)
     {
-        var blanketUid = SpawnAttachedTo(prototypeId, coordinates);
-
-        var lifetime = TryComp<KsFoamBlanketComponent>(blanketUid, out var blanketComponent)
-            ? blanketComponent.PlaceholderLifetime
+        var lifetime = ProtoMan.Index(prototypeId).TryGetComponent<KsFoamBlanketComponent>(out var prototypeComponent, Factory)
+            ? prototypeComponent.PlaceholderLifetime
             : TimeSpan.Zero;
-        AddComp(blanketUid, new KsFoamBlanketPlaceholderComponent { ExpiryTime = _gameTiming.CurTime + lifetime });
 
-        return blanketUid;
+        return _tilePlaceholderSystem.Spawn(prototypeId, coordinates, lifetime);
     }
 
     protected override void OnPlaceholderCrossed(Entity<KsFoamBlanketComponent> blanket)
     {
         base.OnPlaceholderCrossed(blanket);
 
-        if (!_placeholderQuery.TryComp(blanket.Owner, out var placeholderComponent) || placeholderComponent.Superseded)
-            return;
-
-        placeholderComponent.ExpiryTime = _gameTiming.CurTime + blanket.Comp.PlaceholderLifetime;
+        _tilePlaceholderSystem.Refresh(blanket.Owner, blanket.Comp.PlaceholderLifetime);
     }
 
     /// <summary>
-    ///     The server's blanket has arrived on a tile, and taken it over from this client's placeholder. Hidden at
-    ///         once, so the tile never shows two; deleted in <see cref="FrameUpdate"/>, because this runs while the
-    ///         state is applied, and deleting a client-side entity destroys its contacts there and then.
+    ///     The server's blanket has arrived on a tile, and takes it over from this client's placeholder.
     /// </summary>
     protected override bool ShouldSupersedePreviousBlanket(EntityUid previousUid, EntityUid newUid)
     {
-        var previousIsPlaceholder = _placeholderQuery.HasComp(previousUid);
-        var newIsPlaceholder = _placeholderQuery.HasComp(newUid);
+        var previousIsPlaceholder = _tilePlaceholderSystem.IsPlaceholder(previousUid);
+        var newIsPlaceholder = _tilePlaceholderSystem.IsPlaceholder(newUid);
 
         if (previousIsPlaceholder && newIsPlaceholder)
             return false;
@@ -97,10 +86,8 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     {
         base.OnBlanketSuperseded(previousUid);
 
-        if (!_placeholderQuery.TryComp(previousUid, out var placeholderComponent))
+        if (!_tilePlaceholderSystem.IsPlaceholder(previousUid))
             return;
-
-        placeholderComponent.Superseded = true;
 
         if (TryComp<KsFoamBlanketComponent>(previousUid, out var blanketComponent))
         {
@@ -108,8 +95,8 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
             blanketComponent.LocalTile = default;
         }
 
-        if (_spriteQuery.TryComp(previousUid, out var spriteComponent))
-            _spriteSystem.SetVisible((previousUid, spriteComponent), false);
+        // Hidden at once, deleted on the next frame.
+        _tilePlaceholderSystem.Supersede(previousUid);
     }
 
     [SubscribeLocalEvent]
@@ -158,14 +145,6 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         base.FrameUpdate(frameTime);
 
         var curTime = _gameTiming.CurTime;
-
-        // Superseded, or never superseded in time. Out here, clear of state application and of physics.
-        var placeholderEnumerator = EntityQueryEnumerator<KsFoamBlanketPlaceholderComponent>();
-        while (placeholderEnumerator.MoveNext(out var placeholderUid, out var placeholderComponent))
-        {
-            if (placeholderComponent.Superseded || curTime >= placeholderComponent.ExpiryTime)
-                QueueDel(placeholderUid);
-        }
 
         var enumerator = EntityQueryEnumerator<KsFoamBlanketDissolveComponent, SpriteComponent>();
         while (enumerator.MoveNext(out var uid, out var dissolveComponent, out var spriteComponent))

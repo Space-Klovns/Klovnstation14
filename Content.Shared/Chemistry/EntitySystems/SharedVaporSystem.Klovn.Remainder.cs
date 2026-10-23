@@ -1,13 +1,13 @@
-using Content.Server.Chemistry.Components;
+using System.Linq;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Spawners;
 
-namespace Content.Server.Chemistry.EntitySystems;
+namespace Content.Shared.Chemistry.EntitySystems;
 
-internal sealed partial class VaporSystem
+public abstract partial class SharedVaporSystem
 {
     /// <summary>
     ///     A vapor running out of time hands what it still carries to the tile it ends on.
@@ -15,7 +15,8 @@ internal sealed partial class VaporSystem
     [SubscribeLocalEvent]
     private void OnVaporDespawn(Entity<VaporComponent> entity, ref TimedDespawnEvent args)
     {
-        KsReactRemainder(entity);
+        if (IsSimulatedHere(entity))
+            KsReactRemainder(entity);
     }
 
     /// <summary>
@@ -37,9 +38,10 @@ internal sealed partial class VaporSystem
         if (!TryComp(transformComponent.GridUid, out MapGridComponent? gridComponent))
             return;
 
-        var tile = _map.GetTileRef(transformComponent.GridUid.Value, gridComponent, transformComponent.Coordinates);
+        var tile = _mapSystem.GetTileRef(transformComponent.GridUid.Value, gridComponent, transformComponent.Coordinates);
         var contents = solutionComponent.Solution;
-        using var temperatureScope = _puddleSystem.KsBeginTileReactionTemperature(contents.Temperature);
+        using var temperatureScope = PuddleSystem.KsBeginTileReactionTemperature(contents.Temperature);
+        using var predictedScope = _predictedTileReactionSystem.BeginScope();
 
         foreach (var reagentQuantity in contents.Contents.ToArray())
         {
@@ -51,7 +53,7 @@ internal sealed partial class VaporSystem
             if (reaction > reagentQuantity.Quantity)
                 reaction = reagentQuantity.Quantity;
 
-            _solutionContainer.RemoveReagent((entity.Owner, solutionComponent), reagentQuantity.Reagent, reaction);
+            SolutionContainerSystem.RemoveReagent((entity.Owner, solutionComponent), reagentQuantity.Reagent, reaction);
         }
     }
 }

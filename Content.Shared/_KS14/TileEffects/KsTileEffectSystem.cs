@@ -50,11 +50,12 @@ public sealed partial class KsTileEffectSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Injects <paramref name="tileEffect"/> if nothing has yet.
+    ///     Injects <paramref name="tileEffect"/> if nothing has yet, or if what did was a client's systems from before it
+    ///         last connected (see <see cref="KsTileEffect.IsInitializedFor"/>).
     /// </summary>
     public void EnsureInitialized(KsTileEffect tileEffect)
     {
-        if (!tileEffect.IsInitialized)
+        if (!tileEffect.IsInitializedFor(this))
             tileEffect.Initialize(_systemCollectionHookManager.DependencyCollection);
     }
 

@@ -12,7 +12,8 @@ namespace Content.Shared._KS14.TileEffects;
 ///         injected rather than looked up through the <see cref="IEntityManager"/> on every reaction.
 /// </summary>
 /// <remarks>
-///     Nothing initialises tile reactions when prototypes load, so each one injects itself the first time it reacts.
+///     Nothing initialises tile reactions when prototypes load, so each one injects itself when it reacts, again
+///         whenever the systems it was injected with have since been replaced.
 ///         Listed under a reagent's <c>tileEffects</c>, it reacts whatever of the reagent the effects before it left.
 /// </remarks>
 public abstract partial class KsTileReaction : KsTileEffect, ITileReaction
@@ -32,8 +33,8 @@ public abstract partial class KsTileReaction : KsTileEffect, ITileReaction
         IEntityManager entityManager,
         List<ReagentData>? data = null)
     {
-        if (!IsInitialized)
-            entityManager.System<KsTileEffectSystem>().EnsureInitialized(this);
+        // Every time, not only the first: an instance can outlive the systems it was injected with.
+        entityManager.System<KsTileEffectSystem>().EnsureInitialized(this);
 
         return React(tile, reagent, reactVolume, data);
     }

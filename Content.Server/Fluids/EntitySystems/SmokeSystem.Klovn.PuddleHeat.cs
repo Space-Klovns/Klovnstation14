@@ -1,4 +1,4 @@
-using Content.Server._KS14.Atmos.FoamBlanket;
+using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Server.Chemistry.TileReactions;
 using Content.Shared._KS14.Chemistry.SolutionHeatExchange;
 using Content.Shared.Chemistry.Components;

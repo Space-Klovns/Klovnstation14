@@ -1,7 +1,8 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
-using Content.Client._KS14.Atmos.FoamBlanket;
+using Content.Client._KS14.Chemistry;
+using Content.Client._KS14.PredictedSpawning;
 using Content.IntegrationTests.Tests.Interaction;
 using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Shared.Weapons.Ranged.Events;
@@ -22,7 +23,7 @@ namespace Content.IntegrationTests.Tests._KS14.Atmos;
 ///     An extinguisher shot the client fires itself, through the request a real client sends: the shooter's kept copy
 ///         of it lays the client's own blankets along its whole path, and they last until the server's arrive.
 /// </summary>
-[TestOf(typeof(KsPredictedFoamShotSystem))]
+[TestOf(typeof(KsVaporSystem))]
 public sealed class KsPredictedFoamShotTest : InteractionTest
 {
     protected override string PlayerPrototype => "MobHuman"; // hands and combat mode, to fire a gun
@@ -110,7 +111,7 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
 
                     blanketSince.TryAdd(tile, currentTick);
 
-                    if (CEntMan.HasComponent<KsFoamBlanketPlaceholderComponent>(blanket.Owner))
+                    if (CEntMan.HasComponent<KsTilePlaceholderComponent>(blanket.Owner))
                         placeholderSince.TryAdd(tile, currentTick);
                     else if (!CEntMan.IsClientSide(blanket.Owner))
                         serverSince.TryAdd(tile, currentTick);
@@ -127,7 +128,7 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
         var remainingPlaceholders = 0;
         await Client.WaitPost(() =>
         {
-            var enumerator = CEntMan.AllEntityQueryEnumerator<KsFoamBlanketPlaceholderComponent>();
+            var enumerator = CEntMan.AllEntityQueryEnumerator<KsTilePlaceholderComponent>();
             while (enumerator.MoveNext(out _, out _))
                 remainingPlaceholders++;
         });
@@ -170,7 +171,7 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
         var firstExpiry = TimeSpan.Zero;
         var lifetime = TimeSpan.Zero;
 
-        KsFoamBlanketPlaceholderComponent LayPlaceholder(int crossings, out float lastUsed)
+        KsTilePlaceholderComponent LayPlaceholder(int crossings, out float lastUsed)
         {
             var blanketSystem = CEntMan.System<ClientFoamBlanketSystem>();
             var tileRef = CEntMan.System<SharedMapSystem>().GetTileRef(clientGridUid, CEntMan.GetComponent<MapGridComponent>(clientGridUid), tile);
@@ -180,7 +181,7 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
 
             Assert.That(blanketSystem.TryGetBlanket(clientGridUid, tile, out var blanket), "No blanket was laid.");
             lifetime = blanket.Comp.PlaceholderLifetime;
-            Assert.That(CEntMan.TryGetComponent<KsFoamBlanketPlaceholderComponent>(blanket.Owner, out var placeholderComponent),
+            Assert.That(CEntMan.TryGetComponent<KsTilePlaceholderComponent>(blanket.Owner, out var placeholderComponent),
                 "The blanket laid is not a placeholder.");
             return placeholderComponent!;
         }

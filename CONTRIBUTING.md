@@ -1205,7 +1205,7 @@ A predicted spawn makes two copies of an entity: one on the predicting client, a
 | --- | --- | --- |
 | Client's copy | A stand-in. Deleted on every applied server state (`ClientGameStateManager.ResetPredictedEntities`), re-created only while its tick is still being re-predicted, so gone about one round trip after spawning. | Kept for its whole life, on that user's client only. |
 | Server's copy | Replaces the stand-in for everyone. | Hidden and inert on the user's client (no sprite, light, collisions or predicted physics); shown to everyone else. |
-| Use for | Anything long-lived or that gameplay reads: fires, foam blankets. | Short-lived cosmetic movers the user caused: their own bullets, their own sparks. |
+| Use for | Anything long-lived or that gameplay reads: fires, foam blankets. | Short-lived movers the user caused: their own bullets, sparks and vapors. |
 
 Without a `user`, the KS system is the engine spawn plus predicted physics, which matters only for something that moves (a spark). Anything anchored or static uses the engine's spawn directly.
 
@@ -1215,7 +1215,7 @@ User mode exists because the engine's handover is a visible jump for fast movers
 
 User mode has rules nothing enforces:
 
-- **Pass `user` only on that user's own predicted path**: the code their client also runs for their own input, such as a shot request. A server-only path with a `user` hides the server's copy from a client that never made one, and the user sees nothing at all. Teleports, damage-driven effects, triggers and spells pass no user. Guns don't pass one per call either. `SharedGunSystem.OnShootRequest` opens a `BeginUserPrediction` scope, and only projectiles spawned inside it are marked. This is because `PlayerShotProjectileEvent` also fires for server-only shots, such as spells and autofire.
+- **Pass `user` only on that user's own predicted path**: the code their client also runs for their own input, such as a shot request. A server-only path with a `user` hides the server's copy from a client that never made one, and the user sees nothing at all. Teleports, damage-driven effects, triggers and spells pass no user. Guns don't pass one per call either. `SharedGunSystem.OnShootRequest` opens a `BeginUserPrediction` scope, and only projectiles spawned inside it are marked. This is because `PlayerShotProjectileEvent` also fires for server-only shots, such as spells and autofire. Sprays pass one only from their click and activate-in-world handlers (`SharedSpraySystem.Klovn.Predicted.cs`). A verb, an action or a test sprays the server's vapors alone.
 - **The kept copy never hears from the server again.** It can't follow anything the server does to the real one, which is why gameplay-relevant entities don't use this mode.
 - **Gate a kept copy's one-off effects on `KsSharedPredictedSpawnSystem.IsFirstTimePredicted(uid)`, not `IGameTiming.IsFirstTimePredicted`.** Its physics steps only on first-time ticks, but its contacts are found by the next pass, usually a re-predicted tick, so a timing gate drops its impact effect.
 
@@ -1241,15 +1241,47 @@ re-running the code that spawned them, and nothing re-runs a kept copy. So anyth
 vanished from every tile but the first this way. Anything a kept copy spawns that has to last until the server's own copy
 arrives is a plain client-side entity, together with a handover:
 
-- **Mark it.** The placeholder blanket is a client-side `KsFoamBlanket` with `KsFoamBlanketPlaceholderComponent` and an
-  expiry time, so it behaves as a real blanket for prediction.
-- **Hand over.** When the server's copy arrives, hide the placeholder at once, so the tile never shows two, and delete it
-  outside state application (here in `FrameUpdate`), for the contact reason above.
+- **Mark it.** Spawn it with `KsTilePlaceholderSystem.Spawn` (client), which gives it a `KsTilePlaceholderComponent` and
+  an expiry time. It is the real entity on that client until it is handed over: a placeholder blanket keeps chemfires
+  out, and a placeholder puddle is slippery.
+- **Hand over.** When the server's copy for the tile arrives, call `KsTilePlaceholderSystem.Supersede`. That hides the
+  placeholder at once, so the tile never shows two, and deletes it in `FrameUpdate`, outside state application, for the
+  contact reason above. Each feature decides what "arrived" means: the blanket cache taking the server's blanket, or a
+  networked puddle starting up on the tile (`KsPredictedSpillSystem`).
 - **Time it out.** If the server's copy never comes (the server's shot hit something sooner), the placeholder deletes
   itself when it expires.
 
-`KsPredictedFoamShotTest.FiredShotLaysBlanketsThatLastUntilTheServersArrive` fails if engine predicted spawns are used,
-or if the handover is missing.
+**Never change a networked entity's state from a kept copy.** The next state puts it back, and the server's change
+arrives a state or so later, so it flickers between the two. A kept vapor spilling into a puddle the server already sent
+leaves the puddle's solution alone. It adds a client-only `KsPredictedPuddleTopUpComponent`, which only changes the volume the
+puddle is drawn at, until a state shows the server's spill has landed.
+
+`KsPredictedFoamShotTest.FiredShotLaysBlanketsThatLastUntilTheServersArrive` and
+`KsPredictedSpillTest.SprayLaysPuddlesThatLastUntilTheServersArrive` fail if engine predicted spawns are used, or if the
+handover is missing.
+
+**Vapors are shared code** (`SharedVaporSystem`): a player's own spray (`SharedSpraySystem`) or solution gun shot is a
+kept copy, and their client runs its tile walk. The server simulates every vapor; a client only its own kept copies.
+
+- **What the client predicts.** A reagent's `tileReactions` reach the client through `KsTileReactionListSerializer`,
+  which keeps only the types the client has. A reaction is predicted by adding a client-side class with exactly the
+  server's class name (`Content.Client/_KS14/Chemistry/TileReactions/`), or by moving a fork-owned one to Shared
+  (`KsDeployFoamBlanketTileReaction`). Everything else (extinguishing, flammability, CO2 vaporising) stays server-only,
+  with no YAML change. `KsFirefightingTest.TestClientReadsOnlyThePredictedTileReactions` checks every reagent.
+- **Gate each client reaction on `KsPredictedTileReactionSystem.ShouldReact`.** Only a kept vapor's walk opens the scope
+  that makes it true. Other shared code runs tile reactions on the client too: a mop's absorbent, re-run on every
+  re-predicted tick. Without the gate, each re-prediction would spawn another puddle. Checked by
+  `KsPredictedSpillTest.ReactionsOutsideAKeptVaporDoNothingOnTheClient`.
+- **Order before physics.** A vapor reacts with the tile the last tick left it on, so a tile it enters on the tick it
+  despawns is never reacted with on the server. A client that reacts after physics lays one tile too many. That tile's
+  placeholder waits for a server copy that never comes, and vanishes when it expires.
+
+**Objects held on prototypes outlive a client's systems.** A client makes its entity systems anew on every connection,
+but keeps its prototypes, and the tile effects and reactions on them. One injected once, at load, still holds the old
+systems after a reconnect: it compiles, it runs, and it acts on nothing. Before the client had any tile reactions this
+never showed. Re-check whenever you use one: `KsTileEffectSystem.EnsureInitialized` re-injects an effect that was
+injected by an older `KsTileEffectSystem` (`KsTileEffect.IsInitializedFor`). In tests it shows up only when a pooled
+client pair reconnected earlier in the same run, so a test of it fails in a batch and passes alone.
 
 Neither kind of hiding works by sending the client a network event naming the entity: it can arrive before the entity's state does. Put the information on a networked component, as `KsPredictedSpawnComponent.PredictingUser` does. Also, `PredictedDel` of a networked entity on the client is only a predicted detach, which the next state restores, so don't use it to hide one.
 
