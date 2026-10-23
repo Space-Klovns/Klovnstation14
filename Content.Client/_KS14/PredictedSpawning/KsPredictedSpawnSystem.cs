@@ -1,8 +1,13 @@
 using System.Numerics;
 using Content.Shared._KS14.PredictedSpawning;
+using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Client.GameObjects;
 using Robust.Client.Physics;
 using Robust.Client.Player;
+using Robust.Client.Timing;
+using Robust.Shared.Map;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 
@@ -11,12 +16,51 @@ namespace Content.Client._KS14.PredictedSpawning;
 /// <inheritdoc/>
 public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
 {
+    [Dependency] private IClientGameTiming _clientGameTiming = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private SharedPointLightSystem _pointLightSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<KsKeptPredictedSpawnComponent> _keptQuery = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private SharedGunSystem _gunSystem = default!;
+
+    /// <summary>
+    ///     How far, in metres, a server copy may be from a kept copy for the two to be matched as one spawn.
+    /// </summary>
+    private const float MaxPairDistance = 4f;
+
+    /// <summary>
+    ///     The time constant, in seconds, of a kept copy's pull towards its server copy: each such span closes about
+    ///         two thirds of the gap between them.
+    /// </summary>
+    private const float CorrectionTime = 0.1f;
+
+    /// <summary>
+    ///     How long a kept copy waits for its server copy before deciding none is coming.
+    /// </summary>
+    private static readonly TimeSpan UnpairedLifetime = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    ///     Server copies hidden here that are not matched to a kept copy yet.
+    /// </summary>
+    private readonly HashSet<EntityUid> _unpairedServerCopies = new();
+
+    private readonly List<(float Distance, EntityUid ServerUid, EntityUid KeptUid)> _pairCandidates = new();
+
+    /// <summary>
+    ///     How long an impact played by one copy of a shot stops the other copy playing one on the same target: long
+    ///         enough for a round trip, short enough that a second shot at the same target still plays.
+    /// </summary>
+    private static readonly TimeSpan RecentImpactWindow = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     Impacts on this player's own shots' targets played lately, by the kept copy or by the server's copy, each
+    ///         waiting to be matched with the other copy's hit on the same target. A shotgun's pellets each leave one.
+    ///         Pruned in <see cref="Update"/>.
+    /// </summary>
+    private readonly List<(EntityUid Target, TimeSpan Time, bool FromServer)> _recentImpacts = new();
 
     public override void Initialize()
     {
@@ -32,6 +76,11 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         base.Update(frameTime);
 
         var firstTimePredicted = GameTiming.IsFirstTimePredicted;
+        if (firstTimePredicted && _unpairedServerCopies.Count > 0)
+            PairServerCopies();
+
+        if (firstTimePredicted)
+            _recentImpacts.RemoveAll(impact => GameTiming.CurTime > impact.Time + RecentImpactWindow);
 
         var keptEnumerator = EntityQueryEnumerator<KsKeptPredictedSpawnComponent, TransformComponent>();
         while (keptEnumerator.MoveNext(out var keptUid, out var keptComponent, out var transformComponent))
@@ -45,14 +94,129 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
                 continue;
             }
 
+            // Its server copy never came: the server refused the shot, so this is a bullet nobody fired.
+            if (firstTimePredicted &&
+                keptComponent.ServerCopy == null &&
+                GameTiming.CurTime > keptComponent.SpawnTime + UnpairedLifetime)
+            {
+                PhysicsSystem.SetCanCollide(keptUid, false);
+                QueueDel(keptUid);
+                continue;
+            }
+
             // Re-queued every tick, because whether a kept copy steps depends on which kind of tick this is. Physics
             //      only adds or removes the predicted marker when the answer changes, which is twice a frame: off for
             //      the re-predicted ticks, on again for the first-time one.
             PhysicsSystem.UpdateIsPredicted(keptUid);
 
             if (firstTimePredicted)
+            {
                 RestoreSimulatedTransform((keptUid, keptComponent, transformComponent));
+                FollowServerCopy((keptUid, keptComponent, transformComponent));
+            }
         }
+    }
+
+    /// <summary>
+    ///     Matches each newly arrived server copy to the kept copy of the same spawn: the nearest one of the same
+    ///         prototype to where the server copy is now, closest pairs first. Nothing networked names a kept copy,
+    ///         which exists only here, so position is all there is to go on; the two start at the same place and
+    ///         speed, a lag-compensated shot aside.
+    /// </summary>
+    private void PairServerCopies()
+    {
+        _pairCandidates.Clear();
+        foreach (var serverUid in _unpairedServerCopies)
+        {
+            if (!TryGetServerCopyMotion(serverUid, out var serverCoordinates, out _))
+                continue;
+
+            var serverPrototype = MetaData(serverUid).EntityPrototype;
+            var keptEnumerator = EntityQueryEnumerator<KsKeptPredictedSpawnComponent, MetaDataComponent>();
+            while (keptEnumerator.MoveNext(out var keptUid, out var keptComponent, out var keptMetaDataComponent))
+            {
+                if (keptComponent.ServerCopy != null ||
+                    keptComponent.DeletionDeferred ||
+                    keptMetaDataComponent.EntityPrototype != serverPrototype)
+                    continue;
+
+                var keptCoordinates = _transformSystem.GetMapCoordinates(keptUid);
+                if (keptCoordinates.MapId != serverCoordinates.MapId)
+                    continue;
+
+                var distance = Vector2.Distance(keptCoordinates.Position, serverCoordinates.Position);
+                if (distance <= MaxPairDistance)
+                    _pairCandidates.Add((distance, serverUid, keptUid));
+            }
+        }
+
+        _pairCandidates.Sort((first, second) => first.Distance.CompareTo(second.Distance));
+        foreach (var (_, serverUid, keptUid) in _pairCandidates)
+        {
+            var keptComponent = _keptQuery.GetComponent(keptUid);
+            if (keptComponent.ServerCopy != null || !_unpairedServerCopies.Remove(serverUid))
+                continue;
+
+            keptComponent.ServerCopy = serverUid;
+        }
+    }
+
+    /// <summary>
+    ///     Pulls a kept copy towards where its server copy is now, and its velocity towards the server copy's, so a
+    ///         shot the server fired differently (lag compensation, a reflection) ends up with the real one over a
+    ///         few frames, instead of flying on apart from it or jumping to it.
+    /// </summary>
+    private void FollowServerCopy(Entity<KsKeptPredictedSpawnComponent, TransformComponent> entity)
+    {
+        var (uid, keptComponent, transformComponent) = entity;
+        if (keptComponent.ServerCopy is not { } serverUid ||
+            !TryGetServerCopyMotion(serverUid, out var serverCoordinates, out var serverVelocity))
+            return;
+
+        var keptCoordinates = _transformSystem.GetMapCoordinates((uid, transformComponent));
+        if (keptCoordinates.MapId != serverCoordinates.MapId)
+            return;
+
+        var fraction = 1f - MathF.Exp(-(float)GameTiming.TickPeriod.TotalSeconds / CorrectionTime);
+        var offset = serverCoordinates.Position - keptCoordinates.Position;
+        if (offset.LengthSquared() > 1e-8f)
+            _transformSystem.SetWorldPosition((uid, transformComponent), keptCoordinates.Position + offset * fraction);
+
+        if (!_physicsQuery.TryComp(uid, out var physicsComponent))
+            return;
+
+        var velocityChange = (serverVelocity - PhysicsSystem.GetMapLinearVelocity(uid, physicsComponent)) * fraction;
+        if (velocityChange.LengthSquared() <= 1e-8f)
+            return;
+
+        // The change is in map space; the body's velocity is relative to its parent.
+        var parentRotation = _transformSystem.GetWorldRotation(transformComponent.ParentUid);
+        PhysicsSystem.SetLinearVelocity(uid,
+            physicsComponent.LinearVelocity + (-parentRotation).RotateVec(velocityChange),
+            body: physicsComponent);
+    }
+
+    /// <summary>
+    ///     Where a server copy is as of the tick the kept copies were last stepped on. Its state is from
+    ///         <see cref="IClientGameTiming.LastRealTick"/>, and it is not predicted here, so it is carried forward at its
+    ///         velocity.
+    /// </summary>
+    private bool TryGetServerCopyMotion(EntityUid serverUid, out MapCoordinates coordinates, out Vector2 velocity)
+    {
+        coordinates = MapCoordinates.Nullspace;
+        velocity = Vector2.Zero;
+        if (!TryComp(serverUid, out MetaDataComponent? metaDataComponent) ||
+            (metaDataComponent.Flags & MetaDataFlags.Detached) != 0 ||
+            !_physicsQuery.TryComp(serverUid, out var physicsComponent))
+            return false;
+
+        velocity = PhysicsSystem.GetMapLinearVelocity(serverUid, physicsComponent);
+        var ticksAhead = Math.Max(0, (int)GameTiming.CurTick.Value - 1 - (int)_clientGameTiming.LastRealTick.Value);
+        var serverCoordinates = _transformSystem.GetMapCoordinates(serverUid);
+        coordinates = new MapCoordinates(
+            serverCoordinates.Position + velocity * ticksAhead * (float)GameTiming.TickPeriod.TotalSeconds,
+            serverCoordinates.MapId);
+        return true;
     }
 
     /// <summary>
@@ -146,7 +310,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
 
         // The first prediction: this one is kept. Without its PredictedSpawnComponent the state reset leaves it alone.
         RemComp<PredictedSpawnComponent>(uid);
-        EnsureComp<KsKeptPredictedSpawnComponent>(uid);
+        EnsureComp<KsKeptPredictedSpawnComponent>(uid).SpawnTime = GameTiming.CurTime;
         EnsureComp<KsPredictedSpawnComponent>(uid);
         PhysicsSystem.UpdateIsPredicted(uid);
     }
@@ -180,6 +344,84 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         // Predicted physics, whoever's copy this is; or, for the hidden copy, not.
         PhysicsSystem.UpdateIsPredicted(entity.Owner);
         RefreshHidden(entity);
+
+        if (IsHiddenHere(entity))
+            _unpairedServerCopies.Add(entity.Owner);
+    }
+
+    /// <summary>
+    ///     A server copy the server deleted takes its kept copy with it, wherever that has got to: the real shot is
+    ///         over, by a hit or by running out.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnShutdown(Entity<KsPredictedSpawnComponent> entity, ref ComponentShutdown args)
+    {
+        _unpairedServerCopies.Remove(entity.Owner);
+        if (!IsHiddenHere(entity))
+            return;
+
+        // Deferred, as this usually runs while a state is applied (see PredictedQueueDelDeferrable).
+        var keptEnumerator = EntityQueryEnumerator<KsKeptPredictedSpawnComponent>();
+        while (keptEnumerator.MoveNext(out var keptComponent))
+        {
+            if (keptComponent.ServerCopy == entity.Owner)
+                keptComponent.DeletionDeferred = true;
+        }
+    }
+
+    public override bool ClaimImpact(EntityUid projectile, EntityUid target)
+    {
+        if (!IsKeptLocally(projectile))
+            return true;
+
+        // The server's copy got there first and already played this hit.
+        if (TryTakeRecentImpact(target, fromServer: true))
+            return false;
+
+        _recentImpacts.Add((target, GameTiming.CurTime, FromServer: false));
+        return true;
+    }
+
+    /// <summary>
+    ///     Removes an impact on <paramref name="target"/> played within <see cref="RecentImpactWindow"/> by the given
+    ///         side, if there is one.
+    /// </summary>
+    private bool TryTakeRecentImpact(EntityUid target, bool fromServer)
+    {
+        for (var i = 0; i < _recentImpacts.Count; i++)
+        {
+            var (impactTarget, time, impactFromServer) = _recentImpacts[i];
+            if (impactTarget != target || impactFromServer != fromServer || GameTiming.CurTime > time + RecentImpactWindow)
+                continue;
+
+            _recentImpacts.RemoveAt(i);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     The server's copy of this player's own projectile hit something. The kept copy usually played that hit
+    ///         already, on the same target, and then this plays nothing; when the kept copy missed it, or hit something
+    ///         else, the real hit's impact plays here as well.
+    /// </summary>
+    [SubscribeNetworkEvent]
+    private void OnImpact(KsPredictedSpawnImpactEvent args)
+    {
+        if (TryGetEntity(args.Target, out var targetUid))
+        {
+            if (TryTakeRecentImpact(targetUid.Value, fromServer: false))
+                return;
+
+            _recentImpacts.Add((targetUid.Value, GameTiming.CurTime, FromServer: true));
+        }
+
+        if (args.ImpactEffect is { } impactEffect)
+            RaiseLocalEvent(new ImpactEffectEvent(impactEffect, args.Coordinates));
+
+        if (targetUid != null && !TerminatingOrDeleted(targetUid.Value))
+            _gunSystem.PlayImpactSound(targetUid.Value, args.Damage, args.SoundHit, args.ForceSound);
     }
 
     [SubscribeLocalEvent]

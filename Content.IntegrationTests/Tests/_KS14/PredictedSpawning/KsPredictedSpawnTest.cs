@@ -42,6 +42,7 @@ public sealed class KsPredictedSpawnTest : InteractionTest
     private const string RealPistol = "WeaponPistolMk58"; // a magazine, a chambered round and an ejected casing
     private const string TestWall = "KsPredictedSpawnTestWall";
     private const string TestOverlapper = "KsPredictedSpawnTestOverlapper";
+    private const string BulletImpactEffect = "BulletImpactEffect";
 
     private readonly EntProtoId _testEffect = TestEffect;
     private readonly EntProtoId _testWall = TestWall;
@@ -534,6 +535,162 @@ public sealed class KsPredictedSpawnTest : InteractionTest
         {
             Assert.That(CEntMan.EntityExists(keptUid), Is.False, "the kept copy never despawned");
         });
+    }
+
+    /// <summary>
+    ///     The kept bullet is matched to the server's, pulled onto it when the server's goes somewhere else (here
+    ///         moved sideways by the server, as a lag-compensated or reflected shot would be), and deleted with it.
+    /// </summary>
+    [Test]
+    public async Task KeptBulletFollowsAndDiesWithTheServersCopy()
+    {
+        var (keptUid, serverBulletUid) = await FireAlongX(new Vector2(40f, 0f));
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CEntMan.GetComponent<KsKeptPredictedSpawnComponent>(keptUid).ServerCopy, Is.EqualTo(ToClient(serverBulletUid)),
+                "the kept bullet was not matched to the server's");
+        });
+
+        await Server.WaitPost(() =>
+        {
+            var transformSystem = SEntMan.System<SharedTransformSystem>();
+            transformSystem.SetWorldPosition(serverBulletUid, transformSystem.GetWorldPosition(serverBulletUid) + new Vector2(0f, 1.5f));
+        });
+        await RunSeconds(0.6f);
+
+        await Client.WaitAssertion(() =>
+        {
+            var transformSystem = CEntMan.System<SharedTransformSystem>();
+            var keptY = transformSystem.GetWorldPosition(keptUid).Y;
+            var serverY = transformSystem.GetWorldPosition(ToClient(serverBulletUid)).Y;
+            Assert.That(keptY, Is.EqualTo(serverY).Within(0.1f), "the kept bullet was not pulled onto the server's");
+        });
+
+        await Server.WaitPost(() => SEntMan.QueueDeleteEntity(serverBulletUid));
+        await RunTicks(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CEntMan.EntityExists(keptUid), Is.False, "the kept bullet outlived the server's");
+        });
+    }
+
+    /// <summary>
+    ///     The shooter's own bullet plays its impact the moment it hits, without waiting for the server. When it hit
+    ///         the same wall the server's did, that is the only impact; when it hit a wall only this client has, the
+    ///         server's hit on the wall behind plays as well.
+    /// </summary>
+    [Test]
+    public async Task ImpactPlaysAtOnceAndOnlyOnce([Values] bool clientOnlyWall)
+    {
+        // Far enough ahead of the server that the shooter's hit clearly comes first.
+        var clientConfigurationManager = Client.ResolveDependency<IConfigurationManager>();
+        await Client.WaitPost(() => clientConfigurationManager.SetCVar(CVars.NetPredictTickBias, 4));
+
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            SEntMan.SpawnEntity(_testWall, new MapCoordinates(shooterPosition + new Vector2(6f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+        if (clientOnlyWall)
+        {
+            await Client.WaitPost(() =>
+                CEntMan.SpawnEntity(_testWall, new MapCoordinates(shooterPosition + new Vector2(3f, 0f), MapData.MapId)));
+        }
+
+        var impactXs = new Dictionary<EntityUid, float>();
+        int? firstImpactTick = null, serverHitTick = null;
+        var gunNetEntity = await PrepareGun();
+        await Shoot(gunNetEntity, shooterPosition + new Vector2(40f, 0f));
+
+        var serverFired = false;
+        for (var tick = 0; tick < 60; tick++)
+        {
+            await RunTicks(1);
+
+            var currentTick = tick;
+            await Server.WaitPost(() =>
+            {
+                var serverBullets = FindBullets(SEntMan, SPlayer).Count;
+                serverFired |= serverBullets > 0;
+                if (serverFired && serverBullets == 0)
+                    serverHitTick ??= currentTick;
+            });
+            await Client.WaitPost(() =>
+            {
+                var transformSystem = CEntMan.System<SharedTransformSystem>();
+                var enumerator = CEntMan.AllEntityQueryEnumerator<MetaDataComponent>();
+                while (enumerator.MoveNext(out var uid, out var metaDataComponent))
+                {
+                    if (metaDataComponent.EntityPrototype?.ID != BulletImpactEffect || impactXs.ContainsKey(uid))
+                        continue;
+
+                    impactXs[uid] = transformSystem.GetWorldPosition(uid).X - shooterPosition.X;
+                    firstImpactTick ??= currentTick;
+                }
+            });
+        }
+
+        var impacts = string.Join(", ", impactXs.Values);
+        Assert.Multiple(() =>
+        {
+            Assert.That(serverHitTick, Is.Not.Null, "the server's bullet never hit");
+            Assert.That(firstImpactTick ?? int.MaxValue, Is.LessThan(serverHitTick ?? 0), "the shooter's first impact waited for the server's hit");
+            if (clientOnlyWall)
+            {
+                Assert.That(impactXs.Values, Has.Exactly(1).LessThan(4.5f), $"not one impact where the shooter's bullet hit; impacts at {impacts}");
+                Assert.That(impactXs.Values, Has.Exactly(1).GreaterThan(4.5f), $"not one impact where the server's bullet hit; impacts at {impacts}");
+            }
+            else
+            {
+                Assert.That(impactXs.Values, Has.Count.EqualTo(1).And.Exactly(1).GreaterThan(4.5f), $"the one hit did not play exactly one impact; impacts at {impacts}");
+            }
+        });
+    }
+
+    private async Task<NetEntity> PrepareGun()
+    {
+        var gunNetEntity = await PlaceInHands(TestGun);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+        return gunNetEntity;
+    }
+
+    private async Task Shoot(NetEntity gunNetEntity, Vector2 worldTarget)
+    {
+        var targetCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.MapUid, worldTarget));
+        await Client.WaitPost(() =>
+        {
+            CEntMan.RaisePredictiveEvent(new RequestShootEvent
+            {
+                Gun = gunNetEntity,
+                Coordinates = targetCoordinates,
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Fires the test gun at <paramref name="offset"/> from the shooter and waits past the round trip.
+    /// </summary>
+    private async Task<(EntityUid KeptUid, EntityUid ServerBulletUid)> FireAlongX(Vector2 offset)
+    {
+        var gunNetEntity = await PrepareGun();
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() => shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer));
+        await Shoot(gunNetEntity, shooterPosition + offset);
+        await RunTicks(10);
+
+        var serverBulletUid = EntityUid.Invalid;
+        await Server.WaitAssertion(() => serverBulletUid = FindBullets(SEntMan, SPlayer).Single());
+
+        var keptUid = EntityUid.Invalid;
+        await Client.WaitAssertion(() =>
+            keptUid = FindBullets(CEntMan, CPlayer).Single(uid => CEntMan.HasComponent<KsKeptPredictedSpawnComponent>(uid)));
+
+        return (keptUid, serverBulletUid);
     }
 
     private static List<EntityUid> FindBullets(IEntityManager entityManager, EntityUid shooterUid)

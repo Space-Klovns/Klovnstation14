@@ -46,4 +46,18 @@ public sealed partial class KsKeptPredictedSpawnComponent : Component
     /// <seealso cref="KsPredictedSpawnSystem.PredictedQueueDelDeferrable"/>
     [ViewVariables]
     public bool DeletionDeferred;
+
+    /// <summary>
+    ///     The server's copy of this spawn, hidden on this client, once it has arrived and been matched to this one.
+    ///         This copy is steered towards it, and deleted with it.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? ServerCopy;
+
+    /// <summary>
+    ///     When this copy was spawned. One that is still unmatched long after has no server copy coming (the server
+    ///         refused the shot), and is deleted.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan SpawnTime;
 }

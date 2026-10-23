@@ -1,4 +1,6 @@
 using Content.Shared._Trauma.Projectiles;
+using Content.Shared.Damage;
+using Content.Shared.Projectiles;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -146,6 +148,21 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
     ///         component of type TransformComponent</c> in <c>UpdateIsTouching</c>.
     /// </remarks>
     public virtual void PredictedQueueDelDeferrable(EntityUid uid) => PredictedQueueDel(uid);
+
+    /// <summary>
+    ///     Whether a projectile's hit on <paramref name="target"/> plays its impact here. Call it once per hit. Always
+    ///         true, except for a client's kept copy whose hit the server's copy already played (see
+    ///         <see cref="KsPredictedSpawnImpactEvent"/>), so the shooter sees each hit once.
+    /// </summary>
+    public virtual bool ClaimImpact(EntityUid projectile, EntityUid target) => true;
+
+    /// <summary>
+    ///     Called when a projectile hits something. On the server, tells the user of a user-mode projectile, whose
+    ///         client plays this hit's impact in place of its kept copy's (see <see cref="KsPredictedSpawnImpactEvent"/>).
+    /// </summary>
+    public virtual void OnProjectileHit(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage)
+    {
+    }
 
     /// <summary>
     ///     Spawns <paramref name="entityProtoId"/> as a predicted spawn whose physics is predicted too.
