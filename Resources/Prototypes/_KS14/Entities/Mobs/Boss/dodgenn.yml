@@ -159,13 +159,6 @@
   - type: NpcFactionMember
     factions:
     - SimpleHostile
-  - type: NpcRangedAttackPatternHolder
-    attacks:
-      spiral: DodgennSpiralAttack
-      enragedSpiral: DodgennEnragedSpiralAttack
-      shotgun: DodgennShotgunAttack
-      directional: DodgennDirectionalAttack
-      randomAoe: DodgennRandomAoeAttack
   - type: ActionGrant
     actions:
     - KsActionDodgennDial
@@ -183,6 +176,9 @@
     baseCritThreshold: 200
   - type: NPCSteering
   - type: NpcAggro
+  - type: NpcMeterOnDamage
+    meter: KsAnger
+    perDamage: 0.025
   - type: GunDodger
     dodgeChance: 0.4
   - type: HTN
@@ -213,9 +209,6 @@
   - type: Action
     raiseOnAction: true
     useDelay: 1
-    whitelist:
-      components:
-      - MobState
   - type: TargetAction
     range: -1
     checkCanAccess: false

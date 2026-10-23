@@ -18,11 +18,7 @@
   branches:
   - tasks:
     # - !type:HTNPrimitiveTask
-    #   operator: !type:RangedTargetingOperator
-    #     key: Target
-    #     aggroKey: Aggroed
-    #     radiusKey: VisionRadius
-    #     aggroRadiusKey: AggroVisionRadius
+    #   operator: !type:NpcRangedTargetingOperator
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
         proto: DodgennTargets
@@ -63,6 +59,11 @@
       operator: !type:PlaySoundOperator
         sound:
           collection: KsDodgennTalkEntrance # ignore it ok
+
+    - !type:HTNPrimitiveTask
+      operator: !type:RangedOperator
+        attack: DodgennShotgunAttack
+        speech: "7 minutes is all I can spare to play with you."
 
   ## Grenade
   - preconditions:
@@ -155,18 +156,9 @@
         targetKey: Target
     - !type:HTNCompoundTask
       task: DodgennAttackTargetCompound
-    - !type:HTNPrimitiveTask
-      operator: !type:MoveToOperator
-        shutdownState: PlanFinished
-        pathfindInPlanning: false
-        removeKeyOnFinish: false
-        stopOnLineOfSight: false
-        targetKey: TargetCoordinates
-        pathfindKey: TargetPathfind
-        rangeKey: MeleeRange
-  - tasks:
-    - !type:HTNCompoundTask
-      task: IdleCompound
+  # - tasks:
+  #   - !type:HTNCompoundTask
+  #     task: IdleCompound
 
 # Attack compound - handles all attacks
 - type: htnCompound
@@ -176,20 +168,30 @@
   - tasks:
     - !type:HTNPrimitiveTask
       operator: !type:WeightedRangedOperator
-        weights:
-          randomAoe: 20
-          shotgun: 30
-          spiral: 15
-          directional: 20
-        speeches:
-          spiral: "Is that all you have?"
-          randomAoe: "Is that the best you've got?"
-          shotgun: "Worthless."
-          directional: "Just accept your fate!"
-        angerWeights:
-          shotgun: 2
-        useAngerModifier: true
+        weightMeter: KsAnger
+        attacks:
+        - attack: DodgennRandomAoeAttack
+          weight: 20
+          speech: Is that the best you've got?
+        - attack: DodgennShotgunAttack
+          weight: 20
+          meterWeight: 2
+          speech: Worthless.
+        - attack: DodgennSpiralAttack
+          weight: 20
+          speech: Is that all you have?
+        - attack: DodgennDirectionalAttack
+          weight: 20
+          speech: Just accept your fate!
+        failIfNotFired: false # otherwise an attack on cooldown fails the plan before the MoveTo below runs
 
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        pathfindInPlanning: false
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: MeleeRange
 
 ### Guns
 

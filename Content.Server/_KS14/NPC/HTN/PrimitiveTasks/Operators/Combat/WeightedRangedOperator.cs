@@ -1,136 +1,120 @@
+using Content.Server._KS14.NPC.AttackPatterns;
+using Content.Server._KS14.NPC.Meters;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
-using Content.Server.Chat.Systems;
-using Content.Shared.Chat;
-using Content.Server._KS14.NPC.Systems;
+using Content.Shared.Random.Helpers;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Combat;
 
 /// <summary>
-/// Selects a weighted random attack from a weight table (optionally modified
-/// by anger), then executes it with its speech line — all atomically.
+///     Picks one of <see cref="Attacks"/> at random by weight, weighted further by <see cref="WeightMeter"/> if set,
+///         and starts it with its speech line. Finishes as soon as the attack
+///         starts; the attack then fires by itself. See <see cref="NpcCombatRangedPatternSystem"/>.
 /// </summary>
-[DataDefinition]
 public sealed partial class WeightedRangedOperator : HTNOperator
 {
-    [Dependency] private NPCAngerModifierSystem _npcAngerModifierSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private NpcMeterSystem _npcMeterSystem = default!;
     [Dependency] private NpcCombatRangedPatternSystem _npcCombatRangedPatternSystem = default!;
 
-    /// <summary>Attack id -> base weight.</summary>
-    [DataField("weights")] public Dictionary<string, float> Weights = new();
+    [DataField(required: true)]
+    public List<WeightedRangedAttack> Attacks = new();
 
-    /// <summary>Attack id -> additional weight per point of anger.</summary>
-    [DataField("angerWeights")] public Dictionary<string, float> AngerWeights = new();
+    /// <summary>
+    ///     A meter on the NPC, such as anger, whose value adds <see cref="WeightedRangedAttack.MeterWeight"/> per point
+    ///         to each attack's weight.
+    /// </summary>
+    [DataField]
+    public ProtoId<NpcMeterPrototype>? WeightMeter;
 
-    /// <summary>Attack id -> speech line spoken when that attack fires.</summary>
-    [DataField("speeches")] public Dictionary<string, string> Speeches = new();
+    /// <summary>
+    ///     Chance, from 0 to 100, that an attack is tried at all.
+    /// </summary>
+    [DataField]
+    public float Probability = 100f;
 
-    /// <summary>Base probability (0-100) that any attack fires at all this plan.</summary>
-    [DataField("probability")] public float Probability = 100f;
+    /// <summary>
+    ///     If false, an attack that can't fire (probability roll, cooldown) finishes the task instead of
+    ///         failing the plan, so tasks after this one (e.g. moving to the target) still run.
+    /// </summary>
+    [DataField]
+    public bool FailIfNotFired = true;
 
-    [DataField("useAngerModifier")] public bool UseAngerModifier = false;
+    /// <summary>
+    ///     Blackboard key of the entity to aim at. Optional; attacks that need a target don't fire without one.
+    /// </summary>
+    [DataField]
+    public string TargetKey = "Target";
 
-    // Unique-per-instance blackboard keys to avoid clashes between operators.
-    private string ResolvedKey => "WeightedResolved." + GetHashCode();
-    private string ExecutedKey => "WeightedExecuted." + GetHashCode();
-
-    public override void Startup(NPCBlackboard blackboard)
-    {
-        base.Startup(blackboard);
-        blackboard.SetValue(ResolvedKey, "");
-        blackboard.SetValue(ExecutedKey, false);
-    }
+    /// <summary>
+    ///     Scratch for the weights of one pick, by index into <see cref="Attacks"/>. Operators are shared between NPCs,
+    ///         but only ever updated one at a time.
+    /// </summary>
+    private readonly Dictionary<int, float> _effectiveWeights = new();
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var notFiredStatus = FailIfNotFired ? HTNOperatorStatus.Failed : HTNOperatorStatus.Finished;
 
-        // Already fired this plan - fire-and-forget.
-        if (blackboard.ContainsKey(ExecutedKey) && blackboard.GetValue<bool>(ExecutedKey))
-            return HTNOperatorStatus.Finished;
-
-        EntityUid? target = null;
-        if (blackboard.ContainsKey("Target"))
-            target = blackboard.GetValue<EntityUid>("Target");
-
-        // Optional probability gate.
         if (Probability < 100f && !_random.Prob(Probability / 100f))
-            return HTNOperatorStatus.Failed;
+            return notFiredStatus;
 
-        // Roll ONCE among the weighted attacks, then attempt that single attack.
-        // Never re-roll in a loop: when everything is on cooldown the roll is
-        // stateless and a retry loop would spin forever, wedging the server.
-        var attackId = PickWeighted(owner);
-        if (attackId == null)
-            return HTNOperatorStatus.Failed;
+        // Roll once and try only that attack. Re-rolling until one fires would spin forever with everything on cooldown.
+        if (PickWeighted(owner) is not { } attack)
+            return notFiredStatus;
 
-        if (!_npcCombatRangedPatternSystem.TryStartAttack(owner, attackId, target))
-            return HTNOperatorStatus.Failed; // on cooldown -> plan fails -> replan later
+        EntityUid? targetUid = blackboard.TryGetValue<EntityUid>(TargetKey, out var foundTargetUid, _entityManager)
+            ? foundTargetUid
+            : null;
 
-        if (Speeches.TryGetValue(attackId, out var speech))
-            _chat.TrySendInGameICMessage(owner, speech, InGameICChatType.Speak,
-                false, true, checkRadioPrefix: false);
+        if (!_npcCombatRangedPatternSystem.TryStartAttack(owner, attack.Attack, targetUid, speech: attack.Speech))
+            return notFiredStatus;
 
-        blackboard.SetValue(ResolvedKey, attackId);
-        blackboard.SetValue(ExecutedKey, true);
         return HTNOperatorStatus.Finished;
     }
 
-    /// <summary>Effective weight = base + anger scaling. The single source of truth for weight math.</summary>
-    private float GetWeight(string key, float anger)
+    private WeightedRangedAttack? PickWeighted(EntityUid owner)
     {
-        var weight = Weights.GetValueOrDefault(key);
-        if (AngerWeights.TryGetValue(key, out var perAnger))
-            weight += anger * perAnger;
-        return weight;
-    }
+        var meterValue = WeightMeter is { } weightMeter ? _npcMeterSystem.GetValue(owner, weightMeter) : 0f;
 
-    private string? PickWeighted(EntityUid owner)
-    {
-        var anger = UseAngerModifier
-            ? _npcAngerModifierSystem.GetAngerModifier(owner)
-            : 0f;
-
-        var keys = new string?[Weights.Count];
-        var cumulative = new float[Weights.Count];
-
-        var total = 0f;
-        var count = 0;
-        foreach (var key in Weights.Keys)
+        _effectiveWeights.Clear();
+        for (var i = 0; i < Attacks.Count; i++)
         {
-            var weight = GetWeight(key, anger);
-            if (weight <= 0f)
-                continue;
-
-            total += weight;
-            keys[count] = key;
-            cumulative[count] = total;
-            count++;
+            var weight = Attacks[i].Weight + meterValue * Attacks[i].MeterWeight;
+            if (weight > 0f)
+                _effectiveWeights[i] = weight;
         }
 
-        if (count == 0)
-            return null;
-
-        var roll = _random.NextFloat() * total;
-
-        // First entry whose cumulative total passes the roll.
-        for (var i = 0; i < count; i++)
-        {
-            if (roll < cumulative[i])
-                return keys[i]!;
-        }
-
-        return keys[count - 1]!; // float-edge safety; returns a legal entry
+        return _effectiveWeights.Count == 0 ? null : Attacks[_random.Pick(_effectiveWeights)];
     }
+}
 
-    public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
-    {
-        base.TaskShutdown(blackboard, status);
-        blackboard.SetValue(ResolvedKey, "");
-        blackboard.SetValue(ExecutedKey, false);
-    }
+/// <summary>
+///     One attack <see cref="WeightedRangedOperator"/> may pick.
+/// </summary>
+[DataDefinition]
+public sealed partial class WeightedRangedAttack
+{
+    [DataField(required: true)]
+    public EntProtoId<NpcRangedAttackPatternComponent> Attack;
+
+    [DataField]
+    public float Weight = 1f;
+
+    /// <summary>
+    ///     Weight gained per point of the operator's <see cref="WeightedRangedOperator.WeightMeter"/>.
+    /// </summary>
+    [DataField]
+    public float MeterWeight;
+
+    /// <summary>
+    ///     Line spoken when the attack starts.
+    /// </summary>
+    [DataField]
+    public string? Speech;
 }
