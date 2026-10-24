@@ -20,6 +20,9 @@ public sealed partial class PuddleSystem
     {
         InitialisePuddleTileCache();
 
+        Subs.CVar(_configurationManager, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity,
+            value => _puddleEmissivity = value, invokeImmediately: true);
+
         SubscribeLocalEvent<PuddleComponent, MapInitEvent>(OnPuddleMapInit);
     }
 

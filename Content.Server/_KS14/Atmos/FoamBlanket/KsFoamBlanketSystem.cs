@@ -4,11 +4,13 @@ using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Shared._KS14.PopupLocalization;
+using Content.Shared._KS14.Temperature;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Fluids.Components;
 using Content.Shared.Popups;
+using Content.Shared.Temperature.HeatContainer;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
@@ -42,6 +44,11 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     ///     How often foam landing on a chemfire it does not put out at once may say so.
     /// </summary>
     private static readonly TimeSpan PopupInterval = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///     The area, in m², of a tile's floor, which a blanket covers and radiates from.
+    /// </summary>
+    private const float TileArea = 1f;
 
     protected override bool IsBurning(Entity<FlammableComponent> flammable)
         => flammable.Comp.OnFire && flammable.Comp.CanExtinguish;
@@ -113,7 +120,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
             blanketComponent.NextUpdate += blanketComponent.UpdateInterval;
 
             var seconds = (float)blanketComponent.UpdateInterval.TotalSeconds;
-            blanketComponent.Foam -= blanketComponent.DecayRate * seconds;
+            SetFoam((uid, blanketComponent), blanketComponent.Foam - blanketComponent.DecayRate * seconds);
             Boil((uid, blanketComponent), seconds);
             BoilFromRadiatedFire((uid, blanketComponent), seconds);
 
@@ -128,15 +135,23 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     }
 
     /// <summary>
-    ///     Boils foam off into the tile's air, taking the heat from the puddle under the blanket if that is hotter
-    ///         than the foam's boiling point, or from the air if that is.
+    ///     Trades heat with the puddle under the blanket and the air over it, and boils foam off into the tile's air
+    ///         with what takes it past its boiling point: the puddle's heat if there is a puddle hotter than that, or
+    ///         else the air's if that is.
     /// </summary>
     /// <remarks>
-    ///     Boiling a unit takes <c>c (T_boil - T_foam) + L</c> from the source, warming the foam from what it was
-    ///         laid at and then boiling it, and puts the unit into the air as gas carrying <c>c T_boil</c>. The
-    ///         latent heat leaves with the vapor, as <see cref="Content.Server.Chemistry.TileReactions.ExtinguishTileReaction"/>
-    ///         and <see cref="Shared._KS14.TileEffects.Effects.BoilTileEffect"/> account it. The source is never
-    ///         cooled below the boiling point, and nothing boils on a tile with no air to take the gas.
+    ///     <para>
+    ///         The puddle conducts into the foam (<see cref="ExchangeHeatWithPuddle"/>), and the foam into the air, by
+    ///             conduction and radiation (<see cref="ExchangeHeatWithAir"/>), so a blanket cools a puddle below its
+    ///             boiling point too, and room air cools the blanket, slowly.
+    ///     </para>
+    ///     <para>
+    ///         Boiling a unit takes <c>c (T_boil - T_foam) + L</c>, and puts the unit into the air as gas carrying
+    ///             <c>c T_boil</c>. The latent heat leaves with the vapor, as
+    ///             <see cref="Content.Server.Chemistry.TileReactions.ExtinguishTileReaction"/> and
+    ///             <see cref="Shared._KS14.TileEffects.Effects.BoilTileEffect"/> account it. Nothing boils on a tile with
+    ///             no air to take the gas.
+    ///     </para>
     /// </remarks>
     private void Boil(Entity<KsFoamBlanketComponent> blanket, float seconds)
     {
@@ -149,28 +164,16 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false) is not { Immutable: false } mixture)
             return;
 
-        var energyPerUnit = component.SpecificHeat * (component.BoilingPoint - component.FoamTemperature) + component.LatentHeat;
-        if (energyPerUnit <= 0f)
+        // The puddle first: it is what the blanket lies on, and what has to be kept from relighting.
+        if (ExchangeHeatWithPuddle(blanket, gridUid, tile, seconds) || component.Foam <= 0f)
             return;
 
-        // The puddle first: it is what the blanket lies on, and what has to be kept from relighting.
-        if (_puddleSystem.TryGetCachedPuddle(gridUid, tile, out Entity<PuddleComponent> puddle) &&
-            _solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution) &&
-            puddle.Comp.Solution is { } solutionEntity &&
-            solution.Temperature > component.BoilingPoint)
-        {
-            var boiled = MathF.Min(MathF.Min(component.PuddleBoilRate * seconds, component.Foam),
-                (solution.Temperature - component.BoilingPoint) * solution.GetHeatCapacity(ProtoMan) / energyPerUnit);
-
-            if (boiled > 0f && AddBoiledGas(blanket, gridUid, tile, boiled))
-            {
-                _solutionContainerSystem.AddThermalEnergy(solutionEntity, -boiled * energyPerUnit);
-                return;
-            }
-        }
+        ExchangeHeatWithAir(blanket, mixture, seconds);
 
         if (mixture.Temperature <= component.BoilingPoint)
             return;
+
+        var energyPerUnit = GetEnergyPerUnit(component);
 
         var airHeatCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
         if (airHeatCapacity < Atmospherics.MinimumHeatCapacity)
@@ -184,6 +187,79 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         // The air pays before the gas joins it, so the gas is added at the energy it actually carries.
         mixture.Temperature -= airBoiled * energyPerUnit / airHeatCapacity;
         AddBoiledGas(blanket, gridUid, tile, airBoiled);
+    }
+
+    /// <summary>
+    ///     Conducts heat between the blanket and the puddle under it, if there is one, and boils off foam with what
+    ///         would take it past its boiling point.
+    /// </summary>
+    /// <remarks>
+    ///     The foam's capacity is tiny against <see cref="KsFoamBlanketComponent.PuddleConductance"/>, so a puddle hotter
+    ///         than the boiling point brings it there almost at once. From then it holds there, and what flows on boils
+    ///         it, at most <see cref="KsFoamBlanketComponent.PuddleBoilRate"/>: the puddle pays only for what boils.
+    /// </remarks>
+    /// <returns>Whether any foam boiled.</returns>
+    private bool ExchangeHeatWithPuddle(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile, float seconds)
+    {
+        var component = blanket.Comp;
+        if (!_puddleSystem.TryGetCachedPuddle(gridUid, tile, out Entity<PuddleComponent> puddle) ||
+            !_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution) ||
+            puddle.Comp.Solution is not { } solutionEntity)
+            return false;
+
+        var puddleCapacity = solution.GetHeatCapacity(ProtoMan);
+        if (puddleCapacity <= 0f)
+            return false;
+
+        var foamHeat = component.Heat;
+        var toFoam = KsThermalTransfer.ExchangeQuery(foamHeat.HeatCapacity, foamHeat.Temperature,
+            puddleCapacity, solution.Temperature, component.PuddleConductance, seconds);
+
+        var boiled = 0f;
+        if (foamHeat.Temperature + toFoam / foamHeat.HeatCapacity > component.BoilingPoint)
+        {
+            // Warmed to its boiling point, then held there while the puddle conducts into it.
+            toFoam = MathF.Max(0f, (component.BoilingPoint - foamHeat.Temperature) * foamHeat.HeatCapacity);
+            var boilingHeat = -KsThermalTransfer.ExchangeWithReservoirQuery(puddleCapacity, solution.Temperature - toFoam / puddleCapacity,
+                component.BoilingPoint, component.PuddleConductance, seconds);
+
+            boiled = MathF.Min(MathF.Min(component.PuddleBoilRate * seconds, component.Foam), boilingHeat / component.LatentHeat);
+            if (boiled <= 0f || !AddBoiledGas(blanket, gridUid, tile, boiled))
+                boiled = 0f;
+        }
+
+        HeatContainerHelpers.AddHeat(ref component.Heat, toFoam);
+
+        var fromPuddle = toFoam + boiled * component.LatentHeat;
+        if (fromPuddle != 0f)
+            _solutionContainerSystem.AddThermalEnergy(solutionEntity, -fromPuddle);
+
+        return boiled > 0f;
+    }
+
+    /// <summary>
+    ///     Conducts and radiates heat between the blanket and the air over it, without taking the foam past its
+    ///         boiling point: air hot enough to boil it does so at the rates in <see cref="Boil"/>.
+    /// </summary>
+    private void ExchangeHeatWithAir(Entity<KsFoamBlanketComponent> blanket, GasMixture mixture, float seconds)
+    {
+        var component = blanket.Comp;
+        var airCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
+        if (airCapacity < Atmospherics.MinimumHeatCapacity)
+            return;
+
+        var foamHeat = component.Heat;
+        var conductance = component.AirConductance +
+            KsThermalTransfer.RadiativeConductance(foamHeat.Temperature, mixture.Temperature, TileArea, component.Emissivity);
+
+        var toFoam = MathF.Min(
+            KsThermalTransfer.ExchangeQuery(foamHeat.HeatCapacity, foamHeat.Temperature, airCapacity, mixture.Temperature, conductance, seconds),
+            (component.BoilingPoint - foamHeat.Temperature) * foamHeat.HeatCapacity);
+        if (toFoam == 0f)
+            return;
+
+        HeatContainerHelpers.AddHeat(ref component.Heat, toFoam);
+        mixture.Temperature -= toFoam / airCapacity;
     }
 
     /// <summary>
@@ -230,7 +306,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (component.RadiatingTiles.Count == 0)
             return;
 
-        var energyPerUnit = component.SpecificHeat * (component.BoilingPoint - component.FoamTemperature) + component.LatentHeat;
+        var energyPerUnit = GetEnergyPerUnit(component);
         if (component.LocalGridUid is { } gridUid && energyPerUnit > 0f)
         {
             foreach (var burningTile in component.RadiatingTiles.Keys)
@@ -266,7 +342,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (!_tileEffectAtmosSystem.TryAddBoiledGas(gridUid, tile, component.BoiledGas, boiled, boiled * component.SpecificHeat * component.BoilingPoint))
             return false;
 
-        component.Foam -= boiled;
+        SetFoam(blanket, component.Foam - boiled);
         return true;
     }
 
@@ -307,7 +383,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
             return 0f;
 
         var component = blanket.Comp;
-        var energyPerUnit = component.SpecificHeat * (component.BoilingPoint - component.FoamTemperature) + component.LatentHeat;
+        var energyPerUnit = GetEnergyPerUnit(component);
         if (energyPerUnit <= 0f)
             return 0f;
 

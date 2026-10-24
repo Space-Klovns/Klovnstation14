@@ -525,7 +525,7 @@ public sealed class KsFirefightingTest : GameTest
             Assert.That(foamLeft[0], Is.EqualTo(prototype!.MaxFoam - prototype.DecayRate * updates).Within(prototype.DecayRate * 2f),
                 "A blanket over a cold puddle lost more than it drains by itself.");
             // Whichever runs out first: the rate it may boil at, or the heat the puddle has above the boiling point.
-            var energyPerUnit = prototype.SpecificHeat * (prototype.BoilingPoint - prototype.FoamTemperature) + prototype.LatentHeat;
+            var energyPerUnit = SharedKsFoamBlanketSystem.GetEnergyPerUnit(prototype);
             var boilable = MathF.Min(prototype.PuddleBoilRate * updates,
                 (temperatures[1] - prototype.BoilingPoint) * hotPuddleHeatCapacity / energyPerUnit);
             Assert.That(foamLeft[1], Is.LessThan(foamLeft[0] - boilable * 0.5f),

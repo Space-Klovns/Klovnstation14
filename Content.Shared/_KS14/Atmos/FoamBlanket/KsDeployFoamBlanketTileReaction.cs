@@ -2,6 +2,7 @@ using Content.Shared._KS14.Chemistry.PredictedTileReactions;
 using Content.Shared._KS14.TileEffects;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
+using Content.Shared.Fluids;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
@@ -18,6 +19,7 @@ public sealed partial class KsDeployFoamBlanketTileReaction : KsTileReaction
 {
     [Dependency] private SharedKsFoamBlanketSystem _foamBlanketSystem = default!;
     [Dependency] private KsPredictedTileReactionSystem _predictedTileReactionSystem = default!;
+    [Dependency] private SharedPuddleSystem _puddleSystem = default!;
 
     [DataField]
     public EntProtoId Prototype = "KsFoamBlanket";
@@ -27,8 +29,8 @@ public sealed partial class KsDeployFoamBlanketTileReaction : KsTileReaction
         if (reactVolume <= FixedPoint2.Zero || tile.Tile.IsEmpty || !_predictedTileReactionSystem.ShouldReact)
             return FixedPoint2.Zero;
 
-        var energyTaken = reagent.SpecificHeat * (float)reactVolume;
-        var used = _foamBlanketSystem.Deploy(Prototype, tile, (float)reactVolume, energy: energyTaken,
+        // At the temperature of what laid it, such as the vapor's, when that says.
+        var used = _foamBlanketSystem.Deploy(Prototype, tile, (float)reactVolume, temperature: _puddleSystem.KsTileReactionSourceTemperature,
             playSound: !_predictedTileReactionSystem.IsPredicting, placeholder: _predictedTileReactionSystem.IsPredicting);
         return FixedPoint2.Min(FixedPoint2.New(used), reactVolume);
     }

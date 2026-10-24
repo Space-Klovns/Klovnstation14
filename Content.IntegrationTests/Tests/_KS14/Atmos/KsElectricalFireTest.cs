@@ -304,8 +304,8 @@ public sealed class KsElectricalFireTest : GameTest
         var factory = entityManager.ComponentFactory;
         Assert.That(server.ProtoMan.Index(BlanketPrototype).TryGetComponent<KsFoamBlanketComponent>(out var blanketPrototype, factory));
         Assert.That(server.ProtoMan.Index(ElectricalFirePrototype).TryGetComponent<ChemicalFireComponent>(out var firePrototype, factory));
-        var energyPerUnit = blanketPrototype!.SpecificHeat * (blanketPrototype.BoilingPoint - blanketPrototype.FoamTemperature) + blanketPrototype.LatentHeat;
-        var boilSeconds = blanketPrototype.MaxFoam * energyPerUnit / (firePrototype!.HeatPower * firePrototype.FoamHeatFraction);
+        var energyPerUnit = SharedKsFoamBlanketSystem.GetEnergyPerUnit(blanketPrototype!);
+        var boilSeconds = blanketPrototype!.MaxFoam * energyPerUnit / (firePrototype!.HeatPower * firePrototype.FoamHeatFraction);
         Assert.That(boilSeconds, Is.LessThan(30f), "The electrical fire takes so long to boil a full blanket off that foam keeps what lies in it safe.");
         await server.WaitRunTicks((int)MathF.Ceiling(boilSeconds * 1.5f + 1f) * TicksPerSecond);
 

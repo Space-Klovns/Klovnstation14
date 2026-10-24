@@ -39,6 +39,11 @@ public sealed class KsFoamContestTest : GameTest
 
     private const int TicksPerSecond = 30;
 
+    /// <summary>
+    ///     The design limit: spraying steadily smothers thermite within this many seconds.
+    /// </summary>
+    private const float MaxSteadyWinSeconds = 9f;
+
     private async Task<TestMapData> CreateBreathableTestMap()
     {
         var server = Pair.Server;
@@ -85,11 +90,11 @@ public sealed class KsFoamContestTest : GameTest
             // The design, from the prototypes: a full blanket held full wins within a few seconds, and one left alone
             //      boils off before the progress it adds (maxFoam^2 / (2 * boil rate * resistance)) reaches 1.
             Assert.That(SProtoMan.Index(BlanketPrototype).TryComp<KsFoamBlanketComponent>(out var blanketComponent, Pair.Server.EntMan.ComponentFactory));
-            var energyPerUnit = blanketComponent!.SpecificHeat * (blanketComponent.BoilingPoint - blanketComponent.FoamTemperature) + blanketComponent.LatentHeat;
+            var energyPerUnit = SharedKsFoamBlanketSystem.GetEnergyPerUnit(blanketComponent!);
             var boilRate = fireComponent.HeatPower * fireComponent.FoamHeatFraction / energyPerUnit;
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(fireComponent.FoamSmotherResistance / blanketComponent.MaxFoam, Is.LessThan(6f),
+                Assert.That(fireComponent.FoamSmotherResistance / blanketComponent!.MaxFoam, Is.LessThan(MaxSteadyWinSeconds),
                     "Steady spraying takes too long to smother thermite.");
                 Assert.That(blanketComponent.MaxFoam * blanketComponent.MaxFoam / (2f * boilRate * fireComponent.FoamSmotherResistance), Is.LessThan(1f),
                     "One full blanket left alone smothers thermite before it boils away.");
@@ -134,7 +139,16 @@ public sealed class KsFoamContestTest : GameTest
             foamLostAlone = 2f * blanket.Comp.DecayRate;
         });
 
-        await server.WaitRunTicks(TicksPerSecond * 10);
+        // As long as the fire's heat takes to boil the full blanket off, and half again.
+        var boilSeconds = 0f;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, testMap.Tile.GridIndices, out var blanket));
+            var energyPerUnit = SharedKsFoamBlanketSystem.GetEnergyPerUnit(blanket.Comp);
+            var fireComponent = entityManager.GetComponent<ChemicalFireComponent>(fire.Owner);
+            boilSeconds = maxFoam * energyPerUnit / (fireComponent.HeatPower * fireComponent.FoamHeatFraction);
+        });
+        await server.WaitRunTicks((int)MathF.Ceiling(boilSeconds * 1.5f) * TicksPerSecond);
 
         await server.WaitAssertion(() =>
         {
@@ -179,7 +193,7 @@ public sealed class KsFoamContestTest : GameTest
 
         var clientProgressSeen = 0f;
         var outAfter = -1;
-        for (var tick = 0; tick < TicksPerSecond * 8; tick += 5)
+        for (var tick = 0; tick < TicksPerSecond * (MaxSteadyWinSeconds + 2f); tick += 5)
         {
             await server.WaitPost(() => FillBlanket(testMap));
             await Pair.RunTicksSync(5);
@@ -201,7 +215,7 @@ public sealed class KsFoamContestTest : GameTest
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(outAfter, Is.InRange(TicksPerSecond * 1, TicksPerSecond * 6),
+                Assert.That(outAfter, Is.InRange(TicksPerSecond * 1, (int)(TicksPerSecond * MaxSteadyWinSeconds)),
                     $"The fire went out after {outAfter} ticks, not within a few seconds of steady foam.");
                 Assert.That(clientProgressSeen, Is.GreaterThan(0f), "The client never saw the fire losing to the foam.");
                 Assert.That(chemicalFireSystem.SpawnChemicalFire(_fightingFirePrototype, testMap.Tile), Is.Null,

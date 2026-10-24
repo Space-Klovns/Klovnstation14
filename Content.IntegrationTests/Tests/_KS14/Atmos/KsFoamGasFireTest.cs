@@ -208,13 +208,17 @@ public sealed class KsFoamGasFireTest : GameTest
 
         await server.WaitAssertion(() =>
         {
+            Assert.That(server.ProtoMan.Index(BlanketPrototype).TryGetComponent<KsFoamBlanketComponent>(out var blanketPrototype, server.EntMan.ComponentFactory));
+            // What draining alone would take over the wait, which the hot air should outpace many times over.
+            var drained = blanketPrototype!.DecayRate * 2.5f;
+
             using (Assert.EnterMultipleScope())
             {
                 foreach (var tile in new[] { FireTile, BlanketTile })
                 {
                     Assert.That(atmosphereSystem.HasGasHotspot((gridUid, null), tile), $"Foam hid the fire burning in tile {tile}'s hot air.");
-                    // 1.5u at the start; two seconds of draining and the old flat rate from the air would take 0.08u of it.
-                    Assert.That(GetFoam(testMap, tile), Is.LessThan(1.3f), $"The fire's hot air on {tile} barely boiled the foam.");
+                    Assert.That(blanketPrototype.MaxFoam - GetFoam(testMap, tile), Is.GreaterThan(drained * 10f),
+                        $"The fire's hot air on {tile} barely boiled the foam.");
                 }
             }
         });
@@ -285,7 +289,7 @@ public sealed class KsFoamGasFireTest : GameTest
             LayFullBlanket(testMap, blanketTile);
             Assert.That(blanketSystem.TryGetBlanket(gridUid, blanketTile, out var blanket));
             var component = blanket.Comp;
-            energyPerUnit = component.SpecificHeat * (component.BoilingPoint - component.FoamTemperature) + component.LatentHeat;
+            energyPerUnit = SharedKsFoamBlanketSystem.GetEnergyPerUnit(component);
             foamBefore = component.Foam;
             drained = component.DecayRate * 2f;
 

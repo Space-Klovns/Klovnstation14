@@ -4,6 +4,7 @@ using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.FixedPoint;
 using Content.Shared.StepTrigger.Systems;
+using Content.Shared.Temperature.HeatContainer;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -94,6 +95,24 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Sets how much foam the blanket holds, keeping <see cref="KsFoamBlanketComponent.Heat"/>'s capacity in step at
+    ///         the temperature it was: foam that drains or boils off takes its own share of the heat with it.
+    /// </summary>
+    protected void SetFoam(Entity<KsFoamBlanketComponent> blanket, float foam)
+    {
+        blanket.Comp.Foam = foam;
+        if (foam > 0f)
+            blanket.Comp.Heat = new HeatContainer(foam * blanket.Comp.SpecificHeat, blanket.Comp.Heat.Temperature);
+    }
+
+    /// <summary>
+    ///     Energy, in joules, that boiling a unit of the blanket's foam takes: warming it from its temperature to its
+    ///         boiling point, then its latent heat.
+    /// </summary>
+    public static float GetEnergyPerUnit(KsFoamBlanketComponent component)
+        => component.SpecificHeat * MathF.Max(0f, component.BoilingPoint - component.Heat.Temperature) + component.LatentHeat;
+
+    /// <summary>
     ///     Starts a blanket whose foam has run out dissolving. It leaves the tile's cache at once, so a new
     ///         blanket can be laid on the tile and chemfires are no longer kept out; it is removed after
     ///         <see cref="KsFoamBlanketComponent.DissolveDuration"/>.
@@ -171,13 +190,12 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
     ///         until the server's blanket for the tile arrives, instead of losing it at the next state. See
     ///         <see cref="SpawnPlaceholderBlanket"/>. Only the client passes true.
     /// </param>
-    /// <param name="energy">
-    ///     If specified, this acts as the amount of heat energy in joules that the blanket holds.
-    ///         Overrides the default value of <see cref="KsFoamBlanketComponent.FoamTemperature"/>, deriving it off the values of energy
-    ///         and <see cref="KsFoamBlanketComponent.SpecificHeat"/>.
+    /// <param name="temperature">
+    ///     The temperature, in kelvin, of the foam being laid, which mixes into the blanket's heat in proportion to how
+    ///         much is laid. <see cref="KsFoamBlanketComponent.DefaultTemperature"/> if not given.
     /// </param>
     /// <returns>The units of foam used, floored to the 0.01u a solution stores; zero if no blanket was laid.</returns>
-    public float Deploy(EntProtoId prototypeId, TileRef tileRef, float availableFoam, bool playSound = true, bool placeholder = false, float? energy = null)
+    public float Deploy(EntProtoId prototypeId, TileRef tileRef, float availableFoam, bool playSound = true, bool placeholder = false, float? temperature = null)
     {
         var gridUid = tileRef.GridUid;
         var tile = tileRef.GridIndices;
@@ -193,6 +211,8 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
             used = (float)FixedPoint2.New(MathF.Min(MathF.Min(availableFoam, blanket.Comp.FoamPerTile), blanket.Comp.MaxFoam - blanket.Comp.Foam));
             if (used > 0f)
             {
+                var laidHeat = new HeatContainer(used * blanket.Comp.SpecificHeat, temperature ?? blanket.Comp.DefaultTemperature);
+                HeatContainerHelpers.MergeInto(ref blanket.Comp.Heat, ref laidHeat);
                 blanket.Comp.Foam += used;
                 Dirty(blanket);
                 OnBlanketUpdated(blanket);
@@ -232,15 +252,10 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
                 _transformSystem.AnchorEntity((blanketUid, transformComponent), (gridUid, mapGridComponent), tile);
 
             blanketComponent.Foam = used;
+            blanketComponent.Heat = new HeatContainer(used * blanketComponent.SpecificHeat, temperature ?? blanketComponent.DefaultTemperature);
             blanketComponent.NextUpdate = _gameTiming.CurTime + blanketComponent.UpdateInterval;
             Dirty(blanketUid, blanketComponent);
             blanket = (blanketUid, blanketComponent);
-        }
-
-        if (energy is { })
-        {
-            blanket.Comp.FoamTemperature = energy.Value / blanket.Comp.SpecificHeat;
-            Dirty(blanket);
         }
 
         // Smothers on a top-up as well: spraying a blanket again is how you put out what rolled back onto it.

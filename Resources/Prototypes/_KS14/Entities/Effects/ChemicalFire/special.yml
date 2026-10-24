@@ -13,8 +13,8 @@
     heatPower: 3000 # insanely weak
     extinguishable: false # no water, foam or blanket puts it out: it only burns out, as its puddle burns away
     foamSmotherable: false
-    # Burns off foam laid over it rather than lying under it, though weakly (about 0.07u a second at the ~45000 J a
-    #     unit of foam takes, a full blanket in about 50 s).
+    # Burns off foam laid over it rather than lying under it, though weakly (about 0.04u a second at the ~67600 J a
+    #     unit of foam takes, a full blanket in about 80 s).
     foamHeatFraction: 1
   - type: TileEntityEffect
     effects:
@@ -40,8 +40,8 @@
     minimumAirTemperature: 280
     extinguishable: false
     foamSmotherable: false
-    # Burns off foam laid over it rather than lying under it (about 0.2u a second at the ~45000 J a unit of foam takes,
-    #     a full blanket in about 17 s). Less than a sprayer lays (0.8u a second), so steady spraying keeps a blanket
+    # Burns off foam laid over it rather than lying under it (about 0.13u a second at the ~67600 J a unit of foam takes,
+    #     a full blanket in about 26 s). Less than a sprayer lays (0.8u a second), so steady spraying keeps a blanket
     #     over it, though it never smothers it.
     foamHeatFraction: 1
   - type: ChemicalFireGasConsumer

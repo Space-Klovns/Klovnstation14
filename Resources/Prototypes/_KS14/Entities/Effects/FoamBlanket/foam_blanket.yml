@@ -41,12 +41,15 @@
           loop: false # holds the last frame, which is near-transparent
     dissolveDuration: 1.2
     maxFoam: 3.5
-    latentHeat: 45000 # found a good value to be ~38000,
+    # A unit takes 1.5x the heat it did at 45000 (67620 J with warming it to its boiling point), and every rate is
+    #     2/3 of what it was (0.4, 0.5, 0.6): a blanket boils off 1.5x more slowly but takes heat out of what it lies on
+    #     just as fast, so it lasts long enough over a hot puddle to cool it before the fire comes back.
+    latentHeat: 67540
     updateInterval: 0.4
     # boil rates may be overtuned
-    boilRate: 0.4
-    puddleBoilRate: 0.5
-    fireBoilRate: 0.6
+    boilRate: 0.2667
+    puddleBoilRate: 0.3333
+    fireBoilRate: 0.4
 
 - type: entity
   parent: KsFoamBlanket

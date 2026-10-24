@@ -1,5 +1,6 @@
 using Content.Shared.Atmos;
 using Content.Shared.DisplacementMap;
+using Content.Shared.Temperature.HeatContainer;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
@@ -109,12 +110,48 @@ public sealed partial class KsFoamBlanketComponent : Component
     [DataField]
     public float SpecificHeat = 1f;
 
-    // TODO KS14 CHEMFIRES: add a test to make sure the `energy` override and this both properly work with each other
     /// <summary>
-    ///     Temperature, in kelvin, the foam is laid at.
+    ///     Temperature, in kelvin, that foam is laid at when whatever laid it does not say.
     /// </summary>
-    [DataField, AutoNetworkedField]
-    public float FoamTemperature = Atmospherics.T20C;
+    [DataField]
+    public float DefaultTemperature = Atmospherics.T20C;
+
+    /// <summary>
+    ///     The heat the foam holds: <see cref="Foam"/> times <see cref="SpecificHeat"/>, at the foam's temperature. Foam
+    ///         laid onto the blanket mixes in at its own temperature; foam that drains or boils off leaves the rest at
+    ///         the temperature it was.
+    /// </summary>
+    /// <remarks>
+    ///     Set through <see cref="SharedKsFoamBlanketSystem"/>, which keeps the capacity in step with
+    ///         <see cref="Foam"/>.
+    /// </remarks>
+    [ViewVariables, AutoNetworkedField]
+    public HeatContainer Heat = new(1f, Atmospherics.T20C);
+
+    /// <summary>
+    ///     Thermal conductance, in W/K, between the blanket and the puddle it lies on. High, since it lies right on it:
+    ///         a hot puddle brings the foam to its boiling point almost at once, and what flows on after that boils it.
+    /// </summary>
+    [DataField]
+    public float PuddleConductance = 100f;
+
+    /// <summary>
+    ///     Thermal conductance, in W/K, between the blanket and the air over it. Low: still air carries heat poorly.
+    ///         The blanket also radiates to the air (<see cref="Emissivity"/>).
+    /// </summary>
+    /// <remarks>
+    ///     A blanket covering a puddle insulates it: the puddle's own exchange with the air stops, and its heat
+    ///         reaches the air through the blanket.
+    /// </remarks>
+    [DataField]
+    public float AirConductance = 3f;
+
+    /// <summary>
+    ///     How well the blanket's top radiates heat to the air over it, from 0 to 1, over one tile's area. Foam at its
+    ///         boiling point under room air radiates about 0.6 kW at 0.9.
+    /// </summary>
+    [DataField]
+    public float Emissivity = 0.9f;
 
     /// <summary>
     ///     The gas the foam boils into.
