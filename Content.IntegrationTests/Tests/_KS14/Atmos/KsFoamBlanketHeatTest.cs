@@ -4,6 +4,7 @@ using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.Atmos.FoamBlanket;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
+using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -273,6 +274,44 @@ public sealed class KsFoamBlanketHeatTest : GameTest
                 Assert.That(blanketTemperature, Is.LessThan(WarmTemperature - 1f), "The blanket did not cool in room air.");
                 // Its capacity is tiny, so it reaches the air's temperature within a second or so, and never passes it.
                 Assert.That(blanketTemperature, Is.EqualTo(AirTemperature(testMap, BareTile)).Within(1f), "The blanket did not settle at the air's temperature.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Foam laid hotter than its boiling point boils off what its heat over that point boils, at once, rather than
+    ///         being cooled back down by the air while staying liquid.
+    /// </summary>
+    [Test]
+    public async Task TestSuperheatedFoamBoilsOff()
+    {
+        var testMap = await CreateBreathableTestMap();
+        var server = Pair.Server;
+        var expectedBoiled = 0f;
+
+        await server.WaitPost(() =>
+        {
+            Assert.That(server.ProtoMan.Index(BlanketPrototype).TryComp<KsFoamBlanketComponent>(out var blanketPrototype, server.EntMan.ComponentFactory));
+            FillBlanket(testMap, BareTile, temperature: blanketPrototype!.BoilingPoint + 50f);
+            // A control laid at room temperature on a tile with no puddle either, so both drain alike.
+            FillBlanket(testMap, CoveredTile);
+
+            Assert.That(server.EntMan.System<KsFoamBlanketSystem>().TryGetBlanket(testMap.Grid.Owner, BareTile, out var blanket));
+            expectedBoiled = blanket.Comp.Foam * blanket.Comp.SpecificHeat * 50f / blanket.Comp.LatentHeat;
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            var blanketSystem = server.EntMan.System<KsFoamBlanketSystem>();
+            Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, BareTile, out var blanket));
+            Assert.That(blanketSystem.TryGetBlanket(testMap.Grid.Owner, CoveredTile, out var control));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(blanket.Comp.Heat.Temperature, Is.LessThanOrEqualTo(blanket.Comp.BoilingPoint + 0.01f), "The foam stayed above its boiling point.");
+                Assert.That(control.Comp.Foam - blanket.Comp.Foam, Is.EqualTo(expectedBoiled).Within(expectedBoiled * 0.1f),
+                    "Foam above its boiling point did not boil off its heat over that point.");
             }
         });
     }

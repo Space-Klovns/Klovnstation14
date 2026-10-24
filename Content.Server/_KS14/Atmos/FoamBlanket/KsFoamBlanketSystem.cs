@@ -164,6 +164,10 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false) is not { Immutable: false } mixture)
             return;
 
+        BoilSuperheatedFoam(blanket, gridUid, tile);
+        if (component.Foam <= 0f)
+            return;
+
         // The puddle first: it is what the blanket lies on, and what has to be kept from relighting.
         if (ExchangeHeatWithPuddle(blanket, gridUid, tile, seconds) || component.Foam <= 0f)
             return;
@@ -187,6 +191,24 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         // The air pays before the gas joins it, so the gas is added at the energy it actually carries.
         mixture.Temperature -= airBoiled * energyPerUnit / airHeatCapacity;
         AddBoiledGas(blanket, gridUid, tile, airBoiled);
+    }
+
+    /// <summary>
+    ///     Boils off, at once, as much of foam above its boiling point as its heat over that point boils, leaving the
+    ///         rest at the boiling point: foam laid hotter than that cannot lie there as liquid.
+    /// </summary>
+    private void BoilSuperheatedFoam(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile)
+    {
+        var component = blanket.Comp;
+        if (component.Heat.Temperature <= component.BoilingPoint || component.LatentHeat <= 0f)
+            return;
+
+        var excessHeat = (component.Heat.Temperature - component.BoilingPoint) * component.Heat.HeatCapacity;
+        var boiled = MathF.Min(component.Foam, excessHeat / component.LatentHeat);
+        if (!AddBoiledGas(blanket, gridUid, tile, boiled) || component.Foam <= 0f)
+            return;
+
+        component.Heat = new HeatContainer(component.Heat.HeatCapacity, component.BoilingPoint);
     }
 
     /// <summary>
