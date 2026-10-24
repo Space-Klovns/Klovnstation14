@@ -1,6 +1,6 @@
 ﻿using Robust.Shared.Map;
 
-namespace Content.Server.Chemistry.Components
+namespace Content.Shared.Chemistry.Components // KS14: moved from Content.Server, so the shooter's client predicts its own vapor (SharedVaporSystem)
 {
     [RegisterComponent]
     public sealed partial class VaporComponent : Component
@@ -31,5 +31,13 @@ namespace Content.Server.Chemistry.Components
 
         [DataField]
         public bool Active;
+
+        // KS14 start: a client's kept copy can hit a wall while a state is applied, where it must not react yet
+        /// <summary>
+        ///     Whether the vapor has hit a wall and stops at its next update. See <c>SharedVaporSystem.CanStopNow</c>.
+        /// </summary>
+        [ViewVariables]
+        public bool KsStopPending;
+        // KS14 end
     }
 }

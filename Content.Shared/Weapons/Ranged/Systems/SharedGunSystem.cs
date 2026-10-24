@@ -48,6 +48,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 {
     [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
     [Dependency] private _KS14.FarSound.FarSoundSystem _farsoundSystem = default!;// KS14
+    [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private INetManager _netManager = default!;
@@ -177,7 +178,10 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
         userGun.Comp.Target = GetEntity(msg.Target);
-        AttemptShoot(user.Value, userGun);
+        // KS14 start: the projectiles of this shot are the sender's own prediction, kept by their client
+        using (_ksPredictedSpawnSystem.BeginUserPrediction(args.SenderSession.AttachedEntity))
+            AttemptShoot(user.Value, userGun);
+        // KS14 end
         if (msg.Continuous)
             userGun.Comp.ShotCounter = 0;
     }

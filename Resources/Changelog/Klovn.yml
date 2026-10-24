@@ -2270,3 +2270,21 @@ Entries:
       message: Specialist kit limits on RMC vendors can no longer be bypassed.
   id: 232
   time: '2026-10-20T19:31:59.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Extinguishers fire full-auto in combat mode and lay foam that smothers
+        fires and stops them relighting.
+    - type: Add
+      message: >-
+        Carbon dioxide extinguisher, the only way to put out electrical fires.
+        Found in engineer lockers.
+    - type: Add
+      message: Arc flashes start electrical fires.
+    - type: Tweak
+      message: Foam only slows down plasma fires; use CO2 or venting.
+    - type: Fix
+      message: Sprays no longer lose their contents when they hit nothing.
+  id: 233
+  time: '2026-10-24T12:08:58.0000000+00:00'

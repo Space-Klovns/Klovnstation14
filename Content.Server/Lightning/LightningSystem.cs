@@ -69,7 +69,8 @@ public sealed partial class LightningSystem : SharedLightningSystem
     /// <param name="lightningPrototype">The prototype for the lightning to be created</param>
     /// <param name="arcDepth">how many times to recursively fire lightning bolts from the target points of the first shot.</param>
     /// <param name="triggerLightningEvents">if the lightnings being fired should trigger lightning events.</param>
-    public void ShootRandomLightnings(EntityUid user, float range, int boltCount, string lightningPrototype = "Lightning", int arcDepth = 0, bool triggerLightningEvents = true)
+    /// <param name="hitTargets">KS14: if given, every entity a bolt was fired at is added to it, those hit by arcs included.</param>
+    public void ShootRandomLightnings(EntityUid user, float range, int boltCount, string lightningPrototype = "Lightning", int arcDepth = 0, bool triggerLightningEvents = true, List<EntityUid>? hitTargets = null /* KS14: added */)
     {
         // KS14 Start
         // possibly test fail fix o algo, maybe oom fix too
@@ -99,9 +100,10 @@ public sealed partial class LightningSystem : SharedLightningSystem
                 continue;
 
             ShootLightning(user, targets[count].Owner, lightningPrototype, triggerLightningEvents);
+            hitTargets?.Add(targets[count].Owner); // KS14
             if (arcDepth - targets[count].Comp.LightningResistance > 0)
             {
-                ShootRandomLightnings(targets[count].Owner, range, 1, lightningPrototype, arcDepth - targets[count].Comp.LightningResistance, triggerLightningEvents);
+                ShootRandomLightnings(targets[count].Owner, range, 1, lightningPrototype, arcDepth - targets[count].Comp.LightningResistance, triggerLightningEvents, hitTargets: hitTargets /* KS14: added */);
             }
             shootedCount++;
         }

@@ -46,6 +46,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private IConfigurationManager _config = default!; // KS14
     [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14
     [Dependency] private StandingStateSystem _standingStateSystem = default!; // KS14
+    [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -201,18 +202,24 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
             comp.ProjectileSpent = true;
         }
 
+        // KS14 start: the server's copy's hit is sent to its user; a kept client copy's plays at once, unless that hit already did
+        var playImpact = _ksPredictedSpawnSystem.ClaimImpact(uid, target);
+        _ksPredictedSpawnSystem.OnProjectileHit((uid, comp), target, damage);
+        // KS14 end
+
         if (!deleted)
         {
-            _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound);
+            if (playImpact) // KS14
+                _gun.PlayImpactSound(target, damage, comp.SoundHit, comp.ForceSound);
 
-            if (!ourBody.LinearVelocity.IsLengthZero() && _timing.IsFirstTimePredicted)
+            if (!ourBody.LinearVelocity.IsLengthZero() && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> once for a kept client copy, whose hit can land on a re-predicted tick */)
                 _recoil.KickCamera(target, ourBody.LinearVelocity.Normalized());
         }
 
         if (comp.DeleteOnCollide && comp.ProjectileSpent)
-            PredictedQueueDel(uid);
+            _ksPredictedSpawnSystem.PredictedQueueDelDeferrable/* KS14: PredictedQueueDel -> deferred for a kept client copy hit during a state reset */(uid);
 
-        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _timing.IsFirstTimePredicted)
+        if (comp.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _ksPredictedSpawnSystem.IsFirstTimePredicted(uid) /* KS14: _timing.IsFirstTimePredicted -> as above */ && playImpact /* KS14: added, as above */)
         {
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }

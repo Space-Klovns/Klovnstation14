@@ -27,8 +27,8 @@ public sealed partial class SparkOnTriggerSystem : EntitySystem
             component.CountRange.X,
             component.CountRange.Y,
             component.VelocityRange.X,
-            component.VelocityRange.Y,
-            args.User
+            component.VelocityRange.Y
+            // No user: most triggers (timers, proximity, landing, damage) are not the user's own predicted input.
         );
     }
 }

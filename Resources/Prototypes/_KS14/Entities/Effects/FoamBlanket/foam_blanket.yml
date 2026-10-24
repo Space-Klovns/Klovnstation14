@@ -1,0 +1,74 @@
+# Laid by firefighting foam (KsDeployFoamBlanketTileReaction). Transient, like a chemfire, so never saved.
+- type: entity
+  id: KsFoamBlanket
+  categories: [ HideSpawnMenu ]
+  name: firefighting foam
+  description: A blanket of foam. Nothing that can be put out will burn under it until it boils away.
+  save: false
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    drawdepth: HighFloorObjects # above puddles, below mobs
+    sprite: _KS14/Effects/fire_foam.rsi
+    layers:
+    - state: foam
+      map: [ "foam" ]
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      blanket:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        hard: false
+        layer:
+        - SlipLayer
+        mask:
+        - ItemMask
+  - type: StepTrigger
+    requiredTriggeredSpeed: 0
+    intersectRatio: 0.1
+  - type: KsFoamBlanket
+    dissolveDisplacement:
+      sizeMaps:
+        32:
+          sprite: _KS14/Effects/foam_dissolve_displacement.rsi
+          state: dissolve
+          loop: false # holds the last frame, which is near-transparent
+    dissolveDuration: 1.2
+    maxFoam: 3.5
+    # A unit takes 1.5x the heat it did at 45000 (67620 J with warming it to its boiling point), and every rate is
+    #     2/3 of what it was (0.4, 0.5, 0.6): a blanket boils off 1.5x more slowly but takes heat out of what it lies on
+    #     just as fast, so it lasts long enough over a hot puddle to cool it before the fire comes back.
+    latentHeat: 67540
+    updateInterval: 0.4
+    # boil rates may be overtuned
+    boilRate: 0.2667
+    puddleBoilRate: 0.3333
+    fireBoilRate: 0.4
+    decayRate: 0.025
+
+- type: entity
+  parent: KsFoamBlanket
+  id: KsFoamBlanketPowder
+  name: dry powder
+  description: A
+  components:
+  - type: Sprite
+    sprite: Fluids/powder.rsi
+    layers:
+    - state: powder
+      map: [ "foam" ]
+  - type: KsFoamBlanket
+    dissolveDuration: 1.2
+    maxFoam: 4
+    latentHeat: 30000
+    updateInterval: 0.4
+    # boil rates may be overtuned
+    puddleBoilRate: 3
+    fireBoilRate: 3
+    boilingPoint: 463

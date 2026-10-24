@@ -1,0 +1,29 @@
+# What a fire extinguisher fires in full-auto: a vapor that reacts with every tile it crosses, like the spray's.
+- type: entity
+  parent: BulletWaterShot
+  id: KsBulletExtinguisherShot
+  categories: [ HideSpawnMenu ]
+  name: extinguisher spray
+  components:
+  - type: Sprite
+    sprite: Effects/extinguisherSpray.rsi
+    layers:
+    - state: extinguish
+      map: [ "enum.VaporVisualLayers.Base" ]
+  - type: Fixtures
+    fixtures:
+      projectile:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.10,-0.30,0.10,0.15"
+        hard: false
+        mask: # should barely collide with anything, because puddles only care really about walls
+        - HighImpassable
+  - type: TimedDespawn
+    lifetime: 0.35
+  - type: Vapor
+    active: true
+    transferAmountPercentage: 0.5
+  - type: VaporVisuals
+    animationTime: 0.35
+    animationState: extinguish

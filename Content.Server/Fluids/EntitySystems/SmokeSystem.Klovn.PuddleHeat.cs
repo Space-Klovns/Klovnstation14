@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Atmos.FoamBlanket;
 using Content.Server.Chemistry.TileReactions;
 using Content.Shared._KS14.Chemistry.SolutionHeatExchange;
 using Content.Shared.Chemistry.Components;
@@ -29,8 +30,10 @@ public sealed partial class SmokeSystem
 
     /// <summary>
     ///     <see cref="ReagentPrototype.ReactionTile"/>, but only reports what <see cref="ExtinguishTileReaction"/>
-    ///         consumed. Smoke has always ignored the other reactions' return values (spill, clean and so on),
-    ///         and draining the smoke by them would change how it behaves; boiled-off water has to leave it.
+    ///         and <see cref="KsDeployFoamBlanketTileReaction"/> consumed. Smoke has always ignored the other
+    ///         reactions' return values (spill, clean and so on), and draining the smoke by them would change how it
+    ///         behaves; boiled-off water has to leave it, and so does foam laid as a blanket, or one cloud could lay
+    ///         blankets forever.
     /// </summary>
     private FixedPoint2 ReactionTileConsumingExtinguish(TileRef tile, ReagentPrototype reagent, FixedPoint2 reactVolume, List<ReagentData>? data)
     {
@@ -45,7 +48,7 @@ public sealed partial class SmokeSystem
             var reactionRemoved = tileReaction.TileReact(tile, reagent, reactVolume - removed, EntityManager, data);
             removed += reactionRemoved;
 
-            if (tileReaction is ExtinguishTileReaction)
+            if (tileReaction is ExtinguishTileReaction or KsDeployFoamBlanketTileReaction)
                 extinguished += reactionRemoved;
 
             if (removed >= reactVolume)

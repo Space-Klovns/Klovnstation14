@@ -1,4 +1,5 @@
 using System.Linq;
+using Content.Server._KS14.Atmos.FoamBlanket;
 using Content.Server._KS14.Atmos.TileFire;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
@@ -16,6 +17,7 @@ namespace Content.Server._KS14.Atmos.ChemicalFire;
 public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
     [Dependency] private KsTileFireSystem _tileFireSystem = default!;
     [Dependency] private PuddleSystem _puddleSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
@@ -120,7 +122,17 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     [SubscribeLocalEvent]
     private void OnHeatTile(Entity<ChemicalFireComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
+        // Cooled out before it can heat the air back up again.
+        if (args.Mixture is { } mixture && IsTooCold(entity.Comp, mixture))
+        {
+            ExtinguishChemicalFire(entity, playSound: true);
+            return;
+        }
+
         HeatTileAir(entity, ref args);
+
+        if (_foamBlanketSystem.ContestFire(entity, args.GridUid, args.Tile, args.Seconds))
+            return;
 
         _tileFireSystem.RaiseTileFire(args.GridUid, args.Tile, entity.Comp.Temperature, entity.Comp.ExposedVolume);
 
@@ -150,7 +162,9 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
 
         var energyBudget = entity.Comp.HeatPower * args.Seconds;
 
-        // A puddle under the chemfire takes its share first; whatever it cannot absorb falls through to the air.
+        // A foam blanket over the chemfire takes its share first, boiling away; then a puddle under it. Whatever
+        //     neither can absorb falls through to the air.
+        energyBudget -= _foamBlanketSystem.HeatBlanket(args.GridUid, args.Tile, energyBudget * Math.Clamp(entity.Comp.FoamHeatFraction, 0f, 1f));
         energyBudget -= HeatTilePuddle(entity, args.GridUid, args.Tile, energyBudget);
 
         if (energyBudget <= 0f || args.Mixture is not { } mixture || mixture.Immutable || mixture.Temperature >= entity.Comp.Temperature)

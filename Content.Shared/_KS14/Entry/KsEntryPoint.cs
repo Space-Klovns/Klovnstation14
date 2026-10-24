@@ -31,6 +31,7 @@ public sealed partial class KsEntryPoint : GameShared
     /// </summary>
     private readonly ResPath[] _partialPrototypePaths = [
         new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
+        new("/Prototypes/_KS14/Reagents/Partials/"),
     ];
 
     private readonly ResPath[] _partialOwnerPaths = [

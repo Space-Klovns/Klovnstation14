@@ -42,6 +42,7 @@ public partial class SharedGunSystem
     protected virtual (EntityUid Entity, IShootable) GetSolutionShot(Entity<SolutionAmmoProviderComponent> ent, EntityCoordinates position)
     {
         var newEntity = PredictedSpawnAtPosition(ent.Comp.Prototype, position); // Trauma - predict this shit
+        KsFillSolutionShot(ent, newEntity); // KS14: moved here from the server's GunSystem, so the shooter's shot carries its reagents too
         return (newEntity, EnsureShootable(newEntity));
     }
 

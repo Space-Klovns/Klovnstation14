@@ -10,16 +10,17 @@
   - type: SolutionTransfer
     maxTransferAmount: 100
     transferAmount: 100
-  - type: UseDelay
-  - type: Spray
-    transferAmount: 10
-    pushbackAmount: 60
-    spraySound:
-      path: /Audio/Effects/extinguish.ogg
-    sprayedPrototype: ExtinguisherSpray
-    vaporAmount: 3
-    vaporSpread: 90
-    sprayVelocity: 2.0
+  # KS14: removed, the extinguisher fires KsBulletExtinguisherShot through its Gun instead, and a click spraying vapor as well got in its way
+  # - type: UseDelay
+  # - type: Spray
+  #   transferAmount: 10
+  #   pushbackAmount: 60
+  #   spraySound:
+  #     path: /Audio/Effects/extinguish.ogg
+  #   sprayedPrototype: ExtinguisherSpray
+  #   vaporAmount: 3
+  #   vaporSpread: 90
+  #   sprayVelocity: 2.0
   - type: ItemToggle
     soundActivate:
       path: /Audio/Machines/button.ogg
@@ -34,6 +35,41 @@
     verbToggleOn: fire-extinguisher-component-verb-remove
     verbToggleOff: fire-extinguisher-component-verb-engage
   - type: SpraySafety
+  # KS14 start: full-auto in combat mode
+  - type: Gun
+    clumsyProof: true
+    cameraRecoilScalar: 0
+    fireRate: 8
+    projectileSpeed: 7
+    minAngle: 4
+    maxAngle: 16
+    angleIncrease: 1
+    angleDecay: 8
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    soundGunshot:
+      path: /Audio/Effects/extinguish.ogg
+      params:
+        volume: -8
+        variation: 0.15
+    soundEmpty:
+      path: /Audio/Effects/space_wind.ogg
+      params:
+        volume: -5
+        pitch: 2
+        variation: 0.15
+  - type: SolutionAmmoProvider
+    solutionId: spray
+    proto: KsBulletExtinguisherShot
+    fireCost: 1.5
+  - type: PacifismAllowedGun
+  - type: KsGunSpraySafety
+  # KS14 end
+  # KS14 start: itemtoggle size
+  - type: ItemToggleSize
+    activatedSize: Huge
+  # KS14 end
   - type: Tool
     qualities:
     - Rolling
@@ -42,12 +78,13 @@
   - type: Tag
     tags:
     - FireExtinguisher
+    - KsExtinguisherStandard # KS14
   - type: GenericVisualizer
     visuals:
       enum.ToggleableVisuals.Enabled:
-        enum.ToggleableVisuals.Layer:
-          True: { state: fire_extinguisher_open }
-          False: { state: fire_extinguisher_closed }
+        enum.ToggleableVisuals.Layer: # KS14: use KS sprite states
+          True: { state: open }
+          False: { state: closed }
 
 - type: entity
   parent: [SolutionFireExtinguisher, BaseFireExtinguisher]
@@ -56,12 +93,12 @@
   description: It extinguishes fires.
   components:
   - type: Sprite
-    sprite: Objects/Misc/fire_extinguisher.rsi
+    sprite: _KS14/Objects/Misc/Extinguishers/fire.rsi # KS14: use KS sprites
     layers:
-    - state: fire_extinguisher_closed
+    - state: closed # KS14: use KS sprites
       map: [ "enum.ToggleableVisuals.Layer" ]
   - type: Item
-    sprite: Objects/Misc/fire_extinguisher.rsi
+    sprite: _KS14/Objects/Misc/Extinguishers/fire.rsi # KS14: use KS sprites
     size: Normal
   - type: MeleeWeapon
     wideAnimationRotation: 180
@@ -81,9 +118,14 @@
   components:
   - type: Solution
     solution:
+      maxVol: 110 # KS14: 120 -> 110, due to buffs to extinguishers
       reagents:
       - ReagentId: Water
-        Quantity: 120
+        Quantity: 27.5 # KS14: 120 -> 135, a quarter is foam
+      # KS14 start: firefighting foam, which keeps fuel puddles from relighting
+      - ReagentId: FirefightingFoam
+        Quantity: 82.5
+      # KS14 end
 
 - type: entity
   parent: [SolutionFireExtinguisherLarge, FireExtinguisher]
@@ -98,9 +140,14 @@
   components:
   - type: Solution
     solution:
+      maxVol: 360 # KS14: 240 -> 360, room for full-auto
       reagents:
       - ReagentId: Water
-        Quantity: 240
+        Quantity: 270 # KS14: 240 -> 270, a quarter is foam
+      # KS14 start: firefighting foam, which keeps fuel puddles from relighting
+      - ReagentId: FirefightingFoam
+        Quantity: 90
+      # KS14 end
 
 - type: entity
   name: extinguisher spray
@@ -127,12 +174,12 @@
   description: A light and compact fibreglass-framed model fire extinguisher. It holds less water than its bigger brother.
   components:
   - type: Sprite
-    sprite: Objects/Misc/fire_extinguisher_mini.rsi
+    sprite: _KS14/Objects/Misc/Extinguishers/mini.rsi # KS14: use KS sprites
     layers:
-        - state: fire_extinguisher_closed
+        - state: closed # KS14: use KS sprites
           map: [ "enabled" ]
   - type: Item
-    sprite: Objects/Misc/fire_extinguisher_mini.rsi
+    sprite: _KS14/Objects/Misc/Extinguishers/mini.rsi # KS14: use KS sprites
     size: Small
   - type: MeleeWeapon
     wideAnimationRotation: 180
@@ -145,6 +192,12 @@
     materialComposition:
       Steel: 50
       Glass: 40
+  # KS14 start: tags
+  - type: Tag
+    tags:
+    - FireExtinguisher
+    - KsExtinguisherMini
+  # KS14 end
 
 - type: entity
   parent: [SolutionSpray, SolutionSmall]
@@ -153,9 +206,14 @@
   components:
   - type: Solution
     solution:
+      maxVol: 60
       reagents:
       - ReagentId: Water
-        Quantity: 60
+        Quantity: 15 # KS14: 60 -> 15, a quarter is foam
+      # KS14 start: firefighting foam, which keeps fuel puddles from relighting
+      - ReagentId: FirefightingFoam
+        Quantity: 45
+      # KS14 end
 
 # used for a engi xenoborg module
 - type: entity

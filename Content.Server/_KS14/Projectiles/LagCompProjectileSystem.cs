@@ -79,9 +79,6 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         var projectileUid = args.Projectile;
         var shooterUid = args.User;
 
-        // traumastation compat - iirc only used to hide the server-side projectile from the client
-        RaiseNetworkEvent(new ShotPredictedProjectileEvent(GetNetEntity(projectileUid)), shooterUid);
-
         if (!_lagCompensationQuery.HasComp(shooterUid))
             return;
 
@@ -413,8 +410,11 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         CleanupGhosts(projectile);
     }
 
+    /// <summary>
+    /// The shot is gone, or no longer lag-compensated: its ghosts stand in for nothing.
+    /// </summary>
     [SubscribeLocalEvent]
-    private void OnProjectileTerminating(Entity<LagCompensatingProjectileComponent> projectile, ref EntityTerminatingEvent args)
+    private void OnProjectileShutdown(Entity<LagCompensatingProjectileComponent> projectile, ref ComponentShutdown args)
     {
         CleanupGhosts(projectile);
     }

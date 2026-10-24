@@ -175,7 +175,7 @@ namespace Content.Shared.Chemistry.Reagent
         [DataField]
         public Dictionary<ProtoId<ReactiveGroupPrototype>, ReactiveReagentEffectEntry>? ReactiveEffects;
 
-        [DataField(serverOnly: true)]
+        [DataField(customTypeSerializer: typeof(Content.Shared._KS14.Chemistry.PredictedTileReactions.KsTileReactionListSerializer)) /* KS14: was serverOnly: true, the client reads the reactions it predicts */]
         public List<ITileReaction> TileReactions = new(0);
 
         [DataField("plantMetabolism")]

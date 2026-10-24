@@ -12,11 +12,16 @@ public sealed partial class PuddleSystem
     [Dependency] private KsTileEffectSystem _tileEffectSystem = default!;
 
     private static readonly TimeSpan TileEffectUpdateInterval = TimeSpan.FromSeconds(0.5d);
-    private static TimeSpan _nextTileEffectUpdate = TimeSpan.MinValue;
+    // Not static: every server in the process (the integration test pool runs several) has its own clock, and a
+    //     shared next-update time set by one held up the others' tile effects until their clocks caught up.
+    private TimeSpan _nextTileEffectUpdate = TimeSpan.MinValue;
 
     private void InitialiseKlovn()
     {
         InitialisePuddleTileCache();
+
+        Subs.CVar(_configurationManager, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity,
+            value => _puddleEmissivity = value, invokeImmediately: true);
 
         SubscribeLocalEvent<PuddleComponent, MapInitEvent>(OnPuddleMapInit);
     }
@@ -61,7 +66,8 @@ public sealed partial class PuddleSystem
         var scale = careAboutTime ? (float)deltaTime.TotalSeconds : 1f;
         entity.Comp.LastTileEffectUpdate = curTime;
 
-        if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale))
+        if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale,
+                flameTemperature: _ksHotPuddleSystem.GetFlameTemperature(entity.Owner)))
             return;
 
         if (solution.Volume == FixedPoint2.Zero)
