@@ -1,0 +1,192 @@
+# Dodgenn phase two: the full fight. See root.yml.
+
+- type: htnCompound
+  id: DodgennPhaseTwoCompound
+  branches:
+  ## Monologue - every so often, between patterns, it stops to talk, guard down: stands still, dodges nothing, and is
+  ##   open to anything for a few seconds. The breathing room phase two needs. Above the guns, so even the launcher
+  ##   waits for it; the cooldown is set first, so the replans during the speech can't plan it again or beat it.
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: monologue
+      inverted: true
+    - !type:RangedAttackActivePrecondition
+      invert: true
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: monologue
+        duration: 25s
+    - !type:HTNPrimitiveTask
+      operator: !type:SetDodgeChanceOperator
+        dodgeChance: 0
+    - !type:HTNCompoundTask
+      task: DodgennMonologueLineCompound
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: DodgennMonologueTime
+    - !type:HTNPrimitiveTask
+      operator: !type:SetDodgeChanceOperator
+        dodgeChance: 0.4
+
+  ## Guns - a launcher in hand, or one to pick up.
+  - tasks:
+    - !type:HTNCompoundTask
+      task: DodgennRangedCombatCompound
+
+  ## Dash - at a target keeping its distance, with a shotgun blast on landing.
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: dash
+      inverted: true
+    - !type:CoordinatesInRangePrecondition
+      targetKey: TargetCoordinates
+      rangeKey: LeapMinDistance
+    tasks:
+    - !type:HTNCompoundTask
+      task: DodgennDashCompound
+    - !type:HTNPrimitiveTask
+      operator: !type:RangedOperator
+        attack: DodgennShotgunAttack
+
+  ## Grenade
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: grenade
+      inverted: true
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoWorldActionOperator
+        id: KsActionDodgennBossGrenade
+        targetCoordinatesKey: TargetCoordinates
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: grenade
+        duration: 15s
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkGrenade
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "I'll leave this to you."
+        hidden: false
+
+  ## Melee
+  - tasks:
+    - !type:HTNCompoundTask
+      task: DodgennMeleeCompound
+
+  ## Launcher summon - once, after taking enough damage. Picked up by the gun branch at the top.
+  - preconditions:
+    - !type:DamageThresholdPrecondition
+      damageThreshold: 250
+      checkAnyType: false
+    - !type:HasVirtualMarkerPrecondition
+      id: DodgennFinalUsed
+      invert: true
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoActionOperator
+        id: KsActionDodgennDial
+        targetKey: Owner
+    - !type:HTNPrimitiveTask
+      operator: !type:EnsureVirtualMarkerOperator
+        id: DodgennFinalUsed
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkSummonLauncher
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "I require your rocket launcher."
+        hidden: false
+
+  ## Attack - fear the target, then a heavy pattern.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoActionOperator
+        id: KsActionDodgennFear
+        targetKey: Target
+    - !type:HTNCompoundTask
+      task: DodgennAttackTargetCompound
+
+# A weighted pick of the heavy patterns, then close in. Shotgun grows likelier with anger.
+- type: htnCompound
+  id: DodgennAttackTargetCompound
+  branches:
+  - tasks:
+    # Guard back up, in case a monologue was cut short before it could say so itself.
+    - !type:HTNPrimitiveTask
+      operator: !type:SetDodgeChanceOperator
+        dodgeChance: 0.4
+    - !type:HTNPrimitiveTask
+      operator: !type:WeightedRangedOperator
+        weightMeter: KsAnger
+        attacks:
+        - attack: DodgennRandomAoeAttack
+          weight: 20
+          speech: Is that the best you've got?
+        - attack: DodgennShotgunAttack
+          weight: 20
+          meterWeight: 2
+          speech: Worthless.
+        - attack: DodgennSpiralAttack
+          weight: 20
+          speech: Is that all you have?
+        - attack: DodgennDirectionalAttack
+          weight: 20
+          speech: Just accept your fate!
+        failIfNotFired: false # otherwise an attack on cooldown fails the plan before the MoveTo below runs
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        pathfindInPlanning: false
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: MeleeRange
+
+# One of its monologue lines, at random.
+- type: htnCompound
+  id: DodgennMonologueLineCompound
+  branches:
+  - preconditions:
+    - !type:ProbabilityPrecondition
+      probability: 33
+    tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkGod
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "I don't think of myself as a king. No, I am a god, and even kings bow to gods."
+        hidden: false
+
+  - preconditions:
+    - !type:ProbabilityPrecondition
+      probability: 50
+    tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkPhaseOneTaunt
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "You're merely postponing the inevitable."
+        hidden: false
+
+  - tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkPistol
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Your future hinges upon this fight."
+        hidden: false

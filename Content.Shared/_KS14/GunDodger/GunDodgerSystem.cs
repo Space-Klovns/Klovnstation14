@@ -131,7 +131,7 @@ public sealed partial class GunDodgerSystem : EntitySystem
     /// <summary>
     ///     Rolls <see cref="GunDodgerComponent.DodgeChance"/> from a seed of the dodger and <paramref name="salt"/>,
     ///         so the client and server agree on it. The same dodger and salt always give the same result.
-    /// </summary>
+    /// <5/summary>
     /// <returns>
     ///     Whether the dodge succeeded, and the seeded random with the chance already drawn from it, for any further
     ///         predicted rolls.
@@ -142,5 +142,17 @@ public sealed partial class GunDodgerSystem : EntitySystem
         var dodged = predictedRandom.NextDouble() < (double)dodgerEntity.Comp.DodgeChance;
 
         return (dodged, predictedRandom);
+    }
+
+    /// <summary>
+    ///     Sets <see cref="GunDodgerComponent.DodgeChance"/>, clamped to 0 to 1.
+    /// </summary>
+    public void SetDodgeChance(Entity<GunDodgerComponent?> entity, float dodgeChance)
+    {
+        if (!_dodgerQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false))
+            return;
+
+        entity.Comp.DodgeChance = Math.Clamp(dodgeChance, 0f, 1f);
+        Dirty(entity);
     }
 }

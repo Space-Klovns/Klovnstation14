@@ -11,7 +11,7 @@ public sealed partial class KsFactionCollisionSystem : EntitySystem
 
     // its almost like linq except not actually under System.Linq
 
-    [SubscribeLocalEvent(after: [typeof(Projectiles.SharedProjectileSystem)])]
+    [SubscribeLocalEvent(after: [typeof(Content.Shared.Projectiles.SharedProjectileSystem)])]
     private void OnPreventCollide(Entity<KsFactionCollisionComponent> entity, ref PreventCollideEvent args)
     {
         if (args.Cancelled ||
