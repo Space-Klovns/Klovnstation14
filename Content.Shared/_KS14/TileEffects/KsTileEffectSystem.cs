@@ -28,6 +28,12 @@ public sealed partial class KsTileEffectSystem : EntitySystem
         {
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
                 tileEffect.Initialize(dependencyCollection);
+
+            foreach (var tileReaction in reagentPrototype.TileReactions)
+            {
+                if (tileReaction is KsTileReaction ksTileReaction)
+                    ksTileReaction.Initialize(dependencyCollection);
+            }
         }
     }
 
@@ -43,7 +49,18 @@ public sealed partial class KsTileEffectSystem : EntitySystem
         ReloadReagents(_systemCollectionHookManager.DependencyCollection);
     }
 
-    public bool TryUpdateTileEffects(Entity<TransformComponent?> entity, TileRef? tileRef, Solution solution, float scale = 1f)
+    /// <summary>
+    ///     Injects <paramref name="tileEffect"/> if nothing has yet, or if what did was a client's systems from before it
+    ///         last connected (see <see cref="KsTileEffect.IsInitializedFor"/>).
+    /// </summary>
+    public void EnsureInitialized(KsTileEffect tileEffect)
+    {
+        if (!tileEffect.IsInitializedFor(this))
+            tileEffect.Initialize(_systemCollectionHookManager.DependencyCollection);
+    }
+
+    /// <param name="flameTemperature">See <see cref="KsTileEffectReagentData.FlameTemperature"/>.</param>
+    public bool TryUpdateTileEffects(Entity<TransformComponent?> entity, TileRef? tileRef, Solution solution, float scale = 1f, float? flameTemperature = null)
     {
         entity.Comp ??= Transform(entity);
         if (entity.Comp.GridUid is not { } gridUid ||
@@ -51,7 +68,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             return false;
 
         var anythingHappened = false;
-        var tileEffectReagentData = new KsTileEffectReagentData(0f, solution, null);
+        var tileEffectReagentData = new KsTileEffectReagentData(0f, solution, null, FlameTemperature: flameTemperature);
 
         for (var i = solution.Contents.Count - 1; i >= 0; i--)
         {
@@ -60,9 +77,14 @@ public sealed partial class KsTileEffectSystem : EntitySystem
 
             // KS14 - RemovedVolume is per reagent; it was carrying over from the previous reagent otherwise.
             tileEffectReagentData.RemovedVolume = 0f;
+            tileEffectReagentData.Reagent = reagent;
 
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
             {
+                // A prototype reload can hand out new instances without telling this system, so they are checked here,
+                //     where an uninjected one would otherwise throw.
+                EnsureInitialized(tileEffect);
+
                 if (tileRef is not { })
                     tileRef = _mapSystem.GetTileRef((gridUid, gridComponent), entity.Comp.Coordinates);
 

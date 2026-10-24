@@ -67,6 +67,7 @@
     conditions:
     - !type:CheckTemperatureTileEffect
       minimum: 300
+      litByFlame: true # a lit welder or lighter in it lights it at once
     effects:
     - !type:ChemicalFireTileEffect
       removed: 2
@@ -200,7 +201,8 @@
   - !type:LogicAndTileEffect
     conditions:
     - !type:CheckTemperatureTileEffect
-      minimum: 300
+      minimum: 400
+      litByFlame: true # a lit welder or lighter in it lights it at once
     effects:
     - !type:ChemicalFireTileEffect
       removed: 2

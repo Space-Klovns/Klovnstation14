@@ -153,7 +153,7 @@ namespace Content.Server.Atmos.EntitySystems
                 return;
 
             var isHotEvent = new IsHotEvent();
-            RaiseLocalEvent(args.Used, isHotEvent);
+            RaiseLocalEvent(args.Used, ref /* KS14: by ref */ isHotEvent);
 
             if (!isHotEvent.IsHot)
                 return;
@@ -233,7 +233,7 @@ namespace Content.Server.Atmos.EntitySystems
             SetFireStacks(otherUid, avg / mass2, otherFlammable, ignite: true);
         }
 
-        private void OnIsHot(EntityUid uid, FlammableComponent flammable, IsHotEvent args)
+        private void OnIsHot(EntityUid uid, FlammableComponent flammable, ref /* KS14: by ref */ IsHotEvent args)
         {
             args.IsHot = flammable.OnFire;
         }
@@ -306,7 +306,7 @@ namespace Content.Server.Atmos.EntitySystems
             }
             else
             {
-                flammable.OnFire |= ignite;
+                flammable.OnFire |= ignite && (flammable.OnFire || KsCanBurn(uid)) /* KS14: something may keep it from catching fire */;
                 UpdateAppearance(uid, flammable);
             }
         }
@@ -342,7 +342,7 @@ namespace Content.Server.Atmos.EntitySystems
                 flammable.FireStacks = Math.Max(flammable.FirestacksOnIgnite, flammable.FireStacks);
             }
 
-            if (flammable.FireStacks > 0 && !flammable.OnFire)
+            if (flammable.FireStacks > 0 && !flammable.OnFire && KsCanBurn(uid) /* KS14: something may keep it from catching fire */)
             {
                 if (ignitionSourceUser != null)
                     _adminLogger.Add(LogType.Flammable, $"{ToPrettyString(uid):target} set on fire by {ToPrettyString(ignitionSourceUser.Value):actor} with {ToPrettyString(ignitionSource):tool}");
@@ -440,6 +440,18 @@ namespace Content.Server.Atmos.EntitySystems
                     _alertsSystem.ClearAlert(uid, flammable.FireAlert);
                     continue;
                 }
+
+                // KS14 start: something may put it out, as foam does
+                if (!KsCanBurn(uid))
+                {
+                    Extinguish(uid, flammable);
+                    if (!flammable.OnFire)
+                    {
+                        _alertsSystem.ClearAlert(uid, flammable.FireAlert);
+                        continue;
+                    }
+                }
+                // KS14 end
 
                 _alertsSystem.ShowAlert(uid, flammable.FireAlert);
 

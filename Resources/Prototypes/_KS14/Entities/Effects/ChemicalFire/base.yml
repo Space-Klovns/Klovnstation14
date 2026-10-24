@@ -45,6 +45,7 @@
         variation: 0.3
 
   - type: AlwaysHot
+  - type: KsDecalOnSpawn # a scorch mark, as a tile fire leaves
   - type: StepTrigger
     requiredTriggeredSpeed: 0
     intersectRatio: 0.1
@@ -57,3 +58,8 @@
       multiplier: 1.25
       multiplierOnExisting: 0.75
     - !type:Ignite
+  - type: ChemicalFire
+    puddleHeatFraction: 0.6
+    duration: 6.5
+    temperature: 1500
+    exposedVolume: 50

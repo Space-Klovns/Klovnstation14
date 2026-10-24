@@ -19,7 +19,7 @@ internal sealed partial class VaporSystem
         if (!_puddleSystem.TryGetCachedPuddle(tile, out Entity<PuddleComponent> puddle))
             return;
 
-        if (!_solutionContainer.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out _))
+        if (!SolutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out _))
             return;
 
         _heatExchangeSystem.TryEqualizeTemperature(vapor, puddle.Comp.Solution.Value);

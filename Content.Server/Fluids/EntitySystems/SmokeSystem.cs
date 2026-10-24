@@ -307,6 +307,8 @@ public sealed partial class SmokeSystem : EntitySystem
 
         EqualizeTemperatureWithPuddle(component.Solution!.Value, tile); // KS14: puddle heat exchange, before ReactionTile
 
+        using var ksTemperatureScope = _puddleSystem.KsBeginTileReactionTemperature(solution.Temperature); // KS14: tile reactions that spill read the smoke's temperature
+
         foreach (var reagentQuantity in solution.Contents.ToArray())
         {
             if (reagentQuantity.Quantity == FixedPoint2.Zero)

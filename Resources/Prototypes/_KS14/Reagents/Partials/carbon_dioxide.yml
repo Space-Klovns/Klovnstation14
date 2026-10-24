@@ -1,0 +1,29 @@
+# Carbon dioxide as a liquid or solid, as it comes out of a CO2 extinguisher (KsFireExtinguisherCarbonDioxide): it
+#     always ends up as very cold gas, and shoves the air it lands in out of the way.
+#
+# A unit is not a gram here: it becomes 4 mol of gas (molesPerUnit), about 175 times as much, so that a few seconds of
+#     spray clears a tile of most of its air instead of barely denting it. Its specific heat is matched to that, at
+#     4 mol x 30 J/(mol K) (the gas's molar heat capacity) / 8 (the default atmos.heat_scale) = 15, so the gas comes out
+#     at the temperature the reagent was at. Latent heats keep real CO2's ratio of latent to sensible heat (about 680 K),
+#     and the spray's is raised further, as water's ExtinguishTileReaction energy is.
+- type: !PartialOnly reagent
+  id: CarbonDioxide
+  boilingPoint: -78.5 # where it sublimes at one atmosphere
+  specificHeat: 15
+  tileReactions:
+  # Into a puddle it lands on first, which it then boils out of, cooling it.
+  - !type:SpillIfPuddlePresentTileReaction
+  # Otherwise straight to gas, cooling the air. Whatever air already too cold cannot turn to gas lands as a cold
+  #     puddle, which sublimes as the air warms (the BoilTileEffect below).
+  - !type:KsVaporizeTileReaction
+    energyPerUnit: 30000
+    molesPerUnit: 4
+    displace: true
+    spillRemainder: true
+  tileEffects:
+  - !type:BoilTileEffect
+    gas: CarbonDioxide
+    latentHeat: 10200
+    molesPerUnit: 4
+    displace: true
+    sublimate: true

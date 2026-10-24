@@ -1,4 +1,4 @@
-using Content.Server.Chemistry.Components;
+/* using Content.Server.Chemistry.Components; */ // KS14: VaporComponent moved to Content.Shared.Chemistry.Components
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Reagent;
@@ -20,16 +20,21 @@ using Content.Shared.Vapor;
 namespace Content.Server.Chemistry.EntitySystems
 {
     [UsedImplicitly]
-    internal sealed partial class VaporSystem : EntitySystem
+    internal sealed partial class VaporSystem : SharedVaporSystem // KS14: was EntitySystem, its movement and tile reactions moved to SharedVaporSystem so the sprayer's client predicts them
     {
         [Dependency] private ReactiveSystem _reactive = default!;
+        // KS14: moved to SharedVaporSystem with the code that used them
+        /*
         [Dependency] private ThrowingSystem _throwing = default!;
         [Dependency] private SharedAppearanceSystem _appearance = default!;
         [Dependency] private SharedMapSystem _map = default!;
         [Dependency] private SharedPhysicsSystem _physics = default!;
         [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
         [Dependency] private SharedTransformSystem _transformSystem = default!;
+        */
 
+        // KS14: moved to SharedVaporSystem.OnStartCollide, which calls OnTouch below for what is not predicted
+        /*
         public override void Initialize()
         {
             base.Initialize();
@@ -45,9 +50,27 @@ namespace Content.Server.Chemistry.EntitySystems
             // Check for collision with a impassable object (e.g. wall) and stop
             if ((args.OtherFixture.CollisionLayer & (int)CollisionGroup.Impassable) != 0 && args.OtherFixture.Hard)
             {
+                KsReactRemainder(entity); // KS14: what it still carries lands where it stops, rather than vanishing
                 QueueDel(entity);
             }
         }
+        */
+
+        // KS14 start: what a vapor does to what it touches, and its puddle heat, are not predicted
+        protected override void OnTouch(Entity<VaporComponent> vapor, EntityUid touchedUid, Solution solution)
+        {
+            _reactive.DoEntityReaction(touchedUid, solution, ReactionMethod.Touch);
+        }
+
+        protected override void BeforeTileReactions(Entity<SolutionComponent> vapor, TileRef tile)
+        {
+            // Before the reactions, so that water still cools the puddle first.
+            EqualizeTemperatureWithPuddle(vapor, tile);
+        }
+        // KS14 end
+
+        // KS14: moved to SharedVaporSystem
+        /*
 
         public void Start(Entity<VaporComponent?> vapor,
             TransformComponent vaporXform,
@@ -125,6 +148,7 @@ namespace Content.Server.Chemistry.EntitySystems
                     // In this instance, we check individually for each reagent's TileReaction
                     // This is not doing chemical reactions!
                     var contents = solution.Solution;
+                    using var ksTemperatureScope = _puddleSystem.KsBeginTileReactionTemperature(contents.Temperature); // KS14: tile reactions that spill read the vapor's temperature
                     foreach (var reagentQuantity in contents.Contents.ToArray())
                     {
                         // Check if the reagent is empty
@@ -162,5 +186,6 @@ namespace Content.Server.Chemistry.EntitySystems
                 }
             }
         }
+        */
     }
 }

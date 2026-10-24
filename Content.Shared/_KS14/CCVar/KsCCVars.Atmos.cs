@@ -42,4 +42,21 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Fun)]
     public static readonly CVarDef<float> AtmosSpacingThrustSmoothing =
         CVarDef.Create("klovn.atmos.spacing_thrust_smoothing", 0.5f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How often, in seconds, something touching a puddle is asked whether it is hot, and so heats the puddle. The
+    ///         heat it puts in scales with the interval, so this sets how smoothly a puddle warms, not how fast.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosHotPuddleCheckInterval =
+        CVarDef.Create("klovn.atmos.hot_puddle_check_interval", 0.08f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How well an uncovered puddle radiates heat to the air over it, from 0 (not at all) to 1 (a black body), over
+    ///         the share of a tile it covers. Radiation grows with the fourth power of temperature, so this mostly
+    ///         decides how hot a burning puddle can get against the fire heating it. 0 turns it off.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPuddleEmissivity =
+        CVarDef.Create("klovn.atmos.puddle_emissivity", 0.9f, CVar.SERVERONLY);
 }

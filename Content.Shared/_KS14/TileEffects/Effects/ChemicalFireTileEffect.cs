@@ -16,14 +16,21 @@ public sealed partial class ChemicalFireTileEffect : KsTileEffect
     [DataField] public float Removed = 0f;
 
     /// <summary>
-    ///     Duration that this chemfire lasts for per scale.
+    ///     Duration that this chemfire lasts for per scale, on top of the time until the next update refreshes it.
     ///         If null, uses default fixed duration.
     /// </summary>
     [DataField] public TimeSpan? DurationScale = TimeSpan.FromSeconds(1d);
 
     public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
     {
-        var nowExists = _chemicalFireSystem.SpawnChemicalFire(Id, tileRef, duration: DurationScale.HasValue ? DurationScale * scale : null).HasValue;
+        // The scale is the time since the last update, so the fire also gets that long again: as long as the next
+        //     update takes to come. Without it, a scale of 1 or less runs the fire out on the very tick the next update
+        //     would refresh it, and it goes out and relights every other update.
+        var duration = DurationScale is { } durationScale
+            ? durationScale * scale + TimeSpan.FromSeconds(scale)
+            : (TimeSpan?)null;
+
+        var nowExists = _chemicalFireSystem.SpawnChemicalFire(Id, tileRef, duration: duration).HasValue;
 
         // fail and don't consume anything if no chemfire could be created
         if (!nowExists)

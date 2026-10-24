@@ -1,24 +1,39 @@
+using Content.Server._KS14.Atmos.FoamBlanket;
 using Content.Server.Atmos.EntitySystems;
+using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Temperature;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
+using Robust.Shared.Configuration;
 using Robust.Shared.Timing;
 
 namespace Content.Server.Fluids.EntitySystems;
 
 /// <summary>
-///     Conductive heat exchange between a puddle's solution and the air on its tile.
+///     Heat exchange between a puddle's solution and the air on its tile, by conduction and thermal radiation.
 /// </summary>
+/// <remarks>
+///     A puddle under a foam blanket is insulated from the air: its heat goes through the blanket instead
+///         (<see cref="KsFoamBlanketSystem"/>).
+/// </remarks>
 public sealed partial class PuddleSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
+
+    /// <summary>
+    ///     <see cref="KsCCVars.AtmosPuddleEmissivity"/>.
+    /// </summary>
+    private float _puddleEmissivity;
 
     private static readonly TimeSpan AirHeatExchangeInterval = TimeSpan.FromSeconds(1d);
 
     /// <summary>Thermal conductance between a puddle of at least <see cref="AirHeatExchangeReferenceVolume"/> and its tile's air, in W/K.</summary>
-    private const float AirHeatExchangeConductance = 20f;
+    private const float AirHeatExchangeConductance = 15f;
 
     /// <summary>Puddle volume at and above which the full conductance applies; smaller puddles scale down linearly.</summary>
     private const float AirHeatExchangeReferenceVolume = 20f;
@@ -105,13 +120,17 @@ public sealed partial class PuddleSystem
         if (airCapacity < Atmospherics.MinimumHeatCapacity || solutionCapacity <= 0f)
             return;
 
-        var conductance = AirHeatExchangeConductance * MathF.Min(1f, (float)solution.Volume / AirHeatExchangeReferenceVolume);
-        var heat = conductance * (airTemperature - solutionTemperature) * deltaTime;
+        // Insulated by a blanket over it, which carries the heat on to the air itself.
+        if (_foamBlanketSystem.TryGetBlanket(grid.Owner, indices, out _))
+            return;
 
-        // Never overshoot the shared equilibrium temperature.
-        var equilibrium = (airCapacity * airTemperature + solutionCapacity * solutionTemperature) / (airCapacity + solutionCapacity);
-        var maxHeat = MathF.Abs(equilibrium - solutionTemperature) * solutionCapacity;
-        heat = Math.Clamp(heat, -maxHeat, maxHeat);
+        // A puddle smaller than the reference volume covers that share of the tile, for radiation as for conduction.
+        var coverage = MathF.Min(1f, (float)solution.Volume / AirHeatExchangeReferenceVolume);
+        var conductance = AirHeatExchangeConductance * coverage +
+            KsThermalTransfer.RadiativeConductance(solutionTemperature, airTemperature, coverage, _puddleEmissivity);
+
+        // Stepped exactly, so it never overshoots the shared equilibrium however strong the radiation.
+        var heat = KsThermalTransfer.ExchangeQuery(solutionCapacity, solutionTemperature, airCapacity, airTemperature, conductance, deltaTime);
 
         if (heat == 0f || puddle.Comp.Solution is not { } solutionEntity)
             return;

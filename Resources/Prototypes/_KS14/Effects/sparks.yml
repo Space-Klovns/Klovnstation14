@@ -29,3 +29,12 @@
           !type:PhysShapeCircle
           radius: 0.3
         hard: false
+
+# arc flash
+- type: entity
+  parent: EffectSparkMoving
+  id: EffectSparkMovingArc
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    color: '#9d9dff'

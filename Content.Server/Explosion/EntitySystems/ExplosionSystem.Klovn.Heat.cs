@@ -12,7 +12,7 @@ public sealed partial class ExplosionSystem
 
     [Dependency] private EntityQuery<TemperatureComponent> _temperatureQuery = default!;
 
-    private const float JoulesPerFirestack = 12000;
+    private const float JoulesPerFirestack = 62_000;
 
     private void ExposeToHeat(EntityUid uid, float firestacks)
     {

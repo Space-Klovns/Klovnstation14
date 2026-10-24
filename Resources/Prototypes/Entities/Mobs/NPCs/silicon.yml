@@ -129,7 +129,11 @@
     generated:
       reagents:
         - ReagentId: Water
-          Quantity: 10
+          Quantity: 7.5 # KS14: 10 -> 7.5, a quarter is foam, as in its tank
+        # KS14 start: firefighting foam, so a firebot keeps laying foam blankets
+        - ReagentId: FirefightingFoam
+          Quantity: 2.5
+        # KS14 end
   - type: Spray
     transferAmount: 10
     pushbackAmount: 60

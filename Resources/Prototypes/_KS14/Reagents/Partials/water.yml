@@ -1,0 +1,5 @@
+# Water boils off a puddle hotter than its boiling point, taking its latent heat with it.
+- type: !PartialOnly reagent
+  id: Water
+  tileEffects:
+  - !type:BoilTileEffect { }

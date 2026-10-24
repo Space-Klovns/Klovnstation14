@@ -246,6 +246,17 @@ var myFloat = (float)GetMyInt();       // do this
 float myFloat = GetMyInt();            // not this
 ```
 
+**Convert to and from `FixedPoint2` with its own conversions (C#)** — reagent quantities are `FixedPoint2`, stored to 0.01u. When a `float` has to become one, or come back, use `FixedPoint2.New(float)` and the explicit `(float)` cast. Don't write a helper that rounds a float to solution precision by hand:
+```csharp
+// do this - FixedPoint2.New truncates to the 0.01u the solution stores
+var used = (float)FixedPoint2.New(MathF.Min(availableFoam, foamPerTile));
+
+// not this - a hand-rolled copy of what FixedPoint2 already does
+private static float FloorToSolutionUnits(float units) => MathF.Floor(units * 100f) / 100f;
+var used = FloorToSolutionUnits(MathF.Min(availableFoam, foamPerTile));
+```
+The same applies in the other direction: `(float)quantity`, not `quantity.Float()`. A copy of the rounding drifts from `FixedPoint2`'s own. `FixedPoint2.New` applies a float epsilon before truncating, and the hand-rolled version doesn't. So the amount taken and the amount that actually lands in the solution can disagree by 0.01u.
+
 **Name every optional argument (C#)** — an optional parameter is always passed with its name, so the call site says what the value *means* instead of making the reader go read the signature. Required parameters stay positional:
 ```csharp
 // do this
@@ -265,6 +276,8 @@ var water = protoMan.Index(WaterReagent);
 var water = protoMan.Index<ReagentPrototype>("Water");                      // not this
 ```
 For an id that exists only in a test's `[TestPrototypes]` YAML, make that field non-`static` (`private readonly ProtoId<T> _id = "..."`): the YAML linter validates only static id fields against the real prototypes, and an instance field still satisfies `RA0033`.
+
+Entity ids use `EntProtoId` rather than `ProtoId<EntityPrototype>`. `EntProtoId<T>` also requires the entity to have a `T`: as a `[DataField]`, the YAML linter rejects a prototype without one (`public EntProtoId<InstantActionComponent> Action;`).
 
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
@@ -531,6 +544,19 @@ And the table is per base, not universal: only `EntitySystem` has a `ProtoMan`. 
 
 The rule is "check the base before you declare", not "assume it is there". Nothing in the toolchain catches either mistake — C# allows a derived field to hide a base one of a different name without a whisper, so this is a review-time thing.
 
+**The same goes for the queries `EntityManager` already holds.** `EntityManager` (which every `EntitySystem` has, as above) keeps public `TransformQuery` and `MetaQuery` fields. Use those; don't inject or fetch your own `EntityQuery<TransformComponent>` or `EntityQuery<MetaDataComponent>`:
+
+```csharp
+// do this
+var transformComponent = EntityManager.TransformQuery.GetComponent(uid);
+
+// not this - a second query for the one EntityManager already keeps
+[Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
+var transformComponent = _transformQuery.GetComponent(uid);
+```
+
+`Transform(uid)` and `MetaData(uid)` remain fine where you only need the component; reach for the query when you want `TryComp`, `Resolve` or `HasComp`.
+
 **Inject `EntityQuery<T>`, don't `GetEntityQuery<T>()` (C#)** — the collection that injects into `EntitySystem`s (`IEntitySystemManager.DependencyCollection`) resolves `EntityQuery<T>` and `EntitySystem` as well, unlike the default `IoCManager` one. So declare queries as dependencies:
 ```csharp
 [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;   // not GetEntityQuery<SpriteComponent>() in Initialize
@@ -566,6 +592,8 @@ if (_lightLevelCacheQuery.TryComp(targetUid, out var cacheComponent) && cacheCom
     return cacheComponent.Level;
 // ...compute, then EnsureComp<NpcLightLevelCacheComponent>(targetUid) and store it.
 ```
+
+**No `static` mutable state on systems (C#)** — a system is per server (or client), but a `static` field is per process, and integration tests run several pooled servers in one process, each with its own clock. A static timer set by one server holds back every other server's updates. `PuddleSystem`'s `_nextTileEffectUpdate` was static, so in tests a fuel puddle heated past its ignition point never caught fire through the update loop. The existing tests only lit fuel that was spilled already hot, and that path doesn't use the timer, so they passed anyway. `static readonly` constants and shapes are fine. Anything that changes at runtime is an instance field.
 
 This is about state *about* an entity. Two things that look similar are fine as they are:
 - **Transient work lists** — a set of uids queued this tick and drained in `Update`, like the deferred-check set in §6's reparenting entry. It is a to-do list, not state.
@@ -900,6 +928,26 @@ Where several *unrelated* systems genuinely need the same moment, the component'
 as an event of its own — see `KsZLevelTransitEvents.cs`, which exists because `KsZLevelPhysicsSystem`
 had already taken `KsZLevelTransitComponent`'s `ComponentStartup` and `ComponentShutdown`.
 
+### Clean up on `ComponentShutdown`, not `EntityTerminatingEvent`
+
+`EntityTerminatingEvent` is raised only when the entity is deleted. When just the component is removed, it never
+fires. `ComponentShutdown` covers both cases, because deleting an entity shuts down each of its components in turn.
+So cleanup that undoes what a component set up goes on its shutdown. If part of that cleanup is pointless when the
+whole entity is going, skip that part with `Terminating(uid)`, the `EntitySystem` proxy for the entity's life stage.
+
+```csharp
+// not this - removing PuddleComponent alone leaves every toucher still holding the puddle
+[SubscribeLocalEvent]
+private void OnPuddleTerminating(Entity<PuddleComponent> entity, ref EntityTerminatingEvent args)
+
+// this - runs on removal and on deletion alike
+[SubscribeLocalEvent]
+private void OnPuddleShutdown(Entity<PuddleComponent> entity, ref ComponentShutdown args)
+```
+
+If another system already has that component's shutdown, call into yours from its handler (see above), as
+`PuddleSystem.OnPuddleCacheShutdown` does for `KsHotPuddleSystem`.
+
 ### A test that never fails is worse than no test
 
 Two separate bugs in one feature were each "covered" by a test that passed with the bug present. The
@@ -921,6 +969,89 @@ Two ways to end up here that have nothing to do with carelessness:
 
 When you find a test like this, fix the test in the same change as the bug. Deleting it is better than
 leaving it.
+
+The opposite also happens: a test that *did* fail can be reported as not having run. In a `dotnet test` run with
+several tests, a failed `GameTest` can show as `Skipped` or `NotExecuted`, with only `Test was dirty-disposed.` in the
+trx and the console. Treat that as a failure. Rerun that test alone with `--logger "console;verbosity=detailed"` to see
+the assertion that actually failed.
+
+### A test bound to today's tuning breaks on the next balance pass
+
+A test that copies a prototype's numbers into itself (a loop count, a wait, a threshold) is checking those numbers, not
+the mechanic. When someone retunes the prototype, it fails with no bug present, or, worse, it keeps passing while no
+longer exercising what it is named for. One balance pass on the foam blanket (`maxFoam` 1.5 → 3.5, `latentHeat` 12000
+→ 45000) and a shorter shot lifetime broke six tests this way:
+
+- `for (var i = 0; i < 30; i++) Deploy(...)` filled a 1.5u blanket and no longer filled a 3.5u one.
+- `WaitRunTicks(TicksPerSecond * 4)` was enough for a fire to boil a full blanket off, until it took 17 seconds.
+- "Boils at least half its `PuddleBoilRate`" assumed the rate was the limit; with more latent heat, the puddle's
+  spare heat ran out first.
+
+Derive what the test depends on from the prototype it spawns, and state the mechanism as the bound:
+
+```csharp
+// do this - fills the blanket whatever it holds
+for (var i = 0; i < 1000 && blanketSystem.Deploy(BlanketPrototype, tileRef, 1f) > 0f; i++)
+{
+}
+
+// and this - waits as long as the fire's heat takes, from the prototypes' own values
+ProtoMan.Index(BlanketPrototype).TryGetComponent<KsFoamBlanketComponent>(out var blanketPrototype, Factory);
+var boilSeconds = blanketPrototype.MaxFoam * energyPerUnit / (firePrototype.HeatPower * firePrototype.FoamHeatFraction);
+await server.WaitRunTicks((int)MathF.Ceiling(boilSeconds * 1.5f + 1f) * TicksPerSecond);
+
+// not this - true for one tuning
+for (var i = 0; i < 30; i++)
+    blanketSystem.Deploy(BlanketPrototype, tileRef, 1f);
+await server.WaitRunTicks(TicksPerSecond * 4);
+```
+
+- **Bound by every limit the code applies, not only the obvious one.** If the code takes the minimum of a rate and an
+  energy budget, so does the expected value.
+- **Tolerances come from the mechanism too:** a value that changes every update and reaches the client a state later is
+  compared within one update's change (`DecayRate * UpdateInterval`), not `0.0001f`.
+- **Assert the design limit separately** where it matters ("boiling a full blanket off takes under 30 s"), so a tuning
+  that breaks the *gameplay* still fails, with a message saying so, rather than the test silently stretching to fit.
+- **A hard-coded number is fine** when it's the test's own setup (a `[TestPrototypes]` entity, a spilled volume), not a
+  copy of a production prototype's value.
+
+When a test does fail after a balance change, first check whether the change made the test's own arithmetic wrong.
+Only then go looking for a bug, and update the test to derive the value rather than to match the new constant.
+
+### Sleeping bodies get no contact updates, so a teleport doesn't end a collision
+
+Physics only updates contacts for awake bodies. Move a sleeping entity with `SetCoordinates` and it keeps every contact
+it had: no `EndCollideEvent` for what it left, and no `StartCollideEvent` for what it's now on top of, until something
+wakes it. Walking wakes a body, so in game this rarely shows. In a test that teleports an entity to check collision
+tracking (the foam's `KsInFoamComponent`, say), it looks exactly like the tracking being broken. Wake the body after
+moving it:
+
+```csharp
+transformSystem.SetCoordinates(mobUid, outsideCoordinates);
+physicsSystem.WakeBody(mobUid);
+```
+
+### An item lying on a puddle isn't touching it
+
+An item's own fixture has mask `ItemMask` and no layer. A puddle's `slipFixture` is on `SlipLayer` with mask `ItemMask`.
+Neither one's mask matches the other's layer, so a dropped item never makes a contact with the puddle under it, and its
+`StartCollideEvent` never comes. A mob does touch it, which makes a test on a mob look like proof that items work.
+
+When a feature needs items to touch puddles, put the fixture on the side the feature is about. For a puddle feature,
+that's a non-hard fixture on the puddle whose layer matches what items collide with, not a fixture added to every item
+that might matter. Keep it separate from `slipFixture` and filter your collide handlers on `args.OurFixtureId`, so each
+toucher is counted once.
+
+Items have no layer, so the fixture can't pick them out by mask. Whatever layer it uses is also hit by anything else that
+masks that layer, and `FlyingMobMask` is exactly `ItemMask`. Step triggers and speed modifiers don't check *which* of the
+puddle's fixtures was touched, only that the other fixture is hard. So without a filter, bats and carp start slipping on
+puddles and getting slowed by sticky ones. `KsPuddleTouchSystem` cancels `PreventCollideEvent` between the touch
+fixture and a mob's hard fixture. A mob still touches the puddle through its non-hard `flammable` fixture, which is all a
+hot-thing check needs.
+
+Items do reach the puddle's step trigger, but `SlipperySystem.CanSlip` rejects anything that can't be stunned, so
+they're never counted. Non-hard fixtures also don't block a tile (`TurfSystem.IsTileBlocked`), and neither ray queries
+nor projectile hits count them.
 
 ### Verifying an attribute subscription actually generated
 
@@ -1067,6 +1198,94 @@ throws straight out of `Update`.
 
 `PuddleSystem`'s one-puddle-per-tile invariant is enforced this way: a puddle that starts up or moves onto an
 occupied tile is queued, and merged into the cached puddle (then deleted) in `Update`, never in the callback.
+
+### Two kinds of predicted spawn, and which copy each one keeps
+
+A predicted spawn makes two copies of an entity: one on the predicting client, and the server's. The two spawn APIs differ in **which copy the predicting client ends up showing**. Pick by that, not by name.
+
+| | Engine `PredictedSpawn*` (`EntityManager`/`EntitySystem`) | `KsSharedPredictedSpawnSystem` with a `user` |
+| --- | --- | --- |
+| Client's copy | A stand-in. Deleted on every applied server state (`ClientGameStateManager.ResetPredictedEntities`), re-created only while its tick is still being re-predicted, so gone about one round trip after spawning. | Kept for its whole life, on that user's client only. |
+| Server's copy | Replaces the stand-in for everyone. | Hidden and inert on the user's client (no sprite, light, collisions or predicted physics); shown to everyone else. |
+| Use for | Anything long-lived or that gameplay reads: fires, foam blankets. | Short-lived movers the user caused: their own bullets, sparks and vapors. |
+
+Without a `user`, the KS system is the engine spawn plus predicted physics, which matters only for something that moves (a spark). Anything anchored or static uses the engine's spawn directly.
+
+**A one-shot animated effect (an EMP pulse, a flash) is neither.** Each re-creation of an engine stand-in starts its animation again, so it replays on every applied state for a round trip. Spawn it on the server only, as `SharedEmpSystem` does.
+
+User mode exists because the engine's handover is a visible jump for fast movers. A lag-compensated bullet's server copy isn't where the client's copy is, so swapping one for the other teleports it. Showing both is a desync.
+
+User mode has rules nothing enforces:
+
+- **Pass `user` only on that user's own predicted path**: the code their client also runs for their own input, such as a shot request. A server-only path with a `user` hides the server's copy from a client that never made one, and the user sees nothing at all. Teleports, damage-driven effects, triggers and spells pass no user. Guns don't pass one per call either. `SharedGunSystem.OnShootRequest` opens a `BeginUserPrediction` scope, and only projectiles spawned inside it are marked. This is because `PlayerShotProjectileEvent` also fires for server-only shots, such as spells and autofire. Sprays pass one only from their click and activate-in-world handlers (`SharedSpraySystem.Klovn.Predicted.cs`). A verb, an action or a test sprays the server's vapors alone.
+- **The kept copy never hears from the server again.** It can't follow anything the server does to the real one, which is why gameplay-relevant entities don't use this mode.
+- **Gate a kept copy's one-off effects on `KsSharedPredictedSpawnSystem.IsFirstTimePredicted(uid)`, not `IGameTiming.IsFirstTimePredicted`.** Its physics steps only on first-time ticks, but its contacts are found by the next pass, usually a re-predicted tick, so a timing gate drops its impact effect.
+
+Three things the client system handles, each of which looks like a working kept copy until it doesn't:
+- Removing `PredictedSpawnComponent`, so the state reset leaves it alone.
+- Blocking its physics on re-predicted ticks, so it isn't stepped several times per real tick. Nothing rolls a client-only entity back.
+- Restoring its simulated position before each step. The client's transform lerp writes the rendered position over the real one between ticks, and only networked entities get that overwritten by the next reset.
+
+`KsPredictedSpawnTest.KeptCopySurvivesStatesAndMovesAtItsOwnSpeed` fails if any of the three is missing.
+
+**A kept copy that deletes itself from a collision handler uses `PredictedQueueDelDeferrable`, not `PredictedQueueDel`.**
+
+- **Where the events come from.** The state reset raises `StartCollideEvent`/`EndCollideEvent` from a contact list it gathered beforehand (`PhysicsSystem.ResetContacts` → `UpdateIsTouching`, `RobustToolbox/Robust.Client/Physics/PhysicsSystem.Predict.cs`). It never checks whether an earlier event destroyed a later entry.
+- **Why deleting there is fatal.** Queue-deleting a client-side entity destroys its contacts immediately (`SharedPhysicsSystem.OnContactEntityQueueDel`). That returns them to the pool, which clears their entities to `EntityUid.Invalid`. The next entry then throws `KeyNotFoundException: Entity 0 does not have a component of type TransformComponent` from `ResetPredictedEntities`.
+- **Why only kept copies hit it.** Engine predicted spawns are deleted before `ResetContacts` runs, so only a kept copy can be in that list.
+- **What the deferrable form does.** It flags the copy during state application and deletes it before the next physics step.
+
+The same applies to anything else a collision handler does that destroys contacts, such as `SetCanCollide(false)`. `KsPredictedSpawnTest.KeptProjectileHitByTheStateReset` reproduces the crash.
+
+**A kept copy's side effects are not re-predicted either.** The engine re-creates its predicted spawns only by
+re-running the code that spawned them, and nothing re-runs a kept copy. So anything a kept copy spawns with the engine's
+`PredictedSpawn*` is deleted by the next state reset and never comes back: the extinguisher shot's foam blankets
+vanished from every tile but the first this way. Anything a kept copy spawns that has to last until the server's own copy
+arrives is a plain client-side entity, together with a handover:
+
+- **Mark it.** Spawn it with `KsTilePlaceholderSystem.Spawn` (client), which gives it a `KsTilePlaceholderComponent` and
+  an expiry time. It is the real entity on that client until it is handed over: a placeholder blanket keeps chemfires
+  out, and a placeholder puddle is slippery.
+- **Hand over.** When the server's copy for the tile arrives, call `KsTilePlaceholderSystem.Supersede`. That hides the
+  placeholder at once, so the tile never shows two, and deletes it in `FrameUpdate`, outside state application, for the
+  contact reason above. Each feature decides what "arrived" means: the blanket cache taking the server's blanket, or a
+  networked puddle starting up on the tile (`KsPredictedSpillSystem`).
+- **Time it out.** If the server's copy never comes (the server's shot hit something sooner), the placeholder deletes
+  itself when it expires.
+
+**Never change a networked entity's state from a kept copy.** The next state puts it back, and the server's change
+arrives a state or so later, so it flickers between the two. A kept vapor spilling into a puddle the server already sent
+leaves the puddle's solution alone. It adds a client-only `KsPredictedPuddleTopUpComponent`, which only changes the volume the
+puddle is drawn at, until a state shows the server's spill has landed.
+
+`KsPredictedFoamShotTest.FiredShotLaysBlanketsThatLastUntilTheServersArrive` and
+`KsPredictedSpillTest.SprayLaysPuddlesThatLastUntilTheServersArrive` fail if engine predicted spawns are used, or if the
+handover is missing.
+
+**Vapors are shared code** (`SharedVaporSystem`): a player's own spray (`SharedSpraySystem`) or solution gun shot is a
+kept copy, and their client runs its tile walk. The server simulates every vapor; a client only its own kept copies.
+
+- **What the client predicts.** A reagent's `tileReactions` reach the client through `KsTileReactionListSerializer`,
+  which keeps only the types the client has. A reaction is predicted by adding a client-side class with exactly the
+  server's class name (`Content.Client/_KS14/Chemistry/TileReactions/`), or by moving a fork-owned one to Shared
+  (`KsDeployFoamBlanketTileReaction`). Everything else (extinguishing, flammability, CO2 vaporising) stays server-only,
+  with no YAML change. `KsFirefightingTest.TestClientReadsOnlyThePredictedTileReactions` checks every reagent.
+- **Gate each client reaction on `KsPredictedTileReactionSystem.ShouldReact`.** Only a kept vapor's walk opens the scope
+  that makes it true. Other shared code runs tile reactions on the client too: a mop's absorbent, re-run on every
+  re-predicted tick. Without the gate, each re-prediction would spawn another puddle. Checked by
+  `KsPredictedSpillTest.ReactionsOutsideAKeptVaporDoNothingOnTheClient`.
+- **Order before physics.** A vapor reacts with the tile the last tick left it on, so a tile it enters on the tick it
+  despawns is never reacted with on the server. A client that reacts after physics lays one tile too many. That tile's
+  placeholder waits for a server copy that never comes, and vanishes when it expires.
+
+**Objects held on prototypes outlive a client's systems.** A client makes its entity systems anew on every connection,
+but keeps its prototypes, and the tile effects and reactions on them. One injected once, at load, still holds the old
+systems after a reconnect: it compiles, it runs, and it acts on nothing. Before the client had any tile reactions this
+never showed. Re-check whenever you use one: `KsTileEffectSystem.EnsureInitialized` re-injects an effect that was
+injected by an older `KsTileEffectSystem` (`KsTileEffect.IsInitializedFor`). In tests it shows up only when a pooled
+client pair reconnected earlier in the same run, so a test of it fails in a batch and passes alone.
+
+Neither kind of hiding works by sending the client a network event naming the entity: it can arrive before the entity's state does. Put the information on a networked component, as `KsPredictedSpawnComponent.PredictingUser` does. Also, `PredictedDel` of a networked entity on the client is only a predicted detach, which the next state restores, so don't use it to hide one.
 
 ### `IntersectRay` with `returnOnFirstHit: true` is not the nearest hit
 
