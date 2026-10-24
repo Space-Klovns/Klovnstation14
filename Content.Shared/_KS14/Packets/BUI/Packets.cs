@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Packets.Widgets;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Packets.BUI
@@ -9,7 +10,15 @@ namespace Content.Shared._KS14.Packets.BUI
     }
 
     [Serializable, NetSerializable]
-    public sealed class StartExecutionMessage : BoundUserInterfaceMessage;
+    public sealed class StartExecutionMessage : BoundUserInterfaceMessage
+    {
+        public string Command;
+
+        public StartExecutionMessage(string command)
+        {
+            Command = command;
+        }
+    }
 
     [Serializable, NetSerializable]
     public sealed class SendExecutionPacketMessage : BoundUserInterfaceMessage
@@ -72,12 +81,47 @@ namespace Content.Shared._KS14.Packets.BUI
         public int MaxMemory;
 
         public string Command;
+        public Widget[] Widgets;
 
-        public ExecutorBoundUserInterfaceState(int maxStatements, int maxMemory, string command)
+        public ExecutorBoundUserInterfaceState(int maxStatements, int maxMemory, string command, Widget[] widgets)
         {
             MaxStatements = maxStatements;
             MaxMemory = maxMemory;
             Command = command;
+            Widgets = widgets;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    public sealed class WidgetSendMessage : BoundUserInterfaceMessage
+    {
+        public Widget Widget;
+
+        public WidgetSendMessage(Widget widget)
+        {
+            Widget = widget;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    public sealed class WidgetUpdateElementMessage : BoundUserInterfaceMessage
+    {
+        public WidgetElement Element;
+
+        public WidgetUpdateElementMessage(WidgetElement element)
+        {
+            Element = element;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    public sealed class WidgetButtonClickedMessage : BoundUserInterfaceMessage
+    {
+        public string Button;
+
+        public WidgetButtonClickedMessage(string button)
+        {
+            Button = button;
         }
     }
 }

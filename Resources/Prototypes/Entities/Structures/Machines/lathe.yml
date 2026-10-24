@@ -61,7 +61,6 @@
   - type: PacketExecutor # KS14
     modules:
     - BasePacketModule
-    - LathePacketModule
     - NetworkPacketModule
   - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
