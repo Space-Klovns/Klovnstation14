@@ -1,4 +1,4 @@
-﻿using Content.Shared.Decals;
+using Content.Shared.Decals; // KS14
 using Content.Shared.Maps;
 using Robust.Shared.Prototypes;
 
@@ -21,6 +21,13 @@ public sealed class MappingPrototype
     /// </summary>
     public readonly string Name;
 
+// KS14 start: mapping editor overhaul port
+    /// <summary>
+    ///     Whether the prototype is in the “Favorites” list.
+    /// </summary>
+    public bool Favorite;
+
+// KS14 end
     /// <summary>
     ///     Which other prototypes (buttons) this one is nested inside of.
     /// </summary>
