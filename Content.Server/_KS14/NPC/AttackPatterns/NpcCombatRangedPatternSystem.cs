@@ -1,12 +1,14 @@
 using System.Numerics;
-using Content.Server._KS14.NPC.Components;
+using Content.Server.Chat.Systems;
+using Content.Shared.Chat;
 using Content.Shared._KS14.GenericSpriteFlick;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
-namespace Content.Server._KS14.NPC.Systems;
+namespace Content.Server._KS14.NPC.AttackPatterns;
 
 /// <summary>
 ///     Ranged attacks fired in patterns - spirals, fans, bursts in every direction - for bosses and the like, on top of
@@ -17,6 +19,7 @@ namespace Content.Server._KS14.NPC.Systems;
 /// </summary>
 public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
 {
+    [Dependency] private ChatSystem _chatSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private KsGenericSpriteFlickSystem _genericSpriteFlickSystem = default!;
@@ -25,7 +28,7 @@ public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<NpcActiveRangedAttackComponent> _activeAttackQuery = default!;
-    [Dependency] private EntityQuery<NpcRangedAttackPatternHolderComponent> _holderQuery = default!;
+    [Dependency] private EntityQuery<NpcRangedAttackCooldownsComponent> _cooldownsQuery = default!;
 
     private static readonly Vector2[] CardinalDirections =
     [
@@ -52,30 +55,44 @@ public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Starts <paramref name="entity"/>'s attack <paramref name="attackId"/>, at <paramref name="targetUid"/> if
-    ///         given: telegraphed and sounded now, its first burst on the next update. False if it has no such attack,
-    ///         the attack is on cooldown, or it is part way through one already.
+    ///     Starts the attack <paramref name="attackId"/> from <paramref name="uid"/>, at <paramref name="targetUid"/> if
+    ///         given: telegraphed, sounded and announced with <paramref name="speech"/> now, its first burst on the next
+    ///         update. False if the attack is on cooldown for it, or it is part way through one already.
     /// </summary>
-    public bool TryStartAttack(Entity<NpcRangedAttackPatternHolderComponent?> entity, string attackId, EntityUid? targetUid)
+    public bool TryStartAttack(
+        EntityUid uid,
+        EntProtoId<NpcRangedAttackPatternComponent> attackId,
+        EntityUid? targetUid,
+        string? speech = null)
     {
-        if (!_holderQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false) ||
-            _activeAttackQuery.HasComp(entity) ||
-            !entity.Comp.Attacks.TryGetValue(attackId, out var attackProtoId) ||
-            entity.Comp.CooldownEnds.TryGetValue(attackId, out var cooldownEnd) && _gameTiming.CurTime < cooldownEnd ||
-            !ProtoMan.TryIndex(attackProtoId, out var attackPrototype) ||
-            !attackPrototype.TryComp<NpcRangedAttackPatternComponent>(out var pattern, Factory))
+        if (_activeAttackQuery.HasComp(uid) ||
+            IsOnCooldown(uid, attackId) ||
+            !ProtoMan.Index(attackId).TryComp<NpcRangedAttackPatternComponent>(out var pattern, Factory))
             return false;
 
         if (pattern.TelegraphSpriteFlickData is { } spriteFlickData)
-            _genericSpriteFlickSystem.Flick(entity, spriteFlickData);
+            _genericSpriteFlickSystem.Flick(uid, spriteFlickData);
 
         if (pattern.Sound != null)
-            _audioSystem.PlayPvs(pattern.Sound, entity);
+            _audioSystem.PlayPvs(pattern.Sound, uid);
 
-        var activeAttackComponent = AddComp<NpcActiveRangedAttackComponent>(entity);
+        if (!string.IsNullOrEmpty(speech))
+            _chatSystem.TrySendInGameICMessage(uid, speech, InGameICChatType.Speak, hideChat: false, hideLog: true, checkRadioPrefix: false);
+
+        // Ensured now rather than once the attack ends, which happens mid-enumeration in Update.
+        EnsureComp<NpcRangedAttackCooldownsComponent>(uid);
+
+        var activeAttackComponent = AddComp<NpcActiveRangedAttackComponent>(uid);
         activeAttackComponent.State = new NpcRangedAttackState(attackId, pattern, targetUid);
         activeAttackComponent.NextBurstAt = _gameTiming.CurTime;
         return true;
+    }
+
+    private bool IsOnCooldown(EntityUid uid, EntProtoId<NpcRangedAttackPatternComponent> attackId)
+    {
+        return _cooldownsQuery.TryComp(uid, out var cooldownsComponent) &&
+            cooldownsComponent.CooldownEnds.TryGetValue(attackId, out var cooldownEnd) &&
+            _gameTiming.CurTime < cooldownEnd;
     }
 
     public override void Update(float frameTime)
@@ -83,8 +100,8 @@ public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
         base.Update(frameTime);
 
         var now = _gameTiming.CurTime;
-        var activeAttackEnumerator = EntityQueryEnumerator<NpcActiveRangedAttackComponent, NpcRangedAttackPatternHolderComponent>();
-        while (activeAttackEnumerator.MoveNext(out var uid, out var activeAttackComponent, out var holderComponent))
+        var activeAttackEnumerator = EntityQueryEnumerator<NpcActiveRangedAttackComponent, NpcRangedAttackCooldownsComponent>();
+        while (activeAttackEnumerator.MoveNext(out var uid, out var activeAttackComponent, out var cooldownsComponent))
         {
             // Finished, and on its way out at the end of the tick.
             if (activeAttackComponent.LifeStage > ComponentLifeStage.Running || now < activeAttackComponent.NextBurstAt)
@@ -100,7 +117,7 @@ public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
                 continue;
             }
 
-            holderComponent.CooldownEnds[state.AttackId] = now + state.Pattern.Cooldown;
+            cooldownsComponent.CooldownEnds[state.AttackId] = now + state.Pattern.Cooldown;
             RemCompDeferred(uid, activeAttackComponent);
         }
     }

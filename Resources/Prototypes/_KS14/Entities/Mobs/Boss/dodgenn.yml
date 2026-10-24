@@ -90,6 +90,7 @@
   - type: Emoting
   - type: BodyEmotes
     soundsId: GeneralBodyEmotes
+  - type: AnimatedEmotes
   - type: Grammar
     attributes:
       proper: true
@@ -113,7 +114,7 @@
   parent: ClothingEyesGlassesSunglasses
   id: KsClothingEyesGlassesDodgenn
   name: dodgenn mask
-  description: Gives you the ability to dodge bullets.
+  description: Gives you the ability to dodge bullets. Takes your ability to shoot bullets.
   suffix: Boss Loot
   components:
   - type: Sprite
@@ -126,6 +127,13 @@
   - type: ClothingGrantComponent
     component:
     - type: GunDodger
+    - type: Clumsy # TODO KS14 DODGENN: make this into something eventbased on the clothing entity instead of this bs
+      clumsyDefaultCheck: 1
+      clumsyHypo: true
+      clumsyGuns: true
+      clumsyDefib: false
+      clumsyCatching: false
+      clumsyVaulting: false
   - type: MovementIgnoreGravity
     weightless: true
   - type: FloatingVisuals
@@ -139,3 +147,180 @@
       - state: icon
         color: '#ffffff'
         shader: Noir
+
+### Boss
+
+- type: entity
+  parent: KsMobDodgenn
+  id: KsMobDodgennBoss
+  name: The Mastermind
+  suffix: Bossfight
+  components:
+  - type: NpcFactionMember
+    factions:
+    - SimpleHostile
+  - type: ActionGrant
+    actions:
+    - KsActionDodgennDial
+    - KsActionDodgennFear
+    - KsActionDodgennBossGrenade
+  - type: SlowOnDamage
+    speedModifierThresholds:
+      1250: 0.7
+      2000: 0.5
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      2500: Dead
+  - type: Stamina
+    baseCritThreshold: 200
+  - type: NPCSteering
+  - type: NpcAggro
+  - type: NpcMeterOnDamage
+    meter: KsAnger
+    perDamage: 0.025
+  - type: GunDodger
+    dodgeChance: 0.4
+  - type: HTN
+    constantlyReplan: true
+    rootTask:
+      task: DodgennCompound
+    blackboard:
+      VisionRadius: !type:Single
+        14
+      AggroVisionRadius: !type:Single
+        20
+      NavSmash: !type:Bool
+        true
+      RangedRange: !type:Single
+        6
+      MeleeRange: !type:Single
+        1
+      LeapMinDistance: !type:Single
+        6
+  - type: JumpAbility
+    action: KsActionDodgennBossDash
+
+- type: entity
+  parent: BaseAction
+  id: KsDodgennActionBase
+  abstract: true
+  components:
+  - type: Action
+    raiseOnAction: true
+    useDelay: 1
+  - type: TargetAction
+    range: -1
+    checkCanAccess: false
+  - type: TriggerOnActionPerformed
+    userIsTarget: true
+
+- type: entity
+  parent: KsDodgennActionBase
+  id: KsActionDodgennDial
+  name: Deploy Supplypod
+  components:
+  - type: Action
+    useDelay: 5
+    priority: -9
+  - type: WorldTargetAction
+    event: !type:WorldSpawnSpellEvent
+      prototypes:
+      - id: SupplyPodCargoSyndicateAT4
+        amount: 1
+
+- type: entity
+  parent: KsDodgennActionBase
+  id: KsActionDodgennFear
+  components:
+  - type: EntityTargetAction
+    event: !type:KsTriggerOnActionPerformedEntityTargetActionEvent
+    canTargetSelf: false
+  - type: SetStatusEffectOnTrigger
+    targetUser: true
+    status: KsStatusEffectDodgennFight
+    duration: 25s
+
+- type: entity
+  parent: MobStatusEffectDebuff
+  id: KsStatusEffectDodgennFight
+  name: dodgenn fight
+  components:
+  - type: KsAudioStatusEffect
+    sound:
+      path: /Audio/Lobby/ddosking.ogg
+      params:
+        loop: true
+        pitch: 1.25
+    fadeWithTimeLeft: true
+
+- type: entity
+  parent: KsDodgennActionBase
+  id: KsActionDodgennBossDash
+  name: dash
+  components:
+  - type: Action
+    useDelay: 5
+    icon:
+      sprite: Interface/Actions/jump.rsi
+      state: icon
+  - type: WorldTargetAction
+    event: !type:KsGravityJumpWorldEvent
+      staminaCost: 0
+
+- type: entity
+  parent: KsDodgennActionBase
+  id: KsActionDodgennBossGrenade
+  name: grenade
+  components:
+  - type: WorldTargetAction
+    event: !type:SpawnThrownActionEvent
+      prototype: KsDodgennExplosive
+
+- type: entity
+  parent: BaseItem
+  id: KsDodgennExplosive
+  name: dodgenn explosive
+  description: It's gonna blow up!
+  components:
+  - type: Sprite
+    sprite: Objects/Fun/snap_pops.rsi
+    state: icon
+  - type: Item
+    size: Tiny
+  - type: Explosive
+    totalIntensity: 5
+    maxIntensity: 5
+    intensitySlope: 25
+    explosionType: FireBomb
+    canCreateVacuum: false
+  - type: Solution
+    id: inside
+    solution:
+      maxVol: 15
+      temperature: 600
+      canReact: True
+      reagents:
+      - ReagentId: WeldingFuel
+        Quantity: 15
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 5
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Effects/snap.ogg
+      - !type:SpillBehavior
+        solution: inside
+      - !type:ExplodeBehavior
+  - type: DamageOnLand
+    damage:
+      types:
+        Blunt: 15
+  - type: Damageable
+  - type: Injurable
+    damageContainer: Inorganic

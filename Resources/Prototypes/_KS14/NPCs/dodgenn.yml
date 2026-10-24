@@ -1,0 +1,352 @@
+- type: utilityQuery
+  id: DodgennTargets
+  query:
+  - !type:NearbyHostilesQuery
+  considerations:
+  - !type:TargetIsAliveCon
+    curve: !type:BoolCurve
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: TargetDistance
+  - !type:TargetInLOSOrCurrentCon
+    curve: !type:BoolCurve
+# doesnt work yet
+
+# Main compound
+- type: htnCompound
+  id: DodgennCompound
+  branches:
+  - tasks:
+    # - !type:HTNPrimitiveTask
+    #   operator: !type:NpcRangedTargetingOperator
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: DodgennTargets
+    - !type:HTNCompoundTask
+      task: DodgennFightCompound
+
+  # No target - idle
+  - tasks:
+    - !type:HTNCompoundTask
+      task: IdleCompound
+
+- type: htnCompound
+  id: DodgennFightCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: DodgennRangedCombatCompound
+
+  ## Dash
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: dash
+      inverted: true
+    - !type:CoordinatesInRangePrecondition
+      targetKey: TargetCoordinates
+      rangeKey: LeapMinDistance
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoWorldActionOperator
+        id: KsActionDodgennBossDash
+        targetCoordinatesKey: TargetCoordinates
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: dash
+        duration: 5s
+
+    - !type:HTNPrimitiveTask
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkEntrance # ignore it ok
+
+    - !type:HTNPrimitiveTask
+      operator: !type:RangedOperator
+        attack: DodgennShotgunAttack
+        speech: "7 minutes is all I can spare to play with you."
+
+  ## Grenade
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: grenade
+      inverted: true
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoWorldActionOperator
+        id: KsActionDodgennBossGrenade
+        targetCoordinatesKey: TargetCoordinates
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: grenade
+        duration: 15s
+
+    - !type:HTNPrimitiveTask
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkGrenade
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "I'll leave this to you."
+        hidden: false
+
+  ## Melee
+  - preconditions:
+    - !type:CoordinatesInRangePrecondition
+      targetKey: TargetCoordinates
+      rangeKey: MeleeRange
+    tasks:
+      - !type:HTNPrimitiveTask
+        operator: !type:MoveToOperator
+          shutdownState: PlanFinished
+          pathfindInPlanning: true
+          removeKeyOnFinish: false
+          targetKey: TargetCoordinates
+          pathfindKey: TargetPathfind
+          rangeKey: MeleeRange
+      - !type:HTNPrimitiveTask
+        operator: !type:JukeOperator
+          jukeType: Away
+      - !type:HTNPrimitiveTask
+        operator: !type:MeleeOperator
+          targetKey: Target
+        preconditions:
+          - !type:KeyExistsPrecondition
+            key: Target
+          - !type:TargetInRangePrecondition
+            targetKey: Target
+            rangeKey: MeleeRange
+        services:
+          - !type:UtilityService
+            id: MeleeService
+            proto: NearbyMeleeTargets
+            key: Target
+
+  ## Launcher summon
+  - preconditions:
+    - !type:DamageThresholdPrecondition
+      damageThreshold: 250
+      checkAnyType: false
+    - !type:HasVirtualMarkerPrecondition
+      id: DodgennFinalUsed
+      invert: true
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoActionOperator
+        id: KsActionDodgennDial
+        targetKey: Owner
+    - !type:HTNPrimitiveTask
+      operator: !type:EnsureVirtualMarkerOperator
+        id: DodgennFinalUsed
+
+    - !type:HTNPrimitiveTask
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkSummonLauncher
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "I require your rocket launcher."
+        hidden: false
+
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoActionOperator
+        id: KsActionDodgennFear
+        targetKey: Target
+    - !type:HTNCompoundTask
+      task: DodgennAttackTargetCompound
+  # - tasks:
+  #   - !type:HTNCompoundTask
+  #     task: IdleCompound
+
+# Attack compound - handles all attacks
+- type: htnCompound
+  id: DodgennAttackTargetCompound
+  branches:
+  # Normal attacks - weighted pick in one operator
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:WeightedRangedOperator
+        weightMeter: KsAnger
+        attacks:
+        - attack: DodgennRandomAoeAttack
+          weight: 20
+          speech: Is that the best you've got?
+        - attack: DodgennShotgunAttack
+          weight: 20
+          meterWeight: 2
+          speech: Worthless.
+        - attack: DodgennSpiralAttack
+          weight: 20
+          speech: Is that all you have?
+        - attack: DodgennDirectionalAttack
+          weight: 20
+          speech: Just accept your fate!
+        failIfNotFired: false # otherwise an attack on cooldown fails the plan before the MoveTo below runs
+
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        pathfindInPlanning: false
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: MeleeRange
+
+### Guns
+
+- type: htnCompound
+  id: DodgennFluffRpgEmoteCompound
+  branches:
+  # Pick target, then move into range and shoot them.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkUseLauncher
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "THE END DRAWS NIGH!!!"
+        hidden: false
+
+    - !type:HTNPrimitiveTask
+      operator: !type:EmoteOperator
+        id: Flip
+        hidden: false
+
+    - !type:HTNPrimitiveTask
+      operator: !type:DoWorldActionOperator
+        id: KsActionDodgennBossDash
+        targetCoordinatesKey: TargetCoordinates
+
+# Tries to shoot a target at range.
+- type: htnCompound
+  id: DodgennGunCombatCompound
+  branches:
+  # Pick target, then move into range and shoot them.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        shutdownState: PlanFinished
+        pathfindInPlanning: true
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        stopOnLineOfSight: true
+        rangeKey: RangedRange # KS14: MeleeRange -> RangedRange
+
+    - !type:HTNPrimitiveTask
+      operator: !type:JukeOperator
+        jukeType: Away
+
+    # fluff
+    - !type:HTNCompoundTask
+      task: DodgennFluffRpgEmoteCompound
+
+    # actual combat
+    - !type:HTNPrimitiveTask
+      preconditions:
+        - !type:KeyExistsPrecondition
+          key: Target
+      operator: !type:GunOperator
+        targetKey: Target
+      services:
+        - !type:UtilityService
+          id: RangedService
+          proto: NearbyGunTargets
+          key: Target
+
+- type: htnCompound
+  id: DodgennPickupGunCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: DodgennNearbyGuns
+
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+
+    - !type:HTNPrimitiveTask
+      preconditions:
+        - !type:ActiveHandFreePrecondition
+        - !type:TargetInRangePrecondition
+          targetKey: Target
+          rangeKey: InteractRange
+      operator: !type:InteractWithOperator
+        targetKey: Target
+
+- type: htnCompound
+  id: DodgennRangedCombatCompound
+  branches:
+    # Close or rack the gun chamber if necessary
+    - preconditions:
+      - !type:ActiveHandComponentPrecondition
+        components:
+          - type: Gun
+      - !type:GunAmmoPrecondition
+        minPercent: 0.001
+      - !type:NeedToRackBoltPrecondition
+      tasks:
+      - !type:HTNPrimitiveTask
+        operator: !type:RackBoltOperator
+
+    # Wield gun
+    - preconditions:
+      - !type:ActiveHandComponentPrecondition
+        components:
+          - type: Gun
+      - !type:WieldedPrecondition
+        wielded: false
+      tasks:
+      - !type:HTNPrimitiveTask
+        operator: !type:WieldOperator
+
+    # Move to target and shoot them if ammo
+    - preconditions:
+      - !type:GunAmmoPrecondition
+        minPercent: 0.001
+      tasks:
+      - !type:HTNCompoundTask
+        task: DodgennGunCombatCompound
+
+    # Pickup gun with ammo if we have no ammo
+    -  preconditions:
+        - !type:ActiveHandComponentPrecondition
+          components:
+            - type: Gun
+          invert: true
+       tasks:
+        - !type:HTNCompoundTask
+          task: DodgennPickupGunCompound
+
+    # Discard gun if no ammo
+    - preconditions:
+      - !type:ActiveHandComponentPrecondition
+        components:
+          - type: Gun
+      - !type:GunAmmoPrecondition
+        maxPercent: 0.001
+      tasks:
+      - !type:HTNPrimitiveTask
+        preconditions:
+          - !type:ActiveHandEntityPrecondition
+        operator: !type:DropOperator
+
+- type: utilityQuery
+  id: DodgennNearbyGuns
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: Gun
+    - type: Item
+    - type: GunBackblast # bruh
+      radius: 0
+  considerations:
+  - !type:TargetAmmoCon
+    curve: !type:BoolCurve
+  - !type:TargetAccessibleCon
+    curve: !type:BoolCurve
+  - !type:TargetInLOSCon
+    curve: !type:BoolCurve

@@ -131,3 +131,15 @@
         children:
         - id: MechU43Battery
         - id: WelderMini
+
+- type: entity
+  parent: SupplyPodCargoBaseSyndicate
+  id: SupplyPodCargoSyndicateAT4
+  name: at-4 cargo pod
+  description: A Syndicate drop pod containing an AT-4 rocket launcher.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: KsWeaponLauncherRocketAt4

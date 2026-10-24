@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
-using Content.Server._KS14.NPC.Components;
-using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.AttackPatterns;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -25,6 +24,7 @@ public sealed class KsNpcRangedPatternTest : GameTest
 
     private const string ShooterMob = "KsPatternTestShooter";
     private const string Bolt = "KsPatternTestBolt";
+    private readonly EntProtoId<NpcRangedAttackPatternComponent> _crossAttack = "KsPatternTestCross";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -46,10 +46,6 @@ public sealed class KsNpcRangedPatternTest : GameTest
 
 - type: entity
   id: KsPatternTestShooter
-  components:
-  - type: NpcRangedAttackPatternHolder
-    attacks:
-      cross: KsPatternTestCross
 ";
 
     /// <summary>
@@ -69,9 +65,9 @@ public sealed class KsNpcRangedPatternTest : GameTest
             var gridUid = MakeGrid(SEntMan, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-2, -2), new Vector2i(2, 2)).Owner;
             shooterUid = SEntMan.SpawnEntity(ShooterMob, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
 
-            Assert.That(patternSystem.TryStartAttack(shooterUid, "cross", targetUid: null), "the attack should start");
+            Assert.That(patternSystem.TryStartAttack(shooterUid, _crossAttack, targetUid: null), "the attack should start");
             Assert.That(patternSystem.IsAttackActive(shooterUid));
-            Assert.That(patternSystem.TryStartAttack(shooterUid, "cross", targetUid: null), Is.False, "nor start again while firing");
+            Assert.That(patternSystem.TryStartAttack(shooterUid, _crossAttack, targetUid: null), Is.False, "nor start again while firing");
         });
 
         await Pair.RunTicksSync(30);
@@ -91,7 +87,7 @@ public sealed class KsNpcRangedPatternTest : GameTest
                 Assert.That(bolts, Has.Count.EqualTo(8), "two bursts of four");
                 Assert.That(bolts.Count(IsDiagonal), Is.EqualTo(4), "the second burst along the diagonals");
                 Assert.That(patternSystem.IsAttackActive(shooterUid), Is.False, "and then it is done");
-                Assert.That(patternSystem.TryStartAttack(shooterUid, "cross", targetUid: null), Is.False, "and on cooldown");
+                Assert.That(patternSystem.TryStartAttack(shooterUid, _crossAttack, targetUid: null), Is.False, "and on cooldown");
             });
         });
     }

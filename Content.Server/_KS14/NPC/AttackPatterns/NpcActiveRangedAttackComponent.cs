@@ -1,6 +1,6 @@
-using Content.Server._KS14.NPC.Systems;
+using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.NPC.Components;
+namespace Content.Server._KS14.NPC.AttackPatterns;
 
 /// <summary>
 ///     On an NPC while one of its ranged attacks is firing, burst by burst; removed after the last. See
@@ -24,7 +24,7 @@ public sealed partial class NpcActiveRangedAttackComponent : Component
 ///     Where an attack in progress has got to. Kept on <see cref="NpcActiveRangedAttackComponent"/>, and changed in
 ///         place through a <c>ref</c> to it.
 /// </summary>
-public record struct NpcRangedAttackState(string AttackId, NpcRangedAttackPatternComponent Pattern, EntityUid? TargetUid)
+public record struct NpcRangedAttackState(EntProtoId<NpcRangedAttackPatternComponent> AttackId, NpcRangedAttackPatternComponent Pattern, EntityUid? TargetUid)
 {
     public int BurstsFired;
 

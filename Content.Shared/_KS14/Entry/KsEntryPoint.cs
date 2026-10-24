@@ -33,6 +33,12 @@ public sealed partial class KsEntryPoint : GameShared
         new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
     ];
 
+    private readonly ResPath[] _partialOwnerPaths = [
+        new("/Prototypes/_KsModule/"),
+        new("/Audio/_KsModule/"),
+        new("/Maps/_KsModule/"),
+    ];
+
     private ISawmill _sawmill = null!;
 
     public override void PreInit()
@@ -48,6 +54,18 @@ public sealed partial class KsEntryPoint : GameShared
         Dependencies.InjectDependencies(this);
 
         _sawmill = Logger.GetSawmill("ks.shared.entrypoint");
+
+        // finds every file under a /Partial/ directory under each directory in _partialOwnerPaths and designates them as
+        foreach (var partialOwnerPath in _partialOwnerPaths)
+        {
+            foreach (var subPath in _resourceManager.ContentFindFiles(partialOwnerPath))
+            {
+                if (!subPath.CanonPath.Contains(ResPath.Separator + "Partials" + ResPath.Separator))
+                    continue;
+
+                _prototypeManager.PartialFile(subPath, 0);
+            }
+        }
 
         // Before prototypes load, which is the only time the prototype manager reads these.
         foreach (var partialPath in _partialPrototypePaths)
