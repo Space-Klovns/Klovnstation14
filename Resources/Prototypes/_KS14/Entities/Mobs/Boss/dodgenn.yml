@@ -180,7 +180,7 @@
     meter: KsAnger
     perDamage: 0.025
   - type: GunDodger
-    dodgeChance: 0.4
+    dodgeChance: 1 # phase one dodges every shot; DodgennPhaseOneCompound lowers it to 0.4 for phase two
   - type: HTN
     constantlyReplan: true
     rootTask:
@@ -198,8 +198,21 @@
         1
       LeapMinDistance: !type:Single
         6
+      DodgennMonologueTime: !type:Single
+        5
   - type: JumpAbility
     action: KsActionDodgennBossDash
+
+- type: entity
+  parent: KsMobDodgennBoss
+  id: KsMobDodgennBossPhaseTwo
+  suffix: Bossfight, Phase two
+  components:
+  - type: GunDodger
+    dodgeChance: 0.4
+  - type: NpcInitialVirtualMarkers # skips phase one, see NPCs/Bosses/Dodgenn/root.yml
+    markers:
+    - DodgennPhaseTwo
 
 - type: entity
   parent: BaseAction

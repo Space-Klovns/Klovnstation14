@@ -1,23 +1,23 @@
-# BLATANT COPYPASTA FROM COLOSSUS
+# Dodgenn's phase two patterns, picked by DodgennAttackTargetCompound (NPCs/Bosses/Dodgenn/phase_two.yml).
 
-# Lament - 23 bursts, 4 projectiles per burst, cardinal then diagonal directions
+# Cardinal then diagonal bursts of four, 16 times.
 - type: entity
-  id: DodgennDirectionalAttack
   parent: RangedCardinalDirections
+  id: DodgennDirectionalAttack
   components:
   - type: NpcRangedAttackPattern
     projectile: DodgennDeathBolt
     sound:
       collection: KsDodgennTalkAttack1
-    burstCount: 23 # was 45 while every burst counted twice, so 23 fired
+    burstCount: 16
     shots: 4
     shotDelay: 0.3
-    cooldown: 3.0
+    cooldown: 6.0
 
-# Retribution - 1 burst, 8 projectiles (shotgun spread)
+# One fan of eight across 30 degrees, at the target. Also fired on landing a dash.
 - type: entity
-  id: DodgennShotgunAttack
   parent: RangedShotgun
+  id: DodgennShotgunAttack
   components:
   - type: NpcRangedAttackPattern
     projectile: DodgennDeathBolt
@@ -29,36 +29,36 @@
     cooldown: 4.0
     spread: 30
 
-# Judgement - 72 bursts, 1 projectile per burst (spiral)
+# A single-stream spiral, about seven seconds, turning 12 degrees a shot.
 - type: entity
-  id: DodgennSpiralAttack
   parent: RangedSpiral
+  id: DodgennSpiralAttack
   components:
   - type: NpcRangedAttackPattern
     projectile: DodgennDeathBolt
     sound:
       collection: KsDodgennTalkAttack3
-    burstCount: 512
+    burstCount: 180
     shots: 1
     shotDelay: 0.04
-    cooldown: 3.0
+    cooldown: 8.0
     degreesPerShot: 12
 
-# Wrath - 32 bursts, 1 projectile per burst (random directions)
+# A stream of shots in random directions, about six seconds.
 - type: entity
-  id: DodgennRandomAoeAttack
   parent: RangedRandomAoe
+  id: DodgennRandomAoeAttack
   components:
   - type: NpcRangedAttackPattern
     projectile: DodgennDeathBolt
     sound:
       collection: KsDodgennTalkAttack4
-    burstCount: 256
+    burstCount: 120
     shots: 1
     shotDelay: 0.05
-    cooldown: 2.0
+    cooldown: 8.0
 
-# Die
+# Two opposite spirals for a very long time. Not used by the HTN at the moment.
 - type: entity
   parent: RangedDoubleSpiral
   id: DodgennEnragedSpiralAttack

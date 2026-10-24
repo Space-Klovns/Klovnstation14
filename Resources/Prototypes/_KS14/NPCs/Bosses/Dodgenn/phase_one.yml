@@ -1,0 +1,151 @@
+# Dodgenn phase one: "playtime". See root.yml.
+#
+# Every bullet misses (GunDodger dodgeChance 1 on the mob), so it ends on a timer as well as on damage - otherwise a
+#   fight with nothing but guns would never leave it. Lighter than phase two: two slow, sparse patterns, a pistol now
+#   and then, melee and the dash. No grenades, fear or launcher.
+
+- type: htnCompound
+  id: DodgennPhaseOneCompound
+  branches:
+  ## Engage - the first time it has a target: the intro, and the phase-one timer starts. First, so it is said before
+  ##   anything else happens.
+  - preconditions:
+    - !type:HasVirtualMarkerPrecondition
+      id: DodgennEngaged
+      invert: true
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:SetTimeOperator
+        key: DodgennPhaseTwoDueAt
+        offset: 60s
+    - !type:HTNPrimitiveTask
+      operator: !type:EnsureVirtualMarkerOperator
+        id: DodgennEngaged
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkEntrance
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "7 minutes is all I can spare to play with you."
+        hidden: false
+
+  ## Transition - out of time, or hurt badly enough some other way: put the pistol away, stop dodging everything, and
+  ##   move on to phase two. Above everything else, so nothing holds it in phase one.
+  - preconditions:
+    - !type:LogicOrPrecondition
+      conditions:
+      - !type:KeyTimePassedPrecondition
+        key: DodgennPhaseTwoDueAt
+      - !type:DamageThresholdPrecondition
+        damageThreshold: 400
+        checkAnyType: false
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DeleteActiveHandItemOperator
+    - !type:HTNPrimitiveTask
+      operator: !type:SetDodgeChanceOperator
+        dodgeChance: 0.4
+    - !type:HTNPrimitiveTask
+      operator: !type:EnsureVirtualMarkerOperator
+        id: DodgennPhaseTwo
+    - !type:HTNPrimitiveTask # so phase two's first monologue doesn't follow straight on from this line
+      operator: !type:CooldownOperator
+        id: monologue
+        duration: 20s
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkPhaseTransition
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Ohh, playtime is over. How fortunate for you."
+        hidden: false
+    - !type:HTNPrimitiveTask
+      operator: !type:EmoteOperator
+        id: Flip
+        hidden: false
+
+  ## Pistol empty - get rid of it by deleting it, so it never drops as loot. Above the gun branch below, whose own
+  ##   discard would drop it.
+  - preconditions:
+    - !type:ActiveHandComponentPrecondition
+      components:
+      - type: Gun
+    - !type:GunAmmoPrecondition
+      maxPercent: 0.001
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DeleteActiveHandItemOperator
+
+  ## Pistol - while one is in hand, shoot with it. The shared gun compound (guns.yml) racks and shoots.
+  - preconditions:
+    - !type:ActiveHandComponentPrecondition
+      components:
+      - type: Gun
+    tasks:
+    - !type:HTNCompoundTask
+      task: DodgennRangedCombatCompound
+
+  ## Draw pistol - now and then, pull one out of nowhere.
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: pistol
+      inverted: true
+    - !type:ActiveHandFreePrecondition
+    - !type:ProbabilityPrecondition
+      probability: 10
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:SpawnInHandOperator
+        proto: WeaponPistolMk58
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: pistol
+        duration: 20s
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkPistol
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Your future hinges upon this fight."
+        hidden: false
+
+  ## Dash - at a target keeping its distance. The shared compound (root.yml) says the long running-around line only
+  ##   every so often.
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: dash
+      inverted: true
+    - !type:CoordinatesInRangePrecondition
+      targetKey: TargetCoordinates
+      rangeKey: LeapMinDistance
+    tasks:
+    - !type:HTNCompoundTask
+      task: DodgennDashCompound
+
+  ## Melee
+  - tasks:
+    - !type:HTNCompoundTask
+      task: DodgennMeleeCompound
+
+  ## Attack - a light pattern, then close in.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:WeightedRangedOperator
+        attacks:
+        - attack: DodgennPhaseOneRingAttack
+          speech: You're merely postponing the inevitable.
+        - attack: DodgennPhaseOneVolleyAttack
+        failIfNotFired: false # otherwise an attack on cooldown fails the plan before the MoveTo below runs
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        pathfindInPlanning: false
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: MeleeRange
