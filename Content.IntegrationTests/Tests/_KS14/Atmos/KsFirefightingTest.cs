@@ -164,6 +164,14 @@ public sealed class KsFirefightingTest : GameTest
     private readonly EntProtoId _sprayerPrototype = "KsTestFirefightingSprayer";
 
     private const float HotPuddleTemperature = 450f;
+
+    /// <summary>
+    ///     Hot enough that a 50u fuel puddle is still past its ignition point after a whole second of losing heat to the
+    ///         air, by conduction and radiation, before its first tile effect check: at
+    ///         <see cref="HotPuddleTemperature"/> it falls below that point in its first air exchange, and whether it
+    ///         lights depends on which of the two runs first.
+    /// </summary>
+    private const float IgnitingPuddleTemperature = 700f;
     private const int TicksPerSecond = 30;
     private const int BoilTestSeconds = 4; // short enough that a blanket over a hot puddle is not boiled away
 
@@ -461,7 +469,7 @@ public sealed class KsFirefightingTest : GameTest
             if (blanketed)
                 FillBlanket(testMap.Tile);
 
-            SpillPuddle(testMap, WeldingFuelReagent, 50f, HotPuddleTemperature, out _);
+            SpillPuddle(testMap, WeldingFuelReagent, 50f, IgnitingPuddleTemperature, out _);
         });
 
         await server.WaitRunTicks(TicksPerSecond * 2);
