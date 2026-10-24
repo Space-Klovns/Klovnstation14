@@ -50,6 +50,7 @@
     boilRate: 0.2667
     puddleBoilRate: 0.3333
     fireBoilRate: 0.4
+    decayRate: 0.025
 
 - type: entity
   parent: KsFoamBlanket
