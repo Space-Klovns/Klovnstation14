@@ -47,4 +47,9 @@ public abstract partial class KsTileEffect
 
 /// <param name="RemovedVolume">How much of <paramref name="Reagent"/> the effects so far have used up; removed afterwards.</param>
 /// <param name="Reagent">The reagent whose effects are running, when they are running for one in a solution.</param>
-public record struct KsTileEffectReagentData(float RemovedVolume, Solution? Solution, List<ReagentData>? ReagentData, ReagentId? Reagent = null);
+/// <param name="FlameTemperature">
+///     The temperature of an open flame in the solution, such as a lit welder lying in a puddle, if there is one. It
+///         lights what <see cref="Effects.CheckTemperatureTileEffect.LitByFlame"/> says it lights, whatever the
+///         solution's own temperature.
+/// </param>
+public record struct KsTileEffectReagentData(float RemovedVolume, Solution? Solution, List<ReagentData>? ReagentData, ReagentId? Reagent = null, float? FlameTemperature = null);

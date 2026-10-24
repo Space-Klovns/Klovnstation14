@@ -10,6 +10,7 @@ using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Fluids;
+using Content.Shared._KS14.TileEffects.Effects;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
@@ -236,8 +237,9 @@ public sealed class KsHotPuddleTest : GameTest
     }
 
     /// <summary>
-    ///     A lit welder dropped in welding fuel at room temperature sets it alight within a few seconds; an unlit one,
-    ///         or something that is never hot, leaves it as it was.
+    ///     A lit welder dropped in welding fuel at room temperature sets it alight within a few seconds, as an open
+    ///         flame rather than by heating the fuel to its ignition point; an unlit one, or something that is never hot,
+    ///         leaves it as it was.
     /// </summary>
     [Test]
     public async Task TestHotThingInFuelSetsItAlight([Values("lit", "unlit", "cold")] string source)
@@ -253,11 +255,13 @@ public sealed class KsHotPuddleTest : GameTest
         EntityUid puddleUid = default;
         EntityUid itemUid = default;
         var startTemperature = 0f;
+        var heatCapacity = 0f;
 
         await server.WaitPost(() =>
         {
             puddleUid = SpillPuddle(testMap, tile, WeldingFuelReagent, 100f, Atmospherics.T20C);
             startTemperature = Temperature(puddleUid);
+            heatCapacity = PuddleSolution(puddleUid).GetHeatCapacity(SProtoMan);
 
             // Dropped in the fuel.
             itemUid = entityManager.SpawnEntity(source == "cold" ? _coldItemPrototype : WelderPrototype, new EntityCoordinates(gridUid, 0.5f, 0.5f));
@@ -278,6 +282,16 @@ public sealed class KsHotPuddleTest : GameTest
             var burning = chemicalFireSystem.GetTileChemicalFires((gridUid, null), tile) is { Fires.Count: > 0 };
             if (source == "lit")
             {
+                // The flame's doing, not the heat's: the most the welder could have warmed the fuel by falls short.
+                var ignitionTemperature = SProtoMan.Index(WeldingFuelReagent).KsTileEffects
+                    .OfType<LogicAndTileEffect>()
+                    .SelectMany(effect => effect.Conditions)
+                    .OfType<CheckTemperatureTileEffect>()
+                    .Single(condition => condition.LitByFlame)
+                    .Minimum!.Value;
+                Assert.That(startTemperature + KsHotPuddleSystem.HeatPower * 3f / heatCapacity, Is.LessThan(ignitionTemperature),
+                    "The welder's heat alone could light the fuel, so this proves nothing about its flame.");
+
                 Assert.That(burning, $"A lit welder lying in welding fuel did not set it alight within 3 seconds (puddle at {(entityManager.EntityExists(puddleUid) ? Temperature(puddleUid) : -1f)} K, touching {Touched(itemUid)?.Count ?? 0}).");
                 return;
             }

@@ -63,7 +63,8 @@ public sealed partial class PuddleSystem
         var scale = careAboutTime ? (float)deltaTime.TotalSeconds : 1f;
         entity.Comp.LastTileEffectUpdate = curTime;
 
-        if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale))
+        if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale,
+                flameTemperature: _ksHotPuddleSystem.GetFlameTemperature(entity.Owner)))
             return;
 
         if (solution.Volume == FixedPoint2.Zero)

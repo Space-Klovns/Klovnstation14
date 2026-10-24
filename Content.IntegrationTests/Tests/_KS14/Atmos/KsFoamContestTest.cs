@@ -22,18 +22,13 @@ public sealed class KsFoamContestTest : GameTest
 {
     [TestPrototypes]
     private const string Prototypes = @"
+# Thermite's own fire, burning long enough to watch the contest play out.
 - type: entity
-  parent: BaseChemicalFire
+  parent: ChemicalFireThermite
   id: KsTestFoamContestFire
   components:
   - type: ChemicalFire
-    color: '#ffc291'
     duration: 120
-    temperature: 2900
-    heatPower: 12000
-    extinguishable: false
-    foamSmotherResistance: 6
-    foamHeatFraction: 0.065
 ";
 
     // Deliberately NOT static: it only exists in the test YAML above, and the YAML linter validates static ids.
@@ -85,6 +80,19 @@ public sealed class KsFoamContestTest : GameTest
                 Assert.That(fireComponent!.FoamSmotherable, "Foam cannot smother thermite at all.");
                 Assert.That(fireComponent.FoamSmotherResistance, Is.GreaterThan(0f), "Foam smothers thermite at once.");
                 Assert.That(fireComponent.FoamHeatFraction, Is.GreaterThan(0f), "Thermite does not boil the foam over it.");
+            }
+
+            // The design, from the prototypes: a full blanket held full wins within a few seconds, and one left alone
+            //      boils off before the progress it adds (maxFoam^2 / (2 * boil rate * resistance)) reaches 1.
+            Assert.That(SProtoMan.Index(BlanketPrototype).TryComp<KsFoamBlanketComponent>(out var blanketComponent, Pair.Server.EntMan.ComponentFactory));
+            var energyPerUnit = blanketComponent!.SpecificHeat * (blanketComponent.BoilingPoint - blanketComponent.FoamTemperature) + blanketComponent.LatentHeat;
+            var boilRate = fireComponent.HeatPower * fireComponent.FoamHeatFraction / energyPerUnit;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(fireComponent.FoamSmotherResistance / blanketComponent.MaxFoam, Is.LessThan(6f),
+                    "Steady spraying takes too long to smother thermite.");
+                Assert.That(blanketComponent.MaxFoam * blanketComponent.MaxFoam / (2f * boilRate * fireComponent.FoamSmotherResistance), Is.LessThan(1f),
+                    "One full blanket left alone smothers thermite before it boils away.");
             }
         });
     }

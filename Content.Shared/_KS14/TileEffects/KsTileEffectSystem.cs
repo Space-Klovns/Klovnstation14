@@ -59,7 +59,8 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             tileEffect.Initialize(_systemCollectionHookManager.DependencyCollection);
     }
 
-    public bool TryUpdateTileEffects(Entity<TransformComponent?> entity, TileRef? tileRef, Solution solution, float scale = 1f)
+    /// <param name="flameTemperature">See <see cref="KsTileEffectReagentData.FlameTemperature"/>.</param>
+    public bool TryUpdateTileEffects(Entity<TransformComponent?> entity, TileRef? tileRef, Solution solution, float scale = 1f, float? flameTemperature = null)
     {
         entity.Comp ??= Transform(entity);
         if (entity.Comp.GridUid is not { } gridUid ||
@@ -67,7 +68,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             return false;
 
         var anythingHappened = false;
-        var tileEffectReagentData = new KsTileEffectReagentData(0f, solution, null);
+        var tileEffectReagentData = new KsTileEffectReagentData(0f, solution, null, FlameTemperature: flameTemperature);
 
         for (var i = solution.Contents.Count - 1; i >= 0; i--)
         {

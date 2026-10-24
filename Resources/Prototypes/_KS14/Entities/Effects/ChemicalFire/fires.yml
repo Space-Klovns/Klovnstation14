@@ -55,10 +55,11 @@
     temperature: 2900
     heatPower: 18000
     extinguishable: false # thermite burns through a dousing
-    # Foam has to win a fight with it: a blanket smothers it at its foam over 6 a second, while the fire boils the
-    #     blanket away with 6.5% of its heat (about 0.2u a second, at the 4080 J a unit of foam takes). One full blanket
-    #     left alone loses; one kept topped up by spraying wins in about 5 seconds.
-    foamSmotherResistance: 6
-    foamHeatFraction: 0.065
+    # Foam has to win a fight with it: a blanket smothers it at its foam over 17.5 a second, while the fire puts all
+    #     its heat into boiling the blanket (about 0.4u a second, at the ~45000 J a unit of foam takes). A full blanket
+    #     left alone adds up to only maxFoam^2 / (2 * 0.4 * 17.5), about 0.9 of the progress needed, so it loses; one
+    #     kept topped up by spraying wins in 17.5 / maxFoam, about 5 seconds. KsFoamContestTest checks both.
+    foamSmotherResistance: 17.5
+    foamHeatFraction: 1
   - type: SparkOnTrigger
   - type: TriggerOnSpawn

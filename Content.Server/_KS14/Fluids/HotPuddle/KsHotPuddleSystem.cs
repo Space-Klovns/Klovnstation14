@@ -13,7 +13,8 @@ using Robust.Shared.Timing;
 namespace Content.Server._KS14.Fluids.HotPuddle;
 
 /// <summary>
-///     Hot things lying in a puddle heat it: a lit welder dropped in welding fuel sets it alight.
+///     Hot things lying in a puddle heat it, and are an open flame in it: a lit welder dropped in welding fuel sets it
+///         alight (<see cref="KsFlameInPuddleComponent"/>).
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -42,6 +43,7 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
 
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
+    [Dependency] private EntityQuery<KsFlameInPuddleComponent> _flameQuery = default!;
     [Dependency] private EntityQuery<PuddleComponent> _puddleQuery = default!;
     [Dependency] private EntityQuery<KsTouchingPuddleComponent> _touchingQuery = default!;
 
@@ -53,8 +55,8 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
 
     /// <summary>
     ///     The heat, in watts, that a hot thing puts into the puddles it touches, split between them. A puddle's heat
-    ///         capacity is about 1 J/K per unit, so this warms 100u of welding fuel from room temperature to its 300 K
-    ///         ignition point in a little over a second.
+    ///         capacity is about 1 J/K per unit, so this warms 100u of welding fuel by about 5 K a second. Fuel is lit by
+    ///         the flame itself rather than by this (<see cref="KsFlameInPuddleComponent"/>).
     /// </summary>
     public const float HeatPower = 500f;
 
@@ -234,7 +236,11 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
 
             var energy = HeatPower * (float)CheckInterval.TotalSeconds / touchingComponent.Puddles.Count;
             foreach (var puddleUid in touchingComponent.Puddles)
+            {
                 _pendingHeat.Add((puddleUid, energy));
+                // Until just past the next check, so a flame that stays never lapses between them.
+                EnsureComp<KsFlameInPuddleComponent>(puddleUid).Until = curTime + CheckInterval * 2;
+            }
         }
 
         foreach (var toucherUid in _emptiedTouchers)
@@ -273,6 +279,21 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
 
         _solutionContainerSystem.AddThermalEnergy(puddleComponent.Solution.Value, added);
         return added;
+    }
+
+    /// <summary>
+    ///     The temperature of the open flame in a puddle, if something hot was lying in it at its last check.
+    /// </summary>
+    public float? GetFlameTemperature(EntityUid puddleUid)
+    {
+        if (!_flameQuery.TryComp(puddleUid, out var flameComponent))
+            return null;
+
+        if (_gameTiming.CurTime < flameComponent.Until)
+            return SourceTemperature;
+
+        RemCompDeferred(puddleUid, flameComponent);
+        return null;
     }
 
     #endregion

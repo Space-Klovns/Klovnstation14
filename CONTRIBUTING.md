@@ -277,6 +277,8 @@ var water = protoMan.Index<ReagentPrototype>("Water");                      // n
 ```
 For an id that exists only in a test's `[TestPrototypes]` YAML, make that field non-`static` (`private readonly ProtoId<T> _id = "..."`): the YAML linter validates only static id fields against the real prototypes, and an instance field still satisfies `RA0033`.
 
+Entity ids use `EntProtoId` rather than `ProtoId<EntityPrototype>`. `EntProtoId<T>` also requires the entity to have a `T`: as a `[DataField]`, the YAML linter rejects a prototype without one (`public EntProtoId<InstantActionComponent> Action;`).
+
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
 [Dependency] TransformSystem _transformSystem;   // not '_xform'
