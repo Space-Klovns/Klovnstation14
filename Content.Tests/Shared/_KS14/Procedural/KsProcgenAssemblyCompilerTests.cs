@@ -1,3 +1,5 @@
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Content.Shared._KS14.Procedural;
@@ -8,6 +10,40 @@ namespace Content.Tests.Shared._KS14.Procedural;
 [TestFixture]
 public sealed class KsProcgenAssemblyCompilerTests
 {
+    [Test]
+    public void MemberConstructionDetachesEditableDeclarationsAndFreezesNestedCollections()
+    {
+        var entry = new KsProcgenEntityEntry { Id = "Device", Entity = "Computer", RequiresInteractionApproach = true };
+        var member = new KsProcgenResolvedAssemblyMember("Device", "Device", true, entry, KsProcgenMemberRotation.Independent, 0);
+        entry.Entity = "Changed";
+        entry.RequiresInteractionApproach = false;
+        entry.Footprint.Clear();
+        entry.AllowedQuarterTurns.Clear();
+        Assert.That(member.Entry.Entity, Is.EqualTo("Computer"));
+        Assert.That(member.Entry.RequiresInteractionApproach, Is.True);
+        Assert.That(member.Entry.Footprint.Count, Is.EqualTo(1));
+        Assert.That(member.Entry.AllowedQuarterTurns.Count, Is.EqualTo(4));
+        Assert.Throws<NotSupportedException>(() => ((IList<Robust.Shared.Maths.Vector2i>) member.Entry.Footprint).Clear());
+        Assert.Throws<NotSupportedException>(() => ((IList<int>) member.Entry.AllowedQuarterTurns)[0] = 3);
+        var edited = member with { Entry = member.Entry with { RequiresInteractionApproach = false } };
+        Assert.That(edited.Entry.RequiresInteractionApproach, Is.False);
+        Assert.That(member.Entry.RequiresInteractionApproach, Is.True);
+    }
+
+    [Test]
+    public void CompiledVariantMemberAndRelationCollectionsCannotBeEditedInPlace()
+    {
+        Assert.That(KsProcgenAssemblyCompiler.TryCompileVariants("Workstation", [Workstation()],
+            new Dictionary<string, string>(), Exists, out var variants, out var issue), Is.True, issue?.Code);
+        Assert.Throws<NotSupportedException>(() => ((IList<KsProcgenResolvedAssembly>) variants).Clear());
+        var assembly = variants.Single();
+        Assert.Throws<NotSupportedException>(() => ((IList<KsProcgenResolvedAssemblyMember>) assembly.Members)[0] = assembly.Members[0]);
+        Assert.Throws<NotSupportedException>(() => ((IList<KsProcgenResolvedAssemblyRelation>) assembly.Relations).Clear());
+        var singleton = KsProcgenAssemblyCompiler.CompileSingleton(new() { Id = "Chair", Entity = "Chair" });
+        Assert.Throws<NotSupportedException>(() => ((IList<KsProcgenResolvedAssemblyMember>) singleton.Members).Clear());
+        Assert.Throws<NotSupportedException>(() => ((IList<Robust.Shared.Maths.Vector2i>) singleton.Members[0].Entry.Footprint)[0] = new(1, 0));
+    }
+
     [Test]
     public void VariantsReplaceTheWholeCoreAndKeepAuthoredPriority()
     {

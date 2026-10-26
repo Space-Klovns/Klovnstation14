@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -48,7 +49,7 @@ public sealed class KsProcgenSupportedSpatialRelationTests
     {
         var assembly = Assembly();
         // Keep the machine facing south so the selected chair must be its south landing.
-        assembly.Members.Single(member => member.Id == "Device").Entry.AllowedQuarterTurns = [0];
+        assembly = assembly.WithEntry("Device", entry => entry with { AllowedQuarterTurns = [0] });
         var result = KsProcgenSupportedAssemblySearch.Search(assembly, ["Root", "Device", "Seat"], Report(assembly), Room(), 34,
             fixedFloorRoots: [new("Root", new(2f, 2f)), new("Seat", new(2f, 1f))]);
         Assert.That(result.Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Candidate), result.Issue?.Code);

@@ -16,7 +16,10 @@ public sealed record KsProcgenThemeSelection(
     string? LightFixtureId,
     string? DominantEntityPackId,
     IReadOnlyList<string> SupportingEntityPackIds,
-    float FurnishingDensity = 0.2f);
+    float FurnishingDensity = 0.2f)
+{
+    public KsProcgenSelectedContent? Content { get; init; }
+}
 
 public static class KsProcgenThemeSelector
 {
@@ -29,24 +32,63 @@ public static class KsProcgenThemeSelector
         out KsProcgenIssue? issue)
     {
         selection = null;
-        issue = null;
-        if (string.IsNullOrWhiteSpace(roomId) ||
-            !KsProcgenThemeValidator.TryResolve(prototypeManager, themeId, out var theme, out issue))
+        if (string.IsNullOrWhiteSpace(roomId))
         {
-            issue ??= new KsProcgenIssue("InvalidRoomId", "Theme selection needs a stable room ID.");
+            issue = new("InvalidRoomId", "Theme selection needs a stable room ID.");
+            return false;
+        }
+        if (!KsProcgenThemeCatalog.TryCapture(prototypeManager, themeId, out var catalog, out issue)) return false;
+        return TrySelect(catalog!, seed, roomId, out selection, out issue);
+    }
+
+    /// <summary>Choose only from retained candidate pools; no prototype manager lookup occurs.</summary>
+    public static bool TrySelect(KsProcgenThemeCatalog catalog, int seed, string roomId,
+        out KsProcgenThemeSelection? selection, out KsProcgenIssue? issue)
+        => TrySelectCore(catalog, seed, roomId, out selection, out issue, retainAtmosphere: false, retainElectrical: false);
+
+    internal static bool TrySelectForGasPlanning(KsProcgenThemeCatalog catalog, int seed, string roomId,
+        out KsProcgenThemeSelection? selection, out KsProcgenIssue? issue)
+        => TrySelectCore(catalog, seed, roomId, out selection, out issue, retainAtmosphere: true, retainElectrical: false);
+
+    internal static bool TrySelectForUtilityPlanning(KsProcgenThemeCatalog catalog, int seed, string roomId,
+        out KsProcgenThemeSelection? selection, out KsProcgenIssue? issue, bool retainAtmosphere, bool retainElectrical)
+        => TrySelectCore(catalog, seed, roomId, out selection, out issue, retainAtmosphere, retainElectrical);
+
+    private static bool TrySelectCore(KsProcgenThemeCatalog catalog, int seed, string roomId,
+        out KsProcgenThemeSelection? selection, out KsProcgenIssue? issue, bool retainAtmosphere, bool retainElectrical)
+    {
+        selection = null;
+        issue = null;
+        if (catalog == null || string.IsNullOrWhiteSpace(roomId))
+        {
+            issue = new("InvalidThemeCatalogSelection", "Selection needs retained content and a stable room ID.");
+            return false;
+        }
+        var theme = catalog.Theme;
+        var themeId = theme.Id;
+
+        if (theme!.Atmosphere != null && !retainAtmosphere)
+        {
+            issue = new("AtmospherePlanningUnsupported", "This content planner cannot yet retain or realize a theme's atmosphere contract.");
             return false;
         }
 
-        var tilePackRef = Choose(theme!.TilePacks.Select(reference => (reference.Pack, reference.Weight)),
+        if (theme.Electrical != null && !retainElectrical)
+        {
+            issue = new("ElectricalPlanningUnsupported", "This content planner cannot yet retain or realize a theme's electrical contract.");
+            return false;
+        }
+
+        var tilePackRef = Choose(theme.TilePacks.Select(reference => (reference.Pack, reference.Weight)),
             seed, roomId, "tile-pack");
-        var tilePack = prototypeManager.Index<KsProcgenTilePackPrototype>(tilePackRef);
-        var paletteId = Choose(tilePack.Palettes.Select(palette => (palette.Id, palette.Weight)),
+        var tilePack = catalog.TilePacks.Single(pack => pack.Id == tilePackRef);
+        var paletteId = Choose(tilePack.Choices.Select(palette => (palette.Id, palette.Weight)),
             seed, roomId, "tile-palette");
 
         var wallPackRef = Choose(theme.WallPacks.Select(reference => (reference.Pack, reference.Weight)),
             seed, roomId, "wall-pack");
-        var wallPack = prototypeManager.Index<KsProcgenWallPackPrototype>(wallPackRef);
-        var wallFamilyId = Choose(wallPack.Families.Select(family => (family.Id, family.Weight)),
+        var wallPack = catalog.WallPacks.Single(pack => pack.Id == wallPackRef);
+        var wallFamilyId = Choose(wallPack.Choices.Select(family => (family.Id, family.Weight)),
             seed, roomId, "wall-family");
 
         string? lightingPackId = null;
@@ -55,8 +97,8 @@ public static class KsProcgenThemeSelector
         {
             lightingPackId = Choose(theme.LightingPacks.Select(reference => (reference.Pack, reference.Weight)),
                 seed, roomId, "lighting-pack");
-            var lightingPack = prototypeManager.Index<KsProcgenLightingPackPrototype>(lightingPackId);
-            lightFixtureId = Choose(lightingPack.Fixtures.Select(fixture => (fixture.Id, fixture.Weight)),
+            var lightingPack = catalog.LightingPacks.Single(pack => pack.Id == lightingPackId);
+            lightFixtureId = Choose(lightingPack.Choices.Select(fixture => (fixture.Id, fixture.Weight)),
                 seed, roomId, "light-fixture");
         }
 
@@ -65,20 +107,20 @@ public static class KsProcgenThemeSelector
         if (theme.EntityPacks.Count > 0)
         {
             var activityReferences = theme.EntityPacks.Where(reference => reference.Weight > 0f &&
-                prototypeManager.Index<KsProcgenEntityPackPrototype>(reference.Pack).ActivityTags.Count > 0)
+                catalog.EntityPacks.Single(pack => pack.Id == reference.Pack).ActivityTags.Count > 0)
                 .ToArray();
             if (activityReferences.Length == 0)
                 activityReferences = theme.EntityPacks.ToArray();
 
             dominantId = Choose(activityReferences.Select(reference => (reference.Pack, reference.Weight)),
                 seed, roomId, "dominant-activity");
-            var dominantPack = prototypeManager.Index<KsProcgenEntityPackPrototype>(dominantId);
+            var dominantPack = catalog.EntityPacks.Single(pack => pack.Id == dominantId);
             foreach (var reference in theme.EntityPacks.OrderBy(reference => reference.Pack, StringComparer.Ordinal))
             {
                 if (reference.Pack == dominantId || reference.Weight == 0f)
                     continue;
 
-                var candidatePack = prototypeManager.Index<KsProcgenEntityPackPrototype>(reference.Pack);
+                var candidatePack = catalog.EntityPacks.Single(pack => pack.Id == reference.Pack);
                 var compatible = dominantPack.CompatibleSupportTags.Any(tag => candidatePack.Tags.Contains(tag));
                 if (!compatible)
                 {
@@ -96,9 +138,19 @@ public static class KsProcgenThemeSelector
             }
         }
 
-        selection = new KsProcgenThemeSelection(themeId, tilePackRef, paletteId,
-            wallPackRef, wallFamilyId, lightingPackId, lightFixtureId, dominantId, supportingIds,
-            theme.Goals.FurnishingDensity);
+        var chosen = new KsProcgenThemeSelection(themeId, tilePackRef, paletteId,
+            wallPackRef, wallFamilyId, lightingPackId, lightFixtureId, dominantId, KsProcgenReadOnly.Copy(supportingIds),
+            FurnishingDensity: theme.Goals.FurnishingDensity);
+        var selectedIds = supportingIds.ToHashSet(StringComparer.Ordinal);
+        if (dominantId != null) selectedIds.Add(dominantId);
+        var content = new KsProcgenSelectedContent(themeId,
+            tilePack.Choices.Single(choice => choice.Id == paletteId).Declaration,
+            wallPack.Choices.Single(choice => choice.Id == wallFamilyId).Declaration,
+            lightingPackId == null ? null : catalog.LightingPacks.Single(pack => pack.Id == lightingPackId)
+                .Choices.Single(choice => choice.Id == lightFixtureId).Declaration,
+            theme.Goals, catalog.EntityPacks.Where(pack => selectedIds.Contains(pack.Id))
+                .Select(pack => new KsProcgenSelectedEntityPack(pack.Id, pack.Cores)), atmosphere: theme.Atmosphere);
+        selection = chosen with { Content = content };
         issue = null;
         return true;
     }

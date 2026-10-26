@@ -1,0 +1,58 @@
+# Schema-two standalone WiredOnly preset: dedicated closets, MV service and LV floor coverage.
+# Writable generated hull sharing and bounded complete-reservation retries are supported.
+# Operating supply, hosted/preserved networks and complete pose/route search remain unsupported.
+- type: ksProcgenElectricalProfile
+  id: KsProcgenClosetElectrical
+  schemaVersion: 2
+  mode: AutoDistribute
+  supplyRequirement: WiredOnly
+  distribution:
+    closetInteriorSizes:
+    - 1,2
+    - 2,2
+    closetTheme: KsProcgenElectricalCloset
+    mediumVoltageCirculationBackbone: true
+    mediumVoltageRoomEntryBranches: true
+    floorServiceFraction: 1
+    floorServiceDomain: UsableRoomFloor
+    lowVoltageSquares: RequireNecessityCertificate
+
+- type: ksProcgenEntityPack
+  id: KsProcgenElectricalSupplies
+  tags:
+  - station
+  - electrical
+  activityTags:
+  - electricalMaintenance
+  entries:
+  - id: HighVoltageCoil
+    entity: CableHVStack10
+    role: Consumable
+    movement: Clear
+  - id: MediumVoltageCoil
+    entity: CableMVStack10
+    role: Consumable
+    movement: Clear
+  - id: LowVoltageCoil
+    entity: CableApcStack10
+    role: Consumable
+    movement: Clear
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenElectricalCloset
+  tags:
+  - station
+  - electrical
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  lightingPacks:
+  - pack: KsProcgenOfficeLights
+  entityPacks:
+  - pack: KsProcgenElectricalSupplies
+  goals:
+    coherentContents: true
+    keepCenterOpen: true
+    allowLooseItems: true
+    furnishingDensity: 0.15

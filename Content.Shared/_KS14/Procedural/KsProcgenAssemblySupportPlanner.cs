@@ -14,6 +14,7 @@ public enum KsProcgenPlacementLayer : byte
     Floor,
     Surface,
     Container,
+    Wall,
 }
 
 /// <summary>Dependency metadata only; no transform, usable interaction pose or legal overlap is established.</summary>
@@ -105,7 +106,7 @@ public static class KsProcgenAssemblySupportPlanner
                 return Failure("AssemblySupportCycle");
             parents.TryGetValue(next, out var dependency);
             var parent = dependency == null ? null : resolved[dependency.Target!];
-            var layer = dependency == null ? KsProcgenPlacementLayer.Floor :
+            var layer = dependency == null ? (inspected[next].WallMounted ? KsProcgenPlacementLayer.Wall : KsProcgenPlacementLayer.Floor) :
                 dependency.Kind == KsProcgenRelationKind.OnSurface ? KsProcgenPlacementLayer.Surface : KsProcgenPlacementLayer.Container;
             var entry = new KsProcgenSupportMember(next, members[next].Entry.Entity, layer, parent?.MemberId,
                 dependency?.Id, layer == KsProcgenPlacementLayer.Container ? dependency?.ContainerId : dependency?.Slot,

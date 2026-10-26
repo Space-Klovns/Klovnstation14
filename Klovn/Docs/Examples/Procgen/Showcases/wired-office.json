@@ -1,0 +1,1734 @@
+{
+  "schemaVersion": 1,
+  "kind": "KsProcgenShowcase",
+  "id": "wired-office",
+  "seed": 17,
+  "themeId": "Showcase",
+  "state": "InitializedPausedPreview",
+  "nativeGridLoadVerified": true,
+  "published": false,
+  "engineAccessVerified": false,
+  "workingLightingVerified": false,
+  "electricalSupplyVerified": false,
+  "electricalTopologyVerified": true,
+  "planHash": "3256301993054413245",
+  "contentDeclarationHash": 4134257218493343116,
+  "request": {
+    "schemaVersion": 2,
+    "requestId": "Showcase/wired-office",
+    "seed": 17,
+    "shape": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 5
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 5
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": 5
+      }
+    ],
+    "envelope": [
+      {
+        "x": -1,
+        "y": -1
+      },
+      {
+        "x": -1,
+        "y": 0
+      },
+      {
+        "x": -1,
+        "y": 1
+      },
+      {
+        "x": -1,
+        "y": 2
+      },
+      {
+        "x": -1,
+        "y": 3
+      },
+      {
+        "x": -1,
+        "y": 4
+      },
+      {
+        "x": -1,
+        "y": 5
+      },
+      {
+        "x": -1,
+        "y": 6
+      },
+      {
+        "x": 0,
+        "y": -1
+      },
+      {
+        "x": 0,
+        "y": 6
+      },
+      {
+        "x": 1,
+        "y": -1
+      },
+      {
+        "x": 1,
+        "y": 6
+      },
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": 2,
+        "y": 6
+      },
+      {
+        "x": 3,
+        "y": -1
+      },
+      {
+        "x": 3,
+        "y": 6
+      },
+      {
+        "x": 4,
+        "y": -1
+      },
+      {
+        "x": 4,
+        "y": 6
+      },
+      {
+        "x": 5,
+        "y": -1
+      },
+      {
+        "x": 5,
+        "y": 6
+      },
+      {
+        "x": 6,
+        "y": -1
+      },
+      {
+        "x": 6,
+        "y": 0
+      },
+      {
+        "x": 6,
+        "y": 1
+      },
+      {
+        "x": 6,
+        "y": 2
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 5
+      },
+      {
+        "x": 6,
+        "y": 6
+      }
+    ],
+    "atmosphereProfile": null,
+    "electricalProfile": "KsProcgenClosetElectrical"
+  },
+  "rooms": [
+    {
+      "id": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom",
+      "kind": "RoomProposal",
+      "cells": [
+        {
+          "x": 3,
+          "y": 0
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 0
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 5,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "id": "Showcase/wired-office/EntranceNetwork/0/Zone/0",
+      "kind": "RoomProposal",
+      "cells": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 1,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 3
+        },
+        {
+          "x": 5,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 4
+        },
+        {
+          "x": 2,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 5,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 5
+        },
+        {
+          "x": 1,
+          "y": 5
+        },
+        {
+          "x": 2,
+          "y": 5
+        },
+        {
+          "x": 3,
+          "y": 5
+        },
+        {
+          "x": 4,
+          "y": 5
+        },
+        {
+          "x": 5,
+          "y": 5
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "cell": {
+        "x": 0,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 0
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 0
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 0
+      },
+      "tileId": "FloorSteelCheckerLight"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 1
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 1
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 2
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 5
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    }
+  ],
+  "walls": [
+    {
+      "cell": {
+        "x": 0,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 1
+      },
+      "entityId": "WallSolid"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 2
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 2
+      },
+      "entityId": "WallSolid"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 2
+      },
+      "entityId": "WallSolid"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 2
+      },
+      "entityId": "WallSolid"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 2
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 3
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 4
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 4
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 5
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 5
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    }
+  ],
+  "windows": [
+    {
+      "cell": {
+        "x": 1,
+        "y": -1
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 0
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 0
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 3
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 6
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 6
+      },
+      "entityId": "Window"
+    }
+  ],
+  "doors": [
+    {
+      "cell": {
+        "x": 3,
+        "y": 0
+      },
+      "entityId": "Airlock",
+      "quarterTurns": 1
+    }
+  ],
+  "entities": [
+    {
+      "prototypeId": "CableHVStack10",
+      "x": 5.5,
+      "y": 0.5,
+      "quarterTurns": 0,
+      "layer": "Floor",
+      "id": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom/I00_M00",
+      "role": "HighVoltageCoil",
+      "exposed": true
+    },
+    {
+      "prototypeId": "CableApcStack10",
+      "x": 5.5,
+      "y": 1.5,
+      "quarterTurns": 0,
+      "layer": "Floor",
+      "id": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom/I01_M00",
+      "role": "LowVoltageCoil",
+      "exposed": true
+    },
+    {
+      "prototypeId": "SubstationBasic",
+      "x": 4.5,
+      "y": 1.5,
+      "quarterTurns": 0,
+      "layer": "Floor",
+      "id": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom/I02_M00",
+      "role": "Device",
+      "exposed": true
+    },
+    {
+      "prototypeId": "KsProcgenFilteredComputerFixture",
+      "x": 4.5,
+      "y": 5.5,
+      "quarterTurns": 0,
+      "layer": "Floor",
+      "id": "Showcase/wired-office/EntranceNetwork/0/Zone/0/I00_M00",
+      "role": "Computer",
+      "exposed": true
+    },
+    {
+      "prototypeId": "APCBasic",
+      "x": 2.5,
+      "y": -0.5,
+      "quarterTurns": 2,
+      "layer": "Wall",
+      "id": "Showcase/wired-office/EntranceNetwork/0/Zone/0/I01_M00",
+      "role": "Device",
+      "exposed": true
+    }
+  ],
+  "approaches": [
+    {
+      "memberId": "I02_M00",
+      "cell": {
+        "x": 4,
+        "y": 0
+      },
+      "path": [
+        {
+          "x": 4,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "memberId": "I00_M00",
+      "cell": {
+        "x": 4,
+        "y": 4
+      },
+      "path": [
+        {
+          "x": 2,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 2,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "memberId": "I01_M00",
+      "cell": {
+        "x": 2,
+        "y": 0
+      },
+      "path": [
+        {
+          "x": 2,
+          "y": 0
+        }
+      ]
+    }
+  ],
+  "lights": [],
+  "cables": [
+    {
+      "cell": {
+        "x": 4,
+        "y": 1
+      },
+      "prototypeId": "CableHV",
+      "voltage": "High"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": -1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": -1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": -1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": -1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": -1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 0
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 0
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 0
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 0
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 0
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 1
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 2
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 2
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 3
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 3
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 3
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 3
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 3
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 3
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 4
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 5
+      },
+      "prototypeId": "CableMV",
+      "voltage": "Medium"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": -1
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 0
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 1
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 2
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 2
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 2
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 2
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 3
+      },
+      "prototypeId": "CableApcExtension",
+      "voltage": "Low"
+    }
+  ],
+  "transferRadius": 3,
+  "electricalDevices": [
+    {
+      "id": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom/I02_M00",
+      "regionId": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom",
+      "prototypeId": "SubstationBasic",
+      "cell": {
+        "x": 4,
+        "y": 1
+      },
+      "quarterTurns": 0,
+      "substation": true,
+      "wallMounted": false
+    },
+    {
+      "id": "Showcase/wired-office/EntranceNetwork/0/Zone/0/I01_M00",
+      "regionId": "Showcase/wired-office/EntranceNetwork/0/Zone/0",
+      "prototypeId": "APCBasic",
+      "cell": {
+        "x": 2,
+        "y": -1
+      },
+      "quarterTurns": 2,
+      "substation": false,
+      "wallMounted": true
+    }
+  ],
+  "electricalService": {
+    "mediumTargets": [
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 5
+      }
+    ],
+    "floorDomain": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 5
+      },
+      {
+        "x": 1,
+        "y": 5
+      },
+      {
+        "x": 2,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 5
+      }
+    ],
+    "covered": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 5
+      },
+      {
+        "x": 1,
+        "y": 5
+      },
+      {
+        "x": 2,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 5
+      }
+    ],
+    "uncovered": [],
+    "requiredFloorCells": 30,
+    "providerRange": 3,
+    "rooms": [
+      {
+        "regionId": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom",
+        "themeId": "KsProcgenElectricalCloset",
+        "size": {
+          "x": 2,
+          "y": 2
+        },
+        "interior": [
+          {
+            "x": 4,
+            "y": 0
+          },
+          {
+            "x": 5,
+            "y": 0
+          },
+          {
+            "x": 4,
+            "y": 1
+          },
+          {
+            "x": 5,
+            "y": 1
+          }
+        ],
+        "enclosure": [
+          {
+            "x": 3,
+            "y": -1
+          },
+          {
+            "x": 4,
+            "y": -1
+          },
+          {
+            "x": 5,
+            "y": -1
+          },
+          {
+            "x": 6,
+            "y": -1
+          },
+          {
+            "x": 3,
+            "y": 0
+          },
+          {
+            "x": 6,
+            "y": 0
+          },
+          {
+            "x": 3,
+            "y": 1
+          },
+          {
+            "x": 6,
+            "y": 1
+          },
+          {
+            "x": 3,
+            "y": 2
+          },
+          {
+            "x": 4,
+            "y": 2
+          },
+          {
+            "x": 5,
+            "y": 2
+          },
+          {
+            "x": 6,
+            "y": 2
+          }
+        ],
+        "threshold": {
+          "x": 3,
+          "y": 0
+        }
+      }
+    ],
+    "squareProofs": []
+  },
+  "nativeConnections": [
+    {
+      "consumerId": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom/D/3/0",
+      "providerPrototype": "CableApcExtension",
+      "actualNominalWatts": 20,
+      "providerTransferRange": 3,
+      "receiverReceptionRange": 3
+    },
+    {
+      "consumerId": "Showcase/wired-office/EntranceNetwork/0/Zone/0/I00_M00",
+      "providerPrototype": "CableApcExtension",
+      "actualNominalWatts": 50,
+      "providerTransferRange": 3,
+      "receiverReceptionRange": 3
+    }
+  ],
+  "consumers": [
+    {
+      "consumerId": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom/D/3/0",
+      "prototypeId": "Airlock",
+      "position": {
+        "x": 3.5,
+        "y": 0.5
+      },
+      "providerCell": {
+        "x": 2,
+        "y": -1
+      },
+      "nominalWatts": 20,
+      "peakWatts": null
+    },
+    {
+      "consumerId": "Showcase/wired-office/EntranceNetwork/0/Zone/0/I00_M00",
+      "prototypeId": "KsProcgenFilteredComputerFixture",
+      "position": {
+        "x": 4.5,
+        "y": 5.5
+      },
+      "providerCell": {
+        "x": 2,
+        "y": 3
+      },
+      "nominalWatts": 50,
+      "peakWatts": null
+    }
+  ],
+  "electricalOmissions": [],
+  "initialAtmosphere": null,
+  "expandedCells": 4755,
+  "furnishingProbes": 2691,
+  "fallbacks": [
+    {
+      "code": "SparseFurnishing",
+      "regionId": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom"
+    },
+    {
+      "code": "SparseLighting",
+      "regionId": "Showcase/wired-office/EntranceNetwork/0/UtilityRoom"
+    }
+  ],
+  "notes": "Substation in an automatic electrical closet, separate wall APC, MV service trunks and full usable-floor LV coverage without 2x2 cable blocks. Initial native topology/receiver links and save/load counts verified; operating supply and post-load topology remain uncertified."
+}

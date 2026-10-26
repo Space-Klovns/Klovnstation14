@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
@@ -8,12 +9,12 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.Procedural;
 
 [TestOf(typeof(KsProcgenGroupMaterialPlanner))]
-public sealed class KsProcgenGroupMaterialTests : GameTest
+public sealed class KsProcgenGroupMaterialTests : KsProcgenGameTest
 {
     [Test]
     public async Task CompleteOwnedMaterialsIncludeSeparationAndReplayCanonicalChoices()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
@@ -43,7 +44,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [TestCase(true)]
     public async Task PreservedFloorRetainsItsMaterialWithoutAnyWriteChoice(bool constant)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, preservedEntry: true, constant: constant);
@@ -59,14 +60,14 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task ProtectedRoutesRemainPrimaryWhenEveryTileIsRequestedAsAccent()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
             var themes = new KsProcgenThemeAssignmentResult
             {
                 Status = fixture.Themes.Status, Regions = fixture.Themes.Regions.Select(region => region with
-                    { Theme = region.Theme with { TilePackId = "KsProcgenAccentTilesFixture", TilePaletteId = "Accent" } }).ToArray(),
+                    { Theme = region.Theme with { Content = null, TilePackId = "KsProcgenAccentTilesFixture", TilePaletteId = "Accent" } }).ToArray(),
             };
             var result = KsProcgenGroupMaterialPlanner.Plan(manager, fixture.Request, fixture.Partition, themes);
             Assert.That(result.Status, Is.EqualTo(KsProcgenGroupMaterialStatus.Planned), result.Issue?.Code);
@@ -79,7 +80,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task PrototypeReferencesAreRecheckedBeforeAcceptingUnwalledRoomMaterials()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
@@ -92,7 +93,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
                 var themes = new KsProcgenThemeAssignmentResult
                 {
                     Status = fixture.Themes.Status, Regions = fixture.Themes.Regions.Select(region => region with
-                        { Theme = region.Theme with { WallPackId = packId, WallFamilyId = "Reinforced" } }).ToArray(),
+                        { Theme = region.Theme with { Content = null, WallPackId = packId, WallFamilyId = "Reinforced" } }).ToArray(),
                 };
                 AssertFailure(KsProcgenGroupMaterialPlanner.Plan(manager, fixture.Request, fixture.Partition, themes),
                     "MissingOwnedMaterialPrototype", KsProcgenGroupMaterialStatus.InvalidInput);
@@ -107,7 +108,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task InternalDoorChoicesRemainPrimaryAndCannotCrossOwners()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, splitRooms: true);
@@ -130,12 +131,12 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task MissingLaterDoorMaterialDiscardsAllEarlierChoices()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, splitRooms: true);
             var regions = fixture.Themes.Regions.Select(region => region.EntranceGroupIds.Contains("B")
-                ? region with { Theme = region.Theme with { WallPackId = "KsProcgenNoDoorWallsFixture", WallFamilyId = "NoDoor" } } : region).ToArray();
+                ? region with { Theme = region.Theme with { Content = null, WallPackId = "KsProcgenNoDoorWallsFixture", WallFamilyId = "NoDoor" } } : region).ToArray();
             var themes = new KsProcgenThemeAssignmentResult { Status = fixture.Themes.Status, Regions = regions };
             AssertFailure(KsProcgenGroupMaterialPlanner.Plan(manager, fixture.Request, fixture.Partition, themes),
                 "MissingInteriorDoorMaterial", KsProcgenGroupMaterialStatus.IncompatibleMaterials);
@@ -145,12 +146,12 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task DifferentIncidentWallFamiliesRejectTheCompleteSeparator()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
             var regions = fixture.Themes.Regions.Select(region => region.EntranceGroupIds.Contains("B")
-                ? region with { Theme = region.Theme with { WallPackId = "KsProcgenReinforcedWallsFixture", WallFamilyId = "Reinforced" } } : region).ToArray();
+                ? region with { Theme = region.Theme with { Content = null, WallPackId = "KsProcgenReinforcedWallsFixture", WallFamilyId = "Reinforced" } } : region).ToArray();
             AssertFailure(KsProcgenGroupMaterialPlanner.Plan(manager, fixture.Request, fixture.Partition,
                 new() { Status = fixture.Themes.Status, Regions = regions }),
                 "ConflictingSeparationWallMaterials", KsProcgenGroupMaterialStatus.IncompatibleMaterials);
@@ -160,7 +161,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task SourceAndSeparatorFloodsShareOneExactAllowance()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
@@ -178,7 +179,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task MissingSeparatorDispositionAndStaleHostSceneAreRejected()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
@@ -195,7 +196,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task ForeignThemeLabelsAndMissingReservationsAreRejected()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
@@ -217,7 +218,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task OneByThreePassageAndUnreachableWallIslandKeepCompleteDisposition()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, tiny: true);
@@ -234,7 +235,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task HullWallsCoverOnlyClaimableEnvelopeAndReplayWithoutSealingEntrances()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true);
@@ -261,7 +262,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task HullRevalidationAndSelectionShareTheirBudgetAndMissingFamiliesFailAtomically()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true);
@@ -271,7 +272,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
             AssertHullFailure(limited, "HullWallSelectionExpansionBudget", KsProcgenGroupMaterialStatus.BudgetExceeded);
             Assert.That(limited.ExpandedCells, Is.EqualTo(full.ExpandedCells - 1));
             var regions = fixture.Themes.Regions.Select(region => region.EntranceGroupIds.Contains("B")
-                ? region with { Theme = region.Theme with { WallPackId = "KsProcgenNoDoorWallsFixture", WallFamilyId = "NoDoor" } } : region).ToArray();
+                ? region with { Theme = region.Theme with { Content = null, WallPackId = "KsProcgenNoDoorWallsFixture", WallFamilyId = "NoDoor" } } : region).ToArray();
             AssertHullFailure(KsProcgenGroupHullWallPlanner.Plan(manager, fixture.Request, fixture.Partition,
                 new() { Status = fixture.Themes.Status, Regions = regions }),
                 "MissingOwnedHullWallMaterial", KsProcgenGroupMaterialStatus.IncompatibleMaterials);
@@ -281,7 +282,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task AnEnvelopeCellSharedBySeparateNetworksRequiresCompatibleHullFamilies()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true, sharedHole: true);
@@ -291,7 +292,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
             Assert.That(initial.Boundary!.Edges.Where(edge => edge.BoundaryCell == new Vector2i(1, 1))
                 .Select(edge => edge.Component).Distinct().Count(), Is.EqualTo(2));
             var regions = fixture.Themes.Regions.Select(region => region.EntranceGroupIds.Contains("B")
-                ? region with { Theme = region.Theme with { WallPackId = "KsProcgenAlternateHullFixture", WallFamilyId = "Alternate" } } : region).ToArray();
+                ? region with { Theme = region.Theme with { Content = null, WallPackId = "KsProcgenAlternateHullFixture", WallFamilyId = "Alternate" } } : region).ToArray();
             AssertHullFailure(KsProcgenGroupHullWallPlanner.Plan(manager, fixture.Request, fixture.Partition,
                 new() { Status = fixture.Themes.Status, Regions = regions }),
                 "ConflictingOwnedHullWallMaterials", KsProcgenGroupMaterialStatus.IncompatibleMaterials);
@@ -301,7 +302,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task MissingEnvelopeProducesUnknownBoundariesWithoutInventingWallCells()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager);
@@ -317,7 +318,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task ExteriorWindowsReplaceWallsExactlyOnceAndNeverReplaceEntranceSpans()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true);
@@ -349,12 +350,12 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task MissingWindowFamilyExcludesItsCellsAndHardCountsDiscardAllEarlierProposals()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true);
             var regions = fixture.Themes.Regions.Select(region => region.EntranceGroupIds.Contains("B")
-                ? region with { Theme = region.Theme with { WallPackId = "KsProcgenNoWindowsFixture", WallFamilyId = "NoWindows" } } : region).ToArray();
+                ? region with { Theme = region.Theme with { Content = null, WallPackId = "KsProcgenNoWindowsFixture", WallFamilyId = "NoWindows" } } : region).ToArray();
             var themes = new KsProcgenThemeAssignmentResult { Status = fixture.Themes.Status, Regions = regions };
             var facts = OuterFaces(fixture);
             var result = KsProcgenGroupWindowPlanner.Plan(manager, fixture.Request, fixture.Partition, themes, facts);
@@ -373,7 +374,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task NoExteriorContextDoesNotInventEligibilityOrSatisfyAHardMinimum()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true);
@@ -390,7 +391,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task StructuralAuthorExclusionsAffectCountsAndReplayIdentity()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true);
@@ -417,7 +418,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [TestCase(true)]
     public async Task FixedExteriorWindowsCountWithoutBeingEmittedOrOverwritten(bool constant)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true, fixedExterior: true, constantExterior: constant);
@@ -446,7 +447,7 @@ public sealed class KsProcgenGroupMaterialTests : GameTest
     [Test]
     public async Task WindowStagesShareWorkAndRejectStaleOrInvalidContextAtomically()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(manager, envelope: true);

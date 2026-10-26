@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Content.Shared._KS14.Procedural;
@@ -39,11 +40,11 @@ public sealed class KsProcgenRoomAssemblyComposerTests
         Assert.That(second.Assembly!.VariantId, Is.EqualTo(first.Assembly!.VariantId));
         Assert.That(second.Bindings, Is.EqualTo(first.Bindings));
         Assert.That(second.Assembly.Relations, Is.EqualTo(first.Assembly.Relations));
-        source.Members[0].Entry.Footprint.Add(new(1, 0));
-        source.Members[0].Entry.AllowedQuarterTurns.Clear();
+        source = source.WithEntry(source.Members[0].Id, entry => entry with { Footprint = [new(0, 0), new(1, 0)], AllowedQuarterTurns = [] });
+        Assert.That(source.Members[0].Entry.Footprint.Count, Is.EqualTo(2));
         Assert.That(first.Assembly.Members.All(member => member.Entry.Footprint.Count == 1), Is.True);
         Assert.That(first.Assembly.Members.All(member => member.Entry.AllowedQuarterTurns.Count == 4), Is.True);
-        first.Assembly.Members[0].Entry.Footprint.Add(new(2, 0));
+        Assert.Throws<NotSupportedException>(() => ((IList<Vector2i>) first.Assembly.Members[0].Entry.Footprint).Add(new(2, 0)));
         Assert.That(first.Assembly.Members[2].Entry.Footprint.Count, Is.EqualTo(1));
     }
 
@@ -78,6 +79,25 @@ public sealed class KsProcgenRoomAssemblyComposerTests
             .Select(index => new KsProcgenRoomAssemblyInstance("Pack", "Core", index, source)).ToArray());
         Assert.That(result.Issue!.Code, Is.EqualTo("RoomAssemblyCompositionBudget"));
         Assert.That(result.Assembly, Is.Null);
+    }
+
+    [Test]
+    public void InfrastructureAndAuthoredRolesWithTheSameNamesRemainSeparateInstances()
+    {
+        var assembly = Assembly(); var authored = new KsProcgenRoomAssemblyInstance("Electrical", "Apc", 0, assembly);
+        var infrastructure = authored with { Origin = KsProcgenRoomMemberOrigin.Infrastructure };
+        var result = KsProcgenRoomAssemblyComposer.Compose("Room", new[] { authored, infrastructure });
+        Assert.That(result.Issue, Is.Null);
+        Assert.That(result.Bindings.Count(binding => binding.Origin == KsProcgenRoomMemberOrigin.Authored), Is.EqualTo(2));
+        Assert.That(result.Bindings.Count(binding => binding.Origin == KsProcgenRoomMemberOrigin.Infrastructure), Is.EqualTo(2));
+        foreach (var relation in result.Assembly!.Relations)
+            Assert.That(result.Bindings.Single(binding => binding.MemberId == relation.Subject).Origin,
+                Is.EqualTo(result.Bindings.Single(binding => binding.MemberId == relation.Target).Origin));
+        var replay = KsProcgenRoomAssemblyComposer.Compose("Room", new[] { infrastructure, authored });
+        Assert.That(replay.Bindings, Is.EqualTo(result.Bindings));
+        Assert.That(replay.Assembly!.VariantId, Is.EqualTo(result.Assembly.VariantId));
+        var changed = KsProcgenRoomAssemblyComposer.Compose("Room", new[] { authored, infrastructure with { PackId = "Other", Origin = KsProcgenRoomMemberOrigin.Authored } });
+        Assert.That(changed.Assembly!.VariantId, Is.Not.EqualTo(result.Assembly.VariantId));
     }
 
     private static KsProcgenRoomAssemblyInstance[] Instances(KsProcgenResolvedAssembly assembly) =>

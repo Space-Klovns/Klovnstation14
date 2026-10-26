@@ -145,7 +145,10 @@ public static class KsProcgenEntranceSceneAnalyzer
         var exactScopeOwners = new Dictionary<int, string>();
         foreach (var group in configuration.Groups)
         {
-            var localIds = group.Ports.Select(port => byPort[port].LocalComponent).Distinct().ToArray();
+            if (group.Ports.Count == 0 && group.RootCells.Any(cell => !localByCell.ContainsKey(cell)))
+                return Fail(KsProcgenEntranceSceneStatus.Rejected, "EntranceGroupRootUnreachable");
+            var localIds = (group.Ports.Count != 0 ? group.Ports.Select(port => byPort[port].LocalComponent) :
+                group.RootCells.Select(cell => localByCell[cell])).Distinct().ToArray();
             if (localIds.Length != 1)
                 return Fail(KsProcgenEntranceSceneStatus.Rejected, "RequiredEntranceGroupDisconnected");
             var component = localIds[0];
@@ -157,7 +160,7 @@ public static class KsProcgenEntranceSceneAnalyzer
             if (configuration.Mode != KsProcgenEntranceConnectionMode.ExactComponents)
                 continue;
             var scopeComponent = configuration.IsolationScope == KsProcgenEntranceIsolationScope.DomainLocal ? component :
-                byPort[group.Ports[0]].ScopeComponent;
+                group.Ports.Count != 0 ? byPort[group.Ports[0]].ScopeComponent : scopeByCell[group.RootCells[0]];
             if (!exactScopeOwners.TryAdd(scopeComponent, group.Id))
                 return Fail(KsProcgenEntranceSceneStatus.Rejected, "ForbiddenEntranceGroupJoin");
         }

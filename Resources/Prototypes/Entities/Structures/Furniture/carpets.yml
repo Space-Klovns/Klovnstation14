@@ -36,9 +36,11 @@
     - trigger:
         !type:DamageTrigger
         damage: 10
-        behaviors:
-        - !type:DoActsBehavior
-          acts: [ "Destruction" ]
+      # KS14 start: behaviors belong to the threshold, not to DamageTrigger.
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      # KS14 end
   - type: Butcherable
     butcheringType: Knife
     butcherDelay: 2

@@ -3,16 +3,24 @@ using System.Linq;
 
 namespace Content.Shared._KS14.Procedural;
 
+public enum KsProcgenRoomMemberOrigin : byte { Authored, Infrastructure }
 public sealed record KsProcgenRoomAssemblyInstance(string PackId, string CoreId, int CopyIndex,
-    KsProcgenResolvedAssembly Assembly);
+    KsProcgenResolvedAssembly Assembly)
+{
+    public KsProcgenRoomMemberOrigin Origin { get; init; }
+}
 public sealed record KsProcgenRoomMemberBinding(string MemberId, string PackId, string CoreId, int CopyIndex,
-    string AssemblyId, string VariantId, string SourceMemberId);
+    string AssemblyId, string VariantId, string SourceMemberId)
+{
+    public KsProcgenRoomMemberOrigin Origin { get; init; }
+}
 
 public sealed class KsProcgenRoomAssemblyComposition
 {
     public KsProcgenIssue? Issue { get; init; }
     public KsProcgenResolvedAssembly? Assembly { get; init; }
     public IReadOnlyList<KsProcgenRoomMemberBinding> Bindings { get; init; } = [];
+    public IReadOnlyList<KsProcgenRoomAssemblyInstance> Instances { get; init; } = [];
     public bool EnginePlacementVerified => false;
 }
 
@@ -32,9 +40,9 @@ public static class KsProcgenRoomAssemblyComposer
             instances.Count is < 1 or > 16 || instances.Any(instance => instance == null ||
                 string.IsNullOrWhiteSpace(instance.PackId) || instance.PackId.Length > 256 ||
                 string.IsNullOrWhiteSpace(instance.CoreId) || instance.CoreId.Length > 128 ||
-                instance.CopyIndex is < 0 or > 63 || instance.Assembly == null))
+                instance.CopyIndex is < 0 or > 63 || instance.Assembly == null || !Enum.IsDefined(instance.Origin)))
             return Fail("InvalidRoomAssemblyInstances");
-        if (instances.Select(instance => (instance.PackId, instance.CoreId, instance.CopyIndex)).Distinct().Count() != instances.Count)
+        if (instances.Select(instance => (instance.Origin, instance.PackId, instance.CoreId, instance.CopyIndex)).Distinct().Count() != instances.Count)
             return Fail("DuplicateRoomAssemblyInstance");
         if (instances.Any(instance => instance.Assembly.Members == null || instance.Assembly.Relations == null ||
                 instance.Assembly.Members.Count == 0) || instances.Sum(instance => (long) instance.Assembly.Members.Count) > 64 ||
@@ -45,9 +53,9 @@ public static class KsProcgenRoomAssemblyComposer
         var bindings = new List<KsProcgenRoomMemberBinding>();
         string? anchor = null;
         var identity = KsProcgenStableHash.Create();
-        identity.AddString("ks-procgen-room-assembly-v1");
+        identity.AddString("ks-procgen-room-assembly-v2");
         identity.AddString(roomId);
-        var ordered = instances.OrderBy(instance => instance.PackId, StringComparer.Ordinal)
+        var ordered = instances.OrderBy(instance => instance.Origin).ThenBy(instance => instance.PackId, StringComparer.Ordinal)
             .ThenBy(instance => instance.CoreId, StringComparer.Ordinal).ThenBy(instance => instance.CopyIndex).ToArray();
         for (var instanceIndex = 0; instanceIndex < ordered.Length; instanceIndex++)
         {
@@ -67,7 +75,7 @@ public static class KsProcgenRoomAssemblyComposer
             for (var memberIndex = 0; memberIndex < sourceMembers.Length; memberIndex++)
                 renamed.Add(sourceMembers[memberIndex].Id, $"I{instanceIndex:D2}_M{memberIndex:D2}");
             anchor ??= renamed[assembly.AnchorMember];
-            identity.AddString(instance.PackId);
+            identity.AddInt((int) instance.Origin); identity.AddString(instance.PackId);
             identity.AddString(instance.CoreId);
             identity.AddInt(instance.CopyIndex);
             identity.AddString(assembly.AssemblyId);
@@ -79,12 +87,12 @@ public static class KsProcgenRoomAssemblyComposer
                 members.Add(member with { Id = id, Entry = new()
                 {
                     Id = id, Entity = entry.Entity, Weight = entry.Weight, MinimumCount = entry.MinimumCount,
-                    Role = entry.Role, Movement = entry.Movement, Footprint = entry.Footprint.ToList(),
-                    AllowedQuarterTurns = entry.AllowedQuarterTurns.ToList(),
+                    Role = entry.Role, Movement = entry.Movement, Footprint = KsProcgenReadOnly.Copy(entry.Footprint),
+                    AllowedQuarterTurns = KsProcgenReadOnly.Copy(entry.AllowedQuarterTurns),
                     RequiresInteractionApproach = entry.RequiresInteractionApproach,
                 } });
                 bindings.Add(new(id, instance.PackId, instance.CoreId, instance.CopyIndex,
-                    assembly.AssemblyId, assembly.VariantId, member.Id));
+                    assembly.AssemblyId, assembly.VariantId, member.Id) { Origin = instance.Origin });
             }
             if (assembly.Relations.Any(relation => relation == null || string.IsNullOrWhiteSpace(relation.Id) ||
                     string.IsNullOrWhiteSpace(relation.Subject) || !Enum.IsDefined(relation.Kind) ||
@@ -106,6 +114,7 @@ public static class KsProcgenRoomAssemblyComposer
             Assembly = new($"Room/{roomId}", identity.Value.ToString(CultureInfo.InvariantCulture), anchor!,
                 KsProcgenReadOnly.Copy(members), KsProcgenReadOnly.Copy(relations)),
             Bindings = KsProcgenReadOnly.Copy(bindings),
+            Instances = ordered.Select(instance => instance with { Assembly = KsProcgenAssemblyValue.Copy(instance.Assembly) }).ToReadOnlyList(),
         };
     }
 }

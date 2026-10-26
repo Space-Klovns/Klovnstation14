@@ -54,6 +54,7 @@ public sealed record KsProcgenEntityProposal(
     string? VariantId = null,
     Vector2i? DeclaredApproachLanding = null)
 {
+    public KsProcgenRoomMemberOrigin Origin { get; init; }
     public IReadOnlyList<Vector2i> OccupiedCells => Footprint.Cells.Count == 0 ? new[] { Cell } : Footprint.Cells;
 }
 
@@ -61,6 +62,7 @@ public sealed record KsProcgenPackOmission(string PackId, string Reason);
 
 public sealed class KsProcgenFurnishingResult
 {
+    public KsProcgenLayeredFurnishing? Layered { get; init; }
     public KsProcgenFurnishingStatus Status { get; init; }
     public KsProcgenIssue? Issue { get; init; }
     public IReadOnlyList<KsProcgenEntityProposal> Entities { get; init; } = [];
@@ -98,7 +100,7 @@ public static class KsProcgenFurnishingPlanner
         bool meterCleanPaths = false)
     {
         if (prototypeManager == null || region == null || partition == null ||
-            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded ||
+            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded or KsProcgenPartitionStatus.RequiredRoomRejected ||
             maxCandidateProbes <= 0 || maxCandidateProbes > 4_096 ||
             maxRoomCells <= 0 || maxRoomCells > 65_536 || maxRelationPathExpandedCells is < 0 or > 65_536 ||
             !float.IsFinite(region.Theme.FurnishingDensity) ||
@@ -119,6 +121,13 @@ public static class KsProcgenFurnishingPlanner
         var compiledPacks = new Dictionary<string, IReadOnlyList<KsProcgenResolvedEntityCore>>(StringComparer.Ordinal);
         foreach (var packId in selectedPacks)
         {
+            if (region.Theme.Content is { } content)
+            {
+                var captured = content.ThemeId == region.Theme.ThemeId ? content.EntityPacks.SingleOrDefault(pack => pack.Id == packId) : null;
+                if (captured == null) return Failure(KsProcgenFurnishingStatus.InvalidInput, "UncapturedFurnishingPack");
+                compiledPacks[packId] = captured.Cores;
+                continue;
+            }
             if (!prototypeManager.TryIndex<KsProcgenEntityPackPrototype>(packId, out var pack))
                 return Failure(KsProcgenFurnishingStatus.InvalidInput, "UnknownFurnishingPack");
             if (!KsProcgenAssemblyCompiler.TryResolvePack(prototypeManager, pack, out var cores, out _))
@@ -317,6 +326,9 @@ public static class KsProcgenFurnishingPlanner
 
         foreach (var packId in selectedPacks)
         {
+            // Mandatory core/pack minima were placed above. Zero density disables optional fill.
+            if (region.Theme.FurnishingDensity == 0f)
+                continue;
             if (packId != region.Theme.DominantEntityPackId &&
                 region.Theme.DominantEntityPackId != null && dominantAnchors.Count == 0)
             {
@@ -607,7 +619,7 @@ public static class KsProcgenFurnishingPlanner
 
     internal static bool ValidateTrial(
         IReadOnlyList<KsProcgenEntityProposal> trial,
-        IReadOnlyList<KsProcgenEntityEntry> entries,
+        IReadOnlyList<KsProcgenResolvedEntityEntry> entries,
         KsProcgenResolvedAssembly assembly,
         IReadOnlySet<Vector2i> floor,
         IReadOnlySet<Vector2i> walls,

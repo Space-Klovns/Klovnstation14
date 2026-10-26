@@ -99,6 +99,7 @@ namespace Content.Server.NodeContainer.EntitySystems
 
         public void QueueRemakeGroup(BaseNodeGroup group)
         {
+            if (KsQueueRemake(group)) return; // KS14: route owned work through the active scoped transaction.
             if (group.Remaking)
                 return;
 
@@ -118,6 +119,7 @@ namespace Content.Server.NodeContainer.EntitySystems
 
         public void QueueReflood(Node node)
         {
+            if (KsQueueReflood(node)) return; // KS14: retain unrelated work in the ordinary queue.
             if (node.FlaggedForFlood)
                 return;
 
@@ -132,6 +134,7 @@ namespace Content.Server.NodeContainer.EntitySystems
 
         public void CreateSingleNetImmediate(Node node)
         {
+            if (KsBlockImmediateCreation()) return; // KS14: callbacks cannot bypass the scoped rebuild transaction.
             if (node.NodeGroup != null)
                 return;
 
@@ -158,8 +161,13 @@ namespace Content.Server.NodeContainer.EntitySystems
             DoGroupUpdates();
         }
 
-        private void DoGroupUpdates()
+        private void DoGroupUpdatesCore() /* KS14: DoGroupUpdates -> DoGroupUpdatesCore; guarded wrapper in the partial extension. */
         {
+            // KS14 start: native algorithm can consume isolated owned queues without draining global work.
+            var _toRemake = _ksNodeScope?.Remake ?? this._toRemake;
+            var _toReflood = _ksNodeScope?.Reflood ?? this._toReflood;
+            var _toRemove = _ksNodeScope?.Remove ?? this._toRemove;
+            // KS14 end
             // "Why is there a separate queue for group remakes and node refloods when they both cause eachother"
             // Future planning for the potential ability to do more intelligent group updating.
 
@@ -345,7 +353,7 @@ namespace Content.Server.NodeContainer.EntitySystems
             return allNodes;
         }
 
-        private IEnumerable<Node> GetCompatibleNodes(Node node)
+        private IEnumerable<Node> GetCompatibleNodesCore(Node node) /* KS14: GetCompatibleNodes -> GetCompatibleNodesCore; scoped wrapper in partial extension. */
         {
             var xform = Transform(node.Owner);
             Entity<MapGridComponent>? gridEnt = TryComp<MapGridComponent>(xform.GridUid, out var grid) ? (xform.GridUid.Value, grid) : null;

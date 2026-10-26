@@ -9,10 +9,14 @@ internal static class KsProcgenOwnedInteriorHash
     internal static ulong Compute(KsProcgenRequest request, string themeId, KsProcgenGroupFloorSelection floor,
         KsProcgenGroupPartitionResult partition, KsProcgenThemeAssignmentResult themes, KsProcgenGroupWindowResult structure,
         IReadOnlyList<KsProcgenFurnishedRegion> furnishings, KsProcgenGroupLightingResult lighting,
-        KsProcgenGroupInteriorResult access, IReadOnlyList<KsProcgenSizeMixOutcome> sizeMix, IReadOnlyList<KsProcgenOwnedFallback> fallbacks)
+        KsProcgenGroupInteriorResult access, IReadOnlyList<KsProcgenSizeMixOutcome> sizeMix, IReadOnlyList<KsProcgenOwnedFallback> fallbacks,
+        KsProcgenGasBindingResult? gas = null, KsProcgenElectricalPlan? electrical = null)
     {
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-owned-interior-v2");
+        hash.AddString("ks-procgen-owned-interior-v10");
+        // Utility reservations contribute only when the corresponding complete stage exists.
+        if (electrical != null) { hash.AddString("electrical-plan-v1"); hash.AddString(electrical.PlanHash.ToString(CultureInfo.InvariantCulture)); }
+        if (gas != null) { hash.AddString("gas-binding-v1"); hash.AddString(gas.BindingHash.ToString(CultureInfo.InvariantCulture)); }
         hash.AddString(request.RequestId); hash.AddInt(request.Seed); hash.AddString(themeId);
         foreach (var value in new[] { floor.SelectionHash, partition.PartitionHash, structure.WindowProposalHash, access.AccessHash })
             hash.AddString(value.ToString(CultureInfo.InvariantCulture));
@@ -33,6 +37,7 @@ internal static class KsProcgenOwnedInteriorHash
             foreach (var id in new[] { theme.ThemeId, theme.TilePackId, theme.TilePaletteId, theme.WallPackId, theme.WallFamilyId,
                          theme.LightingPackId, theme.LightFixtureId, theme.DominantEntityPackId }) hash.AddString(id ?? "");
             hash.AddInt(BitConverter.SingleToInt32Bits(theme.FurnishingDensity));
+            hash.AddInt(theme.Content?.Goals.CoherentContents == true ? 1 : 0);
             hash.AddInt(theme.SupportingEntityPackIds.Count);
             foreach (var id in theme.SupportingEntityPackIds.OrderBy(id => id, StringComparer.Ordinal)) hash.AddString(id);
             hash.AddInt(region.UnplacedRequiredPacks.Count);
@@ -46,15 +51,36 @@ internal static class KsProcgenOwnedInteriorHash
             hash.AddString(room.RegionId); hash.AddInt((int) proposal.Status);
             hash.AddInt(proposal.TargetDominantClusters); hash.AddInt(proposal.PlacedDominantClusters);
             hash.AddInt(proposal.PreferenceSearchTruncated ? 1 : 0); hash.AddInt(proposal.RelationPathSearchTruncated ? 1 : 0);
+            hash.AddInt(proposal.Layered == null ? 0 : 1);
+            if (proposal.Layered is { } layered)
+            {
+                hash.AddString("automatic-room-preferences-v1");
+                hash.AddInt(layered.Placement.PreferenceScore.MissedRelations);
+                hash.AddString(layered.Placement.PreferenceScore.DistancePenalty.ToString(CultureInfo.InvariantCulture));
+                hash.AddInt(layered.Composition.Instances.Count);
+                foreach (var instance in layered.Composition.Instances)
+                {
+                    hash.AddInt((int) instance.Origin); hash.AddString(instance.PackId); hash.AddString(instance.CoreId); hash.AddInt(instance.CopyIndex);
+                    hash.AddString(instance.Assembly.AssemblyId); hash.AddString(instance.Assembly.VariantId); hash.AddString(instance.Assembly.AnchorMember);
+                }
+                hash.AddInt(layered.Placement.RootPreferenceOutcomes.Count);
+                foreach (var outcome in layered.Placement.RootPreferenceOutcomes)
+                {
+                    hash.AddString(outcome.Subject); hash.AddString(outcome.Target);
+                    hash.AddInt(outcome.MinimumDistance); hash.AddInt(outcome.MaximumDistance);
+                    hash.AddString(outcome.Distance.ToString(CultureInfo.InvariantCulture));
+                    hash.AddString(outcome.Penalty.ToString(CultureInfo.InvariantCulture));
+                }
+            }
             AddCells(proposal.ProtectedPassageCells);
             hash.AddInt(proposal.Entities.Count);
-            foreach (var entity in proposal.Entities.OrderBy(entity => entity.PackId, StringComparer.Ordinal)
+            foreach (var entity in proposal.Entities.OrderBy(entity => entity.Origin).ThenBy(entity => entity.PackId, StringComparer.Ordinal)
                          .ThenBy(entity => entity.CoreId, StringComparer.Ordinal).ThenBy(entity => entity.ClusterIndex)
                          .ThenBy(entity => entity.EntryId, StringComparer.Ordinal).ThenBy(entity => entity.Cell.Y).ThenBy(entity => entity.Cell.X))
             {
                 foreach (var id in new[] { entity.PackId, entity.EntryId, entity.EntityId, entity.CoreId, entity.AssemblyId, entity.VariantId })
                     hash.AddString(id ?? "");
-                hash.AddInt((int) entity.Role); hash.AddInt((int) entity.Movement); AddCell(entity.Cell);
+                hash.AddInt((int) entity.Origin); hash.AddInt((int) entity.Role); hash.AddInt((int) entity.Movement); AddCell(entity.Cell);
                 AddCells(entity.OccupiedCells); hash.AddInt(entity.QuarterTurns); hash.AddInt(entity.ClusterIndex);
                 AddNullableCell(entity.InteractionApproach); AddNullableCell(entity.DeclaredApproachLanding);
             }

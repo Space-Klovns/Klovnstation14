@@ -1,16 +1,20 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Placeable;
+using Content.Shared.Atmos.Piping.Components;
+using Content.Server.NodeContainer.EntitySystems;
+using Content.Shared.NodeContainer;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 
 namespace Content.IntegrationTests.Tests._KS14.Procedural;
 
 /// <summary>Pair-local insertion/initialization fault fixture; inactive without an explicit target prototype.</summary>
-public sealed class KsProcgenInsertionTestSystem : EntitySystem
+public sealed partial class KsProcgenInsertionTestSystem : EntitySystem
 {
     public string? TargetPrototypeId;
     public int ItemSlotAttempts;
@@ -32,6 +36,8 @@ public sealed class KsProcgenInsertionTestSystem : EntitySystem
     public int SpawnExtraOnStartup;
     public bool ThrowOnStartup;
     public Action<EntityUid, EntityUid>? ItemPlacedAction;
+    public Action<EntityUid>? GasTileChangedAction;
+    public Action<EntityUid>? NodesRebuiltAction;
 
     public override void Initialize()
     {
@@ -41,11 +47,16 @@ public sealed class KsProcgenInsertionTestSystem : EntitySystem
         SubscribeLocalEvent<ShuttleDestinationCoordinatesComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<ShuttleDestinationCoordinatesComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<ItemPlacerComponent, ItemPlacedEvent>(OnItemPlaced);
+        // The integration project has no subscription generator; keep this fault hook explicit.
+        SubscribeLocalEvent<TransformComponent, AtmosDeviceTileChangedEvent>(OnGasTileChanged);
+        SubscribeLocalEvent<NodeContainerComponent, NodeGroupsRebuilt>(OnNodesRebuilt);
     }
 
     public void Reset()
     {
         TargetPrototypeId = null;
+        GasTileChangedAction = null;
+        NodesRebuiltAction = null;
         ItemSlotAttempts = ContainerAttempts = CancelItemSlotOnAttempt = CancelContainerOnAttempt = 0;
         ThrowItemSlotOnAttempt = ThrowContainerOnAttempt = MapInitAttempts = CancelTokenOnContainerAttempt = 0;
         ThrowOnMapInit = CancelTokenOnMapInit = false;
@@ -62,6 +73,9 @@ public sealed class KsProcgenInsertionTestSystem : EntitySystem
 
     private bool Selected(EntityUid uid) => TargetPrototypeId != null &&
         MetaData(uid).EntityPrototype?.ID == TargetPrototypeId;
+
+    private void OnNodesRebuilt(Entity<NodeContainerComponent> entity, ref NodeGroupsRebuilt args) =>
+        NodesRebuiltAction?.Invoke(entity.Owner);
 
     private void OnItemPlaced(Entity<ItemPlacerComponent> entity, ref ItemPlacedEvent args)
     {
@@ -121,4 +135,7 @@ public sealed class KsProcgenInsertionTestSystem : EntitySystem
         if (ThrowOnStartup)
             throw new InvalidOperationException("KS procgen fixture startup failure.");
     }
+
+    private void OnGasTileChanged(Entity<TransformComponent> entity, ref AtmosDeviceTileChangedEvent args) =>
+        GasTileChangedAction?.Invoke(entity.Owner);
 }

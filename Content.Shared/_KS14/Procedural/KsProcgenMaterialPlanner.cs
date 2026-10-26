@@ -39,7 +39,7 @@ public static class KsProcgenMaterialPlanner
     {
         if (prototypeManager == null || assignment == null || partition == null ||
             assignment.Status != KsProcgenThemeAssignmentStatus.Selected ||
-            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded)
+            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded or KsProcgenPartitionStatus.RequiredRoomRejected)
             return Invalid("InvalidMaterialInput");
 
         var expectedFloor = new HashSet<Vector2i>(partition.FloorCells);
@@ -63,12 +63,10 @@ public static class KsProcgenMaterialPlanner
         foreach (var region in assignment.Regions.OrderBy(region => region.Id, StringComparer.Ordinal))
         {
             if (string.IsNullOrWhiteSpace(region.Id) || !regionIds.Add(region.Id) ||
-                !prototypeManager.TryIndex<KsProcgenTilePackPrototype>(region.Theme.TilePackId, out var tilePack) ||
-                !prototypeManager.TryIndex<KsProcgenWallPackPrototype>(region.Theme.WallPackId, out var wallPack))
+                !KsProcgenSelectedContent.TryTile(prototypeManager, region.Theme, out var palette) ||
+                !KsProcgenSelectedContent.TryWall(prototypeManager, region.Theme, out var family))
                 return Invalid("InvalidMaterialSelection");
 
-            var palette = tilePack.Palettes.SingleOrDefault(candidate => candidate.Id == region.Theme.TilePaletteId);
-            var family = wallPack.Families.SingleOrDefault(candidate => candidate.Id == region.Theme.WallFamilyId);
             if (palette == null || family == null || string.IsNullOrWhiteSpace(palette.PrimaryTile) ||
                 string.IsNullOrWhiteSpace(family.InteriorWall) || !float.IsFinite(palette.AccentFraction) ||
                 palette.AccentFraction is < 0f or > 1f)

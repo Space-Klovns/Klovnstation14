@@ -31,28 +31,19 @@ public enum KsProcgenContainerStagePhase : byte
 }
 
 /// <summary>Owned, paused preview. Container membership is not full placement or publication proof.</summary>
-public sealed class KsProcgenContainerStage
+public sealed class KsProcgenContainerStage : KsProcgenStageHandle
 {
     internal KsProcgenContainerStage(MapId mapId, EntityUid mapUid, KsProcgenAssemblySupportPlan structure,
         Dictionary<string, EntityUid> members, List<EntityUid> spawnedEntities, int maxSpawnedEntities)
+        : base(mapId, mapUid, KsProcgenStageKind.Container, spawnedEntities, maxSpawnedEntities)
     {
-        MapId = mapId;
-        MapUid = mapUid;
         Structure = structure;
         Members = new ReadOnlyDictionary<string, EntityUid>(members);
-        SpawnedEntities = spawnedEntities;
-        MaxSpawnedEntities = maxSpawnedEntities;
     }
 
-    public MapId MapId { get; }
-    public EntityUid MapUid { get; }
     public IReadOnlyDictionary<string, EntityUid> Members { get; }
-    public bool Active { get; internal set; } = true;
-    public KsProcgenContainerStagePhase Phase { get; internal set; }
-    /// <summary>Cumulative allocations, including the map and subsequently deleted initializer entities.</summary>
-    public int SpawnedEntityCount => SpawnedEntities.Count;
-    public int MaxSpawnedEntities { get; }
-    internal List<EntityUid> SpawnedEntities { get; }
+    public KsProcgenContainerStagePhase Phase => InitializationPhase == KsProcgenStageInitializationPhase.Initialized
+        ? KsProcgenContainerStagePhase.Initialized : KsProcgenContainerStagePhase.Uninitialized;
     internal KsProcgenAssemblySupportPlan Structure { get; }
 }
 
@@ -65,10 +56,8 @@ public sealed record KsProcgenContainerStageResult(
 /// </summary>
 public sealed partial class KsProcgenContainerStageSystem : EntitySystem
 {
-    public const int MaximumRetainedStages = 16;
-    public const int MaximumSpawnedEntitiesPerStage = 256;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
-    [Dependency] private IComponentFactory _componentFactory = default!;
+    public const int MaximumRetainedStages = KsProcgenStageOwnershipSystem.MaximumRetainedPerKind;
+    public const int MaximumSpawnedEntitiesPerStage = KsProcgenPreviewOperationSystem.MaximumAllocationsPerStage;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
@@ -76,30 +65,25 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
     [Dependency] private KsProcgenContainerPreflightSystem _preflightSystem = default!;
     [Dependency] private KsProcgenPreviewOperationSystem _operationSystem = default!;
 
-    private readonly Dictionary<MapId, KsProcgenContainerStage> _stages = new();
-    private List<EntityUid>? _capturedEntities;
+    [Dependency] private KsProcgenStageOwnershipSystem _ownership = default!;
+    [Dependency] private KsProcgenStageLifecycleSystem _lifecycle = default!;
 
-    public int RetainedStageCount => _stages.Count;
+    public int RetainedStageCount => _ownership.Count(KsProcgenStageKind.Container);
 
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
-        EntityManager.EntityAdded += OnEntityAdded;
     }
 
     public override void Shutdown()
     {
-        EntityManager.EntityAdded -= OnEntityAdded;
         DiscardAll();
         base.Shutdown();
     }
 
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args) => DiscardAll();
 
-    // Allocation occurs before components/transforms exist. Only record here; never throw, inspect
-    // parents or delete an entity from this callback. Synchronous operation scope establishes ownership.
-    private void OnEntityAdded(Entity<MetaDataComponent> entity) => _capturedEntities?.Add(entity.Owner);
 
     public KsProcgenContainerStageResult TryStage(KsProcgenResolvedAssembly assembly,
         IReadOnlyCollection<string> selectedMemberIds, int maxMembers = 64,
@@ -115,11 +99,11 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
             return Failure(KsProcgenContainerStageStatus.Cancelled, "ContainerStageCancelled");
         if (maxSpawnedEntities is < 1 or > MaximumSpawnedEntitiesPerStage)
             return Failure(KsProcgenContainerStageStatus.InvalidInput, "InvalidContainerStageSpawnBudget");
-        if (_stages.Count >= MaximumRetainedStages)
+        if (!_ownership.CanRetain(KsProcgenStageKind.Container))
             return Failure(KsProcgenContainerStageStatus.BudgetExceeded, "ContainerStageRetentionBudget");
         if (selectedMemberIds.Count + 1 > maxSpawnedEntities)
             return Failure(KsProcgenContainerStageStatus.BudgetExceeded, "ContainerStageSpawnBudget");
-        if (!KsProcgenPrototypeCapabilityInspector.TryInspectAssembly(_prototypeManager, _componentFactory,
+        if (!KsProcgenPrototypeCapabilityInspector.TryInspectAssembly(ProtoMan, Factory,
                 assembly, out var capabilities, out var issue))
             return Failure(KsProcgenContainerStageStatus.InvalidInput, issue!.Code);
         var structure = KsProcgenAssemblySupportPlanner.Plan(assembly, selectedMemberIds, capabilities!);
@@ -140,7 +124,7 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
             return Failure(KsProcgenContainerStageStatus.InvalidInput, "ContainerStageOperationActive");
         try
         {
-            _capturedEntities = spawnedEntities;
+            _operationSystem.SetCapture(this, spawnedEntities);
             cancellationToken.ThrowIfCancellationRequested();
             mapUid = _mapSystem.CreateMap(out mapId, runMapInit: false);
             _mapSystem.SetPaused(mapId, true);
@@ -177,7 +161,7 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
             if (!VerifyContents(stage))
                 return Failure(KsProcgenContainerStageStatus.Rejected, "ContainerStageVerificationFailed");
             cancellationToken.ThrowIfCancellationRequested();
-            _stages.Add(mapId, stage);
+            _ownership.Attach(stage);
             retained = true;
             return new(KsProcgenContainerStageStatus.InsertedPreview, null, stage);
         }
@@ -191,7 +175,7 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
         }
         finally
         {
-            _capturedEntities = null;
+            _operationSystem.SetCapture(this, null);
             try
             {
                 if (!retained)
@@ -204,8 +188,7 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
         }
     }
 
-    private bool Owns(KsProcgenContainerStage stage) => stage != null && stage.Active &&
-        _stages.TryGetValue(stage.MapId, out var owned) && ReferenceEquals(stage, owned);
+    private bool Owns(KsProcgenContainerStage stage) => _ownership.Owns(stage);
 
     public bool Verify(KsProcgenContainerStage stage) => Owns(stage) && VerifyContents(stage);
 
@@ -213,65 +196,24 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
     public KsProcgenContainerStageResult TryInitialize(KsProcgenContainerStage stage,
         CancellationToken cancellationToken = default)
     {
-        if (!Owns(stage))
-            return Failure(KsProcgenContainerStageStatus.InvalidInput, "ContainerStageNotOwned");
-        if (!_operationSystem.TryEnter(this))
-            return Failure(KsProcgenContainerStageStatus.InvalidInput, "ContainerStageOperationActive");
-        try
-        {
-            _capturedEntities = stage.SpawnedEntities;
-            cancellationToken.ThrowIfCancellationRequested();
-            if (!VerifyContents(stage))
-            {
-                DiscardAfterOperation(stage);
-                return Failure(KsProcgenContainerStageStatus.Rejected, "ContainerStageInitializationPrecondition");
-            }
-            cancellationToken.ThrowIfCancellationRequested();
-            if (stage.Phase == KsProcgenContainerStagePhase.Initialized)
-                return new(KsProcgenContainerStageStatus.InitializedPreview, null, stage);
-            // An uninitialized map is implicitly paused; retain an explicit pause across initialization.
-            _mapSystem.SetPaused(stage.MapId, true);
-            _mapSystem.InitializeMap(stage.MapId, unpause: false);
-            stage.Phase = KsProcgenContainerStagePhase.Initialized;
-            cancellationToken.ThrowIfCancellationRequested();
-            if (stage.SpawnedEntityCount > stage.MaxSpawnedEntities)
-            {
-                DiscardAfterOperation(stage);
-                return Failure(KsProcgenContainerStageStatus.BudgetExceeded, "ContainerStageInitializationSpawnBudget");
-            }
-            if (!VerifyContents(stage))
-            {
-                DiscardAfterOperation(stage);
-                return Failure(KsProcgenContainerStageStatus.Rejected, "ContainerStageInitializationFailed");
-            }
-            cancellationToken.ThrowIfCancellationRequested();
+        var result = _lifecycle.TryInitialize(stage, "ContainerStage", initialized => VerifyContents(stage) ? null :
+            initialized ? "ContainerStageInitializationFailed" : "ContainerStageInitializationPrecondition", cancellationToken);
+        if (result.Status == KsProcgenStageInitializationStatus.Initialized)
             return new(KsProcgenContainerStageStatus.InitializedPreview, null, stage);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        return Failure(result.Status switch
         {
-            DiscardAfterOperation(stage);
-            return Failure(KsProcgenContainerStageStatus.Cancelled, "ContainerStageInitializationCancelled");
-        }
-        catch (Exception)
-        {
-            DiscardAfterOperation(stage);
-            return Failure(KsProcgenContainerStageStatus.EngineFailure, "ContainerStageInitializationEngineFailure");
-        }
-        finally
-        {
-            _capturedEntities = null;
-            _operationSystem.Exit(this);
-        }
-    }
-
-    private void DiscardAfterOperation(KsProcgenContainerStage stage)
-    {
-        _capturedEntities = null;
-        DiscardOwned(stage);
+            KsProcgenStageInitializationStatus.InvalidInput => KsProcgenContainerStageStatus.InvalidInput,
+            KsProcgenStageInitializationStatus.Rejected => KsProcgenContainerStageStatus.Rejected,
+            KsProcgenStageInitializationStatus.BudgetExceeded => KsProcgenContainerStageStatus.BudgetExceeded,
+            KsProcgenStageInitializationStatus.Cancelled => KsProcgenContainerStageStatus.Cancelled,
+            _ => KsProcgenContainerStageStatus.EngineFailure,
+        }, result.IssueCode!);
     }
 
     private bool VerifyContents(KsProcgenContainerStage stage)
     {
+        if (stage.WasRetained && !Owns(stage)) return false;
+        if (EntityManager.IsQueuedForDeletion(stage.MapUid)) return false;
         if (stage.SpawnedEntityCount > stage.MaxSpawnedEntities)
             return false;
         foreach (var spawnedUid in stage.SpawnedEntities)
@@ -322,7 +264,7 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
 
     public bool Discard(KsProcgenContainerStage stage)
     {
-        if (_operationSystem.Active)
+        if (!Owns(stage) || _operationSystem.Active)
             return false;
         if (!_operationSystem.TryEnter(this))
             return false;
@@ -336,37 +278,20 @@ public sealed partial class KsProcgenContainerStageSystem : EntitySystem
         }
     }
 
-    private bool DiscardOwned(KsProcgenContainerStage stage)
-    {
-        if (stage == null || !stage.Active || !_stages.TryGetValue(stage.MapId, out var owned) || !ReferenceEquals(stage, owned))
-            return false;
-        _stages.Remove(stage.MapId);
-        stage.Active = false;
-        Cleanup(stage.MapId, stage.MapUid, stage.SpawnedEntities);
-        return true;
-    }
+    private bool DiscardOwned(KsProcgenContainerStage stage) => _ownership.Release(stage);
 
     public int DiscardAll()
     {
         if (_operationSystem.Active)
             return 0;
-        var stages = _stages.Values.ToArray();
+        var stages = _ownership.Snapshot(KsProcgenStageKind.Container).Cast<KsProcgenContainerStage>().ToArray();
         foreach (var stage in stages)
             Discard(stage);
         return stages.Length;
     }
 
     private void Cleanup(MapId mapId, EntityUid mapUid, IEnumerable<EntityUid> members)
-    {
-        // Delete recorded members even if an event moved them off the owned map.
-        foreach (var memberUid in members.Reverse().ToArray())
-        {
-            if (Exists(memberUid))
-                Del(memberUid);
-        }
-        if (_mapSystem.TryGetMap(mapId, out var actualMapUid) && actualMapUid == mapUid)
-            _mapSystem.DeleteMap(mapId);
-    }
+        => _ownership.Cleanup(mapId, mapUid, members);
 
     private static KsProcgenContainerStageResult Failure(KsProcgenContainerStageStatus status, string code) =>
         new(status, new KsProcgenIssue(code, "Container assembly preview could not be retained."), null);

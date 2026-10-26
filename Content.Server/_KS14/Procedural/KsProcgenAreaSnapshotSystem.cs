@@ -57,10 +57,19 @@ public sealed partial class KsProcgenAreaSnapshotSystem : EntitySystem
             KsProcgenAreaGoalsProfile? goals = null;
             if (profilePrototype.GenerationGoals != null && !KsProcgenAreaGoals.TrySnapshot(profilePrototype.GenerationGoals, out goals))
                 return Fail(KsProcgenStatus.InvalidInput, "InvalidAreaGenerationGoals");
+            KsProcgenAtmosphereProfile? atmosphere = null;
+            if (profilePrototype.AtmosphereProfile != null &&
+                !KsProcgenAtmosphereProfiles.TryResolve(ProtoMan, profilePrototype.AtmosphereProfile, out atmosphere, out var atmosphereIssue))
+                return Fail(KsProcgenStatus.InvalidInput, atmosphereIssue!.Code);
+            KsProcgenElectricalProfile? electrical = null;
+            if (profilePrototype.ElectricalProfile != null &&
+                !KsProcgenElectricalProfiles.TryResolve(ProtoMan, profilePrototype.ElectricalProfile, out electrical, out var electricalIssue))
+                return Fail(KsProcgenStatus.InvalidInput, electricalIssue!.Code);
             profiles.TryAdd(profilePrototype.ID, new KsProcgenAreaProfile(profilePrototype.ID, profilePrototype.Mode, profilePrototype.GeometryMode,
                 profilePrototype.ConnectivityPolicy, profilePrototype.Theme,
                 profilePrototype.Limits.MaxCells, profilePrototype.Limits.MaxAbsoluteCoordinate,
-                EntranceConnections: profilePrototype.EntranceConnections) { RoomSubdivision = subdivision, GenerationGoals = goals });
+                EntranceConnections: profilePrototype.EntranceConnections)
+                { RoomSubdivision = subdivision, GenerationGoals = goals, Atmosphere = atmosphere, Electrical = electrical });
             if (profilePrototype.EntranceConnections != null)
             {
                 if (!ProtoMan.TryIndex<KsProcgenEntranceConnectionsPrototype>(profilePrototype.EntranceConnections, out var connectionPrototype) ||

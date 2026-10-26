@@ -7,7 +7,7 @@ using Content.Shared._KS14.Procedural;
 namespace Content.Server._KS14.Procedural;
 
 /// <summary>Static tile schematic, never an operational map preview or a staging receipt.</summary>
-public static class KsProcgenDiagnosticSvg
+public static partial class KsProcgenDiagnosticSvg
 {
     private static readonly string[] RoomColors = ["#d4e7fa", "#e0efd1", "#f5dfbe", "#e7d8f2", "#ccece6"];
 
@@ -28,6 +28,8 @@ public static class KsProcgenDiagnosticSvg
             return KsProcgenDiagnosticExport.Fail(KsProcgenDiagnosticExportStatus.BudgetExceeded, "DiagnosticSvgDetailBudget");
         if (report.Entities.Any(entity => entity.QuarterTurns is < 0 or > 3))
             return KsProcgenDiagnosticExport.Fail(KsProcgenDiagnosticExportStatus.InvalidInput, "InvalidDiagnosticSvgFacing");
+        var supportedIssue = ValidateSupported(report, maximumCells * 16L);
+        if (supportedIssue != null) return supportedIssue;
         var cells = layers.SelectMany(layer => layer).Distinct().ToArray();
         if (cells.Length == 0 || cells.Any(cell => Math.Abs((long) cell.X) > 1_000_000 || Math.Abs((long) cell.Y) > 1_000_000))
             return KsProcgenDiagnosticExport.Fail(KsProcgenDiagnosticExportStatus.InvalidInput, "InvalidDiagnosticSvgGeometry");
@@ -40,6 +42,8 @@ public static class KsProcgenDiagnosticSvg
         if (width > maximumDimension || height > maximumDimension)
             return KsProcgenDiagnosticExport.Fail(KsProcgenDiagnosticExportStatus.BudgetExceeded, "DiagnosticSvgDimensionBudget");
         var displayWidth = Math.Max(width + 2, 30);
+        var containedRows = Math.Min(report.SupportedEntities.Count(member => !member.Exposed), 16);
+        var displayHeight = (double) height + 4.0 + (containedRows > 0 ? (double) containedRows * 0.5 + 0.8 : 0.0);
         using var stream = new KsProcgenDiagnosticExport.KsProcgenBoundedDiagnosticStream(maximumBytes);
         try
         {
@@ -47,9 +51,9 @@ public static class KsProcgenDiagnosticSvg
                 { Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), Indent = true, CloseOutput = false }))
             {
                 writer.WriteStartElement("svg", "http://www.w3.org/2000/svg");
-                writer.WriteAttributeString("viewBox", FormattableString.Invariant($"{minimumX - 1} {-maximumY - 3} {displayWidth} {height + 4}"));
+                writer.WriteAttributeString("viewBox", FormattableString.Invariant($"{minimumX - 1} {-maximumY - 3} {displayWidth} {displayHeight}"));
                 writer.WriteAttributeString("width", (displayWidth * 24).ToString(CultureInfo.InvariantCulture));
-                writer.WriteAttributeString("height", ((height + 4) * 24).ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("height", (displayHeight * 24.0).ToString(CultureInfo.InvariantCulture));
                 writer.WriteStartElement("title");
                 writer.WriteString($"{report.RequestId}: {report.Status}; proposed geometry, engine access/gas/lighting unverified");
                 writer.WriteEndElement();
@@ -89,7 +93,8 @@ public static class KsProcgenDiagnosticSvg
                 foreach (var cell in report.PreservedCells) Dot(cell, "#7d3c98", "0.16");
                 foreach (var cell in report.EntranceCells) Dot(cell, "#f08b27", "0.22");
                 foreach (var door in report.Doors) Dot(door.Threshold, "#007dba", "0.2");
-                foreach (var entity in report.Entities)
+                var supportedRegions = report.SupportedEntities.Select(entity => entity.RegionId).ToHashSet(StringComparer.Ordinal);
+                foreach (var entity in report.Entities.Where(entity => !supportedRegions.Contains(entity.RegionId)))
                 {
                     writer.WriteStartElement("g");
                     writer.WriteStartElement("title");
@@ -111,6 +116,7 @@ public static class KsProcgenDiagnosticSvg
                     }
                     writer.WriteEndElement();
                 }
+                WriteSupported(writer, report);
                 writer.WriteStartElement("text");
                 writer.WriteAttributeString("x", minimumX.ToString(CultureInfo.InvariantCulture));
                 writer.WriteAttributeString("y", (-maximumY - 2).ToString(CultureInfo.InvariantCulture));
@@ -122,9 +128,12 @@ public static class KsProcgenDiagnosticSvg
                 writer.WriteAttributeString("x", minimumX.ToString(CultureInfo.InvariantCulture));
                 writer.WriteAttributeString("y", (height - maximumY + 0.6).ToString(CultureInfo.InvariantCulture));
                 writer.WriteAttributeString("font-size", "0.35");
-                writer.WriteString("Blue: doors; orange: entrances; green: protected paths; purple: preserved. Engine verification pending.");
-                if (report.EntriesTruncated || report.GeometryTruncated) writer.WriteString(" TRUNCATED DIAGNOSTICS.");
+                writer.WriteString(report.SupportedEntities.Count > 0
+                    ? "Brown: floor; blue: wall; gold: surface. Green: access; purple: required relation. Proposed geometry."
+                    : "Blue: doors; orange: entrances; green: protected paths; purple: preserved. Engine verification pending.");
+                if (report.EntriesTruncated || report.GeometryTruncated || report.InputWorkTruncated) writer.WriteString(" TRUNCATED DIAGNOSTICS.");
                 writer.WriteEndElement();
+                WriteContainedSummary(writer, report, minimumX, (double) height - (double) maximumY + 1.2);
                 writer.WriteEndElement();
             }
             return new(KsProcgenDiagnosticExportStatus.Complete, null, stream.ToArray());

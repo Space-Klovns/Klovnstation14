@@ -55,21 +55,38 @@ public static class KsProcgenGroupHullWallPlanner
             .GroupBy(edge => edge.BoundaryCell).ToDictionary(group => group.Key, group => group.Select(edge => edge.FloorCell).ToHashSet());
         var regionByFloor = themes.Regions.SelectMany(region => region.FloorCells.Select(cell => (cell, region.Id)))
             .ToDictionary(entry => entry.cell, entry => entry.Id);
+        var utilityByCell = new Dictionary<Vector2i, HashSet<string>>();
+        foreach (var region in themes.Regions.Where(region => region.UtilityRoom != null))
+        foreach (var cell in region.UtilityRoom!.ReusedHullCells)
+        {
+            if (expanded >= maximumExpandedCells)
+                return Fail(KsProcgenGroupMaterialStatus.BudgetExceeded, "UtilityHullMaterialBudget");
+            expanded++;
+            if (!boundary.RequiredEnvelopeCells.Contains(cell))
+                return Fail(KsProcgenGroupMaterialStatus.InvalidInput, "StaleUtilityHullMaterialClaim");
+            if (!utilityByCell.TryGetValue(cell, out var owners))
+                utilityByCell.Add(cell, owners = new(StringComparer.Ordinal));
+            owners.Add(region.Id);
+        }
         var walls = new List<KsProcgenWallChoice>();
         foreach (var cell in KsProcgenGeometry.SortCells(boundary.RequiredEnvelopeCells))
         {
             if (expanded >= maximumExpandedCells)
                 return Fail(KsProcgenGroupMaterialStatus.BudgetExceeded, "HullWallSelectionExpansionBudget");
             expanded++;
-            var regionIds = incidentByCell[cell].Select(floor => regionByFloor[floor])
+            var incidentRegions = incidentByCell.TryGetValue(cell, out var incident) ?
+                incident.Select(floor => regionByFloor[floor]) : Enumerable.Empty<string>();
+            var utilityRegions = utilityByCell.TryGetValue(cell, out var utilityOwners) ? utilityOwners : Enumerable.Empty<string>();
+            var regionIds = incidentRegions.Concat(utilityRegions)
                 .Distinct(StringComparer.Ordinal).OrderBy(id => id, StringComparer.Ordinal).ToArray();
+            if (regionIds.Length == 0)
+                return Fail(KsProcgenGroupMaterialStatus.InvalidInput, "MissingUtilityHullMaterialOwner");
             string? entityId = null;
             foreach (var regionId in regionIds)
             {
                 var theme = regionById[regionId].Theme;
-                var family = prototypeManager.Index<KsProcgenWallPackPrototype>(theme.WallPackId)
-                    .Families.Single(candidate => candidate.Id == theme.WallFamilyId);
-                if (string.IsNullOrWhiteSpace(family.HullWall) || !prototypeManager.TryIndex<EntityPrototype>(family.HullWall, out _))
+                if (!KsProcgenSelectedContent.TryWall(prototypeManager, theme, out var family) ||
+                    string.IsNullOrWhiteSpace(family!.HullWall) || !prototypeManager.TryIndex<EntityPrototype>(family.HullWall, out _))
                     return Fail(KsProcgenGroupMaterialStatus.IncompatibleMaterials, "MissingOwnedHullWallMaterial");
                 if (entityId != null && entityId != family.HullWall)
                     return Fail(KsProcgenGroupMaterialStatus.IncompatibleMaterials, "ConflictingOwnedHullWallMaterials");

@@ -45,7 +45,7 @@ public static class KsProcgenDiagnosticExport
         {
             var data = new
             {
-                SchemaVersion = 1, Kind = "AreaSnapshot", Status = snapshot.Status.ToString(), ReasonCode = snapshot.Issue?.Code,
+                SchemaVersion = 3, Kind = "AreaSnapshot", Status = snapshot.Status.ToString(), ReasonCode = snapshot.Issue?.Code,
                 SnapshotHash = snapshot.SnapshotHash.ToString(CultureInfo.InvariantCulture), snapshot.MarkerCount,
                 Published = false, PlanGenerated = false, EngineContextVerified = false,
                 Blobs = snapshot.Blobs.OrderBy(blob => blob.Id, StringComparer.Ordinal).Select(blob => new
@@ -54,6 +54,8 @@ public static class KsProcgenDiagnosticExport
                     Mode = blob.Profile.Mode.ToString(), GeometryMode = blob.Profile.GeometryMode.ToString(),
                     ConnectivityPolicy = blob.Profile.ConnectivityPolicy.ToString(), blob.Profile.RoomSubdivision,
                     blob.Profile.GenerationGoals,
+                    blob.Profile.Atmosphere,
+                    blob.Profile.Electrical,
                     Cells = blob.Cells.Select(cell => new KsProcgenDiagnosticCell(cell.X, cell.Y)),
                     Entrances = blob.Entrances.OrderBy(entrance => entrance.PortId, StringComparer.Ordinal).Select(entrance => new
                     {

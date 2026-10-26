@@ -44,6 +44,7 @@ public sealed class KsProcgenGeometryPipelineResult
     public bool HasSoftSizeMixDeviation => FinalSizeMixOutcomes.Any(item =>
         item.AchievedCount != item.RequestedCount);
     public ulong SemanticHash { get; init; }
+    public ulong ContentDeclarationHash { get; init; }
     public ulong? ConstantContractHash { get; init; }
     public bool HasUnverifiedConstantRegions { get; init; }
     public bool HasUnverifiedHardWindowGoal { get; init; }
@@ -69,7 +70,8 @@ public static class KsProcgenGeometryPipeline
         int maxPartitionMerges = 256,
         int maxFurnishingProbes = 4_096,
         int maxLightingFixtures = 4_096,
-        IReadOnlyList<KsProcgenWindowBoundaryCell>? inspectedWindowBoundary = null)
+        IReadOnlyList<KsProcgenWindowBoundaryCell>? inspectedWindowBoundary = null,
+        KsProcgenThemeCatalog? content = null)
     {
         if (prototypeManager == null || request == null || families == null || string.IsNullOrWhiteSpace(themeId) ||
             maxFurnishingProbes <= 0 || maxFurnishingProbes > 4_096 ||
@@ -79,6 +81,33 @@ public static class KsProcgenGeometryPipeline
                 Status = KsProcgenGeometryPipelineStatus.InvalidInput,
                 Issue = new KsProcgenIssue("InvalidPipelineInput", "A request, library, manager, and theme are required."),
             };
+
+        if (request.SchemaVersion is not (1 or 2))
+            return new() { Status = KsProcgenGeometryPipelineStatus.InvalidInput,
+                Issue = new("UnsupportedRequestSchema", "Generation request schema version 1 or 2 is required.") };
+
+        if (!KsProcgenUtilityContracts.CheckPlanningSupport(request, out var utilityIssue))
+            return new() { Status = KsProcgenGeometryPipelineStatus.InvalidInput, Issue = utilityIssue };
+
+        if (content != null && content.Theme.Id != themeId)
+            return new() { Status = KsProcgenGeometryPipelineStatus.InvalidInput,
+                Issue = new("MismatchedThemeCatalog", "Captured theme content must match the requested theme.") };
+
+        if (content?.Theme.Atmosphere != null || content?.Theme.Electrical != null)
+            return new() { Status = KsProcgenGeometryPipelineStatus.InvalidInput,
+                Issue = content.Theme.Atmosphere != null
+                    ? new("AtmospherePlanningUnsupported", "Captured atmosphere defaults require integrated gas planning.")
+                    : new("ElectricalPlanningUnsupported", "Captured electrical defaults require integrated power planning.") };
+
+        if (!KsProcgenAtmosphereProfiles.CheckPlanningSupport(prototypeManager, request, out var atmosphereIssue, themeId: content == null ? themeId : null))
+            return new()
+            {
+                Status = KsProcgenGeometryPipelineStatus.InvalidInput,
+                Issue = atmosphereIssue,
+            };
+
+        if (!KsProcgenElectricalProfiles.CheckPlanningSupport(prototypeManager, request, out var electricalIssue, themeId: content == null ? themeId : null))
+            return new() { Status = KsProcgenGeometryPipelineStatus.InvalidInput, Issue = electricalIssue };
 
         var packing = KsProcgenPackingPlanner.Plan(request, families, packingBudgets, inspectedExistingPassages);
         if (packing.Status != KsProcgenPackingStatus.GeometryReady)
@@ -117,7 +146,7 @@ public static class KsProcgenGeometryPipeline
 
         var reserved = packing.ResidualRouting?.ReservedPassageCells ?? new HashSet<Vector2i>();
         var partition = KsProcgenPartitionPlanner.Plan(fill, reserved, maxMergeAttempts: maxPartitionMerges);
-        if (partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded)
+        if (partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded or KsProcgenPartitionStatus.RequiredRoomRejected)
             return new KsProcgenGeometryPipelineResult
             {
                 Status = partition.Status == KsProcgenPartitionStatus.BudgetExceeded
@@ -129,7 +158,7 @@ public static class KsProcgenGeometryPipeline
             };
 
         var themes = KsProcgenThemeAssignmentPlanner.Plan(prototypeManager, themeId,
-            request.Seed, fill, partition);
+            request.Seed, fill, partition, content: content);
         if (themes.Status != KsProcgenThemeAssignmentStatus.Selected)
             return new KsProcgenGeometryPipelineResult
             {
@@ -403,6 +432,7 @@ public static class KsProcgenGeometryPipeline
             HasUnverifiedHardWindowGoal = request.WindowGoal.HardFraction ||
                 request.WindowGoal.MinimumCount > 0 || request.WindowGoal.MaximumCount.HasValue,
             HasUnplacedRequiredEntityPacks = themes.Regions.Any(region => region.UnplacedRequiredPacks.Count > 0),
+            ContentDeclarationHash = content?.DeclarationHash ?? 0,
             SemanticHash = HashPlan(request, shape!, themeId, packing, fill, partition, themes, materials,
                 hullBoundary, portNetwork, inspectedExistingPassages, inspectedWindowBoundary, windows,
                 furnishings, lighting, finalSizeMix),

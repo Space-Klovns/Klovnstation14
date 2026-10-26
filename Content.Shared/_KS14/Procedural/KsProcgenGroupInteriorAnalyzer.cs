@@ -13,6 +13,7 @@ public sealed class KsProcgenGroupInteriorResult
     public KsProcgenEntranceSceneResult? Analysis { get; init; }
     public IReadOnlySet<Vector2i> BlockedCells { get; init; } = FrozenSet<Vector2i>.Empty;
     public int ExpandedCells { get; init; }
+    public int LandingProbes { get; init; }
     public ulong AccessHash { get; init; }
     public bool EngineAccessVerified => false;
 }
@@ -27,12 +28,14 @@ public static class KsProcgenGroupInteriorAnalyzer
 
     public static KsProcgenGroupInteriorResult Analyze(KsProcgenRequest request, KsProcgenGroupPartitionResult partition,
         KsProcgenThemeAssignmentResult themes, IReadOnlyList<KsProcgenFurnishedRegion> furnishings,
-        IReadOnlyList<KsProcgenLitRegion> lighting, int maximumExpandedCells = 262_144)
+        IReadOnlyList<KsProcgenLitRegion> lighting, int maximumExpandedCells = 262_144,
+        KsProcgenGroupWindowResult? structure = null, int maximumLandingProbes = 65_536)
     {
         var expanded = 0;
+        var landingProbes = 0;
         KsProcgenGroupInteriorResult Fail(KsProcgenEntranceSceneStatus status, string code) => new()
         {
-            Status = status, Issue = new(code, "Owned interior access audit did not validate."), ExpandedCells = expanded,
+            Status = status, Issue = new(code, "Owned interior access audit did not validate."), ExpandedCells = expanded, LandingProbes = landingProbes,
         };
         if (!KsProcgenGeometry.TryNormalize(request, out var shape, out var issue))
             return new() { Status = KsProcgenEntranceSceneStatus.InvalidInput, Issue = issue };
@@ -43,7 +46,7 @@ public static class KsProcgenGroupInteriorAnalyzer
             furnishings.Count != themes.Regions.Count || lighting.Count != themes.Regions.Count ||
             partition.FloorCells.Count > 4_096 || partition.Regions.Count is < 1 or > 256 ||
             partition.Regions.Sum(network => (long) network.Partition.DoorOpenings.Count) > 4_096 ||
-            maximumExpandedCells is < 0 or > 1_000_000)
+            maximumExpandedCells is < 0 or > 1_000_000 || maximumLandingProbes is < 0 or > 65_536)
             return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidGroupInteriorInput");
         var initial = KsProcgenEntranceSceneAnalyzer.AnalyzeNormalized(shape, request.ConnectivityPolicy, request.RootCells,
             partition.Analysis.ConfigurationId!, partition.Scene, Math.Min(131_072, maximumExpandedCells));
@@ -87,7 +90,39 @@ public static class KsProcgenGroupInteriorAnalyzer
                 return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidInteriorOwnership");
             var terminals = furniture.ProtectedPassageCells.ToHashSet();
             terminals.UnionWith(doorTerminals.Where(floor.Contains));
-            foreach (var entity in furniture.Entities)
+            if (furniture.Layered is { } layered)
+            {
+                if (structure?.Status != KsProcgenGroupWindowStatus.Planned || !furniture.Entities.SequenceEqual(layered.FloorEntities))
+                    return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidLayeredInteriorProjection");
+                var network = partition.Regions.Single(item => item.GroupIds.SequenceEqual(region.EntranceGroupIds));
+                var windowCells = structure.Windows.Select(window => window.Cell).ToHashSet();
+                var expectedWalls = KsProcgenLayeredFurnishingPlanner.SupportWalls(floor, structure.RemainingWalls.Select(wall => wall.Cell)
+                    .Concat(network.Partition.WallCells.Where(cell => !windowCells.Contains(cell))));
+                if (!layered.Room.Floor.SetEquals(floor) || !layered.Room.Walls.SetEquals(expectedWalls) ||
+                    !layered.Room.Network.SetEquals(furniture.ProtectedPassageCells) || layered.Room.Blocking.Count != 0 || layered.Room.Occupied.Count != 0)
+                    return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "StaleLayeredInteriorMask");
+                var verified = KsProcgenSupportedAccessPlanner.Plan(layered.Assembly, layered.Assembly.Members.Select(member => member.Id).ToArray(),
+                    layered.Capabilities, layered.Placement.FloorRoots, layered.Placement.Orientations, layered.Placement.AssemblyQuarterTurns,
+                    layered.Room, maximumExpandedCells: Math.Min(65_536, maximumExpandedCells - expanded), maximumLandingProbes: maximumLandingProbes - landingProbes,
+                    fixedAccess: layered.Access.Access);
+                expanded += verified.ExpandedCells;
+                landingProbes += verified.LandingProbes;
+                if (verified.Status != KsProcgenSupportedAccessStatus.Candidate || verified.AccessHash != layered.Access.AccessHash)
+                    return Fail(verified.Status == KsProcgenSupportedAccessStatus.BudgetExceeded ? KsProcgenEntranceSceneStatus.BudgetExceeded :
+                        KsProcgenEntranceSceneStatus.Rejected, verified.Issue?.Code ?? "StaleLayeredInteriorAccess");
+                if (!KsProcgenPreferenceAudit.TryVerify(region, layered.Composition, layered.Capabilities, layered.Placement, verified, out var preferenceIssue))
+                    return Fail(KsProcgenEntranceSceneStatus.Rejected, preferenceIssue!.Code);
+                var wallMembers = verified.Poses!.Members.Where(pose => pose.Support.Layer == KsProcgenPlacementLayer.Wall)
+                    .Select(pose => pose.Support.MemberId).ToHashSet(StringComparer.Ordinal);
+                var mountCells = verified.Footprints.Where(footprint => wallMembers.Contains(footprint.MemberId))
+                    .SelectMany(footprint => footprint.Cells).ToHashSet();
+                if (layered.OccupiedCells.Any(cell => (!floor.Contains(cell) && !mountCells.Contains(cell)) ||
+                        !shape.CanWrite(cell) || !occupied.Add(cell)))
+                    return Fail(KsProcgenEntranceSceneStatus.Rejected, "LayeredFootprintOutsideWritable");
+                blocked.UnionWith(layered.BlockedCells);
+                terminals.UnionWith(verified.Access.Select(access => access.Approach));
+            }
+            else foreach (var entity in furniture.Entities)
             {
                 if (!Enum.IsDefined(entity.Movement) || entity.OccupiedCells.Count > 256 ||
                     entity.OccupiedCells.Any(cell => !floor.Contains(cell) || !shape.CanWrite(cell) || !occupied.Add(cell)))
@@ -107,6 +142,10 @@ public static class KsProcgenGroupInteriorAnalyzer
                     return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidInteriorLightFootprint");
                 blocked.Add(light.Cell);
             }
+            var lightCells = lights.Lights.Select(light => light.Cell).ToHashSet();
+            if (furniture.Layered is { } supported && supported.Access.Relations.Any(relation =>
+                    relation.CleanPath.Cells.Any(lightCells.Contains)))
+                return Fail(KsProcgenEntranceSceneStatus.Rejected, "BlockedLayeredRelationPath");
             if (lights.Status == KsProcgenLightingPlanStatus.NotRequested && lights.Lights.Count != 0)
                 return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "UnexpectedInteriorLights");
             floorByRegion.Add(region.Id, floor);
@@ -152,11 +191,13 @@ public static class KsProcgenGroupInteriorAnalyzer
         foreach (var regionId in regionIds.OrderBy(id => id, StringComparer.Ordinal))
         {
             hash.AddString(regionId);
+            if (furnishingById[regionId].Layered is { } layered)
+                hash.AddString(layered.Access.AccessHash.ToString(CultureInfo.InvariantCulture));
             var terminals = KsProcgenGeometry.SortCells(terminalsByRegion[regionId]);
             hash.AddInt(terminals.Count);
             foreach (var cell in terminals) { hash.AddInt(cell.X); hash.AddInt(cell.Y); }
         }
         return new() { Status = KsProcgenEntranceSceneStatus.Candidate, Scene = scene, Analysis = analysis,
-            BlockedCells = blocked.ToFrozenSet(), ExpandedCells = expanded, AccessHash = hash.Value };
+            BlockedCells = blocked.ToFrozenSet(), ExpandedCells = expanded, LandingProbes = landingProbes, AccessHash = hash.Value };
     }
 }

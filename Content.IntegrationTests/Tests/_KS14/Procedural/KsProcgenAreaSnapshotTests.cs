@@ -455,7 +455,7 @@ public sealed class KsProcgenAreaSnapshotTests : GameTest
             var mapSystem = Pair.Server.System<SharedMapSystem>();
             var snapshotSystem = Pair.Server.System<KsProcgenAreaSnapshotSystem>();
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
-            var profilePrototype = manager.Index<KsProcgenAreaProfilePrototype>("KsProcgenOfficeArea");
+            var profilePrototype = manager.Index(new ProtoId<KsProcgenAreaProfilePrototype>("KsProcgenOfficeArea"));
             var previousMaximum = profilePrototype.Limits.MaxCells;
             var mapUid = mapSystem.CreateMap(out var mapId, runMapInit: false);
             mapSystem.SetPaused(mapId, true);
@@ -663,7 +663,7 @@ public sealed class KsProcgenAreaSnapshotTests : GameTest
             try
             {
                 var grid = mapSystem.CreateGridEntity(mapId);
-                var profile = Pair.Server.ResolveDependency<IPrototypeManager>().Index<KsProcgenAreaProfilePrototype>("KsProcgenServiceArea");
+                var profile = Pair.Server.ResolveDependency<IPrototypeManager>().Index(new ProtoId<KsProcgenAreaProfilePrototype>("KsProcgenServiceArea"));
                 var previousReference = profile.EntranceConnections;
                 try
                 {

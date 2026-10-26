@@ -36,6 +36,7 @@ public sealed class KsProcgenSupportedAccessPlan
     public ulong AccessHash { get; init; }
     public int ExpandedCells { get; init; }
     public int LandingProbes { get; init; }
+    public bool PreferenceSearchTruncated { get; init; }
     public bool EnginePlacementVerified => false;
 }
 
@@ -58,7 +59,8 @@ public static class KsProcgenSupportedAccessPlanner
         IReadOnlyCollection<string> selectedMemberIds, KsProcgenAssemblyCapabilityReport capabilities,
         IReadOnlyList<KsProcgenFloorRootPose> floorRoots,
         IReadOnlyList<KsProcgenMemberOrientation> orientations, int assemblyQuarterTurns,
-        KsProcgenRoomAccessMask room, int maximumExpandedCells = 4096, int maximumLandingProbes = 4096)
+        KsProcgenRoomAccessMask room, int maximumExpandedCells = 4096, int maximumLandingProbes = 4096,
+        bool optimizePreferences = false, IReadOnlyList<KsProcgenSupportedAccess>? fixedAccess = null)
     {
         var budget = new KsProcgenRelationPathBudget(maximumExpandedCells: Math.Clamp(maximumExpandedCells, 0, 65_536));
         var landingProbes = 0;
@@ -120,7 +122,8 @@ public static class KsProcgenSupportedAccessPlanner
                 for (var x = (int) Math.Floor(centerX); x <= (int) Math.Ceiling(centerX + 1.0) - 1; x++)
                     cells.Add(new(x, y));
             }
-            if (cells.Any(cell => !room.Floor.Contains(cell) || room.Walls.Contains(cell)))
+            if (cells.Any(cell => pose.Support.Layer == KsProcgenPlacementLayer.Wall
+                    ? !room.Walls.Contains(cell) : !room.Floor.Contains(cell) || room.Walls.Contains(cell)))
                 return Fail(KsProcgenSupportedAccessStatus.Rejected, "SupportedFootprintOutsideRoom");
             if (definition.Entry.Role == KsProcgenEntityRole.Seat &&
                 (pose.Support.Layer != KsProcgenPlacementLayer.Floor || cells.Count != 1))
@@ -196,6 +199,12 @@ public static class KsProcgenSupportedAccessPlanner
             choices.Add((pose, allowed.Distinct().OrderByDescending(candidate => candidate.SeatId != null)
                 .ThenBy(candidate => candidate.Cell.Y).ThenBy(candidate => candidate.Cell.X).ToArray(), memberClean));
         }
+        if (fixedAccess != null && (fixedAccess.Count != choices.Count || fixedAccess.Any(item => item == null ||
+                !choices.Any(choice => choice.Pose.Support.MemberId == item.MemberId && choice.Pose.Support.Layer == item.Layer &&
+                    choice.Pose.QuarterTurns == item.QuarterTurns)) ||
+                fixedAccess.Select(item => item.MemberId).Distinct(StringComparer.Ordinal).Count() != fixedAccess.Count))
+            return Fail(KsProcgenSupportedAccessStatus.InvalidInput, "InvalidFixedSupportedAccess");
+        var fixedById = fixedAccess?.ToDictionary(item => item.MemberId, StringComparer.Ordinal);
         var footprints = projected.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair =>
             new KsProcgenSupportedFootprint(pair.Key, KsProcgenGeometry.SortCells(pair.Value))).ToList();
         var spatialRelations = assembly.Relations.Where(relation => relation.Kind is not
@@ -284,6 +293,8 @@ public static class KsProcgenSupportedAccessPlanner
             };
         }
         KsProcgenAssemblyRelationEvaluation? relations = null;
+        IReadOnlyList<KsProcgenSupportedAccess>? bestAccess = null;
+        var bestMissed = int.MaxValue;
         bool ChooseLandings(int index)
         {
             if (index == choices.Count)
@@ -292,12 +303,20 @@ public static class KsProcgenSupportedAccessPlanner
                 var evaluation = EvaluateRelations();
                 if (evaluation?.RequiredSatisfied != true)
                     return false;
-                relations = evaluation;
-                return true;
+                var missed = evaluation.PreferredApplicable - evaluation.PreferredSatisfied;
+                if (bestAccess == null || missed < bestMissed)
+                {
+                    bestAccess = KsProcgenReadOnly.Copy(access);
+                    bestMissed = missed;
+                    relations = evaluation;
+                }
+                return !optimizePreferences || bestMissed == 0;
             }
             var choice = choices[index];
             foreach (var candidate in choice.Landings)
             {
+                if (fixedById != null && (fixedById[choice.Pose.Support.MemberId].Approach != candidate.Cell ||
+                        fixedById[choice.Pose.Support.MemberId].AssociatedSeatMemberId != candidate.SeatId)) continue;
                 if (landingProbes >= maximumLandingProbes)
                 {
                     exhaustedCode = "SupportedLandingProbeBudget";
@@ -322,10 +341,12 @@ public static class KsProcgenSupportedAccessPlanner
             }
             return false;
         }
-        if (!ChooseLandings(0))
+        if (!ChooseLandings(0) && bestAccess == null)
             return exhaustedCode != null ? Fail(KsProcgenSupportedAccessStatus.BudgetExceeded, exhaustedCode) :
                 Fail(KsProcgenSupportedAccessStatus.Rejected, completedModel ?
                     "SupportedSpatialRelationUnmet" : "SupportedCleanApproachUnavailable");
+        access.Clear();
+        access.AddRange(bestAccess!);
         var hash = KsProcgenStableHash.Create();
         hash.AddString("ks-procgen-supported-access-v4");
         hash.AddInt(unchecked((int) poses.PoseHash));
@@ -391,6 +412,7 @@ public static class KsProcgenSupportedAccessPlanner
             PreferredRelationsApplicable = relations.PreferredApplicable,
             ExpandedCells = budget.ExpandedCells,
             LandingProbes = landingProbes,
+            PreferenceSearchTruncated = exhaustedCode != null,
         };
 
         void AddNullableCell(Vector2i? cell)

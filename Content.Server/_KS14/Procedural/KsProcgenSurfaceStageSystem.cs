@@ -27,38 +27,30 @@ public enum KsProcgenSurfaceStagePhase : byte
 }
 
 /// <summary>Owned drop-coordinate preview, not a mount, physical-contact or usable-front guarantee.</summary>
-public sealed class KsProcgenSurfaceStage
+public sealed class KsProcgenSurfaceStage : KsProcgenStageHandle
 {
     internal KsProcgenSurfaceStage(MapId mapId, EntityUid mapUid, EntityUid surfaceUid, EntityUid subjectUid,
         string surfacePrototypeId, string subjectPrototypeId, Vector2 dropPosition, int quarterTurns,
         List<EntityUid> spawnedEntities, int maxSpawnedEntities)
+        : base(mapId, mapUid, KsProcgenStageKind.Surface, spawnedEntities, maxSpawnedEntities)
     {
-        MapId = mapId;
-        MapUid = mapUid;
         SurfaceUid = surfaceUid;
         SubjectUid = subjectUid;
         SurfacePrototypeId = surfacePrototypeId;
         SubjectPrototypeId = subjectPrototypeId;
         DropPosition = dropPosition;
         QuarterTurns = quarterTurns;
-        SpawnedEntities = spawnedEntities;
-        MaxSpawnedEntities = maxSpawnedEntities;
     }
 
-    public MapId MapId { get; }
-    public EntityUid MapUid { get; }
     public EntityUid SurfaceUid { get; }
     public EntityUid SubjectUid { get; }
     public Vector2 DropPosition { get; }
     public int QuarterTurns { get; }
-    public bool Active { get; internal set; } = true;
-    public KsProcgenSurfaceStagePhase Phase { get; internal set; }
+    public KsProcgenSurfaceStagePhase Phase => InitializationPhase == KsProcgenStageInitializationPhase.Initialized
+        ? KsProcgenSurfaceStagePhase.Initialized : KsProcgenSurfaceStagePhase.Uninitialized;
     public bool PlacementVerified => false;
-    public int SpawnedEntityCount => SpawnedEntities.Count;
-    public int MaxSpawnedEntities { get; }
     internal string SurfacePrototypeId { get; }
     internal string SubjectPrototypeId { get; }
-    internal List<EntityUid> SpawnedEntities { get; }
 }
 
 public sealed record KsProcgenSurfaceStageResult(
@@ -72,33 +64,30 @@ public sealed record KsProcgenSurfaceStageResult(
 /// </summary>
 public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
 {
-    public const int MaximumRetainedStages = 16;
-    public const int MaximumSpawnedEntitiesPerStage = 256;
+    public const int MaximumRetainedStages = KsProcgenStageOwnershipSystem.MaximumRetainedPerKind;
+    public const int MaximumSpawnedEntitiesPerStage = KsProcgenPreviewOperationSystem.MaximumAllocationsPerStage;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private KsProcgenSurfacePreflightSystem _preflightSystem = default!;
     [Dependency] private KsProcgenPreviewOperationSystem _operationSystem = default!;
-    private readonly Dictionary<MapId, KsProcgenSurfaceStage> _stages = new();
-    private List<EntityUid>? _capturedEntities;
+    [Dependency] private KsProcgenStageOwnershipSystem _ownership = default!;
+    [Dependency] private KsProcgenStageLifecycleSystem _lifecycle = default!;
 
-    public int RetainedStageCount => _stages.Count;
+    public int RetainedStageCount => _ownership.Count(KsProcgenStageKind.Surface);
 
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
-        EntityManager.EntityAdded += OnEntityAdded;
     }
 
     public override void Shutdown()
     {
-        EntityManager.EntityAdded -= OnEntityAdded;
         DiscardAll();
         base.Shutdown();
     }
 
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args) => DiscardAll();
-    private void OnEntityAdded(Entity<MetaDataComponent> entity) => _capturedEntities?.Add(entity.Owner);
 
     public KsProcgenSurfaceStageResult TryStage(string surfacePrototypeId, string subjectPrototypeId,
         int subjectQuarterTurns = 0, CancellationToken cancellationToken = default,
@@ -114,7 +103,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
             return Failure(KsProcgenSurfaceStageStatus.InvalidInput, "InvalidSurfaceStageInput");
         if (cancellationToken.IsCancellationRequested)
             return Failure(KsProcgenSurfaceStageStatus.Cancelled, "SurfaceStageCancelled");
-        if (_stages.Count >= MaximumRetainedStages)
+        if (!_ownership.CanRetain(KsProcgenStageKind.Surface))
             return Failure(KsProcgenSurfaceStageStatus.BudgetExceeded, "SurfaceStageRetentionBudget");
         if (maxSpawnedEntities < 3)
             return Failure(KsProcgenSurfaceStageStatus.BudgetExceeded, "SurfaceStageSpawnBudget");
@@ -127,7 +116,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
         var retained = false;
         try
         {
-            _capturedEntities = spawnedEntities;
+            _operationSystem.SetCapture(this, spawnedEntities);
             cancellationToken.ThrowIfCancellationRequested();
             mapUid = _mapSystem.CreateMap(out mapId, runMapInit: false);
             _mapSystem.SetPaused(mapId, true);
@@ -150,7 +139,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
             if (Transform(subjectUid).NoLocalRotation && subjectQuarterTurns != 0)
                 return Failure(KsProcgenSurfaceStageStatus.Rejected, "SurfaceStageRotationUnsupported");
             _transformSystem.SetCoordinates(subjectUid, new EntityCoordinates(mapUid, dropPosition));
-            _transformSystem.SetLocalRotation(subjectUid, Angle.FromDegrees((double) subjectQuarterTurns * 90.0));
+            _transformSystem.SetLocalRotation(subjectUid, KsProcgenRotation.ToEngineAngle(subjectQuarterTurns));
             cancellationToken.ThrowIfCancellationRequested();
             if (spawnedEntities.Count > maxSpawnedEntities)
                 return Failure(KsProcgenSurfaceStageStatus.BudgetExceeded, "SurfaceStageSpawnBudget");
@@ -160,7 +149,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
             if (verificationIssue != null)
                 return Failure(KsProcgenSurfaceStageStatus.Rejected, verificationIssue);
             cancellationToken.ThrowIfCancellationRequested();
-            _stages.Add(mapId, stage);
+            _ownership.Attach(stage);
             retained = true;
             return new(KsProcgenSurfaceStageStatus.PositionedPreview, null, stage);
         }
@@ -174,7 +163,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
         }
         finally
         {
-            _capturedEntities = null;
+            _operationSystem.SetCapture(this, null);
             try
             {
                 if (!retained)
@@ -187,8 +176,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
         }
     }
 
-    private bool Owns(KsProcgenSurfaceStage stage) => stage != null && stage.Active &&
-        _stages.TryGetValue(stage.MapId, out var owned) && ReferenceEquals(owned, stage);
+    private bool Owns(KsProcgenSurfaceStage stage) => _ownership.Owns(stage);
 
     public bool Verify(KsProcgenSurfaceStage stage) => Owns(stage) && ContentsIssue(stage) == null;
 
@@ -196,65 +184,23 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
     public KsProcgenSurfaceStageResult TryInitialize(KsProcgenSurfaceStage stage,
         CancellationToken cancellationToken = default)
     {
-        if (!Owns(stage))
-            return Failure(KsProcgenSurfaceStageStatus.InvalidInput, "SurfaceStageNotOwned");
-        if (!_operationSystem.TryEnter(this))
-            return Failure(KsProcgenSurfaceStageStatus.InvalidInput, "SurfaceStageOperationActive");
-        try
-        {
-            _capturedEntities = stage.SpawnedEntities;
-            cancellationToken.ThrowIfCancellationRequested();
-            var preconditionIssue = ContentsIssue(stage);
-            if (preconditionIssue != null)
-            {
-                DiscardAfterOperation(stage);
-                return Failure(KsProcgenSurfaceStageStatus.Rejected, preconditionIssue);
-            }
-            if (stage.Phase == KsProcgenSurfaceStagePhase.Initialized)
-                return new(KsProcgenSurfaceStageStatus.InitializedPreview, null, stage);
-            _mapSystem.SetPaused(stage.MapId, true);
-            _mapSystem.InitializeMap(stage.MapId, unpause: false);
-            stage.Phase = KsProcgenSurfaceStagePhase.Initialized;
-            cancellationToken.ThrowIfCancellationRequested();
-            if (stage.SpawnedEntityCount > stage.MaxSpawnedEntities)
-            {
-                DiscardAfterOperation(stage);
-                return Failure(KsProcgenSurfaceStageStatus.BudgetExceeded, "SurfaceStageInitializationSpawnBudget");
-            }
-            var verificationIssue = ContentsIssue(stage);
-            if (verificationIssue != null)
-            {
-                DiscardAfterOperation(stage);
-                return Failure(KsProcgenSurfaceStageStatus.Rejected, verificationIssue);
-            }
-            cancellationToken.ThrowIfCancellationRequested();
+        var result = _lifecycle.TryInitialize(stage, "SurfaceStage", _ => ContentsIssue(stage), cancellationToken);
+        if (result.Status == KsProcgenStageInitializationStatus.Initialized)
             return new(KsProcgenSurfaceStageStatus.InitializedPreview, null, stage);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        return Failure(result.Status switch
         {
-            DiscardAfterOperation(stage);
-            return Failure(KsProcgenSurfaceStageStatus.Cancelled, "SurfaceStageInitializationCancelled");
-        }
-        catch (Exception)
-        {
-            DiscardAfterOperation(stage);
-            return Failure(KsProcgenSurfaceStageStatus.EngineFailure, "SurfaceStageInitializationEngineFailure");
-        }
-        finally
-        {
-            _capturedEntities = null;
-            _operationSystem.Exit(this);
-        }
-    }
-
-    private void DiscardAfterOperation(KsProcgenSurfaceStage stage)
-    {
-        _capturedEntities = null;
-        DiscardOwned(stage);
+            KsProcgenStageInitializationStatus.InvalidInput => KsProcgenSurfaceStageStatus.InvalidInput,
+            KsProcgenStageInitializationStatus.Rejected => KsProcgenSurfaceStageStatus.Rejected,
+            KsProcgenStageInitializationStatus.BudgetExceeded => KsProcgenSurfaceStageStatus.BudgetExceeded,
+            KsProcgenStageInitializationStatus.Cancelled => KsProcgenSurfaceStageStatus.Cancelled,
+            _ => KsProcgenSurfaceStageStatus.EngineFailure,
+        }, result.IssueCode!);
     }
 
     private string? ContentsIssue(KsProcgenSurfaceStage stage)
     {
+        if (stage.WasRetained && !Owns(stage)) return "SurfaceStageNotOwned";
+        if (EntityManager.IsQueuedForDeletion(stage.MapUid)) return "SurfaceStageMapDrift";
         if (stage.SpawnedEntityCount > stage.MaxSpawnedEntities ||
             !_mapSystem.TryGetMap(stage.MapId, out var mapUid) || mapUid != stage.MapUid ||
             !_mapSystem.IsPaused(stage.MapId) ||
@@ -271,7 +217,7 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
             return "SurfaceStageSurfaceDrift";
         if (!Member(stage.SubjectUid, stage.SubjectPrototypeId, stage.DropPosition))
             return "SurfaceStageSubjectDrift";
-        if (Transform(stage.SubjectUid).LocalRotation != Angle.FromDegrees((double) stage.QuarterTurns * 90.0))
+        if (Transform(stage.SubjectUid).LocalRotation != KsProcgenRotation.ToEngineAngle(stage.QuarterTurns))
             return "SurfaceStageRotationDrift";
         var preflight = _preflightSystem.Check(stage.SubjectUid, stage.SurfaceUid);
         if (preflight.Status != KsProcgenSurfacePreflightStatus.Candidate)
@@ -302,36 +248,20 @@ public sealed partial class KsProcgenSurfaceStageSystem : EntitySystem
         }
     }
 
-    private bool DiscardOwned(KsProcgenSurfaceStage stage)
-    {
-        if (!Owns(stage))
-            return false;
-        _stages.Remove(stage.MapId);
-        stage.Active = false;
-        Cleanup(stage.MapId, stage.MapUid, stage.SpawnedEntities);
-        return true;
-    }
+    private bool DiscardOwned(KsProcgenSurfaceStage stage) => _ownership.Release(stage);
 
     public int DiscardAll()
     {
         if (_operationSystem.Active)
             return 0;
-        var stages = _stages.Values.ToArray();
+        var stages = _ownership.Snapshot(KsProcgenStageKind.Surface).Cast<KsProcgenSurfaceStage>().ToArray();
         foreach (var stage in stages)
             Discard(stage);
         return stages.Length;
     }
 
     private void Cleanup(MapId mapId, EntityUid mapUid, IEnumerable<EntityUid> spawnedEntities)
-    {
-        foreach (var spawnedUid in spawnedEntities.Reverse().ToArray())
-        {
-            if (Exists(spawnedUid))
-                Del(spawnedUid);
-        }
-        if (_mapSystem.TryGetMap(mapId, out var actualMapUid) && actualMapUid == mapUid)
-            _mapSystem.DeleteMap(mapId);
-    }
+        => _ownership.Cleanup(mapId, mapUid, spawnedEntities);
 
     private static KsProcgenSurfaceStageResult Failure(KsProcgenSurfaceStageStatus status, string code) =>
         new(status, new KsProcgenIssue(code, "Surface drop-coordinate preview could not be retained."), null);

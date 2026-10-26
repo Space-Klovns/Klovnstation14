@@ -25,8 +25,7 @@ public sealed class KsProcgenSupportedLandingTests
     public void LaterChairChoicesCanForceRetryOfAnEarlierMachineLanding()
     {
         var assembly = Assembly();
-        var target = assembly.Members.Single(member => member.Id == "Target");
-        target.Entry.Role = KsProcgenEntityRole.Seat;
+        assembly = assembly.WithEntry("Target", entry => entry with { Role = KsProcgenEntityRole.Seat });
         var plan = Plan(assembly, targetPosition: new(4f, 0f));
         Assert.That(plan.Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Candidate), plan.Issue?.Code);
         Assert.That(plan.Access.Single(access => access.MemberId == "Device").Approach, Is.EqualTo(new Vector2i(3, 1)));
@@ -56,8 +55,7 @@ public sealed class KsProcgenSupportedLandingTests
     public void SearchSharesLandingProbesAcrossCompletePoseAttempts()
     {
         var assembly = Assembly();
-        foreach (var member in assembly.Members)
-            member.Entry.AllowedQuarterTurns = [0];
+        assembly = assembly.WithEntries(entry => entry with { AllowedQuarterTurns = [0] });
         var exhausted = KsProcgenSupportedAssemblySearch.Search(assembly, ["Root", "Device", "Target"], Report(assembly), Room(), 0,
             fixedFloorRoots: [new("Root", new(2f, 2f)), new("Target", new(4f, 1f))], maximumLandingProbes: 1);
         Assert.That(exhausted.Status, Is.EqualTo(KsProcgenSupportedAccessStatus.BudgetExceeded));

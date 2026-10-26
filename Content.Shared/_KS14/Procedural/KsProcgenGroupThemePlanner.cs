@@ -7,9 +7,11 @@ namespace Content.Shared._KS14.Procedural;
 public static class KsProcgenGroupThemePlanner
 {
     public static KsProcgenThemeAssignmentResult Plan(IPrototypeManager prototypeManager, string themeId,
-        int seed, KsProcgenGroupPartitionResult partition)
+        int seed, KsProcgenGroupPartitionResult partition, KsProcgenThemeCatalog? content = null,
+        KsProcgenGasPlanningContext? gasContext = null, KsProcgenElectricalPlanningContext? electricalContext = null,
+        KsProcgenThemeCatalog? utilityContent = null)
     {
-        if (partition == null || partition.Status != KsProcgenEntranceSceneStatus.Candidate || partition.PartitionHash == 0 ||
+        if (prototypeManager == null || partition == null || partition.Status != KsProcgenEntranceSceneStatus.Candidate || partition.PartitionHash == 0 ||
             partition.Analysis?.Status != KsProcgenEntranceSceneStatus.Candidate || partition.Scene == null || partition.Regions.Count == 0 ||
             partition.Regions.Select(network => network.Id).Distinct(StringComparer.Ordinal).Count() != partition.Regions.Count ||
             !partition.Scene.CleanDomainCells.SetEquals(partition.FloorCells) ||
@@ -20,10 +22,13 @@ public static class KsProcgenGroupThemePlanner
                     component.GroupIds.SequenceEqual(network.GroupIds))))
             return new() { Status = KsProcgenThemeAssignmentStatus.InvalidInput,
                 Issue = new("InvalidGroupThemeInput", "A validated owned partition is required.") };
+        if (content == null && !KsProcgenThemeCatalog.TryCapture(prototypeManager, themeId, out content, out var issue))
+            return new() { Status = KsProcgenThemeAssignmentStatus.ThemeRejected, Issue = issue };
         var regions = new List<KsProcgenThemedRegion>();
         foreach (var network in partition.Regions)
         {
-            var themes = KsProcgenThemeAssignmentPlanner.Plan(prototypeManager, themeId, seed, network.Fill, network.Partition);
+            var themes = KsProcgenThemeAssignmentPlanner.Plan(prototypeManager, themeId, seed, network.Fill, network.Partition,
+                content: content, gasContext: gasContext, electricalContext: electricalContext, utilityContent: utilityContent);
             if (themes.Status != KsProcgenThemeAssignmentStatus.Selected)
                 return new() { Status = themes.Status, Issue = themes.Issue };
             foreach (var region in themes.Regions)

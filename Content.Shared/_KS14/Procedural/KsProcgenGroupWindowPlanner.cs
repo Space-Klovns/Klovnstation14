@@ -40,11 +40,11 @@ public sealed class KsProcgenGroupWindowResult
 /// Fixed declared windows contribute only counts. SourceHull is diagnostic input, RemainingWalls
 /// and Windows are the resulting structural proposals. Neither may yet be published.
 /// </summary>
-public static class KsProcgenGroupWindowPlanner
+public static partial class KsProcgenGroupWindowPlanner
 {
     public static KsProcgenGroupWindowResult Plan(IPrototypeManager prototypeManager, KsProcgenRequest request,
         KsProcgenGroupPartitionResult partition, KsProcgenThemeAssignmentResult themes,
-        IReadOnlyList<KsProcgenExteriorWindowFact> facts, int maximumExpandedCells = 262_144)
+        IReadOnlyList<KsProcgenExteriorWindowFact> facts, int maximumExpandedCells = 262_144, bool emptyExterior = false)
     {
         var expanded = 0;
         KsProcgenGroupWindowResult Fail(KsProcgenGroupWindowStatus status, string code) => new()
@@ -60,6 +60,18 @@ public static class KsProcgenGroupWindowPlanner
             return Fail(hull.Status == KsProcgenGroupMaterialStatus.BudgetExceeded ? KsProcgenGroupWindowStatus.BudgetExceeded :
                 hull.Status == KsProcgenGroupMaterialStatus.IncompatibleMaterials ? KsProcgenGroupWindowStatus.IncompatibleMaterials :
                 KsProcgenGroupWindowStatus.InvalidInput, hull.Issue!.Code);
+        if (emptyExterior)
+        {
+            if (facts == null || facts.Count != 0)
+                return Fail(KsProcgenGroupWindowStatus.InvalidInput, "ConflictingEmptyExteriorContext");
+            var exteriorIssue = EmptyExteriorFacts(request, partition, hull.Boundary!, maximumExpandedCells - expanded,
+                out var resolvedFacts, out var exteriorWork);
+            expanded += exteriorWork;
+            if (exteriorIssue != null)
+                return Fail(exteriorIssue == "EmptyExteriorClassificationBudget" ? KsProcgenGroupWindowStatus.BudgetExceeded :
+                    KsProcgenGroupWindowStatus.InvalidInput, exteriorIssue);
+            facts = resolvedFacts;
+        }
         var boundary = KsProcgenGroupWindowBoundaryAnalyzer.Analyze(request, partition, facts,
             maximumExpandedCells: maximumExpandedCells - expanded);
         expanded += boundary.ExpandedCells;
@@ -90,9 +102,8 @@ public static class KsProcgenGroupWindowPlanner
             var supported = true;
             foreach (var region in regions)
             {
-                var family = prototypeManager.Index<KsProcgenWallPackPrototype>(region.Theme.WallPackId).Families
-                    .Single(candidate => candidate.Id == region.Theme.WallFamilyId);
-                if (string.IsNullOrWhiteSpace(family.Window) || !prototypeManager.TryIndex<EntityPrototype>(family.Window, out _))
+                if (!KsProcgenSelectedContent.TryWall(prototypeManager, region.Theme, out var family) ||
+                    string.IsNullOrWhiteSpace(family!.Window) || !prototypeManager.TryIndex<EntityPrototype>(family.Window, out _))
                 {
                     supported = false;
                     continue;

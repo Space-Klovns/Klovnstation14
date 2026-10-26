@@ -1,0 +1,45 @@
+windowGoal:
+  toleranceCells: 1
+  minimumCount: 0
+  maximumCount: null
+  hardFraction: False
+  exteriorWindowFraction: 0.25
+utilities: null
+sizeMix: []
+shape:
+  voidCells: []
+  textOrigin: 0,0
+  textMask: null
+  subtractRectangles: []
+  preservedCells: []
+  envelopeCells: []
+  cells:
+  - 0,0
+  - 1,0
+  - 2,0
+  addRectangles: []
+seed: 17
+schemaVersion: 2
+rootCells: []
+requestId: Showcase/tiny-strip
+mode: Procedural
+limits:
+  maxCells: 65536
+  maxAbsoluteCoordinate: 1000000
+geometryMode: Footprint
+fallbackPolicy:
+  allowSparseLighting: True
+  allowSparseFurnishing: True
+  allowRoomSizeShortfall: True
+  allowMergedPartition: True
+entranceDomain:
+  entrances: []
+  configurations: []
+  channel: Default
+electricalProfile: null
+electrical: null
+constantRegions: []
+connectivityPolicy: PerIsland
+atmosphereProfile: null
+atmosphere: null
+...

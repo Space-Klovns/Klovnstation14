@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "kind": "KsProcgenShowcase",
+  "id": "tiny-strip",
+  "seed": 17,
+  "themeId": "KsProcgenNoDoorThemeFixture",
+  "state": "InitializedPausedPreview",
+  "nativeGridLoadVerified": true,
+  "published": false,
+  "engineAccessVerified": false,
+  "workingLightingVerified": false,
+  "electricalSupplyVerified": false,
+  "electricalTopologyVerified": false,
+  "planHash": "12947898532708576013",
+  "contentDeclarationHash": 16389912226718250451,
+  "request": {
+    "schemaVersion": 2,
+    "requestId": "Showcase/tiny-strip",
+    "seed": 17,
+    "shape": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ],
+    "envelope": [],
+    "atmosphereProfile": null,
+    "electricalProfile": null
+  },
+  "rooms": [
+    {
+      "id": "Showcase/tiny-strip/EntranceNetwork/0/Zone/0",
+      "kind": "RoomProposal",
+      "cells": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 1,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 0
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "cell": {
+        "x": 0,
+        "y": 0
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 0
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 0
+      },
+      "tileId": "FloorSteel"
+    }
+  ],
+  "walls": [],
+  "windows": [],
+  "doors": [],
+  "entities": [],
+  "approaches": [],
+  "lights": [],
+  "cables": null,
+  "transferRadius": null,
+  "electricalDevices": null,
+  "electricalService": null,
+  "nativeConnections": null,
+  "consumers": null,
+  "electricalOmissions": null,
+  "initialAtmosphere": null,
+  "expandedCells": 61,
+  "furnishingProbes": 0,
+  "fallbacks": [],
+  "notes": "Native saved grid reloaded on a paused map. Operational use, publication and stable simulation remain uncertified."
+}

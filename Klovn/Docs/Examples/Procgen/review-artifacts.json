@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "KsProcgenReviewArtifacts",
+  "ownedInteriorSemanticsVersion": 10,
+  "ownedDiagnosticSchemaVersion": 3,
+  "engineSuccessCertified": false,
+  "sourceSvgSha256": "faa06105b5a125e3e0c2970ad4a350e1ac8c50e9ee11b4c7f32dc21ac6d7cb50",
+  "previewPngSha256": "120b8683d1dd55ea328a57f9bcd42eb6ac4ed5e122d53286d41bdc5f87518d04",
+  "files": [
+    {
+      "path": "supported-room.json",
+      "bytes": 28722,
+      "sha256": "d2ef49f9bf22b8acbd15a1193b073d88a7f1bc7ea2d8322b2df5e8eb5283faa7"
+    },
+    {
+      "path": "supported-room.svg",
+      "bytes": 21044,
+      "sha256": "faa06105b5a125e3e0c2970ad4a350e1ac8c50e9ee11b4c7f32dc21ac6d7cb50"
+    },
+    {
+      "path": "supported-room.png",
+      "bytes": 17151,
+      "sha256": "120b8683d1dd55ea328a57f9bcd42eb6ac4ed5e122d53286d41bdc5f87518d04"
+    },
+    {
+      "path": "l-shape.json",
+      "bytes": 11874,
+      "sha256": "f29a018ead08c805af6c727f69fcef078bdfe547c61b0e75a6f576124068ce49"
+    },
+    {
+      "path": "l-shape.svg",
+      "bytes": 6396,
+      "sha256": "851513bfa79e73654c524dd7d9b1627a078943e2fc9cef66fb7cdf90afff9ea8"
+    },
+    {
+      "path": "README.md",
+      "bytes": 34809,
+      "sha256": "10cf66c89bcb6056064a2e03ec13164a104ca771049ddcc4ed52e2fd367c5420"
+    }
+  ]
+}

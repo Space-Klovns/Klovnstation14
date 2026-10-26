@@ -21,7 +21,7 @@ public sealed partial class KsProcgenEntranceRequestSpec
     [DataField] public List<KsProcgenEntranceConfigurationSpec> Configurations = [];
 }
 
-public static class KsProcgenEntranceRequestAdapter
+public static partial class KsProcgenEntranceRequestAdapter
 {
     public static KsProcgenEntranceRequestSpec Copy(KsProcgenAreaBlob blob) => new()
     {
@@ -72,8 +72,13 @@ public static class KsProcgenEntranceRequestAdapter
             issue = normalized.Issue;
             return false;
         }
-        // No authored alternatives retains the all-connected default, rather than inventing separate groups.
-        var configurations = domain.Configurations.Count == 0 ? new List<KsProcgenEntranceConfigurationSpec>
+        // Real entrances retain the all-connected default. Standalone requests use rooted islands.
+        List<KsProcgenEntranceConfigurationSpec> configurations;
+        if (domain.Configurations.Count == 0 && normalized.Entrances.Count == 0)
+        {
+            if (!TryStandaloneConfigurations(request, shape, out configurations, out issue)) return false;
+        }
+        else configurations = domain.Configurations.Count == 0 ? new List<KsProcgenEntranceConfigurationSpec>
         {
             new() { Id = "KsDefaultAllConnected", Mode = KsProcgenEntranceConnectionMode.RequiredConnections,
                 Groups = new List<KsProcgenEntranceGroupSpec>

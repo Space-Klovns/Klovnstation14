@@ -278,7 +278,7 @@ public static class KsProcgenAssemblyRelationEvaluator
     private static int Distance(Vector2i first, Vector2i second) =>
         Math.Abs(first.X - second.X) + Math.Abs(first.Y - second.Y);
 
-    private static bool FacesTarget(Vector2i subject, int turn, Vector2i target)
+    internal static bool FacesTarget(Vector2i subject, int turn, Vector2i target)
     {
         var delta = target - subject;
         var face = Faces[turn];

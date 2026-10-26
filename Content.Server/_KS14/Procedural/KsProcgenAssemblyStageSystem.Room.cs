@@ -30,7 +30,7 @@ public sealed partial class KsProcgenAssemblyStageSystem
             return Fail(KsProcgenAssemblyStageStatus.InvalidInput, "InvalidAssemblyStageBudget");
         if (cancellationToken.IsCancellationRequested)
             return Fail(KsProcgenAssemblyStageStatus.Cancelled, "AssemblyStageCancelled");
-        if (_stages.Count >= MaximumRetainedStages)
+        if (!_ownership.CanRetain(KsProcgenStageKind.Assembly))
             return Fail(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageRetentionBudget");
         KsProcgenRoomTerrain? terrain = null;
         if (floorTileId != null)

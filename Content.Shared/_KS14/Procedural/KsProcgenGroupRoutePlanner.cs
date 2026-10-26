@@ -8,7 +8,11 @@ namespace Content.Shared._KS14.Procedural;
 /// <summary>Caller-declared inspected context. These records do not inspect live doors, actors or constants.</summary>
 public sealed record KsProcgenGroupRouteContext(IReadOnlySet<Vector2i> ExistingCleanDomainCells,
     IReadOnlySet<Vector2i> CleanHostCells, IReadOnlySet<Vector2i> ExistingBlockedThresholds,
-    bool HostContextComplete, bool PreservedContextComplete);
+    bool HostContextComplete, bool PreservedContextComplete)
+{
+    /// <summary>Planning context for a fresh standalone map. No live airtightness is implied.</summary>
+    public bool ExteriorIsEmptySpace { get; init; }
+}
 
 public sealed record KsProcgenGroupRoute(string GroupId, IReadOnlyList<Vector2i> NewCells);
 

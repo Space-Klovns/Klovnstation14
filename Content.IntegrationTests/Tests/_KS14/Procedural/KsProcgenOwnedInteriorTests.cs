@@ -9,14 +9,14 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.Procedural;
 
 [TestOf(typeof(KsProcgenOwnedInteriorPlanner))]
-public sealed class KsProcgenOwnedInteriorTests : GameTest
+public sealed class KsProcgenOwnedInteriorTests : KsProcgenGameTest
 {
     private static readonly KsProcgenOwnedPlanBudgets Budgets = new() { PreferredMaximumRoomCells = 64 };
 
     [Test]
     public async Task LShapeCompletesStrictSizeGoalsWithoutAddingMissingCornerTiles()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture(tiny: true);
             fixture.Request.Shape.Cells = Enumerable.Range(0, 8).SelectMany(x => Enumerable.Range(0, x >= 6 ? 2 : 4)
@@ -57,7 +57,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task ReflectedSizeGoalsCompleteStrictInteriorAroundProtectedSeams()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture(tiny: true);
             fixture.Request.Shape.Cells = Enumerable.Range(0, 10).SelectMany(x => Enumerable.Range(0, 4)
@@ -106,7 +106,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task ProtectedNetworkReassignsRoomQuotasBeforeStrictInteriorAudit()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture(tiny: true);
             fixture.Request.Shape.Cells = Enumerable.Range(0, 8).Concat(Enumerable.Range(20, 8))
@@ -158,7 +158,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task GlobalSizeQuotasCompleteAcrossSeparateEntranceNetworks()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture(tiny: true);
             fixture.Request.Shape.Cells = Enumerable.Range(0, 9).Concat(Enumerable.Range(20, 4))
@@ -210,7 +210,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task GoalWidthRetryMovesBoundaryAndCompletesStrictSizeBands()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture(tiny: true);
             fixture.Request.Shape.Cells = Enumerable.Range(0, 10).SelectMany(x => Enumerable.Range(0, 4)
@@ -262,7 +262,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task GoalOrientationRetryPreservesDeclaredFloorAndCompletesStrictSizeGoals()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture(tiny: true);
             fixture.Request.Shape.Cells = Enumerable.Range(0, 6).SelectMany(x => Enumerable.Range(0, 6)
@@ -316,7 +316,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task ProtectedConstantFloorRejectsGoalSeamsThenRetriesScalarWithoutRefunds()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture(tiny: true);
             fixture.Request.Shape.Cells = Enumerable.Range(0, 9).SelectMany(x => Enumerable.Range(0, 4)
@@ -358,7 +358,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task DeniedSubdivisionRetriesInsideOneConfigurationWithoutRefundingWork()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -414,7 +414,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task FloorFailureSkipsSubdivisionAlternativesAndKeepsConfigurationBudgetSeparate()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Alternatives();
             fixture.Request.EntranceDomain!.Configurations[0].Groups[0].RootCells.Add(new(2, 3));
@@ -431,7 +431,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task SubdivisionProfilesRetainAuthoredOrderAndStopAtTheFirstCompleteLayout()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -455,7 +455,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task LayoutAllowanceRemainsSharedWhenTheSearchAdvancesToAnotherConfiguration()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Alternatives();
             fixture.Request.EntranceDomain!.Configurations[0].Groups[0].RootCells.Add(new(2, 3));
@@ -473,7 +473,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task AllowedDegradationDoesNotSpendAlternativeLayoutAllowances()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(), budgets: Budgets with
             {
@@ -491,7 +491,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(65)]
     public async Task InvalidLayoutAllowancesAreRejectedWithoutAnAttempt(int maximum)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(),
                 budgets: Budgets with { MaximumLayoutProbes = maximum });
@@ -509,7 +509,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(5)]
     public async Task InvalidSubdivisionProfilesAreRejectedBeforeWork(int variant)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var sizes = variant switch
             {
@@ -531,7 +531,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task ZeroLayoutAllowanceStopsBeforeEnteringAConfiguration()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(),
                 budgets: Budgets with { MaximumLayoutProbes = 0 });
@@ -544,7 +544,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task PartitionSeamWorkCannotBeRefundedWhenACompleteConfigurationIsRejected()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Alternatives();
@@ -580,7 +580,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task SeamConnectivityValidationUsesTheRemainingRequestGraphAllowance()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -601,7 +601,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(1_000_001)]
     public async Task InvalidSeamWorkLimitsAreRejectedBeforeAnAttempt(int limit)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(),
                 budgets: Budgets with { MaximumPartitionSeamProbes = limit });
@@ -615,7 +615,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task ExhaustedPartitionStatusCannotAuthorizeDownstreamContent()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -662,7 +662,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task RejectedFloorConfigurationCannotPreventACompleteLaterCandidate()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Alternatives();
             fixture.Request.EntranceDomain!.Configurations[0].Groups[0].RootCells.Add(new(2, 3));
@@ -679,13 +679,13 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task DisabledAlternativesConsumeNoSearchAttemptOrAllowance()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Alternatives();
             fixture.Request.EntranceDomain!.Configurations.Single(configuration => configuration.Id == "Joined").Weight = 0;
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), fixture,
                 budgets: Budgets with { MaximumConfigurationProbes = 1 }, themeId: "KsProcgenMandatoryOfficeFixture");
-            AssertFailure(result, KsProcgenOwnedPlanStatus.Rejected, code: "MandatoryPackInPassage");
+            AssertFailure(result, KsProcgenOwnedPlanStatus.Rejected, code: "RequiredPackCannotFit");
             Assert.That(result.Attempts.Count, Is.EqualTo(1));
             Assert.That(result.Stages.All(stage => stage.ConfigurationId == "Separate"), Is.True);
         });
@@ -694,7 +694,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task DiscardedLightingAndFurnishingWorkRemainChargedToTheSearch()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = LightingAlternatives();
@@ -723,7 +723,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(false)]
     public async Task ExhaustingDiscardedContentWorkStopsBeforeUnfundedContent(bool furnishing)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = LightingAlternatives();
@@ -757,7 +757,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task CompleteSearchRevisitsAValidFloorAfterMandatoryThemeFailure()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Alternatives();
@@ -768,7 +768,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
             AssertCandidate(result);
             Assert.That(result.Attempts.Select(attempt => attempt.ConfigurationId), Is.EqualTo(new[] { "Separate", "Joined" }));
             Assert.That(result.Attempts[0].Status, Is.EqualTo(KsProcgenOwnedPlanStatus.Rejected));
-            Assert.That(result.Attempts[0].ReasonCode, Is.EqualTo("MandatoryPackInPassage"));
+            Assert.That(result.Attempts[0].ReasonCode, Is.EqualTo("RequiredPackCannotFit"));
             Assert.That(result.Floor!.Accepted!.Analysis!.ConfigurationId, Is.EqualTo("Joined"));
             Assert.That(result.Partition!.Regions.Count, Is.EqualTo(1));
             Assert.That(result.Themes!.Regions.All(room => room.EntranceGroupIds.SequenceEqual(new[] { "All" })), Is.True);
@@ -776,6 +776,8 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
             Assert.That(result.ExpandedCells, Is.EqualTo(result.Attempts.Sum(attempt => attempt.ExpandedCells)));
             Assert.That(result.ExpandedCells, Is.EqualTo(result.Stages.Sum(stage => stage.ExpandedCells)));
             Assert.That(result.Stages.Where(stage => stage.Stage == KsProcgenOwnedPlanStage.Furnishing)
+                .Any(stage => stage.ConfigurationId == "Separate" && !stage.Completed && stage.ReasonCode == "RequiredPackCannotFit"), Is.True);
+            Assert.That(result.Stages.Where(stage => stage.Stage == KsProcgenOwnedPlanStage.Furnishing && stage.Completed)
                 .All(stage => stage.ConfigurationId == "Joined"), Is.True);
         });
     }
@@ -783,7 +785,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task RetryWorkCannotBeRefundedAtTheFinalAudit()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Alternatives();
@@ -804,7 +806,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(false)]
     public async Task ConfigurationAndOrderLimitsRemainSharedAcrossRetries(bool configurations)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Alternatives();
@@ -822,7 +824,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task DeniedSizeDeviationAdvancesToAnAllowedWholeConfiguration()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Alternatives(narrow: false);
             fixture.Request.SizeMix.Add(new() { Id = "Room", MinCells = 4, MaxCells = 64, TargetCount = 1 });
@@ -840,7 +842,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task RetryReplayRetainsCanonicalOutputAndImmutableAttemptSnapshots()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Alternatives();
@@ -867,20 +869,23 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task ExhaustedAlternativesExposeOnlyFailureDiagnostics()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
-            var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Alternatives(), themeId: "KsMissingOwnedTheme");
+            var fixture = Alternatives();
+            fixture.Request.WindowGoal.MinimumCount = 1;
+            var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), fixture);
             AssertFailure(result, KsProcgenOwnedPlanStatus.Rejected);
             Assert.That(result.Attempts.Count, Is.EqualTo(2));
             Assert.That(result.Attempts.All(attempt => attempt.Status == KsProcgenOwnedPlanStatus.Rejected), Is.True);
             Assert.That(result.Stages.Select(stage => stage.ConfigurationId).Distinct().Count(), Is.EqualTo(2));
+            Assert.That(result.Stages.Where(stage => !stage.Completed).All(stage => stage.Stage == KsProcgenOwnedPlanStage.Structure), Is.True);
         });
     }
 
     [Test]
     public async Task MalformedExteriorContextStopsWithoutTryingAnotherAlternative()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var facts = new KsProcgenExteriorWindowFact[]
                 { new(new(2, 5), new(0, 1), true, true), new(new(2, 5), new(0, 1), true, true) };
@@ -908,7 +913,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task RequiredNearRelationsConsumeTheSameRemainingGraphAllowance()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -930,7 +935,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task CleanFurnishingAccessConsumesTheSharedRequestAllowance()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -958,7 +963,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task ExteriorWindowsAreComposedBeforeContentsAndChangeReplayIdentity()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture(envelope: true);
@@ -980,7 +985,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task CompleteTwoNetworkInteriorReplaysWithExactSharedAllowances()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -989,7 +994,13 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
             Assert.That(result.Partition!.Regions.Count, Is.EqualTo(2));
             Assert.That(result.Furnishings.SelectMany(room => room.Proposal.Entities), Is.Not.Empty);
             Assert.That(result.Lighting!.FixtureCount, Is.GreaterThan(0));
-            Assert.That(result.Stages.Select(stage => stage.Stage).Distinct(), Is.EquivalentTo(Enum.GetValues<KsProcgenOwnedPlanStage>()));
+            Assert.That(result.Stages.Select(stage => stage.Stage).Distinct(), Is.EquivalentTo(new[]
+            {
+                KsProcgenOwnedPlanStage.Floor, KsProcgenOwnedPlanStage.Partition, KsProcgenOwnedPlanStage.Themes,
+                KsProcgenOwnedPlanStage.Structure, KsProcgenOwnedPlanStage.Furnishing, KsProcgenOwnedPlanStage.Lighting,
+                KsProcgenOwnedPlanStage.InteriorAudit,
+            }));
+            Assert.That(result.Gas, Is.Null);
             Assert.That(result.Stages.All(stage => stage.Completed), Is.True);
             Assert.That(result.ExpandedCells, Is.EqualTo(result.Stages.Sum(stage => stage.ExpandedCells)));
             Assert.That(result.FurnishingProbes, Is.EqualTo(result.Stages.Where(stage => stage.Stage == KsProcgenOwnedPlanStage.Furnishing)
@@ -1013,7 +1024,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task FinalAuditExhaustionPublishesNoPartialStageArtifacts()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -1031,7 +1042,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task SharedFixtureExhaustionRetainsWorkWithoutArtifacts()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(),
                 budgets: Budgets with { MaximumLightingFixtures = 0 });
@@ -1045,7 +1056,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(true)]
     public async Task PreservedAndConstantFloorCannotReceiveAnyContentWrite(bool constant)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(preserved: true, constant: constant));
             AssertCandidate(result);
@@ -1060,7 +1071,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task SparseFurnishingPermissionIsAnAdmissionGate()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -1080,7 +1091,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task SizeGoalDefinitionsAffectReplayAndDeniedDeviationIsAtomic()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
@@ -1103,7 +1114,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task TinyOneByThreeCanRemainAnUnfurnishedConnectedPassage()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(tiny: true));
             AssertCandidate(result);
@@ -1117,7 +1128,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(false)]
     public async Task ZeroSearchAllowancesStopBeforeContent(bool graph)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(), budgets: graph
                 ? Budgets with { MaximumReportedGraphExpansions = 0 }
@@ -1132,7 +1143,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [TestCase(false)]
     public async Task UnsupportedGeometryOrModeIsRejectedBeforeWork(bool hybrid)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var fixture = Fixture();
             if (hybrid) fixture.Request.Mode = KsProcgenMode.Hybrid;
@@ -1144,15 +1155,17 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     }
 
     [Test]
-    public async Task MissingThemeAndImpossibleWindowsFailAtTheirOwnStages()
+    public async Task MissingThemeFailsPreflightAndImpossibleWindowsFailAtStructure()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var fixture = Fixture();
             var theme = Plan(manager, fixture, themeId: "KsMissingOwnedTheme");
-            AssertFailure(theme, KsProcgenOwnedPlanStatus.Rejected);
-            Assert.That(theme.Stages.Last().Stage, Is.EqualTo(KsProcgenOwnedPlanStage.Themes));
+            AssertFailure(theme, KsProcgenOwnedPlanStatus.Rejected, code: "UnknownTheme");
+            Assert.That(theme.Stages, Is.Empty);
+            Assert.That(theme.LayoutProbes, Is.Zero);
+            Assert.That(theme.ExpandedCells, Is.Zero);
             fixture.Request.WindowGoal.MinimumCount = 1;
             var window = Plan(manager, fixture);
             AssertFailure(window, KsProcgenOwnedPlanStatus.Rejected);
@@ -1164,7 +1177,7 @@ public sealed class KsProcgenOwnedInteriorTests : GameTest
     [Test]
     public async Task FailedMandatoryFurnishingRetainsCandidateProbeWork()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var result = Plan(Pair.Server.ResolveDependency<IPrototypeManager>(), Fixture(),
                 budgets: Budgets with { MaximumFurnishingProbes = 1 }, themeId: "KsProcgenMandatoryOfficeFixture");

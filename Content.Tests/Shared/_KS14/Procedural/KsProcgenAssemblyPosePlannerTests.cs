@@ -77,7 +77,7 @@ public sealed class KsProcgenAssemblyPosePlannerTests
         var valid = KsProcgenAssemblyPosePlanner.Plan(assembly, ["Root", "Child"], report,
             [new("Root", Vector2.Zero)], [new("Root", 3), new("Child", 0)], 3);
         Assert.That(valid.Status, Is.EqualTo(KsProcgenAssemblySupportStatus.NeedsEngineValidation));
-        assembly.Members[1].Entry.AllowedQuarterTurns = [1];
+        assembly = assembly.WithEntry(assembly.Members[1].Id, entry => entry with { AllowedQuarterTurns = [1] });
         AssertRejected(KsProcgenAssemblyPosePlanner.Plan(assembly, ["Root", "Child"], report,
             [new("Root", Vector2.Zero)], [new("Root", 3), new("Child", 0)], 3), "AssemblyPoseRotationNotAllowed");
     }

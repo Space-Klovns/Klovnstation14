@@ -58,7 +58,7 @@ public sealed class KsProcgenDiagnosticExportTests : GameTest
             Assert.That(json.Status, Is.EqualTo(KsProcgenDiagnosticExportStatus.Complete), json.Issue?.Code);
             Assert.That(svg.Status, Is.EqualTo(KsProcgenDiagnosticExportStatus.Complete), svg.Issue?.Code);
             using var document = JsonDocument.Parse(json.Data);
-            Assert.That(document.RootElement.GetProperty("schemaVersion").GetInt32(), Is.EqualTo(1));
+            Assert.That(document.RootElement.GetProperty("schemaVersion").GetInt32(), Is.EqualTo(3));
             Assert.That(document.RootElement.GetProperty("published").GetBoolean(), Is.False);
             Assert.That(document.RootElement.GetProperty("engineAccessVerified").GetBoolean(), Is.False);
             Assert.That(document.RootElement.GetProperty("floorCells").GetArrayLength(), Is.EqualTo(25));

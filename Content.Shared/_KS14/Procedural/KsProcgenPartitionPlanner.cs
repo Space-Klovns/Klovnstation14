@@ -10,6 +10,7 @@ public enum KsProcgenPartitionStatus : byte
     OpenFallback,
     InvalidInput,
     BudgetExceeded,
+    RequiredRoomRejected,
 }
 
 /// <summary>
@@ -83,6 +84,7 @@ public static class KsProcgenPartitionPlanner
         {
             if (string.IsNullOrWhiteSpace(zone.Id) || zone.Cells.Count == 0 ||
                 !Enum.IsDefined(zone.Kind) || !zonesById.TryAdd(zone.Id, zone) ||
+                zone.UtilityRoom is { } utility && !utility.Matches(zone) ||
                 workBudget != null && zone.Cells.Count > 65_536)
                 return Snapshot(Invalid("InvalidPartitionZone"));
             var zoneComponents = Components(zone.Cells.ToHashSet());
@@ -100,12 +102,21 @@ public static class KsProcgenPartitionPlanner
         }
 
         if (ownerByCell.Count != fill.ProceduralCells ||
+            fill.Zones.Any(zone => zone.UtilityRoom is { } room && !ownerByCell.ContainsKey(room.OutsideApproach)) ||
             protectedFloorCells != null && protectedFloorCells.Any(cell => !ownerByCell.ContainsKey(cell)) ||
             requiredPassageCells.Any(cell => !ownerByCell.TryGetValue(cell, out var zone) ||
                                              zone.Kind != KsProcgenZoneKind.Passage))
             return Snapshot(Invalid("InvalidPartitionCoverage"));
 
+        foreach (var cell in fill.Zones.Where(zone => zone.UtilityRoom != null).SelectMany(zone => zone.UtilityRoom!.ReusedHullCells))
+        {
+            if (workBudget != null && !workBudget.Probe()) return BudgetFailure();
+            if (ownerByCell.ContainsKey(cell)) return Snapshot(Invalid("UtilityRoomHullOverlapsPartition"));
+        }
+
         var parent = zonesById.Keys.ToDictionary(id => id, id => id, StringComparer.Ordinal);
+        var utilityFloor = fill.Zones.Where(zone => zone.UtilityRoom != null)
+            .SelectMany(zone => zone.UtilityRoom!.InteriorCells.Concat(new[] { zone.UtilityRoom.Threshold, zone.UtilityRoom.OutsideApproach })).ToHashSet();
         string Root(string id)
         {
             while (parent[id] != id)
@@ -128,6 +139,14 @@ public static class KsProcgenPartitionPlanner
             if (interfaces == null)
                 return BudgetFailure();
             var walls = new HashSet<Vector2i>();
+            foreach (var zone in fill.Zones.Where(zone => zone.UtilityRoom != null))
+            foreach (var cell in zone.UtilityRoom!.PartitionEnclosureCells.Where(cell => cell != zone.UtilityRoom.Threshold))
+            {
+                if (workBudget != null && !workBudget.Probe()) return BudgetFailure();
+                if (requiredPassageCells.Contains(cell) || protectedFloorCells?.Contains(cell) == true)
+                    return Snapshot(RequiredRoomRejected(rejected, "UtilityRoomWallProtected"));
+                walls.Add(cell);
+            }
             var doors = new List<KsProcgenPartitionDoor>();
             var doorThresholds = new HashSet<Vector2i>();
             (string First, string Second)? rejectedPair = null;
@@ -136,6 +155,24 @@ public static class KsProcgenPartitionPlanner
             {
                 var firstHasPassage = groups[key.First].Any(zone => zone.Kind == KsProcgenZoneKind.Passage);
                 var secondHasPassage = groups[key.Second].Any(zone => zone.Kind == KsProcgenZoneKind.Passage);
+                var firstUtility = groups[key.First].Select(zone => zone.UtilityRoom).FirstOrDefault(room => room != null);
+                var secondUtility = groups[key.Second].Select(zone => zone.UtilityRoom).FirstOrDefault(room => room != null);
+                if (firstUtility != null || secondUtility != null)
+                {
+                    if (firstUtility != null && secondUtility != null)
+                        return Snapshot(RequiredRoomRejected(rejected, "AdjacentUtilityReservationsUnsupported"));
+                    var utility = firstUtility ?? secondUtility!;
+                    var utilityId = firstUtility != null ? key.First : key.Second;
+                    if (groups[utilityId].Length != 1)
+                        return Snapshot(RequiredRoomRejected(rejected, "UtilityRoomMerged"));
+                    if (edges.Any(edge => (firstUtility != null ? edge.First : edge.Second) == utility.Threshold &&
+                        (firstUtility != null ? edge.Second : edge.First) == utility.OutsideApproach))
+                    {
+                        doors.Add(new(key.First, key.Second, utility.Threshold, utility.InsideApproach, utility.OutsideApproach));
+                        doorThresholds.Add(utility.Threshold);
+                    }
+                    continue;
+                }
                 if (firstHasPassage && secondHasPassage)
                     continue;
 
@@ -170,6 +207,7 @@ public static class KsProcgenPartitionPlanner
                     var candidateWalls = new HashSet<Vector2i>(boundaryCells);
                     candidateWalls.Remove(door.Threshold);
                     if (candidateWalls.Count == 0 || candidateWalls.Overlaps(requiredPassageCells) ||
+                        candidateWalls.Overlaps(utilityFloor) ||
                         protectedFloorCells != null && candidateWalls.Overlaps(protectedFloorCells) ||
                         candidateWalls.Overlaps(doorThresholds))
                         continue;
@@ -216,7 +254,7 @@ public static class KsProcgenPartitionPlanner
                         return BudgetFailure();
                     if (usable.Count != 0 && usableComponents.Count == 1)
                         continue;
-                    rejectedPair = FirstInterfaceFor(groupId, interfaces);
+                    rejectedPair = FirstInterfaceFor(groupId, interfaces, groups);
                     break;
                 }
             }
@@ -236,7 +274,7 @@ public static class KsProcgenPartitionPlanner
                     if (componentFloor.Count != 0 && floorComponents.Count == 1)
                         continue;
                     var groupsInComponent = new HashSet<string>(component.Select(cell => groupByCell[cell]));
-                    rejectedPair = OrderedInterfaces(interfaces)
+                    rejectedPair = RepairInterfaces(interfaces, groups)
                         .Select(entry => ((string First, string Second)?) entry.Key)
                         .FirstOrDefault(pair => pair.HasValue && groupsInComponent.Contains(pair.Value.First));
                     break;
@@ -252,7 +290,7 @@ public static class KsProcgenPartitionPlanner
                 var status = rejected == 0 ? KsProcgenPartitionStatus.Proposed :
                     walls.Count == 0 ? KsProcgenPartitionStatus.OpenFallback :
                     KsProcgenPartitionStatus.MergedFallback;
-                return Snapshot(new KsProcgenPartitionResult
+                var proposal = new KsProcgenPartitionResult
                 {
                     Status = status,
                     Issue = rejected == 0 ? null : new KsProcgenIssue(
@@ -263,9 +301,23 @@ public static class KsProcgenPartitionPlanner
                     DoorOpenings = doors,
                     MergedZoneGroups = mergedGroups,
                     RejectedSplits = rejected,
-                });
+                };
+                foreach (var zone in fill.Zones.Where(zone => zone.UtilityRoom != null))
+                {
+                    if (workBudget != null)
+                        for (var probe = 0; probe < floor.Count + walls.Count + doors.Count; probe++)
+                            if (!workBudget.Probe()) return BudgetFailure();
+                    if (!zone.UtilityRoom!.Satisfied(zone.Id, proposal))
+                        return Snapshot(RequiredRoomRejected(rejected, "UtilityRoomEnclosureUnmet"));
+                }
+                return Snapshot(proposal);
             }
 
+            if (groups[rejectedPair.Value.First].Concat(groups[rejectedPair.Value.Second]).Any(zone => zone.UtilityRoom != null))
+                return Snapshot(RequiredRoomRejected(rejected, "UtilityRoomMergeForbidden"));
+            if ((rejected >= maxMergeAttempts || rejectedPair.Value.First == rejectedPair.Value.Second) &&
+                fill.Zones.Any(zone => zone.UtilityRoom != null))
+                return Snapshot(RequiredRoomRejected(rejected, "UtilityRoomOpenFallbackForbidden"));
             if (rejected >= maxMergeAttempts || rejectedPair.Value.First == rejectedPair.Value.Second)
                 return Snapshot(Open(ownerByCell.Keys, rejected + 1, "PartitionMergeBudget"));
 
@@ -301,17 +353,23 @@ public static class KsProcgenPartitionPlanner
         return interfaces;
     }
 
-    private static IEnumerable<KeyValuePair<(string First, string Second), List<(Vector2i First, Vector2i Second)>>> 
+    private static IEnumerable<KeyValuePair<(string First, string Second), List<(Vector2i First, Vector2i Second)>>>
         OrderedInterfaces(Dictionary<(string First, string Second), List<(Vector2i First, Vector2i Second)>> interfaces) =>
         interfaces.OrderBy(entry => entry.Key.First, StringComparer.Ordinal)
             .ThenBy(entry => entry.Key.Second, StringComparer.Ordinal);
 
     private static (string First, string Second)? FirstInterfaceFor(
         string groupId,
-        Dictionary<(string First, string Second), List<(Vector2i First, Vector2i Second)>> interfaces) =>
-        OrderedInterfaces(interfaces).Select(entry => ((string First, string Second)?) entry.Key)
+        Dictionary<(string First, string Second), List<(Vector2i First, Vector2i Second)>> interfaces,
+        Dictionary<string, KsProcgenZone[]> groups) =>
+        RepairInterfaces(interfaces, groups).Select(entry => ((string First, string Second)?) entry.Key)
             .FirstOrDefault(pair => pair.HasValue &&
                                     (pair.Value.First == groupId || pair.Value.Second == groupId));
+
+    private static IEnumerable<KeyValuePair<(string First, string Second), List<(Vector2i First, Vector2i Second)>>> RepairInterfaces(
+        Dictionary<(string First, string Second), List<(Vector2i First, Vector2i Second)>> interfaces,
+        Dictionary<string, KsProcgenZone[]> groups) => OrderedInterfaces(interfaces)
+        .OrderBy(entry => groups[entry.Key.First].Concat(groups[entry.Key.Second]).Any(zone => zone.UtilityRoom != null));
 
     private static KsProcgenPartitionResult Open(IEnumerable<Vector2i> cells, int rejected, string code) => new()
     {
@@ -325,5 +383,11 @@ public static class KsProcgenPartitionPlanner
     {
         Status = KsProcgenPartitionStatus.InvalidInput,
         Issue = new KsProcgenIssue(code, "Partition input is invalid."),
+    };
+
+    private static KsProcgenPartitionResult RequiredRoomRejected(int rejected, string code) => new()
+    {
+        Status = KsProcgenPartitionStatus.RequiredRoomRejected, RejectedSplits = rejected,
+        Issue = new(code, "A mandatory utility room cannot be opened, merged or partially retained."),
     };
 }

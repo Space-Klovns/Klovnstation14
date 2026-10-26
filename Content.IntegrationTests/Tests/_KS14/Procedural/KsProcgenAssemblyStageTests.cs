@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
-using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Procedural;
 using Content.Shared._KS14.Procedural;
 using Content.Shared.Placeable;
@@ -16,7 +15,7 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.Procedural;
 
 [TestOf(typeof(KsProcgenAssemblyStageSystem))]
-public sealed class KsProcgenAssemblyStageTests : GameTest
+public sealed class KsProcgenAssemblyStageTests : KsProcgenGameTest
 {
     private KsProcgenResolvedAssembly Compile(KsProcgenAssemblyVariant definition)
     {
@@ -47,7 +46,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task CompleteAssemblyStagesNestedSupportAndIndependentRoots()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var mapSystem = Pair.Server.System<SharedMapSystem>();
@@ -80,7 +79,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
                 {
                     var actual = SEntMan.GetComponent<TransformComponent>(stage.Members[pose.Support.MemberId]);
                     Assert.That(actual.LocalPosition, Is.EqualTo(pose.LocalPosition));
-                    Assert.That(actual.LocalRotation, Is.EqualTo(Angle.FromDegrees((double) pose.LocalQuarterTurns * 90.0)));
+                    Assert.That(actual.LocalRotation, Is.EqualTo(KsProcgenRotation.ToEngineAngle(pose.LocalQuarterTurns)));
                 }
                 Assert.That(containerSystem.TryGetContainer(stage.Members["Device"], "microwave_entity_container", out var contents), Is.True);
                 Assert.That(contents.Contains(stage.Members["Stored"]), Is.True);
@@ -108,7 +107,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task SupportedMachineAccessIsCheckedBeforeAllocationAndRetainedAsGeometryOnly()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var before = SEntMan.GetEntities().ToHashSet();
@@ -166,11 +165,12 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task LandingProbeBudgetIsEnforcedByBothPreviewEntryPointsBeforeAllocation()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var assembly = SurfaceAssembly(subjectPrototype: "KsProcgenRotatableMicrowaveFixture", surfacePrototype: "Table");
-            assembly.Members.Single(member => member.Id == "Subject").Entry.RequiresInteractionApproach = true;
+            assembly = assembly with { Members = assembly.Members.Select(member => member.Id == "Subject"
+                ? member with { Entry = member.Entry with { RequiresInteractionApproach = true } } : member).ToArray() };
             var room = new KsProcgenRoomAccessMask(
                 Enumerable.Range(0, 3).SelectMany(x => Enumerable.Range(0, 3).Select(y => new Vector2i(x, y))).ToHashSet(),
                 new HashSet<Vector2i>(), new HashSet<Vector2i>(), new HashSet<Vector2i>(), new HashSet<Vector2i> { new(0, 0) }, Vector2.Zero);
@@ -200,7 +200,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task SupportedNearUsesLoadedGeometryAndSharedBudgetWithoutPublishing()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var assembly = Compile(new()
             {
@@ -257,7 +257,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task SupportedSpatialSearchUsesLoadedDeclarationsWithoutBypassingEngineGate()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var before = SEntMan.GetEntities().ToHashSet();
@@ -317,13 +317,14 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task AutomaticSupportedSearchStagesChosenPoseAndCleansUpEngineRejection()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var before = SEntMan.GetEntities().ToHashSet();
             var assembly = SurfaceAssembly(subjectPrototype: "KsProcgenRotatableMicrowaveFixture", surfacePrototype: "Table");
-            assembly.Members.Single(member => member.Id == "Root").Entry.Movement = KsProcgenMovementClass.VaultRequired;
-            assembly.Members.Single(member => member.Id == "Subject").Entry.RequiresInteractionApproach = true;
+            assembly = assembly with { Members = assembly.Members.Select(member => member.Id == "Root"
+                ? member with { Entry = member.Entry with { Movement = KsProcgenMovementClass.VaultRequired } }
+                : member.Id == "Subject" ? member with { Entry = member.Entry with { RequiresInteractionApproach = true } } : member).ToArray() };
             var room = new KsProcgenRoomAccessMask(
                 new HashSet<Vector2i> { new(0, 0), new(1, 0), new(2, 0) }, new HashSet<Vector2i> { new(3, 0) },
                 new HashSet<Vector2i>(), new HashSet<Vector2i>(), new HashSet<Vector2i> { new(0, 0) }, Vector2.Zero);
@@ -347,7 +348,8 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
                 Assert.That(system.Verify(stage), Is.True);
                 var retainedEntities = SEntMan.GetEntities().ToHashSet();
                 var locked = SurfaceAssembly(subjectPrototype: "KitchenMicrowave", surfacePrototype: "Table");
-                locked.Members.Single(member => member.Id == "Subject").Entry.RequiresInteractionApproach = true;
+                locked = locked with { Members = locked.Members.Select(member => member.Id == "Subject"
+                    ? member with { Entry = member.Entry with { RequiresInteractionApproach = true } } : member).ToArray() };
                 var rejected = system.TrySearchStage(locked, ["Root", "Subject"], room, 15,
                     fixedFloorRoots: [new("Root", new(2f, 0f))]);
                 Assert.That(rejected.Issue?.Code, Is.EqualTo("AssemblyStageRotationUnsupported"));
@@ -368,7 +370,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task UnsupportedRelationsAndRotationLocksCannotRetainAPreview()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var before = SEntMan.GetEntities().ToHashSet();
@@ -399,7 +401,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [TestCase(true)]
     public async Task ChangedPosesAndLiveSupportsRejectBeforeOrDuringInitialization(bool duringInitialization)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var listener = Pair.Server.System<KsProcgenInsertionTestSystem>();
@@ -428,7 +430,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
                             case "Offset": surfaceSystem.SetPositionOffset(rootUid, new(0.5f, 0f)); break;
                             case "Disabled": surfaceSystem.SetPlaceable(rootUid, false); break;
                             case "Filter":
-                                Assert.That(Pair.Server.System<TagSystem>().RemoveTag(subjectUid, "KsProcgenBlockedStorageFixture"), Is.True);
+                                Assert.That(Pair.Server.System<TagSystem>().RemoveTag(subjectUid, new ProtoId<TagPrototype>("KsProcgenBlockedStorageFixture")), Is.True);
                                 break;
                             case "Queued": SEntMan.QueueDeleteEntity(subjectUid); break;
                         }
@@ -468,7 +470,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task LiveCapacityMustFitAllSelectedSurfaceChildrenTogether()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var listener = Pair.Server.System<KsProcgenInsertionTestSystem>();
@@ -506,7 +508,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task InitializationFaultsCleanAllOwnedEntitiesAndPreserveOtherPreviews()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var listener = Pair.Server.System<KsProcgenInsertionTestSystem>();
@@ -569,7 +571,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task RealInsertionFaultsRollBackAllMembersOfTheAssembly()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var listener = Pair.Server.System<KsProcgenInsertionTestSystem>();
@@ -621,7 +623,7 @@ public sealed class KsProcgenAssemblyStageTests : GameTest
     [Test]
     public async Task BudgetsStartupFaultsAndCrossAdapterReentrancyCannotLeakStages()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var surfaceSystem = Pair.Server.System<KsProcgenSurfaceStageSystem>();

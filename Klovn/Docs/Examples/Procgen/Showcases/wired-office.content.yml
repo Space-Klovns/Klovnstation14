@@ -1,0 +1,64 @@
+walls: {}
+tiles: {}
+themes:
+  Showcase:
+    wallPacks: null
+    tilePacks: null
+    tags: []
+    parent: KsProcgenSimpleOffice
+    lightingPacks: []
+    goals:
+      lightingCoverage: 0.85
+      keepCenterOpen: True
+      furnishingDensity: 0
+      coherentContents: True
+      allowLooseItems: True
+    fallbackTheme: null
+    entityPacks:
+    - weight: 1
+      pack: ShowcaseContents
+      minimumCount: 0
+    electricalProfile: null
+    compatibleRegionTags: []
+    atmosphereProfile: null
+schemaVersion: 1
+revision: 0
+lights: {}
+entities:
+  ShowcaseContents:
+    tags: []
+    entries: []
+    compatibleSupportTags: []
+    assemblies:
+    - weight: 1
+      minimumCount: 1
+      id: Activity
+      bindings: {}
+      assembly: Computer
+    activityTags: []
+documentId: SmallShowcase
+assemblies:
+  Computer:
+    variants: []
+    relations: []
+    members:
+    - rotationMode: AssemblyRelative
+      role: Equipment
+      requiresInteractionApproach: True
+      movement: Blocks
+      minimumCount: 1
+      maximumCount: 1
+      localQuarterTurns: 0
+      id: Computer
+      footprint:
+      - 0,0
+      entity: KsProcgenFilteredComputerFixture
+      binding: null
+      approachLanding: null
+      allowedQuarterTurns:
+      - 0
+      - 1
+      - 2
+      - 3
+    anchorMember: Computer
+...

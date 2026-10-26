@@ -48,8 +48,8 @@ public static class KsProcgenAssemblyPosePlanner
         var roots = floorRoots.ToDictionary(root => root.MemberId, root => root.Position, StringComparer.Ordinal);
         var turns = orientations.ToDictionary(orientation => orientation.MemberId, orientation => orientation.QuarterTurns,
             StringComparer.Ordinal);
-        if (roots.Count != support.Members.Count(member => member.Layer == KsProcgenPlacementLayer.Floor) ||
-            support.Members.Any(member => member.Layer == KsProcgenPlacementLayer.Floor && !roots.ContainsKey(member.MemberId)) ||
+        if (roots.Count != support.Members.Count(member => member.Layer is KsProcgenPlacementLayer.Floor or KsProcgenPlacementLayer.Wall) ||
+            support.Members.Any(member => member.Layer is KsProcgenPlacementLayer.Floor or KsProcgenPlacementLayer.Wall && !roots.ContainsKey(member.MemberId)) ||
             turns.Count != support.Members.Count || support.Members.Any(member => !turns.ContainsKey(member.MemberId)))
             return Failure("AssemblyPoseSelectionMismatch", invalidInput: true);
         var declarations = capabilities.Members.ToDictionary(member => member.MemberId, member => member.Capabilities,
@@ -111,7 +111,7 @@ public static class KsProcgenAssemblyPosePlanner
             resolved.Add(member.MemberId, pose);
         }
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-support-poses-v1");
+        hash.AddString("ks-procgen-support-poses-v2");
         hash.AddInt(unchecked((int) support.StructureHash));
         hash.AddInt(unchecked((int) (support.StructureHash >> 32)));
         hash.AddInt(assemblyQuarterTurns);

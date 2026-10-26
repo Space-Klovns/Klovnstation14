@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,8 +47,8 @@ public sealed class KsProcgenSupportedNearTests
     public void ClearSupportStillCannotBecomeAShortcutAndWallsCanCutTheRoute()
     {
         var assembly = Assembly(minimum: 4, maximum: 4);
-        foreach (var member in assembly.Members.Where(member => member.Id is "Root" or "Device"))
-            member.Entry.Movement = KsProcgenMovementClass.Clear;
+        assembly = assembly.WithEntry("Root", entry => entry with { Movement = KsProcgenMovementClass.Clear });
+        assembly = assembly.WithEntry("Device", entry => entry with { Movement = KsProcgenMovementClass.Clear });
         var plan = Plan(assembly);
         Assert.That(plan.Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Candidate));
         Assert.That(plan.Relations.Single().PathDistance, Is.EqualTo(4));
@@ -76,7 +77,7 @@ public sealed class KsProcgenSupportedNearTests
     public void SearchRevisitsRootPositionsToMeetARequiredNearDistance()
     {
         var assembly = Assembly(minimum: 1, maximum: 1);
-        assembly.Members.Single(member => member.Id == "Device").Entry.AllowedQuarterTurns = [1];
+        assembly = assembly.WithEntry("Device", entry => entry with { AllowedQuarterTurns = [1] });
         var result = KsProcgenSupportedAssemblySearch.Search(assembly, ["Root", "Device", "Target"], Report(assembly), Room(), 14,
             fixedFloorRoots: [new("Target", new(0f, 2f))]);
         Assert.That(result.Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Candidate), result.Issue?.Code);

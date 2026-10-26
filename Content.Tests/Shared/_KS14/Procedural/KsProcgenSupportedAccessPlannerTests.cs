@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -79,7 +80,7 @@ public sealed class KsProcgenSupportedAccessPlannerTests
         Assert.That(Plan(assembly, Room(), turn: 0).Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Candidate));
         AssertFailure(Plan(assembly, Room() with { Occupied = new HashSet<Vector2i> { new(2, 1) } }, turn: 0),
             "SupportedCleanApproachUnavailable");
-        assembly.Members.Single(member => member.Id == "Seat").Entry.Footprint = [new(0, 0), new(1, 0)];
+        assembly = assembly.WithEntry("Seat", entry => entry with { Footprint = [new(0, 0), new(1, 0)] });
         AssertFailure(Plan(assembly, Room(), turn: 0), "SupportedSeatFootprintUnsupported");
     }
 
@@ -87,8 +88,7 @@ public sealed class KsProcgenSupportedAccessPlannerTests
     public void WideMachinesHonorAnExplicitFrontLanding()
     {
         var assembly = Assembly();
-        foreach (var member in assembly.Members)
-            member.Entry.Footprint = [new(0, 0), new(1, 0)];
+        assembly = assembly.WithEntries(entry => entry with { Footprint = [new(0, 0), new(1, 0)] });
         assembly = assembly with { Members = assembly.Members.Select(member => member.Id == "Device" ?
             member with { ApproachLanding = new(1, -1) } : member).ToArray() };
         var plan = Plan(assembly, Room(), turn: 0);
@@ -128,7 +128,7 @@ public sealed class KsProcgenSupportedAccessPlannerTests
         var plan = Plan(assembly, Room(), turn: 0);
         Assert.That(plan.Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Candidate));
         Assert.That(plan.Footprints.Any(footprint => footprint.MemberId == "Stored"), Is.False);
-        assembly.Members.Single(member => member.Id == "Stored").Entry.RequiresInteractionApproach = true;
+        assembly = assembly.WithEntry("Stored", entry => entry with { RequiresInteractionApproach = true });
         AssertFailure(Plan(assembly, Room(), turn: 0), "ContainedOperatingAccessUnsupported");
     }
 

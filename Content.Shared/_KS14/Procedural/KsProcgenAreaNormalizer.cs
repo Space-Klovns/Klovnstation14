@@ -9,6 +9,8 @@ public sealed record KsProcgenAreaProfile(string Id, KsProcgenMode Mode, KsProcg
 {
     public KsProcgenRoomSubdivisionProfile? RoomSubdivision { get; init; }
     public KsProcgenAreaGoalsProfile? GenerationGoals { get; init; }
+    public KsProcgenAtmosphereProfile? Atmosphere { get; init; }
+    public KsProcgenElectricalProfile? Electrical { get; init; }
 }
 public sealed record KsProcgenAreaMarker(Vector2i Cell, string Channel, string ProfileId, string? BlobId = null);
 
@@ -43,6 +45,8 @@ public sealed record KsProcgenAreaBlob(string Id, string Channel, KsProcgenAreaP
             SizeMix = Profile.GenerationGoals?.SizeMix.Select(goal => goal.Copy()).ToList() ?? new(),
             FallbackPolicy = Profile.GenerationGoals?.FallbackPolicy.Copy() ?? new(),
             WindowGoal = Profile.GenerationGoals?.WindowGoal.Copy() ?? new(),
+            Atmosphere = Profile.Atmosphere?.CopySpec(),
+            Electrical = Profile.Electrical?.CopySpec(),
         };
     }
 }
@@ -174,7 +178,7 @@ public static class KsProcgenAreaNormalizer
             canonical[index] = blob with { ConnectionContract = contract };
         }
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-area-snapshot-v5");
+        hash.AddString("ks-procgen-area-snapshot-v7");
         hash.AddString(hostKey);
         AddCells(ref hash, KsProcgenGeometry.SortCells(keepVoid));
         hash.AddInt(canonical.Count);
@@ -201,6 +205,10 @@ public static class KsProcgenAreaNormalizer
                 foreach (var size in subdivision.AlternativeMaximumRoomCells) hash.AddInt(size);
             }
             KsProcgenAreaGoals.AddHash(ref hash, blob.Profile.GenerationGoals);
+            hash.AddInt(blob.Profile.Atmosphere == null ? 0 : 1);
+            blob.Profile.Atmosphere?.AddHash(ref hash);
+            hash.AddInt(blob.Profile.Electrical == null ? 0 : 1);
+            blob.Profile.Electrical?.AddHash(ref hash);
             AddCells(ref hash, blob.Cells);
             hash.AddString(blob.ConnectionContract?.ContractHash.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty);
         }

@@ -1,0 +1,1526 @@
+{
+  "schemaVersion": 1,
+  "kind": "KsProcgenShowcase",
+  "id": "gas-room",
+  "seed": 17,
+  "themeId": "KsProcgenEmptyOfficeThemeFixture",
+  "state": "InitializedPausedPreview",
+  "nativeGridLoadVerified": true,
+  "published": false,
+  "engineAccessVerified": false,
+  "workingLightingVerified": false,
+  "electricalSupplyVerified": false,
+  "electricalTopologyVerified": false,
+  "planHash": "16622918140720809691",
+  "contentDeclarationHash": 1849557504988195575,
+  "request": {
+    "schemaVersion": 2,
+    "requestId": "Showcase/gas-room",
+    "seed": 17,
+    "shape": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 4
+      },
+      {
+        "x": 0,
+        "y": 5
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 1,
+        "y": 2
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 4
+      },
+      {
+        "x": 1,
+        "y": 5
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 4
+      },
+      {
+        "x": 2,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 4
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 2
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 4
+      },
+      {
+        "x": 4,
+        "y": 5
+      },
+      {
+        "x": 5,
+        "y": 0
+      },
+      {
+        "x": 5,
+        "y": 1
+      },
+      {
+        "x": 5,
+        "y": 2
+      },
+      {
+        "x": 5,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": 5
+      }
+    ],
+    "envelope": [
+      {
+        "x": -1,
+        "y": -1
+      },
+      {
+        "x": -1,
+        "y": 0
+      },
+      {
+        "x": -1,
+        "y": 1
+      },
+      {
+        "x": -1,
+        "y": 2
+      },
+      {
+        "x": -1,
+        "y": 3
+      },
+      {
+        "x": -1,
+        "y": 4
+      },
+      {
+        "x": -1,
+        "y": 5
+      },
+      {
+        "x": -1,
+        "y": 6
+      },
+      {
+        "x": 0,
+        "y": -1
+      },
+      {
+        "x": 0,
+        "y": 6
+      },
+      {
+        "x": 1,
+        "y": -1
+      },
+      {
+        "x": 1,
+        "y": 6
+      },
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": 2,
+        "y": 6
+      },
+      {
+        "x": 3,
+        "y": -1
+      },
+      {
+        "x": 3,
+        "y": 6
+      },
+      {
+        "x": 4,
+        "y": -1
+      },
+      {
+        "x": 4,
+        "y": 6
+      },
+      {
+        "x": 5,
+        "y": -1
+      },
+      {
+        "x": 5,
+        "y": 6
+      },
+      {
+        "x": 6,
+        "y": -1
+      },
+      {
+        "x": 6,
+        "y": 0
+      },
+      {
+        "x": 6,
+        "y": 1
+      },
+      {
+        "x": 6,
+        "y": 2
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 6,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 5
+      },
+      {
+        "x": 6,
+        "y": 6
+      }
+    ],
+    "atmosphereProfile": "KsProcgenStandardAir",
+    "electricalProfile": null
+  },
+  "rooms": [
+    {
+      "id": "Showcase/gas-room/EntranceNetwork/0/Zone/0",
+      "kind": "RoomProposal",
+      "cells": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 1,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 0
+        },
+        {
+          "x": 3,
+          "y": 0
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 5,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 5,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 3
+        },
+        {
+          "x": 5,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 4
+        },
+        {
+          "x": 2,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 5,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 5
+        },
+        {
+          "x": 1,
+          "y": 5
+        },
+        {
+          "x": 2,
+          "y": 5
+        },
+        {
+          "x": 3,
+          "y": 5
+        },
+        {
+          "x": 4,
+          "y": 5
+        },
+        {
+          "x": 5,
+          "y": 5
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "cell": {
+        "x": 0,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 0
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 1
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 1
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 2
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 3
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 3
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 4
+      },
+      "tileId": "FloorSteel"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 4
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 5
+      },
+      "tileId": "FloorSteelMini"
+    }
+  ],
+  "walls": [
+    {
+      "cell": {
+        "x": 0,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": -1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 1
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 2
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 2
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 3
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 4
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 4
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 5
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 5
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 6
+      },
+      "entityId": "WallReinforced"
+    }
+  ],
+  "windows": [
+    {
+      "cell": {
+        "x": 1,
+        "y": -1
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 0
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": 6,
+        "y": 0
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": -1,
+        "y": 3
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 6
+      },
+      "entityId": "Window"
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 6
+      },
+      "entityId": "Window"
+    }
+  ],
+  "doors": [],
+  "entities": [],
+  "approaches": [],
+  "lights": [],
+  "cables": null,
+  "transferRadius": null,
+  "electricalDevices": null,
+  "electricalService": null,
+  "nativeConnections": null,
+  "consumers": null,
+  "electricalOmissions": null,
+  "initialAtmosphere": [
+    {
+      "cell": {
+        "x": 0,
+        "y": 0
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 0
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 0
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 0
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 0
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 0
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 1
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 1
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 1
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 1
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 1
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 1
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 2
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 2
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 2
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 2
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 2
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 2
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 3
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 3
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 3
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 3
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 3
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 3
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 4
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 4
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 4
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 4
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 4
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 4
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 0,
+        "y": 5
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 1,
+        "y": 5
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 2,
+        "y": 5
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 3,
+        "y": 5
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 4,
+        "y": 5
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    },
+    {
+      "cell": {
+        "x": 5,
+        "y": 5
+      },
+      "pressureKPa": 101.325,
+      "temperatureKelvin": 293.15,
+      "gases": [
+        {
+          "gasId": "Oxygen",
+          "moles": 21.824877
+        },
+        {
+          "gasId": "Nitrogen",
+          "moles": 82.10311
+        }
+      ]
+    }
+  ],
+  "expandedCells": 1108,
+  "furnishingProbes": 0,
+  "fallbacks": [],
+  "notes": "Native saved grid reloaded on a paused map. Operational use, publication and stable simulation remain uncertified."
+}

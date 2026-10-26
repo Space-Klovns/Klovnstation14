@@ -147,8 +147,9 @@ public sealed class KsProcgenRoomCoreTests : GameTest
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var before = SEntMan.GetEntities().ToHashSet();
             var oversized = Surface("Oversized", "KsProcgenTrackedSurfaceFixture");
-            oversized.Members.Single(member => member.Id == "Root").Entry.Footprint = Enumerable.Range(0, 4)
-                .SelectMany(x => Enumerable.Range(0, 4).Select(y => new Vector2i(x, y))).ToList();
+            oversized = oversized with { Members = oversized.Members.Select(member => member.Id == "Root"
+                ? member with { Entry = member.Entry with { Footprint = Enumerable.Range(0, 4)
+                    .SelectMany(x => Enumerable.Range(0, 4).Select(y => new Vector2i(x, y))).ToArray() } } : member).ToArray() };
             var firstCore = new KsProcgenResolvedEntityCore("Core", 1f, 1, new[] { oversized });
             var first = KsProcgenRoomCoreSearch.Search(manager, SEntMan.ComponentFactory, "Room",
                 new[] { new KsProcgenRoomCoreSelection("Pack", firstCore, 0) }, Room(), 17);

@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -24,12 +25,12 @@ using Robust.Shared.Physics.Systems;
 namespace Content.IntegrationTests.Tests._KS14.Procedural;
 
 [TestOf(typeof(KsProcgenGeometry))]
-public sealed class KsProcgenContentLoadTests : GameTest
+public sealed class KsProcgenContentLoadTests : KsProcgenGameTest
 {
     [Test]
     public async Task SupportedPoseProposalsMatchRealSurfaceDropsAndContainerInsertion()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var factory = Pair.Server.ResolveDependency<IComponentFactory>();
@@ -67,9 +68,9 @@ public sealed class KsProcgenContentLoadTests : GameTest
                     Assert.That(plan.Status, Is.EqualTo(KsProcgenAssemblySupportStatus.NeedsEngineValidation), plan.Issue?.Code);
                     var surfaceUid = SEntMan.SpawnEntity(surfacePrototype, new EntityCoordinates(mapUid, 2f, 3f));
                     var subjectUid = SEntMan.SpawnEntity("CoordinatesDisk", new EntityCoordinates(mapUid, 2f, 2f));
-                    transformSystem.SetLocalRotation(surfaceUid, Angle.FromDegrees((double) turn * 90.0));
+                    transformSystem.SetLocalRotation(surfaceUid, KsProcgenRotation.ToEngineAngle(turn));
                     Assert.That(SEntMan.GetComponent<TransformComponent>(surfaceUid).LocalRotation,
-                        Is.EqualTo(Angle.FromDegrees((double) turn * 90.0)));
+                        Is.EqualTo(KsProcgenRotation.ToEngineAngle(turn)));
                     Assert.That(handsSystem.TryPickupAnyHand(userUid, subjectUid), Is.True);
                     var dropEvent = new AfterInteractUsingEvent(userUid, subjectUid, surfaceUid,
                         new EntityCoordinates(mapUid, 2f, 3f), true);
@@ -99,7 +100,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 var disk = SEntMan.GetComponent<TransformComponent>(containerStage.Members["Disk"]);
                 Assert.That(disk.ParentUid, Is.EqualTo(containerStage.Members[diskPose.CoordinateParentMemberId!]));
                 Assert.That(disk.LocalPosition, Is.EqualTo(diskPose.LocalPosition));
-                Assert.That(disk.LocalRotation, Is.EqualTo(Angle.FromDegrees((double) diskPose.LocalQuarterTurns * 90.0)));
+                Assert.That(disk.LocalRotation, Is.EqualTo(KsProcgenRotation.ToEngineAngle(diskPose.LocalQuarterTurns)));
             }
             finally
             {
@@ -135,14 +136,14 @@ public sealed class KsProcgenContentLoadTests : GameTest
         var subjectUid = EntityUid.Invalid;
         try
         {
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 mapUid = Pair.Server.System<SharedMapSystem>().CreateMap(out mapId, runMapInit: true);
                 surfaceUid = SEntMan.SpawnEntity("KsProcgenCircleSensorFixture", new EntityCoordinates(mapUid, 0f, 0f));
                 subjectUid = SEntMan.SpawnEntity("KsProcgenCircleBeakerFixture", new EntityCoordinates(mapUid, 0.9f, 0f));
             });
             await RunTicksSync(5);
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 var contactSystem = Pair.Server.System<KsProcgenSurfaceContactSystem>();
                 Assert.That(contactSystem.Check(subjectUid, surfaceUid).Status, Is.EqualTo(KsProcgenSurfaceContactStatus.Observed));
@@ -176,7 +177,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
         var mapId = MapId.Nullspace;
         try
         {
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 var listenerSystem = Pair.Server.System<KsProcgenInsertionTestSystem>();
                 var contactSystem = Pair.Server.System<KsProcgenSurfaceContactSystem>();
@@ -190,7 +191,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 SEntMan.SpawnEntity("Beaker", new EntityCoordinates(mapUid, 10f, 0.1f));
             });
             await RunTicksSync(5);
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 var contactSystem = Pair.Server.System<KsProcgenSurfaceContactSystem>();
                 Assert.That(hardObservation, Is.Not.Null, "Capture read-only evidence from the real engine contact callback before separation.");
@@ -231,7 +232,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
         var mapId = MapId.Nullspace;
         try
         {
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 var mapSystem = Pair.Server.System<SharedMapSystem>();
                 var contactSystem = Pair.Server.System<KsProcgenSurfaceContactSystem>();
@@ -245,7 +246,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 Assert.That(SEntMan.GetComponent<ItemPlacerComponent>(surfaceUid).PlacedEntities, Is.Empty);
             });
             await RunTicksSync(5);
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 var contactSystem = Pair.Server.System<KsProcgenSurfaceContactSystem>();
                 var observed = contactSystem.Check(firstUid, surfaceUid);
@@ -265,7 +266,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 Pair.Server.System<SharedTransformSystem>().SetCoordinates(secondUid, new EntityCoordinates(mapUid, 0.05f, 0.1f));
             });
             await RunTicksSync(5);
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 var contactSystem = Pair.Server.System<KsProcgenSurfaceContactSystem>();
                 var second = contactSystem.Check(secondUid, surfaceUid);
@@ -285,7 +286,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 physicsSystem.SetAwake(secondUid, SEntMan.GetComponent<PhysicsComponent>(secondUid), true);
             });
             await RunTicksSync(5);
-            await Pair.Server.WaitAssertion(() =>
+            await AssertOnServer(() =>
             {
                 var contactSystem = Pair.Server.System<KsProcgenSurfaceContactSystem>();
                 Assert.That(contactSystem.Check(firstUid, surfaceUid).Status, Is.EqualTo(KsProcgenSurfaceContactStatus.NoContact));
@@ -309,7 +310,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task SurfacePreviewInitializationRetainsPausedPosesAndInitializesOnlyOnce()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stageSystem = Pair.Server.System<KsProcgenSurfaceStageSystem>();
             var mapSystem = Pair.Server.System<SharedMapSystem>();
@@ -366,7 +367,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task SurfacePreviewInitializationRejectsLifecyclePoseAndFilterChanges()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stageSystem = Pair.Server.System<KsProcgenSurfaceStageSystem>();
             var surfaceSystem = Pair.Server.System<PlaceableSurfaceSystem>();
@@ -436,7 +437,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task SurfacePreviewInitializationCleansFaultsAndPreservesUnrelatedPreviews()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stageSystem = Pair.Server.System<KsProcgenSurfaceStageSystem>();
             var containerSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -521,7 +522,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task OwnedSurfaceDropPreviewVerifiesCoordinatesOrientationAndRejectsDrift()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stageSystem = Pair.Server.System<KsProcgenSurfaceStageSystem>();
             var transformSystem = Pair.Server.System<SharedTransformSystem>();
@@ -543,10 +544,10 @@ public sealed class KsProcgenContentLoadTests : GameTest
                     Assert.That(SEntMan.GetComponent<TransformComponent>(stage.SubjectUid).ParentUid, Is.EqualTo(stage.MapUid));
                     Assert.That(SEntMan.GetComponent<TransformComponent>(stage.SubjectUid).LocalPosition, Is.EqualTo(stage.DropPosition));
                     Assert.That(SEntMan.GetComponent<TransformComponent>(stage.SubjectUid).LocalRotation,
-                        Is.EqualTo(Angle.FromDegrees((double) quarterTurns * 90.0)));
-                    transformSystem.SetLocalRotation(stage.SubjectUid, Angle.FromDegrees((double) ((quarterTurns + 1) % 4) * 90.0));
+                        Is.EqualTo(KsProcgenRotation.ToEngineAngle(quarterTurns)));
+                    transformSystem.SetLocalRotation(stage.SubjectUid, KsProcgenRotation.ToEngineAngle((quarterTurns + 1) % 4));
                     Assert.That(stageSystem.Verify(stage), Is.False);
-                    transformSystem.SetLocalRotation(stage.SubjectUid, Angle.FromDegrees((double) quarterTurns * 90.0));
+                    transformSystem.SetLocalRotation(stage.SubjectUid, KsProcgenRotation.ToEngineAngle(quarterTurns));
                     Assert.That(stageSystem.Verify(stage), Is.True);
                     transformSystem.SetCoordinates(stage.SubjectUid, new EntityCoordinates(stage.MapUid, 7f, 0f));
                     Assert.That(stageSystem.Verify(stage), Is.False);
@@ -586,7 +587,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task SurfaceDropPreviewBoundsAllocationRetentionAndCleansRejectedPairs()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stageSystem = Pair.Server.System<KsProcgenSurfaceStageSystem>();
             var listenerSystem = Pair.Server.System<KsProcgenInsertionTestSystem>();
@@ -644,7 +645,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task SurfaceAndContainerPreviewTransactionsRejectCrossAdapterReentrancy()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var surfaceStageSystem = Pair.Server.System<KsProcgenSurfaceStageSystem>();
             var containerStageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -714,7 +715,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task LiveSurfacePreflightRetainsTrackingLimitsWithoutMovingOrMountingEntities()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var createdUids = new List<EntityUid>();
             EntityUid Spawn(string? prototypeId)
@@ -799,10 +800,10 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task LoadedRelationalDeclarationsRejectIgnoredFieldsWithoutChangingPrototypeData()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
-            var prototype = manager.Index<KsProcgenAssemblyPrototype>("KsProcgenRelationalFixture");
+            var prototype = manager.Index(new ProtoId<KsProcgenAssemblyPrototype>("KsProcgenRelationalFixture"));
             var bindings = new Dictionary<string, string> { ["DeviceEntity"] = "ComputerAlert" };
             var oversizedReference = new KsProcgenAssemblyReference
             {
@@ -847,7 +848,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 id => manager.TryIndex<EntityPrototype>(id, out _), out var rejected, out issue), Is.False);
             Assert.That(rejected, Is.Null);
             Assert.That(issue?.Code, Is.EqualTo("InapplicableAssemblyRelationField"));
-            var pack = manager.Index<KsProcgenEntityPackPrototype>("KsProcgenRelationalPackFixture");
+            var pack = manager.Index(new ProtoId<KsProcgenEntityPackPrototype>("KsProcgenRelationalPackFixture"));
             Assert.That(KsProcgenAssemblyCompiler.TryResolvePack(manager, pack, out var cores, out issue), Is.True, issue?.Code);
             var replay = cores.Single().Variants.Single(variant => variant.VariantId == "Base");
             Assert.That(replay.Relations, Is.EqualTo(before!.Relations));
@@ -859,7 +860,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task ContainerStageSpawnBudgetsIncludeInitializerEntitiesAndBoundRetention()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -934,7 +935,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task ContainerStageAccountsForOffMapInitializerSpawnsAndCleansThemUp()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -985,7 +986,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task ContainerStageExceptionsDiscardOwnedEntitiesAndPreserveOtherPreviews()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -1047,7 +1048,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task ContainerStageCancellationDiscardsOnlyTheCancelledPreview()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -1126,7 +1127,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task RetainedContainerContentsMustMatchLiveFilters()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -1183,7 +1184,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task ContainerStageHonorsInsertionVetoesAndDoesNotReplayAttempts()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -1246,7 +1247,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task ContainerStageInitializationPreservesMembersOrDiscardsPreview()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -1326,7 +1327,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task OwnedContainerStageInsertsVerifiesAndRollsBack()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var stageSystem = Pair.Server.System<KsProcgenContainerStageSystem>();
@@ -1407,11 +1408,14 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 Assert.That(stageSystem.Verify(second.Stage), Is.False);
                 mapSystem.DeleteMap(second.Stage.MapId);
                 Assert.That(stageSystem.Verify(second.Stage), Is.False);
-                Assert.That(stageSystem.DiscardAll(), Is.EqualTo(2));
+                Assert.That(second.Stage.Active, Is.False);
+                Assert.That(stageSystem.RetainedStageCount, Is.EqualTo(1));
+                Assert.That(stageSystem.Discard(second.Stage), Is.False);
+                Assert.That(stageSystem.DiscardAll(), Is.EqualTo(1));
                 Assert.That(generic.Stage!.Active || second.Stage.Active, Is.False);
                 Assert.That(stageSystem.DiscardAll(), Is.Zero);
 
-                var surfacePack = manager.Index<KsProcgenEntityPackPrototype>("KsProcgenRelationalPackFixture");
+                var surfacePack = manager.Index(new ProtoId<KsProcgenEntityPackPrototype>("KsProcgenRelationalPackFixture"));
                 Assert.That(KsProcgenAssemblyCompiler.TryResolvePack(manager, surfacePack, out var cores, out _), Is.True);
                 var unsupported = Stage(cores.Single().Variants[0]);
                 Assert.That(unsupported.Status, Is.EqualTo(KsProcgenContainerStageStatus.UnsupportedContent));
@@ -1428,7 +1432,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task LiveContainerPreflightUsesEnginePermissionWithoutInsertion()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var createdUids = new List<EntityUid>();
             EntityUid Spawn(string? prototypeId)
@@ -1458,7 +1462,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 Assert.That(itemSlotsSystem.TryGetSlot(shuttleUid, "disk_slot", out var slot), Is.True);
                 Assert.That(slot!.HasItem, Is.False);
                 Assert.That(containerSystem.TryGetContainer(shuttleUid, "disk_slot", out var detachedItemSlot), Is.True);
-                detachedItemSlot.PvsDetachedEntities.Add(SEntMan.GetNetEntity(otherDiskUid));
+                detachedItemSlot!.PvsDetachedEntities.Add(SEntMan.GetNetEntity(otherDiskUid));
                 Assert.That(preflightSystem.Check(diskUid, shuttleUid, "disk_slot").Reason,
                     Is.EqualTo("ContainerSlotOccupied"));
                 Assert.That(slot.HasItem, Is.False, "Detached occupancy must not be mistaken for an empty slot.");
@@ -1523,7 +1527,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task PrototypeCapabilityInspectionRetainsEngineLimits()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             var factory = Pair.Server.ResolveDependency<IComponentFactory>();
@@ -1559,7 +1563,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
             Assert.That(microwave.Containers.Single(container => container.Id == "microwave_entity_container")
                 .DeclaredCapacity, Is.Null);
 
-            var pack = manager.Index<KsProcgenEntityPackPrototype>("KsProcgenRelationalPackFixture");
+            var pack = manager.Index(new ProtoId<KsProcgenEntityPackPrototype>("KsProcgenRelationalPackFixture"));
             Assert.That(KsProcgenAssemblyCompiler.TryResolvePack(manager, pack, out var cores, out var issue),
                 Is.True, issue?.Message);
             Assert.That(KsProcgenPrototypeCapabilityInspector.TryInspectAssembly(manager, factory,
@@ -1604,7 +1608,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task TinyShapeCanBeNormalizedInLoadedServerContent()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var request = new KsProcgenRequest
             {
@@ -1621,7 +1625,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
             };
 
             Assert.That(KsProcgenGeometry.TryNormalize(request, out var shape, out var issue), Is.True, issue?.Message);
-            Assert.That(shape.TargetComponents().Count, Is.EqualTo(1));
+            Assert.That(shape!.TargetComponents().Count, Is.EqualTo(1));
             Assert.That(shape.TargetCells.Count, Is.EqualTo(3));
 
             var plan = KsProcgenPackingPlanner.Plan(request, []);
@@ -1741,8 +1745,8 @@ public sealed class KsProcgenContentLoadTests : GameTest
             Assert.That(KsProcgenThemeSelector.TrySelect(prototypeManager,
                 "KsProcgenRelationalThemeFixture", 17, "RelationalRoom",
                 out var relationalTheme, out var relationalIssue), Is.True, relationalIssue?.Message);
-            var relationalPack = prototypeManager.Index<KsProcgenEntityPackPrototype>(
-                "KsProcgenRelationalPackFixture");
+            var relationalPack = prototypeManager.Index(
+                new ProtoId<KsProcgenEntityPackPrototype>("KsProcgenRelationalPackFixture"));
             Assert.That(KsProcgenAssemblyCompiler.TryResolvePack(prototypeManager, relationalPack,
                 out var relationalCores, out relationalIssue), Is.True, relationalIssue?.Message);
             var relationalCore = relationalCores.Single();
@@ -1815,7 +1819,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
             Assert.That(missingRequiredCorner.Entities, Is.Empty);
             Assert.That(KsProcgenThemeSelector.TrySelect(prototypeManager,
                 "KsProcgenNearThemeFixture", 17, "NearRoom", out var nearTheme, out _), Is.True);
-            var nearRegion = relationalRegion with { Theme = nearTheme! };
+            var nearRegion = relationalRegion with { Theme = nearTheme! with { Content = null, FurnishingDensity = 0.01f } };
             var nearPlacement = KsProcgenFurnishingPlanner.Plan(prototypeManager, nearRegion, openPartition, 17);
             Assert.That(nearPlacement.Status, Is.EqualTo(KsProcgenFurnishingStatus.Proposed), nearPlacement.Issue?.Code);
             Assert.That(nearPlacement.Entities.Select(entity => entity.EntryId),
@@ -1884,6 +1888,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
             Assert.That(KsProcgenThemeSelector.TrySelect(prototypeManager,
                 "KsProcgenWeightedCoresThemeFixture", 17, "WeightedCores",
                 out var weightedTheme, out _), Is.True);
+            weightedTheme = weightedTheme! with { Content = null, FurnishingDensity = 0.01f };
             var weightedFloor = new[] { new Vector2i(0, 0), new Vector2i(1, 0) };
             var weightedRegion = new KsProcgenThemedRegion("WeightedCores", KsProcgenZoneKind.RoomProposal,
                 ["WeightedCores"], weightedFloor, [], weightedTheme!, []);
@@ -2037,7 +2042,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 Is.EqualTo(spaciousFurnishing.Entities));
             var lowDensityRegion = spaciousRegion with
             {
-                Theme = furnishingTheme! with { FurnishingDensity = 0f },
+                Theme = furnishingTheme! with { Content = null, FurnishingDensity = 0.01f },
             };
             var lowDensityFurnishing = KsProcgenFurnishingPlanner.Plan(prototypeManager,
                 lowDensityRegion, spaciousPartition, 17);
@@ -2192,8 +2197,9 @@ public sealed class KsProcgenContentLoadTests : GameTest
             var externallyRemovedStage = externallyRemovedResult.Stage!;
             Pair.Server.System<SharedMapSystem>().DeleteMap(externallyRemovedStage.MapId);
             Assert.That(tileStageSystem.Verify(externallyRemovedStage), Is.False);
-            Assert.That(tileStageSystem.Discard(externallyRemovedStage), Is.True);
             Assert.That(externallyRemovedStage.Active, Is.False);
+            Assert.That(tileStageSystem.RetainedStageCount, Is.Zero);
+            Assert.That(tileStageSystem.Discard(externallyRemovedStage), Is.False);
             var pureReport = purePipeline.Summarize(request);
             Assert.That(pureReport.Disposition, Is.EqualTo(KsProcgenPlanningDisposition.Degraded));
             Assert.That(pureReport.Fallbacks.Select(item => item.Code), Does.Contain("SparseLighting"));
@@ -2442,12 +2448,13 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task MandatoryContentPrecedesOptionalFurnishing()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var prototypeManager = Pair.Server.ResolveDependency<IPrototypeManager>();
             Assert.That(KsProcgenThemeSelector.TrySelect(prototypeManager,
                 "KsProcgenWeightedCoresThemeFixture", 17, "MandatoryScheduling",
                 out var weightedTheme, out _), Is.True);
+            weightedTheme = weightedTheme! with { Content = null, FurnishingDensity = 0.01f };
             var weightedFloor = new[] { new Vector2i(0, 0), new Vector2i(1, 0) };
             var weightedRegion = new KsProcgenThemedRegion("MandatoryScheduling", KsProcgenZoneKind.RoomProposal,
                 ["MandatoryScheduling"], weightedFloor, [], weightedTheme!, []);
@@ -2460,6 +2467,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
             {
                 Theme = weightedTheme! with
                 {
+                    Content = null,
                     SupportingEntityPackIds = ["KsProcgenMandatorySupportCoreFixture"],
                 },
             };
@@ -2477,6 +2485,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
             {
                 Theme = weightedTheme! with
                 {
+                    Content = null,
                     SupportingEntityPackIds = ["KsProcgenMandatorySupportChoiceFixture"],
                 },
                 UnplacedRequiredPacks = [new("KsProcgenMandatorySupportChoiceFixture", 1)],
@@ -2532,7 +2541,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
     [Test]
     public async Task MandatoryCoresBacktrackAcrossPosesChoicesAndVariants()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var prototypeManager = Pair.Server.ResolveDependency<IPrototypeManager>();
             Assert.That(KsProcgenThemeSelector.TrySelect(prototypeManager,
@@ -2543,6 +2552,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
             var region = new KsProcgenThemedRegion("MandatoryBacktracking", KsProcgenZoneKind.RoomProposal,
                 ["MandatoryBacktracking"], floor, walls, theme! with
                 {
+                    Content = null,
                     DominantEntityPackId = "KsProcgenMandatoryFlexiblePackFixture",
                     SupportingEntityPackIds = ["KsProcgenRequiredCornerPackFixture"],
                 }, []);
@@ -2588,6 +2598,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 {
                     DominantEntityPackId = "KsProcgenMandatoryCoreChoiceFixture",
                     SupportingEntityPackIds = ["KsProcgenMandatorySupportChoiceFixture"],
+                    FurnishingDensity = 0.01f,
                 },
                 UnplacedRequiredPacks =
                 [
@@ -2604,7 +2615,7 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 "A wide core that fits locally must be replaced when it leaves no room for another required pack.");
             var variantRegion = choiceRegion with
             {
-                Theme = choiceRegion.Theme with { DominantEntityPackId = "KsProcgenMandatoryVariantPackFixture" },
+                Theme = choiceRegion.Theme with { Content = null, DominantEntityPackId = "KsProcgenMandatoryVariantPackFixture" },
                 UnplacedRequiredPacks =
                 [
                     new("KsProcgenMandatoryVariantPackFixture", 1),

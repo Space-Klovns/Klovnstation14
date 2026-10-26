@@ -1,0 +1,27 @@
+- type: ksProcgenElectricalProfile
+  id: KsProcgenAutomaticElectrical
+  mode: AutoDistribute
+
+- type: ksProcgenElectricalProfile
+  id: KsProcgenWiredElectrical
+  mode: AutoDistribute
+  supplyRequirement: WiredOnly
+
+- type: ksProcgenElectricalProfile
+  id: KsProcgenExistingElectrical
+  mode: ValidateExisting
+
+- type: ksProcgenElectricalProfile
+  id: KsProcgenDisabledElectrical
+  mode: Disabled
+
+# Opt-in authoring samples. Actual network generation remains gated by R09/R10/R12.
+- type: ksProcgenAreaProfile
+  id: KsProcgenPoweredOfficeArea
+  theme: KsProcgenSimpleOffice
+  electricalProfile: KsProcgenAutomaticElectrical
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenPoweredOfficeTheme
+  parent: KsProcgenSimpleOffice
+  electricalProfile: KsProcgenAutomaticElectrical

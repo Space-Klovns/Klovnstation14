@@ -24,12 +24,14 @@ public sealed partial class KsProcgenThemeGoals
 /// <summary>
 /// A reusable interior style. This selects content; it does not prescribe a room shape or fixture location.
 /// </summary>
-[Prototype]
-public sealed partial class KsProcgenRoomThemePrototype : IPrototype
+[DataDefinition]
+[Virtual]
+public partial class KsProcgenRoomThemeSpec
 {
-    [IdDataField] public string ID { get; private set; } = string.Empty;
     [DataField] public string? Parent;
     [DataField] public string? FallbackTheme;
+    [DataField] public string? AtmosphereProfile;
+    [DataField] public string? ElectricalProfile;
     [DataField] public List<string> Tags = new();
     [DataField] public List<string> CompatibleRegionTags = new();
     [DataField] public List<KsProcgenWeightedPackReference>? TilePacks;
@@ -49,10 +51,10 @@ public sealed partial class KsProcgenTilePalette
     [DataField] public float Weight = 1f;
 }
 
-[Prototype]
-public sealed partial class KsProcgenTilePackPrototype : IPrototype
+[DataDefinition]
+[Virtual]
+public partial class KsProcgenTilePackSpec
 {
-    [IdDataField] public string ID { get; private set; } = string.Empty;
     [DataField] public List<string> Tags = new();
     [DataField(required: true)] public List<KsProcgenTilePalette> Palettes = new();
 }
@@ -68,10 +70,10 @@ public sealed partial class KsProcgenWallFamily
     [DataField] public float Weight = 1f;
 }
 
-[Prototype]
-public sealed partial class KsProcgenWallPackPrototype : IPrototype
+[DataDefinition]
+[Virtual]
+public partial class KsProcgenWallPackSpec
 {
-    [IdDataField] public string ID { get; private set; } = string.Empty;
     [DataField] public List<string> Tags = new();
     [DataField(required: true)] public List<KsProcgenWallFamily> Families = new();
 }
@@ -92,10 +94,10 @@ public sealed partial class KsProcgenLightFixture
     [DataField] public KsProcgenLightingSupply Supply = KsProcgenLightingSupply.SelfContained;
 }
 
-[Prototype]
-public sealed partial class KsProcgenLightingPackPrototype : IPrototype
+[DataDefinition]
+[Virtual]
+public partial class KsProcgenLightingPackSpec
 {
-    [IdDataField] public string ID { get; private set; } = string.Empty;
     [DataField] public List<string> Tags = new();
     [DataField(required: true)] public List<KsProcgenLightFixture> Fixtures = new();
 }
@@ -132,13 +134,43 @@ public sealed partial class KsProcgenEntityEntry
     [DataField] public bool RequiresInteractionApproach;
 }
 
-[Prototype]
-public sealed partial class KsProcgenEntityPackPrototype : IPrototype
+[DataDefinition]
+[Virtual]
+public partial class KsProcgenEntityPackSpec
 {
-    [IdDataField] public string ID { get; private set; } = string.Empty;
     [DataField] public List<string> Tags = new();
     [DataField] public List<string> ActivityTags = new();
     [DataField] public List<string> CompatibleSupportTags = new();
     [DataField] public List<KsProcgenEntityEntry> Entries = new();
     [DataField] public List<KsProcgenAssemblyReference> Assemblies = new();
+}
+
+[Prototype]
+public sealed partial class KsProcgenRoomThemePrototype : KsProcgenRoomThemeSpec, IPrototype
+{
+    [IdDataField] public string ID { get; private set; } = string.Empty;
+}
+
+[Prototype]
+public sealed partial class KsProcgenTilePackPrototype : KsProcgenTilePackSpec, IPrototype
+{
+    [IdDataField] public string ID { get; private set; } = string.Empty;
+}
+
+[Prototype]
+public sealed partial class KsProcgenWallPackPrototype : KsProcgenWallPackSpec, IPrototype
+{
+    [IdDataField] public string ID { get; private set; } = string.Empty;
+}
+
+[Prototype]
+public sealed partial class KsProcgenLightingPackPrototype : KsProcgenLightingPackSpec, IPrototype
+{
+    [IdDataField] public string ID { get; private set; } = string.Empty;
+}
+
+[Prototype]
+public sealed partial class KsProcgenEntityPackPrototype : KsProcgenEntityPackSpec, IPrototype
+{
+    [IdDataField] public string ID { get; private set; } = string.Empty;
 }

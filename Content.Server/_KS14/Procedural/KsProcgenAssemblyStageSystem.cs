@@ -4,10 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using Content.Shared._KS14.Procedural;
-using Content.Shared.Containers.ItemSlots;
 using Content.Shared.GameTicking;
-using Content.Shared.Whitelist;
-using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -32,23 +29,18 @@ public enum KsProcgenAssemblyStagePhase : byte
 }
 
 /// <summary>Owned transforms and container contents; no surface mounting or usable-room proof.</summary>
-public sealed class KsProcgenAssemblyStage
+public sealed class KsProcgenAssemblyStage : KsProcgenStageHandle
 {
     internal KsProcgenAssemblyStage(MapId mapId, EntityUid mapUid, KsProcgenAssemblyPosePlan poses,
         Dictionary<string, EntityUid> members, List<EntityUid> spawnedEntities, int maxSpawnedEntities,
         KsProcgenSupportedAccessPlan? access)
+        : base(mapId, mapUid, KsProcgenStageKind.Assembly, spawnedEntities, maxSpawnedEntities)
     {
-        MapId = mapId;
-        MapUid = mapUid;
         Poses = poses;
         Members = new ReadOnlyDictionary<string, EntityUid>(members);
-        SpawnedEntities = spawnedEntities;
-        MaxSpawnedEntities = maxSpawnedEntities;
         Access = access;
     }
 
-    public MapId MapId { get; }
-    public EntityUid MapUid { get; }
     public EntityUid? GridUid { get; internal set; }
     public EntityUid CoordinateFrame => GridUid ?? MapUid;
     public KsProcgenRoomTerrain? Terrain { get; internal set; }
@@ -58,12 +50,9 @@ public sealed class KsProcgenAssemblyStage
     /// <summary>Optional declared room geometry, not live engine reach/collision validation.</summary>
     public KsProcgenSupportedAccessPlan? Access { get; }
     public IReadOnlyDictionary<string, EntityUid> Members { get; }
-    public bool Active { get; internal set; } = true;
-    public KsProcgenAssemblyStagePhase Phase { get; internal set; }
+    public KsProcgenAssemblyStagePhase Phase => InitializationPhase == KsProcgenStageInitializationPhase.Initialized
+        ? KsProcgenAssemblyStagePhase.Initialized : KsProcgenAssemblyStagePhase.Uninitialized;
     public bool PlacementVerified => false;
-    public int SpawnedEntityCount => SpawnedEntities.Count;
-    public int MaxSpawnedEntities { get; }
-    internal List<EntityUid> SpawnedEntities { get; }
 }
 
 public sealed record KsProcgenAssemblyStageResult(
@@ -76,30 +65,18 @@ public sealed record KsProcgenAssemblyStageResult(
 /// </summary>
 public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
 {
-    public const int MaximumRetainedStages = 16;
-    public const int MaximumSpawnedEntitiesPerStage = 256;
+    public const int MaximumRetainedStages = KsProcgenStageOwnershipSystem.MaximumRetainedPerKind;
+    public const int MaximumSpawnedEntitiesPerStage = KsProcgenPreviewOperationSystem.MaximumAllocationsPerStage;
     [Dependency] private SharedMapSystem _mapSystem = default!;
-    [Dependency] private SharedTransformSystem _transformSystem = default!;
-    [Dependency] private SharedContainerSystem _containerSystem = default!;
-    [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
-    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
-    [Dependency] private KsProcgenContainerPreflightSystem _containerPreflightSystem = default!;
-    [Dependency] private KsProcgenSurfacePreflightSystem _surfacePreflightSystem = default!;
     [Dependency] private KsProcgenPreviewOperationSystem _operationSystem = default!;
-    private readonly Dictionary<MapId, KsProcgenAssemblyStage> _stages = new();
-    private List<EntityUid>? _capturedEntities;
+    [Dependency] private KsProcgenStageOwnershipSystem _ownership = default!;
+    [Dependency] private KsProcgenStageLifecycleSystem _lifecycle = default!;
+    [Dependency] private KsProcgenAssemblyPlacementSystem _assemblyPlacementSystem = default!;
 
-    public int RetainedStageCount => _stages.Count;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-        EntityManager.EntityAdded += OnEntityAdded;
-    }
+    public int RetainedStageCount => _ownership.Count(KsProcgenStageKind.Assembly);
 
     public override void Shutdown()
     {
-        EntityManager.EntityAdded -= OnEntityAdded;
         DiscardAll();
         base.Shutdown();
     }
@@ -107,7 +84,6 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args) => DiscardAll();
 
-    private void OnEntityAdded(Entity<MetaDataComponent> entity) => _capturedEntities?.Add(entity.Owner);
 
     public KsProcgenAssemblyStageResult TryStage(KsProcgenResolvedAssembly assembly,
         IReadOnlyCollection<string> selectedMemberIds, IReadOnlyList<KsProcgenFloorRootPose> floorRoots,
@@ -126,7 +102,7 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
             return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageMemberBudget");
         if (cancellationToken.IsCancellationRequested)
             return Failure(KsProcgenAssemblyStageStatus.Cancelled, "AssemblyStageCancelled");
-        if (_stages.Count >= MaximumRetainedStages)
+        if (!_ownership.CanRetain(KsProcgenStageKind.Assembly))
             return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageRetentionBudget");
         if (selectedMemberIds.Count + 1 > maxSpawnedEntities)
             return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
@@ -178,7 +154,7 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
             return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageMemberBudget");
         if (cancellationToken.IsCancellationRequested)
             return Failure(KsProcgenAssemblyStageStatus.Cancelled, "AssemblyStageCancelled");
-        if (_stages.Count >= MaximumRetainedStages)
+        if (!_ownership.CanRetain(KsProcgenStageKind.Assembly))
             return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageRetentionBudget");
         if (selectedMemberIds.Count + 1 > maxSpawnedEntities)
             return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
@@ -219,7 +195,7 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
         var retained = false;
         try
         {
-            _capturedEntities = spawnedEntities;
+            _operationSystem.SetCapture(this, spawnedEntities);
             cancellationToken.ThrowIfCancellationRequested();
             mapUid = _mapSystem.CreateMap(out mapId, runMapInit: false);
             _mapSystem.SetPaused(mapId, true);
@@ -251,52 +227,15 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
                         return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
                 }
             }
-            foreach (var pose in poses.Members)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (spawnedEntities.Count >= maxSpawnedEntities)
-                    return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
-                var member = pose.Support;
-                // Members start in the owned map/grid frame; insertion establishes container parenting.
-                var memberUid = Spawn(member.EntityPrototypeId, new EntityCoordinates(frameUid, pose.Position));
-                members.Add(member.MemberId, memberUid);
-                cancellationToken.ThrowIfCancellationRequested();
-                if (spawnedEntities.Count > maxSpawnedEntities)
-                    return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
-                if (member.Layer == KsProcgenPlacementLayer.Container)
+            var placementIssue = _assemblyPlacementSystem.Place(poses, frameUid, members, spawnedEntities,
+                maxSpawnedEntities, cancellationToken);
+            if (placementIssue != null)
+                return Failure(placementIssue.Status switch
                 {
-                    var parentUid = members[member.ParentMemberId!];
-                    var preflight = _containerPreflightSystem.Check(memberUid, parentUid, member.SlotId!);
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (spawnedEntities.Count > maxSpawnedEntities)
-                        return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
-                    if (preflight.Status != KsProcgenContainerPreflightStatus.Eligible)
-                        return Failure(KsProcgenAssemblyStageStatus.Rejected, preflight.Reason);
-                    var inserted = preflight.UsesItemSlot ?
-                        _itemSlotsSystem.TryInsert(parentUid, member.SlotId!, memberUid, user: null) :
-                        _containerSystem.TryGetContainer(parentUid, member.SlotId!, out var container) &&
-                        _containerSystem.Insert(memberUid, container, force: false);
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (spawnedEntities.Count > maxSpawnedEntities)
-                        return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
-                    if (!inserted || !Membership(memberUid, parentUid, member.SlotId!))
-                        return Failure(KsProcgenAssemblyStageStatus.Rejected, "AssemblyStageInsertionFailed");
-                }
-                else
-                {
-                    if (Transform(memberUid).NoLocalRotation && pose.LocalQuarterTurns != 0)
-                        return Failure(KsProcgenAssemblyStageStatus.Rejected, "AssemblyStageRotationUnsupported");
-                    if (member.Layer == KsProcgenPlacementLayer.Surface)
-                    {
-                        var preflight = _surfacePreflightSystem.Check(memberUid, members[member.ParentMemberId!]);
-                        if (preflight.Status != KsProcgenSurfacePreflightStatus.Candidate)
-                            return Failure(preflight.Status == KsProcgenSurfacePreflightStatus.BudgetExceeded ?
-                                KsProcgenAssemblyStageStatus.BudgetExceeded : KsProcgenAssemblyStageStatus.Rejected, preflight.Reason);
-                    }
-                    _transformSystem.SetCoordinates(memberUid, new EntityCoordinates(frameUid, pose.LocalPosition));
-                    _transformSystem.SetLocalRotation(memberUid, Angle.FromDegrees((double) pose.LocalQuarterTurns * 90.0));
-                }
-            }
+                    KsProcgenAssemblyPlacementStatus.BudgetExceeded => KsProcgenAssemblyStageStatus.BudgetExceeded,
+                    KsProcgenAssemblyPlacementStatus.InvalidInput => KsProcgenAssemblyStageStatus.InvalidInput,
+                    _ => KsProcgenAssemblyStageStatus.Rejected,
+                }, placementIssue.Code);
             cancellationToken.ThrowIfCancellationRequested();
             if (spawnedEntities.Count > maxSpawnedEntities)
                 return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageSpawnBudget");
@@ -315,7 +254,7 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
             var verificationIssue = ContentsIssue(stage);
             if (verificationIssue != null)
                 return VerificationFailure(verificationIssue);
-            _stages.Add(mapId, stage);
+            _ownership.Attach(stage);
             retained = true;
             return new(KsProcgenAssemblyStageStatus.PositionedPreview, null, stage);
         }
@@ -329,7 +268,7 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
         }
         finally
         {
-            _capturedEntities = null;
+            _operationSystem.SetCapture(this, null);
             try
             {
                 if (!retained)
@@ -342,66 +281,30 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
         }
     }
 
-    private bool Owns(KsProcgenAssemblyStage stage) => stage != null && stage.Active &&
-        _stages.TryGetValue(stage.MapId, out var owned) && ReferenceEquals(owned, stage);
+    private bool Owns(KsProcgenAssemblyStage stage) => _ownership.Owns(stage);
 
     public bool Verify(KsProcgenAssemblyStage stage) => Owns(stage) && ContentsIssue(stage) == null;
 
     public KsProcgenAssemblyStageResult TryInitialize(KsProcgenAssemblyStage stage,
         CancellationToken cancellationToken = default)
     {
-        if (!Owns(stage))
-            return Failure(KsProcgenAssemblyStageStatus.InvalidInput, "AssemblyStageNotOwned");
-        if (!_operationSystem.TryEnter(this))
-            return Failure(KsProcgenAssemblyStageStatus.InvalidInput, "AssemblyStageOperationActive");
-        try
-        {
-            _capturedEntities = stage.SpawnedEntities;
-            cancellationToken.ThrowIfCancellationRequested();
-            var preconditionIssue = ContentsIssue(stage);
-            if (preconditionIssue != null)
-            {
-                DiscardAfterOperation(stage);
-                return VerificationFailure(preconditionIssue);
-            }
-            if (stage.Phase == KsProcgenAssemblyStagePhase.Initialized)
-                return new(KsProcgenAssemblyStageStatus.InitializedPreview, null, stage);
-            _mapSystem.InitializeMap(stage.MapId, unpause: false);
-            stage.Phase = KsProcgenAssemblyStagePhase.Initialized;
-            cancellationToken.ThrowIfCancellationRequested();
-            if (stage.SpawnedEntityCount > stage.MaxSpawnedEntities)
-            {
-                DiscardAfterOperation(stage);
-                return Failure(KsProcgenAssemblyStageStatus.BudgetExceeded, "AssemblyStageInitializationSpawnBudget");
-            }
-            var verificationIssue = ContentsIssue(stage);
-            if (verificationIssue != null)
-            {
-                DiscardAfterOperation(stage);
-                return VerificationFailure(verificationIssue);
-            }
-            cancellationToken.ThrowIfCancellationRequested();
+        var result = _lifecycle.TryInitialize(stage, "AssemblyStage", _ => ContentsIssue(stage), cancellationToken);
+        if (result.Status == KsProcgenStageInitializationStatus.Initialized)
             return new(KsProcgenAssemblyStageStatus.InitializedPreview, null, stage);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        if (result.Status == KsProcgenStageInitializationStatus.Rejected)
+            return VerificationFailure(result.IssueCode!);
+        return Failure(result.Status switch
         {
-            DiscardAfterOperation(stage);
-            return Failure(KsProcgenAssemblyStageStatus.Cancelled, "AssemblyStageInitializationCancelled");
-        }
-        catch (Exception)
-        {
-            DiscardAfterOperation(stage);
-            return Failure(KsProcgenAssemblyStageStatus.EngineFailure, "AssemblyStageInitializationEngineFailure");
-        }
-        finally
-        {
-            _capturedEntities = null;
-            _operationSystem.Exit(this);
-        }
+            KsProcgenStageInitializationStatus.InvalidInput => KsProcgenAssemblyStageStatus.InvalidInput,
+            KsProcgenStageInitializationStatus.BudgetExceeded => KsProcgenAssemblyStageStatus.BudgetExceeded,
+            KsProcgenStageInitializationStatus.Cancelled => KsProcgenAssemblyStageStatus.Cancelled,
+            _ => KsProcgenAssemblyStageStatus.EngineFailure,
+        }, result.IssueCode!);
     }
 
     private string? ContentsIssue(KsProcgenAssemblyStage stage)
     {
+        if (stage.WasRetained && !Owns(stage)) return "AssemblyStageNotOwned";
         if (stage.SpawnedEntityCount > stage.MaxSpawnedEntities)
             return "AssemblyStageSpawnBudget";
         if (!_mapSystem.TryGetMap(stage.MapId, out var mapUid) || mapUid != stage.MapUid ||
@@ -417,65 +320,8 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
                 (!TryComp(spawnedUid, out TransformComponent? generatedTransformComponent) || generatedTransformComponent.MapUid != mapUid))
                 return "AssemblyStageGeneratedEntityOffMap";
         }
-        foreach (var pose in stage.Poses.Members)
-        {
-            var member = pose.Support;
-            var memberUid = stage.Members[member.MemberId];
-            if (!TryComp(memberUid, out MetaDataComponent? metadataComponent) ||
-                metadataComponent.EntityPrototype?.ID != member.EntityPrototypeId ||
-                metadataComponent.EntityLifeStage != (stage.Phase == KsProcgenAssemblyStagePhase.Initialized ?
-                    EntityLifeStage.MapInitialized : EntityLifeStage.Initialized) ||
-                EntityManager.IsQueuedForDeletion(memberUid) || !TryComp(memberUid, out TransformComponent? transformComponent))
-                return "AssemblyStageMemberDrift";
-            var parentUid = pose.CoordinateParentMemberId == null ? stage.CoordinateFrame : stage.Members[pose.CoordinateParentMemberId];
-            if (transformComponent.ParentUid != parentUid || transformComponent.LocalPosition != pose.LocalPosition ||
-                transformComponent.LocalRotation != Angle.FromDegrees((double) pose.LocalQuarterTurns * 90.0))
-                return "AssemblyStagePoseDrift";
-            if (member.Layer == KsProcgenPlacementLayer.Container)
-            {
-                if (!Membership(memberUid, parentUid, member.SlotId!))
-                    return "AssemblyStageMembershipDrift";
-            }
-            else if (_containerSystem.TryGetContainingContainer(memberUid, out _))
-                return "AssemblyStageUnexpectedContainment";
-            if (member.Layer != KsProcgenPlacementLayer.Surface)
-                continue;
-            var supportUid = stage.Members[member.ParentMemberId!];
-            var preflight = _surfacePreflightSystem.Check(memberUid, supportUid);
-            if (preflight.Status != KsProcgenSurfacePreflightStatus.Candidate)
-                return preflight.Reason;
-            var offset = preflight.Centered ? preflight.PositionOffset : Vector2.Zero;
-            if (Transform(supportUid).LocalPosition + offset != pose.LocalPosition)
-                return "AssemblyStageDropOffsetDrift";
-        }
-        foreach (var group in stage.Poses.Members.Where(pose => pose.Support.Layer == KsProcgenPlacementLayer.Surface)
-                     .GroupBy(pose => pose.Support.ParentMemberId))
-        {
-            var preflight = _surfacePreflightSystem.Check(stage.Members[group.First().Support.MemberId], stage.Members[group.Key!]);
-            if (preflight.MaximumTrackedEntities is > 0 &&
-                (ulong) preflight.TrackedEntities + (ulong) group.Count() > (ulong) preflight.MaximumTrackedEntities.Value)
-                return "AssemblyStageSurfaceCapacityConflict";
-        }
-        return null;
-    }
-
-    private bool Membership(EntityUid subjectUid, EntityUid parentUid, string containerId)
-    {
-        if (!_containerSystem.TryGetContainer(parentUid, containerId, out var container) || !container.Contains(subjectUid))
-            return false;
-        // Check retained filters without retrying insertion into a now occupied slot.
-        if (TryComp<ItemSlotsComponent>(parentUid, out var slotsComponent) &&
-            _itemSlotsSystem.TryGetSlot(parentUid, containerId, out var slot, component: slotsComponent) &&
-            (!ReferenceEquals(slot.ContainerSlot, container) ||
-                !_whitelistSystem.CheckBoth(subjectUid, blacklist: slot.Blacklist, whitelist: slot.Whitelist)))
-            return false;
-        return !Transform(subjectUid).Anchored;
-    }
-
-    private void DiscardAfterOperation(KsProcgenAssemblyStage stage)
-    {
-        _capturedEntities = null;
-        DiscardOwned(stage);
+        return _assemblyPlacementSystem.MembersIssue(stage.Poses, stage.Members, stage.CoordinateFrame,
+            initialized: stage.Phase == KsProcgenAssemblyStagePhase.Initialized);
     }
 
     public bool Discard(KsProcgenAssemblyStage stage)
@@ -492,36 +338,20 @@ public sealed partial class KsProcgenAssemblyStageSystem : EntitySystem
         }
     }
 
-    private bool DiscardOwned(KsProcgenAssemblyStage stage)
-    {
-        if (!Owns(stage))
-            return false;
-        _stages.Remove(stage.MapId);
-        stage.Active = false;
-        Cleanup(stage.MapId, stage.MapUid, stage.SpawnedEntities);
-        return true;
-    }
+    private bool DiscardOwned(KsProcgenAssemblyStage stage) => _ownership.Release(stage);
 
     public int DiscardAll()
     {
         if (_operationSystem.Active)
             return 0;
-        var stages = _stages.Values.ToArray();
+        var stages = _ownership.Snapshot(KsProcgenStageKind.Assembly).Cast<KsProcgenAssemblyStage>().ToArray();
         foreach (var stage in stages)
             Discard(stage);
         return stages.Length;
     }
 
     private void Cleanup(MapId mapId, EntityUid mapUid, IEnumerable<EntityUid> spawnedEntities)
-    {
-        foreach (var spawnedUid in spawnedEntities.Reverse().ToArray())
-        {
-            if (Exists(spawnedUid))
-                Del(spawnedUid);
-        }
-        if (_mapSystem.TryGetMap(mapId, out var actualMapUid) && actualMapUid == mapUid)
-            _mapSystem.DeleteMap(mapId);
-    }
+        => _ownership.Cleanup(mapId, mapUid, spawnedEntities);
 
     private static KsProcgenAssemblyStageResult Failure(KsProcgenAssemblyStageStatus status, string code) =>
         new(status, new KsProcgenIssue(code, "Supported assembly transform preview could not be retained."), null);

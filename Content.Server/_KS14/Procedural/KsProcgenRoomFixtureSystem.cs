@@ -37,20 +37,41 @@ public sealed record KsProcgenRoomFixtureReport(KsProcgenRoomFixtureStatus Statu
 public sealed partial class KsProcgenRoomFixtureSystem : EntitySystem
 {
     [Dependency] private KsProcgenAssemblyStageSystem _stages = default!;
+    [Dependency] private KsProcgenOwnedStageSystem _ownedStages = default!;
+    [Dependency] private KsProcgenStageOwnershipSystem _ownership = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private SharedContainerSystem _containers = default!;
 
     private sealed record Shape(EntityUid Owner, IPhysShape Geometry, Transform Pose, int Layer, int Mask);
+    private sealed record SceneView(KsProcgenStageHandle Stage, EntityUid GridUid,
+        IReadOnlySet<Vector2i> Floor, IReadOnlySet<Vector2i> Blocked, IReadOnlySet<EntityUid> StructuralWalls);
+
+    private static SceneView? View(KsProcgenAssemblyStage stage) => stage?.Terrain is not { } terrain ||
+        stage.GridUid is not { } gridUid ? null : new(stage, gridUid, terrain.Floor,
+            stage.DeclaredBlockingCells.Union(terrain.Blocked).ToHashSet(), stage.Walls.Values.ToHashSet());
+
+    private static SceneView? View(KsProcgenOwnedStage stage) => stage == null ? null :
+        new(stage, stage.GridUid, stage.Scene.Floor, stage.Scene.Blocked,
+            stage.Scene.Entities.Select((entity, index) => (entity, index))
+                .Where(entry => entry.entity.Kind is KsProcgenOwnedSceneEntityKind.Wall or KsProcgenOwnedSceneEntityKind.Window)
+                .Select(entry => stage.Entities[entry.index]).ToHashSet());
 
     public KsProcgenRoomFixtureReport Check(KsProcgenAssemblyStage stage,
-        int maximumFixturePairs = 16_384, int maximumScannedEntities = 131_072)
+        int maximumFixturePairs = 16_384, int maximumScannedEntities = 131_072) =>
+        Check(View(stage), maximumFixturePairs, maximumScannedEntities);
+
+    public KsProcgenRoomFixtureReport Check(KsProcgenOwnedStage stage,
+        int maximumFixturePairs = 16_384, int maximumScannedEntities = 131_072) =>
+        Check(View(stage), maximumFixturePairs, maximumScannedEntities);
+
+    private KsProcgenRoomFixtureReport Check(SceneView? view, int maximumFixturePairs, int maximumScannedEntities)
     {
         var work = new Work(maximumFixturePairs, maximumScannedEntities, 0, 0);
         if (!ValidBudget(work))
             return work.Report("InvalidRoomFixtureBudget");
-        if (!TryScene(stage, work, out var scene, out var issue))
+        if (!TryScene(view, work, out var scene, out var issue))
             return work.Report(issue!);
-        var structuralWalls = stage.Walls.Values.ToHashSet();
+        var structuralWalls = view!.StructuralWalls;
         for (var first = 0; first < scene.Count; first++)
         for (var second = first + 1; second < scene.Count; second++)
         {
@@ -70,15 +91,26 @@ public sealed partial class KsProcgenRoomFixtureSystem : EntitySystem
 
     public KsProcgenRoomFixtureReport CheckCardinalAccess(KsProcgenAssemblyStage stage, EntityUid actorUid,
         Vector2i root, IReadOnlyList<Vector2i> terminals, int maximumFixturePairs = 16_384,
-        int maximumScannedEntities = 131_072, int maximumExpandedCells = 4096, int maximumFloorProbes = 65_536)
+        int maximumScannedEntities = 131_072, int maximumExpandedCells = 4096, int maximumFloorProbes = 65_536) =>
+        CheckCardinalAccess(View(stage), actorUid, root, terminals, maximumFixturePairs, maximumScannedEntities,
+            maximumExpandedCells, maximumFloorProbes);
+
+    public KsProcgenRoomFixtureReport CheckCardinalAccess(KsProcgenOwnedStage stage, EntityUid actorUid,
+        Vector2i root, IReadOnlyList<Vector2i> terminals, int maximumFixturePairs = 16_384,
+        int maximumScannedEntities = 131_072, int maximumExpandedCells = 4096, int maximumFloorProbes = 65_536) =>
+        CheckCardinalAccess(View(stage), actorUid, root, terminals, maximumFixturePairs, maximumScannedEntities,
+            maximumExpandedCells, maximumFloorProbes);
+
+    private KsProcgenRoomFixtureReport CheckCardinalAccess(SceneView? view, EntityUid actorUid,
+        Vector2i root, IReadOnlyList<Vector2i> terminals, int maximumFixturePairs,
+        int maximumScannedEntities, int maximumExpandedCells, int maximumFloorProbes)
     {
         var work = new Work(maximumFixturePairs, maximumScannedEntities, maximumExpandedCells, maximumFloorProbes);
         if (!ValidBudget(work) || terminals == null || terminals.Count is < 1 or > 1024)
             return work.Report("InvalidRoomFixtureInput");
-        if (!TryScene(stage, work, out var scene, out var issue))
+        if (!TryScene(view, work, out var scene, out var issue))
             return work.Report(issue!);
-        if (stage.Terrain == null || !stage.Terrain.Floor.Contains(root) ||
-            terminals.Any(cell => !stage.Terrain.Floor.Contains(cell)) ||
+        if (!view!.Floor.Contains(root) || terminals.Any(cell => !view.Floor.Contains(cell)) ||
             !TryComp(actorUid, out MetaDataComponent? actorMetadata) ||
             actorMetadata.EntityLifeStage != EntityLifeStage.MapInitialized ||
             EntityManager.IsQueuedForDeletion(actorUid) || !TryComp(actorUid, out TransformComponent? _))
@@ -90,8 +122,8 @@ public sealed partial class KsProcgenRoomFixtureSystem : EntitySystem
             return work.Report(issue ?? "RoomActorFixturesUnavailable");
         if (scene.Any(shape => shape.Owner == actorUid))
             return work.Report("RoomActorMustBeExternal");
-        var floor = stage.Terrain.Floor;
-        var blocked = stage.DeclaredBlockingCells.Union(stage.Terrain.Blocked).ToHashSet();
+        var floor = view.Floor;
+        var blocked = view.Blocked;
         var visits = new HashSet<Vector2i>();
         var queue = new Queue<Vector2i>();
         var edgeCache = new Dictionary<(Vector2i, Vector2i), bool>();
@@ -179,34 +211,45 @@ public sealed partial class KsProcgenRoomFixtureSystem : EntitySystem
         return work.Report("RoomActorTerminalsDisconnected");
     }
 
-    private bool TryScene(KsProcgenAssemblyStage stage, Work work, out List<Shape> scene, out string? issue)
+    private bool TryScene(SceneView? view, Work work, out List<Shape> scene, out string? issue)
     {
         scene = new();
         issue = null;
-        if (stage == null || stage.Phase != KsProcgenAssemblyStagePhase.Initialized || stage.Terrain == null ||
-            !_stages.Verify(stage))
+        if (view == null || view.Stage.InitializationPhase != KsProcgenStageInitializationPhase.Initialized ||
+            !_ownership.Owns(view.Stage))
         {
             issue = "InvalidInitializedRoomScene";
             return false;
         }
-        var owned = stage.SpawnedEntities.ToHashSet();
-        var query = AllEntityQuery<TransformComponent>();
-        while (query.MoveNext(out var uid, out var transform))
+        var stage = view.Stage;
+        List<EntityUid> members;
+        int scannedEntities;
+        if (stage is KsProcgenOwnedStage owned)
         {
-            if (work.ScannedEntities >= work.MaximumScannedEntities)
+            issue = _ownedStages.InspectScene(owned, work.MaximumScannedEntities - work.ScannedEntities,
+                out members, out scannedEntities);
+            issue = issue switch
             {
-                issue = "RoomEntityScanBudget";
-                return false;
-            }
-            work.ScannedEntities++;
-            if (transform.MapUid != stage.MapUid)
-                continue;
-            if (!owned.Contains(uid))
-            {
-                issue = "RoomSceneForeignEntity";
-                return false;
-            }
-            if (uid == stage.MapUid || uid == stage.GridUid || _containers.TryGetContainingContainer(uid, out _))
+                null => null,
+                "OwnedStageEntityScanBudget" => "RoomEntityScanBudget",
+                "OwnedStageSceneForeignEntity" => "RoomSceneForeignEntity",
+                "OwnedStageSceneMembershipDrift" => "RoomSceneMembershipDrift",
+                _ => "InvalidInitializedRoomScene",
+            };
+        }
+        else if (stage is KsProcgenAssemblyStage assembly && _stages.Verify(assembly))
+            issue = _ownership.InspectMapMembers(stage, work.MaximumScannedEntities - work.ScannedEntities,
+                "Room", out members, out scannedEntities);
+        else
+        {
+            issue = "InvalidInitializedRoomScene";
+            return false;
+        }
+        work.ScannedEntities += scannedEntities;
+        if (issue != null) return false;
+        foreach (var uid in members)
+        {
+            if (uid == stage.MapUid || uid == view.GridUid || _containers.TryGetContainingContainer(uid, out _))
                 continue;
             if (!TryComp(uid, out MetaDataComponent? metadata) ||
                 metadata.EntityLifeStage != EntityLifeStage.MapInitialized || EntityManager.IsQueuedForDeletion(uid))

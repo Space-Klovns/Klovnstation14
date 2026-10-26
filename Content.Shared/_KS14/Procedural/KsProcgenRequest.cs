@@ -127,11 +127,12 @@ public sealed partial class KsProcgenFallbackPolicy
 }
 
 /// <summary>
-/// Phase A request contract. Later phases add library, theme, port, and constant-region fields.
+/// Versioned generation request. Omitted schema version retains the legacy version-one defaults.
 /// </summary>
 [DataDefinition]
 public sealed partial class KsProcgenRequest
 {
+    [DataField] public int SchemaVersion = 1;
     [DataField(required: true)] public string RequestId = string.Empty;
     [DataField] public int Seed;
     [DataField] public KsProcgenMode Mode = KsProcgenMode.Procedural;
@@ -145,6 +146,13 @@ public sealed partial class KsProcgenRequest
     [DataField] public List<KsProcgenRoomSizeGoal> SizeMix = new();
     [DataField] public KsProcgenWindowGoal WindowGoal = new();
     [DataField] public KsProcgenFallbackPolicy FallbackPolicy = new();
+    [DataField] public string? AtmosphereProfile;
+    /// <summary>Detached inline override, also used when transporting an immutable paint snapshot.</summary>
+    [DataField] public KsProcgenAtmosphereSpec? Atmosphere;
+    [DataField] public string? ElectricalProfile;
+    [DataField] public KsProcgenElectricalSpec? Electrical;
+    /// <summary>Schema-two scoped requirements and permissions; these do not certify live utilities.</summary>
+    [DataField] public KsProcgenUtilityContractSpec? Utilities;
 }
 
 public sealed record KsProcgenIssue(string Code, string Message);

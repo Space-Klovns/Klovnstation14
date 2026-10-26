@@ -1,13 +1,17 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "requestId": "LShapeDiagnostic",
   "seed": -17,
   "status": "Candidate",
   "reasonCode": null,
-  "semanticHash": "14769492256893777055",
+  "semanticHash": "1441777376209838793",
   "configurationId": "Connected",
   "entriesTruncated": false,
   "geometryTruncated": false,
+  "inputWorkTruncated": false,
+  "projectionInputElements": 119,
+  "entriesWritten": 23,
+  "geometryCellsWritten": 83,
   "published": false,
   "engineAccessVerified": false,
   "gasClosureVerified": false,
@@ -210,7 +214,8 @@
       "fallbacks": [],
       "partitionSeamProbes": 174,
       "preferredMaximumRoomCells": 24,
-      "sizeGoalsRequested": true
+      "sizeGoalsRequested": true,
+      "infrastructureHomeOrdinal": 0
     }
   ],
   "sizeGoalAttempts": [
@@ -579,7 +584,8 @@
           "x": 3,
           "y": 3
         }
-      ]
+      ],
+      "cellsTruncated": false
     },
     {
       "id": "LShapeDiagnostic/EntranceNetwork/0/SizeGoal/001",
@@ -628,8 +634,14 @@
           "x": 5,
           "y": 3
         }
-      ]
+      ],
+      "cellsTruncated": false
     }
   ],
-  "entities": []
+  "entities": [],
+  "preferences": [],
+  "distances": [],
+  "supportedEntities": [],
+  "operatingAccess": [],
+  "relations": []
 }

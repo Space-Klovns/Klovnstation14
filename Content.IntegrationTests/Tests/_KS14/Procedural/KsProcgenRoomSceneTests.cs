@@ -18,12 +18,12 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.Procedural;
 
 [TestOf(typeof(KsProcgenRoomFixtureSystem))]
-public sealed class KsProcgenRoomSceneTests : GameTest
+public sealed class KsProcgenRoomSceneTests : KsProcgenGameTest
 {
     [Test]
     public async Task OwnedTerrainInitializesVerifiesAndDiscardsEveryEntity()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var system = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var map = Pair.Server.System<SharedMapSystem>();
@@ -72,7 +72,7 @@ public sealed class KsProcgenRoomSceneTests : GameTest
     [TestCase(2)]
     public async Task PreallocationTerrainFailuresLeaveNoEntities(int mode)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var before = SEntMan.GetEntities().ToHashSet();
             var room = Room(3, 1);
@@ -92,7 +92,7 @@ public sealed class KsProcgenRoomSceneTests : GameTest
     [TestCase("DeletedWall")]
     public async Task TerrainAndFrameTamperingInvalidateOwnedScene(string fault)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stages = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var map = Pair.Server.System<SharedMapSystem>();
@@ -138,7 +138,7 @@ public sealed class KsProcgenRoomSceneTests : GameTest
     [Test]
     public async Task GridInitializationSpawnExhaustionRollsBackWholeScene()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stages = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var before = SEntMan.GetEntities().ToHashSet();
@@ -161,7 +161,7 @@ public sealed class KsProcgenRoomSceneTests : GameTest
     [Test]
     public async Task FixedActorPassesTinyCorridorWithoutMutationAndHonorsEveryBudget()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stages = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var fixtures = Pair.Server.System<KsProcgenRoomFixtureSystem>();
@@ -209,7 +209,7 @@ public sealed class KsProcgenRoomSceneTests : GameTest
     [Test]
     public async Task ContinuousActorSweepFindsThinObstacleBetweenFreeCenters()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stages = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var fixtures = Pair.Server.System<KsProcgenRoomFixtureSystem>();
@@ -252,7 +252,7 @@ public sealed class KsProcgenRoomSceneTests : GameTest
     [Test]
     public async Task FreshSceneRejectsHardOverlapForeignEntitiesAndUnsupportedShapes()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stages = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var fixtures = Pair.Server.System<KsProcgenRoomFixtureSystem>();
@@ -292,7 +292,7 @@ public sealed class KsProcgenRoomSceneTests : GameTest
     [Test]
     public async Task VaultDeclaredContentBlocksCleanPassageEvenWithoutHardFixtures()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var stages = Pair.Server.System<KsProcgenAssemblyStageSystem>();
             var map = Pair.Server.System<SharedMapSystem>();

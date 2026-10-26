@@ -116,7 +116,7 @@ public static class KsProcgenGroupMaterialPlanner
         foreach (var network in partition.Regions.OrderBy(network => network.Id, StringComparer.Ordinal))
         {
             if (network == null || !networkIds.Add(network.Id) || network.Partition == null ||
-                network.Partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded ||
+                network.Partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded or KsProcgenPartitionStatus.RequiredRoomRejected ||
                 network.GroupIds.Count > 64 || network.ProtectedCells.Count > 4_096 ||
                 network.Partition.FloorCells.Count is < 1 or > 4_096 || network.Partition.WallCells.Count > 4_096 ||
                 network.Partition.DoorOpenings.Count > 4_096 ||
@@ -159,8 +159,9 @@ public static class KsProcgenGroupMaterialPlanner
             shortfall += material.AccentShortfall;
             foreach (var region in networkThemes)
             {
-                var pack = prototypeManager.Index<KsProcgenWallPackPrototype>(region.Theme.WallPackId);
-                var wallId = pack.Families.Single(family => family.Id == region.Theme.WallFamilyId).InteriorWall;
+                if (!KsProcgenSelectedContent.TryWall(prototypeManager, region.Theme, out var family))
+                    return Fail(KsProcgenGroupMaterialStatus.InvalidInput, "MissingOwnedMaterialPrototype");
+                var wallId = family!.InteriorWall;
                 if (!prototypeManager.TryIndex<EntityPrototype>(wallId, out _))
                     return Fail(KsProcgenGroupMaterialStatus.InvalidInput, "MissingOwnedMaterialPrototype");
                 materialByRegion.Add(region.Id, wallId);

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using Content.Shared._KS14.Procedural;
 using Content.Shared.GameTicking;
 using Robust.Shared.Map;
@@ -14,6 +15,7 @@ public enum KsProcgenTileStageStatus : byte
     UnsupportedContent,
     BudgetExceeded,
     EngineFailure,
+    Cancelled,
 }
 
 /// <summary>
@@ -21,24 +23,21 @@ public enum KsProcgenTileStageStatus : byte
 /// visibility isolation are not established by this preview stage.
 /// Only the owning stage system may discard it.
 /// </summary>
-public sealed class KsProcgenTileStage
+public sealed class KsProcgenTileStage : KsProcgenStageHandle
 {
     internal KsProcgenTileStage(MapId mapId, EntityUid mapUid, EntityUid gridUid,
-        ulong semanticHash, IReadOnlyList<(Vector2i Cell, ushort TileId)> tiles)
+        ulong semanticHash, IReadOnlyList<(Vector2i Cell, ushort TileId)> tiles,
+        List<EntityUid> allocations, int maxSpawnedEntities)
+        : base(mapId, mapUid, KsProcgenStageKind.Tiles, allocations, maxSpawnedEntities)
     {
-        MapId = mapId;
-        MapUid = mapUid;
         GridUid = gridUid;
         SemanticHash = semanticHash;
         Tiles = tiles;
     }
 
-    public MapId MapId { get; }
-    public EntityUid MapUid { get; }
     public EntityUid GridUid { get; }
     public ulong SemanticHash { get; }
     public int StagedCells => Tiles.Count;
-    public bool Active { get; internal set; } = true;
     internal IReadOnlyList<(Vector2i Cell, ushort TileId)> Tiles { get; }
 }
 
@@ -55,10 +54,14 @@ public sealed class KsProcgenTileStageResult
 /// </summary>
 public sealed partial class KsProcgenTileStageSystem : EntitySystem
 {
+    public const int MaximumRetainedStages = KsProcgenStageOwnershipSystem.MaximumRetainedPerKind;
+    public const int MaximumSpawnedEntitiesPerStage = KsProcgenPreviewOperationSystem.MaximumAllocationsPerStage;
     [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
 
-    private readonly Dictionary<MapId, KsProcgenTileStage> _activeStages = new();
+    [Dependency] private KsProcgenStageOwnershipSystem _ownership = default!;
+    [Dependency] private KsProcgenPreviewOperationSystem _operationSystem = default!;
+    public int RetainedStageCount => _ownership.Count(KsProcgenStageKind.Tiles);
 
     public override void Initialize()
     {
@@ -79,8 +82,19 @@ public sealed partial class KsProcgenTileStageSystem : EntitySystem
 
     public KsProcgenTileStageResult TryStage(
         KsProcgenGeometryPipelineResult plan,
-        int maxTiles = 4_096)
+        int maxTiles = 4_096, int maxSpawnedEntities = MaximumSpawnedEntitiesPerStage,
+        CancellationToken cancellationToken = default)
     {
+        if (_operationSystem.Active)
+            return Failure(KsProcgenTileStageStatus.InvalidPlan, "TileStageOperationActive");
+        if (cancellationToken.IsCancellationRequested)
+            return Failure(KsProcgenTileStageStatus.Cancelled, "TileStageCancelled");
+        if (!_ownership.CanRetain(KsProcgenStageKind.Tiles))
+            return Failure(KsProcgenTileStageStatus.BudgetExceeded, "TileStageRetentionBudget");
+        if (maxSpawnedEntities is < 1 or > MaximumSpawnedEntitiesPerStage)
+            return Failure(KsProcgenTileStageStatus.InvalidPlan, "InvalidTileStageSpawnBudget");
+        if (maxSpawnedEntities < 2)
+            return Failure(KsProcgenTileStageStatus.BudgetExceeded, "TileStageSpawnBudget");
         if (plan == null || plan.Status != KsProcgenGeometryPipelineStatus.GeometryPlanned ||
             plan.SemanticHash == 0 || plan.Packing == null || plan.Partition == null ||
             plan.Materials?.Status != KsProcgenMaterialStatus.Planned)
@@ -93,7 +107,7 @@ public sealed partial class KsProcgenTileStageSystem : EntitySystem
                 KsProcgenCellDisposition.ProceduralFloor) ||
             plan.Partition.WallCells.Count != 0 || plan.Partition.DoorOpenings.Count != 0 ||
             plan.Materials.InteriorWalls.Count != 0 || plan.Materials.InteriorDoors.Count != 0 ||
-            plan.Furnishings.Any(item => item.Proposal.Entities.Count != 0) ||
+            plan.Furnishings.Any(item => item.Proposal.Entities.Count != 0 || item.Proposal.Layered != null) ||
             plan.Lighting.Any(item => item.Proposal.Lights.Count != 0) ||
             plan.Windows?.ChosenWindowCells.Count > 0)
             return Failure(KsProcgenTileStageStatus.UnsupportedContent, "UnsupportedTileStageContent");
@@ -122,34 +136,63 @@ public sealed partial class KsProcgenTileStageSystem : EntitySystem
         }
 
         var mapId = MapId.Nullspace;
+        var mapUid = EntityUid.Invalid;
+        var allocations = new List<EntityUid>();
+        var retained = false;
+        if (!_operationSystem.TryEnter(this))
+            return Failure(KsProcgenTileStageStatus.InvalidPlan, "TileStageOperationActive");
         try
         {
-            var mapUid = _mapSystem.CreateMap(out mapId, runMapInit: false);
+            _operationSystem.SetCapture(this, allocations);
+            cancellationToken.ThrowIfCancellationRequested();
+            mapUid = _mapSystem.CreateMap(out mapId, runMapInit: false);
             _mapSystem.SetPaused(mapId, true);
+            if (allocations.Count >= maxSpawnedEntities)
+                return Failure(KsProcgenTileStageStatus.BudgetExceeded, "TileStageSpawnBudget");
             var grid = _mapSystem.CreateGridEntity(mapId);
             foreach (var (cell, tileId) in validated)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (allocations.Count > maxSpawnedEntities)
+                    return Failure(KsProcgenTileStageStatus.BudgetExceeded, "TileStageSpawnBudget");
                 _mapSystem.SetTile(grid.Owner, grid.Comp, cell, new Tile(tileId));
+                cancellationToken.ThrowIfCancellationRequested();
+                if (allocations.Count > maxSpawnedEntities)
+                    return Failure(KsProcgenTileStageStatus.BudgetExceeded, "TileStageSpawnBudget");
+            }
+            if (allocations.Any(uid => uid != mapUid && uid != grid.Owner && Exists(uid)))
+                return Failure(KsProcgenTileStageStatus.UnsupportedContent, "TileStageUnexpectedAllocation");
             var stage = new KsProcgenTileStage(mapId, mapUid, grid.Owner,
-                plan.SemanticHash, validated);
-            _activeStages.Add(mapId, stage);
+                plan.SemanticHash, validated, allocations, maxSpawnedEntities);
+            _ownership.Attach(stage);
+            retained = true;
             return new KsProcgenTileStageResult
             {
                 Status = KsProcgenTileStageStatus.Staged,
                 Stage = stage,
             };
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return Failure(KsProcgenTileStageStatus.Cancelled, "TileStageCancelled");
+        }
         catch (Exception)
         {
-            if (mapId != MapId.Nullspace && _mapSystem.MapExists(mapId))
-                _mapSystem.DeleteMap(mapId);
             return Failure(KsProcgenTileStageStatus.EngineFailure, "TileStageEngineFailure");
+        }
+        finally
+        {
+            _operationSystem.SetCapture(this, null);
+            try { if (!retained) _ownership.Cleanup(mapId, mapUid, allocations); }
+            finally { _operationSystem.Exit(this); }
         }
     }
 
     public bool Verify(KsProcgenTileStage stage)
     {
-        if (stage == null || !stage.Active || !_activeStages.TryGetValue(stage.MapId, out var tracked) ||
-            !ReferenceEquals(stage, tracked) ||
+        if (!_ownership.Owns(stage) || EntityManager.IsQueuedForDeletion(stage.MapUid) ||
+            stage.SpawnedEntityCount > stage.MaxSpawnedEntities ||
+            stage.SpawnedEntities.Any(uid => uid != stage.MapUid && uid != stage.GridUid && Exists(uid)) ||
             !_mapSystem.TryGetMap(stage.MapId, out var mapUid) || mapUid != stage.MapUid ||
             !TryComp<MapGridComponent>(stage.GridUid, out var grid))
             return false;
@@ -163,14 +206,9 @@ public sealed partial class KsProcgenTileStageSystem : EntitySystem
 
     public bool Discard(KsProcgenTileStage stage)
     {
-        if (stage == null || !stage.Active || !_activeStages.TryGetValue(stage.MapId, out var tracked) ||
-            !ReferenceEquals(stage, tracked))
-            return false;
-        _activeStages.Remove(stage.MapId);
-        stage.Active = false;
-        if (_mapSystem.TryGetMap(stage.MapId, out var mapUid) && mapUid == stage.MapUid)
-            _mapSystem.DeleteMap(stage.MapId);
-        return true;
+        if (!_ownership.Owns(stage) || !_operationSystem.TryEnter(this)) return false;
+        try { return _ownership.Release(stage); }
+        finally { _operationSystem.Exit(this); }
     }
 
     /// <summary>
@@ -178,7 +216,8 @@ public sealed partial class KsProcgenTileStageSystem : EntitySystem
     /// </summary>
     public int DiscardAll()
     {
-        var stages = _activeStages.Values.ToArray();
+        if (_operationSystem.Active) return 0;
+        var stages = _ownership.Snapshot(KsProcgenStageKind.Tiles).Cast<KsProcgenTileStage>().ToArray();
         foreach (var stage in stages)
             Discard(stage);
         return stages.Length;

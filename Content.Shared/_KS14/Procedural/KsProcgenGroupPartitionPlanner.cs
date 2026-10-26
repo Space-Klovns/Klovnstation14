@@ -9,6 +9,8 @@ namespace Content.Shared._KS14.Procedural;
 public sealed record KsProcgenOwnedPartition(string Id, IReadOnlyList<string> GroupIds,
     KsProcgenPureFillResult Fill, KsProcgenPartitionResult Partition, IReadOnlyList<Vector2i> ProtectedCells);
 
+public sealed record KsProcgenUtilityRoomChoice(string NetworkId, int Ordinal, bool Allocated, string? IssueCode);
+
 /// <summary>Nonreusable diagnostics for an attempted quota, orientation and width variant.</summary>
 public sealed record KsProcgenSizeGoalPartitionAttempt(bool AcrossX, KsProcgenPartitionStatus Status,
     string? ReasonCode, int ExpandedCells, int SeamProbes, int MergeAttempts)
@@ -21,6 +23,7 @@ public sealed record KsProcgenSizeGoalPartitionAttempt(bool AcrossX, KsProcgenPa
 
 public sealed class KsProcgenGroupPartitionResult
 {
+    public IReadOnlyList<KsProcgenUtilityRoomChoice> UtilityRoomChoices { get; init; } = [];
     public KsProcgenEntranceSceneStatus Status { get; init; }
     public KsProcgenIssue? Issue { get; init; }
     public IReadOnlyList<KsProcgenOwnedPartition> Regions { get; init; } = [];
@@ -54,7 +57,9 @@ public static class KsProcgenGroupPartitionPlanner
     public static KsProcgenGroupPartitionResult Plan(KsProcgenRequest request, KsProcgenGroupFloorResult floor,
         int preferredMaxRoomCells = 24, int minimumRoomCells = 4, int maximumMergeAttempts = 64,
         int maximumExpandedCells = 262_144, IReadOnlyList<KsProcgenZone>? zones = null,
-        int maximumSeamProbes = 262_144, bool useSizeGoals = false)
+        int maximumSeamProbes = 262_144, bool useSizeGoals = false,
+        KsProcgenElectricalDistribution? electricalDistribution = null,
+        IReadOnlyDictionary<string, int>? utilityRoomOrdinals = null, int preferredUtilityInteriorCells = 0)
     {
         var expanded = 0;
         var merges = 0;
@@ -65,6 +70,7 @@ public static class KsProcgenGroupPartitionPlanner
         var allocationAttempts = 0;
         var allocationId = string.Empty;
         var sizeGoalAttempts = new List<KsProcgenSizeGoalPartitionAttempt>();
+        var utilityChoices = new Dictionary<string, KsProcgenUtilityRoomChoice>(StringComparer.Ordinal);
         KsProcgenGroupPartitionResult Fail(KsProcgenEntranceSceneStatus status, string code) => new()
         {
             Status = status, Issue = new(code, "Entrance-aware partition proposal did not validate."),
@@ -72,6 +78,7 @@ public static class KsProcgenGroupPartitionPlanner
             SizeGoalAttempts = KsProcgenReadOnly.Copy(sizeGoalAttempts),
             SizeGoalQuotaProbes = quotaProbes, SizeGoalFitProbes = fitProbes,
             SizeGoalAllocationAttempts = allocationAttempts,
+            UtilityRoomChoices = KsProcgenReadOnly.Copy(utilityChoices.Values.OrderBy(choice => choice.NetworkId, StringComparer.Ordinal)),
         };
         if (!KsProcgenGeometry.TryNormalize(request, out var shape, out var issue))
             return new() { Status = KsProcgenEntranceSceneStatus.InvalidInput, Issue = issue };
@@ -81,7 +88,10 @@ public static class KsProcgenGroupPartitionPlanner
             request.GeometryMode != KsProcgenGeometryMode.Footprint ||
             preferredMaxRoomCells < minimumRoomCells || minimumRoomCells < 1 || preferredMaxRoomCells > 4_096 ||
             maximumMergeAttempts is < 0 or > 64 || maximumExpandedCells is < 0 or > 1_000_000 ||
-            floor.FloorCells.Count > 4_096 || zones?.Count > 256 || maximumSeamProbes is < 0 or > 1_000_000)
+            floor.FloorCells.Count > 4_096 || zones?.Count > 256 || maximumSeamProbes is < 0 or > 1_000_000 ||
+            preferredUtilityInteriorCells is < 0 or > 64 || utilityRoomOrdinals?.Count > 256 ||
+            utilityRoomOrdinals?.Any(pair => pair.Value is < 0 or > 65_535) == true ||
+            electricalDistribution == null && (utilityRoomOrdinals?.Count > 0 || preferredUtilityInteriorCells > 0))
             return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidGroupPartitionInput");
         var configurationId = floor.Analysis.ConfigurationId!;
         var initial = KsProcgenEntranceSceneAnalyzer.AnalyzeNormalized(shape, request.ConnectivityPolicy, request.RootCells,
@@ -89,6 +99,9 @@ public static class KsProcgenGroupPartitionPlanner
         expanded += initial.ExpandedCells;
         if (initial.Status != KsProcgenEntranceSceneStatus.Candidate)
             return Fail(initial.Status, initial.Issue!.Code);
+        if (utilityRoomOrdinals != null && utilityRoomOrdinals.Keys.Any(id =>
+                !initial.Components.Any(component => id == $"{request.RequestId}/EntranceNetwork/{component.Component}")))
+            return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidUtilityRoomOrdinalDomain");
         var sourceHash = KsProcgenStableHash.Create();
         sourceHash.AddString("ks-procgen-group-floor-v1");
         sourceHash.AddString(request.RequestId);
@@ -205,9 +218,9 @@ public static class KsProcgenGroupPartitionPlanner
                     }
                     while (frontier.TryDequeue(out var deferred))
                         remaining.Add(deferred);
-                    var entireNetworkIsTiny = component.Cells.Count < minimumRoomCells || !component.Cells.Any(cell =>
-                        initialFloor.Contains(cell + new Vector2i(1, 0)) && initialFloor.Contains(cell + new Vector2i(0, 1)) &&
-                        initialFloor.Contains(cell + new Vector2i(1, 1)));
+                    // Cell count supplies the explicit room-size policy. A missing 2x2 block
+                    // does not prove that wall-mounted equipment and clean access cannot fit.
+                    var entireNetworkIsTiny = component.Cells.Count < minimumRoomCells;
                     assigned[component.Component].Add(new($"{request.RequestId}/EntranceNetwork/{component.Component}/Zone/{index++}",
                         entireNetworkIsTiny ? KsProcgenZoneKind.Passage : KsProcgenZoneKind.RoomProposal,
                         KsProcgenGeometry.SortCells(cells)));
@@ -236,11 +249,35 @@ public static class KsProcgenGroupPartitionPlanner
                 KsProcgenPartitionResult partition = null!;
                 KsProcgenPureFillResult? fallbackFill = null;
                 KsProcgenPartitionResult? fallbackPartition = null;
+                string? utilityFailure = null;
                 foreach (var layout in alternatives)
                 {
+                    var layoutZones = layout.Zones;
+                    if (electricalDistribution != null)
+                    {
+                        var beforeExpanded = seamWork.ExpandedCells; var beforeProbes = seamWork.SeamProbes;
+                        var networkId = $"{request.RequestId}/EntranceNetwork/{component.Component}";
+                        var ordinal = utilityRoomOrdinals != null && utilityRoomOrdinals.TryGetValue(networkId, out var choice) ? choice : 0;
+                        var allocated = KsProcgenUtilityRoomAllocator.TryAllocate(
+                            networkId, layoutZones, shape, protectedCells,
+                            electricalDistribution, seamWork, out layoutZones, out var allocationIssue,
+                            candidateOrdinal: ordinal, preferredInteriorCells: preferredUtilityInteriorCells);
+                        // A later orientation miss cannot erase an earlier reservation at this ordinal.
+                        var anyAllocated = allocated || utilityChoices.TryGetValue(networkId, out var previousChoice) && previousChoice.Allocated;
+                        utilityChoices[networkId] = new(networkId, ordinal, anyAllocated, allocationIssue?.Code);
+                        expanded += seamWork.ExpandedCells - beforeExpanded;
+                        seamProbes += seamWork.SeamProbes - beforeProbes;
+                        if (!allocated)
+                        {
+                            if (seamWork.ExhaustedCode != null || allocationIssue!.Code.EndsWith("Budget", StringComparison.Ordinal))
+                                return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, allocationIssue!.Code);
+                            utilityFailure = allocationIssue!.Code;
+                            continue;
+                        }
+                    }
                     fill = new() { Status = KsProcgenPureFillStatus.Proposed,
-                        Zones = layout.Zones, ProceduralCells = component.Cells.Count };
-                    partition = KsProcgenPartitionPlanner.Plan(fill, layout.Zones.Where(zone => zone.Kind == KsProcgenZoneKind.Passage)
+                        Zones = layoutZones, ProceduralCells = component.Cells.Count };
+                    partition = KsProcgenPartitionPlanner.Plan(fill, layoutZones.Where(zone => zone.Kind == KsProcgenZoneKind.Passage)
                         .SelectMany(zone => zone.Cells).ToFrozenSet(), maxMergeAttempts: maximumMergeAttempts - merges,
                         protectedFloorCells: protectedCells, workBudget: seamWork);
                     expanded += partition.ExpandedCells;
@@ -255,6 +292,8 @@ public static class KsProcgenGroupPartitionPlanner
                                 NetworkId = $"{request.RequestId}/EntranceNetwork/{component.Component}" });
                     if (partition.Status == KsProcgenPartitionStatus.BudgetExceeded)
                         return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, partition.Issue!.Code);
+                    if (partition.Status == KsProcgenPartitionStatus.RequiredRoomRejected)
+                    { utilityFailure = partition.Issue!.Code; continue; }
                     if (partition.Status == KsProcgenPartitionStatus.InvalidInput || partition.WallCells.Any(cell => !shape.CanWrite(cell)) ||
                         protectedCells.Any(cell => !partition.FloorCells.Contains(cell)))
                         return Fail(KsProcgenEntranceSceneStatus.Rejected, "InvalidOwnedPartitionProposal");
@@ -264,11 +303,13 @@ public static class KsProcgenGroupPartitionPlanner
                 }
                 // Prefer an unmerged alternative, then retain the first fallback deterministically.
                 // Failed orientations still consume the shared allowances and remain in diagnostics.
-                if (partition.Status != KsProcgenPartitionStatus.Proposed && fallbackPartition != null)
+                if ((partition == null || partition.Status != KsProcgenPartitionStatus.Proposed) && fallbackPartition != null)
                 {
                     fill = fallbackFill!;
                     partition = fallbackPartition;
                 }
+                if (partition == null || partition.Status == KsProcgenPartitionStatus.RequiredRoomRejected)
+                    return Fail(KsProcgenEntranceSceneStatus.Rejected, utilityFailure ?? "UtilityRoomNoPlacement");
                 // Freeze even legacy solver lists before exposing an accepted network artifact.
                 partition = new()
                 {
@@ -343,6 +384,7 @@ public static class KsProcgenGroupPartitionPlanner
                 hash.AddString(zone.Id);
                 hash.AddInt((int) zone.Kind);
                 hash.AddString(zone.SizeGoalId ?? "");
+                zone.UtilityRoom?.AddHash(ref hash);
                 hash.AddInt(zone.Cells.Count);
                 foreach (var cell in zone.Cells) { hash.AddInt(cell.X); hash.AddInt(cell.Y); }
             }
@@ -371,6 +413,7 @@ public static class KsProcgenGroupPartitionPlanner
             SizeGoalQuotaProbes = quotaProbes, SizeGoalFitProbes = fitProbes,
             SizeGoalAllocationAttempts = allocationAttempts,
             SizeGoalAttempts = KsProcgenReadOnly.Copy(sizeGoalAttempts),
+            UtilityRoomChoices = KsProcgenReadOnly.Copy(utilityChoices.Values.OrderBy(choice => choice.NetworkId, StringComparer.Ordinal)),
         };
     }
 }

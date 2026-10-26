@@ -29,6 +29,7 @@ public sealed record KsProcgenThemedRegion(
     /// <summary>Entrance contract membership retained by the entrance-aware adapter.</summary>
     public IReadOnlyList<string> EntranceGroupIds { get; init; } = [];
     public IReadOnlyList<Vector2i> ProtectedPassageCells { get; init; } = [];
+    public KsProcgenUtilityRoomReservation? UtilityRoom { get; init; }
 }
 
 public sealed class KsProcgenThemeAssignmentResult
@@ -51,18 +52,21 @@ public static class KsProcgenThemeAssignmentPlanner
         string themeId,
         int seed,
         KsProcgenPureFillResult fill,
-        KsProcgenPartitionResult partition)
+        KsProcgenPartitionResult partition,
+        KsProcgenThemeCatalog? content = null, KsProcgenGasPlanningContext? gasContext = null, KsProcgenElectricalPlanningContext? electricalContext = null,
+        KsProcgenThemeCatalog? utilityContent = null)
     {
         if (prototypeManager == null || fill == null || partition == null ||
             fill.Status != KsProcgenPureFillStatus.Proposed ||
-            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded)
+            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded or KsProcgenPartitionStatus.RequiredRoomRejected)
             return Failure(KsProcgenThemeAssignmentStatus.InvalidInput, "InvalidThemeAssignmentInput");
 
         var zoneByCell = new Dictionary<Vector2i, string>();
         var zoneById = new Dictionary<string, KsProcgenZone>(StringComparer.Ordinal);
         foreach (var zone in fill.Zones)
         {
-            if (string.IsNullOrWhiteSpace(zone.Id) || !zoneById.TryAdd(zone.Id, zone))
+            if (string.IsNullOrWhiteSpace(zone.Id) || !zoneById.TryAdd(zone.Id, zone) ||
+                zone.UtilityRoom is { } utility && (!utility.Matches(zone) || !utility.Satisfied(zone.Id, partition)))
                 return Failure(KsProcgenThemeAssignmentStatus.InvalidInput, "InvalidThemeZones");
             foreach (var cell in zone.Cells)
             {
@@ -127,7 +131,7 @@ public static class KsProcgenThemeAssignmentPlanner
         foreach (var (cell, zoneId) in zoneByCell)
         foreach (var offset in Cardinal)
         {
-            if (!zoneByCell.TryGetValue(cell + offset, out var otherId))
+            if (!floor.Contains(cell) || !floor.Contains(cell + offset) || !zoneByCell.TryGetValue(cell + offset, out var otherId))
                 continue;
             var first = initialRoots[zoneId];
             var second = initialRoots[otherId];
@@ -141,18 +145,25 @@ public static class KsProcgenThemeAssignmentPlanner
         if (doors.Any(pair => Root(pair.First) == Root(pair.Second)))
             return Failure(KsProcgenThemeAssignmentStatus.InvalidInput, "InvalidThemeTopology");
 
-        if (!KsProcgenThemeValidator.TryResolve(prototypeManager, themeId, out var theme, out var issue))
+        KsProcgenIssue? issue = null;
+        if (content == null && !KsProcgenThemeCatalog.TryCapture(prototypeManager, themeId, out content, out issue))
             return new KsProcgenThemeAssignmentResult
             {
                 Status = KsProcgenThemeAssignmentStatus.ThemeRejected,
                 Issue = issue,
             };
-
+        if (content!.Theme.Id != themeId)
+            return Failure(KsProcgenThemeAssignmentStatus.InvalidInput, "MismatchedThemeCatalog");
         var regions = new List<KsProcgenThemedRegion>();
         foreach (var group in fill.Zones.GroupBy(zone => Root(zone.Id))
                      .OrderBy(group => group.Key, StringComparer.Ordinal))
         {
             var ids = group.Select(zone => zone.Id).OrderBy(id => id, StringComparer.Ordinal).ToArray();
+            var utility = group.Select(zone => zone.UtilityRoom).FirstOrDefault(room => room != null);
+            if (utility != null && (ids.Length != 1 || utilityContent?.Theme.Id != utility.ThemeId))
+                return Failure(KsProcgenThemeAssignmentStatus.ThemeRejected, "UtilityRoomThemeRequired");
+            var regionContent = utility != null ? utilityContent! : content;
+            var theme = regionContent.Theme;
             var cells = new HashSet<Vector2i>(group.SelectMany(zone => zone.Cells));
             var regionFloor = KsProcgenGeometry.SortCells(cells.Where(floor.Contains));
             if (regionFloor.Count == 0)
@@ -164,8 +175,10 @@ public static class KsProcgenThemeAssignmentPlanner
 
             // Shared passages use the same material stream so their open seams remain coherent.
             var selectionId = kind == KsProcgenZoneKind.Passage ? "<passage>" : string.Join("+", ids);
-            if (!KsProcgenThemeSelector.TrySelect(prototypeManager, themeId, seed, selectionId,
-                    out var selection, out issue))
+            KsProcgenThemeSelection? selection;
+            var selected = KsProcgenThemeSelector.TrySelectForUtilityPlanning(regionContent, seed, selectionId, out selection, out issue,
+                retainAtmosphere: gasContext != null, retainElectrical: electricalContext != null);
+            if (!selected)
                 return new KsProcgenThemeAssignmentResult
                 {
                     Status = KsProcgenThemeAssignmentStatus.ThemeRejected,
@@ -178,7 +191,7 @@ public static class KsProcgenThemeAssignmentPlanner
                 .OrderBy(pack => pack.Pack, StringComparer.Ordinal)
                 .Select(pack => new KsProcgenPackMinimum(pack.Pack, pack.MinimumCount)).ToArray();
             regions.Add(new KsProcgenThemedRegion(group.Key, kind, ids, regionFloor,
-                KsProcgenGeometry.SortCells(cells.Where(walls.Contains)), selection!, requiredPacks));
+                KsProcgenGeometry.SortCells(cells.Where(walls.Contains)), selection!, requiredPacks) { UtilityRoom = utility });
         }
 
         return new KsProcgenThemeAssignmentResult

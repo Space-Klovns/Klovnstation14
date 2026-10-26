@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,17 +12,34 @@ namespace Content.Tests.Shared._KS14.Procedural;
 [TestFixture]
 public sealed class KsProcgenSupportedAssemblySearchTests
 {
+    [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
+    public void WallRootUsesItsSupportCellAndFacesACleanCardinalApproach(int turn)
+    {
+        var assembly = new KsProcgenResolvedAssembly("Mount", "Base", "Device", new[] { Member("Device") }, []);
+        assembly = assembly.WithEntry("Device", entry => entry with { AllowedQuarterTurns = new[] { turn } });
+        var report = Report(assembly);
+        report = report with { Members = report.Members.Select(member => member with
+            { Capabilities = member.Capabilities with { WallMounted = true } }).ToArray() };
+        var face = new Vector2i[] { new(0, -1), new(-1, 0), new(0, 1), new(1, 0) }[turn];
+        var wall = new Vector2i(-face.X, -face.Y);
+        var room = new KsProcgenRoomAccessMask(new HashSet<Vector2i> { new(0, 0) }, new HashSet<Vector2i> { wall },
+            new HashSet<Vector2i>(), new HashSet<Vector2i>(), new HashSet<Vector2i> { new(0, 0) }, Vector2.Zero);
+        var result = KsProcgenSupportedAssemblySearch.Search(assembly, new[] { "Device" }, report, room, 0);
+        Assert.That(result.Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Candidate), result.Issue?.Code);
+        Assert.That(result.Access!.Poses!.Members.Single().Support.Layer, Is.EqualTo(KsProcgenPlacementLayer.Wall));
+        Assert.That(result.Access.Poses.Members.Single().Position, Is.EqualTo(new Vector2((float) wall.X, (float) wall.Y)));
+        Assert.That(result.Access.Access.Single().Approach, Is.EqualTo(Vector2i.Zero));
+        Assert.That(KsProcgenSupportedAssemblySearch.Search(assembly, new[] { "Device" }, report,
+            room with { Walls = new HashSet<Vector2i>() }, 0).Status, Is.EqualTo(KsProcgenSupportedAccessStatus.Rejected));
+    }
+
     [TestCase(2, KsProcgenSupportedAccessStatus.Rejected)]
     [TestCase(3, KsProcgenSupportedAccessStatus.Candidate)]
     public void SurfaceProjectionCannotOverlapAnUnrelatedFloorRoot(int otherX, KsProcgenSupportedAccessStatus expected)
     {
         var assembly = Assembly() with { Members = new[] { Member("Root"), Member("Device"), Member("Other") } };
-        foreach (var member in assembly.Members)
-        {
-            member.Entry.RequiresInteractionApproach = false;
-            member.Entry.AllowedQuarterTurns = new List<int> { 0 };
-        }
-        assembly.Members.Single(member => member.Id == "Device").Entry.Movement = KsProcgenMovementClass.Clear;
+        assembly = assembly.WithEntries(entry => entry with { RequiresInteractionApproach = false, AllowedQuarterTurns = [0] });
+        assembly = assembly.WithEntry("Device", entry => entry with { Movement = KsProcgenMovementClass.Clear });
         var report = Report(assembly);
         report = report with { Members = report.Members.Select(member => member.MemberId == "Root"
             ? member with { Capabilities = member.Capabilities with { SurfaceOffset = new(1f, 0f) } } : member).ToArray() };
@@ -31,6 +49,37 @@ public sealed class KsProcgenSupportedAssemblySearchTests
             report, room, 0, fixedFloorRoots: [new("Root", new(1f, 0f)), new("Other", new((float) otherX, 0f))]);
         Assert.That(result.Status, Is.EqualTo(expected), result.Issue?.Code);
         if (expected == KsProcgenSupportedAccessStatus.Rejected) Assert.That(result.Access, Is.Null);
+    }
+
+    [TestCase(false, KsProcgenSupportedAccessStatus.Rejected)]
+    [TestCase(true, KsProcgenSupportedAccessStatus.Candidate)]
+    public void RootPermissionCoversEveryOccupiedFootprintCell(bool permitSecondCell, KsProcgenSupportedAccessStatus expected)
+    {
+        var assembly = Assembly().WithEntry("Root", entry => entry with { Footprint = [new(0, 0), new(1, 0)], AllowedQuarterTurns = [0] })
+            .WithEntry("Device", entry => entry with { AllowedQuarterTurns = [1] });
+        var room = Corridor() with { Floor = Enumerable.Range(0, 4).Select(x => new Vector2i(x, 0)).ToHashSet(),
+            Walls = new HashSet<Vector2i> { new(4, 0) } };
+        var allowed = new HashSet<Vector2i> { new(2, 0) };
+        if (permitSecondCell) allowed.Add(new(3, 0));
+        var result = KsProcgenSupportedAssemblySearch.Search(assembly, assembly.Members.Select(member => member.Id).ToArray(),
+            Report(assembly), room, 0, fixedFloorRoots: [new("Root", new(2f, 0f))],
+            allowedFloorCells: new Dictionary<string, IReadOnlySet<Vector2i>> { ["Root"] = allowed });
+        Assert.That(result.Status, Is.EqualTo(expected), result.Issue?.Code);
+        if (!permitSecondCell) Assert.That(result.Access, Is.Null);
+    }
+
+    [TestCase(false, KsProcgenSupportedAccessStatus.Candidate)]
+    [TestCase(true, KsProcgenSupportedAccessStatus.Rejected)]
+    public void WholeRoomSearchRejectsAnAccessibleMachineThatCutsOffOtherFloor(bool requireConnected, KsProcgenSupportedAccessStatus expected)
+    {
+        var assembly = Assembly().WithEntry("Root", entry => entry with { AllowedQuarterTurns = [0] })
+            .WithEntry("Device", entry => entry with { AllowedQuarterTurns = [1] });
+        var room = Corridor() with { Floor = Enumerable.Range(0, 5).Select(x => new Vector2i(x, 0)).ToHashSet(),
+            Walls = new HashSet<Vector2i> { new(5, 0) } };
+        var result = KsProcgenSupportedAssemblySearch.Search(assembly, assembly.Members.Select(member => member.Id).ToArray(),
+            Report(assembly), room, 0, fixedFloorRoots: [new("Root", new(2f, 0f))], requireConnectedCleanFloor: requireConnected);
+        Assert.That(result.Status, Is.EqualTo(expected), result.Issue?.Code);
+        if (requireConnected) Assert.That(result.Access, Is.Null);
     }
 
     [Test]
@@ -48,8 +97,8 @@ public sealed class KsProcgenSupportedAssemblySearchTests
     public void SearchRevisitsFloorRootsAfterAllTheirOperatingApproachesFail()
     {
         var assembly = Assembly();
-        assembly.Members.Single(member => member.Id == "Root").Entry.AllowedQuarterTurns = [0];
-        assembly.Members.Single(member => member.Id == "Device").Entry.AllowedQuarterTurns = [1];
+        assembly = assembly.WithEntry("Root", entry => entry with { AllowedQuarterTurns = [0] });
+        assembly = assembly.WithEntry("Device", entry => entry with { AllowedQuarterTurns = [1] });
         var floor = new HashSet<Vector2i> { new(0, 0), new(1, 0), new(2, 0), new(9, 9), new(10, 9) };
         var room = Corridor() with { Floor = floor };
         // Select a seed that tries the isolated tile first. The subsequent choice must revisit Root.
@@ -92,7 +141,7 @@ public sealed class KsProcgenSupportedAssemblySearchTests
         var report = Report(assembly);
         AssertAtomicFailure(KsProcgenSupportedAssemblySearch.Search(assembly, ["Root", "Device"], report, Corridor(), 0),
             KsProcgenSupportedAccessStatus.InvalidInput);
-        assembly.Members.Single(member => member.Id == "Stored").Entry.AllowedQuarterTurns = [3];
+        assembly = assembly.WithEntry("Stored", entry => entry with { AllowedQuarterTurns = [3] });
         AssertAtomicFailure(Search(assembly, Corridor(), fixedRoots: [new("Root", new(2f, 0f))]), KsProcgenSupportedAccessStatus.Rejected);
     }
 

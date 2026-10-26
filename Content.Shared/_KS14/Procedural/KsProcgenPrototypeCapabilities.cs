@@ -5,6 +5,7 @@ using Content.Shared.Item;
 using Content.Shared.Placeable;
 using Content.Shared.Rotatable;
 using Content.Shared.Whitelist;
+using Content.Shared.Wall;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics;
@@ -52,6 +53,7 @@ public sealed record KsProcgenPrototypeCapabilities(
     IReadOnlyList<KsProcgenFixtureDeclaration> Fixtures, IReadOnlyList<KsProcgenContainerDeclaration> Containers)
 {
     public KsProcgenSurfaceTrackerDeclaration? SurfaceTracker { get; init; }
+    public bool WallMounted { get; init; }
     public ulong DeclarationHash => KsProcgenPrototypeCapabilityInspector.Hash(this);
     public bool EnginePlacementVerified => false;
 }
@@ -169,6 +171,7 @@ public static class KsProcgenPrototypeCapabilityInspector
             rotationComponent?.Increment.Theta ?? 0.0,
             KsProcgenReadOnly.Copy(fixtures), containers.ToReadOnlyList())
         {
+            WallMounted = prototype.TryComp<WallMountComponent>(out _, componentFactory),
             SurfaceTracker = surfaceTrackerComponent == null ? null : new KsProcgenSurfaceTrackerDeclaration(
                 surfaceTrackerComponent.MaxEntities, surfaceTrackerComponent.PlacedEntities.Count,
                 CopyFilter(surfaceTrackerComponent.Whitelist)),
@@ -187,7 +190,7 @@ public static class KsProcgenPrototypeCapabilityInspector
     public static ulong Hash(KsProcgenPrototypeCapabilities capabilities)
     {
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-prototype-capabilities-v3");
+        hash.AddString("ks-procgen-prototype-capabilities-v4");
         hash.AddString(capabilities.PrototypeId);
         hash.AddInt(capabilities.HasSurface ? 1 : 0);
         hash.AddInt(capabilities.SurfaceInitiallyEnabled ? 1 : 0);
@@ -201,6 +204,7 @@ public static class KsProcgenPrototypeCapabilityInspector
             hash.AddInt(tracker.InitiallyTrackedEntities);
             AddFilter(ref hash, tracker.Whitelist);
         }
+        hash.AddInt(capabilities.WallMounted ? 1 : 0);
         hash.AddInt(capabilities.HasItem ? 1 : 0);
         hash.AddInt(capabilities.InitiallyAnchored ? 1 : 0);
         hash.AddInt(capabilities.HasRotationVerb ? 1 : 0);

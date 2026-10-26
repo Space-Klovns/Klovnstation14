@@ -16,6 +16,8 @@
   id: KsProcgenFilteredComputerFixture
   categories: [ HideSpawnMenu, Debug ]
   components:
+  - type: Transform
+    noRot: false
   - type: ItemSlots
     slots:
       disk_slot:
@@ -83,6 +85,9 @@
   id: KsProcgenHardContactHotplateFixture
   categories: [ HideSpawnMenu, Debug ]
   components:
+  - type: Transform
+    noRot: false
+  - type: Item
   - type: Fixtures
     fixtures:
       itemcollide:

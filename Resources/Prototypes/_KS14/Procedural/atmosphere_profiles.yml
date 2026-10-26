@@ -1,0 +1,37 @@
+- type: ksProcgenAtmosphereProfile
+  id: KsProcgenStandardAir
+  mode: Fill
+  temperatureKelvin: 293.15
+  pressureKPa: 101.325
+  moleFractions:
+    Oxygen: 0.21
+    Nitrogen: 0.79
+
+- type: ksProcgenAtmosphereProfile
+  id: KsProcgenNitrogenRoom
+  mode: Fill
+  temperatureKelvin: 293.15
+  pressureKPa: 101.325
+  moleFractions:
+    Nitrogen: 1
+
+- type: ksProcgenAtmosphereProfile
+  id: KsProcgenVacuum
+  mode: Vacuum
+  temperatureKelvin: 293.15
+  pressureKPa: 0
+
+- type: ksProcgenAtmosphereProfile
+  id: KsProcgenPreserveAtmosphere
+  mode: Preserve
+
+# Authoring/inspection example; the content planner explicitly rejects gas contracts until R09/R11.
+- type: ksProcgenAreaProfile
+  id: KsProcgenNitrogenOfficeArea
+  theme: KsProcgenSimpleOffice
+  atmosphereProfile: KsProcgenNitrogenRoom
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenNitrogenOfficeTheme
+  parent: KsProcgenSimpleOffice
+  atmosphereProfile: KsProcgenNitrogenRoom

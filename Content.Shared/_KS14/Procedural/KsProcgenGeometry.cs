@@ -126,6 +126,23 @@ public static class KsProcgenGeometry
             return false;
         }
 
+        if (request.SchemaVersion is not (1 or 2))
+        {
+            issue = new("UnsupportedRequestSchema", "Generation request schema version 1 or 2 is required.");
+            return false;
+        }
+
+        if (request.Utilities != null && request.SchemaVersion < 2)
+        {
+            issue = new("UtilityContractsRequireRequestV2", "Scoped utility contracts require request schema version 2.");
+            return false;
+        }
+
+        if (!KsProcgenAtmosphereProfiles.ValidateRequest(request, out issue))
+            return false;
+        if (!KsProcgenElectricalProfiles.ValidateRequest(request, out issue))
+            return false;
+
         var limits = request.Limits;
         if (limits.MaxCells <= 0 || limits.MaxCells > 65_536 ||
             limits.MaxAbsoluteCoordinate <= 0 || limits.MaxAbsoluteCoordinate > 1_000_000)
@@ -358,6 +375,8 @@ public static class KsProcgenGeometry
             return false;
         normalizedShape.Entrances = entrances;
         normalizedShape.EntranceContract = contract;
+        if (request.Utilities != null && !KsProcgenUtilityContracts.Validate(request.Utilities, request.RequestId,
+                normalizedShape, request.Limits.MaxCells, out issue)) return false;
         shape = normalizedShape;
         return true;
     }

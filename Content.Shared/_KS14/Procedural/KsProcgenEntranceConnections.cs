@@ -91,7 +91,8 @@ public static class KsProcgenEntranceConnectionNormalizer
             foreach (var group in configuration.Groups)
             {
                 if (group == null || !KsProcgenAreaNormalizer.ValidId(group.Id) || !groupIds.Add(group.Id) ||
-                    group.Ports == null || group.Ports.Count is < 1 or > 1024 || group.RootCells == null ||
+                    group.Ports == null || group.Ports.Count > 1024 || group.RootCells == null ||
+                    group.Ports.Count == 0 && group.RootCells.Count == 0 ||
                     group.RootCells.Count > 1024 || group.RootCells.Distinct().Count() != group.RootCells.Count ||
                     group.RootCells.Any(cell => Math.Abs((long) cell.X) > 1_000_000 || Math.Abs((long) cell.Y) > 1_000_000))
                     return Fail("InvalidEntranceGroup", configurationId: configuration.Id);

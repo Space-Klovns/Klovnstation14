@@ -20,7 +20,10 @@ public enum KsProcgenZoneKind : byte
 /// A connected logical zone. Room proposals have no physical partition, door, or hull yet.
 /// </summary>
 public sealed record KsProcgenZone(string Id, KsProcgenZoneKind Kind, IReadOnlyList<Vector2i> Cells,
-    string? SizeGoalId = null);
+    string? SizeGoalId = null)
+{
+    public KsProcgenUtilityRoomReservation? UtilityRoom { get; init; }
+}
 
 public sealed record KsProcgenSizeMixOutcome(string GoalId, int RequestedCount, int AchievedCount);
 

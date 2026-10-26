@@ -141,6 +141,26 @@ public static class KsProcgenGroupHullBoundaryAnalyzer
                 edges.Add(new(cell, neighbor, component.Component, KsProcgenReadOnly.Copy(component.GroupIds), kind, portId));
             }
         }
+        // Utility enclosures also own their diagonal structural corners. Those cells have no
+        // cardinal exposure edge and must not become fictitious movement or atmosphere edges.
+        var utilityHull = new HashSet<Vector2i>();
+        foreach (var region in partition.Regions)
+        foreach (var zone in region.Fill.Zones.Where(zone => zone.UtilityRoom != null))
+        {
+            var room = zone.UtilityRoom!;
+            if (!room.Matches(zone) || !room.Satisfied(zone.Id, region.Partition))
+                return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidUtilityHullReservation");
+            foreach (var cell in room.ReusedHullCells)
+            {
+                if (expanded >= maximumExpandedCells)
+                    return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, "UtilityHullClaimBudget");
+                expanded++;
+                if (shape!.ContainsTarget(cell) || !shape.ContainsEnvelope(cell) || !shape.CanWrite(cell) ||
+                    reserved.Contains(cell) || floor.Contains(cell) || walls.Contains(cell))
+                    return Fail(KsProcgenEntranceSceneStatus.InvalidInput, "InvalidUtilityHullClaim");
+                utilityHull.Add(cell); claims.Add(cell);
+            }
+        }
         var ordered = edges.OrderBy(edge => edge.FloorCell.Y).ThenBy(edge => edge.FloorCell.X)
             .ThenBy(edge => edge.BoundaryCell.Y).ThenBy(edge => edge.BoundaryCell.X).ToReadOnlyList();
         var envelopeReservations = reserved.Where(shape.ContainsEnvelope).ToFrozenSet();
@@ -158,6 +178,11 @@ public static class KsProcgenGroupHullBoundaryAnalyzer
         }
         hash.AddInt(envelopeReservations.Count);
         foreach (var cell in KsProcgenGeometry.SortCells(envelopeReservations)) AddCell(cell);
+        if (utilityHull.Count != 0)
+        {
+            hash.AddString("utility-generated-hull-v1"); hash.AddInt(utilityHull.Count);
+            foreach (var cell in KsProcgenGeometry.SortCells(utilityHull)) AddCell(cell);
+        }
         void AddCell(Vector2i cell) { hash.AddInt(cell.X); hash.AddInt(cell.Y); }
         return new()
         {

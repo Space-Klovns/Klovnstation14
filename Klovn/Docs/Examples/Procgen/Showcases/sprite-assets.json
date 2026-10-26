@@ -1,0 +1,370 @@
+{
+    "outputs":  [
+                    {
+                        "path":  "tiny-strip-sprites.png",
+                        "sourcePlanHash":  "12947898532708576013",
+                        "width":  384,
+                        "sha256":  "b354fff4482d98874f274c630a0c0b70c7db003364994eac76f349d91c4caa7e",
+                        "height":  192
+                    },
+                    {
+                        "path":  "l-shape-sprites.png",
+                        "sourcePlanHash":  "15923911387550654836",
+                        "width":  864,
+                        "sha256":  "c4a570927c531dd89832d69b312773b1662acdc14aedcd7e79d92ef668c0a3ea",
+                        "height":  864
+                    },
+                    {
+                        "path":  "kitchenette-sprites.png",
+                        "sourcePlanHash":  "13735555448758578317",
+                        "width":  864,
+                        "sha256":  "3240eec9f1eed8810706e533980e182d5bbff8c15e667a7701b9c3172e202daa",
+                        "height":  864
+                    },
+                    {
+                        "path":  "gas-room-sprites.png",
+                        "sourcePlanHash":  "16622918140720809691",
+                        "width":  864,
+                        "sha256":  "72b127e293a2e12bb08cd01ae37240155f28a477995ad336019a45daf6bd06c3",
+                        "height":  864
+                    },
+                    {
+                        "path":  "wired-office-sprites.png",
+                        "sourcePlanHash":  "3256301993054413245",
+                        "width":  864,
+                        "sha256":  "179a7b458264f2f8724cc0b07410da88167d7b53537c762d21332ec29a7d7fce",
+                        "height":  864
+                    },
+                    {
+                        "path":  "wired-office-wiring.png",
+                        "sourcePlanHash":  "3256301993054413245",
+                        "width":  864,
+                        "sha256":  "81f338d3da8aba46eeaf3775d19e430f2de2ef39704f049eda8759f6050c3653",
+                        "height":  864
+                    }
+                ],
+    "sources":  [
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Machines/computers.rsi/meta.json",
+                        "sha256":  "7a830bc8ddf7817713d8e94ced01a98b5f61f92d6d8e62d47d341d966a8bb34f",
+                        "copyright":  "Taken from tgstation at commit https://github.com/tgstation/tgstation/commit/bd6873fd4dd6a61d7e46f1d75cd4d90f64c40894. comm_syndie made by Veritius, based on comm. generic_panel_open made by Errant, commit https://github.com/space-wizards/space-station-14/pull/32273, comms_wizard and wizard_key by ScarKy0, request- variants transfer made by EmoGarbage404 (github), xenorobot by Samuka-C (github), ai-fixer-progress and -purge sprites made by chromiumboy, generic_syndie_keys and request-syndie modified from generic_keys and request by SlamBamActionman"
+                    },
+                    {
+                        "sha256":  "f4ff97fcf8c4ff1aaa6fa9a7192887e46ac0b4567a734437cab2988cf7e32802",
+                        "path":  "Resources/Textures/Structures/Windows/window.rsi/window0.png"
+                    },
+                    {
+                        "sha256":  "f305f175ffac7662f2e2f6b41f5b7493c27effdb2f090c83811b09ca802dc535",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/reinf_over5.png"
+                    },
+                    {
+                        "sha256":  "2ea59529948dcc3fe3758a50f7b83e05f09ac16a6d308c44c28dd2a9304a9f20",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_2.png"
+                    },
+                    {
+                        "sha256":  "f27d9ae9010477176d539b79c8962a68caa5bf0e89150f848b39868a3147f9c0",
+                        "path":  "Resources/Textures/_KS14/Tiles/_AUTOGEN/floor.png"
+                    },
+                    {
+                        "sha256":  "4a1d8cd219721c54a7e04e6c592300c586939aea600fa30696cf54a4c04da24f",
+                        "path":  "Resources/Textures/Structures/Power/Cables/lv_cable.rsi/lvcable_12.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Power/Cables/lv_cable.rsi/meta.json",
+                        "sha256":  "ecbfa79f974fc1b8fbb4f583bf91c2db2b0bb243562d4c0cbc0eff6a6b1ed66f",
+                        "copyright":  "Taken from tgstation at commit https://github.com/tgstation/tgstation/commit/fcf375d7d9ce6ceed5c7face899725e5655ab640"
+                    },
+                    {
+                        "sha256":  "d7e8177ad5c5cd45bdd58eb8a17aee7cc1f95d9f9ce7ecc3876b0d98f104d98c",
+                        "path":  "Resources/Textures/Structures/Power/Cables/lv_cable.rsi/lvcable_2.png"
+                    },
+                    {
+                        "sha256":  "6d73096e1c19f09481aec7e114b27c864c73c6deb0a20179554af48f174acee8",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/solid5.png"
+                    },
+                    {
+                        "sha256":  "c46eb88da2c74528021874745bd2b08f38e84b86744e3ffc204e64c1ad46d9c3",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_12.png"
+                    },
+                    {
+                        "sha256":  "1de0a57bed0361ee4a534e53a9055ecc9240e6ec5bdb550eab90292799926e33",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_8.png"
+                    },
+                    {
+                        "sha256":  "65bcac22bd14257e946131938265123b51a522f7db0c43204217fdd51f12851c",
+                        "path":  "Resources/Textures/Structures/Machines/computers.rsi/generic_keys.png"
+                    },
+                    {
+                        "sha256":  "876711e903aba08d47302fcfffc06132005c3d3af3e41408baba498e5e88e796",
+                        "path":  "Resources/Textures/Structures/Power/apc.rsi/base.png"
+                    },
+                    {
+                        "sha256":  "e279c4d90aca418caf5d5ffc77b6b000dd9e4bead466a1750b593eb096cc879b",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/solid4.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Doors/Airlocks/Standard/basic.rsi/meta.json",
+                        "sha256":  "5f7a1e047ccc898354effbb0730ba96d532ec0ff0bf9ebb5d532c686bd98560a",
+                        "copyright":  "Taken from tgstation at commit https://github.com/tgstation/tgstation/commit/c6e3401f2e7e1e55c57060cdf956a98ef1fefc24"
+                    },
+                    {
+                        "sha256":  "c8ab98b894b0a394308d39c8e786ff5bbca4799c5304a4f2a1c875fdc1327aaf",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_5.png"
+                    },
+                    {
+                        "sha256":  "f8352ca8ba5bc2370b6d5c9bdfa927cd8e4068ed52b7caa4ea9427a1e5c9f5ac",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_7.png"
+                    },
+                    {
+                        "sha256":  "3abe0c9c177a4781ae4736c510f7a994aac565c71db489a1879ba6374cffaa40",
+                        "path":  "Resources/Textures/Structures/Machines/computers.rsi/generic_keyboard.png"
+                    },
+                    {
+                        "sha256":  "68c2de891bc091584343f6dd61f0178faf708358cc4121cdfa5b2ec5a8cd1a3f",
+                        "path":  "Resources/Textures/Structures/Power/Cables/hv_cable.rsi/hvcable_0.png"
+                    },
+                    {
+                        "sha256":  "35c1365ec9918e9f4dab7e4a5edecf5e1fc57aa074c860b06be153faad2cd10b",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_3.png"
+                    },
+                    {
+                        "sha256":  "e6e449058b94b2e0db87902c992305384535b00ea827e6100614d869a1c72578",
+                        "path":  "Resources/Textures/Structures/Power/Cables/lv_cable.rsi/lvcable_7.png"
+                    },
+                    {
+                        "sha256":  "57c094d2a70822b07dd7a2a5bebd17d6e748ab389431d6a52c8a1b43b54bc59c",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_14.png"
+                    },
+                    {
+                        "sha256":  "74e50cd1bfb79a1b6f8b59ffc98242f44e0a95c0cff621ffaea76e87e6322ba2",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/reinf_over3.png"
+                    },
+                    {
+                        "sha256":  "74e50cd1bfb79a1b6f8b59ffc98242f44e0a95c0cff621ffaea76e87e6322ba2",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/reinf_over1.png"
+                    },
+                    {
+                        "sha256":  "4665c156f13d52a166fe37ca0fea87c2d1b2e3b4a1199bcc1d145ba1832df589",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_5.png"
+                    },
+                    {
+                        "sha256":  "cf80e707ffd582ae6852bb56b4c0929e99a19a46304fde814e858b3974dfc552",
+                        "path":  "Resources/Textures/Objects/Tools/cable-coils.rsi/coilhv-10.png"
+                    },
+                    {
+                        "sha256":  "72e36d80a0abbf1a01ff4948d83beadf16d0351217d872c48fc8ed23a6637902",
+                        "path":  "Resources/Textures/Structures/Doors/Airlocks/Standard/basic.rsi/closed.png"
+                    },
+                    {
+                        "sha256":  "8347581d2b69d7f94a7942ee1db1a6ec766cd7013d77a189d6a30ee61b301f1d",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_13.png"
+                    },
+                    {
+                        "sha256":  "d33ea13039401cc5d607d589034d72eeb8cfefec840da93a00f78b972afab3aa",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_6.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Windows/window.rsi/meta.json",
+                        "sha256":  "c9ad32cb8c33bc0e7bbf79cd807c099a2041b62156b56818b53937746ed9c6c6",
+                        "copyright":  "Taken from vgstation at commit https://github.com/vgstation-coders/vgstation13/raw/99cc2ab62d65a3a7b554dc7b21ff5f57c835f973/icons/turf/walls.dmi and modified by Swept, transparency tweaked by Ubaser."
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/meta.json",
+                        "sha256":  "6b98c72df1080a6b90958d83789afc80e3e8ed94d5d5ff74b83f971011ecf16b",
+                        "copyright":  "Taken from tgstation at commit https://github.com/tgstation/tgstation/commit/fcf375d7d9ce6ceed5c7face899725e5655ab640"
+                    },
+                    {
+                        "sha256":  "321f296afe139e31962ae9b0f8267bab9a06376c496edc8a27de0b6e54b07066",
+                        "path":  "Resources/Textures/Structures/Power/substation.rsi/screen.png"
+                    },
+                    {
+                        "sha256":  "41dab98eef89db021bd1b449788d854115da920c0c324a7c20414db76c89440d",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_9.png"
+                    },
+                    {
+                        "sha256":  "d8a981beb9175346ff0ca74fd52cf12cdead9b3c1a723f26cfd1b9b5df18be08",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/reinf_over4.png"
+                    },
+                    {
+                        "license":  "CC0-1.0",
+                        "path":  "Resources/Textures/Structures/Power/substation.rsi/meta.json",
+                        "sha256":  "76bb1bad273b064d658e40e1205cbf8c1a64a23c7fb8e5746ff18dfc16fe8fc3",
+                        "copyright":  "Created by EmoGarbage404 (github)"
+                    },
+                    {
+                        "sha256":  "d8a981beb9175346ff0ca74fd52cf12cdead9b3c1a723f26cfd1b9b5df18be08",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/reinf_over6.png"
+                    },
+                    {
+                        "sha256":  "3045c9745e9b3358ad22429616b26464f954b233c803bcd6137aba89afdb726a",
+                        "path":  "Resources/Textures/Structures/Power/apc.rsi/display-full.png"
+                    },
+                    {
+                        "sha256":  "3f94c8391a17ff38836e50149b65d372c4e04e347db15d1a8f78e794508be271",
+                        "path":  "Resources/Textures/_KS14/Tiles/_AUTOGEN/small.png"
+                    },
+                    {
+                        "sha256":  "10bc95a931ff1ec87fe83c1bcd347b858215600fa5f1be31d3b18e5aabb7aed9",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_15.png"
+                    },
+                    {
+                        "sha256":  "90bfe8be9af33e80bc5028f1155f6d0849ac59d2d45816d3ade1c1cea0909a59",
+                        "path":  "Resources/Textures/Tiles/plating.png"
+                    },
+                    {
+                        "sha256":  "05ae9a648c147b6dd11b4f79831855704de1c5cb47490bf483dd63a4b4b98cc2",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/reinf_over0.png"
+                    },
+                    {
+                        "sha256":  "a661faf1acc2d0ec1e7c50bf0fbf8cbea9d258a7428e431af32ee1ad67c21822",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_12.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-4.0",
+                        "path":  "Resources/Textures/Structures/Power/Cables/hv_cable.rsi/meta.json",
+                        "sha256":  "903b0efd30dd7b713e1cf6a6cfb82667aa97cc8b6db066f2b6160b9e10b91697",
+                        "copyright":  "Made by PJB3005"
+                    },
+                    {
+                        "sha256":  "05ae9a648c147b6dd11b4f79831855704de1c5cb47490bf483dd63a4b4b98cc2",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/reinf_over2.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Objects/Tools/cable-coils.rsi/meta.json",
+                        "sha256":  "1ead8394fa278999599322da8802712ddf60815c22eb72531eb0ae0912c52848",
+                        "copyright":  "Taken from tgstation and modified by SweptWasTaken at commit https://github.com/tgstation/tgstation/commit/77608a9f46b06a46f0f6b1be061755f68cc255a3"
+                    },
+                    {
+                        "sha256":  "21cdedb6fedd6b6fae7c720e3101c241e42ff0d13ef6bfe90ab9ef6a09554a13",
+                        "path":  "Resources/Textures/Structures/Power/substation.rsi/substation.png"
+                    },
+                    {
+                        "sha256":  "da162211e41dde598ed5e4f82baeb9f7e8e968ceec95fd091cbee4c15eeb6b6b",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_7.png"
+                    },
+                    {
+                        "sha256":  "05c7e25b2b975b93d1549173562c256de1a091c672f45c908f251c2447a3d305",
+                        "path":  "Resources/Textures/_KS14/Tiles/_AUTOGEN/cafeteria.png"
+                    },
+                    {
+                        "sha256":  "387f1003bdb5fab7decb154cdae125ff67c8a363c10b79059aa2a29ce1778c46",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_8.png"
+                    },
+                    {
+                        "sha256":  "71b7a6b0f3b205049ea92f17133612a54d07d359a54a7fce368999e2f55121bd",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/solid3.png"
+                    },
+                    {
+                        "sha256":  "71b7a6b0f3b205049ea92f17133612a54d07d359a54a7fce368999e2f55121bd",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/solid1.png"
+                    },
+                    {
+                        "sha256":  "db767bdfd3d8ef8ab76223b73c445b8752bd785da4e47dfa7d6344d6f43b01de",
+                        "path":  "Resources/Textures/Structures/Machines/computers.rsi/computer.png"
+                    },
+                    {
+                        "sha256":  "2e4e77ede27fc512e14af2499657407434afcdfdbcab7db33cb4c75229cd6cbe",
+                        "path":  "Resources/Textures/Structures/Power/substation.rsi/full.png"
+                    },
+                    {
+                        "sha256":  "04868447d3e34395cb80ba7e4f54138b85211df09b0ff5bb4eaa28e06bd60fe3",
+                        "path":  "Resources/Textures/Structures/Power/Cables/lv_cable.rsi/lvcable_8.png"
+                    },
+                    {
+                        "sha256":  "bb6531b7eb8889e5df00948a3914da890bf6f2d20c67ef59752e3658a96871ea",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_14.png"
+                    },
+                    {
+                        "sha256":  "4eeac70deceb8fc03838a734f10e31fb882310a35726033932d2995dac646e50",
+                        "path":  "Resources/Textures/Objects/Tools/cable-coils.rsi/coillv-10.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/meta.json",
+                        "sha256":  "ab67eb86ad0d316228eb404241a7db7a03691acb2b53a21d572ea11f4626fd7a",
+                        "copyright":  "Taken from tgstation at commit https://github.com/tgstation/tgstation/commit/d90c7e5de6f6d94596c164da78dbc8d3cd35bb99 and modified."
+                    },
+                    {
+                        "sha256":  "e279c4d90aca418caf5d5ffc77b6b000dd9e4bead466a1750b593eb096cc879b",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/solid6.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Power/apc.rsi/meta.json",
+                        "sha256":  "c88511911d80a05f151b1fa4cf13dbadc4aa73df63f4fa1c3c59b2b3db2e58a9",
+                        "copyright":  "Taken from tgstation at commit https://github.com/tgstation/tgstation/commit/9c7d509354ee030300f63c701da63c17928c3b3b and heavily modified by EmoGarbage404 (github)"
+                    },
+                    {
+                        "sha256":  "b7ba362493e390054daeb1419e5e2b2d3359cd5afc68e1094191d6b30f685796",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_13.png"
+                    },
+                    {
+                        "sha256":  "a7b9826c8810ecc897436627a5fed53501e8c409239ec20c167b4ae517164fbc",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvcable_2.png"
+                    },
+                    {
+                        "sha256":  "c535d59399b67f150e1a41038923a53b297acda88bb3edb780e5f7c5494cccf8",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_3.png"
+                    },
+                    {
+                        "sha256":  "80124ec1906ef44c99a7a6981670b62180487aeeb56dfe5bb7a9fb9e309d208e",
+                        "path":  "Resources/Textures/Structures/Furniture/Tables/generic.rsi/state_0.png"
+                    },
+                    {
+                        "sha256":  "94bfafe13dd7a39a36f69319d4a859daf77a6bed847c859d6acd452a244939c4",
+                        "path":  "Resources/Textures/Structures/Walls/solid.rsi/solid0.png"
+                    },
+                    {
+                        "sha256":  "f1e3ad5073f44c431ed59899bebc1ff391af3ac6105327f35a51bb7db983d25a",
+                        "path":  "Resources/Textures/Structures/Power/Cables/lv_cable.rsi/lvcable_1.png"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Machines/microwave.rsi/meta.json",
+                        "sha256":  "b746fb46ab16a06867b0da758723c3a3bbdf70f46862c14fc90dcd149ccd530a",
+                        "copyright":  "Taken from /tg/station at commit 9065b811726ae52be5d1889f436c01a24efbf47a, edited by github user @Flareguy for Space Station 14, inhands by BoskiYourk (GitHub)"
+                    },
+                    {
+                        "license":  "CC-BY-SA-3.0",
+                        "path":  "Resources/Textures/Structures/Furniture/Tables/generic.rsi/meta.json",
+                        "sha256":  "5ce65ef4f0fd862efa64f2347d87c1d1f11f39007ecf40821985202d11647bd4",
+                        "copyright":  "Taken from https://github.com/discordia-space/CEV-Eris/blob/0b3ab17dbad632ddf738b63900ef8df1926bba47/icons/obj/tables.dmi"
+                    },
+                    {
+                        "sha256":  "c83bb9e9b2bdbf6edd6642626e06c67a76874d95c930717354d22dbe4dcbd442",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_9.png"
+                    },
+                    {
+                        "sha256":  "552d1b76e690bedd26164f532a1214f233cc5e468af0fa1f9e9e99fec6a941a9",
+                        "path":  "Resources/Textures/Structures/Power/Cables/lv_cable.rsi/lvcable_3.png"
+                    },
+                    {
+                        "sha256":  "4c8f942440db73154885edcc6bc07b8b1240fea911907a18c78de4417d316f19",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_6.png"
+                    },
+                    {
+                        "sha256":  "198ff57e66869872854192fbdd9f66b31507a6ee29555bb44edc0ce2c36b5afe",
+                        "path":  "Resources/Textures/Structures/Power/Cables/mv_cable.rsi/mvstripes_15.png"
+                    },
+                    {
+                        "sha256":  "a39a35e8bd4e7a5ddf4e89018286c2868324f271f6675abe2ae9cb0ef82eb55b",
+                        "path":  "Resources/Textures/Structures/Machines/microwave.rsi/mw0.png"
+                    }
+                ],
+    "clientScreenshot":  false,
+    "method":  "Repository PNG/RSI frames, native cardinal/corner masks, nearest-neighbor 3x scaling; curated mappings for these five fixtures.",
+    "kind":  "KsProcgenShowcaseSpriteAssets",
+    "schemaVersion":  1,
+    "limitations":  [
+                        "Full-bright static frame, without native lighting/shaders or client runtime appearance verification.",
+                        "Computer screen is unpowered; APC/substation use full-battery display assets, not a claim of operating supply.",
+                        "Normal previews hide under-floor cables. Wiring preview draws cables last above all floors, structures and furnishings.",
+                        "Floor variant zero and animation frame zero; contained items are not drawn."
+                    ]
+}

@@ -8,13 +8,13 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.Procedural;
 
 [TestOf(typeof(KsProcgenFurnishingPlanner))]
-public sealed class KsProcgenCleanFurnishingTests : GameTest
+public sealed class KsProcgenCleanFurnishingTests : KsProcgenGameTest
 {
     [TestCase("KsProcgenSimpleOffice")]
     [TestCase("KsProcgenNearThemeFixture")]
     public async Task AdequateCleanPathAccountingPreservesPlacementsAndReplaysAtTheExactAllowance(string themeId)
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             Assert.That(KsProcgenThemeSelector.TrySelect(manager, themeId, 17, "BudgetRoom", out var theme, out _), Is.True);
@@ -56,7 +56,7 @@ public sealed class KsProcgenCleanFurnishingTests : GameTest
     [Test]
     public async Task MandatoryBacktrackingChargesDiscardedAccessPathsAndFailsAtomicallyOneExpansionShort()
     {
-        await Pair.Server.WaitAssertion(() =>
+        await AssertOnServer(() =>
         {
             var manager = Pair.Server.ResolveDependency<IPrototypeManager>();
             Assert.That(KsProcgenThemeSelector.TrySelect(manager, "KsProcgenWeightedCoresThemeFixture", 17,
@@ -67,6 +67,7 @@ public sealed class KsProcgenCleanFurnishingTests : GameTest
             var region = new KsProcgenThemedRegion("MandatoryBacktracking", KsProcgenZoneKind.RoomProposal,
                 ["MandatoryBacktracking"], floor, walls, theme! with
                 {
+                    Content = null,
                     DominantEntityPackId = "KsProcgenMandatoryFlexiblePackFixture",
                     SupportingEntityPackIds = ["KsProcgenRequiredCornerPackFixture"],
                 }, []);

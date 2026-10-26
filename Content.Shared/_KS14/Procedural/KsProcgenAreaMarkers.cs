@@ -12,6 +12,8 @@ public sealed partial class KsProcgenAreaProfilePrototype : IPrototype
     [DataField] public KsProcgenGeometryMode GeometryMode = KsProcgenGeometryMode.Footprint;
     [DataField] public KsProcgenConnectivityPolicy ConnectivityPolicy = KsProcgenConnectivityPolicy.SingleNetwork;
     [DataField] public string? Theme;
+    [DataField] public string? AtmosphereProfile;
+    [DataField] public string? ElectricalProfile;
     [DataField] public string? EntranceConnections;
     [DataField] public KsProcgenRoomSubdivisionSpec? RoomSubdivision;
     [DataField] public KsProcgenAreaGoalsSpec? GenerationGoals;

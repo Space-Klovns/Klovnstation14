@@ -4,13 +4,21 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Procedural;
 
+public sealed record KsProcgenResolvedPackReference(string Pack, float Weight, int MinimumCount);
+public sealed record KsProcgenResolvedThemeGoals(bool CoherentContents, bool KeepCenterOpen,
+    bool AllowLooseItems, float FurnishingDensity, float LightingCoverage);
+
 public sealed record KsProcgenResolvedTheme(
     string Id,
-    IReadOnlyList<KsProcgenWeightedPackReference> TilePacks,
-    IReadOnlyList<KsProcgenWeightedPackReference> WallPacks,
-    IReadOnlyList<KsProcgenWeightedPackReference> LightingPacks,
-    IReadOnlyList<KsProcgenWeightedPackReference> EntityPacks,
-    KsProcgenThemeGoals Goals);
+    IReadOnlyList<KsProcgenResolvedPackReference> TilePacks,
+    IReadOnlyList<KsProcgenResolvedPackReference> WallPacks,
+    IReadOnlyList<KsProcgenResolvedPackReference> LightingPacks,
+    IReadOnlyList<KsProcgenResolvedPackReference> EntityPacks,
+    KsProcgenResolvedThemeGoals Goals)
+{
+    public KsProcgenAtmosphereProfile? Atmosphere { get; init; }
+    public KsProcgenElectricalProfile? Electrical { get; init; }
+}
 
 /// <summary>
 /// Validates theme references before generation. Operational fixture, hull, and entity-fit checks follow later.
@@ -21,46 +29,56 @@ public static class KsProcgenThemeValidator
         IPrototypeManager prototypeManager,
         string themeId,
         out KsProcgenResolvedTheme? resolved,
-        out KsProcgenIssue? issue)
+        out KsProcgenIssue? issue,
+        KsProcgenUtilityDraft? draft = null, KsProcgenContentDraft? assets = null)
     {
         resolved = null;
         issue = null;
-        var chain = new List<KsProcgenRoomThemePrototype>();
+        if (prototypeManager == null || string.IsNullOrWhiteSpace(themeId))
+        { issue = new("InvalidThemeInput", "A prototype manager and theme ID are required."); return false; }
+        var source = assets?.Source(prototypeManager) ?? new KsProcgenContentSource(prototypeManager);
+        var chain = new List<(string Id, KsProcgenRoomThemeSpec Definition)>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
         var currentId = themeId;
         while (true)
         {
+            if (chain.Count >= 128)
+            { issue = new("ThemeInheritanceBudget", "Theme inheritance exceeds 128 levels."); return false; }
             if (!seen.Add(currentId))
             {
                 issue = new KsProcgenIssue("ThemeInheritanceCycle", $"Theme {currentId} repeats in its parent chain.");
                 return false;
             }
 
-            if (!prototypeManager.TryIndex<KsProcgenRoomThemePrototype>(currentId, out var theme))
+            var theme = source.Theme(currentId);
+            if (theme == null)
             {
                 issue = new KsProcgenIssue("UnknownTheme", $"Theme {currentId} does not exist.");
                 return false;
             }
 
-            chain.Add(theme);
+            chain.Add((currentId, theme));
             if (string.IsNullOrWhiteSpace(theme.Parent))
                 break;
             currentId = theme.Parent;
         }
 
-        foreach (var theme in chain)
+        foreach (var (id, theme) in chain)
         {
-            var fallbackSeen = new HashSet<string>(StringComparer.Ordinal) { theme.ID };
+            var fallbackSeen = new HashSet<string>(StringComparer.Ordinal) { id };
             var fallbackId = theme.FallbackTheme;
             while (!string.IsNullOrWhiteSpace(fallbackId))
             {
+                if (fallbackSeen.Count >= 128)
+                { issue = new("ThemeFallbackBudget", "Theme fallback references exceed 128 levels."); return false; }
                 if (!fallbackSeen.Add(fallbackId))
                 {
-                    issue = new KsProcgenIssue("ThemeFallbackCycle", $"Theme {theme.ID} has a fallback cycle.");
+                    issue = new KsProcgenIssue("ThemeFallbackCycle", $"Theme {id} has a fallback cycle.");
                     return false;
                 }
 
-                if (!prototypeManager.TryIndex<KsProcgenRoomThemePrototype>(fallbackId, out var fallback))
+                var fallback = source.Theme(fallbackId);
+                if (fallback == null)
                 {
                     issue = new KsProcgenIssue("UnknownFallbackTheme", $"Fallback theme {fallbackId} does not exist.");
                     return false;
@@ -75,13 +93,17 @@ public static class KsProcgenThemeValidator
         IReadOnlyList<KsProcgenWeightedPackReference>? lights = null;
         IReadOnlyList<KsProcgenWeightedPackReference>? entities = null;
         KsProcgenThemeGoals? goals = null;
-        foreach (var theme in chain.AsEnumerable().Reverse())
+        string? atmosphereProfileId = null;
+        string? electricalProfileId = null;
+        foreach (var (_, theme) in chain.AsEnumerable().Reverse())
         {
             tiles = theme.TilePacks ?? tiles;
             walls = theme.WallPacks ?? walls;
             lights = theme.LightingPacks ?? lights;
             entities = theme.EntityPacks ?? entities;
             goals = theme.Goals ?? goals;
+            atmosphereProfileId = theme.AtmosphereProfile ?? atmosphereProfileId;
+            electricalProfileId = theme.ElectricalProfile ?? electricalProfileId;
         }
 
         if (tiles == null || walls == null || tiles.Count == 0 || walls.Count == 0)
@@ -101,43 +123,58 @@ public static class KsProcgenThemeValidator
             return false;
         }
 
-        if (!ValidateReferences(tiles, id => prototypeManager.TryIndex<KsProcgenTilePackPrototype>(id, out _),
+        if (!ValidateReferences(tiles, id => source.Tile(id) != null,
                 "tile", out issue) ||
-            !ValidateReferences(walls, id => prototypeManager.TryIndex<KsProcgenWallPackPrototype>(id, out _),
+            !ValidateReferences(walls, id => source.Wall(id) != null,
                 "wall", out issue) ||
-            !ValidateReferences(lights, id => prototypeManager.TryIndex<KsProcgenLightingPackPrototype>(id, out _),
+            !ValidateReferences(lights, id => source.Light(id) != null,
                 "lighting", out issue) ||
-            !ValidateReferences(entities, id => prototypeManager.TryIndex<KsProcgenEntityPackPrototype>(id, out _),
+            !ValidateReferences(entities, id => source.Entity(id) != null,
                 "entity", out issue))
             return false;
 
         foreach (var reference in tiles)
         {
-            var pack = prototypeManager.Index<KsProcgenTilePackPrototype>(reference.Pack);
-            if (!ValidateTilePack(pack, prototypeManager, out issue)) return false;
+            var pack = source.Tile(reference.Pack)!;
+            if (!ValidateTilePack(pack, prototypeManager, out issue, packId: reference.Pack)) return false;
         }
 
         foreach (var reference in walls)
         {
-            var pack = prototypeManager.Index<KsProcgenWallPackPrototype>(reference.Pack);
-            if (!ValidateWallPack(pack, prototypeManager, out issue)) return false;
+            var pack = source.Wall(reference.Pack)!;
+            if (!ValidateWallPack(pack, prototypeManager, out issue, packId: reference.Pack)) return false;
         }
 
         foreach (var reference in lights)
         {
-            var pack = prototypeManager.Index<KsProcgenLightingPackPrototype>(reference.Pack);
-            if (!ValidateLightingPack(pack, prototypeManager, out issue)) return false;
+            var pack = source.Light(reference.Pack)!;
+            if (!ValidateLightingPack(pack, prototypeManager, out issue, packId: reference.Pack)) return false;
         }
 
         foreach (var reference in entities)
         {
-            var pack = prototypeManager.Index<KsProcgenEntityPackPrototype>(reference.Pack);
-            if (!ValidateEntityPack(pack, prototypeManager, out issue)) return false;
+            var pack = source.Entity(reference.Pack)!;
+            if (!ValidateEntityPack(pack, prototypeManager, out issue, source.Assembly)) return false;
         }
 
-        resolved = new KsProcgenResolvedTheme(themeId, tiles, walls, lights, entities, goals);
+        KsProcgenAtmosphereProfile? atmosphere = null;
+        if (atmosphereProfileId != null &&
+            !KsProcgenAtmosphereProfiles.TryResolve(prototypeManager, atmosphereProfileId, out atmosphere, out issue, draft: draft))
+            return false;
+        KsProcgenElectricalProfile? electrical = null;
+        if (electricalProfileId != null &&
+            !KsProcgenElectricalProfiles.TryResolve(prototypeManager, electricalProfileId, out electrical, out issue, draft: draft))
+            return false;
+        resolved = new KsProcgenResolvedTheme(themeId, Freeze(tiles), Freeze(walls), Freeze(lights), Freeze(entities),
+            new(goals.CoherentContents, goals.KeepCenterOpen, goals.AllowLooseItems,
+                goals.FurnishingDensity, goals.LightingCoverage))
+            { Atmosphere = atmosphere, Electrical = electrical };
         return true;
     }
+
+    private static IReadOnlyList<KsProcgenResolvedPackReference> Freeze(IEnumerable<KsProcgenWeightedPackReference> references) =>
+        KsProcgenReadOnly.Copy(references.Select(reference =>
+            new KsProcgenResolvedPackReference(reference.Pack, reference.Weight, reference.MinimumCount)));
 
     private static bool ValidateReferences(
         IReadOnlyList<KsProcgenWeightedPackReference> references,
@@ -178,9 +215,9 @@ public static class KsProcgenThemeValidator
     }
 
     private static bool ValidateTilePack(
-        KsProcgenTilePackPrototype pack,
+        KsProcgenTilePackSpec pack,
         IPrototypeManager manager,
-        out KsProcgenIssue? issue)
+        out KsProcgenIssue? issue, string packId)
     {
         issue = null;
         if (!ValidateChoices(pack.Palettes.Select(p => (p.Id, p.Weight)), out issue)) return false;
@@ -193,7 +230,7 @@ public static class KsProcgenThemeValidator
                 !float.IsFinite(palette.AccentFraction) || palette.AccentFraction < 0f ||
                 palette.AccentFraction > 1f)
             {
-                issue = new KsProcgenIssue("InvalidTilePalette", $"Tile pack {pack.ID} has an invalid palette.");
+                issue = new KsProcgenIssue("InvalidTilePalette", $"Tile pack {packId} has an invalid palette.");
                 return false;
             }
         }
@@ -202,9 +239,9 @@ public static class KsProcgenThemeValidator
     }
 
     private static bool ValidateWallPack(
-        KsProcgenWallPackPrototype pack,
+        KsProcgenWallPackSpec pack,
         IPrototypeManager manager,
-        out KsProcgenIssue? issue)
+        out KsProcgenIssue? issue, string packId)
     {
         issue = null;
         if (!ValidateChoices(pack.Families.Select(f => (f.Id, f.Weight)), out issue)) return false;
@@ -215,7 +252,7 @@ public static class KsProcgenThemeValidator
                 (family.Door != null && !ExistsEntity(manager, family.Door)) ||
                 (family.Window != null && !ExistsEntity(manager, family.Window)))
             {
-                issue = new KsProcgenIssue("InvalidWallFamily", $"Wall pack {pack.ID} has an unresolved entity.");
+                issue = new KsProcgenIssue("InvalidWallFamily", $"Wall pack {packId} has an unresolved entity.");
                 return false;
             }
         }
@@ -224,9 +261,9 @@ public static class KsProcgenThemeValidator
     }
 
     private static bool ValidateLightingPack(
-        KsProcgenLightingPackPrototype pack,
+        KsProcgenLightingPackSpec pack,
         IPrototypeManager manager,
-        out KsProcgenIssue? issue)
+        out KsProcgenIssue? issue, string packId)
     {
         issue = null;
         if (!ValidateChoices(pack.Fixtures.Select(f => (f.Id, f.Weight)), out issue)) return false;
@@ -235,7 +272,7 @@ public static class KsProcgenThemeValidator
             if (!ExistsEntity(manager, fixture.Entity) || fixture.PreferredSpacing <= 0 ||
                 !Enum.IsDefined(fixture.Supply))
             {
-                issue = new KsProcgenIssue("InvalidLightingFixture", $"Lighting pack {pack.ID} has an invalid fixture.");
+                issue = new KsProcgenIssue("InvalidLightingFixture", $"Lighting pack {packId} has an invalid fixture.");
                 return false;
             }
         }
@@ -244,11 +281,11 @@ public static class KsProcgenThemeValidator
     }
 
     private static bool ValidateEntityPack(
-        KsProcgenEntityPackPrototype pack,
+        KsProcgenEntityPackSpec pack,
         IPrototypeManager manager,
-        out KsProcgenIssue? issue)
+        out KsProcgenIssue? issue, Func<string, KsProcgenAssemblySpec?> assemblyResolver)
     {
-        return KsProcgenAssemblyCompiler.TryResolvePack(manager, pack, out _, out issue);
+        return KsProcgenAssemblyCompiler.TryResolvePack(manager, pack, out _, out issue, assemblyResolver: assemblyResolver);
     }
 
     private static bool ValidateChoices(

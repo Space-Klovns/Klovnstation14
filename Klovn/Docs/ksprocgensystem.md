@@ -5,10 +5,209 @@ Status: implementation in progress. This document remains the behavior contract;
 implementation ledger in section 17 records what exists, what has been verified, and what remains.
 An unchecked task is not implemented merely because its API or a partial algorithm exists.
 
-Current overall implementation estimate (2026-10-14): **approximately 75%**. This is weighted
+Current expanded-scope estimate (2026-10-26): **approximately 68%**, using the fixed weighted
+capability index below. This estimates implemented capability, not production readiness.
+The active user milestone is **at least 80%** of this expanded scope. Section 17's current
+capability index fixes the weights and records the evidence; helpers and documentation do not
+earn credit as complete runtime/editor workflows.
+
+Historical implementation estimate (2026-10-14 scope): **approximately 75%**. This is weighted
 capability coverage, not production readiness. Section 17's milestone table and detailed rewrite
 ledger record the evidence, uncertainty and remaining exits; earlier percentages are historical
 checkpoints. R01-R07 remain in progress. Engine access certification and publication remain gated.
+
+Contract revision **2026-10-15** adds configurable initial atmospheres (section 19), automatic
+HV/MV/LV distribution (section 20), and a complete in-game authoring workspace (section 21).
+These remain incomplete features; section 17 records the implemented utility authoring foundations.
+The section 17 review queue R08-R18
+records required rewrites and delivery gates. The earlier 75% estimate applies only to its original
+scope; the current expanded-scope assessment below supersedes it. Documentation work adds no
+implementation credit. Existing section/task IDs are retained to preserve historical references.
+
+Latest verified inheritance-parent prerequisite batch (2026-10-26): manifest schema 10 now
+follows registered entity, tile and other-kind parent chains in both runtime arrays and source
+declarations. Abstract parents retain declaration-only authority, including the new tile-declaration
+kind. Partial abstract fields are inspected through schema validators without fake complete
+instances or missing-required-field failures. Canonical inspection-gap codes retain unrecognized
+fields explicitly; recognized world references still reject. The office catalog now has 649 combined
+definitions and fits the unchanged capture limits. Its one declared-schema gap is legacy
+`femaleMask` on `ClothingUniformSkirtBase`; full content closure remains unverified. Corrected the
+native `CarpetBase` destruction-behavior nesting and verified its inherited destruction act.
+Normal Release and fresh Debug each pass **891 units / 895 integration and sandbox cases / 31
+serialization cases**, retaining all prior 891/862/31 cases. The 33 new cases comprise 32 inheritance
+cases and one source override ancestor case. Six isolated controls produce 14 intended assertion
+failures before exact source restoration; all 12 source hashes remain unchanged across the gates.
+Five regenerated native exports match installed maps, both refreshed office import cases pass,
+and 72 sprite-source hashes/six output identities match. All six sprite PNGs retain their previous
+bytes, including the cable overlay drawn above all layers. Both browser overviews are refreshed
+and checked. Credit stays **68/100**; the **80% goal remains active**. Resource/client/custom-schema
+closure, portable assets/replay, operating checks and in-game authoring still require their own exits.
+
+Previous verified typed-reference prerequisite batch (2026-10-26): native manifest schema 9
+captures registered typed prototype dependencies across kinds, including nested collections,
+abstract reference-discovery templates and map override seeds with distinct provenance. Whole
+capture and parent-placement checks reject transitive drift. The measured office closure contains
+538 combined definitions; the default bound is now 1,024, with the hard maximum unchanged at 4,096.
+Normal Release and fresh Debug each pass **891 units / 862 integration and sandbox cases / 31
+serialization cases**, retaining all previous 891/825/31 cases. The 37 new integration cases comprise
+29 direct kind cases, six source-map cases and two imported-wire cases. Three compile-valid
+negative controls produce 13 expected assertion failures; all mutated sources restore exactly.
+Five native exports and installed maps match, 72 sprite-source hashes and six output identities
+pass, and both browser overviews are refreshed with all images/modes/controls checked. The wiring
+preview draws cables last above scene layers. Capability credit stays **68/100**; inheritance-parent,
+legacy/custom/client/resource closure, portable imports, operational validation and editor/replay
+exits remain open. `FullContentClosureVerified` remains false and the **80% goal remains active**.
+
+Previous verified generated-hull closet batch (2026-10-25): electrical reservations now share
+explicit writable generated-envelope walls while keeping their interiors, entrance thresholds and
+approaches on target floor. Immutable claims distinguish partition walls from reused hull, include
+structural corners without cardinal exposure, and bind native service-layout inspection. Hull-wall
+materials reconcile utility ownership with incident room palettes. Full internal enclosures remain
+a fallback. Native 1x4/4x1 wall-substation rooms and a 4x4 floor-substation layout now initialize with
+separate wall APCs, complete usable-floor LV coverage and no uncertified occupied LV squares.
+Missing, preserved, void and foreign target corners cannot be borrowed; a 1x3 strip still cannot
+invent a mandatory two-tile closet plus entrance and outside approach.
+Normal Release and fresh Debug each pass **891 units, 825 integration/sandbox cases and 31 native
+serialization cases**, retaining all previous **881/817/31** plus **10 unit / 8 integration** cases.
+Two isolated compile-valid controls produce **6 unit + 6 native assertion failures**; source restores
+exactly before 34 focused unit / 59 focused native positives and both complete gates. All nine
+changed C# files retain their captured hashes. Both actual sandbox checks and updated installed-map
+checks pass. Five native showcases regenerate, save/load and match their installed resources.
+The office now has 32 floor tiles, a hull-sharing furnished 2x2 closet, 1 HV / 23 MV / 8 LV segments,
+17 MV targets, coverage of all 30 usable floor cells and no LV 2x2 blocks. All 72 actual sprite-source
+hashes and six output hashes/plan associations pass; both browser overviews are refreshed and all
+five images, two modes and five diagnostic toggles are checked. Schema-two allocation identity is
+now algorithm 3; general planning/review versions remain 10/3 and legacy schema-one context identity
+is unchanged. Credit remains **68/100**: this extends the already credited standalone utility/layout
+capability. Inspected existing-hull/hosted/hybrid reuse, complete pose/route portfolios, operational
+power, default migration, replay/publication and in-game authoring remain open. The **80% milestone
+remains active**; approximately **32%** of expanded scope remains.
+
+Previous verified authority/utility-layout batch (2026-10-25): the owned scene now retains the
+original effective electrical policy, including theme fallback and explicit-request precedence.
+Native inspection binds complete converter claims to captured infrastructure poses and actual
+anchored transforms/prototypes/mounts before topology or square-proof checks. MV terminal targets
+come from captured poses, not routed device coordinates. Full-band closet reservations now have
+stable ordinals and a bounded independent per-network search frontier: later content/device/route
+rejection can advance complete geometry while retaining all work spent. Hardware/content-aware
+space preferences choose a furnished default room without a size or planning-budget override; the
+office showcase now uses the normal named preset. Compact shapes can still select 1x2/2x1.
+Normal Release and fresh Debug each pass **881 units, 817 integration/sandbox cases and 31 native
+serialization cases**, retaining all previous **873/797/31** plus **8 unit / 20 integration** cases.
+One compile-valid control yields **3 unit + 15 native assertion failures**; four source files restore
+exactly before complete positive gates. Both actual sandbox checks, ten installed-map cases per
+configuration, five native exports and final artifact audits pass. General planning/review versions
+remain 10/3; schema-two context identity additionally binds utility allocation algorithm version 2.
+Weighted credit rises to **68/100** (layout 17/22) for complete late-failure utility-geometry retries
+through native initialization, including independent networks. Original-policy/device auditing and
+default comfort ordering are repairs/supporting work and earn no extra duplicated points. Hull
+reuse, hosted/hybrid capture, global content/layout optimization, operating power, publication and
+in-game authoring remain open. The **80% milestone remains active**; approximately **32%** remains.
+
+Previous verified validation/routing batch (2026-10-24): native electrical inspection now rebuilds
+allowed cable cells, MV service targets, eligible LV floor and utility-room identities from the
+separately captured terrain/room/passage/door/furnishing/write inputs. A frozen witness cannot
+silently omit or substitute those domains. Shared work bounds include reconstruction and comparison.
+LV routing algorithm **2** uses shortest cardinal branches, intrinsic occupied-square exclusions and
+an independent full-branch check before atomic commitment. The independent exhaustive oracle agrees
+on **19,171** 3x3 domain/terminal assignments and **56,745** joins; both 1x1024 orientations fit
+100,000 shared routing work units. Whole-layout/consumer/APC/closet ordering is still separate work.
+Normal Release and fresh Debug each pass **873 units, 797 integration/sandbox cases and 31 native
+serialization cases**, retaining all previous **870/786/31** and adding **3 unit / 11 integration**
+cases. Separated compile-valid controls yield **1 unit + 7 domain-audit assertion failures** with
+exact source restoration before the final complete positive gates. Earlier combined-control
+routing interference is explicitly discarded as domain-audit evidence. Five native showcases and
+sprite plan associations are regenerated through the Release tool path; six sprite PNGs and five
+SVGs stay unchanged, and HTML changes only the hidden office plan hash. Weighted credit stays
+**67/100**: this repairs previously credited validation/routing guarantees. The 80% goal stays active.
+
+Previous verified implementation batch (2026-10-24): electrical profile schema two now reaches the
+primary standalone owned generator with the same frozen closet catalog throughout capture,
+planning, native staging and project-area generation. Substations occupy dedicated 1x2/2x2 rooms;
+APCs occupy walls in served ordinary rooms. Coherent electrical supplies retain clean approaches.
+MV backbones include protected circulation, room service crosses and entry branches. LV routing
+services the declared usable-floor fraction independently of required real consumers, forbids
+avoidable 2x2 blocks and retains checkable four-fixed-terminal certificates for its narrow supported
+exception. Native inspection rechecks provider ranges, service coverage, enclosure and topology.
+Normal Release and fresh Debug each pass **870 units, 786 integration/sandbox cases and 31 native
+serialization cases**, retaining all previous **862/774/31** and adding **8 unit / 12 integration**
+cases. A compile-valid combined control causes **8 assertion failures**; all three mutated files
+restore byte-for-byte before both complete positive gates. The five regenerated native showcases
+include a furnished 2x2 electrical closet, separate wall APC, 14 MV targets and LV coverage of all
+23 usable office floor cells, with zero occupied LV 2x2 blocks. Actual repository sprites and
+browser-checked gallery/overviews are current. Weighted credit rises to **67/100** (utilities 7/12):
+one point for complete native dedicated-closet service, one for coverage-driven MV/LV distribution.
+These exits do not award operating supply, hosted/preserved networks, independent circuits, hull
+reuse, complete geometric retries, default migration, replay/publication or in-game editor credit.
+The **80% milestone remains active**; approximately **33%** of the expanded specification remains.
+
+Previous verified structural batch (2026-10-24): the shared partition pipeline now reserves
+mandatory 1x2/2x2 utility-room interiors, enclosing walls, one entrance and clean approaches before
+ordinary seam/material selection. Required rooms cannot be lost through merge/open fallback;
+ordinary rooms may still merge under policy. Theme assignment checks actual floor interfaces,
+revalidates the enclosure and requires the matching frozen closet catalog. Geometry/native
+structural tests cover 1x2, axis-swapped 2x1 and 2x2 rooms, independent entrance networks, complete
+budget replay and atomic failures. Normal Release and fresh Debug each pass **862 units, 774
+integration/sandbox cases and 31 native serialization cases**, retaining all previous 846/766/31
+plus **16 new unit / 8 new integration** cases. One compile-valid combined control produces five
+assertion failures; all three source files restore exactly and all 24 new positives pass in both
+final configurations. All 39 existing showcase/review artifact hashes remain unchanged.
+At that checkpoint, weighted credit remained **65/100** for the verified structural subset. It
+searched full enclosing bands inside writable floor and proved native structural primitives.
+The subsequent owned electrical service batch above supplies frozen closet content, separated
+converters, furnishing and MV/LV coverage through the real generator. Hull reuse, complete joint
+geometric retries, wider necessity proofs, default migration and operating utilities remain open.
+
+Previous verified electrical authoring batch (2026-10-23): electrical **profile schema 2** now freezes
+closet size/theme intent, MV backbone/room-entry targets, LV floor-service fraction/domain and a
+strict forbid-or-certify square policy. Explicit upgrade preserves old source data and historical
+schema-one identities. Requests, painted blobs, utility drafts, native serialization and project
+closet-theme dependency capture retain the new intent. Shared/server context capture explicitly
+rejects revised generation until joint closet/routing work can fulfill it. Normal Release and fresh
+Debug each pass **846 units, 766 integration/sandbox cases and 31 native serialization cases**,
+retaining all previous 825/756/31 plus **21 new unit / 10 new integration** cases. One compile-valid
+combined negative control produces five assertion failures; four source files restore exactly and
+all 31 new positives pass in both final configurations. Weighted credit remains **65/100**: this
+is prerequisite authoring/transport, not actual closet geometry, generous MV routing, LV floor
+coverage or necessity proofs. Schema-two default activation and the section 20.3a rollout remain
+unchecked; the previous native wiring examples still establish only historical primitive behavior.
+
+Previous verified supported-member review batch (2026-10-23): owned diagnostic schema 3 now reviews all
+supported member layers, parent/slot/local-transform metadata, exact operating approaches and
+cardinal relational paths. Hidden contents have no world position or exposed footprint. One
+projection budget bounds all metadata rows and geometry collections, with source-processing limits
+and explicit partial witnesses. SVG review distinguishes layers, facing, paths and contained-item
+listings. Planning version 10 adds required-root contradiction pruning, canonical anchor/support/
+required-neighbor traversal and early missing-wall-domain rejection. Normal Release and fresh Debug
+each pass **825 units, 756 integration/sandbox cases and 31 native serialization cases**, retaining
+all previous 825/740/31 cases plus sixteen new ones. Four compile-valid controls produce five
+assertion failures; exact restoration and all sixteen positives pass. Populated JSON/SVG/PNG review
+samples and five native showcases are regenerated; all six game-sprite PNGs are unchanged.
+Weighted credit stays 65/100. The new section 20.3a substation-closet/MV/LV amendment is required
+but unimplemented: existing open-room wiring examples retain only historical topology evidence.
+In-game authoring, revised utility layout/routing and broader R08-R18 delivery remain open.
+
+Previous verified native wiring foundation (2026-10-22): standalone shared-Main AutoDistribute/WiredOnly
+requests now materialize native cables and converters, build bounded owned node groups, and verify
+same-tile tier terminals, solid-wall mounts and actual receiver/provider membership. APCs occupy
+walls; substation palettes can offer complete floor and wall variants. A 1x2 furnished interior
+selects a wall substation when its preferred floor variant cannot fit, retaining clean approaches.
+Input-only prototype data, including nodes and item slots, is preserved by an explicit prototype
+capture opt-in (image schema 8); ordinary map serialization keeps its existing exclusions. Owned
+slot loading uses native eligibility and container events without playing interaction audio.
+Zero furnishing density omits optional fill while retaining hard minima. Gas/wiring evidence
+commits only after the complete transaction; cancellation and late range drift publish neither.
+
+Normal Release and fresh Debug builds pass with the normal localization hook. Each configuration
+passes **825 units, 685 integration/sandbox cases and 31 native serialization cases**, retaining
+the previous 820/659/23 inventory with the explicitly replaced obsolete electrical-allocation
+guard. The actual sandbox definition passes. Three compile-valid negative controls produce eight
+assertion failures and two unaffected passes; source bytes are restored before positive gates.
+Five regenerated showcases include loadable native grids, verified export tile/prototype counts,
+and browser-checked overlays. Initial office topology is verified before export; post-load topology,
+operating supply, hosted/hybrid fitting, stable simulation, publication and the in-game editor remain
+open. This earns one distinct utility point (utilities 5/12), for approximately **65/100** overall.
+The **80% milestone remains active**; approximately 35% of the expanded specification remains.
 
 Contract revision 2026-09-30 adds reusable relational furnishing assemblies, connected area-marker
 blobs, and selectable entrance connection configurations. These are requirements to implement,
@@ -73,14 +272,22 @@ Required capabilities:
 12. Reuse relational assemblies such as a microwave on a table, chairs adjacent to and facing that
     table, or a device on a corner table facing reachable open floor. Relations are explicit data,
     with engine-validated support, orientation, and access.
+13. Select room gas mixtures, temperature and pressure through reusable atmosphere profiles;
+    initialize actual owned gas-bearing tiles and verify the nominated initial state.
+14. Automatically place and connect electrical distribution to eligible room consumers, including
+    HV/MV under substations and MV/LV under APCs, with real engine power verification.
+15. Author themes, room libraries, packs, relational assemblies, painted areas, entrances and
+    utilities through an in-game editor, with inspectable previews, reusable assets and undo.
 
 Version 1 covers generation before players enter the output. It includes preserved authored rooms
 inside explicit constant regions of a new generated host. Content mode governs the remaining
 generated area; `Procedural` may therefore surround a constant authored landmark without using any
 prefabs for its generated rooms. Arbitrary regeneration of an occupied live station, multi-grid routes,
-vertical connections, functional power/plumbing, and balanced combat simulation are later extensions.
-Air retention is in scope; supplying breathable gas, working power, and job access must be requested
-through explicit content/integration profiles rather than inferred from the word "room."
+vertical connections, automatic atmos pipe networks/life support, automatic power-plant construction,
+and balanced combat simulation are later extensions. Initial gas filling and electrical distribution
+are now in scope through explicit profiles. Power sources may be caller-provided or explicitly
+authored; wiring cannot create energy. Gas composition, operational power and job access must be
+specified rather than inferred from the word "room." A station preset can supply those defaults.
 
 ## 2. Existing repository integration
 
@@ -108,7 +315,7 @@ Suggested homes:
 | --- | --- |
 | `Content.Shared/_KS14/Procedural/` | Serializable requests, prototypes, marker components, result/diagnostic contracts, and pure geometry where shared use warrants it. |
 | `Content.Server/_KS14/Procedural/` | `KsProcgenSystem`, planning algorithms, prefab inspection, validation, materialization, and admin commands. |
-| `Content.Client/_KS14/Procedural/` | Debug overlay only when needed; clients do not rerun generation to determine authoritative geometry. |
+| `Content.Client/_KS14/Procedural/` | In-game authoring workspace, inspectors and overlays (section 21); clients do not determine authoritative generation results. |
 | `Resources/Prototypes/_KS14/Procedural/` | Themes, constraints, room/layout definitions, and marker prototypes. |
 | `Resources/Maps/_KS14/Procedural/` | Authored rooms and example layouts. |
 | `Content.IntegrationTests/Tests/_KS14/Procedural/` | Geometry, solver, prefab, and engine validation tests. |
@@ -132,7 +339,7 @@ visibility and movement are separate graphs.
 | Mask | Definition |
 | --- | --- |
 | `targetMask` (`T`) | Cells the caller asks this operation to classify/fill. |
-| `envelopeMask` (`E`) | Additional cells explicitly authorized for structural closure or connector approaches. Empty by default. |
+| `envelopeMask` (`E`) | Additional cells explicitly authorized for structural closure, connector approaches or named utility connectors. Empty by default; permission is scoped by purpose. |
 | `writableMask` (`W`) | `T union E`, minus preserved cells. Every generated tile/entity footprint must fit here. |
 | `preservedMask` (`P`) | Existing/authored cells and entity footprints that must retain their content. They may participate in traversal. |
 | `voidMask` (`V`) | Explicitly excluded cells intended to remain empty/space. They cannot overlap `T`, `E`, or preserved occupied content. |
@@ -141,7 +348,7 @@ visibility and movement are separate graphs.
 
 Preserved cells may lie within `T`; they count as already assigned when computing residual fill.
 Envelope cells are not an invitation to expand the requested floor area: each use must be tagged as
-closure or an explicitly requested connector. Unused envelope cells remain unchanged.
+closure or an explicitly requested movement/utility connector. Unused envelope cells remain unchanged.
 
 Every cell of `T` MUST finish with exactly one primary disposition: preserved, prefab-owned,
 procedural floor, passage, structure, or an explicitly permitted sealed solid. No implicit holes.
@@ -256,6 +463,8 @@ IDs use PascalCase. Implementation may split types for clarity but MUST preserve
 | `theme` | Floors, walls, airtight windows, doors, allowed furnishings, and classification adapters. Required for materialization. |
 | `roomThemes` | Weighted room-theme pool or one fixed theme; request theme supplies the default room theme when omitted. |
 | `themeGoals` | Typed appearance, lighting, and content goals; override theme defaults within request-hard constraints. |
+| `atmosphereProfile`, `atmosphereAssignments` | Default and scoped initial gas requirements; section 19 defines mixture resolution, preservation and validation. |
+| `electricalProfile`, `electricalInterfaces` | Distribution policy, cable/device choices and inspected source/network interfaces; section 20. |
 | `roomLibrary` | Eligible room prototypes, atomic layout families, and tag/weight filters. Required for automatic prefab selection; theme may supply it. Not used for pure procedural rooms. |
 | `placementPolicy` | `AutomaticFit` by default; controls exterior matching, preferred prefab coverage, size mix, and residual fragmentation. |
 | `exteriorMatchBand`, `matchVoidBoundaries` | Near-match distance cap (default 3 tiles) and whether exterior matching includes space holes/courtyards (default true). |
@@ -362,6 +571,7 @@ working lighting option so a basic author does not need to define every pack per
 | `tilePacks` | Weighted floor palettes, including optional passage/border/accent choices. |
 | `wallPacks` | Weighted interior/hull wall palettes; palettes can name compatible doors/windows/frames. |
 | `lightingPacks` | Weighted lighting plans and fixtures, including placement and supply assumptions. |
+| `atmosphereProfile`, `electricalProfile` | Optional utility defaults; explicit instance/area/request overrides take precedence without weakening request-hard constraints. |
 | `entityPacks` | Related furniture/items/decor; each reference has weight, count/density targets, and optional hard minima. |
 | `goals` | Typed soft targets and boolean/enum preferences described below. |
 | `sizePreference` | Soft area/shape suitability; no implicit minimum that rejects a 1x3 request. |
@@ -385,8 +595,8 @@ Cache expansion of references per content version; do not repeatedly resolve the
   spacing, brightness/color options, placement roles, and an explicit operating/supply profile.
   Roles include ceiling/free-standing lighting, wall mounts, and cluster/task lighting where
   supported by actual prototypes. A fixture requiring unavailable power cannot satisfy a working
-  lighting target. Version 1 does not promise to build a station power network; use supported
-  self-powered fixtures or a validated caller-provided supply contract.
+  lighting target. Section 20 adds generated distribution alongside supported self-contained and
+  caller-supplied options; every powered light participates in the electrical load/coverage plan.
 * **Entity pack (`ksProcgenEntityPack`):** semantically related weighted entity entries and optional
   small assemblies, with instance-count/density targets and placement relations. Examples are
   office workstations, medical treatment, workshop tools, storage, and lounge furniture. This is
@@ -416,7 +626,7 @@ goals include the following; they are soft unless specifically made hard by the 
 | `coherentContents` | Default true: cluster related entries and prefer a dominant room activity. |
 | `preferWallPlacement` | Prefer eligible furnishing/lighting against usable walls. |
 | `keepCenterOpen` | Penalize optional obstacles in the central usable area; mandatory routes remain protected. |
-| `furnishingDensity` | Occupied furnishing-footprint cells / usable room cells before furnishing, in `[0,1]`; count overlapping legal layers once. |
+| `furnishingDensity` | Occupied furnishing-footprint cells / usable room cells before furnishing, in `[0,1]`; count overlapping legal layers once. Zero disables optional fill. Hard core/pack minima remain required and may exceed the soft density target. |
 | `clusterCount` | Preferred number/range of activity clusters, subject to available area/clearance. |
 | `lightingCoverage` | Fraction of usable cell centers meeting a declared light-sampling threshold in the nominated operating state. |
 | `maximumDarkRun` | Preferred maximum consecutive poorly lit cells along required routes. |
@@ -608,7 +818,8 @@ addition; retry other transforms, anchors, or complete declared variants when an
 relation fails. Roll back the failed core together with support slots, child entities and route
 reservations. Plain-list packs compile to grouped singleton cores; failure of an optional singleton
 must not discard unrelated valid singletons. Mandatory pack counts refer to complete valid cores,
-not arbitrary entity totals. T15's current whole-list atomic treatment requires R02 below.
+not arbitrary entity totals. R02's implemented singleton/core behavior supersedes the historical
+whole-list atomic implementation; complete layered integration remains required under R09 below.
 
 #### Machine facing and clean access to seats
 
@@ -828,10 +1039,24 @@ Example canonical data for the user's `1-3-4;9-8` configuration and another acce
 
 Only those five entrances exist in this example. If ten markers are actually placed, every one
 must appear exactly once in every configuration or have an explicit permitted sealed disposition
-in that configuration. Unknown IDs, duplicate membership, missing operational ports, empty groups,
+in that configuration. Unknown IDs, duplicate membership, missing operational ports, groups with
+neither ports nor roots,
 negative/nonfinite weights, and empty eligible configuration sets fail validation. A singleton group
 requires a real reachable interior landing/destination; it does not mean "discard this entrance."
 Sealing requires the port's `OptionalSealable` permission and cannot erase an unrelated hard link.
+
+Standalone owned requests may supply an empty `EntranceDomain` with no authored entrances. Their
+groups use real floor roots, without invented thresholds or host corridors. With no authored
+configurations, `PerIsland` creates one rooted group per cardinal target island, using all explicit
+request roots on that island or its first canonical writable cell (first target cell if none is
+writable). `SingleNetwork` requires those roots in one network and rejects disconnected islands.
+`DeclaredNetworks` requires explicit configurations and roots. Authored groups may have no ports
+when their root list is nonempty; the independent component audit still rejects forbidden joins,
+unreachable roots and unassigned floor. Derivation is bounded to 1024 target islands and existing
+contract root limits; preprocessing remains input bounded rather than fully graph-metered.
+An absent/null `EntranceDomain` retains the existing legacy-request semantics. Canonical snapshots
+retain resolved defaults, and planning does not mutate the authored request. Tiny strips, including
+one tile and 1x3, remain proposals without usable-room, gas or engine-access certification.
 
 The editor may accept one shorthand alternative per line, with an explicit profile-level mode:
 
@@ -983,8 +1208,10 @@ not contain already-spawned speculative entities.
 ```text
 Normalize input -> inspect templates/context -> construct candidates
     -> choose atomic layouts -> plan residual structure and routes
-    -> validate required geometry/connectivity -> place windows/furnishings
-    -> validate final plan -> materialize privately -> engine validation -> publish
+    -> validate required geometry/connectivity -> reserve utility devices and gas domains
+    -> place windows/furnishings/lights -> route electrical distribution
+    -> validate final plan -> materialize privately -> initialize utilities
+    -> engine validation -> publish
 ```
 
 Routing and closure feasibility feed back into selection: this is not a greedy place-everything
@@ -1009,7 +1236,9 @@ pass followed by an attempt to repair an arbitrarily blocked map.
 6. For each complete candidate assignment, derive residual masks, choose room partitions, reserve
    paths, and construct a valid enclosing structure. A failure returns a conflict to the solver.
 7. Resolve room themes and structural pack compatibility during step 6, including required assembly
-   and lighting feasibility. Validate and retain candidate plans satisfying these hard obligations.
+   and lighting feasibility. Resolve gas domains and reserve substations/APCs, their cable tiles,
+   maintenance approaches and source interfaces before optional furnishing. Check mandatory consumer
+   loads/coverage and conflicting gas profiles. Validate and retain plans satisfying these obligations.
    Select the best structural plan under the search budget, preferring fewer required relaxations,
    then the exterior/structural score from section 7.2, then a stable tie-break.
    Freeze that selection before optional furnishing; aesthetic random draws do not rank layouts.
@@ -1017,7 +1246,9 @@ pass followed by an attempt to repair an arbitrarily blocked map.
    clusters under separate stage budgets. Required window counts and other hard content obligations
    were reserved/proven feasible in step 7. Revalidate collision, sightlines, and gas edges after
    relevant changes; revert optional additions locally when they break an invariant. Validate the
-   full plan again. Optional decoration can optimize its own soft goals, never reroll structural
+   full plan again. Final electrical routing includes accepted lights and machine consumers;
+   an optional powered assembly that cannot be supplied is omitted atomically with its dependents.
+   Optional decoration can optimize its own soft goals, never reroll structural
    alternatives; newly discovered hard infeasibility can trigger a recorded bounded backtrack.
 9. Materialize and inspect actual engine behavior as described in section 13. Report the chosen
    layout IDs, fallbacks, and all constraint outcomes even when generation succeeds.
@@ -1338,15 +1569,17 @@ parent passage theme unless explicitly assigned another. Entire masks can use on
 room can choose from a weighted compatible pool. Themes are not tied to rectangular room sizes.
 
 Choose floor/wall families per room and reconcile shared seams before final structural validation.
-Reserve placement/interaction space for required assembly cores and fixtures with hard lighting
-requirements before optional decoration. Plan general lighting to cover the usable room/routes,
+Resolve atmosphere domains and reserve electrical converter/cable interfaces alongside placement
+and interaction space for required assembly cores and fixtures with hard lighting requirements
+before optional decoration. Plan general lighting to cover the usable room/routes,
 then add coherent activity clusters and supported task lighting. Re-evaluate coverage after tall
 furniture or walls change occlusion. A powered fixture placed on a disconnected wire is not working
 lighting; respect the explicit supply profile.
 
-Default placement order is structure/palette, required routes, required assembly cores and their
-clear approaches, general lighting, optional cluster members, supporting clusters, loose items,
-and decoration. Structure and routes remain protected at every stage; if a required assembly cannot
+Default placement order is structure/palette, required routes, utility-device reservations, required
+assembly cores and their clear approaches, general lighting, optional cluster members, supporting
+clusters, loose items, and decoration, followed by final utility routing and validation. Structure
+and routes remain protected at every stage; if a required assembly cannot
 fit, revise the procedural partition or reject that theme candidate instead of shrinking a walkway.
 Ordinary loose-item placement must not make a passage unusable under the declared traversal model.
 
@@ -1405,6 +1638,9 @@ be treated as both a convenient route and a permanently sealed boundary without 
 
 Never repair a leak by overwriting preserved content, extending outside `W`, or blocking an
 operational port. Try a permitted structural alternative, backtrack the layout, or fail/degrade.
+
+Section 19 separately specifies filling those sealed volumes. Closure alone proves neither gas
+composition nor pressure. Section 20 supplies operating power where a nominated door requires it.
 
 ## 11. Exterior windows
 
@@ -1488,7 +1724,8 @@ Classify every condition as an immutable invariant, a request-hard requirement, 
   finite execution, no diagonal movement edges, and minimum one-tile width for any claimed route.
 * Request-hard: required ports/links/roots, connectivity policy, selected entrance-group reachability
   and isolation, required spaceproofing, minimum usable area/counts, access profile, and any explicitly
-  hard window/size/theme constraint, including mandatory functional assemblies and lighting coverage.
+  hard window/size/theme constraint, including mandatory functional assemblies, lighting coverage,
+  requested initial gas state and required operating electrical supply.
 * Soft: preferred sizes/counts, extra loops, nearby optional links, desired corridor width above the
   hard minimum, window fraction by default, furnishings, and tactical goals.
 
@@ -1560,6 +1797,8 @@ never described as a spawned map. Include:
 * Constraint results (`Satisfied`, `Missed`, `Relaxed`, `NotApplicable`, `Unverified`) with original
   values, achieved values, and cell/room/port IDs.
 * Gas-boundary and operational-door-state checks, window denominator/counts, tactical metrics.
+* Resolved atmosphere profiles, domain/tile volumes, requested/measured mixtures and tolerances,
+  electrical layer routes, source/converter/provider/consumer witnesses and load margins (19-20).
 * Resolved room themes/palettes, entity-pack and assembly counts, mandatory/optional omissions,
   cluster membership, interaction approaches, lighting fixture supply/state, and coverage estimates
   versus validated coverage.
@@ -1592,6 +1831,11 @@ Some components can perform global side effects on startup even on a hidden map:
 layer must defer such activation or reject those components from speculative materialization.
 Document this support boundary and prove it with a fixture before promising arbitrary prefab copying.
 
+Initialize gas and electrical networks through section 19/20's owned lifecycle before operational
+door, machine, chair and light validation. Pausing or hiding a map is not proof of isolation from
+global node groups, power processing, atmosphere, callbacks or network visibility. No speculative
+operation may step global simulation to manufacture a successful preview.
+
 Do not rely on deleting a half-built public grid as transactional rollback. On failure, discard the
 private staging output and restore temporary engine flags/resources. On success, publish only
 after all required checks and activation preconditions pass. Fire one completion event containing
@@ -1620,6 +1864,11 @@ and the chosen one, isolation policy, assembly bindings/variants, resolved relat
 reservations. Sort set-valued port groups and footprints canonically; retain meaningful variant
 priority and weights. Marker scan order and shorthand whitespace do not affect results. Increment
 the generator contract version when replacing the old all-connected or whole-pack semantics.
+
+The 2026-10-15 revision also hashes resolved gas profiles/assignments, electrical policies, source
+contracts, cable layers, selected devices and authored operating states. Give utility searches their
+own deterministic streams and request-wide work counters. Interactive drafts have revision IDs;
+these identify editor edits, not semantic changes when normalized content remains identical.
 
 Initial configurable defaults, to be profiled before production tuning:
 
@@ -1658,6 +1907,9 @@ cancel the operation with a diagnostic, but cannot select a different random fal
 cancellation at every yield and before materialization/publication.
 
 ## 15. Author workflow and debug tools
+
+Section 21 expands this workflow into the required in-game workspace. Commands and static exports
+remain useful automation/debug interfaces; they do not fulfill the interactive authoring requirement.
 
 Provide an admin/developer preview entry point accepting a request/profile, mask source, and seed.
 Proposed commands `ksprocgen preview`, `ksprocgen validate`, and `ksprocgen replay` are requirements
@@ -1759,6 +2011,20 @@ Every fixture asserts the semantic invariants and checks actual output when engi
 | A50 | An external host loop can connect locally separate groups under `SingleNetwork`; the same loop fails request-network isolation. `DeclaredNetworks` validates independent roots inside one geometric island, and a global policy conflict or unknown required host context cannot be hidden by root auto-selection. |
 | A51 | Changing a relation/binding, blob profile or connection alternative changes relevant replay identity; marker scan order, set ordering and shorthand whitespace do not. Budget/cancellation during assembly or configuration backtracking leaves no partial stage or branch claims. |
 | A52 | Combined marker-authored hybrid fixture selects rooms automatically around a constant landmark, realizes an accepted exact entrance configuration, and places a relational corner table/device/chair assembly. Engine collision, operational doors, support, interaction, required lighting and pressure checks pass before publication; preview shows matching relation and connectivity witnesses. |
+| A53 | Fill air, pure nitrogen, a custom mixture and vacuum in known enclosed masks. Read every gas-bearing tile back; assert pressure/temperature/fractions and total moles using actual volumes. Repeated initialization is rejected or idempotent, never double-fills. Invalid gases, nonfinite values and inconsistent fractions fail before writes. |
+| A54 | Two open-connected rooms with different hard gas profiles conflict; identical profiles merge. Closed compatible doors separate mixtures. Door tiles receive an assignment; null-air walls, immutable map air and space fallbacks are never filled. A reactive mix passes only its declared initial-state check and fails an incompatible stable-at-rest requirement. |
+| A55 | Constant-region gas and existing utility entities remain unchanged through success, rejected retries and cancellation. A required fill reaching unknown/unowned gas context fails verification. No global map-mixture replacement or whole-grid reset affects unrelated tiles. |
+| A56 | 1x1/1x3 interiors under valid host closure accept requested gas and external electrical service when feasible. An isolated impossible footprint or solid-only output returns the exact failure/authorized degradation without claiming useful pressure/power. |
+| A57 | Real HV source, substation, MV, APC, LV and consumer operate as a chain. Remove each required same-tile cable independently, use the wrong tier, unanchor a device, block a terminal direction or leave diagonal-only cable contact: topology fails. Different cable tiers on one tile stay separate. |
+| A58 | Default unit-grid LV coverage includes offsets (3,0) and (2,2), excludes (3,1), and covers 29 centered cells including its origin. Check effective range overrides, fractional positions, unrelated grids, wall-crossing reach and anchored receiver eligibility. Never confuse diagonal coverage with diagonal wiring. |
+| A59 | Overlapping live/dead and unequal-range providers, startup-order changes and equal-distance ties cannot produce a false intended-circuit claim. Inspect actual provider membership. Adjacent same-tier circuits accidentally merge; a wall cannot isolate provider influence. Surface/contained devices without receiver eligibility fail required supply. |
+| A60 | Source shortage, converter supply/charge/ramp limits, breaker disabled/tripped, depleted batteries, startup load and internal battery fallback produce accurate supply reports. Charged batteries or idle operation alone do not prove sustained supply; WiredOnly does not satisfy a hard working-light/door requirement. |
+| A61 | Utility routing obeys masks/constants, preserves all clean approaches/hull and deduplicates same-tier cables. Cancel/fail during tile gas mutation, node linking, map initialization and observation: no surviving owned cable/provider links or changes to unrelated live gas/power state. Work counters include rejected attempts. |
+| A62 | Through UI alone create/save/reopen a room theme and tile/wall/light/entity packs, override/reset inheritance, bind gas/electrical profiles and export/import portable assets. Roundtrip preserves normalized semantics; missing dependencies and unsupported schema remain actionable errors. |
+| A63 | Through UI create table/device/chair relations and complete large/medium/L-trio/four-room alternatives. Preview all rotations, corner preference and seat approach; support cycles and missing targets are identified. No successful preview combines members from competing variants. |
+| A64 | Painting, erase, undo/redo and channel/profile edits produce the exact expected blobs/holes, including diagonal contact and a one-cell bridge. Graph/matrix and shorthand connection edits roundtrip; ambiguous ports and gas-domain conflicts highlight actual cells. |
+| A65 | Stale edits/previews, unauthorized or duplicate apply, malicious references/oversized imports, disconnect/cancel and concurrent writers cannot mutate shared prototypes or publish invalid output. Draft recovery works; one accepted operation publishes once. Keyboard, localization and non-color labels remain usable. |
+| A66 | End-to-end in-game creation of an automatically fitted hybrid area with a constant landmark, relational furnishings, two valid gas domains, generated wiring and operating lights. Compare seeds, inspect topology/pressure witnesses, apply a verified snapshot, and inspect the actual output. Preview with any required unverified gate cannot apply. |
 
 Add property-based or deterministic seed-sweep tests over small arbitrary masks, asserting bounds,
 exclusive ownership, atomic package selection, cardinal connectivity, finite work, and honest result
@@ -1773,19 +2039,96 @@ committed implementation.
 
 ## 17. Piecemeal implementation tasks
 
+### Current capability index and active 80% milestone (2026-10-23; weights fixed 2026-10-17)
+
+This is the current source/test-inventory assessment, superseding the historical 75% estimate
+for milestone tracking. Weights are fixed before further work toward 80%; changing them later
+requires an explicit scope amendment, not a convenient way to reach the target. Partial helpers
+earn credit only within their tested domain. Shared end-to-end exits are not counted twice.
+The baseline is approximately **54/100**, with 45-65% uncertainty; 80 is not reached.
+Current credit is **68/100**: canonical request/version/utility pinning and scoped utility/consumer
+intent add two contract points (contracts 14/16). Owned support/container candidate integration and
+independent post-lighting layered access each add one interior point (interiors 15/18). These are
+planning exits, not runtime verification; no layout, engine, utility or editor points are counted
+again for those same exits. Shared component-backed ownership/retirement adds one engine lifecycle
+point. Shared allocation capture, tile callback cleanup/cancellation and complete map-scoped scene
+inspection add one further engine point (engine 11/20), without operational/isolation/publication
+credit. Standalone rooted layout through the complete owned pipeline adds one layout point
+(layout 16/22), including real supported/contained room proposals without fabricated entrances or
+host corridors. This does not recount the baseline's 1x3 geometry or already credited support math.
+Complete standalone request-to-stage materialization now adds one engine point (engine 12/20):
+the primary candidate reaches one frozen, budgeted, initialized scene containing real supported
+and hidden container members, terrain, structures and lights. This does not recount the existing
+placement math, shared capture or preview ownership, or award operational/isolation/publication credit.
+Owned InitialOnly gas initialization adds two utility points (utilities 4/12): actual grid-tile
+volumes and resting cardinal boundaries are reconciled, independent air/nitrogen/vacuum mixtures
+are written through native hooks, hard constraints and current state are checked, and callbacks,
+cancellation and repeated initialization cannot publish a failed receipt or silently refill gas.
+These are operational initial-state exits on closed private grids. They do not award hosted gas,
+stable-at-rest simulation, electrical supply, global isolation or publication credit. The flag writer
+and image-version repair are prerequisites, not additional contract/engine points.
+Native standalone WiredOnly realization adds one further utility point (utilities 5/12): actual
+paused cable/converter node groups, same-tile terminal connections, solid-wall support and owned
+receiver/provider backlinks now pass complete configuration gates. Exact shared work, cancellation,
+post-gas callback drift and read-only repeats preserve atomic evidence. This does not award source
+capacity, operating supply, hosted interfaces, independent circuits, global isolation or publication.
+Image schema 8, silent slot loading, corrected zero density and narrow-room classification are
+prerequisite repairs, not additional duplicated contract/layout/engine points.
+Complete standalone schema-two service adds two distinct utility points (utilities 7/12): one for
+actual dedicated-closet substation/furnishing and separate wall APC generation through native
+initialization; one for required MV service targets and independently validated floor-service LV
+routing with strict block rejection/certificates. Earlier geometry/authoring primitives earned no
+extra points. Normal Release/fresh Debug 870/786/31 and the eight failing negative-control
+assertions support these exits. Only four fixed mandatory terminals currently certify a block;
+heuristic failure is never necessity. Hull reuse, complete joint retries, sustained source/load
+operation, hosted networks and independent circuits remain open. No other category gains points.
+Whole-core fallback and ordinary-pack wall/density unification maintain existing furnishing credit.
+Bounded joint preferences and coherent proximity/spacing now have verified placement coverage;
+bounded preference diagnostics and independent policy auditing now have verified coverage. Full
+supported-member review now has bounded JSON/SVG coverage; in-game author workflows remain open. Static sprite previews provide
+review artifacts; in-game authoring/editor exits remain unimplemented.
+Bounded complete utility-reservation retries add one layout point (layout 17/22). A later hard
+converter constraint now changes the actual reservation, then reaches native initialization without
+reusing failed geometry or advancing independent networks in lockstep. All costs and exhausted
+frontiers remain explicit. Automatic comfortable sizing supports this exit; it is not another point.
+Original-policy and physical-claim audits repair prior validation credit. Generated writable hull
+sharing now reaches initialized native narrow closets and keeps the same layout credit. Inspected
+existing-hull reuse and general hybrid fitting remain open. Normal Release/fresh Debug 891/825/31
+retain all 881/817/31 cases. Other domains retain their preceding credit.
+The two remaining contract points require immutable referenced content with manifests and complete
+project asset contracts. Candidate binding and actual utility realization remain in their own
+layout/runtime domains and gain no credit from declaration transport. The table shows baseline and current points separately.
+
+| Capability / acceptance focus | Weight | Baseline points | Current points | Current support and missing exit |
+| --- | ---: | ---: | ---: | --- |
+| Contracts, prototypes and authoring; A21/A31/A41/A43-A52 | 16 | 12 | 14 | Validated relational cores, paint/entrance contracts, gas/power profiles, revisioned utility drafts, canonical requests and scoped utility/consumer intent exist. R08 still needs complete content manifests and project assets. |
+| Layout, packing, routing and partitioning; A01-A12/A37-A42/A45-A50 | 22 | 15 | 17 | Cardinal geometry, atomic library alternatives, mixed size targets, owned configuration/subdivision retries and bounded strip strategies. The complete owned path now supports standalone rooted networks without entrance/host fabrication, including layered room contents. Complete utility-geometry retries now resolve later hard placement failures through native initialization with independent network choices. Writable generated-hull sharing supports compact native utility rooms. It still rejects hybrid/interior-fill; general joint fitting and work metering remain R09/R14. |
+| Interiors, materials and tactics; A25/A27-A36/A43-A44/A52 | 18 | 13 | 15 | Coherent packs, facing, clean approaches, supported-core search and tactical geometry exist. Owned planning now integrates supported whole-core poses and independently audits access after lighting. Unified utilities, operational room staging/lighting and remaining R09/R13 exits stay open. |
+| Owned engine lifecycle, validation and publication; A13-A24/A34-A36/A61 | 20 | 9 | 12 | Disposable previews, callback checks, insertion and conservative clearance exist. Component-backed ownership/retirement and allocation capture now include the complete owned scene. The primary standalone entry freezes exact write intents before allocation and verifies terrain, structures, room poses and complete map membership after shared paused initialization. Hosted/hybrid capture, author sessions, isolation, actual operation and publication remain R10/R17. |
+| Atmosphere and electrical operation; A53-A61 | 12 | 2 | 7 | Current credit is 7/12: closed private-grid InitialOnly gas state/volume/edge checks and transactional filling, plus standalone WiredOnly native cable/converter groups, wall supports and actual receiver/provider membership. The complete standalone schema-two path adds dedicated furnished closets/separate wall APCs and required MV/LV floor service with strict block auditing. Hosted/stable gas, live electrical sources, independent circuits, supply under load and working lighting remain R11-R13. |
+| Replay, editor and release workflow; A22-A24/A51/A62-A66 | 12 | 3 | 3 | Bounded JSON/SVG, paint inspection, stable proposal identities and headless utility draft replacement exist. Full content/context replay, project service, in-game editors, persistence and apply remain R15/R16/R18. |
+| **Total** | **100** | **54** | **68** | Current verified assessment for the expanded-scope 80% goal; bounded native utility-geometry fitting adds one layout point, with inspected-hull/hybrid/operation/editor work still open. |
+
+Implementation sequence: finish R08 schema/snapshot prerequisites, integrate through R09, then
+R10 lifecycle and operational adapters R11-R13/R17; R15 replay contracts and R16 headless/editor
+work follow their documented prerequisites. Keep unsupported gates visible. Update points only
+with an acceptance-backed implemented capability, recording its limitations and test evidence.
+
 ### Implementation ledger
 
 Update this ledger in the same change as each implementation step. Keep task checkboxes below
 unchecked until their full exit criteria pass. Each row records concrete work and validation, not
 an estimate. A partial implementation is labeled `In progress`; an untouched task is `Pending`.
 
-**Revision gate (updated 2026-10-11):** R01-R06 are in progress; R07 remains pending. Existing T-row results
-remain evidence for the older supported subset only. In particular, the 99 focused unit tests and
-loaded fixture do not establish relational stacking, marker ingestion or selectable connection
-groups. No T task may be completed against the revised contract until its mapped rewrite exits
-pass. Keep existing default-behavior regressions while adding A43-A52; do not relabel old tests as
-proof of the new semantics. New contracts are supported only where the rewrite ledger explicitly
-records implemented behavior; schema loading alone does not establish placement or publication.
+**Revision gate (updated 2026-10-17):** R01-R12/R15/R17-R18 are in progress;
+R13-R14/R16's expanded delivery exits remain pending. The dated batches below distinguish
+implemented subsets from each parent task's incomplete exit.
+Historical T-row results establish only their tested subsets. Later entries supersede earlier
+counts/statuses; the 2026-10-14 checkpoint records 513 focused unit and 164 selected integration
+passes, including the client sandbox test. Those gates were not rerun for this documentation edit.
+No T task may be completed until its mapped rewrite exits pass. Existing tests do not establish
+the new gas, electrical or UI requirements. Keep default-behavior regressions and add A53-A66;
+schema loading, geometric proposals and static exports do not establish runtime operation.
 
 | Rewrite | State | Existing tasks requiring revision |
 | --- | --- | --- |
@@ -1794,7 +2137,7 @@ records implemented behavior; schema loading alone does not establish placement 
 | R03 | In progress | T01/T02/T03/T04: geometry/theme/entrance profile references, paint and generic/numbered entrance components/prototypes, explicit void-grid host binding, bounded read-only grid snapshot, exact cardinal components, void subtraction, directed wide entrance ownership, scoped labels, conflict checks and stable identity. Geometry-only conversion rejects entrance-bearing blobs. Real doorway/context inspection, constants/envelopes, complete profiles and publication remain pending. |
 | R04 | In progress | Complete configuration contracts, shorthand, request transport, DeclaredNetworks roots and replay identity. A bounded seeded selector checks complete supplied scenes without mixing alternatives. Complete owned interior search retries ordered subdivision preferences within declared configurations after downstream rejection and retains tagged atomic attempt journals. Configuration and layout caps are separate; all reported pipeline work survives failed layouts. Painted-area profiles transport immutable subdivision preferences, room-size goals, fallback permissions and window goals into explicit owned planning. An opt-in rectangular size-goal strategy precedes scalar attempts, with requested/used strategy diagnostics and protected-floor refusal. Bounded global quota allocation across separate rectangular networks is implemented. Bounded complete quota retries after protected seams are implemented. Bounded fitting of L-shaped and stepped networks is implemented. Joint route/room/content choice, general shapes with holes and quota reassignment after content failures remain pending. |
 | R05 | In progress | Component analysis checks local groups, forbidden joins, host bypasses, roots, sealed thresholds and complete floor assignment with shared work limits. Procedural adapters construct routes, grow owned floor, and partition each network independently. Opt-in rectangular strips fit simultaneous final floor-size bands including wall loss, then use the same protected-route seam solver. Themes, furnishings and bounded lighting retain entrance reservations. A final interior audit checks room-local clean access, interaction/door approaches and the complete post-placement entrance scene; vault-required furniture and floor fixtures are blockers. Local fallback cannot remove inter-network walls. Independently revalidated local tactical queries measure chokes, alternate routes and redundancy with shared budgets; host detours cannot join groups. Owned materials preserve primary entrance tiles and read-only floor, check doors, cover separators and reject shared wall conflicts. Owned hull/window adapters reserve entrance/host spans, retain unknown shell, validate explicit directional exterior facts, count fixed windows without writes and substitute compatible theme prototypes under shared budgets. A complete owned proposal composes these stages atomically; legacy generation entry points reject entrance-aware inputs. Alternate trees, arbitrary-shape/joint room fitting, prefab/hybrid/interior-fill composition, live windows, full-host tactical ownership and engine validation remain pending. |
-| R06 | In progress | T10/T12/T13/T15: `KsProcgenContainerPreflightSystem` delegates live eligibility to engine APIs. `KsProcgenContainerStageSystem` owns disposable paused container-only previews, inserts members in dependency order, checks actual membership/parent transforms and rolls back failures. Explicit initialization verifies selected lifecycle, membership and managed-slot filter compatibility afterward and is idempotent. Insertion-veto fixtures cover preflight, commit and actual container insertion without replaying attempts during verification. Surface/spatial relations remain unsupported there; temporary root coordinates are not validated layout poses. A joint room-core adapter now owns optional grid floor/wall terrain with detached masks, cumulative allocation/initialization limits and exact frame/terrain verification. Fresh initialized scene inspection rejects foreign entities, unsupported shapes and member/wall hard overlaps; continuous fixed-actor cardinal sweeps enforce conservative floor coverage and declared vault/blocking exclusions without moving the actor. The wall lattice is a permitted structural union. Remaining: primary layered pipeline integration, support settling, actual machine/chair/door operation, gas and working-light checks, side-effect isolation and publication. Verification flags remain false; the standalone tile stage still rejects furniture. |
+| R06 | In progress | T10/T12/T13/T15: `KsProcgenContainerPreflightSystem` delegates live eligibility to engine APIs. `KsProcgenContainerStageSystem` owns disposable paused container-only previews, inserts members in dependency order, checks actual membership/parent transforms and rolls back failures. Explicit initialization verifies selected lifecycle, membership and managed-slot filter compatibility afterward and is idempotent. Insertion-veto fixtures cover preflight, commit and actual container insertion without replaying attempts during verification. Surface/spatial relations remain unsupported there; temporary root coordinates are not validated layout poses. A joint room-core adapter now owns optional grid floor/wall terrain with detached masks, cumulative allocation/initialization limits and exact frame/terrain verification. Fresh initialized scene inspection rejects foreign entities, unsupported shapes and member/wall hard overlaps; continuous fixed-actor cardinal sweeps enforce conservative floor coverage and declared vault/blocking exclusions without moving the actor. The wall lattice is a permitted structural union. The primary layered planner now materializes standalone owned scenes through the shared lifecycle. The complete owned scene now reaches the shared fixture/cardinal observer. Remaining: hosted/hybrid materialization, support settling, actual actor/machine/chair/door operation, gas and working-light checks, side-effect isolation and publication. Verification flags remain false; the standalone tile stage still rejects furniture. |
 | R07 | In progress | Stable declaration/geometry identities, detached versioned JSON diagnostics, exact fresh-report comparison, escaped SVG review samples and a localized Debug paint-snapshot command are implemented. Metadata and geometry truncation are separate; unverified engine claims remain false. Remaining: full request work metering, engine/content replay, richer editor workflows, complete acceptance/release coverage and the parent rewrite exits. |
 
 Latest composition amendment (2026-10-10): R05 now composes a complete procedural entrance-aware
@@ -2443,7 +2786,7 @@ temporary local override must be removed after the corresponding code definition
 
 The overall percentage is a coarse capability estimate, not the fraction of checked boxes in this
 historical ledger. Helpers count only within their tested scope; no unverified engine claim receives
-completion credit. The current 75-point assessment uses the following weighting so later changes
+completion credit. The historical 75-point assessment uses the following weighting so later changes
 can be reviewed against concrete capabilities rather than inflated by adding tiny checklist items.
 
 | Capability domain | Weight | Implemented points | Evidence and remaining limits |
@@ -5275,6 +5618,3610 @@ the responsible stage exists. Never ignore them and run the old behavior success
       `.ks_procgen_diagnostic_final_units.log`, `.ks_procgen_diagnostic_final_integration.log`
       and `.ks_procgen_diagnostic_mutation_*.log`. Diagnostics advances from 8 to 11 points;
       overall estimate is 71% (45-75% uncertainty). The 75% milestone remains active.
+### 2026-10-15 review findings and required rewrite queue
+
+This review covered the specification, implementation/test inventory and the main planning,
+relational, staging, scene-validation, gas, lighting and export paths, plus the engine utility
+code linked in sections 19-20. It is an architectural/source review, not a claim that every line
+or every historical test was re-audited. No new runtime test evidence was produced by this edit.
+The following are concrete changes to implement; existing conservative refusal/verification
+guards MUST remain until their replacements pass the listed exits. Do not "fix" incomplete work
+by commenting out those guards. R08-R18 extend and refine R01-R07 rather than erase their exits.
+
+- [ ] **R08 - Version utility and editor contracts before adding implementations.** Priority P0;
+  depends on the existing R01/R03/R04 schema groundwork. Revise `KsProcgenRequest`,
+  `KsProcgenAreaMarkers`, `KsProcgenThemePrototypes`, theme validation/resolution and area snapshot
+  transport. Gas/electrical profile declarations, transport and versioned utility asset drafts now
+  exist (see the dated batches below), along with canonical request snapshots and captured theme
+  candidate pools. Detached themes, material/light/entity packs and relational assemblies can now
+  feed catalog capture without global registration. Scoped utility/consumer contracts are implemented
+  as detached intent in request schema 2. Planning projects now bind canonical requests, captured
+  theme bodies and portable geometry libraries. Direct resolved entity/tile bodies now have a bounded
+  detached manifest with stage drift checks. A separate project-bound static map manifest captures
+  server-resolved source bytes and map/theme references. Registered typed prototype references
+  across kinds now have transitive body capture, including external override seeds and abstract
+  reference-discovery templates, followed by schema-10 parent closure and explicit declared-schema
+  gap witnesses. Explicit owned entities instantiate from captured defaults; complete
+  declaration/resource/component-reference closure and source-map copying remain unfinished.
+  Candidate binding, complete map/editor project contracts, full static entity/library
+  content manifests and typed live verification evidence remain
+  missing; the light-supply enum still has
+  only `SelfContained`/`CallerSupplied`.
+  - [ ] Define sections 19-21's serializable profiles, layer/domain ownership, stable references,
+    editor draft schema, scope precedence and typed verification evidence. Retain explicit generic
+    defaults; migrate old requests without silently enabling gas or power writes.
+  - [ ] Deep-freeze resolved content including inherited mutable prototype lists; validate gas
+    fractions, numeric bounds, references, source tiers and revisions before any allocation.
+  - [ ] Version normalized request/content hashes and portable exports; reject unsupported newer
+    versions instead of silently ignoring fields. Exit: canonical roundtrips and invalid-input
+    cases for A53/A57/A62, with legacy fixtures retained.
+
+- [ ] **R09 - Integrate layered room cores and utilities into one candidate transaction.** Priority
+  P0; depends on R08 and R02/R05. The owned planner now reuses `KsProcgenRoomCoreSearch` and
+  `KsProcgenSupportedAssemblySearch` inside its existing retry path when component inspection context
+  is supplied, including captured ordinary packs. Geometry-only callers without component inspection
+  retain the legacy projection helper; wall mounts reaching the flat stage compiler are rejected.
+  Standalone primary candidates now materialize
+  through one frozen owned scene. Proposed gas domains and scoped bindings now participate in the
+  same retry transaction from retained initial prototype facts. Owned gas initialization and native
+  HV/MV/LV cable/device realization now have retained receipts and regression evidence;
+  bounded joint soft-preference/proximity search now participates in furnishing. Electrical supply,
+  hosted/hybrid materialization, revised utility closets/routing and in-game author workflows remain open.
+  Another disconnected utility planner would leave the primary output incomplete.
+  - [ ] Introduce one immutable plan containing ground, support/container, approach and cable-layer
+    reservations, gas domains and dependency witnesses. Adapt existing pure algorithms to this plan.
+    Supply content through a validated resolver supporting both loaded prototypes and session draft
+    assets; do not require global prototype hot reload for every UI edit.
+  - [ ] Route required utilities/device reservations through room/layout selection and whole-core
+    rollback. Integrate complete variant search; avoid retrying utilities forever after layout freeze.
+  - [ ] Keep floor-only helpers as supported fast paths, not a second conflicting authoring model.
+    Exit: A43-A44/A52/A61 traverse the primary entry point with no member/cable/gas leakage across
+    rejected alternatives. Unsupported combinations still return explicit failure.
+
+- [ ] **R10 - Consolidate stage ownership and activation lifecycle.** Priority P0; depends on R08/R09
+  and R06. Tile, surface, container, assembly and complete owned previews share component-backed
+  ownership, retirement, allocation capture and allocation-list cleanup. Surface/container/assembly/
+  owned initialization shares one typed lifecycle transaction. The primary owned entry now consumes
+  frozen scenes through shared assembly placement and map-tree membership inspection. Remaining
+  specialized surface/container materialization and full author sessions need integration. Preview
+  allocation still has an absolute ceiling
+  at 256, smaller than full-room utilities can require.
+  - [ ] Create one owned generation-session lifecycle with typed phases and shared allocation/work
+    counters. Put persistent per-map/session entity state on an owned component per CONTRIBUTING.md;
+    use a bounded session registry only for non-entity author operations. Preserve existing callback
+    allocation capture, off-map child cleanup, reentrancy guards and lifecycle checks during migration.
+  - [ ] Define activation/isolation for node groups, atmosphere, power, containers and network
+    visibility. Prove scoped processing or reject unsupported operational previews; paused-map
+    creation and deletion alone are not rollback of global side effects.
+    Native prerequisite for R12: `NodeGroupSystem.ForceUpdate` drains all pending group/reflood/
+    removal queues. It cannot certify a single owned grid without also processing unrelated work.
+    The initial `KsRebuildOwnedPowerNodes` entry now scopes known power nodes through the native
+    rebuild algorithm. The scoped-node ledger records its tested domain and remaining queue/frame
+    cases and retained-stage integration. Complete those exits before using it for activation;
+    node topology does not establish isolation of power reconnect, solver or initializer effects.
+  - [ ] Make stage destruction, disconnect, invalidation and cancellation release retained state
+    exactly once. Derive limits from declared request budgets rather than simply removing caps.
+    Exit: A61/A65 plus existing initializer, insertion-veto, nested-callback and off-map cleanup tests.
+
+- [ ] **R11 - Replace gas declarations with owned atmosphere initialization and evidence.** Priority
+  P1; pure profile/domain work follows R08/R09; engine work follows R10. `KsProcgenGasClosure`
+  accepts supplied edge facts and always leaves materialized verification false; hull/window
+  proposals do not inspect or fill actual gas. Preserve that useful preliminary checker. The primary
+  planner now binds proposed domains from retained initial airtight facts, without promoting these
+  declarations into engine evidence.
+  - [x] Add nominal gas-domain conflict resolution to the primary candidate transaction, retaining
+    required/preferred demands and omissions; reuse the existing mixture-math foundation.
+  - [x] For closed private owned grids with InitialOnly intent, inspect actual resting-state gas
+    edges after engine initialization, reconcile them with the retained candidate and fill through
+    a scoped adapter with native revalidation, actual volume, independent mixtures and notifications.
+    Never treat a non-null map/space fallback as owned gas. Verify current state without refill and
+    commit initial evidence only after the shared transaction's final checks.
+  - [x] Complete live preferred-gas omission handling on the supported owned path, retaining hard
+    state/observation constraints and historical receipts without periodic refill.
+  - [ ] Extend actual gas context to hosted/preserved areas. Keep those guards until inspected
+    compatibility and scoped mutation replace them.
+  - [ ] Separate closure, initial fill and stable-at-rest certificates; never replace them with
+    a call to `fixgridatmos`, global map atmosphere or periodic refill.
+  - [ ] Exit: A53-A56/A61 on real grid atmospheres, including leak mutation and preserved context.
+
+- [ ] **R12 - Implement actual electrical distribution and provider assignment checks.** Priority
+  P1; pure topology/routing follows R08/R09; runtime work follows R10. Standalone shared-Main
+  AutoDistribute/WiredOnly now has a native cable/converter pipeline; broader sources, hosted
+  networks and operating supply remain open. Lighting labels do not establish working supply.
+  - [x] Inspect the supported standalone palette and declared loads, place required infrastructure
+    jointly with furnishings, route cardinal voltage tiers and cover consumers with the actual
+    circular LV rule. Native paused groups, same-tile converter wires, wall supports and actual
+    receiver/provider backlinks are verified in this bounded scope; repeats only inspect.
+  - [ ] Finish live source/capacity/load-scenario inspection, hosted interfaces, wider infrastructure
+    strategies and independent circuits. Preserve the existing operational-supply guard.
+  - [ ] Validate actual provider/network membership and supply under the chosen load scenario;
+    account for stateful provider selection and nearest-ineligible-provider behavior. If engine
+    behavior needs an upstream fix, isolate that change with its own tests/provenance; never patch
+    private receiver links or override `Powered` in procgen to conceal it.
+  - [ ] Exit: A57-A61, including independently missing input/output cables, default range 3,
+    overloaded/disabled devices, accidental circuit merges and battery-only false positives.
+
+- [ ] **R13 - Replace supply labels and walkway-distance lighting with operating-light validation.**
+  Priority P1; depends on R08/R12 and the owned stage from R10. `KsProcgenLightingPlanner` spreads
+  estimated coverage through the floor graph using fixture spacing; that is neither electrical
+  range nor engine light transport. Its false `WorkingCoverageVerified` guard is correct.
+  - [ ] Keep the estimator explicitly named as a proposal heuristic; add mounting/capability and
+    demand bindings to the shared consumer plan. Preserve self-contained and caller-supplied cases.
+  - [ ] Measure the specified engine light metric with actual fixture state/occlusion, or reject an
+    unsupported hard metric. Recheck after furnishings, utility device placement and power settle.
+  - [ ] Exit: A29-A30/A60/A66 distinguish nearby-but-unpowered, obstructed and actually lit cells.
+
+- [ ] **R14 - Generalize bounded layout search and centralize work accounting.** Priority P1;
+  depends on R09 and R05's current retry contracts. `KsProcgenSizeGoalSubdivision` and
+  `KsProcgenIrregularSizeGoalSubdivision` are useful strip fast paths, but contiguous-column
+  assumptions and local 4096-probe/8-vector bounds exclude general holes/branching shapes and do
+  not expose complete request work. `GraphWorkFullyMetered` correctly remains false.
+  - [ ] Retain deterministic fast paths behind one strategy interface; add bounded general-mask
+    partitions and joint prefab/procedural fitting with real seams and exterior scores.
+  - [ ] Use a request-owned budget ledger for preprocessing, candidate construction, rejected
+    vectors, relations, utilities, compilation, serialization and engine inspection. Expose
+    strategy truncation separately from infeasibility; do not merely increase magic limits.
+  - [ ] Exit: A37-A42/A49/A61, including feasible holes/branches, deliberately insufficient budgets
+    and stable same-seed output independent of yield boundaries.
+
+- [ ] **R15 - Separate replayable authoring input, diagnostic views and verification receipts.**
+  Priority P0 for schema boundaries, P1 for delivery; depends on R08/R09. Current
+  `KsProcgenOwnedDiagnosticReport` schema 3 is a bounded review view; `VerifyExact` compares fresh
+  diagnostic bytes, not a complete content/context replay. Hardcoded false flags correctly limit
+  its claims. The static room-map manifest now binds canonical project declarations, immutable
+  content-resource bytes and direct prototype bodies; actual source instantiation, full dependency
+  closure, portable imports and live context capture still need implementation. Diagnostic schema 3
+  shares geometry-collection and entry limits across the report, bounds source processing and
+  marks partial paths. These projection limits do not meter the complete generator or certify replay.
+  - [ ] Add versioned canonical authoring/request artifacts with content manifests, separate bounded
+    diagnostic projections, and typed scoped verification receipts keyed to snapshot identity.
+  - [ ] Include gas/electric/UI revisions and provenance; meter total export input work and bytes.
+    Page geometry without presenting a truncated view as a complete plan.
+  - [ ] Implement replay through the actual generator with matching context/content or an explicit
+    mismatch. Exit: A51/A62/A65 and tampered/stale/partial receipt rejection; keep schema-1 samples
+    recognizable as historical geometric diagnostics.
+
+- [ ] **R16 - Deliver the in-game workspace, not just commands and SVGs.** Priority P1; drafts can
+  start after R08/R15; verified apply requires R10-R13/R17. The existing `ksprocgen_snapshot` command
+  reads painted markers; JSON/SVG exports do not edit packs, create assemblies or generate a map.
+  - [ ] Implement document service, revisions, permission checks, persistence/import/export and
+    undo/redo first; share normalized contracts with the headless entry point.
+  - [ ] Add area/entrance tools, theme/room-library/pack editors, assembly and connection graphs,
+    gas/electrical panels, inspectors and diagnostic overlays in section 21.
+  - [ ] Add cancellable preview jobs, comparison, recovery, stale-result handling and deliberate
+    apply. Keep apply unavailable with an actionable reason while required runtime gates are absent.
+  - [ ] Exit: A62-A66 and an actual client UI walkthrough; serialized-message unit tests alone do
+    not prove that authors can complete the workflow.
+
+- [ ] **R17 - Scope scene inspection and complete operational validation.** Priority P0 before
+  publication; depends on R09/R10, then R11-R13 for utility-dependent operation.
+  `KsProcgenRoomFixtureSystem.TryScene` now inspects the engine-maintained owned-map transform
+  tree; unrelated world population no longer consumes its scan cap. Fixed convex sweeps are valuable
+  clearance checks, but do not prove door use, seating, interaction vetoes or support stability.
+  - [x] Replace the global scan with a maintained owned-map membership view plus independent
+    detection of foreign insertions/reparenting. Include paused/noncollidable/container entities
+    where needed; do not optimize by inspecting only selected members and missing callback spawns.
+  - [ ] Add actor/door/seat/device adapters and bounded supported-surface settling under the isolated
+    lifecycle. Recompute actual entrance components, machine fronts and clean approaches after
+    utilities initialize; keep conservative geometry and unsupported-shape rejection as prechecks.
+  - [ ] Exit: identical scene validation with many unrelated entities, foreign-entity drift
+    rejection, A34-A36/A43-A44/A52/A66 operational checks, and no global physics stepping.
+
+- [ ] **R18 - Reconcile task dependencies, current status and release accounting.** Priority P0
+  planning cleanup; complete at release with R07/T19. Historical T rows mix prerequisites with
+  end-to-end exits: T13 needs content whose T15 task depends on T13. Large chronological progress
+  notes also leave stale "current" estimates/statuses that can be mistaken for runtime support.
+  - [x] Publish one current capability index linking evidence and open exits; retain dated history
+    below it, clearly historical. Track exact entry-point support for pure/hybrid/prefab modes,
+    geometry interpretations, relational layers, utilities and editor operations.
+  - [ ] Schedule schema -> pure planning -> stage/lifecycle -> engine adapters -> integrated
+    validation/publication. UI drafts can proceed after schemas; apply waits for verification.
+    Distinguish those construction prerequisites from joint acceptance dependencies in every T row.
+  - [ ] Recalculate an evidence-based estimate for the expanded scope only after updating weights;
+    do not carry the earlier 75% forward or use test counts as capability percentages. Exit: a
+    dependency-consistent release checklist and A01-A66 evidence, with unsupported modes visible.
+  - [ ] Audit older procedural `GameTest` fixtures, starting with `KsProcgenContentLoadTests`,
+    `KsProcgenOwnedInteriorTests` and `KsProcgenRoomSceneTests`, for assertion failures masked by
+    the pool's dirty-disposal warning. Adopt failure-preserving teardown where needed and prove
+    an actual failed result with deliberate source mutation. The new atmosphere, electrical and
+    utility-draft fixtures use `KsProcgenGameTest`; requiring zero skipped cases remains a gate.
+
+Documentation-only specification revision, preceding the implementation batch below:
+
+- [x] Inspect local atmos, node topology, extension coverage and power-state code; record primary
+  source links and correct the assumed LV radius from 2 to the current default of 3 world units.
+- [x] Specify gas profiles/initialization, automatic distribution and in-game asset authoring with
+  runtime evidence, fallbacks, ownership and bounded work requirements.
+- [x] Reconcile scope, request/theme fields, pipeline, result evidence, defaults and stale top-level
+  revision status. Add A53-A66 and R08-R18 without marking those features implemented.
+- [x] Review the existing architecture for concrete integration, lifecycle, search, metering,
+  lighting and authoring limitations; retain existing conservative guards and historical evidence.
+- [x] Check all 28 relative document links, unique contiguous A01-A66 fixture IDs and balanced
+  Markdown code fences; inspect the scoped diff and whitespace. Only the specification changed
+  in that documentation revision; its checks supplied no C# build or runtime/UI test evidence.
+
+### Standalone rooted owned planning (2026-10-17, R09)
+
+- [x] Allow a root-bearing connection group with no ports; reject groups with neither ports nor
+  roots. For explicit empty entrance domains with no authored configurations, derive deterministic
+  rooted networks: one per target island under `PerIsland`, one required group under `SingleNetwork`.
+  Preserve every supplied request root, otherwise prefer the first canonical writable cell.
+  `DeclaredNetworks` still requires explicit group/root configurations; do not invent them.
+- [x] Audit root-only groups through the existing local/full component analysis, exact isolation,
+  root reachability and complete floor ownership. Keep normal port-bearing validation/reason codes.
+  No synthetic entrance, threshold, host passage or separate planning algorithm is introduced.
+- [x] Reuse the existing routing, growth, partitioning, themes, structure, supported furnishings,
+  lighting and independent interior audit. Keep null entrance-domain legacy semantics. Canonical
+  snapshots retain resolved root configurations; the original authoring request remains untouched.
+- [x] Existing 764 procgen units pass after these changes. Seventeen focused standalone/layered
+  integration cases pass with zero skips, including 1x3, islands, rejected false single-network
+  connectivity, explicit roots/networks, forbidden joins, normalized roundtrips, graph exhaustion
+  and a complete table/device/contained-item room with no host floor. The first focused run found
+  a fixture expecting canonical snapshots to omit resolved defaults; assert retained normalized
+  configurations and identical replay semantics instead. Evidence:
+  `.ks_procgen_standalone_initial_units.log`, `.ks_procgen_standalone_roundtrip_debug.log`,
+  `.ks_procgen_standalone_roundtrip.log` and the corresponding TRX files.
+- [x] Independently discard explicit roots and bypass exact-group join rejection in compile-valid
+  source. Each targeted case fails as a real failure, with zero skips; restore both sources exactly
+  in `finally`. Evidence: `.ks_procgen_standalone_mutation_root_build.log`,
+  `.ks_procgen_standalone_mutation_root.log`, `.ks_procgen_standalone_mutation_isolation_build.log`,
+  `.ks_procgen_standalone_mutation_isolation.log` and `ks_standalone_mutation_*.trx`.
+- [x] Index explicit roots once by cell rather than rescanning all roots for every target island;
+  reject excess auto-derived root declarations before indexing. Preserve duplicate validation and
+  canonical ordering. Repeat the explicit-root fault against the indexed implementation: one real
+  failure, zero skips, source restored exactly. Evidence:
+  `.ks_procgen_standalone_indexed_mutation_build.log`, `.ks_procgen_standalone_indexed_mutation.log`
+  and `ks_standalone_indexed_mutation.trx`.
+- [x] The first full gate passed Release/fresh Debug, 764 units and all 302 procgen integration cases,
+  including the new single-tile case, but actual sandbox verification failed: two nonempty list
+  collection expressions lowered to forbidden `CollectionsMarshal.SetCount` calls. Replace them
+  with ordinary list initializers; do not change sandbox permissions. That failed run is retained
+  in `.ks_procgen_standalone_final_*.log`/TRX for review and is not a successful full gate.
+- [x] The corrected full run again passes all 302 procgen cases but actual sandbox verification
+  rejects the newly introduced `ILookup` type. Replace the LINQ lookup with ordinary dictionary/
+  list indexing, preserving duplicate validation. No whitelist change. The failed second run is
+  retained in `.ks_procgen_standalone_corrected_final_*.log`/TRX; rerun the actual sandbox on the
+  dictionary implementation before final acceptance.
+- [x] The dictionary implementation passes all 10 standalone cases and the actual sandbox check
+  (11 total, zero skips), including single-tile/1x3 and the early root-budget rejection. Repeat
+  explicit-root removal on this implementation: one real failure, zero skips, exact source restore.
+  Evidence: `.ks_procgen_standalone_dictionary_debug.log`, `.ks_procgen_standalone_dictionary.log`,
+  `.ks_procgen_standalone_dictionary_mutation_build.log`,
+  `.ks_procgen_standalone_dictionary_mutation.log` and corresponding TRX files.
+- [x] Final dictionary-source Release succeeds with 512 existing warnings and zero errors; fresh
+  Debug succeeds with 1,107 existing warnings and zero errors. All 764 procgen units and 303 selected
+  integration cases pass with zero skips. Match the actual sandbox definition/result to confirm
+  `SandboxTest.Test` passed. No warning suppressions, sandbox whitelist changes or new warnings.
+  Evidence: `.ks_procgen_standalone_dictionary_final_release.log`,
+  `.ks_procgen_standalone_dictionary_final_debug.log`, `.ks_procgen_standalone_dictionary_final_units.log`,
+  `.ks_procgen_standalone_dictionary_final_integration.log` and `ks_standalone_dictionary_final_*.trx`.
+  The full repository suite was not run. Encoding, CRLF, whitespace, relative links, contiguous
+  acceptance IDs and Markdown fence checks pass.
+- [x] Award one layout point for standalone rooted networks traversing the complete owned pipeline
+  and independently audited layered room proposals with no host geometry. Layout advances from
+  15 to 16 of 22; total expanded coverage is approximately 61%. No repeated credit for baseline
+  small-mask geometry, existing support math, or shared placement extraction. No engine operation,
+  utility, UI or publication credit. The 80% goal remains active.
+- [ ] Continue complete owned scene materialization below. Root derivation is input bounded under
+  existing contract limits, not a fully metered request ledger. Proposals do not prove usable or
+  spaceproof rooms. Null-domain legacy handling remains deliberate; the stage entry must capture
+  its resolved standalone input before allocation rather than silently changing review artifacts.
+
+### Native node inspection and queue/frame rewrites (2026-10-21, R10/R12)
+
+- [x] Add `KsInspectOwnedPowerNodes` alongside rebuilding, sharing the bounded scene/graph capture
+  and current native component checks. Inspection never enters the mutation branch, replaces
+  groups, registers networks, emits rebuilt callbacks or drains pending queues. Pending owned
+  work is an explicit `OwnedNodesPendingRebuild` result rather than permission to repair it.
+  Both paths return `KsOwnedNodeTopologyResult`; neither certifies supply or activation.
+  Inspection checks current native consistency against freshly read edges, not equality to an
+  authored utility plan. The caller still pins scene/profile/interface identity and separately
+  checks declared device state, provider assignment, consumers and operational requirements.
+- [x] Pin the grid's map ID/UID and registered map identity. Recheck map/grid retirement, grid
+  component identity, unit size, disabled splitting, transform/frame identity and member map/grid
+  identity after callbacks. Split enablement, unpause, position changes and reparenting must reject.
+- [x] Extend actual engine coverage to 21 scoped-node cases, retaining the prior ten. New cases
+  check repeated read-only group/network identity and callback counts; drift without repair;
+  inspection work/cancellation; separate foreign remake/removal queues; rejected owned callback
+  reflood/remake work surviving until the ordinary updater; and all four frame mutations.
+  Initial and refined preflight both pass all 21, zero failures/skips. Evidence:
+  `.ks_procgen_noderewrites_{initial,preflight}_build.log`,
+  `.ks_procgen_noderewrites_{initial,preflight}.log`, and `ks_noderewrites_{initial,preflight}.trx`.
+- [x] Prove the new exits with mutations for inspection becoming mutating, split-frame checks,
+  foreign remake/removal isolation and preservation of both callback requeue kinds. Restore exact
+  source bytes before final positive gates.
+- [x] Six compile-valid mutations produce nine assertion failures and 117 unaffected passes,
+  zero skips. Mutating inspection fails three cases; bypassed split-frame checks and global
+  remake/removal processing each fail one; lost callback reflood work fails two; lost callback
+  remake work fails the old-group retirement assertion. Every mutation runs all 21 cases.
+  Exact source bytes are restored and compared in `finally`. Evidence:
+  `.ks_procgen_noderewrites_gates_summary.log`,
+  `.ks_procgen_noderewrites_mutation_<name>_build.log`,
+  `.ks_procgen_noderewrites_mutation_<name>.log`, and `ks_noderewrites_mutation_<name>.trx`,
+  for `inspect_mutates`, `split_frame`, `foreign_remake`, `foreign_remove`, `restore_reflood`,
+  `restore_remake`. Restored-source positive gates follow.
+- [x] Run restored Release/fresh Debug, retained procgen/fixture/native/sandbox cases, identity
+  audit, formatting checks and completed-runner cleanup. Expected integrations: 625, including all
+  previous 614 cases plus eleven new cases.
+- [x] Restored normal-hook Release build passes (403 warnings, zero errors; 46s). All 809 units,
+  625 selected integrations/sandbox cases and 23 native contracts pass with zero failures/skips.
+  Fresh Debug with `--no-incremental` also passes its normal-hook build (1,066 warnings, zero errors;
+  6m36s) and the same 809/625/23 gates. Case identity comparison retains all prior 809 units,
+  614 integrations and 23 native contracts with multiplicity, plus all current 21 scoped-node
+  preflight cases. Actual `Content.IntegrationTests.Tests.Utility.SandboxTest.Test` definitions map
+  to Passed in both configurations. Evidence:
+  `.ks_procgen_noderewrites_{release,final_debug}_build.log`,
+  `.ks_procgen_noderewrites_{release,final}_{units,integration,engine}.log`,
+  corresponding `ks_noderewrites_{release,final}_{units,integration,engine}.trx`, and
+  `.ks_procgen_noderewrites_final_audit.log`. Full-repository tests are not claimed.
+- [x] All four touched source/document files pass strict UTF-8/no-BOM, CRLF and trailing-whitespace
+  checks. All 48 specification fences are balanced; main and engine `git diff --check` pass.
+  The completed runner is removed. Evidence: `.ks_procgen_noderewrites_final_style.log`.
+  Existing module revisions and unrelated changes are preserved. No additional capability points
+  are awarded for this unintegrated prerequisite; the 80% goal remains active at approximately 64%.
+- [ ] Integrate inspection/rebuilding with the primary infrastructure plan and shared stage
+  lifecycle. Retain pinned scene/utility identity and call the read-only path on repeated checks;
+  retire the complete owned stage on failed mutation, callback drift or cancellation.
+
+This rewrite closes native queue/frame/inspection prerequisites; it does not route cables, select
+APCs/substations, bind operating consumers, scope power reconnect/solver work, certify retained
+preview isolation or authorize publication. Those R09/R10/R12 exits remain open. No capability
+points are awarded for this unintegrated prerequisite; the last fully verified estimate is 64/100.
+
+### Rotation adapter rewrite prerequisite (2026-10-21, R06/R10/R12)
+
+- [x] Reproduce and fix the authoring/engine rotation-sign mismatch before new infrastructure
+  placement relies on existing poses. `KsProcgenInteractionFacingPlanner` declares clockwise turns
+  (`0` south, `1` west), and `RotateFootprintOffset` rotates `(x,y)` to `(y,-x)` at turn one.
+  Engine `Angle.RotateVec` is counter-clockwise, but before this rewrite assembly placement,
+  owned scene placement and surface staging emitted `Angle.FromDegrees(quarterTurns * 90)` and
+  verified that same raw angle. Matching an emitted angle to itself does not prove the authored pose is realized.
+- [x] Introduce one explicit author-turn/engine-angle conversion and apply it consistently to
+  materialization and live pose verification, including container-relative and supported members.
+  Inspect prototype-specific interaction/sprite offsets rather than assuming every visual has the
+  same baseline. Keep unsupported operational-facing claims guarded.
+- [x] Audit map-import/native-angle capture and directional gas/fixture transforms at this boundary.
+  Distinguish already-authored clockwise integers from engine angles; do not invert both or change
+  pure clockwise geometry to conceal the adapter error. Version affected identities/artifacts.
+- [x] Use an asymmetric native fixture/offset and an explicit face/approach case to prove actual
+  engine geometry/orientation matches the planned clockwise pose. Include the right-wall computer
+  facing left at author turn one. Do not rely only on raw-angle equality or symmetric square boxes.
+  Prove the cases fail with the old conversion and rerun relevant runtime/source/sandbox gates.
+
+- [x] Before the fix, five native cases produce three assertion failures and two unaffected passes,
+  zero skips: both odd turns put the asymmetric fixture center on the wrong side, and the right-wall
+  computer faces east instead of west. Evidence: `.ks_procgen_rotation_before_build.log`,
+  `.ks_procgen_rotation_before.log`, `ks_rotation_before.trx`. This is an actual engine geometry/
+  facing reproduction, not merely a raw-angle comparison.
+- [x] Add `KsProcgenRotation.ToEngineAngle` (clockwise `0..3` to negative engine degrees) to assembly,
+  complete owned-scene and surface emission/verification, and directional gas nomination. Keep pure
+  clockwise offsets, native source-map hierarchy composition and raw extraction radians unchanged.
+  Version support-pose identity to v2, owned interior identity to v3 and gas-context identity to v2;
+  corrected meanings cannot reuse the older plan/context identities.
+- [x] Expand native coverage to ten cases: all four asymmetric fixture turns, the right-wall
+  computer/default renderer west direction, odd-turn surface placement, odd-turn inherited container
+  rotation applied once, and a complete owned materialization before/after initialization. The two
+  debug fixtures explicitly permit rotation; the hotplate fixture is droppable for surface coverage.
+  Six unit cases cover native vector rotation and invalid author turns; directional gas tests now
+  expect clockwise rather than the earlier reversed odd-turn domains. Preflight passes all 815
+  procgen units and 635 selected integration/sandbox cases, zero failures/skips.
+  Evidence: `.ks_procgen_rotation_{cases_build,cases,preflight_units,preflight_integration}.log`,
+  `ks_rotation_{cases,preflight_units,preflight_integration}.trx`.
+- [x] Prove the central sign, each placement/verification adapter and directional gas nomination
+  with compile-valid mutations, then restore exact source bytes before positive gates.
+- [x] Finish restored Release/fresh Debug, retained-case/sandbox audit, source/document formatting
+  checks and completed-runner cleanup.
+- [x] Five compile-valid mutations produce 22 assertion failures and 62 unaffected passes,
+  zero skips. Reversing the bridge fails eight native and four unit cases; restoring the old
+  sign in both emission and verification fails five assembly cases, two surface cases and the
+  complete owned-scene case. Reversing only gas nomination fails both odd-turn domain cases.
+  Each adapter mutation preserves matching raw-angle verification deliberately: independent
+  native geometry/facing assertions must expose the wrong pose. Exact bytes are restored and
+  compared in `finally`. Evidence: `.ks_procgen_rotation_gates_summary.log`,
+  `.ks_procgen_rotation_mutation_<name>_build.log`,
+  `.ks_procgen_rotation_mutation_<name>_{integration,units}.log`, and corresponding
+  `ks_rotation_mutation_<name>_{integration,units}.trx`, for `bridge_sign`, `assembly_sign`,
+  `surface_sign`, `owned_sign`, `gas_sign`. Restored-source positive gates are recorded below.
+- [x] Restored normal-hook Release build passes (952 warnings, zero errors; 2m44s). Fresh Debug
+  with `--no-incremental` also passes its normal-hook build (1,066 warnings, zero errors; 7m36s).
+  Both configurations pass all 815 procgen units, 635 selected integrations/sandbox cases and
+  23 retained native serialization contracts, zero failures/skips. Case identities retain all
+  previous 809 units, 625 integrations and 23 native cases with multiplicity, plus every current
+  815/635-case preflight. The actual `Content.IntegrationTests.Tests.Utility.SandboxTest.Test`
+  definitions map to Passed in Release and Debug. Evidence:
+  `.ks_procgen_rotation_{release,final_debug}_build.log`,
+  `.ks_procgen_rotation_{release,final}_{units,integration,engine}.log`, corresponding
+  `ks_rotation_{release,final}_{units,integration,engine}.trx`, and
+  `.ks_procgen_rotation_final_audit.log`. Full-repository tests are not claimed.
+- [x] All seventeen touched source/data/document files pass strict UTF-8/no-BOM, CRLF and
+  trailing-whitespace checks. The specification's 48 fences and README's six fences are balanced;
+  main and engine `git diff --check` pass. The completed runner is removed. Evidence:
+  `.ks_procgen_rotation_final_style.log`. Existing module revisions and unrelated changes are
+  preserved. No additional capability points are awarded for this correction; the 80% goal
+  remains active at approximately 64% of the expanded specification.
+
+Sprite review: the default four-direction renderer selects south at engine zero, east at positive
+90 degrees and west at negative 90 degrees. Layer `DirOffset`, direction overrides and sprite
+rotation policy can change the visual mapping. The native default-baseline case is covered; this
+does not certify arbitrary custom sprite/interaction calibration or operational machine use.
+Those claims remain guarded under R06/R13. Source-map `LocalRotationRadians`/`GridRotationRadians`
+remain native radians (extraction schema 2); converting those again here would invert source data.
+
+Review evidence: `Content.Shared/_KS14/Procedural/KsProcgenInteractionFacingPlanner.cs`,
+`RobustToolbox/Robust.Shared.Maths/Angle.cs`,
+`Content.Server/_KS14/Procedural/KsProcgenAssemblyPlacementSystem.cs`,
+`Content.Server/_KS14/Procedural/KsProcgenOwnedStageSystem.cs`, and
+`Content.Server/_KS14/Procedural/KsProcgenSurfaceStageSystem.cs`, and the client sprite render/layer
+direction implementation. This default-baseline adapter prerequisite is verified; no additional
+capability points are awarded for its correction. Continue the unified infrastructure plan under
+R09/R12 while retaining R06/R13 guards for custom operational-facing and machine-use certification.
+
+### Scoped native power-node rebuilding (2026-10-21, R10/R12, in progress)
+
+- [x] Reuse the native `NodeGroupSystem` rebuild/flood/group creation algorithm through transient
+  owned queues. Leave its ordinary entry points on the original queues outside the synchronous
+  scope. Preserve unrelated reflood/remake/removal work instead of globally forcing an update.
+- [x] Add `KsRebuildOwnedPowerNodes(gridUid, members, maximumWork, cancellationToken)` for an
+  already inspected complete owned scene on an initialized paused unit grid. Accept the standard
+  cable/device/terminal node classes for HV/MV/APC groups; reject unsupported subclasses, pending
+  owned removals, cross-scope connections and shared foreign groups before mutation.
+- [x] Capture native compatible edges before mutation and retain complete connected components.
+  Check actual edges, component membership, frame and component/reference identity after native
+  callbacks. Bound reported node/edge/queue work before writes; preserve cancellation and reject
+  callback reentrancy or immediate group creation that could bypass the scoped transaction.
+- [x] Exercise ten actual runtime cases: cardinal HV/MV/LV grouping, diagonal nonconnections,
+  same-tile converter input/output cables, untouched foreign pending graph fields and later
+  consumption by the normal updater, insufficient work, cancellation, cross-scope connections,
+  nested ForceUpdate, changed device enablement and removed node declarations during callbacks.
+  First five-case preflight passes; the tightened callback suite passes nine; the final ten-case
+  preflight passes, all with zero failures/skips. Evidence:
+  `.ks_procgen_nodescope_{initial,cases,callback,preflight}_build.log`,
+  `.ks_procgen_nodescope_{first_cases,callback_cases,preflight}.log` and corresponding
+  `ks_nodescope_{first_cases,callback_cases,preflight}.trx`.
+- [x] Prove isolation, reentrancy, fresh-graph validation and budget assertions using compile-valid
+  mutations; restore exact source bytes before Release/fresh Debug and all retained regression gates.
+- [x] Four compile-valid mutations produce thirteen assertion failures and 27 unaffected passes,
+  zero skips. Redirecting the scoped flood pass to the global queue fails all ten cases, including
+  an actual foreign cached-field change. Bypassing nested-update protection, fresh native edge
+  comparison, or work-limit rejection each fails the corresponding runtime case. Every mutation
+  runs all ten cases; source bytes are restored and compared exactly in `finally`.
+  Evidence: `.ks_procgen_nodescope_gates_summary.log`,
+  `.ks_procgen_nodescope_mutation_<name>_build.log`, `.ks_procgen_nodescope_mutation_<name>.log`,
+  and `ks_nodescope_mutation_<name>.trx`, for `foreign_queue`, `reentry`, `fresh_graph`, `budget`.
+- [x] Restored Release passes its normal-hook build (403 warnings, zero errors; 47s), all 809
+  procgen units, 614 selected integrations/sandbox cases and 23 retained native serialization
+  contracts. Zero failures/skips. Evidence: `.ks_procgen_nodescope_release_build.log`,
+  `.ks_procgen_nodescope_release_{units,integration,engine}.log`, and
+  `ks_nodescope_release_{units,integration,engine}.trx`. Fresh Debug and retention audit follow.
+- [x] Fresh restored Debug with `--no-incremental` passes its normal-hook build (1,066 warnings,
+  zero errors; 6m02s). All 809 procgen units, 614 integrations/sandbox cases and 23 native contracts
+  pass with zero failures/skips. The case identity audit retains all previous 809 units,
+  604 integrations and 23 native cases with multiplicity, plus every current ten-case preflight.
+  Actual `Content.IntegrationTests.Tests.Utility.SandboxTest.Test` definitions map to Passed in
+  both configurations. Evidence: `.ks_procgen_nodescope_final_debug_build.log`,
+  `.ks_procgen_nodescope_final_{units,integration,engine,audit}.log`, and
+  `ks_nodescope_final_{units,integration,engine}.trx`. Full-repository tests are not claimed.
+- [x] All five touched source/document files pass UTF-8/no-BOM, CRLF and trailing-whitespace
+  checks. All 48 specification fences are balanced; main and engine `git diff --check` pass.
+  The completed temporary runner is removed. Evidence: `.ks_procgen_nodescope_final_style.log`.
+  Existing module revisions and unrelated working changes are preserved. No additional capability
+  points are awarded for this unintegrated native prerequisite; the 80% goal remains active at 64%.
+- [x] Extend coverage to preexisting foreign remake/removal queues and owned callback requeues;
+  add read-only topology inspection. See the queue/frame/inspection rewrite ledger above.
+- [x] Add explicit frame-mutation cases and recheck unit-grid/splitting properties and pinned map
+  identity after callbacks. See the rewrite ledger above; activation approval remains separate.
+- [ ] Integrate the native entry and read-only verifier with the primary infrastructure plan,
+  shared complete-scene inspector and stage lifecycle. The owning caller must retire its complete
+  scene after any post-mutation issue; repeated verification must not recreate networks.
+
+This is a native topology prerequisite, not an electrical distribution workflow. It registers owned
+power groups through the normal engine hooks but never advances the global power solver or certifies
+provider assignment, delivered power, current load, battery supply, working light or publication.
+`PowerNetSystem.InitPowerNet`/`InitApcNet` allocate registered networks and invalidate `GroupedNets`;
+normal updates later reconnect queued networks and tick the solver. Native pause handling marks
+loads, supplies and batteries separately. R10 must prove those states and scoped reconnect/solver
+behavior before an operational retained preview; a scoped node rebuild alone proves none of them.
+It does not roll back arbitrary callback side effects. Engine iterator/callback cost is not a complete
+CPU/serialization ledger; `GraphWorkFullyMetered` remains false. Existing electricity guards remain
+until the complete R09/R12 plan and owned realization exist. No extra capability points are assigned;
+the last fully verified overall estimate remains 64/100 and the 80% goal stays active.
+
+### Live gas preference rewrite (2026-10-21, R11)
+
+- [x] Preserve hard required gas/stability conditions while reporting optional unsupported stability,
+  leaking optional gas domains, unrepresentable optional mixtures and unmet optional initial values.
+  Do not promote preferred constraints into hard failures or silently claim they were satisfied.
+- [x] Carry binding and runtime omissions into immutable initial receipts. Distinguish required
+  initial-state success, all requested initial values, and stable-at-rest evidence.
+- [x] Preserve request-hard gas restrictions even when a preferred mixture is omitted. Required
+  stability and hard observation bounds remain guarded until scoped simulation is implemented.
+- [x] Exercise preferred/required counterparts, omitted writes, precision failures, stable preferences,
+  hard bounds, repeated read-only verification and existing gas transaction failures. Prove critical
+  cases by source mutation, then run restored Release/fresh Debug and retained regression gates.
+
+Preflight passes all 588 selected procgen-namespace/sandbox cases, including nine new preference
+cases and all 28 retained owned-atmosphere/gas-planning cases. The new cases compare preferred and
+required stability, open footprints and numeric overflow; retain hard observation/pressure limits;
+assert omitted gas remains unwritten; and check that later optional drift neither refills gas nor
+rewrites historical receipt evidence. Required rejection paths assert no allocated entities or
+committed receipts survive. The wider final gate must also retain the sixteen prototype-fixture
+cases outside the procgen namespace (604 expected cases total).
+Evidence: `.ks_procgen_gaspreferences_preflight_complete_build.log`,
+`.ks_procgen_gaspreferences_preflight_complete.log`, `ks_gaspreferences_preflight_complete.trx`.
+Completed mutation and restored-source Release/fresh Debug gates are recorded below. No capability
+points are awarded for this prerequisite rewrite; the expanded-scope estimate remains 64/100.
+
+- [x] Seven compile-valid source mutations produce eleven assertion failures and 52 unaffected
+  passes, zero skips. The cases detect hardening preferred stability, bypassing required stability,
+  bypassing a hard observation bound, writing into an open optional domain, bypassing optional
+  numeric fallback, hardening optional initial-state drift, and falsely certifying all initial
+  values. Every mutation runs all nine preference cases. Exact source bytes are restored and
+  compared in `finally`. Evidence: `.ks_procgen_gaspreferences_mutations_summary.log`,
+  `.ks_procgen_gaspreferences_mutation_<name>_{build,tests}.log`, and corresponding
+  `ks_gaspreferences_mutation_<name>.trx`. Restored-source gates follow in this ledger.
+- [x] Restored Release build passes with the normal localization hook (403 warnings, zero errors;
+  54s). Release passes 809 procgen units, 38 gas/planning/sandbox integrations and 23 native flag/
+  context serialization cases, with zero failures/skips. Fresh Debug with `--no-incremental` also
+  passes (1,066 warnings, zero errors; 5m36s), normal localization hook enabled.
+- [x] Final restored Debug gates pass all 809 units, 604 selected integrations and 23 native cases,
+  zero failures/skips. The identity audit retains all previous 809 units, 595 integrations and
+  23 native cases, plus every one of the current 588-case namespace/sandbox preflight selection.
+  Actual `Content.IntegrationTests.Tests.Utility.SandboxTest.Test` definitions map to Passed in
+  Release and Debug. Final integration filter: `FullyQualifiedName~KsProcgen|FullyQualifiedName~SandboxTest`;
+  it includes the sixteen retained prototype-fixture cases outside the procgen namespace.
+  Evidence: `.ks_procgen_gaspreferences_final_{release,debug,audit}.log`,
+  `.ks_procgen_gaspreferences_{release,final}_{units,integration,engine}.log`, and corresponding
+  `ks_gaspreferences_{release,final}_{units,integration,engine}.trx`. Full-repository tests are not claimed.
+- [x] Correct stale example README gas guards and describe the supported planning/initialization
+  entry, preference omissions, historical evidence and remaining operational limits.
+- [x] All six touched source/document files pass strict UTF-8/no-BOM, CRLF and trailing-whitespace
+  checks; the specification's 48 fences and README's six fences are balanced. Main and engine
+  `git diff --check` pass. Both completed temporary runners are removed. Evidence:
+  `.ks_procgen_gaspreferences_final_style.log`. Existing module revisions and unrelated changes
+  are preserved. The 80% goal remains active at approximately 64%; this rewrite earns no extra
+  operational workflow points. The scoped native node-processing prerequisite is recorded under
+  R10 before electrical realization; global `ForceUpdate` cannot substitute for it.
+
+### Flag serialization rewrite prerequisite (2026-10-20, R08/R11)
+
+- [x] Fix the engine `FlagSerializer<TTag>` writer, which starts at bit index one and drops the
+  least significant flag during captured-image roundtrips. Its highest-bit metadata is a bit count;
+  inspect all 32 integer bits and use an exclusive loop bound to avoid wrapping shift 32 back onto
+  bit zero for signed flags or silently discarding undefined high bits.
+- [x] Reproduce the existing defect with native zero/low/sparse/high/sign/all flag roundtrips:
+  fourteen cases run, three real failures and eleven unaffected passes, zero skips. Evidence:
+  `.ks_procgen_ownedgas_flag_before_fix.log`, `ks_ownedgas_flag_before_fix.trx`.
+- [x] Verify corrected images preserve full wall and window airtight defaults through actual spawning.
+  The first live-gas case exposed a loaded wall mask of 15 becoming 14 in the captured instance;
+  the domain's north edge really leaked. Hash roundtrip agreement alone did not detect this loss.
+- [x] Advance the prototype-image schema/identity to seven and update its contract tests. Retain all prior
+  snapshot, source-reference and allocation cases. Finish this rewrite before continuing gas filling.
+
+Preflight after the rewrite passes all 23 selected native serialization cases, including sixteen
+new flag-boundary/undefined-bit cases and the seven retained contextual-validator cases. All 809
+procgen units and 588 selected integrations/sandbox cases pass. The 21-case runtime gas selection
+passes real air/nitrogen/vacuum filling, independent mixtures, repeated initialization without refill,
+barrier changes, cleanup, separate private grids, tiny-grid failure and existing gas planning guards.
+Evidence: `.ks_procgen_ownedgas_flagfix_build.log`, `.ks_procgen_ownedgas_corrected_{cases,engine}.log`,
+`.ks_procgen_ownedgas_preflight_{units,integration}.log`, and corresponding `ks_ownedgas_*.trx`.
+Completed mutation and restored Release/fresh Debug gates are recorded in the owned-atmosphere
+initialization ledger below.
+
+### Owned atmosphere initialization (2026-10-20, R10/R11, in progress)
+
+- [x] Add scoped native atmosphere preparation/observation and independent mixture writes for
+  complete owned paused grids. Reuse engine tile-data, adjacency, volume, activation and device
+  notifications. Keep map atmosphere and other grids untouched; no global rebuild or refill loop.
+- [x] Reconcile actual initialized gas-transfer components and exterior leaks with the retained
+  candidate before any fill. Resolve every required/preferred demand and preserve write masks.
+- [x] Integrate filling once into the existing owned initialization transaction. Retain point-in-time
+  initial-state evidence on the component-owned stage; repeat initialization verifies rather than
+  refills. Any failure retires the complete owned stage through the shared lifecycle.
+- [x] Retain explicit guards for hosted/preserved gas and unsupported stable-at-rest processing;
+  do not promote initial-state evidence into simulation, electrical, isolation or publication proof.
+- [x] Verify real tile mixtures, volumes, independence, missing/leaking barriers, stale callbacks,
+  repeat initialization, write permissions, separate private grids, and failure cleanup. Prove critical
+  assertions with compile-valid mutations, then run restored Release/fresh Debug/sandbox and all
+  retained procgen/engine gates.
+
+- [x] Runtime preflight passes 595 selected integration/sandbox cases with zero failures/skips.
+  Seventeen new owned-atmosphere cases cover real air/nitrogen/vacuum, distinct per-tile mixtures,
+  repeat verification without refill, different gases across closed internal doors, hard trace-gas
+  restrictions, separate private maps, before/after barrier changes, gas-write masks, stability guards,
+  tiny sealed 1x1/1x3 footprints, corrupting/reparenting device callbacks and cancellation after writes.
+  Failed transactions retire the owned stage and commit no receipt. The receipt records simulation
+  tick/time; `Verify` performs current gas inspection without revalidating or refilling mixtures.
+  The no-gas path retains its original single scene check per lifecycle inspection.
+  Evidence: `.ks_procgen_ownedgas_{callbacks,receipt,preflight}_build.log`,
+  `.ks_procgen_ownedgas_callbacks_cases.log`, `.ks_procgen_ownedgas_preflight_complete.log`,
+  `ks_ownedgas_callbacks_cases.trx`, `ks_ownedgas_preflight_complete.trx`.
+- [x] Complete mutation/restored-source gates and workspace hygiene before assigning capability credit.
+- [x] Nine compile-valid mutations produce 25 real assertion failures and 24 unaffected passes,
+  zero skips: omitted bit zero (six failures), shift-32 wrapping (six), omitted gas write (three),
+  shared tile-mixture references (three), skipped repeat-state verification (two), bypassed gas
+  boundaries (two), skipped hard restrictions (one), bypassed callback frame checks (one), and
+  early receipt commitment (one). Each run builds before testing and checks for an actual
+  assertion failure. Source bytes are restored in `finally` and compared exactly after the run.
+  Evidence: `.ks_procgen_ownedgas_mutations_summary.log`,
+  `.ks_procgen_ownedgas_mutation_<name>_{build,tests}.log`, and
+  `ks_ownedgas_mutation_<name>.trx`, with `flag_low`, `flag_wrap`, `fill_write`,
+  `independent_mixtures`, `repeat_verification`, `gas_boundary`, `hard_restrictions`,
+  `callback_frame`, `receipt_commit`. Restored-source positive gates are recorded below.
+- [x] Restored-source Release build passed (465 warnings, zero errors; 2m03s), with the normal
+  localization hook enabled. Release procgen units passed 809 cases; focused runtime gas/planning/
+  sandbox integrations passed 29; native flag/context serialization cases passed 23. Zero failed/
+  skipped. Evidence: `.ks_procgen_ownedgas_final_release.log`,
+  `.ks_procgen_ownedgas_release_{units,integration,engine}.log`, and
+  `ks_ownedgas_release_{units,integration,engine}.trx`. Fresh Debug and final retention audit are
+  recorded below.
+- [x] Fresh restored Debug build with `--no-incremental` passed (1,066 warnings, zero errors;
+  7m08s), normal localization hook enabled. Final procgen units passed 809 cases; selected
+  integrations/sandbox passed 595; native serialization cases passed 23. Zero failed/skipped.
+  The definitions/case audit retains all previous 809 units, 578 integrations and seven engine
+  contracts, every current 595-case preflight integration and all 23 native flag/context cases.
+  The actual sandbox definition maps to Passed in both configurations. Evidence:
+  `.ks_procgen_ownedgas_final_{debug,units,integration,engine,audit}.log`,
+  `ks_ownedgas_final_{units,integration,engine}.trx`. Full-repository tests are not claimed.
+- [x] Remove both completed runners and normalize the document. All 13 touched source/document
+  files pass strict UTF-8/no-BOM, CRLF and trailing-whitespace checks; all 48 Markdown fences are
+  balanced. Main and engine `git diff --check` pass. Evidence:
+  `.ks_procgen_ownedgas_final_style.log`. Module revisions and unrelated working changes were
+  preserved; no commits or remote updates were made.
+- [x] Award two operational utility points for the verified closed private-grid InitialOnly
+  workflow (utility subtotal 4/12, overall 64/100). No duplicate contract, layout or lifecycle
+  credit is assigned for the supporting serializer, binding or ownership work. The 80% goal
+  remains active and unachieved.
+- [x] Complete live preferred-gas omission handling; see the 2026-10-21 rewrite ledger above.
+- [ ] Continue required stable-at-rest simulation and hosted/preserved gas context. The operational
+  adapter verifies initial values on private owned grids and can omit unsupported preferences;
+  it does not complete R11, simulation isolation or publication.
+
+### Candidate gas binding integration (2026-10-20, R09/R11)
+
+- [x] Bind request/area/room/gas-domain declarations to each complete candidate, retaining
+  individual verification requirements and reporting preferred omissions. Reject unknown targets,
+  equal-priority disagreement, incompatible required states and writes outside owned gas masks.
+- [x] Derive proposed gas-transfer components from retained prototype airtight defaults and exact
+  nominated placements, including rotated directional blockers. Exclude unanchored supported
+  members; never substitute walking connectivity for gas connectivity.
+- [x] Run gas binding inside the primary configuration/subdivision retry transaction. Retain only
+  accepted bindings in its identity and artifacts, and charge failed attempts against shared work.
+- [x] Keep electrical and live atmosphere initialization unsupported until their adapters exist.
+  Binding is planning intent; closure, initial fill, stable-at-rest and publication remain unverified.
+- [x] Verify scope/precedence, whole-candidate rejection, retry, deterministic identity, masks,
+  supported placements and budget boundaries with focused tests and meaningful source mutations.
+- [x] Run Release, fresh Debug, actual sandbox and retained procgen/engine regression gates.
+
+Verified scope and evidence:
+
+- Gas bindings retain each demand's requirement, tolerance and observation interval separately.
+  A required initial fill plus a compatible preferred stable-at-rest request does not become a
+  required stability promise. Required nominal state wins over preferred state; incompatible
+  preferred demands and preferred rooms without volume receive explicit omissions.
+- Topology uses both endpoints of each cardinal edge and combines anchored blockers, including
+  the engine's independent no-air flag contribution. A closed all-direction blocker may still
+  hold gas when its no-air flag is false. Prototype facts, domains and binding identities are
+  detached; work counters never contribute to semantic identity.
+- The primary server planning entry captures initial prototype facts before search. Gas binding
+  runs after the complete furnishing/light/access candidate, inside its existing retry transaction.
+  Failed gas attempts retain diagnostics and spent work; they expose no reusable room artifacts.
+- Hosted entrances, constants and preserved gas still require a real gas-transfer context adapter.
+  This gas path rejects those cases instead of substituting an empty exterior. Electrical
+  declarations/reservations remain unsupported. Gas-bearing scene allocation remains unsupported.
+- Initial twenty binding cases passed. The next thirty-five-case pure run and ten-case integration/
+  sandbox run passed after fixture corrections: retry fixtures now have door materials and the
+  engine comparison has an explicit hull envelope. These runs precede the final no-air flag and
+  hosted-context refinements. Evidence: `.ks_procgen_gasbindings_{tests,refined}_build.log`,
+  `.ks_procgen_gasbindings_{preflight,refined}_{units,integration}.log` and corresponding TRXs.
+  No full-system completion or weighted credit is claimed from these preliminary runs.
+- [x] Preflight with the no-air contribution and hosted-context guards passed all 809 units and
+  all 578 selected integration/sandbox cases, zero failed/skipped. Definitions/case audit retains
+  every prior 773-unit and 567-integration case, and identifies the actual sandbox definition.
+  The legacy no-gas stage assertion now explicitly names its seven stages and checks `Gas == null`;
+  it no longer assumes every optional enum stage must run. Evidence:
+  `.ks_procgen_gasbindings_{preflight,legacy}_build.log`,
+  `.ks_procgen_gasbindings_preflight_all_units.log`, `.ks_procgen_gasbindings_legacy_integration.log`,
+  `.ks_procgen_gasbindings_preflight_audit.log`, `ks_gasbindings_preflight_all_units.trx`,
+  `ks_gasbindings_legacy_integration.trx`.
+- [x] Seven compile-valid source mutations produce ten real assertion failures, four unaffected
+  passing parameter cases and zero skips: required-state conflict (one failure), preserved/narrowed
+  gas ownership (two), directional rotation (two), supported-member exclusion (two), independent
+  no-air contribution (one), shared work charges (one), and primary binding bypass (one).
+  Every mutation builds before testing; failure inspection requires an actual assertion. Exact
+  original source bytes are restored in `finally` and compared after the run. Evidence:
+  `.ks_procgen_gasbindings_mutations_summary.log`,
+  `.ks_procgen_gasbindings_mutation_<name>_{build,tests}.log`, and
+  `ks_gasbindings_mutation_<name>.trx`, for `required_states`, `gas_ownership`,
+  `directional_rotation`, `supported_barriers`, `no_air_contribution`, `shared_work`,
+  `primary_binding`. Restored-source positive gates follow; mutation binaries are not green evidence.
+- [x] Restored-source Release build passed (952 warnings, zero errors; 1m50s). The normal
+  localization hook was enabled. Release gas units passed 36 cases; gas/sandbox integrations
+  passed 12 cases, zero failed/skipped. Evidence: `.ks_procgen_gasbindings_final_release.log`,
+  `.ks_procgen_gasbindings_release_{units,integration}.log`, and corresponding
+  `ks_gasbindings_release_{units,integration}.trx`.
+- [x] Fresh restored Debug build with `--no-incremental` passed (1,066 warnings, zero errors;
+  6m45s), normal localization hook enabled. Final units passed 809 cases; selected integrations/
+  sandbox passed 578; native engine contracts passed seven. Zero failed/skipped. Definitions/case
+  audit retains all prior 773 units, 567 integrations and seven engine contracts, plus all 809/578
+  current preflight cases. The actual sandbox definition is Passed in both configurations.
+  Evidence: `.ks_procgen_gasbindings_final_{debug,units,integration,engine,audit}.log`,
+  `ks_gasbindings_final_{units,integration,engine}.trx`. Full-repository tests are not claimed.
+- [x] Remove both completed temporary runners. All 18 touched source/document files pass strict
+  UTF-8/no-BOM, CRLF and trailing-whitespace checks; all 48 Markdown fences are balanced. Main
+  and engine `git diff --check` pass. Evidence: `.ks_procgen_gasbindings_final_style.log`. Module
+  revisions and unrelated working changes were preserved.
+- [ ] Continue R11 with actual initialized gas-edge inspection and scoped owned tile filling,
+  closure and stable-at-rest evidence. Candidate binding alone earns no completed operational
+  workflow credit; the fixed weighted estimate remains 62/100 and the active 80% goal remains open.
+
+### Source default image work rewrite (2026-10-19, R08/R14, in progress)
+
+Close the repeated/empty prototype-group reconstruction issue identified in the preceding batch
+before continuing source-copy materialization. This is operation-local decode work, not entity state.
+
+- [x] Cache immutable position/rotation/anchor/map-default values once per prototype across all
+  maps in one extraction. Retain captured-image reconstruction and final definition drift checks;
+  do not cache live components, mutable prototype images or data across separate requests.
+- [x] Charge each group and each new default image to extraction graph work. Skip image creation
+  for empty groups while still charging their group read. Add `MaximumDefaultImageCharacters`
+  (default 4,194,304, absolute 16,777,216; zero allows prototype-free sources). Charge canonical
+  body plus metadata input characters once per image, before any field reader runs. This is input
+  size accounting, not a claim of fully metered serializer CPU. Add actual image/character diagnostics;
+  work diagnostics do not alter semantic output identity.
+- [x] Initial cache implementation Debug build passed (403 warnings, zero errors; 1m14s):
+  `.ks_procgen_defaultcache_initial_build.log`. Empty-group skip/read-counter cases are added next.
+- [x] Verify eight new cases using a real prototype field reader to count reconstruction work,
+  including groups, files, separate extractions, exact/short character allowances, empty groups,
+  and invalid limits. Retain all prior source-reference and transient-default cases. Initial six-case
+  preflight retained all 559 prior integrations and passed 565 total. Strengthened seven-case
+  counter run passed; final preflight with graph-before-image coverage passed all 567 integrations,
+  zero failed/skipped, including the sandbox. Evidence:
+  `.ks_procgen_defaultcache_cases_build.log` (403 warnings, zero errors),
+  `.ks_procgen_defaultcache_preflight_tests.log`, `ks_defaultcache_preflight.trx`,
+  `.ks_procgen_defaultcache_counters_{build,tests}.log`, `ks_defaultcache_counters.trx`,
+  `.ks_procgen_defaultcache_imagework_{build,tests}.log`, `ks_defaultcache_imagework.trx`.
+- [x] Detect seven compile-valid mutations with eight assertion failures, zero passing/skipped
+  cases. Bypass cache reuse and reset it per map: each produces four actual field reads versus two.
+  Process empty groups: zero allowance incorrectly rejects. Omit group work: 7 versus 27 graph
+  units. Omit image work or move character checking after reconstruction: two reads versus zero
+  (two character-bound cases). Omit cumulative character charges: the undersized shared allowance
+  incorrectly succeeds. Exact original bytes are restored in `finally`; each failure is checked
+  for an actual assertion. Evidence: `.ks_procgen_defaultcache_mutations_summary.log`,
+  `.ks_procgen_defaultcache_mutation_<name>_{build,tests}.log`, and corresponding
+  `ks_defaultcache_mutation_<name>.trx`, with `cache_reuse`, `per_map_cache`, `empty_groups`,
+  `group_work`, `image_work`, `image_budget_order`, `cumulative_characters`.
+- [x] Restored-source Release build passed (403 warnings, zero errors; 1m19s), and fresh Debug
+  build with `--no-incremental` passed (1,066 warnings, zero errors; 8m50s). Normal localization
+  hook enabled. Evidence: `.ks_procgen_defaultcache_final_{release,debug}.log`.
+- [x] Final procedural units: 773 passed. Selected integrations: 567 passed. Engine contracts:
+  seven passed. Zero failed/skipped cases. Definition/case audit retains all 773 prior units,
+  all 559 prior integrations, all 567 current preflight integrations and all seven engine contracts;
+  the actual `Content.IntegrationTests.Tests.Utility.SandboxTest` definition maps to Passed.
+  Evidence: `.ks_procgen_defaultcache_final_{units,integration,engine,audit}.log`,
+  `ks_defaultcache_final_{units,integration,engine}.trx`. Full-repository tests are not claimed.
+- [x] Remove both temporary scripts after their processes finish. All five edited/new source and
+  document files pass UTF-8/no-BOM, CRLF and trailing-whitespace checks. Main and engine
+  `git diff --check` pass; all 48 Markdown fences are balanced. No module revisions or unrelated
+  working changes were reset. Coverage credit remains 62/100.
+- [ ] Continue full R14 request/serializer work metering and full source-copy/utility/editor exits;
+  no weighted capability credit is assigned merely for this decoder-work optimization.
+
+### Source component reference extraction rewrite (2026-10-19, R08/R09/R10, in progress)
+
+Continue from transform-only source locators to schema-directed reference observations needed by
+the room copier. Validation uses registered serializers without loading source entities or
+inventing live IDs. This is not complete component/container/support closure: client-ignored
+components and unsuccessful validations are listed as known gaps. A custom validator may also
+accept data without exposing its internal references; an empty gap list cannot certify completeness.
+`ComponentReferencesVerified` and `CopyReady` stay false.
+
+- [x] Implement typed `EntityUid`, `NetEntity` and `MapId` observations on component overrides,
+  including nested collections. Charge inspection and reference checks to extraction graph work.
+  Record uninspected component types rather than infer references from numeric-looking strings.
+- [x] Implement selected-room checks for observed references. Reject dangling/cut references;
+  retain selected-grid context anchors and require map references to name its owning source map.
+  Existing transform-branch checks remain independent.
+- [x] Capture entity prototypes referenced by overrides into an extended immutable definition
+  manifest before materialization. Pin original roots and new typed references together; preserve
+  shared definition/reference limits. Add extraction schema 2 identity binding source and extended
+  definition hashes, detached observed links and uninspected-type lists.
+- [x] Replace live prototype reads for source transform defaults with captured prototype images.
+  Keep boundary drift checks for both original and extended definitions.
+- [x] Build and verify existing source-map extraction regressions plus actual nested/reference
+  boundary, context-anchor, override-prototype, opacity, budget and frozen-default cases.
+- [x] Fix engine contextual validator precedence: regular prototype-ID validators previously
+  bypass context overrides, hiding override prototype dependencies. Preserve ordinary/null/tag
+  behavior and isolate the dispatch implementation in a same-folder engine partial extension.
+- [x] Distinguish explicit concrete roots from additional reference seeds in prototype manifests.
+  Override filters can legally name abstract entities; capture their declarations without treating
+  them as spawn requests. Include seed provenance in identity/replay, bound repeated references,
+  and version affected manifests. Explicit abstract-root rejection remains intact. Prototype
+  manifest schema is now 6 and source-map manifest schema is now 8; extraction schema is 2.
+- [x] Initial implementation compiled (403 warnings, zero errors) and retained all 104 prior
+  source-map cases. Added 23 cases; after correcting two test-code analyzer errors, 121/127 passed
+  and six exposed the engine validator precedence bug. The engine fix compiled (1,070 warnings,
+  zero errors) and all 127 source-map cases passed. Evidence:
+  `.ks_procgen_maprefs_initial_{build,tests}.log`, `ks_maprefs_initial.trx`,
+  `.ks_procgen_maprefs_cases_{build,tests}.log`, `.ks_procgen_maprefs_cases_rebuild.log`,
+  `ks_maprefs_cases.trx`, `.ks_procgen_maprefs_context_{build,tests}.log`, `ks_maprefs_context.trx`.
+  Five further seed/abstract/repeated-work cases bring this batch to 28 added cases.
+- [x] Seed-aware Debug build passed (403 warnings, zero errors; 1m02s); full selected preflight
+  passed all 555 integrations, zero failed/skipped, including the actual sandbox case. Evidence:
+  `.ks_procgen_maprefs_seeds_build.log`, `.ks_procgen_maprefs_preflight_tests.log`,
+  `ks_maprefs_preflight.trx`. Final restored-source proof remains pending below.
+- [x] Detect ten compile-valid mutations, with 35 assertion failures and five passing control cases,
+  zero skipped cases. Omit observations (nine failures); invert room membership (two failures/two
+  passes); omit owning-map identity (one failure/three passes); read live transform defaults (one
+  failure); omit inspection work (one failure); omit override prototype seeds (seven failures);
+  omit seed identity (one failure); mislabel known opaque components (two failures); bypass engine
+  context precedence (seven failures); omit returned output witnesses from identity (four failures).
+  Each source is byte-restored in `finally`; assertion-bearing failures are checked independently
+  of native test exit codes. Evidence: `.ks_procgen_maprefs_mutations_summary.log`,
+  `.ks_procgen_maprefs_mutation_<name>_{build,tests}.log`, and corresponding
+  `ks_maprefs_mutation_<name>.trx`, with `observations`, `boundary`, `map_owner`, `frozen_defaults`,
+  `inspection_work`, `prototype_seeds`, `seed_identity`, `opacity`, `context_precedence`,
+  `output_identity`. Debug binaries remain intentionally invalid after these checks until the
+  restored-source final builds below; they are not used as passing evidence.
+- [x] Pass restored-source Release, fresh Debug, focused engine contracts, procedural units and
+  selected integrations including the actual sandbox check. Retain all 773 units, 527 prior
+  integrations and 559 current preflight cases. Detailed evidence follows; temporary-script cleanup
+  and final formatting are recorded separately below.
+- [x] Restored-source Release integration-project build passed (1,072 warnings, zero errors;
+  4m49s), normal localization hook enabled: `.ks_procgen_maprefs_final_release.log`.
+- [x] Fresh restored-source Debug integration-project build passed with `--no-incremental`
+  (1,066 warnings, zero errors; 8m11s), normal localization hook enabled:
+  `.ks_procgen_maprefs_final_debug.log`.
+- [x] Final engine contracts: seven passed. Final procedural units: 773 passed. Final selected
+  integrations: 559 passed. Every run has zero failed/skipped cases. Identity-based result audit
+  retains all 773 prior units, all 527 prior integrations, all 555 first-preflight cases and all
+  559 witness-preflight cases; the actual
+  `Content.IntegrationTests.Tests.Utility.SandboxTest` definition maps to Passed. Evidence:
+  `.ks_procgen_maprefs_final_{engine,units,integration,audit}.log`,
+  `ks_maprefs_final_{engine,units,integration}.trx`. Full repository tests are not claimed; the
+  earlier wider-run/pool-sequence reproduction remains R17 work. Coverage credit remains 62/100.
+- [x] Remove all three temporary mutation/gate scripts after their processes finish. Byte-level
+  checks confirm 14 edited/new source/document files are UTF-8 without BOM, CRLF and free of trailing
+  whitespace. Main and engine `git diff --check` pass; 48 Markdown fences are balanced. Evidence:
+  `.ks_procgen_maprefs_final_format.log`. Ignored logs/TRXs retain test evidence; unrelated work and
+  module revisions were not reset.
+- [x] Bind the actual extracted poses, observed references and known inspection gaps into output
+  identity, not just source/definition input hashes. Validators can consult additional runtime
+  context; equal input hashes alone do not prove equal returned witnesses. Use bounded-memory
+  hashing and test independent witness changes before a copier consumes this identity. Incremental
+  SHA-256 frames source/definition hashes, masks/origins, entity poses/flags, override/removal names,
+  observed links and known gaps. Numeric text is invariant; mask sorting remains within existing
+  mask limits. Hashing does not build one large canonical output string. This identity is not apply
+  permission; full reference/copy verification remains false.
+- [x] Add four independent output-witness identity cases and seven focused engine contract cases
+  covering regular/nullable override precedence, null guards, ordinary fallback, nested collection
+  propagation and invalid type tags. Restored Debug build passed (462 warnings, zero errors;
+  1m15s); all seven engine cases and all 559 selected integrations passed, zero failed/skipped.
+  Evidence: `.ks_procgen_maprefs_witness_{build,engine,preflight}.log`,
+  `ks_maprefs_witness_engine.trx`, `ks_maprefs_witness_preflight.trx`.
+- [ ] Implement complete client/component/container/support dependency extraction and actual
+  source-map materialization before claiming full source-copy readiness or contract credit.
+- [x] **Default-image work rewrite before copying (R08/R14).** The dated rewrite above now caches
+  detached defaults across the entire extraction, skips empty images, charges group/image work and
+  bounds canonical input characters before reconstruction. Repeated-group/file, reader-order and
+  transient-default cases pass. Full serializer/CPU metering remains unverified under R14.
+
+### Typed entity dependency capture rewrite (2026-10-19, R08/R09/R10, in progress)
+
+Extend prototype capture through serialized typed entity references before claiming complete
+referenced-content contracts. This slice covers `EntProtoId`, `EntProtoId<TComponent>` and
+`ProtoId<EntityPrototype>`, including nested serialized collections. Legacy string/custom
+serializers, other prototype kinds, references in ignored client declarations, resource files and
+runtime-generated children still require discovery and freezing. Capturing dependency bodies
+does not yet make callbacks spawn their children from those bodies.
+
+- [x] Implement a deterministic bounded work queue. Deduplicate definitions, charge repeated
+  reference occurrences, terminate cycles, and share existing structural/definition allowances
+  across roots and discovered dependencies. Return no partial manifest on failure.
+- [x] Preserve original root provenance separately from dependency bodies. Replay from those
+  roots under the original limits; do not incorrectly count every dependency as another root.
+  Include roots in manifest identity and compare each placement's fresh dependency bodies.
+  Prototype manifest schema is now 5; containing source-map manifest schema is now 7.
+- [x] Retain bounded abstract entity dependencies as declaration-only records. They cannot be
+  spawned or accepted as concrete root requests. Keep other typed prototype kinds in their
+  ordinary scalar representation without looking them up as entities.
+- [x] Initial Debug build passed (403 warnings, zero errors). Initial selected regression run:
+  504 passed, nine failed, zero skipped, 513 total. Failures exposed old direct-only body-count
+  and `Single()` assumptions. Update assertions to identify their intended root and count all
+  dependency bodies in shared-budget tests; preserve the original test cases.
+  Evidence: `.ks_procgen_entityrefs_initial_{build,tests}.log`, `ks_entityrefs_initial.trx`.
+- [x] Verify 14 new real-engine cases for chains, all wrappers, nested duplicate references, cycles,
+  exact occurrence budgets, atomic failures, child and abstract declaration drift, root identity,
+  snapshot roundtrips and automatic owned-stage rejection/retirement after dependency drift.
+  Updated Debug build passed (401 warnings, zero errors). Selected preflight passed all 527
+  cases, zero failed/skipped, including the sandbox. Evidence:
+  `.ks_procgen_entityrefs_tests_build.log`, `.ks_procgen_entityrefs_preflight_tests.log`,
+  `ks_entityrefs_preflight.trx`. Final restored-source evidence remains pending below.
+- [x] Prove twelve compile-valid mutations fail; restore and byte-verify source in `finally`.
+  Omit ordinary observation (one failure), constrained observation (one failure/three passes),
+  generic entity observation (one failure/three passes), duplicate occurrence charging (two
+  failures/three passes), cycle deduplication (one bounded failure), definition allowance (one
+  failure/two passes), original-root replay (two failures), dependency placement comparison
+  (one failure), abstract declaration bytes (one failure), root identity hashing (one failure),
+  materializable-kind rejection (one failure) and abstract declaration comparison (one failure).
+  Independent result audit confirms all 14 failures across the twelve mutations contain actual
+  assertion mismatches, not setup failures or skipped disposal warnings:
+  `.ks_procgen_entityrefs_mutations_audit.log`. Evidence:
+  `.ks_procgen_entityrefs_mutation_<name>_{build,tests}.log`, corresponding
+  `ks_entityrefs_mutation_<name>.trx`, and `.ks_procgen_entityrefs_mutations_summary.log`, with
+  names `untyped`, `component`, `typed`, `duplicates`, `cycles`, `definitions`, `replay`,
+  `placement`, `abstract`, `root_hash`, `declaration_kind`, `abstract_compare`.
+  Restored Debug build passed (403 warnings, zero errors); all 14 restored dependency cases
+  passed: `.ks_procgen_entityrefs_restored_{build,tests}.log`, `ks_entityrefs_restored.trx`.
+- [x] Restrict per-placement checks to concrete entity/tile kinds. A declaration-only record must
+  not pass because recapturing an unsupported kind produces an empty set whose comparisons are
+  vacuously true. Add a negative assertion and verify concrete prototype images can still retain
+  abstract references. Boundary Debug build passed (401 warnings, zero errors); all 14 dependency
+  cases passed: `.ks_procgen_entityrefs_boundary_{build,tests}.log`, `ks_entityrefs_boundary.trx`.
+  Deliberate guard/comparison regression checks are recorded with the mutation evidence below.
+- [x] Restored-source Release integration-project build passed (403 warnings, zero errors;
+  1m33s), normal localization hook enabled: `.ks_procgen_entityrefs_final_release.log`.
+- [x] Fresh restored-source Debug integration-project build passed with `--no-incremental`
+  (1,066 warnings, zero errors; 6m19s), normal localization hook enabled:
+  `.ks_procgen_entityrefs_final_debug.log`.
+- [x] Final procedural units: 773 passed; selected integrations: 527 passed; zero failed/skipped
+  in either run. Audit class/case identities: all 773 prior units, all 513 prior integrations and
+  all 527 preflight integrations are retained. The actual
+  `Content.IntegrationTests.Tests.Utility.SandboxTest` definition maps to Passed. Evidence:
+  `.ks_procgen_entityrefs_final_{units,integration,audit}.log`,
+  `ks_entityrefs_final_{units,integration}.trx`. This is selected coverage, not a whole-repository
+  integration result; the earlier wider-run/pool sequence remains an R17 obligation.
+- [x] Remove temporary mutation/gate scripts after their processes finish. Confirm the twelve
+  edited/new source/document files are UTF-8 without BOM, use CRLF and have no trailing whitespace.
+  Main and engine `git diff --check` pass; all 48 Markdown fences are balanced. Ignored logs/TRXs
+  retain verification evidence. No module revisions or unrelated working changes were reset.
+- [ ] Complete referenced-content/resource closure and captured child allocation before assigning
+  remaining contract credit. Estimate remains 62/100; operational and publication gates stay open.
+
+### Captured prototype instantiation rewrite (2026-10-18, R08/R09/R10, in progress)
+
+Continue from body identity to actual owned-stage allocation from those bodies. A live prototype
+being equal before/after a callback does not establish which defaults were read in between.
+The main owned entry must use captured defaults for direct entities and relational assembly
+members; complete source-map dependency closure, resource/code freezing and publication remain
+separate open requirements. Legacy individual stage adapters still need consolidation under R10.
+
+- [x] Add a bounded inverse of the canonical body format, without a YAML conversion. Preserve
+  tags, key tags, null flags, ordered sequences and scalar text. Reject malformed lengths/counts,
+  duplicate/unsorted mapping keys, trailing/alternate encodings and depth/node/character excess.
+  Decoding alone performs no component construction or entity allocation. Expose the engine's
+  mapping-key tag setter with an inline provenance marker for lossless reconstruction.
+- [x] Extend entity manifests with complete resolved category metadata, `HideSpawnMenu`, and
+  effective component network-sync defaults. Categories are sorted by ID, bounded to 64 per entity
+  by default (absolute 256), and share the existing structural budget. Serialized entity fields
+  alone omit this resolved state. Version prototype manifests to 4 and source-map manifests to 6.
+- [x] Reconstruct complete private prototype images from immutable strings, with a private
+  non-interning component-registry serializer and readers accepting only invalid world-reference
+  defaults. Restore category/hide metadata and reject serialized/metadata roundtrip drift before
+  accepting an image. Reconstruct each placement separately to isolate successive entities.
+- [x] Add explicit engine allocation from a captured prototype, without prototype-ID lookup.
+  Before allocation callbacks, independently reconstruct private loading and exposed metadata
+  prototypes. Copy serialized node trees explicitly because generated copies may honor `CopyByRef`
+  and ordinary mapping copies share key-tag dictionaries. Pass the private loading source explicitly
+  to the existing component loader, including its network-sync decisions. Avoid the server live-
+  prototype spawn path's tick clearing; client defaults have not been certified identical.
+- [x] Route the main owned entry's direct entities and assembly members through captured allocation,
+  retaining existing initialization, poses, insertion, allocation capture, cleanup and drift guards.
+  Inspect instance metadata prototypes against the captured image when verifying retained scenes.
+- [x] Bound image work before map allocation using `MaximumPrototypeImageCharacters`: default
+  16,777,216, absolute 67,108,864, accounting for four body/metadata image reconstructions per
+  explicit entity. Zero permits floor-only scenes. Actual callback/serializer CPU metering remains R14.
+- [x] Compile the route and verify 193 initial decoder/manifest/source-map/owned-stage/physics
+  cases. Initial compilation exposed the required validators inherited by reference readers;
+  implement them explicitly rather than bypassing the interfaces. Debug rebuild passed (403
+  warnings, zero errors): `.ks_procgen_snapshots_initial_rebuild.log`,
+  `.ks_procgen_snapshots_initial_integration.log`, `ks_snapshots_initial_integration.trx`.
+- [x] Add and pass 32 focused decoder/adversarial cases (17 codec, 15 captured prototype),
+  including actual transient global edits during generated-wall and contained-assembly allocation,
+  metadata mutation before another component loads, separate mutable lists and `CopyByRef` objects,
+  retained metadata drift, category/network capture, malformed IDs/world references, category
+  allowances and pre-allocation image budgets. A relation-free core is optimized into direct
+  placement; use a real computer/disk container relation to prove the assembly branch independently.
+  Decoder visit counts prove node/depth limits stop reconstruction itself. Evidence:
+  `.ks_procgen_snapshots_counters_{build,integration}.log`, `ks_snapshots_counters_integration.trx`.
+- [x] Selected full preflight passed all 513 cases (zero failed/skipped), including the sandbox;
+  ordinary fixtures and prior owned stages remain compatible with the new image route.
+  Evidence: `.ks_procgen_snapshots_preflight_{build,integration}.log`,
+  `ks_snapshots_preflight_integration.trx`. This is pre-mutation evidence, not final restoration proof.
+- [x] Prove ten compile-valid mutations fail, restoring and byte-verifying source in `finally`:
+  omit key-tag restoration (one failure); omit depth guard (one failure, nine visits versus three);
+  omit node guard (one failure, four visits versus three); use live direct spawning (one failure,
+  transient default reaches instance); ignore assembly snapshot spawning (one failure, unsafe scene
+  rejected); use exposed metadata as loading source (one failure, value 99 versus captured 17);
+  use generated copies (one failure, `CopyByRef` payload shared with metadata); bypass instance
+  image comparison (two failures); bypass image-work budget (two failures); omit metadata from
+  identity (one category-hash failure, network case still passes). Evidence:
+  `.ks_procgen_snapshots_mutation_<name>*`, `ks_snapshots_mutation_<name>.trx`, and
+  `.ks_procgen_snapshots_mutations_summary.log`, using `decode_tags`, `decode_depth`,
+  `decode_nodes`, `live_direct`, `live_assembly`, `loading_source`, `copybyref`, `instance_audit`,
+  `image_budget`, `metadata_hash`.
+- [x] Restored-source Release integration-project build passed (1,072 warnings, zero errors;
+  4m03s): `.ks_procgen_snapshots_final_release.log`. Normal localization hook enabled.
+- [x] Fresh restored-source Debug integration-project build passed with `--no-incremental`
+  (1,066 warnings, zero errors; 5m40s): `.ks_procgen_snapshots_final_debug.log`.
+- [x] Final focused procedural unit run: 773 passed, zero failed/skipped, all 773 prior cases
+  retained. Final selected integration run: 513 passed, zero failed/skipped, all 481 prior cases
+  and all 513 preflight cases retained by class/case name. The actual
+  `Content.IntegrationTests.Tests.Utility.SandboxTest` definition maps to Passed. Evidence:
+  `.ks_procgen_snapshots_final_{units,integration}.log`, `ks_snapshots_final_{units,integration}.trx`.
+  Independent audit repeated on 2026-10-19 after the original process handle became unavailable.
+  Full repository integration coverage is not claimed.
+- [x] Remove temporary scripts and pass final main/engine whitespace and Markdown fence checks.
+  Ignored logs/TRXs retain evidence. The existing capability credit remains 62/100: referenced
+  content/project contracts and operational runtime/editor exits are still incomplete.
+- [ ] Continue full component/container/support/reference and resource closure, frozen source-map
+  copying, client agreement and runtime operation. `CopyReady`, engine access, utilities and
+  publication claims remain gated; no weighted credit is assigned to this unverified work.
+
+### Tile prototype/engine binding reconciliation (2026-10-18, R08/R10/R17, in progress)
+
+The wider atlas verification run exposed `UnsupportedPrototypeManifestTileBinding` on a reused
+test pair. Inspection found a supported engine/content condition that the old object-identity
+guard rejected: `PrototypeManager.ReloadPrototypes` creates a new tile prototype, while
+`Shared.Entry.EntryPoint.PrototypeReload` assigns it the registered runtime ID without replacing
+the tile manager's original object. Equal content can therefore have distinct objects. The exact
+test/pool sequence from the wider run is still a separate reproduction obligation below.
+
+- [x] Replace the object-identity requirement between loaded and named tile definitions with
+  complete ordinal canonical body equality. Preserve the actual registry invariant: loaded and
+  named definitions must share a runtime tile ID, and numeric lookup must identify that same
+  registered object. Matching IDs alone never authorize capture.
+- [x] Serialize and charge both loaded and registered tile bodies, including when they are the
+  same object, against one aggregate node/character/depth allowance. Retain the common detached
+  body only after exact equality. Capture cost does not depend on whether reload replaced the
+  prototype object. Declaration capture shares that same allowance.
+- [x] Fresh whole-manifest and per-body verification translate a newly conflicting tile binding
+  to `PrototypeManifestChanged`; direct capture retains `UnsupportedPrototypeManifestTileBinding`.
+  Either case rejects before authorizing a write. Full body comparison still detects equal
+  simultaneous edits to the two objects relative to the captured body.
+- [x] Version prototype-body manifests to 3 and room-map manifests to 5 for the revised binding
+  proof and structural accounting contract. Layout schema remains 2; project schema remains 1.
+- [x] Add nine real-engine cases using supported prototype reload, covering stable identity and
+  owned scene generation, loaded/registered conflicts, loaded/named/numeric ID disagreement,
+  aggregate character/node exhaustion and simultaneous drift. No reflection or transient global
+  prototype substitution is used to construct the reload condition.
+- [x] Initial Debug integration-project build passed (401 warnings, zero errors; 42s). All 153
+  selected prototype-manifest, source-map and owned-scene physics integration cases passed,
+  including all nine new reload/binding cases. Evidence:
+  `.ks_procgen_tilebindings_initial_build.log`, `.ks_procgen_tilebindings_initial_integration.log`,
+  `ks_tilebindings_initial_integration.trx`.
+- [x] Prove six compile-valid regressions fail: restore object identity (one failure after reload),
+  omit full-body comparison (two failures), omit loaded runtime-ID agreement (one failure, two
+  other ID cases still reject), omit numeric object binding (one failure, two others still reject),
+  reset shared accounting before registered-body traversal (two failures), and omit drift-code
+  translation (two failures). Every mutation restores exact source bytes in `finally` and verifies
+  restoration. Evidence: `.ks_procgen_tilebindings_mutation_<name>*` logs and
+  `ks_tilebindings_mutation_<name>.trx`, using `identity`, `bodies`, `runtime`, `numeric`,
+  `aggregate`, `driftcode`; `.ks_procgen_tilebindings_mutations_summary.log` retains counts.
+- [x] Restored-source Release integration-project build passed (401 warnings, zero errors;
+  1m23s), with the normal localization hook enabled: `.ks_procgen_tilebindings_final_release.log`.
+- [x] Fresh restored-source Debug integration-project build passed with `--no-incremental`
+  (1,066 warnings, zero errors; 7m34s): `.ks_procgen_tilebindings_final_debug.log`.
+- [x] All 773 focused procedural unit cases passed after that rebuild (zero failed/skipped):
+  `.ks_procgen_tilebindings_final_units.log`, `ks_tilebindings_final_units.trx`.
+- [x] All 481 selected integration cases passed (zero failed/skipped), including all nine new
+  tile-binding cases and the actual `Content.IntegrationTests.Tests.Utility.SandboxTest`
+  definition/result. Retained-case auditing by class/case name preserves all 472 prior integrations
+  and all 773 prior units. Evidence: `.ks_procgen_tilebindings_final_integration.log`,
+  `ks_tilebindings_final_integration.trx`. Filter:
+  `FullyQualifiedName~KsProcgen|FullyQualifiedName~SandboxTest`. Full repository integration
+  coverage and exact reproduction of the earlier wider-run sequence are not claimed.
+- [x] Remove both temporary tile-binding mutation/final-gate scripts; retain ignored logs/TRXs.
+  Final main/engine whitespace checks pass; all 48 Markdown fences balance. No weighted capability credit
+  is claimed for this correctness rewrite.
+- [ ] Continue complete referenced-content capture and frozen instantiation. No capability credit
+  is assigned for this correctness rewrite; the overall estimate remains approximately 62%.
+
+### Explicit source atlas extraction rewrite (2026-10-18, R08/R09, in progress)
+
+Room asset geometry is room-local. A source binding may select `sourceGridUid` (a positive
+map-local YAML UID) and `sourceOrigin` (the native tile corresponding to room-local `(0, 0)`).
+The source coordinate is `roomCell + sourceOrigin`. This translation only selects source content;
+family/member placement, ports and exterior facades continue to use room-local coordinates.
+Without a grid selector, exactly one occupied unit grid must match. An explicit selector never
+falls back to another grid, even if that other grid matches perfectly. Source origins may be
+negative. Native tile coordinates after translation must remain within +/-1,000,000 per axis.
+
+Example room declaration inside a layout document with `schemaVersion: 2`:
+
+```yaml
+rooms:
+  AtlasBooth:
+    sourceKey: station-room-atlas
+    contentFingerprint: 'sha256:<exact map byte digest>'
+    sourceGridUid: 17
+    sourceOrigin: 40,-12
+    cells:
+    - 0,0
+    - 1,0
+    - 0,1
+```
+
+- [x] Add detached source selector/origin fields to room assets and source reference records.
+  Include both fields in canonical layout/project identity without changing fitting geometry.
+- [x] Introduce layout schema 2; migrate schema 1 with absent selectors/zero origin to canonical
+  schema 2. Reject explicit extraction fields under schema 1, unsupported versions, nonpositive
+  grid UIDs, selectors without source bindings and out-of-range translated masks.
+- [x] Reconcile translated masks against frozen decoded source cells. Index only the explicitly
+  selected grid when supplied; preserve cumulative probe budgets, occupancy checks, scale rejection,
+  exact project binding, cancellation and atomic failure. Retain native cells and the source origin.
+- [x] Extract hierarchy membership in the selected native grid and mask. Retain native grid poses
+  and original parent-local poses; add `RoomPosition` by subtracting the source origin after composing
+  the hierarchy. The future copier must rebase grid children only; changing every child-local pose
+  would apply the offset repeatedly.
+- [x] Version the static room-map manifest to 4 because canonical project/layout serialization
+  and source-selection semantics have changed. Prototype-body manifest remains version 2.
+- [x] Initial validation: Debug integration-project build passed (952 existing warnings, zero errors);
+  37 layout unit cases and 123 selected source-map/project integration cases passed. The batch adds
+  nine unit cases and nine integration cases. Logs: `.ks_procgen_atlas_initial_build.log`,
+  `.ks_procgen_atlas_initial_units.log`, `.ks_procgen_atlas_initial_integration.log`.
+- [x] Prove five compile-valid mutations fail, restoring exact source bytes in `finally` after
+  every mutation: reverse grid selection (two failures, selected grid swapped); ignore mask origin
+  (one failure, negative atlas no longer matches); ignore entity rebasing (one failure, native
+  position returned as room position); omit selected grid ID from identity (one failure, origin
+  case still passes); widen translated X bounds (one failure, translated-range case wrongly
+  accepted; six other invalid-input cases still reject). Logs and TRXs use
+  `.ks_procgen_atlas_mutation_<name>*` / `ks_atlas_mutation_<name>.trx` for `grid`, `origin`,
+  `roompose`, `gridhash`, `bounds`. `.ks_procgen_atlas_mutations_summary.log` retains counts.
+- [x] Restored-source Release integration-project build passed (952 warnings, zero errors;
+  3m27s): `.ks_procgen_atlas_final_release.log`. Normal localization hook enabled.
+- [x] Fresh restored-source Debug integration-project build passed with `--no-incremental`
+  (1,066 warnings, zero errors; 6m34s): `.ks_procgen_atlas_final_debug.log`.
+- [x] All 773 focused procedural unit cases passed after the restored-source rebuild (zero failed
+  or skipped): `.ks_procgen_atlas_final_units.log`, `ks_atlas_final_units.trx`.
+- [x] All 472 selected integration cases passed (zero failed or skipped), including the actual
+  `Content.IntegrationTests.Tests.Utility.SandboxTest` definition/result. Audit by class name and
+  case name retained all 463 prior integration cases; the unit audit retained all 764 prior unit
+  cases. Evidence: `.ks_procgen_atlas_final_integration.log`, `ks_atlas_final_integration.trx`.
+  Final filter: `FullyQualifiedName~KsProcgen|FullyQualifiedName~SandboxTest`. Main/engine whitespace
+  checks pass. Full repository integration coverage is not claimed; the expanded-run failure below
+  remains an explicit open obligation. The weighted estimate remains approximately 62%.
+- [x] Remove the two temporary atlas mutation/final-gate scripts; retain ignored logs and TRXs.
+  Final document fence count is 48 (balanced). No build or test process remains running.
+- [ ] **R17 regression follow-up: prototype/tile registration after pooled content changes.** An
+  accidental wider filter selected the complete construction/damage/device-linking classes rather
+  than only their procgen fixture parameters. During that run,
+  `KsProcgenOwnedScenePhysicsTests.ActualFixtureOverlapIsDetectedAcrossTheCompleteOwnedScene`
+  rejected with `UnsupportedPrototypeManifestTileBinding` on a reused pair. Preserve the guard:
+  a tile registered with the tile manager must agree in complete body and runtime binding with
+  the prototype being captured (see the subsequent tile-binding reconciliation above). Reproduce the
+  responsible test/pool/content-change sequence, determine why the loaded/registered objects differ,
+  and repair conflicting registration or fixture isolation if necessary. Equivalent-body tile reload
+  is now independently reproduced and supported by the subsequent tile-binding rewrite above;
+  confirm whether it fully explains this wider run before closing this sequence-specific task.
+  Evidence: `.ks_procgen_atlas_overbroad_integration.log`; that expanded run was
+  deliberately aborted and does not supply a passing gate. The intended previous selection is
+  `FullyQualifiedName~KsProcgen|FullyQualifiedName~SandboxTest`, which also selects the existing
+  parameterized procgen prototype checks. The final gate audits retention against all 463 prior cases.
+- [ ] Continue R08 component/container/support/reference closure and frozen instantiation, followed
+  by R09 hybrid materialization. `ComponentReferencesVerified` and `CopyReady` remain false. This
+  extraction contract grants no live write authority and adds no weighted capability credit.
+
+### Resolved declaration and mapping-key identity rewrite (2026-10-17, R08/R15, in progress)
+
+Direct prototype identity must include resolved declaration data that has no server component
+instance, notably intentionally ignored client-only components. Capture the engine's inheritance-
+composed `TryGetMapping` result alongside each existing live serialized body; retain detached
+canonical strings rather than cached mutable `GetPrototypeData` values. Neither declaration data
+nor live instance bodies alone substitute for the other.
+
+- [x] Add `CanonicalDeclaration` to direct entity/tile body records and include it in fresh record
+  comparison/content identity. Charge live and declaration nodes/characters to one shared capture
+  allowance. Bound/validate both component registries and normalize only their entry ordering;
+  preserve ordered data sequences and every value/container tag.
+- [x] Close the canonical mapping-key tag omission using a supported public engine accessor.
+  `MappingDataNode.GetKeyTag` reads both parser-retained key tags and representation-model key nodes.
+  The small marked engine API change avoids private-field reflection and does not mutate mappings.
+  Root component sorting uses a bounded temporary sequence and does not rewrite shared declarations.
+- [x] Advance prototype-body manifest schema/hash to 2 and source-map manifest schema/hash to 3
+  because their represented identity changes. Canonical project bodies also gain key-tag identity;
+  the ordinary project/request authoring schema and geometric planning hashes do not change.
+- [x] Verify inherited/ignored client declaration fields, detached strings, tile declarations,
+  tagged keys from both engine representations, registry-order normalization, meaningful sequence
+  order, invalid registries, aggregate budgets and main owned-stage drift rejection without spawning.
+  All 125 focused prototype/map-source cases pass (113 retained plus 12 declaration cases).
+  This includes retaining the registry's own sequence tag and charging live plus declaration text
+  to one allowance. Evidence: `.ks_procgen_declarations_aggregate.log` and
+  `ks_declarations_aggregate.trx`. Earlier missing-prototype error-code regressions were corrected
+  by preserving prototype/tile existence checks before declaration lookup.
+- [x] Prove nine critical paths under compile-valid mutations and restore exact source bytes in
+  `finally`: replace declarations with live data (two failures), ignore declarations in comparison
+  (one), omit declarations from hashes (one), ignore key tags (two), omit registry normalization
+  (one), lose the registry sequence tag (one), sort meaningful sequences (one), reset live/declaration
+  accounting (one), and remove the engine representation-model key-tag fallback (one failure/one
+  passing case). The final mutation includes an engine rebuild; its intended assertion fails.
+  Evidence: `.ks_procgen_declarations_mutation_` build/test logs and corresponding
+  `ks_declarations_mutation_` TRXs for `declaration`, `comparison`, `hash`, `keytags`, `registry`,
+  `sequencetag`, `ordered`, `aggregate`, `representation`. Compiler/setup failures are not evidence.
+- [x] Run restored Release, fresh Debug, procedural units/integrations and the real sandbox check;
+  retain all preceding 451 integration definitions. Verify the engine API change as part of that gate.
+  Final verification completed 2026-10-18. Release: 1072 warnings, zero errors (including rebuilt
+  engine dependencies); fresh `--no-incremental` Debug: 1066 warnings, zero errors. All 764 procedural
+  units and 463 selected integrations pass with zero failures/skips. Class/name comparison retains
+  all prior 451 definitions and confirms 12 new declaration cases (30 total prototype-manifest cases).
+  The exact `Content.IntegrationTests.Tests.Utility.SandboxTest` definition maps to Passed.
+  Evidence: `.ks_procgen_declarations_final_{release,debug,units,integration}.log` and
+  `ks_declarations_final_{units,integration}.trx`. Full repository integration coverage was not run.
+  Temporary mutation/build scripts are removed; ignored logs/TRXs retain the evidence. The marked
+  engine accessor edit remains in the `RobustToolbox` worktree; it is the only engine-submodule edit
+  in this batch. No commit, reset or submodule synchronization was performed. Current fixed-weight
+  expanded coverage remains approximately 62%; broader content-closure/project delivery exits remain.
+- [ ] Finish transitive prototype/resource/code closure, portable manifests and frozen supported
+  instantiation. In particular, raw client-only declarations do not capture client defaults supplied
+  by code, referenced textures/audio or dynamic component behavior. The current 80% milestone and
+  remaining contract points stay open until those broader exits have acceptance evidence.
+
+### Source entity hierarchy extraction (2026-10-17, R08/R09, in progress)
+
+Continue the static map-copy adapter with a read-only entity extraction step. Use the frozen source
+bytes and the exact captured project/native masks; never instantiate source entities to discover
+their membership. Transform override fields merge with verified prototype defaults, while parent
+IDs remain map-local references. No world UID or shared mutable DataNode is retained in the result.
+Known source component names include types intentionally ignored on the server, such as `Sprite`.
+Their override/removal locators and original bytes remain intact without component deserialization;
+unknown names still fail. Server prototype bodies alone do not capture client-only defaults or
+their transitive resources, which remain part of the open complete-content manifest work.
+Use the engine's public `TryGetMapping`/`GetPrototypeData` APIs when extending that capture to raw
+prototype declarations. Do not mistake `GetPrototypeData`'s frozen outer dictionary for immutable
+content: its component values are mutable `MappingDataNode` objects. Snapshot the actual mappings,
+account for inheritance and the separately stored key tags, and retain existing live-body drift
+checks rather than replacing them with a raw declaration hash.
+
+| Extraction limit | Default | Supported range / charged work |
+| --- | ---: | --- |
+| Mask cell probes | 524,288 | 0-2,097,152, using the shared native-mask index/query counter |
+| Entity graph work | 1,048,576 | 0-4,194,304, shared across all files and room extractions |
+| Parent depth | 128 | 1-512, counting the complete source parent chain, including map/grid roots |
+| Extracted members | 4,096 | 0-65,536, cumulative across all requested room extractions |
+
+Graph work charges source rows, override/removal entries, unresolved/resolved parent visits and
+both room selection/output scans. Failed branches do not refund work. Primitive parsing, immutable
+source DataNode reconstruction, sorting and direct-definition serialization still need complete R14
+CPU/memory accounting; these counters do not certify the entire operation's cost.
+
+- [x] Add bounded source-row/component traversal, finite local poses and explicit map-local parent
+  parsing. Preserve local/relative-to-grid poses, anchoring/no-local-rotation facts, override/removal
+  type names and qualified room/resource/grid/entity locators. Check direct definition identity
+  before and after extraction; boundary checks still do not establish frozen instantiation.
+- [x] Resolve parent chains iteratively with shared work/depth bounds, cycle/missing-parent checks,
+  stable parent-before-child output and a fresh local coordinate frame at each grid. Reject nested
+  grids and invalid/unsupported core removals. Source map world translations/rotations must not
+  leak into grid-local extraction coordinates.
+- [x] Select origins using floor-to-cell coordinates and require complete non-grid transform
+  branches: masks cutting parent/child membership reject instead of dropping or orphaning members.
+  Empty selections remain valid. Bound cumulative output across room extractions atomically.
+- [x] Verify real and synthetic hierarchies, prototype defaults/overrides, radians/degrees, negative
+  cell coordinates, source order, missing/cyclic parents, depth/work/output exhaustion, cancellation,
+  cross-boundary branches and stale definitions/projects without allocating source entities.
+  All 95 selected source cases pass: 68 retained map/decoder/mask cases and 27 new extraction cases.
+  The real `/Maps/Test/empty.yml` yields its two spawn markers at native (-0.5,-0.5) without loading
+  a map or running initialization. Parent-first descriptors remain stable when source groups reverse;
+  source map/grid world offsets do not alter local poses. Empty complete branches may be excluded,
+  while either direction of a cut branch rejects. Evidence: `.ks_procgen_entity_extract_real.log`
+  and `ks_entity_extract_real.trx`. The earlier expanded run exposed server-ignored `Sprite` removal;
+  registered-or-ignored type recognition fixes it without silently dropping the original data.
+- [x] Prove ten critical guards under compile-valid mutations and restore exact source bytes in
+  `finally`: remove parent rotation (four failures); leak grid source poses (two failures/two passing
+  cases); allow split branches (two/eight); round negative coordinates (one failure); ignore depth
+  limits (one/three); ignore cumulative output (one failure); skip definition drift rejection (one);
+  bypass graph work (one/three); sort by ID instead of ancestry (four); accept nested grids (one).
+  All failures are the intended fixture assertions, not compiler/setup failures. Evidence:
+  `.ks_procgen_entity_extract_mutation_` build/test logs and corresponding
+  `ks_entity_extract_mutation_` TRXs for `composition`, `gridframe`, `branches`, `floor`, `depth`,
+  `output`, `definitions`, `work`, `ordering`, `nested`.
+- [x] Run restored Release, fresh Debug, procedural units, retained/new integrations and actual
+  sandbox validation. Retain all preceding 424 definitions and record verified final counts.
+  Restored Release: 403 existing warnings, zero errors. Fresh `--no-incremental` Debug: 1066 existing
+  warnings, zero errors. All 764 procedural units and 451 selected integrations pass with zero
+  failures/skips. Class/name comparison retains all prior 424 definitions and confirms 27 new cases
+  (95 total source cases). The exact `Content.IntegrationTests.Tests.Utility.SandboxTest` definition
+  maps to Passed. Evidence: `.ks_procgen_entity_extract_final_{release,debug,units,integration}.log`
+  and `ks_entity_extract_final_{units,integration}.trx`. Full repository integration coverage was
+  not run. Temporary mutation/build scripts are removed; ignored logs/TRXs retain the evidence.
+  The fixed-weight expanded estimate remains approximately 62%; transform ancestry alone does not
+  complete source dependency closure, immutable instantiation or owned hybrid materialization.
+- [ ] Resolve all component entity references, container/support ownership and activation/removal
+  semantics before copy-ready output. A transform-descendant set is not complete component dependency
+  closure. `ComponentReferencesVerified` and `CopyReady` remain false; all general override fields
+  remain located in the immutable original map bytes for the later supported instantiation adapter.
+- [ ] Connect full immutable source instantiation to the owned hybrid transaction, verify physical
+  hull/ports/access/utility operation and preserve constants before publication. No new capability
+  credit or 80% milestone completion comes from this preliminary extraction step alone.
+
+### Static map chunk decoding and native-mask reconciliation (2026-10-17, R08/R09, in progress)
+
+Continue the source adapter before enabling hybrid map writes. Version-6/7 tile-table aliases use
+nonnegative 32-bit IDs; they must not be confused with resolved runtime tile indices. The inspector
+now removes its previous unsigned-16-bit alias ceiling and rejects duplicate numeric aliases even
+when their textual keys differ. Source manifest schema/identity advances to version 2.
+
+| Decode/matching allowance | Default | Supported bound / accounting scope |
+| --- | ---: | --- |
+| Source chunks | 1,024 | 1-4,096, shared across all files/grids |
+| Decoded tile cells, including empty cells | 262,144 | 1-1,048,576, shared across all files/grids |
+| Decoded payload bytes | 2,097,152 | 1-8,388,608, checked before exact buffer allocation |
+| Chunk side length | 16 | Explicit source sides 1-256; chunk and grid sides must agree |
+| Native tile coordinates | Source values | Each axis stays within -1,000,000 through 1,000,000 |
+| Mask index visits plus cell queries | 524,288 | 0-2,097,152, shared across all room extractions |
+
+Captured grids retain tile size as source metadata; native room-mask matching accepts only unit
+tiles. These counters bound this adapter's structural work, not all serializer/parser CPU or a
+future live loader's component initialization and callback work.
+
+- [x] Implement read-only decoding matching `MapChunkSerializer`: chunk versions 1-5 have 4-byte
+  tiles, version 6 has 6-byte tiles, and version 7 has 7-byte tiles. Preserve flags, variants and
+  rotation/mirroring, all cells including empty ones, grid-local coordinates and map-local grid UIDs.
+- [x] Check exact payload lengths, declared grid/chunk dimensions, matching unique chunk indices,
+  alias resolution and coordinate bounds. Share chunk/cell/decoded-byte allowances across every file
+  in one capture. Allocate only the budgeted exact base64 destination. Do not invoke grid serializers
+  or change `SuppressOnTileChanged`. Inherited prototype grids remain explicitly unsupported.
+- [x] Validate the decoder against real and synthetic old/new chunk fixtures, malformed payloads,
+  large aliases, duplicate numeric indices, cancellation and cumulative decode budgets.
+  All 68 map-capture/decoder/mask cases pass in `.ks_procgen_chunks_contracts.log` and
+  `ks_chunks_contracts.trx`: 38 retained cases and 30 new cases. The real map fixture also decodes
+  its default-size chunks. Live probe-grid tile notifications work after successful and rejected
+  capture; the test observes public behavior rather than reflecting into internal engine flags.
+- [x] Reconcile native extraction masks against decoded unit-grid cells, reject missing/empty cells
+  and ambiguous source grids, and retain exact source binding plus work counts. This verifies only
+  occupied source tiles, not clean passage, hull/ports, entities, support or room operation.
+  `TryReconcileRoomMasks` requires the captured canonical project and shares one index/probe budget
+  across room extractions, returning no partial result on exhaustion. A four-cell index plus two
+  one-cell room queries consumes exactly six probes; five rejects. Reconciliation can use frozen
+  sources after the original resource becomes unavailable. Its result names the source manifest,
+  resource path, map-local grid UID and immutable native extraction mask, not a live entity handle.
+- [x] Prove ten critical decode/reconciliation checks with compile-valid mutations and restore exact
+  source bytes in `finally`. Narrowing modern aliases: two failures/two passing cases; accepting
+  short payloads: one failure/eleven passing cases; ignoring stored indices: one/eleven; ignoring
+  grid/chunk size mismatch: one/eleven; resetting decode allowances per file: three failures; treating
+  empty tiles as occupied: one/six; accepting ambiguous source grids: one/six; bypassing shared mask
+  quotas: one failure; accepting stale project geometry: one/six; ignoring inherited grid data: one
+  failure. Each failure is an actual fixture assertion, not a setup/compiler failure.
+  Evidence: `.ks_procgen_chunks_mutation_` build/test logs and corresponding `ks_chunks_mutation_`
+  TRXs for `alias`, `length`, `index`, `dimensions`, `cumulative`, `space`, `ambiguity`, `maskbudget`,
+  `project` and `inherited`.
+- [x] Run restored Release, fresh Debug, procedural units, retained/new integrations and actual
+  sandbox. Retain all preceding 394 integration definitions and record the final counts.
+  Restored Release: 403 existing warnings, zero errors. Fresh `--no-incremental` Debug: 1066 existing
+  warnings, zero errors. All 764 procedural units and 424 selected integrations pass with zero
+  failures/skips. Class/name comparison retains all prior 394 definitions and confirms 30 new cases
+  (68 total map/decoder/mask cases). The exact `Content.IntegrationTests.Tests.Utility.SandboxTest`
+  definition maps to Passed. Evidence: `.ks_procgen_chunks_final_{release,debug,units,integration}.log`
+  and `ks_chunks_final_{units,integration}.trx`. Full repository integration coverage was not run.
+  Temporary mutation/build scripts are removed; ignored logs/TRXs retain the evidence. The weighted
+  expanded estimate remains approximately 62%; native occupied-tile matching does not complete the
+  remaining content closure, physical-source or owned hybrid-copy exits.
+- [ ] Complete source transforms/entity dependency extraction, physical hull/port reconciliation,
+  transitive content identity and immutable instantiation before owned hybrid copying/publication.
+  The active 80% milestone remains open; this unfinished source rewrite earns no new credit.
+- [x] Version explicit source-grid selection and extraction-coordinate authoring for ambiguous
+  atlases; retain automatic unique-grid matching as the default. Implemented by the 2026-10-18
+  atlas extraction rewrite above; that batch's verification ledger governs its current evidence.
+
+### Static room-map content capture rewrite (2026-10-17, R08/R15, in progress)
+
+`KsProcgenRoomMapCaptureSystem` binds a captured planning project to actual content-resource map
+bytes. Source keys remain symbolic: a trusted server dictionary resolves keys to canonical
+`/Maps/...yml` or `.yaml` resource paths. Editor/project data never resolves directly to disk or
+user-data paths. Existing opaque fingerprints remain valid editing declarations but actual source
+capture requires `sha256:<64 hexadecimal digits>` matching the observed bytes. Every bound room,
+including unselected alternatives, participates; geometry-only rooms do not become copied content.
+
+The manifest retains the canonical complete project declaration body, exact detached map bytes,
+ordinal room/key/path bindings, format/entity metadata and direct entity/tile prototype bodies from
+both map tables and every area's theme candidates. It compares actual values and bytes on fresh
+verification, not only declaration hashes. Snapshot streams are read-only and do not expose buffers;
+copies cannot alter the retained source. Server bindings are detached before any resource callbacks.
+
+This is read-only static capture, not map instantiation, mask/port reconciliation, transitive
+component/resource/code closure, frozen instantiation, replay import or verification of room operation.
+It never invokes the engine loader (which can prefer user data and allocate/initialize entities).
+The map inspector currently supports formats 6 and 7, indexes registered override component types,
+checks local UID uniqueness and direct references, and retains all other source bytes unchanged.
+Serialized component fields are not deserialized or certified here. Duplicate YAML keys, anchors,
+aliases, multiple documents, invalid UTF-8 and unsupported structures fail atomically.
+Constant-region source content and live host context are not resolved by this room-source adapter;
+the owned entry retains its `OwnedStageContextCaptureRequired` refusal for those contexts.
+
+File count, per-file/total byte probes, cumulative YAML event nodes, nesting, scalar size, cumulative
+declared entities and direct definition budgets are bounded. Non-seekable/short-read streams work;
+all opened streams close on failure/cancellation. YAML event preflight precedes recursive DataNode
+construction, and aliases cannot expand a small file into an unbounded graph. Parser tokenization
+and trusted project/definition serialization still do not establish complete R14 CPU accounting.
+Canonical project declarations have separate node/character/depth limits, independent of the
+definition limits; `ProjectNodes`/`ProjectCharacters` report their consumed structural work.
+
+- [x] Implement detached map bytes, server-only source bindings, expected/observed SHA-256 checks,
+  bounded event preflight, static direct-reference inspection and full declaration/body comparison.
+- [x] Initial 29 integration cases pass, including actual `/Maps/Test/empty.yml`, both supported
+  formats, buffer isolation, read-time binding mutation, prototype drift, invalid sources, short
+  non-seekable reads, cancellation and resource disposal. Evidence: `.ks_procgen_roommap_initial.log`
+  and `ks_roommap_initial.trx`.
+- [x] Complete multi-file cumulative budget, geometry-only project candidate, duplicate direct map
+  reference occurrences and invalid UTF-8 cases. All 75 selected map/project/prototype cases pass:
+  38 new map cases plus 37 retained project/prototype cases. Evidence:
+  `.ks_procgen_roommap_occurrences.log` and `ks_roommap_occurrences.trx`.
+- [x] Prove eight critical checks fail under compile-valid mutations and restore exact source bytes.
+  Fingerprint bypass: one failure/seven passing cases; live binding reuse: one failure; byte guard
+  bypass: two failures/five passing cases; depth bypass: one failure/six passing cases; premature
+  reference deduplication: one failure; resetting YAML work between files: five failures, including
+  real cumulative-budget acceptance and false reported totals; ignoring canonical project bodies:
+  one failure; comparing only definition counts: one failure. Each source file is restored to its
+  exact prior bytes in `finally`. Evidence: `.ks_procgen_roommap_mutation_` build/test logs and
+  corresponding `ks_roommap_mutation_` TRXs for `fingerprint`, `bindings`, `bytes`, `depth`,
+  `occurrences`, `cumulative`, `project` and `definitions`. Compile-invalid variants are not proofs.
+- [x] Run restored Release, fresh Debug, all procedural units/integrations and the actual sandbox
+  check. Retain the preceding 356 integration definitions and update the verified totals.
+  Restored Release passes with 403 existing warnings and zero errors; fresh `--no-incremental`
+  Debug passes with 1066 existing warnings and zero errors. All 764 procedural units and 394 selected
+  integrations pass with zero failures/skips. Class/name comparison retains all preceding 356
+  definitions and confirms 38 new map cases. The exact
+  `Content.IntegrationTests.Tests.Utility.SandboxTest` definition maps to a Passed result.
+  Evidence: `.ks_procgen_roommap_final_{release,debug,units,integration}.log` and
+  `ks_roommap_final_{units,integration}.trx`. Full repository integration coverage was not run.
+  Temporary verification scripts are removed; ignored logs/TRXs retain the evidence. Current
+  fixed-weight expanded coverage remains approximately 62%; these source prerequisites do not
+  complete the remaining content-closure/project-asset exits or the 80% milestone.
+- [ ] Reconcile captured map tiles/entities, transforms, masks, facade edges, ports, preserved
+  boundaries and all nested prototype/resource/code dependencies. Bind supported immutable source
+  instantiation to the complete owned hybrid transaction; do not treat captured bytes or a matching
+  expected checksum as a playable room or complete replay artifact. This subset earns no new credit.
+  Before loading, separately bound decoded/decompressed chunk payloads, actual tile extents and
+  component override work; byte/YAML limits alone do not bound a later engine loader's expansion.
+  Engine audit: chunk payloads use 4-byte tiles (2-byte IDs) before chunk version 6, 6-byte tiles in version 6,
+  and 7-byte tiles (including rotation/mirroring) from version 7; the default chunk side is 16.
+  Implement exact version/size/length checks from `MapChunkSerializer`, not guessed payload layouts.
+  The original inspector's unsigned-16-bit tile-table alias ceiling is removed by the schema-2 decoder
+  above: version-6/7 chunk aliases are signed 32-bit nonnegative IDs; runtime tile IDs remain separate.
+  The engine chunk reader also toggles `SharedMapSystem.SuppressOnTileChanged` during reads. Static
+  inspection must remain free of that global side effect, and later loading must prove cleanup after
+  failure before using the ordinary loader as a transaction boundary.
+
+### Resolved prototype body capture rewrite (2026-10-17, R08/R10, in progress)
+
+`KsProcgenPrototypeManifestSystem` captures immutable canonical serialized bodies for direct
+candidate entity and tile references, including every captured material/light choice and every
+member of every entity-core alternative. Entity component registries are normalized by component
+name; mapping keys sort ordinally, while meaningful sequence order and node tags/nulls remain.
+The manifest retains strings, runtime tile indices, a version and a SHA-256 identity, never mutable
+prototype/component/data-node references. Fresh verification compares actual body values, not
+only matching hashes or the theme's declaration ID.
+
+The prototype serialization context includes all serialized defaults and accepts only invalid
+entity/network-entity IDs and the nullspace map default. A live world reference fails capture;
+the context does not query or serialize live entities. This initial rewrite required tile prototype
+object identity with the engine registration. The subsequent 2026-10-18 binding rewrite replaces
+that restriction with exact full-body equality and loaded/named/numeric runtime-ID agreement;
+stale conflicting terrain data still rejects, while semantically equal reloads are supported.
+
+The owned entry captures these bodies before planning and validates them after planning, around
+allocation/terrain phases, immediately before tile writes, around explicit entity/member spawning,
+and during retained/initialization inspection. The shared assembly placement helper accepts a
+transient validator from the owning transaction; it retains no manifest, callback or per-map state.
+`KsProcgenOwnedStageBudgets.PrototypeCapture` bounds definition count, reference occurrences,
+components, canonical nodes/characters and depth. Duplicate references consume the occurrence
+allowance. Serialization preprocessing remains trusted loaded-content work; these counters do not
+prove complete serializer CPU/memory accounting or close R14.
+
+This original direct-body subset is extended by the resolved-declaration and static room-map
+capture batches above. Complete transitive prototype/resource/code identity, portable import/export
+and frozen component instantiation remain required. In particular, boundary comparisons do not prove that a callback
+which transiently changes and restores a prototype could not affect a spawned instance. Do not
+promote live component, operation, closure, power, lighting or publication evidence on this basis.
+
+- [x] Add bounded detached body capture, ordinal body comparison and direct candidate-pool
+  enumeration. Include runtime tile identity and reject unsupported prototype/registry bindings.
+- [x] Use a real prototype serialization context rather than dropping entity-reference fields or
+  skipping defaults when ordinary serialization lacks their writers. Reject valid live references.
+- [x] Connect capture and drift checks to the primary owned request-to-stage path, retained
+  inspection and shared assembly member placement, preserving whole-stage rollback.
+- [x] Initial seven capture cases and forty combined capture/stage/physics cases pass. Evidence:
+  `.ks_procgen_manifest_context.log`, `.ks_procgen_manifest_owned.log` and corresponding TRXs.
+- [x] Verify nested mutable component data, tile mutation, all unselected alternatives, component
+  registry order, culture, duplicate-reference limits, live-reference rejection, preallocation
+  capture limits and tile/startup/initialization callback rollback against the main entry.
+  All 18 cases pass in `.ks_procgen_manifest_callbacks_final.log` and
+  `ks_manifest_callbacks_final.trx`. The startup fixture targets `CoordinatesDisk`, whose
+  `ShuttleDestinationCoordinatesComponent` actually receives the registered hook; a computer
+  without that component cannot demonstrate this callback boundary. The callback also allocates
+  an entity outside the stage map, and rejection removes that captured allocation.
+- [x] Catch six compile-valid mutations: ignore canonical bodies (two failures), omit unselected
+  alternatives (one), skip per-member validation (one), bypass retained drift rejection (one),
+  accept a live entity reference (one failure/two passing live-reference cases), and ignore repeated
+  reference occurrences (one). Each changed file is restored byte for byte in `finally`.
+  Evidence: `.ks_procgen_manifest_mutation_{body,alternatives,member,retained,live,references}.log`
+  and corresponding build logs/TRXs. The member test additionally checks that no insertion attempt
+  occurs before rejection: the strengthened mutation rerun observes two item-slot attempts and fails
+  that assertion when the member guard is disabled. Restored final gates follow below.
+- [x] Prove critical checks fail on compile-valid source mutations, restore exact bytes, then run
+  Release, fresh Debug, procedural units, retained/new integrations and actual sandbox validation.
+  Restored final Release: 403 existing warnings, zero errors; fresh `--no-incremental` Debug:
+  1066 existing warnings, zero errors. All 764 procedural units and 356 selected integrations pass
+  with zero failures/skips. Match test definitions by class and name: all previous 338 are retained,
+  with 18 new manifest cases. Match the exact `Content.IntegrationTests.Tests.Utility.SandboxTest`
+  definition to its result: Passed. Evidence: `.ks_procgen_manifest_final_{release,debug,units,integration}.log`
+  and `ks_manifest_final_{units,integration}.trx`. Full repository integration coverage was not run.
+  Temporary mutation/build scripts are removed; ignored logs and TRXs retain the evidence.
+- [ ] Complete transitive prototype/resource/code identity and actual static room-map capture.
+  Bind those manifests to canonical project/replay schemas instead of interpreting a direct-body
+  manifest or a declaration hash as complete content closure.
+- [x] Close the canonical mapping-key tag omission through the resolved-declaration rewrite above.
+  The writer now records value/container tags and explicit key tags using the public engine accessor.
+  Equal-key/different-tag fixtures cover parser-backed and representation-model mappings; a getter
+  mutation proves the representation-model fallback is required. No private storage reflection is
+  used. Complete arbitrary content closure and serializer CPU accounting remain separate exits.
+- [ ] Implement supported frozen component instantiation or equivalent instance evidence before
+  relying on body checks as a write/operation receipt. Keep R17 activation/isolation guards and
+  complete serializer/work accounting open. This preliminary rewrite earns no new milestone credit.
+  Engine audit: `EntityManager.CreateEntity` obtains a live prototype before allocation, and
+  `EntityPrototype.LoadEntity` subsequently iterates that prototype's live component registry.
+  `ComponentRegistry` overrides supply component data but do not replace that iteration or its
+  `NetSyncEnabled` reads. Passing overrides alone therefore does not establish frozen instantiation.
+  A replacement must test transient edits/restoration during `EntityAdded` and component callbacks,
+  unexpected component additions/removals, copied nested data and network-component membership.
+
+### Complete owned scene physics observer rewrite (2026-10-17, R09/R17, in progress)
+
+The complete owned stage must reach the existing fixture/cardinal-passage observer. A separate
+validator with different contact, filtering, floor or vault semantics is not acceptable. This
+integration earns no additional capability credit for already credited clearance mathematics;
+actual actor/seat/door operation and activation isolation remain the operational exit.
+
+`KsProcgenRoomFixtureSystem.Check(ownedStage)` and `CheckCardinalAccess(ownedStage, actorUid,
+root, terminals, ...)` now use the same pair filtering, supported convex geometry, continuous
+sweeps, conservative floor bounds and cardinal search as assembly previews. The actor stays
+outside the preview and is never moved by observation. Wall/window underlay is excluded from clean
+floor. Door thresholds retain their declared floor classification, but closed door fixtures can
+still obstruct actor passage.
+Scene views are transient data; persistent frozen masks and entity intent kinds belong to the
+owned stage retained by its map component. No per-map observer registry is introduced.
+
+The owned inspector now returns its bounded verified member list and scan count to the observer.
+It still checks exact terrain, frame, lifecycle, prototypes, poses, container membership and all
+captured live allocations. The observer consumes that same list to inspect fixtures, including
+paused descendants and generated entities. Entity scan accounting covers that map walk; terrain,
+content preprocessing and other existing work still need the full R14 accounting exit.
+
+- [x] Retain immutable clean-floor and declared blocking masks in the frozen owned scene. Keep
+  structural underlay outside the clean floor. Preserve blocking footprints of anything normally
+  blocking or requiring vaulting, including supported room roots and their full footprints.
+- [x] Classify frozen entity intents as walls, windows, doors, furnishings or lights. Only the
+  wall/window lattice forms the permitted structural union; furniture/door collisions are not
+  exempted by calling every spawned object structural.
+- [x] Adapt the existing fixture and cardinal sweep implementation to both stage kinds through one
+  transient scene view. Retain real supported/container members and inspect every owned map descendant.
+- [x] Share the owned stage's complete membership inspection with the observer, charging one map
+  walk against its scan allowance. Do not call full `Verify` and secretly repeat the same walk.
+- [x] Migrate the older room-scene test callbacks to `KsProcgenGameTest.AssertOnServer` so deliberate
+  failures cannot be replaced by dirty-disposal skips.
+- [x] Verify actual overlap, thin obstacles between free centers, asymmetric collision filtering,
+  clean passage/vault exclusions for floor and layered content, structural underlay, disconnected
+  islands, complete scan bounds and no actor movement against the primary request-to-stage path.
+- [x] Run compile-valid failure mutations and restore exact bytes; finish Release, fresh Debug,
+  procedural units, existing/new integrations and actual sandbox validation.
+- [x] Strengthen the thin-obstacle fixture: place a narrow polygon across every row of a generated
+  room, prove both nominated centers are individually clear, then require their connecting sweep
+  to fail. Add the replacement fixture before removing the original: the engine disables a body
+  when its last fixture is removed. Check asymmetric collision filtering and recovery after removal.
+- [x] Use explicit mandatory fixture counts with zero optional density. A 1x3 strip remains an
+  unfurnished passage; do not alter that valid fallback to make a physics fixture appear there.
+- [x] Make the flat vault case target the second cell of a two-cell footprint, not just its anchor.
+  Disable layered member collisions in that case so the retained vault classification itself must
+  block passage. The first mutation exposed the former test's accidental reliance on table collision;
+  the strengthened tests both pass normally and both fail with empty retained blocking masks.
+- [x] The 28 focused cases pass with zero skips: ten complete owned-scene physics cases, thirteen
+  existing room-scene cases and five scoped membership cases. These include foreign descendants
+  under noncollidable and contained members, clean recovery after deletion, exact entity scan
+  allowance, expansion/floor-probe exhaustion, and unchanged external actor coordinates. Evidence:
+  `.ks_procgen_owned_observer_footprints_build.log`, `.ks_procgen_owned_observer_footprints.log`
+  and `ks_owned_observer_footprints.trx`; the strengthened vault cases are additionally recorded in
+  `.ks_procgen_owned_observer_vault_strengthened{_build,}.log` and
+  `ks_owned_observer_vault_strengthened.trx`.
+- [x] Five compile-valid faults are caught as real test failures with zero skips: empty blocking
+  masks (both strengthened cases fail), treating all structural underlay as clean floor (one),
+  exempting furniture as part of the structural union (one), replacing continuous sweeps with
+  center-only checks (both old and new cases fail), and ignoring the caller's scan allowance (one).
+  Restore exact source bytes in `finally` after every mutation. Evidence:
+  `.ks_procgen_owned_observer_mutation_{floor,union,sweep,scan}_build.log` and corresponding test
+  logs/TRXs, plus `.ks_procgen_owned_observer_mutation_blocked_strengthened{_build,}.log` and
+  `ks_owned_observer_mutation_blocked_strengthened.trx`. The earlier blocked mutation failed only
+  the flat case and prompted the layered test correction; its weaker evidence is retained separately.
+- [x] Final complete integration-project Release succeeds with 403 existing warnings and zero errors.
+  Restored-source fresh Debug (`--no-incremental`) succeeds with 1,066 existing warnings and zero
+  errors. All 764 procedural units and 338 selected integrations pass with zero failures/skips,
+  including the actual `Content.IntegrationTests.Tests.Utility.SandboxTest.Test` definition/result.
+  Retain every previous 328-case regression definition. Evidence:
+  `.ks_procgen_owned_observer_final_release.log`, `.ks_procgen_owned_observer_final_debug.log`,
+  `.ks_procgen_owned_observer_final_units.log`, `.ks_procgen_owned_observer_final_integration.log`
+  and matching `ks_owned_observer_final_{units,integration}.trx`. The full repository suite was not
+  run. No warning policy, suppressions, sandbox whitelist or prototype definitions were changed.
+- [x] Keep the current expanded estimate at approximately 62% under the fixed weights. This closes
+  the complete-scene observer integration gap; it does not count the baseline's static clearance
+  mathematics twice or finish R17's actual operation, actor-profile binding, settling, isolation
+  or publication exits. The user milestone remains at least 80%.
+- [ ] Bind fresh observations to an exact stage/content revision and a nominated normal actor
+  profile before any apply permission. Caller-supplied geometry and an old read-only report do not
+  prove a normal player's current operation or authorize publication.
+- [ ] Continue R08 referenced entity/component/library capture and R17 actual actor/seat/door use,
+  fixture support settling and scoped activation. Static sweep observations must not promote
+  `EngineAccessVerified`, lighting, gas or publication evidence.
+
+### Owned scene materialization rewrite (2026-10-17, R09/R10, in progress)
+
+Verified resumed batch: `KsProcgenOwnedStageSystem.TryGenerate` accepts a request, resolves a
+detached standalone entrance contract, invokes the primary owned planner and compiles a separate
+immutable server scene before allocating. One engine point is credited after the gates below;
+the expanded estimate advances from 61% to approximately 62%. The 80% milestone is not reached.
+
+The current server integration entry is:
+
+```csharp
+var result = ownedStages.TryGenerate(request, themeId,
+    planningBudgets: planningBudgets,
+    stageBudgets: new KsProcgenOwnedStageBudgets
+    {
+        MaximumTerrainCells = 4096,
+        MaximumSpawnedEntities = 256,
+        MaximumPlacementWork = 8192,
+    },
+    content: capturedThemeCatalog,
+    cancellationToken: cancellationToken);
+```
+
+`PositionedPreview` retains one disposable paused map/grid. Call `TryInitialize(result.Stage)`
+explicitly to run the shared paused initialization transaction; `Verify` checks the frozen scene,
+and `Discard`/`DiscardAll` release ownership. No call here authorizes unpausing or publication.
+The source request and public proposal are review data, not a replay/apply permission. Complete
+entity/component content manifests and author-session ownership remain separate open requirements.
+Disconnected islands intentionally share a nonsplitting preview grid; introducing a published
+multi-grid policy is later work. Surface members are explicitly unanchored before surface drop
+preflight; floor-root structures keep their declared engine anchoring.
+
+Fresh-map exterior classification now occurs after partitioning, using the actual proposed hull
+faces. `KsProcgenGroupRouteContext.ExteriorIsEmptySpace` is an explicit planning declaration;
+the owned stage sets it only after excluding host entrances, constants and preserved cells.
+It cannot be combined with caller-supplied face facts or existing host/domain context. Classification
+charges its face work to the same owned graph allowance and retains resolved face facts in the
+structure witness. Window percentage selection still does not establish live airtightness.
+
+- [x] Verify complete scene compilation, including under-structure tiles and per-room layered
+  dependency poses. Keep the public review proposal separate from the retained write scene.
+- [x] Verify tiny shapes, independent islands, multiple supported rooms, initialized scene drift,
+  callback cancellation/allocation cleanup, preallocation budgets and global retention.
+- [x] Reuse one bounded map-tree membership inspection in the existing fixture observer and owned
+  scene verification. Preserve existing map-scoped inspection regressions.
+- [x] Prove new critical tests fail on compile-valid mutations; restore exact source bytes, then
+  complete Release, fresh Debug and selected unit/integration/sandbox gates.
+- [x] Confirm the new `RoundRestartCleanupEvent` subscription exists in generated
+  `AutoSubscriptions`, using the fresh Debug compiler output. Evidence:
+  `.ks_procgen_owned_stage_subscriptions.log`. This checks subscription wiring; operational reset
+  isolation and author disconnect cleanup still require their own acceptance exits.
+- [x] Run 23 new owned-stage cases plus the existing scene/ownership/assembly regressions. The
+  successful large case initializes 24 independent rooms with 72 supported members, including
+  24 real surface devices and 24 hidden container members. A lighting-enabled version deliberately
+  exceeds the 256-allocation initializer ceiling and returns `OwnedStageInitializationSpawnBudget`,
+  with the entire scene removed. The smaller lighting case initializes successfully. Do not raise
+  or suppress the ceiling to make this test pass. The initial 50-case gate is recorded in
+  `.ks_procgen_owned_stage_limits.log`; four additional context conflicts are in the final gate.
+- [x] Verify strict 50% windows on a fresh 7x7 floor with an authored cardinal envelope: 14 windows
+  and 14 remaining hull walls, actual entities over nonempty structural floor tiles. Verify actual
+  door transforms follow cardinal approaches in both rectangular orientations. Hosted/preserved
+  requests still fail before allocation; incomplete, null or conflicting exterior context is rejected.
+- [x] Demonstrate seven real failures with zero skips across four compile-valid source mutations:
+  disabling surface unanchoring (3), bypassing foreign map membership (1), disabling unsuccessful
+  allocation cleanup (2), and disabling fresh exterior classification (1). Restore exact bytes in
+  `finally` after every mutation. Evidence: `.ks_procgen_owned_stage_mutation_{surface,membership,
+  cleanup,windows}_build.log`, corresponding test logs and `ks_owned_stage_mutation_*.trx`.
+- [x] Fix inherited procgen test Release failures discovered by building the complete integration
+  project: enable nullable checking in eleven unit and three integration files, acknowledge two
+  asserted nonnull outputs, and pass validated prototype wrappers at eight literal-ID call sites.
+  No warning policy, analyzer suppression or sandbox whitelist was changed. Earlier failed gate
+  evidence is retained in `.ks_procgen_owned_stage_final_release.log`,
+  `.ks_procgen_owned_stage_release_nullable.log` and
+  `.ks_procgen_owned_stage_release_test_contracts.log`.
+- [x] Final complete integration-project Release build passes (154 existing warnings in the
+  incremental output, zero errors). Fresh Debug with `--no-incremental` passes (1,066 existing
+  warnings, zero errors). All 764 procedural unit cases and 328 selected integration cases pass
+  with zero failures/skips. Match the actual sandbox test definition/class to its passed result.
+  The integration filter includes the previous prototype validation cases outside the procgen
+  namespace; the narrower namespace-only gate passed 312 cases but omitted those sixteen cases.
+  Final evidence: `.ks_procgen_owned_stage_final_release_fixed.log`,
+  `.ks_procgen_owned_stage_final_debug.log`, `.ks_procgen_owned_stage_final_units.log`,
+  `.ks_procgen_owned_stage_final_complete_integration.log` and matching
+  `ks_owned_stage_final_{units,complete_integration}.trx`. The full repository test suite was not run.
+- [ ] Continue R08 authoritative entity/component/library manifests and captured host/constant
+  content; the frozen scene records exact write intents, not a complete referenced content manifest.
+- [ ] Continue R17 complete-scene fixture/actor/seat/door operation and supported activation
+  isolation. MapInit side effects, network visibility and global atmosphere/power registration need
+  explicit supported capability guards or scoped evidence; deleting the preview map is not their
+  rollback proof. Retain false operation, working-light, gas and publication evidence.
+- [ ] Continue R11/R12 candidate-bound gas domains and utility reservations, actual gas filling,
+  cable/converter routing and supply evidence. Existing unsupported utility-planning guards remain.
+- [ ] Continue author-session/disconnect ownership, replay/apply and in-game authoring under R15/R16.
+
+This is prerequisite work for materializing the existing complete owned planner output. The
+standalone assembly preview remains supported; it must not grow a second incompatible placement
+implementation alongside whole-map staging. This extraction alone earns no capability points.
+
+- [x] Extract support member spawning/insertion/rotation and retained member inspection into
+  `KsProcgenAssemblyPlacementSystem`; delegate the existing assembly stage to that implementation.
+  Require the caller's exact active capture list, a captured live coordinate frame and bounded
+  per-assembly membership before placing anything. The owning transaction retains all partial
+  allocations and performs rollback; the helper retains no per-map/member dictionaries.
+- [x] Preserve container live eligibility, managed-slot filter rechecks without reinsertion,
+  dependency ordering, surface preflight/drop offsets/capacity, exact prototype/lifecycle/parent/
+  transform checks, cancellation and cumulative allocation counting. Keep the existing standalone
+  spatial-relation refusal until a complete independently audited owned pose is supplied.
+- [x] Existing 43 selected assembly/room-scene/lifecycle/ownership cases pass with zero skips after
+  extraction. Evidence: `.ks_procgen_placement_debug.log`, `.ks_procgen_placement_initial.log` and
+  `ks_placement_initial.trx`.
+- [x] Move all twelve older assembly server-assertion callbacks to `KsProcgenGameTest.AssertOnServer`
+  so dirty-disposal warnings cannot replace actual failures with skipped tests.
+- [x] Force all extracted placements to angle zero in compile-valid source. The nested-support/
+  independent-root rotation case fails as a real failure, with zero skips. Restore exact helper
+  bytes in `finally`. Evidence: `.ks_procgen_placement_mutation_build.log`,
+  `.ks_procgen_placement_mutation.log` and `ks_placement_mutation.trx`.
+- [x] Final Release succeeds with 250 existing warnings and zero errors; fresh Debug succeeds with
+  1,107 existing warnings and zero errors. All 764 procgen units and 293 selected integration cases
+  pass with zero skips. The actual sandbox definition/result match confirms `SandboxTest.Test`
+  passed. No new warnings, suppressions or sandbox whitelist changes. Evidence:
+  `.ks_procgen_placement_final_release.log`, `.ks_procgen_placement_final_debug.log`,
+  `.ks_procgen_placement_final_units.log`, `.ks_procgen_placement_final_integration.log` and
+  corresponding `ks_placement_final_*.trx`. The full repository suite was not run. Shared scene
+  materialization is still open; this verified extraction alone leaves the estimate at 60%.
+- [x] Compile a frozen complete scene before allocating: exact floor tiles, tiles beneath structures
+  from captured room palettes, wall/window/door transforms, floor-only entities, lighting and each
+  supported assembly's real dependency poses. Never flatten surface/container members into floor
+  projections, or merge all rooms through the existing 64-member single-room composer limit.
+- [x] Add an owned request-to-stage entry that invokes the primary owned planner and consumes the
+  frozen scene through shared placement, ownership, capture and initialization. Public mutable plan
+  objects and a matching semantic hash alone are not engine write authority. Retain proposal data
+  for review separately from the scene used to verify actual engine objects.
+- [x] Derive allocation/work limits from explicit generation budgets; reject an insufficient known
+  minimum before map allocation, and share cumulative callback costs across terrain and every room.
+  Keep absolute server bounds. Check both per-kind and global retention limits before allocation.
+- [x] Reinspect complete terrain, structures, all assembly instances and independent scene membership
+  after initialization. Reuse existing observers/adapters rather than adding a separate room validator.
+  Destroy/cancel/reset/invalidate the complete stage as one owned unit, including escaped children.
+- [x] Materialize authoritatively captured constant/host content or reject unsupported context
+  before allocation. A blank preview outside generated cells is not proof of preserved content,
+  host connectivity, closure or a complete usable room. Keep operational/lighting/gas/power/
+  publication evidence false until the corresponding actual engine exits pass.
+- [x] Resolve the primary owned planner's standalone-entry gap before treating it as the general
+  generation entry: current entrance-aware candidates require declared clean outside approaches.
+  Support explicit/deterministic roots with no authored entrances through the same owned network
+  transaction, while retaining real entrance contracts when supplied. Do not fabricate a host
+  corridor in a new map or silently substitute an unrelated planning path to satisfy that precondition.
+  The subsequent rooted-planning batch implements the explicit empty-domain path; the eventual
+  request-to-stage entry must select/retain that resolved input before engine allocation.
+
+### Shared preview initialization lifecycle (2026-10-17, R10)
+
+- [x] Add one `KsProcgenStageLifecycleSystem` for surface, container and assembly map initialization.
+  The existing public adapters preserve their result types, reason codes and kind-specific content
+  inspectors. The common transaction owns locking, capture, cancellation, pre/post inspection,
+  cumulative budget checks, idempotence and failure cleanup.
+- [x] Move initialization phase state to the common owned stage handle. Expose uninitialized,
+  initializing, initialized and retired lifecycle states; the legacy per-kind phase properties are
+  read-only projections of the common state. Retirement remains authoritative during callbacks,
+  and an initializer cannot revive a session whose component was removed.
+- [x] Clear capture before cleanup and make a single release attempt in the common failure `finally`,
+  with operation-lock release protected by its own `finally`. The transaction retains no inspector
+  delegates or persistent entity registry on the system. Already-retired handles still clean late
+  callback allocations through the ownership system.
+- [x] Existing 50 initialization/ownership integration cases pass with zero skips after delegation.
+  Evidence: `.ks_procgen_lifecycle_debug.log`, `.ks_procgen_lifecycle_initial.log` and
+  `ks_lifecycle_initial.trx`.
+- [x] Seventeen focused lifecycle/ownership cases pass with zero skips, including six new scenarios
+  across all three adapters: callback-time typed phases, nested initialization/discard rejection,
+  idempotent repeated initialization and pre/during-callback cancellation with escaped allocations
+  and recovery. Evidence: `.ks_procgen_lifecycle_cases_debug.log`, `.ks_procgen_lifecycle_cases.log`
+  and `ks_lifecycle_cases.trx`.
+- [x] Independently disable common failed-transaction release and post-initialization inspection in
+  compile-valid source. The cancellation cases fail 3/3; ownership-loss cases fail 4/4; zero skips.
+  Restore the lifecycle source byte-for-byte in `finally` after each check. Evidence:
+  `.ks_procgen_lifecycle_mutation_release_build.log`, `.ks_procgen_lifecycle_mutation_release.log`,
+  `.ks_procgen_lifecycle_mutation_postcheck_build.log`, `.ks_procgen_lifecycle_mutation_postcheck.log`
+  and corresponding `ks_lifecycle_mutation_*.trx` files.
+- [x] Final Release succeeds with 512 existing warnings and zero errors (includes rebuilt shared
+  production outputs after the private prototype-name cache refresh). Fresh Debug succeeds with
+  1,107 existing warnings and zero errors; all 764 procgen units and 293 selected integration cases
+  pass with zero skips, including explicit before/during/after paused-map assertions. Match the
+  actual sandbox test definition/result in the TRX: `SandboxTest.Test` passed. No new warnings,
+  suppressions or sandbox whitelist changes. Evidence: `.ks_procgen_lifecycle_final_release.log`,
+  `.ks_procgen_lifecycle_final_debug.log`, `.ks_procgen_lifecycle_final_units.log`,
+  `.ks_procgen_lifecycle_final_integration.log` and `ks_lifecycle_final_*.trx`.
+  The full repository suite was not run.
+- [x] Name optional diagnostic arguments in the new tests per CONTRIBUTING.md. The test-only cleanup
+  rebuild succeeds (174 existing warnings, zero errors), and all 20 new allocation/scoped-scene/
+  lifecycle cases pass with zero skips. Production source is unchanged by that cleanup. Evidence:
+  `.ks_procgen_lifecycle_namedargs_debug.log`, `.ks_procgen_lifecycle_namedargs.log` and
+  `ks_lifecycle_namedargs.trx`. Encoding, CRLF, whitespace and balanced Markdown checks pass;
+  the 29 relative links resolve and A01-A66 remain unique and contiguous.
+- [ ] Continue R10 owned-plan materialization, request-derived allocation/work budgets, disconnect
+  lifecycle and operational/PVS isolation. Sharing synchronous initialization is not safe rollback
+  of arbitrary global initializer effects and grants no gas/power/room-use/publication certificate.
+  This refactor alone earns no additional capability points; the assessed milestone remains 60%.
+
+### Shared allocation capture and scoped room inspection (2026-10-17, R10/R17)
+
+- [x] Centralize `EntityAdded` capture in `KsProcgenPreviewOperationSystem` for all four preview
+  kinds. Only the exact active operation may change the capture sink. Capture records allocations
+  before components/transforms exist; budget checks and cleanup remain outside that callback.
+  Retained lists remain on the owned session handle; the system keeps only synchronous operation state.
+- [x] Give tile staging cumulative allocation limits and cancellation before entry/during tile
+  callbacks. Count deleted callback entities; reject live unexpected allocations even in nullspace.
+  Failed/cancelled stages clean all recorded entities and clear capture before cleanup/lock release.
+  Tile-only staging still rejects furniture, walls, doors and layered/operational content.
+- [x] Share the existing 256 allocation and 16-per-kind retention constants. This consolidates
+  limits, not request-derived budgeting; whole-plan limits remain an explicit R10 rewrite.
+- [x] Inspect the engine-maintained transform tree rooted at the owned map instead of querying all
+  world transforms. Include paused/noncollidable/contained descendants independently of the captured
+  allocation list; reject foreign insertions and membership drift. Bound pending traversal memory
+  as well as visited entities, and re-evaluate the complete tree on each inspection.
+- [x] Twenty focused allocation/ownership integration cases pass with zero skips. Eighteen focused
+  scoped/legacy room-scene cases pass with zero skips. New cases exercise off-map callback leaks,
+  deleted-allocation budgets, exceptions, cancellation, recovery, unrelated-map scan independence
+  and foreign entities under map/grid/member/container parents. Inspecting a paused map still
+  does not authorize operational activation, global side-effect rollback or publication.
+- [x] Remove duplicate prototype/component dependencies from the server planning entry and container
+  stage in favor of the inherited `ProtoMan`/`Factory`, following CONTRIBUTING.md.
+- [x] Independently disable capture, tile-failure cleanup and foreign membership rejection in
+  compile-valid source mutations. The corresponding tests fail 2/1/4 cases respectively, with
+  zero passes or skips. Restore each source byte-for-byte in `finally`. Evidence:
+  `.ks_procgen_capture_mutation_capture_build.log`, `.ks_procgen_capture_mutation_capture.log`,
+  `.ks_procgen_capture_mutation_tilecleanup_build.log`, `.ks_procgen_capture_mutation_tilecleanup.log`,
+  `.ks_procgen_capture_mutation_sceneforward_build.log`, `.ks_procgen_capture_mutation_sceneforward.log`
+  and their `ks_capture_mutation_*.trx` result files.
+- [x] Final Release succeeds with 250 existing warnings and zero errors. The first Release attempt
+  caught RA0030 on a generic transform lookup; use the engine-required non-generic overload, then
+  restart final verification from Release. Fresh Debug succeeds with 1,107 existing warnings and
+  zero errors; all 764 procgen units and 287 selected integration cases pass with zero skips.
+  Match the TRX sandbox definition to its result to confirm actual `SandboxTest.Test` passed.
+  No new warnings, suppressions or sandbox whitelist changes. Evidence:
+  `.ks_procgen_capture_corrected_final_release.log`, `.ks_procgen_capture_final_debug.log`,
+  `.ks_procgen_capture_final_units.log`, `.ks_procgen_capture_final_integration.log` and
+  `ks_capture_final_*.trx`. The full repository suite was not run. UTF-8/no-BOM, source line endings,
+  whitespace and balanced Markdown fence checks pass.
+- [x] Award one engine point for shared capture, tile callback failure/cancellation behavior and
+  independent complete map-scoped inspection. Engine advances from 10 to 11 of 20; total expanded
+  coverage is approximately 60%. No extra utility, editor, layout or publication credit. The 80%
+  milestone remains active.
+- [x] Fast-forward clean private prototype/audio modules to their locally recorded `origin/main`
+  (`41ad0da`/`2144064`); maps/replacement prototypes remain `1247ebc`/`10b5ed9`. All four have clean
+  worktrees and zero ahead/behind counts. Refresh the prototype-name cache with a successful Debug
+  build (993 existing warnings, zero errors), then rerun all 287 selected integration cases against
+  that content: all pass, zero skips, actual sandbox result passed. Evidence:
+  `.ks_procgen_capture_modules_debug.log`, `.ks_procgen_capture_modules_integration.log` and
+  `ks_capture_modules_integration.trx`. No remote fetch is claimed. This is the earlier user-requested
+  sync, not procgen capability credit. No commits or pushes were made.
+- [ ] Continue shared typed activation/initialization phases, request-derived work/allocation limits,
+  owned-plan materialization, operational isolation and actor/door/seat/device adapters. Neither
+  scoped fixture observation nor allocation capture establishes a working room certificate.
+
+### Component-backed preview ownership and retirement (2026-10-16, R10)
+
+- [x] Replace retained per-map dictionaries in tile, surface, container and assembly stage systems
+  with `KsProcgenStageSessionComponent` on each owned map. The component holds a typed common stage
+  handle and its existing data graph; transient synchronous allocation-capture lists remain operation
+  state, not retained per-map registries. Preserve existing public stage handles and phase APIs.
+- [x] Share ownership checks, paused-inclusive queries, identity checks and allocation/map cleanup
+  through one owner system. Snapshot/discard by kind; cap 16 retained maps per kind and 64 total.
+  Add a matching tile retention cap and share the existing preview operation lock for tile staging.
+- [x] Retire on map termination/component shutdown before cleanup, release escaped owned members,
+  and protect replacement maps with numeric-map-ID plus entity-UID identity. Retired registered
+  handles may finish cleaning allocations captured later in an interrupted initialization.
+- [x] Reject ownership loss/queued deletion in post-initialization checks. Source members and new
+  callback allocations cannot survive a failed stage merely because its ownership component vanished.
+- [x] Release succeeds with 250 existing warnings and zero errors (server-only incremental rebuild;
+  shared production source is unchanged). Fresh Debug succeeds with 1,107 existing warnings and
+  zero errors. All 764 procgen units and 273 selected integration cases pass with zero skips.
+  Inspect the TRX definition/result link to confirm actual client/shared `SandboxTest.Test` passed.
+  No new warnings, suppressions or sandbox whitelist changes. Source restoration, UTF-8/no-BOM
+  and whitespace checks pass. Evidence: `.ks_procgen_stageowner_final_release.log`,
+  `.ks_procgen_stageowner_final_debug.log`, `.ks_procgen_stageowner_final_units.log`,
+  `.ks_procgen_stageowner_final_integration.log` and corresponding `ks_stageowner_final_*.trx` files.
+  The full repository suite was not run. The first full regression exposed an old container test
+  counting an externally deleted stage in `DiscardAll`; assert automatic retirement and only one
+  remaining live stage, then rebuild/rerun the entire final Debug gate successfully.
+- [x] Eleven focused engine integration cases pass with zero skips: external map deletion and
+  stale numeric ID reuse for all four kinds, escaped surface/container/assembly members, mixed
+  paused registry/discard, component loss and queued deletion during initialization both with and
+  without late nullspace allocations, tile cross-operation rejection and preallocation retention
+  exhaustion. Update the old tile fixture to require automatic retirement and a subsequent no-op
+  discard, rather than manual cleanup of a stale registry entry.
+- [x] Deliberately omit escaped-entity cleanup and bypass tile staging's operation guards: four
+  focused cases fail, seven pass, zero skip. Restore both sources byte-for-byte in `finally`.
+  Evidence: `.ks_procgen_stageowner_mutation_build.log`, `.ks_procgen_stageowner_mutation.log`.
+  The three escaped-member failures and the tile callback failure cover separate protected paths.
+- [x] Award one engine lifecycle point for authoritative component ownership, shared retirement and
+  invalidation cleanup across all four preview kinds. Engine advances from 9 to 10 of 20; total
+  expanded-scope coverage is approximately 59%. This is not a completed R10 activation/isolation
+  exit and earns no additional schema, interior, UI, gas/power or publication credit. The 80% goal
+  remains active.
+- [ ] Continue R10's unified phase/activation, whole-owned-plan materialization, derived allocation
+  limits, disconnect lifecycle and atmos/power/container/PVS isolation. Shared allocation capture
+  for every kind and tile callback cancellation are completed by the subsequent dated batch. This ownership
+  rewrite does not establish safe global side-effect rollback, operation, visibility or publication.
+
+### Owned layered room candidate integration (2026-10-16, R09)
+
+- [x] Extend the existing owned configuration/layout retry path with support-aware whole-core
+  furnishing when component inspection context is supplied. Retain the floor-only fast path.
+  Use captured selected pack/core bodies, enforce required copies, and remove optional instances
+  only as complete units after rejection. Do not refund probe or graph work after discarded trials.
+- [x] Retain typed assembly, capability, support-pose, footprint and operating-access witnesses;
+  keep floor-root entity projections distinct from surface/container poses. No projected floor
+  entity authorizes flattening a supported member onto the ground during materialization.
+- [x] Reserve all exposed occupied tiles, operating approaches and clean operating paths during
+  lighting. Recompute supported access in the final independent audit using retained pose/capability
+  data and the current structure mask, then audit whole-room/entrance connectivity after lighting.
+- [x] Add a server planning entry supplying static component inspection context to the same owned
+  planner. Preserve false engine/operational/publication evidence and reject layered data in legacy
+  tile staging. Utilities remain explicitly unsupported; this batch does not integrate gas/wires.
+- [x] Final Release succeeds with 512 existing warnings and zero errors; fresh Debug succeeds with
+  1,107 existing warnings and zero errors. All 764 procgen units and 262 selected integration cases
+  pass with zero skips. Inspect the TRX definition/result link to confirm actual client/shared
+  `SandboxTest.Test` passed. No new warnings, suppressions or sandbox whitelist changes.
+  Evidence: `.ks_procgen_layeredowned_final_release.log`, `.ks_procgen_layeredowned_final_debug.log`,
+  `.ks_procgen_layeredowned_final_units.log`, `.ks_procgen_layeredowned_final_integration.log` and
+  corresponding `ks_layeredowned_final_*.trx` files. Source restoration, UTF-8/no-BOM and whitespace
+  checks pass. The full repository suite was not run. Correct the initial fixture's assumed member
+  suffix to use retained source bindings; remove the new system's initial analyzer warnings before
+  the final gates, without suppressions.
+- [x] Focused acceptance: eight owned-path integration cases plus the actual sandbox check pass
+  with zero skips. Retain a required microwave on a table, nested paper in its container, complete
+  compact-variant replacement of an impossible base, required-versus-optional whole-instance
+  rejection, missing/tampered projection audit failures, lighting/path protection, deterministic
+  replay and zero entity allocations. Shared furnishing work includes final-audit landing probes;
+  zero remaining landing work and a caller's room-size cap fail without partial artifacts.
+- [x] Deliberate source regression: bypass the owned supported branch and weaken the projection
+  audit; all eight focused tests fail with zero skips. Because the planner failure prevents the
+  audit test reaching its valid source candidate, additionally run an isolated audit-only mutation:
+  that one test reaches a valid layered plan and then fails on the accepted tampered projection.
+  Restore every changed source byte-for-byte in `finally`. Evidence:
+  `.ks_procgen_layeredowned_mutation_build.log`, `.ks_procgen_layeredowned_mutation.log`,
+  `.ks_procgen_layeredowned_audit_mutation_build.log`, `.ks_procgen_layeredowned_audit_mutation.log`.
+- [x] Award two interior planning points: one for integrated whole-core surface/container/variant
+  candidates with required/optional rollback, one for protected lighting/operating paths and an
+  independent post-lighting layered audit. Interiors advance from 13 to 15 of 18; overall coverage
+  is approximately 58%. No engine, utility, editor or duplicate layout credit is awarded. The 80%
+  goal remains active; R09 is not complete while the exits below remain open.
+- [ ] Complete unified cable/gas reservations, read-only edge placement search, general density/
+  optional selection goals, lifecycle/engine room materialization and actual operational validation.
+- [ ] R15/R16: extend diagnostics, replay and overlays for layered poses/containers/support/source
+  bindings. Legacy floor projections alone are not a complete layered furnishing export.
+
+### Planning projects and portable geometry libraries (2026-10-16, R08/R15/R16 prerequisites)
+
+- [x] Add versioned room geometry, local layout members, atomic family alternatives and room-library
+  declarations. Compile singleton library rooms into automatically fitted families. Validate common
+  reservations, exact member/generate partitions, references, local transforms, ports and facades.
+  Preserve source keys/fingerprints as authored expectations, never evidence of inspected map contents.
+- [x] Retain immutable source-room bindings for each compiled family/option/member. Global placement
+  remains selected by the existing fitter. Reserve `Room/` for generated singleton family IDs.
+- [x] Add a revisioned project binding areas to canonical requests, captured themes and libraries.
+  Require matching nested document/revision metadata, stable area/request IDs and mode/library
+  compatibility. Import referenced theme inheritance/fallback, pack, assembly and utility bodies into
+  the portable project without registering prototypes. Preserve unreferenced draft assets as well.
+- [x] Add captured content to the existing geometry pipeline, with matching-theme and unsupported
+  utility guards before packing. Keep prior geometry/engine limitations visible; no new utility or
+  map-copy implementation is implied by successful project capture or geometry-only planning.
+- [x] Verify serialization, whole alternatives, shifted/rotated ports, instance bindings, mutation
+  isolation, revisions, imported loaded bodies, project budgets and existing planner integration:
+  28 focused units and 19 project integrations plus the actual sandbox check pass with zero skips.
+  Preserve `DisconnectedPortNetwork` rejection for the unported fixture, then require success with
+  a declared port and external root. No connectivity guard is relaxed to accept source metadata.
+- [x] Final Release succeeds with 512 existing warnings and zero errors; fresh Debug succeeds with
+  1,107 existing warnings and zero errors. All 764 focused procgen units and 254 selected integration
+  cases pass with zero skips. Inspect the TRX definition/result link to confirm the actual client/
+  shared `SandboxTest.Test` passed. No new warnings, suppressions or sandbox whitelist changes.
+  Evidence: `.ks_procgen_project_final_release.log`, `.ks_procgen_project_final_debug.log`,
+  `.ks_procgen_project_final_units.log`, `.ks_procgen_project_final_integration.log`, and corresponding
+  `ks_project_final_*.trx` files. UTF-8/no-BOM, whitespace and source restoration checks pass.
+  The full repository suite was not run. The initial unported positive fixture was corrected to
+  preserve its disconnected-network rejection and separately test a declared-port successful case.
+- [x] Deliberately alias room masks and omit imported tile definitions. Three of 28 unit cases and
+  one of 19 project integration cases fail with zero skips; restore both sources byte-for-byte in
+  `finally`. Evidence: `.ks_procgen_project_mutation_build.log`, `.ks_procgen_project_mutation_units.log`,
+  `.ks_procgen_project_mutation_integration.log`. The successful fixture requires a real declared port
+  in the preliminary network; the original unported fixture remains a checked rejection.
+- [ ] Complete room-map content capture/inspection, full dependency manifests, `KeepVoid`, seams,
+  named alignment anchors, required inter-member links, library eligibility/goals and integrated
+  owned hybrid execution.
+  Project values do not supply permissions, server storage, undo, UI, engine operation or publication.
+  Expanded-scope coverage remains approximately 56%; this prerequisite does not earn the complete
+  project/editor or manifest exit. The 80% goal stays active. See the project/library walkthrough
+  in `Klovn/Docs/Examples/Procgen/README.md` for the implemented API and limits.
+
+### Detached interior asset drafts (2026-10-16, R08/R16 prerequisites)
+
+- [x] Share explicit authoring spec bases between loaded prototypes and editable themes, tile/wall/
+  lighting/entity packs and relational assemblies. Preserve existing prototype kinds and YAML fields.
+- [x] Add an isolated document/revision value with scoped asset names, cumulative element/text bounds,
+  deep copies and declaration identity. Preserve ordered variants and authoring lists. Draft capture
+  checks structure, not semantic validity: broken references can remain visible while editing.
+- [x] Resolve draft assets before loaded assets without registering or mutating global prototypes.
+  Validate effective themes and complete candidate pools at catalog capture; resolve relational
+  assembly references through the same source. Retained catalogs no longer need the editable source.
+- [x] Verify custom loaded/draft inheritance, source shadowing, variant binding, snapshot isolation,
+  serialization, revision conflicts, invalid drafts and the primary owned planner with custom assets:
+  44 focused unit cases and 9 integration cases plus actual sandbox pass with zero skips. The primary
+  test requires nonempty furnishings and unchanged output after editing the original asset bodies.
+- [x] Final Release succeeds with 512 existing warnings and zero errors; fresh Debug succeeds with
+  1,107 existing warnings and zero errors. All 736 procgen units and 235 selected integration cases
+  pass with zero skips. Inspect the TRX definition/result link to confirm the actual client/shared
+  `SandboxTest.Test` passed. No new warnings, suppressions or sandbox whitelist changes.
+  Evidence: `.ks_procgen_contentdraft_final_release.log`, `.ks_procgen_contentdraft_final_debug.log`,
+  `.ks_procgen_contentdraft_final_units.log`, `.ks_procgen_contentdraft_final_integration.log`, and
+  corresponding `ks_contentdraft_final_*.trx` files. UTF-8/no-BOM, scoped whitespace and source
+  restoration checks pass. The full repository suite was not run.
+- [x] Deliberately alias base assembly members and ignore draft tile assets. Five of 44 unit cases
+  and three of nine loaded cases fail with zero skips; restore the source byte-for-byte in `finally`.
+  Evidence: `.ks_procgen_contentdraft_mutation_build.log`, `.ks_procgen_contentdraft_mutation_units.log`,
+  `.ks_procgen_contentdraft_mutation_integration.log`. The initial sandbox run rejected generic
+  `new T()` reflection; explicit constructor factories replace it without whitelist changes.
+- [ ] Complete the larger project contract: room maps/libraries/layout families, assignments and
+  constants, dependency manifests, server-owned storage/undo/revision enforcement and actual UI.
+  This draft value alone earns no completed project/editor capability point. Expanded-scope
+  coverage remains approximately 56%; the 80% goal is active. The fixture walkthrough is in
+  `Klovn/Docs/Examples/Procgen/README.md`, under detached interior asset drafts.
+
+### Scoped utility intent and ownership contracts (2026-10-16, R08)
+
+- [x] Introduce request schema 2 for optional `utilities`, keeping legacy schema 1 requests valid
+  and their existing declaration hashes unchanged. Older consumers must reject the new request
+  version; utility intent cannot hide in a schema 1 extension and disappear on transport.
+- [x] Add bounded gas assignments with stable request, area, room and gas-domain scopes. Area scope
+  defaults to the request ID. Pin loaded/draft named gas profiles into immutable, portable values;
+  reject unequal declarations at the same declared scope/target and conflicting request defaults.
+  Equivalent aliases can coexist. Room/domain overlap must still be resolved after candidate binding.
+- [x] Add bounded consumer declarations selecting all powered entities, an entity prototype, or a
+  stable planned member ID. Retain circuit, required/preferred, wired/operational, minimum matches,
+  and nullable nominal/peak watts. Missing watts require inspection, never an assumed zero load.
+  Validate explicit profile circuits and loaded prototype selectors without claiming live membership.
+- [x] Capture separate gas, cable and device write masks. Null inherits request permission; empty
+  forbids that layer's writes. Masks only narrow normalized writable cells and cannot include void,
+  preserved/constant cells or exterior cells outside the owned envelope. Deduplicate and sort sets.
+- [x] Capture request-hard allowed gas modes/species, pressure/temperature bounds, minimum observation
+  interval and electrical operational/battery restrictions. Validate structure and finite bounds.
+  These are retained constraints, not evidence that any assignment or existing gas satisfies them.
+- [x] Extend request snapshot deep copies, declaration identity and engine serialization transport;
+  preserve source profile identity without retaining mutable prototypes or draft aliases.
+- [x] Reject nonempty scoped requirements in both composed planner entry points before packing or
+  owned layout search. `UtilityPlanningUnsupported` supplies no partial plan or engine certificate.
+- [x] Prove negative coverage by deliberately omitting scoped utility hashing and bypassing the
+  planning guard: 17/54 unit cases and 4/7 loaded cases fail with zero skipped tests. Restore both
+  source files byte-for-byte in `finally`. Evidence: `.ks_procgen_scoped_mutation_build.log`,
+  `.ks_procgen_scoped_mutation_units.log`, `.ks_procgen_scoped_mutation_integration.log`.
+- [x] Final Release succeeds with 512 existing warnings and zero errors; fresh Debug succeeds with
+  1,107 existing warnings and zero errors. All 691 procgen units and 226 selected integration cases
+  pass with zero skips. Inspect the TRX definition/result link to confirm the actual client/shared
+  `SandboxTest.Test` passed. No new warnings, suppressions or sandbox whitelist changes.
+  Evidence: `.ks_procgen_scoped_final_release.log`, `.ks_procgen_scoped_final_debug.log`,
+  `.ks_procgen_scoped_final_units.log`, `.ks_procgen_scoped_final_integration.log` and corresponding
+  `ks_scoped_final_*.trx` files. Scoped whitespace, UTF-8/no-BOM and restoration checks pass.
+  The full repository suite was not run. The initial focused run exposed an abstract `Computer`
+  selector in the new fixture; replace it with concrete `ComputerAlert` and rerun all final gates.
+- [x] Award one contract point for the scoped utility/consumer declaration and transport exit:
+  contracts 14/16, total expanded-scope coverage approximately 56%. No utility operation, editor,
+  runtime or candidate-binding points are awarded. The 80% goal remains active.
+- [ ] R09: bind selectors against candidate rooms/domains/members, reject unknown targets and unmet
+  minimum matches, resolve room/domain equal-specificity overlap, apply every request-hard constraint
+  to effective theme/area/room profiles, inspect unknown demand and enforce layer masks in one joint
+  transaction. This batch does not place utilities, fill gas, route wires or verify operational load.
+
+### Captured theme candidate catalogs (2026-10-16, R08/R15)
+
+- [x] Add an immutable `KsProcgenThemeCatalog` for one resolved theme's complete current planning
+  pools: weighted tile/wall/light alternatives, entity compatibility/activity tags, compiled cores,
+  complete ordered assembly variants, inherited goals and utility defaults. Do not retain mutable
+  prototype lists or recompile a selected core from changed source declarations.
+- [x] Add canonical declaration identity, including unselected candidates, weight/minimum policies,
+  geometry/rotation/approach declarations, relation constraints and utility profiles. Sort unordered
+  pools/references/tags; preserve authored variant priority and canonicalize signed zero. This is a
+  planning-declaration manifest, not an entity-component or writable-context fingerprint.
+- [x] Select per-room content directly from retained catalogs without prototype lookups. Remove the
+  earlier selected-content recapture path. Theme assignment shares one catalog across regions;
+  the primary owned planner shares it across all configuration/layout retries. `PlanSnapshot`
+  accepts an explicit catalog, and owned results expose `ContentDeclarationHash` as provenance.
+  The existing no-catalog entry captures current content once. Utility/publication guards remain.
+- [x] Verify unselected source changes invalidate new hashes without affecting earlier views;
+  prove canonical pool/tag ordering, ordered variant identity, immutable nested lists and complete
+  owned planning after source declarations are removed. Keep mismatched catalog IDs and unsupported
+  utility defaults rejected before layout work. Run Release/Debug, actual sandbox and deliberate
+  mutation checks with restored source and the full focused procgen corpus. Fifteen new loaded
+  cases cover ten independent declaration changes, canonical pools/tags/signed zero, authored
+  variant order, complete owned planning after source-theme references are cleared, mismatched
+  theme rejection, invalid null input and retained gas/electric unsupported guards.
+- [x] Deliberately omit candidate weights and primary tiles from declaration hashing, and ignore
+  a supplied catalog in `PlanSnapshot`. Three loaded cases fail with actual assertions (12 passed,
+  zero skipped). Restore both files byte-for-byte in `finally`; evidence is retained in
+  `.ks_procgen_catalog_mutation.log` and its TRX/build log.
+- [x] Rewrite the old missing-theme expectation for preflight rejection before any layout work.
+  Preserve full two-alternative failure-journal coverage by using an impossible required window
+  count, rather than using missing metadata to manufacture downstream search failures. Move
+  `KsProcgenOwnedInteriorTests` onto failure-preserving teardown; earlier checks exposed another
+  cleanup-masked skip. The remaining R18 legacy-fixture audit is still open.
+- [x] Final Release passes (512 existing warnings, zero errors); final fresh Debug passes (1,107
+  existing warnings, zero errors). All 637 focused procgen units and 219 selected integration cases
+  pass with zero failures/skips, including actual `Content.IntegrationTests.Tests.Utility.SandboxTest.Test`.
+  Logs: `.ks_procgen_catalog_final_release.log`, `.ks_procgen_catalog_final_debug.log`,
+  `.ks_procgen_catalog_final_units.log`, `.ks_procgen_catalog_final_integration.log`.
+  No new warnings, suppressions or sandbox whitelist changes; scoped encoding/whitespace checks
+  pass. The full repository suite was not run. Expanded-scope credit remains 55%, with no full
+  content-manifest point claimed while the wider R08/R15 asset exits below remain open.
+- [ ] Finish wider R08/R15 assets: room-library/fallback eligibility, entity component/static
+  capability fingerprints, full project draft contracts and scoped utility ownership/consumers.
+  Capturing/hashing currently remains input bounded, not fully charged to R14's future request work
+  ledger. Legacy diagnostic schema 1 is unchanged and is not a replay manifest or verification receipt.
+
+### Retained selected planning content (2026-10-16, R08)
+
+- [x] Capture selected floor palette, wall/hull/door/window family, light fixture, theme goals
+  and compiled entity-pack cores into `KsProcgenSelectedContent` when selecting a theme. Keep the
+  supporting-pack list immutable. Captured values are detached from editable loaded declarations.
+- [x] Route material, owned hull/window, furnishing and lighting consumers through the retained
+  selection. A changed selected ID cannot silently reuse a mismatched captured declaration.
+  A manually constructed selection without captured content retains the legacy reference path.
+  Explicit omission of optional packs/lights still works without reintroducing their contents.
+- [x] Verify source edits leave earlier selected planning output unchanged, new selections observe
+  edits, mismatched-ID refusal and immutable nested lists. Loaded cases compare actual material,
+  furnishing and lighting proposals after editing their source declarations; new captures see the
+  changes. Uncaptured furnishing packs reject before probing and return no partial entity proposal.
+- [x] Rewrite explicit reference-edit fixtures to clear their old captured content, preserving
+  original material, mandatory-support, choice and backtracking scenarios. Move
+  `KsProcgenContentLoadTests`, `KsProcgenGroupMaterialTests` and `KsProcgenCleanFurnishingTests` to
+  failure-preserving `KsProcgenGameTest`; the first regression run exposed a cleanup-masked skip.
+  R18 still needs the remaining older fixtures audited.
+- [x] Deliberately bypass retained furnishing cores and permit mismatched captured wall IDs. Both
+  loaded cases fail with actual assertions (two failed, zero skipped); restore both source files
+  byte-for-byte in `finally`. Evidence: `.ks_procgen_selected_content_mutation.log` and its TRX.
+- [x] Final Release passes (512 existing warnings, zero errors), fresh Debug passes (1,107 existing
+  warnings, zero errors), all 637 procgen units and 204 selected integration cases pass with zero
+  failures/skips, including actual `Content.IntegrationTests.Tests.Utility.SandboxTest.Test`.
+  Logs: `.ks_procgen_selected_content_final_release.log`, `.ks_procgen_selected_content_final_debug.log`,
+  `.ks_procgen_selected_content_final_units.log`, `.ks_procgen_selected_content_final_integration.log`.
+  No new warnings, suppressions or sandbox whitelist changes; scoped encoding/whitespace checks
+  pass. The full repository suite was not run. Expanded-scope credit remains 55%; the 80% goal
+  stays active. This prerequisite alone does not earn a full content-manifest point.
+- [ ] Complete full candidate/library capture, source dependency manifests, static capability
+  snapshots, draft material/entity assets and request-wide content binding. This batch pins only
+  selected planning declarations; engine entity component bodies, live context and the standalone
+  pack-only room-core preview still require their own captured resolver. It does not prove live
+  fixture behavior, publication or full replay, and earns no additional point in isolation.
+
+### Compiled assembly entry isolation (2026-10-16, R08)
+
+This is a prerequisite for a retained content snapshot. Previously a resolved assembly's entry
+objects still had mutable fields/lists, and several returned core/variant/member/relation lists
+were writable arrays. These are concrete R08 isolation defects even though most compiler paths
+already copied their source declarations.
+
+- [x] Introduce separate `KsProcgenResolvedEntityEntry` records with detached read-only footprint
+  and rotation collections. Keep editable `KsProcgenEntityEntry` data definitions for authoring.
+  Constructing a resolved member copies its supplied declaration instead of retaining it.
+- [x] Freeze compiler-returned pack/core, variant, member and relation collections, including
+  singleton cores. Room assembly composition preserves immutable entry collections while
+  namespacing selected members; it does not reintroduce mutable lists.
+- [x] Adapt entry-body validation and furnishing consumers to the compiled type. Rewrite fixture
+  setup to construct changed assembly/entry values instead of mutating earlier compiled objects;
+  retain existing unsupported-seat, facing, pose, overlap and staging scenarios.
+- [x] Verify all existing procgen cases plus explicit source-alias and collection-write rejection
+  cases. Two new unit cases test member-construction detachment and immutable variant/member/
+  relation lists. Two loaded cases cover actual assembly packs and plain-list packs: later valid
+  edits are visible to a new compilation, while the earlier compiled view stays unchanged and
+  nested collection edits are refused. No engine entities are spawned by compilation.
+- [x] Deliberately retain source footprint/rotation lists and return a mutable member array. The
+  focused mutation run produces two failed unit assertions (43 passed, zero skipped); exact
+  compiler bytes are restored in `finally`. Evidence: `.ks_procgen_frozen_entries_mutation.log`.
+- [x] Final Release passes (265 existing warnings; initial Release 512), fresh Debug passes
+  (1,107 existing warnings), both with zero errors. All 637 focused procgen units and all 202
+  selected integration cases pass with zero failures/skips, including actual
+  `Content.IntegrationTests.Tests.Utility.SandboxTest.Test`. Logs:
+  `.ks_procgen_frozen_entries_final_release.log`, `.ks_procgen_frozen_entries_final_debug.log`,
+  `.ks_procgen_frozen_entries_final_units.log`, `.ks_procgen_frozen_entries_final_integration.log`.
+  No new warnings, suppressions or sandbox whitelist changes. Scoped encoding/whitespace checks
+  pass; all four KS modules are clean and 0/0 against locally recorded `origin/main` (no fetch).
+  The full repository suite was not run. The expanded-scope estimate remains 55%; the 80% goal
+  remains active, with no extra point awarded for this prerequisite in isolation.
+- [ ] Finish the wider R08 content catalog/manifest: material and light pack bodies, eligibility
+  tags, room libraries and entity prototype capabilities still need a captured resolver. This
+  isolated entry rewrite does not close that full exit or earn another percentage point alone.
+
+### Canonical request snapshots and version rejection (2026-10-16, R08/R15)
+
+The active expanded-scope 80% milestone uses the fixed capability index at the start of section 17.
+This batch finishes the request-input snapshot subset; it does not close R08/R15 or establish a
+complete content/context replay. References to actual theme/room/entity prototype bodies and
+inspected host facts still need their own detached content manifest and context certificates.
+
+- [x] Add `KsProcgenRequest.schemaVersion`, defaulting to 1 for legacy inputs. Geometry normalization
+  and the composed geometry entry reject unsupported versions explicitly before packing; the
+  owned planner inherits the same normalizer gate. No existing request silently enables utilities.
+- [x] Add `KsProcgenRequestSnapshot` with canonical versioned declaration identity, exact normalized
+  masks, detached constant transforms/ports, roots, entrance alternatives and group roots, size
+  bands, window goals, fallback permissions, limits, seed and utility declarations. Expand implicit
+  entrance defaults; sort sets with ordinal identifiers and tile order. Equivalent rectangle/cell
+  descriptions and irrelevant input ordering retain the same identity. Required constants do not
+  become duplicate anonymous preserved reservations when canonical data is normalized again.
+- [x] Resolve named utilities against loaded prototypes or a supplied immutable draft catalog,
+  then retain complete inline copies and their selected reference provenance. Later profile edits
+  cannot alter earlier captured utility declarations. Headless capture accepts inline/legacy input
+  and rejects unresolved names; a portable captured request can be recaptured without the catalog.
+  Gas/entity prototype dependencies still require validation in the receiving loaded content.
+- [x] Return independent editable `CopyRequest()` data for engine serialization. Earlier snapshots
+  do not expose mutable lists or nested authoring objects. Canonical identity is not a permission
+  token, cryptographic signature, loaded-content fingerprint or verified generation result.
+- [x] Add the primary owned planner's `PlanSnapshot` entry. It consumes a fresh copy of retained
+  input while callers supply theme/content, budgets and inspected context separately. Existing
+  gas/power and publication guards remain; passing an input snapshot cannot certify those gates.
+- [x] Deliberately break returned-copy isolation, omit both limit fields from identity and disable
+  the normalizer's version guard. The 39 new unit cases then report four actual failed assertions
+  (35 passed, zero skipped); restore both source files byte-for-byte in `finally`. Evidence:
+  `.ks_procgen_snapshot_mutation_units.log` and the corresponding mutation TRX/build log.
+- [x] Finish final Release/fresh Debug and full focused procgen regressions, including the new
+  owned-planner snapshot case and actual client sandbox. Final evidence:
+  `.ks_procgen_snapshot_final_release.log` (512 existing warnings, zero errors),
+  `.ks_procgen_snapshot_final_debug.log` (fresh Debug, 1,107 existing warnings, zero errors),
+  `.ks_procgen_snapshot_final_units.log` (635 passed), and
+  `.ks_procgen_snapshot_final_integration.log` (200 passed). Both test runs have zero failures
+  and zero skips. The integration TRX identifies the actual `Utility.SandboxTest.Test` as passed.
+  No new warnings, suppressions or sandbox whitelist changes; scoped whitespace checks pass.
+  The full repository suite was not run. Contracts advance from 12 to 13 points for this tested
+  request-snapshot capability; total expanded-scope estimate is 55%, and the 80% goal stays active.
+- [ ] Complete the remaining R08 content snapshot, scoped utility ownership/consumer declarations
+  and full project asset contracts, followed by R09 integration. Current declaration identity does
+  not hash external generation budgets, live context or referenced entity component bodies; R15
+  must bind these separately for complete replay. Parsing/upload byte/depth bounds and persistence
+  remain R16 responsibilities; this adds no externally callable deserialization endpoint.
+
+### Utility draft catalog and inherited theme isolation (2026-10-16, R08)
+
+This batch implements the first headless authoring document subset from section 21.3.
+R08 remains open: a utility asset catalog is not a complete editable room project or a unified
+request/content snapshot. R09/R16 consume these contracts later; no production planner guard is removed.
+
+- [x] Add `KsProcgenUtilityDraftSpec` schema 1 with stable document ID, nonnegative edit revision,
+  and named atmosphere/electrical assets. The combined asset count is bounded at 128; names,
+  nested numeric policies and referenced gases/entities use the existing profile validators.
+  Unknown document or nested profile schemas and invalid receiving-content dependencies reject
+  the entire import, without returning a partially usable catalog.
+- [x] Freeze the catalog and nested profiles into `KsProcgenUtilityDraft`; return independent
+  editable copies. Canonical content identity sorts names by ordinal comparison and excludes
+  document identity/revision. This hash covers utility declarations, not a loaded-content manifest,
+  authorization, verified network capacity or a complete generation request.
+- [x] Add a full-document headless revision replacement check. Replacement must target the same
+  document/current revision, validate successfully and advance revision once. Stale/foreign edits,
+  invalid payloads and exhausted integer revisions fail without changing either snapshot or input.
+  A future server owner must serialize replacement of its current instance; this value API alone
+  is not a concurrent registry, writer lease, operation deduplication service or undo history.
+- [x] Resolve explicit utility references against an optional document catalog before loaded
+  prototypes. Inline overrides retain priority, and absent explicit references retain inherited
+  defaults. Names are scoped by document and utility kind, so gas/power may use the same local
+  name. Editing a loaded asset creates a detached local override of that name; resolution without
+  the catalog still sees the original global prototype. Theme utility defaults use the same path.
+- [x] Replace inherited theme pack-reference objects and goal objects with detached immutable
+  records and immutable collections. Mutating parent weights, clearing parent lists or editing
+  goals after resolution cannot change an earlier resolved theme. Referenced material/entity
+  pack bodies still need freezing into the full R08/R09 content snapshot.
+- [x] Fix the new utility fixtures' failure reporting with shared `KsProcgenGameTest` teardown.
+  The first mutable-list mutation exposed an assertion masked as a dirty-disposal skip. Repeating
+  it after the helper rewrite produces one actual failed integration case, three passed and zero
+  skipped. The revision/hash mutations produce four failed unit cases, fourteen passed and zero
+  skipped. All deliberate source changes were restored byte-for-byte in `finally` blocks.
+- [x] Verify Release, fresh Debug, focused unit/integration regressions and the actual client
+  sandbox; demonstrate meaningful failures with deliberately broken source and restore it.
+  Final evidence: `.ks_procgen_drafts_final_release.log` (265 existing warnings, zero errors;
+  initial Release also passed with 512 existing warnings), `.ks_procgen_drafts_final_debug.log`
+  (fresh Debug, 1,107 existing warnings, zero errors), `.ks_procgen_drafts_final_units.log`
+  (596 passed), and `.ks_procgen_drafts_final_integration.log` (196 passed, including the actual
+  `Content.IntegrationTests.Tests.Utility.SandboxTest.Test`). Both regression runs have zero failed
+  and zero skipped cases. No new warnings, suppressions or sandbox whitelist changes were added.
+  Mutation evidence is retained in `.ks_procgen_drafts_mutation_units.log` and
+  `.ks_procgen_drafts_mutation_visible.log`; the first masked result is retained separately in
+  `.ks_procgen_drafts_mutation_loaded.log`. The full repository test suite was not run.
+  Scoped whitespace/encoding checks pass; the four private KS modules remain clean and 0/0
+  against their locally recorded `origin/main` refs (no remote fetch in this batch).
+- [ ] Finish full room/theme/assembly asset documents, area/domain/circuit assignments, dependency
+  manifests and canonical request snapshots in R08/R15. Add server ownership, typed intentions,
+  permissions, bounded upload parsing, writer leases, operation replay, undo/redo and persistence
+  in R16. No client/network/import command accepts this helper directly yet.
+
+### Atmosphere authoring and mixture foundation (2026-10-15, R08/R11)
+
+This batch implements the atmosphere portion of the new contracts, not a live room fill.
+Electrical profiles, gas-domain assignment/closure, the unified stage and UI remain open.
+Existing geometry/content requests without explicit gas settings retain their supported behavior.
+
+- [x] Add version-1 `KsProcgenAtmosphereSpec`/`ksProcgenAtmosphereProfile`, preserve/fill/vacuum,
+  required/preferred and initial/stable policies, pressure/temperature/fraction tolerances and a
+  bounded observation interval (1-3600 ticks for stable; zero for initial-only). Reject unknown
+  versions, clamped/nonfinite states, incorrect gas identifiers and malformed fractions.
+- [x] Resolve exactly named engine gas IDs, normalize only within the declared `1e-6` sum rounding
+  tolerance, drop validated zero fractions, sort gas names and detach immutable snapshots. Keep
+  source profile identity and versioned semantic hashes; editing source dictionaries cannot mutate
+  an earlier snapshot. Preserve/vacuum remain distinct and cannot carry hidden replacement gases.
+  Retain representation errors at or below `2^-24` rather than renormalizing already rounded
+  floats on each draft reopen; a deterministic 512-mixture/four-roundtrip regression pins identity.
+- [x] Add direct request `atmosphereProfile` references and detached `atmosphere` overrides; painted
+  area and inherited theme defaults use `atmosphereProfile`. Snapshot area profiles into immutable
+  resolved values, transport fresh editable gas specs per request, hash resolved gas state in
+  area snapshot v6 and export it through area-review JSON schema 2. Existing owned-diagnostic JSON
+  schema 1 remains unchanged. Inline selection replaces the whole profile, not individual gases.
+- [x] Add ordinary air, nitrogen, vacuum and preserve prototypes, an opt-in nitrogen area and a
+  nitrogen theme inheriting the office materials. Existing office defaults do not opt into gas writes.
+- [x] Add a per-tile mixture proposal using the actual caller-supplied volume and engine pressure
+  arithmetic; reject overflowing/underflowing or out-of-tolerance results without partial proposals.
+  These detached mixture objects do not touch engine tiles or certify initial/stable atmospheres.
+- [x] Reject explicit gas contracts at both primary content entry points with
+  `AtmospherePlanningUnsupported` before layout work; reject theme gas defaults when selecting
+  unsupported content. Unknown profiles and invalid schemas retain specific diagnostics. Explicit
+  preserve profiles are also gated until preservation can be retained/verified by the unified plan.
+- [x] Verify Release, fresh Debug, focused unit/content/serialization regressions and actual client
+  sandbox loading; demonstrate failing assertions under deliberate restored-source mutations.
+  Final restored-source Server Release passes with 512 existing permitted warnings and no errors.
+  A subsequent sequential Debug integration `--no-incremental --no-restore` build passes with
+  1107 existing warnings and no errors; no warning suppression or sandbox whitelist change was
+  added. All 548 focused procgen unit cases and 184 selected loaded/integration cases pass with
+  zero failures/skips, including `Content.IntegrationTests.Tests.Utility.SandboxTest.Test`.
+  - New coverage comprises 35 focused unit cases and four loaded cases, including all four
+    profile presets and all three modes, engine serialization, inherited defaults and explicit overrides,
+    paused painted-grid snapshots, versioned review JSON, numeric overflow/underflow, invalid
+    schema/gases, and both primary planners refusing unsupported gas contracts without allocation.
+  - The repeated-draft regression initially caught normalization drift at deterministic mixture
+    135; preserving representational roundoff fixes it. An initial paint fixture returned `NoOp`
+    because the engine reparents markers off an empty grid; use the existing explicit
+    `BindMarkerToGrid` authoring adapter. Final gates include both fixes. The loaded fixture logs
+    original assertion exceptions so test-pool dirty disposal cannot hide them behind a skip.
+  - Deliberately divide by tile volume instead of multiplying, expose a mutable fraction list,
+    and drop gas data from `CreateRequest`: all three selected tests fail their protected
+    assertions. Original source bytes are restored in `finally` and independently inspected;
+    the Release/fresh Debug/final regression gates above ran afterward on restored source.
+  - Logs: `.ks_procgen_atmosphere_final_release.log`, `.ks_procgen_atmosphere_final_debug.log`,
+    `.ks_procgen_atmosphere_final_units.log`, `.ks_procgen_atmosphere_final_integration.log`, and
+    `.ks_procgen_atmosphere_mutations.log`. TRX artifacts retain case-level results. Scoped diff
+    and new-file whitespace checks pass. All four private KS modules remain clean and 0/0
+    against their locally recorded `origin/main`; no remote fetch was performed.
+  - These are focused gates; the full repository suite, real room gas initialization and an
+    editor UI walkthrough remain unverified. The historical 75% estimate is not rescored here.
+- [ ] Integrate request/area/theme precedence with immutable request-wide hard constraints,
+  scoped room/domain assignments and the primary R09 plan. The standalone profile resolver accepts
+  an already resolved lower-priority default; it does not yet enforce request-wide utility goals.
+- [ ] Add actual tile mutation, engine domain facts, initial readback and scoped observation under
+  R10/R11 before removing the unsupported-planning guards. Continue R08 electrical/draft contracts.
+
+### Input-only slot loading and narrow-room follow-up (2026-10-22, R08/R09/R10, in progress)
+
+The first broad Release run compiled after correcting a typed-prototype-ID analyzer error, but
+only 675/682 integration cases passed. Seven failures exposed dependencies outside the focused
+power tests; `.ks_procgen_wallmount_release_initial_integration.log` retains that red gate.
+At that failed checkpoint the estimate remained 64/100. The restored complete gates below
+subsequently establish the supported topology exit and the current 65/100 assessment.
+
+- [x] Diagnose the two captured contained-room failures: restored `ItemSlots.Slots` declarations
+  cause native `TryInsert` to play the slot sound, which creates an already MapInitialized Audio
+  entity before the private map initializes. The earlier lost slot dictionaries had silently
+  routed these insertions through generic containers. Do not erase slot data or relax lifecycle
+  membership checks to make the scene pass.
+- [x] Draft silent loading through native `TryGetSlot` / `CanInsert` and native container `Insert`.
+  Keep eligibility, whitelist/lock checks, insertion events, callback cancellation and membership
+  proof; loading is not a user interaction and must not play insertion audio. Ordinary native
+  user interaction remains unchanged. Remove temporary diagnosis logging after locating the Audio.
+- [x] Add a real owned-stage test requiring a retained non-null insertion sound, an occupied slot,
+  no generated Audio entities and complete scene verification. This case and the previous captured
+  contained-room cases pass in the focused follow-up; final broad checks remain below.
+- [x] Make empty-content manifest fixtures explicitly request zero optional furnishing density.
+  Their previous empty scenes depended on implicit strip-to-passage classification; dependency
+  and unselected-variant manifest checks must remain independent of furniture packing.
+- [x] Diagnose another real R09 inconsistency: legacy flat furnishing placed initial optional
+  cores even at zero density, unlike the supported solver. Draft zero-density suppression after
+  hard core/pack minima, and add two tests distinguishing optional omission from mandatory copies.
+- [x] Update the two existing retry assertions to the actual narrow-room `RequiredPackCannotFit`
+  result, including the failed furnishing stage. They still require complete configuration retry,
+  retained work and a successful later configuration; no mandatory requirement was relaxed.
+- [x] Verify both complete configurations after these fixes: normal Release and fresh Debug pass
+  825 unit, 685 integration/sandbox and 31 native serialization cases each, retaining 820/659/23
+  with the single deliberately replaced obsolete electrical-allocation guard recorded below.
+  `.ks_procgen_wallmount_gates_summary.log` and `ks_wallmount_{release,final}_{units,integration,engine}.trx`
+  retain the complete case comparison and actual `SandboxTest.Test`. Temporary diagnosis logging
+  is removed; lifecycle/ownership and native insertion checks remain strict.
+- [x] Correct the optional-content test fixtures after the zero-density fix: explicit small
+  positive density preserves their intended optional competition, sparse outcomes, weighted retries
+  and relation-path assertions. The explicit zero-density cases remain separate. The large historical
+  content-load scenario passes after its one-cluster test uses low positive rather than zero density.
+- [ ] R18 test structure rewrite: split `TinyShapeCanBeNormalizedInLoadedServerContent` into focused
+  capability cases with shared fixtures. Its large mixed scenario hid later optional-density
+  assumptions behind earlier assertion failures. Preserve every existing check and provide an
+  explicit baseline mapping rather than dropping assertions during the split.
+- [ ] Continue the ordinary legacy-pack joint-search rewrite: nonzero optional fill must retry
+  coherent placements or sparsify without disconnecting thin rooms; forcing all narrow shapes
+  back to passage is not a substitute. Preserve density, hard minima and shared work budgets.
+
+### Electrical utility-room and routing amendment (2026-10-23, user steering, required rewrites)
+
+Section 20.3a is now normative. Existing completed native mounting/topology tests retain their
+narrow historical evidence, but do not establish dedicated closets or adequate cable coverage.
+The current `HomeGroups`/`TryInfrastructure` code chooses general rooms and co-locates both
+converter classes. Current MV joins endpoints and LV principally covers declared consumers.
+These are explicit rewrite targets; do not add another disconnected post-processing generator.
+
+- [ ] R08/R09/R12: version and freeze closet theme/pack palettes, 1x2/2x2 interior sizes, backbone
+  and room-floor coverage intent, and strict LV 2x2 exception evidence. Migrate existing drafts,
+  profiles, request snapshots, manifests, hashes, examples and future UI through shared contracts.
+- [ ] R09/R14: allocate actual utility-room partitions and entrances jointly, respecting constant
+  areas, writable hull/cable masks and requested entrance connectivity. Replace general-room
+  substation homes and forced APC/substation co-location; keep APC wall support and both substation
+  mount variants. Keep optional electrical clutter coherent without blocking tiny closet access.
+- [ ] R12: build a generous MV service backbone with room-entry/APC branches and report unmet
+  service targets independently of device topology. Count every proposed/reused route branch.
+- [ ] R12: improve LV service coverage across usable room floors and actual receivers. Avoid new
+  2x2 occupancy throughout route construction and joins; retain a necessity certificate for every
+  exception, with exhaustive versus heuristic/budget status explicit. Revalidate native groups.
+- [ ] R18: finish preserved/hosted wiring, inspected existing-hull reuse and complete pose/route
+  portfolio controls. The later standalone batches below already verify both closet sizes and
+  rotations, floor/wall substations, native wall APCs, generated-hull sharing, clutter/access,
+  MV reach, LV coverage/range edges, block rejection/mandatory-terminal certificates and bounded
+  failures. The old open-room showcase/co-location expectations are replaced. Keep this broader
+  release task open until the remaining interfaces and operational/replay requirements pass.
+- [ ] R16: expose room palettes, backbone/floor coverage overlays, uncovered receivers, forbidden
+  or certified LV blocks and proof limitations in author tools, with real review/apply evidence.
+
+### Showcase cable visibility correction (2026-10-26)
+
+The requested correction concerns the rendered showcase images. Installed cable routes were
+partly hidden by later wall and machine drawing. Wiring inspection must expose the complete route.
+
+- [x] Draw the cable sprite pass after all floors, structures, lights and contents in the wiring PNG.
+- [x] Draw SVG cable diagnostics last, retaining the existing cable-layer visibility control.
+- [x] Regenerate sprite assets, SVGs and gallery; inspect the wiring PNG and verify source/output
+  hashes. All five normal sprite PNGs and native map bytes remain unchanged.
+- [x] Check native installed-wire persistence separately: seven targeted cases pass in each of
+  Release and Debug,
+  including initially paused and unpaused imports, 30 simulation ticks, all 32 anchored/snap-lattice
+  cable segments, covered-floor hiding, converter node membership and native consumer backlinks.
+  A consumer may select the APC's proximity provider directly; it need not select a cable entity.
+- [x] Build Release and Debug and finish the native import regression in both configurations;
+  results: `ks_wireplacement_cover_native.trx` and `ks_wireplacement_cover_debug_native.trx`.
+
+This renderer adjustment earns no additional capability points. It does not certify operating
+supply or general post-load/hosted topology. The subsequent typed-reference batch refreshes both browser
+overviews from the current gallery; wiring PNG/SVG outputs are regenerated and visually inspected.
+
+### Inheritance-parent dependency closure (2026-10-26, R08/R15/R17, verified parent subset)
+
+Schema 10 extends the previous typed-reference subset to explicit inheritance links. Parent
+relationships are discovered from the registered `IInheritingPrototype` contract and its known
+`parent` declaration field, rather than by guessing which ordinary strings name prototypes.
+The last completed assessment remains 68/100; this prerequisite adds no full-manifest point.
+
+- [x] Follow both runtime parent arrays and resolved declaration parent scalars/arrays across
+  entities, tiles and other registered kinds. Charge occurrences before deduplication and share
+  the existing definition/reference/node/character/depth allowances across all ancestors.
+- [x] Preserve abstract ancestor declarations and bounded reference-discovery images without
+  granting placement authority. Add declaration-only tile records; direct abstract tile roots
+  still reject and concrete tiles retain loaded/named/numeric binding checks.
+- [x] Verify transitive and diamond ancestry, parent order, cycles, declaration-only drift beneath
+  an unchanged child, mutable runtime parent arrays, missing/malformed parents, repeated edges,
+  exact budgets and immutable images. Verify closure through abstract ancestor typed references.
+- [x] Inspect partial abstract fields through registered validators without constructing fake
+  complete instances or requiring omitted mandatory fields. Bind canonical inspection input and
+  stable, bounded schema-gap codes into schema 10 identity. Unknown fields never become guessed
+  prototype references; validation success alone is not complete reference-coverage evidence.
+- [x] Verify the native `CarpetBase` correction and a concrete inherited threshold: its destruction
+  behavior was incorrectly nested under `DamageTrigger`; move it to the threshold's behavior list.
+  Keep this source repair separate from intentionally opaque legacy/client declaration fields.
+- [ ] Resolve outstanding declared-schema gaps before claiming full content closure. The native
+  `ClothingUniformSkirtBase` ancestry currently exposes legacy `femaleMask` data absent from the
+  registered server `ClothingComponent` schema. This is the one observed office-catalog schema
+  gap in `.ks_procgen_inheritance_native_catalog_audit.log`. Audit its intended current schema/client meaning;
+  migrate author data or inspect the correct schema explicitly, rather than inventing references
+  or disabling ancestor capture. Other captured gap codes remain concrete follow-up inputs.
+- [x] Reconcile source-map override seed provenance and owned-stage retirement with ancestor drift.
+- [x] Measure the native catalog: 337 entity/tile/declaration records and 312 other-kind records
+  give 649 combined definitions, with 7,253 reference occurrences, 133,845 nodes and 2,987,554
+  canonical characters. The existing 1,024-definition, 32,768-reference, 262,144-node and
+  4,194,304-character defaults all fit. No default is raised and no ancestor is omitted.
+- [x] Keep recognized entity/network/map references in abstract fields as hard failures rather
+  than schema gaps; verify all three types without allocating or querying world entities.
+- [x] Run six isolated compile-valid controls with exact byte restoration: disabling parent
+  traversal causes seven assertion failures; omitting abstract entity or generic-kind reference
+  observation causes one each; suppressing gap reporting causes one; reverting carpet threshold
+  nesting causes one; softening recognized world-reference rejection causes three. All 14 failures
+  are intended assertions. All six mutated source hashes match after restoration. Evidence:
+  `.ks_procgen_inheritance_control_audit.log` and `ks_inheritance_control_*.trx`.
+- [x] Normal Release passes 891 units, 895 integration/sandbox cases and 31 serialization cases,
+  retaining all prior 891/862/31 cases. The 33 added cases comprise 32 inheritance cases and one
+  source override ancestor case. The carpet test additionally verifies the destruction act.
+- [x] Fresh Debug also passes 891/895/31 with zero failures/skips and identical inventories.
+  All prior 891/862/31 cases remain, and all 12 source hashes (11 C# files plus the carpet YAML)
+  stay unchanged across the six gates. Evidence: `.ks_procgen_inheritance_final_audit.log`,
+  `.ks_procgen_inheritance_source_audit.log` and `ks_inheritance_{release,debug}_{units,integration,engine}.trx`.
+- [x] Regenerate five native exports/save-load cases and install matching resources. Both ordinary
+  office import cases pass against the refreshed map. All 72 sprite-source hashes and six output
+  identities match; all six PNGs retain their preceding bytes, with cables drawn last. Six historical
+  review artifacts remain byte-identical. Refresh and inspect both browser overviews: all five
+  images, both view modes and all five overlay controls pass, including nonempty overlay groups.
+  Temporary profiles/HTML copies are removed. Evidence: `.ks_procgen_inheritance_artifacts_audit.log`,
+  `.ks_procgen_inheritance_browser_audit.log`, `ks_showcases.trx` and `ks_inheritance_installed_wiring.trx`.
+- [ ] Continue remaining legacy/custom/client/resource dependencies, portable project assets and
+  replay after this rewrite. Full content closure and general operational/publication flags stay
+  false until their own complete exits pass.
+
+Focused Release evidence: `ks_inheritance_gaps_native.trx` passes 30 cases;
+`ks_inheritance_focused_native.trx` passes 245 dependency/manifest/source-map cases; and
+`ks_inheritance_restored_precontrol_native.trx` passes all 248 after adding the three recognized
+world-reference cases. These include concrete-parent runtime changes, masked entity/generic
+references in partial abstract fields, source override provenance and selected/unselected owned
+stage retirement. Full configuration and refreshed artifact/browser gates now pass; the wider R08/R15/R17 exits above remain open.
+
+### Registered typed prototype dependency closure (2026-10-26, R08/R15/R17, verified typed subset)
+
+The existing image followed entity wrappers but ignored other `ProtoId<T>` kinds. This rewrite
+retains kind-qualified dependencies and follows their typed references back into concrete entities,
+registered tiles or other registered prototype kinds. It is a prerequisite for complete manifests;
+resource bytes, legacy string serializers, ignored client schemas and full replay remain open.
+
+- [x] Introduce native image schema 9 with separate immutable kind/ID/runtime-type/body/declaration
+  records and explicit dependency-root provenance. Keep entity/tile roots separate from referenced
+  definitions; dependencies never acquire spawn authority merely by appearing in a manifest.
+- [x] Follow registered typed kinds across nested collections and mapping keys/values. Reconcile
+  typed tile references with the existing named/numeric tile-registration audit. Meter repeated
+  references before deduplication and share definition, node, character and depth allowances.
+- [x] Discover typed references in abstract templates without deserialization hooks, retaining only
+  declaration authority. Do not register templates globally or make abstract entities spawnable.
+- [x] Compare the complete dependency closure during fresh manifest checks and parent-placement
+  checks. Existing owned stages capture all candidate definitions, including unselected variants;
+  dependency drift must retire a stage rather than silently consult changed live defaults.
+- [x] Verify transitive paths/cycles, kind collisions, abstract and nested references, source and
+  runtime drift, exact budgets, immutable captures, malformed roots and atomic native retirement.
+  Both configurations pass 29 direct typed-kind cases and six source-map kind cases.
+- [x] Run three isolated compile-valid controls: ignoring non-entity typed references causes five
+  assertion failures; bypassing dependency equality only at parent placement causes three failures
+  with the entity-leaf case still passing; omitting source override kinds causes five failures.
+  All three original source hashes match after byte-for-byte restoration. Evidence:
+  `.ks_procgen_kindclosure_control_audit.log` and the three `ks_kindclosure_control_*.trx` files.
+- [x] Normal Release and fresh Debug each pass 891 units, 862 integration/sandbox cases and 31
+  serialization cases, with zero failures/skips and equal inventories. All prior 891/825/31 cases
+  are retained; 35 typed-dependency/source-map cases and two imported-wire cases are added.
+  All 14 C# source hashes remain unchanged across the six gates. Evidence:
+  `.ks_procgen_kindclosure_final_audit.log`, `.ks_procgen_kindclosure_source_audit.log` and
+  `ks_kindclosure_{release,debug}_{units,integration,engine}.trx`.
+- [x] Regenerate five native exports/save-load cases and install byte-identical resource maps.
+  Two additional ordinary import cases pass against the refreshed office, including paused and
+  unpaused starts and 30 simulation ticks. All 72 source sprite hashes and six output/plan identities
+  match; the six sprite PNGs retain their preceding geometry and the wire overlay stays above all
+  layers. Six historical review files retain their exact hashes.
+- [x] Refresh and inspect both browser overviews; all five images load, both view modes and all
+  five overlay controls pass in each capture. Disposable profiles and HTML copies are removed.
+  Native artifacts: `.ks_procgen_kindclosure_artifacts_audit.log`; browser evidence:
+  `.ks_procgen_kindclosure_browser_audit.log`. The normal localization cache is refreshed after
+  correcting stale electrical-preset comments. No general post-load or operating-supply flag is
+  promoted from the two scoped import checks.
+
+- [x] Track inheritance parents explicitly in the subsequent schema-10 closure rewrite. Parent arrays such as
+  `AbstractPrototypeIdArraySerializer<TPrototype>` are string arrays with custom validation, not
+  `ProtoId<T>` wrappers; retaining a child's resolved declaration does not capture every ancestor's
+  own declaration/body. Follow registered-kind parent links, including abstract ancestors, under
+  the shared budgets. Verify declaration-only ancestor drift even when the resolved child fields
+  stay equal, cycles/deduplication, missing parents and source override provenance. Do not infer
+  prototype links from arbitrary strings.
+- [ ] Complete legacy/custom reference serializers, resource and ignored-client dependency capture,
+  portable project imports and generator replay. `FullContentClosureVerified` remains false; this
+  typed-closure rewrite alone does not complete R08/R15 or earn a full manifest/editor point.
+
+The ordinary office catalog contains 238 entity/tile/declaration records and 300 other-kind
+records: 538 combined definitions, 5,721 reference occurrences, 114,695 nodes and 2,589,282
+canonical characters in the measured native catalog. Schema 9 therefore raises the default
+combined definition allowance from 512 to 1,024; its hard maximum stays 4,096. No dependency kinds
+are excluded to fit the old cap. Reference/node/character/depth limits remain unchanged. The
+regression checks that the default captures the same content as an explicit larger allowance and
+that an explicit 512-definition allowance fails atomically with `PrototypeManifestDefinitionBudget`.
+
+
+### Generated hull sharing for electrical closets (2026-10-25, R09/R14/R18, verified standalone subset)
+
+This continuation addresses the unnecessary interior wall band in the dedicated-room amendment.
+It does not authorize reuse of existing or preserved hull. Complete shared/native/artifact
+gates below retain the fixed 68/100 assessment; this extends already credited utility/layout scope.
+
+- [x] Separate immutable reused envelope cells from partition-owned enclosure cells; bind them
+  into reservation identity and native service-layout comparison. Keep thresholds and approaches
+  on target floor, preserve full-band fallback, and reject overlapping partition ownership.
+- [x] Enumerate hull-flush reservations with bounded ordinal retries and shared rejected-candidate
+  work. Bump the schema-two allocator dependency to algorithm 3; preserve old no-reuse reservation
+  hash encoding and the legacy schema-one electrical-context path.
+- [x] Carry explicit structural corner claims through hull boundary inventory and material
+  selection. Combine utility ownership with incident ordinary-room palette requirements rather
+  than silently overriding a conflicting hull material. Do not invent diagonal exposure edges.
+- [x] Verify narrow 1x4/4x1 and 4x4 reservations, impossible 1x3, missing/preserved/void/foreign
+  target corners, immutable claims, canonical replay, exact budgets and partition-overlap denial.
+- [x] Verify initialized native floor/wall converters, wall APCs, enclosure including corners,
+  windows, generous MV targets, full usable-floor LV coverage, no uncertified blocks and rollback.
+- [x] Run two isolated compile-valid controls: allocation denial causes three small-footprint
+  unit assertion failures; removing explicit corner claims causes three geometry assertion
+  failures and six native material-authority failures (`StaleUtilityHullMaterialClaim`). The
+  latter guard rejects incomplete claims before spawning; this is not an operating-power test.
+  Restore both mutated files byte-for-byte and confirm all nine changed C# hashes. All 34 focused
+  utility units and 59 focused electrical/structural native cases pass after restoration.
+- [x] Normal Release and fresh Debug each pass 891/825/31 with identical inventories, zero
+  failures/skips and all previous 881/817/31 retained. Ten units and eight integration cases are
+  new. Actual sandbox checks and current installed showcase maps pass in both configurations.
+- [x] Regenerate five native exports/save-load checks and install matching resources. The office
+  gains seven floor tiles by sharing seven enclosure cells with generated hull. It has 32 floors,
+  23 walls, six windows, one door, five content members, 1 HV / 23 MV / 8 LV segments, 17 MV
+  targets, 30/30 usable floor coverage and zero LV squares. All 72 RSI/PNG source hashes and six
+  preview hashes/plan associations pass. The four other sprite previews and SVGs remain unchanged;
+  all five native serialized exports are refreshed. Inspect the office sprites, exposed wiring
+  and both refreshed browser overviews. Hidden Edge checks all five images, both view modes and
+  all five toggles in both states; disposable profiles are removed.
+- [ ] Add typed utility diagnostics/editor overlays for reused versus partition-owned walls and
+  structural corner claims. Static exported enclosure data is not the section 21 authoring UI.
+- [ ] Continue inspected existing-hull reuse, hosted/preserved interfaces, complete pose/route
+  portfolios, operational supply and authoring-default migration as separate work.
+
+### Joint utility reservations and automatic furnished defaults (2026-10-25, R09/R14/R18, verified full-band standalone subset)
+
+This batch replaces first-reservation-only fitting in the standalone schema-two pipeline. The
+weighted assessment is now 68/100 after the retained gates below; hull-boundary reuse, complete
+hybrid fitting, global optional-content optimization and default-schema migration remain open.
+
+- [x] Enumerate deterministic complete full-band reservations by ordinal, accounting for all
+  discarded enclosures, door candidates and zone-fragment checks in the shared work allowance.
+  Prefer enough interior space for the inspected hardware footprint, clean operation and desired
+  loose contents; this is a soft fitting preference, never a minimum geometry exemption.
+- [x] Retry complete geometry after later seam/content/device/route rejection using a bounded
+  Cartesian frontier of independent per-network ordinals. Preserve already exhausted per-network
+  bounds, deterministic ordering and all consumed graph/seam/furnishing/layout quotas. Retain only
+  scalar choice diagnostics for failed candidates; exhaustion is unknown, not infeasibility.
+- [x] Verify distinct/canonical choices, comfort versus small-shape fallback, copied independent
+  network selections, invalid/missing ordinals and exact/one-less allocation work. Verify native
+  furnished default generation without size or planning-budget overrides, masked-device relocation,
+  shared whole-search limits and independent networks that do not advance in lockstep.
+  All 881 procgen units and 67 selected native/showcase/sandbox integrations pass preflight.
+  The two-island fixture initially requested one connected area; explicitly select PerIsland.
+- [x] Rewrite the sparse-endpoint coverage regression to retain its first required-coverage failure
+  and expect honest exhaustion when only one geometry probe is allowed. The old first-layout
+  rejection is no longer a global conclusion after adding reservation retries. Never permit a
+  successful candidate that omits required coverage.
+- [x] Remove the office showcase's forced 2x2 override and use the normal named schema-two preset.
+  Bind allocation algorithm version 2 into schema-two context identity while retaining historical
+  schema-one identity and general owned planning/review versions 10/3.
+- [x] Complete compile-valid negative controls, exact restoration, normal Release/fresh Debug
+  retained gates, native re-exports, sprite/diagnostic audits and an updated fixed-weight assessment.
+  Each configuration passes **881/817/31**, retains every **873/797/31** case and has an identical
+  inventory with zero failures/skips. All 28 new positives pass in both final configurations;
+  both actual sandbox cases and both ten-case installed-showcase map inventories pass.
+  A combined compile-valid control disables authority comparisons, intrinsic reservation ordinal
+  selection, comfortable sizing and geometry-frontier growth. Exactly **3 unit + 15 integration
+  assertions** fail: thirteen fail at the intended policy/device audit, the default case reaches
+  its size assertion, and the masked-device case cannot produce its required retried candidate.
+  Twenty-one other reservation cases still pass. All four mutated sources restore byte-for-byte
+  in `finally` before both complete positive configuration gates.
+  Logs/TRX: `.ks_procgen_electricalauthority_{release,final}_*`, `_final_audit.log`,
+  `_control_audit.log`, `_artifacts_audit.log` and
+  `ks_electricalauthority_{release,final}_{units,integration,engine}.trx`.
+- [ ] Reuse actual inspected/generated hull boundaries rather than always consuming a full
+  enclosing band inside writable floor. Full-band retry support does not complete this requirement.
+- [ ] Rank optional-content quality across multiple complete candidates when necessary. Current
+  ordering uses frozen hardware footprint and desired content as a soft space estimate, then
+  accepts the first complete valid result. This is not a global optimality guarantee.
+- [ ] Add bounded route-order/APC-site/pose portfolios within a reservation when an earlier valid
+  LV branch blocks a later goal. Whole-reservation retries cannot replace all within-room retries.
+
+### Original electrical policy and converter authority (2026-10-25, R17, verified native subset)
+
+Continue the authority rewrites before adding utility-layout behavior. This batch adds no weighted
+points; the separate full-band fitting exit above raises the fixed assessment to 68/100.
+
+- [x] Retain the effective immutable electrical profile selected before proposing, including
+  theme fallback and explicit-request precedence, in the owned scene. Compilation rejects a
+  missing/substituted routed profile; live inspection compares the complete original declaration.
+  Service-domain reconstruction must use that original policy, not the routed plan as authority.
+- [x] Reconstruct converter declarations from captured infrastructure bindings/poses and compare
+  ID, room, prototype, tile, quarter turns, converter role and wall mounting with each claim.
+  Inspect the real anchored grid parent, native position/rotation, prototype and mount component.
+  MV terminal-domain seeds must come from captured poses. A connected bus does not prove a claimed
+  converter coordinate or certify mandatory-terminal necessity at a different coordinate.
+- [x] Verify same-network forged claims, omission/duplication, weakened policy/palette declarations,
+  actual native position/rotation drift, theme-selected defaults, explicit precedence and exact
+  shared audit work. Keep all prior native wiring tests. The first preflight passes 56/57 cases;
+  its substation rotation fixture did not mutate a no-rotation entity. Correct it to move/re-anchor
+  the real substation and assert the physical change before testing the audit; do not relax checks.
+- [x] Run targeted compile-valid controls without coupled routing defects, restore exact bytes,
+  complete normal Release/fresh Debug retained gates and audit unchanged/revised artifacts.
+  Sixteen new cases cover eight converter claim substitutions/omissions/duplications, three policy
+  changes, actual APC rotation and re-anchored substation movement, exact work and two theme/explicit
+  precedence variants. The substation fixture correction retains actual physical-change assertions.
+  Thirteen specific audit failures in the combined control reach `InspectPolicyAndDevices` and
+  observe null instead of the required failure code; no unrelated routing failure is counted.
+
+### Independent electrical domains and bounded route joins (2026-10-24, R09/R14/R17, verified standalone subset)
+
+This batch completes prerequisite service-domain inspection and route work-bound repairs. Keep the
+fixed assessment at 67/100: these strengthen already credited wiring rather than complete operating
+power, hosted preservation, whole-layout retries or the authoring workspace.
+
+- [x] Retain detached room floors, protected passages, utility reservations and door approaches
+  separately from the electrical service witness when compiling the owned scene. Reconstruct
+  allowed cable cells from compiled terrain and captured request masks, MV targets from room and
+  circulation geometry, and eligible LV floor from room floors and captured blocked footprints.
+  Native inspection must reject missing, substituted, duplicate or overclaimed domains/rooms.
+- [x] Verify dropped cable/MV/floor/closet claims, same-count substitutions/duplicates, usable versus
+  all-room floor, traversable coil supplies, copied input collections and exact shared audit work.
+  First preflight passes all 23 electrical service integrations, including eleven new cases.
+  The final input-freezing fixture clears every source room, nonempty protected passages, the
+  outer room collection and door records, while the captured complete layout remains intact.
+- [x] Replace ancestor-scanning route growth with shortest cardinal branches over the fixed wire
+  state, precluding tiles that complete a square against existing wires. Independently inspect
+  the entire proposed branch before publishing it. A branch never authorizes a new unproved block.
+  This is a single-join guarantee, not global route/APC/closet ordering or necessity certification.
+- [x] Verify every allowed/mandatory/absent assignment on a 3x3 grid against an independent
+  exhaustive simple-path oracle, plus 1x1024/1024x1 routing within 100,000 shared work units.
+  Freeze electrical routing algorithm version 2 into schema-two context identity; preserve
+  schema-one identities and general owned planning/review versions 10/3.
+- [x] Run compile-valid negative controls, restore sources exactly, complete normal Release/fresh
+  Debug retained unit/integration/sandbox/serialization gates and regenerate/audit affected native
+  showcases and actual-sprite associations. Update detailed evidence and current metadata.
+  Final normal Release/fresh Debug each pass **873/797/31**, retaining all **870/786/31** baseline
+  cases with identical inventories and zero failures/skips. Both actual sandbox cases and both
+  ten-case installed-map inventories pass; all fourteen new positives are retained.
+  The first combined control disables intrinsic square exclusions and domain comparisons. Its
+  exhaustive oracle fails (domain 63, terminals 52, target 0); seven native cases fail earlier in
+  generation because the route defect interferes, so those seven are NOT audit evidence. A second
+  isolated domain control changes only comparison guards, producing seven specific expected-code
+  versus null failures at `InspectServiceLayout`. Two source files restore exactly after the
+  first control and the native file restores exactly after the second. Final positive gates follow
+  restoration and the strengthened input-freezing fixture. Valid control evidence is eight
+  invariant assertion failures, with ten unaffected route positives; do not count fifteen failures.
+  Evidence: `.ks_procgen_servicedomains_{release,final}_*`, `_final_audit.log`,
+  `_control_interference_audit.log`, `_domaincontrol_audit.log`, `_artifacts_audit.log` and
+  `ks_servicedomains_{release,final}_{units,integration,engine}.trx`.
+  The generator now accepts `-Configuration Release` as well as default Debug and forwards it
+  consistently to build/test. Five native export/save/load cases and matching installed resources
+  pass. All 68 sprite source hashes, six output plan/file associations and the 33-entry artifact
+  manifest are audited. Visible gallery markup, six sprite images and five SVGs are unchanged;
+  browser/overview evidence is retained on that exact-byte basis, not claimed as a fresh browser run.
+- [x] Freeze the effective pre-planning policy and bind converter claims to captured/native poses.
+  The 2026-10-25 authority batch above verifies theme fallback, request precedence, all descriptor
+  fields, same-bus coordinate forgery, physical pose drift and original-policy domain reconstruction.
+  Native MV terminal seeds now come from captured infrastructure poses.
+- [x] Retry complete full-band closet arrangements after later hard rejection under shared quotas;
+  the 2026-10-25 independent-network native batch above verifies this subset.
+- [ ] Add within-reservation route/consumer-order and APC-site/pose alternatives when an earlier
+  committed branch prevents a later goal. Single-join shortest-path correctness and complete
+  reservation retries do not prove all alternate layouts impossible.
+- [x] Add comfortable hardware/content-aware size ordering and full-band whole-reservation retries.
+  The 2026-10-25 native default uses no size/planning-budget override and includes coherent supplies;
+  the showcase now uses the normal preset. Continue hull reuse and optional-quality optimization
+  under the explicit pending tasks above; first-complete-valid search is not global best-fit proof.
+
+### Owned electrical service rewrite (2026-10-24, R09/R12/R14/R15/R18, verified standalone WiredOnly subset)
+
+This batch connects the structural utility-room subset to the real owned planning/materialization
+path. Normal Release and fresh Debug retained gates below verify this bounded subset. Weighted
+credit is now 67/100, with two additional distinct utility capability exits. Sustained operational
+supply, hosted network/preservation capture, hull reuse and complete post-rejection geometry
+retries remain open.
+
+- [x] Verify the same frozen closet catalog flows through native electrical/gas capture and the
+  owned stage's full prototype manifest, including unselected structural/light/entity alternatives.
+  Reject wrong/missing catalogs and unsupported nested electrical overrides. Shared candidate-ID
+  enumeration is reused across these capture paths; late mutable catalog recapture is forbidden.
+- [x] Verify a substation-only mandatory core in the reserved closet and an APC-only mandatory
+  core in an ordinary served room. Respect real floor/wall converter variants, opaque support,
+  clean interaction approaches and same-tile cable terminals; no shared converter-home shortcut.
+  Coherent optional supplies use the normal relational furnishing path and may not defeat access.
+- [x] Verify MV service targets include declared protected/circulation cells, closet approaches,
+  room entrance branches and explicit room service trunks where no corridor exists, plus all
+  converter inputs. Route these cardinally under the same write masks and graph allowance;
+  accepted candidates retain every service target separately from converter topology.
+- [x] Verify transactional cardinal LV route growth against actual same-tier occupied cells.
+  Check root initialization and every added branch for 2x2 blocks, including path-internal tiles.
+  Do not infer necessity from a failed heuristic or exhausted budget. The initial supported
+  certificate is four fixed mandatory APC terminal cells, bound to candidate-domain and terminal
+  hashes. `ForbidNew` rejects even that exception. Other exact/unique-coverage proofs remain open.
+- [x] Verify full usable-room-floor service by default, configurable fraction/domain and separate
+  covered/uncovered floor cells. Exclude normally blocking/vault-required footprints only in the
+  usable-floor domain. Actual required consumers remain independently required even at zero floor
+  coverage; inspect real provider/reception ranges and eligibility, including supported wall roots.
+- [x] Verify immutable service witnesses bind targets/domains/ranges/room reservations/proofs into
+  plan identity, and live inspection rechecks coverage, physical cable occupancy, mandatory-terminal
+  certificates, native provider ranges and closet enclosure/entrance. Native groups and actual
+  receiver membership remain the existing independent checks. Wired-only never certifies supply.
+- [x] Verify route detours, no fake necessity, forced versus forbidden blocks, exact restoration,
+  one-less-work atomicity, proof-budget exhaustion, input freezing and diagonal-only rejection.
+  Exercise actual owned generation/initialization for closet sizes/mount variants, default schema-two
+  settings, optional electrical supplies, independent real consumers, shared quotas and provider loss.
+  Eight new unit cases and twelve new integration cases pass. Native variants cover floor 2x2,
+  wall 1x2 and wall 2x2 substations with separate wall APCs and supplies. Frozen project-area
+  generation still uses captured coil supplies after a loaded pack is changed to paper; missing
+  captured closet content rejects atomically. A required denied MV cell and sparse endpoint-only
+  cable mask cannot erase service requirements.
+- [x] Complete normal Release and fresh Debug retained unit/integration/sandbox/native serialization
+  gates, targeted negative controls, artifact/source audits and detailed updated capability scoring.
+  Each configuration passes **870/786/31**, retains every **862/774/31** baseline case and has an
+  identical inventory with zero failures/skips. The actual sandbox and ten installed showcase map
+  cases pass. One compile-valid combined control permits an unproved LV block, drops denied MV
+  targets and zeroes both producer/auditor floor requirements: **1 unit + 7 integration assertion
+  failures** result, with twelve unaffected passes. Exact restoration of three source files occurs
+  in `finally`; all twenty new positives pass again in both final configurations.
+  Evidence: `.ks_procgen_electricalservice_{release,final}_*`, `_final_audit.log`, `_control_audit.log`
+  and `ks_electricalservice_{release,final}_{units,integration,engine}.trx`.
+- [ ] Finish hull-boundary reuse and within-reservation joint device/route alternatives. Complete
+  full-band reservation retries now handle later hard rejection in the 2026-10-25 batch above.
+  Preserve the remaining scope; candidate-family failure is not proof of impossibility.
+- [x] Replace the old open-room/sparse-wiring native showcase with a real schema-two 2x2 closet,
+  coherent HV/LV coil supplies and separate wall APC. Export all five native grids and request/content
+  documents, install matching resources, render real sprites and regenerate both overviews. Office:
+  25 floors, 23/23 usable-floor LV coverage, 14 MV targets, 24 tier segments (1 HV / 18 MV / 5 LV),
+  no LV 2x2 blocks. All five export/save/load cases pass; sprite/source/output hashes are audited.
+  Hidden headless Edge checks all five images, both modes and all five layer controls in both states.
+  Full-bright sprite composites remain static previews, not native client-rendering certification.
+- [x] Rewrite the two obsolete authoring-only unsupported-generation assertions to require frozen
+  native schema-two context. Missing/wrong shared closet content still rejects explicitly with
+  `ElectricalUtilityRoomContextRequired`. Legacy schema-one identity/primitive behavior stays
+  historical; the revised supported path no longer rejects all schema-two requests.
+- [ ] Activate/migrate new authoring defaults after hull reuse and complete joint layout retries.
+  Preserve explicit legacy schema-one reading/identities. Complete source-interface/operating supply
+  and author UI/replay work under existing weights; this subset does not complete UI or production.
+- [ ] Add exact-domain/unique-coverage necessity certificates beyond the four mandatory terminal
+  case. Add typed utility-room/service overlays to general owned diagnostics/editor UI; the new
+  showcase JSON/coverage overlay is review evidence, not the complete section 21 workspace.
+- [x] Independently reconstruct cable/MV/LV/closet domains from captured layout and write inputs.
+  The subsequent validation/routing batch above verifies omitted/substituted/duplicate/overclaimed
+  lists, exact shared audit work and complete input freezing; immutable omissions cannot pass.
+- [x] Replace repeated ancestor scans with intrinsically filtered shortest branches and an atomic
+  complete-branch square check. Exhaustive 3x3 path-oracle tests and long thin routes verify the
+  single-join guarantee. The earlier path-state concern did not reproduce; the square constraint
+  admits the shortest-path proof recorded in source. Global route/APC/closet alternatives remain
+  explicit pending tasks above, rather than unsubstantiated claims about the previous BFS.
+- [ ] Make full-page overview screenshot regeneration a supported tooling step. The normal showcase
+  generator updates individual sprite PNGs and HTML/SVG, but the two browser overview screenshots
+  were refreshed separately in this batch; regeneration must not silently leave old overviews.
+
+### Mandatory utility-room partition rewrite (2026-10-24, R09/R14/R18, verified structural subset)
+
+This is the geometry prerequisite for the revised electrical pipeline, not completed substation
+layout, furnishing, routing or native operating-access certification. The fixed assessment stays
+65/100 at this structural checkpoint. The later owned electrical service batch above supersedes
+the temporary schema-two guard for the supported standalone WiredOnly path; broader exits remain open.
+
+- [x] Verify automatic per-network `KsProcgenUtilityRoomAllocator` carving before seam/material
+  selection through `KsProcgenGroupPartitionPlanner`'s distribution input. A typed immutable room
+  reservation carries exact 1x2/2x2 interior cells, enclosing band, threshold, approaches and frozen
+  theme reference. Quarter-turn equivalents are supported; the door is in the enclosing band,
+  outside the stated interior dimensions. No manually placed prefab or room-position preset.
+- [x] Verify the existing partition solver reserves the enclosing walls and clean approaches,
+  creates only the designated entrance, and refuses a merge/open fallback that loses a mandatory
+  room. Ordinary repairs may merge ordinary rooms; utility reservations remain distinct. Failed
+  or exhausted proposals expose no reusable floor/wall/door artifact. Downstream consumers must
+  reject the new explicit required-room rejection status.
+- [x] Verify utility selection and rejected connectivity/carving/retries share existing graph and
+  seam budgets, preserve protected/read-only cells, do not join separate entrance networks, and
+  bind reservation identity into the partition hash without changing legacy no-reservation hashes.
+- [x] Verify theme assignment uses actual final floor adjacencies for open interfaces. A closed
+  wall without a door must not imply a theme union. Revalidate the exact enclosure/entrance and
+  require the matching frozen closet catalog; never silently select the ordinary room theme.
+- [x] Verify dimensions/rotations, independent networks, canonical replay, complete-budget replay,
+  one-less-budget atomic failures, tiny-domain fallback, protected bands and malformed reservations.
+  Test real selected closet/ordinary theme packs and missing/wrong catalog or removed wall/door.
+- [x] Materialize the selected geometry's wall/door prototypes on an owned test map and inspect
+  native initialized anchoring, hard wall fixtures and airtight wall components, then clean it up.
+  This deliberately proves structural primitives only: no powered door, machine, substation,
+  furnished-closet accessibility, gas closure or electrical coverage receipt is implied.
+- [x] Corrected-source Debug preflight passes **16 new unit + 8 new integration** cases,
+  including three initialized native structural variants (1x2, axis-swapped 2x1, 2x2). Device
+  rotation, machinery, powered entrances and furnished access are separate unfinished work.
+  The first fixtures omitted the empty entrance-domain declaration that enables standalone roots;
+  their null-reference failures were fixture errors, corrected without weakening production checks.
+- [x] One compile-valid combined control removes protected-wall enforcement, the hard-room open
+  fallback guard, reservation hash binding and the floor-only open-interface test. Exactly
+  **4 unit + 1 integration assertion failures** result. All three source files restore byte-for-byte;
+  `.ks_procgen_utilityrooms_controls_summary.log` and `_restoration.log` retain the witnesses.
+- [x] Normal Release and fresh Debug (`--no-incremental`, ordinary localization/build hooks)
+  each pass **862 units / 774 integration+sandbox / 31 engine serialization** cases, zero failures
+  or skips. Exact inventories retain all previous **846/766/31** and match across configurations.
+  Both runs include all 24 new positives, the actual sandbox check and ten existing native showcase
+  map-load/lint cases. All 33 showcase + 6 review artifact hashes stay unchanged; no sprite renderer,
+  sprite resource or preview is altered. Planning/review versions remain 10/3; no earlier accepted
+  schema-two generation existed. The weighted assessment stays 65/100 because the full electrical
+  path remains gated. Logs/TRX: `.ks_procgen_utilityrooms_{release,final}_*`, `_gates_summary.log`,
+  `_final_audit.log` and `ks_utilityrooms_{release,final}_{integration,units,engine}.trx`.
+- [x] Extend full-band placement to share writable generated-envelope hull, including small
+  shapes where another interior wall band is wasteful. The generated-hull batch above verifies
+  explicit corner/material ownership, native small layouts, budgets and atomic failures. The
+  outside remainder remains connected; a candidate-family shortfall is not global infeasibility.
+- [x] Retry complete reservations after later seam/content/device/route rejection, retaining shared
+  work and independent network choices. The two later 2026-10-25 batches above verify this subset.
+- [ ] Add inspected existing-hull reuse with immutable captured support/airtightness/ownership
+  witnesses, preserved interfaces and host-context validation. Writable generated-envelope reuse
+  does not satisfy this exit. Within-reservation pose and route portfolios remain separate R09/R14
+  tasks; heuristic exhaustion cannot establish geometry or square necessity.
+- [x] Carry the frozen closet catalog and all unselected native entity/component candidates through
+  context capture, owned theme planning and project-area native generation. The subsequent owned
+  electrical service batch verifies this exit without late mutable pack recapture.
+- [x] Replace shared converter homes in schema two with a reserved-closet substation and a served-room
+  wall APC. The subsequent service batch verifies normal relational supplies, MV target/LV coverage
+  routing, the narrow mandatory-terminal proof and revised real-sprite native showcase. Both obsolete
+  unsupported-generation test bodies are rewritten; legacy schema-one cases retain their identities.
+- [ ] Complete typed utility diagnostics/editor overlays, inspected existing-hull reuse and within-reservation pose/route portfolios,
+  further exact-domain block certificates and default migration under the service rewrite above.
+
+### Electrical distribution schema prerequisite (2026-10-23, R08/R09/R12/R15/R18, verified authoring subset)
+
+Historical prerequisite evidence: the temporary schema-two generation guard and its original test
+bodies are superseded by the verified owned electrical service subset above.
+
+This batch implements the authoring/transport prerequisite for section 20.3a; it does not claim
+closet layout, generous MV routing, LV floor coverage or LV necessity certificates are realized.
+The fixed assessment remains 65/100. Complete the joint layout/routing rewrites before enabling
+the revised profile in the owned generator or replacing the historical wiring showcases.
+
+- [x] Verify electrical schema two: immutable canonical 1x2/2x2 interior size sets, a closet room
+  theme (which carries tile/wall/light/entity packs), circulation backbone and room-entry branch
+  intent, bounded floor-service fraction/domain, and strict forbid-or-certify LV square policy.
+  Default schema-two settings require both closet sizes, the electrical supplies theme, both MV
+  service target classes, full usable-room-floor service and checkable LV-square necessity.
+- [x] Verify explicit detached `KsProcgenElectricalProfiles.TryUpgrade` from schema one to two,
+  including unchanged source data, changed migrated identity, idempotence and no invalid-input
+  laundering. Raw schema one plus new distribution fields is rejected, not silently ignored.
+- [x] Verify shared hashes, request snapshots, painted blobs, utility drafts and native engine
+  serialization retain all distribution fields without mutable aliases. Preserve historical
+  schema-one identities; schema-two policy must alter every containing declaration identity.
+- [x] Verify project collection follows closet themes from inline/named area electrical settings,
+  theme-selected profiles and unused draft profiles, including their packs/assemblies. Validate
+  each closet catalog using captured document assets. Imports with missing/broken closet assets
+  must fail atomically. Declaration capture is not entity-component or live utility certification.
+- [x] Verify real loaded schema-two `KsProcgenClosetElectrical` and `KsProcgenElectricalCloset`
+  examples, with coherent optional HV/MV/LV coil supplies. These are authoring examples; they do
+  not yet place a converter, route wires or prove native access in a tiny closet.
+- [x] Verify shared and server electrical-context capture reject schema-two distribution with
+  `ElectricalUtilityRoomPlanningUnsupported` until joint layout/routing supports all hard intent.
+  An accepted editable document must never silently fall through to general-purpose converter homes.
+- [x] Preflight: corrected-source Debug build and all **21 new unit / 10 new integration** cases
+  pass with no failures/skips. These cover migration/defaults/identity/copies/invalid imports,
+  five project selection paths, three broken dependency cases, engine roundtrips and rejection.
+  Logs/TRX use `.ks_procgen_distribution_preflight_*` / `ks_distribution_preflight_*.trx`.
+- [x] One compile-valid combined negative control removes distribution hash binding, the
+  area-electrical closet dependency enqueue and both legacy-planner rejection checks. It causes
+  exactly **2 unit + 3 integration assertion failures**, covering policy identity, shared/server
+  rejection and inline/loaded area dependency capture. Restore all four source files byte-for-byte;
+  `.ks_procgen_distribution_controls_summary.log` and `_restoration.log` retain exact witnesses.
+- [x] Normal Release and fresh Debug (`--no-incremental`, ordinary localization/build hooks)
+  each pass **846 procgen units / 766 integration+sandbox / 31 native serialization** cases,
+  zero failures/skips. Exact class/test-name inventories retain all previous **825/756/31**;
+  configuration inventories match. Both include all **21 new unit + 10 new integration** positives,
+  all ten existing showcase map-load/lint cases and the actual sandbox assembly check. Source/
+  restoration/format audits pass, and all **33 showcase + 6 review artifact hashes** remain unchanged.
+  No sprite renderer, sprite resource or preview bytes change. Existing planning/review semantics
+  remain version 10/schema 3; adding electrical profile schema 2 does not certify revised generation.
+  `.ks_procgen_distribution_gates_summary.log`, `_final_audit.log` and
+  `ks_distribution_{release,final}_{integration,units,engine}.trx` retain evidence.
+  The first Release integration attempt used an overly broad fixture-class filter and selected
+  unrelated full construction/damage/map suites. Its verified owned test host was stopped; this
+  aborted attempt is not a completed gate or evidence of a procgen failure. Retain it separately
+  as `.ks_procgen_distribution_aborted_broad_integration.log` / matching TRX when present.
+  Correct filter: `FullyQualifiedName~KsProcgen|FullyQualifiedName~SandboxTest|FullyQualifiedName~ProcgenShowcases`.
+  The successful unchanged normal Release build was reused for the corrected scope; fresh Debug
+  then rebuilt normally. `.ks_procgen_distribution_filter_correction.log` records the correction.
+- [ ] Finish joint closet partitioning, separate APC placement, MV service backbone and LV
+  coverage/avoidance/proofs; replace both temporary schema-two planning rejection checks.
+  `KsProcgenOwnedInteriorPlanner` currently partitions before group theme/material selection,
+  then asks `TryInfrastructure` for converters after structure. Allocate mandatory utility rooms
+  before group theme/material/door/window selection, carry their designation through the normal
+  partition/scene audit, and select their frozen closet catalog instead of the ordinary room theme.
+  Keep the existing shared graph/probe quotas and whole-candidate rollback; do not label a rectangle
+  after structure or append an independent closet generator. `TryCaptureElectricalContext` currently
+  captures only ordinary-theme candidates plus converters/cables: extend that same content-manifest
+  path with the frozen closet catalog and its real entity/component candidates before planning,
+  including unselected pack alternatives. Authoring theme/pack capture is not this native manifest.
+  Recheck the designated room's actual interior dimensions/enclosure/entrance after every seam
+  rejection, open-interface union and merge fallback: never silently merge a mandatory closet into
+  the served room. Keep ordinary minimum-room-size goals separate from the allowed two-cell closet.
+- [ ] Activate schema two as the authoring default and migrate the existing built-in profiles,
+  drafts/examples/showcase manifests through the same upgrade. The existing field default and
+  built-in schema-one profiles remain historical primitive compatibility during this prerequisite;
+  their general-room output still does not comply with section 20.3a. Do not call this rollout done.
+
+### Supported-member review and projection bounds (2026-10-23, R15/R18, verified review subset)
+
+This batch addresses the remaining supported-member review prerequisite. Owned planning semantics
+advance to version 10 for a prerequisite bounded-search repair; owned review changes to schema 3. Version 9 /
+diagnostic schema 2 evidence remains historical; the gates below verify planning 10 / review 3.
+Weighted credit stays 65/100; offline review is not the section 21 in-game authoring workspace.
+
+- [x] Implement complete supported member rows with source-qualified identity, floor/wall/surface/
+  container layer, exposed request-tile positions, facing, support and coordinate parents, local
+  transforms, slots and footprints. Hidden contents have null world positions and no exposed
+  footprint; parent-local metadata never becomes a fictitious world placement.
+- [x] Implement operating access and relational witness rows, preserving cardinal path order, exact
+  approaches, associated seats, severities/states, measured distances and explicit partial-path
+  flags. Existing floor projection remains a compatibility view.
+- [x] Implement one diagnostic projection budget for all metadata rows and geometry collections.
+  Count repeated cell occurrences across collections, reserve parent entries before projecting
+  children, and never consume geometry for omitted metadata. Scalar points remain entry-bounded.
+  Source processing has its own bounded counter; exhaustion returns empty non-candidate review
+  data with explicit reason, no semantic receipt and retained generation work.
+- [x] Implement SVG supported-member layers, cardinal access/relation paths and facing. Hidden
+  contents are metadata only. Validate finite positions, rotations, layer/exposure consistency,
+  cardinal paths and bounded detail input; escape all labels and attributes.
+- [x] Add sixteen loaded-server cases for all four layers, real support/container membership,
+  native wall APCs, chair access, whole-report geometry/input bounds, omitted-entry accounting,
+  invalid SVG data, escaping, byte limits and canonical repeat output. Retain actual initialization,
+  verification and complete cleanup. Export a populated supported-room JSON/SVG sample explicitly.
+- [x] Diagnose the composite fixture omission: floor cells alone did not grant writable exterior
+  backing walls for its required APC. The fixed probe supplied such walls and was not equivalent.
+  Grant the intended hull envelope. Early missing-wall-domain rejection preserves infeasibility
+  without exhausting unrelated branches. Keep the independent fixed-layout/search measurements
+  separate from evidence about the corrected owned fixture.
+- [x] Implement required root adjacency/facing pruning and anchor/required-link traversal to reduce
+  unnecessary child enumeration. Every attempted pose retains its charge; preferred relations
+  remain soft, and complete final validation still runs. Verify these optimizations independently.
+- [x] Compile and correct the draft. All 31 focused cases pass, including sixteen new cases.
+  The full Debug regression passes 756 integration/sandbox cases, retaining the previous 740.
+  This preflight precedes negative controls and final normal configuration gates.
+- [x] Run four compile-valid controls: per-collection geometry reset causes two assertion failures;
+  disabling required-root pruning, inventing a hidden item world position and projecting omitted
+  metadata each cause one. Restore three files byte for byte; all sixteen positives pass before
+  and after. Evidence: `.ks_procgen_supportedreview_controls_summary.log`, restoration hashes and TRX.
+- [x] Normal Release and fresh Debug (`--no-incremental`) each pass 825 units, 756 integration/
+  sandbox cases and 31 serialization cases, with no failures or skips. Exact inventories match
+  and retain every previous 825/740/31 case. Both actual sandbox runs pass. Evidence:
+  `.ks_procgen_supportedreview_gates_summary.log` and `ks_supportedreview_{release,final}_{units,integration,engine}.trx`.
+- [x] Export the populated `supported-room.json` / `.svg`, render `.png` using hidden headless
+  Edge and visually inspect all exposed layer types, operating rings/paths and the separate
+  contained-paper listing. The hidden item has no world glyph. Remove the isolated browser profile.
+  Regenerate the L-shape review under schema 3 and five native map exports; native copies match.
+  Preserve all six game-sprite PNGs and both renderers byte for byte, with current plan associations.
+  Reconcile artifact/source hashes in `.ks_procgen_supportedreview_final_audit.log`.
+- [ ] Remaining R15/R16 delivery: complete replay/context manifests, document sessions, persistence,
+  editors and verified apply. Projection counters do not certify complete generator work metering;
+  geometry normalization retains its existing request bounds before diagnostic projection starts.
+
+### Preference evidence and bounded review rewrite (2026-10-23, R09/R18, verified review subset)
+
+This batch completes the immediate preference-audit and light-lookup follow-ups below. Owned
+semantic version 9 and owned diagnostic schema 2 now have complete configuration gates.
+Version 8 evidence remains historical. Weighted credit stays 65/100; these
+changes do not implement full supported-content UI, hermetic replay or operational publication.
+
+- [x] Retain detached selected source variants in each composed room, including actual anchors.
+  Copy nested member footprints/turn lists and source collections; audit structural values rather
+  than relying on reference equality or assuming assembly/variant IDs identify unique content.
+- [x] Implement independent captured-content validation: reconstruct the composed room, verify actual
+  pose identity and captured authored variant membership, rebuild canonical automatic intent from
+  captured goals/minima, and recompute distances/penalties and authored relation totals from the
+  independently revalidated access witness. Forged or stale evidence rejects the whole candidate.
+- [x] Bind automatic-policy enablement, selected anchor provenance, measured outcomes and score
+  totals into owned semantic identity version 9. Freeze returned root-distance collections.
+- [x] Implement owned diagnostic schema 2 with per-room preference totals/truncation and distance
+  rows carrying both endpoints' pack/core/copy/variant/source-member identity. Explicitly label
+  Manhattan anchor distance; never label it a walkable-path distance or engine-success receipt.
+  New arrays share the existing entry allowance and bounded JSON byte limit.
+- [x] Replace the final relational-path/light nested lookup with one room-local light-cell set.
+- [x] Add eleven integration cases: eight forged evidence/source mutations, structurally cloned
+  and detached provenance, canonical bounded diagnostics and long-path light obstruction among
+  twelve unrelated proposed fixtures. Preserve initialization, verification and cleanup checks.
+  Caller changes to member, footprint and rotation lists cannot alter retained provenance.
+- [x] Compile and correct the implementation. Eleven new cases and retained pipeline coverage
+  pass. Correct the lighting fixture to supply its explicit empty standalone entrance domain;
+  its initial invalid-input result did not exercise the intended path guard.
+- [x] Run three compile-valid controls: removing observed distance checks causes three assertion
+  failures, removing captured-source membership causes one, and removing relational-path/light
+  rejection causes one. Restore both source files byte for byte; all eleven positives pass before
+  and after. Evidence: `.ks_procgen_prefaudit_controls_summary.log`, restoration hashes and TRX.
+- [x] Normal Release and fresh Debug (`--no-incremental`) each pass 825 units, 740 integration/
+  sandbox cases and 31 serialization cases, with no failures or skips. Exact inventories match
+  and retain every previous 825/729/31 case. The actual sandbox passes in both. Evidence:
+  `.ks_procgen_prefaudit_gates_summary.log` and `ks_prefaudit_{release,final}_{units,integration,engine}.trx`.
+- [x] Regenerate the schema-2 JSON/SVG sample and all five native showcase exports/save/load
+  cases. Both configurations retain ten standard native map cases. Verify installed copies,
+  all 33 showcase artifacts, 40 sprite sources and six current PNG/plan associations. Sprite PNGs
+  and both renderers are unchanged, preserving earlier browser evidence for both views and five
+  toggles. `.ks_procgen_prefaudit_final_audit.log` records the reconciliation. Weighted credit
+  remains 65/100; these changes repair existing furnishing/review guarantees.
+- [x] Supported wall/surface/container review follows in planning 10 / diagnostic schema 3 above.
+  Full author editing workflows remain R16; preference rows alone never completed that UI exit.
+
+### Joint furnishing preference rewrite (2026-10-23, R09/R18, verified placement subset)
+
+This batch addresses the first-legal-pose limitation identified below. Owned semantic version 8
+has complete configuration gates and regenerated examples; version 7 evidence remains historical.
+Weighted credit remains 65/100: this restores previously credited furnishing intent rather than
+completing the broader authoring, runtime and publication exits. R09/R18 remain open.
+
+- [x] Implement a shared preference allowance for one room search tree. It activates only after a
+  complete hard witness exists and meters additional choice/variant, pose, graph and landing work
+  across nested searches. Existing hard allowances still apply and every attempted branch retains
+  its ordinary work counters. Invalid/unsupported declarations cannot use soft fallback.
+- [x] Implement lexicographic scoring of missed authored preferences and Manhattan group-distance
+  penalties. Preserve seeded traversal order for exact ties and retain immutable pose/orientation
+  snapshots for the best fully validated witness. Soft exhaustion reports truncation with that
+  witness; exhaustion before any hard witness still fails with no partial placement.
+- [x] Implement canonical coherence intent from captured theme goals: initial authored groups prefer
+  a four-tile Manhattan radius around the dominant anchor, and repeated floor groups prefer at
+  least three tiles of separation. Infrastructure is excluded. Explicit relational assemblies
+  remain whole; automatic distances never authorize diagonal movement or cross-room references.
+- [x] Implement measured distance outcomes, separate soft-search truncation from failed optional
+  content exploration, and preserve final density/required-content scheduling. Per-call soft work
+  is capped by a bounded fraction of available work to retain room for subsequent validation.
+- [x] Add thirteen integration cases for preferred-corner improvement, three exhaustion domains,
+  immutable retained poses, no invented hard witness, whole-variant/core-choice improvement,
+  truncated whole-alternative retention and primary-entry coherence on/off with real initialization.
+  Fixed-pose fixtures additionally cover operating-landing improvement, soft landing exhaustion,
+  exact chosen-landing revalidation and rejection of a forged unreachable landing. Two wrapper
+  cases reject visited fractional spatial content even after a valid unsatisfied witness exists
+  and before a later satisfiable variant/core could hide the unsupported declaration.
+- [x] Implement preference search over legal operating landings, preserving the first fully checked
+  witness before spending additional work. Independent audits recompute the exact chosen landing
+  rather than silently selecting another one. Lighting reserves relational paths; final interior
+  validation rejects a light which would block a retained relational path.
+- [x] Verify the earlier root/variant/choice draft: 9 new cases and all 725 retained/current
+  integration/sandbox cases pass. This evidence predates the operating-landing extension; it does
+  not close the current compilation or configuration gates.
+- [x] Compile the new operating-landing extension: 11/11 new cases pass. After correcting
+  unsupported-content propagation in both core wrappers, 13/13 current cases pass. Full retained
+  coverage and normal configuration gates pass below.
+- [x] Run retained supported/core/owned pipeline coverage without weakening hard access, mounts,
+  minima, atomicity or shared quotas. Every existing case is retained in both configurations.
+- [x] Run three compile-valid negative controls: first-legal stopping causes one assertion
+  failure, deleting budget-retained witnesses causes three, and ignoring unsupported core/choice
+  status causes two. All three mutated source files are restored byte for byte; all thirteen
+  positives pass before and after. Evidence: `.ks_procgen_preferences_controls_summary.log`,
+  `.ks_procgen_preferences_controls_restoration.log` and the corresponding TRX files.
+- [x] Run normal Release and fresh Debug (`--no-incremental`) gates: each passes 825 units,
+  729 integration/sandbox cases and 31 native serialization cases, with no failures or skips.
+  Exact test inventories match between configurations and retain all previous 825/716/31 cases.
+  The actual client sandbox passes in both. Evidence: `.ks_procgen_preferences_gates_summary.log`,
+  the release/final logs and `ks_preferences_{release,final}_{units,integration,engine}.trx`.
+- [x] R18 preference evidence follow-up: version 9 exposes bounded source-qualified preference
+  rows, binds policy/anchor/measurement identity, and independently audits captured declarations,
+  actual poses and arithmetic. Full supported-member review and author workflows remain separate.
+- [x] R09/R18 light-lookup follow-up: version 9 uses one room-local cell set. A long retained
+  relation path remains valid among twelve unrelated proposed lights; an obstructing extra light
+  rejects. A compile-valid control proves the guard is exercised.
+- [x] Regenerate version 8 native/sprite showcases: all five real export/save/load cases pass;
+  the installed native grids match their exports. Both configuration runs retain the ten standard
+  map checks. All six sprite PNGs and both rendering tools are unchanged, preserving prior browser
+  evidence for five images, two view modes and five toggles. Verify 40 source hashes, current
+  plan/PNG associations and all 33 artifact hashes. `.ks_procgen_preferences_final_audit.log`
+  records the reconciled evidence. No additional weighted capability point is claimed.
+
+### Unified furnishing scheduler rewrite (2026-10-23, R09, in progress)
+
+The preceding whole-choice primitive is now being used to replace conflicting owned furnishing
+paths. This batch changes owned semantics v6 -> v7; v6 exports remain historical until regeneration.
+Do not count implementation drafts as verified capability or close the broader R09 transaction.
+
+- [x] Draft a supported scheduler for all captured ordinary packs, preserving required core copies,
+  pack minima and infrastructure. Required tasks solve jointly before any optional additions.
+- [x] Draft initial optional-core scheduling in dominant/supporting order and bounded density
+  repeats. Each new instance re-solves the whole accepted room; genuine fit rejection omits the new
+  complete instance. A failed optional budget retains its work and the previous valid witness,
+  reports truncation and stops further optional exploration. Hard requirements never become optional.
+- [x] Keep per-core copy identities distinct, including alternatives still available to a required
+  task, and derive separate pack-local cluster ordinals for flat projections. Derive density from
+  the union of exposed footprints per instance, excluding contained
+  members and duplicate surface XY. Wall-only groups create no artificial floor-density demand.
+- [x] Route captured ordinary packs through supported search with connected cardinal clean floor,
+  protected approaches and inspected wall roots. Add a pre-allocation compiler guard against any
+  wall-mounted furnishing that reaches the legacy flat spawn list.
+- [x] Verify primary-entry ordinary wall packs, optional initial cores, density repeats, supporting
+  dependency, zero density with hard minima, rejected additions, work bounds and deterministic replay.
+  Fourteen new cases pass in the full 716-case Debug integration/sandbox run. Wall-only groups do
+  not satisfy floor demand; mixed groups and supported children have separate density assertions.
+- [x] Audit existing fixtures that inherited nonzero density but asserted exactly one supported
+  instance while the old supported path ignored repeats. Give isolated single-instance fixtures
+  explicit low/zero optional density; retain separate meaningful density/repetition assertions.
+  The first full run recorded 25 failures/677 passes. Single-instance fixtures now state their
+  density, and physics/rotation/count checks follow actual assembly members, retaining their
+  collision, sweep, foreign-child, quarter-turn and allocation-budget assertions.
+- [x] Inspect regressions and finish any prerequisite support-search fixes they reveal. Do not
+  weaken mounting, clean access, minimum counts or shared work limits for passing tests.
+  Focused testing passed 44/45 after fixture fixes; the remaining separated-islands case exposed
+  the independent audit's old global wall expectation. Both now derive the same canonical
+  room-local support-wall mask, preserving exact equality checks rather than accepting subsets.
+  New envelope fixtures use a real hull palette; the earlier fixture without hull material was
+  rejected correctly and its repeated failing run was stopped, not counted as verification.
+- [x] Run three compile-valid negative controls and exact source restoration. Disabling ordinary
+  supported dispatch fails all three native mount cases; disabling density repeats fails the high
+  density case while the low density case passes; erasing the accepted witness after a failed
+  optional addition fails both required-room retention cases. All six failures are assertions,
+  with no skipped cases. Restore exact bytes, rebuild, and all fourteen positives pass again.
+  Evidence: `.ks_procgen_unified_controls_summary.log`, corresponding build/test logs/TRXs and
+  `.ks_procgen_unified_controls_restoration.log` (SHA-256 of restored sources).
+- [x] Run normal Release/fresh Debug and actual sandbox gates, preserving the complete current
+  825/716/31 inventories and distinguishing added coverage. No engine, operational or editor credit
+  follows from closing a prerequisite regression gate alone. Both configurations pass exactly
+  825/716/31 with zero failures/skips, actual sandbox and exact multiset retention of the fourteen
+  new cases plus all preceding 825/702/31 cases. Localization hooks run normally, Debug starts with
+  `--no-incremental`, and restored source SHA-256 values match before and after the gates.
+  Evidence: `.ks_procgen_unified_gates_summary.log`, release/final build/test logs and
+  `ks_unified_{release,final}_{units,integration,engine}.trx`.
+- [x] Follow-up R09/R18 placement subset: version 8 adds bounded joint preference scoring,
+  stable ties, whole-room backtracking, canonical coherence intent and best-witness retention.
+  Thirteen new cases and complete configuration gates are recorded in the preceding batch.
+  Version 9 completes the bounded preference review/audit and light-lookup follow-ups above.
+  Full supported-member review and the broader R09/R18 exits stay open.
+- [x] Regenerate v7 showcases and update artifact hashes, installed maps and detailed evidence.
+  Five actual exports/save/load cases pass; ten standard map checks pass again after regeneration.
+  Debug also passes 825 procgen units and 31 native serialization cases. Current-source tests retain
+  all previous 825/702/31 cases. Normal Release/fresh Debug and negative controls now pass above.
+  Evidence: `.ks_procgen_unified_full_debug.log`, `ks_unified_full_debug.trx`, draft unit/engine
+  logs/TRXs, `.ks_procgen_unified_showcases_generate.log` and `ks_unified_regenerated_maps.trx`.
+
+User-requested sprite previews (2026-10-23):
+
+- [x] Render all five actual exported layouts with repository PNG/RSI assets, including the fork's
+  floor variants, cardinal machine frames, native corner masks and exposed HV/MV/LV cable frames.
+  Add a separate under-floor wiring image, source texture hashes and RSI license/attribution data.
+  This is a curated static renderer for these examples, not a generic client rendering adapter.
+- [x] Make game sprites the gallery default, retain diagnostic view/overlays and reject stale
+  sprite plan/file hashes. Regeneration invokes the Windows System.Drawing renderer; other
+  platforms can explicitly skip sprite previews. No generated substitute artwork is used.
+- [x] Render and inspect `overview-sprites.png`; hidden headless Edge verifies five image loads,
+  both modes and all five overlays in both states (`.ks_procgen_sprites_ui_dom.log`). Native lighting,
+  shaders, animation and runtime power appearance are not certified; offline previews earn no
+  in-game editor/UI credit. Current native files still retain the mandatory wall-mounted APC.
+
+Weighted assessment remains 65/100. This batch repairs previously credited furnishing guarantees;
+the explicit preference rewrite and broader R08-R18 acceptance exits remain open.
+
+### Whole-core choice rewrite (2026-10-23, R09, in progress)
+
+This prerequisite repairs selection of a complete furnishing alternative before ordinary flat
+packs can be migrated to supported whole-room search. Alternatives retain their actual pack,
+core, assembly, variant and copy identities; a rejected core cannot leave individual members in
+the accepted room. It does not complete the legacy density scheduler or arbitrary wall-pack routing.
+
+- [x] Implement bounded ordered choice search around the existing joint variant/pose solver.
+  Charge every visited choice, including duplicate-prefix pruning, and retain failed branches'
+  variant, placement, graph and landing work in the shared allowance. Budget exhaustion returns
+  no partial composition or placement; it is not evidence that all alternatives are impossible.
+- [x] Integrate whole-core alternatives into layered owned-room selection. Keep authored core
+  minima and infrastructure instances fixed. Try complete weighted pack alternatives before
+  dropping an optional instance or rejecting an unmet pack minimum. Preserve the existing direct
+  solver and work accounting when every choice is a singleton.
+- [x] Version owned interior semantics v5 -> v6 for the changed choice policy. Previously exported
+  v5 showcases remain historical evidence until regeneration and validation under this version.
+- [x] Add seven integration cases covering optional and mandatory pack fallback from an oversized
+  nine-cell table assembly to a fitting table/microwave assembly, exact choice-budget exhaustion,
+  charged duplicate-prefix pruning across two instance tasks, and invalid duplicate/mixed-pack
+  choice declarations. The first positive run passes all seven; full validation follows below.
+- [x] Verify all seven focused positives and two compile-valid negative controls. Forcing only
+  the first whole alternative produces five assertion failures/two unaffected passes; making
+  duplicate-prefix skips free produces two assertion failures/five unaffected passes. Restore exact
+  source bytes and rebuild: all seven positives pass again. The optional-room test now asserts its
+  witness exists before reading it, so lost fallback produces an assertion rather than a missing
+  sequence-element exception. Evidence: `.ks_procgen_corechoices_controls_summary.log`, the positive,
+  first-only, free-duplicates and restored build/test logs and matching TRX files.
+- [x] Run normal Release and fresh Debug procgen/engine/sandbox regression gates, retaining every
+  previous case. The initial namespace-only integration filter omitted 16 generic prototype cases;
+  baseline comparison rejected that run despite its green tests. The corrected `Procgen` filter
+  includes them and ten standard loadability/save-state cases for the five showcase maps. Release
+  and fresh Debug each pass 825/702/31 with zero failures/skips and actual sandbox. All previous
+  825/685/31 cases are retained with multiplicity; seven new choice cases and ten additional native
+  map cases account for the integration increase. Normal localization hooks run, and the first
+  Debug build uses `--no-incremental`. Evidence: `.ks_procgen_corechoices_gates_summary.log`,
+  release/final build/test logs and `ks_corechoices_{release,final}_{units,integration,engine}.trx`.
+- [x] Regenerate all five actual showcase exports under v6: five export/save/load cases pass.
+  Complete JSON scene witnesses are unchanged except for plan hashes; all five SVGs match the
+  preceding inspected diagrams byte for byte, retaining the existing overview and overlay evidence.
+  Fresh native files contain new export metadata, so do not assume their older file hashes remain
+  valid. Ten standard loadability/save-state checks pass again after regeneration, installed native
+  copies match byte for byte, and the manifest inventories all 25 artifacts with current hashes.
+  The office retains a solid-wall APC, floor substation, eight cables and native receiver receipt;
+  supply and post-load topology remain uncertified. Evidence: `.ks_procgen_corechoices_showcases_generate.log`,
+  `ks_showcases.trx`, `.ks_procgen_corechoices_regenerated_maps.log`, `ks_corechoices_regenerated_maps.trx`
+  and `.ks_procgen_corechoices_final_audit.log`. No additional weighted capability credit is claimed.
+- [ ] Continue R09 legacy furnishing migration: retain hard minima, complete initial optional
+  cores and bounded density repeats while using joint supported access, actual wall roots and
+  coherent whole-core fallback. The new choice primitive alone does not close this rewrite.
+  - [ ] Solve required core copies, pack minima and infrastructure jointly before soft contents.
+    Pack minima may choose a complete alternative; authored per-core minima cannot substitute away.
+  - [ ] Try each initial optional core in dominant/supporting order, jointly re-solving all accepted
+    instances when adding a new instance. On a genuine fit rejection discard only the new whole
+    instance; budget exhaustion must retain its work and be distinguished from an impossible fit.
+  - [ ] Preserve dominant-pack dependency, report whole-core omissions and schedule bounded density
+    repeats from actual exposed footprints. Do not reduce ordinary furnishing to one core per pack
+    or count surface/container children as additional floor occupancy.
+  - [ ] Keep copy identities unique across retries; reserve clean door and interaction approaches,
+    require connected cardinal clean floor and use native wall-root capabilities for ordinary packs.
+    Flat helpers may remain for equivalent supported cases, with explicit parity tests.
+
+Assessment remains 65/100 until the batch has verified evidence against the existing weighted exits.
+
+### Converter wall mounting rewrite (2026-10-22, R09/R12, in progress)
+
+User correction: APCs require wall mounting. Substations have separate floor and wall-mounted
+prototypes (`SubstationBasic` and `SubstationWallBasic`). Native node connectivity alone does
+not establish a legal mounting position. The preceding floor-only electrical demonstrations
+and passing wiring tests did not cover this requirement and earn no additional capability credit.
+
+- [x] Inspect inherited native prototypes: APCs and wall substations carry `WallMount`, floor
+  substations do not. This component describes interaction occlusion exemptions; procgen uses
+  the inspected declaration to select a wall-root placement contract for these structures.
+- [x] Draft a general wall placement layer in the supported assembly solver and capability hash,
+  preserving separate floor roots, support trees, clean approaches, cardinal facing and budgets.
+- [x] Draft wall-cell converter reservations and same-tile wire routing. Solid support must be
+  an actual retained wall, not a window, door, merely adjacent wall or inferred boundary.
+- [x] Draft initialized electrical support inspection against owned wall entities and anchoring.
+- [x] Verify floor substations, mandatory wall APCs and explicitly selected wall substations,
+  wall-facing clean approaches, support loss, permission masks and missing walls. All 825 Debug
+  procgen unit cases pass, including four new cardinal mount/approach cases and a mounted gas
+  barrier case (`.ks_procgen_wallmount_units.log`, `ks_wallmount_units.trx`). All 37 focused
+  electrical/capture/native cases pass (`.ks_procgen_wallmount_electrical.log`,
+  `ks_wallmount_electrical.trx`). This includes actual paused node/provider construction and
+  read-only repeat checks; no operating-supply or general publication claim follows.
+- [x] Exercise a compact 1x2 mounted utility layout and complete floor/wall variant fallback.
+  `.ks_procgen_wallmount_narrow_primary.log` / `ks_wallmount_narrow_primary.trx` pass: a real
+  computer, wall APC and wall substation share the two-cell interior with clean operating access.
+  A strongly weighted floor substation is replaced by a feasible complete wall variant. The
+  explicit minimum cell policy is respected; all 825 unit cases remain green after the rewrite.
+  A 1x2 integration fixture exposed an earlier R09 classification shortcut: shapes with no 2x2
+  square became passage even when the caller explicitly allowed one-tile rooms. Rewrite this to
+  respect the explicit minimum cell count and let actual support/approach/packing checks decide
+  feasibility. Do not fabricate a larger footprint or weaken clean movement requirements.
+- [x] Rewrite previous electrical success fixtures to provide real support walls; retain a
+  separate no-support rejection test. Correct enlarged shape envelopes and include supporting
+  wall cells in device permissions. The original preflight recorded 26 failures/3 passes;
+  final-audit and fixture fixes restore all 37 focused cases without relaxing mount constraints.
+- [x] Version prototype capability hashes v3 -> v4, electrical context v1 -> v2, electrical plan
+  v1 -> v2 and owned interior semantics v4 -> v5 for explicit wall-root/mount intent.
+- [x] Regenerate all five showcases from the actual planner; the wired office now contains a
+  real wall-mounted APC and eight native HV/MV/LV cables. Its paused topology/receiver receipt and
+  native save/load tile/prototype-count checks pass. All five grids are installed in resources.
+  `.ks_procgen_wallmount_showcases_generate.log` / `ks_showcases.trx`; hidden headless Edge renders
+  the new overview and verifies all five overlays in both states
+  (`.ks_procgen_wallmount_ui_dom.log`). Post-load topology and operating supply are not certified.
+- [ ] Rewrite structure/device joint alternatives: reserve required mount capacity before soft
+  window choices exhaust the available solid walls; retry another legal window pattern or relax
+  only a permitted soft window target. Hard window percentages, doors and preserved cells remain
+  immutable. A previously chosen window pattern must not imply all legal mount layouts were searched.
+- [x] Finish R09 wall content routing outside infrastructure: ordinary captured pack/core members
+  now use supported search and a compiler guard rejects wall mounts reaching flat materialization.
+  The 2026-10-23 unified batch verifies APCs, floor/wall substations and room-local wall ownership,
+  retaining positive controls and complete configuration gates. Operational interaction arcs,
+  soft preference parity and hosted/hybrid geometry remain separate unfinished exits.
+- [x] Run restored configuration/sandbox gates before updating weighted credit. Three compile-valid
+  negative controls detect lost bootstrap nodes (five assertion failures), bypassed wall support
+  (two) and skipped final post-gas wiring inspection (one; two unaffected cases pass). Source bytes
+  are restored and all 42 focused electrical/capture cases pass afterward. The first late-inspection
+  control was ineffective because unanchoring a wire was rejected elsewhere; the strengthened test
+  changes receiver range in the gas callback and requires `OwnedElectricalReceiptDrift` explicitly.
+  Evidence: `.ks_procgen_wallmount_mutations_summary.log`, restored build/log and
+  `ks_wallmount_mutations_restored.trx`. Final normal Release/fresh Debug gates pass 825/685/31
+  each, retaining all prior cases and actual sandbox. This closes the supported native topology
+  subset for one utility point; wider R08-R18 exits above remain open.
+
+### Native owned wiring transaction (2026-10-21, R10/R12, in progress)
+
+This batch connects the preceding reservations to the complete owned stage. The initial scope
+is standalone AutoDistribute/WiredOnly, shared Main, no existing interfaces; operational source,
+load settlement, visibility/global callback isolation and hosted networks remain separate exits.
+
+- [x] Extend the frozen scene with per-tier cable intents and exact consumer/converter bindings.
+- [x] Include utility prototypes in the pre-allocation captured manifest and image/spawn/work checks.
+- [x] Draft a bounded native electrical inspector for same-tile converter cables, native tier
+  groups, actual receiver/provider references and bidirectional owned membership.
+- [x] Draft one shared initialization electrical allowance, cancellation checks and deferred
+  receipt commit after lifecycle/scene/gas checks; repeated verification must only inspect.
+- [x] Identify a prerequisite R08 loss: ordinary serialization intentionally omits input-only
+  (`readOnly`) fields, including `NodeContainer.Nodes`. Earlier captured images silently lost
+  those bootstrap declarations; an empty reconstructed container could roundtrip against an
+  equally incomplete image. This also requires revisiting other input-only defaults.
+- [x] Draft an explicit prototype-only writer/equality context opt-in, preserving ordinary map
+  serialization, and bump captured prototype images to schema/salt 8. Do not special-case power
+  containers or mutate the shared prototype manager to conceal the loss.
+- [x] Verify ordinary/contextual writer and equality behavior, nested/include input-only fields:
+  all 31 selected native serialization cases pass (eight new input-only cases plus the preceding
+  23 flag/context cases); `.ks_procgen_nativewiring_bootstrap_engine.log` and
+  `ks_nativewiring_bootstrap_engine.trx`. Captured node-instance verification remains below.
+- [x] Finish captured node declaration/type/group preservation and independent spawned instances.
+  Corrected Debug capture/native suite passes all 16 cases in
+  `.ks_procgen_nativewiring_boundaries.log` / `ks_nativewiring_boundaries.trx`: five prototype
+  kinds, converter-only and furnished stages, cancellation, exact/one-short shared initialization
+  work, cable anchor drift, receiver/provider range drift, callback movement/unpause and repeats.
+  The later wall-mount correction supersedes floor-only placement coverage; final gates remain open.
+- [x] Retain observed provider transfer and receiver reception ranges in immutable connection
+  evidence. A range change must invalidate evidence even if native reconnection picks the same
+  provider and the receiver remains within reach.
+- [ ] Retain the deliberate old guard replacement in final baseline comparison.
+  Initial native retry passes four stage cases, including the rewritten obsolete allocation
+  guard: `PrimaryStageRejectsUnrealizedElectricalCandidateBeforeAllocation` is deliberately
+  replaced by `PrimaryStageMaterializesElectricalCandidateWithDeferredEvidence`. The guard is
+  no longer the intended behavior; the replacement requires real initialization and deferred
+  topology evidence. `.ks_procgen_nativewiring_bootstrap_stage.log` records four passes and five
+  capture-fixture failures, which are not counted as successful gates. Correct the fixture LV
+  ID and retain live node declarations until ordinary shutdown so queued nodes are removed.
+- [x] Compile and correct native integration; actual primary-stage cables, converters, node groups
+  and receiver/provider links pass the 42 restored focused cases, including solid-wall supports.
+  Native topology evidence remains explicitly separate from operating electrical supply.
+- [x] Verify rollback for group callbacks, cancellation, anchor/provider/range drift, exact shared
+  work exhaustion and foreign pending queues; preserve read-only repeats and historical receipts.
+  Combined gas/wiring callbacks cannot publish either receipt on final electrical drift, and the
+  whole stage leaves a foreign grid's actual native group identity and pending reflood unchanged.
+  Common complete-scene terrain inspection remains part of each electrical inspection.
+- [x] Add three compile-valid negative controls and restored positive configuration/sandbox gates:
+  eight assertion failures, two unaffected passes, exact source restoration, 42 restored focused
+  cases, then normal Release and fresh Debug 825/685/31 each with full baseline retention.
+- [x] Update docs/showcases after native checks: five native grid exports, mounted office topology,
+  current diagrams and artifact inventory. Preserve explicit unsupported behavior for operational
+  supply and unimplemented source/host contracts. No post-load or operating certificate is implied.
+
+### Owned electrical candidate integration (2026-10-21, R09/R12, in progress)
+
+This batch integrates detached electrical reservations into the primary complete owned planning
+entry. It does not certify native node membership, provider assignment, operating supply, or
+materialize utility scenes. No extra weighted capability credit is claimed before verification.
+
+- [x] Draft typed authored/infrastructure member origins, so generated converter roles cannot
+  collide with authored pack/core IDs or satisfy their required copy counts accidentally.
+- [x] Draft mandatory converter cores in the same supported room search as furniture; constrain
+  every converter footprint cell by the device and cable permissions during placement.
+- [x] Draft complete candidate retries over converter home rooms, sharing existing layout,
+  furnishing and graph allowances, without reusing failed placements or refunding work.
+- [x] Draft HV beneath substations, MV beneath both converter classes and cardinal MV routes,
+  LV beneath APCs and cardinal LV routes to proposed circular receiver coverage.
+- [x] Draft request/area/room/member consumer binding, selector minima, deduplication of physical
+  consumers, explicit required/preferred failures and nullable inspected/declared load values.
+- [x] Carry speculative electrical output through the primary candidate, journal and semantic
+  identity. Include cable/converter initial declarations in combined gas nomination.
+- [x] Add a pre-allocation owned-stage rejection for electrical candidates until native utility
+  realization exists. A geometric coverage proposal cannot claim actual power delivery.
+- [x] Correct named-profile/inline-copy declaration comparison without dropping profile fields.
+- [x] Seed supported whole-room access from actual partition door thresholds/approaches as well
+  as existing protected cells. Do not fabricate host entrances or a synthetic operating root.
+- [x] Reject statically impossible front landings before enumerating child furniture placements.
+- [x] Add optional whole-clean-floor connectivity to the joint supported search and enable it for
+  complete owned rooms. Charge its cardinal floods to the shared graph allowance; backtrack an
+  isolating converter pose instead of accepting it and failing only in the final audit.
+- [x] Compile and correct the first integration, then add independent primary-entry tests for
+  converter placement, authored requirements, masks, cardinal tier graphs, exact reach,
+  utility-room retries, selectors, combined gas, budgets and atomic failure.
+- [x] Reject unsupported gas-domain electrical selectors and hard source requirements explicitly;
+  do not broaden a scope or downgrade required operational supply to wired-only.
+- [x] Run compile-valid mutation controls, restored Release and fresh Debug/sandbox gates;
+  retain prior test multiplicities and record exact evidence below.
+- [ ] Follow-up R08/R09: replace positional composed-member selectors (`region/Ixx_Mxx`) with
+  a canonical binding path containing authored pack/core/copy/source-member identity. The current
+  exact candidate selector is deterministic but adding another core can renumber it. Preserve
+  candidate-specific selector behavior during migration; never bind a missing path to another member.
+- [ ] Follow-up R09: separate converter origin cable permission from device footprint permission.
+  The current joint permission set conservatively intersects both masks for every footprint cell;
+  multi-tile converters should require cable permission only at actual same-tile terminals while
+  still requiring device permission for their entire occupied footprint. Add a multi-tile fixture
+  spanning a cable-forbidden neighbor and verify that its permitted terminal origin remains legal.
+- [ ] Follow-up R09/R14: widen utility siting beyond one colocated converter pair per owned
+  network and document/report strategy exhaustion separately from proven infeasibility. Current
+  complete home-room retries are bounded heuristics, not a complete placement optimizer.
+- [ ] Follow-up R12: materialize every planned cable and converter through the retained owned
+  transaction, validate scoped native nodes, inspect actual provider membership, preserve
+  read-only repeats and roll back callback/cancellation failures. Operational supply and host
+  interfaces still need their own live evidence and isolation gates.
+
+Preflight evidence (not the final gate): the initial compile exposed one inaccessible Shared helper;
+local bounded server sorting corrected it. New tests then found the omitted context argument,
+named-profile/inline-copy provenance mismatch, missing door access roots, and a converter placement
+that isolated ordinary floor. These were corrected rather than bypassing the independent audit.
+The first complete run passed 653/654 selected integration/sandbox cases; the sole miss was the
+utility-room retry case above. After adding joint whole-room connectivity, focused units pass
+820/820, including five added origin/permission/connectivity cases. The corrected complete
+preflight passes 654/654 integration/sandbox cases with zero failures/skips, retaining the previous
+635 cases plus nineteen new electrical scenarios. Final mutation/configuration gates are recorded below.
+The obsolete extended run was explicitly stopped
+after known failures and is not a completion receipt.
+
+Final electrical-batch evidence: five compile-valid controls test omission of mandatory converters
+(two assertion failures), collapsing authored/infrastructure identity (one), bypassing footprint
+permission (one), bypassing whole-room connectivity (one), and weakening required operational
+supply (one). Thirteen unaffected control cases pass. Exact bytes are restored in `finally`.
+`.ks_procgen_electricalplan_gates_summary.log` records each build/test exit and restoration.
+Restored Release and fresh Debug builds pass with zero errors and the normal localization hook;
+each passes 820 focused units, 654 selected integration/sandbox cases and 23 native serializer
+contracts with no failures/skips. `.ks_procgen_electricalplan_final_audit.log` verifies all previous
+815/635/23 cases and all new preflight cases with multiplicity and the actual sandbox definition.
+Build/test logs use `.ks_procgen_electricalplan_{release,final}_*.log`; case-level TRXs use
+`ks_electricalplan_*`. The expanded-scope estimate remains 64/100.
+
+### Small generated showcases (2026-10-21, user-requested, in progress)
+
+- [x] Prepare a repeatable native-planner export fixture for a tiny strip, L footprint, supported
+  kitchenette with hidden contents, initial-air room with windows and an automatic electrical plan.
+- [x] Add an offline SVG/HTML renderer with furniture, approach, voltage, gas and coverage overlays;
+  use actual exported positions and clearly label planning-only electrical output.
+- [x] Generate the examples, save/reload each materialized native grid, compare floor tile counts
+  and prototype multiplicities, and clean up all disposable maps.
+- [x] Save requests, room-pack declarations, JSON diagnostics and importable native grids; render
+  and visually inspect the gallery. Include a repeatable regeneration command and loading notes.
+- [x] Record exact artifact checks and focused verification; do not include the showcase fixture
+  in the preceding electrical batch's already completed 820/654/23 gate counts.
+
+Showcase evidence: all five `KsProcgenShowcaseTests` export cases pass; four native grids save/load
+with matching filled-tile counts and entity prototype multiplicities, then every disposable map is
+removed. The complete expanded Debug selection passes 659 cases with zero failures/skips, retaining
+all preceding 654 cases and the actual sandbox definition. `.ks_procgen_showcases_final_audit.log`
+checks native resource-copy equality, SVG/XML, seed/shape counts, 36 actual filled gas tiles near
+101.325 kPa, hidden container content, circular LV reach and the overview PNG. Headless Edge renders
+the offline gallery for visual inspection and checks each of the five overlay controls in both
+states (`data-procgen-ui-check="Passed"` in `.ks_procgen_showcases_ui_dom.log`). Browser startup needed
+an approved launch outside the filesystem sandbox because Windows blocked its IPC initialization.
+
+Artifacts: `Klovn/Docs/Examples/Procgen/Showcases/index.html`, individual SVG/JSON/request/content
+files, four native `.yml` grids, `overview.png`, README and a SHA-256 inventory `manifest.json`.
+Identical map copies are in `Resources/Maps/_KS14/ProcgenShowcases/` for `loadgrid`.
+`Klovn/Tools/_KS14/Procgen/generate_showcases.ps1` regenerates through the real integration fixture;
+`render_showcases.py` only renders that exported data. The wired office is explicitly planning-only.
+These files do not certify operating power, actor interaction, stable simulation, publication or
+complete frozen-resource replay. No further expanded-scope points are awarded for this inspector.
+
+
+### Electrical authoring and capability foundation (2026-10-15, R08/R12)
+
+This batch extends the utility schema groundwork before unified planning or runtime wire placement.
+It does not complete R08: draft documents, scoped consumer assignments, request-wide hard utility
+constraints and full routing policy still need their contracts. R12 has prototype inspection and
+an exact geometric range predicate; its electrical routing/operation exits remain open.
+
+- [x] Add version-1 `KsProcgenElectricalSpec`/`ksProcgenElectricalProfile`, disabled/existing/automatic
+  modes, operational/wired-only requirements, per-tier cable prototypes, bounded weighted converter
+  palettes, shared/independent named circuits and explicit source-interface declarations. Capacity
+  and source state are author declarations until independently inspected; no source is invented.
+- [x] Validate bounded identifiers, enum values, finite weights/capacities, unique palette/interface/
+  circuit IDs, interface circuit membership and coordinates before snapshot expansion. Current
+  authoring bounds are 64 choices per converter palette, 64 circuits, 1024 interfaces, 0-10 demand
+  margin, 0-3600 startup ticks and 1-3600 observation ticks. An optional initial-charge fraction is
+  in [0,1]; omission retains the chosen prototype's starting charge. These are configurable data,
+  not proof of source sufficiency, legal writes or an operating load scenario.
+- [x] Deep-copy converter choices/interfaces/circuits into immutable records and canonically sorted
+  lists; snapshot identity includes every supported field and source profile ID, with signed zero
+  normalized. Every `CopySpec`/blob `CreateRequest` produces independent editable nested values.
+- [x] Carry `electricalProfile` references and inline `electrical` overrides through requests, area
+  profiles and inherited room themes. Bump area semantic snapshot to v7 and area-review JSON to
+  schema 3; preserve atmosphere data. Owned geometry report JSON/SVG remains schema 1. Existing
+  requests without an electrical declaration retain their supported behavior.
+- [x] Add automatic, wired-only, validate-existing and disabled example profiles, plus opt-in powered
+  office area/theme examples. Both primary content planners and per-room theme selection reject
+  explicit electrical contracts with `ElectricalPlanningUnsupported` until R09/R12 retain them.
+  Even an explicit disabled profile is gated so a declared policy cannot disappear from plan identity.
+- [x] Add server-only read-only inherited prototype inspection for real cable types, matching
+  cardinal cable/device node groups, enabled ordinary device ports, compatible charger/discharger/
+  provider connectors, LV provider range, batteries, charge/supply/ramp/efficiency and APC breakers.
+  Reject wrong-tier palettes or converter roles without partial reports. Terminal ports are not
+  treated as ordinary same-tile inputs. Mounting/collision and live membership remain unverified.
+- [x] Add `KsProcgenElectricalReach.WithinRange` using the same inclusive float Euclidean `Length`
+  comparison as `ExtensionCableSystem`, with effective minimum provider/receiver range. It checks
+  geometry only; it cannot establish same-grid eligibility, provider selection or operating power.
+- [x] Verify Release, fresh Debug, focused regressions and the actual client sandbox; prove tests
+  reject deliberately broken range, snapshot transport and capability checks, then restore sources.
+  - Restored-source Server Release passes with 512 existing permitted warnings and zero errors.
+    Sequential fresh Debug integration `--no-incremental --no-restore` passes with 1107 existing
+    warnings and zero errors. No warning suppression or sandbox whitelist changes were added.
+  - All 578 focused procgen unit cases and 192 selected loaded/integration cases pass with zero
+    failures/skips, including `Content.IntegrationTests.Tests.Utility.SandboxTest.Test`. New coverage
+    comprises 30 unit and eight loaded cases: nested immutable copies, canonical identity, malformed
+    bounds/circuits/interfaces, precise LV range, real inherited cable/converter components,
+    serialization, painted snapshots/JSON and unsupported primary-planner refusal.
+  - Deliberately replacing inclusive reach with strict reach makes the 29-cell assertion observe
+    25 cells; removing electrical request transport fails its non-null assertion. Mapping the HV
+    inspector to MV cable/group semantics makes the wrong-prototype fixture observe `True` where
+    `False` is required. All three protected assertions fail. Source bytes are restored in `finally`
+    and checked before the final restored-source gates above. Mutations are not retained.
+  - Logs: `.ks_procgen_electrical_final_release.log`, `.ks_procgen_electrical_final_debug.log`,
+    `.ks_procgen_electrical_final_units.log`, `.ks_procgen_electrical_final_integration.log`,
+    `.ks_procgen_electrical_mutation_units.log` and `.ks_procgen_electrical_mutation_loaded.log`.
+    TRX retains case-level outcomes. Scoped diff/new-file whitespace checks pass. All four private
+    KS modules remain clean and 0/0 against locally recorded `origin/main`; no fetch was performed.
+  - This is focused evidence, not a full repository-suite run or actual utility generation proof.
+    The expanded-scope completion estimate remains unscored; no percentage is awarded for tests.
+- [ ] Add unified ownership/utility reservations and canonical request-wide utility/content identity
+  under R09/R15, electrical route generation and source/load scenarios under R12, then the owned
+  lifecycle and runtime topology/supply certificates. Do not remove existing refusal guards early.
+
 ### Phase A: foundation and geometry
 
 - [ ] **T01 - Freeze contracts and build minimal fixtures.** No dependencies. Define request/result
@@ -5420,14 +9367,15 @@ the responsible stage exists. Never ignore them and run the old behavior success
   - Remaining: prove stage visibility and startup isolation;
     safely copy authored rooms and constants with references intact; place planned entities;
     validate live traversal, atmosphere, and other engine conditions before any publication.
-- [ ] **T13 - Implement final engine validation and publication.** Depends on T07/T10-T12. Reconcile
+- [ ] **T13 - Implement final engine validation and publication.** Depends on T07/T10-T12 and R10-R13/R17. Reconcile
   actual collision, operational doors, anchoring, and atmosphere with the plan, then publish once.
   Exit: A08-A10/A13-A14/A19/A24 pass against materialized entities; a visually correct but leaking or
   inaccessible result never receives success/publication.
 
 ### Phase E: degradation, author tools, and release
 
-- [ ] **T14 - Complete ordered fallbacks and diagnostic reporting.** Depends on T06-T13. Named
+- [ ] **T14 - Complete ordered fallbacks and diagnostic reporting.** Planning follows T06-T09;
+  materialization failure reporting completes with T10-T13. Named
   relaxations, original/effective contracts, per-port reasons, reserve budgets, and best-feasible
   results. Exit: A11/A23/A26 assert exact statuses and permitted behavior; no silent requirement loss.
   - Implemented: four explicit permissions for existing bounded soft fallbacks; a disallowed
@@ -5439,10 +9387,12 @@ the responsible stage exists. Never ignore them and run the old behavior success
   - Remaining: an ordered request-wide search across alternatives, shared retry budget and
     reserved sparse pass, individually enabled hard relaxations, full conflict provenance,
     serialized replay/report, and final engine/publication validation.
-- [ ] **T15a - Implement lighting packs and supply/coverage validation.** Depends on T09a/T13-T14.
+- [ ] **T15a - Implement lighting packs and supply/coverage validation.** Plan after T09a; complete
+  validation with R12-R13 and T13-T14 (a joint exit, not a circular scheduling dependency).
   Fixture selection, spacing/support, working-state checks, bounded coverage estimates, and explicit
   validation of any hard lighting metric. Exit: A29-A30 pass; no unpowered light is counted as
-  working, and a basic theme works without requiring a generated station power network.
+  working. A simple self-contained theme remains available, and a network-powered theme requests
+  generated distribution through section 20 instead of assuming external supply.
   - Implemented: deterministic, bounded fixture proposals using the selected lighting pack;
     geometric floor-graph coverage estimates; exclusion of protected passages, furniture, and
     reserved interaction approaches; conservative clean-floor connectivity preservation for
@@ -5450,7 +9400,8 @@ the responsible stage exists. Never ignore them and run the old behavior success
     semantic replay hashing. The planner never reports verified working coverage.
   - Remaining: inspect mounting/collision and actual supply at placement, measure engine light
     coverage after all entities spawn, validate hard targets, and exercise A29-A30 in live maps.
-- [ ] **T15 - Implement coherent entity-pack furnishing.** Depends on T04a/T09a/T13/T14/T15a. Dominant
+- [ ] **T15 - Implement coherent entity-pack furnishing.** Planning follows T04a/T09a and R02/R09;
+  final operational/lighting exits are verified jointly with T13/T14/T15a. Dominant
   activity selection, grouped singleton defaults, atomic relational assemblies, interaction
   approaches, wall-aware machine facing, reserved clean chair access, optional supports, density
   goals, and small-room fallbacks. Exit: A18/A27-A29/A32-A36
@@ -5470,7 +9421,7 @@ the responsible stage exists. Never ignore them and run the old behavior success
     support, and spawn feasibility have not been checked.
   - Next: inspect actual prototype collision, facing, seats, support surfaces, and container
     relations; perform R01-R02/R06 for explicit relational assemblies and improve density/distribution.
-- [ ] **T16 - Add preview, validation, replay, and overlays.** Depends on T14/T15a/T15. Expose section 15's
+- [ ] **T16 - Add preview, validation, replay, and overlays.** Depends on T14/T15a/T15 and R15-R16. Expose sections 15/21's
   workflow, diagnostic layers, and exportable report. Exit: an author can reproduce and explain an
   L-versus-four conflict and a 1x3 hull failure without reading server source.
 - [ ] **T17 - Add tactical measurements.** Depends on T07/T11/T15. Exposure, nominated-direction
@@ -5491,7 +9442,7 @@ the responsible stage exists. Never ignore them and run the old behavior success
 - [ ] **T18 - Add bounded tactical furnishing preferences.** Depends on T17. Propose and score cover
   with hard-constraint revalidation. Exit: A25 and A18 still pass with optimization enabled; users
   can compare the measured change using the same seed.
-- [ ] **T19 - Run release validation and publish examples.** Depends on T01-T18. Run the full matrix,
+- [ ] **T19 - Run release validation and publish examples.** Depends on T01-T18 and R08-R18. Run the full matrix,
   fixed seed corpus, and pathological budget/cancellation cases; profile representative small,
   medium, and maximum supported requests. Ship the four-alternative example, mixed-size parent,
   arbitrary concave pure fill, hybrid gap fill, and tiny-area examples with documented seeds/results.
@@ -5505,8 +9456,9 @@ the responsible stage exists. Never ignore them and run the old behavior success
 The functional core is T01-T16; T17-T18 satisfy the requested initial cover/defensibility tooling
 without making it a prerequisite for basic room generation. T19 records which release scope is
 delivered; if tactical work is deferred, explicitly label it deferred rather than complete.
-R01-R07 are mandatory amendments to that core for this revision; historical T completion or partial
-geometry tests do not waive them. T19 also ships and verifies the combined A52 authoring example.
+R01-R18 are mandatory amendments to that core for this revision; historical T completion or partial
+geometry tests do not waive them. T19 also ships the combined A52 example and verifies A53-A66's
+gas, power and editor workflows. Historical dependency cycles are resolved by R18's staged exits.
 
 For implementation changes, build affected projects in Release and run relevant integration tests
 in Debug as required by CONTRIBUTING.md. Include at least one content-load test to exercise the
@@ -5547,6 +9499,9 @@ to invent fundamental behavior:
 | Room entrances | Required by default; network preferred, reachable stub allowed unless a stricter destination is declared. |
 | Prefab repair | Forbidden except for explicitly marked seams/entities. |
 | Station spaceproofing | Required at rest, relying on verified host hull unless independent room closure is requested. |
+| Atmosphere | Explicit reusable gas profile; generic requests preserve/leave unspecified gas, station presets select ordinary air. No implicit life-support guarantee. |
+| Electricity | Explicit profile; station preset uses automatic distribution from declared interfaces. No implicit generator or infinite battery. |
+| LV coverage | Engine Euclidean distance, inclusive minimum of provider/receiver ranges; current defaults 3 world units (3 standard tiles). |
 | Windows | Soft 25% of eligible exterior boundary cells, tolerance one cell. |
 | Low-effort pure interiors | Mask + room theme; reusable tile/wall/lighting/entity packs supply content. |
 | Entity-pack distribution | One dominant compatible activity per room, coherent nearby clusters, optional support packs. |
@@ -5557,7 +9512,731 @@ to invent fundamental behavior:
 | Impossible tiny interiors | Sparse fill when constraints permit; otherwise explained failure. Solid/unsealed output requires named permission. |
 | Determinism | Seed + normalized input/context + content/version + work budgets; independent stage streams. |
 | Publication | Validate private staging output before exposing it; live occupied-grid patching deferred. |
+| Authoring | In-game draft workspace with visual pack/assembly/connection/utility editors; authoritative server validation before apply. |
 | Tactical objectives | Optional, measured heuristics; never override required movement or pressure constraints. |
+
+## 19. Atmosphere initialization and gas profiles
+
+### 19.1 Scope and verified engine behavior
+
+Generate an explicitly chosen **initial atmosphere** in each assigned room/gas domain. Permit air,
+single-gas rooms, arbitrary supported mixtures, unusual temperatures/pressures and deliberate vacuum.
+Do not equate "spaceproof," "has gas," and "breathable for this actor." Automatic vent/scrubber/pipe
+networks and continuous life support are separate future features; initial filling is required now.
+
+Repository facts inspected on 2026-10-15:
+
+| Source | Consequence for the adapter |
+| --- | --- |
+| [GasMixture](../../Content.Shared/Atmos/GasMixture.cs), [Atmospherics](../../Content.Shared/Atmos/Atmospherics.cs) | `Pressure = TotalMoles * R * Temperature / Volume`; units are kPa, mol, K and liters. `R = 8.314462618`; standard pressure is 101.325 kPa, standard temperature 293.15 K, standard cell volume 2500 L. |
+| [AtmosphereSystem.Utils](../../Content.Server/Atmos/EntitySystems/AtmosphereSystem.Utils.cs), `GetVolumeForTiles` | Current engine volume is `CellVolume * grid.TileSize * tileCount`. Read actual tile-mixture volumes; do not substitute a guessed cubic scaling law. Existing KS room staging supports unit tiles only. |
+| [AtmosphereSystem.Processing](../../Content.Server/Atmos/EntitySystems/AtmosphereSystem.Processing.cs), `UpdateTileAir` | Fully blocked tiles with `NoAirWhenBlocked` have no air; map-atmosphere tiles use immutable mixtures. A drawn floor cell is not sufficient evidence of a writable gas volume. |
+| [AtmosphereSystem.API](../../Content.Server/Atmos/EntitySystems/AtmosphereSystem.API.cs), `GetTileMixture` | May return a map mixture or immutable space fallback when a grid tile is missing. A non-null return is not evidence of an owned room mixture. |
+| [AtmosphereSystem.Commands](../../Content.Server/Atmos/EntitySystems/AtmosphereSystem.Commands.cs), `RebuildGridAtmosphere` | Resets an entire grid to marker-selected roundstart mixes, rebuilding tile/group state. Do not use this admin repair command to fill one room or preserve neighboring atmospheres. |
+
+Gas filling must use an owned grid-tile adapter with proper invalidation/activation, not global map
+atmosphere replacement, copied admin command logic, a permanent gas spawner, or repeated per-tick
+refilling. Resolve supported gas identifiers through the engine's current gas definitions. Never
+serialize a positional mole array whose meaning changes when gases are added or reordered.
+
+### 19.2 Authoring contract
+
+Reusable `ksProcgenAtmosphereProfile` definitions implement the version-one authoring fields below.
+The owned-stage path now implements InitialOnly filling/verification on closed private grids;
+hosted/preserved context and stable-at-rest processing remain open. See section 17 for exact gates.
+
+| Field | Contract |
+| --- | --- |
+| `mode` | `Preserve`, `Fill`, or `Vacuum`. Omitted generic profile means preserve existing gas and leave newly created gas unspecified in the result; it does not silently mean air or vacuum. |
+| `temperatureKelvin` | Required for `Fill`/`Vacuum`; finite and inside the engine-supported range. Reject values that the engine would silently clamp. |
+| `pressureKPa` | Finite positive total pressure for `Fill`; `Vacuum` specifies zero and no gas fractions. |
+| `moleFractions` | Gas ID to fraction; nonnegative finite values summing to 1 within `1e-6`. Normalize only within that rounding tolerance; otherwise reject. Unlisted gases receive zero moles in a newly filled tile. A single gas uses fraction 1. |
+| `requirement` | `Required` by default for an explicitly assigned fill/vacuum; optional decorative atmosphere may be `Preferred`. No fallback silently substitutes ordinary air. |
+| `stateRequirement` | `InitialOnly` by default; `StableAtRest` additionally validates the declared bounded observation interval after initialization. Neither promises survival during arbitrary later gameplay. |
+| `tolerances` | Defaults: pressure 0.1 kPa absolute, temperature 0.1 K absolute, each fraction 0.001 absolute. Vacuum checks pressure only; zero-mole fractions are undefined. Explicit overrides are finite/nonnegative and retained in the report. |
+| `observationTicks` | Required finite, positive bound for `StableAtRest`; also record simulation tick duration, door states and active devices. No "wait until stable" without a work/time bound. |
+
+Resolve one profile per assignment: explicit room/domain instance, then area profile, then request
+default, then resolved room theme. Request-hard restrictions constrain every level. Conflicting
+assignments of equal specificity fail with both IDs; declaration order does not choose a winner.
+Inheritance replaces the mixture as a whole, not gas-by-gas merging that can retain unwanted gases.
+Request schema 2 implements optional `utilities` (nested schema 1) as detached intent. Its
+`gasAssignments` entries contain unique `id`, `scope` (`Request`, `Area`, `Room`, `GasDomain`),
+optional `scopeId`, and `profileId` and/or a complete inline `profile`. `Request` has no target ID;
+`Area` defaults to this request's ID; room/domain targets require stable planned IDs. At capture,
+equal declared scope/target assignments must agree in every gas-state and requirement field;
+source aliases alone may differ. Binding later determines overlapping room/domain assignments,
+which share instance specificity and must not gain precedence merely from declaration order.
+Loaded/draft references are pinned before transport. Capture does not prove the target exists.
+
+The candidate gas integration under R09/R11 is in progress. The server planning entry captures
+initial airtight/anchoring defaults from independent retained prototype images before choosing
+a layout. The shared owned entry accepts this immutable gas planning context explicitly; legacy
+entries without it retain their unsupported guards. Bindings belong to the complete candidate
+transaction and cannot survive a discarded configuration or subdivision. Room scope IDs are the
+existing stable themed-region IDs. Proposed gas-domain IDs use `Gas/<x>/<y>`, where `(x,y)` is
+the first gas-volume cell in ascending Y, then X order, with invariant integer formatting. These
+IDs describe the proposed topology; changing a separator can change the domain IDs and invalidate
+an explicit assignment. The editor must expose these IDs and any resulting target failures.
+
+Cardinal gas connectivity uses the nominated initial directional airtight defaults on both sides
+of each edge. Multiple anchored blockers combine their directions. Fully blocked cells with a
+no-air contributor have no proposed gas volume. Surface and container placements contribute no
+anchored gas barrier. Callbacks, actual tile mixtures, exterior closure and later door/device states
+still require engine inspection. An initial topology is not a closure or stable-at-rest certificate.
+The owned scene allocator now accepts supported InitialOnly gas plans. Initialization revalidates
+only the owned private grid and its immediate halo, reconciles actual gas-bearing cells and edges,
+and rejects split domains or required fills with leaking boundaries before any explicit fill.
+An optional fill with an open boundary is omitted for the entire domain, with an explicit
+`PreferredGasDomainLeaks` outcome; it must not write gas into an unclosed volume. An optional
+mixture that engine arithmetic cannot represent is likewise omitted for its entire domain
+(`PreferredGasMixtureUnrepresentable`), without substituting an ordinary-air default.
+It writes independent tile mixtures
+using actual engine volume, activates/invalidate visuals through native hooks, and notifies devices
+when their mixture reference changes. Actual pressure, temperature, fractions and request-hard gas
+restrictions must pass before the shared lifecycle can commit a receipt. Unmet preferred initial
+values produce `PreferredGasInitialStateUnmet`; request-hard limits still reject the transaction
+even when a preferred fill was omitted. The receipt records its simulation tick/time and immutable,
+deduplicated binding/runtime omissions. `RequiredInitialGasVerified` certifies the hard initial
+conditions; `InitialGasVerified` additionally requires all preferred initial values to match.
+An unsupported preferred stability interval produces `PreferredGasStabilityUnsupported` and does
+not invalidate otherwise matched initial values. `AtmosphereAtRestVerified` remains false.
+These are initial-state observations, not later-gameplay or publication certificates.
+Repeated initialization and `Verify` inspect current state without creating or refilling mixtures.
+Later optional drift within hard bounds is allowed and does not rewrite the historical receipt;
+required drift or a hard-bound violation rejects verification. Callers must not treat an old receipt
+as a fresh observation of the current simulation tick.
+Callback corruption, grid movement, ownership loss or cancellation retire the transaction and cannot
+commit its pending receipt. Required StableAtRest declarations and request-hard minimum observation
+intervals remain explicitly unsupported in this subset; optional stability is reported as unmet.
+Gas planning also rejects hosted entrances, constant regions and preserved cells until inspected
+gas-transfer context is available for them; generic empty exterior facts cannot replace that context.
+
+`gasRestrictions` retains optional `allowedModes`, `allowedGases`, `minimumPressureKPa`,
+`maximumPressureKPa`, `minimumTemperatureKelvin`, `maximumTemperatureKelvin`, and
+`minimumObservationTicks`. These are request-hard bounds, never defaults to merge into a profile.
+After effective-profile resolution, every candidate must satisfy them or fail with the relevant
+assignment and bound. Preserve mode requires inspected existing state rather than fabricated
+pressure/fraction evidence. Candidate binding now checks nominal hard bounds and rejects unverified
+preserve-state bounds. The supported owned initialization path checks actual pressure/fractions
+and hard bounds after writing and on repeat verification. Observation-interval evidence and hosted/
+preserved-state compatibility remain R11 obligations.
+`gasWriteCells`, `cableWriteCells` and `deviceWriteCells` are separate optional narrowing masks:
+null inherits normalized request write permission; an empty mask forbids all writes on its layer.
+They cannot reclaim constants, preserved cells, voids or cells outside the owned area/envelope.
+
+Preserved cells always take precedence over fill writes. A station preset SHOULD select ordinary
+air (21% oxygen, 79% nitrogen, 101.325 kPa, 293.15 K); a generic request does not assume that preset.
+
+The following profile loads through R08, binds through the owned planner, and initializes supported
+closed owned rooms through the R11 adapter. It does not enable hosted or stable-at-rest generation:
+
+```yaml
+- type: ksProcgenAtmosphereProfile
+  id: KsProcgenNitrogenRoom
+  mode: Fill
+  temperatureKelvin: 293.15
+  pressureKPa: 101.325
+  moleFractions:
+    Nitrogen: 1
+  requirement: Required
+  stateRequirement: InitialOnly
+```
+
+The UI offers gas percentages for convenience and converts them to canonical fractions. Fractions
+are mole fractions, not mass percentages. Human/species suitability is an optional separately
+validated actor requirement; a deliberately authored nitrogen room must not be rejected merely
+because it is unsuitable for an ordinary human.
+
+### 19.3 Domains, ownership and mixing
+
+Build gas domains from actual gas-transfer edges in the nominated resting door state. Movement
+groups, room labels, marker channels and electrical circuits do not imply gas isolation. Include
+door tiles that really hold gas; exclude null-air structure, void and immutable map atmospheres.
+Every writable gas-bearing target tile receives exactly one assignment or an explicit unspecified
+disposition. Threshold tiles use the parent domain's default unless explicitly assigned; conflicts
+must be resolved before filling, without a gap of accidental vacuum under a door.
+
+Rooms connected by an open passage share a gas domain. Compatible identical profiles can merge.
+Conflicting hard fills in that domain reject the layout, even under `InitialOnly`: do not claim two
+distinct room atmospheres that immediately mix. Try a permitted sealed partition/door arrangement,
+another room selection or an explicitly authored common profile. Never invent a blocking wall
+across a required route. Closed doors can separate initial mixtures; report that opening them
+mixes gas. Traversal isolation does not guarantee atmosphere isolation, or vice versa.
+
+Existing preserved gas is read-only context, including mixtures inside constant regions. Filling
+an adjacent connected domain may not silently alter that context: match a verified compatible
+state or require a sealed interface. Unknown preserved gas prevents a hard compatible-state claim.
+No scalar "preserve room" flag grants permission to refill it. Per-island requests validate each
+independent pressure domain, including disconnected blobs.
+
+### 19.4 Initialization, verification and failure
+
+1. Resolve profiles before layout search; reserve any required closure/separation. Reject unknown
+   gases, invalid numbers, contradictory profiles and unsupported grid scales early.
+2. Materialize floors, walls, windows and nominated door states in the owned stage. Complete tile
+   and airtight revalidation through a supported lifecycle. Snapshot actual gas-bearing tiles and
+   their volumes; reject missing, immutable, shared-with-context or unexpected mixture references.
+3. For each writable tile of volume `V`, compute `n = pressureKPa * V / (R * temperatureKelvin)`;
+   assign gas `i` the amount `n * fraction[i]`. Validate intermediate results for overflow/nonfinite
+   values. Do not put a whole room's mole total into every tile. `Vacuum` clears moles without
+   deleting the tile atmosphere. Preserve the engine-owned volume and independent mixture identity.
+4. Apply the initial state exactly once via engine-supported mutation, preserving device references,
+   archived-state rules and activation/overlay notifications. If no safe scoped API exists, add an
+   engine adapter with tests; do not mutate private arrays/dictionaries or bypass access restrictions.
+5. Read back every required tile's gas amounts, pressure and temperature; independently check gas
+   closure under section 10. For `StableAtRest`, observe owned simulation for the declared interval,
+   checking reactions, active devices, thermal changes and leakage against tolerances. Unsupported
+   owned simulation leaves stability `Unverified`; a paused stage is not evidence of stability.
+6. Report per-domain totals and worst per-tile deviations, untouched-context fingerprints, nominated
+   door states, observation interval and separate `GasClosureVerified`/`InitialGasVerified`/
+   `AtmosphereAtRestVerified` evidence. Planned mixture math cannot set runtime flags.
+
+Initial filling may create authored reactive gas; report subsequent reactions honestly rather than
+continuously restoring the starting mix. `InitialOnly` verification is taken at the defined
+post-fill point before normal reaction processing, and says so. A required stable mixture that
+reacts away within its observation interval fails that requirement.
+
+Tiny shapes still follow the normal contract: 1x3 enclosed by a valid host can receive gas; a fully
+solid strip has no gas-bearing interior and cannot satisfy a required room atmosphere. On failure
+retry permitted structure/profile alternatives, omit a preferred fill with a report, or fail. Only
+an explicitly named relaxation may drop a hard gas requirement. Rollback discards owned gas state
+alongside geometry and entities. No failed attempt changes a live neighbor or global map mixture.
+
+## 20. Automatic electrical distribution
+
+### 20.1 Verified topology and exact LV range
+
+The normal generated chain is:
+
+```text
+declared HV source -> HV cable -> substation input
+    substation output -> MV cable -> APC input
+        APC output -> LV cable providers -> eligible nearby receivers
+```
+
+Substations/APCs are battery-backed devices with limits and operating states; the engine does not
+model them as lossless abstract voltage labels. Both cable layers must occupy the device's tile:
+HV + MV under a substation, MV + LV under an APC. Mere cardinal adjacency to a device is insufficient.
+Cable-to-cable adjacency is same-layer and cardinal (or same tile), never diagonal. Distinct layers
+may share a tile without shorting; device behavior transfers energy between its distinct networks.
+
+Verified source references (2026-10-15):
+
+| Source | Behavior |
+| --- | --- |
+| [CableNode](../../Content.Server/Power/Nodes/CableNode.cs), [CableDeviceNode](../../Content.Server/Power/Nodes/CableDeviceNode.cs), [NodeGroupSystem](../../Content.Server/NodeContainer/EntitySystems/NodeGroupSystem.cs) | Anchored grid nodes; cardinal cable neighbors, same-tile cable-device links, matching node group IDs. Cable terminals can block a direction; simple Manhattan adjacency is insufficient around terminals. |
+| [Substation prototypes](../../Resources/Prototypes/Entities/Structures/Power/substation.yml) | `input: HVPower`, `output: MVPower`; battery charger/discharger and supply/ramp limits. |
+| [APC prototypes](../../Resources/Prototypes/Entities/Structures/Power/apc.yml), [ApcComponent](../../Content.Server/Power/Components/ApcComponent.cs) | `input: MVPower`, `output: Apc`; battery, main breaker and overload/trip state. APCs also have extension-provider capability themselves. |
+| [Cable prototypes](../../Resources/Prototypes/Entities/Structures/Power/cables.yml) | `CableHV`, `CableMV`, `CableApcExtension` use `HVPower`, `MVPower`, `Apc`. LV has `PowerProvider` plus `ExtensionCableProvider`, without a range override. |
+| [ExtensionCableProviderComponent](../../Content.Server/Power/Components/ExtensionCableProviderComponent.cs), [ExtensionCableReceiverComponent](../../Content.Server/Power/Components/ExtensionCableReceiverComponent.cs) | Both range defaults are **3**, not 2. Inherited/component overrides must be inspected. |
+| [ExtensionCableSystem](../../Content.Server/Power/EntitySystems/ExtensionCableSystem.cs) | Same-grid anchored-cell search, followed by inclusive Euclidean distance between local entity positions, limited by `min(provider.TransferRange, receiver.ReceptionRange)`. No raycast or wall-occlusion check. |
+| [PowerReceiverSystem](../../Content.Server/Power/EntitySystems/PowerReceiverSystem.cs), [PowerNetSystem](../../Content.Server/Power/EntitySystems/PowerNetSystem.cs) | Provider membership and actual received power determine operation; coverage alone does not establish power. Disabled receivers, unmet load and batteries require separate state checks. |
+
+For standard tile-centered entities with both ranges at their default, coverage is
+`dx*dx + dy*dy <= 9`: `(3,0)` and `(2,2)` are covered; `(3,1)` is not. This is a circle of radius
+**3 world units**, equivalent to 3 tiles on the supported unit grid, including 29 tile centers.
+It is not a square, Manhattan radius, flood along a walkway, or a radius around the APC covering
+the whole LV network. Each cable/provider supplies its own local reach. Diagonal *coverage* is
+valid; diagonal *wire connections* are not. Fractional device positions use actual positions.
+
+Only eligible receivers can connect. The search enumerates anchored entities on the same grid;
+receiver connection also depends on its connectable/physics/anchoring lifecycle. Contained items
+or a loose tabletop machine are not automatically eligible. Proximity to LV cannot power an
+arbitrary entity that lacks the relevant receiver. This must be checked for relational devices.
+
+Provider assignment is stateful: existing links are retained; provider startup fills unassigned
+receivers, while receiver discovery chooses the nearest candidate before checking its effective
+range. A nearer short-range or unpowered provider can prevent the intended connection. Equal
+distances and startup order are not a guaranteed circuit-selection policy. Verify the actual
+provider/network and supply after initialization; do not assume nearest powered cable wins.
+If disjoint circuits are required, walls do not isolate coverage. Avoid overlapping provider
+influence or establish a supported assignment mechanism; inspect preserved providers too.
+
+### 20.2 Electrical profile and interfaces
+
+Add `ksProcgenElectricalProfile`, referenced at request/area/theme level with section 19.2's
+precedence and hard-constraint rules. Explicit fields:
+
+| Field | Contract |
+| --- | --- |
+| `mode` | `Disabled`, `ValidateExisting`, or `AutoDistribute`. Generic omission is disabled; station presets select automatic distribution. Disabled does not waive required operating lights/machines. |
+| `cablePrototypes` | Validated HV/MV/LV prototype references with matching node and provider capabilities; defaults are the three standard IDs above. |
+| `substationPrototypes`, `apcPrototypes` | Weighted eligible concrete device variants; inspect mounting, input/output groups, footprint, battery and load limits. Do not infer behavior from display names. |
+| `interfaces` | Stable interface ID, grid-local cell, voltage, source/network identity, declared available watts, operating state and permitted connection action. References resolve to inspected context or an explicitly authored source in the owned stage. |
+| `circuitPolicy` | `Shared` default; optional named independent circuits with explicit consumer assignments. Room/entrance separation does not implicitly demand electrical separation. |
+| `supplyRequirement` | `Operational` default for requested power; `WiredOnly` deliberately allows an unenergized installation. Required working machines/lights still fail if no permitted supply exists. |
+| `loadPolicy` | Per-consumer nominal/peak/load-state requirements, demand margin (default 20%), startup allowance and verification interval. Uninspectable dynamic demand needs an authored bound; it cannot be assumed zero. |
+| `batteryPolicy` | Declare initial charge and whether temporary battery-only operation is allowed. A finite reserve never establishes sustained upstream supply. |
+| `routingPolicy` | Allowed utility cells, prohibited cells, corridor/wall preferences, optional redundancy, device-count/cable-length goals and explicit reuse of existing compatible wires. |
+
+The R08 version-1 authoring subset currently uses `highVoltageCable`, `mediumVoltageCable`,
+`lowVoltageCable`, and `substations`/`apcs` lists of `{ prototype, weight }`. Interfaces contain
+`id`, `cell`, `voltage` (`High`/`Medium`/`Low`), `networkKey`, `circuitId`, `availableWatts`,
+`enabled` and `connection` (`ReuseExisting`/`JoinAtCell`). Shared circuits use the single ID `Main`;
+independent circuits declare a bounded `circuitIds` list. `demandMargin`, `startupTicks`,
+`observationTicks`, `allowBatteryOnly`, nullable `initialChargeFraction` and `reuseExistingCables`
+are currently flat profile fields. Detailed load-state inspection and spatial routing policies
+remain planned; the flat fields do not imply those missing features. `JoinAtCell` is only an
+author intent, never permission to edit preserved cells or connect to live power speculatively.
+
+Electrical **profile schema 2** adds `distribution` below. This is independent of the enclosing
+request/project/draft schema. Omitting `distribution` in an explicit schema-two profile expands to
+these defaults; canonical editable copies always include the expanded policy. It cannot be attached
+to schema one. `KsProcgenElectricalProfiles.TryUpgrade` validates and returns a detached schema-two
+copy, preserves other settings, and changes identity; it never mutates the old document or preview.
+Schema-one declaration hashes remain historical. The temporary C# field default and old built-in
+profiles stay schema one until the joint closet/routing rewrite activates the rollout; the revised
+`KsProcgenClosetElectrical` preset is explicitly schema two. The primary standalone owned
+AutoDistribute/Shared/WiredOnly path now captures the matching frozen closet catalog and generates
+actual dedicated rooms, separated converters and required MV/LV service. Shared callers must supply
+that inspected catalog; missing/wrong content rejects with `ElectricalUtilityRoomContextRequired`.
+Hosted/preserved interfaces, operating supply, hull reuse and complete joint retries remain gated.
+Explicit schema-one primitive behavior is historical compatibility, not the revised layout contract.
+
+| `distribution` field | Schema-two contract/default |
+| --- | --- |
+| `closetInteriorSizes` | Set of one or both `1,2` and `2,2`; `2,1` is equivalent to `1,2`. Default both. Canonical copies sort dimensions/sets; duplicate rotated sizes, empty sets and other dimensions fail. Closets still need actual partitions, an entrance and clean access. |
+| `closetTheme` | Room-theme reference, default `KsProcgenElectricalCloset`. Select tile/wall/light/entity packs through this ordinary theme; no separate miniature furnishing language. Project capture follows and validates its complete authoring dependencies, including unused utility-draft profiles. Component bodies/native access still require separate inspection. |
+| `mediumVoltageCirculationBackbone` | Default `true`: service writable circulation/protected-spine targets and closet approaches. Core converter terminals remain mandatory if disabled. |
+| `mediumVoltageRoomEntryBranches` | Default `true`: service room entries and an explicit room service target domain where no corridor exists. APC terminals remain mandatory if disabled. |
+| `floorServiceFraction` | Finite fraction `[0,1]`, default `1`. Hard minimum geometric LV service over the selected floor domain, separate from all actual required consumer checks. Choosing zero does not waive consumers. Native range/eligibility and actual supply are independent checks. |
+| `floorServiceDomain` | `UsableRoomFloor` default: generated room floor eligible for normal traversal/use, excluding walls, voids, preserved areas and normally blocking/vault-required footprints. `AllRoomFloor`: all generated room interior floor, including occupied furniture positions. Actual receivers use their own positions/reception ranges in either case. |
+| `lowVoltageSquares` | `RequireNecessityCertificate` default, or stricter `ForbidNew`. Neither mode authorizes a heuristic exception. The former requires section 20.3a's retained checkable proof for every newly completed block; the latter allows no newly completed blocks. Constant inherited blocks stay preservation concerns. |
+
+The loaded electrical-closet theme offers a coherent optional HV/MV/LV coil-supplies pack using
+real prototypes with clear movement declarations. Its loose supplies are examples, not required
+floor clutter; closet access wins. The supported standalone WiredOnly path now creates a room,
+places converters and retains native service/topology evidence. A 1x2 room may omit optional
+supplies when access/space cannot fit them; no operating-supply certificate is implied.
+
+Request schema 2's `utilities.consumers` now carries unique `id`, `scope`/`scopeId`, `selector`
+(`AllPowered`, `Prototype`, `Member`), optional `selectorId`, `circuitId` (default `Main`),
+`requirement` (`Required`/`Preferred`), `supply` (`Operational`/`WiredOnly`), nullable finite
+nonnegative `nominalWatts`/`peakWatts`, and `minimumMatches` (default 1). `AllPowered` has no
+selector ID; the others require a concrete prototype or stable planned member ID. Known peak
+watts cannot be below known nominal watts; unspecified values require inspection, not zero.
+Explicit profile circuit references and receiving loaded prototype IDs are validated at capture.
+Inherited circuits, member existence, receiver eligibility, minimum matches and physical demand
+remain candidate-binding obligations. Never double-count one physical consumer selected more than
+once; contradictory circuit requirements must fail with both selector IDs after binding.
+`utilities.electricalRestrictions.requireOperationalSupply` and `forbidBatteryOnly` are request-hard
+constraints across all effective profiles. No contract-capture result certifies power or eligibility.
+
+Example loaded authoring preset (no source is implied, and runtime distribution remains gated):
+
+```yaml
+- type: ksProcgenElectricalProfile
+  id: KsProcgenAutomaticElectrical
+  mode: AutoDistribute
+```
+
+HV input creates a complete distribution tree. An existing compatible MV or LV interface may
+satisfy downstream distribution without adding redundant upstream equipment; report the supplied
+tiers. A missing source under `Operational` is an unmet requirement. Do not create a generator,
+infinite battery or live-grid connection without an explicit source/interface contract.
+Disconnected islands require a source or authorized cable route for each electrical network.
+
+Substation/APC front access, facing and mounting use the same machine rules as other furnishings.
+**APCs must occupy a solid wall tile**, with their interaction face directed toward a reachable
+clean floor approach. A wall merely next to a floor-placed APC does not satisfy mounting.
+Substations have distinct floor and wall-mounted prototypes: preserve the selected prototype's
+mount contract (`SubstationBasic` on floor; `SubstationWallBasic` on a solid wall). Do not substitute
+one variant silently. Windows and door openings do not count as wall supports. Shared wall mounts
+cannot overlap one another, and support cells require device-write permission. Both cable tiers
+needed by each converter still occupy that converter's exact tile, including wall tiles; extend
+the cable route to those tiles with cardinal connections. Missing support produces a bounded
+placement failure and candidate retry, never a floor-placement fallback. Recheck actual owned
+support entities, anchoring and the unobstructed front approach before certifying initialized
+wiring. A profile may list both `SubstationBasic` and `SubstationWallBasic` in its weighted
+`substations` palette. Try complete alternatives within the shared placement allowance: a failed
+floor variant may be replaced by a wall variant without mixing their members or consuming a clean
+floor passage. Explicitly listing one prototype restricts the search to that mount kind.
+Devices may be wall-mounted only where their actual prototype supports it. Cable placement can
+coexist with a traversable passage or supporting furniture, subject to actual engine support;
+the device itself must not block a reserved route or chair approach.
+
+### 20.3 Routing and joint placement algorithm
+
+1. Inspect source interfaces, existing cables/providers, terminals, allowed utility cells and every
+   mandatory consumer, including doors, lights and relational assembly members. Record voltage,
+   actual receiver range/eligibility and requested demand. Reinspect final spawned consumers later.
+2. Allocate designated 1x2/2x2 substation utility rooms and feasible wall APC sites early, outside required movement/interaction space.
+   Group consumers into supply zones by allowed circuit and demand. Sharing one APC across adjacent
+   rooms is permitted; prefer fewer maintainable devices subject to capacity and required isolation.
+3. Use a separate layered graph with vertices `(cell, voltage, circuit)`. Same-layer cardinal edges
+   require valid cable placement and terminal behavior. Cross-tier transfer occurs only at selected
+   device ports. Do not represent cables as floor obstacles or reject different layers at one tile.
+4. Connect HV interfaces to substations, then MV outputs to APC inputs using bounded deterministic
+   service-backbone paths. Meet section 20.3a coverage targets before minimizing length. In stable endpoint
+   order, grow a connected tree from already routed cells; cycles are optional policy-controlled
+   redundancy. Routing costs are finite/nonnegative and stable ties use cell/layer/ID order.
+5. For each APC circuit, enumerate legal LV provider cells that cover still-unserved consumers using
+   the exact distance/capability rule. Score candidates by newly covered required demand and route
+   cost; choose deterministically and join each to the existing LV tree by cardinal routing. This
+   must also serve the room-floor coverage domain and avoid LV 2x2 blocks under section 20.3a. This
+   is a bounded connected set-cover heuristic, not a claim of optimal minimum wire length. Always
+   include a valid LV cable on the APC tile, even where the APC itself could provide local coverage.
+6. Count demand once per consumer; compare with all upstream device/source limits, charge-rate and
+   ramp/breaker behavior under the authored load scenario. Move/add devices or reroute within the
+   same request budget when overloaded or unreachable. Two touching same-tier circuits merge in the
+   engine; reject accidental joins rather than relying on different logical IDs.
+7. Include optional accepted content and lighting, then validate topology and load again. Failure of
+   a mandatory device triggers whole-core/layout backtracking; failure of optional content can omit
+   that complete core. Keep required gas boundaries and paths intact. Do not defer all infrastructure
+   to a final pass after furniture has consumed every legal device tile.
+
+Generated cable cells remain within `W`. Envelope use for utilities must be explicitly authorized
+as a utility connector; closure-only envelope permission does not grant a cable route. A preserved
+cell can supply an inspected compatible wire, but cannot receive new cables. An author needing a
+new cable seam must explicitly place that seam outside the constant/preserved mask before generation;
+an interface marker alone cannot override preservation. Existing cables are reused without edits.
+Crossing a wall tile is allowed only if cable placement is supported and the tile/layer is writable;
+never cut or replace a hull to reach a cable. Deduplicate same-tier cable intents on the same tile.
+
+### 20.3a Dedicated substation rooms and service coverage (2026-10-23 amendment)
+
+These requirements supersede the earlier general-purpose converter-home placement and sparse
+endpoint-only wiring examples. They refine the existing electrical scope and keep its fixed
+capability weight. Current implementation must be rewritten before claiming this amendment done.
+
+- Every newly generated substation MUST occupy a designated electrical utility room with **1x2 or
+  2x2 interior floor dimensions**, allowing quarter-turn equivalents. Dimensions exclude enclosing
+  walls. The room needs actual walls, a usable entrance and a cardinal clean route to the device's
+  operating tile. A small rectangle label inside a general-purpose room does not establish a closet.
+  Allocate these rooms during joint partitioning, before ordinary contents consume the footprint.
+- Prefer sharing legal generated exterior walls over consuming an additional complete wall band
+  inside the target floor. A reservation must distinguish interior floor, partition-owned enclosure
+  and reused generated-hull cells. Reuse requires explicit writable envelope ownership; it cannot
+  borrow another target area, an uninspected existing wall, a constant cell or explicit void. Include
+  diagonal enclosure corners as structural claims even where they have no cardinal floor exposure.
+  Such non-exposed corners are not movement/atmosphere edges or exterior-window candidates. The entrance
+  threshold and both approaches remain inside the target, with an uninterrupted cardinal route.
+  All incident room palettes must agree on the shared hull-wall material. Recheck these claims after
+  structural material/window selection and against the native enclosure. Fully internal closets
+  remain a fallback when no legal generated hull can be shared.
+- Closet contents MUST use a configurable coherent electrical theme/entity pack: electrical
+  equipment, supplies and other appropriate paraphernalia. Resolve real loaded prototypes and
+  mounting/support behavior. In a tight 1x2 room prefer wall/surface/container fill when floor
+  props would block the remaining operating/entrance tile. Hard device and access requirements
+  take priority; report sparse optional decoration rather than blocking the closet.
+- Preserve floor versus wall substation variants. Wall variants need real solid support; floor
+  variants need a legal interior footprint. APCs remain wall mounted in their served rooms or
+  service zones. A substation and its downstream APC MUST NOT be forced into the same room by
+  the current shared-home shortcut. Required same-tile HV/MV and MV/LV terminals still apply.
+- MV routing MUST provide a generous service backbone, not only the shortest substation-to-APC
+  connection. Default backbone targets include writable circulation/protected-spine cells,
+  closet approaches and room service-entry branches, plus every required APC input. A network
+  without a separate corridor still needs explicit room service coverage targets. Prefer existing
+  compatible trunks and useful reach; shortest wire length is secondary to coverage. MV loops
+  and redundancy are allowed by policy. This does not authorize foreign or constant-area writes.
+- LV routing MUST verify each actual required consumer and SHOULD provide service to all usable
+  generated room-floor tiles by default, including likely equipment positions. This is the current
+  interpretation of adequate low-effort interior wiring. Make the coverage fraction and domain
+  configurable, show uncovered cells and actual consumers separately, and use loaded native
+  provider ranges. Each actual consumer must also meet its own reception range and eligibility.
+  Coverage cannot be inferred from a Manhattan/square neighborhood or mere cable proximity.
+- Newly generated LV cable occupancy MUST avoid fully occupied **2x2 blocks** unless they are
+  proven necessary. Check all four same-tier tiles and the physical native adjacency graph;
+  omitting a drawn edge does not remove a connection. HV/MV overlap at different tiers does not
+  form an LV block. Reuse, route growth, branch joins and later extensions must all recheck this.
+- Do not use "search could not avoid it" as proof of necessity. Accept an exception only with a
+  retained checkable certificate, such as four individually forced LV cells (mandatory terminals
+  or uniquely required coverage in the complete allowed candidate domain), or a completed bounded
+  exact search proving equivalent required coverage impossible without the block. Freeze candidate
+  permissions, receiver ranges, terminals and preserved cells into that evidence. Exhaustion is
+  unknown, not proof: try other routes/APC sites/closet arrangements, or return the appropriate
+  required-coverage failure/budget result. Never silently relax this rule after a heuristic stalls.
+- Existing constant-area LV blocks may remain untouched; distinguish inherited geometry from a
+  newly created block. Adding a generated tile that completes a block is a new block and needs
+  the same proof. Existing inspected interfaces may serve the request without a newly generated
+  substation; they cannot bypass preservation or invent an undesignated generated substation room.
+
+Electrical profile/draft transport needs a versioned migration for closet palettes and sizes,
+backbone targets, floor-service coverage and LV block policy. Old documents must receive explicit
+new defaults or a supported migration failure; they must not silently retain open-room substations.
+All geometry, packs, doors, cable tiers and coverage/proof work share request-wide quotas and
+whole-candidate rollback. Small 1x1/1x3 pure generation remains representable; an impossible hard
+electrical service request must report its limitation rather than breaking these placement rules.
+The old wired-office showcase and tiny co-located converter fixtures are historical evidence for
+native mounting/topology primitives. They do not meet this revised room/routing contract.
+
+### 20.4 Runtime checks, budgets and fallbacks
+
+Materialize devices and cables in a deterministic engine-supported order in the owned stage. Allow
+node groups, anchoring, extension-provider linking and power state to initialize before checking.
+Inspect actual same-tile input/output membership and cardinal paths, the selected provider for
+every consumer, breaker/switch states, battery/source contribution, delivered load and the consumer's
+operating state. Use the authored load/observation scenario, not a momentary charged battery or
+idle machine, to establish operational supply. Optional surplus capacity is a soft goal unless hard.
+
+Expose separate evidence: `ElectricalTopologyVerified`, `ElectricalSupplyVerified`, per-consumer
+operation and light coverage. `WiredOnly` may pass topology while supply stays `Unverified` or
+`Missed`; it cannot count as a working interior when operating power is required. Do not force
+`Powered`, disable `NeedsPower`, bypass breakers or add invisible generators to pass validation.
+
+Initial configurable utility limits: 65,536 distinct inspected utility/gas cells (also sharing the
+request cell cap), 196,608 cable-layer vertices, 4,096 device-placement proposals, 1,000,000
+receiver/provider coverage probes, 2,000,000 electrical path expansions and 4,096 consumers.
+Cable spawns also share the request entity cap; a larger graph budget is not spawn authorization.
+Count rejected placements and retries; build sparse graphs and query coverage spatially. Gas
+readback is capped at the accepted tile count per sample; observation ticks, node-reflood work and
+engine validation receive explicit limits as well. Budget exhaustion cannot skip required checks.
+
+On failure, try legal routes/device sites, approved device variants, reduced optional demand or a
+complete alternative layout. `AllowUnpoweredOutput` is an explicit scoped relaxation with a
+`Degraded` result and affected consumers listed; it never silently waives a required traversable
+powered door or another unrelated hard condition. 1x3 requests can be wired from external supply
+or return explained failure when mandatory infrastructure does not fit. Never fake a diagonal join.
+Cancellation/rollback must remove owned cable nodes and provider links as well as spawned entities,
+without altering an existing live power network during speculative work.
+
+## 21. In-game authoring UI and interactive workflow
+
+### 21.1 Workspace and basic flow
+
+Provide a localized procgen workspace inside the game, accessible through mapping/admin tools to
+authorized authors. Use existing engine UI/placement/overlay services and the KS localization APIs.
+Normal players do not gain map-edit permissions by opening the window. This is an editor workflow;
+it does not require placing an in-world gameplay console. A future console may open the same UI
+under an explicit permission policy.
+
+The main layout has a searchable asset browser, central grid/preview viewport, selection inspector,
+and diagnostics/history panel. Dockable or resizable panes are preferred; a compact layout must
+remain usable at the supported minimum resolution. Provide keyboard navigation, tooltips, units,
+text labels and patterns/icons in addition to colors. Author-facing labels explain behavior; internal
+schema/hash details belong in an expandable diagnostic panel.
+
+Quick workflow: select a grid, paint a target, pick a room theme and optional library, choose gas
+and electrical presets/source interfaces, preview, inspect, then apply a verified result. Presets
+fill advanced settings, which remain inspectable. Default automatic room selection must not turn
+into mandatory manual room placement. Basic pure fill still needs only a mask and suitable theme.
+
+### 21.2 Authoring tools and editors
+
+| Editor/tool | Required interactions |
+| --- | --- |
+| Area painter | Brush, line, rectangle, bounded flood, erase, selection and move/copy. Separate target, void, envelope and constant layers. Preview exact cardinal blobs/holes and stable IDs; allow channel/profile assignment and identify merge/split conflicts. Painting an outline does not silently fill its center. |
+| Entrance tool | Place/select a port on a threshold, edit its label, normal, span, approaches and destination policy. Highlight its bound blob; list orphan, duplicate and ambiguous ports immediately. Numbered convenience presets use the same string-label model. |
+| Connection editor | Add alternative configuration cards. Drag ports into named groups and choose exact versus minimum connectivity and local versus host isolation. Graph and matrix views show required/forbidden joins. Import/export shorthand such as `1-3-4;9-8` with one alternative per line, preserving stable configuration IDs and weights. |
+| Theme editor | Choose tile/wall/light/entity packs, primary/accent palettes, goals, counts, density, atmosphere/electrical profiles, inheritance and fallbacks. Show inherited versus overridden values and reset-to-inherited. Validate references/cycles and hard requirements while editing. |
+| Room/library editor | Create packs from existing room assets or capture a selected authored area into a draft asset through supported map serialization. Edit eligible room types, tags, transforms, size mix and exterior preference. Inspect exact footprints/ports and copy-supported overrides; reject unsupported captures. Automatically fit library rooms without fixed target slots. |
+| Layout family editor | Assemble alternatives such as one large, medium-room set, L trio and four-room set; edit complete-package weights, common exposed ports, claims, gaps and exclusions. Preview each alternative and why variants are incompatible. Never turn alternative members into an independent room pool. |
+| Tile/wall/light pack editor | Add/remove weighted variants, preview appearance, mounting and compatible doors/windows; set light supply and goals. Display unresolved or unsupported content rather than silently deleting it. |
+| Entity-pack editor | Search actual localized prototypes by name/ID/tags/capabilities; add singleton entries or assemblies, bind entity choices, set core minima/optional counts and activity coherence. Show effective inherited collision, movement, power, support/container and interaction capabilities with their verification status. |
+| Assembly editor | Name members and bindings, connect typed relation edges (`OnSurface`, `InContainer`, `AdjacentTo`, `FacingTarget`, `UsesSeat`, `Near`, `AtCorner`, `FacingOpenSpace`), select targets/slots, multiplicities, severity and allowed rotations. Distinguish support dependencies from spatial cycles. Add complete variants; switch preview bindings without rewriting relations. |
+| Assembly viewport | Drag a member only to author an explicit offset/constraint or test pose; do not quietly replace relational rules with fixed coordinates. Rotate members/assemblies, show actual facing and clean chair/device approaches, support layers and blockers. Test a corner table/device/chair arrangement against selected masks and actor profiles. |
+| Atmosphere editor | Pick gases, edit percentages, temperature and pressure with units, choose preserve/fill/vacuum and initial/stable requirement. Assign profiles to rooms/blobs/defaults and preview actual gas domains, conflicts, expected volume/moles and leak witnesses. Warn about declared species incompatibility only when that actor requirement applies. |
+| Electrical editor | Select cable/converter palettes and source interfaces, voltage/capacity, shared/separate circuits, required loads, battery policy and wired/operational requirement. Automatic routing is the default; optional pinned device sites/route waypoints become explicit constraints. Overlay each tier, same-tile dual cables, true circular coverage and unserved/incorrectly assigned consumers. |
+| Constraints/seed panel | Edit hard versus preferred goals, tolerances, named permitted fallbacks and deterministic budgets. Reroll seed, lock authored assets and compare alternatives without implicitly pinning generated rooms. Show effective values and why a choice is unavailable. |
+
+"Room pack" in the UI must distinguish a library of complete prefab rooms/layouts from an entity
+pack furnishing a procedural room. Both can be created and configured in game. Provide a simple
+new-room-theme wizard that chooses materials, lighting, coherent contents and utilities without
+requiring raw YAML. An advanced structured/raw view may expose the same canonical data; it is not
+the only way to author any required feature. Unsupported future fields remain visibly unavailable.
+
+### 21.3 Drafts, assets and saving
+
+Separate **authoring documents** from live ECS/prototype instances. A server-owned draft has a
+stable document ID, schema version, monotonically increasing edit revision, content dependencies,
+named assets and exact area/port/utility assignments. Editing a loaded prototype creates a draft
+copy; it never mutates the shared prototype-manager object or hot-reloads the round globally.
+Generated choices belong to a preview result; authors can explicitly convert selected choices to
+constraints, constants or reusable assets with the resulting loss of automatic freedom shown.
+
+Support new, duplicate, rename, delete with reference inspection, import, save, save-as and export
+for themes, material/light/entity packs, assemblies, room libraries, layout families and profiles.
+Renaming updates draft references atomically; deleting a referenced asset must resolve or retain
+visible broken references, never silently substitute another asset. Captured rooms include portable
+entity references/overrides and dependency manifests through the validated map adapter.
+
+Persist drafts through an approved server resource/storage service and offer download/export through
+existing tooling. Versioned assets can be used directly by that generation session after validation;
+creating content does not require a server restart or editing repository files by hand. Persisted
+project exports use supported YAML/map formats with dependency manifests for later repository use.
+No client-supplied filesystem path, arbitrary code, console command or component deserialization
+is accepted as an editing shortcut. Bound upload size, parsed depth, references and asset counts.
+
+Undo/redo covers document edits, brush strokes, reference changes and profile assignments as atomic
+transactions. Auto-save successful draft revisions and recover them after disconnect. Never treat
+post-publication undo as arbitrary live-map rollback: before exposure a retained owned result may
+be discarded, while replacing an active/occupied map remains outside version 1. Closing a window
+does not silently apply or destroy an authored map.
+
+#### Implemented interior draft subset (2026-10-16)
+
+`KsProcgenContentDraftSpec` schema 1 is now an explicit, bounded authoring value containing
+`documentId`, `revision`, and six dictionaries: `themes`, `tiles`, `walls`, `lights`, `entities`,
+`assemblies`. Their values share the existing prototype authoring spec fields without a global
+prototype `id`/`type`. Asset names are scoped by document and kind. A draft may override a loaded
+name or inherit a loaded theme; an invalid local override must fail selected catalog capture and
+must not silently use the loaded asset instead.
+
+`TrySnapshot` validates structure and copies every nested body. Editing drafts can retain broken
+references, incomplete choices and symbolic bindings; they are not validated generation content.
+`KsProcgenThemeCatalog.TryCapture(..., assets: draft)` resolves and validates a selected theme's
+complete candidate pools and assembly variants, producing the existing detached planning catalog.
+It can also receive `draft: utilityDraft` for local gas/power defaults. Supply that captured catalog
+to the primary owned planner. This does not expand the planner's currently supported relational
+layers or enable pending utilities. No operation registers prototypes, imports arbitrary components,
+spawns content, grants permissions or verifies physical operation.
+
+Bounds are 128 combined assets, 32,768 cumulative collection elements, 1,048,576 text characters,
+512 characters per string and per-kind member/choice/relation limits. Null structures, unsupported
+enum values and nonfinite numbers fail atomically. Theme inheritance/fallback traversal is capped
+at 128 levels, including loaded ancestors. Portable copies retain every authored field and ordered
+alternative. Draft declaration identity sorts dictionary keys and preserves authoring list order;
+it excludes document ID/revision and is distinct from semantic planning identity or a dependency
+manifest. Full replacements require matching document/current revision and increment once; the
+server owner still needs to serialize replacement, permissions and undo history. Persistence,
+room maps/libraries/layout families, assignments and UI remain open. This subset does not complete
+the project contract above or the R08/R15 manifest requirements.
+
+#### Implemented planning project/library subset (2026-10-16)
+
+`KsProcgenProjectSpec` schema 1 aggregates optional interior/utility/layout documents and named
+`areas`. All provided child documents must match the project's document ID and revision. Each area
+binds a canonical `request`, explicit `theme`, and optional `library`; its key must equal the request
+ID. Procedural requests omit libraries; prefab/hybrid requests name one. `TryCapture` validates every
+selected area's content and references atomically. It imports referenced theme inheritance/fallback,
+pack, assembly and utility authoring definitions into portable project copies; no global prototype
+registration is required. Unreferenced interior draft assets may retain broken semantic references
+for editing, as described above. This is not the server-owned editing session or a full replay artifact.
+
+`KsProcgenLayoutDraftSpec` schema 2 (with migration of schema 1 defaults) provides reusable room geometry, atomic layout families and
+libraries. Room assets declare cells, facade edges, ports and optional paired source key/fingerprint
+expectations. Source rooms also accept a positive map-local `sourceGridUid` and a native
+`sourceOrigin` offset; see the 2026-10-18 atlas extraction ledger for the exact coordinate contract.
+A family's complete alternatives share an exact reservation; each partitions it into
+nonoverlapping transformed room members and explicit generated cells. Members store stable source
+room IDs, local origins and quarter turns. Singleton library rooms compile into `Room/<asset>`
+families; layout asset, option, member and port IDs exclude `/` to reserve that namespace. Global origins and family turns
+remain discovered by the fitter. Port/facade directions transform cardinally with the room, and
+immutable bindings retain family/option/member-to-source-room identity for future map adapters.
+
+Project copies contain the pinned authoring definitions, canonical requests and source declarations;
+loaded entity components, tile definitions, actual room-map contents and live host facts remain R15
+manifest/context obligations. `ContentFingerprint` is an expectation, not an observed checksum.
+Geometry-only rooms do not become real copied prefab contents. The existing geometry pipeline can
+receive a captured catalog from a project; disconnected networks and unsupported gas/power contracts
+remain failures. The primary owned planner still has its documented hybrid and layered-content gates.
+
+Project capture bounds 64 areas, 256 combined child assets and 65,536 cumulative normalized target/
+envelope/void mask cells. Layout drafts separately cap 256 assets, 32,768 collection elements, 65,536
+authored mask cells and 65,536 expanded room-instance cells. Exact source masks reject duplicates;
+mask/rotation set ordering and dictionary insertion order do not affect canonical identity. Complete alternative
+ordering remains authored data. Failed capture returns no partial project. `TryRevise` checks project
+identity/current revision, captures the replacement and increments the project and serialized children
+once. Concurrent ownership, undo, persistence and UI remain R16 work; no project value grants a lease
+or permission. Advanced layout void/seam/link/anchor/eligibility fields and room-map capture remain
+explicit open R08/R09 requirements.
+
+#### Implemented static room-map capture subset (2026-10-17)
+
+The server can now call `KsProcgenRoomMapCaptureSystem.TryCapture(project, sourceBindings, ...)`
+with its own symbolic-source-to-content-path catalog. It captures exact immutable map bytes,
+checks observed SHA-256 against each room's expected fingerprint, and binds the canonical project
+declaration and map/theme prototype bodies, following typed entity references, into a separate
+manifest. Only content resources
+under canonical `/Maps/` paths are read; user data and client-supplied paths are not consulted.
+This API is not an editor import endpoint, a room loader or apply permission. It supports bounded
+static inspection of formats 6/7 without creating entities. `CopyBytes()` returns a copy and
+`OpenRead()` returns a read-only stream over the captured source, enabling a future loader to consume
+the same bytes without reopening a mutable resource. Project/library source declarations remain
+unverified geometry until the adapter reconciles actual masks/ports/transforms and validates room
+operation. Full dependency/resource capture, source-map instantiation and portable replay remain
+open; section 17 records the implementation and verification checklist.
+
+The current source-manifest schema 8 also decodes bounded chunk payloads without engine grid
+allocation. `TryReconcileRoomMasks` separately translates each room-local mask by `sourceOrigin`
+and matches it to the explicit `sourceGridUid`, or a unique occupied unit grid when no selector
+is supplied. This supports atlas submasks without moving the fitted room geometry. Empty/missing cells,
+ambiguous grids, stale project declarations and shared probe exhaustion reject the whole result.
+This remains occupied-tile evidence; physical ports, walkable floor, hull, transforms and entity
+dependency extraction still need the complete map-copy adapter and operational checks.
+
+`TryExtractRoomEntities(project, sourceManifest, ...)` now adds map-local entity locators and finite
+grid-relative and rebased room-relative transform witnesses without spawning source content. It merges transform overrides
+with verified prototype defaults, resolves ancestry independently of source ordering, and rejects
+cuts through non-grid transform branches. Registered and server-ignored component override/removal
+names remain tied to the original immutable source bytes. This is transform-hierarchy extraction;
+it does not establish complete component/container/support relationships or authorize loading or
+activation. Extraction schema 2 now reads captured prototype images for transform defaults and
+observes typed entity/network/map links through registered component validators. Observed links
+must stay inside the selected room or name its selected grid/owning map context. Numeric-looking
+ordinary fields are not interpreted as entity IDs. Skipped/unsuccessfully validated component
+types are recorded as known inspection gaps; an empty gap list is not completeness evidence.
+
+The base source manifest captures group/theme prototype roots and their typed dependencies.
+Extraction's `Definitions` extends that snapshot with typed prototype references in overrides,
+using separate reference seeds so abstract filter definitions need not become spawnable roots.
+Prototype manifest schema is 10. Entity/tile roots, explicit other-kind roots and external typed
+reference seeds retain distinct provenance. Referenced registered kinds close transitively through
+nested typed wrappers, including references back to entities and registered tiles; abstract
+reference-discovery images retain declaration authority only. Parent chains and declared-schema
+inspection gaps are included; an opaque field is not guessed to be a prototype reference.
+Extraction identity binds those
+definitions and the actual returned mask/pose/reference/gap witnesses; base source hashes alone do
+not freeze override dependencies.
+Legacy/custom/client reference schemas, resources and actual component copying remain unfinished.
+Both `ComponentReferencesVerified` and `CopyReady` remain false.
+
+### 21.4 Preview, diagnostics and apply
+
+The utility palette inspector must display the captured mount requirement for each converter
+prototype. Wall candidates, actual selected support walls, front interaction approaches and
+same-tile HV/MV/LV terminals need separate preview overlays. Report missing solid support,
+window/door conflicts and mount-cell write restrictions directly; an adjacent-wall floor placement
+must never be shown as a valid APC. Show the selected floor/wall substation variant and any whole
+variant replacement. This is required editor behavior; the headless mount solver is not a delivered
+in-game control.
+
+Use explicit operation states: `Draft`, `Validating`, `Planning`, `Planned`, `Staging`,
+`Verifying`, `ReadyToApply`, `Failed`, `Cancelled`, `Applied`. Display independent evidence for
+geometry, clean access, gas closure/fill, electrical topology/supply, light coverage and publication.
+A geometry-only result is viewable as `Planned`; it cannot become `ReadyToApply` when hard runtime
+checks remain unverified. Planned and measured overlays use different labels/styles.
+
+* Preview uses an immutable draft/content/context snapshot. Progress reports stage, deterministic
+  counters and current issue; cancel remains responsive. Debounce interactive edits and bound work
+  per user/server. A new revision invalidates an old preview rather than retagging it as current.
+* Selecting a diagnostic focuses its room, cell, relation, gas boundary or circuit and highlights
+  the witness: blocked path, incompatible variants, leaking edge, missing cable layer, wrong
+  provider, insufficient source or failed load. Offer an explicit edit action where appropriate;
+  never auto-relax a hard condition merely to make the display green.
+* Overlay toggles include ownership/constants/void, alternatives, entrance groups/routes, support
+  layers/facing/approaches, gas domains/composition/pressure, HV/MV/LV, converter terminals,
+  consumer radius/provider links/load, operating light coverage and tactical samples. Clicking an
+  entity exposes both authored declarations and inspected engine facts.
+* Compare previews using the same seed and changed settings, or different seeds with identical
+  content. Report changed rooms, package selections, gas assignments, cable length/capacity,
+  omitted contents and hard/soft outcomes. Retain bounded replay artifacts and failing seeds.
+* Apply is a deliberate action on one validated snapshot. Server checks editor permission,
+  current draft revision, content/context fingerprints, stage ownership and all required evidence
+  again; stale results require regeneration. One operation publishes once, and duplicate requests
+  return the same outcome. Partial multi-blob publication is disabled by default.
+
+### 21.5 Client/server protocol and acceptance
+
+Clients send typed editing intentions with document ID, expected revision and operation ID. Server
+validates permissions, references, numeric bounds and writable context, then acknowledges the
+new revision or returns a conflict. Preview/apply messages reference server-issued snapshot tokens;
+clients cannot assert their own verification flags, UIDs, watts or writable masks. Validate those
+claims against permitted context. Use revisioned bounded/paged asset lists, diagnostics and overlay
+geometry; report truncation and fetch details on demand without creating one UI control per tile.
+
+Start with one writer per draft and read-only collaborators, with visible writer identity and an
+explicit takeover/release action. Rejected stale edits preserve local unsaved input for recovery.
+Disconnect, cancellation, timeout and server shutdown dispose unretained stages and release leases.
+UI preview throttling affects scheduling, not the selected seed outcome. Expensive validation runs
+as a cancellable job; pure client validation is advisory and uses the same schema semantics.
+
+Implement schema-driven reusable fields/pickers where practical, plus dedicated graph/paint/layer
+controls where a plain form cannot explain the spatial rules. The server generator remains usable
+headlessly through the same draft/request contracts. Required UI exits are A62-A66: authors can
+create and save a coherent room theme, library alternatives and a relational assembly, configure
+gas and power, diagnose failures, preview and apply without touching source files or raw YAML.
 
 Revisions to these defaults should update the contracts, fixture expectations, and task acceptance
 criteria together. The final implementation must make its limits visible through results and

@@ -50,7 +50,7 @@ public static class KsProcgenPortNetworkAnalyzer
         if (partition == null || inspectedExistingPassages == null || packing == null ||
             partition.FloorCells == null || partition.WallCells == null || partition.DoorOpenings == null ||
             !Enum.IsDefined(partition.Status) ||
-            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded)
+            partition.Status is KsProcgenPartitionStatus.InvalidInput or KsProcgenPartitionStatus.BudgetExceeded or KsProcgenPartitionStatus.RequiredRoomRejected)
             return Failure(KsProcgenPortNetworkStatus.InvalidInput, "InvalidPartitionedPortNetwork");
 
         var floor = partition.FloorCells.ToHashSet();

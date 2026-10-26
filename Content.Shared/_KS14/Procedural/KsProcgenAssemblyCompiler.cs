@@ -5,14 +5,47 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Procedural;
 
-public sealed record KsProcgenResolvedAssemblyMember(
-    string Id,
-    string SourceMemberId,
-    bool Required,
-    KsProcgenEntityEntry Entry,
-    KsProcgenMemberRotation RotationMode,
-    int LocalQuarterTurns,
-    Vector2i? ApproachLanding = null);
+/// <summary>Detached compiled entry. Editable pack declarations remain KsProcgenEntityEntry.</summary>
+public sealed record KsProcgenResolvedEntityEntry
+{
+    public string Id { get; init; } = string.Empty;
+    public string Entity { get; init; } = string.Empty;
+    public float Weight { get; init; } = 1f;
+    public int MinimumCount { get; init; }
+    public KsProcgenEntityRole Role { get; init; }
+    public KsProcgenMovementClass Movement { get; init; }
+    public IReadOnlyList<Vector2i> Footprint { get; init; } = [];
+    public IReadOnlyList<int> AllowedQuarterTurns { get; init; } = [];
+    public bool RequiresInteractionApproach { get; init; }
+
+    public static KsProcgenResolvedEntityEntry Copy(KsProcgenEntityEntry entry) => new()
+    {
+        Id = entry.Id, Entity = entry.Entity, Weight = entry.Weight, MinimumCount = entry.MinimumCount,
+        Role = entry.Role, Movement = entry.Movement, RequiresInteractionApproach = entry.RequiresInteractionApproach,
+        Footprint = entry.Footprint == null ? null! : KsProcgenReadOnly.Copy(entry.Footprint),
+        AllowedQuarterTurns = entry.AllowedQuarterTurns == null ? null! : KsProcgenReadOnly.Copy(entry.AllowedQuarterTurns),
+    };
+}
+
+public sealed record KsProcgenResolvedAssemblyMember
+{
+    public string Id { get; init; }
+    public string SourceMemberId { get; init; }
+    public bool Required { get; init; }
+    public KsProcgenResolvedEntityEntry Entry { get; init; }
+    public KsProcgenMemberRotation RotationMode { get; init; }
+    public int LocalQuarterTurns { get; init; }
+    public Vector2i? ApproachLanding { get; init; }
+
+    // Keep construction from editable declarations, but never retain their mutable lists/fields.
+    public KsProcgenResolvedAssemblyMember(string id, string sourceMemberId, bool required, KsProcgenEntityEntry entry,
+        KsProcgenMemberRotation rotationMode, int localQuarterTurns, Vector2i? approachLanding = null)
+    {
+        Id = id; SourceMemberId = sourceMemberId; Required = required;
+        Entry = entry == null ? null! : KsProcgenResolvedEntityEntry.Copy(entry);
+        RotationMode = rotationMode; LocalQuarterTurns = localQuarterTurns; ApproachLanding = approachLanding;
+    }
+}
 
 public sealed record KsProcgenResolvedAssemblyRelation(
     string Id,
@@ -49,9 +82,10 @@ public static class KsProcgenAssemblyCompiler
 
     public static bool TryResolvePack(
         IPrototypeManager prototypeManager,
-        KsProcgenEntityPackPrototype pack,
+        KsProcgenEntityPackSpec pack,
         out IReadOnlyList<KsProcgenResolvedEntityCore> cores,
-        out KsProcgenIssue? issue)
+        out KsProcgenIssue? issue,
+        Func<string, KsProcgenAssemblySpec?>? assemblyResolver = null)
     {
         cores = [];
         issue = null;
@@ -68,12 +102,12 @@ public static class KsProcgenAssemblyCompiler
                 !ValidateEntry(entry, id => prototypeManager.TryIndex<EntityPrototype>(id, out _)))
                 return Fail("InvalidEntityEntry", out issue);
             compiled.Add(new KsProcgenResolvedEntityCore(entry.Id, entry.Weight, entry.MinimumCount,
-                [CompileSingleton(entry)]));
+                KsProcgenReadOnly.Copy(new[] { CompileSingleton(entry) })));
         }
         foreach (var reference in pack.Assemblies)
         {
             if (reference == null || !ValidName(reference.Id) || !seen.Add(reference.Id) ||
-                !TryResolve(prototypeManager, reference, out var variants, out issue))
+                !TryResolve(prototypeManager, reference, out var variants, out issue, assemblyResolver: assemblyResolver))
             {
                 issue ??= new KsProcgenIssue("InvalidAssemblyReference", "Assembly core IDs must be unique.");
                 return false;
@@ -83,7 +117,7 @@ public static class KsProcgenAssemblyCompiler
         }
         if (!compiled.Any(core => core.Weight > 0f))
             return Fail("EmptyPackChoice", out issue);
-        cores = compiled.OrderBy(core => core.Id, StringComparer.Ordinal).ToArray();
+        cores = compiled.OrderBy(core => core.Id, StringComparer.Ordinal).ToReadOnlyList();
         return true;
     }
 
@@ -91,7 +125,8 @@ public static class KsProcgenAssemblyCompiler
         IPrototypeManager prototypeManager,
         KsProcgenAssemblyReference reference,
         out IReadOnlyList<KsProcgenResolvedAssembly> variants,
-        out KsProcgenIssue? issue)
+        out KsProcgenIssue? issue,
+        Func<string, KsProcgenAssemblySpec?>? assemblyResolver = null)
     {
         variants = [];
         issue = null;
@@ -100,9 +135,13 @@ public static class KsProcgenAssemblyCompiler
             reference.Bindings == null || reference.Bindings.Count > MaximumBindings ||
             !float.IsFinite(reference.Weight) || reference.Weight < 0f ||
             reference.MinimumCount < 0 || reference.MinimumCount > 64 ||
-            reference.MinimumCount > 0 && reference.Weight == 0f ||
-            !prototypeManager.TryIndex<KsProcgenAssemblyPrototype>(reference.Assembly, out var prototype))
+            reference.MinimumCount > 0 && reference.Weight == 0f)
             return Fail("InvalidAssemblyReference", out issue);
+
+        var prototype = assemblyResolver == null
+            ? prototypeManager.TryIndex<KsProcgenAssemblyPrototype>(reference.Assembly, out var loaded) ? loaded : null
+            : assemblyResolver(reference.Assembly);
+        if (prototype == null) return Fail("InvalidAssemblyReference", out issue);
 
         if (prototype.Variants == null || prototype.Variants.Count > MaximumVariants - 1)
             return Fail("AssemblyVariantBudget", out issue);
@@ -117,7 +156,7 @@ public static class KsProcgenAssemblyCompiler
             },
         };
         definitions.AddRange(prototype.Variants);
-        return TryCompileVariants(prototype.ID, definitions, reference.Bindings,
+        return TryCompileVariants(reference.Assembly, definitions, reference.Bindings,
             id => prototypeManager.TryIndex<EntityPrototype>(id, out _), out variants, out issue);
     }
 
@@ -159,7 +198,7 @@ public static class KsProcgenAssemblyCompiler
                 return false;
             compiled.Add(resolved!);
         }
-        variants = compiled.ToArray();
+        variants = KsProcgenReadOnly.Copy(compiled);
         return true;
     }
 
@@ -225,7 +264,7 @@ public static class KsProcgenAssemblyCompiler
                     return Fail("InvalidAssemblyApproachLanding", out issue);
                 var instance = new KsProcgenResolvedAssemblyMember(instanceId, member.Id,
                     index < member.MinimumCount, entry, member.RotationMode, member.LocalQuarterTurns,
-                    ApproachLanding: member.ApproachLanding);
+                    approachLanding: member.ApproachLanding);
                 members.Add(instance);
                 instances.Add(instance);
             }
@@ -304,14 +343,14 @@ public static class KsProcgenAssemblyCompiler
             }
         }
         resolved = new KsProcgenResolvedAssembly(assemblyId, definition.Id, definition.AnchorMember,
-            members.OrderBy(member => member.Id, StringComparer.Ordinal).ToArray(),
-            relations.OrderBy(relation => relation.Id, StringComparer.Ordinal).ToArray());
+            members.OrderBy(member => member.Id, StringComparer.Ordinal).ToReadOnlyList(),
+            relations.OrderBy(relation => relation.Id, StringComparer.Ordinal).ToReadOnlyList());
         return true;
     }
 
     public static KsProcgenResolvedAssembly CompileSingleton(KsProcgenEntityEntry entry) => new(
         $"Singleton/{entry.Id}", "Base", entry.Id,
-        new[] { new KsProcgenResolvedAssemblyMember(entry.Id, entry.Id, true, new KsProcgenEntityEntry
+        KsProcgenReadOnly.Copy(new[] { new KsProcgenResolvedAssemblyMember(entry.Id, entry.Id, true, new KsProcgenEntityEntry
         {
             Id = entry.Id,
             Entity = entry.Entity,
@@ -322,18 +361,24 @@ public static class KsProcgenAssemblyCompiler
             Footprint = entry.Footprint.OrderBy(cell => cell.Y).ThenBy(cell => cell.X).ToList(),
             AllowedQuarterTurns = entry.AllowedQuarterTurns.OrderBy(turn => turn).ToList(),
             RequiresInteractionApproach = entry.RequiresInteractionApproach,
-        }, KsProcgenMemberRotation.Independent, 0) }, Array.Empty<KsProcgenResolvedAssemblyRelation>());
+        }, KsProcgenMemberRotation.Independent, 0) }), Array.Empty<KsProcgenResolvedAssemblyRelation>());
 
     public static bool ValidateEntry(KsProcgenEntityEntry entry, Func<string, bool> entityExists) =>
-        entry != null && entry.Footprint != null && entry.AllowedQuarterTurns != null &&
-        !string.IsNullOrWhiteSpace(entry.Entity) && entry.Entity.Length <= MaximumPrototypeIdLength && entityExists(entry.Entity) &&
-        Enum.IsDefined(entry.Role) && Enum.IsDefined(entry.Movement) &&
-        entry.Footprint.Count is > 0 and <= 16 && entry.Footprint.Contains(new Vector2i(0, 0)) &&
-        entry.Footprint.All(cell => cell.X is >= -8 and <= 8 && cell.Y is >= -8 and <= 8) &&
-        entry.Footprint.Distinct().Count() == entry.Footprint.Count &&
-        entry.AllowedQuarterTurns.Count is > 0 and <= 4 &&
-        entry.AllowedQuarterTurns.All(turn => turn is >= 0 and <= 3) &&
-        entry.AllowedQuarterTurns.Distinct().Count() == entry.AllowedQuarterTurns.Count;
+        entry != null && ValidateEntryBody(entry.Entity, entry.Role, entry.Movement, entry.Footprint, entry.AllowedQuarterTurns, entityExists);
+
+    public static bool ValidateEntry(KsProcgenResolvedEntityEntry entry, Func<string, bool> entityExists) =>
+        entry != null && ValidateEntryBody(entry.Entity, entry.Role, entry.Movement, entry.Footprint, entry.AllowedQuarterTurns, entityExists);
+
+    private static bool ValidateEntryBody(string entity, KsProcgenEntityRole role, KsProcgenMovementClass movement,
+        IReadOnlyList<Vector2i> footprint, IReadOnlyList<int> turns, Func<string, bool> entityExists) =>
+        footprint != null && turns != null &&
+        !string.IsNullOrWhiteSpace(entity) && entity.Length <= MaximumPrototypeIdLength && entityExists(entity) &&
+        Enum.IsDefined(role) && Enum.IsDefined(movement) &&
+        footprint.Count is > 0 and <= 16 && footprint.Contains(new Vector2i(0, 0)) &&
+        footprint.All(cell => cell.X is >= -8 and <= 8 && cell.Y is >= -8 and <= 8) &&
+        footprint.Distinct().Count() == footprint.Count &&
+        turns.Count is > 0 and <= 4 && turns.All(turn => turn is >= 0 and <= 3) &&
+        turns.Distinct().Count() == turns.Count;
 
     private static bool ValidName(string name) => !string.IsNullOrWhiteSpace(name) && name.Length <= MaximumNameLength &&
         name.All(character => char.IsAsciiLetterOrDigit(character) || character == '_');

@@ -1,0 +1,1620 @@
+{
+  "schemaVersion": 3,
+  "requestId": "SupportedReview",
+  "seed": 17,
+  "status": "Candidate",
+  "reasonCode": null,
+  "semanticHash": "15088196926847717679",
+  "configurationId": "KsDefaultStandalone",
+  "entriesTruncated": false,
+  "geometryTruncated": false,
+  "inputWorkTruncated": false,
+  "projectionInputElements": 303,
+  "entriesWritten": 29,
+  "geometryCellsWritten": 243,
+  "published": false,
+  "engineAccessVerified": false,
+  "gasClosureVerified": false,
+  "workingLightingVerified": false,
+  "graphWorkFullyMetered": false,
+  "searchComplete": false,
+  "work": {
+    "expandedCells": 1342,
+    "furnishingProbes": 70,
+    "orderProbes": 1,
+    "partitionMerges": 0,
+    "partitionSeamProbes": 384,
+    "fixtureSelections": 0,
+    "configurationProbes": 1,
+    "layoutProbes": 1
+  },
+  "constraints": [
+    {
+      "id": "DeclaredShape",
+      "state": "Satisfied",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": null
+    },
+    {
+      "id": "PlannedCleanAccess",
+      "state": "Satisfied",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": null
+    },
+    {
+      "id": "EngineCleanAccess",
+      "state": "Unverified",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "EngineAccessNotVerified"
+    },
+    {
+      "id": "GasClosure",
+      "state": "Unverified",
+      "hard": true,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "GasClosureNotVerified"
+    },
+    {
+      "id": "WorkingLighting",
+      "state": "Unverified",
+      "hard": false,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "WorkingLightingNotVerified"
+    },
+    {
+      "id": "FullWorkAccounting",
+      "state": "Unverified",
+      "hard": false,
+      "requested": null,
+      "achieved": null,
+      "reasonCode": "WorkNotFullyMetered"
+    }
+  ],
+  "stages": [
+    {
+      "stage": "Floor",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 129,
+      "candidateProbes": 1,
+      "configurationId": "KsDefaultStandalone",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Partition",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 448,
+      "candidateProbes": 0,
+      "configurationId": "KsDefaultStandalone",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "partitionSeamProbes": 384
+    },
+    {
+      "stage": "Themes",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 0,
+      "candidateProbes": 0,
+      "configurationId": "KsDefaultStandalone",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Structure",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 448,
+      "candidateProbes": 0,
+      "configurationId": "KsDefaultStandalone",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Furnishing",
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 95,
+      "candidateProbes": 67,
+      "configurationId": "KsDefaultStandalone",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "Lighting",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 0,
+      "candidateProbes": 0,
+      "configurationId": "KsDefaultStandalone",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "partitionSeamProbes": 0
+    },
+    {
+      "stage": "InteriorAudit",
+      "regionId": null,
+      "completed": true,
+      "reasonCode": null,
+      "expandedCells": 222,
+      "candidateProbes": 3,
+      "configurationId": "KsDefaultStandalone",
+      "layoutOrdinal": 0,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "partitionSeamProbes": 0
+    }
+  ],
+  "attempts": [
+    {
+      "ordinal": 0,
+      "configurationId": "KsDefaultStandalone",
+      "status": "Candidate",
+      "reasonCode": null,
+      "expandedCells": 1342,
+      "furnishingProbes": 70,
+      "orderProbes": 1,
+      "partitionMerges": 0,
+      "fixtureSelections": 0,
+      "fallbacks": [],
+      "partitionSeamProbes": 384,
+      "preferredMaximumRoomCells": 64,
+      "sizeGoalsRequested": false,
+      "infrastructureHomeOrdinal": 0
+    }
+  ],
+  "sizeGoalAttempts": [],
+  "fallbacks": [],
+  "sizeMix": [],
+  "requestedCells": [
+    {
+      "x": 0,
+      "y": 0
+    },
+    {
+      "x": 1,
+      "y": 0
+    },
+    {
+      "x": 2,
+      "y": 0
+    },
+    {
+      "x": 3,
+      "y": 0
+    },
+    {
+      "x": 4,
+      "y": 0
+    },
+    {
+      "x": 5,
+      "y": 0
+    },
+    {
+      "x": 6,
+      "y": 0
+    },
+    {
+      "x": 7,
+      "y": 0
+    },
+    {
+      "x": 0,
+      "y": 1
+    },
+    {
+      "x": 1,
+      "y": 1
+    },
+    {
+      "x": 2,
+      "y": 1
+    },
+    {
+      "x": 3,
+      "y": 1
+    },
+    {
+      "x": 4,
+      "y": 1
+    },
+    {
+      "x": 5,
+      "y": 1
+    },
+    {
+      "x": 6,
+      "y": 1
+    },
+    {
+      "x": 7,
+      "y": 1
+    },
+    {
+      "x": 0,
+      "y": 2
+    },
+    {
+      "x": 1,
+      "y": 2
+    },
+    {
+      "x": 2,
+      "y": 2
+    },
+    {
+      "x": 3,
+      "y": 2
+    },
+    {
+      "x": 4,
+      "y": 2
+    },
+    {
+      "x": 5,
+      "y": 2
+    },
+    {
+      "x": 6,
+      "y": 2
+    },
+    {
+      "x": 7,
+      "y": 2
+    },
+    {
+      "x": 0,
+      "y": 3
+    },
+    {
+      "x": 1,
+      "y": 3
+    },
+    {
+      "x": 2,
+      "y": 3
+    },
+    {
+      "x": 3,
+      "y": 3
+    },
+    {
+      "x": 4,
+      "y": 3
+    },
+    {
+      "x": 5,
+      "y": 3
+    },
+    {
+      "x": 6,
+      "y": 3
+    },
+    {
+      "x": 7,
+      "y": 3
+    },
+    {
+      "x": 0,
+      "y": 4
+    },
+    {
+      "x": 1,
+      "y": 4
+    },
+    {
+      "x": 2,
+      "y": 4
+    },
+    {
+      "x": 3,
+      "y": 4
+    },
+    {
+      "x": 4,
+      "y": 4
+    },
+    {
+      "x": 5,
+      "y": 4
+    },
+    {
+      "x": 6,
+      "y": 4
+    },
+    {
+      "x": 7,
+      "y": 4
+    },
+    {
+      "x": 0,
+      "y": 5
+    },
+    {
+      "x": 1,
+      "y": 5
+    },
+    {
+      "x": 2,
+      "y": 5
+    },
+    {
+      "x": 3,
+      "y": 5
+    },
+    {
+      "x": 4,
+      "y": 5
+    },
+    {
+      "x": 5,
+      "y": 5
+    },
+    {
+      "x": 6,
+      "y": 5
+    },
+    {
+      "x": 7,
+      "y": 5
+    },
+    {
+      "x": 0,
+      "y": 6
+    },
+    {
+      "x": 1,
+      "y": 6
+    },
+    {
+      "x": 2,
+      "y": 6
+    },
+    {
+      "x": 3,
+      "y": 6
+    },
+    {
+      "x": 4,
+      "y": 6
+    },
+    {
+      "x": 5,
+      "y": 6
+    },
+    {
+      "x": 6,
+      "y": 6
+    },
+    {
+      "x": 7,
+      "y": 6
+    },
+    {
+      "x": 0,
+      "y": 7
+    },
+    {
+      "x": 1,
+      "y": 7
+    },
+    {
+      "x": 2,
+      "y": 7
+    },
+    {
+      "x": 3,
+      "y": 7
+    },
+    {
+      "x": 4,
+      "y": 7
+    },
+    {
+      "x": 5,
+      "y": 7
+    },
+    {
+      "x": 6,
+      "y": 7
+    },
+    {
+      "x": 7,
+      "y": 7
+    }
+  ],
+  "floorCells": [
+    {
+      "x": 0,
+      "y": 0
+    },
+    {
+      "x": 1,
+      "y": 0
+    },
+    {
+      "x": 2,
+      "y": 0
+    },
+    {
+      "x": 3,
+      "y": 0
+    },
+    {
+      "x": 4,
+      "y": 0
+    },
+    {
+      "x": 5,
+      "y": 0
+    },
+    {
+      "x": 6,
+      "y": 0
+    },
+    {
+      "x": 7,
+      "y": 0
+    },
+    {
+      "x": 0,
+      "y": 1
+    },
+    {
+      "x": 1,
+      "y": 1
+    },
+    {
+      "x": 2,
+      "y": 1
+    },
+    {
+      "x": 3,
+      "y": 1
+    },
+    {
+      "x": 4,
+      "y": 1
+    },
+    {
+      "x": 5,
+      "y": 1
+    },
+    {
+      "x": 6,
+      "y": 1
+    },
+    {
+      "x": 7,
+      "y": 1
+    },
+    {
+      "x": 0,
+      "y": 2
+    },
+    {
+      "x": 1,
+      "y": 2
+    },
+    {
+      "x": 2,
+      "y": 2
+    },
+    {
+      "x": 3,
+      "y": 2
+    },
+    {
+      "x": 4,
+      "y": 2
+    },
+    {
+      "x": 5,
+      "y": 2
+    },
+    {
+      "x": 6,
+      "y": 2
+    },
+    {
+      "x": 7,
+      "y": 2
+    },
+    {
+      "x": 0,
+      "y": 3
+    },
+    {
+      "x": 1,
+      "y": 3
+    },
+    {
+      "x": 2,
+      "y": 3
+    },
+    {
+      "x": 3,
+      "y": 3
+    },
+    {
+      "x": 4,
+      "y": 3
+    },
+    {
+      "x": 5,
+      "y": 3
+    },
+    {
+      "x": 6,
+      "y": 3
+    },
+    {
+      "x": 7,
+      "y": 3
+    },
+    {
+      "x": 0,
+      "y": 4
+    },
+    {
+      "x": 1,
+      "y": 4
+    },
+    {
+      "x": 2,
+      "y": 4
+    },
+    {
+      "x": 3,
+      "y": 4
+    },
+    {
+      "x": 4,
+      "y": 4
+    },
+    {
+      "x": 5,
+      "y": 4
+    },
+    {
+      "x": 6,
+      "y": 4
+    },
+    {
+      "x": 7,
+      "y": 4
+    },
+    {
+      "x": 0,
+      "y": 5
+    },
+    {
+      "x": 1,
+      "y": 5
+    },
+    {
+      "x": 2,
+      "y": 5
+    },
+    {
+      "x": 3,
+      "y": 5
+    },
+    {
+      "x": 4,
+      "y": 5
+    },
+    {
+      "x": 5,
+      "y": 5
+    },
+    {
+      "x": 6,
+      "y": 5
+    },
+    {
+      "x": 7,
+      "y": 5
+    },
+    {
+      "x": 0,
+      "y": 6
+    },
+    {
+      "x": 1,
+      "y": 6
+    },
+    {
+      "x": 2,
+      "y": 6
+    },
+    {
+      "x": 3,
+      "y": 6
+    },
+    {
+      "x": 4,
+      "y": 6
+    },
+    {
+      "x": 5,
+      "y": 6
+    },
+    {
+      "x": 6,
+      "y": 6
+    },
+    {
+      "x": 7,
+      "y": 6
+    },
+    {
+      "x": 0,
+      "y": 7
+    },
+    {
+      "x": 1,
+      "y": 7
+    },
+    {
+      "x": 2,
+      "y": 7
+    },
+    {
+      "x": 3,
+      "y": 7
+    },
+    {
+      "x": 4,
+      "y": 7
+    },
+    {
+      "x": 5,
+      "y": 7
+    },
+    {
+      "x": 6,
+      "y": 7
+    },
+    {
+      "x": 7,
+      "y": 7
+    }
+  ],
+  "wallCells": [
+    {
+      "x": 0,
+      "y": -1
+    },
+    {
+      "x": 2,
+      "y": -1
+    },
+    {
+      "x": 3,
+      "y": -1
+    },
+    {
+      "x": 4,
+      "y": -1
+    },
+    {
+      "x": 5,
+      "y": -1
+    },
+    {
+      "x": 7,
+      "y": -1
+    },
+    {
+      "x": 8,
+      "y": 0
+    },
+    {
+      "x": -1,
+      "y": 1
+    },
+    {
+      "x": -1,
+      "y": 2
+    },
+    {
+      "x": 8,
+      "y": 2
+    },
+    {
+      "x": 8,
+      "y": 3
+    },
+    {
+      "x": -1,
+      "y": 4
+    },
+    {
+      "x": 8,
+      "y": 4
+    },
+    {
+      "x": -1,
+      "y": 5
+    },
+    {
+      "x": 8,
+      "y": 5
+    },
+    {
+      "x": -1,
+      "y": 6
+    },
+    {
+      "x": -1,
+      "y": 7
+    },
+    {
+      "x": 8,
+      "y": 7
+    },
+    {
+      "x": 0,
+      "y": 8
+    },
+    {
+      "x": 1,
+      "y": 8
+    },
+    {
+      "x": 2,
+      "y": 8
+    },
+    {
+      "x": 3,
+      "y": 8
+    },
+    {
+      "x": 4,
+      "y": 8
+    },
+    {
+      "x": 7,
+      "y": 8
+    }
+  ],
+  "protectedCells": [
+    {
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "preservedCells": [],
+  "voidCells": [],
+  "entranceCells": [],
+  "windowCells": [
+    {
+      "x": 1,
+      "y": -1
+    },
+    {
+      "x": 6,
+      "y": -1
+    },
+    {
+      "x": -1,
+      "y": 0
+    },
+    {
+      "x": 8,
+      "y": 1
+    },
+    {
+      "x": -1,
+      "y": 3
+    },
+    {
+      "x": 8,
+      "y": 6
+    },
+    {
+      "x": 5,
+      "y": 8
+    },
+    {
+      "x": 6,
+      "y": 8
+    }
+  ],
+  "doors": [],
+  "rooms": [
+    {
+      "id": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "kind": "RoomProposal",
+      "entranceGroups": [
+        "Root0000"
+      ],
+      "themeId": "Review",
+      "tilePackId": "KsProcgenOfficeTiles",
+      "wallPackId": "KsProcgenOfficeWalls",
+      "lightingPackId": null,
+      "cells": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 1,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 0
+        },
+        {
+          "x": 3,
+          "y": 0
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
+          "x": 7,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 5,
+          "y": 1
+        },
+        {
+          "x": 6,
+          "y": 1
+        },
+        {
+          "x": 7,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 5,
+          "y": 2
+        },
+        {
+          "x": 6,
+          "y": 2
+        },
+        {
+          "x": 7,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 3
+        },
+        {
+          "x": 5,
+          "y": 3
+        },
+        {
+          "x": 6,
+          "y": 3
+        },
+        {
+          "x": 7,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 4
+        },
+        {
+          "x": 2,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 5,
+          "y": 4
+        },
+        {
+          "x": 6,
+          "y": 4
+        },
+        {
+          "x": 7,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 5
+        },
+        {
+          "x": 1,
+          "y": 5
+        },
+        {
+          "x": 2,
+          "y": 5
+        },
+        {
+          "x": 3,
+          "y": 5
+        },
+        {
+          "x": 4,
+          "y": 5
+        },
+        {
+          "x": 5,
+          "y": 5
+        },
+        {
+          "x": 6,
+          "y": 5
+        },
+        {
+          "x": 7,
+          "y": 5
+        },
+        {
+          "x": 0,
+          "y": 6
+        },
+        {
+          "x": 1,
+          "y": 6
+        },
+        {
+          "x": 2,
+          "y": 6
+        },
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 4,
+          "y": 6
+        },
+        {
+          "x": 5,
+          "y": 6
+        },
+        {
+          "x": 6,
+          "y": 6
+        },
+        {
+          "x": 7,
+          "y": 6
+        },
+        {
+          "x": 0,
+          "y": 7
+        },
+        {
+          "x": 1,
+          "y": 7
+        },
+        {
+          "x": 2,
+          "y": 7
+        },
+        {
+          "x": 3,
+          "y": 7
+        },
+        {
+          "x": 4,
+          "y": 7
+        },
+        {
+          "x": 5,
+          "y": 7
+        },
+        {
+          "x": 6,
+          "y": 7
+        },
+        {
+          "x": 7,
+          "y": 7
+        }
+      ],
+      "cellsTruncated": false
+    }
+  ],
+  "entities": [
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "packId": "Contents",
+      "entryId": "Seat",
+      "entityId": "ChairOfficeLight",
+      "coreId": "Workstation",
+      "assemblyId": "Workstation",
+      "variantId": "Base",
+      "clusterIndex": 0,
+      "role": "Seat",
+      "movement": "Clear",
+      "quarterTurns": 2,
+      "cell": {
+        "x": 2,
+        "y": 3
+      },
+      "footprint": [
+        {
+          "x": 2,
+          "y": 3
+        }
+      ],
+      "approach": {
+        "x": 2,
+        "y": 2
+      },
+      "footprintTruncated": false
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "packId": "Contents",
+      "entryId": "Table",
+      "entityId": "Table",
+      "coreId": "Workstation",
+      "assemblyId": "Workstation",
+      "variantId": "Base",
+      "clusterIndex": 0,
+      "role": "PrimaryFurniture",
+      "movement": "VaultRequired",
+      "quarterTurns": 0,
+      "cell": {
+        "x": 2,
+        "y": 4
+      },
+      "footprint": [
+        {
+          "x": 2,
+          "y": 4
+        }
+      ],
+      "approach": null,
+      "footprintTruncated": false
+    }
+  ],
+  "preferences": [
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "missedAuthoredRelations": 0,
+      "distancePenalty": 0,
+      "searchTruncated": false
+    }
+  ],
+  "distances": [],
+  "supportedEntities": [
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M00",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Apc",
+        "origin": "Authored"
+      },
+      "entityId": "APCBasic",
+      "role": "Equipment",
+      "movement": "Blocks",
+      "layer": "Wall",
+      "position": {
+        "x": 0.5,
+        "y": -0.5
+      },
+      "quarterTurns": 2,
+      "supportParentMemberId": null,
+      "coordinateParentMemberId": null,
+      "localPosition": {
+        "x": 0.5,
+        "y": -0.5
+      },
+      "localQuarterTurns": 2,
+      "slotId": null,
+      "exposed": true,
+      "footprint": {
+        "cells": [
+          {
+            "x": 0,
+            "y": -1
+          }
+        ],
+        "truncated": false
+      },
+      "positionFrame": "RequestTiles"
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M01",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Device",
+        "origin": "Authored"
+      },
+      "entityId": "KsProcgenRotatableMicrowaveFixture",
+      "role": "Equipment",
+      "movement": "Blocks",
+      "layer": "Surface",
+      "position": {
+        "x": 2.5,
+        "y": 4.5
+      },
+      "quarterTurns": 0,
+      "supportParentMemberId": "I00_M04",
+      "coordinateParentMemberId": null,
+      "localPosition": {
+        "x": 2.5,
+        "y": 4.5
+      },
+      "localQuarterTurns": 0,
+      "slotId": null,
+      "exposed": true,
+      "footprint": {
+        "cells": [
+          {
+            "x": 2,
+            "y": 4
+          }
+        ],
+        "truncated": false
+      },
+      "positionFrame": "RequestTiles"
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M02",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Paper",
+        "origin": "Authored"
+      },
+      "entityId": "Paper",
+      "role": "PrimaryFurniture",
+      "movement": "Clear",
+      "layer": "Container",
+      "position": null,
+      "quarterTurns": 0,
+      "supportParentMemberId": "I00_M01",
+      "coordinateParentMemberId": "I00_M01",
+      "localPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "localQuarterTurns": 0,
+      "slotId": "microwave_entity_container",
+      "exposed": false,
+      "footprint": {
+        "cells": [],
+        "truncated": false
+      },
+      "positionFrame": "RequestTiles"
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M03",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Seat",
+        "origin": "Authored"
+      },
+      "entityId": "ChairOfficeLight",
+      "role": "Seat",
+      "movement": "Clear",
+      "layer": "Floor",
+      "position": {
+        "x": 2.5,
+        "y": 3.5
+      },
+      "quarterTurns": 2,
+      "supportParentMemberId": null,
+      "coordinateParentMemberId": null,
+      "localPosition": {
+        "x": 2.5,
+        "y": 3.5
+      },
+      "localQuarterTurns": 2,
+      "slotId": null,
+      "exposed": true,
+      "footprint": {
+        "cells": [
+          {
+            "x": 2,
+            "y": 3
+          }
+        ],
+        "truncated": false
+      },
+      "positionFrame": "RequestTiles"
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M04",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Table",
+        "origin": "Authored"
+      },
+      "entityId": "Table",
+      "role": "PrimaryFurniture",
+      "movement": "VaultRequired",
+      "layer": "Floor",
+      "position": {
+        "x": 2.5,
+        "y": 4.5
+      },
+      "quarterTurns": 0,
+      "supportParentMemberId": null,
+      "coordinateParentMemberId": null,
+      "localPosition": {
+        "x": 2.5,
+        "y": 4.5
+      },
+      "localQuarterTurns": 0,
+      "slotId": null,
+      "exposed": true,
+      "footprint": {
+        "cells": [
+          {
+            "x": 2,
+            "y": 4
+          }
+        ],
+        "truncated": false
+      },
+      "positionFrame": "RequestTiles"
+    }
+  ],
+  "operatingAccess": [
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M00",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Apc",
+        "origin": "Authored"
+      },
+      "layer": "Wall",
+      "quarterTurns": 2,
+      "approach": {
+        "x": 0,
+        "y": 0
+      },
+      "associatedSeatMemberId": null,
+      "cleanPath": {
+        "cells": [
+          {
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M01",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Device",
+        "origin": "Authored"
+      },
+      "layer": "Surface",
+      "quarterTurns": 0,
+      "approach": {
+        "x": 2,
+        "y": 3
+      },
+      "associatedSeatMemberId": "I00_M03",
+      "cleanPath": {
+        "cells": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": 0,
+            "y": 3
+          },
+          {
+            "x": 1,
+            "y": 3
+          },
+          {
+            "x": 2,
+            "y": 3
+          }
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "member": {
+        "memberId": "I00_M03",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Seat",
+        "origin": "Authored"
+      },
+      "layer": "Floor",
+      "quarterTurns": 2,
+      "approach": {
+        "x": 2,
+        "y": 2
+      },
+      "associatedSeatMemberId": null,
+      "cleanPath": {
+        "cells": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 2,
+            "y": 2
+          }
+        ],
+        "truncated": false
+      }
+    }
+  ],
+  "relations": [
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "relationId": "I00_R000",
+      "subject": {
+        "memberId": "I00_M03",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Seat",
+        "origin": "Authored"
+      },
+      "target": {
+        "memberId": "I00_M04",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Table",
+        "origin": "Authored"
+      },
+      "kind": "AdjacentTo",
+      "severity": "Required",
+      "state": "Satisfied",
+      "reasonCode": null,
+      "minimumDistance": null,
+      "maximumDistance": null,
+      "pathDistance": null,
+      "cleanPath": {
+        "cells": [],
+        "truncated": false
+      }
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "relationId": "I00_R001",
+      "subject": {
+        "memberId": "I00_M03",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Seat",
+        "origin": "Authored"
+      },
+      "target": {
+        "memberId": "I00_M04",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Table",
+        "origin": "Authored"
+      },
+      "kind": "FacingTarget",
+      "severity": "Required",
+      "state": "Satisfied",
+      "reasonCode": null,
+      "minimumDistance": null,
+      "maximumDistance": null,
+      "pathDistance": null,
+      "cleanPath": {
+        "cells": [],
+        "truncated": false
+      }
+    },
+    {
+      "regionId": "SupportedReview/EntranceNetwork/0/Zone/0",
+      "relationId": "I00_R004",
+      "subject": {
+        "memberId": "I00_M01",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Device",
+        "origin": "Authored"
+      },
+      "target": {
+        "memberId": "I00_M03",
+        "packId": "Contents",
+        "coreId": "Workstation",
+        "copyIndex": 0,
+        "assemblyId": "Workstation",
+        "variantId": "Base",
+        "sourceMemberId": "Seat",
+        "origin": "Authored"
+      },
+      "kind": "UsesSeat",
+      "severity": "Required",
+      "state": "Satisfied",
+      "reasonCode": null,
+      "minimumDistance": null,
+      "maximumDistance": null,
+      "pathDistance": null,
+      "cleanPath": {
+        "cells": [],
+        "truncated": false
+      }
+    }
+  ]
+}

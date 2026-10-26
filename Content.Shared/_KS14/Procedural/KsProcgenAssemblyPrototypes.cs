@@ -76,10 +76,10 @@ public sealed partial class KsProcgenAssemblyVariant
     [DataField] public List<KsProcgenAssemblyRelation> Relations = new();
 }
 
-[Prototype]
-public sealed partial class KsProcgenAssemblyPrototype : IPrototype
+[DataDefinition]
+[Virtual]
+public partial class KsProcgenAssemblySpec
 {
-    [IdDataField] public string ID { get; private set; } = string.Empty;
     [DataField(required: true)] public string AnchorMember = string.Empty;
     [DataField(required: true)] public List<KsProcgenAssemblyMember> Members = new();
     [DataField] public List<KsProcgenAssemblyRelation> Relations = new();
@@ -94,4 +94,10 @@ public sealed partial class KsProcgenAssemblyReference
     [DataField] public Dictionary<string, string> Bindings = new();
     [DataField] public float Weight = 1f;
     [DataField] public int MinimumCount;
+}
+
+[Prototype]
+public sealed partial class KsProcgenAssemblyPrototype : KsProcgenAssemblySpec, IPrototype
+{
+    [IdDataField] public string ID { get; private set; } = string.Empty;
 }

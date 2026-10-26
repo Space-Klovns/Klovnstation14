@@ -73,14 +73,9 @@ public static class KsProcgenLightingPlanner
                 Status = KsProcgenLightingPlanStatus.NotRequested,
                 TotalFloorCells = floor.Count,
             };
-        if (!prototypeManager.TryIndex<KsProcgenLightingPackPrototype>(region.Theme.LightingPackId,
-                out var pack) ||
-            !KsProcgenThemeValidator.TryResolve(prototypeManager, region.Theme.ThemeId,
-                out var theme, out _) ||
-            pack.Fixtures.FirstOrDefault(item => item.Id == region.Theme.LightFixtureId) is not { } fixture)
+        if (!KsProcgenSelectedContent.TryLight(prototypeManager, region.Theme, out var fixture, out var goal))
             return Fail(KsProcgenLightingPlanStatus.InvalidInput, "InvalidLightingFixture");
 
-        var goal = theme!.Goals.LightingCoverage;
         if (floor.Count > maxRoomCells)
             return new KsProcgenLightingPlanResult
             {
@@ -92,6 +87,13 @@ public static class KsProcgenLightingPlanner
             };
 
         var unavailable = new HashSet<Vector2i>(furnishings.ProtectedPassageCells);
+        if (furnishings.Layered is { } layered)
+        {
+            unavailable.UnionWith(layered.OccupiedCells);
+            unavailable.UnionWith(layered.ApproachCells);
+            unavailable.UnionWith(layered.Access.Access.SelectMany(access => access.CleanPath.Cells));
+            unavailable.UnionWith(layered.Access.Relations.SelectMany(relation => relation.CleanPath.Cells));
+        }
         unavailable.UnionWith(furnishings.Entities.SelectMany(entity => entity.OccupiedCells));
         unavailable.UnionWith(furnishings.Entities.Where(entity => entity.InteractionApproach.HasValue)
             .Select(entity => entity.InteractionApproach!.Value));
@@ -99,6 +101,7 @@ public static class KsProcgenLightingPlanner
         var blocked = new HashSet<Vector2i>(furnishings.Entities
             .Where(entity => entity.Movement != KsProcgenMovementClass.Clear)
             .SelectMany(entity => entity.OccupiedCells));
+        if (furnishings.Layered != null) blocked.UnionWith(furnishings.Layered.BlockedCells);
         var candidates = KsProcgenGeometry.SortCells(floor.Where(cell => !unavailable.Contains(cell)));
         var radius = Math.Max(1, fixture.PreferredSpacing / 2);
         var footprints = new Dictionary<Vector2i, IReadOnlySet<Vector2i>>();
