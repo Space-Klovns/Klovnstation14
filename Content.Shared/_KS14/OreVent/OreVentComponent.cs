@@ -1,5 +1,6 @@
 using Content.Shared._KS14.OreWell;
 using Content.Shared.DoAfter;
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -46,6 +47,12 @@ public sealed partial class OreVentComponent : Component
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public int ClearRadius = 6;
+
+    /// <summary>
+    ///     Played on each clearing iteration that destroyed any rock.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? ClearingSound = new SoundPathSpecifier("/Audio/Effects/break_stone.ogg");
 
     /// <summary>
     ///     Entity spawned during the process of tapping, and deleted

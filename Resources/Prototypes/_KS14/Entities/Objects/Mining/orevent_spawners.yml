@@ -24,8 +24,8 @@
   components:
   - type: TimedSpawner
     prototypes:
-    - MobWatcherLavaland
-    - MobGoliath
+    - KsOreVentTelegraphWatcherLavaland
+    - KsOreVentTelegraphGoliath
 
 - type: entity
   parent: KsOreVentMobSpawnerBase
@@ -34,6 +34,47 @@
   components:
   - type: TimedSpawner
     prototypes:
-    - MobWatcherIcewing
-    - MobGoliath
-    - MobBasilisk
+    - KsOreVentTelegraphWatcherIcewing
+    - KsOreVentTelegraphGoliath
+    - KsOreVentTelegraphBasilisk
+
+# Telegraphs: what a vent's spawner actually spawns. Each churns up the ground for a moment before its mob comes out
+#   of it, so that nobody gets a goliath on top of them without warning.
+
+- type: entity
+  id: KsOreVentTelegraphGoliath
+  name: churning ground
+  description: Something is coming up.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: Effects/rockspawn.rsi # placeholder until dedicated telegraph art; only its first half (debris) shows
+    state: asteroid
+    drawdepth: FloorObjects
+  - type: TimedDespawn
+    lifetime: 1.2 # half of rockspawn's animation, before the debris has formed into a rock
+  - type: SpawnOnDespawn
+    prototype: MobGoliath
+
+- type: entity
+  parent: KsOreVentTelegraphGoliath
+  id: KsOreVentTelegraphWatcherLavaland
+  components:
+  - type: SpawnOnDespawn
+    prototype: MobWatcherLavaland
+
+- type: entity
+  parent: KsOreVentTelegraphGoliath
+  id: KsOreVentTelegraphWatcherIcewing
+  components:
+  - type: SpawnOnDespawn
+    prototype: MobWatcherIcewing
+
+- type: entity
+  parent: KsOreVentTelegraphGoliath
+  id: KsOreVentTelegraphBasilisk
+  components:
+  - type: SpawnOnDespawn
+    prototype: MobBasilisk

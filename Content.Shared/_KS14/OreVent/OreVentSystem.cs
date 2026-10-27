@@ -3,7 +3,6 @@ using Content.Shared._KS14.OreVent.Drone;
 using Content.Shared._KS14.OreWell;
 using Content.Shared._KS14.ScanDiscoverable.Base;
 using Content.Shared.DoAfter;
-using Content.Shared.Explosion.EntitySystems;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
 using Content.Shared.Jittering;
@@ -22,7 +21,6 @@ public sealed partial class OreVentSystem : EntitySystem
     [Dependency] private SharedJitteringSystem _jitteringSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private SharedExplosionSystem _explosionSystem = default!;
     [Dependency] private KsScanDiscoverableSystem _discoverableSystem = default!;
     [Dependency] private SharedOreVentDroneSystem _oreVentDroneSystem = default!;
     [Dependency] private OreWellSystem _oreWellSystem = default!;
@@ -130,9 +128,9 @@ public sealed partial class OreVentSystem : EntitySystem
 
             if (activeComponent.Iteration < component.ClearingIterations)
             {
-                // Clear the area around ts
-                // TODO LCDC: Something better than explosions
-                ClearAreaAround((uid, component), component.ClearRadius / (float)(component.ClearingIterations - activeComponent.Iteration));
+                // Clear the area around it, a little further out each iteration
+                var clearingEv = new OreVentClearingEvent(component.ClearRadius / (float)(component.ClearingIterations - activeComponent.Iteration));
+                RaiseLocalEvent(uid, ref clearingEv);
 
                 // on last iteration, dont repeat and instead fall thru
                 activeComponent.Iteration += 1;
@@ -151,9 +149,11 @@ public sealed partial class OreVentSystem : EntitySystem
             DirtyField(uid, component, nameof(component.DoingClearing));
         }
     }
-
-    private void ClearAreaAround(Entity<OreVentComponent> entity, float radius)
-    {
-        _explosionSystem.TriggerExplosive(entity.Owner, delete: false, radius: radius);
-    }
 }
+
+/// <summary>
+///     Raised on a vent for each iteration of clearing the area around it. The rock within
+///         <see cref="Radius"/> should be destroyed. Rock is server-only, so the server handles this.
+/// </summary>
+[ByRefEvent]
+public readonly record struct OreVentClearingEvent(float Radius);

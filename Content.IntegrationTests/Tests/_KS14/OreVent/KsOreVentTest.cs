@@ -34,6 +34,7 @@ public sealed class KsOreVentTest : GameTest
     private readonly EntProtoId _notAScanner = "KsTestOreVentNotAScanner";
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId Wall = "WallSolid";
+    private static readonly EntProtoId Rock = "WallRock";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -68,14 +69,6 @@ public sealed class KsOreVentTest : GameTest
     extractionDuration: 1
     tappingProcessEntityProto: KsTestOreVentProcess
     oreWellSettingId: KsTestOreVentWell
-  - type: Explosive
-    explosionType: OreVentClearing
-    maxIntensity: 100
-    totalIntensity: 80
-    intensitySlope: 5
-    canCreateVacuum: false
-    repeatable: true
-    deleteAfterExplosion: false
 
 - type: entity
   parent: KsTestOreVent
@@ -136,8 +129,8 @@ public sealed class KsOreVentTest : GameTest
     }
 
     /// <summary>
-    ///     A human holding <paramref name="itemPrototype"/>, standing next to the vent. The blasts do structural
-    ///         damage, which a human does not take.
+    ///     A human holding <paramref name="itemPrototype"/>, standing next to the vent. The clearing only destroys
+    ///         rock, so it is safe there.
     /// </summary>
     private async Task<(EntityUid User, EntityUid Item)> SpawnUserHoldingAsync(EntProtoId itemPrototype)
     {
@@ -298,8 +291,16 @@ public sealed class KsOreVentTest : GameTest
         var vent = await SpawnVentAsync(_vent);
         var (user, scanner) = await SpawnUserHoldingAsync(_scanner);
 
+        EntityUid nearRock = default;
+        EntityUid farRock = default;
         EntityUid wall = default;
-        await Server.WaitPost(() => wall = SEntMan.SpawnEntity(Wall, new EntityCoordinates(_grid, new Vector2(1.5f, 0.5f))));
+        await Server.WaitPost(() =>
+        {
+            nearRock = SEntMan.SpawnEntity(Rock, new EntityCoordinates(_grid, new Vector2(1.5f, 0.5f)));
+            // Outside the vent's clearRadius of 3
+            farRock = SEntMan.SpawnEntity(Rock, new EntityCoordinates(_grid, new Vector2(5.5f, 0.5f)));
+            wall = SEntMan.SpawnEntity(Wall, new EntityCoordinates(_grid, new Vector2(-0.5f, 0.5f)));
+        });
 
         await UseOnVentAsync(user, scanner, vent);
 
@@ -313,7 +314,9 @@ public sealed class KsOreVentTest : GameTest
             var component = Component(vent);
             Assert.That(component.DoingClearing, Is.False, "clearing is over");
             Assert.That(component.BeingTapped || component.Tapped, Is.True, "and the tapping followed it");
-            Assert.That(SEntMan.Deleted(wall), Is.True, "the clearing blasts the structures around the vent");
+            Assert.That(SEntMan.Deleted(nearRock), Is.True, "the clearing destroys the rock around the vent");
+            Assert.That(SEntMan.Deleted(farRock), Is.False, "but only within its radius");
+            Assert.That(SEntMan.Deleted(wall), Is.False, "and only rock: a built wall is left alone");
         });
 
         await RunSecondsAsync(1.5f);
