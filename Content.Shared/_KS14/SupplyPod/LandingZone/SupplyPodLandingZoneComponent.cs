@@ -67,6 +67,13 @@ public sealed partial class SupplyPodLandingZoneIndicatorComponent : Component
     public float SliderEndScale = 0.01f;
 
     /// <summary>
+    ///     Whether the pixel-snapped layers blend the four nearest texels, rather than taking the one
+    ///         under each block's centre. Only read by the client.
+    /// </summary>
+    [DataField]
+    public bool Filtered = true;
+
+    /// <summary>
     ///     How far the zone turns over the whole countdown. Negative is clockwise on screen.
     /// </summary>
     [DataField]

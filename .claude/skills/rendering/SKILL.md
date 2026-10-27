@@ -6,7 +6,7 @@ description: How the client draws a frame in this repo - Clyde's viewport pipeli
 # Rendering
 
 What the engine does when it draws, as read from `RobustToolbox` v291, so you don't have to work it out again.
-Shaders themselves (SWSL, built-ins, post-shaders, uniform leaks) are in `Klovn/Docs/shaders.md`. Read that too if
+Shaders themselves (SWSL, built-ins, post-shaders, uniform leaks) are in the `shaders` skill. Read that too if
 you write one.
 
 Nothing headless draws anything (see [Testing](#testing)). Every statement here was read from the engine, but your

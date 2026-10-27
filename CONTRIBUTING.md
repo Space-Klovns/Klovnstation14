@@ -652,9 +652,9 @@ _popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
 
 So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
 
-**Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering, sprites, client UI and integration testing each
+**Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering, sprites, shaders, client UI and integration testing each
 have an agent skill under `.claude/skills/` (agents see the list automatically). Read the matching one before working
-in that area. To port an SS13 sprite, run the `/dmi-to-rsi` command: it converts a `.dmi` into an `.rsi`, copyright line included.
+in that area. To port an SS13 sprite, run the `/dmi-to-rsi` command: it converts a `.dmi` into an `.rsi`, copyright line included. To port SS13 code or read DM, use the `dreammaker` skill.
 
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
