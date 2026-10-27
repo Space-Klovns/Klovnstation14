@@ -20,6 +20,7 @@
 - type: entity
   parent: KsBaseSupplyPodGlow
   id: KsSupplyPodGlowYellow
+  categories: [ HideSpawnMenu ]
   suffix: Yellow
   components:
   - type: Sprite
@@ -28,6 +29,7 @@
 - type: entity
   parent: KsBaseSupplyPodGlow
   id: KsSupplyPodGlowBlue
+  categories: [ HideSpawnMenu ]
   suffix: Blue
   components:
   - type: Sprite
@@ -36,6 +38,7 @@
 - type: entity
   parent: KsBaseSupplyPodGlow
   id: KsSupplyPodGlowRed
+  categories: [ HideSpawnMenu ]
   suffix: Red
   components:
   - type: Sprite
@@ -44,6 +47,7 @@
 - type: entity
   parent: KsBaseSupplyPodGlow
   id: KsSupplyPodGlowGreen
+  categories: [ HideSpawnMenu ]
   suffix: Green
   components:
   - type: Sprite

@@ -61,6 +61,7 @@
 - type: entity
   parent: KsOreVentTelegraphGoliath
   id: KsOreVentTelegraphWatcherLavaland
+  categories: [ HideSpawnMenu ]
   components:
   - type: SpawnOnDespawn
     prototype: MobWatcherLavaland
@@ -68,6 +69,7 @@
 - type: entity
   parent: KsOreVentTelegraphGoliath
   id: KsOreVentTelegraphWatcherIcewing
+  categories: [ HideSpawnMenu ]
   components:
   - type: SpawnOnDespawn
     prototype: MobWatcherIcewing
@@ -75,6 +77,7 @@
 - type: entity
   parent: KsOreVentTelegraphGoliath
   id: KsOreVentTelegraphBasilisk
+  categories: [ HideSpawnMenu ]
   components:
   - type: SpawnOnDespawn
     prototype: MobBasilisk

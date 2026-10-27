@@ -55,6 +55,7 @@
 - type: entity
   parent: KsFoamBlanket
   id: KsFoamBlanketPowder
+  categories: [ HideSpawnMenu ]
   name: dry powder
   description: A
   components:
