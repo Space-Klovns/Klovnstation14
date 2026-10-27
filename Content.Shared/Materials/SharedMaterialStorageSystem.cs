@@ -450,17 +450,20 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         else if (!CanTakeVolume(receiver, totalVolume, storage, localOnly: true))
             return false;
 
-        // TODO LCDC: test if this works with entities made up of more than 1 material
+        // KS14 start: the limit is shared by every material, so each one gets only what the ones before it left
+        var newTotalVolume = oldTotalVolume;
         foreach (var (mat, vol) in composition.MaterialComposition)
         {
             var amountAdded = vol * maximumMultiplier;
 
             // amount of material added will be limited so that it doesnt go over storagelimit
             if (storage.StorageLimit is { } storageLimit)
-                amountAdded = Math.Min(amountAdded, storageLimit - oldTotalVolume);
+                amountAdded = Math.Min(amountAdded, storageLimit - newTotalVolume);
 
-            TryChangeMaterialAmount(receiver, mat, amountAdded, storage);
+            if (amountAdded > 0 && TryChangeMaterialAmount(receiver, mat, amountAdded, storage))
+                newTotalVolume += amountAdded;
         }
+        // KS14 end
 
         var insertingComp = EnsureComp<InsertingMaterialStorageComponent>(receiver);
         insertingComp.EndTime = _timing.CurTime + storage.InsertionTime;
