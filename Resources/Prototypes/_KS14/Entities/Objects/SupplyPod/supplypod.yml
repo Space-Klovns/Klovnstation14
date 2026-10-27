@@ -106,6 +106,8 @@
     trailProto: KsSupplyPodTrail
   - type: SupplyPodGlow
     glowProto: KsSupplyPodGlowRed
+  - type: SupplyPodLandingZone
+    indicatorProto: KsSupplyPodLandingZone
   - type: Lock
     locked: true
     useAccess: false
@@ -232,6 +234,8 @@
       params:
         pitch: 0.75
     angularDeviation: 15
+  - type: SupplyPodLandingZone
+    indicatorProto: KsSupplyPodLandingZone
   - type: SupplyPodDrawDepth # its funny
     landedDrawDepth: OverMobs
   - type: Appearance

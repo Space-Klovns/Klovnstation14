@@ -47,6 +47,8 @@ Don't assume partial access (e.g. "the audio submodule but not the prototypes on
 
 Inside `_KS14/`, mirror upstream's feature-driven layout (`_KS14/Atmos/Components/...`, `_KS14/Cargo/Systems/...`) — group by feature, not by type.
 
+Where possible, give each feature its own subfolder rather than leaving its files loose in a shared one (`Entities/Effects/SupplyPod/`, not `Effects/podglow.yml`), and mirror it in `Resources/Locale/`.
+
 ### File structure examples
 
 Treat `*` as a placeholder.
@@ -650,7 +652,7 @@ _popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
 
 So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
 
-**Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering, client UI and integration testing each
+**Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering, sprites, client UI and integration testing each
 have an agent skill under `.claude/skills/` (agents see the list automatically). Read the matching one before working
 in that area. To port an SS13 sprite, run the `/dmi-to-rsi` command: it converts a `.dmi` into an `.rsi`, copyright line included.
 
@@ -666,6 +668,7 @@ in that area. To port an SS13 sprite, run the `/dmi-to-rsi` command: it converts
 | `DebugTools.Assert`, `DebugTools.AssertNotNull` | **compiled out** | live |
 
 - **Build `-c Release`.** It is the only configuration that reproduces the warnings-as-errors failures CI reports; `Debug` will happily build code that fails CI.
+- **Read build output by `error CS` and the `Passed!`/`Failed!` line**, not by grepping `error`: obsolete-API warnings contain it.
 - **Run tests `-c Debug` as well.** Every `DebugTools.Assert` in the engine and in content is a no-op under `Release`, so a Release-only test run silently skips the lot — and CI runs the tests in `Debug`. A suite that is green in `Release` tells you nothing about assertions.
 
 ```sh
@@ -1611,6 +1614,7 @@ inherited one, overrides that key. Keep prototype IDs case-sensitive. Put fork
 translations under `Resources/Locale/<culture>/_KS14/` and mirror the corresponding
 prototype paths; do not collect an entire module's prototypes in one giant FTL file.
 Follow existing translated upstream trees when extending their translations.
+A new prototype needs its `ent-` entry in both `en-US` and `ru-RU`, with the prototype's path as a comment above it.
 
 ```ftl
 ent-KsExampleDevice = пример устройства
