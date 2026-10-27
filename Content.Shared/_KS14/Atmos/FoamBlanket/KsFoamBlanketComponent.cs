@@ -3,6 +3,7 @@ using Content.Shared.DisplacementMap;
 using Content.Shared.Temperature.HeatContainer;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Atmos.FoamBlanket;
 
@@ -18,6 +19,7 @@ namespace Content.Shared._KS14.Atmos.FoamBlanket;
 /// </remarks>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true), AutoGenerateComponentPause]
 [Access(typeof(SharedKsFoamBlanketSystem))]
+[EntityCategory("KsFoamBlanket")]
 public sealed partial class KsFoamBlanketComponent : Component
 {
     /// <summary>

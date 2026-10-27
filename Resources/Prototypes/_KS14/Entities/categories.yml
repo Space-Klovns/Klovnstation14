@@ -5,6 +5,14 @@
   id: KsTrail
   name: entity-category-name-ks-trail
   description: entity-category-desc-ks-trail
+  hideSpawnMenu: true
+
+# Foam blankets are laid by SharedKsFoamBlanketSystem.Deploy, which a spawned one would skip. KsFoamBlanketComponent
+#     implies this category.
+- type: entityCategory
+  id: KsFoamBlanket
+  name: entity-category-name-ks-foam-blanket
+  hideSpawnMenu: true
 
 # Chemfires are only ever created through ChemicalFireSystem.SpawnChemicalFire, so they have no business
 #     showing up in the spawn menu. ChemicalFireComponent implies this category.

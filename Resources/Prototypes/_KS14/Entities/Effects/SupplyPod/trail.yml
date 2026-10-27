@@ -2,7 +2,6 @@
   id: KsSupplyPodTrail
   name: smoke trail
   description: The scar a pod leaves in the air behind it.
-  categories: [ HideSpawnMenu ]
   components:
   - type: KsTrail
     startSprite:
@@ -26,7 +25,6 @@
 - type: entity
   parent: KsSupplyPodTrail
   id: KsSupplyPodTrailSlow
-  categories: [ HideSpawnMenu ]
   components:
   - type: KsTrailFade
     alphaDuration: 8s
