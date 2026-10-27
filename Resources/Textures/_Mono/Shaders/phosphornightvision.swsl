@@ -36,7 +36,9 @@ highp float coneMask(
     highp vec2 fragcoord,
     highp vec2 screenSize
 ) {
-    highp vec2 center = screenSize * 0.5 + (EYE_OFFSET * ZOOM * 32); // TODO LCDC: fix this with zoom (like when wielding xl8)
+    // KS14: the eye offset is in metres. On screen a metre is 32px at zoom 1, and fewer the further out the eye is
+    //      zoomed (ZOOM above 1), so divide: multiplying put the cone's centre further off the more you zoomed out.
+    highp vec2 center = screenSize * 0.5 + (EYE_OFFSET * 32.0 / ZOOM);
     highp vec2 delta = fragcoord - center;
 
     // Distance from screen center in pixels.

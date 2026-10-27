@@ -207,10 +207,10 @@ Summarised from the upstream conventions doc — that page stays the authority; 
 
 A partial prototype has the same kind and id as an existing one, and is merged into it instead of failing the load as `Duplicate ID`. It's the way to add to, or take from, an upstream prototype (a sound collection, a loadout group, an entity's components) from a fork-owned file, with no `# KS14:` edit to the upstream file and so nothing to conflict with on the next merge.
 
-**A file is only partial if it's registered.** Anywhere else, a second `LobbyMusic` throws `PrototypeLoadException: Duplicate ID` and the load fails. Register the file, or a whole directory, in `_partialPrototypePaths` in `Content.Shared/_KS14/Entry/KsEntryPoint.cs`, which runs before prototypes load on the client, server and YAML linter alike:
+**A file is only partial if it's registered.** Anywhere else, a second `LobbyMusic` throws `PrototypeLoadException: Duplicate ID` and the load fails. Register the file, or a whole directory, in `PartialPrototypePaths` in `Content.Shared/_KS14/Entry/KsEntryPoint.cs`, which runs before prototypes load on the client, server and YAML linter alike, and which the packaged localization cache reads too:
 
 ```csharp
-private readonly ResPath[] _partialPrototypePaths = [
+public static readonly ResPath[] PartialPrototypePaths = [
     new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),   // a file
     new("/Prototypes/_KS14/Partials/"),                       // or a directory, with no extension
 ];

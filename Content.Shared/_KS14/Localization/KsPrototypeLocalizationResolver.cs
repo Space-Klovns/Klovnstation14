@@ -7,7 +7,7 @@ public sealed class KsPrototypeLocalizationData(
     string id, string[] parents, string? name, string? description, string? localizationId, bool isAbstract)
 {
     public string Id { get; } = id;
-    public string[] Parents { get; } = parents;
+    public string[] Parents { get; set; } = parents;
     public string? Name { get; set; } = name;
     public string? Description { get; set; } = description;
     public string? LocalizationId { get; set; } = localizationId;

@@ -47,7 +47,8 @@ public abstract partial class SharedSolutionContainerSystem
     #region Relay Event Handlers
 
     // Starlight-start: relay solution changes from beakers to parent dispenser
-    // TODO LCDC: this used SolutionContainerChangedEvent, doubt this is the same
+    // KS14: this used SolutionContainerChangedEvent. SolutionChangedEvent is the same thing now: UpdateChemicals raises it on
+    //      the solution's owner (the beaker), which is what this receives and passes on to the dispenser holding it.
     private void OnFitsInDispenserSolutionChanged(Entity<FitsInDispenserComponent> entity, ref SolutionChangedEvent args)
     {
         if (ContainerSystem.TryGetContainingContainer(entity.Owner, out var container))
