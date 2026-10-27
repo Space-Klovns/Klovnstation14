@@ -11,7 +11,7 @@ namespace Content.Server.Antag;
 public sealed partial class AntagSelectionSystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
-    [Dependency] private IPlayTimeTrackingManager _playTimeTrackingManager = default!;
+    [Dependency] private PlayTimeTrackingManager _playTimeTrackingManager = default!;
     [Dependency] private LastRolledAntagManager _lastRolledAntagManager = default!;
 
     /// <summary>

@@ -1,3 +1,4 @@
+using Content.Shared.Movement.Components;
 using Content.Server.Movement.Components;
 using Content.Server.Movement.Systems;
 using Content.Shared._Trauma.Projectiles;
@@ -52,12 +53,10 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     // just past the max dodge distance isn't missed even though its hitbox still overlaps that point.
     private const float MaxHitboxRadius = 2.5f;
 
-    // TODO LCDC: use movement speed instead
-    // How far a mob could plausibly have moved during the lag window - this bounds the search, not the
-    // projectile's own speed. A ghost is only ever worth spawning within dodging range of the muzzle;
-    // real physics (travel time, obstruction) takes care of everything from there.
-    // Base sprint speed (see MovementSpeedModifierComponent.DefaultBaseSprintSpeed); ignores speed buffs.
-    private const float MaxCompensationSpeed = 5.5f;
+    // The least the search assumes a mob could have moved per second of the lag window: base sprint speed (see
+    //      MovementSpeedModifierComponent.DefaultBaseSprintSpeed). Not lower even when every mob is slow now, since a mob
+    //      slowed by the hit that's being compensated for was still moving at full speed during the window.
+    private const float MinCompensationSpeed = MovementSpeedModifierComponent.DefaultBaseSprintSpeed;
 
     // Safety net in case a ghost is somehow never resolved by a collision or projectile cleanup.
     private const float GhostLifetime = 7f;
@@ -131,7 +130,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
         // How far the target could plausibly have moved during the lag window - not how far the projectile
         // could have flown, since that's what actually determines how far a dodge could have carried them.
-        var maxDodgeDistance = Math.Min(projectileSpeed, MaxCompensationSpeed) * lagSeconds;
+        var maxDodgeDistance = Math.Min(projectileSpeed, GetMaxCompensationSpeed(projectileOrigin.MapId, shooterUid)) * lagSeconds;
         var projectileDirection = projectilePhysicsComponent.LinearVelocity / projectileSpeed;
 
         SpawnCompensationGhosts(projectileUid, shooterUid, projectileOrigin, projectileDirection, projectileSpeed, maxDodgeDistance, lagDuration);
@@ -250,6 +249,27 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
             SpawnGhost(projectileUid, targetUid, targetFixture, targetShape, rewoundCoordinates, lagDuration);
         }
+    }
+
+    /// <summary>
+    /// The fastest any compensated mob on <paramref name="mapId"/>, other than the shooter, can currently move, and at
+    /// least <see cref="MinCompensationSpeed"/>: the furthest a target can have got from where the shooter saw it, per
+    /// second of lag. Bounds the search for targets, so a mob sped up past base sprint speed is still found.
+    /// </summary>
+    private float GetMaxCompensationSpeed(MapId mapId, EntityUid shooterUid)
+    {
+        var maxSpeed = MinCompensationSpeed;
+
+        var enumerator = EntityQueryEnumerator<LagCompensationComponent, MovementSpeedModifierComponent, TransformComponent>();
+        while (enumerator.MoveNext(out var uid, out _, out var speedModifierComponent, out var transformComponent))
+        {
+            if (uid == shooterUid || transformComponent.MapID != mapId)
+                continue;
+
+            maxSpeed = MathF.Max(maxSpeed, MathF.Max(speedModifierComponent.CurrentSprintSpeed, speedModifierComponent.CurrentWalkSpeed));
+        }
+
+        return maxSpeed;
     }
 
     /// <summary>

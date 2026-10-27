@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.Chain;
 using NUnit.Framework;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
@@ -355,6 +358,104 @@ public sealed class KsChainTest : GameTest
             var reach = (ChainLength - 1) * SegmentOffset * 3f;
             Assert.That(intactSpan, Is.LessThanOrEqualTo(reach + 0.5f), "the intact chain's ends are held together");
             Assert.That(severedSpan, Is.GreaterThan(reach + 1f), "control: with the chain cut, the towed end leaves");
+        });
+    }
+
+    private string? StretchJointId(EntityUid link) => SEntMan.GetComponent<ChainLinkComponent>(link).StretchJointId;
+
+    [Test]
+    public async Task AChainIsHeldTogetherEndToEndByOneStretchJoint()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var links = await SpawnChainAsync(testMap.Grid);
+
+        await Server.WaitAssertion(() =>
+        {
+            var stretchJointId = StretchJointId(links[0]);
+            Assert.That(stretchJointId, Is.Not.Null, "the start has a stretch joint");
+            Assert.That(StretchJointId(links[^1]), Is.EqualTo(stretchJointId), "to the end");
+            Assert.That(HasJoint(links[0], stretchJointId) && HasJoint(links[^1], stretchJointId), Is.True, "and it is really on both bodies");
+
+            for (var i = 1; i < links.Count - 1; i++)
+                Assert.That(StretchJointId(links[i]), Is.Null, $"link {i} is not an end");
+
+            // Never shorter than the chain pulled straight, or it would fight the links' own joints
+            var joint = (DistanceJoint)SEntMan.GetComponent<JointComponent>(links[0]).GetJoints[stretchJointId!];
+            Assert.That(joint.MaxLength, Is.EqualTo((3 * ChainLength - 5) * SegmentOffset).Within(0.001f));
+        });
+    }
+
+    [Test]
+    public async Task BreakingAChainGivesEachLongEnoughSegmentItsOwnStretchJoint()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var links = await SpawnChainAsync(testMap.Grid, length: 9);
+
+        // Leaves 0-4 (five links) and 6-8 (three); then 0-1 (two, no stretch joint) and 3-4 (two)
+        await Server.WaitPost(() => SEntMan.DeleteEntity(links[5]));
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(StretchJointId(links[0]), Is.Not.Null.And.EqualTo(StretchJointId(links[4])), "first segment, end to end");
+            Assert.That(StretchJointId(links[6]), Is.Not.Null.And.EqualTo(StretchJointId(links[8])), "second segment, end to end");
+            Assert.That(StretchJointId(links[0]), Is.Not.EqualTo(StretchJointId(links[6])), "one each");
+            Assert.That(HasJoint(links[8], StretchJointId(links[0])), Is.False, "the old end-to-end joint is gone");
+        });
+
+        await Server.WaitPost(() => SEntMan.DeleteEntity(links[2]));
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            foreach (var link in new[] { links[0], links[1], links[3], links[4] })
+                Assert.That(StretchJointId(link), Is.Null, "two links need no stretch joint");
+
+            Assert.That(StretchJointId(links[6]), Is.Not.Null, "an untouched segment keeps its own");
+        });
+    }
+
+    /// <summary>
+    ///     A contained body's joints are relayed to its container's owner, so a stretch joint with both ends held by
+    ///         one person would join them to themselves. It is taken off while an end is contained.
+    /// </summary>
+    [Test]
+    public async Task AStretchJointIsOnlyThereWhileNeitherEndIsContained()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var links = await SpawnChainAsync(testMap.Grid);
+
+        EntityUid holder = default;
+        await Server.WaitPost(() =>
+        {
+            Probe.Clear();
+            holder = SEntMan.SpawnEntity(null, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f)));
+            SEntMan.EnsureComponent<PhysicsComponent>(holder); // a relay target wakes its body
+            var containerSystem = SEntMan.System<SharedContainerSystem>();
+            var container = containerSystem.EnsureContainer<Container>(holder, "ks-test-chain-holder");
+            Assert.That(containerSystem.Insert(links[0], container, force: true), Is.True, "precondition: the end goes in");
+        });
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(StretchJointId(links[0]), Is.Null, "contained start");
+            Assert.That(StretchJointId(links[^1]), Is.Null, "and the other end lets go of it too");
+            Assert.That(Probe.Segmented, Is.Empty, "taking a stretch joint off is not a break");
+            Assert.That(Chains.IsChainFullyIntact(links[1]), Is.True);
+        });
+
+        await Server.WaitPost(() =>
+        {
+            var containerSystem = SEntMan.System<SharedContainerSystem>();
+            Assert.That(containerSystem.TryRemoveFromContainer(links[0], force: true), Is.True, "precondition: the end comes out");
+        });
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(StretchJointId(links[0]), Is.Not.Null.And.EqualTo(StretchJointId(links[^1])), "back once out");
+            Assert.That(Probe.Segmented, Is.Empty);
         });
     }
 }
