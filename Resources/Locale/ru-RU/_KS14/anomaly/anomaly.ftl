@@ -5,3 +5,4 @@ ks-anomaly-scanner-atmosphere-primary = Основной катализатор:
 ks-anomaly-scanner-atmosphere-secondary = Secondary Catalyst: { "[" }color=white{ "]" }{ $gas }{ "[" }/color{ "]" } { "[" }color=gray{ "]" }({ $percent }%){ "[" }/color{ "]" }
 ks-anomaly-scanner-atmosphere-title = Анализ влияния атмосферы:
 ks-anomaly-scanner-health = Текущее состояние: { "[" }color=gray{ "]" }{ $health }%{ "[" }/color{ "]" }
+gorilla-shove-failed = Не удалось затолкать! Мусоропровод занят или полон.

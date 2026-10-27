@@ -803,6 +803,11 @@ namespace Content.Server.GameTicking
         {
             if (CurrentPreset == null) return;
 
+            // KS14 start: scenarios are not a shift on a station, so no welcome to one
+            if (IsGameRuleAdded<_KS14.GameTicking.Rules.ScenarioRuleComponent>())
+                return;
+            // KS14 end
+
             var options = ProtoMan.EnumeratePrototypes<RoundAnnouncementPrototype>().ToList();
 
             if (options.Count == 0)

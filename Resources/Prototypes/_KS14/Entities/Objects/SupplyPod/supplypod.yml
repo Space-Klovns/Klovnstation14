@@ -130,7 +130,9 @@
         door:
           True: { visible: false }
           False: { visible: true }
-        paint_displacement: # BROOOO # TODO LCDC: make this not overwrite the existing copytoshaderparameters or whatever
+        # Both states restate copyToShaderParameters: the engine resets it to null whenever a visualizer sets the layer's data
+        #   without it, and the map layer would then draw as a plain visible layer.
+        paint_displacement:
           True:
             sprite: _KS14/Objects/SupplyPod/displacement.rsi
             state: open
@@ -176,7 +178,7 @@
   - type: TimedDespawn
     lifetime: 30
   - type: SpawnOnDespawn
-    prototype: AdminInstantEffectBluespace # TODO LCDC: spawn sparks here
+    prototype: KsEffectSupplyPodDespawn
   - type: TimerTrigger
     examinable: false
     beepSound: null
@@ -377,3 +379,11 @@
       behaviors:
         - !type:DoActsBehavior
           acts: [ "Destruction" ]
+
+# What a supply pod leaves behind when it despawns: a bluespace flash, and sparks.
+- type: entity
+  parent: AdminInstantEffectBluespace
+  id: KsEffectSupplyPodDespawn
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: SparkOnTrigger

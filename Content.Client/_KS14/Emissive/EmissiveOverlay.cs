@@ -193,8 +193,10 @@ public sealed partial class EmissiveOverlay : Overlay
                             }
                         }
 
+                        ent.Comp.LayerParams.TryGetValue(layerId, out var layerParams);
+
                         var texture = GetLayerTexture(spriteComponent, layer, textureRotation);
-                        var box = Box2.CenteredAround(origin + ent.Comp.Offset /* this is the centroid of the box */, texture.Size / (float)EyeManager.PixelsPerMeter).Enlarged(ent.Comp.GlowRadius);
+                        var box = Box2.CenteredAround(origin + ent.Comp.Offset /* this is the centroid of the box */, texture.Size / (float)EyeManager.PixelsPerMeter).Enlarged(layerParams?.GlowRadius ?? ent.Comp.GlowRadius);
 
                         var textureBox = new Box2Rotated(
                             box,
@@ -202,10 +204,15 @@ public sealed partial class EmissiveOverlay : Overlay
                             origin // /* this is the pivot-point of the box */ The pivot-point should be at the origin of the box, not origin of the world (0,0)
                         );
 
+                        // The colour drawn is the colour emitted, so scaling it dims this layer's glow alone
+                        var color = spriteColor * layer.Color;
+                        if (layerParams is { Brightness: var brightness } && brightness != 1f)
+                            color = new Color(color.R * brightness, color.G * brightness, color.B * brightness, color.A);
+
                         worldHandle.DrawTextureRect(
                             texture,
                             textureBox,
-                            modulate: spriteColor * layer.Color
+                            modulate: color
                         );
                     }
 

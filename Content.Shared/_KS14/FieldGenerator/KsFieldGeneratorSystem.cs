@@ -1,4 +1,6 @@
 using Content.Shared._KS14.PopupLocalization;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Database;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -8,21 +10,18 @@ using Robust.Shared.Player;
 
 namespace Content.Shared._KS14.FieldGenerator;
 
-// TODO admin logs
-
 public sealed partial class KsFieldGeneratorSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogManager = default!;
 
-    private EntityQuery<KsGeneratedFieldComponent> _fieldQuery;
+    [Dependency] private EntityQuery<KsGeneratedFieldComponent> _fieldQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-
-        _fieldQuery = GetEntityQuery<KsGeneratedFieldComponent>();
 
         InitialiseLinking();
     }
@@ -44,6 +43,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
             return;
 
         SetEnabled(entity!, !entity.Comp.Enabled);
+        _adminLogManager.Add(LogType.FieldGeneration, LogImpact.Medium, $"{ToPrettyString(args.User):user} turned {(entity.Comp.Enabled ? "on" : "off")} {ToPrettyString(entity.Owner):generator}");
 
         if (entity.Comp.Enabled)
         {
@@ -85,6 +85,9 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
         if (wasPowered && !args.Powered) // Power was lost
         {
+            if (entity.Comp.LinkedGeneratorUid is { } && _netManager.IsServer)
+                _adminLogManager.Add(LogType.FieldGeneration, LogImpact.Medium, $"{ToPrettyString(entity.Owner):generator} lost power and dropped its field");
+
             UnlinkAndClearFields(entity);
         }
         else if (_netManager.IsServer && !wasPowered && args.Powered && entity.Comp.Enabled) // Should turn back on

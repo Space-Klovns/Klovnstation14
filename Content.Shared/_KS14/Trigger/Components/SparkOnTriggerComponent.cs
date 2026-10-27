@@ -7,7 +7,6 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Trigger.Components;
 
-// TODO: Hotspot-expose
 /// <summary>
 ///     Spawns sparks upon being triggered.
 /// </summary>
@@ -38,4 +37,17 @@ public sealed partial class SparkOnTriggerComponent : BaseXOnTriggerComponent
     /// </summary>
     [DataField]
     public SoundSpecifier? SoundSpecifier = SharedSparksSystem.DefaultSoundSpecifier;
+
+    /// <summary>
+    ///     Temperature the sparks expose the tile they come from to, which can ignite what's in its air.
+    ///         Null for sparks that light nothing.
+    /// </summary>
+    [DataField]
+    public float? ExposedTemperature = 1600f;
+
+    /// <summary>
+    ///     Volume of air the sparks expose, see <see cref="ExposedTemperature"/>.
+    /// </summary>
+    [DataField]
+    public float ExposedVolume = 0.6f;
 }

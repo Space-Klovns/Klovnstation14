@@ -142,7 +142,7 @@ order, so the copying layer must come **before** the target or you get a one-fra
 **Swapping maps at runtime** with `GenericVisualizer` (`cargopods.yml:44-58`): the visualizer sets the map layer's sprite/state, and
 **must restate `copyToShaderParameters` every time**, because applying layer data without it sets the layer's
 `CopyToShaderParameters` back to null (`SpriteComponent.cs:634-645`). Forgetting it turns the map layer into a normal
-visible layer and the target loses its map. (The existing `# TODO LCDC` in `supplypod.yml:133` is this trap.)
+visible layer and the target loses its map. (`supplypod.yml`'s `paint_displacement` visuals restate it for this reason.)
 
 ```yaml
   - type: GenericVisualizer
