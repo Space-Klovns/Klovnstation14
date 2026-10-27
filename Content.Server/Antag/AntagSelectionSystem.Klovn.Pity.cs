@@ -30,9 +30,10 @@ public sealed partial class AntagSelectionSystem
 
         // A player who has never rolled one counts from zero: all of their playtime
         _lastRolledAntagManager.TryGetLastRolled(player.UserId, out var lastRolled);
-        var sinceLastRolled = _playTimeTrackingManager.GetOverallPlaytime(player) - (lastRolled ?? TimeSpan.Zero);
+        // In hours as doubles: playtime can be TimeSpan.MaxValue (tests grant it), and subtracting TimeSpans overflows
+        var hoursSinceLastRolled = _playTimeTrackingManager.GetOverallPlaytime(player).TotalHours - (lastRolled ?? TimeSpan.Zero).TotalHours;
 
-        var fraction = Math.Clamp((float)sinceLastRolled.TotalHours / hoursToMax, 0f, 1f);
+        var fraction = Math.Clamp((float)(hoursSinceLastRolled / hoursToMax), 0f, 1f);
         return 1f + (maxWeight - 1f) * fraction;
     }
 
