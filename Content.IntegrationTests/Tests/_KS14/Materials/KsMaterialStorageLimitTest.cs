@@ -29,7 +29,7 @@ public sealed class KsMaterialStorageLimitTest : GameTest
     private const string Prototypes = @"
 - type: stack
   id: KsTestDualMaterial
-  name: dual material
+  name: stack-steel # any existing name: the test is about the materials, not the stack
   spawn: KsTestDualMaterialSheet
   maxCount: 30
 

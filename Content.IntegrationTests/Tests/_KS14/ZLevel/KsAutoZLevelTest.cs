@@ -54,8 +54,8 @@ public sealed class KsAutoZLevelTest : GameTest
         await Server.WaitPost(() =>
         {
             var mapSystem = SEntMan.System<SharedMapSystem>();
-            lower = mapSystem.CreateMap(out _, runMapInit: false);
-            upper = mapSystem.CreateMap(out _, runMapInit: false);
+            lower = mapSystem.CreateMap(out _); // initialized, then paused below: how auto z-level maps are loaded
+            upper = mapSystem.CreateMap(out _); // initialized, then paused below: how auto z-level maps are loaded
             mapSystem.SetPaused(lower, true);
             mapSystem.SetPaused(upper, true);
 

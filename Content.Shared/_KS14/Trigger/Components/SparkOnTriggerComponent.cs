@@ -40,10 +40,10 @@ public sealed partial class SparkOnTriggerComponent : BaseXOnTriggerComponent
 
     /// <summary>
     ///     Temperature the sparks expose the tile they come from to, which can ignite what's in its air.
-    ///         Null for sparks that light nothing.
+    ///         Null, the default, for sparks that light nothing.
     /// </summary>
     [DataField]
-    public float? ExposedTemperature = 1600f;
+    public float? ExposedTemperature;
 
     /// <summary>
     ///     Volume of air the sparks expose, see <see cref="ExposedTemperature"/>.

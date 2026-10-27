@@ -387,3 +387,4 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: SparkOnTrigger
+    exposedTemperature: 1600 # like a broken light's sparks
