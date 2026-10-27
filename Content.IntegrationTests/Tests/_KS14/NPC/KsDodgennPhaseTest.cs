@@ -6,7 +6,11 @@ using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Shared._KS14.GunDodger;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Mobs.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
@@ -15,7 +19,7 @@ namespace Content.IntegrationTests.Tests._KS14.NPC;
 
 /// <summary>
 ///     The operators behind the Dodgenn's phases: drawing and throwing away its pistol, and dropping its dodge chance
-///         when phase one ends.
+///         when phase one ends. Also that the boss dies rather than being gibbed.
 /// </summary>
 public sealed class KsDodgennPhaseTest : GameTest
 {
@@ -24,6 +28,8 @@ public sealed class KsDodgennPhaseTest : GameTest
     private static readonly EntProtoId DodgennBoss = "KsMobDodgennBoss";
     private static readonly EntProtoId DodgennBossPhaseTwo = "KsMobDodgennBossPhaseTwo";
     private static readonly EntProtoId Pistol = "WeaponPistolMk58";
+    private static readonly ProtoId<DamageTypePrototype> BluntDamage = "Blunt";
+    private static readonly ProtoId<DamageTypePrototype> HeatDamage = "Heat";
 
     /// <summary>
     ///     The boss starts out dodging everything, draws a pistol into its hand, deletes it again, and dodges less
@@ -107,6 +113,39 @@ public sealed class KsDodgennPhaseTest : GameTest
                 Assert.That(HasVirtualMarkerPrecondition.HasMarker(entManager.GetComponent<HTNComponent>(phaseOneUid).Blackboard, "DodgennPhaseTwo", entManager), Is.False,
                     "the ordinary boss should not");
             });
+        });
+    }
+
+    /// <summary>
+    ///     Far more damage than kills it, of the types an ordinary mob is gibbed or burnt to ash by, leaves the boss a
+    ///         dead body to loot rather than deleting it.
+    /// </summary>
+    [TestCase("Blunt")]
+    [TestCase("Heat")]
+    public async Task TestBossDiesWithoutBeingDestroyed(string damageTypeName)
+    {
+        var server = Pair.Server;
+        var entManager = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var damageType = damageTypeName == "Blunt" ? BluntDamage : HeatDamage;
+
+        EntityUid bossUid = default;
+
+        await server.WaitPost(() =>
+        {
+            bossUid = entManager.SpawnEntity(DodgennBoss, testMap.GridCoords);
+            entManager.GetComponent<HTNComponent>(bossUid).Enabled = false;
+
+            var damage = new DamageSpecifier(SProtoMan.Index(damageType), 10000);
+            entManager.System<DamageableSystem>().TryChangeDamage(bossUid, damage, ignoreResistances: true);
+        });
+
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.Deleted(bossUid), Is.False, $"{damageTypeName} damage should not destroy the boss");
+            Assert.That(entManager.System<MobStateSystem>().IsDead(bossUid), $"{damageTypeName} damage should kill the boss");
         });
     }
 }

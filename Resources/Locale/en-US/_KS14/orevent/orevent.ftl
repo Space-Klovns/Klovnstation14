@@ -8,3 +8,4 @@ ks-specific-orevent-tapping-failed-detachment = {CAPITALIZE(THE($drone))} detach
 
 ks-specific-orevent-startingextraction-others = {CAPITALIZE(THE($user))} prepares to start extracting {THE($vent)}. You might want to get away.
 ks-specific-orevent-startingextraction-user = You prepare to start extracting on {THE($vent)}… Are you sure about this?
+ks-specific-orevent-creature-emerges = A creature emerges to assault the ore vent!

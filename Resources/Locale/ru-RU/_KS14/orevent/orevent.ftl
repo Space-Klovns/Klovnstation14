@@ -7,3 +7,4 @@ ks-specific-orevent-startingextraction-user = Вы готовитесь к на�
 ks-specific-orevent-tapping-failed-destruction = { CAPITALIZE(THE($vent)) } Слышны скрипы и стоны, когда попытка добычи заканчивается неудачей, и вентиляционное отверстие снова закрывается!
 ks-specific-orevent-tapping-failed-detachment = { CAPITALIZE(THE($drone)) } отсоединяется от { THE($vent) }{ "." }.. и она снова закрывается!
 ks-specific-orevent-whatareyoudoing = В настоящее время ведётся добыча руды — отправляйтесь защищать месторождение!
+ks-specific-orevent-creature-emerges = Существо вылезает, чтобы напасть на рудную жилу!

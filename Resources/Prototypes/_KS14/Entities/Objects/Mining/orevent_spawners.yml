@@ -49,14 +49,25 @@
   components:
   - type: Transform
     anchored: true
+  # tgstation's /obj/effect/temp_visual/dust_cloud: it plays once over 1s, above mobs, and sits 4px down and left.
   - type: Sprite
-    sprite: _KS14/Effects/telegraph.rsi
-    state: target_circle
-    drawdepth: FloorObjects
+    sprite: _KS14/Effects/dust_cloud.rsi
+    offset: -0.125,-0.125
+    drawdepth: OverMobs
+    layers:
+    - state: light_dust_cloud
+      loop: false
+  - type: EmitSoundOnSpawn # tgstation's spawner plays this at volume 40 (of 100), about -8 dB
+    sound:
+      path: /Audio/_KS14/Effects/node_drilling.ogg
+      params:
+        volume: -8
   - type: TimedDespawn
     lifetime: 1.2
   - type: SpawnOnDespawn
     prototype: MobGoliath
+  - type: KsPopupOnDespawn # as tgstation's spawner component says when a vent's mob comes out
+    message: ks-specific-orevent-creature-emerges
 
 - type: entity
   parent: KsOreVentTelegraphGoliath

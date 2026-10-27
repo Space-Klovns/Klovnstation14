@@ -12,6 +12,7 @@
 #   Mob prototype (Entities/Mobs/Boss/dodgenn.yml)
 #     VisionRadius, AggroVisionRadius, NavSmash, RangedRange, MeleeRange, LeapMinDistance,
 #     DodgennMonologueTime (how long a phase-two monologue stands still for)
+#     DodgennLauncherWindup (pause between the launcher's line and its shot, guns.yml)
 #   Targeting          Target, TargetCoordinates, TargetPathfind (DodgennTargets, queries.yml)
 #   Phase one          DodgennPhaseTwoDueAt (when phase one ends by time, set on engaging)
 #   Virtual markers    (KsMobDodgennBossPhaseTwo spawns with DodgennPhaseTwo)
