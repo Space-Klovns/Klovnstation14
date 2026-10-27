@@ -30,7 +30,9 @@ It writes `<output-dir>/<dmi stem>.rsi/`, containing `meta.json` and one PNG per
    destination from the request if one was given, otherwise the folder that best fits what the sprite is for. No `Ks`
    prefix on the filename: the path already namespaces it.
    ```sh
-   python Tools/_KS14/dmi_to_rsi.py "C:/Space/SS13 Dev/Repo/tgstation/icons/mob/telegraphing/telegraph.dmi"        "Resources/Textures/_KS14/Effects"        --repo https://github.com/tgstation/tgstation --commit e6c9da8511c11d6bb696a306685885e972a079ca
+   python Tools/_KS14/dmi_to_rsi.py "C:/Space/SS13 Dev/Repo/tgstation/icons/mob/telegraphing/telegraph.dmi" \
+       "Resources/Textures/_KS14/Effects" \
+       --repo https://github.com/tgstation/tgstation --commit e6c9da8511c11d6bb696a306685885e972a079ca
    ```
 5. **Look at it.** Read a PNG or two to check the states are what was wanted (Read renders images). If the request
    asked for only some states, delete the others, and remove them from `meta.json` too.
