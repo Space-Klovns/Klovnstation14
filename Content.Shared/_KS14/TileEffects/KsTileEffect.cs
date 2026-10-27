@@ -52,4 +52,8 @@ public abstract partial class KsTileEffect
 ///         lights what <see cref="Effects.CheckTemperatureTileEffect.LitByFlame"/> says it lights, whatever the
 ///         solution's own temperature.
 /// </param>
-public record struct KsTileEffectReagentData(float RemovedVolume, Solution? Solution, List<ReagentData>? ReagentData, ReagentId? Reagent = null, float? FlameTemperature = null);
+/// <param name="RefreshedWithin">
+///     The longest the caller may take to run these effects again, if it runs them on a schedule. An effect that lasts
+///         until it is next refreshed (a chemfire on a burning puddle) lasts this long, so it cannot run out first.
+/// </param>
+public record struct KsTileEffectReagentData(float RemovedVolume, Solution? Solution, List<ReagentData>? ReagentData, ReagentId? Reagent = null, float? FlameTemperature = null, TimeSpan? RefreshedWithin = null);

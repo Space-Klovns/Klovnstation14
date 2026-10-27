@@ -66,8 +66,12 @@ public sealed partial class PuddleSystem
         var scale = careAboutTime ? (float)deltaTime.TotalSeconds : 1f;
         entity.Comp.LastTileEffectUpdate = curTime;
 
+        // On the schedule, the next update is an interval away, and can land a tick late: the interval is no whole number
+        //     of ticks. One more tick, so an effect that expires then isn't left to the order the systems update in.
+        var refreshedWithin = careAboutTime ? TileEffectUpdateInterval + _gameTiming.TickPeriod * 2 : (TimeSpan?)null;
+
         if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale,
-                flameTemperature: _ksHotPuddleSystem.GetFlameTemperature(entity.Owner)))
+                flameTemperature: _ksHotPuddleSystem.GetFlameTemperature(entity.Owner), refreshedWithin: refreshedWithin))
             return;
 
         if (solution.Volume == FixedPoint2.Zero)

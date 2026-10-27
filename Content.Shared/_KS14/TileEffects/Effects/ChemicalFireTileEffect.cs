@@ -23,11 +23,11 @@ public sealed partial class ChemicalFireTileEffect : KsTileEffect
 
     public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
     {
-        // The scale is the time since the last update, so the fire also gets that long again: as long as the next
-        //     update takes to come. Without it, a scale of 1 or less runs the fire out on the very tick the next update
-        //     would refresh it, and it goes out and relights every other update.
+        // The fire also lasts until the caller next refreshes it. Without that, it runs out on the tick the next update
+        //     would refresh it, and goes out and relights. The scale (the time since the last update) is no stand-in for
+        //     the time to the next: a puddle's first update comes sooner than its interval, so it would come up short.
         var duration = DurationScale is { } durationScale
-            ? durationScale * scale + TimeSpan.FromSeconds(scale)
+            ? durationScale * scale + (reagentData.RefreshedWithin ?? TimeSpan.FromSeconds(scale))
             : (TimeSpan?)null;
 
         var nowExists = _chemicalFireSystem.SpawnChemicalFire(Id, tileRef, duration: duration).HasValue;

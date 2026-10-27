@@ -158,14 +158,21 @@ public sealed class ChemicalFireTest : GameTest
     ///     A puddle's chemfire is the same fire for as long as the puddle keeps it lit: it never runs out between the
     ///         updates that refresh it, and so never goes out and relights.
     /// </summary>
+    /// <param name="ticksIntoSchedule">
+    ///     Ticks waited before spilling. Puddles update on a half-second schedule shared by all of them, so this moves
+    ///         the spill to every point in it. Spilled just before an update, the puddle's first update came early,
+    ///         and the fire it lit ran out on the tick the next one was due.
+    /// </param>
     [Test]
-    public async Task TestPuddleKeepsOneFireLit()
+    public async Task TestPuddleKeepsOneFireLit([Range(0, TicksPerSecond / 2 - 1)] int ticksIntoSchedule)
     {
         var server = Pair.Server;
         var entityManager = server.EntMan;
         var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
         var testMap = await Pair.CreateTestMap();
         var gridUid = testMap.Grid.Owner;
+
+        await server.WaitRunTicks(ticksIntoSchedule);
 
         await server.WaitAssertion(() =>
         {
