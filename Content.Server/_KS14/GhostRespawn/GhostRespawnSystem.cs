@@ -58,12 +58,19 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
     {
         base.Initialize();
 
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, x => _enabled = x, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnAlwaysStartTimer, x => _alwaysStartTimer = x, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnPenaltySeconds, x => _penaltyTime = TimeSpan.FromSeconds(x), invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnEnabled, x => _enabled = x, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnAlwaysStartTimer, x => _alwaysStartTimer = x, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnPenaltySeconds, x => _penaltyTime = TimeSpan.FromSeconds(x), invokeImmediately: true);
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
     }
 
     [Pure]
