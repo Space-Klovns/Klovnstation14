@@ -652,7 +652,7 @@ So when replacing an obsolete call, keep the audience it had: `PopupPredicted(me
 
 **Area guides** — NPC behaviour, ranged combat, overlays, lighting, rendering, client UI and integration testing each
 have an agent skill under `.claude/skills/` (agents see the list automatically). Read the matching one before working
-in that area. `dmi-to-rsi` also bundles a script that converts an SS13 `.dmi` into an `.rsi`, copyright line included.
+in that area. To port an SS13 sprite, run the `/dmi-to-rsi` command: it converts a `.dmi` into an `.rsi`, copyright line included.
 
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v291.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 

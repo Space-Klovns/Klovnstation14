@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 ## Logic in this file was ported from https://github.com/space-wizards/RSIEdit and its RSI.NET submodule
-##      (https://github.com/space-wizards/RSI.NET), both licensed under the MIT license. See SKILL.md beside it for usage.
+##      (https://github.com/space-wizards/RSI.NET), both licensed under the MIT license. See .claude/commands/dmi-to-rsi.md for usage.
 
 """Convert a BYOND DreamMaker Image (.dmi) into a Robust Station Image (.rsi directory).
 
@@ -14,8 +14,8 @@ A port of the DMI import in space-wizards/RSIEdit, which does the work in its RS
     RSIEdit  Editor/ViewModels/MainWindowViewModel.cs          - TryPasteDmiUrl: copyright, ReformatAllNames
 
 Usage:
-    python .claude/skills/dmi-to-rsi/dmi_to_rsi.py <input.dmi> <output-dir> [--license L] [--copyright TEXT]
-                                                   [--repo URL --commit HASH [--repo-path PATH]] [--keep-names] [--indent N] [--force]
+    python Tools/_KS14/dmi_to_rsi.py <input.dmi> <output-dir> [--license L] [--copyright TEXT]
+                                      [--repo URL --commit HASH [--repo-path PATH]] [--keep-names] [--indent N] [--force]
 
 Requires Pillow.
 """

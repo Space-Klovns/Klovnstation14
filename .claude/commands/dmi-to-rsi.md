@@ -1,42 +1,44 @@
 ---
-name: dmi-to-rsi
-description: Convert a BYOND DreamMaker Image (.dmi, from SS13 codebases like tgstation, Goonstation, Paradise) into an SS14 .rsi with a bundled script, a port of RSIEdit's DMI import - including its "Taken from <repo> at <url>" copyright autofill, licence, state-name cleanup, delays and rewind. Use when porting or borrowing a sprite, effect, icon or animation from an SS13 repo, when a .dmi needs to become an .rsi, or when filling in an RSI's license/copyright for something taken from another repo.
+description: Convert an SS13 .dmi (tgstation, etc.) into an SS14 .rsi under _KS14, with licence and "Taken from" copyright filled in
+argument-hint: <path/to/file.dmi | sprite to find> [destination feature folder] [extra notes]
 ---
 
-# DMI to RSI
+Convert a BYOND DreamMaker Image (`.dmi`) into an SS14 `.rsi`, using `Tools/_KS14/dmi_to_rsi.py`, a port of
+[RSIEdit](https://github.com/space-wizards/RSIEdit)'s DMI import (most of it in its `RSI.NET` submodule). Needs
+Python 3 and Pillow.
 
-`dmi_to_rsi.py` (beside this file) converts a `.dmi` into an `.rsi` directory. It ports the DMI import from
-[space-wizards/RSIEdit](https://github.com/space-wizards/RSIEdit), most of which lives in its `RSI.NET` submodule
-(`SpaceWizards.RsiLib/DMI/...`). Needs Python 3 and Pillow. Run it from the repo root:
+Request: $ARGUMENTS
 
 ```sh
-python .claude/skills/dmi-to-rsi/dmi_to_rsi.py <input.dmi> <output-dir> [--license CC-BY-SA-3.0] [--copyright "..."]
-                                               [--repo URL --commit HASH [--repo-path PATH]] [--keep-names] [--indent 2] [--force]
+python Tools/_KS14/dmi_to_rsi.py <input.dmi> <output-dir> [--license CC-BY-SA-3.0] [--copyright "..."]
+                                  [--repo URL --commit HASH [--repo-path PATH]] [--keep-names] [--indent 2] [--force]
 ```
 
 It writes `<output-dir>/<dmi stem>.rsi/`, containing `meta.json` and one PNG per state.
 
-## Workflow
+## Steps
 
-1. **Find the source.** The user usually has the SS13 repo cloned locally (tgstation lives under
-   `C:/Space/SS13 Dev/Repo/tgstation` on the main dev machine). Ask if you can't find it. Don't download a
-   `.dmi` from a raw URL unless asked: the copyright needs a commit hash anyway.
+1. **Find the source.** If the request names a sprite rather than a path, search the user's local SS13 clones for the
+   `.dmi` (tgstation is at `C:/Space/SS13 Dev/Repo/tgstation` on the main dev machine). Ask if you can't find it.
+   Don't download a `.dmi` from a raw URL unless asked: the copyright needs a commit hash anyway.
 2. **Pin the commit.** `git -C <ss13 repo> rev-parse HEAD`, and the remote's web URL from
    `git -C <ss13 repo> remote get-url origin` (strip `.git`).
 3. **Check the licence.** Most SS13 sprites are `CC-BY-SA-3.0` (the default), but not all: check the repo's licence
    file and any per-folder notes. Paradise, Goonstation and some others carry `CC-BY-NC-SA-3.0` for some or all of
    their art, which may not be usable here. Ask the user if it isn't CC-BY-SA.
-4. **Convert into `_KS14`.** Output goes under `Resources/Textures/_KS14/<Feature>/` (CONTRIBUTING §2). No `Ks`
+4. **Convert into `_KS14`.** Output goes under `Resources/Textures/_KS14/<Feature>/` (CONTRIBUTING §2), using the
+   destination from the request if one was given, otherwise the folder that best fits what the sprite is for. No `Ks`
    prefix on the filename: the path already namespaces it.
    ```sh
-   python .claude/skills/dmi-to-rsi/dmi_to_rsi.py "C:/Space/SS13 Dev/Repo/tgstation/icons/mob/telegraphing/telegraph.dmi" \
-       "Resources/Textures/_KS14/Effects" \
-       --repo https://github.com/tgstation/tgstation --commit e6c9da8511c11d6bb696a306685885e972a079ca
+   python Tools/_KS14/dmi_to_rsi.py "C:/Space/SS13 Dev/Repo/tgstation/icons/mob/telegraphing/telegraph.dmi"        "Resources/Textures/_KS14/Effects"        --repo https://github.com/tgstation/tgstation --commit e6c9da8511c11d6bb696a306685885e972a079ca
    ```
-5. **Look at it.** Read a PNG or two to check the states are what you wanted (Read renders images). Delete states
-   nothing will use, and fix them out of `meta.json` too.
+5. **Look at it.** Read a PNG or two to check the states are what was wanted (Read renders images). If the request
+   asked for only some states, delete the others, and remove them from `meta.json` too.
 6. **Validate.** `python Tools/_KS14/validate_rsis.py Resources/Textures/_KS14/<Feature>` checks the RSI against the
    schema and its PNG sizes.
+7. **Report** the new `.rsi` path, its states (with directions and frame counts), and the licence and copyright
+   written. Mention any warnings the script printed (dropped `movement`/`loop`/`hotspot`, padded delays, renamed
+   duplicates).
 
 ## Options
 
