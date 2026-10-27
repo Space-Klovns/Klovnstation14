@@ -2,12 +2,10 @@ using System.Linq;
 using System.Numerics;
 using Content.Client.Graphics;
 using Content.Client._KS14.ArcVisibility;
-using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.OverlayStains;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
-using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
@@ -26,7 +24,6 @@ public sealed partial class StainOverlay : Overlay
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
-    [Dependency] private IConfigurationManager _configurationManager = default!;
 
     [Dependency] private TransformSystem _transformSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
@@ -41,7 +38,7 @@ public sealed partial class StainOverlay : Overlay
     /// <summary>
     ///     Arc a stain is visible within, based on <see cref="Shared._KS14.CCVar.KsCCVars.StainArcDegrees"/>.
     /// </summary>
-    private Angle _stainArc = Angle.FromDegrees(180d);
+    public Angle StainArc = Angle.FromDegrees(180d);
 
     [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
@@ -73,8 +70,6 @@ public sealed partial class StainOverlay : Overlay
         _blackShader = _prototypeManager.Index(BlackShaderId).Instance();
         _stencilMaskShader = _prototypeManager.Index(StencilMaskShaderId).Instance();
         _stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShaderId).Instance();
-
-        _configurationManager.OnValueChanged(KsCCVars.StainArcDegrees, (arcDegrees) => _stainArc = Angle.FromDegrees(arcDegrees), invokeImmediately: true);
     }
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
@@ -131,23 +126,19 @@ public sealed partial class StainOverlay : Overlay
                     var worldMatrix = _transformSystem.GetWorldMatrix(grid, _transformQuery);
                     var localMatrix = Matrix3x2.Multiply(worldMatrix, invMatrix);
 
-                    if (ComplexDrawing)
-                        worldHandle.SetTransform(Matrix3x2.Identity);
-                    else
-                        worldHandle.SetTransform(localMatrix);
+                    // Complex drawing renders each sprite at its world position, so it only needs world-to-target.
+                    worldHandle.SetTransform(ComplexDrawing ? invMatrix : localMatrix);
 
-                    // TODO: Draw actual sprite texture to stencil?
                     foreach (var uid in _intersectingEntities)
                     {
                         if (!_transformQuery.TryGetComponent(uid, out var transformComponent) ||
                             !_spriteQuery.TryGetComponent(uid, out var spriteComponent))
                             continue;
 
-                        // TODO LCDC: make this work
                         if (ComplexDrawing)
                         {
-                            //_spriteSystem.RenderSprite((uid, spriteComponent), worldHandle, eyeRotation, worldMatrix.Rotation() * transformComponent.LocalRotation, Vector2.Transform(transformComponent.LocalPosition, worldMatrix));
-                            _spriteSystem.RenderSprite((uid, spriteComponent), worldHandle, eyeRotation, _transformSystem.GetWorldRotation(transformComponent), _transformSystem.GetWorldPosition(transformComponent));
+                            var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
+                            _spriteSystem.RenderSprite((uid, spriteComponent), worldHandle, eyeRotation, worldRotation, worldPosition);
                         }
                         else
                         {
@@ -198,7 +189,7 @@ public sealed partial class StainOverlay : Overlay
 
                 if (fadeEntityStains)
                 {
-                    if (!_arcVisibilitySystem.TryGetArcAlpha(eyeState, worldPosition, stainRotation, stain.Direction, _stainArc, stain.Color.A, out var alpha))
+                    if (!_arcVisibilitySystem.TryGetArcAlpha(eyeState, worldPosition, stainRotation, stain.Direction, StainArc, stain.Color.A, out var alpha))
                         continue;
 
                     color = stain.Color.WithAlpha(alpha);

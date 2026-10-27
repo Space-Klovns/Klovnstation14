@@ -16,14 +16,10 @@ public sealed partial class SwapToHandOperator : HTNOperator
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private HandsSystem _handsSystem = default!;
 
-    //[Dependency] private EntityQuery<HandsComponent> _handsQuery = default;
-
     /// <summary>
     ///     Key of ID of the hand.
     /// </summary>
     [DataField(required: true)] public string Key = "";
-
-    [DataField] public bool ProbablyFree = false; // TODO LCDC HTN: make this proper
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {

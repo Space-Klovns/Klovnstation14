@@ -7,11 +7,11 @@ namespace Content.Shared._KS14.CCVar;
 public sealed partial class KsCCVars
 {
     /// <summary>
-    ///     Should overlay stains be drawn more expensively?
+    ///     Should overlay stains be masked by the sprites of what they are on, rather than by their bounding boxes?
+    ///         More expensive, but a stain on an irregularly shaped sprite does not spill past its edges.
     /// </summary>
-    [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<bool> ComplexStainDrawing =
-        CVarDef.Create("klovn.stains.complexdrawing", false, CVar.CLIENT | CVar.CLIENTONLY); // TODO LCDC FUCK: FIX THIS ASAP
+        CVarDef.Create("klovn.stains.complexdrawing", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
     ///     Width, in degrees, of the arc a stain is visible within. Stains fade out towards the edges of it,

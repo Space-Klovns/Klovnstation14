@@ -202,9 +202,6 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
         SetCollider(entity, value);
 
         _appearanceSystem.SetData(entity.Owner, GasPistonVisuals.Extended, value);
-
-        if (entity.Comp.FlickData is { } flickData)
-            _spriteFlickSystem.ResetFlickFinishState(entity.Owner, flickData);
     }
 
     private void SetCollider(Entity<GasPistonComponent> entity, bool value)

@@ -73,8 +73,9 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
 
     private void FinishProcessing(in Entity<KsEntityProcessorComponent, KsActiveEntityProcessorComponent?> processorEntity, EntityUid processedUid)
     {
-        // TODO LCDC: debug this and check if its raised on client, i think it isnt
-
+        // Raised on the client as well: KsActiveEntityProcessorComponent.Processing is networked, so the client runs
+        //      the same timers in Update. Handlers that spawn or delete must therefore guard themselves, as
+        //      KsStackProcessorSystem.OnFinishedProcessing does.
         var ev = new KsFinishedProcessingEntityEvent(processorEntity, processedUid);
         RaiseLocalEvent(processorEntity, ref ev);
     }
