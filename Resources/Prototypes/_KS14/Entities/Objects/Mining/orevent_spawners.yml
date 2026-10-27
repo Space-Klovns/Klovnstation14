@@ -16,6 +16,10 @@
     maximumEntitiesSpawned: 2
     minRadius: 4.5
     maxRadius: 6
+    sound: # tgstation's spawner plays this once per wave, at volume 40 (of 100), about -8 dB
+      path: /Audio/_KS14/Effects/node_drilling.ogg
+      params:
+        volume: -8
 
 - type: entity
   parent: KsOreVentMobSpawnerBase
@@ -57,11 +61,6 @@
     layers:
     - state: light_dust_cloud
       loop: false
-  - type: EmitSoundOnSpawn # tgstation's spawner plays this at volume 40 (of 100), about -8 dB
-    sound:
-      path: /Audio/_KS14/Effects/node_drilling.ogg
-      params:
-        volume: -8
   - type: TimedDespawn
     lifetime: 1.2
   - type: SpawnOnDespawn
