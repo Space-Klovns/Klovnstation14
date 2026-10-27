@@ -20,4 +20,10 @@ public sealed partial class StainedComponent : Component
     /// </summary>
     [AutoNetworkedField]
     public bool OwnsBoundReactiveComponent = false;
+
+    /// <summary>
+    ///     Was <see cref="StainSystem.CleaningGroup"/> added to this entity's reactive groups after being stained?
+    /// </summary>
+    [AutoNetworkedField]
+    public bool AddedCleaningGroup = false;
 }

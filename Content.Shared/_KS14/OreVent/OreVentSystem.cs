@@ -129,8 +129,7 @@ public sealed partial class OreVentSystem : EntitySystem
             if (activeComponent.Iteration < component.ClearingIterations)
             {
                 // Clear the area around it, a little further out each iteration
-                var clearingEv = new OreVentClearingEvent(component.ClearRadius / (float)(component.ClearingIterations - activeComponent.Iteration));
-                RaiseLocalEvent(uid, ref clearingEv);
+                ClearAreaAround(uid, component.ClearRadius / (float)(component.ClearingIterations - activeComponent.Iteration));
 
                 // on last iteration, dont repeat and instead fall thru
                 activeComponent.Iteration += 1;
@@ -149,11 +148,17 @@ public sealed partial class OreVentSystem : EntitySystem
             DirtyField(uid, component, nameof(component.DoingClearing));
         }
     }
+
+    private void ClearAreaAround(EntityUid uid, float radius)
+    {
+        var clearingEv = new OreVentClearingEvent(radius);
+        RaiseLocalEvent(uid, ref clearingEv);
+    }
 }
 
 /// <summary>
-///     Raised on a vent for each iteration of clearing the area around it. The rock within
-///         <see cref="Radius"/> should be destroyed. Rock is server-only, so the server handles this.
+///     Raised on a vent when the rock around it, within <see cref="Radius"/>, should be destroyed: on each iteration
+///         of clearing, and when tapping fails. Rock is server-only, so the server handles this.
 /// </summary>
 [ByRefEvent]
 public readonly record struct OreVentClearingEvent(float Radius);

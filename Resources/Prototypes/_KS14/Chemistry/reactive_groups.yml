@@ -1,0 +1,4 @@
+# Reagents in this group wash stains (StainedComponent) off whatever they touch. A reagent joins it with a
+#   reactiveEffects entry for KsStainCleaning running StainClean.
+- type: reactiveGroup
+  id: KsStainCleaning
