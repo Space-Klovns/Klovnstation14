@@ -3,20 +3,15 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.Packets.Widgets;
 
 [Serializable, NetSerializable]
-public sealed class Widget : WidgetElement
+public sealed class Widget(string id) : WidgetElement(id)
 {
     public WidgetElement[] Elements = [];
-
-    public Widget(string id)
-    {
-        Id = id;
-    }
 }
 
 [Serializable] [NetSerializable]
-public abstract class WidgetElement
+public abstract class WidgetElement(string id)
 {
-    public string Id = "";
+    public string Id = id;
 
     public int[] Margin = [0, 0, 0, 0];
     public int[] Size = [150, 50];
@@ -26,50 +21,47 @@ public abstract class WidgetElement
 }
 
 [Serializable, NetSerializable]
-public sealed class WidgetButton : WidgetElement
+public sealed class WidgetButton(string id) : WidgetElement(id)
 {
-    public string Name;
-    public string MethodName;
+    public string Text = "Click me!";
+    public string MethodName = "method";
 
-    public WidgetButton(string name, string id, string methodName)
+    public WidgetButton(string id, string text, string methodName) : this(id)
     {
-        Name = name;
-        Id = id;
+        Text = text;
         MethodName = methodName;
     }
 }
 
 [Serializable, NetSerializable]
-public sealed class WidgetContainer : WidgetElement
+public sealed class WidgetContainer(string id) : WidgetElement(id)
 {
     public WidgetElement[] Elements = [];
 
-    public WidgetContainer(string id)
+    public WidgetContainer(string id, WidgetElement[] elements) : this(id)
     {
-        Id = id;
+        Elements = elements;
     }
 }
 
 [Serializable] [NetSerializable]
-public sealed class WidgetLabel : WidgetElement
+public sealed class WidgetLabel(string id) : WidgetElement(id)
 {
-    public string Text;
+    public string Text = "Label";
 
-    public WidgetLabel(string name, string id, string methodName)
+    public WidgetLabel(string id, string text) : this(id)
     {
-        Text = name;
-        Id = id;
+        Text = text;
     }
 }
 
 [Serializable] [NetSerializable]
-public sealed class WidgetTextEdit : WidgetElement
+public sealed class WidgetTextEdit(string id) : WidgetElement(id)
 {
     public bool ReadOnly;
 
-    public WidgetTextEdit(bool readOnly, string id)
+    public WidgetTextEdit(string id, bool readOnly) : this(id)
     {
-        Id = id;
         ReadOnly = readOnly;
     }
 }

@@ -1,3 +1,4 @@
+using Content.Server._KS14.Packet.Attributes;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Ame.Components;
 using Content.Server.Lathe;
@@ -12,7 +13,9 @@ namespace Content.Server._KS14.Packet.States.Calls;
 
 public sealed class RadioMessageCall : DeviceCall
 {
+    [PacketField(PacketFieldType.Accepts)]
     public string Message = "This is a test message.";
+    [PacketField(PacketFieldType.Accepts)]
     public string Channel = "Common";
 
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)

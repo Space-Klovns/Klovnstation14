@@ -1,3 +1,4 @@
+using Content.Server._KS14.Packet.Attributes;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Ame.Components;
 using Content.Server.Chemistry.Components;
@@ -14,10 +15,15 @@ namespace Content.Server._KS14.Packet.States.Calls;
 
 public sealed class ChemMasterTransferCall : DeviceCall
 {
+    [PacketField(PacketFieldType.Accepts)]
     public string? Mode { get; set; }
 
+    [PacketField(PacketFieldType.Accepts)]
     public string[] Reagents = [];
+    [PacketField(PacketFieldType.Accepts)]
     public float[] Amount = [];
+
+    [PacketField(PacketFieldType.Accepts)]
     public bool? FromBuffer { get; set; }
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {

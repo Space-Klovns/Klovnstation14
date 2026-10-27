@@ -1,3 +1,4 @@
+using Content.Server._KS14.Packet.Attributes;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Lathe;
 using Content.Shared.Chat;
@@ -11,6 +12,7 @@ namespace Content.Server._KS14.Packet.States.Calls;
 
 public sealed class SpeakerCall : DeviceCall
 {
+    [PacketField(PacketFieldType.Accepts)]
     public string Text = "";
 
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)

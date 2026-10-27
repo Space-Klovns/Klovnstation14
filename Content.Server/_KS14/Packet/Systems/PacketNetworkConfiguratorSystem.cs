@@ -2,14 +2,12 @@ using Content.Shared._KS14.PopupLocalization;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Chat.Systems;
 using Content.Shared._KS14.Packets;
-using Content.Shared._KS14.Packets.BUI;
 using Content.Shared.Chat;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Paper;
 using Content.Shared.Popups;
 using Content.Shared.Verbs;
-using Robust.Server.GameObjects;
 using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Packet.Systems;
@@ -22,7 +20,6 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
     [Dependency] private PacketSystem _packetSystem = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
     [Dependency] private SharedPopupSystem _sharedPopupSystem = default!;
-    [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
 
 
     public override void Initialize()
@@ -30,7 +27,6 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, UseInHandEvent>(OnUse);
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, AfterInteractEvent>(OnInteract);
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, GetVerbsEvent<AlternativeVerb>>(OnAltInteract);
-        SubscribeLocalEvent<PacketExecutorComponent, GetVerbsEvent<AlternativeVerb>>(OnExecutorInteract);
     }
 
     private void SwitchMode(Entity<PacketNetworkConfiguratorComponent> ent, EntityUid user)
@@ -125,28 +121,6 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
             OnProbeInteract(ent, (target, packetNetwork));
         else
             OnSaveInteract(ent, (target, packetNetwork), ev.User);
-    }
-
-    /// <summary>
-    /// This is used for opening executor UIs on supported machinery (i.e lathes). Used for advanced automation.
-    /// </summary>
-    /// <param name="ent"></param>
-    /// <param name="ev"></param>
-    private void OnExecutorInteract(Entity<PacketExecutorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
-    {
-        if (!ev.CanAccess || !ev.CanInteract || !HasComp<PacketNetworkConfiguratorComponent>(ev.Using))
-            return;
-
-        var user = ev.User;
-
-        var executorVerb = new AlternativeVerb()
-        {
-            Text = Loc.GetString("packet-configurator-open-executor"),
-            Icon = new SpriteSpecifier.Texture(new ResPath("/Textures/Interface/VerbIcons/in.svg.192dpi.png")),
-            Act = () => { _userInterfaceSystem.TryOpenUi(ent.Owner, ExecutorUiKey.Key, user); }
-        };
-
-        ev.Verbs.Add(executorVerb);
     }
 
     /// <summary>

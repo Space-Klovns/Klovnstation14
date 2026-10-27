@@ -2,6 +2,7 @@ using System.Threading;
 using Content.Server._KS14.Packet.Components;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking;
+using Content.Shared.Trigger.Systems;
 using Jint;
 using Jint.Runtime.Interop;
 
@@ -112,6 +113,16 @@ public sealed partial class PacketSystem
         _engineCts.Add(engine, cts);
 
         return cts;
+    }
+
+    private void LoadVariables(Entity<PacketExecutorComponent> executor, Dictionary<string, string> variables)
+    {
+        var engine = EnsureEngine(executor);
+
+        foreach (var variable in variables)
+        {
+            engine.SetValue("VAR_" + variable.Key, variable.Value);
+        }
     }
 
     private void SetConstants(Entity<PacketExecutorComponent> executor)

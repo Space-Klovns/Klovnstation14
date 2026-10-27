@@ -1,3 +1,4 @@
+using Content.Server._KS14.Packet.Attributes;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Chemistry.Components;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
@@ -9,7 +10,9 @@ namespace Content.Server._KS14.Packet.States;
 
 public sealed class SolutionState : DeviceCall
 {
+    [PacketField(PacketFieldType.Returns)]
     public ProtoId<ReagentPrototype>[] Reagents = [];
+    [PacketField(PacketFieldType.Returns)]
     public float[] Quantity = [];
 
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)

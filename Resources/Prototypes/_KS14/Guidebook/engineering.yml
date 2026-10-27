@@ -26,3 +26,8 @@
   id: ShuttleConsole
   name: guide-entry-shuttle-console
   text: "/ServerInfo/_KS14/Guidebook/Engineering/ShuttleConsole.xml"
+
+- type: guideEntry # KS14
+  id: Packets
+  name: guide-entry-packets
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/Packets/Packets.xml"

@@ -59,7 +59,7 @@ namespace Content.Client._KS14.Packets.UI
 
         private void OnLoad()
         {
-            SendMessage(new ReloadModulesMessage());
+            SendMessage(new ExecutorRequestCallsInfoMessage());
         }
 
         private void OnTerminate()
@@ -91,6 +91,9 @@ namespace Content.Client._KS14.Packets.UI
             {
                 case LogExecutorMessage cast:
                     _menu.WriteLog(cast.Log);
+                    break;
+                case ExecutorRequestCallsInfoMessage info:
+                    _menu.UpdateDefinitions(info.Calls);
                     break;
                 case WidgetSendMessage widget:
                     InitWidget(widget.Widget);

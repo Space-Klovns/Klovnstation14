@@ -4,6 +4,7 @@ using Content.Shared._KS14.Packets.BUI;
 using Content.Shared._KS14.Packets.Widgets;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.Packets.UI
 {
@@ -118,7 +119,7 @@ namespace Content.Client._KS14.Packets.UI
 
         private void CreateButton(WidgetButton widgetButton, PanelContainer widgetContainer)
         {
-            var button = new Button { Name = widgetButton.Id, Text = widgetButton.Name };
+            var button = new Button { Name = widgetButton.Id, Text = widgetButton.Text };
             button.OnPressed += OnWidgetButtonClick;
 
             SetupControlLayout(widgetButton, ref button, widgetContainer);
@@ -146,9 +147,30 @@ namespace Content.Client._KS14.Packets.UI
             SetupControlLayout(widgetTextEdit, ref textEdit, widgetContainer);
         }
 
+        private Dictionary<string, string> GetArguments(Control control)
+        {
+            var arguments = new Dictionary<string, string>();
+
+            if (control.Parent is not { } parent)
+                return arguments;
+
+            foreach (var child in parent.Children)
+            {
+                if (child is not TextEdit edit)
+                    continue;
+
+                if (edit.Name == null || Rope.Collapse(edit.TextRope) is not { } text)
+                    continue;
+
+                arguments.Add(edit.Name, text);
+            }
+
+            return arguments;
+        }
+
         private void OnWidgetButtonClick(BaseButton.ButtonEventArgs args)
         {
-            SendMessage(new WidgetButtonClickedMessage(args.Button.Name ?? "None"));
+            SendMessage(new WidgetButtonClickedMessage(args.Button.Name ?? "None", GetArguments(args.Button)));
         }
     }
 }

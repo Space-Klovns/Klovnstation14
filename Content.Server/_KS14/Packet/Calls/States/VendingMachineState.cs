@@ -1,4 +1,5 @@
 using System.Linq;
+using Content.Server._KS14.Packet.Attributes;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Chemistry.Components;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
@@ -11,7 +12,9 @@ namespace Content.Server._KS14.Packet.States;
 
 public sealed class VendingMachineState : DeviceCall
 {
+    [PacketField(PacketFieldType.Returns)]
     public string[] Items = [];
+    [PacketField(PacketFieldType.Returns)]
     public int[] Amount = [];
 
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)

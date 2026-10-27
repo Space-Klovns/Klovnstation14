@@ -62,8 +62,8 @@ public sealed partial class PacketSystem : EntitySystem
         SubscribeLocalEvent<PacketExecutorComponent, StartExecutionMessage>(OnExecute);
         SubscribeLocalEvent<PacketExecutorComponent, ReloadModulesMessage>(OnModuleReload);
         SubscribeLocalEvent<PacketExecutorComponent, TerminateExecutorMessage>(OnTerminate);
-        SubscribeLocalEvent<PacketExecutorComponent, InputExecutorMessage>(OnInput);
         SubscribeLocalEvent<PacketExecutorComponent, WidgetButtonClickedMessage>(OnWidgetButton);
+        SubscribeLocalEvent<PacketExecutorComponent, ExecutorRequestCallsInfoMessage>(OnDeviceCallsRequest);
 
         SubscribeLocalEvent<PacketExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
@@ -145,22 +145,23 @@ public sealed partial class PacketSystem : EntitySystem
         Cancel(ent);
     }
 
-    /// <summary>
-    /// On "SEND" message - Send data from client in input method channel.
-    /// </summary>
-    /// <param name="ent"></param>
-    /// <param name="ev"></param>
-    private void OnInput(Entity<PacketExecutorComponent> ent, ref InputExecutorMessage ev)
-    {
-        SendData(ev.Input, ent, typeof(InputMethod), "BasePacketModule", ent.Comp);
-    }
-
     private void OnWidgetButton(Entity<PacketExecutorComponent> ent, ref WidgetButtonClickedMessage ev)
     {
         if (!TryFindWidgetElement<WidgetButton>(ent, ev.Button,  out var widget))
             return;
 
+        LoadVariables(ent, ev.Arguments);
         InvokeAction(widget.MethodName, ent);
+    }
+
+    private void OnDeviceCallsRequest(Entity<PacketExecutorComponent> ent, ref ExecutorRequestCallsInfoMessage ev)
+    {
+        var message = new ExecutorRequestCallsInfoMessage
+        {
+            Calls = _classEntries,
+        };
+
+        UserInterfaceSystem.ServerSendUiMessage(ent.Owner, ExecutorUiKey.Key, message);
     }
 
     /// <summary>

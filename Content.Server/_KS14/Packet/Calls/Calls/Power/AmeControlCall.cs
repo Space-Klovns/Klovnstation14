@@ -1,3 +1,4 @@
+using Content.Server._KS14.Packet.Attributes;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Ame.Components;
 using Content.Server.Lathe;
@@ -11,7 +12,9 @@ namespace Content.Server._KS14.Packet.States.Calls;
 
 public sealed class AmeControlCall : DeviceCall
 {
+    [PacketField(PacketFieldType.Accepts)]
     public int? Injection { get; set; }
+    [PacketField(PacketFieldType.Accepts)]
     public bool? Injecting { get; set; }
 
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)

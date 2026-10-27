@@ -58,17 +58,6 @@ namespace Content.Shared._KS14.Packets.BUI
     }
 
     [Serializable, NetSerializable]
-    public sealed class InputExecutorMessage : BoundUserInterfaceMessage
-    {
-        public string Input;
-
-        public InputExecutorMessage(string input)
-        {
-            Input = input;
-        }
-    }
-
-    [Serializable, NetSerializable]
     public sealed class TerminateExecutorMessage : BoundUserInterfaceMessage;
 
     [Serializable, NetSerializable]
@@ -118,10 +107,18 @@ namespace Content.Shared._KS14.Packets.BUI
     public sealed class WidgetButtonClickedMessage : BoundUserInterfaceMessage
     {
         public string Button;
+        public Dictionary<string, string> Arguments;
 
-        public WidgetButtonClickedMessage(string button)
+        public WidgetButtonClickedMessage(string button, Dictionary<string, string> arguments)
         {
             Button = button;
+            Arguments = arguments;
         }
+    }
+
+    [Serializable, NetSerializable]
+    public sealed class ExecutorRequestCallsInfoMessage : BoundUserInterfaceMessage
+    {
+        public List<DeviceCallEntry>? Calls;
     }
 }

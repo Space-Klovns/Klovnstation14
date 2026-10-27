@@ -19,3 +19,4 @@ packet-configurator-mode-save = Save
 
 packet-configurator-status-label = Mode: {$mode}
     Freq: {$frequency}
+

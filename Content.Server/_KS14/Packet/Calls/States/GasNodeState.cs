@@ -1,3 +1,4 @@
+using Content.Server._KS14.Packet.Attributes;
 using Content.Server._KS14.Packet.Components;
 using Content.Server.NodeContainer.NodeGroups;
 using Content.Server.NodeContainer.Nodes;
@@ -12,12 +13,18 @@ namespace Content.Server._KS14.Packet.States;
 
 public sealed class GasNodeState : DeviceCall
 {
+    [PacketField(PacketFieldType.Accepts)]
     public string NodeName = "pipe";
 
+    [PacketField(PacketFieldType.Returns)]
     public string[] Gas = [];
+    [PacketField(PacketFieldType.Returns)]
     public float[] Moles = [];
+    [PacketField(PacketFieldType.Returns)]
     public float Temperature { get; set; }
+    [PacketField(PacketFieldType.Returns)]
     public float TotalMoles  { get; set; }
+    [PacketField(PacketFieldType.Returns)]
     public float Pressure { get; set; }
 
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
