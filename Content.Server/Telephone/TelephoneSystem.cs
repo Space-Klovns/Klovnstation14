@@ -88,7 +88,8 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
         if (!_recentChatMessages.Add((args.Source, args.Message, entity)))
             return;
 
-        SendTelephoneMessage(args.Source, args.Message, entity, ksLanguage: args.KsLanguage /* KS14 */);
+        // BS: UPSTREAM-BS-TRANSLATION-001, muffled speech has no original text to translate.
+        SendTelephoneMessage(args.Source, args.Message, entity, ksLanguage: args.KsLanguage, ksRelayedTranslationText: args.KsTranslationText);
     }
 
     private void OnTelephoneMessageReceived(Entity<TelephoneComponent> entity, ref TelephoneMessageReceivedEvent args)
@@ -117,7 +118,11 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
         var volume = entity.Comp.SpeakerVolume == TelephoneVolume.Speak ? InGameICChatType.Speak : InGameICChatType.Whisper;
 
         // KS14: thread the language or the re-emission launders exotic speech into clear chat.
-        _chat.TrySendInGameICMessage(speaker, args.Message, volume, range, nameOverride: name, checkRadioPrefix: false, ksLanguageOverride: args.KsLanguage?.LanguageId /* KS14 */);
+        // BS: Preserve the actual player and clear pre-accent text through the hologram/telephone speaker.
+        _chat.TrySendInGameICMessage(speaker, args.Message, volume, range, nameOverride: name, checkRadioPrefix: false,
+            ksLanguageOverride: args.KsLanguage?.LanguageId,
+            ksTranslationSource: args.KsTranslationText != null ? args.MessageSource : null,
+            ksRelayedTranslationText: args.KsTranslationText);
     }
 
     #endregion
@@ -353,7 +358,8 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
         SetTelephoneMicrophoneState(entity, false);
     }
 
-    private void SendTelephoneMessage(EntityUid messageSource, string message, Entity<TelephoneComponent> source, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */)
+    // BS: UPSTREAM-BS-TRANSLATION-001, carry translation metadata through connected holopads.
+    private void SendTelephoneMessage(EntityUid messageSource, string message, Entity<TelephoneComponent> source, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */, string? ksRelayedTranslationText = null)
     {
         // This method assumes that you've already checked that this
         // telephone is able to transmit messages and that it can
@@ -396,7 +402,7 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
         RaiseLocalEvent(source, ref evSentMessage);
         source.Comp.StateStartTime = _timing.CurTime;
 
-        var evReceivedMessage = new TelephoneMessageReceivedEvent(message, chatMsg, messageSource, source, ksLanguage /* KS14 */);
+        var evReceivedMessage = new TelephoneMessageReceivedEvent(message, chatMsg, messageSource, source, KsLanguage: ksLanguage, KsTranslationText: ksRelayedTranslationText); // BS: Preserve clear speech metadata.
 
         foreach (var receiverUid in source.Comp.LinkedTelephones)
         {

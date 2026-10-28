@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
@@ -26,7 +26,7 @@ namespace Content.Shared.Administration
         }
 
         [Serializable, NetSerializable]
-        public sealed class BwoinkTextMessage : EntityEventArgs
+        public sealed partial class BwoinkTextMessage : EntityEventArgs // BS: UPSTREAM-BS-TRANSLATION-001, optional server translation metadata.
         {
             public DateTime SentAt { get; }
 

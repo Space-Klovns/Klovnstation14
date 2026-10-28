@@ -379,7 +379,9 @@ public abstract partial class SharedChatSystem : EntitySystem
         string? nameOverride = null,
         bool checkRadioPrefix = true,
         bool ignoreActionBlocker = false,
-        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */,
+        EntityUid? ksTranslationSource = null, // BS: UPSTREAM-BS-TRANSLATION-001, authenticated source of relayed speech.
+        string? ksRelayedTranslationText = null // BS: Original text is absent on muffled relay deliveries.
         )
     { }
 

@@ -152,7 +152,9 @@ public sealed partial class ChatSystem : SharedChatSystem
         string? nameOverride = null,
         bool checkRadioPrefix = true,
         bool ignoreActionBlocker = false,
-        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */,
+        EntityUid? ksTranslationSource = null, // BS: UPSTREAM-BS-TRANSLATION-001, preserve the player behind a holopad.
+        string? ksRelayedTranslationText = null // BS: Pre-accent text from a clear relay delivery only.
         )
     {
         if (HasComp<GhostComponent>(source))
@@ -238,10 +240,12 @@ public sealed partial class ChatSystem : SharedChatSystem
         switch (desiredType)
         {
             case InGameICChatType.Speak:
-                SendEntitySpeak(source, message, range, nameOverride, hideLog, ignoreActionBlocker, ksLanguageOverride /* KS14 */);
+                // BS: Relays retain their source and pre-accent text while using normal hearing/language checks.
+                SendEntitySpeak(source, message, range, nameOverride, hideLog: hideLog, ignoreActionBlocker: ignoreActionBlocker, ksLanguageOverride: ksLanguageOverride, ksTranslationSource: ksTranslationSource, ksRelayedTranslationText: ksRelayedTranslationText);
                 break;
             case InGameICChatType.Whisper:
-                SendEntityWhisper(source, message, range, null, nameOverride, hideLog, ignoreActionBlocker, ksLanguageOverride /* KS14 */);
+                // BS: Preserve clear relay metadata for whisper-volume holopads too.
+                SendEntityWhisper(source, message, range, null, nameOverride, hideLog: hideLog, ignoreActionBlocker: ignoreActionBlocker, ksLanguageOverride: ksLanguageOverride, ksTranslationSource: ksTranslationSource, ksRelayedTranslationText: ksRelayedTranslationText);
                 break;
             case InGameICChatType.Emote:
                 SendEntityEmote(source, message, range, nameOverride, hideLog: hideLog, ignoreActionBlocker: ignoreActionBlocker);
@@ -391,7 +395,8 @@ public sealed partial class ChatSystem : SharedChatSystem
         string? nameOverride,
         bool hideLog = false,
         bool ignoreActionBlocker = false,
-        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */,
+        EntityUid? ksTranslationSource = null, string? ksRelayedTranslationText = null // BS: UPSTREAM-BS-TRANSLATION-001.
         )
     {
         if (!_actionBlocker.CanSpeak(source) && !ignoreActionBlocker)
@@ -458,7 +463,8 @@ public sealed partial class ChatSystem : SharedChatSystem
         }
         // KS14 End
 
-        SendInVoiceRange(ChatChannel.Local, message, wrappedMessage, source, range, ksLanguage: ksLanguage, ksObfuscated: ksObfuscated, ksWrappedObfuscated: ksWrappedObfuscated, ksTranslationText: originalMessage /* KS14 */);
+        // BS: A hologram emits the visible chat, but the original player supplies the translation language.
+        SendInVoiceRange(ChatChannel.Local, message, wrappedMessage, source, range, ksLanguage: ksLanguage, ksObfuscated: ksObfuscated, ksWrappedObfuscated: ksWrappedObfuscated, ksTranslationText: ksRelayedTranslationText ?? originalMessage, ksTranslationSource: ksTranslationSource);
 
         var ev = new EntitySpokeEvent(source, message, null, null, ksLanguage: ksLanguage /* KS14 */) { KsTranslationText = originalMessage }; // KS14: preserve text before accents
         RaiseLocalEvent(source, ev, true);
@@ -494,7 +500,8 @@ public sealed partial class ChatSystem : SharedChatSystem
         string? nameOverride,
         bool hideLog = false,
         bool ignoreActionBlocker = false,
-        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */,
+        EntityUid? ksTranslationSource = null, string? ksRelayedTranslationText = null // BS: UPSTREAM-BS-TRANSLATION-001.
         )
     {
         if (!_actionBlocker.CanSpeak(source) && !ignoreActionBlocker)
@@ -557,7 +564,9 @@ public sealed partial class ChatSystem : SharedChatSystem
 
         // KS14 Start: per-reader translation; only the clear variant is translatable.
         KsTranslationContext? translation = null;
-        _translation.TryBeginLocal(ChatChannel.Whisper, ksTranslationText, source, out translation);
+        // BS: Only the translation uses the relay origin; range and game-language checks still use the speaker.
+        var ksPlain = ksRelayedTranslationText ?? ksTranslationText;
+        _translation.TryBeginLocal(ChatChannel.Whisper, ksPlain, ksTranslationSource ?? source, out translation);
         // KS14 End
 
         foreach (var (session, data) in GetRecipients(source, WhisperMuffledRange))
@@ -583,7 +592,7 @@ public sealed partial class ChatSystem : SharedChatSystem
                 }
                 // KS14 End
 
-                int? messageId = translation is { } ctx ? _translation.TryReader(ksTranslationText, ctx, session.Channel) : null; // KS14
+                int? messageId = translation is { } ctx ? _translation.TryReader(ksPlain, ctx, session.Channel) : null; // BS: Retain pre-accent relay text.
                 _chatManager.ChatMessageToOne(ChatChannel.Whisper, message, wrappedMessage, source, false, session.Channel, messageId: messageId); // KS14: messageId
             }
             //If listener is too far, they only hear fragments of the message
@@ -770,14 +779,15 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// <summary>
     ///     Sends a chat message to the given players in range of the source entity.
     /// </summary>
-    private void SendInVoiceRange(ChatChannel channel, string message, string wrappedMessage, EntityUid source, ChatTransmitRange range, NetUserId? author = null, KsUtteranceContext? ksLanguage = null /* KS14 */, string? ksObfuscated = null /* KS14 */, string? ksWrappedObfuscated = null /* KS14 */, string? ksTranslationText = null /* KS14: text before accents */)
+    // BS: UPSTREAM-BS-TRANSLATION-001, relayed speech resolves translation preferences from its real origin.
+    private void SendInVoiceRange(ChatChannel channel, string message, string wrappedMessage, EntityUid source, ChatTransmitRange range, NetUserId? author = null, KsUtteranceContext? ksLanguage = null /* KS14 */, string? ksObfuscated = null /* KS14 */, string? ksWrappedObfuscated = null /* KS14 */, string? ksTranslationText = null /* KS14: text before accents */, EntityUid? ksTranslationSource = null)
     {
         // KS14 Start: per-reader chat translation. Local and LOOC both fan out one message per reader here
         // and resolve the speaker from the entity they control.
         KsTranslationContext? translation = null;
         ksTranslationText ??= message;
         if (channel is ChatChannel.Local or ChatChannel.LOOC)
-            _translation.TryBeginLocal(channel, ksTranslationText, source, out translation);
+            _translation.TryBeginLocal(channel, ksTranslationText, ksTranslationSource ?? source, out translation); // BS: Preserve holopad speaker identity.
         // KS14 End
 
         foreach (var (session, data) in GetRecipients(source, VoiceRange))
@@ -798,8 +808,11 @@ public sealed partial class ChatSystem : SharedChatSystem
             }
             // KS14 End
 
-            // KS14: stamp a message id when this reader will receive a translation swap (skip hidden recipients).
-            int? messageId = translation is { } ctx && !entHideChat
+            // BS: UPSTREAM-BS-TRANSLATION-001, broadcasts hide chat rows but nearby listeners still see bubbles.
+            // Do not translate distant observers or a recipient hidden by another system's explicit override.
+            var ksBroadcastBubble = ksTranslationSource != null && range == ChatTransmitRange.HideChat &&
+                                    data.Range >= 0 && data.HideChatOverride != true;
+            int? messageId = translation is { } ctx && (!entHideChat || ksBroadcastBubble)
                 ? _translation.TryReader(ksTranslationText, ctx, session.Channel)
                 : null;
             _chatManager.ChatMessageToOne(channel, message, wrappedMessage, source, entHideChat, session.Channel, author: author, messageId: messageId); // KS14: messageId
