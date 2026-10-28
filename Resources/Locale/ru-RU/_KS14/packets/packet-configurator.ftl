@@ -9,6 +9,12 @@ packet-configurator-probe-address =
     Сеть: { $network }
 packet-configurator-save = Сохраненное устройство
 packet-configurator-switch-mode = Режим переключения
-packet-configurator-switch-probe = Переключение на зонд
+packet-configurator-switch-probe = Переключение на пробирование
 packet-configurator-switch-save = Переключено на сохранение
 packet-frequencies-paper-label = { "[" }head=1{ "]" }Частоты.{ "[" }/head{ "]" }
+
+packet-configurator-mode-probe = Проб
+packet-configurator-mode-save = Сохр
+
+packet-configurator-status-label = Режим: {$mode}
+    Частота: {$frequency}

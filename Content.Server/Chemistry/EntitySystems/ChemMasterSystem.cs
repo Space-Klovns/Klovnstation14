@@ -154,7 +154,7 @@ namespace Content.Server.Chemistry.EntitySystems
             ClickSound(chemMaster);
         }
 
-        private void TransferReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer)
+        public void TransferReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer) // KS14 - Make it public for Packets
         {
             var container = _itemSlotsSystem.GetItemOrNull(chemMaster, SharedChemMaster.InputSlotName);
             if (container is null ||
@@ -182,7 +182,7 @@ namespace Content.Server.Chemistry.EntitySystems
             UpdateUiState(chemMaster, updateLabel: true);
         }
 
-        private void DiscardReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer)
+        public void DiscardReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer) // KS14 - Make it public for Packets
         {
             if (fromBuffer)
             {
