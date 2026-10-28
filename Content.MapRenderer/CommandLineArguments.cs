@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Content.MapRenderer.Extensions;
@@ -14,6 +14,7 @@ public sealed class CommandLineArguments
     public bool ArgumentsAreFileNames { get; set; } = false;
     public bool ShowMarkers { get; set; } = false;
     public bool OutputParallax { get; set; } = false;
+    public bool WiresLast { get; set; } = false; // KS14: native installed-cable diagnostic view.
 
     public static bool TryParse(IReadOnlyList<string> args, [NotNullWhen(true)] out CommandLineArguments? parsed)
     {
@@ -71,6 +72,12 @@ public sealed class CommandLineArguments
                     PrintHelp();
                     return false;
 
+                // KS14 start: use native cable appearance and render it after other entities.
+                case "--wires-last":
+                    parsed.WiresLast = true;
+                    break;
+                // KS14 end
+
                 case "--parallax":
                     parsed.OutputParallax = true;
                     break;
@@ -118,6 +125,9 @@ Options:
         Output images and data used for map viewer parallax.
     -h / --help
         Displays this help text");
+        // KS14 start: keep fork-specific help outside the upstream help text.
+        Console.WriteLine("    --wires-last\n        Reveal native installed cables and draw them above other entities.");
+        // KS14 end
     }
 }
 

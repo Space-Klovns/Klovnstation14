@@ -9,7 +9,7 @@ internal sealed record KsProcgenSizeGoalAllocation(
 }
 
 /// <summary>
-/// Assigns request-wide room counts to separate rectangular entrance networks. Search is atomic:
+/// Assigns request-wide room counts to separate entrance networks. Search is atomic:
 /// either every network receives a feasible quota, or no goal layouts are returned. Metadata work
 /// is capped separately from the graph and seam allowances used by the eventual partition solves.
 /// </summary>
@@ -18,7 +18,8 @@ internal static class KsProcgenSizeGoalAllocator
     internal static KsProcgenSizeGoalAllocation Allocate(string requestId,
         IReadOnlyList<KsProcgenEntranceComponentWitness> components,
         IReadOnlyList<KsProcgenRoomSizeGoal> goals, int minimumRoomCells,
-        IReadOnlySet<string>? rejectedAllocations = null, int previousQuotaProbes = 0, int previousFitProbes = 0)
+        IReadOnlySet<string>? rejectedAllocations = null, int previousQuotaProbes = 0, int previousFitProbes = 0,
+        KsProcgenPartitionWorkBudget? workBudget = null)
     {
         var selected = new Dictionary<int, IReadOnlyList<KsProcgenSizeGoalLayout>>();
         var quotaProbes = previousQuotaProbes;
@@ -39,7 +40,7 @@ internal static class KsProcgenSizeGoalAllocator
             if (lastNetwork) remaining.CopyTo(counts, 0);
             do
             {
-                if (quotaProbes >= 4096 || fitProbes >= 64) return false;
+                if (quotaProbes >= 4096 || fitProbes >= 64 || workBudget?.ExhaustedCode != null) return false;
                 quotaProbes++;
                 var assignedCount = counts.Sum();
                 // Every remaining network needs at least one room; quotas are never duplicated.
@@ -53,7 +54,7 @@ internal static class KsProcgenSizeGoalAllocator
                     }).Where(goal => goal.TargetCount != 0).ToArray();
                     var network = networks[networkIndex];
                     var layouts = KsProcgenSizeGoalSubdivision.Propose(
-                        $"{requestId}/EntranceNetwork/{network.Component}", network.Cells, quota, minimumRoomCells);
+                        $"{requestId}/EntranceNetwork/{network.Component}", network.Cells, quota, minimumRoomCells, workBudget: workBudget);
                     if (layouts.Count != 0)
                     {
                         selected[network.Component] = layouts;

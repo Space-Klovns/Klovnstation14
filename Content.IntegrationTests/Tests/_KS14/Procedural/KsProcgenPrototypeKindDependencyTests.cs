@@ -63,16 +63,19 @@ public sealed class KsProcgenPrototypeKindDependencyTests : KsProcgenGameTest
 
 - type: material
   id: KsProcgenKindMaterialA
+  icon: /Textures/Tiles/plating.png
   price: 1
   stackEntity: KsProcgenKindBridge
 
 - type: material
   id: KsProcgenKindMaterialB
+  icon: /Textures/Tiles/plating.png
   price: 2
   stackEntity: KsProcgenKindLeaf
 
 - type: material
   id: KsProcgenKindSharedId
+  icon: /Textures/Tiles/plating.png
   price: 3
 
 - type: entityCategory
@@ -106,6 +109,8 @@ public sealed class KsProcgenPrototypeKindDependencyTests : KsProcgenGameTest
             Assert.That(Pair.Server.System<KsProcgenPrototypeManifestSystem>().TryCapture(catalog!, out var manifest, out issue, limits: limits), Is.True, issue?.ToString());
             diagnostics.Add("Native office closure: entities/tiles=" + manifest!.Bodies.Count + "; other=" + manifest.Dependencies.Count +
                 "; references=" + manifest.ReferenceOccurrences + "; nodes=" + manifest.Nodes + "; characters=" + manifest.Characters);
+            diagnostics.Add("Native office resources: observed=" + manifest.ResourceOccurrences + "; unique=" + manifest.ResourceReferences.Count +
+                "; files=" + manifest.Resources.Count + "; bytes=" + manifest.CapturedResourceBytes);
             diagnostics.Add("Native abstract inspection gaps: " + manifest.AbstractTemplates.Count(template => template.HasDeclaredInspectionGaps));
             foreach (var template in manifest.AbstractTemplates.Where(template => template.HasDeclaredInspectionGaps))
                 diagnostics.Add("Native inspection gap: " + template.Kind + "/" + template.PrototypeId + " " + template.CanonicalInspection);

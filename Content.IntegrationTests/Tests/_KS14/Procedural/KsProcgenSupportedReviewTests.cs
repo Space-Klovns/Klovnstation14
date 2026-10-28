@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Xml.Linq;
 using Content.Server._KS14.Procedural;
 using Content.Shared._KS14.Procedural;
 using Robust.Shared.Maths;
@@ -81,22 +80,12 @@ public sealed class KsProcgenSupportedReviewTests : KsProcgenGameTest
             using var document = JsonDocument.Parse(json.Data);
             Assert.That(document.RootElement.GetProperty("schemaVersion").GetInt32(), Is.EqualTo(3));
             Assert.That(document.RootElement.GetProperty("supportedEntities").GetArrayLength(), Is.EqualTo(5));
-            var svg = KsProcgenDiagnosticSvg.Render(report);
-            Assert.That(svg.Status, Is.EqualTo(KsProcgenDiagnosticExportStatus.Complete), svg.Issue?.Code);
-            var drawing = XDocument.Parse(Encoding.UTF8.GetString(svg.Data));
-            Assert.That(drawing.Descendants().Count(node => node.Attribute("class")?.Value == "supported-member"), Is.EqualTo(4));
-            var hidden = drawing.Descendants().Single(node => node.Attribute("class")?.Value == "contained-member");
-            Assert.That(hidden.Descendants().Any(node => node.Name.LocalName is "circle" or "line" or "rect"), Is.False);
-            Assert.That(drawing.Descendants().Any(node => node.Attribute("class")?.Value == "operating-path"), Is.True);
-            Assert.That(drawing.Descendants().Count(node => node.Attribute("class")?.Value == "operating-approach"), Is.EqualTo(report.OperatingAccess.Count));
-            Assert.That(drawing.Descendants().Any(node => node.Attribute("class")?.Value == "contained-summary" && node.Value.Contains("Paper")), Is.True);
             Assert.That(report.Published || report.EngineAccessVerified || report.WorkingLightingVerified, Is.False);
             var directory = System.Environment.GetEnvironmentVariable("KS_PROCGEN_ARTIFACT_DIR");
             if (!string.IsNullOrWhiteSpace(directory))
             {
                 Directory.CreateDirectory(directory);
                 File.WriteAllBytes(Path.Combine(directory, "supported-room.json"), json.Data);
-                File.WriteAllBytes(Path.Combine(directory, "supported-room.svg"), svg.Data);
             }
         }));
     }
@@ -157,41 +146,18 @@ public sealed class KsProcgenSupportedReviewTests : KsProcgenGameTest
         }));
     }
 
-    [TestCase("diagonal")] [TestCase("nonfinite")] [TestCase("hidden_world")] [TestCase("facing")] [TestCase("layer")]
-    public async Task SvgRejectsInvalidSupportedGeometryWithoutPartialOutput(string kind)
-    {
-        await AssertOnServer(() => WithRoom((request, result) =>
-        {
-            var report = KsProcgenOwnedDiagnosticReportBuilder.Build(request, result);
-            var member = report.SupportedEntities.First(item => item.Exposed);
-            if (kind == "nonfinite") member = member with { Position = new(float.NaN, 0f) };
-            if (kind == "hidden_world") member = member with { Exposed = false };
-            if (kind == "facing") member = member with { QuarterTurns = 4 };
-            if (kind == "layer") member = member with { Layer = "Unknown" };
-            var access = report.OperatingAccess.First();
-            if (kind == "diagonal") access = access with { CleanPath = new(new[] { new KsProcgenDiagnosticCell(0, 0), new(1, 1) }, false) };
-            var invalid = new KsProcgenOwnedDiagnosticReport { RequestId = "Invalid", Status = "Candidate", FloorCells = report.FloorCells,
-                SupportedEntities = new[] { member }, OperatingAccess = new[] { access } };
-            var svg = KsProcgenDiagnosticSvg.Render(invalid);
-            Assert.That(svg.Status, Is.EqualTo(KsProcgenDiagnosticExportStatus.InvalidInput));
-            Assert.That(svg.Data, Is.Empty);
-        }));
-    }
-
     [Test]
-    public async Task SupportedLabelsAreEscapedAndBoundedExportsRemainCanonical()
+    public async Task SupportedLabelsRemainJsonTextAndBoundedExportsRemainCanonical()
     {
         await AssertOnServer(() => WithRoom((request, result) =>
         {
             var report = KsProcgenOwnedDiagnosticReportBuilder.Build(request, result);
             var member = report.SupportedEntities.First(item => item.Exposed) with { EntityId = "<script>alert('x')</script>", SupportParentMemberId = "<&parent>" };
             var text = new KsProcgenOwnedDiagnosticReport { RequestId = request.RequestId, FloorCells = report.FloorCells, SupportedEntities = new[] { member } };
-            var rendered = KsProcgenDiagnosticSvg.Render(text);
+            var rendered = KsProcgenDiagnosticExport.Serialize(text);
             Assert.That(rendered.Status, Is.EqualTo(KsProcgenDiagnosticExportStatus.Complete));
-            var drawing = XDocument.Parse(Encoding.UTF8.GetString(rendered.Data));
-            Assert.That(drawing.Descendants().Any(node => node.Name.LocalName == "script"), Is.False);
-            Assert.That(drawing.Descendants().Any(node => node.Name.LocalName == "title" && node.Value.Contains(member.EntityId)), Is.True);
-            Assert.That(KsProcgenDiagnosticSvg.Render(report, maximumBytes: 32).Data, Is.Empty);
+            using var document = JsonDocument.Parse(rendered.Data);
+            Assert.That(document.RootElement.GetProperty("supportedEntities")[0].GetProperty("entityId").GetString(), Is.EqualTo(member.EntityId));
             Assert.That(KsProcgenDiagnosticExport.Serialize(report, maximumBytes: 32).Data, Is.Empty);
             Assert.That(KsProcgenDiagnosticExport.Serialize(KsProcgenOwnedDiagnosticReportBuilder.Build(request, result)).Data,
                 Is.EqualTo(KsProcgenDiagnosticExport.Serialize(report).Data));

@@ -27,7 +27,7 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Content.MapRenderer.Painters
 {
-    public sealed class MapPainter : IAsyncDisposable
+    public sealed partial /* KS14: native cable view helper. */ class MapPainter : IAsyncDisposable
     {
         private readonly RenderMap _map;
         private readonly ITestContextLike _testContextLike;
@@ -139,7 +139,7 @@ namespace Content.MapRenderer.Painters
             return mapViewerData;
         }
 
-        public async IAsyncEnumerable<RenderedGridImage<Rgba32>> Paint()
+        public async IAsyncEnumerable<RenderedGridImage<Rgba32>> Paint(bool drawWiresLast = false /* KS14: native cable overlay option. */)
         {
             if (_pair == null)
                 throw new InvalidOperationException("Instance not initialized!");
@@ -157,7 +157,7 @@ namespace Content.MapRenderer.Painters
             await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
             var tilePainter = new TilePainter(client, server);
-            var entityPainter = new GridPainter(client, server);
+            using var entityPainter = new GridPainter(client, server, drawWiresLast: drawWiresLast); // KS14: own native image caches for this paint operation.
             var xformQuery = sEntityManager.GetEntityQuery<TransformComponent>();
             var xformSystem = sEntityManager.System<SharedTransformSystem>();
 
@@ -185,6 +185,10 @@ namespace Content.MapRenderer.Painters
 
             await _pair.RunTicksSync(10);
             await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+
+            // KS14 start: use native appearance updates, not a procgen sprite/state mapping.
+            await PrepareNativeAppearance(drawWiresLast);
+            // KS14 end
 
             foreach (var (uid, grid) in _grids)
             {

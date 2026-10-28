@@ -37,7 +37,7 @@
   components:
   - type: Clothing
     slots: [innerclothing]
-    femaleMask: UniformTop
+    # KS14: removed obsolete femaleMask: UniformTop; clothing visuals use inventory displacement maps.
 
 
 - type: entity
@@ -61,7 +61,7 @@
   components:
   - type: Clothing
     slots: [innerclothing]
-    femaleMask: UniformTop
+    # KS14: removed obsolete femaleMask: UniformTop; clothing visuals use inventory displacement maps.
 
 - type: entity
   abstract: true

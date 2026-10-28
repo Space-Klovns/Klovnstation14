@@ -4,7 +4,7 @@ meta:
   engineVersion: 291.0.0
   forkId: ""
   forkVersion: ""
-  time: 10/26/2026 20:34:08
+  time: 10/27/2026 12:54:12
   entityCount: 32
 maps: []
 grids:
@@ -115,7 +115,7 @@ entities:
           occludes: True
     - type: DeviceNetwork
       receiveFrequency: 1280
-      address: 4738-F91F
+      address: 6BCE-7611
     - type: MeleeWeapon
       nextAttack: -1.666665
     - type: Physics

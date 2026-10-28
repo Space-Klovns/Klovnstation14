@@ -105,6 +105,7 @@ public sealed class KsProcgenPrototypeInheritanceTests : KsProcgenGameTest
 
 - type: material
   id: KsProcgenInheritanceParentOnlyMaterial
+  icon: /Textures/Tiles/plating.png
   price: 1
 
 - type: entity
@@ -125,11 +126,13 @@ public sealed class KsProcgenPrototypeInheritanceTests : KsProcgenGameTest
 
 - type: material
   id: KsProcgenInheritanceConcreteMaterialParent
+  icon: /Textures/Tiles/plating.png
   price: 1
 
 - type: material
   parent: KsProcgenInheritanceConcreteMaterialParent
   id: KsProcgenInheritanceConcreteMaterialChild
+  icon: /Textures/Tiles/plating.png
   price: 3
 
 - type: material
@@ -148,6 +151,7 @@ public sealed class KsProcgenPrototypeInheritanceTests : KsProcgenGameTest
   abstract: false
   parent: KsProcgenInheritanceMaterialParent
   id: KsProcgenInheritanceMaterialChild
+  icon: /Textures/Tiles/plating.png
   price: 3
 
 - type: tile

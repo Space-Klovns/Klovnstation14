@@ -73,6 +73,8 @@ public sealed partial class KsProcgenPrototypeManifestSystem
         public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier.EntityPrototype value, IDependencyCollection dependencies,
             bool alwaysWrite = false, ISerializationContext? context = null)
         {
+            if (string.IsNullOrWhiteSpace(value.EntityPrototypeId))
+                throw new InvalidOperationException("Entity-based sprites require a nonempty prototype ID.");
             (context as IKsProcgenResourceObservationContext)?.ObserveSpriteEntity(value.EntityPrototypeId);
             return new MappingDataNode { { "entity", new ValueDataNode(value.EntityPrototypeId) } };
         }
@@ -88,6 +90,8 @@ public sealed partial class KsProcgenPrototypeManifestSystem
         {
             if (node.TryGet<ValueDataNode>("entity", out var entity))
             {
+                if (entity.IsNull || string.IsNullOrWhiteSpace(entity.Value))
+                    return new ErrorNode(node, "Entity-based sprites require a nonempty prototype ID.");
                 (context as IKsProcgenResourceObservationContext)?.ObserveSpriteEntity(entity.Value);
                 return new ValidatedValueNode(node);
             }
@@ -99,6 +103,8 @@ public sealed partial class KsProcgenPrototypeManifestSystem
         ValidationNode ITypeValidator<SpriteSpecifier.EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager,
             ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
+            if (node.IsNull || string.IsNullOrWhiteSpace(node.Value))
+                return new ErrorNode(node, "Entity-based sprites require a nonempty prototype ID.");
             (context as IKsProcgenResourceObservationContext)?.ObserveSpriteEntity(node.Value);
             return new ValidatedValueNode(node);
         }

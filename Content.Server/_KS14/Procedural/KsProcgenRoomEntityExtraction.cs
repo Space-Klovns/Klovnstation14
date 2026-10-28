@@ -9,23 +9,31 @@ namespace Content.Server._KS14.Procedural;
 public enum KsProcgenMapReferenceKind : byte { Entity, NetworkEntity, Map }
 public sealed record KsProcgenMapEntityReference(string ComponentType, KsProcgenMapReferenceKind Kind, int TargetYamlUid);
 
+/// <summary>Immutable, canonical map override data; references remain symbolic until instance remapping.</summary>
+public sealed record KsProcgenMapComponentOverride(string ComponentType, string CanonicalBody);
+
 public sealed record KsProcgenRoomEntityExtractionLimits
 {
     public int MaximumMaskCellProbes { get; init; } = 524_288;
     public int MaximumGraphWork { get; init; } = 1_048_576;
     public int MaximumParentDepth { get; init; } = 128;
     public int MaximumExtractedEntities { get; init; } = 4096;
+    public int MaximumOverrideNodes { get; init; } = 262_144;
+    public int MaximumOverrideCharacters { get; init; } = 4_194_304;
+    public int MaximumOverrideDepth { get; init; } = 64;
     public int MaximumDefaultImageCharacters { get; init; } = 4_194_304;
 }
 
-/// <summary>Map-local source locator and transform witness, not a spawned or copy-authorized entity.</summary>
+/// <summary>Detached source overrides, locators and transform witnesses, not a spawned or copy-authorized entity.</summary>
 public sealed class KsProcgenExtractedMapEntity
 {
     internal KsProcgenExtractedMapEntity(int yamlUid, string prototypeId, int parentYamlUid,
         Vector2 localPosition, double localRotation, Vector2 gridPosition, Vector2 roomPosition, double gridRotation,
         bool anchored, bool noLocalRotation, IEnumerable<string> overrides, IEnumerable<string> removed,
-        IEnumerable<KsProcgenMapEntityReference> references, IEnumerable<string> uninspected)
+        IEnumerable<KsProcgenMapEntityReference> references, IEnumerable<string> uninspected,
+        IEnumerable<KsProcgenMapComponentOverride> componentOverrides)
     {
+        ComponentOverrides = Array.AsReadOnly(componentOverrides.OrderBy(component => component.ComponentType, StringComparer.Ordinal).ToArray());
         YamlUid = yamlUid; PrototypeId = prototypeId; ParentYamlUid = parentYamlUid;
         LocalPosition = localPosition; LocalRotationRadians = localRotation;
         GridPosition = gridPosition; RoomPosition = roomPosition; GridRotationRadians = gridRotation; Anchored = anchored; NoLocalRotation = noLocalRotation;
@@ -46,6 +54,8 @@ public sealed class KsProcgenExtractedMapEntity
     public double GridRotationRadians { get; }
     public bool Anchored { get; }
     public bool NoLocalRotation { get; }
+    /// <summary>Complete source override nodes, including type tags, isolated from mutable parser nodes.</summary>
+    public IReadOnlyList<KsProcgenMapComponentOverride> ComponentOverrides { get; }
     public IReadOnlyList<string> OverrideComponentTypes { get; }
     public IReadOnlyList<string> RemovedComponentTypes { get; }
     /// <summary>Typed references observed by registered component validators, not a complete reference schema.</summary>
@@ -67,13 +77,14 @@ public sealed class KsProcgenRoomEntityExtraction
 {
     internal KsProcgenRoomEntityExtraction(string sourceHash, KsProcgenPrototypeManifest definitions,
         IEnumerable<KsProcgenExtractedRoomEntities> rooms, int probes, int graphWork,
-        int defaultPrototypeImages = 0, int defaultImageCharacters = 0)
+        int defaultPrototypeImages = 0, int defaultImageCharacters = 0, int overrideNodes = 0, int overrideCharacters = 0)
     {
         SourceContentHash = sourceHash; Definitions = definitions; Rooms = Array.AsReadOnly(rooms.ToArray()); MaskCellProbes = probes; GraphWork = graphWork;
+        OverrideNodes = overrideNodes; OverrideCharacters = overrideCharacters;
         DefaultPrototypeImages = defaultPrototypeImages; DefaultImageCharacters = defaultImageCharacters;
         ContentHash = ComputeContentHash();
     }
-    public int SchemaVersion => 2;
+    public int SchemaVersion => 3;
     public string SourceContentHash { get; }
     public string ContentHash { get; }
     /// <summary>Includes typed entity prototypes discovered in overrides, captured before any materialization.</summary>
@@ -81,6 +92,8 @@ public sealed class KsProcgenRoomEntityExtraction
     public IReadOnlyList<KsProcgenExtractedRoomEntities> Rooms { get; }
     public int MaskCellProbes { get; }
     public int GraphWork { get; }
+    public int OverrideNodes { get; }
+    public int OverrideCharacters { get; }
     public int DefaultPrototypeImages { get; }
     /// <summary>Canonical body and metadata input characters, charged once per reconstructed source prototype.</summary>
     public int DefaultImageCharacters { get; }
@@ -103,7 +116,7 @@ public sealed class KsProcgenRoomEntityExtraction
         { Add(point.X.ToString("R", CultureInfo.InvariantCulture)); Add(point.Y.ToString("R", CultureInfo.InvariantCulture)); }
         void Strings(IReadOnlyList<string> values)
         { Number(values.Count); foreach (var value in values) Add(value); }
-        Add("ks-room-entity-extraction-v2"); Add(SourceContentHash); Add(Definitions.ContentHash); Number(Rooms.Count);
+        Add("ks-room-entity-extraction-v3"); Add(SourceContentHash); Add(Definitions.ContentHash); Number(Rooms.Count);
         foreach (var room in Rooms)
         {
             var mask = room.Room;
@@ -118,6 +131,9 @@ public sealed class KsProcgenRoomEntityExtraction
                 Point(entity.LocalPosition); Real(entity.LocalRotationRadians); Point(entity.GridPosition);
                 Point(entity.RoomPosition); Real(entity.GridRotationRadians);
                 Add(entity.Anchored ? "1" : "0"); Add(entity.NoLocalRotation ? "1" : "0");
+                Number(entity.ComponentOverrides.Count);
+                foreach (var component in entity.ComponentOverrides)
+                { Add(component.ComponentType); Add(component.CanonicalBody); }
                 Strings(entity.OverrideComponentTypes); Strings(entity.RemovedComponentTypes); Strings(entity.UninspectedComponentTypes);
                 Number(entity.References.Count);
                 foreach (var reference in entity.References)

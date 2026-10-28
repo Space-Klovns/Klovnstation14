@@ -53,7 +53,8 @@ public static class KsProcgenPackingPlanner
         KsProcgenRequest request,
         IReadOnlyList<KsProcgenLayoutFamily> families,
         KsProcgenPackingBudgets? budgets = null,
-        IReadOnlySet<Vector2i>? inspectedExistingPassages = null)
+        IReadOnlySet<Vector2i>? inspectedExistingPassages = null,
+        KsProcgenPackingEligibility? eligibility = null)
     {
         budgets ??= new KsProcgenPackingBudgets();
         inspectedExistingPassages ??= new HashSet<Vector2i>();
@@ -102,6 +103,13 @@ public static class KsProcgenPackingPlanner
                 };
             }
         }
+
+        if (eligibility != null && !eligibility.Matches(families))
+            return new()
+            {
+                Status = KsProcgenPackingStatus.InvalidInput,
+                Issue = new("UnknownPackingOrientation", "Eligibility must refer only to supplied alternatives and permitted family rotations."),
+            };
 
         if (shape!.TargetCells.Count == 0)
         {
@@ -260,7 +268,8 @@ public static class KsProcgenPackingPlanner
 
                     foreach (var candidate in proposed)
                     {
-                        if (candidate.Claims.All(entry => orderedCells.Contains(entry.Cell)))
+                        if ((eligibility == null || eligibility.Allows(candidate)) &&
+                            candidate.Claims.All(entry => orderedCells.Contains(entry.Cell)))
                             candidates.Add(candidate);
                     }
                 }

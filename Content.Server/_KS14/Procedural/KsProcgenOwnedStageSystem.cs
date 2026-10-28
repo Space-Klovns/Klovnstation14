@@ -87,7 +87,7 @@ public sealed partial class KsProcgenOwnedStageSystem : EntitySystem
                 catalogs.SelectMany(item => item.CandidateTileIds()), out var prototypes, out issue, limits: budgets.PrototypeCapture))
             return Failure(issue!.Code.EndsWith("Budget", StringComparison.Ordinal) ? KsProcgenOwnedStageStatus.BudgetExceeded :
                 issue.Code.StartsWith("Unsupported", StringComparison.Ordinal) ? KsProcgenOwnedStageStatus.UnsupportedContent :
-                KsProcgenOwnedStageStatus.InvalidInput, issue.Code);
+                KsProcgenOwnedStageStatus.InvalidInput, issue.Code, message: issue.Message);
         var proposal = _planning.Propose(resolved, themeId, context, [], budgets: planningBudgets, content: content, utilityContent: utilityContent);
         if (proposal.Status != KsProcgenOwnedPlanStatus.Candidate)
             return Failure(proposal.Status == KsProcgenOwnedPlanStatus.BudgetExceeded ? KsProcgenOwnedStageStatus.BudgetExceeded :
@@ -349,6 +349,6 @@ public sealed partial class KsProcgenOwnedStageSystem : EntitySystem
     public override void Shutdown() { DiscardAll(); base.Shutdown(); }
 
     private static KsProcgenOwnedStageResult Failure(KsProcgenOwnedStageStatus status, string code,
-        KsProcgenOwnedInteriorResult? proposal = null) => new(status,
-        new(code, "Complete owned procedural preview could not be retained."), null, proposal);
+        KsProcgenOwnedInteriorResult? proposal = null, string? message = null) => new(status,
+        new(code, message ?? "Complete owned procedural preview could not be retained."), null, proposal);
 }

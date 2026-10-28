@@ -72,6 +72,13 @@ public sealed partial class KsProcgenPrototypeManifestSystem
         }
     }
 
+    internal EntityUid AllocateCaptured(EntityPrototype? snapshot, out EntityPrototype? loadingPrototype) =>
+        EntityManager.KsAllocateEntityFromSnapshot(snapshot, new PrototypeContext(_serializationManager), out loadingPrototype);
+
+    internal MappingDataNode WriteCapturedComponent(IComponent component) =>
+        (MappingDataNode) _serializationManager.WriteValue(component.GetType(), component, alwaysWrite: true,
+            context: new PrototypeContext(_serializationManager), notNullableOverride: true);
+
     internal EntityUid SpawnCaptured(KsProcgenPrototypeManifest manifest, string id, EntityCoordinates coordinates)
     {
         // Rebuild every placement from immutable strings, isolating later placements from mutable

@@ -38,6 +38,7 @@ public sealed class KsProcgenNativeWiringTests : KsProcgenGameTest
                 Assert.That(initialized.Status, Is.EqualTo(KsProcgenOwnedStageStatus.InitializedPreview), initialized.Issue?.Code);
                 var receipt = stage.InitialElectrical!;
                 Assert.That(receipt, Is.Not.Null); Assert.That(receipt.ElectricalTopologyVerified, Is.True);
+                Assert.That(receipt.NativePowerLinksVerified, Is.True);
                 Assert.That(receipt.ElectricalSupplyVerified || stage.Published, Is.False);
                 Assert.That(receipt.CableCount, Is.EqualTo(stage.Entities.Count(uid => SEntMan.HasComponent<CableComponent>(uid))));
                 Assert.That(receipt.DeviceCount, Is.EqualTo(2)); Assert.That(receipt.Work, Is.GreaterThan(0));
@@ -318,6 +319,36 @@ public sealed class KsProcgenNativeWiringTests : KsProcgenGameTest
                 Assert.That(initialized.Status, Is.EqualTo(KsProcgenOwnedStageStatus.InitializedPreview), initialized.Issue?.Code);
                 Assert.That(stage.InitialElectrical!.Connections.Count, Is.EqualTo(1));
                 Assert.That(stages.Verify(stage), Is.True);
+            }
+            finally { stages.DiscardAll(); }
+            Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));
+        });
+    }
+
+    [Test]
+    public async Task OwnedVerificationRejectsSolverBacklinkDriftWithoutReconnecting()
+    {
+        await AssertOnServer(() =>
+        {
+            var stages = Server.System<KsProcgenOwnedStageSystem>();
+            var before = SEntMan.GetEntities().ToHashSet();
+            var generated = Generate(computer: true);
+            try
+            {
+                Assert.That(generated.Stage, Is.Not.Null, generated.Issue?.Code);
+                var stage = generated.Stage!;
+                Assert.That(stages.TryInitialize(stage).Status, Is.EqualTo(KsProcgenOwnedStageStatus.InitializedPreview));
+                var receipt = stage.InitialElectrical!;
+                Assert.That(receipt.NativePowerLinksVerified, Is.True);
+                var receiver = SEntMan.GetComponent<ApcPowerReceiverComponent>(receipt.Connections.Single().Consumer);
+                Assert.That(receiver.NetworkLoad.LinkedNetwork, Is.Not.EqualTo(default(Content.Server.Power.Pow3r.PowerState.NodeId)));
+                receiver.NetworkLoad.LinkedNetwork = default;
+                Assert.That(stages.Verify(stage), Is.False);
+                Assert.That(receiver.NetworkLoad.LinkedNetwork, Is.EqualTo(default(Content.Server.Power.Pow3r.PowerState.NodeId)));
+                Assert.That(stage.InitialElectrical, Is.SameAs(receipt));
+                var repeated = stages.TryInitialize(stage);
+                Assert.That(repeated.Status, Is.EqualTo(KsProcgenOwnedStageStatus.Rejected));
+                Assert.That(stage.Active, Is.False);
             }
             finally { stages.DiscardAll(); }
             Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));

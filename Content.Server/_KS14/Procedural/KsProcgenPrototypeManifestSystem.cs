@@ -44,7 +44,8 @@ public sealed record KsProcgenPrototypeManifestLimits
 
 /// <summary>
 /// Detached candidate bodies and registered typed prototype-reference closure. Legacy reference
-/// strings, resource files and ignored client-only schemas still need dependency discovery.
+/// strings and ignored client-only schemas still need dependency discovery. Observed resource paths
+/// retain bounded detached bytes; this is not proof of all resource or native appearance coverage.
 /// </summary>
 public sealed class KsProcgenPrototypeManifest
 {
@@ -255,6 +256,7 @@ public sealed partial class KsProcgenPrototypeManifestSystem : EntitySystem
         {
             while (references.Pending.Count > 0 || references.DependencyPending.Count > 0)
             {
+                if (resourceWork.Issue != null) { issue = resourceWork.Issue; return false; }
                 if (references.Pending.Count == 0)
                 {
                     var dependency = references.DependencyPending.Min!;
@@ -325,6 +327,7 @@ public sealed partial class KsProcgenPrototypeManifestSystem : EntitySystem
                     registeredTileNode = _serializationManager.WriteValue(registered, alwaysWrite: true, context: context, notNullableOverride: true);
                 }
                 if (references.Issue != null) { issue = references.Issue; return false; }
+                if (resourceWork.Issue != null) { issue = resourceWork.Issue; return false; }
                 var canonical = new StringBuilder();
                 var entity = reference.Kind == KsProcgenPrototypeBodyKind.Entity;
                 if (!work.Write(node, canonical, 0, normalizeEntity: entity))
@@ -413,6 +416,9 @@ public sealed partial class KsProcgenPrototypeManifestSystem : EntitySystem
     {
         if (issue?.Code == "UnsupportedPrototypeManifestTileBinding")
             issue = new("PrototypeManifestChanged", "A captured tile's prototype and engine registration no longer agree.");
+        else if (issue?.Code is "MissingPrototypeResource" or "MissingPrototypeRsiState" or
+                 "InvalidPrototypeResource" or "InvalidPrototypeRsi" or "InvalidPrototypeResourceReference")
+            issue = new("PrototypeManifestChanged", $"Captured content can no longer be read: {issue.Code}.");
         return false;
     }
 

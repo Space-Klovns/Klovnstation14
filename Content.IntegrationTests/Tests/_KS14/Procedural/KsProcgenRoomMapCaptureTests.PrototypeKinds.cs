@@ -25,6 +25,7 @@ public sealed partial class KsProcgenRoomMapCaptureTests
   abstract: false
   parent: KsProcgenSourceKindAncestor
   id: KsProcgenSourceKindMaterial
+  icon: /Textures/Tiles/plating.png
   price: 2
   stackEntity: KsProcgenSourceKindLeaf
 

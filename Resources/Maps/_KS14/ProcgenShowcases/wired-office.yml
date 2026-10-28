@@ -4,7 +4,7 @@ meta:
   engineVersion: 291.0.0
   forkId: ""
   forkVersion: ""
-  time: 10/26/2026 20:34:18
+  time: 10/27/2026 12:54:34
   entityCount: 77
 maps: []
 grids:
@@ -92,7 +92,7 @@ entities:
           occludes: True
     - type: DeviceNetwork
       receiveFrequency: 1280
-      address: 3EC8-9ABB
+      address: 76FC-10BE
 - proto: APCBasic
   entities:
   - uid: 76

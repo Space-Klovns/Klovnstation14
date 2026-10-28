@@ -6,6 +6,7 @@ using Content.Shared.Inventory;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
+using Content.Shared._KS14.Serialization; // KS14
 
 namespace Content.Shared.Clothing.Components;
 
@@ -57,7 +58,7 @@ public sealed partial class ClothingComponent : Component
     [DataField, AutoNetworkedField]
     public string? EquippedState;
 
-    [DataField("sprite")]
+    [DataField("sprite", customTypeSerializer: typeof(KsResourcePathStringSerializer) /* KS14: retain string API while exposing resource semantics */)]
     public string? RsiPath;
 
     /// <summary>

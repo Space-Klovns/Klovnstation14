@@ -32,7 +32,7 @@ public sealed class PrototypeTests : GameTest
     public async Task TestAllClientPrototypesAreSerializable()
     {
         var pair = Pair;
-        var ser = pair.Server.ResolveDependency<ISerializationManager>();
+        var ser = pair.Client /* KS14: client registry must back its own context */.ResolveDependency<ISerializationManager>();
         var context = new PrototypeSaveTest.TestEntityUidContext(ser);
         await SaveThenValidatePrototype(pair.Client, "client", context);
     }
@@ -83,7 +83,7 @@ public sealed class PrototypeTests : GameTest
     public async Task ClientPrototypeSaveLoadSaveTest()
     {
         var pair = Pair;
-        var ser = pair.Server.ResolveDependency<ISerializationManager>();
+        var ser = pair.Client /* KS14: client registry must back its own context */.ResolveDependency<ISerializationManager>();
         var context = new PrototypeSaveTest.TestEntityUidContext(ser);
         await SaveLoadSavePrototype(pair.Client, context);
     }

@@ -248,6 +248,8 @@ public sealed partial class KsProcgenRoomMapCaptureTests
             Assert.That(source.Maps.Single().OverrideComponentTypes, Does.Contain("Sprite"));
             Assert.That(system.TryExtractRoomEntities(project, source, out var result, out var issue), Is.True, message: issue?.Code);
             Assert.That(result!.Rooms.Single().Entities.All(entity => entity.OverrideComponentTypes.Contains("Sprite")), Is.True);
+            Assert.That(result.Rooms.Single().Entities.All(entity =>
+                DecodeOverride(entity, "Sprite").Get<Robust.Shared.Serialization.Markdown.Value.ValueDataNode>("sprite").Value == "Objects/Misc/paper.rsi"), Is.True);
             Assert.That(source.Maps.Single().CopyBytes(), Is.EqualTo(root.Bytes));
             Assert.That(result.ComponentReferencesVerified, Is.False);
         }));

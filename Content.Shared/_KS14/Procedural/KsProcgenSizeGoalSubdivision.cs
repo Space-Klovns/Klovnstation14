@@ -18,7 +18,7 @@ internal sealed record KsProcgenSizeGoalLayout(bool AcrossX, IReadOnlyList<KsPro
 internal static class KsProcgenSizeGoalSubdivision
 {
     internal static IReadOnlyList<KsProcgenSizeGoalLayout> Propose(string networkId, IReadOnlyList<Vector2i> cells,
-        IReadOnlyList<KsProcgenRoomSizeGoal> goals, int minimumRoomCells)
+        IReadOnlyList<KsProcgenRoomSizeGoal> goals, int minimumRoomCells, KsProcgenPartitionWorkBudget? workBudget = null)
     {
         var count = goals.Sum(goal => (long) goal.TargetCount);
         if (cells.Count == 0 || count is < 1 or > 256)
@@ -30,7 +30,7 @@ internal static class KsProcgenSizeGoalSubdivision
         // The caller supplies unique connected graph witness cells. Equal bounding area proves
         // complete rectangular coverage, without probing or allocating a potentially huge box.
         if (width * height != cells.Count)
-            return KsProcgenIrregularSizeGoalSubdivision.Propose(networkId, cells, goals, minimumRoomCells);
+            return KsProcgenIrregularSizeGoalSubdivision.Propose(networkId, cells, goals, minimumRoomCells, workBudget: workBudget);
         if (width < 2 || height < 2)
             return [];
         var ordered = goals.OrderByDescending(goal => goal.MaxCells)

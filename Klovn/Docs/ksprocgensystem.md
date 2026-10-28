@@ -1,11 +1,15 @@
 <!-- KS14: added in this fork -->
 # KS14 procedural generation system specification
 
+Rendering contract amendment (2026-10-28): map previews now use `Content.MapRenderer` exclusively.
+The bespoke procgen Python/PowerShell/SVG/gallery pipeline is removed. Section 21.4 supersedes older
+rendering requirements and historical ledger entries; do not rebuild that retired pipeline.
+
 Status: implementation in progress. This document remains the behavior contract; the detailed
 implementation ledger in section 17 records what exists, what has been verified, and what remains.
 An unchecked task is not implemented merely because its API or a partial algorithm exists.
 
-Current expanded-scope estimate (2026-10-26): **approximately 68%**, using the fixed weighted
+Current expanded-scope estimate (2026-10-28): **approximately 69%**, using the fixed weighted
 capability index below. This estimates implemented capability, not production readiness.
 The active user milestone is **at least 80%** of this expanded scope. Section 17's current
 capability index fixes the weights and records the evidence; helpers and documentation do not
@@ -24,7 +28,63 @@ records required rewrites and delivery gates. The earlier 75% estimate applies o
 scope; the current expanded-scope assessment below supersedes it. Documentation work adds no
 implementation credit. Existing section/task IDs are retained to preserve historical references.
 
-Latest verified inheritance-parent prerequisite batch (2026-10-26): manifest schema 10 now
+Latest verified source-library batch (2026-10-28): automatic packing excludes whole alternative/
+rotation pairs that conflict with captured native rotation or anchored-pose constraints, then
+selects compatible complete alternatives without mixing their members. Eligibility work across
+selected and unselected alternatives is bounded and rejected orientations retain reasons. Complete
+terrain/entity preparation still precedes writes. Normal Release passes **918 procedural units**
+and **360 selected native/sandbox cases**, including 16 new unit and 10 new native eligibility cases.
+This is the bounded internal source adapter; primary library/hybrid generation, physical entrance/
+hull certification and publication remain open. Expanded-scope credit stays **69/100**.
+
+Previous verified terrain-composition batch (2026-10-28): native room copying now combines exact
+captured floor masks and metadata with the entity graph. Native mirroring/rotation, atlas rebasing,
+untouched surrounding cells, cancellation and failed-transaction cleanup are covered. Normal Release
+passes **314 selected integrations** (46 new terrain cases); a further Release/six-case check
+strengthens anchored-room ordering. Scope/evidence are in section 17. Primary automatic hybrid
+integration, physical access/hull certification and publication remain open. Credit stays **69/100**.
+
+Previous verified native entity-copy batch (2026-10-28): captured prefab entity graphs now instantiate
+inside an owned paused transaction. Every member is allocated and loaded before parent-first startup;
+entity/network/map references stay within each copy, authored overrides merge with captured defaults,
+and post-startup verification checks the complete graph. Actual container contents, removals, all
+quarter turns, unprototyped members, cancellation and cleanup are covered. Passing normal Release
+verification: **268 selected native/sandbox cases**, including **24 new copy cases**. MapInit is
+explicitly deferred. This is the component-graph prerequisite; terrain copying, complete hybrid
+composition and publication remain open. Credit stays **69/100** and the **80% goal remains active**.
+
+Previous verified generator batches (2026-10-27): hole-aware size-band fitting now supports the
+bounded courtyard/mixed-size cases in primary generation. Normal Release passes 906 procedural/
+power-storage units and 62 selected native cases; the fixed index awards one distinct layout point,
+raising total capability to **69/100**. Extraction schema 3 additionally retains complete immutable
+component override bodies; its Release gate passes 181 selected native/sandbox cases with 13 new
+image checks. That source-preservation prerequisite earns no separate workflow credit. Native room
+graph instantiation now exists; primary library/hybrid composition remains the current implementation task.
+Showcase/presentation expansion is closed for this phase. Detailed scope and evidence are in section 17.
+
+Previous verified resource snapshot batch (2026-10-27): manifest schema 11 binds observed resource
+paths/states and detached file bytes, including folder/compiled RSI assets and source-only overrides.
+Missing or changed bytes reject revalidation; selected and unselected candidate drift retires owned
+stages. Normal Release and fresh Debug each pass **891 units / 937 integration and sandbox cases /
+31 serialization cases**, with identical inventories and all prior cases retained. The 42 new cases
+cover resource observation, immutable bytes, bounded/failed reads, source overrides, empty entity
+sprite IDs and owned retirement. Four compile-valid controls cause nine intended assertion failures;
+mutated sources restore exactly, and 27 source hashes remain unchanged across the final gates.
+Five regenerated native exports pass save/load checks and match installed maps. All 72 sprite-source
+hashes and six output identities pass; six sprite PNGs retain exact bytes. Both refreshed browser
+overviews pass five-image/two-mode/five-overlay checks. Six historical review files stay unchanged.
+The office's 936 resource files total 3,819,355 bytes and fit unchanged limits. Full content closure,
+legacy/client/custom schemas, portable replay, operating checks and authoring remain open.
+Credit stays **68/100**; the **80% goal remains active**.
+
+Previous preview maintainability batch (2026-10-27): offline entry points now delegate to private
+asset/frame/mapping/layer/export/gallery modules with invocation-owned caches and explicit wire-last
+composition. Seven presentation tests and five native showcase cases pass; three isolated controls
+fail as intended before exact restoration. Normal Release builds and all 33 retained artifact hashes
+pass. Section 17 records the server/presentation boundary and remaining workspace work. Credit stays
+**68/100**; this refactor supplies no new end-to-end generator or editor capability.
+
+Previous verified inheritance-parent prerequisite batch (2026-10-26): manifest schema 10 now
 follows registered entity, tile and other-kind parent chains in both runtime arrays and source
 declarations. Abstract parents retain declaration-only authority, including the new tile-declaration
 kind. Partial abstract fields are inspected through schema validators without fake complete
@@ -1220,7 +1280,12 @@ pass followed by an attempt to repair an arbitrarily blocked map.
 1. Normalize masks, markers, references, profiles, and budgets. Snapshot preserved geometry and
    port/door states. Hash the relevant content for replay and cache invalidation.
 2. Inspect room maps into immutable template records. Resolve actual footprints and preserve map
-   data. Reject illegal rotations and rooms whose mandatory paths are already blocked.
+   data. Reject illegal rotations and rooms whose mandatory paths are already blocked. Combine
+   each member's rotation with the proposed family rotation before checking native mounting and
+   rotation restrictions. Exclude the complete affected option/rotation, then allow the solver to
+   select another complete alternative. Do not repair it by mixing members from other alternatives
+   or changing authored member poses. A pose-compatible alternative still needs complete source,
+   path, hull and engine validation. Eligibility work is bounded across unselected alternatives too.
 3. Apply constant-region reservations, then discover transformed room/layout placements from the
    library against the actual shape using section 7.1. Filter by bounds, explicit anchor overrides,
    required port reachability potential, seams, and exclusions. Reserve closure/approach space early.
@@ -2039,14 +2104,14 @@ committed implementation.
 
 ## 17. Piecemeal implementation tasks
 
-### Current capability index and active 80% milestone (2026-10-23; weights fixed 2026-10-17)
+### Current capability index and active 80% milestone (2026-10-27; weights fixed 2026-10-17)
 
 This is the current source/test-inventory assessment, superseding the historical 75% estimate
 for milestone tracking. Weights are fixed before further work toward 80%; changing them later
 requires an explicit scope amendment, not a convenient way to reach the target. Partial helpers
 earn credit only within their tested domain. Shared end-to-end exits are not counted twice.
 The baseline is approximately **54/100**, with 45-65% uncertainty; 80 is not reached.
-Current credit is **68/100**: canonical request/version/utility pinning and scoped utility/consumer
+Current credit is **69/100**: canonical request/version/utility pinning and scoped utility/consumer
 intent add two contract points (contracts 14/16). Owned support/container candidate integration and
 independent post-lighting layered access each add one interior point (interiors 15/18). These are
 planning exits, not runtime verification; no layout, engine, utility or editor points are counted
@@ -2099,15 +2164,23 @@ The two remaining contract points require immutable referenced content with mani
 project asset contracts. Candidate binding and actual utility realization remain in their own
 layout/runtime domains and gain no credit from declaration transport. The table shows baseline and current points separately.
 
+Hole-aware size-band fitting adds one distinct layout point (layout 18/22): complete primary
+requests now meet hard counts/areas around one or multiple holes, including one large + one medium
++ three small rooms, cardinal doors and shared quotas across separate islands. Native initialization
+preserves void tiles and scene ownership; fitting floods share the graph allowance and exhaustion
+publishes no partial layout. This closes the bounded courtyard-fitting portion of A01/A04/A12, not
+all preservation/prefab/actor requirements in those fixtures. No additional engine, interior or
+utility point is counted for the same generated rooms. General non-strip/joint fitting remains open.
+
 | Capability / acceptance focus | Weight | Baseline points | Current points | Current support and missing exit |
 | --- | ---: | ---: | ---: | --- |
 | Contracts, prototypes and authoring; A21/A31/A41/A43-A52 | 16 | 12 | 14 | Validated relational cores, paint/entrance contracts, gas/power profiles, revisioned utility drafts, canonical requests and scoped utility/consumer intent exist. R08 still needs complete content manifests and project assets. |
-| Layout, packing, routing and partitioning; A01-A12/A37-A42/A45-A50 | 22 | 15 | 17 | Cardinal geometry, atomic library alternatives, mixed size targets, owned configuration/subdivision retries and bounded strip strategies. The complete owned path now supports standalone rooted networks without entrance/host fabrication, including layered room contents. Complete utility-geometry retries now resolve later hard placement failures through native initialization with independent network choices. Writable generated-hull sharing supports compact native utility rooms. It still rejects hybrid/interior-fill; general joint fitting and work metering remain R09/R14. |
+| Layout, packing, routing and partitioning; A01-A12/A37-A42/A45-A50 | 22 | 15 | 18 | Cardinal geometry, atomic library alternatives, mixed size targets, owned configuration/subdivision retries and bounded strip strategies. The complete owned path now supports standalone rooted networks without entrance/host fabrication, including layered room contents. Complete utility-geometry retries now resolve later hard placement failures through native initialization with independent network choices. Writable generated-hull sharing supports compact native utility rooms. Hole-aware strip fitting now meets hard size/count goals through native generation, including several small rooms and request-wide quotas across courtyard islands. It still rejects hybrid/interior-fill; general joint fitting and work metering remain R09/R14. |
 | Interiors, materials and tactics; A25/A27-A36/A43-A44/A52 | 18 | 13 | 15 | Coherent packs, facing, clean approaches, supported-core search and tactical geometry exist. Owned planning now integrates supported whole-core poses and independently audits access after lighting. Unified utilities, operational room staging/lighting and remaining R09/R13 exits stay open. |
 | Owned engine lifecycle, validation and publication; A13-A24/A34-A36/A61 | 20 | 9 | 12 | Disposable previews, callback checks, insertion and conservative clearance exist. Component-backed ownership/retirement and allocation capture now include the complete owned scene. The primary standalone entry freezes exact write intents before allocation and verifies terrain, structures, room poses and complete map membership after shared paused initialization. Hosted/hybrid capture, author sessions, isolation, actual operation and publication remain R10/R17. |
-| Atmosphere and electrical operation; A53-A61 | 12 | 2 | 7 | Current credit is 7/12: closed private-grid InitialOnly gas state/volume/edge checks and transactional filling, plus standalone WiredOnly native cable/converter groups, wall supports and actual receiver/provider membership. The complete standalone schema-two path adds dedicated furnished closets/separate wall APCs and required MV/LV floor service with strict block auditing. Hosted/stable gas, live electrical sources, independent circuits, supply under load and working lighting remain R11-R13. |
-| Replay, editor and release workflow; A22-A24/A51/A62-A66 | 12 | 3 | 3 | Bounded JSON/SVG, paint inspection, stable proposal identities and headless utility draft replacement exist. Full content/context replay, project service, in-game editors, persistence and apply remain R15/R16/R18. |
-| **Total** | **100** | **54** | **68** | Current verified assessment for the expanded-scope 80% goal; bounded native utility-geometry fitting adds one layout point, with inspected-hull/hybrid/operation/editor work still open. |
+| Atmosphere and electrical operation; A53-A61 | 12 | 2 | 7 | Current credit is 7/12: closed private-grid InitialOnly gas state/volume/edge checks and transactional filling, plus standalone WiredOnly native cable/converter groups, wall supports, actual receiver/provider membership and scoped registered solver lists/backlinks. The complete standalone schema-two path adds dedicated furnished closets/separate wall APCs and required MV/LV floor service with strict block auditing. Hosted/stable gas, live electrical sources, independent circuits, supply under load and working lighting remain R11-R13. |
+| Replay, editor and release workflow; A22-A24/A51/A62-A66 | 12 | 3 | 3 | Bounded canonical JSON, native map rendering, paint inspection, stable proposal identities and headless utility draft replacement exist. The bespoke SVG/gallery pipeline is retired. Native theme-pack/goal/profile selection and immutable server saves now exist as a partial authoring slice. Full content/context replay, project service, pack-content editors, undo/redo and apply remain R15/R16/R18. |
+| **Total** | **100** | **54** | **69** | Current verified assessment for the expanded-scope 80% goal; complete bounded courtyard size fitting adds one layout point, with inspected-hull/hybrid/operation/editor work still open. |
 
 Implementation sequence: finish R08 schema/snapshot prerequisites, integrate through R09, then
 R10 lifecycle and operational adapters R11-R13/R17; R15 replay contracts and R16 headless/editor
@@ -2135,7 +2208,7 @@ schema loading, geometric proposals and static exports do not establish runtime 
 | R01 | In progress | `KsProcgenAssemblyPrototypes` and `KsProcgenAssemblyCompiler` implement reusable named members, required/optional multiplicities, entity bindings, complete ordered variants, typed spatial/context/support relations, and normalized core records. Expansion is bounded to 64 members/256 relations, targets must resolve to one instance, support/container cycles and multiple support parents are rejected separately from valid spatial cycles. Theme validation compiles both assemblies and legacy singleton entries; entries and assembly references carry core minima. Loaded fixtures resolve a table/device/optional-chair core and a standing variant. The live office pack now references an explicit desk/seat/console assembly. `KsProcgenPrototypeCapabilityInspector` copies inherited surface, fixture, rotation and container declarations into bounded snapshots and support inspection witnesses; declaration hashes are separate from full content/geometry hashes. Remaining: full schema/replay exit coverage and R02/R06 adapters proving actual placement and insertion; snapshots never certify engine placement. |
 | R02 | In progress | T09a/T15/T15a: normalized floor cores replace whole-pack atomic lists. Mandatory core counts are enforced across all selected packs before optional content, then required pack minima select complete cores. Bounded mandatory continuations revisit earlier poses, whole variants and weighted core choices when later requirements cannot fit, rolling back claims, protected paths, witnesses and copy/anchor metadata. Unrelated optional singletons can be omitted. Office adjacency, chair facing and console seat association are explicit. Required/preferred corner context and clean-path `Near` rules produce persisted geometric witnesses. Authored landings rotate with members and remain root-accessible; accepted Near paths are protected from later furnishing. Floor search revisits member positions, permitted orientations, selected interaction approaches and optional-member omissions. Path searches share a 4096-node room budget. Optional initial cores and repeated density draws use seeded weighted ordering; density placement retries other whole cores when a heavier candidate cannot fit. Semantic hash v20 distinguishes mandatory continuation search. Remaining: joint optional/lighting search and preference optimization, support/container layers, lighting layer checks and engine validation. |
 | R03 | In progress | T01/T02/T03/T04: geometry/theme/entrance profile references, paint and generic/numbered entrance components/prototypes, explicit void-grid host binding, bounded read-only grid snapshot, exact cardinal components, void subtraction, directed wide entrance ownership, scoped labels, conflict checks and stable identity. Geometry-only conversion rejects entrance-bearing blobs. Real doorway/context inspection, constants/envelopes, complete profiles and publication remain pending. |
-| R04 | In progress | Complete configuration contracts, shorthand, request transport, DeclaredNetworks roots and replay identity. A bounded seeded selector checks complete supplied scenes without mixing alternatives. Complete owned interior search retries ordered subdivision preferences within declared configurations after downstream rejection and retains tagged atomic attempt journals. Configuration and layout caps are separate; all reported pipeline work survives failed layouts. Painted-area profiles transport immutable subdivision preferences, room-size goals, fallback permissions and window goals into explicit owned planning. An opt-in rectangular size-goal strategy precedes scalar attempts, with requested/used strategy diagnostics and protected-floor refusal. Bounded global quota allocation across separate rectangular networks is implemented. Bounded complete quota retries after protected seams are implemented. Bounded fitting of L-shaped and stepped networks is implemented. Joint route/room/content choice, general shapes with holes and quota reassignment after content failures remain pending. |
+| R04 | In progress | Complete configuration contracts, shorthand, request transport, DeclaredNetworks roots and replay identity. A bounded seeded selector checks complete supplied scenes without mixing alternatives. Complete owned interior search retries ordered subdivision preferences within declared configurations after downstream rejection and retains tagged atomic attempt journals. Configuration and layout caps are separate; all reported pipeline work survives failed layouts. Painted-area profiles transport immutable subdivision preferences, room-size goals, fallback permissions and window goals into explicit owned planning. An opt-in rectangular size-goal strategy precedes scalar attempts, with requested/used strategy diagnostics and protected-floor refusal. Bounded global quota allocation across separate rectangular networks is implemented. Bounded complete quota retries after protected seams are implemented. Bounded fitting of L-shaped, stepped and courtyard networks is implemented, including shared fitting work and strict mixed-size native output. Joint route/room/content choice, general non-strip fitting and quota reassignment after content failures remain pending. |
 | R05 | In progress | Component analysis checks local groups, forbidden joins, host bypasses, roots, sealed thresholds and complete floor assignment with shared work limits. Procedural adapters construct routes, grow owned floor, and partition each network independently. Opt-in rectangular strips fit simultaneous final floor-size bands including wall loss, then use the same protected-route seam solver. Themes, furnishings and bounded lighting retain entrance reservations. A final interior audit checks room-local clean access, interaction/door approaches and the complete post-placement entrance scene; vault-required furniture and floor fixtures are blockers. Local fallback cannot remove inter-network walls. Independently revalidated local tactical queries measure chokes, alternate routes and redundancy with shared budgets; host detours cannot join groups. Owned materials preserve primary entrance tiles and read-only floor, check doors, cover separators and reject shared wall conflicts. Owned hull/window adapters reserve entrance/host spans, retain unknown shell, validate explicit directional exterior facts, count fixed windows without writes and substitute compatible theme prototypes under shared budgets. A complete owned proposal composes these stages atomically; legacy generation entry points reject entrance-aware inputs. Alternate trees, arbitrary-shape/joint room fitting, prefab/hybrid/interior-fill composition, live windows, full-host tactical ownership and engine validation remain pending. |
 | R06 | In progress | T10/T12/T13/T15: `KsProcgenContainerPreflightSystem` delegates live eligibility to engine APIs. `KsProcgenContainerStageSystem` owns disposable paused container-only previews, inserts members in dependency order, checks actual membership/parent transforms and rolls back failures. Explicit initialization verifies selected lifecycle, membership and managed-slot filter compatibility afterward and is idempotent. Insertion-veto fixtures cover preflight, commit and actual container insertion without replaying attempts during verification. Surface/spatial relations remain unsupported there; temporary root coordinates are not validated layout poses. A joint room-core adapter now owns optional grid floor/wall terrain with detached masks, cumulative allocation/initialization limits and exact frame/terrain verification. Fresh initialized scene inspection rejects foreign entities, unsupported shapes and member/wall hard overlaps; continuous fixed-actor cardinal sweeps enforce conservative floor coverage and declared vault/blocking exclusions without moving the actor. The wall lattice is a permitted structural union. The primary layered planner now materializes standalone owned scenes through the shared lifecycle. The complete owned scene now reaches the shared fixture/cardinal observer. Remaining: hosted/hybrid materialization, support settling, actual actor/machine/chair/door operation, gas and working-light checks, side-effect isolation and publication. Verification flags remain false; the standalone tile stage still rejects furniture. |
 | R07 | In progress | Stable declaration/geometry identities, detached versioned JSON diagnostics, exact fresh-report comparison, escaped SVG review samples and a localized Debug paint-snapshot command are implemented. Metadata and geometry truncation are separate; unverified engine claims remain false. Remaining: full request work metering, engine/content replay, richer editor workflows, complete acceptance/release coverage and the parent rewrite exits. |
@@ -5695,10 +5768,20 @@ by commenting out those guards. R08-R18 extend and refine R01-R07 rather than er
     creation and deletion alone are not rollback of global side effects.
     Native prerequisite for R12: `NodeGroupSystem.ForceUpdate` drains all pending group/reflood/
     removal queues. It cannot certify a single owned grid without also processing unrelated work.
-    The initial `KsRebuildOwnedPowerNodes` entry now scopes known power nodes through the native
-    rebuild algorithm. The scoped-node ledger records its tested domain and remaining queue/frame
-    cases and retained-stage integration. Complete those exits before using it for activation;
-    node topology does not establish isolation of power reconnect, solver or initializer effects.
+    `KsRebuildOwnedPowerNodes` scopes known power nodes through the native rebuild algorithm;
+    the native-node ledger records the verified queue/frame/inspection scope and WiredOnly stage
+    integration. The scoped power-reconnect ledger below adds solver membership/backlink checks.
+    Broader source, solver, battery-sync and initializer isolation remain activation prerequisites.
+  - [x] Native power-reconnect prerequisite: `PowerNetSystem.Update` still drains both global
+    reconnect queues before the solver. Add a bounded scoped adapter around the existing
+    `DoReconnectApcNet`/`DoReconnectPowerNet` implementation, after inspected native topology.
+    Preflight registered network/load/supply/battery identities, complete owned group membership,
+    provider/receiver backlinks, component ownership, paused state and all writable target lists.
+    Reserve reconnect work before mutation, remove only selected completed entries from the
+    queues, and preserve unrelated pending networks. Repeated checks must inspect rather than
+    reconnect. Prove two-grid queue isolation, foreign references, exact budgets/cancellation and
+    unchanged battery/load/solver state. This is a prerequisite to supply validation, not permission
+    to tick the global solver or claim live electrical operation.
   - [ ] Make stage destruction, disconnect, invalidation and cancellation release retained state
     exactly once. Derive limits from declared request budgets rather than simply removing caps.
     Exit: A61/A65 plus existing initializer, insertion-veto, nested-callback and off-map cleanup tests.
@@ -5826,6 +5909,568 @@ by commenting out those guards. R08-R18 extend and refine R01-R07 rather than er
     an actual failed result with deliberate source mutation. The new atmosphere, electrical and
     utility-draft fixtures use `KsProcgenGameTest`; requiring zero skipped cases remains a gate.
 
+### Preview compartmentalization (2026-10-27, R10/R15/R16)
+
+The preview pipeline must keep generation, authoritative staging and presentation independently
+maintainable. The offline showcase renderer must not become a second generator or an apply path.
+New editor work must observe these same boundaries rather than growing another combined preview
+controller.
+
+- [x] Replace the two combined offline renderers with small entry points and a private
+  `Klovn/Tools/_KS14/Procgen/preview` package. Python file orchestration, sprite verification,
+  card markup, viewport coordinates, diagnostic layers, page markup, CSS and interaction script
+  now have separate homes. Pure SVG layers consume exported values and never load engine assets.
+- [x] Isolate sprite rendering in `preview/sprites/ShowcaseSprites.psm1`, exporting only
+  `Invoke-ShowcaseSpritePreview`. Private asset, frame, mapping, scene, wiring, encoding and batch
+  modules receive an explicit invocation context. No dot-sourced drawing helper or shared mutable
+  image cache is installed into the caller's scope. Each invocation releases images in `finally`;
+  local frames/graphics/attributes have their own disposal scopes, including error paths.
+- [x] Keep cable drawing as an explicit final scene pass. Replace repeated whole-cable scans with
+  one cardinal occupancy lookup per voltage tier; preserve native masks and all output pixels.
+- [x] Inspect the existing server split: planning, assembly placement, allocation transaction,
+  component-backed stage ownership/retirement, paused initialization, atmosphere/electrical
+  adapters and bounded diagnostic presentation remain separate systems. Offline renderers do
+  not hold live stage handles or entity references. Preserve this separation in future work.
+- [x] Add seven presentation behavior tests using the real exports: unchanged gallery/SVGs and
+  PNGs, final nonempty wire overlay, pure composition, escaping, exact plan/byte sprite matching,
+  missing-sprite fallback, invalid export rejection, private module exports, repeated invocation,
+  intervening render failure and exclusive source-image access after cleanup.
+- [ ] Complete R16's server job coordinator and client workspace with explicit revision/cancel
+  state; presentation receives detached bounded reports only. Permission checks, authoritative
+  receipts, ownership and apply remain server responsibilities. Offline images do not satisfy
+  this exit or certify native runtime appearance, power supply or publication.
+
+Module ownership and commands are documented in
+[`Klovn/Tools/_KS14/Procgen/README.md`](../Tools/_KS14/Procgen/README.md).
+The first post-refactor comparison retains all 15 recorded preview-artifact byte hashes, including
+six PNGs, five SVGs, two overviews, the gallery and sprite manifest. Both existing rendering entry
+points retain their arguments. Rendering failures remain explicit; no placeholder artwork is
+introduced. Capability credit remains **68/100**: this is a maintainability rewrite, not a newly
+completed generator/editor workflow.
+
+Verification: seven Python presentation tests pass, including the Windows module-session test.
+Three isolated controls (wrong final wire layer, bypassed sprite hash and omitted cache disposal)
+each produce the intended assertion failure; each source restores to its exact original bytes.
+The normal Release integration-project build passes with localization hooks enabled. That build
+also exposed and fixed an existing missing server compile reference to ImageSharp in the unfinished
+resource-capture prerequisite; no runtime resource-closure credit is awarded for that dependency
+repair. Native checks also found two malformed `/Audio//Weapons/pierce.ogg` declarations on the
+cardboard table; corrected them to the existing canonical asset rather than weakening the resource
+path guard. Staging now preserves the underlying resource error message for diagnosis, and invalid
+path summaries are bounded. Final native showcase verification passes **5/5**, with zero failures
+or skips (`ks_preview_final_native.trx`), following the normal Release build. All 33 recorded
+showcase artifact hashes still match. No showcase exports are regenerated against the unfinished
+schema-11 prerequisite in this batch. The older
+schema-10 Release/Debug gates remain historical evidence and are not relabeled as schema-11 tests.
+
+### Complete source-layout preparation before map allocation (2026-10-28, R08/R09/R10, in progress)
+
+- [x] Extract complete eligibility, geometric selection, binding reconciliation, terrain and entity
+  preparation into `KsProcgenLayoutInstantiationSystem.TryPrepare`, without requiring an owned
+  map/grid/allocation transaction. Preserve cumulative preparation allowances and source identity.
+- [x] Return a system-bound single-use layout plan. Expose immutable provenance, counts, eligibility
+  and explicit ungenerated residuals; keep mutable packing objects and native load inputs private.
+  Consume a materialization attempt before definition callbacks, recheck the frame and remaining
+  allocations before terrain writes, and retain final whole-layout verification.
+- [x] Keep the existing combined adapter as a wrapper around preparation/materialization. Preserve
+  its original frame identity across preparation callbacks. A failed write attempt still requires
+  retirement of the complete caller-owned transaction.
+- [ ] Verify preparation success/failure with no map or member allocation, frozen caller settings
+  and source bytes, captured revision/hash metadata, immutable residual review, frame/budget/cancel
+  entry preconditions, definition drift, foreign-system plans and failed-attempt reuse. Retain all
+  source capture, alternative selection, native generation, roundtrip and sandbox regressions.
+- [ ] Integrate the plan with the primary owned lifecycle and post-MapInit source verification,
+  then inspected physical ports/hull and composed residual generation/utilities. No primary library
+  or entrance-aware guard is removed by this planning prerequisite. Current credit stays **69/100**.
+
+### Native pose eligibility for automatic layout alternatives (2026-10-28, R08/R09/R14, verified pose subset)
+
+- [x] Add detached, immutable eligibility for complete family/option/rotation identities to packing.
+  Preserve whole-alternative reservation, seeded fit ordering, routing and residual semantics.
+  Reject unknown alternatives/rotations instead of silently weakening constraints.
+- [x] Derive eligible orientations from captured native member poses and the composed member/family
+  rotations before geometric selection. Exclude a whole orientation when any member forbids its
+  rotation or has an unsupported anchored pose. Record the rejected orientation, asset and reason.
+  Bound all checked orientations and members across selected and unselected alternatives.
+- [x] Keep complete source/terrain preparation and final native verification after selection.
+  A declared generate-only alternative needs no fabricated room binding; its residual cells remain
+  explicitly ungenerated. This adapter still does not produce complete hybrid maps.
+- [x] Verify automatic fallback between L/three-member and four-member alternatives, composed
+  rotations, exact/short shared eligibility budgets, all-ineligible prefab/hybrid outcomes,
+  immutable constraints and unknown/invalid eligibility. Retain earlier preparation and native gates.
+  Initial normal Release passed 918 units and 359/360 integrations; the sandbox gate rejected
+  `Array.AsReadOnly` in shared code. Replaced it with the existing sandbox-compatible immutable-list
+  helper. Initial evidence:
+  `.ks_procgen_eligibility_release.log`, `ks_eligibility_units.trx`, `ks_eligibility_native.trx`.
+  Final normal Release build passes **918 units / 360 selected integrations**, zero failures/skips.
+  Native inventories retain all previous 350 case names and add ten source-eligibility cases; the
+  unit run includes sixteen new eligibility cases. The late-room preparation regression now uses
+  a separate source asset with an opaque registered override so it still tests full preparation
+  beyond the earlier pose filter. Eleven implementation/test hashes are stable through build/tests;
+  UTF-8/no-BOM, CRLF, trailing whitespace and `git diff --check` checks pass.
+  Final evidence: `.ks_procgen_eligibility_final.log`,
+  `Content.Tests/TestResults/ks_eligibility_final_units.trx`,
+  `Content.IntegrationTests/TestResults/ks_eligibility_final_native.trx` and
+  `.ks_procgen_eligibility_final_sources.json`. This is a focused Release gate, not Debug or the
+  full repository suite. No preview/rendering implementation is added.
+- [ ] Extend eligibility beyond authored poses to complete source/component compatibility and
+  retry complete candidates after native initialization failures, retiring the complete failed
+  transaction and sharing all search/preparation/allocation allowances across attempts.
+- [ ] Extract complete selection/binding/terrain/entity preparation into a private preallocation
+  layout plan factory. The current adapter receives an already-owned map/grid; the primary entry
+  must finish planning before allocating its map rather than using a populated speculative map as
+  its plan. Preserve exact source revision, definition identity, budgets and single-use load inputs.
+- [ ] Bind the plan to the primary owned lifecycle, including paused map initialization, complete
+  map-member inspection, cleanup/retention and post-MapInit source verification. Inspect physical
+  source ports/hull and compose residual generation/routes/utilities before accepting hybrid output.
+  Do not remove existing library/entrance guards until their actual exits pass. No additional
+  expanded-scope credit is claimed for this prerequisite subset; current **69/100**.
+
+### Prepare complete selected room graphs before writes (2026-10-28, R08/R09/R10, verified prerequisite)
+
+- [x] Separate captured entity-image decoding, prototype reconstruction and rebased pose checks
+  from native allocation/loading. Use internal single-use preparations bound to their originating
+  system; recheck source definitions, owned frame and allocation allowances when consuming them.
+- [x] Prepare every selected room's complete entity inputs alongside its terrain before writing
+  any selected terrain or allocating members. Keep shared image/member allowances and final
+  whole-layout verification. Apply the same ordering to standalone complete-room copying.
+- [x] Verify later-room rotation rejection leaves earlier rooms and all terrain unwritten;
+  preparation allocates nothing; plans cannot be consumed twice or on another frame after use;
+  cancellation/definition drift reject before allocation; unsupported anchors leave terrain empty.
+  Run the retained native generation, capture, report, roundtrip and sandbox regressions.
+  Normal Release build and **350 selected integration cases pass**, with zero failures/skips.
+  The TRX inventory retains all 343 cases from the native renderer replacement gate and adds
+  seven preparation cases. Implementation/test source hashes remain unchanged during the run.
+  Evidence: `.ks_procgen_preparation_release.log`,
+  `Content.IntegrationTests/TestResults/ks_preparation_release.trx` and
+  `.ks_procgen_preparation_sources.json`. The five changed implementation/test files pass
+  UTF-8/no-BOM, CRLF and trailing-whitespace checks; `git diff --check` passes. This is a focused
+  Release gate, not a full repository or Debug run. No renderer work is added.
+- [ ] Follow with complete source-aware alternative retries, physical source/port inspection and
+  composed residual generation. Preparation alone does not certify a hybrid candidate or remove
+  the primary library/entrance-aware guards. Expanded-scope credit remains **69/100**.
+
+### Automatic source-layout binding (2026-10-28, R08/R09/R10/R14, verified prefab-selection subset)
+
+- [x] Run packing internally from the captured project area/library; do not accept an editable
+  public packing result as write authority. Bind every selected family/option/member to its source
+  asset, compose member and placement transforms, and require exact ownership-mask agreement.
+- [x] Preflight complete selected alternatives with shared room, terrain, source-probe, entity and
+  image allowances before writes. Reuse prepared terrain plans instead of rescanning each source
+  during materialization. Freeze caller budget settings before callbacks run.
+- [x] Copy every member of each selected alternative inside the existing owned transaction. Keep
+  each room's entity/network references independent, then reverify all room graphs and terrain
+  after all selected rooms have started. Reject cross-room late mutation and frame/map drift.
+- [x] Verify automatic three-room L-versus-four-room selection at nonzero target coordinates,
+  composed rotations, shared budget exhaustion before writes, late cross-room mutation and
+  revision/entrance-contract guards. Normal Release build and **324 selected native/sandbox tests**
+  pass with zero failures/skips, including 10 new layout cases. Evidence:
+  `.ks_procgen_layout_verified.log`, `.ks_procgen_layout_final.log`, `ks_layout_verified.trx` and
+  `ks_layout_final.trx`. Existing source, terrain, generation and ordinary-import cases remain green.
+- [ ] Finish entrance-aware packing and residual generation against inspected source interiors,
+  including actual ports, hull, gas/electrical domains and clean cardinal access. The current adapter
+  explicitly returns ungenerated residual cells and retains the legacy entrance-aware guard.
+- [ ] Add whole-alternative retries after native/physical rejection, sharing all search/staging
+  allowances and retiring the failed transaction; never substitute individual members from another
+  option. Connect the composed result to the primary owned lifecycle before crediting a hybrid exit.
+
+`KsProcgenLayoutInstantiationSystem` materializes the automatically selected prefab portion only.
+It is not a complete hybrid generator or a public editor/apply operation. Source constants and
+physical certification remain open. Expanded-scope credit stays **69/100**.
+
+### Replace bespoke previews with the existing map renderer (2026-10-28, user-directed)
+
+- [x] Remove the separate Python/PowerShell sprite renderer, SVG/gallery pipeline and associated
+  presentation-only assets/tests. Use `Content.MapRenderer` for native map images and its existing
+  viewer output; do not retain a second procgen drawing pipeline. Keep bounded diagnostic JSON,
+  generation, ownership, validation and native map export as feature code.
+- [x] Extend the native map renderer with `--wires-last`: reveal actual installed cable sprites
+  through native subfloor appearance and paint them in a final entity pass. Process queued native
+  appearance changes explicitly in the headless renderer. Own sprite-cache/layer/tint images and
+  streams, and fix grid-relative descendant placement and fractional sprite offsets.
+- [x] Update map examples, regeneration commands and section 21.4 to the native rendering path.
+  Remove old custom gallery, sprite manifest, PNG/SVG composites and SVG-only assertions. Retain
+  canonical JSON/report tests and the native generation/map-roundtrip checks.
+- [x] Finish the post-removal native renderer and retained-feature regression gate. The normal
+  Release renderer build passes; all five native maps render with the final appearance,
+  offset and relative-position changes. All **343 selected integration cases pass**, with no
+  failed or skipped cases, and renderer/diagnostic source hashes remain stable through the gate.
+  Evidence: `.ks_procgen_render_replacement_final.log` and
+  `Content.IntegrationTests/TestResults/ks_render_replacement_final.trx`.
+  Native PNG signatures and dimensions are checked; the wired-office image is visually reviewed.
+  The thin regeneration coordinator passes PowerShell syntax validation; the full coordinator
+  was not rerun. This is a focused Release gate, not the full repository suite or a Debug gate.
+
+The bespoke preview replacement is complete. Native images live under
+`Klovn/Docs/Examples/Procgen/Showcases/Native/`; `--wires-last` is an optional native renderer
+mode, not a separate compositor. This maintenance change adds no procgen capability credit:
+expanded-scope implementation remains **69/100**, with native hybrid residual generation,
+physical certification and primary lifecycle integration still pending.
+
+### Captured room terrain and entity composition (2026-10-28, R08/R09/R10/R14, verified bounded materialization)
+
+- [x] Add an immutable source-bound terrain plan that selects exactly the extracted room mask,
+  checks source/extraction identity, uses captured runtime tile IDs and keeps flags and variants.
+  Rebase source atlas coordinates before applying the room's clockwise turn and target origin.
+- [x] Compose native tile orientation using the actual engine convention: ordinary rotation codes
+  decrease for clockwise room turns; mirrored codes increase because native mirroring is applied
+  after rotation. Preserve the mirror bit. Reject unsupported orientation codes instead of guessing.
+- [x] Write through the native map API only within a captured, owned, paused, uninitialized unit
+  grid with splitting disabled. Check map identity, allocation allowances and cancellation at write
+  boundaries. Verify all selected tiles after callbacks; do not clear cells outside the footprint.
+- [x] Combine terrain and the verified entity graph adapter in `TryInstantiateRoom`. Return one
+  internal immutable receipt only after entity startup and final terrain verification succeed.
+  Failure can leave writes in the private map and requires caller-owned retirement of the entire
+  captured transaction; no partial receipt authorizes retaining or publishing the failed scene.
+- [x] Verify 32 native orientation combinations, L-shaped captured footprints plus entity graphs
+  at all quarter turns, positive/negative atlas origins, preserved surrounding cells, source identity
+  mismatch, budgets, cancellation and entity-startup tile drift. Run retained native generation,
+  ordinary map-import/simulation and actual sandbox cases. Strengthen the four combined-footprint
+  cases with anchored tables, proving terrain exists before native anchoring/startup.
+- [ ] Integrate complete room instances into the primary library/hybrid pipeline. Select whole
+  layout alternatives atomically, accumulate terrain/entity/probe/image allowances across all
+  placements, fill residual areas, and verify native ports and composed cardinal access paths.
+  Keep host/constant, entrance-aware packing and primary library guards until their rewrites pass.
+
+Default allowances per prepared room are 65,536 selected tiles and 262,144 source-grid tile probes;
+accepted ranges are 0-65,536 and 0-1,048,576 respectively. Scans charge each decoded tile in the
+selected source grid, including cells outside the selected room. These are bounded local counters,
+not complete end-to-end CPU/memory accounting. The eventual multi-room caller must share its
+remaining allowances across candidates rather than resetting them for each copied room.
+
+No preview rendering or new editor workflow is part of this adapter. Client appearance, legacy and
+custom reference closure, physical door/hull/access checks, operational activation and publication
+remain unverified. `CopyReady` and `ComponentReferencesVerified` remain false; the expanded-scope
+estimate stays **69/100** pending an end-to-end capability exit.
+
+Verification: normal Release build with localization hooks enabled and **314 selected integrations**
+pass with zero failures/skips: 234 source-map cases (46 new terrain/materialization cases), 16 captured
+prototype cases, 56 retained primary owned-generation cases, 5 hole-aware cases, 2 ordinary native
+map-import cases and the actual sandbox test. Four changed C# source hashes remain stable during
+that gate. Evidence: `.ks_procgen_room_terrain_final.log` and
+`Content.IntegrationTests/TestResults/ks_room_terrain_final.trx`. After strengthening the four
+combined-room cases to use anchored structures, another normal Release build and all six targeted
+combined-room/atlas-origin cases pass (`.ks_procgen_room_terrain_anchors.log`,
+`ks_room_terrain_anchors.trx`). The runtime implementation is unchanged by that test-only hardening;
+the six-case follow-up is not represented as another 314-case full rerun. Four source files pass
+UTF-8-without-BOM, CRLF and whitespace checks. No fresh Debug, full station-map suite or new
+renderer/export artifacts are claimed.
+
+The L-shaped fixture proves copying its captured footprint and actors, not room enclosure or clean
+access. The combined adapter's caller must retire its owned map after any failure, including an
+entity image-budget rejection after terrain writes. Final terrain verification rejects tile edits
+made during entity startup. Native grid/frame identity and the allocation capture remain mandatory;
+this is not authorization to paste into an arbitrary live or host map.
+
+### Native room graph instantiation (2026-10-28, R08/R09/R10/R14, verified bounded prerequisite)
+
+- [x] Add a native allocation path that reserves all room identities before component loading,
+  using independent captured loading and metadata prototype images. Keep the allocation capture
+  and caller-owned cleanup contract; do not create a separate renderer/export staging path.
+- [x] Extend native map component loading to accept captured default mappings instead of live
+  prototype-manager mappings. Retain native merge/copy/container hooks and modification ticks.
+- [x] Add strict per-instance entity/network/map reference decoding. Unknown graph aliases throw;
+  invalid world defaults remain invalid. Do not silently drop links while copying a room.
+- [x] Implement an internal source adapter for a paused, owned, uninitialized grid. Preflight full
+  override bodies and image/allocation allowances, rebase/rotate root poses consistently with
+  integer cell transforms, retain child-local poses, load all components, then initialize members
+  in parent-first order. Cancellation/failure returns no successful member receipt; the owning
+  transaction must retire every captured allocation.
+- [x] Verify actual native values and supported parent/reference graphs, independently repeated
+  copies, all quarter turns, component removals, containers, strict dangling references and rollback.
+  The 24 new native cases also cover unprototyped members, captured partial-override merging during
+  allocation-time live prototype drift, image/allocation bounds, cancellation, initializer allocations,
+  explicit MapInit suppression and late startup changes to earlier roots, free children and metadata.
+- [x] Verify all members after every startup callback has returned. Reject changed parent/map,
+  lifecycle, deletion queue, prototype identity/image, anchoring and local-rotation constraints.
+  Roots and free children must retain their authored poses; native containers canonicalize contained
+  child poses through the ordinary container hooks. Recheck the owned map identity and transaction.
+- [x] Add bounded captured terrain copying with exact source-mask selection, flags/variants and
+  native rotation/mirroring composition, plus a combined terrain/entity receipt. The preceding
+  terrain-composition ledger records its verification; full hybrid integration remains unchecked.
+- [ ] Wire this adapter into primary hybrid generation with tiles, complete layout alternatives,
+  generated residual regions and composed physical access/port checks. Keep primary guards until
+  those requirements pass. General constant/host capture, operational startup isolation and
+  publication remain separate open requirements.
+
+Verification: normal Release build with localization hooks enabled and **268 selected integrations**
+pass with zero failures/skips: 188 source-map cases (24 new native copy cases), 16 captured-prototype
+cases, 56 retained primary owned-generation cases, 5 hole-aware generation cases, 2 ordinary native
+map-import/simulation cases and the actual sandbox test. Six changed C# source hashes remain stable
+through the final gate; UTF-8 without BOM, CRLF and whitespace checks pass. Evidence:
+`.ks_procgen_room_copy_complete.log` and
+`Content.IntegrationTests/TestResults/ks_room_copy_complete.trx`. Earlier runs exposed and corrected
+native anchoring and premature MapInit behavior; the final gate includes those assertions. The
+resumed 264-case gate and subsequent 267-case callback audit remain intermediate evidence, not the
+final 268-case inventory. No fresh Debug, full station-map suite, source-wide custom/client schema
+closure, operational activation or publication is claimed.
+
+The caller must own the paused uninitialized map/grid and allocation capture, enforce the shared
+allocation ceiling (at most 256), and retire the entire captured transaction after failure. Default
+per-copy image allowance is 4,194,304 characters (supported 0-67,108,864). Anchored members must be
+grid roots at exact tile centers; offset/nested anchors reject rather than silently snapping. A
+nonzero required rotation of a no-local-rotation root rejects. Registered overrides with known
+inspection gaps reject; ignored client overrides remain captured but are skipped by the native
+server loader, so complete client appearance is not certified. Unknown typed world links throw.
+This does not establish generic legacy-string reference schemas or isolation of arbitrary startup
+side effects. `CopyReady` and `ComponentReferencesVerified` remain false.
+
+No capability credit is awarded for this internal prerequisite: **69/100** remains the verified
+expanded-scope assessment. Do not treat this adapter as an editor feature or complete hybrid workflow.
+No renderer, gallery, export or showcase artifact is changed in this batch.
+
+### Authored room component images (2026-10-27, R08/R09/R10/R14, verified prerequisite)
+
+Showcase presentation is closed for this phase. Continue the actual generator through immutable
+prefab instantiation and hybrid composition; do not expand galleries or renderer infrastructure.
+
+- [x] Retain canonical immutable component override bodies for each extracted room member,
+  including ignored client component data, tags and nested data. Keep removal lists and
+  map-local reference witnesses separate. Parser nodes never escape the source adapter.
+- [x] Bump extraction identity to schema 3 and bind every returned component body to its hash;
+  source hashes and override type names alone cannot describe an extracted blueprint.
+- [x] Bound selected image nodes, characters and depth. Share node/character allowances across
+  all selected rooms, including overlapping atlas masks; reject atomically without a partial
+  extraction. Excluded entities consume source traversal work but no selected-image allowance.
+- [x] Verify authored values, detached decode mutation isolation, cumulative exact/short limits,
+  structural bounds, reference preservation and retained source-extraction regression cases.
+  Decode an authored light into the actual native component type and assert radius/energy; retain
+  ignored client sprite overrides without marking their reference inspection complete. Require
+  callers constructing extracted members to supply their override image collection explicitly.
+- [ ] Instantiate complete rooms from these images and captured prototype defaults, allocating
+  members before remapping references and initializing them. Preserve hierarchy, removals,
+  tile metadata, rotation and anchoring; prove independent repeated copies and cleanup.
+- [ ] Compose automatically fitted complete alternatives with procedural residual areas in the
+  primary owned hybrid transaction, then verify physical ports and all required access paths.
+
+The first three steps preserve source data; they do not certify generic component dependencies,
+container/support closure, native load-hook isolation or activation. `CopyReady` and
+`ComponentReferencesVerified` remain false. Keep the primary hybrid/library guards until actual
+instantiation and composed validation are implemented. No new capability point is assigned:
+**69/100** remains the verified expanded-spec estimate.
+
+Selected-image defaults: 262,144 nodes, 4,194,304 canonical characters and depth 64. Accepted limits
+are 0-1,048,576 nodes, 0-16,777,216 characters and depth 1-128. Zero image allowance permits only
+selections without component override images. Existing source-map decoding, parent-graph,
+mask-selection and prototype-default allowances remain independently enforced. Budget exhaustion
+reports `RoomEntityOverrideImageBudget`; excessive image nesting reports
+`RoomEntityOverrideDepthBudget`. This is not a claim of complete end-to-end CPU/memory accounting.
+
+Verification: normal Release build passes with the localization hooks enabled. All **181 selected
+integration tests pass**, with zero failures/skips, covering the source-map adapter, captured
+prototype allocation and the actual sandbox test (identified by its TestMethod class, rather than
+its generic `Test` display name). The new override-image fixture contributes 13 cases. Six changed
+C# source hashes remain stable throughout the final build/test run; all six retain UTF-8 without
+BOM, CRLF and no trailing whitespace. Evidence: `.ks_procgen_override_images_final.log` and
+`Content.IntegrationTests/TestResults/ks_override_images_final.trx`. No fresh Debug or full station-map
+suite is claimed. The final gate follows a compiler-caught nullable output contract after making
+image collections required; the helper now explicitly guarantees a non-null collection on success.
+No preview renderer, gallery, export, screenshot or showcase artifact is changed in this batch.
+
+### Referenced resource byte capture (2026-10-27, R08/R09/R10/R14, observed scope verified)
+
+Manifest schema 11 is verified for the observed native resource scope. Observed `ResPath` and
+`SpriteSpecifier` values now retain detached VFS bytes and SHA-256 identities. Explicit sprite
+observation is necessary because the native RSI writer does not pass its serialization context
+into its nested path write; entity-based icons likewise need explicit typed entity observation.
+This does not discover arbitrary string fields or ignored client/custom component schemas.
+`FullContentClosureVerified`, source `CopyReady` and `ComponentReferencesVerified` remain false.
+
+- [x] Capture files and referenced RSI folders (metadata plus every declared state frame), with
+  compiled `.rsic` metadata fallback. Canonicalize native rooted/relative texture forms; preserve
+  explicit source-resource seed provenance separately from candidate roots and discovered refs.
+  Hash discovered paths/states and exact file identities into the detached prototype image.
+- [x] Add independent allowances for resource-reference occurrences, file count, per-file and
+  aggregate bytes, visible directory entries, RSI states and JSON depth. Defaults are respectively
+  65,536 references, 4,096 files, 16 MiB/file, 128 MiB total, 16,384 directory entries,
+  16,384 states and depth 32. Charge references/visible directory entries before deduplication;
+  use a one-byte sentinel to detect over-limit nonseekable input without reading an entire file.
+- [x] Fail atomically on missing/invalid resources and malformed RSI metadata. Dispose streams on
+  success and failure; return resource-specific issues rather than unrelated prototype errors.
+  Revalidation converts missing/invalid captured resources into manifest drift. Stop processing
+  further definitions after the resource observer has already recorded an issue.
+- [x] Pass 36 focused real-engine resource cases: detached/read-only bytes, same-size drift,
+  matching parent-body checks, automatic path/RSI/entity-icon observation, canonical path forms,
+  directory ordering and repeated entry work, exact/chunked nonseekable reads, invalid contracts,
+  missing/throwing resources, folder/compiled RSI metadata and frames, state presence/duplication,
+  state/JSON-depth allowances and no partial manifests. The initial compiled fixtures exposed a
+  bad PNG IDAT CRC in test data; corrected the fixture bytes without weakening native validation.
+  Evidence: `ks_resources_focused_fixed.trx`, `.ks_procgen_resources_focused_fixed.log`.
+- [x] Verify two source-only path/texture override cases join extraction identity, preserve
+  candidate-root authority, reject missing bytes and change replay identity on same-size drift
+  without loading source entities. Verify two selected/unselected candidate cases retire owned
+  stages after resource drift. All 40 new cases pass together in
+  `ks_resources_control_positive.trx`; the preceding broad preflight passes 933 cases with no
+  failures/skips, retaining the earlier tests. The final broader gate must include both newly
+  added ownership cases as well. Evidence: `.ks_procgen_resources_regressions.log`,
+  `ks_resources_release_regressions.trx`.
+- [x] Prove four compile-valid isolated controls: omitted ordinary path observation causes three
+  assertion failures; omitted whole-image byte comparison causes three; deduplicating resource
+  references before charging causes one; omitting override resource seeds causes two. Restore
+  every mutated source to its original bytes in `finally`. All 40 then-current new cases pass on
+  restored sources. Evidence: `.ks_procgen_resources_controls_audit.log`, control build/test logs
+  and `ks_resources_control_restored.trx`.
+- [x] Reject empty/whitespace entity-based sprite IDs instead of letting them disappear through
+  the optional-entity-reference sentinel path. Two added cases plus the preceding 40 new cases
+  and the existing native office probe pass together: **43/43**, zero failures/skips, in
+  `ks_resources_final_focused.trx`. The new-case total is now **42**.
+- [x] Complete final normal Release/fresh Debug gates: each passes 891 units, 937 integration/
+  sandbox cases and 31 serialization cases, zero failures/skips; inventories agree and preserve
+  every earlier case. All 27 source hashes remain unchanged. Evidence:
+  `.ks_procgen_resources_gates_audit.log`, `.ks_procgen_resources_final_audit.log`, and
+  `ks_resources_{release,debug}_{units,integration,engine}.trx`.
+  These supersede the earlier schema-10 configuration checkpoint for the observed resource scope.
+- [x] Measure the native office against unchanged defaults: 649 combined definitions,
+  7,253 typed reference occurrences, 133,845 canonical nodes and 2,987,550 canonical characters;
+  1,226 resource occurrences, 327 unique resource references, 936 captured files and 3,819,355
+  detached bytes. The four-character canonical reduction follows the corrected table sound
+  paths. Both elevated prototype limits and unchanged defaults capture identical images.
+  The one legacy `femaleMask` declaration-schema gap remains explicit.
+- [x] Regenerate all five schema-11 showcase exports and installed native maps; save/load checks
+  pass and installed bytes match. Validate 72 sprite-source hashes and six output/plan associations;
+  the six sprite PNGs retain exact prior bytes. Refresh both browser overviews and verify five
+  loaded images, two modes and five nonempty working overlay controls. Preserve six historical
+  review files. Evidence: `.ks_procgen_resources_showcases.log`, `ks_showcases.trx`,
+  `.ks_procgen_resources_browser_audit.log`, `.ks_procgen_resources_final_audit.log`.
+- [ ] **R14 resource preprocessing rewrite:** VFS enumeration deduplicates internally before
+  exposing entries. Its hidden raw enumeration work is not metered by the visible-entry cap.
+  ImageSharp identifies compiled PNG metadata before the expanded JSON length check; native
+  metadata decompression/decoder work is likewise trusted preprocessing. Add a bounded native
+  enumeration/metadata adapter before claiming a hard per-operation CPU/allocation limit or a
+  responsive resumable job. Current byte/state/JSON bounds do not prove that stronger property.
+- [ ] **R14 resource capture profiling:** instrument file opens, hashing and repeated parent-body
+  checks before optimizing the new byte capture. The broad preflight took 14m26s for 933 cases;
+  the prior schema-10 Release run took approximately 6m31s for 895 cases. These different runs
+  and workloads do not establish causality or a controlled performance ratio. Measure individual
+  stage operations and test-pool overhead. Any reuse must bind an immutable resource revision or
+  perform a fresh comparison at the required authority boundary; do not hide drift with a cache
+  keyed only by file path or timestamps.
+- [ ] Complete ignored client/custom/legacy resource schemas, code identity and portable native
+  asset capture/import. Resource snapshots alone do not validate image pixels, shader/animation
+  appearance, actual audio decoding, native client rendering or portable replay publication.
+
+Capability credit remains **68/100** while this prerequisite is verified. Helpers and additional
+assertions do not constitute a completed authoring, generation or publication workflow.
+
+### Clothing schema and explicit string resource paths (2026-10-27, R08, in progress)
+
+- [x] Audit the `femaleMask` gap against current shared/server/client code. The field has no
+  consumer; the remaining `ClothingMask` enum is unused. Current client equipment visuals select
+  inventory displacement maps by sex. Do not reintroduce a dummy data field to silence validation.
+- [x] Explicitly migrate the two skirt bases and the towel base: remove their obsolete active
+  `femaleMask: UniformTop` declarations with inline KS14 comments preserving the old value and
+  explaining the current displacement mechanism. Keep public enum compatibility; do not weaken
+  unknown-field detection or silently discard arbitrary future declarations.
+- [x] Add an opt-in `KsResourcePathStringSerializer` in shared serialization code and annotate
+  `ClothingComponent.RsiPath`. Preserve its public string/YAML representation while forwarding
+  resource semantics through native `ResPath` serialization and validation. It has no dependency
+  on the procgen system and is not the global string serializer. Existing arbitrary text remains
+  text; only explicitly annotated fields acquire resource semantics.
+- [x] Pass 52 focused native cases, including automatic resource-string observation and source
+  overrides, three clothing string/YAML roundtrips, all three migrated abstract declarations and
+  continued reporting/hashing of injected unknown fields. The office now has zero registered
+  declaration-schema gaps; its 649 definitions capture 1,145 files / 4,174,678 bytes from 336
+  unique resource references / 1,238 occurrences. Complete client/custom/legacy coverage and
+  portable replay remain explicitly unverified. Evidence: `ks_clothing_tests.trx` and
+  `.ks_procgen_clothing_tests.log`.
+- [x] Pass the actual client sandbox check after adding the shared serializer.
+- [x] Audit four broad native prototype-test failures using an isolated reverted-annotation
+  baseline. All four outcomes and normalized failure signatures reproduce exactly without the
+  new annotation. The sandbox case passes. Source restores byte-for-byte. Evidence:
+  `ks_clothing_native_validation.trx`, `ks_clothing_global_baseline.trx`,
+  `.ks_procgen_clothing_global_baseline_audit.log`. These four tests remain failed, not green.
+- [ ] **R18 global prototype-fixture rewrite:** `PrototypeSaveTest.TestEntityUidContext` only
+  handles `EntityUid`; all-prototype save/load tests now encounter test-only `NetEntity` fields
+  and throw before finishing. Add invalid-only network/map default handling consistent with
+  native prototype contexts, preserving rejection of live references. Create the client context
+  from the client serialization manager instead of passing a server-backed provider.
+- [ ] **R18 material-fixture rewrite:** concrete procgen material test prototypes omit valid icons;
+  native global validation sees the `SpriteSpecifier.Invalid` self sentinel as `/Textures` and
+  rejects it. Supply real fixture icons or use abstract declarations where appropriate, then
+  adjust resource/counter expectations without weakening native validation. Re-run the four
+  global prototype tests with failure-preserving teardown. Do not silence or skip these errors.
+- [x] Verify two isolated compile-valid context-omission controls: dropping context in the shared
+  writer loses automatic resource-string observation; dropping context in validation loses source
+  override observation. Each produces one intended assertion failure. Sources restore exactly;
+  the final normal Release build and all 53 focused/sandbox cases pass on restored sources.
+  All 891 procedural units also pass. Evidence: `.ks_procgen_clothing_controls_audit.log`,
+  `ks_clothing_control_{writer-context,validator-context}.trx`, `ks_clothing_final_restored.trx`,
+  `ks_clothing_units.trx`, `.ks_procgen_clothing_final_audit.log`.
+- [ ] Incorporate these nine added cases into the next full procgen Release/Debug gates after the
+  related R18 fixture repairs. The last complete broad checkpoint remains 891/937/31; the scoped
+  53/891 checks above do not replace it. This batch does not reopen the completed showcase refresh
+  or award a complete-manifest capability point.
+
+### Global prototype-fixture repair (2026-10-27, R18, in progress)
+
+- [x] Add a test-only serializer for invalid `NetEntity`/`MapId` defaults and register it in the
+  existing prototype save context. Preserve legacy `EntityUid` handling, including its transform
+  exception, instead of weakening map-save checks. Reject live/malformed network and map references
+  in read/write/validation; six dedicated context cases cover both types.
+- [x] Construct client prototype-test contexts from the client serialization manager rather than
+  reusing a server-backed provider.
+- [x] Give the eight concrete material fixtures valid texture icons. Keep the fixtures concrete
+  where their tests require runtime objects; do not mark them abstract to hide invalid defaults.
+- [x] Audit the first repaired preflight: 221/223 cases pass. Both all-prototype save/load/save
+  tests now pass; remaining failures expose the resource probe's unset path/icon sentinels.
+  Change those optional probe fields to nullable defaults. Configured values still pass through
+  native/contextual validation, and resource budget/capture assertions remain intact.
+- [ ] Verify the expanded selected suite, including all four previously failed global prototype
+  tests, resource/clothing/source-map suites, original typed/inheritance tests and sandbox.
+- [ ] Prove live-reference rejection and fixture-icon validity with isolated compile-valid
+  controls, restore exact sources and include these changes in the pending broad configuration
+  gates. Keep the last 891/937/31 checkpoint historical until the new gates pass.
+
+### In-game room-theme authoring (2026-10-27, R16, in progress)
+
+User priority: stop expanding preview infrastructure and deliver generator/editor behavior.
+The completed showcase batch stays closed. Remaining fixture/broad-gate follow-up remains recorded.
+
+- [x] Implement the first native editor command, `ksprocgen_theme [saved-key]`, for mapping admins.
+  Its EUI selects loaded floor/wall/light/entity packs and configures furnishing density, lighting
+  coverage, coherent contents, open center and loose items. Pack selectors use server-supplied
+  bounded catalogs, with visible truncation. No raw YAML editing or offline preview is required.
+- [x] Build editor values into the existing immutable content-draft and theme-catalog contracts.
+  Validate selected references/candidate pools on the server. Keep EUI-bound document identity,
+  expected revisions and permission rechecks; close on permission loss. Preserve local unsaved
+  input on errors/conflicts.
+- [x] Implement immutable saved revisions in server user data under `/Procgen/RoomThemes`.
+  Server-issued GUID/revision keys prevent arbitrary paths. Write a temporary file, then rename
+  without overwriting an earlier revision. Bound loaded bytes/JSON depth and revalidate catalogs.
+  `KsProcgenThemeLibrarySystem.TryCaptureCatalog` exposes saved themes to normal generator callers.
+  Opening a saved key creates an explicitly labeled editable copy with a fresh document identity.
+- [x] Compile native client/server/XAML and verify shared/client sandbox compatibility.
+- [x] Verify saved values are detached from caller edits, reload into a normal catalog, and generate
+  a valid 1x3 scene. Reject duplicate revision writes, missing packs and arbitrary file keys while
+  retaining previous revisions. The virtual file provider reports duplicate rename differently
+  from the physical provider; both must return a rejected save rather than an unhandled exception.
+- [x] Verify the connected native client can open the window, click Save and receive the persistent key.
+  Normal Release build and all seven focused editor/generator/sandbox tests pass, with zero skips.
+  Evidence: `.ks_procgen_theme_editor_verified.log` and
+  `Content.IntegrationTests/TestResults/ks_theme_editor_verified.trx`. These checks cover the first
+  theme-authoring slice; they do not replace the full Release/Debug acceptance gates. The fixed
+  capability assessment remains 68/100 pending the remaining R16 workflow exits.
+- [x] Verify all four pack selectors, reopen a saved copy under a fresh identity, save it without
+  changing its source, reject stale revisions and allow a valid retry, and close the native window
+  when mapping permission is lost. Validate old files without utility fields and reject oversized,
+  malformed, mismatched-identity and unknown-schema stored files.
+- [ ] Finish hard I/O failure/cleanup handling and complete editor input-limit coverage. Full
+  document-service/undo/import/export/application acceptance remains separate from this slice.
+
+Mapper workflow for this slice: run `ksprocgen_theme`, choose loaded packs and room goals,
+then use **Validate and save theme**. Copy the resulting GUID/revision key. Running
+`ksprocgen_theme <key>` opens an editable copy; saving that copy creates its own identity.
+Server-side generation callers use `KsProcgenThemeLibrarySystem.TryCaptureCatalog(key, ...)`
+and pass the resulting catalog as `content` to the existing generator with theme ID `Theme`.
+This slice does not provide a map-painting or live-map apply button.
+
+- [ ] Extend to weighted multiple-pack editing, creating/editing pack contents and relational
+  assemblies, atmosphere/electricity controls, area painting and integrated generation/apply.
+  This first theme-authoring slice must not be described as the complete R16 workspace.
+
+The fixed assessment stays 68/100: this native authoring slice does not close the complete
+R16/replay/release exits or add new utility-operation credit.
+
 Documentation-only specification revision, preceding the implementation batch below:
 
 - [x] Inspect local atmos, node topology, extension coverage and power-state code; record primary
@@ -5839,6 +6484,42 @@ Documentation-only specification revision, preceding the implementation batch be
 - [x] Check all 28 relative document links, unique contiguous A01-A66 fixture IDs and balanced
   Markdown code fences; inspect the scoped diff and whitespace. Only the specification changed
   in that documentation revision; its checks supplied no C# build or runtime/UI test evidence.
+
+### Theme utility-profile authoring (2026-10-27, R16, in progress)
+
+- [x] Add atmosphere and electricity profile selectors to the native room-theme editor. Supply
+  bounded sorted catalogs from the server, retaining the existing visible catalog limit. None
+  leaves the utility unspecified; it must not invent a default gas fill or power requirement.
+- [x] Carry profile IDs through detached editor values, immutable saved revisions and normal
+  theme-catalog capture. Validate missing/malformed profiles through the existing utility resolvers.
+  Existing saved files without the optional fields retain empty selections.
+- [x] Keep the form scrollable and identify selector items by prototype ID. Explain why a wired-only
+  profile lays infrastructure without proving operating power; gas filling still requires closure.
+- [x] Verify selection of all four pack kinds and both utility profiles through the connected native
+  client Save workflow. Generate from reloaded standard-air, nitrogen and vacuum choices; initialize
+  a nitrogen room with schema-two closet electrical service and inspect native gas/wiring evidence.
+- [ ] Complete custom mixture/profile editing, converter and distribution preferences, and the
+  full room-pack/relational authoring workflow. Profile selection alone does not complete the
+  atmosphere/electricity panels or the R16 workspace acceptance exit.
+
+- [x] Repair atomic load publication: a stored theme whose profile validation fails returns neither
+  editable values nor a partial content draft. Keep validated draft publication after catalog capture.
+- [x] Verify actual gas species/fractions, temperature and pressure on reloaded standard-air,
+  nitrogen and vacuum cases, including combined nitrogen/closet electrical generation. Inspect
+  native topology/cable/converter evidence and complete floor service while keeping operating
+  supply and stable-at-rest evidence false. Retire scenes without leaking their entities.
+  Normal Release build and all 20 focused editor/generator/sandbox cases pass with zero failures
+  or skips, including native save/copy, stale retry, permission loss, legacy files and atomic
+  rejection. Evidence: `.ks_procgen_theme_utilities_verified.log` and
+  `Content.IntegrationTests/TestResults/ks_theme_utilities_verified.trx`. The preceding 20-case
+  run in `.ks_procgen_theme_utilities_final.log` also passed before the stronger gas assertions.
+
+The earlier broader regression process (`.ks_procgen_theme_utilities.log`) was explicitly stopped
+before a final verdict because the loader/session verification source had advanced. It is not a
+passing gate. The final focused run covers changed authoring behavior and real native generation;
+full Release/Debug acceptance remains open. No additional weighted credit is claimed. The completed
+showcase/presentation work remains closed. The scoped native power-reconnect prerequisite is now
+verified in its ledger below; isolated solver/battery synchronization and operating power remain open.
 
 ### Standalone rooted owned planning (2026-10-17, R09)
 
@@ -5906,6 +6587,106 @@ Documentation-only specification revision, preceding the implementation batch be
   existing contract limits, not a fully metered request ledger. Proposals do not prove usable or
   spaceproof rooms. Null-domain legacy handling remains deliberate; the stage entry must capture
   its resolved standalone input before allocation rather than silently changing review artifacts.
+
+### Hole-aware room-size fitting (2026-10-27, R04/R09/R14, verified bounded subset)
+
+User priority: the showcase/presentation batch is closed; continue actual room selection and area
+filling. This batch extends the primary procedural generator rather than adding presentation code.
+
+- [x] Replace the irregular strip fitter's contiguous-column restriction with exact column cell
+  sets and cardinal overlap counts. A hole may split a boundary into multiple spans; all spans
+  contribute to wall loss, while a door requires a common threshold/approach coordinate across
+  three columns. Keep the normal seam solver authoritative for walls, protected floor and doors.
+- [x] Require cardinal connectivity for every proposed non-convex strip. Cache interval witnesses
+  within each axis/order search, retain the existing bounded cut/vector search, and reject
+  disconnected proposals before they reach the seam solver. Do not fill a hole to make a room fit.
+- [x] Charge the added connectivity floods to the request's graph allowance, including failed
+  quota fits, separate networks and whole-allocation retries. An exhausted fit returns no layout
+  artifacts or fallback success. Preserve existing metadata caps and scalar fallback when fitting
+  is infeasible with sufficient work. Column-convex and rectangular cases keep their old path.
+- [x] Verify exact 28/33 courtyard rooms, simultaneous 16/23/35 rooms around two courtyards,
+  transposed/canonical inputs, global quotas across separate courtyard islands, exact/short graph
+  budgets, fitting exhaustion and disconnected-strip fallback through the real partition path.
+- [x] Generate and initialize those layouts through `KsProcgenOwnedStageSystem`, with merged-room
+  and size-deviation fallback denied. Inspect real hole tiles and request-wide size outcomes;
+  verify cleanup leaves no generated entities. Run retained size-goal and procedural regressions.
+- [ ] Continue entrance-aware prefab packing, source-room instantiation and complete hybrid
+  composition. The legacy packing guard and primary owned hybrid/source guards remain necessary;
+  extending pure room-size fitting does not establish prefab/hybrid materialization.
+
+- [x] Extend the same-footprint example to one 35-tile large room, one 23-tile medium room and
+  three 16-tile small rooms. Verify four real door reservations, exact requested counts and no
+  hole tile writes through normal generation/initialization. No presentation/export work is involved.
+
+Verification: normal Release build, all 906 procedural/power-storage units and all 62 selected
+loaded-server/sandbox cases pass, with zero failures or skips. Retain the older size-goal and owned
+interior retry/fallback cases. Seven changed source hashes remain stable throughout final gates.
+Evidence: `.ks_procgen_hole_rooms_final.log`, `Content.Tests/TestResults/ks_hole_rooms_final_units.trx`
+and `Content.IntegrationTests/TestResults/ks_hole_rooms_final_native.trx`. Two compile-valid controls
+restore the old split-column exclusion and bypass shared fitting work: each produces exactly two
+intended assertion failures. The fitter source is restored byte-for-byte before final builds;
+`.ks_procgen_hole_rooms_controls.log` and `ks_hole_control_{hole-guard,fit-budget}.trx` retain evidence.
+No fresh full Debug or complete repository gate is claimed.
+
+This end-to-end bounded courtyard-fitting exit adds one layout point, taking the fixed assessment
+from 68/100 to 69/100. It adds no duplicate engine/interior/utility credit. This remains an axis-strip
+strategy, not a complete arbitrary-shape partition optimizer; valid fallback and budget reporting
+remain required. Prefab/hybrid source instantiation and the overall 80% goal remain unfinished.
+
+### Scoped native power reconnect (2026-10-27, R10/R12, verified scoped subset)
+
+This implements the next electrical runtime prerequisite. It must not be credited as operating
+supply, solver isolation or permission to publish a room. This checkpoint retained 68/100 pending further weighted exits; the current capability index above
+records later verified layout work.
+
+- [x] Add internal scoped reconnect/read-only inspection APIs in the native `PowerNetSystem`
+  partial extension. Reuse `DoReconnectApcNet`/`DoReconnectPowerNet`, with complete native-node
+  topology inspection before solver membership processing. Never call global `Update` or clear
+  global reconnect queues. Reconnect only selected pending networks; repeats inspect clean ones.
+- [x] Preflight registered network/load/supply/battery objects, paused state, group/component
+  membership in both directions, receiver/provider backlinks and current writable network lists.
+  Reject foreign, missing, stale, duplicate or unsupported bindings before the first write.
+  Require work for validation, native reconnect and final comparisons before modifying links.
+- [x] Integrate through the existing owned electrical initialization transaction and shared work
+  allowance. Add `NativePowerLinksVerified` to the initial wiring receipt only after this path
+  succeeds. Read-only repeat/gas-callback checks also validate native solver membership; neither
+  that flag nor `ElectricalTopologyVerified` claims delivered power.
+- [x] Repair native `PowerState.GenIdStorage` capacity growth: the final newly allocated slot was
+  left at generation zero, contrary to the allocator/restore contract. Initialize that slot too;
+  preserve stale-ID invalidation and normal storage registration. Four unit cases now pass across
+  capacities 4/8/16, restore, and freed-last-slot reuse. A confirmed preflight `OwnedPowerNetworkDrift`
+  exposed this allocator issue; the obsolete preflight was stopped before a final suite verdict.
+- [x] Compile and verify own/foreign pending-queue behavior, load/supply/receiver/battery links,
+  unchanged stored/delivered power, exact versus short work, cancelled calls, foreign members,
+  omitted native-list entries, unpaused loads, stale registrations and read-only drift rejection.
+- [x] Run retained node-scope/native wiring, combined saved-theme gas/wiring, compact utility-room
+  and small native power-system acceptance cases. Prove key assertions with compile-valid negative
+  controls and restore sources. Snapshot all public scalar load/supply/battery/network fields;
+  only intended member lists and LinkedNetwork backlinks may change. Include the receiver state
+  on node-less machines while collecting graph networks only from entities with node containers.
+- [ ] Continue isolated solver/battery synchronization, operational sources and supply-under-load
+  validation. Preserve the operational-supply guard; this adapter does not finish R10/R12.
+
+Verification: normal Release build and 895 procedural/power-storage units pass without skips.
+The broad 97-case runtime run passed 96 cases, including saved-theme gas/wiring, compact electrical
+rooms, native power fixtures and retained solver-backlink rejection. Its sole failure was a new
+snapshot helper calling the strict node accessor on a node-less computer. After the test-only guard
+fix, all 32 node/power scope cases pass with seven source hashes stable throughout. The receiver's
+scalar state remains included; no production guard was relaxed. Latest retained outcomes therefore
+cover all 97 runtime cases, but the original 97-case run itself must not be described as all green.
+The earlier 52-case preflight found diagnostic precedence and pending-network-count expectations;
+those corrections are covered by the retained runs. No fresh full Debug or all-station-map gate is
+claimed. Evidence: `.ks_procgen_power_reconnect_{allunits,final,verified,audit}.log` and corresponding
+`ks_power_reconnect_allunits`, `ks_power_reconnect_final_native`, `ks_power_reconnect_verified_native`
+TRX files in the test projects' `TestResults` directories.
+
+Two isolated compile-valid negative controls produce exactly three intended allocator failures and
+one intended foreign-queue failure, with zero skips. Both controlled sources are restored byte for
+byte before normal builds. Evidence: `.ks_procgen_power_reconnect_controls.log` and
+`ks_power_control_{storage,queues}.trx`. The tests use normal component registration/native reconnect
+hooks; procgen does not patch private provider links or solver values. Test mutations are restored
+before fixture destruction. Source growth repair and this scoped prerequisite add no operating-
+supply credit; this checkpoint retained 68/100; consult the current capability index for later layout credit. The 80% goal stays active.
 
 ### Native node inspection and queue/frame rewrites (2026-10-21, R10/R12)
 
@@ -9970,8 +10751,13 @@ every consumer, breaker/switch states, battery/source contribution, delivered lo
 operating state. Use the authored load/observation scenario, not a momentary charged battery or
 idle machine, to establish operational supply. Optional surplus capacity is a soft goal unless hard.
 
-Expose separate evidence: `ElectricalTopologyVerified`, `ElectricalSupplyVerified`, per-consumer
-operation and light coverage. `WiredOnly` may pass topology while supply stays `Unverified` or
+Expose separate evidence: `ElectricalTopologyVerified`, `NativePowerLinksVerified`,
+`ElectricalSupplyVerified`, per-consumer operation and light coverage. `NativePowerLinksVerified`
+means that registered native solver member lists and component backlinks match the inspected owned
+networks at initialization. It does not imply a solver tick, available source capacity, delivered
+power or operating devices. Repeated verification inspects links and pending work without repairing
+them; only the owning initialization transaction may establish the first receipt.
+`WiredOnly` may pass topology and native membership while supply stays `Unverified` or
 `Missed`; it cannot count as a working interior when operating power is required. Do not force
 `Powered`, disable `NeedsPower`, bypass breakers or add invisible generators to pass validation.
 
@@ -10162,7 +10948,7 @@ with verified prototype defaults, resolves ancestry independently of source orde
 cuts through non-grid transform branches. Registered and server-ignored component override/removal
 names remain tied to the original immutable source bytes. This is transform-hierarchy extraction;
 it does not establish complete component/container/support relationships or authorize loading or
-activation. Extraction schema 2 now reads captured prototype images for transform defaults and
+activation. Extraction schema 3 reads captured prototype images for transform defaults and
 observes typed entity/network/map links through registered component validators. Observed links
 must stay inside the selected room or name its selected grid/owning map context. Numeric-looking
 ordinary fields are not interpreted as entity IDs. Skipped/unsuccessfully validated component
@@ -10176,13 +10962,30 @@ reference seeds retain distinct provenance. Referenced registered kinds close tr
 nested typed wrappers, including references back to entities and registered tiles; abstract
 reference-discovery images retain declaration authority only. Parent chains and declared-schema
 inspection gaps are included; an opaque field is not guessed to be a prototype reference.
+Extraction also retains complete immutable canonical override nodes, with cumulative selected-image
+node/character budgets and a depth limit. It does not deserialize those bodies into live components.
 Extraction identity binds those
-definitions and the actual returned mask/pose/reference/gap witnesses; base source hashes alone do
+definitions and the actual returned component bodies and mask/pose/reference/gap witnesses; base source hashes alone do
 not freeze override dependencies.
 Legacy/custom/client reference schemas, resources and actual component copying remain unfinished.
 Both `ComponentReferencesVerified` and `CopyReady` remain false.
 
 ### 21.4 Preview, diagnostics and apply
+
+All graphical map previews use the existing `Content.MapRenderer` and its native map/viewer
+outputs. Do not implement a parallel procgen sprite compositor, SVG schematic renderer or custom
+gallery. The Python/PowerShell procgen drawing pipeline and server SVG renderer are retired by the
+2026-10-28 user-directed replacement. Historical implementation entries describe removed systems;
+they are not requirements to restore them.
+
+Planning, generation transactions, stage ownership/lifecycle, inspection, bounded diagnostic JSON
+and native map export remain separate feature responsibilities. A rendered image cannot grant apply
+permission or replace physical validation. Native renderer caches belong to their paint operation
+and must be disposed after success or failure. The renderer processes native client appearance
+updates before reading sprite layers. Its `--wires-last` option reveals installed cables through
+native subfloor appearance and paints them after ordinary entities; loose cable coils retain their
+normal treatment. Reuse the native tile, decal, sprite, direction and appearance pipelines rather
+than adding curated procgen prototype-to-sprite mappings. Use its `--viewer` output for map viewing.
 
 The utility palette inspector must display the captured mount requirement for each converter
 prototype. Wall candidates, actual selected support walls, front interaction approaches and

@@ -18,7 +18,8 @@ public sealed partial class KsProcgenRoomMapCaptureSystem
     private sealed record SourceEntity(int Uid, string PrototypeId, int Parent, Vector2 Position, double Rotation,
         bool Anchored, bool NoRotation, bool IsMap, IReadOnlyList<string> Overrides, IReadOnlyList<string> Removed,
         IReadOnlyList<KsProcgenMapEntityReference> References, IReadOnlyList<string> Prototypes, IReadOnlyList<string> Uninspected,
-        IReadOnlyList<KsProcgenPrototypeReference> TypedPrototypes, IReadOnlyList<KsProcgenResourceReference> Resources);
+        IReadOnlyList<KsProcgenPrototypeReference> TypedPrototypes, IReadOnlyList<KsProcgenResourceReference> Resources,
+        IReadOnlyList<MappingDataNode> OverrideData);
     private sealed record SourcePose(SourceEntity Entity, int GridUid, Vector2 Position, double Rotation, int Depth);
     private readonly record struct SourceDefaults(Vector2 Position, double Rotation, bool Anchored, bool NoRotation, bool IsMap);
     private sealed class EntityWork(KsProcgenRoomEntityExtractionLimits limits)
@@ -26,6 +27,8 @@ public sealed partial class KsProcgenRoomMapCaptureSystem
         public readonly KsProcgenRoomEntityExtractionLimits Limits = limits;
         public int Used;
         public int Output;
+        public int OverrideNodes;
+        public int OverrideCharacters;
         public int DefaultImageCharacters;
         public int DefaultPrototypeImages;
         public readonly Dictionary<string, SourceDefaults> Defaults = new(StringComparer.Ordinal);
@@ -39,7 +42,9 @@ public sealed partial class KsProcgenRoomMapCaptureSystem
         extraction = null; issue = null; limits ??= new();
         if (project == null || source == null || limits.MaximumMaskCellProbes is < 0 or > 2_097_152 ||
             limits.MaximumGraphWork is < 0 or > 4_194_304 || limits.MaximumParentDepth is < 1 or > 512 ||
-            limits.MaximumExtractedEntities is < 0 or > 65_536 || limits.MaximumDefaultImageCharacters is < 0 or > 16_777_216)
+            limits.MaximumExtractedEntities is < 0 or > 65_536 ||
+            limits.MaximumOverrideNodes is < 0 or > 1_048_576 || limits.MaximumOverrideCharacters is < 0 or > 16_777_216 ||
+            limits.MaximumOverrideDepth is < 1 or > 128 || limits.MaximumDefaultImageCharacters is < 0 or > 16_777_216)
             return Reject("InvalidRoomEntityExtractionInput", "Extraction needs captured input and bounded work/depth/output limits.", out issue);
         try
         {
@@ -90,15 +95,17 @@ public sealed partial class KsProcgenRoomMapCaptureSystem
                     if (work.Output++ >= limits.MaximumExtractedEntities)
                         return Reject("RoomEntityExtractionOutputBudget", "Cumulative selected members exceed the extraction allowance.", out issue);
                     var entity = pose.Entity;
+                    if (!TryCaptureOverrideImages(entity, work, cancellationToken, out var images, out issue)) return false;
                     members.Add(new(entity.Uid, entity.PrototypeId, entity.Parent, entity.Position, entity.Rotation,
                         pose.Position, pose.Position - new Vector2((float) mask.SourceOrigin.X, (float) mask.SourceOrigin.Y),
-                        pose.Rotation, entity.Anchored, entity.NoRotation, entity.Overrides, entity.Removed, entity.References, entity.Uninspected));
+                        pose.Rotation, entity.Anchored, entity.NoRotation, entity.Overrides, entity.Removed, entity.References, entity.Uninspected, componentOverrides: images));
                 }
                 rooms.Add(new(mask, members));
             }
             if (!_definitions.Matches(source.Definitions, out issue) || !_definitions.Matches(definitions!, out issue)) return false;
             extraction = new(source.ContentHash, definitions!, rooms, masks.CellProbes, work.Used,
-                defaultPrototypeImages: work.DefaultPrototypeImages, defaultImageCharacters: work.DefaultImageCharacters); return true;
+                defaultPrototypeImages: work.DefaultPrototypeImages, defaultImageCharacters: work.DefaultImageCharacters,
+                overrideNodes: work.OverrideNodes, overrideCharacters: work.OverrideCharacters); return true;
         }
         catch (OperationCanceledException)
         { return Reject("RoomEntityExtractionCancelled", "Source entity extraction was cancelled.", out issue); }
@@ -178,7 +185,8 @@ public sealed partial class KsProcgenRoomMapCaptureSystem
                     if (!TryInspectComponentReferences(uid, component, references, prototypeIds, typedPrototypes, resources, uninspected, work, cancellationToken, out issue)) return false;
                 result.Add(uid, new(uid, prototypeId, parent, position, rotation, anchored, noRotation,
                     defaults.IsMap || overrides.Contains("Map"), overrides.AsReadOnly(), removed.AsReadOnly(),
-                    references.AsReadOnly(), prototypeIds.AsReadOnly(), uninspected.AsReadOnly(), typedPrototypes.AsReadOnly(), resources.AsReadOnly()));
+                    references.AsReadOnly(), prototypeIds.AsReadOnly(), uninspected.AsReadOnly(), typedPrototypes.AsReadOnly(), resources.AsReadOnly(),
+                    row.TryGet<SequenceDataNode>("components", out var data) ? data.Cast<MappingDataNode>().ToArray() : []));
             }
         }
         entities = result; return true;

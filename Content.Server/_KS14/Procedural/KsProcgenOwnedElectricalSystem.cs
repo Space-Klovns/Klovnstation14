@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Threading;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.Power.Components;
+using Content.Server.Power.EntitySystems;
 using Content.Server.Power.NodeGroups;
 using Content.Server.Power.Nodes;
 using Content.Shared._KS14.Procedural;
@@ -22,6 +23,7 @@ public sealed partial class KsProcgenOwnedElectricalSystem : EntitySystem
     [Dependency] private KsProcgenOwnedStageSystem _stages = default!;
     [Dependency] private KsProcgenStageOwnershipSystem _ownership = default!;
     [Dependency] private NodeGroupSystem _nodes = default!;
+    [Dependency] private PowerNetSystem _powerNetworks = default!;
     [Dependency] private IGameTiming _timing = default!;
 
     internal string? Inspect(KsProcgenOwnedStage stage, KsProcgenInitialElectricalReceipt? expected,
@@ -211,12 +213,16 @@ public sealed partial class KsProcgenOwnedElectricalSystem : EntitySystem
                     if (!ownedPowerReceivers.Contains(receiver) || !ReferenceEquals(receiver.Provider, provider)) return "OwnedElectricalForeignPowerReceiver";
                 }
             }
-            if (expected != null)
-            {
-                if (expected.CableCount != cableIds.Count || expected.DeviceCount != plan.Devices.Count ||
-                    !expected.Connections.SequenceEqual(actual.OrderBy(item => item.ConsumerId, StringComparer.Ordinal))) return "OwnedElectricalReceiptDrift";
-                return null;
-            }
+            if (expected != null && (expected.CableCount != cableIds.Count || expected.DeviceCount != plan.Devices.Count ||
+                    !expected.Connections.SequenceEqual(actual.OrderBy(item => item.ConsumerId, StringComparer.Ordinal))))
+                return "OwnedElectricalReceiptDrift";
+            var powerLinks = expected == null
+                ? _powerNetworks.KsReconnectOwnedPowerNetworks(stage.GridUid, members, maximumWork - used, cancellationToken: cancellationToken)
+                : _powerNetworks.KsInspectOwnedPowerNetworks(stage.GridUid, members, maximumWork - used, cancellationToken: cancellationToken);
+            if (!Spend(powerLinks.Work)) return "OwnedElectricalWorkBudget";
+            cancellationToken.ThrowIfCancellationRequested();
+            if (powerLinks.IssueCode != null) return powerLinks.IssueCode;
+            if (expected != null) return null;
             prepared = new(plan.PlanHash, actual, cableIds.Count, plan.Devices.Count, used, _timing.CurTick, _timing.CurTime);
             return null;
         }

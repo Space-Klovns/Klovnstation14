@@ -41,6 +41,7 @@
        Ogg loader), but only as a private compile dependency; the version comes from RobustToolbox. -->
   <ItemGroup>
     <PackageReference Include="VorbisPizza" />
+    <PackageReference Include="SixLabors.ImageSharp" /> <!-- KS14: inspect captured compiled RSI metadata; engine compile dependency is private -->
   </ItemGroup>
 
   <!-- KS14: voice chat microphone page, served from the status host -->

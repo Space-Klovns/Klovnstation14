@@ -10,6 +10,7 @@ public sealed record KsProcgenResourceCaptureLimits
 {
     public int MaximumReferences { get; init; } = 65_536;
     public int MaximumFiles { get; init; } = 4096;
+    public int MaximumDirectoryEntries { get; init; } = 16_384;
     public int MaximumFileBytes { get; init; } = 16_777_216;
     public int MaximumTotalBytes { get; init; } = 134_217_728;
     public int MaximumRsiStates { get; init; } = 16_384;

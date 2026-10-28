@@ -296,7 +296,9 @@ public sealed class KsProcgenCapturedPrototypeTests : KsProcgenGameTest
                 manifest.Limits, manifest.Nodes, manifest.Characters, manifest.ReferenceOccurrences,
                 roots: manifest.Roots, entityReferenceSeeds: manifest.EntityReferenceSeeds,
                 dependencyRoots: manifest.DependencyRoots, dependencies: manifest.Dependencies,
-                abstractTemplates: manifest.AbstractTemplates, typedReferenceSeeds: manifest.TypedReferenceSeeds);
+                abstractTemplates: manifest.AbstractTemplates, typedReferenceSeeds: manifest.TypedReferenceSeeds,
+                resourceReferences: manifest.ResourceReferences, resources: manifest.Resources,
+                resourceOccurrences: manifest.ResourceOccurrences, resourceReferenceSeeds: manifest.ResourceReferenceSeeds);
             var before = SEntMan.GetEntities().ToHashSet();
             Assert.That(system.TryCreatePrototypeSnapshot(invalid, Probe, out var snapshot, out var issue), Is.False);
             Assert.That(snapshot, Is.Null); Assert.That(issue, Is.Not.Null); Assert.That(SEntMan.GetEntities(), Is.EquivalentTo(before));

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text; // KS14
 using Content.IntegrationTests.Fixtures;
 using Content.Shared.Coordinates;
+using Content.IntegrationTests.Tests._KS14.Serialization; // KS14
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -233,6 +234,7 @@ public sealed class PrototypeSaveTest : GameTest
 
             SerializerProvider = new(ser);
             SerializerProvider.RegisterSerializer(this);
+            SerializerProvider.RegisterSerializer<KsPrototypeDefaultReferenceSerializer>(); // KS14: invalid-only network/map defaults
         }
 
         ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,

@@ -16,7 +16,7 @@ using static Robust.UnitTesting.RobustIntegrationTest;
 
 namespace Content.MapRenderer.Painters
 {
-    public sealed class GridPainter
+    public sealed partial /* KS14: native wire ordering and resource ownership. */ class GridPainter
     {
         private readonly EntityPainter _entityPainter;
         private readonly DecalPainter _decalPainter;
@@ -28,8 +28,9 @@ namespace Content.MapRenderer.Painters
         private readonly ConcurrentDictionary<EntityUid, List<EntityData>> _entities;
         private readonly Dictionary<EntityUid, List<DecalData>> _decals;
 
-        public GridPainter(ClientIntegrationInstance client, ServerIntegrationInstance server)
+        public GridPainter(ClientIntegrationInstance client, ServerIntegrationInstance server, bool drawWiresLast = false /* KS14: cable overlay option. */)
         {
+            _drawWiresLast = drawWiresLast; // KS14: native cable overlay selection.
             _entityPainter = new EntityPainter(client, server);
             _decalPainter = new DecalPainter(client, server);
 
@@ -57,7 +58,7 @@ namespace Content.MapRenderer.Painters
                 _decalPainter.Run(gridCanvas, CollectionsMarshal.AsSpan(decals), customOffset);
 
 
-            _entityPainter.Run(gridCanvas, entities, customOffset);
+            PaintEntities(gridCanvas, entities, customOffset); // KS14: optional final installed-cable pass.
             Console.WriteLine($"{nameof(GridPainter)} painted grid {gridUid} in {(int) stopwatch.Elapsed.TotalMilliseconds} ms");
         }
 
@@ -85,7 +86,7 @@ namespace Content.MapRenderer.Painters
                 var transform = _sEntityManager.GetComponent<TransformComponent>(serverEntity);
                 if (_sEntityManager.TryGetComponent(transform.GridUid, out MapGridComponent? grid))
                 {
-                    var position = transform.LocalPosition;
+                    var position = _sEntityManager.System<SharedTransformSystem>().GetRelativePosition(transform, transform.GridUid.Value); // KS14: parent-local -> grid-local for attached/supported entities.
 
                     var (x, y) = TransformLocalPosition(position, grid);
                     var data = new EntityData(serverEntity, sprite, x, y);

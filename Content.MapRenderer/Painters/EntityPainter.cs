@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.GameObjects;
@@ -14,7 +14,7 @@ using static Robust.UnitTesting.RobustIntegrationTest;
 
 namespace Content.MapRenderer.Painters;
 
-public sealed class EntityPainter
+public sealed partial /* KS14: own cached native sprite images. */ class EntityPainter
 {
     private readonly IResourceManager _resManager;
 
@@ -85,14 +85,17 @@ public sealed class EntityPainter
 
                 if (!_images.TryGetValue(key, out image!))
                 {
-                    var stream = _resManager.ContentFileRead($"{rsi.Path}/{state.StateId}.png");
+                    using var stream = _resManager.ContentFileRead /* KS14: dispose the source stream after decoding. */($"{rsi.Path}/{state.StateId}.png");
                     image = Image.Load<Rgba32>(stream);
 
                     _images[key] = image;
                 }
             }
 
-            image = image.CloneAs<Rgba32>();
+            // KS14 start: each transformed layer owns its temporary image.
+            using var layerImage = image.CloneAs<Rgba32>();
+            image = layerImage;
+            // KS14 end
 
             (int, int, int, int) GetRsiFrame(RSI? rsi, Image image, EntityData entity, ISpriteLayer layer, int direction)
             {
@@ -134,12 +137,14 @@ public sealed class EntityPainter
 
             var colorMix = entity.Sprite.Color * layer.Color;
             var imageColor = Color.FromRgba(colorMix.RByte, colorMix.GByte, colorMix.BByte, colorMix.AByte);
-            var coloredImage = new Image<Rgba32>(image.Width, image.Height);
+            using var coloredImage = new Image<Rgba32> /* KS14: dispose per-layer tint buffers. */(image.Width, image.Height);
             coloredImage.Mutate(o => o.BackgroundColor(imageColor));
 
             var (imgX, imgY) = rsi?.Size ?? (EyeManager.PixelsPerMeter, EyeManager.PixelsPerMeter);
-            var offsetX = (int)(entity.Sprite.Offset.X + customOffset.X) * EyeManager.PixelsPerMeter;
-            var offsetY = (int)(entity.Sprite.Offset.Y + customOffset.X) * EyeManager.PixelsPerMeter;
+            // KS14 start: preserve fractional offsets; Y previously used customOffset.X.
+            var offsetX = (int) ((entity.Sprite.Offset.X + customOffset.X) * (float) EyeManager.PixelsPerMeter);
+            var offsetY = (int) ((entity.Sprite.Offset.Y + customOffset.Y) * (float) EyeManager.PixelsPerMeter);
+            // KS14 end
             image.Mutate(o => o
                 .DrawImage(coloredImage, PixelColorBlendingMode.Multiply, PixelAlphaCompositionMode.SrcAtop, 1)
                 .Resize(imgX, imgY)

@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -209,7 +209,7 @@ namespace Content.MapRenderer
                 var i = 0;
                 try
                 {
-                    await foreach (var renderedGrid in painter.Paint())
+                    await foreach (var renderedGrid in painter.Paint(drawWiresLast: arguments.WiresLast) /* KS14: optional native cable overlay. */)
                     {
                         var grid = renderedGrid.Image;
                         Directory.CreateDirectory(directory);

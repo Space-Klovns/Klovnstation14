@@ -1,0 +1,35 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      Title="{Loc 'ks-procgen-theme-title'}" SetSize="580 620" MinSize="480 520">
+    <ScrollContainer HScrollEnabled="False">
+    <BoxContainer Orientation="Vertical" Margin="12" SeparationOverride="8">
+        <Label Text="{Loc 'ks-procgen-theme-name'}"/>
+        <LineEdit Name="ThemeName"/>
+        <Label Text="{Loc 'ks-procgen-theme-tiles'}"/>
+        <OptionButton Name="Tiles"/>
+        <Label Text="{Loc 'ks-procgen-theme-walls'}"/>
+        <OptionButton Name="Walls"/>
+        <Label Text="{Loc 'ks-procgen-theme-lights'}"/>
+        <OptionButton Name="Lights"/>
+        <Label Text="{Loc 'ks-procgen-theme-entities'}"/>
+        <OptionButton Name="Entities"/>
+        <Label Text="{Loc 'ks-procgen-theme-atmosphere'}"/>
+        <OptionButton Name="Atmosphere"/>
+        <Label Text="{Loc 'ks-procgen-theme-electricity'}"/>
+        <OptionButton Name="Electricity"/>
+        <RichTextLabel Name="UtilityExplanation"/>
+        <Label Name="DensityLabel"/>
+        <Slider Name="Density" MinValue="0" MaxValue="100" Rounded="True"/>
+        <Label Name="CoverageLabel"/>
+        <Slider Name="Coverage" MinValue="0" MaxValue="100" Rounded="True"/>
+        <CheckBox Name="Coherent" Text="{Loc 'ks-procgen-theme-coherent'}"/>
+        <CheckBox Name="OpenCenter" Text="{Loc 'ks-procgen-theme-center'}"/>
+        <CheckBox Name="LooseItems" Text="{Loc 'ks-procgen-theme-loose'}"/>
+        <Button Name="Save" Text="{Loc 'ks-procgen-theme-save'}"/>
+        <RichTextLabel Name="Status"/>
+        <LineEdit Name="SavedKey" Editable="False"/>
+        <Label Name="CatalogWarning" Text="{Loc 'ks-procgen-theme-truncated'}" Visible="False"/>
+        <RichTextLabel Name="Explanation"/>
+    </BoxContainer>
+    </ScrollContainer>
+</controls:FancyWindow>

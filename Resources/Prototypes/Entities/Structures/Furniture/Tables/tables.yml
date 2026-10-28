@@ -338,13 +338,13 @@
         - !type:DoActsBehavior
           acts: [ "Destruction" ]
         - !type:PlaySoundBehavior
-          sound: /Audio//Weapons/pierce.ogg
+          sound: /Audio/Weapons/pierce.ogg # KS14: /Audio//Weapons/pierce.ogg -> canonical resource path
     - trigger:
         !type:DamageTrigger
         damage: 15
       behaviors:
       - !type:PlaySoundBehavior
-        sound: /Audio//Weapons/pierce.ogg
+        sound: /Audio/Weapons/pierce.ogg # KS14: /Audio//Weapons/pierce.ogg -> canonical resource path
       - !type:SpawnEntitiesBehavior
         spawn:
           MaterialCardboard:

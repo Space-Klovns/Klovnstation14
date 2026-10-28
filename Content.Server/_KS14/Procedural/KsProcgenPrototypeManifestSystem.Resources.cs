@@ -35,7 +35,12 @@ public sealed partial class KsProcgenPrototypeManifestSystem
                 reference.Kind is not (KsProcgenResourceReferenceKind.Path or KsProcgenResourceReferenceKind.Rsi) ||
                 reference.State is { Length: > 512 } || reference.State?.Any(char.IsControl) == true ||
                 reference.Kind == KsProcgenResourceReferenceKind.Path && reference.State != null)
-            { Issue = new("InvalidPrototypeResourceReference", "Resources need bounded canonical content paths and state IDs."); return; }
+            {
+                var summary = reference.Path is { Length: > 128 } ? reference.Path[..128] : reference.Path;
+                Issue = new("InvalidPrototypeResourceReference",
+                    $"Resources need bounded canonical content paths and state IDs: {reference.Kind}/{summary}");
+                return;
+            }
             References.Add(reference with { Path = path! });
         }
     }
@@ -43,11 +48,26 @@ public sealed partial class KsProcgenPrototypeManifestSystem
     private bool TryCaptureResources(ResourceWork work, KsProcgenResourceCaptureLimits limits,
         out IReadOnlyList<KsProcgenCapturedResource>? resources, out KsProcgenIssue? issue)
     {
+        resources = null;
+        try { return TryCaptureResourceFiles(work, limits, out resources, out issue); }
+        catch (Exception exception)
+        {
+            // Fail atomically, without reporting an unrelated prototype serialization error.
+            resources = null;
+            issue = new("InvalidPrototypeResource", $"Content resource capture failed: {exception.GetType().Name}.");
+            Log.Debug($"Content resource capture failed: {exception}");
+            return false;
+        }
+    }
+
+    private bool TryCaptureResourceFiles(ResourceWork work, KsProcgenResourceCaptureLimits limits,
+        out IReadOnlyList<KsProcgenCapturedResource>? resources, out KsProcgenIssue? issue)
+    {
         resources = null; issue = work.Issue;
         if (issue != null) return false;
         var files = new SortedDictionary<string, KsProcgenCapturedResource>(StringComparer.Ordinal);
         var rsiStates = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-        var totalBytes = 0; var totalStates = 0;
+        var totalBytes = 0; var totalStates = 0; var directoryEntries = 0;
         KsProcgenIssue? failure = null;
         bool Read(string path, out KsProcgenCapturedResource? file)
         {
@@ -87,6 +107,10 @@ public sealed partial class KsProcgenPrototypeManifestSystem
                     var any = false;
                     foreach (var entry in _resources.ContentFindFiles(new ResPath(reference.Path)))
                     {
+                        // Charge visible entries even when overlapping directories repeat a file.
+                        // VFS enumeration itself is trusted engine preprocessing, not a resumable job.
+                        if (directoryEntries++ >= limits.MaximumDirectoryEntries)
+                        { issue = new("PrototypeResourceDirectoryBudget", "Directory entries exceed the shared allowance."); return false; }
                         if (!TryResourcePath(entry.ToString(), out var path) || !path!.StartsWith(reference.Path, StringComparison.Ordinal))
                         { issue = new("InvalidPrototypeResourceDirectory", "Directory members must remain inside the captured content root."); return false; }
                         any = true;
@@ -166,6 +190,7 @@ public sealed partial class KsProcgenPrototypeManifestSystem
 
     internal static bool ValidResourceLimits(KsProcgenResourceCaptureLimits limits) =>
         limits.MaximumReferences is >= 1 and <= 262_144 && limits.MaximumFiles is >= 1 and <= 16_384 &&
+        limits.MaximumDirectoryEntries is >= 1 and <= 65_536 &&
         limits.MaximumFileBytes is >= 1 and <= 67_108_864 && limits.MaximumTotalBytes is >= 1 and <= 536_870_912 &&
         limits.MaximumRsiStates is >= 1 and <= 65_536 && limits.MaximumJsonDepth is >= 1 and <= 64;
 }

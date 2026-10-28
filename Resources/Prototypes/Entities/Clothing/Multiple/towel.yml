@@ -13,7 +13,7 @@
     - BELT
     - INNERCLOTHING
     - HEAD
-    femaleMask: UniformTop
+    # KS14: removed obsolete femaleMask: UniformTop; clothing visuals use inventory displacement maps.
     equipSound:
     unequipSound:
   - type: Spillable

@@ -25,6 +25,8 @@ public sealed class KsProcgenInitialElectricalReceipt
     public GameTick VerifiedAtTick { get; }
     public TimeSpan VerifiedAtTime { get; }
     public bool ElectricalTopologyVerified => true;
+    /// <summary>Native solver membership/backlinks at initialization, without running the solver.</summary>
+    public bool NativePowerLinksVerified => true;
     public bool ElectricalSupplyVerified => false;
     internal KsProcgenInitialElectricalReceipt WithWork(int work) => new(PlanHash, Connections, CableCount, DeviceCount,
         work, VerifiedAtTick, VerifiedAtTime);

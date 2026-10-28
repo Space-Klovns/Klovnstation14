@@ -67,7 +67,7 @@ public sealed class KsProcgenShowcaseTests : KsProcgenGameTest
                 // Keep native save/load temporaries scoped before exporting diagnostics.
                 {
                     var generated = stages.TryGenerate(request, themeId, planningBudgets: budgets, content: catalog);
-                    Assert.That(generated.Status, Is.EqualTo(KsProcgenOwnedStageStatus.PositionedPreview), generated.Issue?.Code);
+                    Assert.That(generated.Status, Is.EqualTo(KsProcgenOwnedStageStatus.PositionedPreview), generated.Issue?.ToString());
                     stage = generated.Stage!;
                     Assert.That(stages.TryInitialize(stage).Status, Is.EqualTo(KsProcgenOwnedStageStatus.InitializedPreview));
                     Assert.That(stages.Verify(stage), Is.True);

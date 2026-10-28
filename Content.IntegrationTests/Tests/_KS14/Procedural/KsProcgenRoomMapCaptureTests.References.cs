@@ -79,7 +79,8 @@ public sealed partial class KsProcgenRoomMapCaptureTests
                 change == "pose" ? owner.GridPosition + Vector2.UnitX : owner.GridPosition,
                 owner.RoomPosition, owner.GridRotationRadians, owner.Anchored, owner.NoLocalRotation,
                 owner.OverrideComponentTypes, owner.RemovedComponentTypes, references,
-                change == "opacity" ? new[] { "Sprite" } : owner.UninspectedComponentTypes);
+                change == "opacity" ? new[] { "Sprite" } : owner.UninspectedComponentTypes,
+                componentOverrides: owner.ComponentOverrides);
             var mask = change == "mask" ? new KsProcgenRoomMapNativeMask(room.Room.RoomAssetId, room.Room.ResourcePath,
                 room.Room.GridYamlUid, room.Room.SourceOrigin, room.Room.Cells.Append(new Vector2i(1, 1))) : room.Room;
             var changedRoom = new KsProcgenExtractedRoomEntities(mask, room.Entities.Select(entity => entity.YamlUid == owner.YamlUid ? modified : entity));
@@ -159,7 +160,7 @@ public sealed partial class KsProcgenRoomMapCaptureTests
                 new KsProcgenMapEntityReference("KsProcgenMapReferenceProbe", KsProcgenMapReferenceKind.NetworkEntity, 11),
             }));
             Assert.That(owner.UninspectedComponentTypes, Is.Empty);
-            Assert.That(extraction.SchemaVersion, Is.EqualTo(2)); Assert.That(extraction.ContentHash.Length, Is.EqualTo(64));
+            Assert.That(extraction.SchemaVersion, Is.EqualTo(3)); Assert.That(extraction.ContentHash.Length, Is.EqualTo(64));
             Assert.That(extraction.ComponentReferencesVerified, Is.False); Assert.That(extraction.CopyReady, Is.False);
             Assert.That(system.TryExtractRoomEntities(project, source, out var replay, out issue), Is.True, message: issue?.ToString());
             Assert.That(replay!.ContentHash, Is.EqualTo(extraction.ContentHash));

@@ -236,6 +236,7 @@ namespace Content.Server.Power.Pow3r
                 }
 
                 _storage[^1].NextSlot = _nextFree;
+                _storage[^1].Generation = 1; // KS14: initialize the final new slot too; upstream left its generation at zero.
 
                 _nextFree = oldLength;
             }

@@ -157,8 +157,13 @@ public static class KsProcgenGroupPartitionPlanner
                             return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, "GroupPartitionExpansionBudget");
                         expanded++;
                     }
+                var fittingWork = new KsProcgenPartitionWorkBudget(maximumExpandedCells: maximumExpandedCells - expanded,
+                    maximumSeamProbes: 0);
                 var allocation = KsProcgenSizeGoalAllocator.Allocate(request.RequestId, initial.Components,
-                    request.SizeMix, minimumRoomCells);
+                    request.SizeMix, minimumRoomCells, workBudget: fittingWork);
+                expanded += fittingWork.ExpandedCells;
+                if (fittingWork.ExhaustedCode != null)
+                    return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, fittingWork.ExhaustedCode);
                 quotaProbes = allocation.QuotaProbes;
                 fitProbes = allocation.FitProbes;
                 allocationId = allocation.AllocationId;
@@ -182,9 +187,14 @@ public static class KsProcgenGroupPartitionPlanner
                             return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, "GroupPartitionExpansionBudget");
                         expanded++;
                     }
+                    var fittingWork = new KsProcgenPartitionWorkBudget(maximumExpandedCells: maximumExpandedCells - expanded,
+                        maximumSeamProbes: 0);
                     var layouts = KsProcgenSizeGoalSubdivision.Propose(
                         $"{request.RequestId}/EntranceNetwork/{component.Component}", component.Cells,
-                        request.SizeMix, minimumRoomCells);
+                        request.SizeMix, minimumRoomCells, workBudget: fittingWork);
+                    expanded += fittingWork.ExpandedCells;
+                    if (fittingWork.ExhaustedCode != null)
+                        return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, fittingWork.ExhaustedCode);
                     if (layouts.Count != 0)
                     {
                         assigned[component.Component].AddRange(layouts[0].Zones);
@@ -332,9 +342,13 @@ public static class KsProcgenGroupPartitionPlanner
             rejectedAllocations.Add(allocationId);
             // Complete assignments are retried atomically. Reinspection/repeated fits still count
             // against the same metadata caps; all seam solves retain the original shared budget.
+            var beforeFitExpanded = seamWork.ExpandedCells;
             var next = allocationAttempts >= 8 ? null : KsProcgenSizeGoalAllocator.Allocate(request.RequestId,
                 initial.Components, request.SizeMix, minimumRoomCells, rejectedAllocations: rejectedAllocations,
-                previousQuotaProbes: quotaProbes, previousFitProbes: fitProbes);
+                previousQuotaProbes: quotaProbes, previousFitProbes: fitProbes, workBudget: seamWork);
+            expanded += seamWork.ExpandedCells - beforeFitExpanded;
+            if (seamWork.ExhaustedCode != null)
+                return Fail(KsProcgenEntranceSceneStatus.BudgetExceeded, seamWork.ExhaustedCode);
             if (next != null)
             {
                 quotaProbes = next.QuotaProbes;
