@@ -467,7 +467,8 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
 
     /// <summary>
     ///     Nothing that can be put out catches fire, or keeps burning, while it is in foam, unless the air over the foam
-    ///         is too hot for it (<see cref="ProtectsOccupants"/>).
+    ///         is too hot for it (<see cref="ProtectsOccupants"/>), or a chemfire still burns on its tile
+    ///         (<see cref="HasChemicalFire"/>).
     /// </summary>
     [SubscribeLocalEvent]
     private void OnInFoamBurnAttempt(Entity<KsInFoamComponent> entity, ref KsBurnAttemptEvent args)
@@ -482,12 +483,24 @@ public abstract partial class SharedKsFoamBlanketSystem : EntitySystem
         {
             if (!_blanketQuery.TryComp(blanketUid, out var blanketComponent) ||
                 !IsActive((blanketUid, blanketComponent)) ||
-                !ProtectsOccupants((blanketUid, blanketComponent)))
+                !ProtectsOccupants((blanketUid, blanketComponent)) ||
+                HasChemicalFire((blanketUid, blanketComponent)))
                 continue;
 
             args.Cancel();
             return;
         }
+    }
+
+    /// <summary>
+    ///     Whether any chemfire burns on the blanket's tile, of any kind. Foam can't keep what stands in a fire from
+    ///         burning: until every chemfire there is out, whether the foam is smothering it, fighting it or can't touch it,
+    ///         the blanket protects nothing.
+    /// </summary>
+    private bool HasChemicalFire(Entity<KsFoamBlanketComponent> blanket)
+    {
+        return blanket.Comp.LocalGridUid is { } gridUid &&
+            _chemicalFireSystem.GetTileChemicalFires((gridUid, null), blanket.Comp.LocalTile) is { Fires.Count: > 0 };
     }
 
     /// <summary>
