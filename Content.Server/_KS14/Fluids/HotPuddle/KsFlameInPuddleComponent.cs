@@ -17,11 +17,4 @@ public sealed partial class KsFlameInPuddleComponent : Component
     /// </summary>
     [ViewVariables, AutoPausedField]
     public TimeSpan Until;
-
-    /// <summary>
-    ///     How hot the flame is: <see cref="KsHotPuddleSystem.SourceTemperature"/> for something hot lying in it, or an
-    ///         explosion's own temperature for one that sparked it.
-    /// </summary>
-    [ViewVariables]
-    public float Temperature = KsHotPuddleSystem.SourceTemperature;
 }

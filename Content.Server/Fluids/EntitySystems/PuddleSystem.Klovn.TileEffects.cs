@@ -53,7 +53,11 @@ public sealed partial class PuddleSystem
             TryUpdateTileEffects((uid, puddleComponent), curTime);
     }
 
-    public void TryUpdateTileEffects(Entity<PuddleComponent> entity, TimeSpan curTime, bool careAboutTime = true)
+    /// <param name="flameTemperature">
+    ///     An open flame in the puddle for this one update, such as an explosion passing over it, on top of any it already
+    ///         has (<see cref="GetFlameTemperature"/>).
+    /// </param>
+    public void TryUpdateTileEffects(Entity<PuddleComponent> entity, TimeSpan curTime, bool careAboutTime = true, float? flameTemperature = null)
     {
         if (entity.Comp.Solution is not { } solutionEntity)
             return;
@@ -75,7 +79,7 @@ public sealed partial class PuddleSystem
         var refreshedWithin = careAboutTime ? TileEffectUpdateInterval + _gameTiming.TickPeriod * 2 : (TimeSpan?)null;
 
         if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale,
-                flameTemperature: GetFlameTemperature(entity.Owner), refreshedWithin: refreshedWithin))
+                flameTemperature: MaxFlame(GetFlameTemperature(entity.Owner), flameTemperature), refreshedWithin: refreshedWithin))
             return;
 
         if (solution.Volume == FixedPoint2.Zero)
@@ -93,11 +97,27 @@ public sealed partial class PuddleSystem
     /// </summary>
     private float? GetFlameTemperature(EntityUid puddleUid)
     {
-        var itemFlame = _ksHotPuddleSystem.GetFlameTemperature(puddleUid);
-        var spreadFlame = GetSpreadFlameTemperature(puddleUid);
-        if (itemFlame is not { } item)
-            return spreadFlame;
+        return MaxFlame(_ksHotPuddleSystem.GetFlameTemperature(puddleUid), GetSpreadFlameTemperature(puddleUid));
+    }
 
-        return spreadFlame is { } spread ? MathF.Max(item, spread) : item;
+    private static float? MaxFlame(float? a, float? b)
+    {
+        if (a is not { } first)
+            return b;
+
+        return b is { } second ? MathF.Max(first, second) : first;
+    }
+
+    /// <summary>
+    ///     Runs the puddle's tile effects now, with an open flame of this temperature in it, so whatever a flame lights
+    ///         catches at once. It stands in for the puddle's next scheduled update: it covers the time since the last
+    ///         one, as that would have.
+    /// </summary>
+    public void KsSparkPuddle(EntityUid puddleUid, float flameTemperature)
+    {
+        if (!TryComp(puddleUid, out PuddleComponent? puddleComponent))
+            return;
+
+        TryUpdateTileEffects((puddleUid, puddleComponent), _gameTiming.CurTime, flameTemperature: flameTemperature);
     }
 }

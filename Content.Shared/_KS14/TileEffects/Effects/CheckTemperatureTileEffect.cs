@@ -9,9 +9,10 @@ public sealed partial class CheckTemperatureTileEffect : KsTileEffect
 
     /// <summary>
     ///     Whether an open flame in the solution (<see cref="KsTileEffectReagentData.FlameTemperature"/>) counts toward
-    ///         <see cref="Minimum"/>, so that a lit welder dropped in fuel lights it, however cold the fuel.
+    ///         <see cref="Minimum"/>, so that a lit welder dropped in fuel lights it, however cold the fuel. On unless a
+    ///         reagent only reacts to being heated through.
     /// </summary>
-    [DataField] public bool LitByFlame;
+    [DataField] public bool LitByFlame = true;
 
     public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
     {

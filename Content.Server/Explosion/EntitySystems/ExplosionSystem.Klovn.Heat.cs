@@ -1,5 +1,4 @@
 using System.Linq;
-using Content.Server._KS14.Fluids.HotPuddle;
 using Content.Server.Chemistry.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Temperature.Systems;
@@ -13,7 +12,6 @@ public sealed partial class ExplosionSystem
     [Dependency] private TemperatureSystem _temperatureSystem = default!;
     [Dependency] private SolutionContainerSystem _solutionContainerSystem = default!;
     [Dependency] private PuddleSystem _puddleSystem = default!;
-    [Dependency] private KsHotPuddleSystem _hotPuddleSystem = default!;
 
     [Dependency] private EntityQuery<TemperatureComponent> _temperatureQuery = default!;
 
@@ -30,19 +28,14 @@ public sealed partial class ExplosionSystem
     }
 
     /// <summary>
-    ///     How long the flame an explosion leaves in a puddle lasts: past the puddle's next tile-effect update, which is
-    ///         what lights it.
-    /// </summary>
-    private static readonly TimeSpan PuddleSparkDuration = TimeSpan.FromSeconds(1);
-
-    /// <summary>
     ///     An explosion is an open flame to the puddle on a tile it passes over, so fuel it spilled or swept across
-    ///         catches (<c>CheckTemperatureTileEffect.LitByFlame</c>), rather than only being warmed.
+    ///         catches (<c>CheckTemperatureTileEffect.LitByFlame</c>), rather than only being warmed. The puddle's tile
+    ///         effects run then and there, so nothing has to remember the flame until its next update.
     /// </summary>
     private void SparkPuddle(Entity<MapGridComponent> grid, Vector2i tile, float temperature)
     {
         var tileRef = _map.GetTileRef(grid, tile);
         if (_puddleSystem.TryGetPuddle(tileRef, out var puddleUid))
-            _hotPuddleSystem.SetFlame(puddleUid, temperature, _timing.CurTime + PuddleSparkDuration);
+            _puddleSystem.KsSparkPuddle(puddleUid, temperature);
     }
 }
