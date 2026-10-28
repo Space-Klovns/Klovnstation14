@@ -1,4 +1,5 @@
 using Content.Shared.Whitelist;
+using Robust.Shared.GameStates;
 
 namespace Content.Shared._KS14.McqDialogue;
 
@@ -7,7 +8,7 @@ namespace Content.Shared._KS14.McqDialogue;
 ///         longer there, and can't be answered after that. A user holding nothing that passes
 ///         <see cref="Whitelist"/> when it opens gets it closed straight away.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 [Access(typeof(McqDialogueHeldItemSystem), typeof(McqDialogueSystem), Other = AccessPermissions.Read)]
 public sealed partial class McqDialogueHeldItemComponent : Component
 {
@@ -18,8 +19,9 @@ public sealed partial class McqDialogueHeldItemComponent : Component
     public EntityWhitelist? Whitelist;
 
     /// <summary>
-    ///     The item the user held when the dialogue opened, if it passed <see cref="Whitelist"/>.
+    ///     The item the user held when the dialogue opened, if it passed <see cref="Whitelist"/>. Networked for the
+    ///         source to read on the answering client, predicting what the answer does.
     /// </summary>
-    [ViewVariables]
+    [ViewVariables, AutoNetworkedField]
     public EntityUid? HeldUid;
 }

@@ -24,20 +24,26 @@ public sealed partial class McqDialogueSystem : EntitySystem
         entity.Comp.Dialogues.Clear();
     }
 
+    /// <summary>
+    ///     Deletes the dialogue. Server only: the dialogue is the server's entity, which the client could only detach
+    ///         until the next state put it back. The client closes its window with the UI's own predicted close.
+    /// </summary>
     public void CloseDialogue(Entity<ActiveMcqDialogueComponent?> dialogueEntity)
     {
-        if (!Resolve(dialogueEntity, ref dialogueEntity.Comp) ||
+        if (_netManager.IsClient ||
+            !Resolve(dialogueEntity, ref dialogueEntity.Comp) ||
             TerminatingOrDeleted(dialogueEntity.Comp.Source) ||
             TerminatingOrDeleted(dialogueEntity.Owner) ||
             dialogueEntity.Comp.Deleted)
             return;
 
-        var sourceEntity = dialogueEntity.Comp.Source!;
-        var sourceComponent = sourceEntity.Comp;
-
-        sourceComponent.Dialogues.Remove(dialogueEntity!);
-        if (sourceComponent.Dialogues.Count == 0)
-            RemComp(sourceEntity, sourceComponent);
+        var sourceUid = dialogueEntity.Comp.Source;
+        if (TryComp<McqDialogueSourceComponent>(sourceUid, out var sourceComponent))
+        {
+            sourceComponent.Dialogues.Remove(dialogueEntity!);
+            if (sourceComponent.Dialogues.Count == 0)
+                RemComp(sourceUid, sourceComponent);
+        }
 
         // immediately remove it
         PredictedQueueDel(dialogueEntity.Owner);
@@ -55,7 +61,8 @@ public sealed partial class McqDialogueSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnDataSelected(Entity<ActiveMcqDialogueComponent> entity, ref McqDialogueDataSelectedMessage args)
     {
-        // The id comes from the client, so it's only trusted if it's one the dialogue offered.
+        // The id comes from the client, so it's only trusted if it's one the dialogue offered. Also run on the
+        //      answering client, predicted: the dialogue's data is networked so that the source can act on it there.
         if (!Exists(entity.Comp.Source) || !entity.Comp.OptionIds.Contains(args.Id))
             return;
 
@@ -99,9 +106,9 @@ public sealed partial class McqDialogueSystem : EntitySystem
         foreach (var optionDatum in options)
             dialogueComponent.OptionIds.Add(optionDatum.Id);
 
-        var dialogueSourceComponent = EnsureComp<McqDialogueSourceComponent>(sourceUid);
-        dialogueComponent.Source = (sourceUid, dialogueSourceComponent);
-        dialogueSourceComponent.Dialogues.Add((dialogueUid, dialogueComponent));
+        dialogueComponent.Source = sourceUid;
+        Dirty(dialogueUid, dialogueComponent);
+        EnsureComp<McqDialogueSourceComponent>(sourceUid).Dialogues.Add((dialogueUid, dialogueComponent));
 
         if (settings?.HeldItemWhitelist is { } heldItemWhitelist)
             EnsureComp<McqDialogueHeldItemComponent>(dialogueUid).Whitelist = heldItemWhitelist;

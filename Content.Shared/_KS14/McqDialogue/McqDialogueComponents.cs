@@ -1,18 +1,24 @@
+using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.McqDialogue;
 
 /// <summary>
 ///     Added to an entity that is an active (open) dialogue.
-///         This holds the actual UI components.
+///         This holds the actual UI components. Networked so that the answering client can predict what the answer
+///         does.
 /// </summary>
-[RegisterComponent, UnsavedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, UnsavedComponent]
 [Access(typeof(McqDialogueSystem), Other = AccessPermissions.Read)]
 public sealed partial class ActiveMcqDialogueComponent : Component
 {
-    public Entity<McqDialogueSourceComponent> Source = default;
+    [ViewVariables, AutoNetworkedField]
+    public EntityUid Source;
+
+    [ViewVariables, AutoNetworkedField]
     public EntityUid User = EntityUid.Invalid;
 
+    [ViewVariables, AutoNetworkedField]
     public List<string> OptionIds = [];
 }
 

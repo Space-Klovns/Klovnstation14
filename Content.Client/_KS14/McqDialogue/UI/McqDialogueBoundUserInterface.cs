@@ -22,9 +22,10 @@ public sealed partial class McqDialogueBoundUserInterface(EntityUid owner, Enum 
 
         foreach (var datum in dialogueState.DialogueData)
         {
+            // Predicted: the answer runs on this client too, so what it starts shows at once.
             void Handler()
             {
-                SendMessage(new McqDialogueDataSelectedMessage(datum.Id));
+                SendPredictedMessage(new McqDialogueDataSelectedMessage(datum.Id));
                 Close();
             }
 

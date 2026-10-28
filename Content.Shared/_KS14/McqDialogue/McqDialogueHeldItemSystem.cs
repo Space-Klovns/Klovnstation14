@@ -20,7 +20,10 @@ public sealed partial class McqDialogueHeldItemSystem : EntitySystem
     {
         if (_handsSystem.GetActiveItem(args.User) is { } heldUid &&
             _entityWhitelistSystem.IsWhitelistPassOrNull(entity.Comp.Whitelist, heldUid))
+        {
             entity.Comp.HeldUid = heldUid;
+            Dirty(entity);
+        }
     }
 
     /// <remarks>

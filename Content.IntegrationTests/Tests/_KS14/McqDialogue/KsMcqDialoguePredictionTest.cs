@@ -7,6 +7,7 @@ using Content.Client._KS14.McqDialogue.UI;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.McqDialogue;
 using Content.Shared._KS14.OreVent;
+using Content.Shared.DoAfter;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
 using NUnit.Framework;
@@ -157,6 +158,52 @@ public sealed class KsMcqDialoguePredictionTest : GameTest
         });
 
         await Client.WaitAssertion(() => Assert.That(OpenWindows(), Is.Empty, "and no window reopened for it"));
+    }
+
+    /// <summary>
+    ///     Answering through the dialogue's UI is predicted: what the answer starts - here, the excavation's do-after -
+    ///         is already running on the client before the server has handled the answer.
+    /// </summary>
+    [Test]
+    public async Task AnsweringIsPredicted()
+    {
+        var (vent, user, scanner) = await SetUpAsync();
+
+        await ServerScanAsync(vent, user, scanner);
+        await Pair.RunTicksSync(10);
+
+        await Client.WaitPost(() =>
+        {
+            EntityUid? dialogueUid = null;
+            var dialogueEnumerator = CEntMan.EntityQueryEnumerator<ActiveMcqDialogueComponent>();
+            while (dialogueEnumerator.MoveNext(out var uid, out var dialogueComponent))
+            {
+                if (dialogueComponent.Source == ToClientUid(vent))
+                    dialogueUid = uid;
+            }
+
+            Assert.That(dialogueUid, Is.Not.Null, "precondition: the client has the server's dialogue");
+            Assert.That(CEntMan.System<SharedUserInterfaceSystem>().TryGetOpenUi(dialogueUid!.Value, McqDialogueUiKey.Key, out var bui),
+                "precondition: and its UI is open");
+
+            // As the option's button does.
+            bui!.SendPredictedMessage(new McqDialogueDataSelectedMessage("yes"));
+        });
+
+        // The client alone, so the server can't have handled the answer yet.
+        await Client.WaitRunTicks(2);
+
+        await Client.WaitAssertion(() => Assert.That(CEntMan.GetComponent<DoAfterComponent>(ToClientUid(user)).DoAfters, Is.Not.Empty,
+            "the client started the excavation itself"));
+        await Server.WaitAssertion(() => Assert.That(SEntMan.GetComponent<DoAfterComponent>(user).DoAfters, Is.Empty,
+            "precondition: before the server did"));
+
+        await RunSecondsAsync(1f);
+        await Server.WaitAssertion(() =>
+        {
+            var ventComponent = SEntMan.GetComponent<OreVentComponent>(vent);
+            Assert.That(ventComponent.DoingClearing || ventComponent.BeingTapped || ventComponent.Tapped, "and the server followed");
+        });
     }
 
     [Test]

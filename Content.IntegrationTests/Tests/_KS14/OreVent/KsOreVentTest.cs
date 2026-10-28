@@ -167,7 +167,7 @@ public sealed class KsOreVentTest : GameTest
         var dialogueEnumerator = SEntMan.EntityQueryEnumerator<ActiveMcqDialogueComponent>();
         while (dialogueEnumerator.MoveNext(out var dialogueUid, out var dialogueComponent))
         {
-            if (dialogueComponent.Source.Owner == vent && dialogueComponent.User == user && !SEntMan.IsQueuedForDeletion(dialogueUid))
+            if (dialogueComponent.Source == vent && dialogueComponent.User == user && !SEntMan.IsQueuedForDeletion(dialogueUid))
                 return dialogueUid;
         }
 
