@@ -364,8 +364,11 @@ public sealed class KsHotPuddleTest : GameTest
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(Temperature(firstPuddleUid), Is.EqualTo(firstTemperature).Within(0.01f), "The puddle the item left was still heated.");
-                Assert.That(Temperature(secondPuddleUid), Is.GreaterThan(secondTemperature + 1f), "The puddle the item stayed in stopped being heated.");
+                // The puddle left behind still warms a little, by conduction from its heated neighbour, but far less.
+                var firstGain = Temperature(firstPuddleUid) - firstTemperature;
+                var secondGain = Temperature(secondPuddleUid) - secondTemperature;
+                Assert.That(secondGain, Is.GreaterThan(1f), "The puddle the item stayed in stopped being heated.");
+                Assert.That(firstGain, Is.LessThan(secondGain * 0.5f), "The puddle the item left was still heated.");
             }
         });
 

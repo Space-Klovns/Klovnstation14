@@ -76,6 +76,9 @@ public sealed partial class PuddleSystem
 
         foreach (var (gridUid, tilePuddles) in _gridPuddleCache)
         {
+            foreach (var (indices, puddle) in tilePuddles)
+                ConductHeatToNeighbours(puddle, tilePuddles, indices, deltaTime);
+
             // Resolved once per grid; grids without an atmosphere fall back to the map's (immutable) mixture and are skipped.
             if (!TryComp(gridUid, out GridAtmosphereComponent? gridAtmosphere))
                 continue;

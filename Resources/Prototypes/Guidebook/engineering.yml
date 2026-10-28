@@ -244,6 +244,8 @@
   id: Fires
   name: guide-entry-fires
   text: "/ServerInfo/Guidebook/Engineering/Fires.xml"
+  children: # KS14
+  - ChemicalFires # KS14
 
 - type: guideEntry
   id: Spacing

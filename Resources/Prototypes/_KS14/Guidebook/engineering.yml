@@ -26,3 +26,8 @@
   id: ShuttleConsole
   name: guide-entry-shuttle-console
   text: "/ServerInfo/_KS14/Guidebook/Engineering/ShuttleConsole.xml"
+
+- type: guideEntry # KS14
+  id: ChemicalFires
+  name: guide-entry-chemical-fires
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/ChemicalFires.xml"
