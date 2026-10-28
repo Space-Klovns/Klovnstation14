@@ -2288,3 +2288,11 @@ Entries:
       message: Sprays no longer lose their contents when they hit nothing.
   id: 233
   time: '2026-10-24T12:08:58.0000000+00:00'
+- author: NazrinNya
+  changes:
+    - type: Add
+      message: More calls for executor.
+    - type: Tweak
+      message: Improved QoL of packet network configurators and packet executors
+  id: 234
+  time: '2026-10-28T12:28:33.0000000+00:00'
