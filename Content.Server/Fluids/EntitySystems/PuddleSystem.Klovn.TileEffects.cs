@@ -22,6 +22,8 @@ public sealed partial class PuddleSystem
 
         Subs.CVar(_configurationManager, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity,
             value => _puddleEmissivity = value, invokeImmediately: true);
+        Subs.CVar(_configurationManager, Content.Shared._KS14.CCVar.KsCCVars.AtmosFlameSpreadRate,
+            value => _flameSpreadRate = value, invokeImmediately: true);
 
         SubscribeLocalEvent<PuddleComponent, MapInitEvent>(OnPuddleMapInit);
     }
@@ -43,6 +45,8 @@ public sealed partial class PuddleSystem
             return;
 
         _nextTileEffectUpdate = curTime + TileEffectUpdateInterval;
+
+        UpdateFlameSpread();
 
         var eqe = EntityQueryEnumerator<TileEffectPuddleComponent, PuddleComponent>();
         while (eqe.MoveNext(out var uid, out _, out var puddleComponent))
@@ -71,7 +75,7 @@ public sealed partial class PuddleSystem
         var refreshedWithin = careAboutTime ? TileEffectUpdateInterval + _gameTiming.TickPeriod * 2 : (TimeSpan?)null;
 
         if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale,
-                flameTemperature: _ksHotPuddleSystem.GetFlameTemperature(entity.Owner), refreshedWithin: refreshedWithin))
+                flameTemperature: GetFlameTemperature(entity.Owner), refreshedWithin: refreshedWithin))
             return;
 
         if (solution.Volume == FixedPoint2.Zero)
@@ -82,5 +86,18 @@ public sealed partial class PuddleSystem
 
         _solutionContainerSystem.UpdateChemicals(solutionEntity);
         Dirty(solutionEntity);
+    }
+
+    /// <summary>
+    ///     The hottest open flame in the puddle: something hot lying in it, or fire spreading from a burning tile nearby.
+    /// </summary>
+    private float? GetFlameTemperature(EntityUid puddleUid)
+    {
+        var itemFlame = _ksHotPuddleSystem.GetFlameTemperature(puddleUid);
+        var spreadFlame = GetSpreadFlameTemperature(puddleUid);
+        if (itemFlame is not { } item)
+            return spreadFlame;
+
+        return spreadFlame is { } spread ? MathF.Max(item, spread) : item;
     }
 }

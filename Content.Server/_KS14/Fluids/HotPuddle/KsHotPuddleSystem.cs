@@ -239,7 +239,7 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
             {
                 _pendingHeat.Add((puddleUid, energy));
                 // Until just past the next check, so a flame that stays never lapses between them.
-                EnsureComp<KsFlameInPuddleComponent>(puddleUid).Until = curTime + CheckInterval * 2;
+                SetFlame(puddleUid, SourceTemperature, curTime + CheckInterval * 2);
             }
         }
 
@@ -290,10 +290,28 @@ public sealed partial class KsHotPuddleSystem : EntitySystem
             return null;
 
         if (_gameTiming.CurTime < flameComponent.Until)
-            return SourceTemperature;
+            return flameComponent.Temperature;
 
         RemCompDeferred(puddleUid, flameComponent);
         return null;
+    }
+
+    /// <summary>
+    ///     Puts an open flame of this temperature in the puddle until <paramref name="until"/>, as an explosion passing
+    ///         over it does. A hotter flame already there, still burning, is kept.
+    /// </summary>
+    public void SetFlame(EntityUid puddleUid, float temperature, TimeSpan until)
+    {
+        var flameComponent = EnsureComp<KsFlameInPuddleComponent>(puddleUid);
+        var stillBurning = _gameTiming.CurTime < flameComponent.Until;
+        if (stillBurning && flameComponent.Temperature > temperature)
+        {
+            flameComponent.Until = until > flameComponent.Until ? until : flameComponent.Until;
+            return;
+        }
+
+        flameComponent.Temperature = temperature;
+        flameComponent.Until = until;
     }
 
     #endregion

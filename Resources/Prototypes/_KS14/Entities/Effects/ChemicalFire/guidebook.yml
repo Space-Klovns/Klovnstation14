@@ -1,0 +1,68 @@
+# Pictures for the guidebook. Real chemfires have no sprite (ChemicalFireOverlay draws them from the grid's fire
+#     data), so a GuideEntityEmbed of one shows nothing. These are sprites only, drawn from the same RSI and colours.
+- type: entity
+  abstract: true
+  id: KsGuidebookChemicalFireBase
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Effects/Fire/chemfire.rsi
+    offset: 0,0.25
+    layers:
+    - state: white_under-1
+      color: "#FF9030"
+      shader: unshaded
+    - state: white_over-1
+      color: "#FF9030"
+      shader: unshaded
+
+- type: entity
+  parent: KsGuidebookChemicalFireBase
+  id: KsGuidebookChemicalFire
+  categories: [ HideSpawnMenu ]
+  name: chemical fire
+  description: A burning puddle.
+
+- type: entity
+  parent: KsGuidebookChemicalFireBase
+  id: KsGuidebookThermiteFire
+  categories: [ HideSpawnMenu ]
+  name: thermite fire
+  description: A burning puddle of thermite.
+  components:
+  - type: Sprite
+    layers:
+    - state: white_under-2
+      color: "#ffc291"
+      shader: unshaded
+    - state: white_over-2
+      color: "#ffc291"
+      shader: unshaded
+
+- type: entity
+  parent: KsGuidebookChemicalFireBase
+  id: KsGuidebookElectricalFire
+  categories: [ HideSpawnMenu ]
+  name: electrical fire
+  description: Sparks and burning insulation.
+  components:
+  - type: Sprite
+    layers:
+    - state: white_under-1
+      color: "#9fd8ff"
+      shader: unshaded
+    - state: white_over-1
+      color: "#9fd8ff"
+      shader: unshaded
+
+- type: entity
+  id: KsGuidebookFoamBlanket
+  categories: [ HideSpawnMenu ]
+  name: firefighting foam
+  description: A blanket of foam.
+  components:
+  - type: Sprite
+    sprite: _KS14/Effects/fire_foam.rsi
+    color: "#FFFFFFD9" # a full blanket's alpha, 0.85 (Client KsFoamBlanketSystem.MaximumAlpha)
+    layers:
+    - state: foam

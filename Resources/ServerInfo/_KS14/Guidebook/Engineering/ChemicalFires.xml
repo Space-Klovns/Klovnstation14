@@ -1,42 +1,92 @@
 <Document>
   # Chemical Fires
-  A chemical fire is a puddle that is burning. Spill welding fuel, napalm or any other pyrotechnic on the floor, let it get hot enough, and every tile of the puddle can catch.
+  A chemical fire is a [bold]burning puddle[/bold]. Spill welding fuel or another flammable chemical, let it get hot, and the whole spill can go up.
 
   <Box>
+    <GuideEntityEmbed Entity="KsGuidebookChemicalFire"/>
+    <GuideEntityEmbed Entity="KsGuidebookFoamBlanket"/>
+  </Box>
+
+  The short version:
+  - Flames are only half the problem. [bold]The hot puddle underneath is what relights them.[/bold]
+  - Water puts the flames out. [bold]Foam keeps them out[/bold] while the puddle cools.
+  - Don't leave until the puddle is cold or gone.
+  - Keep fuel tanks away from fire. [bold]They explode.[/bold]
+
+  ## What burns
+  <Box>
     <GuideEntityEmbed Entity="WeldingFuelTankFull"/>
+  </Box>
+  Most fuels, like [color=orange]welding fuel[/color] and [color=orange]napalm[/color], need heat before they catch: a hot room, a gas fire nearby or a burning tile next door. A lit welder or lighter touching either one sets it off at once.
+
+  Once part of a spill is burning, the flame [bold]runs across the rest of it in seconds[/bold], however cold it is. Water, foam or bare floor between two puddles stops it.
+
+  [color=orange]Thermite[/color] and [color=orange]phlogiston[/color] don't wait. They start burning the moment they hit the floor.
+
+  ## Why they come back
+  A chemical fire eats its puddle slowly, and while it does it heats the air above and the puddle below. Heat also spreads from tile to tile through the liquid, so one burning corner of a big spill warms the rest of it.
+
+  Put the flames out but leave the fuel hot, and a few seconds later it lights itself again. A fire is only [bold]out for good[/bold] once the puddle under it has cooled down.
+
+  ## Your tools
+  <Box>
     <GuideEntityEmbed Entity="FireExtinguisher"/>
     <GuideEntityEmbed Entity="MobFireBot"/>
   </Box>
+  [bold]The fire extinguisher[/bold] sprays water mixed with firefighting foam. Open it with [color=yellow][bold][keybind="ActivateItemInHand"][/bold][/color], switch to combat mode, and hold [color=yellow][bold][keybind="Use"][/bold][/color] for a steady stream.
 
-  ## How they start and spread
-  Most fuels need heat before they catch. A hot room, a gas fire nearby or a burning neighbour tile will do it, and napalm or welding fuel lights the moment a lit welder or lighter touches it. Thermite and phlogiston don't wait: they burn as soon as they hit the floor.
+  - The [bold]water[/bold] puts out ordinary chemical fires and cools the puddle.
+  - The [bold]foam[/bold] leaves a blanket on every tile the spray passes over. While a blanket lies on a tile, no chemical fire can start there.
+  - Foam doesn't last. Heat boils it away and it fades on its own, so a blanket over a hot puddle needs topping up.
 
-  A chemical fire eats its puddle a little at a time, heats the air above it, and heats the puddle under it. The hot puddle is the real danger. Put the flames out and leave the fuel hot, and it lights itself again a few seconds later. On a large spill, every tile you leave burning keeps heating the tiles around it.
+  <Box>
+    <GuideEntityEmbed Entity="KsGuidebookFoamBlanket"/>
+  </Box>
+  [bold]What foam looks like:[/bold] a white froth lying flat on the floor, over any puddle. A thick blanket is bright white. As it boils off it turns thin and see-through, and when the last of it is gone it breaks up and vanishes. Foam fighting a fire hisses. If the foam on a hot puddle is getting see-through, spray it again.
 
-  ## Putting them out
-  Water puts out an ordinary chemical fire and cools the puddle, but a soaked puddle can still be hot enough to relight.
+  [bold]Firebots[/bold] fight chemical fires on their own (see [color=orange]Firebots[/color] below).
 
-  A fire extinguisher sprays water mixed with firefighting foam. Open it, switch to combat mode and hold the trigger for a steady stream. Every tile the spray crosses gets a foam blanket. While a blanket lies on a tile, no chemical fire can start there.
-
-  Foam doesn't last forever. Heat boils it off and it slowly fades on its own, so a blanket over a hot puddle will eventually give out. A fire is out for good once the puddle under it has cooled down, not when the flames go out. Until then, keep coming back and topping the blanket up.
-
-  - [bold]Work from the near edge in.[/bold] Spray the tiles closest to you first, then advance. Aim through the fire rather than at its nearest tile, since the spray foams everything it crosses.
-  - [bold]Don't walk away early.[/bold] Wait a few seconds after the last flame dies and look for one coming back.
-  - [bold]Mop up or let it boil.[/bold] Spilled fuel stays dangerous until it is gone or cold.
+  ## Putting one out
+  1. [bold]Stand back.[/bold] Spray from a few tiles away, not from inside the fire.
+  2. [bold]Start at the near edge.[/bold] Put out the tiles closest to you, then step forward and do the next row.
+  3. [bold]Aim through the fire, not at it.[/bold] The spray foams everything along its path, so a long shot across the spill covers more than a short one.
+  4. [bold]Keep watch.[/bold] After the last flame dies, wait a few seconds and look for any that come back. Re-spray any tile whose foam has thinned.
+  5. [bold]Finish the job.[/bold] Mop up the fuel, or wait for it to cool. It stays dangerous until it does.
 
   ## Fires that fight back
-  [bold]Thermite[/bold] burns through water and boils away the foam over it. A single pass of foam loses, because the fire burns the blanket off before it is done. Keep spraying and keep the blanket full, and the foam wins. You can watch the fight: the flames shrink and dim as the foam gains, and flare back up if you stop.
+  <Box>
+    <GuideEntityEmbed Entity="KsGuidebookThermiteFire"/>
+  </Box>
+  [bold]Thermite[/bold] ignores water and boils away the foam over it. One quick pass of foam loses, because the fire burns through the blanket before it is done. [bold]Keep spraying[/bold] so the blanket stays thick, and the foam wins. You can watch the fight: the flames shrink and dim as the foam gains, and flare back up if you stop.
 
-  [bold]Suspended klovnide-trioxide[/bold] can't be put out by water or foam at all. It burns until its puddle is gone, so contain it and keep people away.
+  [bold]Suspended klovnide-trioxide[/bold] can't be put out at all. It burns until its puddle is gone. Keep people away and stop it spreading.
+
+  ## Explosions
+  <Box>
+    <GuideEntityEmbed Entity="WeldingFuelTankFull"/>
+    <GuideEntityEmbed Entity="Jug"/>
+  </Box>
+  Anything holding [color=orange]fuel or other pyrotechnics[/color] can explode: fuel tanks, wall fuel dispensers, generators, jugs, beakers and bottles. The more it holds, the bigger the blast, and napalm hits harder than fuel. A tank of water never explodes.
+
+  - [bold]Shooting or burning one[/bold] sets it off at once.
+  - [bold]Leaving one near a fire[/bold] heats up what's inside, and once that gets hot enough it goes off on its own. A tank sitting in a burning room lasts about ten seconds.
+  - [bold]Drag tanks away[/bold] from a spill before you start on the fire, and never fight a fire from next to one.
 
   ## Electrical fires
-  An arc flash can start an electrical fire on the machine that flashed and on every machine its arcs hit. Wall-mounted machines burn on the tile in front of them.
+  <Box>
+    <GuideEntityEmbed Entity="KsGuidebookElectricalFire"/>
+  </Box>
+  An [textlink="arc flash" link="ArcFlash"] can set fire to the machine that flashed and to every machine its arcs hit. Machines on walls burn on the tile in front of them. You'll know one by its pale blue flames and the crackle of sparks.
 
-  Water and foam do nothing to an electrical fire, and it never burns out on its own. It needs oxygen and warm air, so take one of those away. A carbon dioxide extinguisher does both: it freezes the air and pushes the oxygen out. Without one, cut the room's oxygen or vent it.
+  Water and foam do nothing to an electrical fire, and it never burns out by itself. It needs [bold]oxygen[/bold] and [bold]warm air[/bold], so take one away:
+  - A [bold]carbon dioxide extinguisher[/bold] does both. It freezes the air and pushes the oxygen out of the tile.
+  - Without one, cut the room's oxygen supply or vent it.
 
   ## Gas fires and foam
-  Foam only slows a plasma or other gas fire down. A blanket holds a gas fire back while the air over it is cooler than boiling water, and boils away fast once it is hotter. To actually stop a gas fire, starve it or vent it (see [textlink="Fires" link="Fires"]).
+  Foam only [bold]slows[/bold] a plasma or other gas fire. A blanket holds one back while the air above it is cooler than boiling water, then boils away fast. To actually stop a gas fire, starve it or vent it. See [textlink="Fires" link="Fires"].
 
   ## Firebots
-  Firebots fight chemical fires on their own. One finds the nearest burning tile, sprays from a safe distance, works its way across the spill, and keeps watch until the puddle has cooled. It still puts out people on fire first. It can't do anything about electrical or klovnide-trioxide fires.
+  A firebot finds the nearest burning tile, sprays it from a safe distance and works its way across the spill. Once the flames are out it stays and keeps the foam topped up until the puddle has cooled.
+
+  It still puts out burning people first, and it can't do anything about electrical or klovnide-trioxide fires. One firebot can't hold back a very hot spill on its own, so lend it a hand.
 </Document>
