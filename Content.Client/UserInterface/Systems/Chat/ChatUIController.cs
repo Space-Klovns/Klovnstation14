@@ -200,6 +200,7 @@ public sealed partial class ChatUIController : UIController
         _net.RegisterNetMessage<MsgChatMessage>(OnChatMessage);
         _net.RegisterNetMessage<MsgDeleteChatMessagesBy>(OnDeleteChatMessagesBy);
         _net.RegisterNetMessage<MsgReplaceChatMessage>(OnReplaceChatMessage); // KS14
+        KsInitializeTranslationSession(); // BS: UPSTREAM-BS-TRANSLATION-001, isolate live translation IDs across connections.
         SubscribeNetworkEvent<DamageForceSayEvent>(OnDamageForceSay);
         _config.OnValueChanged(CCVars.ChatEnableColorName, (value) => { _chatNameColorsEnabled = value; });
         _chatNameColorsEnabled = _config.GetCVar(CCVars.ChatEnableColorName);
@@ -863,24 +864,9 @@ public sealed partial class ChatUIController : UIController
                 msg.WrappedMessage = SharedChatSystem.InjectTagInsideTag(msg, "Name", "color", GetNameColor(SharedChatSystem.GetStringInsideTag(msg, "Name")));
         }
 
-        // Color any words chosen by the client.
-        foreach (var highlight in _highlights)
-        {
-            msg.WrappedMessage = SharedChatSystem.InjectTagAroundString(msg, highlight, "color", _highlightsColor);
-        }
-
-        // Color any codewords for minds that have roles that use them
-        if (_player.LocalUser != null && _mindSystem != null && _roleCodewordSystem != null)
-        {
-            if (_mindSystem.TryGetMind(_player.LocalUser.Value, out var mindId) && _ent.TryGetComponent(mindId, out RoleCodewordComponent? codewordComp))
-            {
-                foreach (var (_, codewordData) in codewordComp.RoleCodewords)
-                {
-                    foreach (string codeword in codewordData.Codewords)
-                        msg.WrappedMessage = SharedChatSystem.InjectTagAroundString(msg, codeword, "color", codewordData.Color.ToHex());
-                }
-            }
-        }
+        // BS: UPSTREAM-BS-TRANSLATION-001, highlights must not split the hidden translation's source template.
+        var ksWrappedTemplate = msg.WrappedMessage;
+        KsApplyChatHighlights(msg);
 
         // Log all incoming chat to repopulate when filter is un-toggled
         if (!msg.HideChat)
@@ -905,6 +891,10 @@ public sealed partial class ChatUIController : UIController
         }
 
         // Local messages that have an entity attached get a speech bubble.
+        // BS: Hidden holopad broadcasts still need async replacement, including a result arriving first.
+        if (msg.HideChat)
+            KsRememberHiddenTranslation(msg, ksWrappedTemplate);
+
         if (!speechBubble || msg.SenderEntity == default)
             return;
 
@@ -957,6 +947,7 @@ public sealed partial class ChatUIController : UIController
             return true;
         });
         // KS14 End
+        KsRemoveHiddenTranslations(msg); // BS: Erased broadcast messages must not retain a translation target.
         Repopulate();
     }
 
@@ -1019,7 +1010,7 @@ public sealed partial class ChatUIController : UIController
             return true;
         }
 
-        return false; // not in History yet
+        return KsTryApplyHiddenTranslation(messageId, translated); // BS: Broadcasts intentionally have no History row.
     }
 
     // KS14: reveal the original (pre-translation) text for a translated line, used by the hover marker tag.

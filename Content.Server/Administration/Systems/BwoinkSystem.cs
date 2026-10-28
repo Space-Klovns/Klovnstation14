@@ -684,12 +684,15 @@ namespace Content.Server.Administration.Systems
 
             LogBwoink(msg);
 
+            // BS: UPSTREAM-BS-TRANSLATION-001, translate authorized AHelp in both directions with private context.
+            _ksTranslation.KsTryBeginAHelp(message.Text, senderSession, out var ksTranslation);
+
             var admins = GetTargetAdmins();
 
             // Notify all admins
             foreach (var channel in admins)
             {
-                RaiseNetworkEvent(msg, channel);
+                KsSendTranslatedBwoink(msg, message.Text, ksTranslation, channel); // BS: Per-reader language and delivery.
             }
 
             string adminPrefixWebhook = "";
@@ -726,16 +729,20 @@ namespace Content.Server.Administration.Systems
 
                         overrideMsgText = $"{(message.PlaySound ? "" : "(S) ")}{overrideMsgText}: {escapedText}";
 
-                        RaiseNetworkEvent(new BwoinkTextMessage(message.UserId,
+                        KsSendTranslatedBwoink(new BwoinkTextMessage(message.UserId,
                                 senderSession.UserId,
                                 overrideMsgText,
                                 playSound: playSound),
-                            session.Channel);
+                            message.Text, ksTranslation, session.Channel); // BS: Keep the configured admin name override.
                     }
                     else
-                        RaiseNetworkEvent(msg, session.Channel);
+                        KsSendTranslatedBwoink(msg, message.Text, ksTranslation, session.Channel); // BS: Player receives only their own conversation.
                 }
             }
+
+            // BS: Apply the existing API-call cooldown once, after all authorized recipients are queued.
+            if (ksTranslation != null)
+                _ksTranslation.EndMessage(ksTranslation);
 
             var sendsWebhook = _webhookUrl != string.Empty;
             if (sendsWebhook)

@@ -11,6 +11,7 @@ using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Systems.MenuBar.Widgets;
 using Content.Shared.Administration;
+using Content.Shared._KS14.Translation; // BS: UPSTREAM-BS-TRANSLATION-001, private AHelp replacements.
 using Content.Shared.CCVar;
 using Content.Shared.Input;
 using JetBrains.Annotations;
@@ -58,6 +59,8 @@ public sealed partial class AHelpUIController : UIController, IOnSystemChanged<B
 
         SubscribeNetworkEvent<BwoinkDiscordRelayUpdated>(DiscordRelayUpdated);
         SubscribeNetworkEvent<BwoinkPlayerTypingUpdated>(PeopleTypingUpdated);
+        SubscribeNetworkEvent<KsBwoinkTranslationEvent>(KsReceiveTranslation); // BS: Keep translated replies in their conversation.
+        KsInitializeTranslationLifetime(); // BS: Keep private UI and translation results within one connection.
 
         _adminManager.AdminStatusUpdated += OnAdminStatusUpdated;
         _config.OnValueChanged(CCVars.AHelpSound, v => _aHelpSound = v, true);
@@ -84,6 +87,12 @@ public sealed partial class AHelpUIController : UIController, IOnSystemChanged<B
 
     private void OnAdminStatusUpdated()
     {
+        // BS: UPSTREAM-BS-TRANSLATION-001, disconnect can clear the player before admin status arrives.
+        if (_playerManager.LocalUser == null)
+        {
+            KsResetTranslationSession();
+            return;
+        }
         if (UIHelper is not { IsOpen: true })
             return;
         EnsureUIHelper();
@@ -111,6 +120,7 @@ public sealed partial class AHelpUIController : UIController, IOnSystemChanged<B
         DebugTools.Assert(_bwoinkSystem != null);
         _bwoinkSystem!.OnBwoinkTextMessageRecieved -= ReceivedBwoink;
         _bwoinkSystem = null;
+        KsResetTranslationSession(); // BS: Private panels and pending results belong to this system/connection.
     }
 
     private void SetAHelpPressed(bool pressed)
@@ -152,6 +162,7 @@ public sealed partial class AHelpUIController : UIController, IOnSystemChanged<B
         }
 
         UIHelper!.Receive(message);
+        KsApplyPendingTranslation(message); // BS: Handle a translation that arrived before its original.
     }
 
     private void DiscordRelayUpdated(BwoinkDiscordRelayUpdated args, EntitySessionEventArgs session)
@@ -172,6 +183,7 @@ public sealed partial class AHelpUIController : UIController, IOnSystemChanged<B
         if (UIHelper != null && UIHelper.IsAdmin == isAdmin)
             return;
 
+        UIHelper?.Close(); // BS: UPSTREAM-BS-TRANSLATION-001, role changes must close detached admin windows too.
         UIHelper?.Dispose();
         var ownerUserId = _playerManager.LocalUser!.Value;
         UIHelper = isAdmin ? new AdminAHelpUIHandler(ownerUserId) : new UserAHelpUIHandler(ownerUserId);
@@ -319,6 +331,7 @@ public interface IAHelpUIHandler : IDisposable
     public bool IsAdmin { get; }
     public bool IsOpen { get; }
     public void Receive(SharedBwoinkSystem.BwoinkTextMessage message);
+    public bool KsTryReplaceTranslation(KsBwoinkTranslationEvent replacement); // BS: Replacements never count as new bwoinks.
     public void Close();
     public void Open(NetUserId netUserId, bool relayActive);
     public void ToggleWindow();
@@ -329,7 +342,7 @@ public interface IAHelpUIHandler : IDisposable
     public Action<NetUserId, string, bool, bool>? SendMessageAction { get; set; }
     public event Action<NetUserId, string>? InputTextChanged;
 }
-public sealed class AdminAHelpUIHandler : IAHelpUIHandler
+public sealed partial /* KS14: keep translation extensions in a separate file */ class AdminAHelpUIHandler : IAHelpUIHandler
 {
     private readonly NetUserId _ownerId;
     public AdminAHelpUIHandler(NetUserId owner)
@@ -490,7 +503,7 @@ public sealed class AdminAHelpUIHandler : IAHelpUIHandler
     }
 }
 
-public sealed class UserAHelpUIHandler : IAHelpUIHandler
+public sealed partial /* KS14: keep translation extensions in a separate file */ class UserAHelpUIHandler : IAHelpUIHandler
 {
     private readonly NetUserId _ownerId;
     public UserAHelpUIHandler(NetUserId owner)
