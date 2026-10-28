@@ -116,8 +116,8 @@ public sealed partial class KsTileEffectSystem : EntitySystem
         }
     }
 
-    /// <param name="flameTemperature">See <see cref="KsTileEffectReagentData.FlameTemperature"/>.</param>
-    /// <param name="refreshedWithin">See <see cref="KsTileEffectReagentData.RefreshedWithin"/>.</param>
+    /// <param name="flameTemperature">See <see cref="KsTileEffectContext.FlameTemperature"/>.</param>
+    /// <param name="refreshedWithin">See <see cref="KsTileEffectContext.RefreshedWithin"/>.</param>
     public bool TryUpdateTileEffects(Entity<TransformComponent?> entity, TileRef? tileRef, Solution solution, float scale = 1f, float? flameTemperature = null, TimeSpan? refreshedWithin = null)
     {
         entity.Comp ??= Transform(entity);
@@ -126,7 +126,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             return false;
 
         var anythingHappened = false;
-        var tileEffectReagentData = new KsTileEffectReagentData(0f, solution, null, FlameTemperature: flameTemperature, RefreshedWithin: refreshedWithin);
+        var context = new KsTileEffectContext(0f, solution, null, FlameTemperature: flameTemperature, RefreshedWithin: refreshedWithin);
 
         for (var i = solution.Contents.Count - 1; i >= 0; i--)
         {
@@ -134,8 +134,8 @@ public sealed partial class KsTileEffectSystem : EntitySystem
             var reagentPrototype = ProtoMan.Index<ReagentPrototype>(reagent.Prototype);
 
             // KS14 - RemovedVolume is per reagent; it was carrying over from the previous reagent otherwise.
-            tileEffectReagentData.RemovedVolume = 0f;
-            tileEffectReagentData.Reagent = reagent;
+            context.RemovedVolume = 0f;
+            context.Reagent = reagent;
 
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
             {
@@ -146,12 +146,12 @@ public sealed partial class KsTileEffectSystem : EntitySystem
                 if (tileRef is not { })
                     tileRef = _mapSystem.GetTileRef((gridUid, gridComponent), entity.Comp.Coordinates);
 
-                anythingHappened |= tileEffect.Execute(tileRef!.Value, scale, ref tileEffectReagentData);
-                if (tileEffectReagentData.RemovedVolume >= (float)quantity)
+                anythingHappened |= tileEffect.Execute(tileRef!.Value, scale, ref context);
+                if (context.RemovedVolume >= (float)quantity)
                     break;
             }
 
-            var removedVolume = tileEffectReagentData.RemovedVolume;
+            var removedVolume = context.RemovedVolume;
             if (removedVolume <= 0f)
                 continue;
 

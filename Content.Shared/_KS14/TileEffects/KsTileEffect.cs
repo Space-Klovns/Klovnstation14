@@ -1,6 +1,5 @@
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Reagent;
-using Content.Shared.FixedPoint;
 using Robust.Shared.Map;
 
 namespace Content.Shared._KS14.TileEffects;
@@ -36,15 +35,19 @@ public abstract partial class KsTileEffect
     }
 
     // return whether someting happened
-    public abstract bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData);
+    public abstract bool Execute(TileRef tileRef, float scale, ref KsTileEffectContext context);
 
     public bool Execute(TileRef tileRef, float scale)
     {
-        var reagentData = new KsTileEffectReagentData(0f, null, null);
-        return Execute(tileRef, scale, ref reagentData);
+        var context = new KsTileEffectContext(0f, null, null);
+        return Execute(tileRef, scale, ref context);
     }
 }
 
+/// <summary>
+///     The state of one run of a solution's tile effects, handed from effect to effect: the solution, the reagent whose
+///         effects are running, how much of it they have used up, and what the caller says about the run.
+/// </summary>
 /// <param name="RemovedVolume">How much of <paramref name="Reagent"/> the effects so far have used up; removed afterwards.</param>
 /// <param name="Reagent">The reagent whose effects are running, when they are running for one in a solution.</param>
 /// <param name="FlameTemperature">
@@ -56,4 +59,11 @@ public abstract partial class KsTileEffect
 ///     The longest the caller may take to run these effects again, if it runs them on a schedule. An effect that lasts
 ///         until it is next refreshed (a chemfire on a burning puddle) lasts this long, so it cannot run out first.
 /// </param>
-public record struct KsTileEffectReagentData(float RemovedVolume, Solution? Solution, List<ReagentData>? ReagentData, ReagentId? Reagent = null, float? FlameTemperature = null, TimeSpan? RefreshedWithin = null);
+public record struct KsTileEffectContext(
+    float RemovedVolume,
+    Solution? Solution,
+    List<ReagentData>? ReagentData,
+    ReagentId? Reagent = null,
+    float? FlameTemperature = null,
+    TimeSpan? RefreshedWithin = null
+);

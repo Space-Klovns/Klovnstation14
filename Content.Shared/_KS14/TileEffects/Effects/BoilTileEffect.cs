@@ -73,10 +73,10 @@ public sealed partial class BoilTileEffect : KsTileEffect
     [DataField]
     public bool Sublimate;
 
-    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
+    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectContext context)
     {
-        if (reagentData.Solution is not { } solution ||
-            reagentData.Reagent is not { } reagent ||
+        if (context.Solution is not { } solution ||
+            context.Reagent is not { } reagent ||
             !_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentPrototype) ||
             reagentPrototype.BoilingPoint is not { } boilingPointCelsius ||
             LatentHeat <= 0f)
@@ -89,8 +89,8 @@ public sealed partial class BoilTileEffect : KsTileEffect
         var temperature = solution.Temperature;
         var specificHeat = reagentPrototype.SpecificHeat;
         // Whatever an earlier effect of this reagent already claimed is removed afterwards, along with its heat capacity.
-        var heatCapacity = solution.GetHeatCapacity(_prototypeManager) - reagentData.RemovedVolume * specificHeat;
-        var available = (float)solution.GetReagentQuantity(reagent) - reagentData.RemovedVolume;
+        var heatCapacity = solution.GetHeatCapacity(_prototypeManager) - context.RemovedVolume * specificHeat;
+        var available = (float)solution.GetReagentQuantity(reagent) - context.RemovedVolume;
         if (heatCapacity <= 0f || available <= 0f)
             return false;
 
@@ -122,7 +122,7 @@ public sealed partial class BoilTileEffect : KsTileEffect
         if (boiled <= 0f)
             return false;
 
-        reagentData.RemovedVolume += boiled;
+        context.RemovedVolume += boiled;
         return true;
     }
 

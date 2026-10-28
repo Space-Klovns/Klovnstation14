@@ -1,0 +1,24 @@
+# Reagents in the pyrotechnic group that don't burn. BasePyrotechnic's touch effect makes whatever they land on
+#     flammable; a child's mapping merges with its parent's rather than replacing it, so it is overridden here with one
+#     that does nothing. (The fire that BasePyrotechnic used to give its children now sits on chlorine trifluoride alone.)
+
+- type: !PartialOnly reagent
+  id: FoamingAgent
+  reactiveEffects:
+    Flammable:
+      methods: [ Touch ]
+      effects: []
+
+- type: !PartialOnly reagent
+  id: Fluorosurfactant
+  reactiveEffects:
+    Flammable:
+      methods: [ Touch ]
+      effects: []
+
+- type: !PartialOnly reagent
+  id: Sorium
+  reactiveEffects:
+    Flammable:
+      methods: [ Touch ]
+      effects: []

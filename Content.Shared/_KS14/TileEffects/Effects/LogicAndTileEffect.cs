@@ -18,18 +18,18 @@ public sealed partial class LogicAndTileEffect : KsTileEffect
             effect.Initialize(dependencyCollection);
     }
 
-    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
+    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectContext context)
     {
         foreach (var condition in Conditions)
         {
-            if (condition.Execute(tileRef, scale, ref reagentData))
+            if (condition.Execute(tileRef, scale, ref context))
                 continue;
 
             return false;
         }
 
         foreach (var effect in Effects)
-            effect.Execute(tileRef, scale, ref reagentData);
+            effect.Execute(tileRef, scale, ref context);
 
         return true;
     }
