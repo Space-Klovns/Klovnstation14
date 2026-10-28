@@ -1,10 +1,19 @@
 using System.Numerics;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.McqDialogue;
 
 public sealed partial class McqDialogueSystem : EntitySystem
 {
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
+
+    private static readonly EntProtoId<ActiveMcqDialogueComponent> DialogueProto = "McqDialogue";
 
     [SubscribeLocalEvent]
     private void OnDialogueSourceShutdown(Entity<McqDialogueSourceComponent> entity, ref ComponentShutdown args)
@@ -39,25 +48,52 @@ public sealed partial class McqDialogueSystem : EntitySystem
     {
         CloseDialogue(entity!);
 
-        var ev = new McqDialogueClosedEvent(args.Actor);
+        var ev = new McqDialogueClosedEvent(args.Actor, entity.Owner);
         RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
     [SubscribeLocalEvent]
     private void OnDataSelected(Entity<ActiveMcqDialogueComponent> entity, ref McqDialogueDataSelectedMessage args)
     {
-        if (!Exists(entity.Comp.Source))
+        // The id comes from the client, so it's only trusted if it's one the dialogue offered.
+        if (!Exists(entity.Comp.Source) || !entity.Comp.OptionIds.Contains(args.Id))
             return;
 
         CloseDialogue(entity!);
 
-        var ev = new McqDialogueSelectedEvent(args.Actor, args.Id);
+        var ev = new McqDialogueSelectedEvent(args.Actor, args.Id, entity.Owner);
         RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
-    public void StartDialogue(EntityUid sourceUid, EntityUid userUid, IEnumerable<McqDialogueData> options)
+    /// <summary>
+    ///     Opens a dialogue about <paramref name="sourceUid"/> for <paramref name="userUid"/>, as a new entity on the
+    ///         source. It stays open while the engine's UI checks pass for it - in range of the source and able to
+    ///         interact - and while what <paramref name="settings"/> asks for holds. Requirement components on it get a
+    ///         <see cref="McqDialogueStartedEvent"/> just before it opens.
+    ///
+    ///     Can be called from predicted code. Only the server makes the dialogue; the user's client opens its window
+    ///         straight away (<see cref="McqDialoguePredictedEvent"/>), for the dialogue's UI to take over.
+    /// </summary>
+    /// <param name="settings">Title, prompt and requirements, usually a data field of the source's component.</param>
+    /// <returns>The dialogue, or null on the client.</returns>
+    public Entity<ActiveMcqDialogueComponent>? StartDialogue(
+        EntityUid sourceUid,
+        EntityUid userUid,
+        IEnumerable<McqDialogueData> options,
+        McqDialogueSettings? settings = null)
     {
-        var dialogueUid = Spawn("McqDialogue", new(sourceUid, Vector2.Zero));
+        if (_netManager.IsClient)
+        {
+            if (_gameTiming.IsFirstTimePredicted && _playerManager.LocalEntity == userUid)
+            {
+                var predictedEvent = new McqDialoguePredictedEvent(sourceUid, [.. options], settings);
+                RaiseLocalEvent(ref predictedEvent);
+            }
+
+            return null;
+        }
+
+        var dialogueUid = Spawn(DialogueProto, new(sourceUid, Vector2.Zero));
         var dialogueComponent = Comp<ActiveMcqDialogueComponent>(dialogueUid);
         dialogueComponent.User = userUid;
         foreach (var optionDatum in options)
@@ -67,13 +103,24 @@ public sealed partial class McqDialogueSystem : EntitySystem
         dialogueComponent.Source = (sourceUid, dialogueSourceComponent);
         dialogueSourceComponent.Dialogues.Add((dialogueUid, dialogueComponent));
 
+        if (settings?.HeldItemWhitelist is { } heldItemWhitelist)
+            EnsureComp<McqDialogueHeldItemComponent>(dialogueUid).Whitelist = heldItemWhitelist;
+
         var uiComponent = Comp<UserInterfaceComponent>(dialogueUid);
+        if (settings?.Range is { } range &&
+            _userInterfaceSystem.TryGetInterfaceData((dialogueUid, uiComponent), McqDialogueUiKey.Key, out var interfaceData))
+            _userInterfaceSystem.SetUi((dialogueUid, uiComponent), McqDialogueUiKey.Key, new InterfaceData(interfaceData) { InteractionRange = range });
+
+        var startedEvent = new McqDialogueStartedEvent(sourceUid, userUid);
+        RaiseLocalEvent(dialogueUid, ref startedEvent);
 
         _userInterfaceSystem.OpenUi((dialogueUid, uiComponent), McqDialogueUiKey.Key, userUid);
         _userInterfaceSystem.SetUiState(
             (dialogueUid, uiComponent),
             McqDialogueUiKey.Key,
-            new McqDialogueBoundUserInterfaceState([.. options])
+            new McqDialogueBoundUserInterfaceState(GetNetEntity(sourceUid), [.. options], settings?.Title, settings?.Prompt)
         );
+
+        return (dialogueUid, dialogueComponent);
     }
 }

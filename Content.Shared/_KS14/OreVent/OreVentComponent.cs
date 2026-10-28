@@ -1,5 +1,7 @@
+using Content.Shared._KS14.McqDialogue;
 using Content.Shared._KS14.OreWell;
 using Content.Shared.DoAfter;
+using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -53,6 +55,45 @@ public sealed partial class OreVentComponent : Component
     /// </summary>
     [DataField]
     public SoundSpecifier? ClearingSound = new SoundPathSpecifier("/Audio/Effects/break_stone.ogg");
+
+    /// <summary>
+    ///     Played when tapping fails and the vent closes back up.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? TappingFailedSound = new SoundPathSpecifier("/Audio/_KS14/Effects/rock_break.ogg");
+
+    /// <summary>
+    ///     Played when the vent is tapped.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? TappedSound = new SoundPathSpecifier("/Audio/_KS14/Effects/node_victory.ogg", AudioParams.Default.WithVolume(-8f));
+
+    /// <summary>
+    ///     Chance, from 0 to 1, that each piece of rock cleared leaves rubble behind.
+    /// </summary>
+    [DataField]
+    public float RockRubbleChance = 0.15f;
+
+    /// <summary>
+    ///     Chance, from 0 to 1, that each clear floor tile gets rubble on each clearing iteration.
+    /// </summary>
+    [DataField]
+    public float FloorRubbleChance = 0.1f;
+
+    [DataField]
+    public EntProtoId RubbleProto = "KsRubble";
+
+    /// <summary>
+    ///     The question asked on scanning a discovered vent, before the clearing starts, as tgstation asks. It stays
+    ///         open only while the asker holds the scanner they scanned with.
+    /// </summary>
+    [DataField]
+    public McqDialogueSettings ExcavateDialogue = new()
+    {
+        Title = "ks-specific-orevent-excavate-title",
+        Prompt = "ks-specific-orevent-excavate-prompt",
+        HeldItemWhitelist = new EntityWhitelist { Components = ["KsDiscoveringScanner"] },
+    };
 
     /// <summary>
     ///     Entity spawned during the process of tapping, and deleted

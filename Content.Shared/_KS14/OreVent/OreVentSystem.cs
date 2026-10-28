@@ -1,5 +1,6 @@
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.OreVent.Drone;
+using Content.Shared._KS14.McqDialogue;
 using Content.Shared._KS14.OreWell;
 using Content.Shared._KS14.ScanDiscoverable.Base;
 using Content.Shared.DoAfter;
@@ -24,6 +25,13 @@ public sealed partial class OreVentSystem : EntitySystem
     [Dependency] private KsScanDiscoverableSystem _discoverableSystem = default!;
     [Dependency] private SharedOreVentDroneSystem _oreVentDroneSystem = default!;
     [Dependency] private OreWellSystem _oreWellSystem = default!;
+    [Dependency] private McqDialogueSystem _mcqDialogueSystem = default!;
+    [Dependency] private EntityQuery<McqDialogueHeldItemComponent> _dialogueHeldItemQuery = default!;
+
+    private const string ExcavateYesId = "yes";
+    private const string ExcavateNoId = "no";
+    private static readonly LocId ExcavateYesLoc = "ks-specific-orevent-excavate-yes";
+    private static readonly LocId ExcavateNoLoc = "ks-specific-orevent-excavate-no";
 
     public override void Initialize()
     {
@@ -58,7 +66,32 @@ public sealed partial class OreVentSystem : EntitySystem
             return;
         }
 
-        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, args.User, entity.Comp.ClearingDuration, new OreVentPreExtractionDoAfterEvent(), entity.Owner, entity.Owner, used: args.Used)
+        args.Handled = true;
+
+        // tgstation asks before the wave defence starts. Predicted: the user's window opens at once. It closes if the
+        //      scanner leaves their hand or they walk off.
+        _mcqDialogueSystem.StartDialogue(entity.Owner, args.User,
+            new[] { new McqDialogueData(ExcavateYesLoc, ExcavateYesId), new McqDialogueData(ExcavateNoLoc, ExcavateNoId) },
+            settings: entity.Comp.ExcavateDialogue);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnExcavateDialogueSelected(Entity<OreVentComponent> entity, ref McqDialogueSelectedEvent args)
+    {
+        if (args.Id != ExcavateYesId ||
+            !_dialogueHeldItemQuery.TryComp(args.Dialogue, out var heldItemComponent) ||
+            heldItemComponent.HeldUid is not { } scannerUid)
+            return;
+
+        // The dialogue saw to the user still holding the scanner and being in reach, but the vent may have changed
+        //      while it was open: someone else may have started it.
+        if (entity.Comp.Tapped ||
+            entity.Comp.BeingTapped ||
+            entity.Comp.DoingClearing ||
+            !_discoverableSystem.IsDiscovered(entity.Owner))
+            return;
+
+        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, args.Actor, entity.Comp.ClearingDuration, new OreVentPreExtractionDoAfterEvent(), entity.Owner, entity.Owner, used: scannerUid)
         {
             BreakOnDamage = true,
 
@@ -74,14 +107,10 @@ public sealed partial class OreVentSystem : EntitySystem
         if (!success)
             return;
 
-        args.Handled = true;
-
-        if (_netManager.IsClient)
-            _popupSystem.PopupClient(
-                KsPopupMessage.Create("ks-specific-orevent-startingextraction-user", ("vent", entity.Owner)), entity, args.User, type: PopupType.LargeCaution);
-        else
-            _popupSystem.PopupEntity(
-                KsPopupMessage.Create("ks-specific-orevent-startingextraction-others", ("vent", entity.Owner), ("user", Identity.Name(args.User, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.User), true, type: PopupType.MediumCaution);
+        _popupSystem.PopupEntity(
+            KsPopupMessage.Create("ks-specific-orevent-startingextraction-user", ("vent", entity.Owner)), entity, args.Actor, type: PopupType.LargeCaution);
+        _popupSystem.PopupEntity(
+            KsPopupMessage.Create("ks-specific-orevent-startingextraction-others", ("vent", entity.Owner), ("user", Identity.Name(args.Actor, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.Actor), true, type: PopupType.MediumCaution);
     }
 
     [SubscribeLocalEvent]
