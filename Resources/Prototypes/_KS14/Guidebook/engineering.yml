@@ -30,4 +30,4 @@
 - type: guideEntry # KS14
   id: Packets
   name: guide-entry-packets
-  text: "/ServerInfo/_KS14/Guidebook/Engineering/Packets/Packets.xml"
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/Packets.xml"

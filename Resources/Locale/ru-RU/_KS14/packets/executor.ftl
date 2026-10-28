@@ -2,16 +2,16 @@
 
 executor-menu-data =
     «Исполнитель» активен.
-    
+
     Заявление Макса:
     - { $maxStatements } за каждый запуск.
-    
+
     Объём памяти:
     - { $maxMemory } байт.
-executor-menu-title = Packet Executor
+executor-menu-title = Пакетный Исполнитель 
 signal-port-description-executor = Используется для вызова методов исполнителя.
-signal-port-name-executor-0 = Порт «Исполнитель» 0
-signal-port-name-executor-1 = Порт «Исполнитель» 1
-signal-port-name-executor-2 = Executor Port 2
-signal-port-name-executor-3 = Порт 3 «Исполнитель»
-signal-port-name-executor-4 = Executor Port 4
+signal-port-name-executor-0 = Порт Исполнителя 0
+signal-port-name-executor-1 = Порт Исполнителя 1
+signal-port-name-executor-2 = Порт Исполнителя 2
+signal-port-name-executor-3 = Порт Исполнителя 3
+signal-port-name-executor-4 = Порт Исполнителя 4
