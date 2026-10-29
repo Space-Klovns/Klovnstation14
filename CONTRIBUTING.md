@@ -458,6 +458,8 @@ public override void Update(float frameTime)
 
 This only holds while the setter is the *only* way in: `[Access]` the field to the system (above), and close off VV, the one writer `[Access]` can't stop (below).
 
+**Cheapest rejection first (C#)** — in a filter loop, order the checks so the ones that reject most, cheaply, run first: a field on a component you already have before a `HasComp`, and a `HasComp` before a fixture or layer loop. A broad lookup returns mostly things you skip (decals, cables, pipes), and every check ahead of the one that rejects them runs for nothing.
+
 **ViewVariables (VV) (C#)** — the engine's live inspector. Admins and developers open any entity, component or system in the VV window, or use `vv`/`vvread`/`vvwrite`, to read and change its fields mid-round. Every `[DataField]` and `[ViewVariables]` member shows up there, writable by default, so VV is a writer of your component that your code does not control. It writes by reflection, so `[Access]` does not stop it, and the server is told nothing beyond the component being dirtied. When a field must only change through a setter:
 
 1. `[ViewVariables(VVAccess.ReadOnly)]` limits the VV window to viewing it. The window writes server components by reflection and ignores custom paths, so read-only is the only way to keep it out.

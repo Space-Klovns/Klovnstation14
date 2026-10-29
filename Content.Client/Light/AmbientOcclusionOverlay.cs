@@ -39,6 +39,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
     {
         IoCManager.InjectDependencies(this);
         ZIndex = AfterLightTargetOverlay.ContentZIndex + 1;
+        SubscribeCVars(); // KS14: cache cvars rather than reading them every frame
     }
 
     protected override void Draw(in OverlayDrawArgs args)
@@ -59,7 +60,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
         var worldBounds = args.WorldBounds;
         var worldAabb = args.WorldAABB; // KS14: for the item and structure lookup
         var worldHandle = args.WorldHandle;
-        var color = Color.FromHex(_cfgManager.GetCVar(CCVars.AmbientOcclusionColor));
+        var color = Color; // KS14: Color.FromHex(_cfgManager.GetCVar(CCVars.AmbientOcclusionColor)) -> cached
         //var color = Color.Red;
         var target = viewport.RenderTarget;
         var lightScale = target.Size / (Vector2)viewport.Size;
@@ -162,6 +163,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
     {
         _resources.Dispose();
         _surfaceResources.Dispose(); // KS14
+        UnsubscribeCVars(); // KS14
 
         base.DisposeBehavior();
     }

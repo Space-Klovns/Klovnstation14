@@ -1,7 +1,5 @@
 using Content.Client.Light;
-using Content.Shared.CCVar;
 using Robust.Client.Graphics;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.Prototypes;
 using DrawDepth = Content.Shared.DrawDepth.DrawDepth;
@@ -16,7 +14,6 @@ public sealed partial class KsSurfaceAmbientOcclusionOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> MaskedTextureShader = "KsMaskedTexture";
 
-    [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private readonly AmbientOcclusionOverlay _ambientOcclusionOverlay;
@@ -40,11 +37,9 @@ public sealed partial class KsSurfaceAmbientOcclusionOverlay : Overlay
         if (!_ambientOcclusionOverlay.TryTakeSurfaceTextures(args.Viewport, out var aoTexture, out var maskTexture))
             return;
 
-        var color = Color.FromHex(_configurationManager.GetCVar(CCVars.AmbientOcclusionColor));
-
         _maskedTextureShader.SetParameter("MASK", maskTexture);
         args.WorldHandle.UseShader(_maskedTextureShader);
-        args.WorldHandle.DrawTextureRect(aoTexture, args.WorldBounds, color);
+        args.WorldHandle.DrawTextureRect(aoTexture, args.WorldBounds, _ambientOcclusionOverlay.Color);
         args.WorldHandle.UseShader(null);
     }
 

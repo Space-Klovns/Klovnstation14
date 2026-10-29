@@ -1,5 +1,4 @@
 using System.Numerics;
-using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Light;
 using DrawDepth = Content.Shared.DrawDepth.DrawDepth;
 using Content.Shared.Item;
@@ -60,7 +59,7 @@ public sealed partial class AmbientOcclusionOverlay
         _surfaceSilhouettes.Clear();
         _itemSilhouettes.Clear();
 
-        if (!_cfgManager.GetCVar(KsCCVars.AmbientOcclusionEntities))
+        if (!_drawEntities)
             return;
 
         if (!_queriesResolved)
