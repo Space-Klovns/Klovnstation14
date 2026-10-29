@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Content.Client._KS14.AdminMusic;
 using Content.Client._KS14.Cinematics;
 using Content.Shared._KS14.Nuke;
@@ -86,21 +87,36 @@ public sealed partial class KsNukeExplosionCinematicSystem : EntitySystem
     {
         Stop();
 
-        var rsi = _resourceCache.GetResource<RSIResource>(RsiPath).RSI;
-        var explode = GetState(rsi, "station_explode_fade_red");
+        // TryGetResource remembers a missing RSI, unlike GetResource, which would retry the load
+        // and dump a stack trace on every detonation.
+        if (!_resourceCache.TryGetResource<RSIResource>(RsiPath, out var resource))
+        {
+            Log.Error($"Couldn't load {RsiPath}, skipping the nuke explosion cinematic.");
+            return;
+        }
+
+        var rsi = resource.RSI;
         var summary = ev.Ending switch
         {
             KsNukeExplosionEnding.TotalA => "summary_totala",
             _ => "summary_nukewin",
         };
 
+        if (!TryGetState(rsi, "intro_nuke", out var introState) ||
+            !TryGetState(rsi, "station_intact", out var intactState) ||
+            !TryGetState(rsi, "station_explode_fade_red", out var explode) ||
+            !TryGetState(rsi, summary, out var summaryState))
+        {
+            return;
+        }
+
         var intro = KsNukeExplosionCinematicTimings.IntroDuration;
         KsCinematicScene[] scenes =
         [
-            new(GetState(rsi, "intro_nuke"), intro),
-            new(GetState(rsi, "station_intact"), ev.ExplosionDelay - intro),
+            new(introState, intro),
+            new(intactState, ev.ExplosionDelay - intro),
             new(explode, TimeSpan.FromSeconds(explode.AnimationLength)),
-            new(GetState(rsi, summary), KsNukeExplosionCinematicTimings.SummaryDuration),
+            new(summaryState, KsNukeExplosionCinematicTimings.SummaryDuration),
         ];
 
         _explosionDelay = ev.ExplosionDelay;
@@ -181,11 +197,12 @@ public sealed partial class KsNukeExplosionCinematicSystem : EntitySystem
             audio.Gain = 0f;
     }
 
-    private static RSI.State GetState(RSI rsi, string name)
+    private bool TryGetState(RSI rsi, string name, [NotNullWhen(true)] out RSI.State? state)
     {
-        if (!rsi.TryGetState(name, out var state))
-            throw new InvalidOperationException($"{RsiPath} is missing the '{name}' state.");
+        if (rsi.TryGetState(name, out state))
+            return true;
 
-        return state;
+        Log.Error($"{RsiPath} is missing the '{name}' state, skipping the nuke explosion cinematic.");
+        return false;
     }
 }
