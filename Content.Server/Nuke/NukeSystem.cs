@@ -348,7 +348,7 @@ public sealed partial class NukeSystem : EntitySystem
             // KS14 start: remember the alarm so the detonation cinematic can continue it in sync
             var alertSound = _audio.ResolveSound(nuke.AlertSound);
             nuke.PlayedAlertSoundInfo = (alertSound, _timing.CurTime);
-            _sound.PlayGlobalOnStation(uid, alertSound, new AudioParams { Volume = KsNukeExplosionCinematicTimings.AlarmVolume });
+            _sound.PlayGlobalOnStation(uid, alertSound);
             // KS14 end
             _sound.StopStationEventMusic(uid, StationEventMusicType.Nuke);
             nuke.PlayedAlertSound = true;

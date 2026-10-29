@@ -75,6 +75,4 @@ public static class KsNukeExplosionCinematicTimings
     ///     How long the ending summary stays up before the cinematic fades out.
     /// </summary>
     public static readonly TimeSpan SummaryDuration = TimeSpan.FromSeconds(6);
-
-    public const float AlarmVolume = -5f;
 }
