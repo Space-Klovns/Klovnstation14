@@ -97,6 +97,7 @@
           !type:PhysShapeAabb
             bounds: "-0.5,-0.5,0.5,0.5"
 
+  - type: KsNoAmbientOcclusion
   - type: Icon
     sprite: _KS14/Structures/Holo/atmos_shield.rsi
     state: full

@@ -395,6 +395,8 @@ path: "/Textures/_KS14/Shaders/ks_lobby_contrast.swsl"  # not this - _KS14/ alre
 ```
 This covers resource files referenced by path and nothing else. Prototype IDs, C# type names (and the `.cs` files named after them), locale keys and style classes still follow the `Ks` prefix rule above, because they share one global namespace with upstream whatever folder they sit in.
 
+**`"metaAtlas": false` for large sprites (RSI)** — by default every `.rsi` is packed into the sprite atlas at startup and so held in VRAM for the whole session. `"metaAtlas": false` in its `meta.json` leaves it out and loads it on demand instead. Use it for large-resolution sprites.
+
 **`TryGet`/`Resolve`/`Ensure` naming (C#)** — `TryGet...` implies a pure lookup: it either finds the thing or it doesn't, with no side effects either way. If a "`TryGet`" actually creates the thing when it's missing, name it `Resolve...` or `Ensure...` instead — whichever reads better for the case — not `TryGet...`:
 ```csharp
 // misleading - this can create a new entity as a side effect, which "TryGet" doesn't promise

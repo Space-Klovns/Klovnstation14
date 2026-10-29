@@ -57,6 +57,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
         var viewport = args.Viewport;
         var mapId = args.MapId;
         var worldBounds = args.WorldBounds;
+        var worldAabb = args.WorldAABB; // KS14: for the item and structure lookup
         var worldHandle = args.WorldHandle;
         var color = Color.FromHex(_cfgManager.GetCVar(CCVars.AmbientOcclusionColor));
         //var color = Color.Red;
@@ -110,9 +111,12 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
                 }
 
                 FlushAmbientOcclusionPolygons(worldHandle);
+
+                DrawEntityAmbientOcclusion(worldHandle, mapId, worldAabb, worldToTargetMatrix, viewport.Eye!.Rotation, lookups, xformSystem); // KS14: items and structures
             }, Color.Transparent);
 
         _clyde.BlurRenderTarget(viewport, res.AOTarget, res.AOBlurBuffer, viewport.Eye!, 14f);
+        DrawSurfaceAmbientOcclusion(worldHandle, viewport, res.AOBlurBuffer, scale, lookups); // KS14: AO of items on tables
 
         // Need to do stencilling after blur as it will nuke it.
         // Draw stencil for the grid so we don't draw in space.
@@ -157,6 +161,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
     protected override void DisposeBehavior()
     {
         _resources.Dispose();
+        _surfaceResources.Dispose(); // KS14
 
         base.DisposeBehavior();
     }
