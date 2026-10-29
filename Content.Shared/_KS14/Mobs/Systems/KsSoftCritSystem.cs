@@ -11,8 +11,11 @@ using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Events;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Popups;
 using Content.Shared.Speech;
+using Content.Shared.Stunnable;
 using Robust.Shared.Configuration;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Mobs.Systems;
 
@@ -28,7 +31,9 @@ public sealed partial class KsSoftCritSystem : EntitySystem
     [Dependency] private ActionBlockerSystem _actionBlocker = default!;
     [Dependency] private DamageableSystem _damageable = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeed = default!;
+    [Dependency] private SharedStunSystem _stun = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     [Dependency] private EntityQuery<KsSoftCritComponent> _softCritQuery = default!;
 
@@ -48,6 +53,7 @@ public sealed partial class KsSoftCritSystem : EntitySystem
 #pragma warning restore CS0618
         SubscribeLocalEvent<KsSoftCritComponent, RefreshMovementSpeedModifiersEvent>(OnRefreshSpeed);
         SubscribeLocalEvent<KsSoftCritComponent, AfterAutoHandleStateEvent>(OnAfterHandleState);
+        SubscribeLocalEvent<KsSoftCritComponent, StandUpAttemptEvent>(OnStandUpAttempt);
     }
 
     /// <summary>
@@ -105,14 +111,44 @@ public sealed partial class KsSoftCritSystem : EntitySystem
         UpdateEffects(ent);
     }
 
+    private void OnStandUpAttempt(Entity<KsSoftCritComponent> ent, ref StandUpAttemptEvent args)
+    {
+        if (!ent.Comp.Active || args.Cancelled)
+            return;
+
+        // Crit normally keeps you down by not letting you move at all, but soft crit lets you crawl,
+        // which would otherwise let you get back up from the knockdown.
+        args.Cancelled = true;
+        args.Autostand = false;
+        args.Message = (Loc.GetString("ks-soft-crit-stand-attempt"), PopupType.SmallCaution);
+    }
+
     private void Refresh(Entity<KsSoftCritComponent> ent)
     {
+        // The server's result comes in with the state.
+        if (_timing.ApplyingState)
+            return;
+
         var active = ShouldBeSoftCrit(ent);
         if (active == ent.Comp.Active)
             return;
 
         ent.Comp.Active = active;
         Dirty(ent);
+
+        if (active)
+        {
+            // Crawl like any other knocked down mob, for as long as soft crit lasts.
+            _stun.TryCrawling(ent.Owner, time: null, autoStand: false);
+            _stun.SetAutoStand(ent.Owner, false);
+        }
+        else
+        {
+            // Get up as normal once able: right away if healed, or never while hard crit or dead
+            // keeps you from moving. Any knockdown time left from something else still applies.
+            _stun.SetAutoStand(ent.Owner, true);
+        }
+
         UpdateEffects(ent);
     }
 
@@ -174,7 +210,8 @@ public sealed partial class KsSoftCritSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Gets a threshold the same way <see cref="MobThresholdSystem"/> checks it, adjustments included.
+    ///     Gets a threshold the same way <see cref="MobThresholdSystem"/> checks it, adjustments included,
+    ///         so chems that shift crit (like klovnide's safe-crit) shift the soft crit window along with it.
     /// </summary>
     private static bool TryGetThreshold(MobThresholdsComponent thresholds, MobState state, out FixedPoint2 threshold)
     {

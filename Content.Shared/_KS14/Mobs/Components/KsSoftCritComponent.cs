@@ -21,10 +21,10 @@ public sealed partial class KsSoftCritComponent : Component
     public float HardCritFraction = 0.3f;
 
     /// <summary>
-    ///     Movement speed multiplier while crawling in soft crit.
+    ///     Movement speed multiplier while crawling in soft crit, on top of the normal crawling slowdown.
     /// </summary>
     [DataField]
-    public float CrawlSpeedModifier = 0.3f;
+    public float CrawlSpeedModifier = 0.75f;
 
     /// <summary>
     ///     Chance for each letter to get swallowed when speaking, right after going critical.
