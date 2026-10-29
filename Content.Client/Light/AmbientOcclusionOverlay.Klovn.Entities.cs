@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Client.Effects;
 using Content.Shared._KS14.Light;
 using DrawDepth = Content.Shared.DrawDepth.DrawDepth;
 using Content.Shared.Item;
@@ -33,6 +34,7 @@ public sealed partial class AmbientOcclusionOverlay
     private readonly List<SilhouetteDatum> _itemSilhouettes = new();
 
     private EntityQuery<OccluderComponent> _occluderQuery;
+    private EntityQuery<EffectVisualsComponent> _effectVisualsQuery;
     private EntityQuery<MobStateComponent> _mobStateQuery;
     private EntityQuery<ProjectileComponent> _projectileQuery;
     private EntityQuery<ItemComponent> _itemQuery;
@@ -65,6 +67,7 @@ public sealed partial class AmbientOcclusionOverlay
         if (!_queriesResolved)
         {
             _occluderQuery = _entManager.GetEntityQuery<OccluderComponent>();
+            _effectVisualsQuery = _entManager.GetEntityQuery<EffectVisualsComponent>();
             _mobStateQuery = _entManager.GetEntityQuery<MobStateComponent>();
             _projectileQuery = _entManager.GetEntityQuery<ProjectileComponent>();
             _itemQuery = _entManager.GetEntityQuery<ItemComponent>();
@@ -105,6 +108,7 @@ public sealed partial class AmbientOcclusionOverlay
                 continue;
 
             if (_occluderQuery.HasComp(uid)
+                || _effectVisualsQuery.HasComp(uid)
                 || _mobStateQuery.HasComp(uid)
                 || _projectileQuery.HasComp(uid)
                 || _noAmbientOcclusionQuery.HasComp(uid)
