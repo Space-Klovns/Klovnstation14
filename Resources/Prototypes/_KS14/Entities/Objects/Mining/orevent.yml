@@ -33,14 +33,6 @@
     droneEntityProto: KsOreVentDrone
     extractionDuration: 75s
     oreWellSettingId: Basic
-  - type: Explosive
-    explosionType: OreVentClearing
-    maxIntensity: 100
-    totalIntensity: 80
-    intensitySlope: 5
-    canCreateVacuum: false
-    repeatable: true
-    deleteAfterExplosion: false
 
   # Sprites
   - type: Sprite

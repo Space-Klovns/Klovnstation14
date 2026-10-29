@@ -65,15 +65,16 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         // Find nearby disposal unit
         var xform = Transform(target);
         var disposals = _lookup.GetEntitiesInRange<DisposalUnitComponent>(xform.Coordinates, 1.5f);
-        var targetDisposal = disposals.FirstOrDefault();
 
-        // KS14 GERKADA TODO BOTHER: this is always false
-        // if (targetDisposal == null)
-        // {
-        //     // No charge consumed yet, just return
-        //     _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-not-disposals"), user, user);
-        //     return;
-        // }
+        // Checked on the set: FirstOrDefault of an empty one is a default Entity<T>, a struct, never null
+        if (disposals.Count == 0)
+        {
+            // No charge consumed yet, just return
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-not-disposals"), user, user);
+            return;
+        }
+
+        var targetDisposal = disposals.First();
 
         //Prepare entity
         if (xform.Anchored)
@@ -105,7 +106,7 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         if (!_disposals.TryInsert(targetDisposal.Owner, target, null))
         {
             // If this fails, something is fundamentally broken
-            _popup.PopupEntity("Shove failed! (Unit blocked/full?)", user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-failed"), user, user);
             return;
         }
 

@@ -4,6 +4,7 @@ using Content.Shared._KS14.AdminMusic;
 using Robust.Server.Audio;
 using Robust.Server.Player;
 using Robust.Shared.Audio;
+using Robust.Shared.Collections;
 using Robust.Shared.Enums;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -38,13 +39,16 @@ public sealed partial class KsAdminMusicManager : IPostInjectInit
         var oldActiveCount = _activeEntries.Count;
         var realTime = _gameTiming.RealTime;
 
+        // Collected first: RemoveEntryNoUpdate trims the dictionary, which would break enumerating it
+        var endedEntries = new ValueList<KsAdminMusicEntry>();
         foreach (var (entry, endTime) in _entryEndTimes)
         {
-            if (realTime < endTime)
-                continue;
-
-            RemoveEntryNoUpdate(entry);
+            if (realTime >= endTime)
+                endedEntries.Add(entry);
         }
+
+        foreach (var entry in endedEntries)
+            RemoveEntryNoUpdate(entry);
 
         // only send data update if something actually changed
         if (oldActiveCount == _activeEntries.Count)

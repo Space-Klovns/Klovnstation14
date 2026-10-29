@@ -1,7 +1,6 @@
 # Laid by firefighting foam (KsDeployFoamBlanketTileReaction). Transient, like a chemfire, so never saved.
 - type: entity
   id: KsFoamBlanket
-  categories: [ HideSpawnMenu ]
   name: firefighting foam
   description: A blanket of foam. Nothing that can be put out will burn under it until it boils away.
   save: false

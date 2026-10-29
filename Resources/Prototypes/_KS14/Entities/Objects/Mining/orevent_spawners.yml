@@ -16,6 +16,10 @@
     maximumEntitiesSpawned: 2
     minRadius: 4.5
     maxRadius: 6
+    sound: # tgstation's spawner plays this once per wave, at volume 40 (of 100), about -8 dB
+      path: /Audio/_KS14/Effects/node_drilling.ogg
+      params:
+        volume: -8
 
 - type: entity
   parent: KsOreVentMobSpawnerBase
@@ -24,8 +28,8 @@
   components:
   - type: TimedSpawner
     prototypes:
-    - MobWatcherLavaland
-    - MobGoliath
+    - KsOreVentTelegraphWatcherLavaland
+    - KsOreVentTelegraphGoliath
 
 - type: entity
   parent: KsOreVentMobSpawnerBase
@@ -34,6 +38,56 @@
   components:
   - type: TimedSpawner
     prototypes:
-    - MobWatcherIcewing
-    - MobGoliath
-    - MobBasilisk
+    - KsOreVentTelegraphWatcherIcewing
+    - KsOreVentTelegraphGoliath
+    - KsOreVentTelegraphBasilisk
+
+# Telegraphs: what a vent's spawner actually spawns. Each marks the ground for a moment before its mob comes out of
+#   it, so that nobody gets a goliath on top of them without warning.
+
+- type: entity
+  id: KsOreVentTelegraphGoliath
+  name: marked ground
+  description: Something is coming up here.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+    anchored: true
+  # tgstation's /obj/effect/temp_visual/dust_cloud: it plays once over 1s, above mobs, and sits 4px down and left.
+  - type: Sprite
+    sprite: _KS14/Effects/dust_cloud.rsi
+    offset: -0.125,-0.125
+    drawdepth: OverMobs
+    layers:
+    - state: light_dust_cloud
+      loop: false
+  - type: TimedDespawn
+    lifetime: 1.2
+  - type: SpawnOnDespawn
+    prototype: MobGoliath
+  - type: KsPopupOnDespawn # as tgstation's spawner component says when a vent's mob comes out
+    message: ks-specific-orevent-creature-emerges
+
+- type: entity
+  parent: KsOreVentTelegraphGoliath
+  id: KsOreVentTelegraphWatcherLavaland
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: SpawnOnDespawn
+    prototype: MobWatcherLavaland
+
+- type: entity
+  parent: KsOreVentTelegraphGoliath
+  id: KsOreVentTelegraphWatcherIcewing
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: SpawnOnDespawn
+    prototype: MobWatcherIcewing
+
+- type: entity
+  parent: KsOreVentTelegraphGoliath
+  id: KsOreVentTelegraphBasilisk
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: SpawnOnDespawn
+    prototype: MobBasilisk

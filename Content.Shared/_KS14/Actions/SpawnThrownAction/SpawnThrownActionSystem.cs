@@ -1,21 +1,25 @@
 using Content.Shared.Throwing;
-using Content.Shared._KS14.PredictedSpawning;
+using Robust.Shared.Network;
 
 namespace Content.Shared._KS14.Actions.SpawnThrownAction;
 
 /// <summary>
-/// Handles action priming, confirmation and automatic unpriming.
+///     Spawns an entity on the performer and throws it at the action's target.
 /// </summary>
 public sealed partial class SpawnThrownActionSystem : EntitySystem
 {
-    [Dependency] private KsSharedPredictedSpawnSystem _predictedSpawnSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
     [Dependency] private ThrowingSystem _throwingSystem = default!;
 
     [SubscribeLocalEvent]
     private void OnSpawnThrownAction(SpawnThrownActionEvent args)
     {
-        // TODO KS14: either dont predict this or fix whatever mispredict this may cause
-        var uid = _predictedSpawnSystem.PredictedSpawnAttachedTo(args.Prototype, Transform(args.Performer).Coordinates, user: args.Performer);
+        // Not predicted: what gets thrown is gameplay (a bomb, say), so the server's copy is the only one that may exist.
+        //      A kept predicted copy would be a second, inert bomb in the wrong place on the performer's screen.
+        if (_netManager.IsClient)
+            return;
+
+        var uid = SpawnAttachedTo(args.Prototype, Transform(args.Performer).Coordinates);
         _throwingSystem.TryThrow(uid, args.Target, baseThrowSpeed: args.ThrowSpeed, user: args.Performer);
     }
 }

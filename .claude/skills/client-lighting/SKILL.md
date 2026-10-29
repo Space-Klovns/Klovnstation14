@@ -113,6 +113,7 @@ Points that matter:
 | `offset` | `(0,0)` | Offset of the glow's centre. |
 | `useSpriteTransform` | `true` | Apply the sprite's and layer's rotation/offset when drawing the glow. |
 | `onlyRotateTexture` | `false` | Use rotation only for the texture lookup, not for rendering. For direction-state sprites (light tubes). |
+| `layerParams` | `{}` | Per-layer overrides by layer key: `glowRadius`, and `brightness` (multiplies the emitted colour; `intensity` stays per entity). See `Computers/shuttle.yml`. |
 
 ```yaml
 - type: EmissiveLayers   # in-tree uses are marked "# KS14: emissive"

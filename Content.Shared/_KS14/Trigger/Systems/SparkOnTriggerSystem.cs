@@ -30,5 +30,8 @@ public sealed partial class SparkOnTriggerSystem : EntitySystem
             component.VelocityRange.Y
             // No user: most triggers (timers, proximity, landing, damage) are not the user's own predicted input.
         );
+
+        if (component.ExposedTemperature is { } exposedTemperature)
+            _sparksSystem.ExposeSpark(targetTransform.Coordinates, exposedTemperature, component.ExposedVolume);
     }
 }

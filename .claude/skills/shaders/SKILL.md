@@ -1,3 +1,8 @@
+---
+name: shaders
+description: How shaders work in this repo - SWSL source files and shader prototypes, how the engine splices fragment() into its wrapper (no early return), built-ins (UV vs UV2, FRAGCOORD, TEXTURE_PIXEL_SIZE), z-library helpers, mapping UV to UV2 with derivatives, shared vs unique instances and uniforms that leak between users, where a shader can be applied (sprite layers, post-shaders, overlays, status effects), and the traps that fail silently. Use when writing, changing or debugging any .swsl or shader prototype, a sprite or screen effect that needs a shader, a shader that compiles but draws garbage, or a uniform that seems to hold another entity's value.
+---
+
 # Shaders
 
 How shaders work in this codebase: where they live, what the engine does with them, which built-ins you get, and
@@ -122,6 +127,41 @@ derivatives instead. This is how `_KS14/Shaders/bar_glitch.swsl` does it:
 
 `TEXTURE_PIXEL_SIZE` is not a substitute. It is per atlas texel, not per sprite. In a post-shader, one texel is one
 screen pixel, so the value changes with zoom.
+
+### Mapping between UV and UV2 without knowing the sprite's rectangle
+
+To move a sample by an amount measured in quad space (a snap, a shift, a zoom), the shader needs how `UV` changes
+with `UV2`. Take it from the screen-space derivatives of both, as a 2x2 matrix, instead of assuming a texel size:
+
+```glsl
+highp mat2 uvDerivative = mat2(dFdx(UV), dFdy(UV));
+highp mat2 quadDerivative = mat2(dFdx(UV2), dFdy(UV2));
+highp float determinant = quadDerivative[0][0] * quadDerivative[1][1] - quadDerivative[0][1] * quadDerivative[1][0];
+// GLSL ES 1.0 has no inverse(): this is the 2x2 one.
+highp mat2 quadDerivativeInverse = mat2(quadDerivative[1][1], -quadDerivative[0][1],
+                                        -quadDerivative[1][0], quadDerivative[0][0]) / determinant;
+COLOR = zTexture(UV + uvDerivative * quadDerivativeInverse * (wantedQuad - UV2));
+```
+
+- Unlike the `length()` ratio above, this keeps the **sign of each axis**. Atlas rows run the other way to the quad's
+  y, and an entity's rotation mixes the axes. Both come out right.
+- Guard against a near-zero determinant, and put it all behind `#ifdef HAS_DFDX` with a plain `zTexture(UV)` fallback.
+- It is exact for a flat quad. The varyings are linear there.
+- Worked example: `_KS14/Shaders/pixel_snap.swsl`. It snaps `UV2` to a grid of `pixelCount` blocks so no texel is drawn
+  smaller than a world pixel, which is how BYOND looks when a sprite is shrunk. Sprite scale alone cannot do this:
+  the engine samples at screen resolution, so a half-scale sprite has half-world-pixel texels.
+
+### A uniform that changes every frame needs its own shader and instance
+
+A layer shader from YAML (`shader: Id`) is a shared, immutable instance. To change a uniform per frame, give the
+shader its own `.swsl` (so it has its own program, see the leak above), take `InstanceUnique()` once, put it on the
+layer with `SpriteComponent.LayerSetShader(key, instance)`, and `SetParameter` on it each frame. Keep the instance on a
+client-only component and dispose it in `ComponentShutdown` (`SupplyPodLandingZoneSliderComponent`).
+
+### Sprite layer scale cannot be zero
+
+`SpriteSystem` logs an error for a layer scale of `<0, 0>` ("very small values"), which fails an integration test.
+To make a shrinking layer vanish, hide it with `LayerSetVisible` and keep the scale at its smallest real value.
 
 ## Instances, and uniforms that leak
 

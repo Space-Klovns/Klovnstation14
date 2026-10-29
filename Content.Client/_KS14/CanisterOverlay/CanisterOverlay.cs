@@ -47,19 +47,13 @@ public sealed partial class CanisterOverlay : Overlay
 
     public static readonly Vector2 HalfNegativeVector2 = new(-0.5f, -0.5f);
 
-    /* TODO LCDC KILL THIS VVV */
-    private GasTileVisibleGasOverlay _gasTileOverlay = null!;
-    private GasTileFireOverlay _fireTileOverlay = null!;
-    private bool _initialisedOverlays = false;
-
-    public void InitialiseOverlays(GasTileVisibleGasOverlay otherOverlay, GasTileFireOverlay otherOtherOverlay)
-    {
-        _gasTileOverlay = otherOverlay;
-        _fireTileOverlay = otherOtherOverlay;
-
-        _initialisedOverlays = true;
-    }
-    /* TODO LCDC KILL THIS ^^^ */
+    /// <summary>
+    ///     The gas and fire tile overlays, whose animation frames are drawn inside the canister window
+    ///         so that the gas in a canister animates in step with the gas on the tiles around it.
+    ///         Looked up in <see cref="BeforeDraw"/>, since their systems add them independently of this one.
+    /// </summary>
+    private GasTileVisibleGasOverlay? _gasTileOverlay;
+    private GasTileFireOverlay? _fireTileOverlay;
 
     private readonly int _visibleGasCount;
     private readonly float[] _visibleGasMolesVisibleMin = new float[Atmospherics.TotalNumberOfGases];
@@ -118,9 +112,11 @@ public sealed partial class CanisterOverlay : Overlay
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
     {
-        return
-            _initialisedOverlays &&
-            _entityManager.EntityQuery<GasCanisterOverlayComponent>(includePaused: false).Any(); // Don't draw anything if no entities with canistercomponent even exist.
+        if (!OverlayManager.TryGetOverlay(out _gasTileOverlay) ||
+            !OverlayManager.TryGetOverlay(out _fireTileOverlay))
+            return false;
+
+        return _entityManager.EntityQuery<GasCanisterOverlayComponent>(includePaused: false).Any(); // Don't draw anything if no entities with canistercomponent even exist.
     }
 
     protected override void Draw(in OverlayDrawArgs args)
@@ -141,7 +137,6 @@ public sealed partial class CanisterOverlay : Overlay
         var maskTexture = _spriteSystem.GetState(WindowMaskSpriteSpecifier).Frame0;
 
         // because canisters always have the same rotation as the camera, we use the camera's rotation
-        // TODO LCDC: maybe this shouldnt be negative maybe it should IDFK.
         var rotationMatrix = Matrix3Helpers.CreateRotation(-viewport.Eye?.Rotation ?? Angle.Zero);
 
         // Draw on the stencil target
@@ -218,7 +213,7 @@ public sealed partial class CanisterOverlay : Overlay
                     1f :
                     (gasMoles - gasMolesVisibleMin) / (gasMolesVisibleMax - gasMolesVisibleMin);
 
-                var gasTexture = _gasTileOverlay._frames[i][_gasTileOverlay._frameCounter[i]];
+                var gasTexture = _gasTileOverlay!._frames[i][_gasTileOverlay._frameCounter[i]];
                 var textureBox = Box2.FromDimensions(HalfNegativeVector2, gasTexture.Size / (float)EyeManager.PixelsPerMeter * WindowMaskSizeMultiplier);
                 worldHandle.DrawTextureRect(
                     gasTexture,
@@ -232,7 +227,7 @@ public sealed partial class CanisterOverlay : Overlay
                     worldHandle.UseShader(unshadedShader);
 
                     var fireStateIndex = overlayComponent.FireState - 1;
-                    var texture = _fireTileOverlay._frames[fireStateIndex][_fireTileOverlay._frameCounter[fireStateIndex]];
+                    var texture = _fireTileOverlay!._frames[fireStateIndex][_fireTileOverlay._frameCounter[fireStateIndex]];
                     worldHandle.DrawTextureRect(texture, textureBox); // yes i am reusing the same box2 joyy
 
                     worldHandle.UseShader(equalDrawShader);

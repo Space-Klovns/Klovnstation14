@@ -158,6 +158,7 @@
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg
+  - type: KsNpcFirefighter # KS14
 
 - type: entity
   parent: MobSiliconBase

@@ -247,10 +247,11 @@ public abstract partial class GameTest
             // And other teardown logic will go here. Eventually.
 
         }
-        catch (Exception)
+        catch (Exception e)
         {
             _pairDestroyed = true;
-            Assert.Fail();
+            // KS14: say why, or the failure reads as a bare "Test was dirty-disposed" with no cause
+            Assert.Fail($"Teardown threw: {e}");
             throw;
         }
         finally

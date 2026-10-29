@@ -4,3 +4,4 @@ entity-category-desc-ks-trail = Визуальные следы, оставля�
 entity-category-name-chemical-fire = Пожары, вызванные химическими веществами
 entity-category-name-ks-trail = Тропы
 entity-category-name-npc-attack-pattern = Схемы атак NPC
+entity-category-name-ks-foam-blanket = Пенные покрытия

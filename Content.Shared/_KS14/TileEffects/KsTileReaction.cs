@@ -43,14 +43,14 @@ public abstract partial class KsTileReaction : KsTileEffect, ITileReaction
     ///     A reaction is by volume, not by time, so <paramref name="scale"/> does not change how much reacts. The
     ///         reaction sees the solution's temperature as its source's, as it does when a puddle's tile reactions run.
     /// </remarks>
-    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
+    public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectContext context)
     {
-        if (reagentData.Solution is not { } solution ||
-            reagentData.Reagent is not { } reagent ||
+        if (context.Solution is not { } solution ||
+            context.Reagent is not { } reagent ||
             !_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentPrototype))
             return false;
 
-        var available = solution.GetReagentQuantity(reagent) - FixedPoint2.New(reagentData.RemovedVolume);
+        var available = solution.GetReagentQuantity(reagent) - FixedPoint2.New(context.RemovedVolume);
         if (available <= FixedPoint2.Zero)
             return false;
 
@@ -61,7 +61,7 @@ public abstract partial class KsTileReaction : KsTileEffect, ITileReaction
         if (used <= FixedPoint2.Zero)
             return false;
 
-        reagentData.RemovedVolume += (float)used;
+        context.RemovedVolume += (float)used;
         return true;
     }
 }

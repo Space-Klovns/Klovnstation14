@@ -52,6 +52,8 @@ public sealed partial class SpawnerSystem : EntitySystem
         if (!_random.Prob(component.Chance))
             return;
 
+        PlaySpawnSound(uid, component); // KS14
+
         var number = _random.Next(component.MinimumEntitiesSpawned, component.MaximumEntitiesSpawned);
         var baseCoordinates = Transform(uid).Coordinates; // KS14: spawn radius: coordinates -> baseCoordinates
 

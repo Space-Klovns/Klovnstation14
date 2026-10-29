@@ -71,6 +71,8 @@
   # KS14 End
   - type: DrainableSolution
     solution: tank
+  - type: KsCookOff # KS14: explodes once its explosive contents get hot
+    solution: tank
   - type: ReagentTank
   - type: Transform
     noRot: true

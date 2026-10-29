@@ -36,6 +36,9 @@
     - id: KsClothingEyesGlassesDodgenn
       amount: 1
 
+  - type: Destructible # dies at its MobThresholds and stays a body: no gibbing on blunt, no ash on heat
+    thresholds: []
+
   - type: DamageStateVisuals
     states:
       Alive:
@@ -179,6 +182,9 @@
   - type: NpcMeterOnDamage
     meter: KsAnger
     perDamage: 0.025
+  - type: NpcRangedAttackCooldowns # a breather between attack patterns
+    minAttackGap: 0.2
+    maxAttackGap: 0.5
   - type: GunDodger
     dodgeChance: 1 # phase one dodges every shot; DodgennPhaseOneCompound lowers it to 0.4 for phase two
   - type: HTN
@@ -200,6 +206,8 @@
         6
       DodgennMonologueTime: !type:Single
         5
+      DodgennLauncherWindup: !type:Single
+        1
   - type: JumpAbility
     action: KsActionDodgennBossDash
 

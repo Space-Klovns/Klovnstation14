@@ -142,7 +142,7 @@ order, so the copying layer must come **before** the target or you get a one-fra
 **Swapping maps at runtime** with `GenericVisualizer` (`cargopods.yml:44-58`): the visualizer sets the map layer's sprite/state, and
 **must restate `copyToShaderParameters` every time**, because applying layer data without it sets the layer's
 `CopyToShaderParameters` back to null (`SpriteComponent.cs:634-645`). Forgetting it turns the map layer into a normal
-visible layer and the target loses its map. (The existing `# TODO LCDC` in `supplypod.yml:133` is this trap.)
+visible layer and the target loses its map. (`supplypod.yml`'s `paint_displacement` visuals restate it for this reason.)
 
 ```yaml
   - type: GenericVisualizer
@@ -222,7 +222,7 @@ scratchpad, not the repo.
 | Whole sprite shifted, smeared or washed | `load.srgb: false` missing on the map RSI (section 2). |
 | One-frame lag or never applies | The map layer is *after* its target in the layer list. Map layer index must be lower. |
 | Displacement vanishes after a state/visualizer change | The layer data lacked `copyToShaderParameters`, which nulls it (`SpriteComponent.cs:634-645`). |
-| Edge pixels show bits of neighbouring sprites | Offsets read outside the frame. The shader samples the **atlas** (`UV` covers the sub-rectangle of a shared atlas; `TEXTURE` is the whole atlas, `Klovn/Docs/shaders.md:83-88`), so a read past the edge hits the adjacent frame, not transparent. Keep offsets pointing inside the content, or leave a transparent margin in the target art. |
+| Edge pixels show bits of neighbouring sprites | Offsets read outside the frame. The shader samples the **atlas** (`UV` covers the sub-rectangle of a shared atlas; `TEXTURE` is the whole atlas, the `shaders` skill, Built-ins), so a read past the edge hits the adjacent frame, not transparent. Keep offsets pointing inside the content, or leave a transparent margin in the target art. |
 | Sprite fades unexpectedly | `COLOR.a *= map.a`: the map's alpha multiplies the layer's own alpha, and layer `color` alpha on top. Opaque maps want alpha 255. |
 | Wrong map picked / looks stretched | `sizeMaps` keyed by the layer RSI **width**, falling back to 32 (`DisplacementMapSystem.cs:75-90`); non-square RSIs warn. Map size is not checked against the layer, it is stretched over it. |
 | "no 32x32 default" error, displacement skipped | `sizeMaps` lacks key 32 (`:69-73`). |

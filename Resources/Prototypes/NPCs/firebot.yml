@@ -7,6 +7,11 @@
     - tasks:
         - !type:HTNCompoundTask
           task: DouseFireTargetCompound
+    # KS14 start: fight chemical fires
+    - tasks:
+        - !type:HTNCompoundTask
+          task: KsFightChemicalFireCompound
+    # KS14 end
     - tasks:
         - !type:HTNCompoundTask
           task: IdleCompound

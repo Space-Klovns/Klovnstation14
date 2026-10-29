@@ -73,8 +73,19 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
 
     private void LinkWith(Entity<KsAutoZLevelComponent> entity, Entity<KsAutoZLevelComponent?> otherEntity)
     {
+        Resolve(otherEntity, ref otherEntity.Comp, logMissing: false);
         if (otherEntity.Comp?.Location == entity.Comp.Location)
             Log.Warning($"KsAutoZLevelType of auto z-levels {ToPrettyString(entity.Owner)} and {ToPrettyString(otherEntity.Owner)} is the same! The location of the z-levels relative to each other will be determined by update order.");
+
+        var location = entity.Comp.Location;
+        var depth = entity.Comp.Depth;
+
+        // Both are linked by this call, so neither should link again. Removed before unpausing the partner below:
+        //      its unpause runs OnUnpaused synchronously, which would otherwise find us and link the pair the other
+        //      way round from inside this call, leaving the insertion below to find it already in our stack.
+        RemComp(entity.Owner, entity.Comp);
+        if (otherEntity.Comp is { } otherComponent)
+            RemComp(otherEntity.Owner, otherComponent);
 
         // Z-level maps are saved with mapPaused set, so that nothing on them runs until they have been linked
         //      into a stack. This one has already been unpaused - that is what ran OnUnpaused and got us here -
@@ -83,7 +94,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         _mapSystem.SetPaused(otherEntity.Owner, false);
 
         KsZLevelComponent? ourZLevelComponent;
-        if (entity.Comp.Location == KsAutoZLevelType.Above)
+        if (location == KsAutoZLevelType.Above)
             _zLevelSystem.AddZLevelDirectlyAbove(
                 (otherEntity.Owner, EnsureComp<KsZLevelComponent>(otherEntity.Owner)),
                 (entity.Owner, ourZLevelComponent = EnsureComp<KsZLevelComponent>(entity.Owner))
@@ -95,12 +106,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
             );
 
         // Null means "leave it at the prototype default", so only override when the mapper actually set one.
-        if (entity.Comp.Depth is { } depth)
-            _zLevelSystem.SetDepth((entity.Owner, ourZLevelComponent), depth);
-
-        RemComp(entity.Owner, entity.Comp);
-
-        if (Resolve(otherEntity, ref otherEntity.Comp, logMissing: false))
-            RemComp(otherEntity.Owner, otherEntity.Comp);
+        if (depth is { } setDepth)
+            _zLevelSystem.SetDepth((entity.Owner, ourZLevelComponent), setDepth);
     }
 }

@@ -1503,6 +1503,51 @@ public sealed class KsFirefightingTest : GameTest
     }
 
     /// <summary>
+    ///     Foam doesn't put out something burning in it while any chemfire burns on the same tile: here one foam can't
+    ///         touch. Once the tile's fires are all out (an ordinary one, which the foam smothers), it does.
+    /// </summary>
+    [Test]
+    public async Task TestBurningItemInFoamOverAChemicalFireKeepsBurning([Values(true, false)] bool untouchableFire)
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var flammableSystem = entityManager.System<FlammableSystem>();
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await CreateBreathableTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var tile = testMap.Tile.GridIndices;
+        EntityUid flammableUid = default;
+
+        await server.WaitPost(() =>
+        {
+            FloorRow(testMap);
+            FillBlanket(testMap.Tile);
+
+            chemicalFireSystem.SpawnChemicalFire(ChemicalFirePrototype, (gridUid, null), tile, duration: TimeSpan.FromSeconds(30d));
+            if (untouchableFire)
+                chemicalFireSystem.SpawnChemicalFire(KlovnideFirePrototype, (gridUid, null), tile, duration: TimeSpan.FromSeconds(30d));
+
+            flammableUid = entityManager.SpawnEntity(_flammablePrototype, new EntityCoordinates(gridUid, 4.5f, 0.5f));
+            flammableSystem.AdjustFireStacks(flammableUid, 5f, ignite: true);
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, "Test flammable did not catch fire.");
+        });
+        await server.WaitRunTicks(5);
+
+        await server.WaitPost(() => MoveAwake(flammableUid, new EntityCoordinates(gridUid, 0.5f, 0.5f)));
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.HasComponent<KsInFoamComponent>(flammableUid), "The item on the blanket is not in foam.");
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, Is.EqualTo(untouchableFire),
+                untouchableFire
+                    ? "The foam put the item out while a chemfire burned on its tile."
+                    : "The item kept burning in foam once the tile's fire was smothered, so the other case proves nothing.");
+        });
+    }
+
+    /// <summary>
     ///     Moves something and wakes it, as walking would: physics only updates the contacts of a body that is awake.
     /// </summary>
     private void MoveAwake(EntityUid uid, EntityCoordinates coordinates)

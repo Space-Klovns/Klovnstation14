@@ -59,4 +59,23 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosPuddleEmissivity =
         CVarDef.Create("klovn.atmos.puddle_emissivity", 0.9f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How often, in seconds, every puddle's tile effects run: catching fire, boiling, and the rest. Each run covers
+    ///         the time since the last, so this sets how quickly a puddle reacts, not how fast anything happens. Every
+    ///         puddle with tile effects is updated each time, so halving it doubles that work.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPuddleTileEffectInterval =
+        CVarDef.Create("klovn.atmos.puddle_tile_effect_interval", 0.25f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How fast, in tiles per second, flame runs across a spill of something an open flame lights (welding fuel,
+    ///         napalm), however cold it is. It moves in whole tiles once per puddle tile-effect update
+    ///         (<see cref="AtmosPuddleTileEffectInterval"/>), carrying the fraction over, so the interval doesn't change
+    ///         the speed. 0 turns it off, so a spill only catches as its tiles heat up.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosFlameSpreadRate =
+        CVarDef.Create("klovn.atmos.flame_spread_rate", 6f, CVar.SERVERONLY);
 }

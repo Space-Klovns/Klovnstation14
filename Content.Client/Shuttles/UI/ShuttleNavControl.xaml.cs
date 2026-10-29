@@ -303,19 +303,20 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
     // KS14
     private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Entity<MapGridComponent> gridEntity)
     {
-        foreach (var (_, interest) in _ksRadarInterestSystem.StaticInterests)
+        var gridNetEntity = EntManager.GetNetEntity(gridEntity.Owner);
+        foreach (var interest in _ksRadarInterestSystem.StaticInterests.Values)
         {
-            if (gridEntity.Owner != interest.Item2)
+            if (interest.Owner != gridNetEntity)
                 continue;
 
             // Control pixels, so the cull box is the control: the old test compared
             // pixels to a world-metres box.
-            var interestPosition = Vector2.Transform(interest.Item3, curGridToViewMatrix);
+            var interestPosition = Vector2.Transform(interest.Position, curGridToViewMatrix);
             if (!new UIBox2(Vector2.Zero, PixelSize).Contains(interestPosition))
                 continue;
 
             handle.DrawCircle(interestPosition, 5, Color.ToSrgb(Color.DarkGoldenrod), true);
-            handle.DrawString(Font, interestPosition, interest.Item1.Text, Color.DarkGoldenrod);
+            handle.DrawString(Font, interestPosition, interest.Data.Text, Color.DarkGoldenrod);
         }
     }
 

@@ -29,7 +29,7 @@ public sealed partial class KsEntryPoint : GameShared
     ///         duplicate-id error (see <see cref="IPrototypeManager.PartialDirectory"/>). Kept narrow on purpose:
     ///         anywhere listed here, an accidental duplicate id silently merges rather than failing the load.
     /// </summary>
-    private readonly ResPath[] _partialPrototypePaths = [
+    public static readonly ResPath[] PartialPrototypePaths = [
         new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
         new("/Prototypes/_KS14/Reagents/Partials/"),
     ];
@@ -69,7 +69,7 @@ public sealed partial class KsEntryPoint : GameShared
         }
 
         // Before prototypes load, which is the only time the prototype manager reads these.
-        foreach (var partialPath in _partialPrototypePaths)
+        foreach (var partialPath in PartialPrototypePaths)
         {
             if (string.IsNullOrEmpty(partialPath.Extension))
                 _prototypeManager.PartialDirectory(partialPath, 0);

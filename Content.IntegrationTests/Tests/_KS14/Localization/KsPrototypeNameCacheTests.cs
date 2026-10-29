@@ -85,6 +85,32 @@ public sealed class KsPrototypeNameCacheTests
         });
     }
 
+    /// <summary>
+    ///     A partial entity changes the fields it states on the prototype it modifies, as the prototype manager does,
+    ///         rather than being skipped or failing as a duplicate. One for a prototype that doesn't exist does nothing.
+    /// </summary>
+    [Test]
+    public void PartialsMergeIntoTheirOriginal()
+    {
+        var sources = Sources().Append(Text("Prototypes/test_partial.yml", """
+            - type: !PartialOnly entity
+              id: TestLiteral
+              name: partial literal
+            - type: !PartialOnly entity
+              id: TestMissing
+              name: should not exist
+            """)).ToArray();
+
+        using var stream = new MemoryStream(KsPrototypeNameCacheCompiler.Compile(sources));
+        var cache = KsPrototypeNameCache.Read(stream);
+        Assert.Multiple(() =>
+        {
+            Assert.That(cache["en-US"].Names["TestLiteral"], Is.EqualTo("partial literal"), "the partial's name wins");
+            Assert.That(cache["en-US"].Names.ContainsKey("TestMissing"), Is.False, "a !PartialOnly with no original is ignored");
+            Assert.That(cache["fr-FR"].Names["TestChild"], Is.EqualTo("base française"), "nothing else moves");
+        });
+    }
+
     [Test]
     public void CompilationIsIndependentOfInputOrder()
     {

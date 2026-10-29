@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Content.Shared._KS14.Entry;
 using Content.Shared._KS14.Localization;
 using Content.Shared.Localizations;
 using Linguini.Bundle;
@@ -91,6 +92,10 @@ public static class KsPrototypeNameCacheCompiler
             }
         }
 
+        // Partials are merged in after everything else, as the prototype manager does.
+        var partials = new List<(MappingDataNode Mapping, bool PartialOnly, string Path)>();
+        var partialPaths = KsEntryPoint.PartialPrototypePaths.Select(path => path.ToString().TrimStart('/')).ToArray();
+
         // Replacement modules overwrite existing prototypes after normal prototype loading.
         foreach (var file in files.Where(file => file.Path.StartsWith("Prototypes/", StringComparison.Ordinal)
                      || file.Path.StartsWith("_KsModule_ReplacedPrototypes/", StringComparison.Ordinal))
@@ -108,19 +113,21 @@ public static class KsPrototypeNameCacheCompiler
                         typeValueNode.IsNull)
                         continue;
 
-                    if (typeValueNode.Value != "entity" ||
-                        typeValueNode.Tag == "!PartialOnly" /* TODO KS14 NAMECACHE: Make this less of a hack */)
+                    if (typeValueNode.Value != "entity")
                         continue;
+
+                    var partialOnly = typeValueNode.Tag == PartialOnlyTag;
+                    if (partialOnly || IsInPartialPath(file.Path, partialPaths))
+                    {
+                        partials.Add((mapping, partialOnly, file.Path));
+                        continue;
+                    }
 
                     var id = Scalar(mapping, "id") ?? throw new InvalidDataException($"Entity without id in {file.Path}.");
                     var isReplacement = file.Path.StartsWith("_KsModule_ReplacedPrototypes/", StringComparison.Ordinal);
                     if (isReplacement && (!prototypes.TryGetValue(id, out var original) || original.Abstract))
                         throw new InvalidDataException($"Replacement entity {id} does not exist in the package inputs.");
-                    var parents = Array.Empty<string>();
-                    if (mapping.TryGet("parent", out var parentNode) && !parentNode.IsNull)
-                        parents = parentNode is ValueDataNode parent ? [parent.Value]
-                            : ((SequenceDataNode)parentNode).Sequence.Cast<ValueDataNode>().Select(node => node.Value).ToArray();
-                    var prototype = new KsPrototypeLocalizationData(id, parents, Scalar(mapping, "name"), Scalar(mapping, "description"),
+                    var prototype = new KsPrototypeLocalizationData(id, Parents(mapping) ?? [], Scalar(mapping, "name"), Scalar(mapping, "description"),
                         Scalar(mapping, "localizationId"),
                         string.Equals(Scalar(mapping, "abstract"), "true", StringComparison.OrdinalIgnoreCase)
                         || ignoredPaths.Any(path => file.Path == path
@@ -132,7 +139,67 @@ public static class KsPrototypeNameCacheCompiler
                 }
             }
         }
+
+        foreach (var (mapping, partialOnly, path) in partials)
+            MergePartial(prototypes, mapping, partialOnly, path);
+
         return prototypes;
+    }
+
+    private const string PartialOnlyTag = "!PartialOnly";
+
+    private static bool IsInPartialPath(string path, string[] partialPaths)
+    {
+        // A registered path with an extension is one file; one without is a whole directory.
+        return partialPaths.Any(partialPath => path == partialPath
+            || (Path.GetExtension(partialPath).Length == 0 && path.StartsWith(partialPath.TrimEnd('/') + "/", StringComparison.Ordinal)));
+    }
+
+    /// <summary>
+    ///     Applies a partial entity to the prototype it modifies: the fields it states replace the original's, and the
+    ///         rest are kept. Without an original, a <c>!PartialOnly</c> one does nothing and any other is a new prototype,
+    ///         as the prototype manager has it.
+    /// </summary>
+    private static void MergePartial(Dictionary<string, KsPrototypeLocalizationData> prototypes, MappingDataNode mapping, bool partialOnly, string path)
+    {
+        var id = Scalar(mapping, "id") ?? throw new InvalidDataException($"Entity without id in {path}.");
+        if (!prototypes.TryGetValue(id, out var original))
+        {
+            if (!partialOnly)
+            {
+                prototypes.Add(id, new KsPrototypeLocalizationData(id, Parents(mapping) ?? [], Scalar(mapping, "name"),
+                    Scalar(mapping, "description"), Scalar(mapping, "localizationId"),
+                    string.Equals(Scalar(mapping, "abstract"), "true", StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return;
+        }
+
+        if (Scalar(mapping, "name") is { } name)
+            original.Name = name;
+
+        if (Scalar(mapping, "description") is { } description)
+            original.Description = description;
+
+        if (Scalar(mapping, "localizationId") is { } localizationId)
+            original.LocalizationId = localizationId;
+
+        // As the prototype manager merges them: a list is added to, a single value replaces
+        if (mapping.TryGet("parent", out var parentNode) && !parentNode.IsNull)
+        {
+            original.Parents = parentNode is SequenceDataNode
+                ? original.Parents.Concat(Parents(mapping)!).Distinct().ToArray()
+                : Parents(mapping)!;
+        }
+    }
+
+    private static string[]? Parents(MappingDataNode mapping)
+    {
+        if (!mapping.TryGet("parent", out var parentNode) || parentNode.IsNull)
+            return null;
+
+        return parentNode is ValueDataNode parent ? [parent.Value]
+            : ((SequenceDataNode)parentNode).Sequence.Cast<ValueDataNode>().Select(node => node.Value).ToArray();
     }
 
     private static string? Scalar(MappingDataNode mapping, string key)

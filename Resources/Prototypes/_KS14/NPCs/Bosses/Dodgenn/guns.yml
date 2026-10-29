@@ -97,7 +97,7 @@
 - type: htnCompound
   id: DodgennGunFluffCompound
   branches:
-  ## Launcher - the end draws nigh, a flip, and a dash at the target.
+  ## Launcher - the end draws nigh, a pause, a flip, and a dash at the target.
   - preconditions:
     - !type:ActiveHandComponentPrecondition
       components:
@@ -113,6 +113,9 @@
         speech: !type:SingleSpeakOperatorSpeech
           line: "THE END DRAWS NIGH!!!"
         hidden: false
+    - !type:HTNPrimitiveTask # a moment to react to the line before it fires
+      operator: !type:StaticWaitOperator
+        key: DodgennLauncherWindup
     - !type:HTNPrimitiveTask
       operator: !type:EmoteOperator
         id: Flip

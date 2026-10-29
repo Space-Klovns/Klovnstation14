@@ -113,6 +113,22 @@ local uid number, as in CONTRIBUTING §4 ("ViewVariables").
 - A `CLIENT` cvar can only be set with `Side.Client`. Setting it on the server is silently ignored (CONTRIBUTING §6).
 - Toggle the feature within the test and assert both ways. "Nothing happens while it's off" is half of the proof.
 
+### Mechanics that cost a lookup
+
+- **Usings.** `GameTest` is in `Content.IntegrationTests.Fixtures`, `Pair` helpers in `Content.IntegrationTests.Pair`,
+  plus `NUnit.Framework` and `System.Threading.Tasks`. Forgetting them gives a bare `GameTest could not be found`.
+- **Ticks from seconds.** `(int)(seconds * (float)server.ResolveDependency<IGameTiming>().TickRate)`, passed to
+  `Pair.RunTicksSync`. Don't hardcode a tick rate.
+- **Client entity from a server one.** `Pair.ToClientUid(serverUid)`, then read the client component in
+  `client.WaitAssertion`. Run ticks first so the state has arrived.
+- **Sprite layer state on the client.** `spriteComponent[spriteSystem.LayerMapGet((uid, spriteComponent), key)]` gives a
+  layer with `.Scale`, `.Rotation` and so on. Assert a mid-animation value inside a range, not an exact number: the
+  headless client's `FrameUpdate` runs, but not on your tick boundaries.
+- **Spawn a real prototype** (a `SupplyPodCargoBase`, say) with `SpawnEntity(proto, new EntityCoordinates(testMap.Grid,
+  0.5f, 0.5f))` instead of writing a `[TestPrototypes]` copy, when the real wiring is what you're testing.
+- **Proving red.** Comment out the one client or server line that produces the behaviour and rerun that test alone.
+  Restore it from a copy, not by retyping.
+
 ## What a headless client can check
 
 The test client's graphics are `ClydeHeadless`. Nothing is rendered, overlays never `Draw`, and controls never

@@ -180,15 +180,28 @@ namespace Content.Shared.Throwing
             RaiseLocalEvent(thrown, ref doHitEv, true);
         }
 
+        private readonly List<(EntityUid, ThrownItemComponent, PhysicsComponent)> _dueThrownItems = new(); // KS14
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
 
-            // KS14: TODO LCDC: TODO ZLEVELS: Collection was modified error sometimes when falling thru zlevel
-
+            // KS14 start: collected first. Landing raises LandEvent, and what reacts to it (an item falling through a z-level
+            //      and being thrown on, say) can add a ThrownItemComponent while the query is walking them.
+            _dueThrownItems.Clear();
             var query = EntityQueryEnumerator<ThrownItemComponent, PhysicsComponent>();
-            while (query.MoveNext(out var uid, out var thrown, out var physics))
+            while (query.MoveNext(out var dueUid, out var dueThrown, out var duePhysics))
             {
+                if ((dueThrown.LandTime ?? dueThrown.ThrownTime) <= _gameTiming.CurTime) // the same time both checks below use
+                    _dueThrownItems.Add((dueUid, dueThrown, duePhysics));
+            }
+
+            foreach (var (uid, thrown, physics) in _dueThrownItems)
+            {
+                if (thrown.LifeStage > ComponentLifeStage.Running || TerminatingOrDeleted(uid))
+                    continue;
+            // KS14 end
+
                 // If you remove this check verify slipping for other entities is networked properly.
                 if (_netMan.IsClient && !physics.Predict)
                     continue;

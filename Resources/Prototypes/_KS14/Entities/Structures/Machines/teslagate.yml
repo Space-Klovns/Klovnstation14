@@ -105,7 +105,7 @@
     prototype: TeslaGate
     stackRequirements:
       Steel: 5
-      Manipulator: 3 # TODO: make this capacitor, ffs.
+      Manipulator: 3 # would be capacitors, but upstream removed them: manipulators are the only stock part left
   - type: StaticPrice
     price: 1000
 

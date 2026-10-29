@@ -11,6 +11,7 @@ using Content.Shared.Power;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.BatteryShielding;
@@ -18,6 +19,7 @@ namespace Content.Shared._KS14.BatteryShielding;
 public abstract partial class SharedBatteryShieldingSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
     [Dependency] private ISharedAdminLogManager _adminLogManager = default!;
     [Dependency] private SharedBatterySystem _batterySystem = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
@@ -31,9 +33,8 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        if (!_gameTiming.IsFirstTimePredicted)
-            return;
-
+        // Not gated on IsFirstTimePredicted: a re-predicted tick that skipped this would leave the BtfoTime the
+        //      last server state reset it to, and the next first-time tick would set the battery off all over again.
         var btfoEqe = EntityQueryEnumerator<BtfoingBatteryShieldingComponent, BatteryShieldingComponent>();
         while (btfoEqe.MoveNext(out var uid, out var btfoingComponent, out var shieldingComponent))
         {
@@ -43,8 +44,11 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             btfoingComponent.BtfoTime = TimeSpan.MaxValue;
             Dirty(uid, btfoingComponent);
 
-            // TODO LCDC: fix this being spammed by prediction(?)
-            _audioSystem.PlayPredicted(shieldingComponent.EmagImplosionSound, Transform(uid).Coordinates, user: btfoingComponent.UserUid);
+            // Only the server plays it. Every client runs this timer, not just the user's, so a predicted
+            //      sound would be heard once from the client and once more from the server by everyone but the user.
+            if (_netManager.IsServer)
+                _audioSystem.PlayPvs(shieldingComponent.EmagImplosionSound, Transform(uid).Coordinates);
+
             _damageableSystem.ChangeDamage(uid, shieldingComponent.EmagImplosionDamage, ignoreResistances: true, origin: btfoingComponent.UserUid);
         }
     }

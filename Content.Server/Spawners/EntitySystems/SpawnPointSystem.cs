@@ -11,7 +11,7 @@ public sealed partial class SpawnPointSystem : EntitySystem
 {
     [Dependency] private GameTicker _gameTicker = default!;
     [Dependency] private IRobustRandom _random = default!;
-    //[Dependency] private StationSystem _stationSystem = default!; KS14
+    [Dependency] private StationSystem _stationSystem = default!;
     [Dependency] private StationSpawningSystem _stationSpawning = default!;
 
     public override void Initialize()
@@ -25,41 +25,12 @@ public sealed partial class SpawnPointSystem : EntitySystem
             return;
 
         // TODO: Cache all this if it ends up important.
-        var points = EntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
-        var possiblePositions = new List<EntityCoordinates>();
-
-        bool foundPicky = false; //KS14 - dont spawn on normal latejoins if youve found a picky latejoin
-
-        while (points.MoveNext(out var uid, out var spawnPoint, out var xform))
-        {
-            //if (args.Station != null && _stationSystem.GetOwningStation(uid, xform) != args.Station) KS14 - disabled this check for scenarios
-            //TODO SOOT or LCDC - check if this is important
-            //    continue;
-
-            //KS14 start
-            if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == true &&
-                (args.Job == null || spawnPoint.Job == null || spawnPoint.Job == args.Job))
-            {
-                if (foundPicky == false) //incredible demoncode to reset the found positions upon latejoin
-                    possiblePositions = new List<EntityCoordinates>();
-                possiblePositions.Add(xform.Coordinates);
-                foundPicky = true;
-            }
-
-            if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == false && foundPicky == false)
-            {
-                possiblePositions.Add(xform.Coordinates);
-            }
-            //KS14 end
-
-
-            if (_gameTicker.RunLevel != GameRunLevel.InRound &&
-                spawnPoint.SpawnType == SpawnPointType.Job &&
-                (args.Job == null || spawnPoint.Job == null || spawnPoint.Job == args.Job))
-            {
-                possiblePositions.Add(xform.Coordinates);
-            }
-        }
+        // KS14 start: prefer the joining station's own spawn points, but fall back to every spawn point when it has none,
+        //      as in scenarios, whose spawn points are not on a station
+        var possiblePositions = CollectPossiblePositions(args, requireStation: true);
+        if (possiblePositions.Count == 0 && args.Station != null)
+            possiblePositions = CollectPossiblePositions(args, requireStation: false);
+        // KS14 end
 
         if (possiblePositions.Count == 0)
         {
@@ -86,5 +57,46 @@ public sealed partial class SpawnPointSystem : EntitySystem
             args.Job,
             args.HumanoidCharacterProfile,
             args.Station);
+    }
+
+    // KS14: moved out of OnPlayerSpawning so it can be run with and without the station check
+    private List<EntityCoordinates> CollectPossiblePositions(PlayerSpawningEvent args, bool requireStation)
+    {
+        var points = EntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
+        var possiblePositions = new List<EntityCoordinates>();
+
+        bool foundPicky = false; //KS14 - dont spawn on normal latejoins if youve found a picky latejoin
+
+        while (points.MoveNext(out var uid, out var spawnPoint, out var xform))
+        {
+            if (requireStation /* KS14: added */ && args.Station != null && _stationSystem.GetOwningStation(uid, xform) != args.Station)
+                continue;
+
+            //KS14 start
+            if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == true &&
+                (args.Job == null || spawnPoint.Job == null || spawnPoint.Job == args.Job))
+            {
+                if (foundPicky == false) //incredible demoncode to reset the found positions upon latejoin
+                    possiblePositions = new List<EntityCoordinates>();
+                possiblePositions.Add(xform.Coordinates);
+                foundPicky = true;
+            }
+
+            if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == false && foundPicky == false)
+            {
+                possiblePositions.Add(xform.Coordinates);
+            }
+            //KS14 end
+
+
+            if (_gameTicker.RunLevel != GameRunLevel.InRound &&
+                spawnPoint.SpawnType == SpawnPointType.Job &&
+                (args.Job == null || spawnPoint.Job == null || spawnPoint.Job == args.Job))
+            {
+                possiblePositions.Add(xform.Coordinates);
+            }
+        }
+
+        return possiblePositions;
     }
 }

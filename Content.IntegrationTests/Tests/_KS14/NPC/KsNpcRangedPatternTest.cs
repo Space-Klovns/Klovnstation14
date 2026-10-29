@@ -23,8 +23,11 @@ public sealed class KsNpcRangedPatternTest : GameTest
     public override PoolSettings PoolSettings => PsDisconnected;
 
     private const string ShooterMob = "KsPatternTestShooter";
+    private const string PausingShooterMob = "KsPatternTestPausingShooter";
+    private const int TicksPerSecond = 30;
     private const string Bolt = "KsPatternTestBolt";
     private readonly EntProtoId<NpcRangedAttackPatternComponent> _crossAttack = "KsPatternTestCross";
+    private readonly EntProtoId<NpcRangedAttackPatternComponent> _singleAttack = "KsPatternTestSingle";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -45,7 +48,23 @@ public sealed class KsNpcRangedPatternTest : GameTest
     cooldown: 30
 
 - type: entity
+  parent: BaseNPCRanged
+  id: KsPatternTestSingle
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: CardinalDirections
+    projectile: KsPatternTestBolt
+    cooldown: 0
+
+- type: entity
   id: KsPatternTestShooter
+
+- type: entity
+  id: KsPatternTestPausingShooter
+  components:
+  - type: NpcRangedAttackCooldowns
+    minAttackGap: 1
+    maxAttackGap: 1
 ";
 
     /// <summary>
@@ -89,6 +108,45 @@ public sealed class KsNpcRangedPatternTest : GameTest
                 Assert.That(patternSystem.IsAttackActive(shooterUid), Is.False, "and then it is done");
                 Assert.That(patternSystem.TryStartAttack(shooterUid, _crossAttack, targetUid: null), Is.False, "and on cooldown");
             });
+        });
+    }
+
+    /// <summary>
+    ///     With a gap between attacks set, no attack - not even a different one, off cooldown - starts until the gap
+    ///         after the last one is over. Without one, the next starts straight away.
+    /// </summary>
+    [TestCase(PausingShooterMob, true)]
+    [TestCase(ShooterMob, false)]
+    public async Task TestGapBetweenAttacks(string shooterPrototype, bool hasGap)
+    {
+        var patternSystem = SEntMan.System<NpcCombatRangedPatternSystem>();
+        var map = await Pair.CreateTestMap();
+        EntityUid shooterUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            shooterUid = SEntMan.SpawnEntity(shooterPrototype, map.GridCoords);
+            Assert.That(patternSystem.TryStartAttack(shooterUid, _singleAttack, targetUid: null), "the first attack should start");
+        });
+
+        // Its one burst fires on the next update.
+        await Pair.RunTicksSync(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(patternSystem.IsAttackActive(shooterUid), Is.False, "the first attack should be over");
+            Assert.That(patternSystem.TryStartAttack(shooterUid, _crossAttack, targetUid: null), Is.EqualTo(!hasGap),
+                hasGap ? "no attack should start during the gap" : "the next attack should start straight away");
+        });
+
+        if (!hasGap)
+            return;
+
+        await Pair.RunTicksSync(TicksPerSecond + 1);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(patternSystem.TryStartAttack(shooterUid, _crossAttack, targetUid: null), "an attack should start once the gap is over");
         });
     }
 

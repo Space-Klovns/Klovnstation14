@@ -57,7 +57,8 @@ public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
     /// <summary>
     ///     Starts the attack <paramref name="attackId"/> from <paramref name="uid"/>, at <paramref name="targetUid"/> if
     ///         given: telegraphed, sounded and announced with <paramref name="speech"/> now, its first burst on the next
-    ///         update. False if the attack is on cooldown for it, or it is part way through one already.
+    ///         update. False if the attack is on cooldown for it, it is part way through one already, or the gap after
+    ///         its last one (<see cref="NpcRangedAttackCooldownsComponent.MinAttackGap"/>) isn't over.
     /// </summary>
     public bool TryStartAttack(
         EntityUid uid,
@@ -90,9 +91,12 @@ public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
 
     private bool IsOnCooldown(EntityUid uid, EntProtoId<NpcRangedAttackPatternComponent> attackId)
     {
-        return _cooldownsQuery.TryComp(uid, out var cooldownsComponent) &&
-            cooldownsComponent.CooldownEnds.TryGetValue(attackId, out var cooldownEnd) &&
-            _gameTiming.CurTime < cooldownEnd;
+        if (!_cooldownsQuery.TryComp(uid, out var cooldownsComponent))
+            return false;
+
+        var now = _gameTiming.CurTime;
+        return now < cooldownsComponent.NextAttackAllowedAt ||
+            cooldownsComponent.CooldownEnds.TryGetValue(attackId, out var cooldownEnd) && now < cooldownEnd;
     }
 
     public override void Update(float frameTime)
@@ -118,6 +122,7 @@ public sealed partial class NpcCombatRangedPatternSystem : EntitySystem
             }
 
             cooldownsComponent.CooldownEnds[state.AttackId] = now + state.Pattern.Cooldown;
+            cooldownsComponent.NextAttackAllowedAt = now + _robustRandom.Next(cooldownsComponent.MinAttackGap, cooldownsComponent.MaxAttackGap);
             RemCompDeferred(uid, activeAttackComponent);
         }
     }

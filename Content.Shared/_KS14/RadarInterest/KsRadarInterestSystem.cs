@@ -6,19 +6,24 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.RadarInterest;
 
-// Shoddy system for getting data for things that should be shown on radar and will probably never locally move
-// TODO LCDC: Handle deletion of interests, currently it does epic fails
-
+/// <summary>
+///     Sends clients the things that should be shown on radar and will probably never locally move.
+/// </summary>
+/// <remarks>
+///     Everything is keyed by <see cref="NetEntity"/>, not <see cref="EntityUid"/>: the removal of a deleted interest
+///         reaches a client after the entity is already gone there, and could not be resolved to a uid any more.
+/// </remarks>
 public sealed partial class KsRadarInterestSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private ISharedPlayerManager _playerManager = default!;
 
+    private readonly Dictionary<NetEntity, KsStaticRadarInterest> _staticInterests = [];
+
     /// <summary>
-    ///     Networked dictionary of interests, with their respective data+parent+localpos.
-    ///         Only populated clientside.
+    ///     Every interest, keyed by the interest entity.
     /// </summary>
-    public readonly Dictionary<EntityUid, (KsRadarInterestData, EntityUid, Vector2)> StaticInterests = [];
+    public IReadOnlyDictionary<NetEntity, KsStaticRadarInterest> StaticInterests => _staticInterests;
 
     public override void Initialize()
     {
@@ -40,12 +45,20 @@ public sealed partial class KsRadarInterestSystem : EntitySystem
         }
     }
 
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        if (_netManager.IsServer)
+            _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+    }
+
     public void AddInterest(EntityUid uid, KsRadarInterestData data)
     {
         if (HasComp<KsRadarInterestComponent>(uid))
             return;
 
-        var component = EntityManager.ComponentFactory.GetComponent<KsRadarInterestComponent>();
+        var component = Factory.GetComponent<KsRadarInterestComponent>();
         component.Data = data;
 
         AddComp(uid, component);
@@ -56,26 +69,15 @@ public sealed partial class KsRadarInterestSystem : EntitySystem
         if (args.NewStatus != SessionStatus.InGame)
             return;
 
-        var netState = new Dictionary<NetEntity, (KsRadarInterestData, NetEntity, Vector2)>();
-        foreach (var (ourKey, ourVal) in StaticInterests)
-            netState[GetNetEntity(ourKey)] = (ourVal.Item1, GetNetEntity(ourVal.Item2), ourVal.Item3);
-
-        RaiseNetworkEvent(new KsStaticRadarInterestResetMessage(netState), args.Session);
+        RaiseNetworkEvent(new KsStaticRadarInterestResetMessage(new(_staticInterests)), args.Session);
     }
 
     private void OnInterestParentChanged(Entity<KsRadarInterestComponent> entity, ref EntParentChangedMessage args)
     {
-        if (TerminatingOrDeleted(entity)) // shutdown should handle this idk
+        if (TerminatingOrDeleted(entity)) // shutdown handles this
             return;
 
-        StaticInterests[entity.Owner] = (entity.Comp.Data, args.Transform.ParentUid, args.Transform.LocalPosition);
-
-        RaiseNetworkEvent(new KsStaticRadarInterestDeltaMessage(
-            GetNetEntity(args.Transform.ParentUid),
-            GetNetEntity(entity.Owner),
-            entity.Comp.Data,
-            args.Transform.LocalPosition
-         ));
+        SetInterest(entity, args.Transform);
     }
 
     private void OnInterestStartup(Entity<KsRadarInterestComponent> entity, ref ComponentStartup args)
@@ -83,70 +85,56 @@ public sealed partial class KsRadarInterestSystem : EntitySystem
         if (entity.Comp.Data.Text.IsWhiteSpace())
             entity.Comp.Data.Text = MetaData(entity.Owner).EntityName;
 
-        var transformComponent = Transform(entity);
-        StaticInterests[entity.Owner] = (entity.Comp.Data, transformComponent.ParentUid, transformComponent.LocalPosition);
+        SetInterest(entity, Transform(entity));
+    }
 
-        RaiseNetworkEvent(new KsStaticRadarInterestDeltaMessage(
-            GetNetEntity(transformComponent.ParentUid),
-            GetNetEntity(entity.Owner),
-            entity.Comp.Data,
-            transformComponent.LocalPosition
-         ));
+    private void SetInterest(Entity<KsRadarInterestComponent> entity, TransformComponent transformComponent)
+    {
+        var interestNetEntity = GetNetEntity(entity.Owner);
+        var interest = new KsStaticRadarInterest(entity.Comp.Data, GetNetEntity(transformComponent.ParentUid), transformComponent.LocalPosition);
+
+        _staticInterests[interestNetEntity] = interest;
+        RaiseNetworkEvent(new KsStaticRadarInterestDeltaMessage(interestNetEntity, interest));
     }
 
     private void OnInterestShutdown(Entity<KsRadarInterestComponent> entity, ref ComponentShutdown args)
     {
-        StaticInterests.Remove(entity.Owner);
+        var interestNetEntity = GetNetEntity(entity.Owner);
 
-        RaiseNetworkEvent(new KsStaticRadarInterestDeltaMessage(
-            NetEntity.Invalid,
-            GetNetEntity(entity.Owner),
-            null,
-            Vector2.Zero
-         ));
+        _staticInterests.Remove(interestNetEntity);
+        RaiseNetworkEvent(new KsStaticRadarInterestDeltaMessage(interestNetEntity, null));
     }
 
     private void OnResetMessage(KsStaticRadarInterestResetMessage msg)
     {
-        foreach (var (theirKey, theirVal) in msg.AllInterests)
-        {
-            if (!TryGetEntity(theirKey, out var dataEntity) ||
-                !TryGetEntity(theirVal.Item2, out var ownerEntity))
-                return;
-
-            StaticInterests[dataEntity.Value] = (theirVal.Item1, ownerEntity.Value, theirVal.Item3);
-        }
+        _staticInterests.Clear();
+        foreach (var (interestNetEntity, interest) in msg.AllInterests)
+            _staticInterests[interestNetEntity] = interest;
     }
 
     private void OnDeltaMessage(KsStaticRadarInterestDeltaMessage msg)
     {
-        if (!TryGetEntity(msg.DataEntity, out var dataEntity))
-            return;
-
-        if (!TryGetEntity(msg.NewOwnerEntity, out var ownerEntity) ||
-            msg.Data == null)
-        {
-
-            StaticInterests.Remove(dataEntity.Value);
-            return;
-        }
-
-        StaticInterests[dataEntity.Value] = (msg.Data, ownerEntity.Value, msg.StaticPosition)!;
+        if (msg.Interest is { } interest)
+            _staticInterests[msg.InterestEntity] = interest;
+        else
+            _staticInterests.Remove(msg.InterestEntity);
     }
 }
 
+/// <param name="Owner">The entity <paramref name="Position"/> is relative to: the grid or map the interest is on.</param>
 [Serializable, NetSerializable]
-public sealed class KsStaticRadarInterestResetMessage(Dictionary<NetEntity, (KsRadarInterestData, NetEntity, Vector2)> allInterests) : EntityEventArgs
+public readonly record struct KsStaticRadarInterest(KsRadarInterestData Data, NetEntity Owner, Vector2 Position);
+
+[Serializable, NetSerializable]
+public sealed class KsStaticRadarInterestResetMessage(Dictionary<NetEntity, KsStaticRadarInterest> allInterests) : EntityEventArgs
 {
-    public Dictionary<NetEntity, (KsRadarInterestData, NetEntity, Vector2)> AllInterests = allInterests;
+    public Dictionary<NetEntity, KsStaticRadarInterest> AllInterests = allInterests;
 }
 
+/// <param name="Interest">Null if the interest was removed.</param>
 [Serializable, NetSerializable]
-public sealed class KsStaticRadarInterestDeltaMessage(NetEntity newOwnerEntity, NetEntity dataEntity, KsRadarInterestData? data, Vector2 staticPosition) : EntityEventArgs
+public sealed class KsStaticRadarInterestDeltaMessage(NetEntity interestEntity, KsStaticRadarInterest? interest) : EntityEventArgs
 {
-    public NetEntity NewOwnerEntity = newOwnerEntity;
-
-    public NetEntity DataEntity = dataEntity;
-    public KsRadarInterestData? Data = data;
-    public Vector2 StaticPosition = staticPosition;
+    public NetEntity InterestEntity = interestEntity;
+    public KsStaticRadarInterest? Interest = interest;
 }
