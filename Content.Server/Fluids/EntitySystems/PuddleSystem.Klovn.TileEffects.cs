@@ -96,13 +96,15 @@ public sealed partial class PuddleSystem
                 return;
         }
 
+        // Without a time to cover (a puddle being spilled), it covers none: whatever happens over time (burning fuel off,
+        //      boiling) waits for the next scheduled update, which counts from now. What happens at once still does.
         var solution = solutionEntity.Comp.Solution;
-        var scale = careAboutTime ? (float)deltaTime.TotalSeconds : 1f;
+        var scale = (float)deltaTime.TotalSeconds;
         entity.Comp.LastTileEffectUpdate = curTime;
 
-        // On the schedule, the next update is an interval away, and can land a tick late: the interval is no whole number
-        //     of ticks. One more tick, so an effect that expires then isn't left to the order the systems update in.
-        var refreshedWithin = careAboutTime ? _tileEffectUpdateInterval + _gameTiming.TickPeriod * 2 : (TimeSpan?)null;
+        // Effects that last until they're refreshed (a chemfire) last until the next scheduled update, and a tick or two
+        //      past it: the interval is no whole number of ticks, and the next update can land a tick late.
+        var refreshedWithin = TimeUntilNextTileEffectUpdate(curTime) + _gameTiming.TickPeriod * 2;
 
         if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale,
                 flameTemperature: MaxFlame(GetFlameTemperature(entity.Owner), flameTemperature), refreshedWithin: refreshedWithin))
@@ -116,6 +118,19 @@ public sealed partial class PuddleSystem
 
         _solutionContainerSystem.UpdateChemicals(solutionEntity);
         Dirty(solutionEntity);
+    }
+
+    /// <summary>
+    ///     How long until the scheduled pass runs every puddle's effects again. During the pass it's already a whole
+    ///         interval away; outside it, whatever is left of the current one.
+    /// </summary>
+    private TimeSpan TimeUntilNextTileEffectUpdate(TimeSpan curTime)
+    {
+        if (_nextTileEffectUpdate == TimeSpan.MinValue)
+            return _tileEffectUpdateInterval;
+
+        var remaining = _nextTileEffectUpdate - curTime;
+        return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
     }
 
     /// <summary>
