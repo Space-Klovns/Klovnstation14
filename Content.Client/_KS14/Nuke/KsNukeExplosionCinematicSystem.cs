@@ -117,9 +117,9 @@ public sealed partial class KsNukeExplosionCinematicSystem : EntitySystem
         if (!IsAlarmPlaying() && ev.AlarmOffset < _audio.GetAudioLength(ev.AlarmSound))
         {
             PlayCinematicSound(ev.AlarmSound,
-                AudioParams.Default
-                    .WithVolume(KsNukeExplosionCinematicTimings.AlarmVolume)
-                    .WithPlayOffset((float)ev.AlarmOffset.TotalSeconds));
+                AudioParams.Default.
+                    WithVolume(-2f).
+                        WithPlayOffset((float)ev.AlarmOffset.TotalSeconds));
         }
     }
 
