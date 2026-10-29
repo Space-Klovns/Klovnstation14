@@ -58,7 +58,7 @@ public sealed partial class AmbientOcclusionOverlay
 
         _surfaceBounds.Clear();
         foreach (var surface in _surfaceSilhouettes)
-            _surfaceBounds.Add(lookupSystem.GetWorldAABB(surface.Uid));
+            _surfaceBounds.Add(lookupSystem.GetWorldAABB(surface.SpriteEntity.Owner));
 
         _itemsOnSurfaces.Clear();
         foreach (var item in _itemSilhouettes)
@@ -100,7 +100,7 @@ public sealed partial class AmbientOcclusionOverlay
             {
                 worldHandle.UseShader(silhouetteShader);
                 foreach (var item in _itemsOnSurfaces)
-                    DrawSilhouette(worldHandle, spriteSystem, item.SpriteComponent, item.WorldPosition, item.WorldRotation, eyeRotation, worldToTargetMatrix);
+                    DrawSilhouette(worldHandle, spriteSystem, item.SpriteEntity, item.WorldPosition, item.WorldRotation, eyeRotation, worldToTargetMatrix);
             }, Color.Transparent);
 
         _clyde.BlurRenderTarget(viewport, res.AOTarget, blurBuffer, eye, SurfaceBlurMultiplier);
@@ -110,7 +110,7 @@ public sealed partial class AmbientOcclusionOverlay
             {
                 worldHandle.UseShader(silhouetteShader);
                 foreach (var surface in _surfaceSilhouettes)
-                    DrawSilhouette(worldHandle, spriteSystem, surface.SpriteComponent, surface.WorldPosition, surface.WorldRotation, eyeRotation, worldToTargetMatrix);
+                    DrawSilhouette(worldHandle, spriteSystem, surface.SpriteEntity, surface.WorldPosition, surface.WorldRotation, eyeRotation, worldToTargetMatrix);
             }, Color.Transparent);
 
         worldHandle.SetTransform(Matrix3x2.Identity);

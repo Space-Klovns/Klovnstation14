@@ -46,7 +46,7 @@ public sealed partial class AmbientOcclusionOverlay
     private bool _queriesResolved;
 
     /// <summary>
-    ///     Draws the sprite silhouette of every uncontained item and anchored structure in view into the AO target.
+    ///     Draws the sprite silhouette of every uncontained item and structure in view into the AO target.
     /// </summary>
     private void DrawEntityAmbientOcclusion(
         DrawingHandleWorld worldHandle,
@@ -94,69 +94,74 @@ public sealed partial class AmbientOcclusionOverlay
 
         foreach (var uid in _cachedEntities)
         {
+            // Sprite and draw depth first: most of what the lookup returns (decals, cables, pipes, puddles) fails here,
+            //      before any of the component lookups below.
+            if (!_spriteQuery.TryComp(uid, out var spriteComponent)
+                || !spriteComponent.Visible
+                || spriteComponent.DrawDepth >= MinEffectDrawDepth)
+                continue;
+
+            var forced = _forceAmbientOcclusionQuery.HasComp(uid);
+            if (!forced && spriteComponent.DrawDepth <= MaxFlatDrawDepth)
+                continue;
+
             if (_occluderQuery.HasComp(uid)
                 || _mobStateQuery.HasComp(uid)
                 || _projectileQuery.HasComp(uid)
                 || _noAmbientOcclusionQuery.HasComp(uid)
-                || !_spriteQuery.TryComp(uid, out var spriteComponent)
-                || !spriteComponent.Visible
-                || spriteComponent.DrawDepth >= MinEffectDrawDepth
                 || !_transformQuery.TryComp(uid, out var transformComponent))
                 continue;
 
+            // Structures block movement, anchored or not (closets, crates); that leaves out decals, cables and pipes.
             var isItem = _itemQuery.HasComp(uid);
-            if (!_forceAmbientOcclusionQuery.HasComp(uid))
-            {
-                if (spriteComponent.DrawDepth <= MaxFlatDrawDepth)
-                    continue;
-
-                // Structures block movement, anchored or not (closets, crates); that leaves out decals, cables and pipes.
-                if (!isItem && !HasHardFixture(uid))
-                    continue;
-            }
-
-            // A sprite that is all light (holograms, glowing signs) has no body to occlude with.
-            if (IsFullyUnshaded(spriteComponent))
+            if (!forced && !isItem && !HasHardFixture(uid))
                 continue;
 
+            var spriteEntity = new Entity<SpriteComponent>(uid, spriteComponent);
             var (worldPosition, worldRotation) = transformSystem.GetWorldPositionRotation(transformComponent);
-            DrawSilhouette(worldHandle, spriteSystem, spriteComponent, worldPosition, worldRotation, eyeRotation, worldToTargetMatrix);
+
+            // Nothing drawn means the sprite is all light (holograms, glowing signs), with no body to occlude with.
+            if (!DrawSilhouette(worldHandle, spriteSystem, spriteEntity, worldPosition, worldRotation, eyeRotation, worldToTargetMatrix))
+                continue;
 
             if (isItem)
-                _itemSilhouettes.Add(new SilhouetteDatum(uid, spriteComponent, worldPosition, worldRotation));
+                _itemSilhouettes.Add(new SilhouetteDatum(spriteEntity, worldPosition, worldRotation));
             else if (_placeableSurfaceQuery.TryComp(uid, out var placeableSurfaceComponent) && placeableSurfaceComponent.IsPlaceable)
-                _surfaceSilhouettes.Add(new SilhouetteDatum(uid, spriteComponent, worldPosition, worldRotation));
+                _surfaceSilhouettes.Add(new SilhouetteDatum(spriteEntity, worldPosition, worldRotation));
         }
 
         worldHandle.SetTransform(Matrix3x2.Identity);
         worldHandle.UseShader(_proto.Index(UnshadedShader).Instance());
     }
 
-    private readonly record struct SilhouetteDatum(EntityUid Uid, SpriteComponent SpriteComponent, Vector2 WorldPosition, Angle WorldRotation);
+    private readonly record struct SilhouetteDatum(Entity<SpriteComponent> SpriteEntity, Vector2 WorldPosition, Angle WorldRotation);
 
     /// <summary>
     ///     Draws every layer of a sprite with the current shader, in the AO target's frame.
     /// </summary>
+    /// <returns>Whether any layer was drawn; a sprite whose every layer is unshaded draws none.</returns>
     /// <remarks>
     ///     Not <see cref="SpriteSystem.RenderSprite"/>: that sets the handle's transform per layer, discarding the
     ///     world-to-target matrix, so everything lands outside the target. This is its layer loop minus layer
     ///     shaders and colours, which the silhouette doesn't want anyway.
     /// </remarks>
-    private static void DrawSilhouette(
+    private static bool DrawSilhouette(
         DrawingHandleWorld worldHandle,
         SpriteSystem spriteSystem,
-        SpriteComponent spriteComponent,
+        Entity<SpriteComponent> spriteEntity,
         Vector2 worldPosition,
         Angle worldRotation,
         Angle eyeRotation,
         Matrix3x2 worldToTargetMatrix)
     {
+        var spriteComponent = spriteEntity.Comp;
         var angle = (worldRotation + eyeRotation).Reduced().FlipPositive();
         var cardinal = spriteComponent is { NoRotation: false, SnapCardinals: true } ? angle.RoundToCardinalAngle() : Angle.Zero;
         var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, spriteComponent.NoRotation ? -eyeRotation : worldRotation - cardinal);
         var spriteToTargetMatrix = spriteComponent.LocalMatrix * entityMatrix * worldToTargetMatrix;
 
         Direction? overrideDirection = spriteComponent.EnableDirectionOverride ? spriteComponent.DirectionOverride : null;
+        var drewAny = false;
 
         foreach (var spriteLayer in spriteComponent.AllLayers)
         {
@@ -180,22 +185,10 @@ public sealed partial class AmbientOcclusionOverlay
 
             worldHandle.SetTransform(layerMatrix * spriteToTargetMatrix);
             worldHandle.DrawTextureRect(texture, Box2.FromDimensions(textureSize / -2f, textureSize));
-        }
-    }
-
-    /// <returns>Whether every layer that would be drawn is unshaded, including when none would be.</returns>
-    private static bool IsFullyUnshaded(SpriteComponent spriteComponent)
-    {
-        foreach (var spriteLayer in spriteComponent.AllLayers)
-        {
-            if (spriteLayer is not SpriteComponent.Layer layer || !layer.Visible || layer.Blank)
-                continue;
-
-            if (layer.ShaderPrototype != SpriteSystem.UnshadedId)
-                return false;
+            drewAny = true;
         }
 
-        return true;
+        return drewAny;
     }
 
     private bool HasHardFixture(EntityUid uid)
