@@ -15,6 +15,26 @@ public enum KsNukeExplosionEnding : byte
     ///     The station was destroyed and the nuclear operatives' shuttle went down with it.
     /// </summary>
     TotalA,
+
+    /// <summary>
+    ///     The nuke went off but missed the station.
+    /// </summary>
+    NukeFail,
+
+    /// <summary>
+    ///     The station blew itself up.
+    /// </summary>
+    SelfDestruct,
+
+    /// <summary>
+    ///     A rogue AI blew up the station.
+    /// </summary>
+    Malf,
+
+    /// <summary>
+    ///     The station was consumed by a blood cult.
+    /// </summary>
+    Cult,
 }
 
 /// <summary>
@@ -54,15 +74,33 @@ public sealed class KsNukeExplosionCinematicEvent : EntityEventArgs
     }
 }
 
+/// <summary>
+///     The RSI states shown for an ending: the intro, what's held until the climax,
+///     the climax itself and the closing summary.
+///     The intro and climax play at the frame timings in the RSI.
+/// </summary>
+public readonly record struct KsNukeExplosionCinematicStates(string Intro, string Hold, string Climax, string Summary)
+{
+    public const string RsiPath = "/Textures/_KS14/Cinematic/station_explosion.rsi";
+
+    public static KsNukeExplosionCinematicStates Get(KsNukeExplosionEnding ending)
+    {
+        return ending switch
+        {
+            KsNukeExplosionEnding.TotalA => new("intro_nuke", "station_intact", "station_explode_fade_red", "summary_totala"),
+            KsNukeExplosionEnding.NukeFail => new("intro_nuke", "station_intact", "station_intact_fade_red", "summary_nukefail"),
+            KsNukeExplosionEnding.SelfDestruct => new("intro_nuke", "station_intact", "station_explode_fade_red", "summary_selfdes"),
+            KsNukeExplosionEnding.Malf => new("intro_malf", "intro_malf_still", "station_explode_fade_red", "summary_malf"),
+            KsNukeExplosionEnding.Cult => new("intro_cult", "station_intact", "station_corrupted", "summary_cult"),
+            _ => new("intro_nuke", "station_intact", "station_explode_fade_red", "summary_nukewin"),
+        };
+    }
+}
+
 public static class KsNukeExplosionCinematicTimings
 {
     /// <summary>
-    ///     Length of the 3-2-1 timer intro.
-    /// </summary>
-    public static readonly TimeSpan IntroDuration = TimeSpan.FromSeconds(3.5);
-
-    /// <summary>
-    ///     The intact station is always shown for at least this long.
+    ///     The hold state between the intro and the climax is always shown for at least this long.
     /// </summary>
     public static readonly TimeSpan MinimumIntactDuration = TimeSpan.FromSeconds(2);
 

@@ -22,7 +22,7 @@ namespace Content.Client._KS14.Nuke;
 /// </summary>
 public sealed partial class KsNukeExplosionCinematicSystem : EntitySystem
 {
-    private const string RsiPath = "/Textures/_KS14/Cinematic/station_explosion.rsi";
+    private const string RsiPath = KsNukeExplosionCinematicStates.RsiPath;
     private static readonly ResolvedSoundSpecifier ExplosionSound = new ResolvedPathSpecifier("/Audio/Effects/explosionfar.ogg");
     private const float ExplosionVolume = -6f;
     private static readonly TimeSpan FadeIn = TimeSpan.FromSeconds(0.1);
@@ -96,31 +96,28 @@ public sealed partial class KsNukeExplosionCinematicSystem : EntitySystem
         }
 
         var rsi = resource.RSI;
-        var summary = ev.Ending switch
-        {
-            KsNukeExplosionEnding.TotalA => "summary_totala",
-            _ => "summary_nukewin",
-        };
+        var states = KsNukeExplosionCinematicStates.Get(ev.Ending);
 
-        if (!TryGetState(rsi, "intro_nuke", out var introState) ||
-            !TryGetState(rsi, "station_intact", out var intactState) ||
-            !TryGetState(rsi, "station_explode_fade_red", out var explode) ||
-            !TryGetState(rsi, summary, out var summaryState))
+        if (!TryGetState(rsi, states.Intro, out var introState) ||
+            !TryGetState(rsi, states.Hold, out var holdState) ||
+            !TryGetState(rsi, states.Climax, out var climaxState) ||
+            !TryGetState(rsi, states.Summary, out var summaryState))
         {
             return;
         }
 
-        var intro = KsNukeExplosionCinematicTimings.IntroDuration;
+        // Animations play at their own frame timings, the server times the explosion from the same RSI.
+        var intro = TimeSpan.FromSeconds(introState.AnimationLength);
         KsCinematicScene[] scenes =
         [
             new(introState, intro),
-            new(intactState, ev.ExplosionDelay - intro),
-            new(explode, TimeSpan.FromSeconds(explode.AnimationLength)),
+            new(holdState, ev.ExplosionDelay - intro),
+            new(climaxState, TimeSpan.FromSeconds(climaxState.AnimationLength)),
             new(summaryState, KsNukeExplosionCinematicTimings.SummaryDuration),
         ];
 
         _explosionDelay = ev.ExplosionDelay;
-        _explosionPlayed = false;
+        _explosionPlayed = ev.Ending == KsNukeExplosionEnding.Cult;
         _alarmPath = _audio.GetAudioPath(ev.AlarmSound) ?? string.Empty;
 
         _control = new KsCinematicControl(scenes, FadeIn, FadeOut);

@@ -627,7 +627,7 @@ public sealed partial class NukeSystem : EntitySystem
             return;
 
         // KS14 start: begin the synchronized station explosion cinematic before resolving the blast
-        BeginCinematicDetonation(uid, component, transform);
+        BeginCinematicDetonation((uid, component, transform));
         // KS14 end
     }
 
