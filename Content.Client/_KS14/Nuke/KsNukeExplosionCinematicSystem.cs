@@ -21,7 +21,7 @@ namespace Content.Client._KS14.Nuke;
 /// </summary>
 public sealed partial class KsNukeExplosionCinematicSystem : EntitySystem
 {
-    private const string RsiPath = "/Textures/_KS14/Effects/station_explosion.rsi";
+    private const string RsiPath = "/Textures/_KS14/Cinematic/station_explosion.rsi";
     private static readonly ResolvedSoundSpecifier ExplosionSound = new ResolvedPathSpecifier("/Audio/Effects/explosionfar.ogg");
     private const float ExplosionVolume = -6f;
     private static readonly TimeSpan FadeIn = TimeSpan.FromSeconds(0.1);

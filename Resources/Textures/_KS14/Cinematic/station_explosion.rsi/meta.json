@@ -6,6 +6,7 @@
         "x": 512,
         "y": 512
     },
+    "metaAtlas": false,
     "states": [
         {
             "name": "station_intact"
