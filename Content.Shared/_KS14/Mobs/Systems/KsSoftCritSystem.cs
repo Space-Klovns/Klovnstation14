@@ -1,3 +1,4 @@
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Mobs.Components;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Damage;
@@ -11,6 +12,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Events;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Speech;
+using Robust.Shared.Configuration;
 
 namespace Content.Shared._KS14.Mobs.Systems;
 
@@ -26,12 +28,17 @@ public sealed partial class KsSoftCritSystem : EntitySystem
     [Dependency] private ActionBlockerSystem _actionBlocker = default!;
     [Dependency] private DamageableSystem _damageable = default!;
     [Dependency] private MovementSpeedModifierSystem _movementSpeed = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     [Dependency] private EntityQuery<KsSoftCritComponent> _softCritQuery = default!;
+
+    private bool _enabled;
 
     public override void Initialize()
     {
         base.Initialize();
+
+        Subs.CVar(_cfg, KsCCVars.SoftCritEnabled, OnEnabledChanged, true);
 
         SubscribeLocalEvent<KsSoftCritComponent, MobStateChangedEvent>(OnMobStateChanged);
         // Mob thresholds still run on total damage and DamageChangedEvent. Soft crit has to measure damage
@@ -57,6 +64,21 @@ public sealed partial class KsSoftCritSystem : EntitySystem
     public bool AllowsInCrit(EntityUid uid, CancellableEntityEventArgs args)
     {
         return args is UpdateCanMoveEvent or ChangeDirectionAttemptEvent or SpeakAttemptEvent && IsSoftCrit(uid);
+    }
+
+    private void OnEnabledChanged(bool enabled)
+    {
+        if (_enabled == enabled)
+            return;
+
+        _enabled = enabled;
+
+        // Put anyone already critical into or out of soft crit right away.
+        var query = EntityQueryEnumerator<KsSoftCritComponent>();
+        while (query.MoveNext(out var uid, out var softCrit))
+        {
+            Refresh((uid, softCrit));
+        }
     }
 
     private void OnMobStateChanged(Entity<KsSoftCritComponent> ent, ref MobStateChangedEvent args)
@@ -114,7 +136,7 @@ public sealed partial class KsSoftCritSystem : EntitySystem
 
     private bool ShouldBeSoftCrit(EntityUid uid)
     {
-        if (!TryComp<MobStateComponent>(uid, out var mobState) || mobState.CurrentState != MobState.Critical)
+        if (!_enabled || !TryComp<MobStateComponent>(uid, out var mobState) || mobState.CurrentState != MobState.Critical)
             return false;
 
         return TryGetSoftCritProgress(uid, out var progress) && progress < 1f;
