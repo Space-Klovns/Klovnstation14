@@ -508,6 +508,42 @@ public sealed class ChemicalFireTest : GameTest
     }
 
     /// <summary>
+    ///     A chemfire refreshed more often than it heats, as a burning puddle refreshes its fire on every update, still
+    ///         heats on schedule: refreshing it never puts its next heat back.
+    /// </summary>
+    [Test]
+    public async Task TestChemicalFireRefreshedOftenStillHeats()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        var flammableUid = EntityUid.Invalid;
+        await server.WaitAssertion(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+            flammableUid = entityManager.SpawnEntity(FlammableProto, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+        });
+
+        // Every few ticks for two seconds: far more often than the fire's heat interval
+        for (var tick = 0; tick < TicksPerSecond * 2; tick += 5)
+        {
+            await server.WaitPost(() => Assert.That(chemicalFireSystem.SpawnChemicalFire(FireProto, (gridUid, null), FireTile), Is.Not.Null,
+                "Chemfire failed to spawn or refresh."));
+            await server.WaitRunTicks(5);
+        }
+
+        await server.WaitAssertion(() =>
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire,
+                "A chemfire refreshed more often than it heats never heated its tile, so never set the flammable alight."));
+    }
+
+    /// <summary>
     ///     A chemfire keeps announcing itself for as long as it burns, so walking into one that is already
     ///         going has to set you alight just as being caught by a fresh one does.
     /// </summary>

@@ -47,6 +47,10 @@ public sealed partial class KsNpcFirefightingSystem : EntitySystem
 
     private readonly List<Vector2i> _targetTiles = new();
     private readonly List<Vector2i> _expiredTiles = new();
+    private readonly List<SprayTarget> _tilesInReach = new();
+
+    /// <param name="Weight">What spraying the tile is worth: more if it is burning.</param>
+    private readonly record struct SprayTarget(Vector2i Tile, Vector2 Center, float Distance, float Weight);
 
     /// <summary>
     ///     Picks the tile the NPC should go to: the nearest that needs it. Also gives how close it should get.
@@ -117,32 +121,41 @@ public sealed partial class KsNpcFirefightingSystem : EntitySystem
         GetTargetTiles(entity, grid, _targetTiles);
 
         var reach = sprayComponent.SprayDistance;
+        var lineHalfWidth = SprayLineHalfWidth * gridComponent.TileSize;
+
+        // Only tiles in reach can be aimed at or lie on a line to one, so the rest of a large spill is left out of the
+        //      scoring below, which compares every pair. Centres and burning are worked out once per tile here.
+        _tilesInReach.Clear();
+        foreach (var targetTile in _targetTiles)
+        {
+            var center = TileCenter(targetTile, gridComponent);
+            var distance = (center - ownPosition).Length();
+            if (distance <= reach + lineHalfWidth)
+                _tilesInReach.Add(new SprayTarget(targetTile, center, distance, IsBurning(grid, targetTile) ? 2f : 1f));
+        }
+
         Vector2i? aimTile = null;
         var bestScore = 0f;
         var bestDistance = float.MaxValue;
-        foreach (var candidate in _targetTiles)
+        foreach (var candidate in _tilesInReach)
         {
-            var candidateCenter = TileCenter(candidate, gridComponent);
-            var distance = (candidateCenter - ownPosition).Length();
-            if (distance > reach)
+            if (candidate.Distance > reach)
                 continue;
 
             // A spray foams every tile it crosses, so aim where the line from here covers the most: burning tiles first.
             var score = 0f;
-            foreach (var other in _targetTiles)
+            foreach (var other in _tilesInReach)
             {
-                if (DistanceToSegment(TileCenter(other, gridComponent), ownPosition, candidateCenter) > SprayLineHalfWidth * gridComponent.TileSize)
-                    continue;
-
-                score += IsBurning(grid, other) ? 2f : 1f;
+                if (DistanceToSegment(other.Center, ownPosition, candidate.Center) <= lineHalfWidth)
+                    score += other.Weight;
             }
 
-            if (score < bestScore || score == bestScore && distance >= bestDistance)
+            if (score < bestScore || score == bestScore && candidate.Distance >= bestDistance)
                 continue;
 
             bestScore = score;
-            bestDistance = distance;
-            aimTile = candidate;
+            bestDistance = candidate.Distance;
+            aimTile = candidate.Tile;
         }
 
         if (aimTile is not { } tile)

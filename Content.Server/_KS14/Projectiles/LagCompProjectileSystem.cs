@@ -258,18 +258,47 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// </summary>
     private float GetMaxCompensationSpeed(MapId mapId, EntityUid shooterUid)
     {
-        var maxSpeed = MinCompensationSpeed;
+        RefreshMapSpeeds();
+
+        if (!_mapSpeeds.TryGetValue(mapId, out var mapSpeeds))
+            return MinCompensationSpeed;
+
+        // The shooter is left out, so if it is the fastest, the next fastest counts
+        var maxSpeed = mapSpeeds.FastestUid == shooterUid ? mapSpeeds.SecondSpeed : mapSpeeds.FastestSpeed;
+        return MathF.Max(MinCompensationSpeed, maxSpeed);
+    }
+
+    /// <summary>
+    ///     The two fastest compensated mobs on each map, found once per tick rather than once per projectile: a burst of
+    ///         fire or a room full of shooters would otherwise go over every mob for every shot.
+    /// </summary>
+    private readonly Dictionary<MapId, MapSpeeds> _mapSpeeds = new();
+
+    private GameTick _mapSpeedsTick = GameTick.Zero;
+
+    private record struct MapSpeeds(EntityUid FastestUid, float FastestSpeed, float SecondSpeed);
+
+    private void RefreshMapSpeeds()
+    {
+        if (_mapSpeedsTick == _timing.CurTick)
+            return;
+
+        _mapSpeedsTick = _timing.CurTick;
+        _mapSpeeds.Clear();
 
         var enumerator = EntityQueryEnumerator<LagCompensationComponent, MovementSpeedModifierComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out _, out var speedModifierComponent, out var transformComponent))
         {
-            if (uid == shooterUid || transformComponent.MapID != mapId)
-                continue;
+            var speed = MathF.Max(speedModifierComponent.CurrentSprintSpeed, speedModifierComponent.CurrentWalkSpeed);
+            var mapSpeeds = _mapSpeeds.GetValueOrDefault(transformComponent.MapID);
 
-            maxSpeed = MathF.Max(maxSpeed, MathF.Max(speedModifierComponent.CurrentSprintSpeed, speedModifierComponent.CurrentWalkSpeed));
+            if (speed > mapSpeeds.FastestSpeed)
+                mapSpeeds = new MapSpeeds(uid, speed, mapSpeeds.FastestSpeed);
+            else if (speed > mapSpeeds.SecondSpeed)
+                mapSpeeds.SecondSpeed = speed;
+
+            _mapSpeeds[transformComponent.MapID] = mapSpeeds;
         }
-
-        return maxSpeed;
     }
 
     /// <summary>

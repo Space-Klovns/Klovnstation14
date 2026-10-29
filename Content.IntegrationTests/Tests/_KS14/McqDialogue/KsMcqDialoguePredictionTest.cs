@@ -206,6 +206,25 @@ public sealed class KsMcqDialoguePredictionTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     Scanning again while the question is open asks nothing new, on the client or the server.
+    /// </summary>
+    [Test]
+    public async Task ScanningAgainWhileTheQuestionIsOpenOpensNoSecondWindow()
+    {
+        var (vent, user, scanner) = await SetUpAsync();
+
+        for (var scan = 0; scan < 2; scan++)
+        {
+            await Client.WaitPost(() => ClientScan(vent, user, scanner));
+            await ServerScanAsync(vent, user, scanner);
+            await Pair.RunTicksSync(10);
+        }
+
+        await Client.WaitAssertion(() => Assert.That(OpenWindows(), Has.Length.EqualTo(1), "one window, however often it's scanned"));
+        await Server.WaitAssertion(() => Assert.That(SEntMan.Count<ActiveMcqDialogueComponent>(), Is.EqualTo(1), "and one dialogue"));
+    }
+
     [Test]
     public async Task AWindowTheServerNeverOpensClosesAfterTheTimeout()
     {

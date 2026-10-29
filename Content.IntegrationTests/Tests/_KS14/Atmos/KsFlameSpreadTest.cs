@@ -10,6 +10,7 @@ using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -67,6 +68,123 @@ public sealed class KsFlameSpreadTest : GameTest
         Assert.That(caught, Does.Not.Contain(new Vector2i(gap + 1, 0)), "The flame should not cross the water.");
     }
 
+    /// <summary>
+    ///     Every burning tile spreads its flame as far as it would alone, however many others burn next to it: a fire
+    ///         behind it reaching the same tiles first doesn't cut its reach short.
+    /// </summary>
+    [Test]
+    public async Task TestAFireBehindAnotherDoesNotShortenItsReach()
+    {
+        // Several tiles per update: with one, the fire behind has nowhere to get in the way
+        await OverrideCVar(Side.Server, KsCCVars.AtmosFlameSpreadRate, 4f / TileEffectInterval());
+
+        var aloneGridUid = await SetUpLine(waterGapAt: null);
+        var pairedGridUid = await SetUpLine(waterGapAt: null);
+
+        // In the same tick, so both lines spread on the same updates. The paired line's fire behind is lit first.
+        await Pair.Server.WaitPost(() =>
+        {
+            LightTile(aloneGridUid, 1);
+            LightTile(pairedGridUid, 0);
+            LightTile(pairedGridUid, 1);
+        });
+
+        // Up to the first update that spreads anything, and no further.
+        var aloneReach = 1;
+        var pairedReach = 1;
+        for (var tick = 0; tick < TicksPerSecond * 2 && aloneReach <= 1; tick++)
+        {
+            await Pair.Server.WaitRunTicks(1);
+            await Pair.Server.WaitPost(() =>
+            {
+                aloneReach = FarthestBurningTile(aloneGridUid);
+                pairedReach = FarthestBurningTile(pairedGridUid);
+            });
+        }
+
+        Assert.That(aloneReach, Is.GreaterThan(1), "precondition: the lone fire should spread within a couple of seconds");
+        Assert.That(pairedReach, Is.GreaterThanOrEqualTo(aloneReach),
+            "A fire with another behind it should spread as far as the same fire alone.");
+    }
+
+    /// <summary>
+    ///     The flame moves at the spread rate however often puddles update: each update moves it as many whole tiles as
+    ///         the time since the last one earned, and carries the fraction over.
+    /// </summary>
+    [TestCase(0.5f)]
+    [TestCase(0.25f)]
+    [TestCase(0.1f)]
+    public async Task TestSpreadSpeedDoesNotDependOnTheUpdateInterval(float interval)
+    {
+        await OverrideCVar(Side.Server, KsCCVars.AtmosPuddleTileEffectInterval, interval);
+        var gridUid = await SetUpLine(waterGapAt: null);
+        var rate = Pair.Server.ResolveDependency<IConfigurationManager>().GetCVar(KsCCVars.AtmosFlameSpreadRate);
+
+        const float seconds = 1.5f;
+        await LightFirstTile(gridUid);
+        var caught = await WatchTilesCatch(gridUid, seconds);
+
+        var reach = 0;
+        foreach (var tile in caught)
+            reach = Math.Max(reach, tile.X);
+
+        // Within what one update moves, either way: the first update can come up to an interval after the lighting.
+        var expected = rate * seconds;
+        Assert.That(reach, Is.EqualTo(expected).Within(rate * interval + 1f),
+            $"In {seconds} s at {rate} tiles/s the flame should reach about tile {expected}, updating every {interval} s.");
+    }
+
+    /// <summary>
+    ///     Only the scheduled pass sees the flame spreading from nearby fires. A puddle that runs its effects at any other
+    ///         time, as a new one does when it is spilled, isn't lit by where the flame reached on the last pass, from
+    ///         fires that may have gone out since.
+    /// </summary>
+    [Test]
+    public async Task TestANewSpillIsNotLitByFlameFromFiresThatWentOut()
+    {
+        // Far in one update, so the tiles past the last burning one are marked too
+        await OverrideCVar(Side.Server, KsCCVars.AtmosFlameSpreadRate, 8f / TileEffectInterval());
+
+        var gridUid = await SetUpLine(waterGapAt: null);
+        await LightFirstTile(gridUid);
+
+        const int respilledX = 3;
+        var respilled = false;
+        var litByOldFlame = false;
+        for (var tick = 0; tick < TicksPerSecond * 2 && !respilled; tick++)
+        {
+            await Pair.Server.WaitRunTicks(1);
+            await Pair.Server.WaitPost(() =>
+            {
+                if (FarthestBurningTile(gridUid) < respilledX)
+                    return;
+
+                // The flame has just passed over the tile. Put every fire out, and replace the tile's puddle with fresh
+                //      cold fuel, which runs its effects as it is spilled.
+                var entityManager = Pair.Server.EntMan;
+                var fireEnumerator = entityManager.AllEntityQueryEnumerator<ChemicalFireComponent>();
+                while (fireEnumerator.MoveNext(out var fireUid, out _))
+                    entityManager.DeleteEntity(fireUid);
+
+                var mapSystem = entityManager.System<SharedMapSystem>();
+                var puddleSystem = entityManager.System<PuddleSystem>();
+                var tileRef = mapSystem.GetTileRef(gridUid, entityManager.GetComponent<MapGridComponent>(gridUid), new Vector2i(respilledX, 0));
+                Assert.That(puddleSystem.TryGetPuddle(tileRef, out var oldPuddleUid), "precondition: the tile has a puddle");
+                entityManager.DeleteEntity(oldPuddleUid);
+
+                puddleSystem.TrySpillAt(tileRef, new Solution(WeldingFuelReagent.Id, FixedPoint2.New(FuelPerTile)) { Temperature = Atmospherics.T20C },
+                    out _, sound: false);
+
+                litByOldFlame = entityManager.TryGetComponent<ChemicalFireGridComponent>(gridUid, out var chemicalFireGridComponent) &&
+                    chemicalFireGridComponent.Tiles.ContainsKey(new Vector2i(respilledX, 0));
+                respilled = true;
+            });
+        }
+
+        Assert.That(respilled, "precondition: the flame should reach the tile");
+        Assert.That(litByOldFlame, Is.False, "Fresh cold fuel should not be lit by the flame of fires that are out.");
+    }
+
     [Test]
     public async Task TestSpreadingCanBeTurnedOff()
     {
@@ -120,19 +238,38 @@ public sealed class KsFlameSpreadTest : GameTest
 
     private async Task LightFirstTile(EntityUid gridUid)
     {
+        await Pair.Server.WaitPost(() => LightTile(gridUid, 0));
+    }
+
+    private void LightTile(EntityUid gridUid, int x)
+    {
         var entityManager = Pair.Server.EntMan;
-        await Pair.Server.WaitPost(() =>
+        var tileRef = entityManager.System<SharedMapSystem>().GetTileRef(gridUid, entityManager.GetComponent<MapGridComponent>(gridUid), new Vector2i(x, 0));
+        entityManager.System<SharedChemicalFireSystem>().SpawnChemicalFire(FirePrototype, tileRef);
+    }
+
+    private float TileEffectInterval()
+    {
+        return Pair.Server.ResolveDependency<IConfigurationManager>().GetCVar(KsCCVars.AtmosPuddleTileEffectInterval);
+    }
+
+    private int FarthestBurningTile(EntityUid gridUid)
+    {
+        var farthest = 0;
+        if (Pair.Server.EntMan.TryGetComponent<ChemicalFireGridComponent>(gridUid, out var chemicalFireGridComponent))
         {
-            var tileRef = entityManager.System<SharedMapSystem>().GetTileRef(gridUid, entityManager.GetComponent<MapGridComponent>(gridUid), new Vector2i(0, 0));
-            entityManager.System<SharedChemicalFireSystem>().SpawnChemicalFire(FirePrototype, tileRef);
-        });
+            foreach (var tile in chemicalFireGridComponent.Tiles.Keys)
+                farthest = Math.Max(farthest, tile.X);
+        }
+
+        return farthest;
     }
 
     /// <summary>
     ///     Every tile seen burning over the next few seconds. A small puddle burns away soon after it catches, so the
     ///         fires burning at the end say little.
     /// </summary>
-    private async Task<HashSet<Vector2i>> WatchTilesCatch(EntityUid gridUid, int seconds)
+    private async Task<HashSet<Vector2i>> WatchTilesCatch(EntityUid gridUid, float seconds)
     {
         var caught = new HashSet<Vector2i>();
         for (var tick = 0; tick < TicksPerSecond * seconds; tick += 5)

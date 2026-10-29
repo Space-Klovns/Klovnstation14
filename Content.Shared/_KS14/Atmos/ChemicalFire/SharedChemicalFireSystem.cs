@@ -463,7 +463,12 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         component.OverStatePrefix = prototypeComponent.OverStatePrefix;
 
         component.EndTime = curTime + component.Duration;
-        component.NextHeatTime = curTime + component.HeatInterval;
+
+        // Never later than it already was: a puddle refreshes its fire on every update, and pushing the heat back each
+        //      time would stop a fire refreshed more often than its heat interval from ever heating anything.
+        var nextHeatTime = curTime + component.HeatInterval;
+        if (component.NextHeatTime > nextHeatTime)
+            component.NextHeatTime = nextHeatTime;
 
         Dirty(fire);
 

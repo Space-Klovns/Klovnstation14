@@ -12,6 +12,7 @@ using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Explosion.Components;
 using Content.Shared.FixedPoint;
+using Content.Shared.Fluids.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -92,6 +93,49 @@ public sealed class KsSolutionExplosionTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
             Assert.That(ExplosionCount(), holdsFuel ? Is.GreaterThan(0) : Is.Zero));
+    }
+
+    /// <summary>
+    ///     An exploding tank spills what it held once: the fuel on the floor and any left in the tank add up to no more
+    ///         than the tank held, however the explosion leaves the tank.
+    /// </summary>
+    [Test]
+    public async Task TestExplodingTankSpillsItsContentsOnce()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var tankUid = await SpawnFilled(testMap.GridCoords, FuelTankPrototype, null, "tank");
+
+        var held = 0f;
+        await server.WaitPost(() => held = FuelIn(tankUid));
+        Assert.That(held, Is.GreaterThan(0f), "precondition: the tank holds fuel");
+
+        await Damage(tankUid, HeatDamage, 10);
+
+        // Long enough for the explosion to finish with the tank, not long enough for much of the spill to burn.
+        await server.WaitRunTicks(TicksPerSecond / 2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(ExplosionCount() > 0 || !entityManager.EntityExists(tankUid), "precondition: the tank went off");
+
+            var total = entityManager.EntityExists(tankUid) ? FuelIn(tankUid) : 0f;
+            var puddleEnumerator = entityManager.AllEntityQueryEnumerator<PuddleComponent>();
+            while (puddleEnumerator.MoveNext(out var puddleUid, out var puddleComponent))
+                total += FuelIn(puddleUid, puddleComponent.SolutionName);
+
+            Assert.That(total, Is.LessThanOrEqualTo(held + 0.01f),
+                "The fuel spilled and the fuel left in the tank should add up to no more than the tank held.");
+        });
+    }
+
+    private float FuelIn(EntityUid uid, string solutionName = "tank")
+    {
+        var solutionContainerSystem = Pair.Server.EntMan.System<SharedSolutionContainerSystem>();
+        return solutionContainerSystem.TryGetSolution(uid, solutionName, out _, out var solution)
+            ? (float)solution.GetTotalPrototypeQuantity(WeldingFuelReagent)
+            : 0f;
     }
 
     /// <summary>

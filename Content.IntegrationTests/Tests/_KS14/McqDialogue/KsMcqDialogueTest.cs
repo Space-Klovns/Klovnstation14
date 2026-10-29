@@ -162,6 +162,32 @@ public sealed class KsMcqDialogueTest : GameTest
     }
 
     /// <summary>
+    ///     Asking a user about the same source again while their dialogue is open does nothing. Another user still gets
+    ///         their own, and the first user can be asked again once theirs has closed.
+    /// </summary>
+    [Test]
+    public async Task OneOpenDialoguePerUserAndSource()
+    {
+        await SetUpMapAsync();
+        var (user, _, dialogue) = await StartDialogueAsync(null, null);
+        var options = new[] { new McqDialogueData(OptionLoc, OptionId) };
+
+        await Server.WaitAssertion(() =>
+        {
+            var dialogueSystem = SEntMan.System<McqDialogueSystem>();
+            var source = SEntMan.GetComponent<ActiveMcqDialogueComponent>(dialogue).Source;
+
+            Assert.That(dialogueSystem.StartDialogue(source, user, options), Is.Null, "a second one for the same user is refused");
+
+            var otherUser = SEntMan.SpawnEntity(Human, new EntityCoordinates(_grid, new Vector2(1.5f, 0.5f)));
+            Assert.That(dialogueSystem.StartDialogue(source, otherUser, options), Is.Not.Null, "the control: another user gets their own");
+
+            dialogueSystem.CloseDialogue(dialogue);
+            Assert.That(dialogueSystem.StartDialogue(source, user, options), Is.Not.Null, "once it's closed, the user can be asked again");
+        });
+    }
+
+    /// <summary>
     ///     An option id comes from the client, so one the dialogue didn't offer is ignored rather than handed on.
     /// </summary>
     [TestCase(OptionId, false)]

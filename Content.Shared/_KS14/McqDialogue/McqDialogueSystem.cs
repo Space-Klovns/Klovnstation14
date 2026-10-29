@@ -81,14 +81,22 @@ public sealed partial class McqDialogueSystem : EntitySystem
     ///     Can be called from predicted code. Only the server makes the dialogue; the user's client opens its window
     ///         straight away (<see cref="McqDialoguePredictedEvent"/>), for the dialogue's UI to take over.
     /// </summary>
+    /// <remarks>
+    ///     A user gets one dialogue about a source at a time: while one is open, asking again does nothing, so asking
+    ///         repeatedly doesn't stack windows.
+    /// </remarks>
     /// <param name="settings">Title, prompt and requirements, usually a data field of the source's component.</param>
-    /// <returns>The dialogue, or null on the client.</returns>
+    /// <returns>The dialogue, or null on the client or if the user already has one open about the source.</returns>
     public Entity<ActiveMcqDialogueComponent>? StartDialogue(
         EntityUid sourceUid,
         EntityUid userUid,
         IEnumerable<McqDialogueData> options,
         McqDialogueSettings? settings = null)
     {
+        // Checked on the client too, where the dialogue is networked, so it doesn't open a window the server won't
+        if (HasOpenDialogue(sourceUid, userUid))
+            return null;
+
         if (_netManager.IsClient)
         {
             if (_gameTiming.IsFirstTimePredicted && _playerManager.LocalEntity == userUid)
@@ -129,5 +137,24 @@ public sealed partial class McqDialogueSystem : EntitySystem
         );
 
         return (dialogueUid, dialogueComponent);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="userUid"/> has a dialogue about <paramref name="sourceUid"/> open, and not yet closed.
+    /// </summary>
+    public bool HasOpenDialogue(EntityUid sourceUid, EntityUid userUid)
+    {
+        // There are only ever a few dialogues open at once
+        var dialogueEnumerator = EntityQueryEnumerator<ActiveMcqDialogueComponent>();
+        while (dialogueEnumerator.MoveNext(out var dialogueUid, out var dialogueComponent))
+        {
+            if (dialogueComponent.Source == sourceUid &&
+                dialogueComponent.User == userUid &&
+                dialogueComponent.LifeStage <= ComponentLifeStage.Running &&
+                !EntityManager.IsQueuedForDeletion(dialogueUid))
+                return true;
+        }
+
+        return false;
     }
 }

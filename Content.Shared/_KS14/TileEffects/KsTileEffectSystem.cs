@@ -94,26 +94,52 @@ public sealed partial class KsTileEffectSystem : EntitySystem
         if (ProtoMan.TryIndex<ReagentPrototype>(reagentId, out var reagentPrototype))
         {
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
-                FindFlameLightingTemperature(tileEffect, ref coolest);
+                coolest = Coolest(coolest, GetFlameLightingTemperature(tileEffect));
         }
 
         _flameLightingTemperatures[reagentId] = coolest;
         return coolest;
     }
 
-    private static void FindFlameLightingTemperature(KsTileEffect tileEffect, ref float? coolest)
+    /// <summary>
+    ///     The coolest open flame that makes this effect start a chemfire, or null if a flame alone can't. A fire starts
+    ///         from a <see cref="ChemicalFireTileEffect"/> whose conditions a flame can meet: every condition a
+    ///         <see cref="CheckTemperatureTileEffect"/> that it lights, so the flame has to be as hot as the hottest of
+    ///         their minimums. A condition on anything else, or a check a flame doesn't count toward, is one a flame can't
+    ///         promise, and neither is a temperature check guarding something other than fire.
+    /// </summary>
+    private static float? GetFlameLightingTemperature(KsTileEffect tileEffect)
     {
         switch (tileEffect)
         {
-            case CheckTemperatureTileEffect { LitByFlame: true } checkTemperature:
-                var minimum = checkTemperature.Minimum ?? 0f;
-                coolest = coolest is { } current ? MathF.Min(current, minimum) : minimum;
-                break;
+            case ChemicalFireTileEffect:
+                return 0f;
             case LogicAndTileEffect logicAnd:
+                var conditionsMinimum = 0f;
                 foreach (var condition in logicAnd.Conditions)
-                    FindFlameLightingTemperature(condition, ref coolest);
-                break;
+                {
+                    if (condition is not CheckTemperatureTileEffect { LitByFlame: true } checkTemperature)
+                        return null;
+
+                    conditionsMinimum = MathF.Max(conditionsMinimum, checkTemperature.Minimum ?? 0f);
+                }
+
+                float? effectsMinimum = null;
+                foreach (var effect in logicAnd.Effects)
+                    effectsMinimum = Coolest(effectsMinimum, GetFlameLightingTemperature(effect));
+
+                return effectsMinimum is { } minimum ? MathF.Max(conditionsMinimum, minimum) : null;
+            default:
+                return null;
         }
+    }
+
+    private static float? Coolest(float? a, float? b)
+    {
+        if (a is not { } first)
+            return b;
+
+        return b is { } second ? MathF.Min(first, second) : first;
     }
 
     /// <param name="flameTemperature">See <see cref="KsTileEffectContext.FlameTemperature"/>.</param>

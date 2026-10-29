@@ -90,7 +90,7 @@ public sealed partial class KsSolutionExplosionSystem : EntitySystem
     /// <returns>Whether it exploded.</returns>
     public bool TryExplodeSolution(EntityUid uid, string solutionName, EntityUid? cause = null)
     {
-        if (!_solutionContainerSystem.TryGetSolution(uid, solutionName, out _, out var solution) ||
+        if (!_solutionContainerSystem.TryGetSolution(uid, solutionName, out var solutionEntity, out var solution) ||
             solution.Volume <= 0)
             return false;
 
@@ -98,9 +98,11 @@ public sealed partial class KsSolutionExplosionSystem : EntitySystem
         if (intensity < MinimumIntensity)
             return false;
 
-        // Spilled first, so the explosion can light it.
+        // Spilled first, so the explosion can light it. Taken out of the container rather than spilled from it:
+        //      spilling only copies what it's given, and the container's own destruction would then spill it all again.
         var coordinates = Transform(uid).Coordinates;
-        _puddleSystem.TrySpillAt(coordinates, solution, out _);
+        var spilled = _solutionContainerSystem.SplitSolution(solutionEntity.Value, solution.Volume);
+        _puddleSystem.TrySpillAt(coordinates, spilled, out _);
 
         // Not deleted here: the explosion's own damage cleans the container up.
         if (_explosiveQuery.TryComp(uid, out var explosiveComponent))
