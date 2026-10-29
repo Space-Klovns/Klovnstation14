@@ -1,0 +1,76 @@
+<ksui:KsBaseWindow xmlns="https://spacestation14.io"
+            xmlns:ksui="clr-namespace:Content.Client._KS14.Shuttles.UI"
+            xmlns:nuke="clr-namespace:Content.Client._KS14.Nuke.UI"
+            MouseFilter="Stop">
+    <!-- The casing: the whole window is the nuke's control panel, no stock chrome. -->
+    <PanelContainer Name="Bezel"/>
+    <BoxContainer Orientation="Vertical" Margin="3">
+        <PanelContainer Name="TitleBar">
+            <BoxContainer Orientation="Horizontal" Margin="8 3 3 3">
+                <Label Name="TitleLabel"
+                       HorizontalExpand="True"
+                       VAlign="Center"
+                       Text="{Loc 'nuke-user-interface-title'}"/>
+                <nuke:KsNukeKeyButton Name="CloseButton"
+                                      Text="X"
+                                      SetSize="24 22"/>
+            </BoxContainer>
+        </PanelContainer>
+        <BoxContainer Orientation="Vertical" Margin="10 10 10 12">
+            <PanelContainer Name="FirstDisplay" Margin="0 0 0 6">
+                <Label Name="FirstStatusLabel" ClipText="True"/>
+            </PanelContainer>
+            <BoxContainer Orientation="Horizontal" Margin="0 0 0 10">
+                <PanelContainer Name="SecondDisplay" HorizontalExpand="True">
+                    <Label Name="SecondStatusLabel" ClipText="True"/>
+                </PanelContainer>
+                <PanelContainer Name="EjectFrame" Margin="8 0 0 0">
+                    <nuke:KsNukeKeyButton Name="EjectButton"
+                                          Access="Public"
+                                          SetSize="40 34"
+                                          ToolTip="{Loc 'nuke-user-interface-eject-button'}">
+                        <nuke:KsEjectGlyph Name="EjectGlyph" Margin="10 8 10 8"/>
+                    </nuke:KsNukeKeyButton>
+                </PanelContainer>
+            </BoxContainer>
+            <BoxContainer Orientation="Horizontal">
+                <PanelContainer Name="KeypadFrame" VerticalAlignment="Top">
+                    <GridContainer Name="KeypadGrid"
+                                   Columns="3"
+                                   HSeparationOverride="3"
+                                   VSeparationOverride="3">
+                        <!-- Keypad is filled by code -->
+                    </GridContainer>
+                </PanelContainer>
+                <BoxContainer Orientation="Vertical"
+                              HorizontalExpand="True"
+                              Margin="10 0 0 0">
+                    <PanelContainer Name="CommandFrame">
+                        <BoxContainer Orientation="Vertical" SeparationOverride="3">
+                            <nuke:KsNukeKeyButton Name="ArmButton"
+                                                  Access="Public"
+                                                  KeyColor="Yellow"
+                                                  FontSize="20"
+                                                  MinHeight="46"
+                                                  Text="{Loc 'nuke-user-interface-arm-button'}"/>
+                            <nuke:KsNukeKeyButton Name="AnchorButton"
+                                                  Access="Public"
+                                                  KeyColor="Orange"
+                                                  FontSize="20"
+                                                  MinHeight="46"
+                                                  Text="{Loc 'nuke-user-interface-anchor-button'}"/>
+                        </BoxContainer>
+                    </PanelContainer>
+                    <nuke:KsTrefoilGlyph SetSize="76 76"
+                                         HorizontalAlignment="Center"
+                                         Margin="0 14 0 0"/>
+                    <TextureRect TexturePath="/Textures/Interface/Nano/ntlogo.svg.png"
+                                 Stretch="KeepAspectCentered"
+                                 ModulateSelfOverride="#9C9987"
+                                 SetHeight="56"
+                                 Margin="0 12 0 0"/>
+                </BoxContainer>
+            </BoxContainer>
+        </BoxContainer>
+    </BoxContainer>
+</ksui:KsBaseWindow>

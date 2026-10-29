@@ -30,6 +30,33 @@ public sealed partial class KsAdminMusicManager : IPostInjectInit
     /// </summary>
     private readonly HashSet<KsAdminMusicEntry> _endedEntries = [];
 
+    private bool _muted;
+
+    /// <summary>
+    ///     Silences all admin music without stopping it, e.g. during a cinematic.
+    /// </summary>
+    public bool Muted
+    {
+        get => _muted;
+        set
+        {
+            _muted = value;
+            foreach (var (entry, data) in _activeEntryData)
+            {
+                if (data.AudioSource is { } audioSource)
+                    ApplyVolume(entry, audioSource);
+            }
+        }
+    }
+
+    private void ApplyVolume(KsAdminMusicEntry entry, IAudioSource audioSource)
+    {
+        if (_muted)
+            audioSource.Gain = 0f;
+        else
+            audioSource.Volume = entry.Volume;
+    }
+
     public void Initialise()
     {
         _client.RunLevelChanged += OnRunLevelChanged;
@@ -82,7 +109,7 @@ public sealed partial class KsAdminMusicManager : IPostInjectInit
         {
             audioSource = _audioManager.CreateAudioSource(audioResource)!;
             audioSource.Global = true;
-            audioSource.Volume = entry.Volume;
+            ApplyVolume(entry, audioSource: audioSource);
 
             audioSource.StartPlaying();
         }

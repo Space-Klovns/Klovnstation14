@@ -1,3 +1,4 @@
+using Content.Client._KS14.Nuke.UI; // KS14
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Nuke;
 using JetBrains.Annotations;
@@ -10,7 +11,7 @@ namespace Content.Client.Nuke
     public sealed partial class NukeBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private NukeMenu? _menu;
+        private KsNukeMenu /* KS14: NukeMenu -> KsNukeMenu, retro keypad */? _menu;
 
         public NukeBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -20,7 +21,7 @@ namespace Content.Client.Nuke
         {
             base.Open();
 
-            _menu = this.CreateWindow<NukeMenu>();
+            _menu = this.CreateWindow<KsNukeMenu /* KS14: NukeMenu -> KsNukeMenu */>();
 
             _menu.OnKeypadButtonPressed += i =>
             {

@@ -213,6 +213,14 @@ namespace Content.Server.Nuke
 
         public EntityUid? AlertAudioStream = default;
 
+        // KS14 start: remembered so the detonation cinematic can stay in sync with the alarm
+        /// <summary>
+        ///     The resolved alert sound and the time it started playing, if it has played.
+        /// </summary>
+        [ViewVariables]
+        public (ResolvedSoundSpecifier Sound, TimeSpan StartTime)? PlayedAlertSoundInfo;
+        // KS14 end
+
         /// <summary>
         ///     The radius from the nuke for which there must be floor tiles for it to be anchorable.
         /// </summary>
