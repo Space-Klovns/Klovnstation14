@@ -2296,3 +2296,118 @@ Entries:
       message: Improved QoL of packet network configurators and packet executors
   id: 234
   time: '2026-10-28T12:28:33.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Fire now runs across a spill of fuel, napalm or chlorine trifluoride,
+        lighting it tile by tile within moments, even when the fuel is cold.
+        Water, foam or bare floor stops it.
+    - type: Add
+      message: Explosions set fire to any fuel they pass over.
+    - type: Add
+      message: >-
+        Containers explode as strongly as what they hold. Napalm, plasma,
+        phlogiston and chlorine trifluoride hit harder than welding fuel; water
+        doesn't explode at all.
+    - type: Add
+      message: >-
+        Fuel tanks, jugs, bottles and beakers holding fuel explode when shot or
+        burned, and cook off on their own if left in a fire.
+    - type: Add
+      message: Burning puddles pass heat to the puddles next to them.
+    - type: Add
+      message: >-
+        Firebots now fight chemical fires. They spray burning puddles and keep
+        watch over a spill until it has cooled, so it doesn't relight.
+    - type: Add
+      message: Added a guidebook page on chemical fires, under Engineering.
+    - type: Add
+      message: >-
+        Scanning a discovered ore vent now asks whether you're ready to start
+        defending it. The question closes if you put the scanner away or walk
+        off.
+    - type: Add
+      message: >-
+        Ore vents now break up the rock around them as they clear, leaving
+        rubble, with sounds for clearing, success and failure.
+    - type: Add
+      message: >-
+        Ground is marked with a dust cloud a moment before a creature emerges
+        from an ore vent, with a warning popup.
+    - type: Add
+      message: >-
+        The ore vent's drone tells you whether it escaped because the vent was
+        secured or because it failed. Very rarely, it doesn't make it home.
+    - type: Add
+      message: >-
+        Supply pods project a landing zone marker that closes in as the pod
+        falls, and leave sparks behind when they go.
+    - type: Add
+      message: >-
+        The longer you've played since you were last an antagonist, the likelier
+        you are to be picked as one.
+    - type: Tweak
+      message: >-
+        Foam no longer keeps you from burning while you stand in a chemical
+        fire.
+    - type: Tweak
+      message: >-
+        Foaming agent, fluorosurfactant and sorium no longer burn or make things
+        flammable.
+    - type: Tweak
+      message: Water, space cleaner and bleach wash stains off walls and windows.
+    - type: Tweak
+      message: Computer keyboards glow less.
+    - type: Tweak
+      message: Scenarios no longer play the station shift-start announcement.
+    - type: Tweak
+      message: >-
+        The gorilla gauntlet now tells you when there's no disposal unit nearby
+        to shove someone into.
+    - type: Remove
+      message: >-
+        Removed the "complex stain drawing" setting, which only made stains
+        disappear.
+    - type: Fix
+      message: >-
+        Fixed burning puddles going out on their own, with fuel left, instead of
+        burning away.
+    - type: Fix
+      message: Fixed chemical fires sometimes flickering out and relighting.
+    - type: Fix
+      message: Fixed exploding containers spilling their contents twice.
+    - type: Fix
+      message: >-
+        Fixed throwing a bomb with an action showing a second, fake bomb on your
+        screen.
+    - type: Fix
+      message: >-
+        Fixed shots missing mobs that move faster than a normal sprint while you
+        lag.
+    - type: Fix
+      message: >-
+        Fixed the battery shielding implosion sound playing twice for
+        bystanders.
+    - type: Fix
+      message: >-
+        Fixed blood splatter landing in the wrong place on rotated or moving
+        shuttles.
+    - type: Fix
+      message: Fixed the night vision cone not starting from your character.
+    - type: Fix
+      message: Fixed long chains stretching apart.
+    - type: Fix
+      message: >-
+        Fixed material storage accepting stacks made of several materials beyond
+        its limit.
+    - type: Fix
+      message: Fixed a crash when a thrown item fell through to another level.
+    - type: Fix
+      message: >-
+        Fixed players joining in scenarios sometimes failing to find a spawn
+        point.
+    - type: Fix
+      message: Fixed the gas grenade compressor's slot and verbs not being translated.
+  id: 235
+  time: '2026-10-29T09:17:51.0000000+00:00'
