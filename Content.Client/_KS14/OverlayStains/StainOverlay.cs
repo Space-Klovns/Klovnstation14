@@ -31,11 +31,6 @@ public sealed partial class StainOverlay : Overlay
     [Dependency] private ArcVisibilitySystem _arcVisibilitySystem = default!;
 
     /// <summary>
-    ///     Based on <see cref="Shared._KS14.CCVar.KsCCVars.ComplexStainDrawing"/>
-    /// </summary>
-    public bool ComplexDrawing = false;
-
-    /// <summary>
     ///     Arc a stain is visible within, based on <see cref="Shared._KS14.CCVar.KsCCVars.StainArcDegrees"/>.
     /// </summary>
     public Angle StainArc = Angle.FromDegrees(180d);
@@ -125,26 +120,18 @@ public sealed partial class StainOverlay : Overlay
 
                     var worldMatrix = _transformSystem.GetWorldMatrix(grid, _transformQuery);
                     var localMatrix = Matrix3x2.Multiply(worldMatrix, invMatrix);
+                    worldHandle.SetTransform(localMatrix);
 
-                    // Complex drawing renders each sprite at its world position, so it only needs world-to-target.
-                    worldHandle.SetTransform(ComplexDrawing ? invMatrix : localMatrix);
-
+                    // Masked by each sprite's bounding box, which for the full-tile walls and windows that take stains
+                    //      is the sprite itself.
                     foreach (var uid in _intersectingEntities)
                     {
                         if (!_transformQuery.TryGetComponent(uid, out var transformComponent) ||
                             !_spriteQuery.TryGetComponent(uid, out var spriteComponent))
                             continue;
 
-                        if (ComplexDrawing)
-                        {
-                            var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
-                            _spriteSystem.RenderSprite((uid, spriteComponent), worldHandle, eyeRotation, worldRotation, worldPosition);
-                        }
-                        else
-                        {
-                            var bounds = _spriteSystem.CalculateBounds((uid, spriteComponent), transformComponent.Coordinates.Position, transformComponent.LocalRotation, eyeRotation);
-                            worldHandle.DrawRect(bounds, Color.Black);
-                        }
+                        var bounds = _spriteSystem.CalculateBounds((uid, spriteComponent), transformComponent.Coordinates.Position, transformComponent.LocalRotation, eyeRotation);
+                        worldHandle.DrawRect(bounds, Color.Black);
                     }
                 }
 
