@@ -41,6 +41,7 @@ public sealed partial class AmbientOcclusionOverlay
     private EntityQuery<SpriteComponent> _spriteQuery;
     private EntityQuery<TransformComponent> _transformQuery;
     private EntityQuery<KsNoAmbientOcclusionComponent> _noAmbientOcclusionQuery;
+    private EntityQuery<KsForceAmbientOcclusionComponent> _forceAmbientOcclusionQuery;
     private EntityQuery<PlaceableSurfaceComponent> _placeableSurfaceQuery;
     private bool _queriesResolved;
 
@@ -73,6 +74,7 @@ public sealed partial class AmbientOcclusionOverlay
             _transformQuery = _entManager.GetEntityQuery<TransformComponent>();
             _noAmbientOcclusionQuery = _entManager.GetEntityQuery<KsNoAmbientOcclusionComponent>();
             _placeableSurfaceQuery = _entManager.GetEntityQuery<PlaceableSurfaceComponent>();
+            _forceAmbientOcclusionQuery = _entManager.GetEntityQuery<KsForceAmbientOcclusionComponent>();
             _queriesResolved = true;
         }
 
@@ -98,15 +100,20 @@ public sealed partial class AmbientOcclusionOverlay
                 || _noAmbientOcclusionQuery.HasComp(uid)
                 || !_spriteQuery.TryComp(uid, out var spriteComponent)
                 || !spriteComponent.Visible
-                || spriteComponent.DrawDepth <= MaxFlatDrawDepth
                 || spriteComponent.DrawDepth >= MinEffectDrawDepth
                 || !_transformQuery.TryComp(uid, out var transformComponent))
                 continue;
 
-            // Structures block movement, anchored or not (closets, crates); that leaves out decals, cables and pipes.
             var isItem = _itemQuery.HasComp(uid);
-            if (!isItem && !HasHardFixture(uid))
-                continue;
+            if (!_forceAmbientOcclusionQuery.HasComp(uid))
+            {
+                if (spriteComponent.DrawDepth <= MaxFlatDrawDepth)
+                    continue;
+
+                // Structures block movement, anchored or not (closets, crates); that leaves out decals, cables and pipes.
+                if (!isItem && !HasHardFixture(uid))
+                    continue;
+            }
 
             // A sprite that is all light (holograms, glowing signs) has no body to occlude with.
             if (IsFullyUnshaded(spriteComponent))
