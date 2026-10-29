@@ -1,10 +1,11 @@
+using Content.Shared._KS14.Mobs.Systems; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Standing;
-using Content.Shared._KS14.Components.Mobs;
 using Robust.Shared.Timing;
+
 namespace Content.Shared.Mobs.Systems;
 
 [Virtual]
@@ -17,7 +18,7 @@ public partial class MobStateSystem : EntitySystem
     [Dependency] private ILogManager _logManager = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private DamageableSystem _damageable = default!;
-    [Dependency] private MobThresholdSystem _thresholds = default!;
+    [Dependency] private KsSoftCritSystem _ksSoftCrit = default!; // KS14
     private ISawmill _sawmill = default!;
 
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
@@ -94,22 +95,6 @@ public partial class MobStateSystem : EntitySystem
         if (!_mobStateQuery.Resolve(target, ref component, false))
             return false;
         return component.CurrentState is MobState.Invalid;
-    }
-
-    /// <summary>
-    /// True while the mob is in Critical but has species soft-crit and
-    /// damage below the soft-crit boundary.
-    /// </summary>
-    public bool IsSoftCrit(EntityUid uid, MobStateComponent? component = null,
-        SoftCriticalComponent? soft = null)
-    {
-        if (!Resolve(uid, ref component, false) || component.CurrentState != MobState.Critical)
-            return false;
-
-        if (!_thresholds.TryGetSoftCritBoundary(uid, out var boundary, soft))
-            return false;
-
-        return _thresholds.GetTotalDamage(uid) < boundary;
     }
 
     #endregion

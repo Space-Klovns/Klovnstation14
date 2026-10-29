@@ -12,7 +12,6 @@ using Content.Shared.StatusEffectNew; // KS14: Ports upstream https://github.com
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing; // KS14
 using Robust.Shared.Utility; // KS14
-using Content.Shared._KS14.Components.Mobs; // KS14
 
 namespace Content.Shared.Mobs.Systems;
 
@@ -189,33 +188,6 @@ public sealed partial class MobThresholdSystem : EntitySystem
         return TryGetThresholdForState(target, MobState.Critical, out threshold, thresholdComponent)
                || TryGetThresholdForState(target, MobState.Dead, out threshold, thresholdComponent);
     }
-
-    // KS14 start
-    /// <summary>
-    /// Try to get the damage boundary at which soft-crit ends and hard critical begins,
-    /// for entities with a <see cref="SoftCriticalComponent"/>.
-    /// </summary>
-    public bool TryGetSoftCritBoundary(EntityUid target,
-        [NotNullWhen(true)] out FixedPoint2? threshold,
-        SoftCriticalComponent? soft = null)
-    {
-        threshold = null;
-        if (!Resolve(target, ref soft, false))
-            return false;
-
-        // fail closed on misconfigured prototypes: no immortal whisper-crawlers
-        if (TryGetThresholdForState(target, MobState.Critical, out var crit)
-            && soft.CriticalThreshold <= crit.Value)
-        {
-            Log.Error($"SoftCritical.criticalThreshold ({soft.CriticalThreshold}) must be greater " +
-                    $"than the Critical threshold ({crit}) on {ToPrettyString(target)}");
-            return false;
-        }
-
-        threshold = soft.CriticalThreshold;
-        return true;
-    }
-    // KS14 end
 
     /// <summary>
     /// Try to get a percentage of the Damage Threshold for crit or death. Outputs the first found percentage.

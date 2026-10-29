@@ -19,7 +19,6 @@ using Content.Shared.Standing;
 using Content.Shared.Strip.Components;
 using Content.Shared.Throwing;
 using Robust.Shared.Physics.Components;
-using Content.Shared._KS14.Components.Mobs; // KS14 softcrit addition
 
 namespace Content.Shared.Mobs.Systems;
 
@@ -49,7 +48,6 @@ public partial class MobStateSystem
         SubscribeLocalEvent<MobStateComponent, AttemptPacifiedAttackEvent>(OnAttemptPacifiedAttack);
         SubscribeLocalEvent<MobStateComponent, DamageModifyEvent>(OnDamageModify);
 
-        SubscribeLocalEvent<SoftCriticalComponent, DamageChangedEvent>(OnSoftCritDamageChanged); //KS14 softcrit addition
         SubscribeLocalEvent<MobStateComponent, UnbuckleAttemptEvent>(OnUnbuckleAttempt);
     }
 
@@ -176,8 +174,10 @@ public partial class MobStateSystem
         {
             case MobState.Dead:
             case MobState.Critical:
-                if (args is UpdateCanMoveEvent && IsSoftCrit(target, component))
-                    return;
+                // KS14: soft crit lets a few actions through
+                if (_ksSoftCrit.AllowsInCrit(target, args))
+                    break;
+
                 args.Cancel();
                 break;
         }
@@ -215,17 +215,5 @@ public partial class MobStateSystem
         args.Damage *= _damageable.UniversalMobDamageModifier;
     }
 
-// KS14 start
-    private void OnSoftCritDamageChanged(Entity<MobStateComponent> entState, Entity<SoftCriticalComponent> entSoft, ref DamageDealtEvent args)
-    {
-        // only relevant when inside Critical; no-op for the vast majority of damage events
-        if (!_stateQuery.TryGetComponent(entSoft.Owner, out var state)
-            || state.CurrentState != MobState.Critical)
-            return;
-
-        // crossing the boundary in either direction: flip CanMove + crawl speed live
-        _blocker.UpdateCanMove(ent.Owner);
-    }
-// KS14 end
     #endregion
 }
