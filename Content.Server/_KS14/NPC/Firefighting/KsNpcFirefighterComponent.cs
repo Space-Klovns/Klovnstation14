@@ -37,7 +37,7 @@ public sealed partial class KsNpcFirefighterComponent : Component
     ///     A watched puddle's foam blanket is topped up once it holds less than this fraction of its most foam.
     /// </summary>
     [DataField]
-    public float RefoamFraction = 0.7f;
+    public float RefoamFraction = 0.5f;
 
     /// <summary>
     ///     What fraction of its spray's reach the NPC closes to before it sprays.

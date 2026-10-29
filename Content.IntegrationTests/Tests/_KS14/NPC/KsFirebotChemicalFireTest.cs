@@ -3,6 +3,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Firefighting;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
+using Content.Server.Gravity;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
@@ -13,6 +14,7 @@ using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
+using Content.Shared.Gravity;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -42,7 +44,7 @@ public sealed class KsFirebotChemicalFireTest : GameTest
     private const int CheckTicks = TicksPerSecond / 2;
 
     /// <summary>
-    ///     How hot, and for how long, the hot-puddle test holds the fuel after its flames are out: past welding fuel's
+    ///     How hot the hot-puddle test holds the fuel, from the start, and for how long after its flames are out: past welding fuel's
     ///         400 K ignition point, and long enough for an untended blanket to give out. Much hotter and the puddle boils
     ///         foam off faster than one firebot can lay it.
     /// </summary>
@@ -101,16 +103,18 @@ public sealed class KsFirebotChemicalFireTest : GameTest
         var gridUid = await SetUpBurningSpill();
         await SpawnFirebot(gridUid);
 
+        // Something keeps the fuel hot past its ignition point the whole time, from before the firebot gets there: the
+        //      flames only stay out where the foam is, so the firebot has to foam every hot puddle, not only the burning ones.
         var knockedDown = false;
         for (var tick = 0; tick < TicksPerSecond * 30 && !knockedDown; tick += CheckTicks)
         {
+            await server.WaitPost(() => HeatFuelPuddles(HeldPuddleTemperature));
             await server.WaitRunTicks(CheckTicks);
             await server.WaitPost(() => knockedDown = CountGridFires(gridUid) == 0);
         }
 
         Assert.That(knockedDown, "The firebot should put the flames out first.");
 
-        // Something keeps the fuel hot past its ignition point: only the foam keeps it from lighting.
         var relitChecks = 0;
         for (var tick = 0; tick < TicksPerSecond * HeldHotSeconds; tick += CheckTicks)
         {
@@ -142,6 +146,10 @@ public sealed class KsFirebotChemicalFireTest : GameTest
             mixture.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
             entityManager.System<AtmosphereSystem>().SetMapAtmosphere(testMap.MapUid, space: false, mixture);
             entityManager.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner);
+
+            // A station has gravity. Without it, the recoil of every spray shoves the firebot clear of the fire.
+            var gravityComponent = entityManager.EnsureComponent<GravityComponent>(testMap.Grid.Owner);
+            entityManager.System<GravitySystem>().EnableGravity(testMap.Grid.Owner, gravityComponent);
 
             var mapSystem = entityManager.System<SharedMapSystem>();
             for (var x = -4; x < 12; x++)
