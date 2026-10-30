@@ -1,0 +1,127 @@
+# Scene durations match the states' animation lengths in the RSI, so they play at their own frame timings.
+# The hold scene before the climax stretches, so whoever plays the cinematic can time the climax.
+
+- type: ksCinematic
+  abstract: true
+  id: KsCinematicStationExplosionBase
+  sprite: _KS14/Cinematic/station_explosion.rsi
+
+- type: ksCinematic
+  parent: KsCinematicStationExplosionBase
+  id: KsCinematicNukeWin
+  scenes:
+  - state: intro_nuke
+    duration: 3
+  - state: station_intact
+    duration: 2
+    stretch: true
+  - state: station_explode_fade_red
+    duration: 7.9
+    sounds:
+    - sound:
+        path: /Audio/Effects/explosionfar.ogg
+        params:
+          volume: -6
+  - state: summary_nukewin
+    duration: 6
+
+- type: ksCinematic
+  parent: KsCinematicStationExplosionBase
+  id: KsCinematicNukeTotalAnnihilation
+  scenes:
+  - state: intro_nuke
+    duration: 3
+  - state: station_intact
+    duration: 2
+    stretch: true
+  - state: station_explode_fade_red
+    duration: 7.9
+    sounds:
+    - sound:
+        path: /Audio/Effects/explosionfar.ogg
+        params:
+          volume: -6
+  - state: summary_totala
+    duration: 6
+
+- type: ksCinematic
+  parent: KsCinematicStationExplosionBase
+  id: KsCinematicNukeFail
+  scenes:
+  - state: intro_nuke
+    duration: 3
+  - state: station_intact
+    duration: 2
+    stretch: true
+  - state: station_intact_fade_red
+    duration: 2
+    sounds:
+    - sound:
+        path: /Audio/Effects/explosionfar.ogg
+        params:
+          volume: -6
+  - state: summary_nukefail
+    duration: 6
+
+- type: ksCinematic
+  parent: KsCinematicStationExplosionBase
+  id: KsCinematicSelfDestruct
+  scenes:
+  - state: intro_nuke
+    duration: 3
+  - state: station_intact
+    duration: 2
+    stretch: true
+  - state: station_explode_fade_red
+    duration: 7.9
+    sounds:
+    - sound:
+        path: /Audio/Effects/explosionfar.ogg
+        params:
+          volume: -6
+  - state: summary_selfdes
+    duration: 6
+
+- type: ksCinematic
+  parent: KsCinematicStationExplosionBase
+  id: KsCinematicMalf
+  scenes:
+  - state: intro_malf
+    duration: 7.2
+  - state: intro_malf_still
+    duration: 2
+    stretch: true
+  - state: station_explode_fade_red
+    duration: 7.9
+    sounds:
+    - sound:
+        path: /Audio/Effects/explosionfar.ogg
+        params:
+          volume: -6
+  - state: summary_malf
+    duration: 6
+
+- type: ksCinematic
+  parent: KsCinematicStationExplosionBase
+  id: KsCinematicCult
+  scenes:
+  - state: intro_cult
+    duration: 7.82
+    # Sounds and their timings from tgstation's /datum/cinematic/cult_arm.
+    sounds:
+    - sound:
+        path: /Audio/_KS14/Effects/Magic/enter_blood.ogg
+      offset: 2.5
+    - sound:
+        path: /Audio/_KS14/Machines/Terminal/terminal_off.ogg
+      offset: 5.3
+  - state: station_intact
+    duration: 2
+    stretch: true
+  - state: station_corrupted
+    duration: 28.77
+    sounds:
+    - sound:
+        path: /Audio/_KS14/Effects/ghost.ogg
+  - state: summary_cult
+    duration: 6

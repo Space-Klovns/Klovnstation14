@@ -38,6 +38,13 @@ public sealed partial class KsZLevelAudioSystem : EntitySystem
     [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
 
+    /// <summary>
+    ///     Asked about every stream before anything else; one it says yes to is silenced. The engine's override is
+    ///         single-target and this system holds it, so anything else that needs a say over streams goes through
+    ///         here. Runs on the audio system's parallel job, so it must only read shared state.
+    /// </summary>
+    public Func<EntityUid, AudioComponent, bool>? SilenceStream;
+
     private bool _enabled;
     private float _levelHeight;
     private int _maximumLevels;
@@ -83,6 +90,12 @@ public sealed partial class KsZLevelAudioSystem : EntitySystem
         {
             component.Started = true;
             component.StartPlaying();
+        }
+
+        if (SilenceStream?.Invoke(entity, component) == true)
+        {
+            component.Gain = 0f;
+            return;
         }
 
         // Global audio has no position, so it has nowhere to leak from and nothing to leak through.
