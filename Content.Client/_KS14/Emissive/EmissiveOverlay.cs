@@ -153,6 +153,9 @@ public sealed partial class EmissiveOverlay : Overlay
                         ? spriteToWorldMatrix
                         : spriteToGridMatrix * Matrix3x2.CreateTranslation(localRotation.RotateVec(ent.Comp.LightOffset)) * gridWorldMatrix;
 
+                    // Or the light ignores the sprite and layers entirely: at the entity, turned by its rotation alone.
+                    var lightEntityToWorldMatrix = Matrix3Helpers.CreateTransform(transformComponent.LocalPosition, localRotation) * gridWorldMatrix;
+
                     // A halo is blurred in screen space, so it would spread past a wall onto its far side. Bloom only what
                     //      the eye can see, like FOV does; an emitter inside the occluder it's mounted on still counts.
                     var inView = !cullBloom || _examineSystem.InRangeUnOccluded(eyeCoordinates,
@@ -193,14 +196,18 @@ public sealed partial class EmissiveOverlay : Overlay
 
                         // In the layer's own frame, centred on it, as the engine draws it.
                         var bloomBox = Box2.CenteredAround(ent.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter);
-                        var lightBox = bloomBox.Enlarged(layerParams?.GlowRadius ?? ent.Comp.GlowRadius);
+                        var glowRadius = layerParams?.GlowRadius ?? ent.Comp.GlowRadius;
+                        var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
+                        var lightBox = ent.Comp.LightFollowsEntity
+                            ? Box2.CenteredAround(ent.Comp.LightOffset, textureSize).Enlarged(glowRadius)
+                            : bloomBox.Enlarged(glowRadius);
 
                         // The colour drawn is the colour emitted, so scaling it dims this layer's glow alone
                         var color = spriteColor * layer.Color;
                         if (layerParams is { Brightness: var brightness } && brightness != 1f)
                             color = new Color(color.R * brightness, color.G * brightness, color.B * brightness, color.A);
 
-                        _draws.Add(new EmissiveDraw(layerMatrix * lightSpriteToWorldMatrix,
+                        _draws.Add(new EmissiveDraw(ent.Comp.LightFollowsEntity ? lightEntityToWorldMatrix : layerMatrix * lightSpriteToWorldMatrix,
                             layerMatrix * spriteToWorldMatrix,
                             texture,
                             lightBox,

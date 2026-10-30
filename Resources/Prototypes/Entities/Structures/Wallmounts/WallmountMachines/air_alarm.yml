@@ -96,6 +96,7 @@
     glowRadius: 1.1
     intensity: 3
     lightOffset: 0, -0.4
+    lightFollowsEntity: true
     layers:
     - airAlarmState
   - type: DirectionalSpriteManipulation

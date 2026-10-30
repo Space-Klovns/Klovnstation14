@@ -50,6 +50,16 @@ public sealed partial class EmissiveLayersComponent : Component, IComponentTreeE
     public Vector2 LightOffset = Vector2.Zero;
 
     /// <summary>
+    ///     If true, the light the layers cast ignores the sprite's and layers' own transforms: it's placed at the entity,
+    ///         turned by the entity's rotation alone, with <see cref="LightOffset"/> turned with it. The sprite and its
+    ///         bloom still follow the sprite. For sprites whose layers are shifted or turned per direction in ways the
+    ///         light shouldn't copy.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool LightFollowsEntity;
+
+    /// <summary>
     ///     Overrides for individual layers in <see cref="Layers"/>, by the same key. Layers without one use the
     ///         component's own values.
     /// </summary>
