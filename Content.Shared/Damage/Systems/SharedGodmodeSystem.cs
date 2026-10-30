@@ -14,7 +14,6 @@ namespace Content.Shared.Damage.Systems;
 
 public abstract partial class SharedGodmodeSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _protoMan = default!;
 
     public override void Initialize()
     {
@@ -41,7 +40,7 @@ public abstract partial class SharedGodmodeSystem : EntitySystem
 
     private void OnBeforeStatusEffect(EntityUid uid, GodmodeComponent component, ref BeforeStatusEffectAddedEvent args)
     {
-        if (_protoMan.Index(args.Effect).HasComponent<RejuvenateRemovedStatusEffectComponent>(Factory))
+        if (ProtoMan.Index(args.Effect).HasComponent<RejuvenateRemovedStatusEffectComponent>(Factory))
             args.Cancelled = true;
     }
 

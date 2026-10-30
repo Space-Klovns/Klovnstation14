@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Threading;
 using Content.Server.Screens.Components;
 using Content.Server.Shuttles.Components;
@@ -238,7 +239,7 @@ public sealed partial class EmergencyShuttleSystem
 
         if (!_reader.FindAccessTags(player).Contains(EmergencyRepealAllAccess))
         {
-            Popup.PopupCursor(Loc.GetString("emergency-shuttle-console-denied"), player, PopupType.Medium);
+            Popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emergency-shuttle-console-denied"), player, PopupType.Medium);
             return;
         }
 
@@ -257,7 +258,7 @@ public sealed partial class EmergencyShuttleSystem
 
         if (!_idSystem.TryFindIdCard(player, out var idCard) || !_reader.IsAllowed(idCard, uid))
         {
-            Popup.PopupCursor(Loc.GetString("emergency-shuttle-console-denied"), player, PopupType.Medium);
+            Popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emergency-shuttle-console-denied"), player, PopupType.Medium);
             return;
         }
 
@@ -277,7 +278,7 @@ public sealed partial class EmergencyShuttleSystem
 
         if (!_idSystem.TryFindIdCard(player, out var idCard) || !_reader.IsAllowed(idCard, uid))
         {
-            Popup.PopupCursor(Loc.GetString("emergency-shuttle-console-denied"), args.Actor, PopupType.Medium);
+            Popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emergency-shuttle-console-denied"), args.Actor, PopupType.Medium);
             return;
         }
 

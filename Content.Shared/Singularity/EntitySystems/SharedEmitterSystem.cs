@@ -1,4 +1,5 @@
-﻿using Content.Shared.Database;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Shared.Database;
 using Content.Shared.Examine;
 using Content.Shared.Lock;
 using Content.Shared.Popups;
@@ -10,7 +11,6 @@ namespace Content.Shared.Singularity.EntitySystems;
 
 public abstract partial class SharedEmitterSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
 
     public override void Initialize()
@@ -32,15 +32,16 @@ public abstract partial class SharedEmitterSystem : EntitySystem
         if (ent.Comp.SelectableTypes.Count < 2)
             return;
 
+        var userUid = args.User; // KS14: retain the popup recipient for the verb callback
         foreach (var type in ent.Comp.SelectableTypes)
         {
-            var proto = _prototype.Index(type);
+            var proto = ProtoMan.Index(type);
 
             var v = new Verb
             {
                 Priority = 1,
                 Category = VerbCategory.SelectType,
-                Text = proto.Name,
+                Text = _contentLocalizationManager.GetLocalizedPrototypeName(proto), // KS14: active client culture
                 Disabled = type == ent.Comp.BoltType,
                 Impact = LogImpact.Medium,
                 DoContactInteraction = true,
@@ -48,7 +49,7 @@ public abstract partial class SharedEmitterSystem : EntitySystem
                 {
                     ent.Comp.BoltType = type;
                     Dirty(ent);
-                    _popup.PopupClient(Loc.GetString("emitter-component-type-set", ("type", proto.Name)), ent.Owner);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("emitter-component-type-set", ("type", new KsPopupPrototypeName(proto.ID) /* KS14: defer selected prototype */)), ent.Owner, userUid);
                 },
             };
             args.Verbs.Add(v);
@@ -60,7 +61,7 @@ public abstract partial class SharedEmitterSystem : EntitySystem
         if (ent.Comp.SelectableTypes.Count < 2)
             return;
 
-        var proto = _prototype.Index(ent.Comp.BoltType);
-        args.PushMarkup(Loc.GetString("emitter-component-current-type", ("type", proto.Name)));
+        var proto = ProtoMan.Index(ent.Comp.BoltType);
+        args.PushMarkup(Loc.GetString("emitter-component-current-type", ("type", _contentLocalizationManager.GetLocalizedPrototypeName(proto) /* KS14: active response culture */)));
     }
 }

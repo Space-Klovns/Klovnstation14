@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.Power.Components;
@@ -38,7 +39,6 @@ namespace Content.Server.Electrocution;
 public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
 {
     [Dependency] private IAdminLogManager _adminLogger = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private DamageableSystem _damageable = default!;
     [Dependency] private EntityLookupSystem _entityLookup = default!;
@@ -427,7 +427,7 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
 
         if (shockDamage is { } dmg)
         {
-            if (_damageable.TryChangeDamage(uid, new DamageSpecifier(_prototypeManager.Index(DamageType), dmg), out var damage, origin: sourceUid))
+            if (_damageable.TryChangeDamage(uid, new DamageSpecifier(ProtoMan.Index(DamageType), dmg), out var damage, origin: sourceUid))
             {
                 _adminLogger.Add(LogType.Electrocution,
                     $"{ToPrettyString(uid):entity} received {damage:damage} powered electrocution damage{(sourceUid != null ? " from " + ToPrettyString(sourceUid.Value) : ""):source}");
@@ -437,7 +437,7 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
         _stuttering.DoStutter(uid, time * StutteringTimeMultiplier, refresh);
         _jittering.DoJitter(uid, time * JitterTimeMultiplier, refresh, JitterAmplitude, JitterFrequency, true, statusEffects);
 
-        _popup.PopupEntity(Loc.GetString("electrocuted-component-mob-shocked-popup-player"), uid, uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("electrocuted-component-mob-shocked-popup-player"), uid, uid);
 
         var filter = Filter.PvsExcept(uid, entityManager: EntityManager);
 
@@ -445,13 +445,13 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
         // TODO: Allow being able to pass EntityUid to Loc...
         if (sourceUid != null)
         {
-            _popup.PopupEntity(Loc.GetString("electrocuted-component-mob-shocked-by-source-popup-others",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("electrocuted-component-mob-shocked-by-source-popup-others",
                 ("mob", identifiedUid), ("source", (sourceUid.Value))), uid, filter, true);
             PlayElectrocutionSound(uid, sourceUid.Value);
         }
         else
         {
-            _popup.PopupEntity(Loc.GetString("electrocuted-component-mob-shocked-popup-others",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("electrocuted-component-mob-shocked-popup-others",
                 ("mob", identifiedUid)), uid, filter, true);
         }
 

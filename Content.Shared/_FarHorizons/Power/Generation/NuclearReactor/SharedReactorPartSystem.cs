@@ -19,7 +19,6 @@ public abstract partial class SharedReactorPartSystem : EntitySystem
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedPointLightSystem _lightSystem = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private SharedRadiationSystem _radiationSystem = default!;
 
     private readonly float _rate = 5;
@@ -218,7 +217,7 @@ public abstract partial class SharedReactorPartSystem : EntitySystem
         {
             var DeltaT = reactorPart.Temperature - reactor.Temperature;
 
-            var k = MaterialSystem.CalculateHeatTransferCoefficient(reactorPart.Properties, _proto.Index(reactorPart.Material).Properties);
+            var k = MaterialSystem.CalculateHeatTransferCoefficient(reactorPart.Properties, ProtoMan.Index(reactorPart.Material).Properties);
             var A = reactorPart.ThermalCrossSection;
 
             reactorPart.Temperature = (float)(reactorPart.Temperature - (k * A * (0.5 * 8) / reactorPart.ThermalMass * DeltaT));
@@ -352,7 +351,7 @@ public abstract partial class SharedReactorPartSystem : EntitySystem
     /// <returns>Post-processing list of neutrons</returns>
     public virtual List<ReactorNeutron> ProcessNeutronsGas(ReactorPartComponent reactorPart, List<ReactorNeutron> neutrons) => neutrons;
 
-    public void SetProperties(ReactorPartComponent reactorPart, out MaterialProperties properties) => properties = new MaterialProperties(_proto.Index(reactorPart.Material).Properties);
+    public void SetProperties(ReactorPartComponent reactorPart, out MaterialProperties properties) => properties = new MaterialProperties(ProtoMan.Index(reactorPart.Material).Properties);
 
     /// <summary>
     /// Returns true according to a percent chance.

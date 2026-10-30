@@ -1,7 +1,10 @@
+using Content.Shared.Movement.Components;
 using Content.Server.Movement.Components;
 using Content.Server.Movement.Systems;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Projectiles;
+using Content.Shared.Trigger.Components.Triggers;
+using Content.Shared.Trigger.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -37,6 +40,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private FixtureSystem _fixtures = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private TriggerSystem _triggerSystem = default!;
 
     [Dependency] private EntityQuery<LagCompensationComponent> _lagCompensationQuery = default;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery = default;
@@ -49,12 +53,10 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     // just past the max dodge distance isn't missed even though its hitbox still overlaps that point.
     private const float MaxHitboxRadius = 2.5f;
 
-    // TODO LCDC: use movement speed instead
-    // How far a mob could plausibly have moved during the lag window - this bounds the search, not the
-    // projectile's own speed. A ghost is only ever worth spawning within dodging range of the muzzle;
-    // real physics (travel time, obstruction) takes care of everything from there.
-    // Base sprint speed (see MovementSpeedModifierComponent.DefaultBaseSprintSpeed); ignores speed buffs.
-    private const float MaxCompensationSpeed = 5.5f;
+    // The least the search assumes a mob could have moved per second of the lag window: base sprint speed (see
+    //      MovementSpeedModifierComponent.DefaultBaseSprintSpeed). Not lower even when every mob is slow now, since a mob
+    //      slowed by the hit that's being compensated for was still moving at full speed during the window.
+    private const float MinCompensationSpeed = MovementSpeedModifierComponent.DefaultBaseSprintSpeed;
 
     // Safety net in case a ghost is somehow never resolved by a collision or projectile cleanup.
     private const float GhostLifetime = 7f;
@@ -68,24 +70,13 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         // the *following* tick's broadphase/contact pass - a permanent one-tick lag behind where it should be,
         // which is significant against a fast-moving target and a direct contributor to missed hits.
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
-
-        SubscribeLocalEvent<PlayerShotProjectileEvent>(OnShotProjectile);
-
-        SubscribeLocalEvent<LagCompensationGhostComponent, PreventCollideEvent>(OnGhostPreventCollide);
-        SubscribeLocalEvent<LagCompensationGhostComponent, StartCollideEvent>(OnGhostStartCollide);
-
-        SubscribeLocalEvent<LagCompensatingProjectileComponent, PreventCollideEvent>(OnProjectilePreventCollide);
-        SubscribeLocalEvent<LagCompensatingProjectileComponent, ProjectileHitEvent>(OnProjectileHit);
-        SubscribeLocalEvent<LagCompensatingProjectileComponent, EntityTerminatingEvent>(OnProjectileTerminating);
     }
 
+    [SubscribeLocalEvent]
     private void OnShotProjectile(ref PlayerShotProjectileEvent args)
     {
         var projectileUid = args.Projectile;
         var shooterUid = args.User;
-
-        // traumastation compat - iirc only used to hide the server-side projectile from the client
-        RaiseNetworkEvent(new ShotPredictedProjectileEvent(GetNetEntity(projectileUid)), shooterUid);
 
         if (!_lagCompensationQuery.HasComp(shooterUid))
             return;
@@ -94,16 +85,6 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         // so there's no client round trip to correct for. This also gives us that player's session, which is
         // the only server-trusted source of latency we have (see the CurTime comment below).
         if (!_playerManager.TryGetSessionByEntity(shooterUid, out var shooterSession))
-            return;
-
-        if (!_physicsQuery.TryComp(projectileUid, out var projectilePhysicsComponent) ||
-            !_xformQuery.TryComp(projectileUid, out var projectileTransformComponent))
-        {
-            return;
-        }
-
-        var projectileSpeed = projectilePhysicsComponent.LinearVelocity.Length();
-        if (projectileSpeed <= 0f)
             return;
 
         // IMPORTANT: a client-sent IGameTiming.CurTime is NOT comparable to the server's. RobustToolbox
@@ -118,6 +99,27 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         if (lagDuration > LagCompensationSystem.BufferTime)
             lagDuration = LagCompensationSystem.BufferTime;
 
+        CompensateProjectile(projectileUid, shooterUid, lagDuration);
+    }
+
+    /// <summary>
+    /// Spawns compensation ghosts for <paramref name="projectileUid"/> as though <paramref name="shooterUid"/>
+    /// fired it <paramref name="lagDuration"/> ago. <see cref="OnShotProjectile"/> derives that duration from the
+    /// shooter's ping; this is the entry point for anything that knows it by other means - integration tests
+    /// especially, whose net channels always report a ping of zero and so never reach here on their own.
+    /// </summary>
+    public void CompensateProjectile(EntityUid projectileUid, EntityUid shooterUid, TimeSpan lagDuration)
+    {
+        if (!_physicsQuery.TryComp(projectileUid, out var projectilePhysicsComponent) ||
+            !_xformQuery.TryComp(projectileUid, out var projectileTransformComponent))
+        {
+            return;
+        }
+
+        var projectileSpeed = projectilePhysicsComponent.LinearVelocity.Length();
+        if (projectileSpeed <= 0f)
+            return;
+
         var lagSeconds = (float)lagDuration.TotalSeconds;
         if (lagSeconds <= 0f)
             return;
@@ -128,7 +130,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
         // How far the target could plausibly have moved during the lag window - not how far the projectile
         // could have flown, since that's what actually determines how far a dodge could have carried them.
-        var maxDodgeDistance = Math.Min(projectileSpeed, MaxCompensationSpeed) * lagSeconds;
+        var maxDodgeDistance = Math.Min(projectileSpeed, GetMaxCompensationSpeed(projectileOrigin.MapId, shooterUid)) * lagSeconds;
         var projectileDirection = projectilePhysicsComponent.LinearVelocity / projectileSpeed;
 
         SpawnCompensationGhosts(projectileUid, shooterUid, projectileOrigin, projectileDirection, projectileSpeed, maxDodgeDistance, lagDuration);
@@ -250,6 +252,56 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     }
 
     /// <summary>
+    /// The fastest any compensated mob on <paramref name="mapId"/>, other than the shooter, can currently move, and at
+    /// least <see cref="MinCompensationSpeed"/>: the furthest a target can have got from where the shooter saw it, per
+    /// second of lag. Bounds the search for targets, so a mob sped up past base sprint speed is still found.
+    /// </summary>
+    private float GetMaxCompensationSpeed(MapId mapId, EntityUid shooterUid)
+    {
+        RefreshMapSpeeds();
+
+        if (!_mapSpeeds.TryGetValue(mapId, out var mapSpeeds))
+            return MinCompensationSpeed;
+
+        // The shooter is left out, so if it is the fastest, the next fastest counts
+        var maxSpeed = mapSpeeds.FastestUid == shooterUid ? mapSpeeds.SecondSpeed : mapSpeeds.FastestSpeed;
+        return MathF.Max(MinCompensationSpeed, maxSpeed);
+    }
+
+    /// <summary>
+    ///     The two fastest compensated mobs on each map, found once per tick rather than once per projectile: a burst of
+    ///         fire or a room full of shooters would otherwise go over every mob for every shot.
+    /// </summary>
+    private readonly Dictionary<MapId, MapSpeeds> _mapSpeeds = new();
+
+    private GameTick _mapSpeedsTick = GameTick.Zero;
+
+    private record struct MapSpeeds(EntityUid FastestUid, float FastestSpeed, float SecondSpeed);
+
+    private void RefreshMapSpeeds()
+    {
+        if (_mapSpeedsTick == _timing.CurTick)
+            return;
+
+        _mapSpeedsTick = _timing.CurTick;
+        _mapSpeeds.Clear();
+
+        var enumerator = EntityQueryEnumerator<LagCompensationComponent, MovementSpeedModifierComponent, TransformComponent>();
+        while (enumerator.MoveNext(out var uid, out _, out var speedModifierComponent, out var transformComponent))
+        {
+            var speed = MathF.Max(speedModifierComponent.CurrentSprintSpeed, speedModifierComponent.CurrentWalkSpeed);
+            var mapSpeeds = _mapSpeeds.GetValueOrDefault(transformComponent.MapID);
+
+            if (speed > mapSpeeds.FastestSpeed)
+                mapSpeeds = new MapSpeeds(uid, speed, mapSpeeds.FastestSpeed);
+            else if (speed > mapSpeeds.SecondSpeed)
+                mapSpeeds.SecondSpeed = speed;
+
+            _mapSpeeds[transformComponent.MapID] = mapSpeeds;
+        }
+    }
+
+    /// <summary>
     /// Spawns an invisible physics proxy at <paramref name="coordinates"/> carrying a copy of
     /// <paramref name="targetShape"/>, and ties it to <paramref name="projectileUid"/>. Kept in sync with
     /// its real target every tick afterward by <see cref="UpdateGhostPosition"/> - this is just its initial
@@ -333,6 +385,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// <summary>
     /// Ghosts only ever collide with the one projectile they were spawned for.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnGhostPreventCollide(Entity<LagCompensationGhostComponent> ghost, ref PreventCollideEvent args)
     {
         if (args.Cancelled)
@@ -346,6 +399,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// A projectile never collides with the real entity behind a ghost it's already carrying - the ghost
     /// is the one deciding whether that target gets hit.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnProjectilePreventCollide(Entity<LagCompensatingProjectileComponent> projectile, ref PreventCollideEvent args)
     {
         if (args.Cancelled)
@@ -359,6 +413,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// The ghost caught the projectile: resolve this candidate (win or lose) and, if it wins, redirect
     /// the hit onto the real target.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnGhostStartCollide(Entity<LagCompensationGhostComponent> ghost, ref StartCollideEvent args)
     {
         if (args.OtherEntity != ghost.Comp.Projectile || args.OtherFixtureId != SharedProjectileSystem.ProjectileFixture)
@@ -372,6 +427,25 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         if (TerminatingOrDeleted(targetUid) || TerminatingOrDeleted(projectileUid) || !CanReallyCollide(projectileUid, targetUid))
             return;
 
+        HitRealTarget(projectileUid, targetUid);
+    }
+
+    /// <summary>
+    /// Does what physics would have done had the projectile touched the real target rather than its ghost.
+    /// The ghost's fixture is soft, so the ghost/projectile contact itself is ignored by every hard-fixture
+    /// collide handler - including <see cref="TriggerOnCollideComponent"/>, which is what detonates rockets.
+    /// Calling only <see cref="PredictedProjectileSystem.DoHit"/> here dealt the impact damage and silently
+    /// skipped the explosion; the trigger goes first, the same order <see cref="TriggerSystem"/>'s
+    /// <c>before:</c> gives it on a real collision.
+    /// </summary>
+    private void HitRealTarget(EntityUid projectileUid, EntityUid targetUid)
+    {
+        if (_fixturesQuery.TryComp(targetUid, out var targetFixturesComponent) &&
+            FindHardFixture(targetFixturesComponent) is { } targetFixture)
+        {
+            _triggerSystem.TryCollideTrigger(projectileUid, targetUid, SharedProjectileSystem.ProjectileFixture, targetFixture);
+        }
+
         _projectile.DoHit(projectileUid, targetUid);
     }
 
@@ -379,12 +453,17 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// The shot resolved - whether against a ghost or a real, un-ghosted target - so every remaining
     /// ghost from this shot is stale.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnProjectileHit(Entity<LagCompensatingProjectileComponent> projectile, ref ProjectileHitEvent args)
     {
         CleanupGhosts(projectile);
     }
 
-    private void OnProjectileTerminating(Entity<LagCompensatingProjectileComponent> projectile, ref EntityTerminatingEvent args)
+    /// <summary>
+    /// The shot is gone, or no longer lag-compensated: its ghosts stand in for nothing.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnProjectileShutdown(Entity<LagCompensatingProjectileComponent> projectile, ref ComponentShutdown args)
     {
         CleanupGhosts(projectile);
     }

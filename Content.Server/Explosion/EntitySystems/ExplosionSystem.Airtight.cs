@@ -39,7 +39,7 @@ public sealed partial class ExplosionSystem
         _explosionTypes.Clear();
 
         int index = 0;
-        foreach (var prototype in _prototypeManager.EnumeratePrototypes<ExplosionPrototype>())
+        foreach (var prototype in ProtoMan.EnumeratePrototypes<ExplosionPrototype>())
         {
             _explosionTypes.Add(prototype.ID, index);
             index++;
@@ -238,7 +238,7 @@ public sealed partial class ExplosionSystem
         {
             // TODO EXPLOSION SYSTEM
             // cache explosion type damage.
-            if (!_prototypeManager.Resolve(id, out ExplosionPrototype? explosionType))
+            if (!ProtoMan.Resolve(id, out ExplosionPrototype? explosionType))
                 continue;
 
             // evaluate the damage that this damage type would do to this entity

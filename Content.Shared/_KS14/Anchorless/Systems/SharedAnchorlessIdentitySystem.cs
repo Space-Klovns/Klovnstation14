@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared._KS14.Anchorless.Components;
@@ -35,23 +36,14 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
 
     private MapId? _pausedMap;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, PlayerAttachedEvent>(OnPlayerAttached);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, PlayerDetachedEvent>(OnPlayerDetached);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessTransformActionEvent>(OnTransform);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessCommunionActionEvent>(OnCommunion);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessTransformIdentitySelectMessage>(OnTransformSelected);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsAnchorlessAntagComponent> ent, ref ComponentStartup args)
     {
         if (_net.IsServer)
             _bloodstream.ChangeBloodReagents(ent.Owner, new Solution([new("AnchorlessBlood", 600)]));
     }
+
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<KsAnchorlessAntagComponent> ent, ref MapInitEvent args)
     {
         var ui = EnsureComp<UserInterfaceComponent>(ent);
@@ -69,6 +61,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         Dirty(ent);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsAnchorlessAntagComponent> ent, ref ComponentShutdown args)
     {
         if (TryComp<ActorComponent>(ent, out var actor))
@@ -81,6 +74,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
             QueueDel(data.StoredIdentity);
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerAttached(Entity<KsAnchorlessAntagComponent> ent, ref PlayerAttachedEvent args)
     {
         foreach (var data in ent.Comp.LearnedIdentities)
@@ -88,6 +82,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
                 _pvs.AddSessionOverride(data.StoredIdentity.Value, args.Player);
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerDetached(Entity<KsAnchorlessAntagComponent> ent, ref PlayerDetachedEvent args)
         => RemovePvsOverrides(ent, args.Player);
 
@@ -98,6 +93,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
                 _pvs.RemoveSessionOverride(data.StoredIdentity.Value, session);
     }
 
+    [SubscribeLocalEvent]
     private void OnCommunion(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessCommunionActionEvent args)
     {
         if (args.Handled || !TryComp<KsAnchorlessAntagComponent>(ent, out var self) ||
@@ -105,7 +101,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
             return;
 
         args.Handled = true;
-        _popupSystem.PopupEntity(Loc.GetString("anchorless-communion-message"), ent.Owner, ent.Owner, PopupType.Medium);
+        _popupSystem.PopupEntity(KsPopupMessage.Create("anchorless-communion-message"), ent.Owner, ent.Owner, PopupType.Medium);
         if (_net.IsClient)
             return;
 
@@ -115,6 +111,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         LearnMissing((args.Target, other), memories);
     }
 
+    [SubscribeLocalEvent]
     private void OnTransform(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessTransformActionEvent args)
     {
         if (args.Handled || !TryComp<UserInterfaceComponent>(ent, out var ui))
@@ -125,6 +122,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
             _ui.OpenUi((ent, ui), AnchorlessTransformUiKey.Key, args.Performer);
     }
 
+    [SubscribeLocalEvent]
     private void OnTransformSelected(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessTransformIdentitySelectMessage args)
     {
         if (!TryGetEntity(args.TargetIdentity, out var target) || ent.Comp.CurrentIdentity == target)

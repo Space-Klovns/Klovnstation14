@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Shared.Examine;
 using Content.Shared.Interaction;
@@ -151,7 +152,7 @@ public sealed partial class LightReplacerSystem : SharedLightReplacerSystem
         {
             if (userUid != null)
             {
-                var msg = Loc.GetString("comp-light-replacer-missing-light",
+                var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-light-replacer-missing-light",
                     ("light-replacer", replacerUid));
                 _popupSystem.PopupEntity(msg, replacerUid, userUid.Value);
             }
@@ -195,7 +196,7 @@ public sealed partial class LightReplacerSystem : SharedLightReplacerSystem
         {
             if (showTooltip && userUid != null)
             {
-                var msg = Loc.GetString("comp-light-replacer-insert-broken-light");
+                var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-light-replacer-insert-broken-light");
                 _popupSystem.PopupEntity(msg, replacerUid, userUid.Value);
             }
 
@@ -206,7 +207,7 @@ public sealed partial class LightReplacerSystem : SharedLightReplacerSystem
         var hasInsert = _container.Insert(bulbUid, replacer.InsertedBulbs);
         if (hasInsert && showTooltip && userUid != null)
         {
-            var msg = Loc.GetString("comp-light-replacer-insert-light",
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-light-replacer-insert-light",
                 ("light-replacer", replacerUid), ("bulb", bulbUid));
             _popupSystem.PopupEntity(msg, replacerUid, userUid.Value, PopupType.Medium);
         }
@@ -244,7 +245,7 @@ public sealed partial class LightReplacerSystem : SharedLightReplacerSystem
         // show some message if success
         if (insertedBulbs > 0 && userUid != null)
         {
-            var msg = Loc.GetString("comp-light-replacer-refill-from-storage", ("light-replacer", replacerUid));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("comp-light-replacer-refill-from-storage", ("light-replacer", replacerUid));
             _popupSystem.PopupEntity(msg, replacerUid, userUid.Value, PopupType.Medium);
         }
 

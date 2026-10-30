@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Atmos.Components;
 using Content.Shared._KS14.BatteryShielding;
 using Content.Shared.Popups;
@@ -10,13 +11,7 @@ public sealed partial class KsGasMaxPressureIntervalSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsGasMaxPressureIntervalComponent, KsGasMaxPressureAttemptLoseIntegrityEvent>(OnAttemptLoseIntegrity, after: [typeof(SharedBatteryShieldingSystem)]);
-    }
-
+    [SubscribeLocalEvent(after: [typeof(SharedBatteryShieldingSystem)])]
     private void OnAttemptLoseIntegrity(Entity<KsGasMaxPressureIntervalComponent> entity, ref KsGasMaxPressureAttemptLoseIntegrityEvent args)
     {
         if (args.Cancelled)
@@ -39,7 +34,7 @@ public sealed partial class KsGasMaxPressureIntervalSystem : EntitySystem
             if (locId is not { })
                 break;
 
-            _popupSystem.PopupEntity(Loc.GetString(locId, ("name", Name(entity.Owner))), entity.Owner, type: entity.Comp.PopupType);
+            _popupSystem.PopupEntity(KsPopupMessage.Create(locId, ("name", entity.Owner)), entity.Owner, type: entity.Comp.PopupType);
             break;
         }
     }

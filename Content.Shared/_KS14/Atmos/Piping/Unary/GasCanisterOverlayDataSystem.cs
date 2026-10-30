@@ -14,14 +14,7 @@ public sealed partial class GasCanisterOverlayDataSystem : EntitySystem
 
     [Dependency] private EntityQuery<GasCanisterComponent> _canisterQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GasCanisterOverlayComponent, ComponentInit>(OnCanisterInit);
-        SubscribeLocalEvent<GasCanisterOverlayComponent, MapInitEvent>(OnCanisterMapInit, after: [typeof(SharedGasCanisterSystem)]);
-    }
-
+    [SubscribeLocalEvent]
     private void OnCanisterInit(Entity<GasCanisterOverlayComponent> entity, ref ComponentInit args)
     {
         entity.Comp.AppearanceGasPercentages = new byte[_gasTileOverlaySystem.VisibleGasId.Length];
@@ -64,6 +57,7 @@ public sealed partial class GasCanisterOverlayDataSystem : EntitySystem
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.FireState));
     }
 
+    [SubscribeLocalEvent(after: [typeof(SharedGasCanisterSystem)])]
     private void OnCanisterMapInit(Entity<GasCanisterOverlayComponent> entity, ref MapInitEvent args)
     {
         if (!_netManager.IsServer)

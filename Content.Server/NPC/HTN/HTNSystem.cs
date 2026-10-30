@@ -20,7 +20,6 @@ namespace Content.Server.NPC.HTN;
 public sealed partial class HTNSystem : EntitySystem
 {
     [Dependency] private IAdminManager _admin = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private NPCSystem _npc = default!;
     [Dependency] private NPCUtilitySystem _utility = default!;
 
@@ -80,7 +79,7 @@ public sealed partial class HTNSystem : EntitySystem
 
         // Add dependencies for all operators.
         // We put code on operators as I couldn't think of a clean way to put it on systems.
-        foreach (var compound in _prototypeManager.EnumeratePrototypes<HTNCompoundPrototype>())
+        foreach (var compound in ProtoMan.EnumeratePrototypes<HTNCompoundPrototype>())
         {
             UpdateCompound(compound);
         }
@@ -321,7 +320,7 @@ public sealed partial class HTNSystem : EntitySystem
 
         if (task is HTNCompoundTask compTask)
         {
-            var compound = _prototypeManager.Index<HTNCompoundPrototype>(compTask.Task);
+            var compound = ProtoMan.Index<HTNCompoundPrototype>(compTask.Task);
             level++;
             text.AppendLine(compound.ID);
             var branches = compound.Branches;
@@ -386,7 +385,13 @@ public sealed partial class HTNSystem : EntitySystem
                 component.CheckServices = false;
             }
 
-            status = currentOperator.Update(blackboard, frameTime);
+            // KS14 start: a task that asked for it stops as soon as its preconditions no longer hold, and replans at once
+            var preconditionsBroken = currentTask.RecheckPreconditions && !currentTask.PreconditionsStillMet(blackboard);
+            if (preconditionsBroken)
+                component.PlanAccumulator = 0f;
+            // KS14 end
+
+            status = preconditionsBroken ? HTNOperatorStatus.Failed /* KS14: precondition recheck */ : currentOperator.Update(blackboard, frameTime);
 
             switch (status)
             {
@@ -395,6 +400,7 @@ public sealed partial class HTNSystem : EntitySystem
                 case HTNOperatorStatus.Failed:
                     ShutdownTask(currentOperator, blackboard, status);
                     ShutdownPlan(component);
+                    KsDiscardStalePlanning(component); // KS14
                     break;
                 // Operator completed so go to the next one.
                 case HTNOperatorStatus.Finished:
@@ -405,6 +411,7 @@ public sealed partial class HTNSystem : EntitySystem
                     if (component.Plan.Tasks.Count <= component.Plan.Index)
                     {
                         ShutdownPlan(component);
+                        KsDiscardStalePlanning(component); // KS14
                         break;
                     }
 
@@ -494,7 +501,7 @@ public sealed partial class HTNSystem : EntitySystem
 
         var job = new HTNPlanJob(
             0.02,
-            _prototypeManager,
+            ProtoMan,
             component.RootTask,
             component.Blackboard.ShallowClone(), branchTraversal, cancelToken.Token);
 
@@ -524,7 +531,7 @@ public sealed partial class HTNSystem : EntitySystem
         }
         else if (task is HTNCompoundTask compTask)
         {
-            var compound = _prototypeManager.Index<HTNCompoundPrototype>(compTask.Task);
+            var compound = ProtoMan.Index<HTNCompoundPrototype>(compTask.Task);
             builder.AppendLine(buffer + $"Compound: {task}");
 
             for (var i = 0; i < compound.Branches.Count; i++)

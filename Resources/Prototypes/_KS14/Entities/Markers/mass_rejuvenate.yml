@@ -1,0 +1,44 @@
+- type: entity
+  abstract: true
+  parent: MarkerBase
+  id: KsMassRejuvenateMarkerBase
+  name: mass rejuvenate marker
+  description: Fully heals everything around it when the map loads, then disappears.
+  components:
+  - type: MassRejuvenateMarker
+
+- type: entity
+  parent: KsMassRejuvenateMarkerBase
+  id: KsMassRejuvenatePlayers2
+  suffix: Players, 2 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 2
+    playerControlledOnly: true
+
+- type: entity
+  parent: KsMassRejuvenateMarkerBase
+  id: KsMassRejuvenateAll2
+  suffix: All entities, 2 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 2
+    playerControlledOnly: false
+
+- type: entity
+  parent: KsMassRejuvenateMarkerBase
+  id: KsMassRejuvenatePlayers4
+  suffix: Players, 4 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 4
+    playerControlledOnly: true
+
+- type: entity
+  parent: KsMassRejuvenateMarkerBase
+  id: KsMassRejuvenateAll4
+  suffix: All entities, 4 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 4
+    playerControlledOnly: false

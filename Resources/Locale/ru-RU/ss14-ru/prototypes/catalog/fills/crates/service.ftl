@@ -1,0 +1,30 @@
+# KS14: ported locale; references to unavailable source content pruned.
+
+ent-CrateCandles = ящик свечей
+    .desc = Содержит 4 коробки свечей, 2 больших и 2 маленьких. Для создания атмосферы или ещё чего-нибудь.
+ent-CrateServiceBooks = ящик книг
+    .desc = Содержит 10 пустых книг случайного вида.
+ent-CrateServiceBoozeDispenser = ящик пополнения раздатчика алкоголя
+    .desc = Содержит пополнение раздатчика алкоголя.
+ent-CrateServiceBox = ящик коробок
+    .desc = Содержит 6 пустых универсальных коробок.
+ent-CrateServiceBureaucracy = ящик бюрократических припасов
+    .desc = Стопка бумаги, папки, несколько ручек, офисная игрушка. О чём ещё можно мечтать?
+ent-CrateServiceCustomSmokable = ящик табачных изделий (собери-сам)
+    .desc = Хотите проявить творческий подход к тому, что вы используете для уничтожения своих лёгких? Этот ящик для вас! В нём есть всё, что нужно, чтобы скрутить свои сигареты.
+ent-CrateServiceFaxMachine = ящик с факсом
+    .desc = Факсовый аппарат и отвёртка для настройки его имени.
+ent-CrateServiceGuidebooks = ящик руководств
+    .desc = Содержит руководства.
+ent-CrateServicePersonnel = ящик для найма персонала
+    .desc = Содержит коробку с КПК и чистыми ID картами.
+    .suffix = { ent-CrateCommandSecure.suffix }
+ent-CrateServiceSmokeables = ящик табачных изделий
+    .desc = Устали от быстрой смерти на станции? Закажите этот ящик и прокурите свой путь к кашляющей погибели!
+ent-CrateServiceSodaDispenser = ящик пополнения раздатчика безалкоголя
+    .desc = Содержит пополнение раздатчика безалкоголя.
+ent-CrateServiceTheatre = ящик театрального снаряжения
+    .desc = Ящик снаряжения для театральных представлений.
+ent-CrateTrashCartFilled = { ent-CrateTrashCart }
+    .suffix = Заполнен
+    .desc = { "" }

@@ -17,8 +17,6 @@ namespace Content.Shared._KS14.BloodSpray;
 
 public sealed partial class BloodSpraySystem : EntitySystem
 {
-
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
     [Dependency] private SharedDecalSystem _decalSystem = default!;
@@ -46,41 +44,35 @@ public sealed partial class BloodSpraySystem : EntitySystem
         new(new ResPath("/Textures/Fluids/splatter.rsi"), "splatter-2")
     };
 
-    private EntityUid RecursivelyGetGridOrMapUid(TransformComponent transformComponent)
-    {
-        if (transformComponent.GridUid is { })
-            return transformComponent.GridUid.Value;
-        else if (transformComponent.MapUid == transformComponent.ParentUid)
-            return transformComponent.ParentUid;
-
-        return RecursivelyGetGridOrMapUid(Transform(transformComponent.ParentUid));
-    }
-
     public void HandleBleedEffects(Entity<BloodstreamComponent?> entity, DamageSpecifier bloodlossSpecifier, EntityUid originUid)
         => HandleBleedEffects(entity, (float)bloodlossSpecifier.GetTotal(), originUid);
 
+    /// <summary>
+    ///     Sprays blood away from <paramref name="originUid"/>, whatever caused the bleeding.
+    /// </summary>
     public void HandleBleedEffects(Entity<BloodstreamComponent?> entity, float bloodloss, EntityUid originUid)
     {
         if (!Resolve(entity, ref entity.Comp) ||
             TerminatingOrDeleted(originUid))
             return;
 
-        var targetTransform = Transform(entity);
-        var originTransform = Transform(originUid);
-
-        var worldDeltaUnit = _transformSystem.GetWorldPosition(targetTransform) - _transformSystem.GetWorldPosition(originTransform);
+        var worldDeltaUnit = _transformSystem.GetWorldPosition(entity.Owner) - _transformSystem.GetWorldPosition(originUid);
 
         Vector2Helpers.Normalize(ref worldDeltaUnit);
-        HandleBleedEffects(entity!, bloodloss, targetTransform, RecursivelyGetGridOrMapUid(originTransform), worldDeltaUnit);
+        HandleBleedEffects(entity!, bloodloss, worldDeltaUnit);
     }
 
-    // TODO: Clean up code
-    // Coder's Ultimatum
-    // TODO LCDC: FUCKING FIX THIS HOLY SHIT! IITS SO EASY
-    // TODO LCDC: READ ABOVE
-    public void HandleBleedEffects(Entity<BloodstreamComponent> entity, float bloodloss, TransformComponent targetTransform, EntityUid parentUid, Vector2 worldDeltaUnit)
+    /// <summary>
+    ///     Sprays blood from <paramref name="entity"/> along <paramref name="worldDeltaUnit"/>, splattering decals on the
+    ///         floor and staining whatever wall stops the spray.
+    /// </summary>
+    /// <remarks>
+    ///     Everything here is worked out in the frame of the broadphase the entity is on (its grid, or its map
+    ///         if it is in space): that is the frame the ray is cast in, the frame its hit point comes back in,
+    ///         and the frame the decals are placed in.
+    /// </remarks>
+    public void HandleBleedEffects(Entity<BloodstreamComponent> entity, float bloodloss, Vector2 worldDeltaUnit)
     {
-        // it shouldnt be 0 ever anyway
         if (bloodloss <= 5f)
             return;
 
@@ -89,9 +81,17 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
         // TODO: fix occasional mispredict here
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_gameTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(entity.Owner, EntityManager));
-        var parentInvWorldMatrix = _transformSystem.GetInvWorldMatrix(parentUid);
 
-        var bloodColor = bloodSolution.GetColor(_prototypeManager);
+        var targetTransform = Transform(entity);
+        if ((targetTransform.GridUid ?? targetTransform.MapUid) is not { } broadphaseUid)
+            return;
+
+        var broadphaseInvWorldMatrix = _transformSystem.GetInvWorldMatrix(broadphaseUid);
+        var localPosition = Vector2.Transform(_transformSystem.GetWorldPosition(targetTransform), broadphaseInvWorldMatrix);
+        // `Transform` instead of `TransformNormal` would apply translation, which a direction must not have.
+        var localDeltaUnit = Vector2.TransformNormal(worldDeltaUnit, broadphaseInvWorldMatrix);
+
+        var bloodColor = bloodSolution.GetColor(ProtoMan);
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.12f, 0.2f)); // random alpha
 
         const float maxPower = 1.75f;
@@ -110,16 +110,12 @@ public sealed partial class BloodSpraySystem : EntitySystem
             totalVariation += variation;
         }
 
-        var localDeltaUnit = worldDeltaUnit;
-        if (targetTransform.ParentUid != targetTransform.MapUid)
-            // `Transform` instead of `TransformNormal` would apply translation which would be HORRIBLE
-            localDeltaUnit = Vector2.TransformNormal(worldDeltaUnit, parentInvWorldMatrix);
-
+        // Casting against one broadphase takes and returns positions local to that broadphase.
         RayResult rayResult = new();
         _rayCastSystem.CastRayClosest(
-            parentUid,
+            broadphaseUid,
             ref rayResult,
-            targetTransform.LocalPosition,
+            localPosition,
             localDeltaUnit * power + totalVariation,
             StaticQueryFilter
         );
@@ -127,15 +123,11 @@ public sealed partial class BloodSpraySystem : EntitySystem
         EntityCoordinates effectCoordinates;
         if (rayResult.Hit)
         {
-            var hitData = rayResult.Results[0];
-
-            // docs for RayHit lie because RayHit.Point isnt the *caller* changing it to local terms, but instead the code constructing it; it is also local to the hit entity's parent(? TODO: confirm that assumption)
-            // tldr `hitData.Point` is relative to `hitData.Entity`'s ParentUid's ParentUid(???) (map?)
-            effectCoordinates = new(targetTransform.ParentUid /* it should just be the hitdatas hit entitys transforms parentuid, but im GIGA LAZY. TODO LCDC FIX ALL THIS SHITT */, hitData.Point);
-            localDeltaUnit *= -1; // it should go other way
+            effectCoordinates = new(broadphaseUid, rayResult.Results[0].Point);
+            localDeltaUnit *= -1; // splatter back off the wall, rather than into it
         }
         else
-            effectCoordinates = new EntityCoordinates(targetTransform.ParentUid, targetTransform.LocalPosition);
+            effectCoordinates = new(broadphaseUid, localPosition);
 
         var accumulatedVariation = Vector2.Zero;
         while (power > 0f)
@@ -156,10 +148,6 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
             power -= iterationDelta;
         }
-
-        // >its while but it looks like you are so good at low level we should demote you to deepseek prompter
-        // TODO: make loop end
-        // TODO: delete todo because i fixed it
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
             _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f), texture: predictedRandom.Pick(Textures));

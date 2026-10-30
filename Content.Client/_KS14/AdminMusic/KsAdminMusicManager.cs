@@ -151,8 +151,8 @@ public sealed partial class KsAdminMusicManager : IPostInjectInit
     {
         var updatedSet = message.Entries.ToHashSet();
 
-        // TODO LCDC: ADMINMUSIC: support changing playback position here im lazy rn
-
+        // An entry's start time is part of what identifies it, so moving a track's playback position is a removal of
+        //      the old entry and an addition of the new one: the new one starts playing from its own start time.
         var activeEntries = _activeEntryData.Keys;
         var addedEntries = updatedSet.Except(activeEntries);
         var removedEntries = activeEntries.Except(updatedSet);

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Atmos.Components;
 using Content.Server.Stunnable;
@@ -152,7 +153,7 @@ namespace Content.Server.Atmos.EntitySystems
                 return;
 
             var isHotEvent = new IsHotEvent();
-            RaiseLocalEvent(args.Used, isHotEvent);
+            RaiseLocalEvent(args.Used, ref /* KS14: by ref */ isHotEvent);
 
             if (!isHotEvent.IsHot)
                 return;
@@ -185,7 +186,7 @@ namespace Content.Server.Atmos.EntitySystems
             }
             else
             {
-                _popup.PopupEntity(Loc.GetString(component.ExtinguishFailed), uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.ExtinguishFailed), uid);
             }
         }
 
@@ -232,7 +233,7 @@ namespace Content.Server.Atmos.EntitySystems
             SetFireStacks(otherUid, avg / mass2, otherFlammable, ignite: true);
         }
 
-        private void OnIsHot(EntityUid uid, FlammableComponent flammable, IsHotEvent args)
+        private void OnIsHot(EntityUid uid, FlammableComponent flammable, ref /* KS14: by ref */ IsHotEvent args)
         {
             args.IsHot = flammable.OnFire;
         }
@@ -305,7 +306,7 @@ namespace Content.Server.Atmos.EntitySystems
             }
             else
             {
-                flammable.OnFire |= ignite;
+                flammable.OnFire |= ignite && (flammable.OnFire || KsCanBurn(uid)) /* KS14: something may keep it from catching fire */;
                 UpdateAppearance(uid, flammable);
             }
         }
@@ -341,7 +342,7 @@ namespace Content.Server.Atmos.EntitySystems
                 flammable.FireStacks = Math.Max(flammable.FirestacksOnIgnite, flammable.FireStacks);
             }
 
-            if (flammable.FireStacks > 0 && !flammable.OnFire)
+            if (flammable.FireStacks > 0 && !flammable.OnFire && KsCanBurn(uid) /* KS14: something may keep it from catching fire */)
             {
                 if (ignitionSourceUser != null)
                     _adminLogger.Add(LogType.Flammable, $"{ToPrettyString(uid):target} set on fire by {ToPrettyString(ignitionSourceUser.Value):actor} with {ToPrettyString(ignitionSource):tool}");
@@ -392,7 +393,7 @@ namespace Content.Server.Atmos.EntitySystems
 
             flammable.ResistCompleteTime = _timing.CurTime + flammable.ResistTime;
 
-            _popup.PopupEntity(Loc.GetString("flammable-component-resist-message"), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flammable-component-resist-message"), uid, uid);
             _stunSystem.TryUpdateParalyzeDuration(uid, flammable.ResistTime);
         }
 
@@ -440,6 +441,18 @@ namespace Content.Server.Atmos.EntitySystems
                     continue;
                 }
 
+                // KS14 start: something may put it out, as foam does
+                if (!KsCanBurn(uid))
+                {
+                    Extinguish(uid, flammable);
+                    if (!flammable.OnFire)
+                    {
+                        _alertsSystem.ClearAlert(uid, flammable.FireAlert);
+                        continue;
+                    }
+                }
+                // KS14 end
+
                 _alertsSystem.ShowAlert(uid, flammable.FireAlert);
 
                 if (flammable.FireStacks > 0)
@@ -457,7 +470,7 @@ namespace Content.Server.Atmos.EntitySystems
                     _ignitionSourceSystem.SetIgnited((uid, source));
 
                     if (TryComp(uid, out TemperatureComponent? temp))
-                        _temperatureSystem.ChangeHeat(uid, 12500 * flammable.FireStacks, false, temp);
+                        _temperatureSystem.ChangeHeat(uid, flammable.HeatPerFireStack /* KS14: 12500 -> datafield */ * flammable.FireStacks, false, temp);
 
                     var ev = new GetFireProtectionEvent();
                     // let the thing on fire handle it

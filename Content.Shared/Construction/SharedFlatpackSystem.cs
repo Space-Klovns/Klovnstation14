@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Construction.Components;
@@ -23,7 +24,6 @@ public abstract partial class SharedFlatpackSystem : EntitySystem
 {
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private INetManager _net = default!;
-    [Dependency] protected IPrototypeManager PrototypeManager = default!;
     [Dependency] private AnchorableSystem _anchorable = default!;
     [Dependency] private MetaDataSystem _metaData = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
@@ -80,7 +80,7 @@ public abstract partial class SharedFlatpackSystem : EntitySystem
             return;
         }
 
-        if (!PrototypeManager.Resolve(comp.Entity, out var proto) ||
+        if (!ProtoMan.Resolve(comp.Entity, out var proto) ||
             !proto.TryGetComponent<FixturesComponent>(out var fixture, EntityManager.ComponentFactory))
         {
             return;
@@ -91,7 +91,7 @@ public abstract partial class SharedFlatpackSystem : EntitySystem
 
         if (!_anchorable.TileFree((grid, gridComp), buildPos, layer, mask))
         {
-            _popup.PopupPredicted(Loc.GetString("flatpack-unpack-no-room"), uid, args.User);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flatpack-unpack-no-room"), uid, args.User);
             return;
         }
 
@@ -120,7 +120,7 @@ public abstract partial class SharedFlatpackSystem : EntitySystem
             return;
 
         ent.Comp.Entity = proto;
-        var machinePrototype = PrototypeManager.Index<EntityPrototype>(proto);
+        var machinePrototype = ProtoMan.Index<EntityPrototype>(proto);
 
         var meta = MetaData(ent);
         _metaData.SetEntityName(ent, Loc.GetString("flatpack-entity-name", ("name", machinePrototype.Name)), meta);

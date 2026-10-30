@@ -12,23 +12,19 @@ public sealed partial class AnchorlessHorrorVisualSystem : EntitySystem
 
     private readonly Dictionary<EntityUid, List<bool>> _hiddenLayers = new();
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<AnchorlessHorrorVisualComponent, ComponentStartup>(OnVisualStartup);
-        SubscribeLocalEvent<AnchorlessHorrorVisualComponent, ComponentShutdown>(OnVisualShutdown);
-        SubscribeLocalEvent<AnchorlessHorrorVisualComponent, AfterAutoHandleStateEvent>(OnVisualStateChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnVisualStartup(Entity<AnchorlessHorrorVisualComponent> ent, ref ComponentStartup args)
     {
         UpdateVisual(ent);
     }
 
+    [SubscribeLocalEvent]
     private void OnVisualShutdown(Entity<AnchorlessHorrorVisualComponent> ent, ref ComponentShutdown args)
     {
         RemoveVisual(ent);
     }
 
+    [SubscribeLocalEvent]
     private void OnVisualStateChanged(Entity<AnchorlessHorrorVisualComponent> ent, ref AfterAutoHandleStateEvent args)
     {
         UpdateVisual(ent);

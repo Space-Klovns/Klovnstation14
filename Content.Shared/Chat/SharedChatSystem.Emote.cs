@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Collections.Frozen;
 using Content.Shared._KS14.Chat; // KS14
 using Content.Shared.Chat.Prototypes;
@@ -15,7 +16,7 @@ public abstract partial class SharedChatSystem
     private void CacheEmotes()
     {
         var dict = new Dictionary<string, EmotePrototype>();
-        var emotes = _prototypeManager.EnumeratePrototypes<EmotePrototype>();
+        var emotes = ProtoMan.EnumeratePrototypes<EmotePrototype>();
         foreach (var emote in emotes)
         {
             foreach (var word in emote.ChatTriggers)
@@ -60,7 +61,7 @@ public abstract partial class SharedChatSystem
         Filter? networkedFilter = null /* KS14 */
     )
     {
-        if (!_prototypeManager.Resolve<EmotePrototype>(emoteId, out var proto))
+        if (!ProtoMan.Resolve<EmotePrototype>(emoteId, out var proto))
             return false;
 
         return TryEmoteWithChat(source, proto, range, hideLog: hideLog, nameOverride, ignoreActionBlocker: ignoreActionBlocker, forceEmote: forceEmote, networkedFilter: networkedFilter /* KS14 */);
@@ -114,7 +115,7 @@ public abstract partial class SharedChatSystem
     /// <returns>True if an emote was performed. False if the emote is unavailable, cancelled, etc.</returns>
     public bool TryEmoteWithoutChat(EntityUid uid, string emoteId, bool ignoreActionBlocker = false, Filter? networkedFilter = null /* KS14*/)
     {
-        if (!_prototypeManager.Resolve<EmotePrototype>(emoteId, out var proto))
+        if (!ProtoMan.Resolve<EmotePrototype>(emoteId, out var proto))
             return false;
 
         return TryEmoteWithoutChat(uid, proto, ignoreActionBlocker, networkedFilter: networkedFilter /* KS14 */);
@@ -246,9 +247,9 @@ public abstract partial class SharedChatSystem
             if (beforeEv.Blocker != null)
             {
                 _popup.PopupEntity(
-                    Loc.GetString(
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */(
                         "chat-system-emote-cancelled-blocked",
-                        ("emote", Loc.GetString(proto.Name).ToLower()),
+                        ("emote", KsPopupMessage.Create(proto.Name).ToLower()),
                         ("blocker", beforeEv.Blocker.Value)
                     ),
                     uid,
@@ -258,8 +259,8 @@ public abstract partial class SharedChatSystem
             else
             {
                 _popup.PopupEntity(
-                    Loc.GetString("chat-system-emote-cancelled-generic",
-                        ("emote", Loc.GetString(proto.Name).ToLower())),
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("chat-system-emote-cancelled-generic",
+                        ("emote", KsPopupMessage.Create(proto.Name).ToLower())),
                     uid,
                     uid
                 );

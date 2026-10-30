@@ -6,7 +6,6 @@ namespace Content.Client._KS14.WetOverlay;
 
 public sealed partial class KsWetOverlaySystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
@@ -20,7 +19,7 @@ public sealed partial class KsWetOverlaySystem : EntitySystem
 
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
-        var overlay = new KsWetOverlay(_prototypeManager.Index(ShaderId).InstanceUnique());
+        var overlay = new KsWetOverlay(ProtoMan.Index(ShaderId).InstanceUnique());
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
         _overlayManager.AddOverlay(overlay);

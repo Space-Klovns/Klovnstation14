@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Atmos.Components;
 using Content.Shared.Construction.Components;
 using Content.Shared.Popups;
@@ -9,14 +10,7 @@ public abstract partial class SharedGasPistonSystem : EntitySystem
 {
     [Dependency] protected SharedPopupSystem PopupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GasPistonComponent, UnanchorAttemptEvent>(OnUnanchorAttempt);
-        SubscribeLocalEvent<GasPistonComponent, AttemptChangePanelEvent>(OnAttemptChangePanel);
-    }
-
+    [SubscribeLocalEvent]
     private void OnUnanchorAttempt(Entity<GasPistonComponent> entity, ref UnanchorAttemptEvent args)
     {
         // Cancel unanchor if piston is extended or something
@@ -26,9 +20,10 @@ public abstract partial class SharedGasPistonSystem : EntitySystem
             return;
 
         args.Cancel();
-        PopupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, args.User);
+        PopupSystem.PopupPredicted(KsPopupMessage.Create("gas-piston-popup-retractfirst"), entity.Owner, args.User);
     }
 
+    [SubscribeLocalEvent]
     private void OnAttemptChangePanel(Entity<GasPistonComponent> entity, ref AttemptChangePanelEvent args)
     {
         // Don't let wirepanel be opened/closed if piston is extended (to prevent construction or something)
@@ -40,6 +35,6 @@ public abstract partial class SharedGasPistonSystem : EntitySystem
         args.Cancelled = true;
 
         if (args.User is { } userUid)
-            PopupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, userUid);
+            PopupSystem.PopupPredicted(KsPopupMessage.Create("gas-piston-popup-retractfirst"), entity.Owner, userUid);
     }
 }

@@ -34,7 +34,6 @@ public sealed partial class SmokeSystem : EntitySystem
     [Dependency] private IAdminLogManager _logger = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedMapSystem _map = default!;
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private AppearanceSystem _appearance = default!;
     [Dependency] private BloodstreamSystem _blood = default!;
@@ -306,13 +305,23 @@ public sealed partial class SmokeSystem : EntitySystem
 
         var tile = _map.GetTileRef(xform.GridUid.Value, mapGrid, xform.Coordinates);
 
+        EqualizeTemperatureWithPuddle(component.Solution!.Value, tile); // KS14: puddle heat exchange, before ReactionTile
+
+        using var ksTemperatureScope = _puddleSystem.KsBeginTileReactionTemperature(solution.Temperature); // KS14: tile reactions that spill read the smoke's temperature
+
         foreach (var reagentQuantity in solution.Contents.ToArray())
         {
             if (reagentQuantity.Quantity == FixedPoint2.Zero)
                 continue;
 
-            var reagent = _prototype.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
-            reagent.ReactionTile(tile, reagentQuantity.Quantity, EntityManager, reagentQuantity.Reagent.Data);
+            var reagent = ProtoMan.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
+            /* KS14: was reagent.ReactionTile(...) with the result ignored */
+            var consumed = ReactionTileConsumingExtinguish(tile, reagent, reagentQuantity.Quantity, reagentQuantity.Reagent.Data);
+
+            // KS14 start: water boiled off by an extinguish reaction leaves the smoke
+            if (consumed > FixedPoint2.Zero)
+                _solutionContainerSystem.RemoveReagent(component.Solution!.Value, reagentQuantity.Reagent, FixedPoint2.Min(consumed, reagentQuantity.Quantity));
+            // KS14 end
         }
     }
 
@@ -342,7 +351,7 @@ public sealed partial class SmokeSystem : EntitySystem
             !_solutionContainerSystem.ResolveSolution(smoke.Owner, SmokeComponent.SolutionName, ref smoke.Comp1.Solution, out var solution))
             return;
 
-        var color = solution.GetColor(_prototype);
+        var color = solution.GetColor(ProtoMan);
         _appearance.SetData(smoke.Owner, SmokeVisuals.Color, color, smoke.Comp2);
     }
 }

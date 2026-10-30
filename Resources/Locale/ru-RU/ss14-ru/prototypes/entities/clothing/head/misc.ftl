@@ -1,0 +1,63 @@
+ent-ActionBecomeValid = Become Valid
+    .desc = *замечает ваш знак смерти* owo whats this
+
+ent-ClothingHeadHatBunny = кроличьи ушки
+    .desc = Милые ушки кролика.
+
+ent-ClothingHeadHatCake = шляпа с тортом
+    .desc = Вы надели торт на голову. Гениально.
+
+ent-ClothingHeadHatCatEars = кошачьи ушки
+    .desc = НЯ!
+
+ent-ClothingHeadHatCatEarsValid = { ent-ClothingHeadHatCatEars }
+    .desc = { ent-ClothingHeadHatCatEars.desc }
+    .suffix = Valid, НЕ МАППИТЬ!
+
+ent-ClothingHeadHatChickenhead = голова цыплёнка
+    .desc = Это голова цыплёнка. Бок-бок-бок!
+
+ent-ClothingHeadHatCone = предупредительный конус
+    .desc = Этот конус пытается вас о чём-то предупредить!
+
+ent-ClothingHeadHatDogEars = собачьи ушки
+    .desc = Только для хороших мальчиков.
+
+ent-ClothingHeadHatFancyCrown = причудливая корона
+    .desc = Пахнет дохлой крысой. Позволяет тебе говорить как она!
+
+ent-ClothingHeadHatFlowerWreath = цветочный венок
+    .desc = Венок из красочных цветов. Можно носить как на голове, так и на шее.
+
+ent-ClothingHeadHatHairflower = цветок для волос
+    .desc = Красивый цветок для волос, который можно вставить между локонами.
+
+ent-ClothingHeadHatPumpkin = шляпа из тыквы
+    .desc = Светильник Джека! Считается, что он отпугивает злых духов.
+
+ent-ClothingHeadHatPwig = напудренный парик
+    .desc = Нелепо? Судите сами.
+
+ent-ClothingHeadHatRedRacoon = шапка рыжего енота
+    .desc = Пушистая шапка рыжего енота!
+
+ent-ClothingHeadHatRichard = Ричард
+    .desc = Тебе нравится причинять боль людям?
+
+ent-ClothingHeadHatShrineMaidenWig = парик святой девы
+    .desc = На этикетке написано: "Все вырученные средства пойдут в храм Хакурей".
+
+ent-ClothingHeadHatSkub = шапка скаб
+    .desc = Лучше всего сочетается с костюмом скаба.
+
+ent-ClothingHeadHatSquid = сквидди
+    .desc = Напугайте своих друзей этой маской древнего ужаса.
+
+ent-ClothingHeadMirror = налобный рефлектор
+    .desc = Сомневаюсь, что даже главный врач знает, как пользоваться этой штукой.
+
+ent-ClothingHeadPerformerWig = парик артиста
+    .desc = При детальном рассмотрении оказывается, что он сделан из оптического волокна.
+
+ent-WaterDropletHat = капелька воды
+    .desc = Делает 8-глазых друзей в 8 раз очаровательнее!

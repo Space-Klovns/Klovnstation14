@@ -4,19 +4,9 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.WormWithoutOrgans;
 
-// TODO LCDC: optimise too somehow
-
 public sealed partial class WormWithoutOrgansSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<WormWithoutOrgansComponent, OrganInsertedIntoEvent>(OnOrganInserted);
-        SubscribeLocalEvent<WormWithoutOrgansComponent, OrganRemovedFromEvent>(OnOrganRemoved);
-    }
 
     private static bool HasAllRequiredOrgans(Entity<WormWithoutOrgansComponent> entity, BodyComponent bodyComponent)
     {
@@ -31,23 +21,34 @@ public sealed partial class WormWithoutOrgansSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    ///     Whether gaining or losing this organ can change <see cref="HasAllRequiredOrgans"/>.
+    /// </summary>
+    private static bool IsRequiredOrgan(Entity<WormWithoutOrgansComponent> entity, OrganComponent organComponent)
+        => organComponent.Category is { } category && entity.Comp.Categories.Contains(category);
+
+    [SubscribeLocalEvent]
     private void OnOrganInserted(Entity<WormWithoutOrgansComponent> entity, ref OrganInsertedIntoEvent args)
     {
         if (_gameTiming.ApplyingState)
             return;
 
-        if (!HasAllRequiredOrgans(entity, args.BodyComponent))
+        if (!IsRequiredOrgan(entity, args.OrganComponent) ||
+            !HasComp<WormComponent>(entity) ||
+            !HasAllRequiredOrgans(entity, args.BodyComponent))
             return;
 
         RemComp<WormComponent>(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnOrganRemoved(Entity<WormWithoutOrgansComponent> entity, ref OrganRemovedFromEvent args)
     {
         if (_gameTiming.ApplyingState)
             return;
 
-        if (HasComp<WormComponent>(entity) ||
+        if (!IsRequiredOrgan(entity, args.OrganComponent) ||
+            HasComp<WormComponent>(entity) ||
             HasAllRequiredOrgans(entity, args.BodyComponent))
             return;
 

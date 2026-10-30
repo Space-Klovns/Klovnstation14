@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
 using Content.Shared.Lathe;
@@ -56,7 +57,7 @@ public sealed partial class BlueprintSystem : EntitySystem
             var userId = Identity.Entity(user.Value, EntityManager);
             var bpId = Identity.Entity(blueprint, EntityManager);
             var machineId = Identity.Entity(ent, EntityManager);
-            var msg = Loc.GetString("blueprint-receiver-popup-insert",
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("blueprint-receiver-popup-insert",
                 ("user", userId),
                 ("blueprint", bpId),
                 ("receiver", machineId));
@@ -87,7 +88,7 @@ public sealed partial class BlueprintSystem : EntitySystem
         var currentRecipes = GetBlueprintRecipes(ent);
         if (currentRecipes.Count != 0 && currentRecipes.IsSupersetOf(blueprint.Comp.ProvidedRecipes))
         {
-            _popup.PopupPredicted(Loc.GetString("blueprint-receiver-popup-recipe-exists"), ent, user);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("blueprint-receiver-popup-recipe-exists"), ent, user);
             return false;
         }
 

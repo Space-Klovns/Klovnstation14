@@ -47,6 +47,9 @@ public sealed partial class SpeakOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
+        if (KsIsSilenced(blackboard)) // KS14: a voice set can leave some lines unsaid
+            return base.Update(blackboard, frameTime);
+
         if (Cooldown != TimeSpan.Zero && CooldownID != string.Empty)
         {
             if (blackboard.TryGetValue<TimeSpan>(CooldownID, out var nextSpeechTime, _entMan) && _gameTiming.CurTime < nextSpeechTime)
@@ -59,7 +62,7 @@ public sealed partial class SpeakOperator : HTNOperator
         switch (Speech)
         {
             case LocalizedSetSpeakOperatorSpeech localizedDataSet:
-                if (!_proto.TryIndex(localizedDataSet.LineSet, out var speechSet))
+                if (!_proto.TryIndex(KsResolveLineSet(blackboard, localizedDataSet.LineSet) /* KS14: per-mob voice sets */, out var speechSet))
                     return HTNOperatorStatus.Failed;
                 speechLocId = _random.Pick(speechSet);
                 break;

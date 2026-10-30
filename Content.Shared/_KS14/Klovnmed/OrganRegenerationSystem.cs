@@ -1,8 +1,10 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Body;
 using Content.Shared.Popups;
 using Content.Shared.Rejuvenate;
 using Robust.Shared.Containers;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Klovnmed;
 
@@ -20,20 +22,11 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
 
     private static readonly LocId PopupLocId = "ks-klovnmed-organ-regen-popup";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        // thievery
-        SubscribeLocalEvent<InitialBodyComponent, RejuvenateEvent>(OnRejuvenate);
-    }
-
+    [SubscribeLocalEvent]
     private void OnRejuvenate(Entity<InitialBodyComponent> entity, ref RejuvenateEvent args)
     {
         RegenerateForBody(entity!);
     }
-
-    // TODO LCDC: option for whitelist of categories to regen?
 
     /// <summary>
     ///     Called on a body/organ to regenerate some number of organs and suborgans.
@@ -41,7 +34,11 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
     /// <returns>List of organs re-generated.</returns>
     /// <param name="entity">Body/organ to regenerate organs on.</param>
     /// <param name="maxCount">Maximum number of organs to regenerate. Null to regen all possible organs.</param>
-    public List<EntityUid>? RegenerateForBody(Entity<InitialBodyComponent?, BodyComponent?> entity, int? maxCount = null)
+    /// <param name="categoryWhitelist">
+    ///     If not null, only organs of these categories are regenerated. Organs of other categories are still looked
+    ///         through for missing children, but a missing one is not regrown, so neither is anything under it.
+    /// </param>
+    public List<EntityUid>? RegenerateForBody(Entity<InitialBodyComponent?, BodyComponent?> entity, int? maxCount = null, IReadOnlySet<ProtoId<OrganCategoryPrototype>>? categoryWhitelist = null)
     {
         if (maxCount == 0)
             return null;
@@ -54,7 +51,7 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
         var list = new List<EntityUid>();
         foreach (var initialBodyPart in entity.Comp1.Organs)
         {
-            AddOrgan((entity.Owner, entity.Comp2), container, initialBodyPart, list, maxCount: ref maxCount);
+            AddOrgan((entity.Owner, entity.Comp2), container, initialBodyPart, list, categoryWhitelist, maxCount: ref maxCount);
 
             if (maxCount == 0)
                 break;
@@ -63,17 +60,18 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
         return list;
     }
 
-    private void AddOrgan(in Entity<BodyComponent> bodyEntity, BaseContainer parentOrganContainer, InitialBodyPart datum, List<EntityUid> spawnedUidList, ref int? maxCount)
+    private void AddOrgan(in Entity<BodyComponent> bodyEntity, BaseContainer parentOrganContainer, InitialBodyPart datum, List<EntityUid> spawnedUidList, IReadOnlySet<ProtoId<OrganCategoryPrototype>>? categoryWhitelist, ref int? maxCount)
     {
-        if (!bodyEntity.Comp.PresentOrganCategories.ContainsKey(datum.Category))
+        if (!bodyEntity.Comp.PresentOrganCategories.ContainsKey(datum.Category) &&
+            (categoryWhitelist is null || categoryWhitelist.Contains(datum.Category)))
         {
-            var spawnedUid = EntityManager.PredictedSpawn(datum.Entity);
+            var spawnedUid = PredictedSpawn(datum.Entity);
             spawnedUidList.Add(spawnedUid);
             _containerSystem.Insert(spawnedUid, parentOrganContainer);
 
             // bruh
             if (_netManager.IsServer)
-                _popupSystem.PopupEntity(Loc.GetString(PopupLocId, ("name", Name(spawnedUid))), bodyEntity.Owner, bodyEntity.Owner);
+                _popupSystem.PopupEntity(KsPopupMessage.Create(PopupLocId, ("name", new KsPopupPrototypeName(datum.Entity))), bodyEntity.Owner, bodyEntity.Owner);
 
             if (maxCount is { } &&
                 --maxCount == 0)
@@ -87,7 +85,7 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
 
         foreach (var childDatum in children)
         {
-            AddOrgan(bodyEntity, childParentOrganContainer, childDatum, spawnedUidList, maxCount: ref maxCount);
+            AddOrgan(bodyEntity, childParentOrganContainer, childDatum, spawnedUidList, categoryWhitelist, maxCount: ref maxCount);
 
             if (maxCount == 0)
                 return;

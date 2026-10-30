@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using Content.Shared._KS14.PopupLocalization; // KS14
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.FixedPoint;
 using Content.Shared.Implants;
@@ -18,7 +19,6 @@ namespace Content.Shared.Store;
 /// </summary>
 public abstract partial class SharedStoreSystem : EntitySystem
 {
-    [Dependency] protected IPrototypeManager Proto = default!;
     [Dependency] protected SharedMindSystem Mind = default!;
     [Dependency] protected SharedPopupSystem Popup = default!;
     [Dependency] protected SharedStackSystem Stack = default!;
@@ -84,7 +84,7 @@ public abstract partial class SharedStoreSystem : EntitySystem
             return;
 
         args.Handled = true;
-        var msg = Loc.GetString("store-currency-inserted", ("used", args.Used), ("target", ev.TargetOverride ?? target));
+        var msg = KsPopupMessage.Create /* KS14: defer popup translation */("store-currency-inserted", ("used", args.Used), ("target", ev.TargetOverride ?? target));
         Popup.PopupEntity(msg, target, args.User);
     }
 
@@ -154,7 +154,7 @@ public abstract partial class SharedStoreSystem : EntitySystem
     /// <param name="uid"></param>
     /// <param name="component"></param>
     /// <returns>The value of the currency</returns>
-    public Dictionary<string, FixedPoint2> GetCurrencyValue(EntityUid uid, CurrencyComponent component)
+    public Dictionary<ProtoId<CurrencyPrototype>, FixedPoint2> GetCurrencyValue(EntityUid uid, CurrencyComponent component)
     {
         var amount = EntityManager.GetComponentOrNull<StackComponent>(uid)?.Count ?? 1;
         return component.Price.ToDictionary(v => v.Key, p => p.Value * amount);
@@ -198,7 +198,7 @@ public abstract partial class SharedStoreSystem : EntitySystem
     /// <param name="uid"></param>
     /// <param name="store">The store to add it to</param>
     /// <returns>Whether or not the currency was succesfully added</returns>
-    public bool TryAddCurrency(Dictionary<string, FixedPoint2> currency, EntityUid uid, StoreComponent? store = null)
+    public bool TryAddCurrency(Dictionary<ProtoId<CurrencyPrototype>, FixedPoint2> currency, EntityUid uid, StoreComponent? store = null)
     {
         if (!Resolve(uid, ref store))
             return false;

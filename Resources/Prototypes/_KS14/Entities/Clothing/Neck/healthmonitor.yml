@@ -5,9 +5,9 @@
   description: A small, wearable device that outputs a signal when its wearer goes crit or dies.
   components:
   - type: Sprite
-    sprite: _KS14/Clothing/Neck/Misc/healthmonitor.rsi
+    sprite: _KS14/Objects/Signal/healthmonitor.rsi
   - type: Clothing
-    sprite: _KS14/Clothing/Neck/Misc/healthmonitor.rsi
+    sprite: _KS14/Objects/Signal/healthmonitor.rsi
   - type: StaticPrice
     price: 40
   - type: DeviceLinkSource

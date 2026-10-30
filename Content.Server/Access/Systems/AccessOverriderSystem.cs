@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Popups;
 using Content.Shared.Access;
@@ -185,7 +186,7 @@ public sealed partial class AccessOverriderSystem : SharedAccessOverriderSystem
 
         if (!_interactionSystem.InRangeUnobstructed(player, component.TargetAccessReaderId))
         {
-            _popupSystem.PopupEntity(Loc.GetString("access-overrider-out-of-range"), player, player);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("access-overrider-out-of-range"), player, player);
 
             return;
         }
@@ -218,7 +219,7 @@ public sealed partial class AccessOverriderSystem : SharedAccessOverriderSystem
         if (!oldTags.ToHashSet().IsSubsetOf(privilegedPerms))
         {
             _sawmill.Warning($"User {ToPrettyString(uid)} tried to modify permissions when they do not have sufficient access!");
-            _popupSystem.PopupEntity(Loc.GetString("access-overrider-cannot-modify-access"), player, player);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("access-overrider-cannot-modify-access"), player, player);
             _audioSystem.PlayPvs(component.DenialSound, uid);
 
             return;

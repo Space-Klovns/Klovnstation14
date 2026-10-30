@@ -349,7 +349,7 @@ public sealed partial class AntagSelectionSystem : GameRuleSystem<AntagSelection
     private float GetWeight(ICommonSession player)
     {
         // TODO: Actually add weights! This is placeholder for a future PR.
-        return 1f;
+        return GetPityWeight(player); // KS14: 1f -> antag pity, see AntagSelectionSystem.Klovn.Pity.cs
     }
 
     private void AssignAntags(Entity<AntagSelectionComponent> gameRule)

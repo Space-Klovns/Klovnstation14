@@ -8,7 +8,6 @@ namespace Content.Client.Overlays;
 
 public sealed partial class ShowCriminalRecordIconsSystem : EquipmentHudSystem<ShowCriminalRecordIconsComponent>
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
 
     public override void Initialize()
     {
@@ -22,7 +21,7 @@ public sealed partial class ShowCriminalRecordIconsSystem : EquipmentHudSystem<S
         if (!IsActive)
             return;
 
-        if (_prototype.Resolve(component.StatusIcon, out var iconPrototype))
+        if (ProtoMan.Resolve(component.StatusIcon, out var iconPrototype))
             ev.StatusIcons.Add(iconPrototype);
     }
 }

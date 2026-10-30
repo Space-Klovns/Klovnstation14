@@ -14,14 +14,6 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ChemicalFireGasConsumerComponent, ChemicalFireHeatTileEvent>(OnHeatTile);
-        SubscribeLocalEvent<ChemicalFireGasConsumerComponent, ChemicalFireCanSustainEvent>(OnCanSustain);
-    }
-
     /// <summary>
     ///     Vetoes survival unless at least one of <see cref="ChemicalFireGasConsumerComponent.Gases"/> clears
     ///         the same trace threshold upstream's own fuel/oxidiser hotspot check uses - mirrors the
@@ -34,30 +26,56 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     ///         correct it if it turns out to be wrong. An immutable mixture (space) is real data, so that still
     ///         vetoes.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnCanSustain(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireCanSustainEvent args)
     {
         if (args.Mixture is not { } mixture)
             return;
 
-        if (mixture.Immutable)
-        {
+        if (mixture.Immutable || IsStarved(entity.Comp, mixture))
             args.Deny();
-            return;
-        }
-
-        foreach (var gas in entity.Comp.Gases.Keys)
-        {
-            if (mixture.GetMoles(gas) >= Atmospherics.Epsilon)
-                return;
-        }
-
-        args.Deny();
     }
 
+    /// <summary>
+    ///     Whether the tile has too little of what the chemfire burns: none of its gases above a trace, or less of them
+    ///         together than <see cref="ChemicalFireGasConsumerComponent.MinimumMoleFraction"/>.
+    /// </summary>
+    public static bool IsStarved(ChemicalFireGasConsumerComponent component, GasMixture mixture)
+    {
+        var anyAboveTrace = false;
+        var moles = 0f;
+        foreach (var gas in component.Gases.Keys)
+        {
+            var gasMoles = mixture.GetMoles(gas);
+            anyAboveTrace |= gasMoles >= Atmospherics.Epsilon;
+            moles += gasMoles;
+        }
+
+        if (!anyAboveTrace)
+            return true;
+
+        if (component.MinimumMoleFraction <= 0f)
+            return false;
+
+        var totalMoles = mixture.TotalMoles;
+        return totalMoles <= 0f || moles / totalMoles < component.MinimumMoleFraction;
+    }
+
+    [SubscribeLocalEvent]
     private void OnHeatTile(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
         if (args.Mixture is not { } mixture || mixture.Immutable)
             return;
+
+        // Starved before it eats anything this tick: crowded out, rather than burnt through.
+        if (entity.Comp.ExtinguishWhenDepleted &&
+            entity.Comp.MinimumMoleFraction > 0f &&
+            IsStarved(entity.Comp, mixture) &&
+            _chemicalFireQuery.TryGetComponent(entity.Owner, out var starvedFireComponent))
+        {
+            _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, starvedFireComponent), playSound: true);
+            return;
+        }
 
         var consumedAmount = 0f;
         foreach (var (gas, molesPerSecond) in entity.Comp.Gases)
@@ -91,6 +109,6 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
             !_chemicalFireQuery.TryGetComponent(entity.Owner, out var fireComponent))
             return;
 
-        _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, fireComponent));
+        _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, fireComponent), playSound: true);
     }
 }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server.Cargo.Components;
@@ -65,7 +66,7 @@ namespace Content.Server.Cargo.Systems
             if (!TryGetOrderDatabase(stationUid, out var orderDatabase))
                 return;
 
-            if (!_protoMan.TryIndex(slip.Product, out var product))
+            if (!ProtoMan.TryIndex(slip.Product, out var product))
             {
                 Log.Error($"Tried to add invalid cargo product {slip.Product} as order!");
                 return;
@@ -147,7 +148,7 @@ namespace Content.Server.Cargo.Systems
 
             if (!_accessReaderSystem.IsAllowed(player, uid))
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-order-not-allowed"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-order-not-allowed"));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -159,22 +160,22 @@ namespace Content.Server.Cargo.Systems
                 !TryComp(station, out StationDataComponent? stationData) ||
                 !TryGetOrderDatabase(station, out var orderDatabase))
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-station-not-found"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-station-not-found"));
                 PlayDenySound(uid, component);
                 return;
             }
 
             // Find our order again. It might have been dispatched or approved already
             var order = orderDatabase.Orders[component.Account].Find(order => args.OrderId == order.OrderId && !order.Approved);
-            if (order == null || !_protoMan.Resolve(order.Account, out var account))
+            if (order == null || !ProtoMan.Resolve(order.Account, out var account))
             {
                 return;
             }
 
             // Invalid order
-            if (!_protoMan.Resolve(order.Product, out var product))
+            if (!ProtoMan.Resolve(order.Product, out var product))
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-invalid-product"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-invalid-product"));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -185,7 +186,7 @@ namespace Content.Server.Cargo.Systems
             // Too many orders, avoid them getting spammed in the UI.
             if (amount >= capacity)
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-too-many"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-too-many"));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -196,7 +197,7 @@ namespace Content.Server.Cargo.Systems
             if (cappedAmount != order.OrderQuantity)
             {
                 order.OrderQuantity = cappedAmount;
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-snip-snip"));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-snip-snip"));
                 PlayDenySound(uid, component);
             }
 
@@ -206,7 +207,7 @@ namespace Content.Server.Cargo.Systems
             // Not enough balance
             if (cost > accountBalance)
             {
-                ConsolePopup(args.Actor, Loc.GetString("cargo-console-insufficient-funds", ("cost", cost)));
+                ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-insufficient-funds", ("cost", cost)));
                 PlayDenySound(uid, component);
                 return;
             }
@@ -221,7 +222,7 @@ namespace Content.Server.Cargo.Systems
 
                 if (ev.FulfillmentEntity == null)
                 {
-                    ConsolePopup(args.Actor, Loc.GetString("cargo-console-unfulfilled"));
+                    ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-unfulfilled"));
                     PlayDenySound(uid, component);
                     return;
                 }
@@ -244,7 +245,7 @@ namespace Content.Server.Cargo.Systems
                     _radio.SendRadioMessage(uid, message, CargoOrderConsoleComponent.BaseAnnouncementChannel, uid, escapeMarkup: false);
             }
 
-            ConsolePopup(args.Actor, Loc.GetString("cargo-console-trade-station", ("destination", MetaData(ev.FulfillmentEntity.Value).EntityName)));
+            ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-trade-station", ("destination", MetaData(ev.FulfillmentEntity.Value).EntityName)));
 
             // Log order approval
             _adminLogger.Add(LogType.Action,
@@ -319,7 +320,7 @@ namespace Content.Server.Cargo.Systems
 
         private void OnAddOrderMessageSlipPrinter(EntityUid uid, CargoOrderConsoleComponent component, CargoConsoleAddOrderMessage args, CargoProductPrototype product)
         {
-            if (!_protoMan.Resolve(component.Account, out var account))
+            if (!ProtoMan.Resolve(component.Account, out var account))
                 return;
 
             if (Timing.CurTime < component.NextPrintTime)
@@ -366,7 +367,7 @@ namespace Content.Server.Cargo.Systems
             if (!TryComp<StationBankAccountComponent>(stationUid, out var bank))
                 return;
 
-            if (!_protoMan.TryIndex<CargoProductPrototype>(args.CargoProductId, out var product))
+            if (!ProtoMan.TryIndex<CargoProductPrototype>(args.CargoProductId, out var product))
             {
                 Log.Error($"Tried to add invalid cargo product {args.CargoProductId} as order!");
                 return;
@@ -447,7 +448,7 @@ namespace Content.Server.Cargo.Systems
             return ourOrders.Concat(otherOrders).ToList();
         }
 
-        private void ConsolePopup(EntityUid actor, string text)
+        private void ConsolePopup(EntityUid actor, KsPopupMessage /* KS14: keep helper messages deferred */ text)
         {
             _popup.PopupCursor(text, actor);
         }
@@ -612,7 +613,7 @@ namespace Content.Server.Cargo.Systems
         /// </summary>
         private bool FulfillOrder(CargoOrderData order, ProtoId<CargoAccountPrototype> account, EntityCoordinates spawn, string? paperProto)
         {
-            if (!_protoMan.Resolve(order.Product, out var product))
+            if (!ProtoMan.Resolve(order.Product, out var product))
                 return false;
 
             // Create the item itself
@@ -649,7 +650,7 @@ namespace Content.Server.Cargo.Systems
                 var val = Loc.GetString("cargo-console-paper-print-name", ("orderNumber", order.OrderId));
                 _metaSystem.SetEntityName(printed, val);
 
-                var accountProto = _protoMan.Index(account);
+                var accountProto = ProtoMan.Index(account);
                 _paperSystem.SetContent((printed, paper),
                     Loc.GetString(
                         "cargo-console-paper-print-text",
@@ -685,7 +686,7 @@ namespace Content.Server.Cargo.Systems
 
             // Note that a market must be both on the station and on the console to be available.
             var markets = ent.Comp.AllowedGroups.Intersect(db.Markets).ToList();
-            foreach (var product in _protoMan.EnumeratePrototypes<CargoProductPrototype>())
+            foreach (var product in ProtoMan.EnumeratePrototypes<CargoProductPrototype>())
             {
                 if (!markets.Contains(product.Group))
                     continue;

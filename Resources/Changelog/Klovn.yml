@@ -2006,3 +2006,408 @@ Entries:
       message: Laser projectiles now go thru windows
   id: 207
   time: '2026-09-07T17:45:21.0000000+00:00'
+- author: FloraMillhouse
+  changes:
+    - type: Add
+      message: Added new items to the theatre vending machine.
+  id: 208
+  time: '2026-09-16T19:27:04.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Blood spray is now predicted
+  id: 209
+  time: '2026-09-17T13:11:13.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Falling down Z-levels is no longer instant. You can also drop *large*
+        things down Z-levels to hit things.
+    - type: Tweak
+      message: Falling down Z-levels now does damage.
+  id: 210
+  time: '2026-09-18T14:14:04.0000000+00:00'
+- author: NazrinNya
+  changes:
+    - type: Add
+      message: Added Packet networks. Check your CE locker.
+  id: 211
+  time: '2026-09-19T14:25:19.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: IV drips
+    - type: Add
+      message: Mass rejuv marker for admins
+    - type: Add
+      message: Action folders
+    - type: Add
+      message: Action layout persistence
+    - type: Add
+      message: Guidebook entry for the Anchorless antagonist
+    - type: Tweak
+      message: Eshield now self recharges
+    - type: Tweak
+      message: Massive improvements to the mapping system
+  id: 212
+  time: '2026-09-19T17:45:28.0000000+00:00'
+- author: ResomiDumbass
+  changes:
+    - type: Tweak
+      message: Buffed inaprovaline, it heals double the amount it did before.
+  id: 213
+  time: '2026-09-20T18:37:55.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Fixed some rendering (items in bags being offset, wire panels), puddle
+        mispredicts, and stealth shader.
+  id: 214
+  time: '2026-09-21T05:21:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed decals not showing up on elevators sometimes.
+  id: 215
+  time: '2026-09-24T11:35:58.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: You can no longer shoot/attack while committing suicide.
+  id: 216
+  time: '2026-09-25T23:47:33.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Argon has been renamed to Encalite.
+  id: 217
+  time: '2026-09-26T08:50:25.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed popups not showing for suicide-blocked attacks.
+  id: 218
+  time: '2026-09-26T09:10:02.0000000+00:00'
+- author: Anthropic
+  changes:
+    - type: Add
+      message: >-
+        Faxing Central Command may occasionally give you an automated response.
+        Sometimes.
+  id: 219
+  time: '2026-09-26T10:45:54.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed RPG rockets sometimes just not exploding on things
+  id: 220
+  time: '2026-09-26T13:00:12.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        The centcom AI can now send the station nuke codes, transfer funds, and
+        send cargo.
+  id: 221
+  time: '2026-09-26T14:10:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: You now sound funny when doing emotes through a mask.
+  id: 222
+  time: '2026-09-26T15:40:02.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added proximity voice chat. Open your voice link from the options menu,
+        then hold the push-to-talk key (default N) to talk to people nearby.
+  id: 223
+  time: '2026-09-28T15:39:13.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Voice chat now uses the Opus codec, for much clearer audio.
+    - type: Add
+      message: >-
+        Voice chat has a voice activation option (Options → Klovnstation 14) for
+        talking without push-to-talk, if the server allows it.
+    - type: Add
+      message: Voice chat can be heard in round replays.
+    - type: Add
+      message: >-
+        Masks and helmets muffle your voice in voice chat, like they do your
+        emotes.
+    - type: Add
+      message: >-
+        The voice chat page is translated into several languages, follows the
+        game's language, and has a mic volume slider and a mic test.
+    - type: Add
+      message: >-
+        Pick your character's text-to-speech voice in the character editor, and
+        preview it before choosing.
+    - type: Add
+      message: >-
+        Text-to-speech audio now reaches you as Opus: smaller, and decoded
+        without stalling the game.
+    - type: Fix
+      message: >-
+        Long lines are no longer cut down to their last few characters by
+        text-to-speech.
+    - type: Fix
+      message: Text-to-speech no longer voices every message in a rapid burst.
+    - type: Fix
+      message: The voice chat page no longer says you have no body after you spawn.
+    - type: Fix
+      message: >-
+        Voice chat auto-mutes show up in the admin mute list and can be lifted
+        by admins.
+    - type: Fix
+      message: >-
+        Skipping through a replay no longer plays every skipped TTS line at
+        once.
+    - type: Tweak
+      message: >-
+        Server hosts can serve the voice chat page at a custom path with
+        `klovn.voice.public_path`.
+  id: 224
+  time: '2026-09-30T10:32:46.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Chat translation not affecting speech bubbles.
+    - type: Fix
+      message: Chat translation using speech with accents applied.
+  id: 225
+  time: '2026-10-05T21:50:46.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Russian localisation.
+    - type: Fix
+      message: Guidebook visuals.
+  id: 226
+  time: '2026-10-06T17:58:21.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Potentially fixed the lag in the lobby fade-out when spawning.
+  id: 227
+  time: '2026-10-07T06:46:25.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Maybe fixed changelogs
+  id: 228
+  time: '2026-10-09T08:06:56.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Spraying or splashing water on a chemical fire now cools the burning
+        puddle, so it no longer instantly re-ignites.
+    - type: Add
+      message: >-
+        Puddles now slowly heat up or cool down to match the air around them,
+        and chemical fires heat the puddle they burn on.
+    - type: Tweak
+      message: Spraying hot or cold liquids onto a puddle now changes its temperature.
+    - type: Tweak
+      message: >-
+        Extinguishers no longer flash-freeze burning air; very hot fires may
+        need more than one spray.
+    - type: Tweak
+      message: >-
+        Only water cools burning air when sprayed on a fire. Other drinks still
+        put fires out but no longer chill the air.
+    - type: Tweak
+      message: Burning creatures heat up more slowly.
+    - type: Tweak
+      message: Thermite fires can no longer be put out with water.
+  id: 229
+  time: '2026-10-12T17:43:26.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Portals look a bit different now
+  id: 230
+  time: '2026-10-13T18:04:33.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Changed lobby UI.
+  id: 231
+  time: '2026-10-16T17:51:51.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Locked ID-locked shuttle consoles can no longer be pried apart or
+        unanchored.
+    - type: Fix
+      message: >-
+        Scenario round-end text now credits the faction that actually captured
+        the objective and names the factions that took part.
+    - type: Fix
+      message: >-
+        The portal telefrag message no longer stacks up repeatedly, and
+        bystanders now see it too.
+    - type: Fix
+      message: Dismemberment no longer briefly shows the wrong body part coming off.
+    - type: Fix
+      message: Cutting a chain or wire in the middle now properly breaks both ends.
+    - type: Fix
+      message: >-
+        Pulling ore back out of a smelter before it finishes no longer destroys
+        it.
+    - type: Fix
+      message: >-
+        Reactor control rods can no longer be moved further per click than the
+        console allows.
+    - type: Fix
+      message: Specialist kit limits on RMC vendors can no longer be bypassed.
+  id: 232
+  time: '2026-10-20T19:31:59.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Extinguishers fire full-auto in combat mode and lay foam that smothers
+        fires and stops them relighting.
+    - type: Add
+      message: >-
+        Carbon dioxide extinguisher, the only way to put out electrical fires.
+        Found in engineer lockers.
+    - type: Add
+      message: Arc flashes start electrical fires.
+    - type: Tweak
+      message: Foam only slows down plasma fires; use CO2 or venting.
+    - type: Fix
+      message: Sprays no longer lose their contents when they hit nothing.
+  id: 233
+  time: '2026-10-24T12:08:58.0000000+00:00'
+- author: NazrinNya
+  changes:
+    - type: Add
+      message: More calls for executor.
+    - type: Tweak
+      message: Improved QoL of packet network configurators and packet executors
+  id: 234
+  time: '2026-10-28T12:28:33.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Fire now runs across a spill of fuel, napalm or chlorine trifluoride,
+        lighting it tile by tile within moments, even when the fuel is cold.
+        Water, foam or bare floor stops it.
+    - type: Add
+      message: Explosions set fire to any fuel they pass over.
+    - type: Add
+      message: >-
+        Containers explode as strongly as what they hold. Napalm, plasma,
+        phlogiston and chlorine trifluoride hit harder than welding fuel; water
+        doesn't explode at all.
+    - type: Add
+      message: >-
+        Fuel tanks, jugs, bottles and beakers holding fuel explode when shot or
+        burned, and cook off on their own if left in a fire.
+    - type: Add
+      message: Burning puddles pass heat to the puddles next to them.
+    - type: Add
+      message: >-
+        Firebots now fight chemical fires. They spray burning puddles and keep
+        watch over a spill until it has cooled, so it doesn't relight.
+    - type: Add
+      message: Added a guidebook page on chemical fires, under Engineering.
+    - type: Add
+      message: >-
+        Scanning a discovered ore vent now asks whether you're ready to start
+        defending it. The question closes if you put the scanner away or walk
+        off.
+    - type: Add
+      message: >-
+        Ore vents now break up the rock around them as they clear, leaving
+        rubble, with sounds for clearing, success and failure.
+    - type: Add
+      message: >-
+        Ground is marked with a dust cloud a moment before a creature emerges
+        from an ore vent, with a warning popup.
+    - type: Add
+      message: >-
+        The ore vent's drone tells you whether it escaped because the vent was
+        secured or because it failed. Very rarely, it doesn't make it home.
+    - type: Add
+      message: >-
+        Supply pods project a landing zone marker that closes in as the pod
+        falls, and leave sparks behind when they go.
+    - type: Add
+      message: >-
+        The longer you've played since you were last an antagonist, the likelier
+        you are to be picked as one.
+    - type: Tweak
+      message: >-
+        Foam no longer keeps you from burning while you stand in a chemical
+        fire.
+    - type: Tweak
+      message: >-
+        Foaming agent, fluorosurfactant and sorium no longer burn or make things
+        flammable.
+    - type: Tweak
+      message: Water, space cleaner and bleach wash stains off walls and windows.
+    - type: Tweak
+      message: Computer keyboards glow less.
+    - type: Tweak
+      message: Scenarios no longer play the station shift-start announcement.
+    - type: Tweak
+      message: >-
+        The gorilla gauntlet now tells you when there's no disposal unit nearby
+        to shove someone into.
+    - type: Remove
+      message: >-
+        Removed the "complex stain drawing" setting, which only made stains
+        disappear.
+    - type: Fix
+      message: >-
+        Fixed burning puddles going out on their own, with fuel left, instead of
+        burning away.
+    - type: Fix
+      message: Fixed chemical fires sometimes flickering out and relighting.
+    - type: Fix
+      message: Fixed exploding containers spilling their contents twice.
+    - type: Fix
+      message: >-
+        Fixed throwing a bomb with an action showing a second, fake bomb on your
+        screen.
+    - type: Fix
+      message: >-
+        Fixed shots missing mobs that move faster than a normal sprint while you
+        lag.
+    - type: Fix
+      message: >-
+        Fixed the battery shielding implosion sound playing twice for
+        bystanders.
+    - type: Fix
+      message: >-
+        Fixed blood splatter landing in the wrong place on rotated or moving
+        shuttles.
+    - type: Fix
+      message: Fixed the night vision cone not starting from your character.
+    - type: Fix
+      message: Fixed long chains stretching apart.
+    - type: Fix
+      message: >-
+        Fixed material storage accepting stacks made of several materials beyond
+        its limit.
+    - type: Fix
+      message: Fixed a crash when a thrown item fell through to another level.
+    - type: Fix
+      message: >-
+        Fixed players joining in scenarios sometimes failing to find a spawn
+        point.
+    - type: Fix
+      message: Fixed the gas grenade compressor's slot and verbs not being translated.
+  id: 235
+  time: '2026-10-29T09:17:51.0000000+00:00'

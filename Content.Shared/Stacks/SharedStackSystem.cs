@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using Content.Shared.Examine;
 using Content.Shared.Hands.EntitySystems;
@@ -21,7 +22,6 @@ namespace Content.Shared.Stacks;
 [UsedImplicitly]
 public abstract partial class SharedStackSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private IViewVariablesManager _vvm = default!;
     [Dependency] protected SharedAppearanceSystem Appearance = default!;
     [Dependency] protected SharedHandsSystem Hands = default!;
@@ -91,7 +91,7 @@ public abstract partial class SharedStackSystem : EntitySystem
 
                 if (GetAvailableSpace(recipientStack) == 0)
                 {
-                    Popup.PopupClient(Loc.GetString("comp-stack-becomes-full"),
+                    Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-stack-becomes-full"),
                         popupPos.Offset(new Vector2(0, -0.5f)),
                         args.User);
                 }
@@ -99,7 +99,7 @@ public abstract partial class SharedStackSystem : EntitySystem
                 break;
 
             case 0 when GetAvailableSpace(recipientStack) == 0:
-                Popup.PopupClient(Loc.GetString("comp-stack-already-full"), popupPos, args.User);
+                Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-stack-already-full"), popupPos, args.User);
                 break;
         }
 

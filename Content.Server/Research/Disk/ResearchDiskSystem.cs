@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Interaction;
 using Content.Server.Popups;
@@ -10,7 +11,6 @@ namespace Content.Server.Research.Disk
 {
     public sealed partial class ResearchDiskSystem : EntitySystem
     {
-        [Dependency] private IPrototypeManager _prototype = default!;
         [Dependency] private PopupSystem _popupSystem = default!;
         [Dependency] private ResearchSystem _research = default!;
         public override void Initialize()
@@ -29,7 +29,7 @@ namespace Content.Server.Research.Disk
                 return;
 
             _research.ModifyServerPoints(args.Target.Value, component.Points, server);
-            _popupSystem.PopupEntity(Loc.GetString("research-disk-inserted", ("points", component.Points)), args.Target.Value, args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("research-disk-inserted", ("points", component.Points)), args.Target.Value, args.User);
             QueueDel(uid);
             args.Handled = true;
         }
@@ -39,7 +39,7 @@ namespace Content.Server.Research.Disk
             if (!component.UnlockAllTech)
                 return;
 
-            component.Points = _prototype.EnumeratePrototypes<TechnologyPrototype>()
+            component.Points = ProtoMan.EnumeratePrototypes<TechnologyPrototype>()
                 .Sum(tech => tech.Cost);
         }
     }

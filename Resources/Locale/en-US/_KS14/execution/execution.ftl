@@ -9,3 +9,6 @@ suicide-popup-gun-initial-internal = You place the muzzle of {THE($weapon)} in y
 suicide-popup-gun-initial-external = {$attacker} places the muzzle of {THE($weapon)} in {POSS-ADJ($attacker)} mouth.
 suicide-popup-gun-complete-internal = You shoot yourself in the head!
 suicide-popup-gun-complete-external = {$attacker} shoots {REFLEXIVE($attacker)} in the head!
+
+suicide-popup-melee-cant = Stop trying to commit suicide before trying to hit something!
+suicide-popup-gun-cant = Stop trying to commit suicide before trying to shoot!

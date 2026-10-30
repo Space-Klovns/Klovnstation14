@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Research.Systems;
 using Content.Server.Xenoarchaeology.Artifact;
 using Content.Shared.Popups;
@@ -45,6 +46,6 @@ public sealed partial class ArtifactAnalyzerSystem : SharedArtifactAnalyzerSyste
 
         _research.ModifyServerPoints(server.Value, sumResearch, serverComponent);
         _audio.PlayPvs(ent.Comp.ExtractSound, artifact.Value);
-        _popup.PopupEntity(Loc.GetString("analyzer-artifact-extract-popup"), artifact.Value, PopupType.Large);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("analyzer-artifact-extract-popup"), artifact.Value, PopupType.Large);
     }
 }

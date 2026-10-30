@@ -3,6 +3,7 @@ using Content.Client.Stylesheets;
 using Content.Client.Stylesheets.Fonts;
 using Content.Client.Chat.UI;
 using Content.Client.UserInterface.Controls;
+using Content.Client.UserInterface.Controls.FancyTree;
 using Content.Client.UserInterface.Screens;
 using Content.Client.UserInterface.Systems.Chat.Controls;
 using Robust.Client.Graphics;
@@ -148,6 +149,19 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<ContainerButton>().Class(ButtonStyle3).Box(button3),
             E<ContainerButton>().Class(ButtonStyle4).Box(button4),
             E<ContainerButton>().Class(ButtonStyle5).Box(button5),
+
+            // Let the enclosing Baron panel show through entry lists, including nested guidebook categories.
+            E<TreeItem>().Panel(new StyleBoxEmpty()),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassEvenRow).Box(new StyleBoxEmpty()),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassOddRow).Box(new StyleBoxEmpty()),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassSelected).Box(new StyleBoxFlat(Color.Black.WithAlpha(0.3f))),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .PseudoHovered().Box(new StyleBoxFlat(Color.Black.WithAlpha(0.15f))),
+            E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
+                .Class(TreeItem.StyleClassSelected).PseudoHovered().Box(new StyleBoxFlat(Color.Black.WithAlpha(0.4f))),
 
             // KS14: make the Baron texture the default PanelContainer chrome across menus.
             E<PanelContainer>().Panel(panelDark1Clean).Modulate(Color.White),

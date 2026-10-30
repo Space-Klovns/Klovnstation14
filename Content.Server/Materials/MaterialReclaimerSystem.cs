@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Ghost;
@@ -32,7 +33,6 @@ namespace Content.Server.Materials;
 /// <inheritdoc/>
 public sealed partial class MaterialReclaimerSystem : SharedMaterialReclaimerSystem
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private AppearanceSystem _appearance = default!;
     [Dependency] private GhostSystem _ghostSystem = default!;
     [Dependency] private MaterialStorageSystem _materialStorage = default!;
@@ -101,11 +101,11 @@ public sealed partial class MaterialReclaimerSystem : SharedMaterialReclaimerSys
             _ghostSystem.OnGhostAttempt(mindId, false, mind: mind);
             if (mind.OwnedEntity is { Valid: true } suicider)
             {
-                _popup.PopupEntity(Loc.GetString("recycler-component-suicide-message"), suicider);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("recycler-component-suicide-message"), suicider);
             }
         }
 
-        _popup.PopupEntity(Loc.GetString("recycler-component-suicide-message-others",
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("recycler-component-suicide-message-others",
                 ("victim", Identity.Entity(victim, EntityManager))),
             victim,
             Filter.PvsExcept(victim, entityManager: EntityManager),
@@ -272,7 +272,7 @@ public sealed partial class MaterialReclaimerSystem : SharedMaterialReclaimerSys
             // Are we a recycler? Only use drainable solution.
             if (_solutionContainer.TryGetDrainableSolution(item, out _, out var drainableSolution))
             {
-                totalChemicals.AddSolution(drainableSolution, _prototype);
+                totalChemicals.AddSolution(drainableSolution, ProtoMan);
             }
         }
         else
@@ -280,7 +280,7 @@ public sealed partial class MaterialReclaimerSystem : SharedMaterialReclaimerSys
             // Are we an industrial reagent grinder? Use extractable solution.
             if (_solutionContainer.TryGetExtractableSolution(item, out _, out var extractableSolution))
             {
-                totalChemicals.AddSolution(extractableSolution, _prototype);
+                totalChemicals.AddSolution(extractableSolution, ProtoMan);
             }
         }
 

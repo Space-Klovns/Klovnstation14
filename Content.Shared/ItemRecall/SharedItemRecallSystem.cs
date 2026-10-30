@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Hands.Components;
@@ -50,17 +51,17 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
 
             if (markItem == null)
             {
-                _popups.PopupClient(Loc.GetString("item-recall-item-mark-empty"), args.Performer, args.Performer);
+                _popups.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("item-recall-item-mark-empty"), args.Performer, args.Performer);
                 return;
             }
 
             if (HasComp<RecallMarkerComponent>(markItem))
             {
-                _popups.PopupClient(Loc.GetString("item-recall-item-already-marked", ("item", markItem)), args.Performer, args.Performer);
+                _popups.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("item-recall-item-already-marked", ("item", markItem)), args.Performer, args.Performer);
                 return;
             }
 
-            _popups.PopupClient(Loc.GetString("item-recall-item-marked", ("item", markItem.Value)), args.Performer, args.Performer);
+            _popups.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("item-recall-item-marked", ("item", markItem.Value)), args.Performer, args.Performer);
             TryMarkItem(ent, markItem.Value);
             return;
         }
@@ -83,10 +84,10 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
         if (TryComp<EmbeddableProjectileComponent>(ent, out var projectile))
             _proj.EmbedDetach(ent, projectile, user);
 
-        _popups.PopupPredicted(Loc.GetString("item-recall-item-summon-self", ("item", ent)),
-                               Loc.GetString("item-recall-item-summon-others", ("item", ent), ("name", Identity.Entity(user, EntityManager))),
+        _popups.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("item-recall-item-summon-self", ("item", ent)),
+                               KsPopupMessage.Create("item-recall-item-summon-others", ("item", ent), ("name", Identity.Entity(user, EntityManager))),
                                user, user);
-        _popups.PopupPredictedCoordinates(Loc.GetString("item-recall-item-disappear", ("item", ent)), Transform(ent).Coordinates, user);
+        _popups.PopupPredictedCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("item-recall-item-disappear", ("item", ent)), Transform(ent).Coordinates, user);
 
         _hands.TryForcePickupAnyHand(user, ent);
     }
@@ -131,7 +132,7 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
             // This line will only do something once that is fixed.
             if (action.Comp.AttachedEntity is { } user)
             {
-                _popups.PopupClient(Loc.GetString("item-recall-item-unmark", ("item", item)), user, user, PopupType.MediumCaution);
+                _popups.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("item-recall-item-unmark", ("item", item)), user, user, PopupType.MediumCaution);
                 RemoveFromPvsOverride(item, user);
             }
 

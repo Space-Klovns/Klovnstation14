@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -32,7 +33,6 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
 {
     public static readonly EntProtoId Bloodloss = "StatusEffectBloodloss";
 
-    [Dependency] protected IPrototypeManager PrototypeManager = default!;
     [Dependency] protected SharedSolutionContainerSystem SolutionContainer = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
@@ -131,7 +131,7 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
         // The DNA string might not be initialized yet, but the reagent data gets updated in the GenerateDnaEvent subscription
         var solution = entity.Comp.BloodReferenceSolution.Clone();
         solution.ScaleTo(entity.Comp.BloodReferenceSolution.Volume - bloodSolution.Comp.Solution.Volume);
-        bloodSolution.Comp.Solution.AddSolution(solution, PrototypeManager);
+        bloodSolution.Comp.Solution.AddSolution(solution, ProtoMan);
     }
 
     // prevent the infamous UdderSystem debug assert, see https://github.com/space-wizards/space-station-14/pull/35314
@@ -198,7 +198,7 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
         }
 
         // TODO probably cache this or something. humans get hurt a lot
-        if (!PrototypeManager.Resolve(ent.Comp.DamageBleedModifiers, out var modifiers))
+        if (!ProtoMan.Resolve(ent.Comp.DamageBleedModifiers, out var modifiers))
             return;
 
         // some reagents may deal and heal different damage types in the same tick, which means DamageIncreased will be true
@@ -241,9 +241,9 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
             // Only the burned entity can see the popup.
             // TODO: Make the PopupSystem API more sane so that this is handled by a single method.
             if (args.Origin == ent.Owner) // predict the popup on the client if they caused damage to themselves
-                _popup.PopupClient(Loc.GetString("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
             else
-                _popup.PopupEntity(Loc.GetString("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bloodstream-component-wounds-cauterized"), ent, ent, PopupType.Medium);
             _audio.PlayPredicted(ent.Comp.BloodHealedSound, ent, args.Origin);
         }
     }
@@ -490,7 +490,7 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
         if (!SolutionContainer.ResolveSolution(ent.Owner, ent.Comp.BloodTemporarySolutionName, ref ent.Comp.TemporarySolution, out var tempSolution))
             return true;
 
-        tempSolution.AddSolution(leakedBlood, PrototypeManager);
+        tempSolution.AddSolution(leakedBlood, ProtoMan);
 
         if (tempSolution.Volume > ent.Comp.BleedPuddleThreshold)
         {
@@ -542,14 +542,14 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
         if (SolutionContainer.ResolveSolution(ent.Owner, ent.Comp.BloodSolutionName, ref ent.Comp.BloodSolution, out var bloodSolution))
         {
             tempSol.MaxVolume += bloodSolution.MaxVolume;
-            tempSol.AddSolution(bloodSolution, PrototypeManager);
+            tempSol.AddSolution(bloodSolution, ProtoMan);
             SolutionContainer.RemoveAllSolution(ent.Comp.BloodSolution.Value);
         }
 
         if (SolutionContainer.ResolveSolution(ent.Owner, ent.Comp.BloodTemporarySolutionName, ref ent.Comp.TemporarySolution, out var tempSolution))
         {
             tempSol.MaxVolume += tempSolution.MaxVolume;
-            tempSol.AddSolution(tempSolution, PrototypeManager);
+            tempSol.AddSolution(tempSolution, ProtoMan);
             SolutionContainer.RemoveAllSolution(ent.Comp.TemporarySolution.Value);
         }
 

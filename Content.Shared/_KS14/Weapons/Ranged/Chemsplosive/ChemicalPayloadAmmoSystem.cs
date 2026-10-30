@@ -15,13 +15,7 @@ public sealed partial class ChemicalPayloadAmmoSystem : EntitySystem
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ChemicalPayloadAmmoComponent, KsAmmoUsedEvent>(OnAmmoUsed);
-    }
-
+    [SubscribeLocalEvent]
     private void OnAmmoUsed(Entity<ChemicalPayloadAmmoComponent> entity, ref KsAmmoUsedEvent args)
     {
         var projectileUid = args.ProjectileUids[0];

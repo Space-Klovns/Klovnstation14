@@ -1105,6 +1105,7 @@
   variants: 8
   placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
   # KS14: AUTOGEN END
+  ksZLevelTransparent: true # KS14: Z-levels
   footstepSounds:
     collection: FootstepTile
   itemDrop: SheetGlass1
@@ -1118,6 +1119,7 @@
   variants: 8
   placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
   # KS14: AUTOGEN END
+  ksZLevelTransparent: true # KS14: Z-levels
   footstepSounds:
     collection: FootstepTile
   itemDrop: SheetRGlass1

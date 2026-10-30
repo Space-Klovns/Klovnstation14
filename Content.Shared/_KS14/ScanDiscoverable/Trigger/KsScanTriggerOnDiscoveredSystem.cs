@@ -7,13 +7,7 @@ public sealed partial class KsScanTriggerOnDiscoveredSystem : EntitySystem
 {
     [Dependency] private TriggerSystem _triggerSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsScanTriggerOnDiscoveredComponent, KsAfterScanDiscoveringEvent>(OnDiscover);
-    }
-
+    [SubscribeLocalEvent]
     private void OnDiscover(Entity<KsScanTriggerOnDiscoveredComponent> entity, ref KsAfterScanDiscoveringEvent args)
     {
         if (entity.Owner != args.InteractUsingEvent.Target)

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Components;
@@ -22,7 +23,6 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
 {
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private SharedStackSystem _heap = default!; // KS14
     [Dependency] private SharedAudioSystem _audio = default!; // KS14: Added to shared
@@ -450,23 +450,26 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         else if (!CanTakeVolume(receiver, totalVolume, storage, localOnly: true))
             return false;
 
-        // TODO LCDC: test if this works with entities made up of more than 1 material
+        // KS14 start: the limit is shared by every material, so each one gets only what the ones before it left
+        var newTotalVolume = oldTotalVolume;
         foreach (var (mat, vol) in composition.MaterialComposition)
         {
             var amountAdded = vol * maximumMultiplier;
 
             // amount of material added will be limited so that it doesnt go over storagelimit
             if (storage.StorageLimit is { } storageLimit)
-                amountAdded = Math.Min(amountAdded, storageLimit - oldTotalVolume);
+                amountAdded = Math.Min(amountAdded, storageLimit - newTotalVolume);
 
-            TryChangeMaterialAmount(receiver, mat, amountAdded, storage);
+            if (amountAdded > 0 && TryChangeMaterialAmount(receiver, mat, amountAdded, storage))
+                newTotalVolume += amountAdded;
         }
+        // KS14 end
 
         var insertingComp = EnsureComp<InsertingMaterialStorageComponent>(receiver);
         insertingComp.EndTime = _timing.CurTime + storage.InsertionTime;
         if (!storage.IgnoreColor)
         {
-            _prototype.TryIndex<MaterialPrototype>(composition.MaterialComposition.Keys.First(), out var lastMat);
+            ProtoMan.TryIndex<MaterialPrototype>(composition.MaterialComposition.Keys.First(), out var lastMat);
             insertingComp.MaterialColor = lastMat?.Color;
         }
         _appearance.SetData(receiver, MaterialStorageVisuals.Inserting, true);
@@ -477,7 +480,7 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
 
         // KS14: moved ts to shared
         _audio.PlayPredicted(storage.InsertingSound, receiver, user);
-        _popup.PopupPredicted(Loc.GetString("machine-insert-item",
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("machine-insert-item",
                 ("user", user),
                 ("machine", receiver),
                 ("item", Identity.Name(toInsert, EntityManager))),
@@ -522,7 +525,7 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         if (material.StackEntity == null)
             return DefaultSheetVolume;
 
-        var proto = _prototype.Index<EntityPrototype>(material.StackEntity);
+        var proto = ProtoMan.Index<EntityPrototype>(material.StackEntity);
 
         if (!proto.TryGetComponent<PhysicalCompositionComponent>(out var composition, EntityManager.ComponentFactory))
             return DefaultSheetVolume;

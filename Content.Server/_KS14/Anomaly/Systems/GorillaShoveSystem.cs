@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Disposal.Unit;
 using Content.Shared.Disposal.Components;
 using Content.Server.Popups;
@@ -23,13 +24,7 @@ public sealed partial class GorillaShoveSystem : EntitySystem
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        // Subscribe to MeleeHitEvent
-        SubscribeLocalEvent<GorillaGauntletComponent, MeleeHitEvent>(OnMeleeHit);
-    }
-
+    [SubscribeLocalEvent]
     private void OnMeleeHit(Entity<GorillaGauntletComponent> ent, ref MeleeHitEvent args)
     {
         // Basic Validation
@@ -48,14 +43,14 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         var slotId = "core_slot";
         if (!_itemSlots.TryGetSlot(ent.Owner, slotId, out var slot) || slot.Item is not { } coreItem)
         {
-            _popup.PopupEntity(Loc.GetString("gorilla-shove-gauntlet-not-active"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-gauntlet-not-active"), user, user);
             return;
         }
 
         // Verify it is an Anomaly Core
         if (!TryComp<AnomalyCoreComponent>(coreItem, out var coreComp))
         {
-            _popup.PopupEntity(Loc.GetString("gorilla-shove-gauntlet-not-active"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-gauntlet-not-active"), user, user);
             return;
         }
 
@@ -63,22 +58,23 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         // If the core is decayed, it has limited charges. If it is 0, we can't use it.
         if (coreComp.IsDecayed && coreComp.Charge <= 0)
         {
-            _popup.PopupEntity(Loc.GetString("gorilla-shove-gauntlet-not-active"), user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-gauntlet-not-active"), user, user);
             return;
         }
 
         // Find nearby disposal unit
         var xform = Transform(target);
         var disposals = _lookup.GetEntitiesInRange<DisposalUnitComponent>(xform.Coordinates, 1.5f);
-        var targetDisposal = disposals.FirstOrDefault();
 
-        // KS14 GERKADA TODO BOTHER: this is always false
-        // if (targetDisposal == null)
-        // {
-        //     // No charge consumed yet, just return
-        //     _popup.PopupEntity(Loc.GetString("gorilla-shove-not-disposals"), user, user);
-        //     return;
-        // }
+        // Checked on the set: FirstOrDefault of an empty one is a default Entity<T>, a struct, never null
+        if (disposals.Count == 0)
+        {
+            // No charge consumed yet, just return
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-not-disposals"), user, user);
+            return;
+        }
+
+        var targetDisposal = disposals.First();
 
         //Prepare entity
         if (xform.Anchored)
@@ -110,7 +106,7 @@ public sealed partial class GorillaShoveSystem : EntitySystem
         if (!_disposals.TryInsert(targetDisposal.Owner, target, null))
         {
             // If this fails, something is fundamentally broken
-            _popup.PopupEntity("Shove failed! (Unit blocked/full?)", user, user);
+            _popup.PopupEntity(KsPopupMessage.Create("gorilla-shove-failed"), user, user);
             return;
         }
 

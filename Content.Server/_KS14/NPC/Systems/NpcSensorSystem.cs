@@ -1,4 +1,6 @@
 using Content.Server._KS14.NPC.Components;
+using Content.Server.NPC.HTN;
+using Content.Server.NPC.Systems;
 using Content.Shared._KS14.NPC.Systems;
 using Content.Shared.Trigger;
 using Robust.Shared.Map;
@@ -8,18 +10,15 @@ namespace Content.Server._KS14.NPC.Systems;
 public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
 {
     [Dependency] private EntityLookupSystem _lookupSystem = default!;
+    [Dependency] private HTNSystem _htnSystem = default!;
+    [Dependency] private NPCSystem _npcSystem = default!;
 
     [Dependency] private EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
+    [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
 
     private const string DisturbanceCoordinatesSensorKey = "__Sensor__Disturbance.TargetCoordinates";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<NpcDisturbOnTriggerComponent, TriggerEvent>(OnTrigger);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<NpcDisturbOnTriggerComponent> entity, ref TriggerEvent args)
     {
         EntityCoordinates coordinates;
@@ -36,18 +35,25 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
         DoDisturbance(coordinates, entity.Comp.Radius);
     }
 
-    public void TryImmediatelyUpdatePlan(EntityUid uid)
+    /// <summary>
+    ///     Makes <paramref name="uid"/> replan on its next HTN update rather than when its plan cooldown runs out,
+    ///         so fresh information is acted on straight away. This is the one way systems outside HTN tell an NPC
+    ///         to rethink: sensor data, squad callouts, a target appearing or vanishing. Whether the new plan replaces the running one is
+    ///         still up to the planner: the root's Sensors branch only plans while sensor data is pending, and
+    ///         only wins against branches below it.
+    /// </summary>
+    /// <remarks>
+    ///     Sleeping NPCs are left asleep. They sleep for a reason (dead, critical, player-controlled), and their
+    ///         pending data waits for them either way.
+    /// </remarks>
+    public void RequestReplan(EntityUid uid)
     {
-        // ack
-        // TODO LCDC: TODO ANK2: fix
-        // if (!TryComp<HTNComponent>(uid, out var htnComponent) ||
-        //     !htnComponent.Enabled ||
-        //     htnComponent.Planning ||
-        //     htnComponent.Plan is { })
-        //     return;
+        if (!_htnQuery.TryComp(uid, out var htnComponent) ||
+            !htnComponent.Enabled ||
+            !_npcSystem.IsAwake(uid, htnComponent))
+            return;
 
-        // _npcSystem.WakeNPC(uid, htnComponent);
-        // _htnSystem.Replan(htnComponent);
+        _htnSystem.Replan(htnComponent);
     }
 
     public void AddEffect(Entity<NpcSensorsComponent?> entity, string key, object value)
@@ -56,7 +62,7 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
             return;
 
         entity.Comp.AggregatedEffects[key] = value;
-        TryImmediatelyUpdatePlan(entity.Owner);
+        RequestReplan(entity.Owner);
     }
 
     public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<(string, object)> effects)
@@ -67,7 +73,7 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
         foreach (var (key, value) in effects)
             entity.Comp.AggregatedEffects[key] = value;
 
-        TryImmediatelyUpdatePlan(entity.Owner);
+        RequestReplan(entity.Owner);
     }
 
     public void AddEffects(Entity<NpcSensorsComponent?> entity, Dictionary<string, object> effects)
@@ -78,7 +84,7 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
         foreach (var (key, value) in effects)
             entity.Comp.AggregatedEffects[key] = value;
 
-        TryImmediatelyUpdatePlan(entity.Owner);
+        RequestReplan(entity.Owner);
     }
 
     public override void DoDisturbance(EntityCoordinates coordinates, float radius, EntityUid? source = null)

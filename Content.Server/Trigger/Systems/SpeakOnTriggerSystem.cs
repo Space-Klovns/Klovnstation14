@@ -10,7 +10,6 @@ namespace Content.Server.Trigger.Systems;
 public sealed partial class SpeakOnTriggerSystem : EntitySystem
 {
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ChatSystem _chat = default!;
 
     public override void Initialize()
@@ -39,7 +38,7 @@ public sealed partial class SpeakOnTriggerSystem : EntitySystem
         //KS14 end
         else
         {
-            if (!_prototypeManager.Resolve(ent.Comp.Pack, out var messagePack))
+            if (!ProtoMan.Resolve(ent.Comp.Pack, out var messagePack))
                 return;
             message = Loc.GetString(_random.Pick(messagePack.Values));
         }
@@ -47,7 +46,7 @@ public sealed partial class SpeakOnTriggerSystem : EntitySystem
         // Prepending ">" forces the message to be spoken instead.
         // TODO chat refactor: remove this
         message = '>' + message;
-        _chat.TrySendInGameICMessage(target.Value, message, InGameICChatType.Speak, true);
+        _chat.TrySendInGameICMessage(target.Value, message, InGameICChatType.Speak, ent.Comp.HideChat /* KS14: use datafield instead of hardcoding it */);
         args.Handled = true;
     }
 }

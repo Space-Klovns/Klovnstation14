@@ -9,13 +9,7 @@ public sealed partial class RemoveRandomOrganSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<RemoveRandomOrganComponent, MapInitEvent>(OnMapInit);
-    }
-
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<RemoveRandomOrganComponent> entity, ref MapInitEvent args)
     {
         if (!TryComp<BodyComponent>(entity, out var bodyComponent))

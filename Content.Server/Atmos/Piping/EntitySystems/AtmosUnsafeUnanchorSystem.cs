@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Components;
 using Content.Server.NodeContainer;
@@ -43,7 +44,7 @@ namespace Content.Server.Atmos.Piping.EntitySystems
                 if (pipe.Air.Pressure - environment.Pressure > 2 * Atmospherics.OneAtmosphere)
                 {
                     args.Delay += 2f;
-                    _popup.PopupEntity(Loc.GetString("comp-atmos-unsafe-unanchor-warning"), pipe.Owner,
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-atmos-unsafe-unanchor-warning"), pipe.Owner,
                         args.User, PopupType.MediumCaution);
                     return; // Show the warning only once.
                 }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
@@ -22,7 +23,6 @@ namespace Content.Shared.Medical;
 public sealed partial class VomitSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private HungerSystem _hunger = default!;
     [Dependency] private MobStateSystem _mobState = default!;
     [Dependency] private MovementModStatusSystem _movementMod = default!;
@@ -59,7 +59,7 @@ public sealed partial class VomitSystem : EntitySystem
             return;
 
         // Empty stomach solution into the new vomit solution
-        args.Args.Sol.AddSolution(sol, _proto);
+        args.Args.Sol.AddSolution(sol, ProtoMan);
         sol.RemoveAllSolution();
 
         // Remind the stomach that it's empty.
@@ -112,7 +112,7 @@ public sealed partial class VomitSystem : EntitySystem
                 if (vomitChemstreamAmount != null)
                 {
                     vomitChemstreamAmount.ScaleSolution(ChemMultiplier);
-                    solution.AddSolution(vomitChemstreamAmount, _proto);
+                    solution.AddSolution(vomitChemstreamAmount, ProtoMan);
                     vomitAmount -= (float)vomitChemstreamAmount.Volume;
                 }
             }
@@ -132,7 +132,7 @@ public sealed partial class VomitSystem : EntitySystem
 
         // Force sound to play as spill doesn't work if solution is empty.
         _audio.PlayPvs(_vomitSound, uid);
-        _popup.PopupEntity(Loc.GetString("disease-vomit", ("person", Identity.Entity(uid, EntityManager))), uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disease-vomit", ("person", Identity.Entity(uid, EntityManager))), uid);
     }
 }
 

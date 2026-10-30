@@ -1,2 +1,2 @@
 gas-zipion-abbreviation = Zi
-gas-argon-abbreviation = Ar
+gas-encalite-abbreviation = Ec

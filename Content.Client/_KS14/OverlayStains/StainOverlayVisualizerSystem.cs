@@ -26,7 +26,9 @@ public sealed partial class StainOverlayVisualizerSystem : EntitySystem
         _stainOverlay.Initialise();
 
         _overlayManager.AddOverlay(_stainOverlay);
-        _configurationManager.OnValueChanged(KsCCVars.ComplexStainDrawing, (complexDrawing) => _stainOverlay.ComplexDrawing = complexDrawing, invokeImmediately: true);
+
+        // Subs.CVar rather than subscribing from the overlay, so the subscription goes when this system does.
+        Subs.CVar(_configurationManager, KsCCVars.StainArcDegrees, arcDegrees => _stainOverlay.StainArc = Angle.FromDegrees(arcDegrees), invokeImmediately: true);
     }
 
     public override void Shutdown()

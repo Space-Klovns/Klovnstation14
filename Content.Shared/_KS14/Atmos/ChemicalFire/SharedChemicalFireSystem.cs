@@ -1,8 +1,10 @@
-using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared.Atmos;
 using Content.Shared.Light.Components;
+using Content.Shared.Physics;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -18,17 +20,16 @@ namespace Content.Shared._KS14.Atmos.ChemicalFire;
 public abstract partial class SharedChemicalFireSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
-    [Dependency] private KsSharedPredictedSpawnSystem _predictedSpawnSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
-    [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
 
     /// <summary>
     ///     One paused, never-map-inited singleton per chemfire prototype that's been sustain-checked so far,
@@ -43,18 +44,13 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<ChemicalFireComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<ChemicalFireComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<ChemicalFireComponent, EntParentChangedMessage>(OnEntParentChanged);
-
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
         InitialiseNetworking();
     }
 
     /// <summary>
     ///     Drops every cached template singleton so the next sustain check rebuilds it against fresh data.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.WasModified<EntityPrototype>())
@@ -112,7 +108,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
             PredictedDel(existingFire.Owner);
         }
 
-        var fireUid = _predictedSpawnSystem.PredictedSpawnAttachedTo(prototypeId, _mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile));
+        var fireUid = PredictedSpawnAttachedTo(prototypeId, _mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile));
         if (!_chemicalFireQuery.TryGetComponent(fireUid, out var fireComponent))
         {
             Log.Error($"Prototype {prototypeId} indexed a {nameof(ChemicalFireComponent)} but the spawned entity has none.");
@@ -122,7 +118,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
 
         // Chemfire prototypes are anchored, so initialisation has usually already snapped the entity onto the
         //     tile it spawned on - anchoring it a second time would double-register it in the snap grid cell.
-        var transformComponent = _transformQuery.GetComponent(fireUid);
+        var transformComponent = EntityManager.TransformQuery.GetComponent(fireUid);
         if (!transformComponent.Anchored)
             _transformSystem.AnchorEntity((fireUid, transformComponent), (grid.Owner, grid.Comp), tile);
 
@@ -194,8 +190,16 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     /// <summary>
     ///     Puts a chemfire out.
     /// </summary>
-    public void ExtinguishChemicalFire(Entity<ChemicalFireComponent> fire)
-        => PredictedQueueDel(fire.Owner);
+    /// <param name="playSound">Whether to play its <see cref="ChemicalFireComponent.ExtinguishSound"/>.</param>
+    public void ExtinguishChemicalFire(Entity<ChemicalFireComponent> fire, bool playSound = false)
+    {
+        // Only the server plays it: the paths that ask for it (cooling, starving) need the air, which the client
+        //     does not have.
+        if (playSound)
+            _audioSystem.PlayPvs(fire.Comp.ExtinguishSound, Transform(fire.Owner).Coordinates);
+
+        PredictedQueueDel(fire.Owner);
+    }
 
     /// <summary>
     ///     The key a chemfire smooths and deduplicates by, falling back to its prototype id.
@@ -216,7 +220,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         var enumerator = EntityQueryEnumerator<ChemicalFireComponent>();
         while (enumerator.MoveNext(out var uid, out var fireComponent))
         {
-            if (curTime >= fireComponent.EndTime)
+            if (fireComponent.BurnsOut && curTime >= fireComponent.EndTime)
             {
                 PredictedQueueDel(uid);
                 continue;
@@ -236,6 +240,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<ChemicalFireComponent> entity, ref ComponentStartup args)
     {
         var curTime = _gameTiming.CurTime;
@@ -249,7 +254,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
 
         var tileEmissionComponent = EnsureComp<TileEmissionComponent>(entity.Owner);
         tileEmissionComponent.Color = entity.Comp.Color;
-        tileEmissionComponent.Range = entity.Comp.EmissionRange;
+        tileEmissionComponent.Range = GetEmissionRange(entity.Comp);
         Dirty(entity.Owner, tileEmissionComponent);
 
         RegisterFire(entity);
@@ -257,6 +262,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         AfterFireStartup(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<ChemicalFireComponent> entity, ref ComponentShutdown args)
     {
         BeforeFireShutdown(entity);
@@ -302,12 +308,81 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         if (!ResolveTemplateFire(prototypeId, out var templateUid))
             return true; // No ChemicalFireComponent to speak of - SpawnChemicalFire's own check already covers this.
 
+        if (IsWall(grid, tile))
+            return false;
+
         var mixture = ResolveTileMixture(grid.Owner, tile, excite: false);
+        if (mixture != null &&
+            _chemicalFireQuery.TryGetComponent(templateUid, out var templateComponent) &&
+            IsTooCold(templateComponent, mixture))
+            return false;
         var ev = new ChemicalFireCanSustainEvent(grid.Owner, tile, mixture);
         RaiseLocalEvent(templateUid, ref ev);
 
         return ev.CanSustain;
     }
+
+    /// <summary>
+    ///     Whether a tile is a wall, or a window: something anchored on it with a hard fixture on the
+    ///         <see cref="CollisionGroup.Impassable"/> layer, which nothing walks through. No chemfire burns inside one.
+    /// </summary>
+    /// <remarks>
+    ///     Only anchored entities are looked at, rather than <c>TurfSystem.IsTileBlocked</c>'s lookup of everything
+    ///         on the tile: walls are always anchored, and this runs on every puddle's tile effect.
+    /// </remarks>
+    public bool IsWall(Entity<MapGridComponent?> grid, Vector2i tile)
+    {
+        if (!_mapGridQuery.Resolve(grid.Owner, ref grid.Comp, false))
+            return false;
+
+        var anchoredEnumerator = _mapSystem.GetAnchoredEntitiesEnumerator(grid.Owner, grid.Comp, tile);
+        while (anchoredEnumerator.MoveNext(out var anchoredUid))
+        {
+            if (!_fixturesQuery.TryGetComponent(anchoredUid, out var fixturesComponent))
+                continue;
+
+            foreach (var fixture in fixturesComponent.Fixtures.Values)
+            {
+                if (fixture.Hard && (fixture.CollisionLayer & (int)CollisionGroup.Impassable) != 0)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether the air is colder than a chemfire's <see cref="ChemicalFireComponent.MinimumAirTemperature"/>.
+    /// </summary>
+    public static bool IsTooCold(ChemicalFireComponent component, GasMixture mixture)
+        => component.MinimumAirTemperature is { } minimumTemperature && mixture.Temperature < minimumTemperature;
+
+    /// <summary>
+    ///     Sets how close foam is to smothering a chemfire, which the client draws as the flames guttering, and dims
+    ///         its glow to match. Only dirties the fire when the networked step changes.
+    /// </summary>
+    public void SetSmotherProgress(Entity<ChemicalFireComponent> fire, float progress)
+    {
+        var stepped = MathF.Floor(Math.Clamp(progress, 0f, 1f) / ChemicalFireComponent.SmotherProgressStep) *
+                      ChemicalFireComponent.SmotherProgressStep;
+        if (stepped == fire.Comp.SmotherProgress)
+            return;
+
+        fire.Comp.SmotherProgress = stepped;
+        Dirty(fire);
+
+        if (TryComp<TileEmissionComponent>(fire.Owner, out var tileEmissionComponent))
+        {
+            tileEmissionComponent.Range = GetEmissionRange(fire.Comp);
+            Dirty(fire.Owner, tileEmissionComponent);
+        }
+    }
+
+    /// <summary>
+    ///     How far a chemfire's tile emission reaches, which shrinks as foam smothers it.
+    /// </summary>
+    public static float GetEmissionRange(ChemicalFireComponent component)
+        => component.EmissionRange * (1f - ChemicalFireComponent.SmotheredShrink * component.SmotherProgress);
 
     /// <summary>
     ///     Gets or lazily creates the paused, nullspace singleton chemfire used to answer sustain checks for a
@@ -321,7 +396,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         if (_templateFires.TryGetValue(prototypeId, out templateUid) && Exists(templateUid))
             return true;
 
-        if (!_prototypeManager.TryIndex<EntityPrototype>(prototypeId, out var entityPrototype) ||
+        if (!ProtoMan.TryIndex<EntityPrototype>(prototypeId, out var entityPrototype) ||
             !entityPrototype.TryGetComponent(out ChemicalFireComponent? _, _componentFactory))
         {
             templateUid = default;
@@ -337,6 +412,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnEntParentChanged(Entity<ChemicalFireComponent> entity, ref EntParentChangedMessage args)
     {
         if (!entity.Comp.Running)
@@ -366,22 +442,40 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         component.Color = prototypeComponent.Color;
         component.Temperature = prototypeComponent.Temperature;
         component.ExposedVolume = prototypeComponent.ExposedVolume;
+        component.HeatPower = prototypeComponent.HeatPower;
+        component.PuddleHeatFraction = prototypeComponent.PuddleHeatFraction;
+        component.Extinguishable = prototypeComponent.Extinguishable;
+        component.BurnsOut = prototypeComponent.BurnsOut;
+        component.MinimumAirTemperature = prototypeComponent.MinimumAirTemperature;
+        component.FoamSmotherable = prototypeComponent.FoamSmotherable;
+        component.FoamSmotherResistance = prototypeComponent.FoamSmotherResistance;
+        component.FoamHeatFraction = prototypeComponent.FoamHeatFraction;
+        component.SmotherRecoveryRate = prototypeComponent.SmotherRecoveryRate;
+        component.ExtinguishSound = prototypeComponent.ExtinguishSound;
+        component.FoamResistSound = prototypeComponent.FoamResistSound;
         component.HeatInterval = prototypeComponent.HeatInterval;
         component.EmissionRange = prototypeComponent.EmissionRange;
         component.ConnectionKey = prototypeComponent.ConnectionKey;
+        component.Sprite = prototypeComponent.Sprite;
+        component.SpriteOffset = prototypeComponent.SpriteOffset;
         component.SpriteVariations = prototypeComponent.SpriteVariations;
         component.UnderStatePrefix = prototypeComponent.UnderStatePrefix;
         component.OverStatePrefix = prototypeComponent.OverStatePrefix;
 
         component.EndTime = curTime + component.Duration;
-        component.NextHeatTime = curTime + component.HeatInterval;
+
+        // Never later than it already was: a puddle refreshes its fire on every update, and pushing the heat back each
+        //      time would stop a fire refreshed more often than its heat interval from ever heating anything.
+        var nextHeatTime = curTime + component.HeatInterval;
+        if (component.NextHeatTime > nextHeatTime)
+            component.NextHeatTime = nextHeatTime;
 
         Dirty(fire);
 
         if (TryComp<TileEmissionComponent>(fire.Owner, out var tileEmissionComponent))
         {
             tileEmissionComponent.Color = component.Color;
-            tileEmissionComponent.Range = component.EmissionRange;
+            tileEmissionComponent.Range = GetEmissionRange(component);
             Dirty(fire.Owner, tileEmissionComponent);
         }
 
@@ -392,7 +486,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     {
         prototypeComponent = default!;
 
-        if (!_prototypeManager.TryIndex(prototypeId, out var entityPrototype) ||
+        if (!ProtoMan.TryIndex(prototypeId, out var entityPrototype) ||
             !entityPrototype.TryGetComponent(out ChemicalFireComponent? foundComponent, _componentFactory))
             return false;
 
@@ -409,7 +503,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
 
     private void RegisterFire(Entity<ChemicalFireComponent> entity, TransformComponent? transformComponent = null)
     {
-        transformComponent ??= _transformQuery.GetComponent(entity.Owner);
+        transformComponent ??= EntityManager.TransformQuery.GetComponent(entity.Owner);
 
         if (transformComponent.GridUid is not { } gridUid ||
             !_transformSystem.TryGetGridTilePosition((entity.Owner, transformComponent), out var tile))

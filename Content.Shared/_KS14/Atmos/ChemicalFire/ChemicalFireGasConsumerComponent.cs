@@ -30,4 +30,15 @@ public sealed partial class ChemicalFireGasConsumerComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool ExtinguishWhenDepleted = true;
+
+    /// <summary>
+    ///     The smallest share (0 to 1) of the tile's gas that <see cref="Gases"/> together may make up for the chemfire
+    ///         to start or keep burning. Below it, the fire cannot start, and one already burning goes out on its next
+    ///         heat tick, as if they were gone. Zero only needs a trace.
+    /// </summary>
+    /// <remarks>
+    ///     How a fire is starved by something pushing its oxygen out of the way, like carbon dioxide.
+    /// </remarks>
+    [DataField, AutoNetworkedField]
+    public float MinimumMoleFraction;
 }

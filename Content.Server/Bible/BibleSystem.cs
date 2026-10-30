@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Bible.Components;
 using Content.Server.Ghost.Roles.Events;
 using Content.Server.Popups;
@@ -83,7 +84,7 @@ namespace Content.Server.Bible
                     summonableComp.Summon = null;
                 }
                 summonableComp.AlreadySummoned = false;
-                _popupSystem.PopupEntity(Loc.GetString("bible-summon-respawn-ready", ("book", uid)), uid, PopupType.Medium);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bible-summon-respawn-ready", ("book", uid)), uid, PopupType.Medium);
                 _audio.PlayPvs(summonableComp.SummonSound, uid);
                 // Clean up the accumulator and respawn tracking component
                 summonableComp.Accumulator = 0;
@@ -106,7 +107,7 @@ namespace Content.Server.Bible
 
             if (!HasComp<BibleUserComponent>(args.User))
             {
-                _popupSystem.PopupEntity(Loc.GetString("bible-sizzle"), args.User, args.User);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bible-sizzle"), args.User, args.User);
 
                 _audio.PlayPvs(component.SizzleSoundPath, args.User);
                 _damageableSystem.TryChangeDamage(args.User, component.DamageOnUntrainedUse, true, origin: uid);
@@ -123,10 +124,10 @@ namespace Content.Server.Bible
             {
                 if (_random.Prob(component.FailChance))
                 {
-                    var othersFailMessage = Loc.GetString(component.LocPrefix + "-heal-fail-others", ("user", userEnt), ("target", targetEnt), ("bible", uid));
+                    var othersFailMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(component.LocPrefix + "-heal-fail-others", ("user", userEnt), ("target", targetEnt), ("bible", uid));
                     _popupSystem.PopupEntity(othersFailMessage, args.User, Filter.PvsExcept(args.User), true, PopupType.SmallCaution);
 
-                    var selfFailMessage = Loc.GetString(component.LocPrefix + "-heal-fail-self", ("target", targetEnt), ("bible", uid));
+                    var selfFailMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(component.LocPrefix + "-heal-fail-self", ("target", targetEnt), ("bible", uid));
                     _popupSystem.PopupEntity(selfFailMessage, args.User, args.User, PopupType.MediumCaution);
 
                     _audio.PlayPvs(component.BibleHitSound, args.User);
@@ -246,7 +247,7 @@ namespace Content.Server.Bible
             // If this is going to use a ghost role mob spawner, attach it to the bible.
             if (HasComp<GhostRoleMobSpawnerComponent>(familiar))
             {
-                _popupSystem.PopupEntity(Loc.GetString("bible-summon-requested"), user, user, PopupType.Medium);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("bible-summon-requested"), user, user, PopupType.Medium);
                 _transform.SetParent(familiar, uid);
             }
             component.AlreadySummoned = true;

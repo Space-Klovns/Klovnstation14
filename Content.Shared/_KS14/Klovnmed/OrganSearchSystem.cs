@@ -1,9 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
-using Robust.Shared.Collections;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -65,7 +63,9 @@ public sealed partial class OrganSearchSystem : EntitySystem
     /// <inheritdoc cref="TryGetRandomBodyPartOfType(EntityUid, BodyPartType, out Entity{OrganComponent}?)"/>
     public bool TryGetRandomBodyPartOfType(Entity<BodyComponent> bodyEntity, BodyPartType partType, out System.Random? predictedRandom, [NotNullWhen(true)] out EntityUid? partUid)
     {
-        var eligible = new ValueList<EntityUid>();
+        // RecursiveChildUids is kept in net id order (BodyHierarchySystem.InsertRecursiveChild), so the client builds the
+        //      same list as the server to index into, and predicts the same part.
+        var eligible = new List<EntityUid>();
         foreach (var possiblePartUid in bodyEntity.Comp.RecursiveChildUids)
         {
             if (!TryComp<OrganComponent>(possiblePartUid, out var organComponent))
@@ -87,7 +87,7 @@ public sealed partial class OrganSearchSystem : EntitySystem
         }
         else if (eligible.Count == 1)
         {
-            partUid = eligible.First();
+            partUid = eligible[0];
             predictedRandom = null;
             return true;
         }

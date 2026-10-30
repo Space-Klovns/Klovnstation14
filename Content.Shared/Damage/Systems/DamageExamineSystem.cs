@@ -12,7 +12,6 @@ namespace Content.Shared.Damage.Systems;
 public sealed partial class DamageExamineSystem : EntitySystem
 {
     [Dependency] private ExamineSystemShared _examine = default!;
-    [Dependency] private IPrototypeManager _prototype = default!;
 
     public override void Initialize()
     {
@@ -75,7 +74,7 @@ public sealed partial class DamageExamineSystem : EntitySystem
             if (damage.Value != FixedPoint2.Zero)
             {
                 msg.PushNewline();
-                msg.AddMarkupOrThrow(Loc.GetString("damage-value", ("type", _prototype.Index<DamageTypePrototype>(damage.Key).LocalizedName), ("amount", damage.Value)));
+                msg.AddMarkupOrThrow(Loc.GetString("damage-value", ("type", ProtoMan.Index<DamageTypePrototype>(damage.Key).LocalizedName), ("amount", damage.Value)));
             }
         }
 
@@ -85,7 +84,7 @@ public sealed partial class DamageExamineSystem : EntitySystem
         {
             foreach (var (key, val) in percentPen)
             {
-                var typeName = _prototype.Index<DamageTypePrototype>(key).LocalizedName;
+                var typeName = ProtoMan.Index<DamageTypePrototype>(key).LocalizedName;
                 var perc = val * 100f;
                 var ap = (int)Math.Round(perc);
                 var abs = Math.Abs(ap);
@@ -100,7 +99,7 @@ public sealed partial class DamageExamineSystem : EntitySystem
         {
             foreach (var (key, val) in flatPen)
             {
-                var typeName = _prototype.Index<DamageTypePrototype>(key).LocalizedName;
+                var typeName = ProtoMan.Index<DamageTypePrototype>(key).LocalizedName;
                 var ap = (int)Math.Round(val);
                 var abs = Math.Abs(ap);
                 var arg = abs == 0 ? 0 : ap / abs; // yields 1 for positive, -1 for negative

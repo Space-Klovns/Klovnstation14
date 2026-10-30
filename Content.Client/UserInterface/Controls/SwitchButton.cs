@@ -274,7 +274,7 @@ namespace Content.Client.UserInterface.Controls
         {
             var separation = ActualSeparation;
 
-            var actualMainLabelWidth = finalSize.X - separation - TrackOutline.DesiredSize.X;
+            var actualMainLabelWidth = Math.Max(0f, finalSize.X - separation - TrackOutline.DesiredSize.X);
             float iconPosition = 0;
             float stateLabelPosition = 0;
 
@@ -302,7 +302,7 @@ namespace Content.Client.UserInterface.Controls
             // Upstream UI retained for mergeability: TrackFill.Arrange(iconTargetBox); Symbol.Arrange(iconTargetBox); ThumbOutline.Measure(TrackOutline.DesiredSize); var thumbLeft = iconTargetBox.Left; if (Pressed) thumbLeft = iconTargetBox.Right - ThumbOutline.DesiredSize.X; var thumbTargetBox = new UIBox2(thumbLeft, 0, thumbLeft + ThumbOutline.DesiredSize.X, finalSize.Y); ThumbFill.Arrange(thumbTargetBox); ThumbOutline.Arrange(thumbTargetBox);
             TrackOutline.Arrange(iconTargetBox);
 
-            var stateLabelsTargetBox = new UIBox2(stateLabelPosition, 0, finalSize.X, finalSize.Y);
+            var stateLabelsTargetBox = new UIBox2(Math.Min(finalSize.X, stateLabelPosition), 0, finalSize.X, finalSize.Y);
             OffStateLabel?.Arrange(stateLabelsTargetBox);
             OnStateLabel?.Arrange(stateLabelsTargetBox);
 

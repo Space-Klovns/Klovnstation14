@@ -1,4 +1,5 @@
 using Content.Shared._KS14.ZLevel;
+using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map.Components;
@@ -10,6 +11,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
 {
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
 
     private static readonly DeserializationOptions DeserializationOptions = DeserializationOptions.Default with
     {
@@ -17,14 +19,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         PauseMaps = false
     };
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsAutoZLevelComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsAutoZLevelComponent, EntityUnpausedEvent>(OnUnpaused);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsAutoZLevelComponent> entity, ref ComponentStartup args)
     {
         if (Paused(entity.Owner))
@@ -33,6 +28,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         TryLink(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnUnpaused(Entity<KsAutoZLevelComponent> entity, ref EntityUnpausedEvent args)
     {
         TryLink(entity);
@@ -62,7 +58,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         }
         else
         {
-            var eqe = EntityQueryEnumerator<KsAutoZLevelComponent, MapComponent>();
+            var eqe = AllEntityQuery<KsAutoZLevelComponent, MapComponent>();
             while (eqe.MoveNext(out var uid, out var component, out _))
             {
                 if (component.Id != entity.Comp.Id ||
@@ -77,23 +73,40 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
 
     private void LinkWith(Entity<KsAutoZLevelComponent> entity, Entity<KsAutoZLevelComponent?> otherEntity)
     {
+        Resolve(otherEntity, ref otherEntity.Comp, logMissing: false);
         if (otherEntity.Comp?.Location == entity.Comp.Location)
             Log.Warning($"KsAutoZLevelType of auto z-levels {ToPrettyString(entity.Owner)} and {ToPrettyString(otherEntity.Owner)} is the same! The location of the z-levels relative to each other will be determined by update order.");
 
-        if (entity.Comp.Location == KsAutoZLevelType.Above)
+        var location = entity.Comp.Location;
+        var depth = entity.Comp.Depth;
+
+        // Both are linked by this call, so neither should link again. Removed before unpausing the partner below:
+        //      its unpause runs OnUnpaused synchronously, which would otherwise find us and link the pair the other
+        //      way round from inside this call, leaving the insertion below to find it already in our stack.
+        RemComp(entity.Owner, entity.Comp);
+        if (otherEntity.Comp is { } otherComponent)
+            RemComp(otherEntity.Owner, otherComponent);
+
+        // Z-level maps are saved with mapPaused set, so that nothing on them runs until they have been linked
+        //      into a stack. This one has already been unpaused - that is what ran OnUnpaused and got us here -
+        //      but the partner found by the query above may still be sitting paused, waiting for exactly this.
+        //      Left paused it would be a z-level that renders, is fallen onto, and never simulates.
+        _mapSystem.SetPaused(otherEntity.Owner, false);
+
+        KsZLevelComponent? ourZLevelComponent;
+        if (location == KsAutoZLevelType.Above)
             _zLevelSystem.AddZLevelDirectlyAbove(
                 (otherEntity.Owner, EnsureComp<KsZLevelComponent>(otherEntity.Owner)),
-                (entity.Owner, EnsureComp<KsZLevelComponent>(entity.Owner))
+                (entity.Owner, ourZLevelComponent = EnsureComp<KsZLevelComponent>(entity.Owner))
             );
         else
             _zLevelSystem.AddZLevelDirectlyUnder(
                 (otherEntity.Owner, EnsureComp<KsZLevelComponent>(otherEntity.Owner)),
-                (entity.Owner, EnsureComp<KsZLevelComponent>(entity.Owner))
+                (entity.Owner, ourZLevelComponent = EnsureComp<KsZLevelComponent>(entity.Owner))
             );
 
-        RemComp(entity.Owner, entity.Comp);
-
-        if (Resolve(otherEntity, ref otherEntity.Comp, logMissing: false))
-            RemComp(otherEntity.Owner, otherEntity.Comp);
+        // Null means "leave it at the prototype default", so only override when the mapper actually set one.
+        if (depth is { } setDepth)
+            _zLevelSystem.SetDepth((entity.Owner, ourZLevelComponent), setDepth);
     }
 }

@@ -7,3 +7,4 @@
   sturdy: false
   thermalConductivity: 0.4
   heatCapacity: 700000
+  ksZLevelTransparent: true # KS14: Z-levels

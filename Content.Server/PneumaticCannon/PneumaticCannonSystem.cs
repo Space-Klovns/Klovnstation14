@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Storage.EntitySystems;
 using Content.Server.Stunnable;
@@ -45,7 +46,7 @@ public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
         val = (val + 1) % (int)PneumaticCannonPower.Len;
         component.Power = (PneumaticCannonPower)val;
 
-        Popup.PopupEntity(Loc.GetString("pneumatic-cannon-component-change-power",
+        Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pneumatic-cannon-component-change-power",
             ("power", component.Power.ToString())), uid, args.User);
 
         component.ProjectileSpeed = GetProjectileSpeedFromPower(component);
@@ -81,7 +82,7 @@ public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
         if (component.Power == PneumaticCannonPower.High
             && _stun.TryUpdateParalyzeDuration(args.User, TimeSpan.FromSeconds(component.HighPowerStunTime)))
         {
-            Popup.PopupEntity(Loc.GetString("pneumatic-cannon-component-power-stun",
+            Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pneumatic-cannon-component-power-stun",
                 ("cannon", uid)), cannon, args.User);
         }
 

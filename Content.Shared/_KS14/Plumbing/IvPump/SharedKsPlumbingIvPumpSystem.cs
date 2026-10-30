@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Chain;
 using Content.Shared._Starlight.Plumbing.Components;
 using Content.Shared.ActionBlocker;
@@ -17,18 +18,7 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
 
     [Dependency] protected EntityQuery<BloodstreamComponent> BloodstreamQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, ExaminedEvent>(OnExamined);
-
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, CanDragEvent>(OnCanDrag);
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, CanDropDraggedEvent>(OnCanDropDragged);
-
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, ActivateInWorldEvent>(OnActivateInWorld);
-    }
-
+    [SubscribeLocalEvent]
     private void OnExamined(Entity<KsPlumbingIvPumpComponent> entity, ref ExaminedEvent args)
     {
         args.PushMarkup(Loc.GetString("ks-plumbing-ivpump-examined", ("mode", entity.Comp.Mode.ToString())), priority: 5);
@@ -61,10 +51,10 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
         switch (newMode)
         {
             case KsPlumbingIvPumpMode.Injecting:
-                _popupSystem.PopupPredicted(Loc.GetString("ks-plumbing-ivpump-setto-injecting"), entity.Owner, userUid, type: PopupType.Small);
+                _popupSystem.PopupPredicted(KsPopupMessage.Create("ks-plumbing-ivpump-setto-injecting"), entity.Owner, userUid, type: PopupType.Small);
                 break;
             case KsPlumbingIvPumpMode.Drawing:
-                _popupSystem.PopupPredicted(Loc.GetString("ks-plumbing-ivpump-setto-drawing"), entity.Owner, userUid, type: PopupType.Small);
+                _popupSystem.PopupPredicted(KsPopupMessage.Create("ks-plumbing-ivpump-setto-drawing"), entity.Owner, userUid, type: PopupType.Small);
                 break;
             default:
                 throw new InvalidOperationException("Invalid mode for IV pump: " + newMode.ToString());
@@ -75,11 +65,13 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
         UpdateState(entity!);
     }
 
+    [SubscribeLocalEvent]
     private void OnCanDrag(Entity<KsPlumbingIvPumpComponent> entity, ref CanDragEvent args)
     {
         args.Handled = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnCanDropDragged(Entity<KsPlumbingIvPumpComponent> entity, ref CanDropDraggedEvent args)
     {
         args.Handled = true;
@@ -94,6 +86,7 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
             _actionBlockerSystem.CanComplexInteract(args.User);
     }
 
+    [SubscribeLocalEvent]
     private void OnActivateInWorld(Entity<KsPlumbingIvPumpComponent> entity, ref ActivateInWorldEvent args)
     {
         if (!args.Complex ||

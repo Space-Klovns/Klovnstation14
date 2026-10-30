@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Atmos;
 using Content.Shared._KS14.Sparks;
 using Content.Shared.Administration.Logs;
@@ -10,6 +11,7 @@ using Content.Shared.Power;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.BatteryShielding;
@@ -17,6 +19,7 @@ namespace Content.Shared._KS14.BatteryShielding;
 public abstract partial class SharedBatteryShieldingSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
     [Dependency] private ISharedAdminLogManager _adminLogManager = default!;
     [Dependency] private SharedBatterySystem _batterySystem = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
@@ -26,25 +29,12 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
     [Dependency] private EmagSystem _emagSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<BatteryShieldingComponent, BatteryStateChangedEvent>(OnBatteryStateChanged);
-        SubscribeLocalEvent<BatteryShieldingComponent, ChargeChangedEvent>(OnChargeChanged);
-
-        SubscribeLocalEvent<BatteryShieldingComponent, GotEmaggedEvent>(OnGotEmagged);
-        SubscribeLocalEvent<BatteryShieldingComponent, BatteryShieldingToggleMessage>(OnToggleMessage);
-        SubscribeLocalEvent<BatteryShieldingComponent, KsGasMaxPressureAttemptLoseIntegrityEvent>(OnGasMaxPressureAttemptLoseIntegrity);
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        if (!_gameTiming.IsFirstTimePredicted)
-            return;
-
+        // Not gated on IsFirstTimePredicted: a re-predicted tick that skipped this would leave the BtfoTime the
+        //      last server state reset it to, and the next first-time tick would set the battery off all over again.
         var btfoEqe = EntityQueryEnumerator<BtfoingBatteryShieldingComponent, BatteryShieldingComponent>();
         while (btfoEqe.MoveNext(out var uid, out var btfoingComponent, out var shieldingComponent))
         {
@@ -54,13 +44,17 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             btfoingComponent.BtfoTime = TimeSpan.MaxValue;
             Dirty(uid, btfoingComponent);
 
-            // TODO LCDC: fix this being spammed by prediction(?)
-            _audioSystem.PlayPredicted(shieldingComponent.EmagImplosionSound, Transform(uid).Coordinates, user: btfoingComponent.UserUid);
+            // Only the server plays it. Every client runs this timer, not just the user's, so a predicted
+            //      sound would be heard once from the client and once more from the server by everyone but the user.
+            if (_netManager.IsServer)
+                _audioSystem.PlayPvs(shieldingComponent.EmagImplosionSound, Transform(uid).Coordinates);
+
             _damageableSystem.ChangeDamage(uid, shieldingComponent.EmagImplosionDamage, ignoreResistances: true, origin: btfoingComponent.UserUid);
         }
     }
 
     // This assumes immutability of BatterySelfRecharger.............................................
+    [SubscribeLocalEvent]
     private void OnBatteryStateChanged(Entity<BatteryShieldingComponent> entity, ref BatteryStateChangedEvent args)
     {
         if (!TryComp<BatterySelfRechargerComponent>(entity, out var rechargerComponent))
@@ -83,6 +77,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             EnsureComp<ActiveBatteryShieldingComponent>(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnChargeChanged(Entity<BatteryShieldingComponent> entity, ref ChargeChangedEvent args)
     {
         if (MetaData(entity).EntityLifeStage != EntityLifeStage.MapInitialized)
@@ -105,13 +100,14 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
         Disable(entity, adminReason: "No more power is available");
 
         if (entity.Comp.FailPopupLoc is { } failPopupLocId)
-            _popupSystem.PopupEntity(Loc.GetString(failPopupLocId), entity, type: PopupType.LargeCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create(failPopupLocId), entity, type: PopupType.LargeCaution);
 
         var coordinates = Transform(entity).Coordinates;
         _sparksSystem.DoSpark(coordinates, SharedSparksSystem.DefaultSparkPrototype, soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier);
         _sparksSystem.ExposeSpark(coordinates, exposedTemperature: 2500f, exposedVolume: 10f);
     }
 
+    [SubscribeLocalEvent]
     private void OnGotEmagged(Entity<BatteryShieldingComponent> entity, ref GotEmaggedEvent args)
     {
         if (!_emagSystem.CompareFlag(args.Type, EmagType.Interaction) ||
@@ -131,6 +127,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
         _sparksSystem.ExposeSpark(coordinates, exposedTemperature: 2500f, exposedVolume: 10f);
     }
 
+    [SubscribeLocalEvent]
     private void OnToggleMessage(Entity<BatteryShieldingComponent> entity, ref BatteryShieldingToggleMessage args)
     {
         if (entity.Comp.Enabled)
@@ -145,6 +142,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnGasMaxPressureAttemptLoseIntegrity(Entity<BatteryShieldingComponent> entity, ref KsGasMaxPressureAttemptLoseIntegrityEvent args)
     {
         if (args.Cancelled ||
@@ -156,7 +154,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             return;
 
         if (entity.Comp.FalterPopupLoc is { } falterPopupLocId)
-            _popupSystem.PopupEntity(Loc.GetString(falterPopupLocId), entity, type: PopupType.SmallCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create(falterPopupLocId), entity, type: PopupType.SmallCaution);
 
         args.Cancelled = true;
     }
@@ -187,7 +185,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             _adminLogManager.Add(LogType.Explosion, $"{ToPrettyString(entity.Owner)} is exploding after being emagged and having its battery shielding turned on");
 
             if (entity.Comp.EmagMalfunctionPopupLoc is { } malfPopupLoc)
-                _popupSystem.PopupPredicted(Loc.GetString(malfPopupLoc), entity.Owner, recipient: userUid, type: PopupType.LargeCaution);
+                _popupSystem.PopupPredicted(KsPopupMessage.Create(malfPopupLoc), entity.Owner, recipient: userUid, type: PopupType.LargeCaution);
 
             _audioSystem.PlayPredicted(entity.Comp.EmagMalfunctionSound, entity.Owner, user: userUid);
 

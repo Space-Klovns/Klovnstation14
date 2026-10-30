@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Numerics;
 using Content.Server.Administration.Logs;
@@ -56,7 +57,6 @@ namespace Content.Server.Ghost
         [Dependency] private VisibilitySystem _visibilitySystem = default!;
         [Dependency] private MetaDataSystem _metaData = default!;
         [Dependency] private MobThresholdSystem _mobThresholdSystem = default!;
-        [Dependency] private IPrototypeManager _prototypeManager = default!;
         [Dependency] private IConfigurationManager _configurationManager = default!;
         [Dependency] private IChatManager _chatManager = default!;
         [Dependency] private SharedMindSystem _mind = default!;
@@ -128,8 +128,8 @@ namespace Content.Server.Ghost
             }
 
             var str = HasComp<GhostHearingComponent>(uid)
-                ? Loc.GetString("ghost-gui-toggle-hearing-popup-on")
-                : Loc.GetString("ghost-gui-toggle-hearing-popup-off");
+                ? KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ghost-gui-toggle-hearing-popup-on")
+                : KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ghost-gui-toggle-hearing-popup-off");
 
             Popup.PopupEntity(str, uid, uid);
             Dirty(uid, component);
@@ -157,7 +157,7 @@ namespace Content.Server.Ghost
             }
 
             if (booCounter == 0)
-                _popup.PopupEntity(Loc.GetString("ghost-component-boo-action-failed"), uid, uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ghost-component-boo-action-failed"), uid, uid);
 
             args.Handled = true;
         }
@@ -578,7 +578,7 @@ namespace Content.Server.Ghost
                                       _damageable.GetTotalDamage((playerEntity.Value, damageable));
                     }
 
-                    DamageSpecifier damage = new(_prototypeManager.Index(AsphyxiationDamageType), dealtDamage);
+                    DamageSpecifier damage = new(ProtoMan.Index(AsphyxiationDamageType), dealtDamage);
 
                     _damageable.ChangeDamage(playerEntity.Value, damage, true);
                 }

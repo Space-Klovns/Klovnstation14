@@ -52,12 +52,15 @@
   - type: LockVisuals
     stateUnlocked: unlocked
     stateLocked: locked
-  - type: EmissiveLayers # TODO EMISSIVES: adjustable params for individual layers; rn, keyboards emit a bit too much light than i'd like them to
+  - type: EmissiveLayers
     glowRadius: 0.15
     layers:
     - computerLayerScreen
     - computerLayerKeys
     - enum.LockVisualLayers.Lock
+    layerParams:
+      computerLayerKeys:
+        brightness: 0.5 # keyboards glowed about as much as the screen
 
   - type: UIRequiresLock
     userInterfaceKeys:
@@ -66,6 +69,7 @@
   - type: Lock
     locked: false
     useAccess: false
+  - type: LockedAnchorable
   - type: Computer
     board: KsShuttleConsoleIdLockedCircuitboard
 

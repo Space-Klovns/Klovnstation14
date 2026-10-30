@@ -6,20 +6,10 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.InventoryRequiresOrgan;
 
-// TODO LCDC: optimise somehow
-
 public sealed partial class InventoryRequiresOrganSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private InventorySystem _inventorySystem = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<InventoryRequiresOrganComponent, IsEquippingTargetAttemptEvent>(OnTargetEquippingAttempt);
-        SubscribeLocalEvent<InventoryRequiresOrganComponent, OrganRemovedFromEvent>(OnOrganRemoved);
-    }
 
     /// <returns>True if the inventory slot can continue being active.</returns>
     public static bool ShouldDisableSlot(List<ProtoId<OrganCategoryPrototype>> requiredCategories, Dictionary<ProtoId<OrganCategoryPrototype>, Entity<OrganComponent>> presentOrganCategoryCounts)
@@ -38,6 +28,7 @@ public sealed partial class InventoryRequiresOrganSystem : EntitySystem
         return missingCategories == requiredCategories.Count;
     }
 
+    [SubscribeLocalEvent]
     private void OnTargetEquippingAttempt(Entity<InventoryRequiresOrganComponent> entity, ref IsEquippingTargetAttemptEvent args)
     {
         if (!entity.Comp.Categories.TryGetValue(args.Slot, out var requiredCategories))
@@ -56,18 +47,22 @@ public sealed partial class InventoryRequiresOrganSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnOrganRemoved(Entity<InventoryRequiresOrganComponent> entity, ref OrganRemovedFromEvent args)
     {
         if (_gameTiming.ApplyingState)
             return;
 
-        if (TerminatingOrDeleted(entity) ||
+        if (args.OrganComponent.Category is not { } removedCategory ||
+            TerminatingOrDeleted(entity) ||
             !Transform(entity.Owner).ParentUid.IsValid())
             return;
 
         foreach (var (slotId, requiredCategories) in entity.Comp.Categories)
         {
-            if (!ShouldDisableSlot(requiredCategories, args.BodyComponent.PresentOrganCategories))
+            // Losing an organ no slot asks for can't disable one
+            if (!requiredCategories.Contains(removedCategory) ||
+                !ShouldDisableSlot(requiredCategories, args.BodyComponent.PresentOrganCategories))
                 continue;
 
             _inventorySystem.TryUnequip(entity.Owner, slotId, silent: true, force: true, predicted: true);

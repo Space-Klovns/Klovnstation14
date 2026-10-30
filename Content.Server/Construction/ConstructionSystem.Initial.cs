@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -108,7 +109,7 @@ namespace Content.Server.Construction
 
             if (existed)
             {
-                _popup.PopupEntity(Loc.GetString("construction-system-construct-cannot-start-another-construction"), user, user);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-construct-cannot-start-another-construction"), user, user);
                 return null;
             }
 
@@ -262,7 +263,7 @@ namespace Content.Server.Construction
 
             if (failed)
             {
-                _popup.PopupEntity(Loc.GetString("construction-system-construct-no-materials"), user, user);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-construct-no-materials"), user, user);
                 FailCleanup();
                 return null;
             }
@@ -357,13 +358,13 @@ namespace Content.Server.Construction
         // LEGACY CODE. See warning at the top of the file!
         public async Task<bool> TryStartItemConstruction(string prototype, EntityUid user)
         {
-            if (!PrototypeManager.TryIndex(prototype, out ConstructionPrototype? constructionPrototype))
+            if (!ProtoMan.TryIndex(prototype, out ConstructionPrototype? constructionPrototype))
             {
                 Log.Error($"Tried to start construction of invalid recipe '{prototype}'!");
                 return false;
             }
 
-            if (!PrototypeManager.TryIndex(constructionPrototype.Graph,
+            if (!ProtoMan.TryIndex(constructionPrototype.Graph,
                     out ConstructionGraphPrototype? constructionGraph))
             {
                 Log.Error(
@@ -373,7 +374,7 @@ namespace Content.Server.Construction
 
             if (_whitelistSystem.IsWhitelistFail(constructionPrototype.EntityWhitelist, user))
             {
-                _popup.PopupEntity(Loc.GetString("construction-system-cannot-start"), user, user);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-cannot-start"), user, user);
                 return false;
             }
 
@@ -436,14 +437,14 @@ namespace Content.Server.Construction
         // LEGACY CODE. See warning at the top of the file!
         private async void HandleStartStructureConstruction(TryStartStructureConstructionMessage ev, EntitySessionEventArgs args)
         {
-            if (!PrototypeManager.TryIndex(ev.PrototypeName, out ConstructionPrototype? constructionPrototype))
+            if (!ProtoMan.TryIndex(ev.PrototypeName, out ConstructionPrototype? constructionPrototype))
             {
                 Log.Error($"Tried to start construction of invalid recipe '{ev.PrototypeName}'!");
                 RaiseNetworkEvent(new AckStructureConstructionMessage(ev.Ack));
                 return;
             }
 
-            if (!PrototypeManager.TryIndex(constructionPrototype.Graph, out ConstructionGraphPrototype? constructionGraph))
+            if (!ProtoMan.TryIndex(constructionPrototype.Graph, out ConstructionGraphPrototype? constructionGraph))
             {
                 Log.Error($"Invalid construction graph '{constructionPrototype.Graph}' in recipe '{ev.PrototypeName}'!");
                 RaiseNetworkEvent(new AckStructureConstructionMessage(ev.Ack));
@@ -458,13 +459,13 @@ namespace Content.Server.Construction
 
             if (_whitelistSystem.IsWhitelistFail(constructionPrototype.EntityWhitelist, user))
             {
-                _popup.PopupEntity(Loc.GetString("construction-system-cannot-start"), user, user);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-cannot-start"), user, user);
                 return;
             }
 
             if (_container.IsEntityInContainer(user))
             {
-                _popup.PopupEntity(Loc.GetString("construction-system-inside-container"), user, user);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-inside-container"), user, user);
                 return;
             }
 
@@ -477,7 +478,7 @@ namespace Content.Server.Construction
             {
                 if (!set.Add(ev.Ack))
                 {
-                    _popup.PopupEntity(Loc.GetString("construction-system-already-building"), user, user);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("construction-system-already-building"), user, user);
                     return;
                 }
             }

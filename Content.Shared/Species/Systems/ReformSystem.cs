@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Species.Components;
 using Content.Shared.Actions;
 using Content.Shared.DoAfter;
@@ -18,7 +19,6 @@ public sealed partial class ReformSystem : EntitySystem
     [Dependency] private INetManager _netMan = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
-    [Dependency] private IPrototypeManager _protoManager = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedMindSystem _mindSystem = default!;
@@ -39,7 +39,7 @@ public sealed partial class ReformSystem : EntitySystem
     private void OnMapInit(EntityUid uid, ReformComponent comp, MapInitEvent args)
     {
         // When the map is initialized, give them the action
-        if (comp.ActionPrototype != default && !_protoManager.TryIndex<EntityPrototype>(comp.ActionPrototype, out var actionProto))
+        if (comp.ActionPrototype != default && !ProtoMan.TryIndex<EntityPrototype>(comp.ActionPrototype, out var actionProto))
             return;
 
         _actionsSystem.AddAction(uid, ref comp.ActionEntity, out var reformAction, comp.ActionPrototype);
@@ -64,7 +64,7 @@ public sealed partial class ReformSystem : EntitySystem
         // Stun them when they use the action for the amount of reform time.
         if (comp.ShouldStun)
             _stunSystem.TryUpdateStunDuration(uid, TimeSpan.FromSeconds(comp.ReformTime));
-        _popupSystem.PopupClient(Loc.GetString(comp.PopupText, ("name", uid)), uid, uid);
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.PopupText, ("name", uid)), uid, uid);
 
         // Create a doafter & start it
         var doAfter = new DoAfterArgs(EntityManager, uid, comp.ReformTime, new ReformDoAfterEvent(), uid)

@@ -33,7 +33,6 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         base.Initialize();
 
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, OnEnabledChanged, invokeImmediately: true);
-        SubscribeNetworkEvent<GhostRespawnTimeMessage>(OnTimeMessage);
     }
 
     private void OnEnabledChanged(bool enabled)
@@ -42,6 +41,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         LocalEnabledUpdated?.Invoke(enabled);
     }
 
+    [SubscribeNetworkEvent]
     private void OnTimeMessage(GhostRespawnTimeMessage message)
     {
         LocalRespawnTime = message.Time;

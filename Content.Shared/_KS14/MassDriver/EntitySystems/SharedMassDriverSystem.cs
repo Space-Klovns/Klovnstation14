@@ -15,13 +15,6 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private SharedAmbientSoundSystem _audioSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<MassDriverComponent, PowerChangedEvent>(OnPowerChanged);
-    }
-
     #region Logic
 
     /// <summary>
@@ -30,6 +23,7 @@ public abstract partial class SharedMassDriverSystem : EntitySystem
     /// <param name="uid">Mass Driver</param>
     /// <param name="component">Mass Driver Component</param>
     /// <param name="args">Event arguments</param>
+    [SubscribeLocalEvent]
     private void OnPowerChanged(EntityUid uid, MassDriverComponent component, ref PowerChangedEvent args)
     {
         if (component.Mode != MassDriverMode.Auto)

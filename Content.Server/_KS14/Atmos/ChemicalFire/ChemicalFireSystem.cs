@@ -1,8 +1,12 @@
 using System.Linq;
+using Content.Server._KS14.Atmos.FoamBlanket;
 using Content.Server._KS14.Atmos.TileFire;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Atmos;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Fluids.Components;
 
 namespace Content.Server._KS14.Atmos.ChemicalFire;
 
@@ -13,18 +17,10 @@ namespace Content.Server._KS14.Atmos.ChemicalFire;
 public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
     [Dependency] private KsTileFireSystem _tileFireSystem = default!;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ChemicalFireComponent, ChemicalFireHeatTileEvent>(OnHeatTile);
-
-        SubscribeLocalEvent<ChemicalFireGridComponent, AtmosphereSystem.IsHotspotActiveMethodEvent>(OnGridIsHotspotActive);
-        SubscribeLocalEvent<ChemicalFireGridComponent, KsGetTileFireSourcesEvent>(OnGridGetTileFireSources);
-        SubscribeLocalEvent<ChemicalFireGridComponent, KsExtinguishTileFireSourcesEvent>(OnGridExtinguishTileFireSources);
-    }
+    [Dependency] private PuddleSystem _puddleSystem = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
 
     /// <summary>
     ///     Reports a tile holding a chemfire as burning, even when there is no gas fire on it.
@@ -35,6 +31,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     ///         useless against a chemfire burning in an atmosphere with nothing flammable in it.
     ///     Deliberately runs even once the event is handled, since it only ever raises the answer.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnGridIsHotspotActive(Entity<ChemicalFireGridComponent> entity, ref AtmosphereSystem.IsHotspotActiveMethodEvent args)
     {
         if (args.Result || !entity.Comp.Tiles.ContainsKey(args.Tile))
@@ -47,6 +44,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// <summary>
     ///     Answers <see cref="KsTileFireSystem"/> with the chemfires burning a tile.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnGridGetTileFireSources(Entity<ChemicalFireGridComponent> entity, ref KsGetTileFireSourcesEvent args)
     {
         if (args.AnySources || GetTileChemicalFires((entity.Owner, entity.Comp), args.Tile) is not { } tileData)
@@ -65,6 +63,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// <summary>
     ///     Douses the chemfires on a tile, which is how an extinguisher reaches them.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnGridExtinguishTileFireSources(Entity<ChemicalFireGridComponent> entity, ref KsExtinguishTileFireSourcesEvent args)
     {
         if (GetTileChemicalFires((entity.Owner, entity.Comp), args.Tile) is not { } tileData)
@@ -120,9 +119,20 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     ///         hotspot announces itself once per atmos cycle: whatever walks onto a burning tile has to catch
     ///         fire too, and a chemfire sharing a tile with a cooler fire has to keep setting the pace.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnHeatTile(Entity<ChemicalFireComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
+        // Cooled out before it can heat the air back up again.
+        if (args.Mixture is { } mixture && IsTooCold(entity.Comp, mixture))
+        {
+            ExtinguishChemicalFire(entity, playSound: true);
+            return;
+        }
+
         HeatTileAir(entity, ref args);
+
+        if (_foamBlanketSystem.ContestFire(entity, args.GridUid, args.Tile, args.Seconds))
+            return;
 
         _tileFireSystem.RaiseTileFire(args.GridUid, args.Tile, entity.Comp.Temperature, entity.Comp.ExposedVolume);
 
@@ -147,7 +157,17 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// </remarks>
     private void HeatTileAir(Entity<ChemicalFireComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
-        if (entity.Comp.HeatPower <= 0f || args.Mixture is not { } mixture || mixture.Immutable || mixture.Temperature >= entity.Comp.Temperature)
+        if (entity.Comp.HeatPower <= 0f)
+            return;
+
+        var energyBudget = entity.Comp.HeatPower * args.Seconds;
+
+        // A foam blanket over the chemfire takes its share first, boiling away; then a puddle under it. Whatever
+        //     neither can absorb falls through to the air.
+        energyBudget -= _foamBlanketSystem.HeatBlanket(args.GridUid, args.Tile, energyBudget * Math.Clamp(entity.Comp.FoamHeatFraction, 0f, 1f));
+        energyBudget -= HeatTilePuddle(entity, args.GridUid, args.Tile, energyBudget);
+
+        if (energyBudget <= 0f || args.Mixture is not { } mixture || mixture.Immutable || mixture.Temperature >= entity.Comp.Temperature)
             return;
 
         var heatCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
@@ -155,11 +175,43 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
             return;
 
         var energy = MathF.Min(
-            entity.Comp.HeatPower * args.Seconds,
+            energyBudget,
             (entity.Comp.Temperature - mixture.Temperature) * heatCapacity
         );
 
         _atmosphereSystem.AddHeat(mixture, energy);
+    }
+
+    /// <summary>
+    ///     Pours <see cref="ChemicalFireComponent.PuddleHeatFraction"/> of <paramref name="energyBudget"/> into the
+    ///         puddle on the tile, if there is one, never warming it past <see cref="ChemicalFireComponent.Temperature"/>.
+    /// </summary>
+    /// <returns>The energy actually given to the puddle, in joules; zero if there is no puddle or it took none.</returns>
+    private float HeatTilePuddle(Entity<ChemicalFireComponent> entity, EntityUid gridUid, Vector2i tile, float energyBudget)
+    {
+        var fraction = Math.Clamp(entity.Comp.PuddleHeatFraction, 0f, 1f);
+        if (fraction <= 0f || !_puddleSystem.TryGetCachedPuddle(gridUid, tile, out Entity<PuddleComponent> puddle))
+            return 0f;
+
+        if (!_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution) ||
+            puddle.Comp.Solution is not { } solutionEntity ||
+            solution.Temperature >= entity.Comp.Temperature)
+            return 0f;
+
+        var heatCapacity = solution.GetHeatCapacity(ProtoMan);
+        if (heatCapacity <= 0f)
+            return 0f;
+
+        var energy = MathF.Min(
+            energyBudget * fraction,
+            (entity.Comp.Temperature - solution.Temperature) * heatCapacity
+        );
+
+        if (energy <= 0f)
+            return 0f;
+
+        _solutionContainerSystem.AddThermalEnergy(solutionEntity, energy);
+        return energy;
     }
 
     protected override GasMixture? ResolveTileMixture(EntityUid gridUid, Vector2i tile, bool excite)

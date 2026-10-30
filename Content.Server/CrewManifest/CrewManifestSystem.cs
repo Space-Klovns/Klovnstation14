@@ -24,7 +24,6 @@ public sealed partial class CrewManifestSystem : EntitySystem
     [Dependency] private StationRecordsSystem _recordsSystem = default!;
     [Dependency] private EuiManager _euiManager = default!;
     [Dependency] private IConfigurationManager _configManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     /// <summary>
     ///     Cached crew manifest entries. The alternative is to outright
@@ -231,7 +230,7 @@ public sealed partial class CrewManifestSystem : EntitySystem
             var record = recordObject.Item2;
             var entry = new CrewManifestEntry(record.Name, record.JobTitle, record.JobIcon, record.JobPrototype);
 
-            _prototypeManager.TryIndex(record.JobPrototype, out JobPrototype? job);
+            ProtoMan.TryIndex(record.JobPrototype, out JobPrototype? job);
             entriesSort.Add((job, entry));
         }
 

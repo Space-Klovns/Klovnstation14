@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using Content.Server.CombatMode;
 using Content.Server.Hands.Systems;
 using Content.Server.Interaction;
@@ -23,7 +25,20 @@ public sealed partial class InteractUsingOperator : HTNOperator
     /// </summary>
     [DataField(required: true)] public string TargetKey;
 
-    // TODO LCDC HTN: Make plan for this (its quite ez)
+    /// <remarks>
+    ///     Only the target is checked: the item to use is usually equipped by an earlier task in the same plan,
+    ///         which has no planning effects to say so.
+    /// </remarks>
+    public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
+    {
+        if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entManager) ||
+            !_entManager.EntityExists(targetUid))
+        {
+            return (false, null);
+        }
+
+        return (true, null);
+    }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {

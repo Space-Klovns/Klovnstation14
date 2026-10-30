@@ -19,15 +19,7 @@ public sealed partial class SupplyPodGlowSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<SupplyPodGlowComponent, SupplyPodLaunchedEvent>(OnLaunched);
-        SubscribeLocalEvent<SupplyPodGlowComponent, SupplyPodLandedEvent>(OnLanded);
-        SubscribeLocalEvent<SupplyPodGlowComponent, ComponentShutdown>(OnShutdown);
-    }
-
+    [SubscribeLocalEvent]
     private void OnLaunched(Entity<SupplyPodGlowComponent> entity, ref SupplyPodLaunchedEvent args)
     {
         // A pod on the way up is not burning anything - the glow belongs to the descent.
@@ -48,6 +40,7 @@ public sealed partial class SupplyPodGlowSystem : EntitySystem
         entity.Comp.GlowEntity = glowUid;
     }
 
+    [SubscribeLocalEvent]
     private void OnLanded(Entity<SupplyPodGlowComponent> entity, ref SupplyPodLandedEvent args)
     {
         ReleaseGlow(entity.Comp);
@@ -58,6 +51,7 @@ public sealed partial class SupplyPodGlowSystem : EntitySystem
     ///         <c>qdel(glow_effect)</c> on destruction. Landing releases the glow first, so this
     ///         only ever catches the abnormal case.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<SupplyPodGlowComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.GlowEntity is not { } glowUid)

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.Piping.Components;
 using Content.Server.Atmos.Piping.EntitySystems;
 using Content.Server.Charges;
@@ -68,7 +69,7 @@ public sealed partial class SprayPainterSystem : SharedSprayPainterSystem
         args.Handled = true;
         if (TryComp(ent, out LimitedChargesComponent? charges) && _charges.GetCurrentCharges((ent, charges)) < ent.Comp.DecalChargeCost)
         {
-            _popup.PopupEntity(Loc.GetString("spray-painter-interact-no-charges"), args.User, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spray-painter-interact-no-charges"), args.User, args.User);
             return;
         }
 
@@ -87,22 +88,22 @@ public sealed partial class SprayPainterSystem : SharedSprayPainterSystem
         else
         {
             var gridUid = _transform.GetGrid(args.ClickLocation);
-            if (gridUid is not { } grid || !TryComp<DecalGridComponent>(grid, out var decalGridComp))
+            if (gridUid is not { } grid)
             {
-                _popup.PopupEntity(Loc.GetString("spray-painter-interact-nothing-to-remove"), args.User, args.User);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spray-painter-interact-nothing-to-remove"), args.User, args.User);
                 return;
             }
 
             var decals = _decals.GetDecalsInRange(grid, position.Position, validDelegate: IsDecalValid);
             if (decals.Count <= 0)
             {
-                _popup.PopupEntity(Loc.GetString("spray-painter-interact-nothing-to-remove"), args.User, args.User);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spray-painter-interact-nothing-to-remove"), args.User, args.User);
                 return;
             }
 
             foreach (var decal in decals)
             {
-                _decals.RemoveDecal(grid, decal.Index, decalGridComp);
+                _decals.RemoveDecal(grid, decal.Index);
             }
         }
 
@@ -118,7 +119,7 @@ public sealed partial class SprayPainterSystem : SharedSprayPainterSystem
     /// </summary>
     private bool IsDecalValid(Decal decal)
     {
-        if (!Proto.TryIndex<DecalPrototype>(decal.Id, out var decalProto))
+        if (!ProtoMan.TryIndex<DecalPrototype>(decal.Id, out var decalProto))
             return false;
 
         return (decalProto.Tags.Contains("station")
@@ -176,7 +177,7 @@ public sealed partial class SprayPainterSystem : SharedSprayPainterSystem
         if (TryComp<LimitedChargesComponent>(args.Used, out var charges)
             && _charges.GetCurrentCharges((args.Used, charges)) < painter.PipeChargeCost)
         {
-            var msg = Loc.GetString("spray-painter-interact-no-charges");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("spray-painter-interact-no-charges");
             _popup.PopupEntity(msg, args.User, args.User);
             return;
         }
@@ -208,13 +209,13 @@ public sealed partial class SprayPainterSystem : SharedSprayPainterSystem
         var decals = _decals.GetDecalsInRange(grid, clickPos, validDelegate: IsDecalValid);
         if (decals.Count == 0)
         {
-            _popup.PopupEntity(Loc.GetString("spray-painter-interact-no-color-pick"), args.User, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spray-painter-interact-no-color-pick"), args.User, args.User);
             return;
         }
 
         var closestDecal = decals.MinBy(d => Vector2.Distance(d.Decal.Coordinates, clickPos)).Decal;
 
-        _popup.PopupEntity(Loc.GetString("spray-painter-interact-color-picked", ("id", closestDecal.Id)), args.User, args.User);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spray-painter-interact-color-picked", ("id", closestDecal.Id)), args.User, args.User);
 
         ent.Comp.SelectedDecalColor = closestDecal.Color;
         ent.Comp.ColorPickerEnabled = false;

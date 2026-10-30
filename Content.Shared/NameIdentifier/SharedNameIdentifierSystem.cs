@@ -8,7 +8,6 @@ namespace Content.Shared.NameIdentifier;
 /// </summary>
 public abstract partial class SharedNameIdentifierSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     public override void Initialize()
     {
@@ -26,7 +25,7 @@ public abstract partial class SharedNameIdentifierSystem : EntitySystem
         if (ent.Comp.LifeStage > ComponentLifeStage.Running)
             return;
 
-        if (!_prototypeManager.Resolve(ent.Comp.Group, out var group))
+        if (!ProtoMan.Resolve(ent.Comp.Group, out var group))
             return;
 
         var format = group.FullName ? "name-identifier-format-full" : "name-identifier-format-append";

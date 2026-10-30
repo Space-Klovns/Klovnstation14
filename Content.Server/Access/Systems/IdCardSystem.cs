@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.Chat.Systems;
@@ -20,7 +21,6 @@ public sealed partial class IdCardSystem : SharedIdCardSystem
 {
     [Dependency] private PopupSystem _popupSystem = default!;
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IAdminLogManager _adminLogger = default!;
     [Dependency] private ChatSystem _chat = default!;
     [Dependency] private MicrowaveSystem _microwave = default!;
@@ -47,7 +47,7 @@ public sealed partial class IdCardSystem : SharedIdCardSystem
                 TryComp(uid, out TransformComponent? transformComponent);
                 if (transformComponent != null)
                 {
-                    _popupSystem.PopupCoordinates(Loc.GetString("id-card-component-microwave-burnt", ("id", uid)),
+                    _popupSystem.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("id-card-component-microwave-burnt", ("id", uid)),
                      transformComponent.Coordinates, PopupType.Medium);
                     Spawn("FoodBadRecipe",
                         transformComponent.Coordinates);
@@ -68,7 +68,7 @@ public sealed partial class IdCardSystem : SharedIdCardSystem
             // If they're unlucky, brick their ID
             if (randomPick <= 0.25f)
             {
-                _popupSystem.PopupEntity(Loc.GetString("id-card-component-microwave-bricked", ("id", uid)), uid);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("id-card-component-microwave-bricked", ("id", uid)), uid);
 
                 access.Tags.Clear();
                 Dirty(uid, access);
@@ -78,11 +78,11 @@ public sealed partial class IdCardSystem : SharedIdCardSystem
             }
             else
             {
-                _popupSystem.PopupEntity(Loc.GetString("id-card-component-microwave-safe", ("id", uid)), uid, PopupType.Medium);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("id-card-component-microwave-safe", ("id", uid)), uid, PopupType.Medium);
             }
 
             // Give them a wonderful new access to compensate for everything
-            var ids = _prototypeManager.EnumeratePrototypes<AccessLevelPrototype>().Where(x => x.CanAddToIdCard).ToArray();
+            var ids = ProtoMan.EnumeratePrototypes<AccessLevelPrototype>().Where(x => x.CanAddToIdCard).ToArray();
 
             if (ids.Length == 0)
                 return;

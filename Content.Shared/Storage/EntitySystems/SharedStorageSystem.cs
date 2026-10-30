@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -50,7 +51,6 @@ namespace Content.Shared.Storage.EntitySystems;
 public abstract partial class SharedStorageSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _cfg = default!;
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] protected IRobustRandom Random = default!;
     [Dependency] private ISharedAdminLogManager _adminLog = default!;
 
@@ -76,7 +76,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
     [Dependency] private EntityQuery<ItemComponent> _itemQuery = default!;
     [Dependency] private EntityQuery<StackComponent> _stackQuery = default!;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery = default!;
-    [Dependency] private EntityQuery<UserInterfaceUserComponent> _userQuery = default!;
+    /* [Dependency] private EntityQuery<UserInterfaceUserComponent> _userQuery = default!; */ // KS14: removed, its only user was the open-storage counting replaced in OnBoundUIAttempt
 
     /// <summary>
     /// Whether we're allowed to go up-down storage via UI.
@@ -124,7 +124,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
     {
         base.Initialize();
 
-        _prototype.PrototypesReloaded += OnPrototypesReloaded;
+        ProtoMan.PrototypesReloaded += OnPrototypesReloaded;
 
         Subs.CVar(_cfg, CCVars.StorageLimit, OnStorageLimitChanged, true);
 
@@ -241,7 +241,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
     public override void Shutdown()
     {
-        _prototype.PrototypesReloaded -= OnPrototypesReloaded;
+        ProtoMan.PrototypesReloaded -= OnPrototypesReloaded;
     }
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
@@ -256,9 +256,9 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
     private void UpdatePrototypeCache()
     {
-        _defaultStorageMaxItemSize = _prototype.Index(DefaultStorageMaxItemSize);
+        _defaultStorageMaxItemSize = ProtoMan.Index(DefaultStorageMaxItemSize);
         _sortedSizes.Clear();
-        _sortedSizes.AddRange(_prototype.EnumeratePrototypes<ItemSizePrototype>());
+        _sortedSizes.AddRange(ProtoMan.EnumeratePrototypes<ItemSizePrototype>());
         _sortedSizes.Sort();
 
         var nextSmallest = new KeyValuePair<string, ItemSizePrototype>[_sortedSizes.Count];
@@ -302,6 +302,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
     private void OnBoundUIClosed(EntityUid uid, StorageComponent storageComp, BoundUIClosedEvent args)
     {
+        RemoveOpenStorageWindow(args.Actor, uid); // KS14: track storage window open order
         CloseNestedInterfaces(uid, args.Actor, storageComp);
 
         // If UI is closed for everyone
@@ -424,8 +425,12 @@ public abstract partial class SharedStorageSystem : EntitySystem
         {
             // If you need something more sophisticated for multi-UI you'll need to code some smarter
             // interactions.
+            // KS14 start: was "if (_openStorageLimit == 1) UI.CloseUserUis<StorageUiKey>(actor);".
+            // That closed every storage UI before the eviction path could see it, which emptied the
+            // tracking list and meant the replacement window never inherited the old one's position.
             if (_openStorageLimit == 1)
-                UI.CloseUserUis<StorageComponent.StorageUiKey>(actor);
+                MakeRoomForStorageWindow(uid, actor);
+            // KS14 end
 
             OpenStorageUIInternal(uid, actor, storageComp, silent: silent);
         }
@@ -530,6 +535,19 @@ public abstract partial class SharedStorageSystem : EntitySystem
     {
     }
 
+    /// <summary>
+    ///     Called on the client just before <paramref name="oldStorage"/>'s window is evicted to make
+    ///         room for <paramref name="newStorage"/>'s, so the replacement can open where it was.
+    /// </summary>
+    /// <remarks>
+    ///     Implementations hide the outgoing window and remember its position; they must not close its
+    ///         UI, because the authoritative close is the server's to send.
+    ///     No-op on the server, which evicts by closing the UI outright.
+    /// </remarks>
+    protected virtual void PrepareStorageWindowReplacement(EntityUid oldStorage, EntityUid newStorage, EntityUid actor)
+    {
+    }
+
     protected virtual void ShowStorageWindow(EntityUid uid, EntityUid actor)
     {
     }
@@ -575,7 +593,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
             {
                 if (entity == args.User
                     || !_itemQuery.TryGetComponent(entity, out var itemComp) // Need comp to get item size to get weight
-                    || !_prototype.Resolve(itemComp.Size, out var itemSize)
+                    || !ProtoMan.Resolve(itemComp.Size, out var itemSize)
                     || !CanInsert(uid, entity, out _, storageComp, item: itemComp)
                     || !_interactionSystem.InRangeUnobstructed(args.User, entity))
                 {
@@ -855,6 +873,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
     private void OnBoundUIOpen(Entity<StorageComponent> ent, ref BoundUIOpenedEvent args)
     {
+        AddOpenStorageWindow(args.Actor, ent.Owner); // KS14: track storage window open order
         UpdateAppearance((ent.Owner, ent.Comp, null));
     }
 
@@ -865,34 +884,13 @@ public abstract partial class SharedStorageSystem : EntitySystem
             _nestedCheck ||
             args.Message is not OpenBoundInterfaceMessage)
             return;
-
-        var uid = args.Target;
-        var actor = args.Actor;
-        var count = 0;
-
-        if (_userQuery.TryComp(actor, out var userComp))
-        {
-            foreach (var (ui, keys) in userComp.OpenInterfaces)
-            {
-                if (ui == uid)
-                    continue;
-
-                foreach (var key in keys)
-                {
-                    if (key is not StorageComponent.StorageUiKey)
-                        continue;
-
-                    count++;
-
-                    if (count >= _openStorageLimit)
-                    {
-                        args.Cancel();
-                    }
-
-                    break;
-                }
-            }
-        }
+        // KS14 start: replaces upstream's "count the actor's open storage UIs and cancel at the
+        // limit". At the limit the oldest window is evicted instead, so opening a new container
+        // always works. Cancelling is now only for a limit of zero. The client/server split lives
+        // inside MakeRoomForStorageWindow.
+        if (!MakeRoomForStorageWindow(args.Target, args.Actor))
+            args.Cancel();
+        // KS14 end
     }
 
     private void OnEntInserted(Entity<StorageComponent> entity, ref EntInsertedIntoContainerMessage args)
@@ -1255,13 +1253,13 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
         if (!CanInsert(ent, toInsert.Value, out var reason, ent.Comp))
         {
-            _popupSystem.PopupClient(Loc.GetString(reason ?? "comp-storage-cant-insert"), ent, player);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(reason ?? "comp-storage-cant-insert"), ent, player);
             return false;
         }
 
         if (!_sharedHandsSystem.CanDrop(player, toInsert.Value))
         {
-            _popupSystem.PopupClient(Loc.GetString("comp-storage-cant-drop", ("entity", toInsert.Value)), ent, player);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-storage-cant-drop", ("entity", toInsert.Value)), ent, player);
             return false;
         }
 
@@ -1283,7 +1281,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
         if (!Insert(uid, toInsert, out _, user: player, uid.Comp, playSound: playSound))
         {
-            _popupSystem.PopupClient(Loc.GetString("comp-storage-cant-insert"), uid, player);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-storage-cant-insert"), uid, player);
             return false;
         }
         return true;
@@ -1818,7 +1816,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
         // If we specify a max item size, use that
         if (uid.Comp.MaxItemSize != null)
         {
-            if (_prototype.Resolve(uid.Comp.MaxItemSize.Value, out var proto))
+            if (ProtoMan.Resolve(uid.Comp.MaxItemSize.Value, out var proto))
                 return proto;
 
             Log.Error($"{ToPrettyString(uid.Owner)} tried to get invalid item size prototype: {uid.Comp.MaxItemSize.Value}. Stack trace:\\n{Environment.StackTrace}");

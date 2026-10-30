@@ -8,12 +8,11 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<ActiveSupplyPodComponent, PreventCollideEvent>(OnPreventCollide);
-
         SubscribeLocalEvent<ActiveSupplyPodComponent, ComponentStartup>(OnActiveStartup);
         SubscribeLocalEvent<ActiveSupplyPodComponent, ComponentShutdown>(OnActiveShutdown);
     }
 
+    [SubscribeLocalEvent]
     private void OnPreventCollide(Entity<ActiveSupplyPodComponent> entity, ref PreventCollideEvent args)
     {
         args.Cancelled = true;

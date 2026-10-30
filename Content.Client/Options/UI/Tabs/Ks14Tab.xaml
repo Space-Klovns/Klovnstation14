@@ -1,4 +1,4 @@
-﻿<tabs:Ks14Tab xmlns="https://spacestation14.io"
+<tabs:Ks14Tab xmlns="https://spacestation14.io"
               xmlns:tabs="clr-namespace:Content.Client.Options.UI.Tabs"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:ui="clr-namespace:Content.Client.Options.UI">
@@ -8,10 +8,48 @@
             <BoxContainer Orientation="Vertical"
                           Margin="8 8 8 8"
                           VerticalExpand="True">
+                <!-- KS14: select the client interface language independently of chat translation -->
+                <ui:OptionDropDown Name="DropDownClientLocale"
+                                   Title="{Loc 'ks-ui-options-client-locale'}"/>
+                <Label Text="{Loc 'ks-ui-options-client-locale-hint'}"
+                       StyleClasses="LabelSubText"/>
                 <CheckBox Name="SlurFilterEnabled"
                           Text="{Loc 'ks-ui-options-slurfilter'}"/>
+                <!-- KS14: dim bright lobby art behind the lobby text -->
+                <CheckBox Name="LobbyAdaptiveContrast"
+                          Text="{Loc 'ks-ui-options-lobby-adaptive-contrast'}"/>
+                <!-- Lobby font family: disabled, the lobby uses Jura. Re-enable with the block in Ks14Tab.xaml.cs.
+                <ui:OptionDropDown Name="DropDownLobbyFont"
+                                   Title="{Loc 'ks-ui-options-lobby-font'}"/>
+                -->
+                <CheckBox Name="ActionFoldersEnabled"
+                          Text="{Loc 'ks-ui-options-action-folders'}"/>
+                <CheckBox Name="ActionLayoutPersistenceEnabled"
+                          Text="{Loc 'ks-ui-options-action-layout-persistence'}"/>
                 <ui:OptionDropDown Name="DropDownTranslateLanguage"
                                    Title="{Loc 'ks-ui-options-translate-language'}"/>
+                <!-- KS14 start: voice chat, shown only while the server has it enabled -->
+                <BoxContainer Name="VoiceSection"
+                              Orientation="Vertical"
+                              Margin="0 8 0 0"
+                              Visible="False">
+                    <Label Text="{Loc 'ks-ui-options-voice-header'}"
+                           StyleClasses="LabelKeyText"/>
+                    <CheckBox Name="VoiceHearEnabled"
+                              Text="{Loc 'ks-ui-options-voice-hear'}"/>
+                    <CheckBox Name="VoiceActivation"
+                              Text="{Loc 'ks-ui-options-voice-activation'}"
+                              ToolTip="{Loc 'ks-ui-options-voice-activation-tooltip'}"/>
+                    <ui:OptionSlider Name="SliderVoiceVolume"
+                                     Title="{Loc 'ks-ui-options-voice-volume'}"/>
+                    <ui:OptionSlider Name="SliderVoiceJitter"
+                                     Title="{Loc 'ks-ui-options-voice-jitter'}"/>
+                    <Button Name="VoiceOpenButton"
+                            Text="{Loc 'ks-ui-options-voice-open'}"
+                            HorizontalAlignment="Left"
+                            Margin="0 4 0 0"/>
+                </BoxContainer>
+                <!-- KS14 end -->
             </BoxContainer>
         </ScrollContainer>
         <ui:OptionsTabControlRow Name="Control"

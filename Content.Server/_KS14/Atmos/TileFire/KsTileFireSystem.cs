@@ -30,17 +30,11 @@ public sealed partial class KsTileFireSystem : EntitySystem
     /// <summary>Scratch set for the entities standing on a tile.</summary>
     private readonly HashSet<EntityUid> _tileEntities = [];
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GridAtmosphereComponent, KsGetTileFireSourcesEvent>(OnGridGetTileFireSources);
-    }
-
     /// <remarks>
     ///     Answered here rather than by atmospherics itself because a hotspot is tile data rather than an
     ///         entity, so it has nothing of its own to hang a subscription off. The grid stands in for it.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnGridGetTileFireSources(Entity<GridAtmosphereComponent> entity, ref KsGetTileFireSourcesEvent args)
     {
         if (args.AnySources ||

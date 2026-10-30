@@ -11,7 +11,6 @@ namespace Content.Server.Speech
     public sealed partial class SpeechSoundSystem : EntitySystem
     {
         [Dependency] private IGameTiming _gameTiming = default!;
-        [Dependency] private IPrototypeManager _protoManager = default!;
         [Dependency] private IRobustRandom _random = default!;
         [Dependency] private SharedAudioSystem _audio = default!;
 
@@ -29,7 +28,7 @@ namespace Content.Server.Speech
 
             // Play speech sound
             SoundSpecifier? contextSound;
-            var prototype = _protoManager.Index<SpeechSoundsPrototype>(ent.Comp.SpeechSounds);
+            var prototype = ProtoMan.Index<SpeechSoundsPrototype>(ent.Comp.SpeechSounds);
 
             // Different sounds for ask/exclaim based on last character
             contextSound = message[^1] switch

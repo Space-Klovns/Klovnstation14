@@ -1,0 +1,109 @@
+<Document>
+  # Манипуляция газами
+  В распоряжении Атмосферных техников имеется широкий спектр инструментов и оборудования для манипулирования газами на всей территории станции.
+
+  [bold]Внимание: при отсоединении (откручивании) большинства устройств, содержащих газ, [color=red]происходит утечка газа[/color] в атмосферу.[/bold]
+  Вы можете безопасно отсоединить [textlink="канистры" link="GasCanisters"], [textlink="переносные скрубберы" link="PortableScrubber"], [textlink="конденсаторы газа" link="GasCondensing"], и [textlink="термомашины" link="Thermomachines"].
+
+  <Box>
+    <GuideEntityEmbed Entity="GasPipeStraight" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeHalf" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeBend" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeTJunction" Caption=""/>
+    <GuideEntityEmbed Entity="GasPipeFourway" Caption=""/>
+  </Box>
+  <Box>
+    ## Трубы
+  </Box>
+  <Box>
+    [color=#999999][italic]Распределение газов из одного места в другое[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="GasPressurePump" Caption=""/>
+    <GuideEntityEmbed Entity="GasVolumePump" Caption=""/>
+  </Box>
+  <Box>
+    ## Насосы
+  </Box>
+  <Box>
+    [color=#999999][italic]Принудительное перемещение газов из одного места в другое[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="GasVentPump" Caption=""/>
+    <GuideEntityEmbed Entity="GasPassiveVent" Caption=""/>
+    <GuideEntityEmbed Entity="GasOutletInjector" Caption=""/>
+    <GuideEntityEmbed Entity="GasVentScrubber" Caption=""/>
+    <GuideEntityEmbed Entity="PortableScrubber" Caption=""/>
+  </Box>
+  <Box>
+    ## Вход и выход атмосферы
+  </Box>
+  <Box>
+    [color=#999999][italic]Введение и извлечение газов из существующей (или отсутствующей) атмосферы[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="GasValve" Caption=""/>
+    <GuideEntityEmbed Entity="SignalControlledValve" Caption=""/>
+    <GuideEntityEmbed Entity="PressureControlledValve" Caption=""/>
+    <GuideEntityEmbed Entity="GasPassiveGate" Caption=""/>
+    <GuideEntityEmbed Entity="GasPressureRegulator" Caption=""/>
+  </Box>
+  <Box>
+    ## Клапаны
+  </Box>
+  <Box>
+    [color=#999999][italic]Контролирование потока газа по трубам[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="GasMixer" Caption=""/>
+    <GuideEntityEmbed Entity="GasFilter" Caption=""/>
+  </Box>
+  <Box>
+    ## Смешивание и Фильтрация
+  </Box>
+  <Box>
+    [color=#999999][italic]Изменение состава газа[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="AirCanister" Caption=""/>
+    <GuideEntityEmbed Entity="OxygenCanister" Caption=""/>
+    <GuideEntityEmbed Entity="NitrogenCanister" Caption=""/>
+    <GuideEntityEmbed Entity="CarbonDioxideCanister" Caption=""/>
+    <GuideEntityEmbed Entity="StorageCanister" Caption=""/>
+    <GuideEntityEmbed Entity="GasPort" Caption=""/>
+  </Box>
+  <Box>
+    ## Канистры газа
+  </Box>
+  <Box>
+    [color=#999999][italic]Хранение и транспортировка газа для удобства использования экипажем[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="SpaceHeater" Caption=""/>
+    <GuideEntityEmbed Entity="GasThermoMachineHeater" Caption=""/>
+    <GuideEntityEmbed Entity="GasThermoMachineFreezer" Caption=""/>
+    <GuideEntityEmbed Entity="HeatExchanger" Caption=""/>
+  </Box>
+  <Box>
+    ## Термомашины и Радиаторы
+  </Box>
+  <Box>
+    [color=#999999][italic]Изменение температуры газов в сети труб или атмосфере.[italic][/color]
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="BaseGasCondenser" Caption=""/>
+  </Box>
+  <Box>
+    ## Конденсирование газа
+  </Box>
+  <Box>
+    [color=#999999][italic]Конденсация газов для дальнейшего использования[italic][/color]
+  </Box>
+</Document>

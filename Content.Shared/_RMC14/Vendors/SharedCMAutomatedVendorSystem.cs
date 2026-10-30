@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Hands;
@@ -29,7 +30,6 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
     [Dependency] private SharedHandsSystem _hands = default!;
     [Dependency] private InventorySystem _inventory = default!;
     [Dependency] private SharedStorageSystem _storage = default!;
-    [Dependency] private IPrototypeManager _prototypes = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
@@ -170,14 +170,13 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
     protected virtual void OnVendBui(Entity<CMAutomatedVendorComponent> vendor, ref CMVendorVendBuiMsg args)
     {
-        _audio.PlayPredicted(vendor.Comp.Sound, vendor, args.Actor);
-
+        /* _audio.PlayPredicted(vendor.Comp.Sound, vendor, args.Actor); */ // KS14: moved below the input validation
         var comp = vendor.Comp;
         var sections = comp.Sections.Count;
         var actor = args.Actor;
         if (args.Section < 0 || args.Section >= sections)
         {
-            Log.Error($"{ToPrettyString(actor)} sent an invalid vend section: {args.Section}. Max: {sections}");
+            Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} sent an invalid vend section: {args.Section}. Max: {sections}");
             return;
         }
 
@@ -185,7 +184,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         var entries = section.Entries.Count;
         if (args.Entry < 0 || args.Entry >= entries)
         {
-            Log.Error($"{ToPrettyString(actor)} sent an invalid vend entry: {args.Entry}. Max: {entries}");
+            Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} sent an invalid vend entry: {args.Entry}. Max: {entries}");
             return;
         }
 
@@ -193,11 +192,13 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         if (entry.Amount is <= 0)
             return;
 
-        if (!_prototypes.TryIndex(entry.Id, out var entity))
+        if (!ProtoMan.TryIndex(entry.Id, out var entity))
         {
             Log.Error($"Tried to vend non-existent entity: {entry.Id}");
             return;
         }
+
+        _audio.PlayPredicted(vendor.Comp.Sound, vendor, args.Actor); // KS14: moved here, after the input validation
 
         var user = CompOrNull<CMVendorUserComponent>(actor);
         if (section.TakeAll is { } takeAll)
@@ -205,7 +206,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
             user = EnsureComp<CMVendorUserComponent>(actor);
             if (!user.TakeAll.Add((takeAll, entry.Id)))
             {
-                Log.Error($"{ToPrettyString(actor)} tried to buy too many take-alls.");
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} tried to buy too many take-alls.");
                 return;
             }
 
@@ -217,7 +218,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
             user = EnsureComp<CMVendorUserComponent>(actor);
             if (!user.TakeOne.Add(takeOne))
             {
-                Log.Error($"{ToPrettyString(actor)} tried to buy too many take-ones.");
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} tried to buy too many take-ones.");
                 return;
             }
 
@@ -236,7 +237,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
             if (playerChoices >= choices.Amount)
             {
-                Log.Error($"{ToPrettyString(actor)} tried to buy too many choices.");
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */($"{ToPrettyString(actor)} tried to buy too many choices.");
                 return;
             }
 
@@ -262,9 +263,24 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 {
                     // FIXME
                     ResetChoices();
-                    _popup.PopupEntity(Loc.GetString("cm-vending-machine-specialist-max"), vendor, actor);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cm-vending-machine-specialist-max"), vendor, actor);
                     return;
                 }
+
+                // KS14 start: derive the linked entries from the vendor's own data, args.LinkedEntries is client-sent and untrusted
+                var linkedEntryIndexes = new List<int>();
+                foreach (var linkedEntry in entry.LinkedEntries)
+                {
+                    var linkedEntryIndex = 0;
+                    foreach (var vendorEntry in section.Entries)
+                    {
+                        if (vendorEntry.Id == linkedEntry)
+                            linkedEntryIndexes.Add(linkedEntryIndex);
+
+                        linkedEntryIndex++;
+                    }
+                }
+                // KS14 end
 
                 // Get every RMCVendorSpec
                 var specVendors = EntityQueryEnumerator<RMCVendorSpecialistComponent>();
@@ -273,7 +289,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 // Goes through each RMCVendorSpec and gets the value for this kit type.
                 while (specVendors.MoveNext(out _, out var specVendorComponent))
                 {
-                    foreach (var linkedEntry in args.LinkedEntries)
+                    foreach (var linkedEntry in linkedEntryIndexes /* KS14: args.LinkedEntries -> server-derived */)
                     {
                         specVendorComponent.GlobalSharedVends.TryGetValue(linkedEntry, out var linkedCount);
                         allVendorsTotal += linkedCount;
@@ -287,7 +303,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 if (allVendorsTotal >= globalLimit)
                 {
                     ResetChoices();
-                    _popup.PopupEntity(Loc.GetString("cm-vending-machine-specialist-max"), vendor.Owner, actor);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cm-vending-machine-specialist-max"), vendor.Owner, actor);
                     return;
                 }
 
@@ -307,7 +323,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         {
             if (user == null)
             {
-                Log.Error(
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */(
                     $"{ToPrettyString(actor)} tried to buy {entry.Id} for {entry.Points} points without having points.");
                 return;
             }
@@ -317,7 +333,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 : user.ExtraPoints?.GetValueOrDefault(vendor.Comp.PointsType) ?? 0;
             if (userPoints < entry.Points)
             {
-                Log.Error(
+                Log.Warning /* KS14: Error -> Warning, client-triggerable */(
                     $"{ToPrettyString(actor)} with {user.Points} tried to buy {entry.Id} for {entry.Points} points without having enough points.");
                 return;
             }

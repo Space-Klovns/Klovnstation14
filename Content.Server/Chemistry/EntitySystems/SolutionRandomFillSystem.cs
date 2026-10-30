@@ -12,7 +12,6 @@ namespace Content.Server.Chemistry.EntitySystems;
 public sealed partial class SolutionRandomFillSystem : EntitySystem
 {
     [Dependency] private SharedSolutionContainerSystem _solutionsSystem = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
@@ -27,12 +26,12 @@ public sealed partial class SolutionRandomFillSystem : EntitySystem
         if (entity.Comp.WeightedRandomId == null)
             return;
 
-        var pick = _proto.Index<WeightedRandomFillSolutionPrototype>(entity.Comp.WeightedRandomId).Pick(_random);
+        var pick = ProtoMan.Index<WeightedRandomFillSolutionPrototype>(entity.Comp.WeightedRandomId).Pick(_random);
 
         var reagent = pick.reagent;
         var quantity = pick.quantity;
 
-        if (!_proto.HasIndex<ReagentPrototype>(reagent))
+        if (!ProtoMan.HasIndex<ReagentPrototype>(reagent))
         {
             Log.Error($"Tried to add invalid reagent Id {reagent} using SolutionRandomFill.");
             return;

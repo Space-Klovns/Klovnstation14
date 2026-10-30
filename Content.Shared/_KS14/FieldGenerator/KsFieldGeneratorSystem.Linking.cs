@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Content.Shared.Database;
 using Content.Shared.Physics;
 using Robust.Shared.Collections;
 using Robust.Shared.Map.Components;
@@ -7,33 +8,25 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.FieldGenerator;
 
-// HOLY COPYPASTA
-// TODO: Clean this up, FUCK
-
 public sealed partial class KsFieldGeneratorSystem : EntitySystem
 {
     [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
 
-    // Could be a component on the grid but whatever
-    // Server-side only IG
     /// <summary>
     ///     Cache of every grid, and a dictionary of anchored generators on that grid
-    ///         as well as their tile coordinates.
+    ///         as well as their tile coordinates. Server-side only: anchoring is not tracked on the client.
     /// </summary>
     private readonly Dictionary<EntityUid, Dictionary<Vector2i, HashSet<EntityUid>>> _tileCache = [];
 
     private void InitialiseLinking()
     {
-        base.Initialize();
-
-        if (_netManager.IsServer) // FUCK, i dont wanna deal with this on client
+        // Conditional, so not attribute subscriptions: the tile cache is the server's
+        if (_netManager.IsServer)
         {
             SubscribeLocalEvent<KsFieldGeneratorComponent, AnchorStateChangedEvent>(OnAnchorStateChanged);
             SubscribeLocalEvent<KsFieldGeneratorComponent, ReAnchorEvent>(OnReAnchor);
         }
-
-        SubscribeLocalEvent<KsFieldGeneratorComponent, ComponentShutdown>(OnShutdown);
     }
 
     private void ClearFields(Entity<KsFieldGeneratorComponent> entity)
@@ -168,6 +161,8 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
         secondGeneratorEntity.Comp1.LinkedGeneratorUid = firstGeneratorEntity.Owner;
         DirtyField(secondGeneratorEntity.Owner, secondGeneratorEntity.Comp1, nameof(secondGeneratorEntity.Comp1.LinkedGeneratorUid));
+
+        _adminLogManager.Add(LogType.FieldGeneration, LogImpact.Low, $"{ToPrettyString(firstGeneratorEntity.Owner):generator} linked to {ToPrettyString(secondGeneratorEntity.Owner):generator} with a field of {tiles.Count} tiles");
     }
 
     private void OnAnchorStateChanged(Entity<KsFieldGeneratorComponent> entity, ref AnchorStateChangedEvent args)
@@ -185,19 +180,9 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
     private void OnReAnchor(Entity<KsFieldGeneratorComponent> entity, ref ReAnchorEvent args)
     {
-        if (_tileCache.TryGetValue(args.OldGrid, out var oldGridEntTileCache) &&
-            oldGridEntTileCache.TryGetValue(args.TilePos, out var oldLocalTileCache))
-        {
-            oldLocalTileCache.Remove(entity);
-
-            // Clear unused caches
-            if (oldLocalTileCache.Count == 0)
-                oldGridEntTileCache.Remove(args.TilePos);
-
-            if (oldGridEntTileCache.Count == 0)
-                _tileCache.Remove(args.OldGrid);
-        }
-
+        // Moved to another grid (a grid split, say): out of the old grid's cache, and into the new one's
+        RemoveFromTileCache(entity, args.OldGrid, args.TilePos);
+        TryUpdateAnchoredPosition(entity, args.Xform);
     }
 
     private void UpdateAnchoredPosition(Entity<KsFieldGeneratorComponent> entity, TransformComponent transformComponent, Entity<MapGridComponent> gridEntity)
@@ -210,21 +195,23 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
     private void RemoveFromAnchoredPositions(Entity<KsFieldGeneratorComponent> entity, TransformComponent transformComponent, Entity<MapGridComponent> oldGridEntity)
     {
-        if (!_tileCache.TryGetValue(oldGridEntity, out var oldGridEntTileCache))
+        RemoveFromTileCache(entity, oldGridEntity, _mapSystem.CoordinatesToTile(oldGridEntity, oldGridEntity, transformComponent.Coordinates));
+    }
+
+    private void RemoveFromTileCache(EntityUid generatorUid, EntityUid gridUid, Vector2i tileCoordinates)
+    {
+        if (!_tileCache.TryGetValue(gridUid, out var gridEntTileCache) ||
+            !gridEntTileCache.TryGetValue(tileCoordinates, out var localTileCache))
             return;
 
-        var tileCoordinates = _mapSystem.CoordinatesToTile(oldGridEntity, oldGridEntity, transformComponent.Coordinates);
-        if (!oldGridEntTileCache.TryGetValue(tileCoordinates, out var oldLocalTileCache))
-            return;
-
-        oldLocalTileCache.Remove(entity);
+        localTileCache.Remove(generatorUid);
 
         // Clear unused caches
-        if (oldLocalTileCache.Count == 0)
-            oldGridEntTileCache.Remove(tileCoordinates);
+        if (localTileCache.Count == 0)
+            gridEntTileCache.Remove(tileCoordinates);
 
-        if (oldGridEntTileCache.Count == 0)
-            _tileCache.Remove(oldGridEntity);
+        if (gridEntTileCache.Count == 0)
+            _tileCache.Remove(gridUid);
     }
 
     private bool TryUpdateAnchoredPosition(Entity<KsFieldGeneratorComponent> entity, TransformComponent transformComponent)
@@ -247,6 +234,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsFieldGeneratorComponent> entity, ref ComponentShutdown args)
     {
         var transformComponent = Transform(entity);

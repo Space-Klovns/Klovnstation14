@@ -154,7 +154,7 @@ namespace Content.Server.Chemistry.EntitySystems
             ClickSound(chemMaster);
         }
 
-        private void TransferReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer)
+        public void TransferReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer) // KS14 - Make it public for Packets
         {
             var container = _itemSlotsSystem.GetItemOrNull(chemMaster, SharedChemMaster.InputSlotName);
             if (container is null ||
@@ -182,7 +182,7 @@ namespace Content.Server.Chemistry.EntitySystems
             UpdateUiState(chemMaster, updateLabel: true);
         }
 
-        private void DiscardReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer)
+        public void DiscardReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer) // KS14 - Make it public for Packets
         {
             if (fromBuffer)
             {
@@ -216,6 +216,8 @@ namespace Content.Server.Chemistry.EntitySystems
                 return; // output can't fit pills
             }
 
+            // KS14 start: validate and prepare the entire batch before consuming reagents.
+            /* Previous validation only checked for one free cell and multiplied uint values unchecked.
             // Ensure the number is valid.
             if (message.Number == 0 || !_storageSystem.HasSpace((container, storage)))
                 return;
@@ -232,18 +234,23 @@ namespace Content.Server.Chemistry.EntitySystems
 
             if (!WithdrawFromSource(chemMaster, needed, user, out var withdrawal))
                 return;
+            */
+            if (!KsTryPreparePills(chemMaster, (container, storage), message, out var pills, out var withdrawal, out var dosage))
+                return;
+            // KS14 end
             _labelSystem.Label(container, message.Label);
 
-            for (var i = 0; i < message.Number; i++)
+            // KS14 start: process only the bounded batch already inserted successfully.
+            // Previously: for (var i = 0; i < message.Number; i++), Spawn and unchecked Insert here.
+            foreach (var item in pills)
             {
-                var item = Spawn(PillPrototypeId, Transform(container).Coordinates);
-                _storageSystem.Insert(container, item, out _, user: user, storage);
+                // KS14 end
                 _labelSystem.Label(item, message.Label);
 
                 _solutionContainerSystem.EnsureSolution(item, SharedChemMaster.PillSolutionName, out var itemSolution);
-                itemSolution.Comp.Solution.MaxVolume = message.Dosage;
+                itemSolution.Comp.Solution.MaxVolume = dosage /* KS14: message.Dosage -> validated exact fixed-point dose */;
 
-                _solutionContainerSystem.TryAddSolution(itemSolution, withdrawal.SplitSolution(message.Dosage));
+                _solutionContainerSystem.TryAddSolution(itemSolution, withdrawal.SplitSolution(dosage /* KS14: message.Dosage -> validated exact fixed-point dose */));
 
                 var pill = EnsureComp<PillComponent>(item);
                 pill.PillType = chemMaster.Comp.PillType;
@@ -297,63 +304,9 @@ namespace Content.Server.Chemistry.EntitySystems
         {
             outputSolution = null;
 
-            Solution? solution;
-            Entity<SolutionComponent>? soln = null;
-
-            switch (chemMaster.Comp.DrawSource)
-            {
-                case ChemMasterDrawSource.Internal:
-                    if (!_solutionContainerSystem.TryGetSolution(chemMaster.Owner, SharedChemMaster.BufferSolutionName, out _, out solution))
-                        return false;
-
-                    if (solution.Volume == 0)
-                    {
-                        if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-buffer-empty-text"), uid);
-
-                        return false;
-                    }
-                    if (neededVolume > solution.Volume)
-                    {
-                        if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-buffer-low-text"), uid);
-
-                        return false;
-                    }
-
-                    break;
-
-                case ChemMasterDrawSource.External:
-                    if (_itemSlotsSystem.GetItemOrNull(chemMaster, SharedChemMaster.InputSlotName) is not { } container)
-                    {
-                        if (user.HasValue)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-no-beaker-text"), user.Value);
-                        return false;
-                    }
-
-                    if (!_solutionContainerSystem.TryGetFitsInDispenser(container, out soln, out solution))
-                        return false;
-
-                    if (solution.Volume == 0)
-                    {
-                        if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-beaker-empty-text"), uid);
-
-                        return false;
-                    }
-                    if (neededVolume > solution.Volume)
-                    {
-                        if (user is { } uid)
-                            _popupSystem.PopupCursor(Loc.GetString("chem-master-window-beaker-low-text"), uid);
-
-                        return false;
-                    }
-
-                    break;
-
-                default:
-                    return false;
-            }
+            // KS14: source lookup and validation moved to the shared preflight helper.
+            if (!KsTryResolveDrawSource(chemMaster, neededVolume, user, out var solution, out var soln))
+                return false;
 
             outputSolution = solution.SplitSolution(neededVolume);
 

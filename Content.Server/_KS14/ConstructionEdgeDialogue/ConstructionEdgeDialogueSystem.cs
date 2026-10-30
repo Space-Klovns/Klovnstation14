@@ -10,21 +10,13 @@ public sealed partial class ConstructionEdgeDialogueSystem : EntitySystem
     [Dependency] private ConstructionSystem _constructionSystem = default!;
     [Dependency] private McqDialogueSystem _mcqDialogueSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ConstructionEdgeDialogueComponent, McqDialogueClosedEvent>(OnDialogueClosed);
-        SubscribeLocalEvent<ConstructionEdgeDialogueComponent, McqDialogueSelectedEvent>(OnDialogueSelected);
-
-        SubscribeLocalEvent<ConstructionEdgeDialogueComponent, GetVerbsEvent<AlternativeVerb>>(OnGetAltVerb);
-    }
-
+    [SubscribeLocalEvent]
     private void OnDialogueClosed(Entity<ConstructionEdgeDialogueComponent> entity, ref McqDialogueClosedEvent args)
     {
         entity.Comp.CurrentNode = null;
     }
 
+    [SubscribeLocalEvent]
     private void OnDialogueSelected(Entity<ConstructionEdgeDialogueComponent> entity, ref McqDialogueSelectedEvent args)
     {
         if (!int.TryParse(args.Id, out var id))
@@ -46,6 +38,7 @@ public sealed partial class ConstructionEdgeDialogueSystem : EntitySystem
         ConstructionSystem.SetEdgeIndex(constructionComponent, id);
     }
 
+    [SubscribeLocalEvent]
     private void OnGetAltVerb(Entity<ConstructionEdgeDialogueComponent> entity, ref GetVerbsEvent<AlternativeVerb> args)
     {
         if (!args.CanAccess ||

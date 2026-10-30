@@ -31,17 +31,8 @@
         - SlipLayer
         mask:
         - ItemMask
-  # The RSI is 32x48 greyscale, so it is offset quarter a tile up and modulated with the chemfire's colour.
-  #     The matching `over` half is drawn above the effects layer by ChemicalFireOverlay.
-  - type: Sprite
-    sprite: _KS14/Effects/Fire/chemfire.rsi
-    drawdepth: Objects
-    snapCardinals: true
-    offset: 0,0.25
-    layers:
-    - state: white_under-1
-      map: ["enum.ChemicalFireVisualLayers.Under"]
-      shader: unshaded
+  # No Sprite: both flame halves are drawn by the client's chemfire overlays, from the RSI and offset set on
+  #     ChemicalFire, so that whatever draws between them (gas, mobs) treats both the same way.
   - type: Tag
     tags:
     - HideContextMenu
@@ -54,6 +45,7 @@
         variation: 0.3
 
   - type: AlwaysHot
+  - type: KsDecalOnSpawn # a scorch mark, as a tile fire leaves
   - type: StepTrigger
     requiredTriggeredSpeed: 0
     intersectRatio: 0.1
@@ -66,3 +58,8 @@
       multiplier: 1.25
       multiplierOnExisting: 0.75
     - !type:Ignite
+  - type: ChemicalFire
+    puddleHeatFraction: 0.6
+    duration: 6.5
+    temperature: 1500
+    exposedVolume: 50

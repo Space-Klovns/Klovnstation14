@@ -22,12 +22,11 @@ public sealed partial class PhysicsVehicleSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PhysicsVehicleComponent, UpdateWishDirEvent>(OnUpdateWishDir);
-        SubscribeLocalEvent<PhysicsVehicleComponent, MoveInputEvent>(OnMoveInput);
         //MoveInputEvent
     }
 
     // Makes sure that the vehicle can't move while turning
+    [SubscribeLocalEvent]
     private void OnUpdateWishDir(Entity<PhysicsVehicleComponent> entity, ref UpdateWishDirEvent args)
     {
         if (args.WishDir == Vector2.Zero)
@@ -45,6 +44,7 @@ public sealed partial class PhysicsVehicleSystem : EntitySystem
         //     args.WishDir = Vector2.Zero;
     }
 
+    [SubscribeLocalEvent]
     private void OnMoveInput(Entity<PhysicsVehicleComponent> entity, ref MoveInputEvent args)
     {
         Log.Info($"PhysVehicle MoveInput");

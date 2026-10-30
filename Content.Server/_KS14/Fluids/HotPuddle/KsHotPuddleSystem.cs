@@ -1,0 +1,300 @@
+using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Fluids;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.FixedPoint;
+using Content.Shared.Fluids.Components;
+using Content.Shared.Temperature;
+using Robust.Shared.Configuration;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
+
+namespace Content.Server._KS14.Fluids.HotPuddle;
+
+/// <summary>
+///     Hot things lying in a puddle heat it, and are an open flame in it: a lit welder dropped in welding fuel sets it
+///         alight (<see cref="KsFlameInPuddleComponent"/>).
+/// </summary>
+/// <remarks>
+///     <para>
+///         Whatever touches a puddle gets a <see cref="KsTouchingPuddleComponent"/>, and is asked every
+///             <see cref="CheckInterval"/> whether it is hot. If it is, it is a heat source of <see cref="HeatPower"/>
+///             at <see cref="SourceTemperature"/>, like a small flame: the power is split between the puddles it
+///             touches, and a puddle is never heated past the source's temperature. It adds energy at a bounded rate
+///             rather than setting a temperature, so a big puddle takes longer to heat than a small one.
+///     </para>
+///     <para>
+///         The power and temperature are constants rather than data fields: <see cref="IsHotEvent"/> only says whether something
+///             is hot, not how hot, so there is nothing on a source to vary them by, and a field on the puddle would
+///             mean restating every puddle prototype for the same values.
+///     </para>
+///     <para>
+///         Only contacts with the puddle's <see cref="KsPuddleTouchSystem.TouchFixtureId"/> fixture count. Items
+///             touch puddles through nothing else (see <see cref="KsPuddleTouchSystem"/>), and counting one fixture
+///             counts each toucher once per puddle, however many of the puddle's fixtures it touches.
+///     </para>
+/// </remarks>
+public sealed partial class KsHotPuddleSystem : EntitySystem
+{
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
+
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
+    [Dependency] private EntityQuery<KsFlameInPuddleComponent> _flameQuery = default!;
+    [Dependency] private EntityQuery<PuddleComponent> _puddleQuery = default!;
+    [Dependency] private EntityQuery<KsTouchingPuddleComponent> _touchingQuery = default!;
+
+    /// <summary>
+    ///     How often something touching a puddle is asked whether it is hot: <see cref="KsCCVars.AtmosHotPuddleCheckInterval"/>.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan CheckInterval { get; private set; }
+
+    /// <summary>
+    ///     The heat, in watts, that a hot thing puts into the puddles it touches, split between them. A puddle's heat
+    ///         capacity is about 1 J/K per unit, so this warms 100u of welding fuel by about 5 K a second. Fuel is lit by
+    ///         the flame itself rather than by this (<see cref="KsFlameInPuddleComponent"/>).
+    /// </summary>
+    public const float HeatPower = 500f;
+
+    /// <summary>
+    ///     The temperature, in kelvin, of a hot thing: about that of a flame. A puddle is never heated past it.
+    /// </summary>
+    public const float SourceTemperature = 700f;
+
+    private readonly List<(EntityUid PuddleUid, float Energy)> _pendingHeat = [];
+    private readonly List<EntityUid> _staleEntries = [];
+    private readonly List<EntityUid> _emptiedTouchers = [];
+    private readonly List<EntityUid> _releasedTouchers = [];
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.AtmosHotPuddleCheckInterval,
+            seconds => CheckInterval = TimeSpan.FromSeconds(seconds), invokeImmediately: true);
+    }
+
+    #region Contacts
+
+    /// <summary>
+    ///     Something that is not fixed in place touching a puddle is touching it until it touches it no more.
+    /// </summary>
+    /// <remarks>
+    ///     Only the touch fixture counts, so something touching both of a puddle's fixtures is in it once. Static
+    ///         bodies are left out: puddles touch the walls, tables and machines around them, and none of those lie in
+    ///         one. Nothing is heated here, inside the physics step; that waits for <see cref="Update"/>.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnPuddleStartCollide(Entity<PuddleComponent> entity, ref StartCollideEvent args)
+    {
+        var otherUid = args.OtherEntity;
+        if (args.OurFixtureId != KsPuddleTouchSystem.TouchFixtureId ||
+            args.OtherBody.BodyType == BodyType.Static ||
+            TerminatingOrDeleted(otherUid) ||
+            TerminatingOrDeleted(entity.Owner))
+            return;
+
+        if (!_touchingQuery.TryComp(otherUid, out var touchingComponent))
+        {
+            touchingComponent = AddComp<KsTouchingPuddleComponent>(otherUid);
+            // Checked as soon as it lands: a lit welder dropped in fuel starts heating it on the next tick. One that
+            //     left a puddle less than an interval ago still has its component, and keeps its check time.
+            touchingComponent.NextCheck = _gameTiming.CurTime;
+        }
+
+        touchingComponent.Puddles.Add(entity.Owner);
+    }
+
+    /// <summary>
+    ///     Leaving a puddle, which for something touching its touch fixture with several fixtures of its own is when
+    ///         the last of them stops.
+    /// </summary>
+    /// <remarks>
+    ///     Also raised when the contact is destroyed with the puddle still touching, as it is when either entity is
+    ///         deleted or stops colliding (<c>SharedPhysicsSystem.DestroyContact</c>).
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnPuddleEndCollide(Entity<PuddleComponent> entity, ref EndCollideEvent args)
+    {
+        var otherUid = args.OtherEntity;
+        if (args.OurFixtureId != KsPuddleTouchSystem.TouchFixtureId ||
+            !_touchingQuery.TryComp(otherUid, out var touchingComponent) ||
+            !touchingComponent.Puddles.Contains(entity.Owner) ||
+            IsTouching(otherUid, entity.Owner))
+            return;
+
+        LeavePuddle((otherUid, touchingComponent), entity.Owner);
+    }
+
+    /// <summary>
+    ///     A puddle's <see cref="PuddleComponent"/> is shutting down, because it was removed or because the puddle is
+    ///         being deleted (evaporated, mopped up, or merged into the one already on its tile). Everything touching
+    ///         it leaves it, before its contacts go.
+    /// </summary>
+    /// <remarks>
+    ///     Called from <c>PuddleSystem.OnPuddleCacheShutdown</c> rather than subscribed: that system already takes
+    ///         <see cref="PuddleComponent"/>'s <see cref="ComponentShutdown"/>, and only one system may.
+    /// </remarks>
+    public void OnPuddleShutdown(EntityUid puddleUid)
+    {
+        // Without fixtures nothing ever touched it, and the physics system cannot list the contacts of what has none.
+        if (!_fixturesQuery.HasComp(puddleUid))
+            return;
+
+        _releasedTouchers.Clear();
+        var contacts = _physicsSystem.GetContacts(puddleUid, includeDeleting: true);
+        while (contacts.MoveNext(out var contact))
+            _releasedTouchers.Add(contact.EntityA == puddleUid ? contact.EntityB : contact.EntityA);
+
+        foreach (var toucherUid in _releasedTouchers)
+        {
+            if (_touchingQuery.TryComp(toucherUid, out var touchingComponent))
+                LeavePuddle((toucherUid, touchingComponent), puddleUid);
+        }
+
+        _releasedTouchers.Clear();
+    }
+
+    /// <summary>
+    ///     Whether any of the entity's contacts, other than ones being destroyed, is touching the puddle's touch
+    ///         fixture.
+    /// </summary>
+    private bool IsTouching(EntityUid uid, EntityUid puddleUid)
+    {
+        var contacts = _physicsSystem.GetContacts(uid);
+        while (contacts.MoveNext(out var contact))
+        {
+            if (!contact.IsTouching)
+                continue;
+
+            if (contact.EntityA == puddleUid && contact.FixtureAId == KsPuddleTouchSystem.TouchFixtureId ||
+                contact.EntityB == puddleUid && contact.FixtureBId == KsPuddleTouchSystem.TouchFixtureId)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <remarks>
+    ///     The component stays when the last puddle is left, and <see cref="Update"/> removes it once its next check
+    ///         is due. Removing it here would let something that keeps stepping in and out of puddles start a fresh
+    ///         component, checked at once, on every return, and so heat them faster than once per
+    ///         <see cref="CheckInterval"/>.
+    /// </remarks>
+    private void LeavePuddle(Entity<KsTouchingPuddleComponent> entity, EntityUid puddleUid)
+    {
+        entity.Comp.Puddles.Remove(puddleUid);
+    }
+
+    #endregion
+
+    #region Heating
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var curTime = _gameTiming.CurTime;
+        _pendingHeat.Clear();
+        _emptiedTouchers.Clear();
+
+        var query = EntityQueryEnumerator<KsTouchingPuddleComponent>();
+        while (query.MoveNext(out var uid, out var touchingComponent))
+        {
+            if (curTime < touchingComponent.NextCheck)
+                continue;
+
+            touchingComponent.NextCheck = curTime + CheckInterval;
+
+            // Checked rather than trusted: a puddle that went without its touchers hearing of it is dropped here.
+            _staleEntries.Clear();
+            foreach (var puddleUid in touchingComponent.Puddles)
+            {
+                if (!_puddleQuery.HasComp(puddleUid) || TerminatingOrDeleted(puddleUid))
+                    _staleEntries.Add(puddleUid);
+            }
+
+            foreach (var puddleUid in _staleEntries)
+                touchingComponent.Puddles.Remove(puddleUid);
+
+            _staleEntries.Clear();
+
+            if (touchingComponent.Puddles.Count == 0)
+            {
+                _emptiedTouchers.Add(uid);
+                continue;
+            }
+
+            var isHotEvent = new IsHotEvent();
+            RaiseLocalEvent(uid, ref isHotEvent);
+            if (!isHotEvent.IsHot)
+                continue;
+
+            var energy = HeatPower * (float)CheckInterval.TotalSeconds / touchingComponent.Puddles.Count;
+            foreach (var puddleUid in touchingComponent.Puddles)
+            {
+                _pendingHeat.Add((puddleUid, energy));
+                // Until just past the next check, so a flame that stays never lapses between them.
+                EnsureComp<KsFlameInPuddleComponent>(puddleUid).Until = curTime + CheckInterval * 2;
+            }
+        }
+
+        foreach (var toucherUid in _emptiedTouchers)
+            RemComp<KsTouchingPuddleComponent>(toucherUid);
+
+        _emptiedTouchers.Clear();
+
+        // Applied once the components are no longer being walked: heating a solution updates its chemicals, which can
+        //     run reactions and tile effects that spawn or delete puddles, and so add or remove touching components.
+        foreach (var (puddleUid, energy) in _pendingHeat)
+            HeatPuddle(puddleUid, energy);
+
+        _pendingHeat.Clear();
+    }
+
+    /// <summary>
+    ///     Puts up to <paramref name="energy"/> joules into a puddle's solution, but never past
+    ///         <see cref="SourceTemperature"/>.
+    /// </summary>
+    /// <returns>The energy actually put in.</returns>
+    private float HeatPuddle(EntityUid puddleUid, float energy)
+    {
+        if (TerminatingOrDeleted(puddleUid) ||
+            !_puddleQuery.TryComp(puddleUid, out var puddleComponent) ||
+            !_solutionContainerSystem.ResolveSolution(puddleUid, puddleComponent.SolutionName, ref puddleComponent.Solution, out var solution) ||
+            solution.Volume <= FixedPoint2.Zero)
+            return 0f;
+
+        var heatCapacity = solution.GetHeatCapacity(ProtoMan);
+        if (heatCapacity <= 0f)
+            return 0f;
+
+        var added = MathF.Min(energy, (SourceTemperature - solution.Temperature) * heatCapacity);
+        if (added <= 0f)
+            return 0f;
+
+        _solutionContainerSystem.AddThermalEnergy(puddleComponent.Solution.Value, added);
+        return added;
+    }
+
+    /// <summary>
+    ///     The temperature of the open flame in a puddle, if something hot was lying in it at its last check.
+    /// </summary>
+    public float? GetFlameTemperature(EntityUid puddleUid)
+    {
+        if (!_flameQuery.TryComp(puddleUid, out var flameComponent))
+            return null;
+
+        if (_gameTiming.CurTime < flameComponent.Until)
+            return SourceTemperature;
+
+        RemCompDeferred(puddleUid, flameComponent);
+        return null;
+    }
+
+    #endregion
+}

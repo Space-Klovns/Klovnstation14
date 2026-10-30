@@ -31,7 +31,6 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     {
         base.Initialize();
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
     }
 
     public override void Shutdown()
@@ -126,6 +125,7 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     /// clear here would leave their client-side overlay stuck showing stale data from the previous round -
     /// tell each of them explicitly before dropping the server-side state.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
     {
         foreach (var session in _debuggingSessions.Keys)

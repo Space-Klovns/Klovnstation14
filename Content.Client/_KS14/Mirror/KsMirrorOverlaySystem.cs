@@ -6,7 +6,6 @@ namespace Content.Client._KS14.Mirror;
 
 public sealed partial class KsMirrorOverlaySystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
@@ -24,10 +23,10 @@ public sealed partial class KsMirrorOverlaySystem : EntitySystem
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
         var overlay = new KsMirrorOverlay(
-            _prototypeManager.Index(MirrorShaderId).InstanceUnique(),
-            _prototypeManager.Index(WhiteShaderId).InstanceUnique(),
-            _prototypeManager.Index(StencilMaskId).InstanceUnique(),
-            _prototypeManager.Index(StencilDrawId).InstanceUnique()
+            ProtoMan.Index(MirrorShaderId).InstanceUnique(),
+            ProtoMan.Index(WhiteShaderId).InstanceUnique(),
+            ProtoMan.Index(StencilMaskId).InstanceUnique(),
+            ProtoMan.Index(StencilDrawId).InstanceUnique()
         );
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);

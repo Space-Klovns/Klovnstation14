@@ -1,6 +1,8 @@
 using System.IO;
 using System.Linq;
 using Content.Shared._KS14.IoC;
+using Content.Shared._KS14.RadioLocalization;
+using Content.Shared.Localizations;
 using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Prototypes;
@@ -22,6 +24,22 @@ public sealed partial class KsEntryPoint : GameShared
         new("/_KsModule_ReplacedPrototypes/")
     ];
 
+    /// <summary>
+    ///     Files or directories whose prototypes combine with existing ones of the same id instead of throwing a
+    ///         duplicate-id error (see <see cref="IPrototypeManager.PartialDirectory"/>). Kept narrow on purpose:
+    ///         anywhere listed here, an accidental duplicate id silently merges rather than failing the load.
+    /// </summary>
+    public static readonly ResPath[] PartialPrototypePaths = [
+        new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
+        new("/Prototypes/_KS14/Reagents/Partials/"),
+    ];
+
+    private readonly ResPath[] _partialOwnerPaths = [
+        new("/Prototypes/_KsModule/"),
+        new("/Audio/_KsModule/"),
+        new("/Maps/_KsModule/"),
+    ];
+
     private ISawmill _sawmill = null!;
 
     public override void PreInit()
@@ -37,6 +55,27 @@ public sealed partial class KsEntryPoint : GameShared
         Dependencies.InjectDependencies(this);
 
         _sawmill = Logger.GetSawmill("ks.shared.entrypoint");
+
+        // finds every file under a /Partial/ directory under each directory in _partialOwnerPaths and designates them as
+        foreach (var partialOwnerPath in _partialOwnerPaths)
+        {
+            foreach (var subPath in _resourceManager.ContentFindFiles(partialOwnerPath))
+            {
+                if (!subPath.CanonPath.Contains(ResPath.Separator + "Partials" + ResPath.Separator))
+                    continue;
+
+                _prototypeManager.PartialFile(subPath, 0);
+            }
+        }
+
+        // Before prototypes load, which is the only time the prototype manager reads these.
+        foreach (var partialPath in PartialPrototypePaths)
+        {
+            if (string.IsNullOrEmpty(partialPath.Extension))
+                _prototypeManager.PartialDirectory(partialPath, 0);
+            else
+                _prototypeManager.PartialFile(partialPath, 0);
+        }
     }
 
     public override void PostInit()
@@ -47,6 +86,10 @@ public sealed partial class KsEntryPoint : GameShared
 
         foreach (var replacementDirectory in _replacementDirectories)
             DoPrototypeReplacements(replacementDirectory);
+
+        Dependencies.Resolve<ContentLocalizationManager>().InitializePrototypeNameCaches();
+        Dependencies.Resolve<ContentLocalizationManager>().InitializeCultures();
+        Dependencies.Resolve<KsRadioLocalization>().Initialize();
     }
 
     public override void Shutdown()

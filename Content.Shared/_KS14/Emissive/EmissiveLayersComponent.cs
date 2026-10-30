@@ -1,5 +1,6 @@
 using System.Numerics;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Emissive;
 
@@ -56,4 +57,32 @@ public sealed partial class EmissiveLayersComponent : Component
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
     public bool OnlyRotateTexture = false;
+
+    /// <summary>
+    ///     Overrides for individual layers in <see cref="Layers"/>, by the same key. Layers without one use the
+    ///         component's own values.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public Dictionary<string, EmissiveLayerParams> LayerParams = new();
+}
+
+/// <summary>
+///     How one layer of <see cref="EmissiveLayersComponent"/> glows, where it should differ from the rest.
+/// </summary>
+[DataDefinition, Serializable, NetSerializable]
+public sealed partial class EmissiveLayerParams
+{
+    /// <summary>
+    ///     This layer's <see cref="EmissiveLayersComponent.GlowRadius"/>, if it has its own.
+    /// </summary>
+    [DataField]
+    public float? GlowRadius;
+
+    /// <summary>
+    ///     Multiplies the colour this layer emits: below 1 to make it glow and light its surroundings less.
+    ///         Unlike <see cref="EmissiveLayersComponent.Intensity"/>, which is per entity.
+    /// </summary>
+    [DataField]
+    public float Brightness = 1f;
 }

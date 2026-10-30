@@ -33,3 +33,4 @@
   background: /Textures/_KS14/LobbyScreens/nanoplantcenter.png
   title: lobby-state-background-nanoplantcenter-title
   artist: lobby-state-background-nanoplantcenter-artist
+  randomlySelectable: false

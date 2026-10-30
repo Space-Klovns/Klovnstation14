@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.Administration.Logs;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
@@ -30,27 +31,13 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
         [Dependency] private NodeContainerSystem _nodeContainer = default!;
         [Dependency] private SharedPopupSystem _popup = default!;
 
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            SubscribeLocalEvent<MolarMixerComponent, ComponentInit>(OnInit);
-            SubscribeLocalEvent<MolarMixerComponent, AtmosDeviceUpdateEvent>(OnMixerUpdated);
-            SubscribeLocalEvent<MolarMixerComponent, ActivateInWorldEvent>(OnMixerActivate);
-            SubscribeLocalEvent<MolarMixerComponent, GasAnalyzerScanEvent>(OnMixerAnalyzed);
-            // Bound UI subscriptions
-            SubscribeLocalEvent<MolarMixerComponent, MolarMixerChangeOutputMolarFlowMessage>(OnOutputMolarFlowChangeMessage);
-            SubscribeLocalEvent<MolarMixerComponent, MolarMixerChangeNodePercentageMessage>(OnChangeNodePercentageMessage);
-            SubscribeLocalEvent<MolarMixerComponent, MolarMixerToggleStatusMessage>(OnToggleStatusMessage);
-
-            SubscribeLocalEvent<MolarMixerComponent, AtmosDeviceDisabledEvent>(OnMixerLeaveAtmosphere);
-        }
-
+        [SubscribeLocalEvent]
         private void OnInit(EntityUid uid, MolarMixerComponent mixer, ComponentInit args)
         {
             UpdateAppearance(uid, mixer);
         }
 
+        [SubscribeLocalEvent]
         private void OnMixerUpdated(EntityUid uid, MolarMixerComponent mixer, ref AtmosDeviceUpdateEvent args)
         {
             // TODO ATMOS: Cache total moles since it's expensive.
@@ -122,6 +109,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
                 _ambientSoundSystem.SetAmbience(uid, true);
         }
 
+        [SubscribeLocalEvent]
         private void OnMixerLeaveAtmosphere(EntityUid uid, MolarMixerComponent mixer, ref AtmosDeviceDisabledEvent args)
         {
             mixer.Enabled = false;
@@ -131,6 +119,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             _userInterfaceSystem.CloseUi(uid, GasFilterUiKey.Key);
         }
 
+        [SubscribeLocalEvent]
         private void OnMixerActivate(EntityUid uid, MolarMixerComponent mixer, ActivateInWorldEvent args)
         {
             if (args.Handled || !args.Complex)
@@ -146,7 +135,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             }
             else
             {
-                _popup.PopupCursor(Loc.GetString("comp-gas-mixer-ui-needs-anchor"), args.User);
+                _popup.PopupCursor(KsPopupMessage.Create("comp-gas-mixer-ui-needs-anchor"), args.User);
             }
 
             args.Handled = true;
@@ -169,6 +158,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             _appearance.SetData(uid, FilterVisuals.Enabled, mixer.Enabled, appearance);
         }
 
+        [SubscribeLocalEvent]
         private void OnToggleStatusMessage(EntityUid uid, MolarMixerComponent mixer, MolarMixerToggleStatusMessage args)
         {
             mixer.Enabled = args.Enabled;
@@ -178,6 +168,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             UpdateAppearance(uid, mixer);
         }
 
+        [SubscribeLocalEvent]
         private void OnOutputMolarFlowChangeMessage(EntityUid uid, MolarMixerComponent mixer, MolarMixerChangeOutputMolarFlowMessage args)
         {
             mixer.TargetMolarFlow = Math.Clamp(args.MolarFlow, 0f, mixer.MaxTargetMolarFlow);
@@ -186,6 +177,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             DirtyUI(uid, mixer);
         }
 
+        [SubscribeLocalEvent]
         private void OnChangeNodePercentageMessage(EntityUid uid, MolarMixerComponent mixer,
             MolarMixerChangeNodePercentageMessage args)
         {
@@ -200,6 +192,7 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
         /// <summary>
         /// Returns the gas mixture for the gas analyzer
         /// </summary>
+        [SubscribeLocalEvent]
         private void OnMixerAnalyzed(EntityUid uid, MolarMixerComponent component, GasAnalyzerScanEvent args)
         {
             args.GasMixtures ??= new List<(string, GasMixture?)>();

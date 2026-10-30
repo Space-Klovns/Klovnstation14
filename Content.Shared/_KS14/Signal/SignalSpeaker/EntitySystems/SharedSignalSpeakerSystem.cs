@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
 using Content.Shared.Examine;
@@ -17,19 +18,7 @@ public abstract partial class SharedSignalSpeakerSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<SignalSpeakerComponent, GetVerbsEvent<UtilityVerb>>(OnUtilityVerb);
-        SubscribeLocalEvent<SignalSpeakerComponent, ExaminedEvent>(OnExamined);
-        // Bound UI subscriptions
-        SubscribeLocalEvent<SignalSpeakerComponent, SignalSpeakerTextChangedMessage>(OnSignalSpeakerTextChanged);
-        SubscribeLocalEvent<SignalSpeakerComponent, SignalSpeakerApplyMessage>(OnSignalSpeakerApply);
-        SubscribeLocalEvent<SignalSpeakerComponent, ComponentGetState>(OnGetState);
-        SubscribeLocalEvent<SignalSpeakerComponent, ComponentHandleState>(OnHandleState);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGetState(Entity<SignalSpeakerComponent> ent, ref ComponentGetState args)
     {
         args.State = new SignalSpeakerComponentState(ent.Comp.AssignedText)
@@ -38,6 +27,7 @@ public abstract partial class SharedSignalSpeakerSystem : EntitySystem
         };
     }
 
+    [SubscribeLocalEvent]
     private void OnHandleState(Entity<SignalSpeakerComponent> ent, ref ComponentHandleState args)
     {
         if (args.Current is not SignalSpeakerComponentState state)
@@ -63,20 +53,21 @@ public abstract partial class SharedSignalSpeakerSystem : EntitySystem
 
         if (!TryComp<SpeakOnTriggerComponent>(ent.Owner, out var speakComp))
         {
-            _popupSystem.PopupClient(Loc.GetString("signal-speaker-no-trigger"), user, user);
+            _popupSystem.PopupClient(KsPopupMessage.Create("signal-speaker-no-trigger"), user, user);
             return;
         }
 
         speakComp.NonLocText = ent.Comp.AssignedText;
         Dirty(ent.Owner, speakComp);
 
-        _popupSystem.PopupClient(Loc.GetString("signal-speaker-successfully-applied"), user, user);
+        _popupSystem.PopupClient(KsPopupMessage.Create("signal-speaker-successfully-applied"), user, user);
 
         // Log
         _adminLogger.Add(LogType.Action, LogImpact.Low,
             $"{ToPrettyString(user):user} set speak text on {ToPrettyString(ent):signalspeaker}");
     }
 
+    [SubscribeLocalEvent]
     private void OnUtilityVerb(Entity<SignalSpeakerComponent> ent, ref GetVerbsEvent<UtilityVerb> args)
     {
         if (args.Target is not { Valid: true } target || !args.CanAccess)
@@ -96,6 +87,7 @@ public abstract partial class SharedSignalSpeakerSystem : EntitySystem
         args.Verbs.Add(applyVerb);
     }
 
+    [SubscribeLocalEvent]
     private void OnSignalSpeakerTextChanged(EntityUid uid, SignalSpeakerComponent signalSpeaker, SignalSpeakerTextChangedMessage args)
     {
         var text = args.Text.Trim();
@@ -108,11 +100,13 @@ public abstract partial class SharedSignalSpeakerSystem : EntitySystem
             $"{ToPrettyString(args.Actor):user} set {ToPrettyString(uid):signalspeaker} to apply text \"{signalSpeaker.AssignedText}\"");
     }
 
+    [SubscribeLocalEvent]
     private void OnSignalSpeakerApply(EntityUid uid, SignalSpeakerComponent signalSpeaker, SignalSpeakerApplyMessage args)
     {
         ApplyTextToSpeaker((uid, signalSpeaker), args.Actor);
     }
 
+    [SubscribeLocalEvent]
     private void OnExamined(Entity<SignalSpeakerComponent> ent, ref ExaminedEvent args)
     {
         if (!args.IsInDetailsRange)

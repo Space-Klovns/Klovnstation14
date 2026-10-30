@@ -7,7 +7,6 @@ namespace Content.Client.BarSign;
 
 public sealed partial class BarSignVisualizerSystem : VisualizerSystem<BarSignComponent>
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     protected override void OnAppearanceChange(EntityUid uid, BarSignComponent component, ref AppearanceChangeEvent args)
     {
@@ -16,7 +15,7 @@ public sealed partial class BarSignVisualizerSystem : VisualizerSystem<BarSignCo
 
         if (powered
             && currentSign != null
-            && _prototypeManager.Resolve<BarSignPrototype>(currentSign, out var proto))
+            && ProtoMan.Resolve<BarSignPrototype>(currentSign, out var proto))
         {
             SpriteSystem.LayerSetSprite((uid, args.Sprite), 0, proto.Icon);
             args.Sprite?.LayerSetShader(0, "unshaded");

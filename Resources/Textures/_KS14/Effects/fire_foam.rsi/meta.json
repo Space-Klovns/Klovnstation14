@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "license": "CC-BY-NC-SA-3.0",
+  "copyright": "Taken from https://github.com/goonstation/goonstation/ at commit 220812124dbf8b20560969a23e35822eb18a5480 ; icons/effects/fire.dmi ",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "foam",
+      "directions": 8
+    }
+  ]
+}

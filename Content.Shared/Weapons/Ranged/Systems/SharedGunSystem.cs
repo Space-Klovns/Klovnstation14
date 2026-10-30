@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 // <Trauma>
 using Content.Shared.Weapons.Hitscan.Events;
 using Content.Shared._Trauma.Projectiles;
@@ -46,7 +47,8 @@ namespace Content.Shared.Weapons.Ranged.Systems;
 public abstract partial class SharedGunSystem : EntitySystem
 {
     [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
-    [Dependency] private _KS14.Farsound.FarSoundSystem _farsoundSystem = default!;// KS14
+    [Dependency] private _KS14.FarSound.FarSoundSystem _farsoundSystem = default!;// KS14
+    [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private INetManager _netManager = default!;
@@ -58,7 +60,6 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] protected DamageableSystem Damageable = default!;
     [Dependency] protected ExamineSystemShared Examine = default!;
     [Dependency] protected IGameTiming Timing = default!;
-    [Dependency] protected IPrototypeManager ProtoManager = default!;
     [Dependency] protected IRobustRandom Random = default!;
     [Dependency] protected ISharedAdminLogManager Logs = default!;
     [Dependency] protected SharedActionsSystem Actions = default!;
@@ -177,7 +178,10 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
         userGun.Comp.Target = GetEntity(msg.Target);
-        AttemptShoot(user.Value, userGun);
+        // KS14 start: the projectiles of this shot are the sender's own prediction, kept by their client
+        using (_ksPredictedSpawnSystem.BeginUserPrediction(args.SenderSession.AttachedEntity))
+            AttemptShoot(user.Value, userGun);
+        // KS14 end
         if (msg.Continuous)
             userGun.Comp.ShotCounter = 0;
     }
@@ -433,11 +437,16 @@ public abstract partial class SharedGunSystem : EntitySystem
             // If they're firing an existing clip then don't play anything.
             if (shots > 0)
             {
-                PopupSystem.PopupCursor(ev.Reason ?? Loc.GetString("gun-magazine-fired-empty"));
+                // KS14 start: keep the default empty-gun message unformatted for the recipient.
+                if (ev.Reason == null)
+                    PopupSystem.PopupCursor(KsPopupMessage.Create("gun-magazine-fired-empty"), user);
+                else
+                    PopupSystem.PopupCursor(ev.Reason, user);
+                // KS14 end
 
                 // MNET14: ent-popup
                 if (gun.Comp.EmptyFireLoc is { } emptyFireLoc)
-                    PopupSystem.PopupPredicted(Loc.GetString(emptyFireLoc), user, user);
+                    PopupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(emptyFireLoc), user, user);
 
                 // Don't spam safety sounds at gun fire rate, play it at a reduced rate.
                 // May cause prediction issues? Needs more tweaking
@@ -934,7 +943,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         // 3. Nothing
         if (!forceWeaponSound && modifiedDamage != null && modifiedDamage.GetTotal() > 0 && TryComp<RangedDamageSoundComponent>(otherEntity, out var rangedSound))
         {
-            var type = SharedMeleeWeaponSystem.GetHighestDamageSound(modifiedDamage, ProtoManager);
+            var type = SharedMeleeWeaponSystem.GetHighestDamageSound(modifiedDamage, ProtoMan);
 
             if (type != null && rangedSound.SoundTypes?.TryGetValue(type, out var damageSoundType) == true)
             {

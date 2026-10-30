@@ -1,4 +1,7 @@
-﻿using Content.Shared.Examine;
+using Content.Shared._KS14.PopupLocalization;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Database;
+using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
 using Content.Shared.Power;
@@ -7,29 +10,23 @@ using Robust.Shared.Player;
 
 namespace Content.Shared._KS14.FieldGenerator;
 
-// TODO admin logs
-
 public sealed partial class KsFieldGeneratorSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogManager = default!;
 
-    private EntityQuery<KsGeneratedFieldComponent> _fieldQuery;
+    [Dependency] private EntityQuery<KsGeneratedFieldComponent> _fieldQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _fieldQuery = GetEntityQuery<KsGeneratedFieldComponent>();
-
-        SubscribeLocalEvent<KsFieldGeneratorComponent, ExaminedEvent>(OnExamined);
-        SubscribeLocalEvent<KsFieldGeneratorComponent, ActivateInWorldEvent>(OnActivateInWorld);
-        SubscribeLocalEvent<KsFieldGeneratorComponent, PowerChangedEvent>(OnPowerChanged);
-
         InitialiseLinking();
     }
 
+    [SubscribeLocalEvent]
     private void OnExamined(Entity<KsFieldGeneratorComponent> entity, ref ExaminedEvent args)
     {
         if (!args.IsInDetailsRange)
@@ -38,6 +35,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         args.PushMarkup(Loc.GetString("ks-field-generator-examined", ("state", entity.Comp.Enabled)), priority: 4);
     }
 
+    [SubscribeLocalEvent]
     private void OnActivateInWorld(Entity<KsFieldGeneratorComponent> entity, ref ActivateInWorldEvent args)
     {
         if (args.Handled ||
@@ -45,6 +43,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
             return;
 
         SetEnabled(entity!, !entity.Comp.Enabled);
+        _adminLogManager.Add(LogType.FieldGeneration, LogImpact.Medium, $"{ToPrettyString(args.User):user} turned {(entity.Comp.Enabled ? "on" : "off")} {ToPrettyString(entity.Owner):generator}");
 
         if (entity.Comp.Enabled)
         {
@@ -57,7 +56,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         }
 
         _popupSystem.PopupPredicted(
-            Loc.GetString(entity.Comp.Enabled ? "ks-field-generator-enabled" : "ks-field-generator-disabled"),
+            KsPopupMessage.Create(entity.Comp.Enabled ? "ks-field-generator-enabled" : "ks-field-generator-disabled"),
             entity.Owner,
             args.User,
             Filter.Empty(),
@@ -78,6 +77,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         _appearanceSystem.SetData(entity.Owner, KsFieldGeneratorVisuals.State, GetState(entity!));
     }
 
+    [SubscribeLocalEvent]
     private void OnPowerChanged(Entity<KsFieldGeneratorComponent> entity, ref PowerChangedEvent args)
     {
         var wasPowered = entity.Comp.Powered;
@@ -85,6 +85,9 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
         if (wasPowered && !args.Powered) // Power was lost
         {
+            if (entity.Comp.LinkedGeneratorUid is { } && _netManager.IsServer)
+                _adminLogManager.Add(LogType.FieldGeneration, LogImpact.Medium, $"{ToPrettyString(entity.Owner):generator} lost power and dropped its field");
+
             UnlinkAndClearFields(entity);
         }
         else if (_netManager.IsServer && !wasPowered && args.Powered && entity.Comp.Enabled) // Should turn back on

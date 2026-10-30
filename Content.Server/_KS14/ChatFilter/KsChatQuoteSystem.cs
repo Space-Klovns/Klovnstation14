@@ -16,10 +16,9 @@ public sealed partial class KsChatQuoteSystem : EntitySystem
 
         if (!_configurationManager.GetCVar(KsCCVars.ChatQuotesEnabled))
             return;
-
-        SubscribeLocalEvent<KsBeforeMessageSentEvent>(OnBeforeMessageSent, after: [typeof(KsChatFilterSystem)]);
     }
 
+    [SubscribeLocalEvent(after: [typeof(KsChatFilterSystem)])]
     private void OnBeforeMessageSent(ref KsBeforeMessageSentEvent args)
     {
         if (args.Cancelled)

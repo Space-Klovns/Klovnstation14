@@ -167,7 +167,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
             return false;
 
         // KS14 Start
-        if (_speczoneSystem.AttemptInterfere(gun, user: user, predicted: true))
+        if (_speczoneSystem.AttemptInterfere(gun, userUid: user, predicted: true))
             return false;
         // KS14 End
 

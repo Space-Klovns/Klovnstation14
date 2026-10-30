@@ -20,17 +20,7 @@ public sealed partial class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSyste
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
     [Dependency] private AmbientSoundSystem _ambientSoundSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsPlumbingIvPumpChainStartComponent, ChainInitiallyBrokenEvent>(OnChainBroken);
-
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, PlumbingDeviceUpdateEvent>(OnDeviceUpdate);
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, PlumbingPullAttemptEvent>(OnPullAttempt);
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, DragDropDraggedEvent>(OnDragDropDragged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnChainBroken(Entity<KsPlumbingIvPumpChainStartComponent> entity, ref ChainInitiallyBrokenEvent args)
     {
         // We dont need ts anymore GEG
@@ -58,6 +48,7 @@ public sealed partial class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSyste
             RemComp(entity, args.EdgeComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnDeviceUpdate(Entity<KsPlumbingIvPumpComponent> entity, ref PlumbingDeviceUpdateEvent args)
     {
         var patientUid = entity.Comp.PatientUid;
@@ -131,6 +122,7 @@ public sealed partial class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSyste
         return toAddFp2;
     }
 
+    [SubscribeLocalEvent]
     private void OnDragDropDragged(Entity<KsPlumbingIvPumpComponent> entity, ref DragDropDraggedEvent args)
     {
         if (args.Handled ||
@@ -152,6 +144,7 @@ public sealed partial class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSyste
         UpdateState(entity!);
     }
 
+    [SubscribeLocalEvent]
     private void OnPullAttempt(Entity<KsPlumbingIvPumpComponent> entity, ref PlumbingPullAttemptEvent args)
     {
         if (args.Cancelled ||

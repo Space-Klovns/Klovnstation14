@@ -88,7 +88,7 @@ public sealed partial class ThrusterSystem : EntitySystem
         }
     }
 
-    private void OnIsHotEvent(EntityUid uid, ThrusterComponent component, IsHotEvent args)
+    private void OnIsHotEvent(EntityUid uid, ThrusterComponent component, ref /* KS14: by ref */ IsHotEvent args)
     {
         args.IsHot = component.Type != ThrusterType.Angular && component.IsOn;
     }

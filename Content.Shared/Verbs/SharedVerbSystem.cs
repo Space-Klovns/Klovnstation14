@@ -36,15 +36,22 @@ namespace Content.Shared.Verbs
 
             // Get the list of verbs. This effectively also checks that the requested verb is in fact a valid verb that
             // the user can perform.
-            var verbs = GetLocalVerbs(target.Value, user.Value, args.RequestedVerb.GetType());
+            // KS14 start: match translated labels in the request's culture, then restore it before executing callbacks.
+            Verb? verb;
+            using (VerbLocalization.BeginCultureScope(args.ClientLocale))
+            {
+                var verbs = GetLocalVerbs(target.Value, user.Value, args.RequestedVerb.GetType());
+                if (!verbs.TryGetValue(args.RequestedVerb, out verb))
+                    return;
+            }
+            // KS14 end
 
             // Note that GetLocalVerbs might waste time checking & preparing unrelated verbs even though we know
             // precisely which one we want to run. However, MOST entities will only have 1 or 2 verbs of a given type.
             // The one exception here is the "other" verb type, which has 3-4 verbs + all the debug verbs.
 
             // Find the requested verb.
-            if (verbs.TryGetValue(args.RequestedVerb, out var verb))
-                ExecuteVerb(verb, user.Value, target.Value);
+            ExecuteVerb(verb, user.Value, target.Value); // KS14: already validated above; server culture is restored
         }
 
         /// <summary>

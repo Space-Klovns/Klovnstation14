@@ -66,6 +66,7 @@ public sealed partial class SimpleToolUsageSystem : EntitySystem
         if (attemptEv.Cancelled)
             return;
 
+        var quality = Loc.GetString(ProtoMan.Index(ent.Comp.Quality).Name).ToLower();
         var doAfterArgs = new DoAfterArgs(EntityManager, user, ent.Comp.DoAfter, new SimpleToolDoAfterEvent(), ent, ent, tool)
         {
             BreakOnDamage = true,

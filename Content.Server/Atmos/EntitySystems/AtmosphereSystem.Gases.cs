@@ -11,7 +11,6 @@ namespace Content.Server.Atmos.EntitySystems
 {
     public sealed partial class AtmosphereSystem
     {
-        [Dependency] private IPrototypeManager _protoMan = default!;
 
         private GasReactionPrototype[] _gasReactions = [];
 
@@ -32,7 +31,7 @@ namespace Content.Server.Atmos.EntitySystems
         // pointing at prototype instances the prototype manager has already replaced
         private void RefreshGasReactionsCache()
         {
-            _gasReactions = _protoMan.EnumeratePrototypes<GasReactionPrototype>().ToArray();
+            _gasReactions = ProtoMan.EnumeratePrototypes<GasReactionPrototype>().ToArray();
             Array.Sort(_gasReactions, (a, b) => b.Priority.CompareTo(a.Priority));
         }
         // KS14 end

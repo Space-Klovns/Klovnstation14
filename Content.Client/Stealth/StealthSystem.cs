@@ -1,5 +1,5 @@
 using Content.Client.Interactable.Components;
-using Content.Client.StatusIcon;
+using Content.Client.Graphics;
 using Content.Shared.Stealth;
 using Content.Shared.Stealth.Components;
 using Robust.Client.GameObjects;
@@ -12,7 +12,6 @@ public sealed partial class StealthSystem : SharedStealthSystem
 {
     private static readonly ProtoId<ShaderPrototype> Shader = "Stealth";
 
-    [Dependency] private IPrototypeManager _protoMan = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SpriteSystem _sprite = default!;
 
@@ -22,7 +21,7 @@ public sealed partial class StealthSystem : SharedStealthSystem
     {
         base.Initialize();
 
-        _shader = _protoMan.Index(Shader).InstanceUnique();
+        _shader = ProtoMan.Index(Shader).InstanceUnique();
 
         SubscribeLocalEvent<StealthComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<StealthComponent, ComponentStartup>(OnStartup);
@@ -44,9 +43,19 @@ public sealed partial class StealthSystem : SharedStealthSystem
             return;
 
         _sprite.SetColor((uid, sprite), Color.White);
-        sprite.PostShader = enabled ? _shader : null;
-        sprite.GetScreenTexture = enabled;
-        sprite.RaiseShaderEvent = enabled;
+        if (enabled)
+        {
+            _sprite.SetPostShader((uid, sprite), new SpriteComponent.PostShaderArgs(ContentPostShaderIds.Stealth, _shader)
+            {
+                GetScreenTexture = true,
+                RaiseShaderEvent = true,
+                Before = ContentPostShaderIds.BeforeOutlines,
+            });
+        }
+        else
+        {
+            _sprite.RemovePostShader((uid, sprite), ContentPostShaderIds.Stealth);
+        }
 
         if (!enabled)
         {
@@ -55,11 +64,16 @@ public sealed partial class StealthSystem : SharedStealthSystem
             return;
         }
 
-        if (TryComp(uid, out InteractionOutlineComponent? outline))
+        // KS14 start: upstream stopped removing this when it moved to multi-post-shaders. The outline is
+        //      ordered after the stealth shader, so leaving it on means hovering a cloaked entity draws a ring
+        //      around an invisible sprite - and it left the HadOutline/EnsureComp restore above as dead code,
+        //      since the component was never gone to begin with.
+        if (TryComp<InteractionOutlineComponent>(uid, out var outlineComponent))
         {
-            RemCompDeferred(uid, outline);
+            RemCompDeferred(uid, outlineComponent);
             component.HadOutline = true;
         }
+        // KS14 end
     }
 
     private void OnStartup(EntityUid uid, StealthComponent component, ComponentStartup args)
@@ -94,6 +108,7 @@ public sealed partial class StealthSystem : SharedStealthSystem
 
         _shader.SetParameter("reference", reference);
         _shader.SetParameter("visibility", visibility);
+        /* _shader.SetParameter("shimmer_frequency", component.ShimmerFrequency); */ // KS14: removed, StealthComponent.ShimmerFrequency and the shader uniform both come from a later upstream change this fork has not merged
 
         visibility = MathF.Max(0, visibility);
         _sprite.SetColor((uid, args.Sprite), new Color(visibility, visibility, 1, 1));

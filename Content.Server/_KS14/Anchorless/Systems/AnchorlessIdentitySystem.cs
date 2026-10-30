@@ -5,14 +5,9 @@ using Robust.Shared.GameStates;
 
 namespace Content.Server._KS14.Anchorless.Systems;
 
-public sealed class AnchorlessIdentitySystem : SharedAnchorlessIdentitySystem
+public sealed partial class AnchorlessIdentitySystem : SharedAnchorlessIdentitySystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentGetState>(OnGetState);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGetState(Entity<KsAnchorlessAntagComponent> ent, ref ComponentGetState args)
     {
         var identities = ent.Comp.LearnedIdentities.Select(identity => new AnchorlessNetworkedIdentityData

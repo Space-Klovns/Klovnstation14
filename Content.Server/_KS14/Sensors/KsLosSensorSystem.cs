@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Shared._KS14.Occlusion;
 using Content.Shared._KS14.Sensors;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -99,7 +100,7 @@ public abstract partial class KsLosSensorSystem : EntitySystem
     private float CastReach(MapId mapId, Vector2 origin, Vector2 dir, float range, EntityUid ownGrid = default, HashSet<EntityUid>? transparent = null)
     {
         var ray = new Ray(origin, dir);
-        var state = new LosIgnoreState(EntityUid.Invalid, ownGrid, transparent);
+        var state = new LosIgnoreState(EntityUid.Invalid, ownGrid, transparent, XformSystem, origin, origin + dir * range);
 
         if (Occluder.IntersectRay(mapId, ray, range, state, LosIgnore) is not { } first)
             return range;
@@ -206,7 +207,7 @@ public abstract partial class KsLosSensorSystem : EntitySystem
             return null;
 
         var ray = new Ray(from, delta / dist);
-        var state = new LosIgnoreState(ignoreGrid, ownGrid, transparent);
+        var state = new LosIgnoreState(ignoreGrid, ownGrid, transparent, XformSystem, from, to);
         return Occluder.IntersectRay(mapId, ray, dist - RayContact, state, LosIgnore);
     }
 
@@ -222,6 +223,15 @@ public abstract partial class KsLosSensorSystem : EntitySystem
         if (!occ.Comp1.Enabled)
             return true;
 
+        // Along a tile edge, the occluder tree reports every occluder on the line - behind the sensor and past the
+        //      target included - with a NaN or zero distance. One the segment cannot reach is not in the way.
+        var (worldPosition, worldRotation) = state.XformSystem.GetWorldPositionRotation(occ.Comp2);
+        var worldBounds = new Box2Rotated(occ.Comp1.LocalBounds.Translated(worldPosition), worldRotation, worldPosition)
+            .CalcBoundingBox()
+            .Enlarged(UnreachableHitSlack);
+        if (!KsSegmentBounds.Touches(state.Start, state.End, worldBounds))
+            return true;
+
         if (occ.Comp2.GridUid is not { } grid)
             return false;
 
@@ -231,6 +241,17 @@ public abstract partial class KsLosSensorSystem : EntitySystem
         return state.Transparent != null && grid != state.OwnGrid && state.Transparent.Contains(grid);
     }
 
-    /// <summary>State threaded through the occluder ray cast's ignore predicate.</summary>
-    private readonly record struct LosIgnoreState(EntityUid IgnoreGrid, EntityUid OwnGrid, HashSet<EntityUid>? Transparent);
+    /// <summary>
+    ///     How far past an occluder's bounds a reported hit may lie and still be believed. Far above float error.
+    /// </summary>
+    private const float UnreachableHitSlack = 0.01f;
+
+    /// <summary>State threaded through the occluder ray cast's ignore predicate, with the segment being cast.</summary>
+    private readonly record struct LosIgnoreState(
+        EntityUid IgnoreGrid,
+        EntityUid OwnGrid,
+        HashSet<EntityUid>? Transparent,
+        SharedTransformSystem XformSystem,
+        Vector2 Start,
+        Vector2 End);
 }

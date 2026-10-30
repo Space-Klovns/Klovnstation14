@@ -1,0 +1,25 @@
+light_mode unshaded;
+
+// A horizontal cut with a moving cut line and a fading remainder, for something sinking into a surface.
+//
+// This is hcut.swsl with `c` and `alphaModifier` promoted to uniforms so they can be animated per frame, and
+//      it is a separate shader on purpose. GL uniforms belong to the program rather than to the
+//      ShaderInstance, and Clyde uploads nothing at all for an instance that sets no parameters
+//      (`if (instance.Parameters.Count == 0) return;`, Clyde.Rendering.cs) - so any instance that leaves
+//      these alone renders with whatever the last instance to set them wrote. Upstream's floor occlusion,
+//      which cuts mobs standing in water, is exactly such an instance: it sets nothing and relies on the
+//      shader's own defaults. Sharing one program with it meant an entity that had finished sinking into
+//      lava, at alphaModifier 0, left every mob in water completely invisible.
+uniform highp float c = 0.3;
+uniform highp float alphaModifier = 0.2;
+const bool below = true;
+
+void fragment()
+{
+    highp vec4 tex = zTexture(UV);
+    highp float modifier = (UV.y > c ^^ !below) ? 1.0 : alphaModifier;
+
+    // Premultiplied: the sprite is drawn into a transparent render target, so its colour already carries its
+    //      alpha and both have to be attenuated together. See DrawEntityPostShaders in Clyde.HLR.cs.
+    COLOR = vec4(tex.rgb * modifier, tex.a * modifier);
+}

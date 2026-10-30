@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using Content.Server.Atmos.Reactions;
 using Content.Shared._KS14.IoC;
 using Robust.Shared.Prototypes;
@@ -16,7 +15,7 @@ public sealed partial class AtmosphereSystem
 
     private void KsUpdateGasReactionPrototypes(IDependencyCollection dependencyCollection)
     {
-        foreach (var gasReactionPrototype in _protoMan.EnumeratePrototypes<GasReactionPrototype>())
+        foreach (var gasReactionPrototype in ProtoMan.EnumeratePrototypes<GasReactionPrototype>())
         {
             foreach (var effect in gasReactionPrototype.GetEffects())
                 dependencyCollection.InjectDependencies(effect, oneOff: true);

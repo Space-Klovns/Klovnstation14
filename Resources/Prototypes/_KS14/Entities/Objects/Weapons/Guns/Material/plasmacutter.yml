@@ -125,8 +125,9 @@
     price: 1200
 
 - type: entity
-  id: BulletAdvancedPlasmaCutter
   parent: BulletPlasmaCutter
+  id: BulletAdvancedPlasmaCutter
+  categories: [ HideSpawnMenu ]
   components:
   - type: Projectile
     damage:

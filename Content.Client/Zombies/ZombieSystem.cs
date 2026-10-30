@@ -11,7 +11,6 @@ namespace Content.Client.Zombies;
 
 public sealed partial class ZombieSystem : SharedZombieSystem
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private SpriteSystem _sprite = default!;
 
     public override void Initialize()
@@ -25,7 +24,7 @@ public sealed partial class ZombieSystem : SharedZombieSystem
 
     private void GetZombieIcon(Entity<ZombieComponent> ent, ref GetStatusIconsEvent args)
     {
-        var iconPrototype = _prototype.Index(ent.Comp.StatusIcon);
+        var iconPrototype = ProtoMan.Index(ent.Comp.StatusIcon);
         args.StatusIcons.Add(iconPrototype);
     }
 
@@ -34,7 +33,7 @@ public sealed partial class ZombieSystem : SharedZombieSystem
         if (HasComp<ZombieComponent>(ent))
             return;
 
-        var iconPrototype = _prototype.Index(ent.Comp.StatusIcon);
+        var iconPrototype = ProtoMan.Index(ent.Comp.StatusIcon);
         args.StatusIcons.Add(iconPrototype);
     }
 

@@ -230,7 +230,7 @@ public abstract partial class SharedGunSystem
         {
             component.UnspawnedCount--;
             DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
-            var ent = EntityManager.PredictedSpawn(component.Proto, coordinates);
+            var ent = PredictedSpawn/* KS14: EntityManager.PredictedSpawn -> proxy */(component.Proto, coordinates);
             EnsureShootable(ent);
             EjectCartridge(GetRandom(uid), ent, user: user); // KS14: added user
         }

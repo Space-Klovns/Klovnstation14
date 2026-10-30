@@ -38,7 +38,6 @@ public sealed partial class KsTranslationSystem : EntitySystem
     [Dependency] private IServerNetManager _net = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     /// <summary>
     ///     The translation backend. Deliberately NOT a [Dependency] so integration tests can swap in a fake;
@@ -89,9 +88,6 @@ public sealed partial class KsTranslationSystem : EntitySystem
         _net.RegisterNetMessage<MsgReplaceChatMessage>();
 
         Translator = new DeepLTranslator(_cfg);
-
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         RebuildGlossary();
 
         _cfg.OnValueChanged(KsCCVars.TranslateEnabled, v => _enabled = v, invokeImmediately: true);
@@ -111,6 +107,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
         (Translator as IDisposable)?.Dispose();
     }
 
+    [SubscribeLocalEvent]
     private void OnCleanup(RoundRestartCleanupEvent ev)
     {
         _cooldownUntil.Clear();
@@ -118,6 +115,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
         // Cache/budget intentionally persist across rounds (budget is a billing-period concept).
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs ev)
     {
         if (ev.WasModified<KsTranslationGlossaryPrototype>())
@@ -132,7 +130,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
     public void RebuildGlossary()
     {
         var dictionaries = new List<KsGlossaryDictionary>();
-        foreach (var proto in _proto.EnumeratePrototypes<KsTranslationGlossaryPrototype>())
+        foreach (var proto in ProtoMan.EnumeratePrototypes<KsTranslationGlossaryPrototype>())
         {
             if (proto.Entries.Count == 0)
                 continue;
@@ -165,7 +163,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
         // original are independent unordered net messages, so on the cache-hit path they can still be
         // reordered on the wire; the client buffers a swap that outruns its original (see ChatUIController).
         while (_cachedSwaps.TryDequeue(out var swap))
-            SendSwap(swap.MessageId, swap.Reader, swap.Translated);
+            SendSwap(swap.MessageId, swap.Reader, swap.Translated, swap.Deliver); // BS: UPSTREAM-BS-TRANSLATION-001, AHelp has its own delivery path.
 
         // Completed async calls: cache the result and fan it out to every reader that attached to it.
         while (_asyncResults.TryDequeue(out var res))
@@ -177,8 +175,9 @@ public sealed partial class KsTranslationSystem : EntitySystem
                 continue; // failure/timeout: readers keep the original
 
             _cache[res.CacheKey] = res.Translated;
-            foreach (var (id, reader) in inflight.Readers)
-                SendSwap(id, reader, res.Translated);
+            // BS: Dispatch private AHelp results through their authorized recipient callback.
+            foreach (var (id, reader, deliver) in inflight.Readers)
+                SendSwap(id, reader, res.Translated, deliver);
         }
 
         PollUsage();
@@ -216,12 +215,16 @@ public sealed partial class KsTranslationSystem : EntitySystem
         _usagePollInFlight = false;
     }
 
-    private void SendSwap(int messageId, INetChannel reader, string translated)
+    // BS: UPSTREAM-BS-TRANSLATION-001, share the queue/cache without sending AHelp into ordinary chat.
+    private void SendSwap(int messageId, INetChannel reader, string translated, Action<int, INetChannel, string>? deliver = null)
     {
         if (!reader.IsConnected)
             return;
 
-        _net.ServerSendMessage(new MsgReplaceChatMessage { MessageId = messageId, Message = translated }, reader);
+        if (deliver != null)
+            deliver(messageId, reader, translated);
+        else
+            _net.ServerSendMessage(new MsgReplaceChatMessage { MessageId = messageId, Message = translated }, reader);
     }
 
     #region Message-level gating
@@ -249,7 +252,8 @@ public sealed partial class KsTranslationSystem : EntitySystem
         return TryBeginCommon(channel, plain, speakerLang, speaker.UserId, out ctx);
     }
 
-    private bool TryBeginCommon(ChatChannel channel, string plain, string speakerLang, NetUserId speaker, [NotNullWhen(true)] out KsTranslationContext? ctx)
+    // BS: AHelp supplies a fixed support context and never reads or writes public channel history.
+    private bool TryBeginCommon(ChatChannel channel, string plain, string speakerLang, NetUserId speaker, [NotNullWhen(true)] out KsTranslationContext? ctx, string? ksContextOverride = null)
     {
         ctx = null;
 
@@ -274,8 +278,9 @@ public sealed partial class KsTranslationSystem : EntitySystem
 
         // Build the context from the buffer as it stands (excludes this line), then record this line for the
         // benefit of the next message on this channel.
-        ctx = new KsTranslationContext { SpeakerBase = speakerBase, Speaker = speaker, Length = len, Text = plain, Context = BuildContext(channel) };
-        AppendContext(channel, plain);
+        ctx = new KsTranslationContext { SpeakerBase = speakerBase, Speaker = speaker, Length = len, Text = plain, Context = ksContextOverride ?? BuildContext(channel) };
+        if (ksContextOverride == null)
+            AppendContext(channel, plain);
         return true;
     }
 
@@ -336,9 +341,10 @@ public sealed partial class KsTranslationSystem : EntitySystem
         if (ctx is null)
             return shared;
 
-        // Translate exactly what this reader will see: if the jammer already swapped in a garbled clone,
-        // this keys off that garbled text (harmless) rather than leaking the clear original onto it.
-        var id = TryReader(shared.Message.Message, ctx, reader.Channel);
+        // Clear broadcasts use the text before accents. A jammer's garbled clone must never
+        // receive a translation of the clear original.
+        var plain = shared.Message.Message == ctx.RadioMessage ? ctx.Text : shared.Message.Message;
+        var id = TryReader(plain, ctx, reader.Channel);
         if (id is not { } messageId)
             return shared;
 
@@ -364,23 +370,25 @@ public sealed partial class KsTranslationSystem : EntitySystem
         return true;
     }
 
-    private void Enqueue(int id, INetChannel reader, string plain, KsTranslationContext ctx, string target)
+    // BS: Keep AHelp's fixed-context cache separate from context-sensitive game chat.
+    private void Enqueue(int id, INetChannel reader, string plain, KsTranslationContext ctx, string target,
+        Action<int, INetChannel, string>? ksDeliver = null, string ksCacheScope = "")
     {
-        var key = CacheKey(ctx.SpeakerBase, target, plain);
+        var key = ksCacheScope + CacheKey(ctx.SpeakerBase, target, plain);
 
         if (_cache.TryGetValue(key, out var cached))
         {
-            _cachedSwaps.Enqueue(new CachedSwap(id, reader, cached));
+            _cachedSwaps.Enqueue(new CachedSwap(id, reader, cached, ksDeliver));
             return;
         }
 
         if (_inFlight.TryGetValue(key, out var infl))
         {
-            infl.Readers.Add((id, reader));
+            infl.Readers.Add((id, reader, ksDeliver));
             return;
         }
 
-        _inFlight[key] = new InFlight(id, reader);
+        _inFlight[key] = new InFlight(id, reader, ksDeliver);
         ctx.StartedCall = true;
         _ = RunTranslateAsync(key, plain, ctx.SpeakerBase, target, ctx.Context);
     }
@@ -451,16 +459,18 @@ public sealed partial class KsTranslationSystem : EntitySystem
 
     private sealed class InFlight
     {
-        public readonly List<(int Id, INetChannel Reader)> Readers = new();
+        // BS: Each reader retains its delivery path, including deduplicated/cached AHelp requests.
+        public readonly List<(int Id, INetChannel Reader, Action<int, INetChannel, string>? Deliver)> Readers = new();
 
-        public InFlight(int id, INetChannel reader)
+        public InFlight(int id, INetChannel reader, Action<int, INetChannel, string>? deliver)
         {
-            Readers.Add((id, reader));
+            Readers.Add((id, reader, deliver));
         }
     }
 
     private readonly record struct AsyncResult(string CacheKey, string? Translated);
-    private readonly record struct CachedSwap(int MessageId, INetChannel Reader, string Translated);
+    // BS: Preserve the private delivery callback on cache hits too.
+    private readonly record struct CachedSwap(int MessageId, INetChannel Reader, string Translated, Action<int, INetChannel, string>? Deliver);
 
     #endregion
 }
@@ -482,6 +492,9 @@ public sealed class KsTranslationContext
 
     /// <summary>The plain message text, letting a same-text companion line or repeat bypass the cooldown.</summary>
     public string Text = "";
+
+    /// <summary>The clear radio broadcast after accents, used to detect jammed deliveries.</summary>
+    public string? RadioMessage;
 
     /// <summary>The unbilled DeepL context hint (setting hint + recent channel lines) for this message.</summary>
     public string Context = "";

@@ -20,15 +20,6 @@ public sealed partial class KsVisualSearchSystem : KsLosSensorSystem
 {
     [Dependency] private KsSensorIntelSystem _intel = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsVisualSearchComponent, KsSensorSweepEvent>(OnSweep);
-        SubscribeLocalEvent<KsVisualSearchComponent, KsSensorCoverageEvent>(OnCoverage);
-        SubscribeLocalEvent<KsVisualSearchComponent, KsSensorPointVisibleEvent>(OnPointVisible);
-    }
-
     /// <summary>
     ///     Whether this sensor plainly sees a given world point right now: within range and
     ///         with an unobstructed line of sight, using the very same occluder ray it
@@ -39,6 +30,7 @@ public sealed partial class KsVisualSearchSystem : KsLosSensorSystem
     ///         view of a grid the sensor can't detect anyway is no evidence it left, so such
     ///         a ghost is left untouched.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnPointVisible(Entity<KsVisualSearchComponent> ent, ref KsSensorPointVisibleEvent args)
     {
         var xform = Transform(args.Sensor);
@@ -64,6 +56,7 @@ public sealed partial class KsVisualSearchSystem : KsLosSensorSystem
         args.Visible = HasLos(args.MapId, sensorPos, args.WorldPos, EntityUid.Invalid);
     }
 
+    [SubscribeLocalEvent]
     private void OnSweep(Entity<KsVisualSearchComponent> ent, ref KsSensorSweepEvent args)
     {
         var sensorXform = Transform(args.Sensor);
@@ -132,6 +125,7 @@ public sealed partial class KsVisualSearchSystem : KsLosSensorSystem
     }
 
     /// <summary>Purely cosmetic: the coverage fan feeds radar rendering, never detection.</summary>
+    [SubscribeLocalEvent]
     private void OnCoverage(Entity<KsVisualSearchComponent> ent, ref KsSensorCoverageEvent args)
     {
         args.WorldPoints = ComputeCoverage(args.Sensor);

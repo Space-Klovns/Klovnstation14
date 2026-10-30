@@ -16,12 +16,10 @@ public sealed partial class KsShadowOverlaySystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<KsShadowComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<KsShadowComponent, AppearanceChangeEvent>(OnAppearanceChanged);
-
         _systemCollectionHookManager.HookAction(OnDependenciesReady);
     }
 
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<KsShadowComponent> entity, ref MapInitEvent args)
     {
         if (!_appearanceSystem.TryGetData(entity.Owner, entity.Comp.Visuals, out var key) ||
@@ -33,6 +31,7 @@ public sealed partial class KsShadowOverlaySystem : EntitySystem
         BuildVars(entity, value);
     }
 
+    [SubscribeLocalEvent]
     private void OnAppearanceChanged(Entity<KsShadowComponent> entity, ref AppearanceChangeEvent args)
     {
         if (!args.AppearanceData.TryGetValue(entity.Comp.Visuals, out var key) ||

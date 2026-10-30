@@ -8,23 +8,19 @@ public sealed partial class HristovAppearanceSystem : EntitySystem
 {
     [Dependency] private SpriteSystem _sprite = default!;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<HristovAppearanceComponent, ComponentStartup>(OnHristovAppearanceAdded);
-        SubscribeLocalEvent<HristovAppearanceComponent, ComponentShutdown>(OnHristovAppearanceRemoved);
-        SubscribeLocalEvent<HristovAppearanceComponent, AfterAutoHandleStateEvent>(OnHristovAppearanceStateChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnHristovAppearanceRemoved(Entity<HristovAppearanceComponent> ent, ref ComponentShutdown args)
     {
         RemoveHristovAppearance(ent);
     }
 
+    [SubscribeLocalEvent]
     private void OnHristovAppearanceAdded(Entity<HristovAppearanceComponent> ent, ref ComponentStartup args)
     {
         AddHristovAppearance(ent);
     }
 
+    [SubscribeLocalEvent]
     private void OnHristovAppearanceStateChanged(Entity<HristovAppearanceComponent> ent, ref AfterAutoHandleStateEvent args)
     {
         // After receiving a new state for the component, we remove the old appearance and build a new one.

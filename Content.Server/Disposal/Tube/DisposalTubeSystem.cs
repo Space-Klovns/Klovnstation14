@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using System.Text;
 using Content.Server.Atmos.EntitySystems;
@@ -414,7 +415,7 @@ namespace Content.Server.Disposal.Tube
             RaiseLocalEvent(tubeId, ref ev);
             var directions = string.Join(", ", ev.Connectable);
 
-            _popups.PopupEntity(Loc.GetString("disposal-tube-component-popup-directions-text", ("directions", directions)), tubeId, recipient);
+            _popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disposal-tube-component-popup-directions-text", ("directions", directions)), tubeId, recipient);
         }
 
         public override bool TryInsert(EntityUid uid, DisposalUnitComponent from, IEnumerable<string>? tags = default, DisposalEntryComponent? entry = null)

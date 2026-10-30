@@ -13,20 +13,14 @@ public abstract partial class SharedOrganAttachmentConstructionSystem : EntitySy
 {
     [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<OrganAttachmentConstructionComponent, OrganAttachmentGetCategoriesEvent>(OnGetCategories);
-        SubscribeLocalEvent<OrganAttachmentConstructionComponent, CanAttachOrganEvent>(OnCanAttachOrgan);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGetCategories(Entity<OrganAttachmentConstructionComponent> entity, ref OrganAttachmentGetCategoriesEvent args)
     {
         foreach (var item in entity.Comp.AlwaysAttachable)
             args.Add(item.Key);
     }
 
+    [SubscribeLocalEvent]
     private void OnCanAttachOrgan(Entity<OrganAttachmentConstructionComponent> entity, ref CanAttachOrganEvent args)
     {
         if (args.Cancelled ||

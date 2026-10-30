@@ -19,19 +19,11 @@ public sealed partial class PipeNodeTeleporterSystem : EntitySystem
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
     [Dependency] private AppearanceSystem _appearanceSystem = default!;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<PipeNodeTeleporterRecipientComponent, MapInitEvent>(OnRecipientMapInit);
-        SubscribeLocalEvent<PipeNodeTeleporterRecipientComponent, DeviceListUpdateEvent>(OnRecipientDeviceListUpdate);
-
-        SubscribeLocalEvent<PipeNodeTeleporterRecipientComponent, ComponentShutdown>(OnRecipientShutdown);
-        SubscribeLocalEvent<PipeNodeTeleporterBeaconComponent, ComponentShutdown>(OnBeaconShutdown);
-    }
-
     /// <summary>
     ///     Device lists survive mapping and saving, but <see cref="DeviceListUpdateEvent"/> is only raised on change,
     ///         so pre-linked teleporters have to establish their links themselves.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnRecipientMapInit(Entity<PipeNodeTeleporterRecipientComponent> entity, ref MapInitEvent args)
     {
         if (!TryComp<DeviceListComponent>(entity.Owner, out var deviceListComponent))
@@ -40,6 +32,7 @@ public sealed partial class PipeNodeTeleporterSystem : EntitySystem
         UpdateLinks(entity, deviceListComponent.Devices);
     }
 
+    [SubscribeLocalEvent]
     private void OnRecipientDeviceListUpdate(Entity<PipeNodeTeleporterRecipientComponent> entity, ref DeviceListUpdateEvent args)
         => UpdateLinks(entity, args.Devices);
 
@@ -83,6 +76,7 @@ public sealed partial class PipeNodeTeleporterSystem : EntitySystem
         UpdateConnectedVisuals(entity.Owner, entity.Comp.LinkedBeaconUids.Count);
     }
 
+    [SubscribeLocalEvent]
     private void OnRecipientShutdown(Entity<PipeNodeTeleporterRecipientComponent> entity, ref ComponentShutdown args)
     {
         if (!TryGetTeleporterNode(entity.Owner, entity.Comp.NodeName, out var recipientNode))
@@ -94,6 +88,7 @@ public sealed partial class PipeNodeTeleporterSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnBeaconShutdown(Entity<PipeNodeTeleporterBeaconComponent> entity, ref ComponentShutdown args)
     {
         if (!TryGetTeleporterNode(entity.Owner, entity.Comp.NodeName, out var beaconNode))

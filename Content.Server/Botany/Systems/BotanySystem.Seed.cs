@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Botany.Components;
 using Content.Server.Popups;
 using Content.Shared.Chemistry.EntitySystems;
@@ -21,7 +22,6 @@ namespace Content.Server.Botany.Systems;
 
 public sealed partial class BotanySystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private AppearanceSystem _appearance = default!;
     [Dependency] private PopupSystem _popupSystem = default!;
@@ -48,7 +48,7 @@ public sealed partial class BotanySystem : EntitySystem
         }
 
         if (comp.SeedId != null
-            && _prototypeManager.TryIndex(comp.SeedId, out SeedPrototype? protoSeed))
+            && ProtoMan.TryIndex(comp.SeedId, out SeedPrototype? protoSeed))
         {
             seed = protoSeed;
             return true;
@@ -67,7 +67,7 @@ public sealed partial class BotanySystem : EntitySystem
         }
 
         if (comp.SeedId != null
-            && _prototypeManager.TryIndex(comp.SeedId, out SeedPrototype? protoSeed))
+            && ProtoMan.TryIndex(comp.SeedId, out SeedPrototype? protoSeed))
         {
             seed = protoSeed;
             return true;
@@ -134,12 +134,12 @@ public sealed partial class BotanySystem : EntitySystem
     {
         if (proto.ProductPrototypes.Count == 0 || proto.Yield <= 0)
         {
-            _popupSystem.PopupCursor(Loc.GetString("botany-harvest-fail-message"), user, PopupType.Medium);
+            _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("botany-harvest-fail-message"), user, PopupType.Medium);
             return Enumerable.Empty<EntityUid>();
         }
 
         var name = Loc.GetString(proto.DisplayName);
-        _popupSystem.PopupCursor(Loc.GetString("botany-harvest-success-message", ("name", name)), user, PopupType.Medium);
+        _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("botany-harvest-success-message", ("name", name)), user, PopupType.Medium);
 
         if (proto.HarvestLogImpact != null)
             _adminLogger.Add(LogType.Botany, proto.HarvestLogImpact.Value, $"{ToPrettyString(user):player} harvested {Loc.GetString(proto.Name):seed} at Pos:{Transform(user).Coordinates}.");

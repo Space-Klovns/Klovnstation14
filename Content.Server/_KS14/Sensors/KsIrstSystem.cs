@@ -40,14 +40,6 @@ public sealed partial class KsIrstSystem : KsLosSensorSystem
     /// <summary>Sweep scratch: detected grids, with what frames their life signs grid-locally.</summary>
     private readonly Dictionary<EntityUid, (Matrix3x2 InvMatrix, Vector2 LocalCenter)> _lifeSignFrames = new();
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsIrstComponent, KsSensorSweepEvent>(OnSweep);
-        SubscribeLocalEvent<KsIrstComponent, KsSensorCoverageEvent>(OnCoverage);
-    }
-
     /// <summary>
     ///     Rebuilds <see cref="_transparentGrids"/> from the grids within <paramref name="maxRange"/>,
     ///         shared by the sweep and the coverage cone so the two can never disagree about which
@@ -82,6 +74,7 @@ public sealed partial class KsIrstSystem : KsLosSensorSystem
         return MathF.Max(comp.MinDetectable, comp.MinDetectableAtMaxRange - maxRange / comp.Factor);
     }
 
+    [SubscribeLocalEvent]
     private void OnSweep(Entity<KsIrstComponent> ent, ref KsSensorSweepEvent args)
     {
         var sensorXform = Transform(args.Sensor);
@@ -212,6 +205,7 @@ public sealed partial class KsIrstSystem : KsLosSensorSystem
     ///         grids the sweep does, or the cone would stop at an invisible cold hull
     ///         while the sweep still detects the hot target beyond it.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnCoverage(Entity<KsIrstComponent> ent, ref KsSensorCoverageEvent args)
     {
         var sensorXform = Transform(args.Sensor);

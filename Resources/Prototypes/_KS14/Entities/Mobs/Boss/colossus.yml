@@ -10,16 +10,9 @@
   - type: RotationVisuals
     defaultRotation: 90
     horizontalRotation: 90
-  - type: NpcAngerModifier
-    maxAnger: 20
-    damagePerAnger: 40
-  - type: NpcRangedAttackPatternHolder
-    attacks:
-      spiral: ColossusSpiralAttack
-      enragedSpiral: ColossusEnragedSpiralAttack
-      shotgun: ColossusShotgunAttack
-      directional: ColossusDirectionalAttack
-      randomAoe: ColossusRandomAoeAttack
+  - type: NpcMeterOnDamage
+    meter: KsAnger
+    perDamage: 0.025
   - type: Speech
   - type: NpcAggro
   - type: HTN

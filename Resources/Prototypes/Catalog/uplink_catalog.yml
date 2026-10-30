@@ -145,9 +145,9 @@
   productEntity: EnergyShield
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 9 # KS14 Change: x3
+    Telecrystal: 12 # KS14: 4 -> 12, x3; reverted energy-shield repair price decrease
   cost:
-    Telecrystal: 18 # KS14 Change: x3
+    Telecrystal: 24 # KS14: 8 -> 24, x3; reverted energy-shield repair price decrease
   categories:
   - UplinkWeaponry #KS14 change added to syndie uplink
 

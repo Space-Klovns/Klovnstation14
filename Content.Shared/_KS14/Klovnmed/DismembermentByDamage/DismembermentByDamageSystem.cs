@@ -25,14 +25,7 @@ public sealed partial class DismembermentByDamageSystem : EntitySystem
     /// </summary>
     public static readonly TimeSpan FuckupCooldown = TimeSpan.FromSeconds(1);
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<DismembermentByDamageComponent, ComponentStartup>(OnInit);
-        SubscribeLocalEvent<DismembermentByDamageComponent, DamageChangedEvent>(OnDamageTaken);
-    }
-
+    [SubscribeLocalEvent]
     private void OnInit(Entity<DismembermentByDamageComponent> entity, ref ComponentStartup args)
     {
         if (entity.Comp.LastUpdate != TimeSpan.MinValue)
@@ -42,6 +35,7 @@ public sealed partial class DismembermentByDamageSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnDamageTaken(Entity<DismembermentByDamageComponent> entity, ref DamageChangedEvent args)
     {
         // Thank you masulita

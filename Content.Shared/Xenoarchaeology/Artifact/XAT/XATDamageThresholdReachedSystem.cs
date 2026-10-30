@@ -11,7 +11,6 @@ namespace Content.Shared.Xenoarchaeology.Artifact.XAT;
 /// </summary>
 public sealed partial class XATDamageThresholdReachedSystem : BaseXATSystem<XATDamageThresholdReachedComponent>
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -41,7 +40,7 @@ public sealed partial class XATDamageThresholdReachedSystem : BaseXATSystem<XATD
 
         foreach (var (group, needed) in damageTriggerComponent.GroupsNeeded)
         {
-            var damageGroupPrototype = _prototype.Index(group);
+            var damageGroupPrototype = ProtoMan.Index(group);
             if (!damageTriggerComponent.AccumulatedDamage.TryGetDamageInGroup(damageGroupPrototype, out var damage))
                 continue;
 

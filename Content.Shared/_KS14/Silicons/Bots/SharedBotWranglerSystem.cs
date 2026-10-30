@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using System.Linq;
 using Content.Shared.Actions;
 using Content.Shared.Popups;
@@ -12,16 +13,7 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<ActivelyWrangledBotComponent, ComponentShutdown>(OnActivelyWrangledBotShutdown);
-        SubscribeLocalEvent<BotWranglerComponent, ComponentShutdown>(OnBotWranglerShutdown);
-
-        //subscribe the 2 ai actions you need
-        SubscribeLocalEvent<BotWranglerComponent, SelectControlledBotEvent>(OnSelectControlledBot);
-        SubscribeLocalEvent<BotWranglerComponent, MoveControlledBotToPositionEvent>(OnMoveControlledBotToPosition);
-    }
-
+    [SubscribeLocalEvent]
     private void OnActivelyWrangledBotShutdown(Entity<ActivelyWrangledBotComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.UserUid is not { } userUid ||
@@ -32,6 +24,7 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
         AfterActivelyWrangledBotShutdown(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnBotWranglerShutdown(Entity<BotWranglerComponent> entity, ref ComponentShutdown args)
     {
         foreach (var botUid in entity.Comp.WrangledBotUids)
@@ -45,6 +38,7 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
     }
 
     //when you want to select a bot to wrangle
+    [SubscribeLocalEvent]
     private void OnSelectControlledBot(Entity<BotWranglerComponent> entity, ref SelectControlledBotEvent args)
     {
         if (!_gameTiming.IsFirstTimePredicted ||
@@ -65,13 +59,13 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
             }
 
             // tell the original user of this bot that someone else selected it
-            _popupSystem.PopupEntity(Loc.GetString("ai-bot-someone-else-selected"), args.Target, oldUserUid, PopupType.MediumCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ai-bot-someone-else-selected"), args.Target, oldUserUid, PopupType.MediumCaution);
         }
 
         if (entity.Comp.MaximumSelected > 0 &&
             entity.Comp.WrangledBotUids.Count == entity.Comp.MaximumSelected)
         {
-            _popupSystem.PopupClient(Loc.GetString("ai-bot-selection-too-many", ("limit", entity.Comp.MaximumSelected)), args.Performer, PopupType.MediumCaution);
+            _popupSystem.PopupClient(KsPopupMessage.Create("ai-bot-selection-too-many", ("limit", entity.Comp.MaximumSelected)), args.Performer, PopupType.MediumCaution);
             return;
         }
 
@@ -81,19 +75,20 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
         entity.Comp.WrangledBotUids.Add(args.Target);
         Dirty(entity, entity.Comp);
 
-        _popupSystem.PopupClient(Loc.GetString("ai-bot-selection-successful"), args.Performer, PopupType.Medium);
+        _popupSystem.PopupClient(KsPopupMessage.Create("ai-bot-selection-successful"), args.Performer, PopupType.Medium);
     }
 
     //when you want to move selected bot
+    [SubscribeLocalEvent]
     private void OnMoveControlledBotToPosition(Entity<BotWranglerComponent> entity, ref MoveControlledBotToPositionEvent args)
     {
         if (entity.Comp.WrangledBotUids.Count == 0)
         {
-            _popupSystem.PopupClient(Loc.GetString("ai-controlled-bot-not-found"), args.Performer, PopupType.Medium);
+            _popupSystem.PopupClient(KsPopupMessage.Create("ai-controlled-bot-not-found"), args.Performer, PopupType.Medium);
             return;
         }
 
-        _popupSystem.PopupClient(Loc.GetString("ai-bot-targeting-successful"), args.Performer, PopupType.Medium);
+        _popupSystem.PopupClient(KsPopupMessage.Create("ai-bot-targeting-successful"), args.Performer, PopupType.Medium);
 
         foreach (var botUid in entity.Comp.WrangledBotUids.ToArray())
         {

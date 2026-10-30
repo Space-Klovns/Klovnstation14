@@ -8,7 +8,6 @@ namespace Content.Client.Overlays;
 
 public sealed partial class ShowMindShieldIconsSystem : EquipmentHudSystem<ShowMindShieldIconsComponent>
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
 
     public override void Initialize()
     {
@@ -23,7 +22,7 @@ public sealed partial class ShowMindShieldIconsSystem : EquipmentHudSystem<ShowM
     {
         if (!IsActive)
             return;
-        if (component.IsEnabled && _prototype.Resolve(component.MindShieldStatusIcon, out var fakeStatusIconPrototype))
+        if (component.IsEnabled && ProtoMan.Resolve(component.MindShieldStatusIcon, out var fakeStatusIconPrototype))
             ev.StatusIcons.Add(fakeStatusIconPrototype);
     }
 
@@ -32,7 +31,7 @@ public sealed partial class ShowMindShieldIconsSystem : EquipmentHudSystem<ShowM
         if (!IsActive)
             return;
 
-        if (_prototype.Resolve(component.MindShieldStatusIcon, out var iconPrototype))
+        if (ProtoMan.Resolve(component.MindShieldStatusIcon, out var iconPrototype))
             ev.StatusIcons.Add(iconPrototype);
     }
 }

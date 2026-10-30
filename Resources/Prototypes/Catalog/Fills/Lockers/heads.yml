@@ -170,6 +170,8 @@
     - id: MetalFoamGrenade
     - id: PlushieLizardJobChiefengineer
       prob: 0.02
+    - id: ClothingBackpackDuffelEngineeringFilledPackets # KS14: Packets
+    - id: KsFireExtinguisherCarbonDioxide # KS14
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable

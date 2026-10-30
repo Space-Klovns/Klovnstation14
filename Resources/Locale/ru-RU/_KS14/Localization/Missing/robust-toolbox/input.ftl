@@ -1,0 +1,11 @@
+input-key-Again = Ещё раз
+input-key-Copy = Копировать
+input-key-Cut = Вырезать
+input-key-Find = Найти
+input-key-Help = Справка
+input-key-Open = Открыть
+input-key-Paste = Вставить
+input-key-Prop = Реквизит
+input-key-ScrollLock = Scroll Lock
+input-key-Stop = Остановиться
+input-key-Undo = Отменить

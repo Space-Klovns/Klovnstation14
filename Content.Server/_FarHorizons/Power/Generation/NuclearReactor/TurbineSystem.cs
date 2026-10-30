@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Components;
 using Content.Server.Explosion.EntitySystems;
@@ -134,7 +135,7 @@ public sealed partial class TurbineSystem : SharedTurbineSystem
             if (!comp.Ruined && !_audio.IsPlaying(comp.AlarmAudioOvertemp))
             {
                 comp.AlarmAudioOvertemp = _audio.PlayPvs(new SoundPathSpecifier("/Audio/_FarHorizons/Machines/alarm_buzzer.ogg"), uid, AudioParams.Default.WithLoop(true))?.Entity;
-                _popupSystem.PopupEntity(Loc.GetString("turbine-overheat", ("owner", uid)), uid, PopupType.LargeCaution);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("turbine-overheat", ("owner", uid)), uid, PopupType.LargeCaution);
             }
 
             _atmosphereSystem.Merge(outlet.Air, AirContents!);
@@ -262,7 +263,7 @@ public sealed partial class TurbineSystem : SharedTurbineSystem
             return;
 
         _audio.PlayPvs(new SoundPathSpecifier("/Audio/Effects/metal_break5.ogg"), entity, AudioParams.Default);
-        _popupSystem.PopupEntity(Loc.GetString("turbine-explode", ("owner", entity.Owner)), entity, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("turbine-explode", ("owner", entity.Owner)), entity, PopupType.LargeCaution);
         _explosion.TriggerExplosive(entity, explosive: null, delete: false, totalIntensity: entity.Comp.RPM / 10, 5);
         ShootShrapnel(entity);
 

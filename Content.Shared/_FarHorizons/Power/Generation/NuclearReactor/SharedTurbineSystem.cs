@@ -11,7 +11,6 @@ namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 public abstract partial class SharedTurbineSystem : EntitySystem
 {
     [Dependency] protected DamageableSystem DamageableSystem = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
 
@@ -77,7 +76,7 @@ public abstract partial class SharedTurbineSystem : EntitySystem
                 }
             }
 
-            if (_prototypeManager.Resolve(ent.Comp.DamageMessages, out var proto) && proto.Values.Count > 0)
+            if (ProtoMan.Resolve(ent.Comp.DamageMessages, out var proto) && proto.Values.Count > 0)
             {
                 var damagePercentage = GetDamagePercent(ent);
                 string message;

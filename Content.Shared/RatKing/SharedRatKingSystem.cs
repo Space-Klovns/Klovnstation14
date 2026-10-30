@@ -7,7 +7,6 @@ namespace Content.Shared.RatKing;
 
 public abstract partial class SharedRatKingSystem : EntitySystem
 {
-    [Dependency] protected IPrototypeManager PrototypeManager = default!;
     [Dependency] protected IRobustRandom Random = default!;
     [Dependency] private SharedActionsSystem _action = default!;
 

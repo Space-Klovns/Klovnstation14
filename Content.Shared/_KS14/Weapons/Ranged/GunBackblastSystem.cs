@@ -31,13 +31,7 @@ public sealed partial class GunBackblastSystem : EntitySystem
 
     [Dependency] private EntityQuery<SubFloorHideComponent> _subFloorHideQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GunBackblastComponent, GunShotEvent>(OnGunShot);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGunShot(Entity<GunBackblastComponent> entity, ref GunShotEvent args)
     {
         var gunTransform = Transform(entity);

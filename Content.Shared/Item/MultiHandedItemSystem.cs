@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Hands;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory.VirtualItem;
@@ -44,7 +45,7 @@ public sealed partial class MultiHandedItemSystem : EntitySystem
 
         if (args.ShowPopup)
             _popup.PopupPredictedCursor(
-                Loc.GetString("multi-handed-item-pick-up-fail",
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */("multi-handed-item-pick-up-fail",
                     ("number", ent.Comp.HandsNeeded - 1),
                     ("item", ent.Owner)),
                 args.User);

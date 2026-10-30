@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Access.Systems;
 using Content.Shared.Interaction;
 using Content.Shared.Lock;
@@ -12,19 +13,6 @@ public sealed partial class KsIdLockSystem : EntitySystem
 
     [Dependency] private EntityQuery<KsIdLockKeyComponent> _keyQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsIdLockComponent, LockToggleAttemptEvent>(OnLockToggleAttempt);
-
-        SubscribeLocalEvent<KsIdLockComponent, ComponentShutdown>(OnLockShutdown);
-        SubscribeLocalEvent<KsIdLockComponent, InteractUsingEvent>(OnLockInteractUsing);
-
-        SubscribeLocalEvent<KsIdLockKeyComponent, ComponentShutdown>(OnKeyShutdown);
-        SubscribeLocalEvent<KsIdLockKeyComponent, InteractUsingEvent>(OnKeyInteractUsing);
-    }
-
     private void AddKeyToLock(Entity<KsIdLockComponent> lockEntity, Entity<KsIdLockKeyComponent> keyEntity)
     {
         lockEntity.Comp.AllowedUids.Add(keyEntity);
@@ -34,6 +22,7 @@ public sealed partial class KsIdLockSystem : EntitySystem
         Dirty(keyEntity);
     }
 
+    [SubscribeLocalEvent]
     private void OnLockToggleAttempt(Entity<KsIdLockComponent> entity, ref LockToggleAttemptEvent args)
     {
         if (args.Cancelled)
@@ -59,12 +48,13 @@ public sealed partial class KsIdLockSystem : EntitySystem
     cancel:
         if (!args.Silent &&
             entity.Comp.ToggleLockDeniedPopupLoc is { } toggleLockDeniedPopupLoc)
-            _popupSystem.PopupClient(Loc.GetString(toggleLockDeniedPopupLoc), entity, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create(toggleLockDeniedPopupLoc), entity, args.User);
 
         args.Cancelled = true;
         return;
     }
 
+    [SubscribeLocalEvent]
     private void OnLockShutdown(Entity<KsIdLockComponent> entity, ref ComponentShutdown args)
     {
         // Forget about freeman
@@ -72,6 +62,7 @@ public sealed partial class KsIdLockSystem : EntitySystem
             Comp<KsIdLockKeyComponent>(keyUid).AttachedUids.Remove(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnLockInteractUsing(Entity<KsIdLockComponent> entity, ref InteractUsingEvent args)
     {
         // Try to claim this console
@@ -106,15 +97,17 @@ public sealed partial class KsIdLockSystem : EntitySystem
         args.Handled = true;
 
         if (entity.Comp.ClaimPopupLoc is { } claimPopupLoc)
-            _popupSystem.PopupClient(Loc.GetString(claimPopupLoc), args.Target, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create(claimPopupLoc), args.Target, args.User);
     }
 
+    [SubscribeLocalEvent]
     private void OnKeyShutdown(Entity<KsIdLockKeyComponent> entity, ref ComponentShutdown args)
     {
         foreach (var lockUid in entity.Comp.AttachedUids)
             Comp<KsIdLockComponent>(lockUid).AllowedUids.Remove(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnKeyInteractUsing(Entity<KsIdLockKeyComponent> entity, ref InteractUsingEvent args)
     {
         if (!entity.Comp.Inheritable ||
@@ -132,6 +125,6 @@ public sealed partial class KsIdLockSystem : EntitySystem
 
         var inheritedCount = otherKeyComponent.AttachedUids.Count - originalAccessCount;
         if (entity.Comp.InheritPopupLoc is { } inheritPopupLoc)
-            _popupSystem.PopupClient(Loc.GetString(inheritPopupLoc, ("count", inheritedCount)), args.User, args.User);
+            _popupSystem.PopupClient(KsPopupMessage.Create(inheritPopupLoc, ("count", inheritedCount)), args.User, args.User);
     }
 }

@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using System.Text; // KS14
 using Content.IntegrationTests.Fixtures;
 using Content.Shared.Coordinates;
 using Robust.Shared.GameObjects;
@@ -74,14 +75,30 @@ public sealed class PrototypeSaveTest : GameTest
             prototypes.Add(prototype);
         }
 
-        var context = new TestEntityUidContext(seriMan);
+        // KS14 start: collect failures instead of failing inline, so the test can end with one message that
+        //      names every offending prototype up front. CI runs with NUnit.ConsoleOut=0 and a minimal console
+        //      logger, so anything past the head of the assertion message never reaches the GitHub log.
+        var failures = new Dictionary<string, List<string>>();
+
+        void AddFailure(string prototypeId, string reason)
+        {
+            if (!failures.TryGetValue(prototypeId, out var reasons))
+                failures[prototypeId] = reasons = new List<string>();
+
+            reasons.Add(reason);
+        }
+        // KS14 end
+
+        var context = new TestEntityUidContext(seriMan, addFailure: AddFailure /* KS14: added arg */);
 
         await server.WaitAssertion(() =>
         {
             Assert.That(!mapSystem.IsInitialized(mapId));
             var testLocation = grid.Owner.ToCoordinates();
 
-            Assert.Multiple(() =>
+            // KS14: was an Assert.Multiple, redundant now that every failure below is collected and reported in
+            //      one go at the end of the test. The braces stay so the loop keeps its indentation, and upstream
+            //      changes inside it keep merging cleanly.
             {
                 //Iterate list of prototypes to spawn
                 foreach (var prototype in prototypes)
@@ -106,7 +123,7 @@ public sealed class PrototypeSaveTest : GameTest
                     }
                     catch (Exception e)
                     {
-                        Assert.Fail($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
+                        AddFailure(prototype.ID, $"failed to convert into yaml. Exception: {e.Message}"); // KS14: was Assert.Fail
                         continue;
                     }
 
@@ -129,7 +146,7 @@ public sealed class PrototypeSaveTest : GameTest
                         }
                         catch (Exception e)
                         {
-                            Assert.Fail($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
+                            AddFailure(prototype.ID, $"failed to serialize component {compName}. Exception: {e.Message}"); // KS14: was Assert.Fail
                             continue;
                         }
 
@@ -138,26 +155,64 @@ public sealed class PrototypeSaveTest : GameTest
                             var diff = compMapping.Except(protoMapping);
 
                             if (diff != null && diff.Children.Count != 0)
-                                Assert.Fail($"Prototype {prototype.ID} modifies component on spawn: {compName}. Modified yaml:\n{diff}");
+                                AddFailure(prototype.ID, $"modifies component on spawn: {compName}. Modified yaml:\n{diff}"); // KS14: was Assert.Fail
                         }
                         else
                         {
-                            Assert.Fail($"Prototype {prototype.ID} gains a component on spawn: {compName}");
+                            AddFailure(prototype.ID, $"gains a component on spawn: {compName}"); // KS14: was Assert.Fail
                         }
                     }
 
                     // An entity may also remove components on init -> check no components are missing.
                     foreach (var (compType, comp) in prototype.Components)
                     {
-                        Assert.That(compNames, Does.Contain(compType), $"Prototype {prototype.ID} removes component {compType} on spawn.");
+                        if (!compNames.Contains(compType)) // KS14: was an Assert.That
+                            AddFailure(prototype.ID, $"removes component {compType} on spawn.");
                     }
 
                     if (!entityMan.Deleted(uid))
                         entityMan.DeleteEntity(uid);
                 }
-            });
+            }
+
+            // KS14 start: report everything in one go, prototype ids first.
+            if (failures.Count != 0)
+                Assert.Fail(BuildFailureMessage(failures));
+            // KS14 end
         });
     }
+
+    // KS14 start: the ids go on the first line because that is the part of the message that survives CI - it runs
+    //      with NUnit.ConsoleOut=0 and a minimal console logger, so a failure that only names its prototypes deep
+    //      inside a wall of yaml diffs tells the reader on GitHub nothing. Details follow, capped so that a bad
+    //      merge breaking hundreds of prototypes still leaves a readable log.
+    private const int MaxDetailedPrototypes = 20;
+
+    private static string BuildFailureMessage(Dictionary<string, List<string>> failures)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"{failures.Count} prototype(s) failed the uninitialized-save test: {string.Join(", ", failures.Keys)}");
+
+        foreach (var (prototypeId, reasons) in failures.Take(MaxDetailedPrototypes))
+        {
+            builder.AppendLine();
+            builder.AppendLine($"{prototypeId}:");
+
+            foreach (var reason in reasons)
+            {
+                builder.AppendLine($"  - {reason}");
+            }
+        }
+
+        if (failures.Count > MaxDetailedPrototypes)
+        {
+            builder.AppendLine();
+            builder.AppendLine($"...and {failures.Count - MaxDetailedPrototypes} more prototype(s), named on the first line of this message.");
+        }
+
+        return builder.ToString();
+    }
+    // KS14 end
 
     public sealed class TestEntityUidContext : ISerializationContext,
         ITypeSerializer<EntityUid, ValueDataNode>
@@ -168,8 +223,14 @@ public sealed class PrototypeSaveTest : GameTest
         public string WritingComponent = string.Empty;
         public EntityPrototype? Prototype;
 
-        public TestEntityUidContext(ISerializationManager ser)
+        private readonly Action<string, string> _addFailure; // KS14: see the failure collection in the test above
+
+        public TestEntityUidContext(ISerializationManager ser, Action<string, string>? addFailure = null /* KS14: added param */)
         {
+            // KS14: PrototypeTests only validates serialization and collects nothing, so a caller that passes no
+            //      collector keeps failing inline the way this did before.
+            _addFailure = addFailure ?? ((prototypeId, reason) => Assert.Fail($"Prototype {prototypeId} {reason}"));
+
             SerializerProvider = new(ser);
             SerializerProvider.RegisterSerializer(this);
         }
@@ -189,7 +250,7 @@ public sealed class PrototypeSaveTest : GameTest
                 // Maybe this will be necessary in the future, but at the moment it just indicates that there is some
                 // issue, like a non-nullable entityUid data-field. If a component MUST have an entity uid to work with,
                 // then the prototype very likely has to be a no-spawn entity that is never meant to be directly spawned.
-                Assert.Fail($"Uninitialized entities should not be saving entity Uids. Component: {WritingComponent}. Prototype: {Prototype.ID}");
+                _addFailure(Prototype.ID, $"saves an entity uid while uninitialized. Component: {WritingComponent}"); // KS14: was Assert.Fail
             }
 
             return new ValueDataNode(value.ToString());

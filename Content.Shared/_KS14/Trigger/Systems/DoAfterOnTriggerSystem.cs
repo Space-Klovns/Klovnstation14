@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Trigger.Components;
 using Content.Shared.DoAfter;
 using Content.Shared.Popups;
@@ -15,14 +16,7 @@ public sealed partial class DoAfterOnTriggerSystem : EntitySystem
     [Dependency] private TriggerSystem _triggerSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<DoAfterOnTriggerComponent, TriggerEvent>(OnTrigger);
-        SubscribeLocalEvent<DoAfterOnTriggerComponent, DoAfterOnTriggerDoAfterEvent>(OnDoAfter);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<DoAfterOnTriggerComponent> entity, ref TriggerEvent args)
     {
         if (args.Key is { } key &&
@@ -40,7 +34,7 @@ public sealed partial class DoAfterOnTriggerSystem : EntitySystem
         {
             if (args.User is { } userUid &&
                 entity.Comp.DuplicatePopupLoc is { } duplicatePopupLoc)
-                _popupSystem.PopupClient(Loc.GetString(duplicatePopupLoc), userUid, userUid);
+                _popupSystem.PopupClient(KsPopupMessage.Create(duplicatePopupLoc), userUid, userUid);
 
             return;
         }
@@ -52,7 +46,7 @@ public sealed partial class DoAfterOnTriggerSystem : EntitySystem
                 entity.Comp.CooldownPopupLoc is { } cooldownPopupLoc)
             {
                 var timeLeftSeconds = (float)(entity.Comp.NextAllowedTime - curTime).TotalSeconds;
-                _popupSystem.PopupClient(Loc.GetString(cooldownPopupLoc, ("time", $"{timeLeftSeconds:0.#}")), userUid, userUid);
+                _popupSystem.PopupClient(KsPopupMessage.Create(cooldownPopupLoc, ("time", $"{timeLeftSeconds:0.#}")), userUid, userUid);
             }
 
             return;
@@ -82,6 +76,7 @@ public sealed partial class DoAfterOnTriggerSystem : EntitySystem
         args.Predicted = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnDoAfter(Entity<DoAfterOnTriggerComponent> entity, ref DoAfterOnTriggerDoAfterEvent args)
     {
         entity.Comp.CurrentUserUid = null;

@@ -15,13 +15,6 @@ public sealed partial class SupplyPodDescentSystem : EntitySystem
 
     private const string DescentAnimationKey = "poddescent";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ActiveSupplyPodComponent, AnimationCompletedEvent>(OnAnimationCompleted);
-    }
-
     /// <summary>
     ///     Starts (or restarts) the flight animation for whichever leg the pod is currently on.
     ///         A launched pod flips from ascent to descent without the component ever going away,
@@ -119,6 +112,7 @@ public sealed partial class SupplyPodDescentSystem : EntitySystem
         _animationPlayerSystem.Play(entity.Owner, arrivalAnimation, DescentAnimationKey);
     }
 
+    [SubscribeLocalEvent]
     private void OnAnimationCompleted(Entity<ActiveSupplyPodComponent> entity, ref AnimationCompletedEvent args)
     {
         if (args.Key != DescentAnimationKey)

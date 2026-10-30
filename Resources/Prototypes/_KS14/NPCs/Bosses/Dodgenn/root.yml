@@ -1,0 +1,133 @@
+# Dodgenn boss HTN root. Branches are tried top to bottom; the first that plans wins. The mob replans constantly
+#   (HTN constantlyReplan on KsMobDodgennBoss), so a branch higher up interrupts one lower down the moment it plans.
+#
+# The fight has two phases:
+#   Phase one (phase_one.yml) - "playtime". Dodges every bullet (GunDodger dodgeChance 1, set on the mob), fights with
+#     a light attack set and now and then pulls a pistol. Ends after a set time, or once enough damage gets through
+#     some other way (melee, explosives).
+#   Phase two (phase_two.yml) - the full fight. Dodge chance drops, and the heavy attacks, grenades, fear and the
+#     rocket launcher come out, broken up by monologues where it stands still with its guard down.
+#
+# Blackboard keys, by who writes them:
+#   Mob prototype (Entities/Mobs/Boss/dodgenn.yml)
+#     VisionRadius, AggroVisionRadius, NavSmash, RangedRange, MeleeRange, LeapMinDistance,
+#     DodgennMonologueTime (how long a phase-two monologue stands still for)
+#     DodgennLauncherWindup (pause between the launcher's line and its shot, guns.yml)
+#   Targeting          Target, TargetCoordinates, TargetPathfind (DodgennTargets, queries.yml)
+#   Phase one          DodgennPhaseTwoDueAt (when phase one ends by time, set on engaging)
+#   Virtual markers    (KsMobDodgennBossPhaseTwo spawns with DodgennPhaseTwo)
+#                      DodgennEngaged (intro said), DodgennPhaseTwo (phase one over), DodgennFinalUsed (launcher
+#                      summoned)
+#   Cooldowns          dash, runningLine, grenade, pistol, monologue
+#   Meters             KsAnger, raised by damage taken (NpcMeterOnDamage on the mob); weights phase two's attacks
+
+- type: htnCompound
+  id: DodgennCompound
+  branches:
+  ## Fight - pick a target, then fight it in whichever phase the fight is in.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: DodgennTargets
+    - !type:HTNCompoundTask
+      task: DodgennPhaseCompound
+
+  ## No target - idle.
+  - tasks:
+    - !type:HTNCompoundTask
+      task: IdleCompound
+
+- type: htnCompound
+  id: DodgennPhaseCompound
+  branches:
+  ## Phase two - once phase one has ended, or from the start for a mob given the marker on spawn
+  ##   (NpcInitialVirtualMarkers). The marker is never removed, so there is no way back.
+  - preconditions:
+    - !type:HasVirtualMarkerPrecondition
+      id: DodgennPhaseTwo
+    tasks:
+    - !type:HTNCompoundTask
+      task: DodgennPhaseTwoCompound
+
+  ## Phase one - where every fight starts.
+  - tasks:
+    - !type:HTNCompoundTask
+      task: DodgennPhaseOneCompound
+
+# Dash, shared by both phases: leap at the target. The caller checks the dash cooldown and range.
+- type: htnCompound
+  id: DodgennDashCompound
+  branches:
+  ## With the running-around line - it is long, so at most every 30 seconds rather than every dash.
+  - preconditions:
+    - !type:CooldownPrecondition
+      id: runningLine
+      inverted: true
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoWorldActionOperator
+        id: KsActionDodgennBossDash
+        targetCoordinatesKey: TargetCoordinates
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: dash
+        duration: 5s
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: runningLine
+        duration: 30s
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:PlaySoundOperator
+        sound:
+          collection: KsDodgennTalkRunning
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Here I am, offering you my precious time, and you'll waste it by running around?"
+        hidden: false
+
+  ## Silently.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DoWorldActionOperator
+        id: KsActionDodgennBossDash
+        targetCoordinatesKey: TargetCoordinates
+    - !type:HTNPrimitiveTask
+      operator: !type:CooldownOperator
+        id: dash
+        duration: 5s
+
+# Melee, shared by both phases: close enough to hit, so hit, then step away.
+- type: htnCompound
+  id: DodgennMeleeCompound
+  branches:
+  - preconditions:
+    - !type:CoordinatesInRangePrecondition
+      targetKey: TargetCoordinates
+      rangeKey: MeleeRange
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        shutdownState: PlanFinished
+        pathfindInPlanning: true
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: MeleeRange
+    - !type:HTNPrimitiveTask
+      operator: !type:JukeOperator
+        jukeType: Away
+    - !type:HTNPrimitiveTask
+      operator: !type:MeleeOperator
+        targetKey: Target
+      preconditions:
+      - !type:KeyExistsPrecondition
+        key: Target
+      - !type:TargetInRangePrecondition
+        targetKey: Target
+        rangeKey: MeleeRange
+      services:
+      - !type:UtilityService
+        id: MeleeService
+        proto: NearbyMeleeTargets
+        key: Target
