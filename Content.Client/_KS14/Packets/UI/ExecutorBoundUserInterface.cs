@@ -12,9 +12,12 @@ namespace Content.Client._KS14.Packets.UI
         [ViewVariables]
         private ExecutorMenu? _menu;
 
+        private PacketExecutorComponent? _component;
+
         public ExecutorBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
             IoCManager.InjectDependencies(this);
+            _component = EntMan.GetComponent<PacketExecutorComponent>(owner);
         }
 
         protected override void Open()
@@ -26,15 +29,19 @@ namespace Content.Client._KS14.Packets.UI
             _menu.OnLoadButton += OnLoad;
             _menu.OnTerminateButton += OnTerminate;
 
-            _menu.Input.OnMouseExited += OnInputExit;
+            _menu.Input.OnTextChanged += OnTextChange;
+            _menu.Input.OnMouseExited += OnMouseExit;
+            _menu.OnClose += OnClose;
         }
 
-        protected override void Dispose(bool disposing)
+        private void OnClose()
         {
             if (_menu is not { } menu)
                 return;
 
-            SaveCode();
+            Logger.Info("Updated");
+            Logger.Info(_component?.Command ?? "");
+            menu._closed = true;
             menu.ExecutorLog.TextRope = Rope.Leaf.Empty;
 
             for (int i = menu.ExecutorTabs.Children.Count() - 1; i >= 0; i--)
@@ -43,13 +50,16 @@ namespace Content.Client._KS14.Packets.UI
                 if (child.Name != "Executor")
                     menu.ExecutorTabs.RemoveChild(child);
             }
-
-            base.Dispose(disposing);
         }
 
-        private void OnInputExit(GUIMouseHoverEventArgs args)
+        private void OnMouseExit(GUIMouseHoverEventArgs args)
         {
             SaveCode();
+        }
+
+        private void OnTextChange(TextEdit.TextEditEventArgs args)
+        {
+            _component?.Command = Rope.Collapse(_menu?.Input.TextRope ?? Rope.Leaf.Empty);
         }
 
         private void OnExecute()
@@ -70,11 +80,14 @@ namespace Content.Client._KS14.Packets.UI
 
         protected override void UpdateState(BoundUserInterfaceState state)
         {
+            Logger.Info($"Executor State: {state}");
             base.UpdateState(state);
             if (state is not ExecutorBoundUserInterfaceState rState)
                 return;
 
-            _menu?.UpdateState(rState);
+            _menu?.UpdateState(rState, _component);
+
+            SaveCode();
 
             foreach (var widget in rState.Widgets)
             {
@@ -106,7 +119,10 @@ namespace Content.Client._KS14.Packets.UI
 
         private void SaveCode()
         {
-            SendMessage(new SaveExecutorCommandMessage(Rope.Collapse(_menu?.Input.TextRope ?? Rope.Leaf.Empty)));
+            if (_component == null || _component.Command == "")
+                return;
+
+            SendMessage(new SaveExecutorCommandMessage(_component.Command));
         }
     }
 }

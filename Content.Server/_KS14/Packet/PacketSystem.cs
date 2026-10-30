@@ -57,7 +57,7 @@ public sealed partial class PacketSystem : EntitySystem
         _mainThreadId = Environment.CurrentManagedThreadId;
         PreInitJint();
 
-        SubscribeLocalEvent<PacketExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
+        SubscribeLocalEvent<PacketExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState<BoundUIOpenedEvent>);
         SubscribeLocalEvent<PacketExecutorComponent, SaveExecutorCommandMessage>(OnSave);
         SubscribeLocalEvent<PacketExecutorComponent, StartExecutionMessage>(OnExecute);
         SubscribeLocalEvent<PacketExecutorComponent, ReloadModulesMessage>(OnModuleReload);
@@ -68,6 +68,7 @@ public sealed partial class PacketSystem : EntitySystem
         SubscribeLocalEvent<PacketExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
         SubscribeLocalEvent<PacketNetworkComponent, MapInitEvent>(OnPacketInit);
+        SubscribeLocalEvent<PacketExecutorComponent, MapInitEvent>(OnExecutorInit);
 
         SubscribeLocalEvent<FrequenciesPaperComponent, MapInitEvent>(OnFrequencyPaperInit);
 
@@ -108,6 +109,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// <param name="ev"></param>
     private void OnSave(Entity<PacketExecutorComponent> ent, ref SaveExecutorCommandMessage ev)
     {
+        Logger.Info(ent.Comp.Command);
         ent.Comp.Command = ev.Command;
     }
 
@@ -201,6 +203,12 @@ public sealed partial class PacketSystem : EntitySystem
     {
         SetupAddress(ent);
         ReloadFrequencies(ent);
+        InitReference(ent);
+    }
+
+    private void OnExecutorInit(Entity<PacketExecutorComponent> ent, ref MapInitEvent ev)
+    {
+        FormatReferences(ent);
     }
 
     private void OnFrequencyPaperInit(Entity<FrequenciesPaperComponent> ent, ref MapInitEvent ev)
@@ -222,5 +230,6 @@ public sealed partial class PacketSystem : EntitySystem
         _engineCts.Clear();
         _frequencies.Clear();
         _networks.Clear();
+        _referenceMap.Clear();
     }
 }
