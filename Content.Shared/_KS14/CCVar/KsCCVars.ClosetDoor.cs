@@ -10,4 +10,12 @@ public sealed partial class KsCCVars
     /// </summary>
     public static readonly CVarDef<bool> ClosetDoorPixelSnap =
         CVarDef.Create("klovn.closet_door.pixel_snap", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+    /// <summary>
+    /// Debugging aid for the contents a closing closet draws inside it: the doorway they are clipped to is drawn in
+    /// translucent magenta, and the contents themselves are tinted green. Green outside the magenta means the clip
+    /// isn't working; contents that aren't green aren't being drawn by the closet at all.
+    /// </summary>
+    public static readonly CVarDef<bool> ClosetDoorDebugMask =
+        CVarDef.Create("klovn.closet_door.debug_mask", false, CVar.CLIENTONLY);
 }

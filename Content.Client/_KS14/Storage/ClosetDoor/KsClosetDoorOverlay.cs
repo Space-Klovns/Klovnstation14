@@ -49,6 +49,15 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     /// </summary>
     public bool PixelSnap;
 
+    /// <summary>
+    ///     Whether a closing closet's doorway and contents are tinted, to see the clip at work. Follows
+    ///         <see cref="Content.Shared._KS14.CCVar.KsCCVars.ClosetDoorDebugMask"/>.
+    /// </summary>
+    public bool DebugMask;
+
+    private static readonly Color DebugMaskColor = Color.Magenta.WithAlpha(0.35f);
+    private static readonly Color DebugContentsColor = Color.Lime;
+
     private List<ComponentTreeEntry<KsClosetDoorVisualsComponent>> _entries = []; // not readonly: the tree query takes it by ref
     private List<Entity<MapGridComponent>> _grids = [];
     private readonly List<DrawEntry> _drawEntries = [];
@@ -303,6 +312,15 @@ public abstract partial class KsClosetDoorOverlay : Overlay
         worldHandle.SetTransform(maskMatrix);
         worldHandle.DrawTextureRect(maskTexture, maskQuad);
 
+        // The doorway the contents are clipped to, unshaded (a negative colour) so it shows in the dark too.
+        if (DebugMask)
+        {
+            worldHandle.UseShader(null);
+            worldHandle.DrawTextureRect(maskTexture, maskQuad, new Color(new Vector4(-1f) - DebugMaskColor.RGBA));
+        }
+
+        var contentsTint = DebugMask ? DebugContentsColor : Color.White;
+
         // Where the closet stands, in the snapped frame its own sprite is drawn in.
         var closetPosition = Vector2.Transform(_entityManager.TransformQuery.GetComponent(entry.Door.Owner).LocalPosition, context.SnappedWorldMatrix);
 
@@ -312,7 +330,7 @@ public abstract partial class KsClosetDoorOverlay : Overlay
             if (!_spriteQuery.TryComp(containedUid, out var containedSpriteComponent) || !containedSpriteComponent.Visible)
                 continue;
 
-            DrawSpriteLayers(worldHandle, containedSpriteComponent, context.EyeRotation, _doorSystem.GetContentWorldRotation(containedUid), closetPosition);
+            DrawSpriteLayers(worldHandle, containedSpriteComponent, context.EyeRotation, _doorSystem.GetContentWorldRotation(containedUid), closetPosition, contentsTint);
         }
 
         worldHandle.UseShader(clearShader);
@@ -325,7 +343,13 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     ///     Draws a sprite's layers where the engine's sprite renderer puts them, with whatever shader is in use.
     ///         Mirrors <c>SpriteSystem.Render</c> and <c>RenderLayer</c>, without layer shaders or post-shaders.
     /// </summary>
-    private static void DrawSpriteLayers(DrawingHandleWorld worldHandle, SpriteComponent spriteComponent, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition)
+    private static void DrawSpriteLayers(
+        DrawingHandleWorld worldHandle,
+        SpriteComponent spriteComponent,
+        Angle eyeRotation,
+        Angle worldRotation,
+        Vector2 worldPosition,
+        Color tint)
     {
         var angle = (worldRotation + eyeRotation).Reduced().FlipPositive(); // on screen; picks 4- and 8-directional states
         var cardinal = spriteComponent is { NoRotation: false, SnapCardinals: true } ? angle.RoundToCardinalAngle() : Angle.Zero;
@@ -355,7 +379,7 @@ public abstract partial class KsClosetDoorOverlay : Overlay
                 continue;
 
             worldHandle.SetTransform(layerMatrix * spriteMatrix);
-            worldHandle.DrawTextureRect(texture, GetQuad(texture), spriteComponent.Color * layer.Color);
+            worldHandle.DrawTextureRect(texture, GetQuad(texture), spriteComponent.Color * layer.Color * tint);
         }
     }
 

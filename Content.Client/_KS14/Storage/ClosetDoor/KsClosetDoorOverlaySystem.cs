@@ -22,12 +22,14 @@ public sealed partial class KsClosetDoorOverlaySystem : EntitySystem
     private KsClosetDoorFrontOverlay? _frontOverlay;
     private KsClosetDoorBackOverlay? _backOverlay;
     private bool _pixelSnap;
+    private bool _debugMask;
 
     public override void Initialize()
     {
         base.Initialize();
 
         Subs.CVar(_configurationManager, KsCCVars.ClosetDoorPixelSnap, SetPixelSnap, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.ClosetDoorDebugMask, SetDebugMask, invokeImmediately: true);
         _systemCollectionHookManager.HookAction(OnDependenciesReady);
     }
 
@@ -48,6 +50,7 @@ public sealed partial class KsClosetDoorOverlaySystem : EntitySystem
         AddOverlay(dependencyCollection, _frontOverlay);
         AddOverlay(dependencyCollection, _backOverlay);
         SetPixelSnap(_pixelSnap);
+        SetDebugMask(_debugMask);
     }
 
     private void AddOverlay(IDependencyCollection dependencyCollection, KsClosetDoorOverlay overlay)
@@ -65,6 +68,14 @@ public sealed partial class KsClosetDoorOverlaySystem : EntitySystem
 
         if (_backOverlay != null)
             _backOverlay.PixelSnap = pixelSnap;
+    }
+
+    private void SetDebugMask(bool debugMask)
+    {
+        _debugMask = debugMask;
+
+        if (_backOverlay != null)
+            _backOverlay.DebugMask = debugMask;
     }
 
     public override void Shutdown()
