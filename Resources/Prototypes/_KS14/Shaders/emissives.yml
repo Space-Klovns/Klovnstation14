@@ -2,3 +2,8 @@
   id: Emissive
   kind: source
   path: "/Textures/_KS14/Shaders/bloom.swsl"
+
+- type: shader
+  id: KsAdditive
+  kind: source
+  path: "/Textures/_KS14/Shaders/additive.swsl"

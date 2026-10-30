@@ -1,0 +1,12 @@
+light_mode unshaded;
+
+// The engine maps `add` to BlendFunc(SrcAlpha, DstAlpha), so COLOR.a is written as 1 for a plain src + dst.
+blend_mode add;
+
+uniform highp float strength;
+
+void fragment()
+{
+    highp vec4 glow = zTexture(UV);
+    COLOR = vec4(glow.rgb, glow.a * strength);
+}

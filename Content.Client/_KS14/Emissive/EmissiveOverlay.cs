@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Client.Graphics;
 using Content.Client.Light;
 using Content.Shared._KS14;
 using Content.Shared._KS14.Emissive;
@@ -26,6 +27,7 @@ public sealed partial class EmissiveOverlay : Overlay
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IReflectionManager _reflectionManager = default!;
     [Dependency] private IOverlayManager _overlay = default!;
+    [Dependency] private IClyde _clyde = default!;
 
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -42,6 +44,9 @@ public sealed partial class EmissiveOverlay : Overlay
     /// </summary>
     private readonly Dictionary<float, ShaderInstance> _shadersByIntensity = [];
     private List<Entity<MapGridComponent>> _grids = [];
+
+    private readonly OverlayResourceCache<CachedResources> _resources = new();
+    private readonly List<EmissiveDraw> _draws = [];
 
     public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
 
@@ -65,9 +70,13 @@ public sealed partial class EmissiveOverlay : Overlay
 
         var lightOverlay = _overlay.GetOverlay<BeforeLightTargetOverlay>();
         var bounds = lightOverlay.EnlargedBounds;
-        var target = lightOverlay.GetCachedForViewport(args.Viewport).EnlargedLightTarget;
+        var lightTarget = lightOverlay.GetCachedForViewport(args.Viewport).EnlargedLightTarget;
 
         var viewport = args.Viewport;
+        var resources = _resources.GetForViewport(viewport, static _ => new CachedResources());
+        resources.Drawn = false;
+        resources.Bounds = bounds;
+
         _grids.Clear();
         _mapSystem.FindGridsIntersecting(mapId, bounds, ref _grids, approx: true);
 
@@ -79,11 +88,12 @@ public sealed partial class EmissiveOverlay : Overlay
 
         var eyeRotation = args.Viewport.Eye?.Rotation ?? new();
 
-        args.WorldHandle.RenderInRenderTarget(target,
-        () =>
+        // The query and every layer's maths run once, into a list of draws, which is then replayed: into the light
+        //      target enlarged by the glow radius, which lights the floor around it, and, for KsEmissiveBloomOverlay,
+        //      into the bloom target at the sprite's own size. The enlarged quads can't be the bloom: added over the
+        //      lit world, they'd wash it out.
+        _draws.Clear();
         {
-            var invMatrix = target.GetWorldToLocalMatrix(viewport.Eye!, scale);
-
             foreach (var grid in _grids)
             {
                 var gridInvMatrix = _transformSystem.GetInvWorldMatrix(grid);
@@ -106,12 +116,10 @@ public sealed partial class EmissiveOverlay : Overlay
                 if (_entities.Count == 0)
                     continue;
 
-                var gridMatrix = Matrix3x2.Multiply(_transformSystem.GetWorldMatrix(grid.Owner), invMatrix);
-                worldHandle.SetTransform(gridMatrix);
+                var gridWorldMatrix = _transformSystem.GetWorldMatrix(grid.Owner);
 
                 var localEyeRotation = eyeRotation - gridInvMatrix.Rotation();
 
-                ShaderInstance? currentShader = null;
                 foreach (var entry in _entities)
                 {
                     var ent = new Entity<EmissiveLayersComponent>(entry.Uid, entry.Component);
@@ -120,11 +128,6 @@ public sealed partial class EmissiveOverlay : Overlay
                         continue;
 
                     var shader = GetShader(ent.Comp.Intensity);
-                    if (shader != currentShader)
-                    {
-                        worldHandle.UseShader(shader);
-                        currentShader = shader;
-                    }
 
                     var transformComponent = entry.Transform;
 
@@ -202,30 +205,122 @@ public sealed partial class EmissiveOverlay : Overlay
                         ent.Comp.LayerParams.TryGetValue(layerId, out var layerParams);
 
                         var texture = GetLayerTexture(spriteComponent, layer, textureRotation);
-                        var box = Box2.CenteredAround(origin + ent.Comp.Offset /* this is the centroid of the box */, texture.Size / (float)EyeManager.PixelsPerMeter).Enlarged(layerParams?.GlowRadius ?? ent.Comp.GlowRadius);
+                        var spriteBox = Box2.CenteredAround(origin + ent.Comp.Offset /* this is the centroid of the box */, texture.Size / (float)EyeManager.PixelsPerMeter);
+                        var boxRotation = ent.Comp.OnlyRotateTexture ? Angle.Zero : drawRotation;
 
-                        var textureBox = new Box2Rotated(
-                            box,
-                            ent.Comp.OnlyRotateTexture ? Angle.Zero : drawRotation,
-                            origin // /* this is the pivot-point of the box */ The pivot-point should be at the origin of the box, not origin of the world (0,0)
-                        );
+                        // The pivot-point should be at the origin of the box, not origin of the world (0,0)
+                        var lightBox = new Box2Rotated(spriteBox.Enlarged(layerParams?.GlowRadius ?? ent.Comp.GlowRadius), boxRotation, origin);
+                        var bloomBox = new Box2Rotated(spriteBox, boxRotation, origin);
 
                         // The colour drawn is the colour emitted, so scaling it dims this layer's glow alone
                         var color = spriteColor * layer.Color;
                         if (layerParams is { Brightness: var brightness } && brightness != 1f)
                             color = new Color(color.R * brightness, color.G * brightness, color.B * brightness, color.A);
 
-                        worldHandle.DrawTextureRect(
-                            texture,
-                            textureBox,
-                            modulate: color
-                        );
+                        _draws.Add(new EmissiveDraw(gridWorldMatrix, texture, lightBox, bloomBox, color, shader));
                     }
+                }
+            }
+        }
+
+        if (_draws.Count == 0)
+            return;
+
+        var lightMatrix = lightTarget.GetWorldToLocalMatrix(viewport.Eye!, scale);
+        worldHandle.RenderInRenderTarget(lightTarget,
+            () =>
+            {
+                ShaderInstance? currentShader = null;
+                foreach (var draw in _draws)
+                {
+                    if (draw.Shader != currentShader)
+                    {
+                        worldHandle.UseShader(draw.Shader);
+                        currentShader = draw.Shader;
+                    }
+
+                    worldHandle.SetTransform(draw.GridWorldMatrix * lightMatrix);
+                    worldHandle.DrawTextureRect(draw.Texture, draw.LightBox, modulate: draw.Color);
                 }
 
                 worldHandle.UseShader(null);
-            }
-        }, null);
+            }, null);
+
+        if (!OverlayManager.TryGetOverlay<KsEmissiveBloomOverlay>(out var bloomOverlay) || !bloomOverlay.Active)
+            return;
+
+        // Same size and frame as the light target, so the light target's matrix maps into it too. Made only once bloom is on.
+        if (resources.Target?.Size != lightTarget.Size)
+        {
+            resources.Target?.Dispose();
+            resources.BlurBuffer?.Dispose();
+            var format = new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb);
+            resources.Target = _clyde.CreateRenderTarget(lightTarget.Size, format, name: "emissive-target");
+            resources.BlurBuffer = _clyde.CreateRenderTarget(lightTarget.Size, format, name: "emissive-blur-target");
+        }
+
+        var target = resources.Target;
+
+        resources.Drawn = true;
+        worldHandle.RenderInRenderTarget(target,
+            () =>
+            {
+                // Plain, without the Emissive shader: the sprite's own pixels, which the bloom overlay blurs.
+                foreach (var draw in _draws)
+                {
+                    worldHandle.SetTransform(draw.GridWorldMatrix * lightMatrix);
+                    worldHandle.DrawTextureRect(draw.Texture, draw.BloomBox, modulate: draw.Color);
+                }
+            }, Color.Transparent);
+    }
+
+    private readonly record struct EmissiveDraw(
+        Matrix3x2 GridWorldMatrix,
+        Texture Texture,
+        Box2Rotated LightBox,
+        Box2Rotated BloomBox,
+        Color Color,
+        ShaderInstance Shader);
+
+    /// <summary>
+    ///     This frame's emissive glow for a viewport, for <see cref="KsEmissiveBloomOverlay"/>. False if nothing glowed.
+    /// </summary>
+    public bool TryGetGlow(IClydeViewport viewport,
+        [NotNullWhen(true)] out IRenderTexture? target,
+        [NotNullWhen(true)] out IRenderTexture? blurBuffer,
+        out Box2Rotated bounds)
+    {
+        var resources = _resources.GetForViewport(viewport, static _ => new CachedResources());
+        target = resources.Target;
+        blurBuffer = resources.BlurBuffer;
+        bounds = resources.Bounds;
+        return resources.Drawn && target != null && blurBuffer != null;
+    }
+
+    public sealed class CachedResources : IDisposable
+    {
+        /// <summary>
+        ///     The glow, in the enlarged light target's frame.
+        /// </summary>
+        public IRenderTexture? Target;
+
+        /// <summary>
+        ///     Scratch for blurring <see cref="Target"/>.
+        /// </summary>
+        public IRenderTexture? BlurBuffer;
+
+        /// <summary>
+        ///     The world bounds <see cref="Target"/> covers.
+        /// </summary>
+        public Box2Rotated Bounds;
+
+        public bool Drawn;
+
+        public void Dispose()
+        {
+            Target?.Dispose();
+            BlurBuffer?.Dispose();
+        }
     }
 
     private ShaderInstance GetShader(float intensity)
@@ -247,6 +342,7 @@ public sealed partial class EmissiveOverlay : Overlay
             shader.Dispose();
 
         _shadersByIntensity.Clear();
+        _resources.Dispose();
         base.DisposeBehavior();
     }
 

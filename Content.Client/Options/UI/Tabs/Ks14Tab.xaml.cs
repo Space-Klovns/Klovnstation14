@@ -35,6 +35,7 @@ public sealed partial class Ks14Tab : Control
         */
         Control.AddOptionCheckBox(Content.Shared.CCVar.CCVars.AmbientOcclusion, AmbientOcclusionEnabled);
         Control.AddOptionCheckBox(KsCCVars.AmbientOcclusionEntities, AmbientOcclusionEntitiesEnabled);
+        Control.AddOptionCheckBox(KsCCVars.EmissiveBloom, EmissiveBloomEnabled);
         Control.AddOptionCheckBox(KsCCVars.ActionFoldersEnabled, ActionFoldersEnabled);
         Control.AddOptionCheckBox(KsCCVars.ActionLayoutPersistenceEnabled, ActionLayoutPersistenceEnabled);
 
