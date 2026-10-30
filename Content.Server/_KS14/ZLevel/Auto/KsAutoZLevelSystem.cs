@@ -85,7 +85,10 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         //      way round from inside this call, leaving the insertion below to find it already in our stack.
         RemComp(entity.Owner, entity.Comp);
         if (otherEntity.Comp is { } otherComponent)
+        {
+            depth ??= otherComponent.Depth;
             RemComp(otherEntity.Owner, otherComponent);
+        }
 
         // Z-level maps are saved with mapPaused set, so that nothing on them runs until they have been linked
         //      into a stack. This one has already been unpaused - that is what ran OnUnpaused and got us here -
