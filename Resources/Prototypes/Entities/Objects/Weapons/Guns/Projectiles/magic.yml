@@ -129,6 +129,7 @@
   - type: KsClosetDoorVisuals
     layers:
       enum.LockVisualLayers.Lock: Front
+      enum.PaperLabelVisuals.Layer: Front
   # KS14 end
   #TODO: Will have to eventually make a custom visualizer for cursed lockers
   - type: EntityStorageVisuals

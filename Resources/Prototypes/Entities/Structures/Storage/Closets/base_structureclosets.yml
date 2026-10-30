@@ -46,6 +46,18 @@
         layer:
         - MachineLayer
   - type: EntityStorage
+  # KS14 start
+    openSound:
+      path: /Audio/_KS14/Containers/closet_open.ogg
+      params:
+        variation: 0.08
+        volume: -1
+    closeSound:
+      path: /Audio/_KS14/Containers/closet_close.ogg
+      params:
+        variation: 0.08
+        volume: -1
+  # KS14 end
   - type: ContainerContainer
     containers:
       entity_storage: !type:Container

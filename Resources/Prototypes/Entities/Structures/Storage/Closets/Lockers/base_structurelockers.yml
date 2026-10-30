@@ -5,6 +5,18 @@
   components:
   - type: AccessReader
   - type: Lock
+  # KS14 start
+    lockingSound:
+      path: /Audio/_KS14/Containers/closet_lock.ogg
+      params:
+        variation: 0.08
+        volume: -1
+    unlockingSound:
+      path: /Audio/_KS14/Containers/closet_unlock.ogg
+      params:
+        variation: 0.08
+        volume: -1
+  # KS14 end
   - type: LockVisuals
   - type: Sprite
     sprite: _KS14/Structures/Storage/closet.rsi # KS14: Structures/Storage/closet.rsi -> _KS14/Structures/Storage/closet.rsi, tgstation's closets
@@ -35,6 +47,7 @@
   - type: KsClosetDoorVisuals
     layers:
       enum.LockVisualLayers.Lock: Front
+      enum.PaperLabelVisuals.Layer: Front
   # KS14 end
   - type: Destructible
     thresholds:
