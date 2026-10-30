@@ -10,9 +10,9 @@ using Robust.Shared.Enums;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
-using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.Emissive;
 
@@ -25,23 +25,22 @@ public sealed partial class EmissiveOverlay : Overlay
     [Dependency] private EntityManager _entityManager = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IReflectionManager _reflectionManager = default!;
-    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IOverlayManager _overlay = default!;
 
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
-    [Dependency] private EntityLookupSystem _lookupSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
 
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<EmissiveTreeComponent> _emissiveTreeQuery = default!;
 
-    private readonly List<EntityUid> _entitiesToRemoveFromShaders = [];
-    private readonly HashSet<Entity<EmissiveLayersComponent>> _entities = [];
-    private readonly HashSet<EntityUid> _allShaderEntities = [];
+    private List<ComponentTreeEntry<EmissiveLayersComponent>> _entities = []; // not readonly: the tree query takes it by ref
+
     /// <summary>
-    ///     Because a new shader has to be instantiated if you want to use a custom parameter yaaaaaaaaay
+    ///     One shader per intensity, since the intensity is a parameter and a parameter needs its own instance. Shared by
+    ///         every entity with that intensity, so their draws batch together instead of each breaking the batch.
     /// </summary>
-    private readonly Dictionary<EntityUid, ShaderInstance> _shaders = [];
+    private readonly Dictionary<float, ShaderInstance> _shadersByIntensity = [];
     private List<Entity<MapGridComponent>> _grids = [];
 
     public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
@@ -80,9 +79,6 @@ public sealed partial class EmissiveOverlay : Overlay
 
         var eyeRotation = args.Viewport.Eye?.Rotation ?? new();
 
-        var transformQuery = _entityManager.TransformQuery;
-        var curTime = _gameTiming.CurTime;
-
         args.WorldHandle.RenderInRenderTarget(target,
         () =>
         {
@@ -93,8 +89,19 @@ public sealed partial class EmissiveOverlay : Overlay
                 var gridInvMatrix = _transformSystem.GetInvWorldMatrix(grid);
                 var localBounds = gridInvMatrix.TransformBox(bounds);
 
+                // The grid's own tree of emissives, rather than every entity in view filtered for the component.
+                if (!_emissiveTreeQuery.TryComp(grid.Owner, out var treeComponent))
+                    continue;
+
                 _entities.Clear();
-                _lookupSystem.GetLocalEntitiesIntersecting(grid.Owner, localBounds, _entities);
+                treeComponent.Tree.QueryAabb(ref _entities,
+                    static (ref List<ComponentTreeEntry<EmissiveLayersComponent>> entities, in ComponentTreeEntry<EmissiveLayersComponent> entry) =>
+                    {
+                        entities.Add(entry);
+                        return true;
+                    },
+                    localBounds,
+                    approx: true);
 
                 if (_entities.Count == 0)
                     continue;
@@ -104,23 +111,22 @@ public sealed partial class EmissiveOverlay : Overlay
 
                 var localEyeRotation = eyeRotation - gridInvMatrix.Rotation();
 
-                foreach (var ent in _entities)
+                ShaderInstance? currentShader = null;
+                foreach (var entry in _entities)
                 {
+                    var ent = new Entity<EmissiveLayersComponent>(entry.Uid, entry.Component);
                     var spriteComponent = _spriteQuery.GetComponent(ent);
                     if (!spriteComponent.Visible)
                         continue;
 
-                    // GetValueRefOrAddDefault isnt sandboxed so GEG
-                    if (!_shaders.TryGetValue(ent.Owner, out var shader))
+                    var shader = GetShader(ent.Comp.Intensity);
+                    if (shader != currentShader)
                     {
-                        shader = _prototypeManager.Index(Shader).InstanceUnique();
-                        _shaders[ent.Owner] = shader;
+                        worldHandle.UseShader(shader);
+                        currentShader = shader;
                     }
-                    _allShaderEntities.Add(ent);
-                    shader.SetParameter("bloom_intensity", ent.Comp.Intensity);
-                    worldHandle.UseShader(shader);
 
-                    var transformComponent = transformQuery.GetComponent(ent);
+                    var transformComponent = entry.Transform;
 
                     var renderPosition = transformComponent.LocalPosition;
                     var spriteRotation = Angle.Zero;
@@ -215,28 +221,33 @@ public sealed partial class EmissiveOverlay : Overlay
                             modulate: color
                         );
                     }
-
-                    worldHandle.UseShader(null);
                 }
+
+                worldHandle.UseShader(null);
             }
         }, null);
+    }
 
-        // Now, start purging old shaders that are no longer in use
-
-        foreach (var (oldUid, oldShader) in _shaders)
+    private ShaderInstance GetShader(float intensity)
+    {
+        // GetValueRefOrAddDefault isnt sandboxed so GEG
+        if (!_shadersByIntensity.TryGetValue(intensity, out var shader))
         {
-            if (_allShaderEntities.Contains(oldUid!))
-                continue;
-
-            oldShader.Dispose();
-            _entitiesToRemoveFromShaders.Add(oldUid);
+            shader = _prototypeManager.Index(Shader).InstanceUnique();
+            shader.SetParameter("bloom_intensity", intensity);
+            _shadersByIntensity[intensity] = shader;
         }
 
-        foreach (var uid in _entitiesToRemoveFromShaders)
-            _shaders.Remove(uid);
+        return shader;
+    }
 
-        _entitiesToRemoveFromShaders.Clear();
-        _allShaderEntities.Clear();
+    protected override void DisposeBehavior()
+    {
+        foreach (var shader in _shadersByIntensity.Values)
+            shader.Dispose();
+
+        _shadersByIntensity.Clear();
+        base.DisposeBehavior();
     }
 
     private Texture GetLayerTexture(SpriteComponent spriteComponent, SpriteComponent.Layer layer, Angle rotation)

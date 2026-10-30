@@ -14,6 +14,12 @@ public sealed partial class KsSurfaceAmbientOcclusionOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> MaskedTextureShader = "KsMaskedTexture";
 
+    /// <summary>
+    ///     Above surfaces (tables are at <see cref="DrawDepth.Objects"/>), below what rests on them. Anything drawn below
+    ///         this is covered by the AO, so an item drawn below it casts none onto surfaces.
+    /// </summary>
+    public const int OverlayZIndex = (int)DrawDepth.SmallObjects;
+
     [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private readonly AmbientOcclusionOverlay _ambientOcclusionOverlay;
@@ -28,8 +34,7 @@ public sealed partial class KsSurfaceAmbientOcclusionOverlay : Overlay
         _ambientOcclusionOverlay = ambientOcclusionOverlay;
         _maskedTextureShader = _prototypeManager.Index(MaskedTextureShader).InstanceUnique();
 
-        // Above surfaces (tables are at Objects), below the items on them.
-        ZIndex = (int)DrawDepth.Items;
+        ZIndex = OverlayZIndex;
     }
 
     protected override void Draw(in OverlayDrawArgs args)

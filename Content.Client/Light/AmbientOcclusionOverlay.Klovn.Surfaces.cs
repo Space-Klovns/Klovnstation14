@@ -13,6 +13,9 @@ namespace Content.Client.Light;
 ///     textures for <see cref="_KS14.Light.KsSurfaceAmbientOcclusionOverlay"/>, which draws above surfaces and below
 ///     items: the blurred AO of the items on surfaces, and the surfaces' silhouettes to mask it with. Masking is a
 ///     shader rather than the stencil, which already holds the grid and FOV masks by then.
+///
+///     It owns no render targets. It runs after the ordinary AO has been drawn for the frame, so it borrows that AO's
+///     target and blur buffer, which are idle until the next frame.
 /// </remarks>
 public sealed partial class AmbientOcclusionOverlay
 {
@@ -34,24 +37,29 @@ public sealed partial class AmbientOcclusionOverlay
         maskTexture = default!;
 
         var res = _surfaceResources.GetForViewport(viewport, static _ => new SurfaceResources());
-        if (!res.Ready || res.AOTarget == null || res.MaskTarget == null)
+        if (res.AOTexture == null || res.MaskTexture == null)
             return false;
 
-        res.Ready = false;
-        aoTexture = res.AOTarget.Texture;
-        maskTexture = res.MaskTarget.Texture;
+        aoTexture = res.AOTexture;
+        maskTexture = res.MaskTexture;
+        res.AOTexture = null;
+        res.MaskTexture = null;
         return true;
     }
 
+    /// <param name="aoTarget">Borrowed for the item AO; free once the ordinary AO has been drawn.</param>
+    /// <param name="blurBuffer">Borrowed as the blur's scratch, then for the mask.</param>
     private void DrawSurfaceAmbientOcclusion(
         DrawingHandleWorld worldHandle,
         IClydeViewport viewport,
+        IRenderTexture aoTarget,
         IRenderTexture blurBuffer,
         Vector2 scale,
         EntityLookupSystem lookupSystem)
     {
         var res = _surfaceResources.GetForViewport(viewport, static _ => new SurfaceResources());
-        res.Ready = false;
+        res.AOTexture = null;
+        res.MaskTexture = null;
 
         if (_surfaceSilhouettes.Count == 0 || _itemSilhouettes.Count == 0)
             return;
@@ -63,6 +71,10 @@ public sealed partial class AmbientOcclusionOverlay
         _itemsOnSurfaces.Clear();
         foreach (var item in _itemSilhouettes)
         {
+            // Drawn before the surface AO, so its AO would be drawn over it (a recharger at SmallObjects, say).
+            if (item.SpriteEntity.Comp.DrawDepth < Content.Client._KS14.Light.KsSurfaceAmbientOcclusionOverlay.OverlayZIndex)
+                continue;
+
             foreach (var bounds in _surfaceBounds)
             {
                 if (!bounds.Contains(item.WorldPosition))
@@ -76,26 +88,13 @@ public sealed partial class AmbientOcclusionOverlay
         if (_itemsOnSurfaces.Count == 0)
             return;
 
-        var targetSize = viewport.RenderTarget.Size;
-        if (res.AOTarget?.Texture.Size != targetSize)
-        {
-            res.AOTarget?.Dispose();
-            res.AOTarget = _clyde.CreateRenderTarget(targetSize, new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb), name: "surface-ambient-occlusion-target");
-        }
-
-        if (res.MaskTarget?.Texture.Size != targetSize)
-        {
-            res.MaskTarget?.Dispose();
-            res.MaskTarget = _clyde.CreateRenderTarget(targetSize, new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb), name: "surface-ambient-occlusion-mask-target");
-        }
-
         var eye = viewport.Eye!;
         var eyeRotation = eye.Rotation;
-        var worldToTargetMatrix = res.AOTarget.GetWorldToLocalMatrix(eye, scale);
+        var worldToTargetMatrix = aoTarget.GetWorldToLocalMatrix(eye, scale);
         var spriteSystem = _entManager.System<SpriteSystem>();
         var silhouetteShader = _proto.Index(SilhouetteShader).Instance();
 
-        worldHandle.RenderInRenderTarget(res.AOTarget,
+        worldHandle.RenderInRenderTarget(aoTarget,
             () =>
             {
                 worldHandle.UseShader(silhouetteShader);
@@ -103,9 +102,9 @@ public sealed partial class AmbientOcclusionOverlay
                     DrawSilhouette(worldHandle, spriteSystem, item.SpriteEntity, item.WorldPosition, item.WorldRotation, eyeRotation, worldToTargetMatrix);
             }, Color.Transparent);
 
-        _clyde.BlurRenderTarget(viewport, res.AOTarget, blurBuffer, eye, SurfaceBlurMultiplier);
+        _clyde.BlurRenderTarget(viewport, aoTarget, blurBuffer, eye, SurfaceBlurMultiplier);
 
-        worldHandle.RenderInRenderTarget(res.MaskTarget,
+        worldHandle.RenderInRenderTarget(blurBuffer,
             () =>
             {
                 worldHandle.UseShader(silhouetteShader);
@@ -115,23 +114,20 @@ public sealed partial class AmbientOcclusionOverlay
 
         worldHandle.SetTransform(Matrix3x2.Identity);
         worldHandle.UseShader(null);
-        res.Ready = true;
+        res.AOTexture = aoTarget.Texture;
+        res.MaskTexture = blurBuffer.Texture;
     }
 
+    /// <summary>
+    ///     What this frame built for a viewport, until it is drawn. Owns nothing: both are the ordinary AO's targets.
+    /// </summary>
     private sealed class SurfaceResources : IDisposable
     {
-        public IRenderTexture? AOTarget;
-        public IRenderTexture? MaskTarget;
-
-        /// <summary>
-        ///     Whether the textures were built this frame and not yet drawn.
-        /// </summary>
-        public bool Ready;
+        public Texture? AOTexture;
+        public Texture? MaskTexture;
 
         public void Dispose()
         {
-            AOTarget?.Dispose();
-            MaskTarget?.Dispose();
         }
     }
 }

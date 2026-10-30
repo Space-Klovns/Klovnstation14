@@ -1,5 +1,7 @@
 using System.Numerics;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Emissive;
@@ -9,7 +11,7 @@ namespace Content.Shared._KS14.Emissive;
 ///         The layer MUST exist.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class EmissiveLayersComponent : Component
+public sealed partial class EmissiveLayersComponent : Component, IComponentTreeEntry<EmissiveLayersComponent>
 {
     /// <summary>
     ///     Keys of layers affected.
@@ -65,6 +67,21 @@ public sealed partial class EmissiveLayersComponent : Component
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
     public Dictionary<string, EmissiveLayerParams> LayerParams = new();
+
+    /// <summary>
+    ///     Whether the entity is in a container, and so out of the client's tree of emissives. Kept by the client's
+    ///         emissive tree system; unused on the server.
+    /// </summary>
+    [ViewVariables]
+    public bool InContainer;
+
+    public EntityUid? TreeUid { get; set; }
+
+    public DynamicTree<ComponentTreeEntry<EmissiveLayersComponent>>? Tree { get; set; }
+
+    public bool AddToTree => !InContainer;
+
+    public bool TreeUpdateQueued { get; set; }
 }
 
 /// <summary>

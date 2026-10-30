@@ -1,17 +1,11 @@
 using System.Numerics;
-using Content.Client.Effects;
-using Content.Shared._KS14.Light;
-using DrawDepth = Content.Shared.DrawDepth.DrawDepth;
-using Content.Shared.Item;
-using Content.Shared.Mobs.Components;
+using Content.Client._KS14.Light;
 using Content.Shared.Placeable;
-using Content.Shared.Projectiles;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Map;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 
 namespace Content.Client.Light;
@@ -21,41 +15,33 @@ public sealed partial class AmbientOcclusionOverlay
     // Draws the sprite's alpha as white, which is what the AO target expects.
     private static readonly ProtoId<ShaderPrototype> SilhouetteShader = "KsWhite";
 
-    // Anything drawn this low lies flat on the floor (catwalks, water, puddles, pipes), so casts nothing.
-    private const int MaxFlatDrawDepth = (int)DrawDepth.HighFloorObjects;
+    // The AO is blurred into a soft gradient, so it loses nothing visible at half resolution, while drawing, blurring
+    //      and sampling it costs a quarter. The blur's radius is in texture coordinates, so it is unchanged.
+    private const int TargetResolutionDivisor = 2;
 
-    // Gases, effects and above aren't solid.
-    private const int MinEffectDrawDepth = (int)DrawDepth.Gasses;
-
-    private readonly HashSet<EntityUid> _cachedEntities = new();
+    private readonly List<Entity<KsAmbientOcclusionCasterComponent, TransformComponent>> _cachedCasters = new();
 
     // Gathered by DrawEntityAmbientOcclusion for the surface pass; see AmbientOcclusionOverlay.Klovn.Surfaces.cs.
     private readonly List<SilhouetteDatum> _surfaceSilhouettes = new();
     private readonly List<SilhouetteDatum> _itemSilhouettes = new();
 
-    private EntityQuery<OccluderComponent> _occluderQuery;
-    private EntityQuery<EffectVisualsComponent> _effectVisualsQuery;
-    private EntityQuery<MobStateComponent> _mobStateQuery;
-    private EntityQuery<ProjectileComponent> _projectileQuery;
-    private EntityQuery<ItemComponent> _itemQuery;
-    private EntityQuery<FixturesComponent> _fixturesQuery;
     private EntityQuery<SpriteComponent> _spriteQuery;
-    private EntityQuery<TransformComponent> _transformQuery;
-    private EntityQuery<KsNoAmbientOcclusionComponent> _noAmbientOcclusionQuery;
-    private EntityQuery<KsForceAmbientOcclusionComponent> _forceAmbientOcclusionQuery;
     private EntityQuery<PlaceableSurfaceComponent> _placeableSurfaceQuery;
     private bool _queriesResolved;
 
     /// <summary>
-    ///     Draws the sprite silhouette of every uncontained item and structure in view into the AO target.
+    ///     Draws the sprite silhouette of every caster in view into the AO target.
     /// </summary>
+    /// <remarks>
+    ///     <see cref="KsAmbientOcclusionCasterSystem"/> has already left out everything that can never cast, so only what
+    ///         can change at runtime is checked here: visibility, draw depth, and unshaded layers.
+    /// </remarks>
     private void DrawEntityAmbientOcclusion(
         DrawingHandleWorld worldHandle,
         MapId mapId,
         Box2 worldAabb,
         Matrix3x2 worldToTargetMatrix,
         Angle eyeRotation,
-        EntityLookupSystem lookupSystem,
         SharedTransformSystem transformSystem)
     {
         _surfaceSilhouettes.Clear();
@@ -66,58 +52,25 @@ public sealed partial class AmbientOcclusionOverlay
 
         if (!_queriesResolved)
         {
-            _occluderQuery = _entManager.GetEntityQuery<OccluderComponent>();
-            _effectVisualsQuery = _entManager.GetEntityQuery<EffectVisualsComponent>();
-            _mobStateQuery = _entManager.GetEntityQuery<MobStateComponent>();
-            _projectileQuery = _entManager.GetEntityQuery<ProjectileComponent>();
-            _itemQuery = _entManager.GetEntityQuery<ItemComponent>();
-            _fixturesQuery = _entManager.GetEntityQuery<FixturesComponent>();
             _spriteQuery = _entManager.GetEntityQuery<SpriteComponent>();
-            _transformQuery = _entManager.GetEntityQuery<TransformComponent>();
-            _noAmbientOcclusionQuery = _entManager.GetEntityQuery<KsNoAmbientOcclusionComponent>();
             _placeableSurfaceQuery = _entManager.GetEntityQuery<PlaceableSurfaceComponent>();
-            _forceAmbientOcclusionQuery = _entManager.GetEntityQuery<KsForceAmbientOcclusionComponent>();
             _queriesResolved = true;
         }
 
-        // Uncontained only: held and stored entities are never drawn, so never looked at either.
-        //      Sundries matter: a body that can't collide (as a dropped item is, once the server's state lands) is filed there, not in the dynamic tree.
-        _cachedEntities.Clear();
-        lookupSystem.GetEntitiesIntersecting(mapId,
-            worldAabb,
-            _cachedEntities,
-            LookupFlags.Uncontained | LookupFlags.Approximate);
+        _cachedCasters.Clear();
+        _entManager.System<KsAmbientOcclusionCasterSystem>().QueryAabb(_cachedCasters, mapId, worldAabb);
 
-        if (_cachedEntities.Count == 0)
+        if (_cachedCasters.Count == 0)
             return;
 
         var spriteSystem = _entManager.System<SpriteSystem>();
         worldHandle.UseShader(_proto.Index(SilhouetteShader).Instance());
 
-        foreach (var uid in _cachedEntities)
+        foreach (var (uid, casterComponent, transformComponent) in _cachedCasters)
         {
-            // Sprite and draw depth first: most of what the lookup returns (decals, cables, pipes, puddles) fails here,
-            //      before any of the component lookups below.
             if (!_spriteQuery.TryComp(uid, out var spriteComponent)
                 || !spriteComponent.Visible
-                || spriteComponent.DrawDepth >= MinEffectDrawDepth)
-                continue;
-
-            var forced = _forceAmbientOcclusionQuery.HasComp(uid);
-            if (!forced && spriteComponent.DrawDepth <= MaxFlatDrawDepth)
-                continue;
-
-            if (_occluderQuery.HasComp(uid)
-                || _effectVisualsQuery.HasComp(uid)
-                || _mobStateQuery.HasComp(uid)
-                || _projectileQuery.HasComp(uid)
-                || _noAmbientOcclusionQuery.HasComp(uid)
-                || !_transformQuery.TryComp(uid, out var transformComponent))
-                continue;
-
-            // Structures block movement, anchored or not (closets, crates); that leaves out decals, cables and pipes.
-            var isItem = _itemQuery.HasComp(uid);
-            if (!forced && !isItem && !HasHardFixture(uid))
+                || spriteComponent.DrawDepth >= KsAmbientOcclusionCasterSystem.MinEffectDrawDepth)
                 continue;
 
             var spriteEntity = new Entity<SpriteComponent>(uid, spriteComponent);
@@ -127,14 +80,23 @@ public sealed partial class AmbientOcclusionOverlay
             if (!DrawSilhouette(worldHandle, spriteSystem, spriteEntity, worldPosition, worldRotation, eyeRotation, worldToTargetMatrix))
                 continue;
 
-            if (isItem)
+            if (casterComponent.IsItem)
                 _itemSilhouettes.Add(new SilhouetteDatum(spriteEntity, worldPosition, worldRotation));
-            else if (_placeableSurfaceQuery.TryComp(uid, out var placeableSurfaceComponent) && placeableSurfaceComponent.IsPlaceable)
+            else if (casterComponent.IsSurface
+                && _placeableSurfaceQuery.TryComp(uid, out var placeableSurfaceComponent)
+                && placeableSurfaceComponent.IsPlaceable)
                 _surfaceSilhouettes.Add(new SilhouetteDatum(spriteEntity, worldPosition, worldRotation));
         }
 
         worldHandle.SetTransform(Matrix3x2.Identity);
         worldHandle.UseShader(_proto.Index(UnshadedShader).Instance());
+    }
+
+    private static Vector2i GetAmbientOcclusionTargetSize(Vector2i viewportTargetSize)
+    {
+        return new Vector2i(
+            Math.Max(1, viewportTargetSize.X / TargetResolutionDivisor),
+            Math.Max(1, viewportTargetSize.Y / TargetResolutionDivisor));
     }
 
     private readonly record struct SilhouetteDatum(Entity<SpriteComponent> SpriteEntity, Vector2 WorldPosition, Angle WorldRotation);
@@ -166,9 +128,13 @@ public sealed partial class AmbientOcclusionOverlay
         Direction? overrideDirection = spriteComponent.EnableDirectionOverride ? spriteComponent.DirectionOverride : null;
         var drewAny = false;
 
-        foreach (var spriteLayer in spriteComponent.AllLayers)
+        // AllLayers is the sprite's own List<Layer>; indexing it avoids boxing an enumerator for every entity, every frame.
+        if (spriteComponent.AllLayers is not IReadOnlyList<ISpriteLayer> spriteLayers)
+            return false;
+
+        for (var i = 0; i < spriteLayers.Count; i++)
         {
-            if (spriteLayer is not SpriteComponent.Layer layer
+            if (spriteLayers[i] is not SpriteComponent.Layer layer
                 || !layer.Visible
                 || layer.Blank
                 || layer.CopyToShaderParameters != null
@@ -192,19 +158,5 @@ public sealed partial class AmbientOcclusionOverlay
         }
 
         return drewAny;
-    }
-
-    private bool HasHardFixture(EntityUid uid)
-    {
-        if (!_fixturesQuery.TryComp(uid, out var fixturesComponent))
-            return false;
-
-        foreach (var fixture in fixturesComponent.Fixtures.Values)
-        {
-            if (fixture.Hard)
-                return true;
-        }
-
-        return false;
     }
 }
