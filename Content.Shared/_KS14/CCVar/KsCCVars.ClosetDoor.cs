@@ -12,6 +12,14 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.closet_door.pixel_snap", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
+    ///     Whether an open closet door is hidden behind the closets in front of it, as it would be if it were part of
+    ///         its closet's sprite. The door is drawn over every closet otherwise, so in a column of closets an open
+    ///         door shows through the top of the one below.
+    /// </summary>
+    public static readonly CVarDef<bool> ClosetDoorOcclusionMask =
+        CVarDef.Create("klovn.closet_door.occlusion_mask", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+    /// <summary>
     ///     Debugging aid for the contents a closing closet draws inside it: the doorway they are clipped to is drawn in
     ///         translucent magenta, and the contents themselves are tinted green. Green outside the magenta means the clip
     ///         isn't working; contents that aren't green aren't being drawn by the closet at all.

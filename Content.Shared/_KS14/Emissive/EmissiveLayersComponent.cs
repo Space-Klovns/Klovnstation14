@@ -35,30 +35,19 @@ public sealed partial class EmissiveLayersComponent : Component, IComponentTreeE
     public float Intensity = 2.2f;
 
     /// <summary>
-    ///     Offset to center of the glow effect.
+    ///     Offset to center of the glow effect, in the layer's own frame.
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
     public Vector2 Offset = Vector2.Zero;
 
     /// <summary>
-    ///     If true, then the sprites rotation/offset and layers rotation/offsets
-    ///         will be applied when rendering emissive layers.
-    ///
-    ///     Eye rotation and <see cref="Offset"/> are both still applied no matter what.
+    ///     Moves only the light the layers cast, not the sprite or its bloom, in the entity's own frame: it turns with the
+    ///         entity even if the sprite doesn't. For wall-mounted things, to light the room in front of them more.
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public bool UseSpriteTransform = true;
-
-    /// <summary>
-    ///     Whether the texture lookup should use rotation only and the actual rendering doesnt.
-    ///
-    ///     Good for things that have sprites rotated for each direction, like light tubes etc..
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    [ViewVariables(VVAccess.ReadWrite)]
-    public bool OnlyRotateTexture = false;
+    public Vector2 LightOffset = Vector2.Zero;
 
     /// <summary>
     ///     Overrides for individual layers in <see cref="Layers"/>, by the same key. Layers without one use the

@@ -14,11 +14,11 @@ public sealed partial class KsCCVars
     /// How bright the emissive bloom is added.
     /// </summary>
     public static readonly CVarDef<float> EmissiveBloomStrength =
-        CVarDef.Create("klovn.emissive.bloom_strength", 1f, CVar.CLIENTONLY | CVar.ARCHIVE);
+        CVarDef.Create("klovn.emissive.bloom_strength", 0.35f, CVar.CLIENTONLY);
 
     /// <summary>
     /// How far the emissive bloom spreads, as a blur multiplier.
     /// </summary>
     public static readonly CVarDef<float> EmissiveBloomRadius =
-        CVarDef.Create("klovn.emissive.bloom_radius", 12f, CVar.CLIENTONLY | CVar.ARCHIVE);
+        CVarDef.Create("klovn.emissive.bloom_radius", 9f, CVar.CLIENTONLY);
 }

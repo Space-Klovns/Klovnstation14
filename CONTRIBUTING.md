@@ -1306,6 +1306,32 @@ foreach (var result in _physicsSystem.IntersectRay(mapId, ray, length, ignoredEn
     length = MathF.Min(length, result.Distance);
 ```
 
+### `Color.Transparent` is white, not black
+
+`Color.Transparent` is `(1, 1, 1, 0)`: white at zero alpha (`Robust.Shared.Maths/Color.cs`). Anything that reads only
+its alpha never notices, which is why it passes for "nothing". Anything that reads its colour gets white:
+
+- **A render target cleared with it** holds white under every empty pixel. Adding that target over the screen washes
+  it white; a sprite blended into it fades towards white at its edges, and a blur spreads that into a whitish halo.
+- **Interpolating towards it** (`Color.InterpolateBetween(color, Color.Transparent, t)`, a fade) passes through
+  paler and paler colours on the way out, not just more transparent ones.
+- **A shader that samples it** sees white wherever alpha is zero, unless it weights by alpha.
+
+Where colour matters, use a black transparent colour instead:
+
+```csharp
+// do this - colour times alpha comes out as 0 where nothing was drawn
+handle.RenderInRenderTarget(target, DrawGlow, new Color(0f, 0f, 0f, 0f));
+
+// not this - fine for an alpha mask, white for anything that reads the colour
+handle.RenderInRenderTarget(target, DrawGlow, Color.Transparent);
+```
+
+A target cleared to black also comes out premultiplied after ordinary blending (colour times alpha), which is what a
+blur or an additive composite needs. `EmissiveOverlay`'s bloom target was cleared with `Color.Transparent`: the bloom
+first washed the whole screen white, then, once weighted by alpha, gave white halos that looked like they had taken
+the ambient light's colour.
+
 ### `Equals` on an enum boxes it
 
 An enum's `Equals` is inherited from `System.Enum`, a class, and takes an `object`. Calling it boxes both

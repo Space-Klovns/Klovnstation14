@@ -32,6 +32,7 @@ public abstract partial class KsClosetDoorOverlay : Overlay
 {
     [Dependency] private EntityManager _entityManager = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private EntityLookupSystem _lookupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private KsClosetDoorSystem _doorSystem = default!;
@@ -55,12 +56,26 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     /// </summary>
     public bool DebugMask;
 
+    /// <summary>
+    ///     Whether an open door is hidden behind the closets drawn in front of it. Follows
+    ///         <see cref="Content.Shared._KS14.CCVar.KsCCVars.ClosetDoorOcclusionMask"/>.
+    /// </summary>
+    public bool OcclusionMask;
+
+    /// <summary>
+    ///     How far above its own bounds a closet's sprite can reach: tgstation's closets stand half a tile taller than
+    ///         the tile they're on.
+    /// </summary>
+    private const float OccluderReach = 0.5f;
+
     private static readonly Color DebugMaskColor = Color.Magenta.WithAlpha(0.35f);
     private static readonly Color DebugContentsColor = Color.Lime;
 
     private List<ComponentTreeEntry<KsClosetDoorVisualsComponent>> _entries = []; // not readonly: the tree query takes it by ref
     private List<Entity<MapGridComponent>> _grids = [];
     private readonly List<DrawEntry> _drawEntries = [];
+    private readonly HashSet<Entity<KsClosetDoorVisualsComponent>> _occluderCandidates = [];
+    private readonly List<Occluder> _occluders = [];
 
     /// <summary>
     ///     Instances of the snapping shaders, one per draw: their uniforms differ per draw, and a uniform is read
@@ -70,13 +85,29 @@ public abstract partial class KsClosetDoorOverlay : Overlay
 
     private readonly ShaderPool _snapUnshadedShaders;
 
+    private readonly KsClosetDoorOcclusionShaders? _occlusionShaders;
+
+    /// <summary>
+    ///     The snapping shader drawn only outside the occlusion mask, for doors partly behind other closets.
+    /// </summary>
+    private readonly ShaderPool? _snapOccludedShaders;
+
     /// <param name="snapShader">The lit snapping shader, <c>KsSkewPixelSnap</c>.</param>
     /// <param name="snapUnshadedShader">The unshaded one, <c>KsSkewPixelSnapUnshaded</c>.</param>
-    protected KsClosetDoorOverlay(int zIndex, ShaderPrototype snapShader, ShaderPrototype snapUnshadedShader)
+    /// <param name="occlusionShaders">For a pass that hides doors behind the closets in front of them.</param>
+    protected KsClosetDoorOverlay(
+        int zIndex,
+        ShaderPrototype snapShader,
+        ShaderPrototype snapUnshadedShader,
+        KsClosetDoorOcclusionShaders? occlusionShaders = null)
     {
         ZIndex = zIndex;
         _snapShaders = new ShaderPool(snapShader);
         _snapUnshadedShaders = new ShaderPool(snapUnshadedShader);
+
+        _occlusionShaders = occlusionShaders;
+        if (occlusionShaders != null)
+            _snapOccludedShaders = new ShaderPool(occlusionShaders.SnapDraw);
     }
 
     /// <summary>
@@ -95,6 +126,7 @@ public abstract partial class KsClosetDoorOverlay : Overlay
 
         _snapShaders.Rewind();
         _snapUnshadedShaders.Rewind();
+        _snapOccludedShaders?.Rewind();
     }
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
@@ -109,90 +141,20 @@ public abstract partial class KsClosetDoorOverlay : Overlay
 
         _grids.Clear();
         _mapSystem.FindGridsIntersecting(args.MapId, bounds, ref _grids, approx: true);
-        if (_grids.Count == 0)
-            return;
 
         var worldHandle = args.WorldHandle;
-        var transformQuery = _entityManager.TransformQuery;
         var eye = args.Viewport.Eye!;
-        var eyeRotation = eye.Rotation;
-
-        var viewPosition = eye.Position.Position + eye.Offset;
-        var viewScale = eye.Scale * args.Viewport.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
-        var viewportSize = (Vector2)args.Viewport.Size;
+        var view = new ViewData(
+            eye.Position.Position + eye.Offset,
+            eye.Rotation,
+            eye.Scale * args.Viewport.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter),
+            (Vector2)args.Viewport.Size);
 
         foreach (var grid in _grids)
-        {
-            if (!_treeQuery.TryComp(grid.Owner, out var treeComponent))
-                continue;
+            DrawTree(worldHandle, bounds, view, grid.Owner, pixelSnap: true);
 
-            var (_, gridRotation, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(grid.Owner);
-
-            _entries.Clear();
-            treeComponent.Tree.QueryAabb(ref _entries,
-                static (ref List<ComponentTreeEntry<KsClosetDoorVisualsComponent>> entries, in ComponentTreeEntry<KsClosetDoorVisualsComponent> entry) =>
-                {
-                    entries.Add(entry);
-                    return true;
-                },
-                invWorldMatrix.TransformBox(bounds),
-                approx: true);
-
-            if (_entries.Count == 0)
-                continue;
-
-            var localEyeRotation = eyeRotation + gridRotation;
-
-            _drawEntries.Clear();
-            foreach (var treeEntry in _entries)
-            {
-                var doorEntity = new Entity<KsClosetDoorVisualsComponent>(treeEntry.Uid, treeEntry.Component);
-                var angle = _doorSystem.GetDoorAngle(doorEntity);
-                var closing = _doorSystem.IsClosing(doorEntity);
-                if (!DrawsAt(angle, closing))
-                    continue;
-
-                if (!_spriteQuery.TryComp(doorEntity.Owner, out var spriteComponent) ||
-                    !spriteComponent.Visible ||
-                    !_storageVisualsQuery.TryComp(doorEntity.Owner, out var storageVisualsComponent) ||
-                    !_spriteSystem.TryGetLayer((doorEntity.Owner, spriteComponent), StorageVisualLayers.Base, out var baseLayer, logMissing: false))
-                    continue;
-
-                var position = transformQuery.GetComponent(doorEntity.Owner).LocalPosition;
-
-                // As a no-rotation sprite is placed: upright on screen, whatever the grid and eye do. Its layers'
-                //     own matrices, and the door's swing, go in front of this.
-                var spriteMatrix = spriteComponent.LocalMatrix * Matrix3Helpers.CreateTransform(position, -localEyeRotation);
-
-                _drawEntries.Add(new DrawEntry(
-                    doorEntity,
-                    spriteComponent,
-                    storageVisualsComponent,
-                    baseLayer,
-                    spriteMatrix,
-                    angle,
-                    closing,
-                    localEyeRotation.RotateVec(position).Y));
-            }
-
-            if (_drawEntries.Count == 0)
-                continue;
-
-            // Back to front, the way the sprite renderer y-sorts: whatever is lower on screen is drawn later.
-            _drawEntries.Sort(static (a, b) =>
-            {
-                var order = b.ScreenHeight.CompareTo(a.ScreenHeight);
-                return order != 0 ? order : a.Door.Owner.Id.CompareTo(b.Door.Owner.Id);
-            });
-
-            // Snapped the same way the engine snaps a grid's sprites, so doors stay fixed to their closets.
-            var snappedWorldMatrix = worldMatrix;
-            snappedWorldMatrix.Translation += KsPixelSnap.GetOffset(worldMatrix.Translation, viewPosition, eyeRotation, viewScale, viewportSize);
-
-            var context = new DrawContext(worldHandle, snappedWorldMatrix, eyeRotation);
-            foreach (var entry in _drawEntries)
-                DrawCloset(context, entry);
-        }
+        // Closets off any grid, drifting in space, are in the map's own tree. The engine doesn't snap those sprites.
+        DrawTree(worldHandle, bounds, view, args.MapUid, pixelSnap: false);
 
         _drawEntries.Clear();
 
@@ -201,10 +163,116 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     }
 
     /// <summary>
+    ///     Draws this pass for the closets in one grid's or map's tree.
+    /// </summary>
+    private void DrawTree(DrawingHandleWorld worldHandle, Box2Rotated bounds, in ViewData view, EntityUid treeOwnerUid, bool pixelSnap)
+    {
+        if (!_treeQuery.TryComp(treeOwnerUid, out var treeComponent))
+            return;
+
+        var (_, treeRotation, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(treeOwnerUid);
+
+        _entries.Clear();
+        treeComponent.Tree.QueryAabb(ref _entries,
+            static (ref List<ComponentTreeEntry<KsClosetDoorVisualsComponent>> entries, in ComponentTreeEntry<KsClosetDoorVisualsComponent> entry) =>
+            {
+                entries.Add(entry);
+                return true;
+            },
+            invWorldMatrix.TransformBox(bounds),
+            approx: true);
+
+        if (_entries.Count == 0)
+            return;
+
+        var transformQuery = _entityManager.TransformQuery;
+        var localEyeRotation = view.Rotation + treeRotation;
+
+        _drawEntries.Clear();
+        foreach (var treeEntry in _entries)
+        {
+            var doorEntity = new Entity<KsClosetDoorVisualsComponent>(treeEntry.Uid, treeEntry.Component);
+            var angle = _doorSystem.GetDoorAngle(doorEntity);
+            var closing = _doorSystem.IsClosing(doorEntity);
+            if (!DrawsAt(angle, closing))
+                continue;
+
+            if (!_spriteQuery.TryComp(doorEntity.Owner, out var spriteComponent) ||
+                !spriteComponent.Visible ||
+                !_storageVisualsQuery.TryComp(doorEntity.Owner, out var storageVisualsComponent) ||
+                !_spriteSystem.TryGetLayer((doorEntity.Owner, spriteComponent), StorageVisualLayers.Base, out var baseLayer, logMissing: false))
+                continue;
+
+            var position = GetTreePosition(transformQuery.GetComponent(doorEntity.Owner), treeOwnerUid, invWorldMatrix);
+
+            // As a no-rotation sprite is placed: upright on screen, whatever the grid and eye do. Its layers'
+            //     own matrices, and the door's swing, go in front of this.
+            var spriteMatrix = spriteComponent.LocalMatrix * Matrix3Helpers.CreateTransform(position, -localEyeRotation);
+
+            _drawEntries.Add(new DrawEntry(
+                doorEntity,
+                spriteComponent,
+                storageVisualsComponent,
+                baseLayer,
+                position,
+                spriteMatrix,
+                angle,
+                closing,
+                GetScreenHeight(position, localEyeRotation)));
+        }
+
+        if (_drawEntries.Count == 0)
+            return;
+
+        // Back to front, the way the sprite renderer y-sorts: whatever is lower on screen is drawn later.
+        _drawEntries.Sort(static (a, b) =>
+        {
+            var order = b.ScreenHeight.CompareTo(a.ScreenHeight);
+            return order != 0 ? order : a.Door.Owner.Id.CompareTo(b.Door.Owner.Id);
+        });
+
+        // Snapped the same way the engine snaps a grid's sprites, so doors stay fixed to their closets.
+        var snappedWorldMatrix = worldMatrix;
+        if (pixelSnap)
+            snappedWorldMatrix.Translation += KsPixelSnap.GetOffset(worldMatrix.Translation, view.Position, view.Rotation, view.Scale, view.Size);
+
+        var context = new DrawContext(
+            worldHandle,
+            treeOwnerUid,
+            snappedWorldMatrix,
+            invWorldMatrix,
+            view.Rotation,
+            localEyeRotation,
+            bounds);
+        foreach (var entry in _drawEntries)
+            DrawCloset(context, entry);
+    }
+
+    /// <summary>
+    ///     Where an entity in a grid's (or map's) tree stands, in that grid's frame.
+    /// </summary>
+    private Vector2 GetTreePosition(TransformComponent transformComponent, EntityUid treeOwnerUid, in Matrix3x2 invWorldMatrix)
+    {
+        return transformComponent.ParentUid == treeOwnerUid
+            ? transformComponent.LocalPosition
+            : Vector2.Transform(_transformSystem.GetWorldPosition(transformComponent), invWorldMatrix);
+    }
+
+    /// <summary>
+    ///     How high on screen something at <paramref name="position"/> in the grid's frame is, as the sprite renderer
+    ///         y-sorts: whatever is lower is drawn later.
+    /// </summary>
+    private static float GetScreenHeight(Vector2 position, Angle localEyeRotation)
+    {
+        return localEyeRotation.RotateVec(position).Y;
+    }
+
+    /// <summary>
     ///     Draws one face of a closet's door, swung to the entry's angle: <paramref name="stateName"/> from the
     ///         closet's RSI, then each mounted layer on <paramref name="face"/> that was shown on the shut closet.
     /// </summary>
-    protected void DrawDoor(in DrawContext context, in DrawEntry entry, string? stateName, KsClosetDoorFace face)
+    /// <param name="occluded">Whether to draw only outside the mask <see cref="MaskOccluders"/> wrote.</param>
+    protected void DrawDoor(in DrawContext context, in DrawEntry entry, string? stateName, KsClosetDoorFace face, bool occluded = false)
     {
         var swing = KsClosetDoorSystem.GetDoorTransform(entry.Door.Comp, entry.Angle);
 
@@ -216,7 +284,8 @@ public abstract partial class KsClosetDoorOverlay : Overlay
                 entry.BaseLayer.LocalMatrix * swing,
                 entry.Sprite.Color * entry.BaseLayer.Color,
                 unshaded: false,
-                layerShader: null);
+                layerShader: null,
+                occluded);
         }
 
         var spriteEntity = new Entity<SpriteComponent?>(entry.Door.Owner, entry.Sprite);
@@ -238,7 +307,8 @@ public abstract partial class KsClosetDoorOverlay : Overlay
                 layer.LocalMatrix * swing,
                 entry.Sprite.Color * layer.Color,
                 unshaded: layer.ShaderPrototype == SpriteSystem.UnshadedId,
-                layerShader: layer.Shader);
+                layerShader: layer.Shader,
+                occluded);
         }
     }
 
@@ -252,13 +322,14 @@ public abstract partial class KsClosetDoorOverlay : Overlay
         Matrix3x2 quadToSprite,
         Color color,
         bool unshaded,
-        ShaderInstance? layerShader)
+        ShaderInstance? layerShader,
+        bool occluded)
     {
         var worldHandle = context.WorldHandle;
         worldHandle.SetTransform(quadToSprite * entry.SpriteMatrix * context.SnappedWorldMatrix);
         var quad = GetQuad(texture);
 
-        // A layer with a shader of its own keeps it, unsnapped.
+        // A layer with a shader of its own keeps it, unsnapped and unmasked.
         if (layerShader != null)
         {
             worldHandle.UseShader(layerShader);
@@ -267,23 +338,36 @@ public abstract partial class KsClosetDoorOverlay : Overlay
             return;
         }
 
+        // Behind other closets the stencil-testing shaders are lit, so an unshaded layer is drawn with a negative
+        //     colour, which tells any shader with the default wrapper to skip the light.
+        occluded &= _occlusionShaders != null;
+        var occludedColor = unshaded ? GetUnshadedColor(color) : color;
+
         if (PixelSnap)
         {
-            var shader = (unshaded ? _snapUnshadedShaders : _snapShaders).Next();
+            var shader = (occluded ? _snapOccludedShaders! : unshaded ? _snapUnshadedShaders : _snapShaders).Next();
             shader.SetParameter("quadSize", (Vector2)texture.Size);
             shader.SetParameter("transform", new Vector4(quadToSprite.M11, quadToSprite.M12, quadToSprite.M21, quadToSprite.M22));
             shader.SetParameter("translation", quadToSprite.Translation * EyeManager.PixelsPerMeter);
 
             worldHandle.UseShader(shader);
-            worldHandle.DrawTextureRect(texture, quad, color);
+            worldHandle.DrawTextureRect(texture, quad, occluded ? occludedColor : color);
             worldHandle.UseShader(null);
             return;
         }
 
-        // The engine's own unshaded sprite layers are drawn the same way: a negative colour tells the default shader
-        //     to skip the light.
+        // The engine's own unshaded sprite layers are drawn the same way.
+        worldHandle.UseShader(occluded ? _occlusionShaders!.Draw : null);
+        worldHandle.DrawTextureRect(texture, quad, occludedColor);
         worldHandle.UseShader(null);
-        worldHandle.DrawTextureRect(texture, quad, unshaded ? new Color(new Vector4(-1f) - color.RGBA) : color);
+    }
+
+    /// <summary>
+    ///     A colour the default shader wrapper draws unshaded, as the engine draws its own unshaded sprite layers.
+    /// </summary>
+    private static Color GetUnshadedColor(Color color)
+    {
+        return new Color(new Vector4(-1f) - color.RGBA);
     }
 
     /// <summary>
@@ -294,10 +378,16 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     /// <remarks>
     ///     The contents' layers are drawn here one by one, all through the stencil shader, rather than by
     ///         <c>SpriteSystem.RenderSprite</c>: that switches to each layer's own shader and back to none, so every
-    ///         layer after the first that has one would draw unclipped. Layer shaders (displacement, unshaded) are
-    ///         dropped for the swing's length instead.
+    ///         layer after the first that has one would draw unclipped. Layer shaders other than unshaded (such as
+    ///         displacement) are dropped for the swing's length instead.
     /// </remarks>
-    protected void DrawContents(in DrawContext context, in DrawEntry entry, ShaderInstance maskShader, ShaderInstance clearShader, ShaderInstance drawShader)
+    protected void DrawContents(
+        in DrawContext context,
+        in DrawEntry entry,
+        ShaderInstance resetShader,
+        ShaderInstance maskShader,
+        ShaderInstance clearShader,
+        ShaderInstance drawShader)
     {
         if (!_entityStorageQuery.TryComp(entry.Door.Owner, out var entityStorageComponent) ||
             entityStorageComponent.Contents.ContainedEntities.Count == 0 ||
@@ -308,6 +398,14 @@ public abstract partial class KsClosetDoorOverlay : Overlay
         var maskMatrix = entry.BaseLayer.LocalMatrix * entry.SpriteMatrix * context.SnappedWorldMatrix;
         var maskQuad = GetQuad(maskTexture);
 
+        // The mask's bit is cleared across the whole view first: whatever drew before may have left it set anywhere.
+        //     The engine sets every stencil bit across the viewport each time it comes back from drawing into another
+        //     render target, which the ambient occlusion pass does before entities are drawn, and a set bit lets the
+        //     contents through.
+        worldHandle.UseShader(resetShader);
+        worldHandle.SetTransform(Matrix3x2.Identity);
+        worldHandle.DrawRect(context.WorldBounds, Color.White);
+
         worldHandle.UseShader(maskShader);
         worldHandle.SetTransform(maskMatrix);
         worldHandle.DrawTextureRect(maskTexture, maskQuad);
@@ -316,13 +414,13 @@ public abstract partial class KsClosetDoorOverlay : Overlay
         if (DebugMask)
         {
             worldHandle.UseShader(null);
-            worldHandle.DrawTextureRect(maskTexture, maskQuad, new Color(new Vector4(-1f) - DebugMaskColor.RGBA));
+            worldHandle.DrawTextureRect(maskTexture, maskQuad, GetUnshadedColor(DebugMaskColor));
         }
 
         var contentsTint = DebugMask ? DebugContentsColor : Color.White;
 
         // Where the closet stands, in the snapped frame its own sprite is drawn in.
-        var closetPosition = Vector2.Transform(_entityManager.TransformQuery.GetComponent(entry.Door.Owner).LocalPosition, context.SnappedWorldMatrix);
+        var closetPosition = Vector2.Transform(entry.Position, context.SnappedWorldMatrix);
 
         worldHandle.UseShader(drawShader);
         foreach (var containedUid in entityStorageComponent.Contents.ContainedEntities)
@@ -340,8 +438,95 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     }
 
     /// <summary>
+    ///     Masks out of a door the closets that the sprite renderer would draw over it, if the door were part of its
+    ///         closet's sprite as it is in tgstation: the ones lower on screen, mostly the closet below in a column.
+    ///         They go into the third stencil bit, for <see cref="DrawDoor"/> to draw outside of.
+    /// </summary>
+    /// <returns>Whether any closet covers the door, so it is to be drawn masked and the mask cleared after.</returns>
+    /// <remarks>
+    ///     Only closets near the door are looked up, and nothing is drawn unless one is in front of it, so a door
+    ///         standing on its own costs one small lookup.
+    /// </remarks>
+    protected bool MaskOccluders(in DrawContext context, in DrawEntry entry, string? stateName)
+    {
+        _occluders.Clear();
+        if (_occlusionShaders == null || !TryGetTexture(entry, stateName, out var doorTexture))
+            return false;
+
+        var doorMatrix = entry.BaseLayer.LocalMatrix * KsClosetDoorSystem.GetDoorTransform(entry.Door.Comp, entry.Angle) * entry.SpriteMatrix;
+        var doorQuad = GetQuad(doorTexture);
+
+        _occluderCandidates.Clear();
+        _lookupSystem.GetLocalEntitiesIntersecting(context.TreeOwner,
+            doorMatrix.TransformBox(doorQuad).Enlarged(OccluderReach),
+            _occluderCandidates,
+            LookupFlags.Approximate | LookupFlags.Static | LookupFlags.Dynamic);
+
+        var transformQuery = _entityManager.TransformQuery;
+        var worldHandle = context.WorldHandle;
+        foreach (var candidate in _occluderCandidates)
+        {
+            if (candidate.Owner == entry.Door.Owner ||
+                !_spriteQuery.TryComp(candidate.Owner, out var spriteComponent) ||
+                !spriteComponent.Visible ||
+                spriteComponent.ContainerOccluded)
+                continue;
+
+            // Drawn after this closet, in the sprite renderer's order: deeper, or as deep and lower on screen.
+            var transformComponent = transformQuery.GetComponent(candidate.Owner);
+            var position = GetTreePosition(transformComponent, context.TreeOwner, context.InvWorldMatrix);
+            var screenHeight = GetScreenHeight(position, context.LocalEyeRotation);
+            var inFront = spriteComponent.DrawDepth != entry.Sprite.DrawDepth
+                ? spriteComponent.DrawDepth > entry.Sprite.DrawDepth
+                : screenHeight != entry.ScreenHeight
+                    ? screenHeight < entry.ScreenHeight
+                    : candidate.Owner.Id > entry.Door.Owner.Id;
+            if (!inFront)
+                continue;
+
+            // The bit is cleared over the door first, as nothing can be assumed about the stencil here.
+            if (_occluders.Count == 0)
+            {
+                worldHandle.UseShader(_occlusionShaders.Reset);
+                worldHandle.SetTransform(doorMatrix * context.SnappedWorldMatrix);
+                worldHandle.DrawTextureRect(doorTexture, doorQuad);
+                worldHandle.UseShader(_occlusionShaders.Mask);
+            }
+
+            var occluder = new Occluder(spriteComponent,
+                _transformSystem.GetWorldRotation(transformComponent),
+                Vector2.Transform(position, context.SnappedWorldMatrix));
+            _occluders.Add(occluder);
+            DrawSpriteLayers(worldHandle, occluder.Sprite, context.EyeRotation, occluder.WorldRotation, occluder.WorldPosition, Color.White);
+        }
+
+        worldHandle.UseShader(null);
+        return _occluders.Count > 0;
+    }
+
+    /// <summary>
+    ///     Takes back out of the stencil what <see cref="MaskOccluders"/> wrote, so the bit is clear for whatever tests
+    ///         the whole value later.
+    /// </summary>
+    protected void ClearOccluders(in DrawContext context)
+    {
+        if (_occlusionShaders == null || _occluders.Count == 0)
+            return;
+
+        var worldHandle = context.WorldHandle;
+        worldHandle.UseShader(_occlusionShaders.Clear);
+        foreach (var occluder in _occluders)
+            DrawSpriteLayers(worldHandle, occluder.Sprite, context.EyeRotation, occluder.WorldRotation, occluder.WorldPosition, Color.White);
+
+        worldHandle.UseShader(null);
+        _occluders.Clear();
+    }
+
+    /// <summary>
     ///     Draws a sprite's layers where the engine's sprite renderer puts them, with whatever shader is in use.
     ///         Mirrors <c>SpriteSystem.Render</c> and <c>RenderLayer</c>, without layer shaders or post-shaders.
+    ///         Unshaded layers still draw unshaded, through a negative colour, so the shader in use needs the default
+    ///         wrapper.
     /// </summary>
     private static void DrawSpriteLayers(
         DrawingHandleWorld worldHandle,
@@ -378,8 +563,9 @@ public abstract partial class KsClosetDoorOverlay : Overlay
             if (texture == null)
                 continue;
 
+            var color = spriteComponent.Color * layer.Color * tint;
             worldHandle.SetTransform(layerMatrix * spriteMatrix);
-            worldHandle.DrawTextureRect(texture, GetQuad(texture), spriteComponent.Color * layer.Color * tint);
+            worldHandle.DrawTextureRect(texture, GetQuad(texture), layer.ShaderPrototype == SpriteSystem.UnshadedId ? GetUnshadedColor(color) : color);
         }
     }
 
@@ -410,21 +596,39 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     {
         _snapShaders.Dispose();
         _snapUnshadedShaders.Dispose();
+        _snapOccludedShaders?.Dispose();
 
         base.DisposeBehavior();
     }
 
+    /// <param name="Scale">World units to viewport pixels, y down, as the engine's pixel snap takes it.</param>
+    private readonly record struct ViewData(Vector2 Position, Angle Rotation, Vector2 Scale, Vector2 Size);
+
+    /// <param name="TreeOwner">The grid, or map, whose closets are being drawn.</param>
+    /// <param name="InvWorldMatrix">The grid's unsnapped inverse world matrix.</param>
+    /// <param name="LocalEyeRotation">The eye's rotation, plus the grid's.</param>
     protected readonly record struct DrawContext(
         DrawingHandleWorld WorldHandle,
+        EntityUid TreeOwner,
         Matrix3x2 SnappedWorldMatrix,
-        Angle EyeRotation);
+        Matrix3x2 InvWorldMatrix,
+        Angle EyeRotation,
+        Angle LocalEyeRotation,
+        Box2Rotated WorldBounds);
 
+    /// <summary>
+    ///     A closet the sprite renderer draws in front of a door, masked out of it.
+    /// </summary>
+    private readonly record struct Occluder(SpriteComponent Sprite, Angle WorldRotation, Vector2 WorldPosition);
+
+    /// <param name="Position">Where the closet stands, in its grid's (or map's) frame.</param>
     /// <param name="SpriteMatrix">Places the closet's sprite, after its layers' own matrices, in the grid's frame.</param>
     protected readonly record struct DrawEntry(
         Entity<KsClosetDoorVisualsComponent> Door,
         SpriteComponent Sprite,
         EntityStorageVisualsComponent StorageVisuals,
         SpriteComponent.Layer BaseLayer,
+        Vector2 Position,
         Matrix3x2 SpriteMatrix,
         float Angle,
         bool Closing,
@@ -487,10 +691,12 @@ public sealed partial class KsClosetDoorFrontOverlay(ShaderPrototype snapShader,
 public sealed partial class KsClosetDoorBackOverlay(
     ShaderPrototype snapShader,
     ShaderPrototype snapUnshadedShader,
+    ShaderInstance resetShader,
     ShaderInstance maskShader,
     ShaderInstance clearShader,
-    ShaderInstance drawShader)
-    : KsClosetDoorOverlay((int)DrawDepth.SmallObjects, snapShader, snapUnshadedShader)
+    ShaderInstance drawShader,
+    KsClosetDoorOcclusionShaders occlusionShaders)
+    : KsClosetDoorOverlay((int)DrawDepth.SmallObjects, snapShader, snapUnshadedShader, occlusionShaders)
 {
     protected override bool DrawsAt(float angle, bool closing)
     {
@@ -500,9 +706,34 @@ public sealed partial class KsClosetDoorBackOverlay(
     protected override void DrawCloset(in DrawContext context, in DrawEntry entry)
     {
         if (entry.Closing)
-            DrawContents(context, entry, maskShader, clearShader, drawShader);
+            DrawContents(context, entry, resetShader, maskShader, clearShader, drawShader);
 
-        if (entry.Angle >= KsClosetDoorSystem.BackFacingAngle)
-            DrawDoor(context, entry, entry.StorageVisuals.StateBaseClosed + KsClosetDoorVisualsComponent.BackStateSuffix, KsClosetDoorFace.Back);
+        if (entry.Angle < KsClosetDoorSystem.BackFacingAngle)
+            return;
+
+        // The door's back is drawn over every closet, but in tgstation it is part of its own closet's sprite, under
+        //     the closets in front of it. Its front is over mobs in both, so needs none of this.
+        var stateName = entry.StorageVisuals.StateBaseClosed + KsClosetDoorVisualsComponent.BackStateSuffix;
+        var occluded = OcclusionMask && MaskOccluders(context, entry, stateName);
+        DrawDoor(context, entry, stateName, KsClosetDoorFace.Back, occluded);
+
+        if (occluded)
+            ClearOccluders(context);
     }
 }
+
+/// <summary>
+///     The shaders <see cref="KsClosetDoorBackOverlay"/> hides a door behind other closets with, all in the third
+///         stencil bit.
+/// </summary>
+/// <param name="Reset">Clears the bit wherever it is drawn.</param>
+/// <param name="Mask">Sets the bit under an occluder's opaque pixels.</param>
+/// <param name="Clear">Clears the bit under an occluder's opaque pixels.</param>
+/// <param name="Draw">Draws only where the bit is clear.</param>
+/// <param name="SnapDraw">The pixel snapping shader, drawn only where the bit is clear. An instance per draw.</param>
+public sealed record KsClosetDoorOcclusionShaders(
+    ShaderInstance Reset,
+    ShaderInstance Mask,
+    ShaderInstance Clear,
+    ShaderInstance Draw,
+    ShaderPrototype SnapDraw);

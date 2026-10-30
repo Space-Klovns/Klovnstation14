@@ -73,6 +73,7 @@ public sealed partial class KsEmissiveBloomOverlay : Overlay
         var worldHandle = args.WorldHandle;
         worldHandle.UseShader(_shader);
         worldHandle.DrawTextureRectRegion(target.Texture, args.WorldBounds, subRegion: subRegion);
+
         worldHandle.UseShader(null);
     }
 

@@ -116,6 +116,7 @@
     stateDoorClosed: generic_door
   # KS14 start: tgstation's swinging door, with the paper label on its front
   - type: KsClosetDoorVisuals
+    duration: 0.24s
     layers:
       enum.PaperLabelVisuals.Layer: Front
   # KS14 end
