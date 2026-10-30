@@ -2411,3 +2411,17 @@ Entries:
       message: Fixed the gas grenade compressor's slot and verbs not being translated.
   id: 235
   time: '2026-10-29T09:17:51.0000000+00:00'
+- author: dececece
+  changes:
+    - type: Add
+      message: >-
+        Nuclear detonations now play a station explosion cinematic for everyone
+        on the server.
+    - type: Add
+      message: The nuke has a new keypad interface.
+    - type: Tweak
+      message: >-
+        The nuke can no longer be armed or disarmed after it has started
+        detonating.
+  id: 236
+  time: '2026-10-30T12:16:06.0000000+00:00'
