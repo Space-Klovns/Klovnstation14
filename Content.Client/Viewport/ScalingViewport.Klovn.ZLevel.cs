@@ -537,7 +537,9 @@ namespace Content.Client.Viewport
             // Cleared, unlike the drawing passes: the colour image is about to be used as a mask, and it can
             //      only say where this z-level is solid if nothing else is left in it.
             _viewport.ClearColor = Color.Transparent;
+            KsZLevelRenderPass.Capture = true;
             _viewport.Render();
+            KsZLevelRenderPass.Capture = false;
 
             var capture = EnsureCapture(mapComponent.MapId);
             capture.WorldBounds = GetEyeWorldBounds(_zLevelEye);

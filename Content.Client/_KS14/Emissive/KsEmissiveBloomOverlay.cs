@@ -49,7 +49,9 @@ public sealed partial class KsEmissiveBloomOverlay : Overlay
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
     {
-        return Active && args.Viewport.Eye != null;
+        // Not in a z-level light capture: the additive blend writes alpha, which the capture reads as floor, so every
+        //      hole under a bloom would stop letting light through.
+        return Active && args.Viewport.Eye != null && !Content.Client._KS14.ZLevel.KsZLevelRenderPass.Capture;
     }
 
     protected override void Draw(in OverlayDrawArgs args)

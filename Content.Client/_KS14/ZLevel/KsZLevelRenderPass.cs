@@ -14,4 +14,10 @@ public static class KsZLevelRenderPass
     ///         soft effects (ambient occlusion, bloom) can be drawn at a fraction of the resolution.
     /// </summary>
     public static bool LowerLevel { get; internal set; }
+
+    /// <summary>
+    ///     Whether a z-level is being rendered only to capture its light and floor for the z-level below. The floor is
+    ///         read from the colour image's alpha, so anything that writes alpha where there's no floor must skip it.
+    /// </summary>
+    public static bool Capture { get; internal set; }
 }
