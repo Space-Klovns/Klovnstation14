@@ -63,17 +63,19 @@ public sealed class KsNukeCinematicDetonationTest : GameTest
         await server.WaitAssertion(() =>
         {
             var nukeSystem = server.EntMan.System<NukeSystem>();
+            // The count outlives a test on a pair that isn't restarted between them, so only what this test adds counts.
+            var countBefore = listenerSystem.ExplodedCount;
 
             var idleNukeUid = server.EntMan.SpawnEntity(_nukePrototype, testMap.GridCoords);
             server.EntMan.DeleteEntity(idleNukeUid);
-            Assert.That(listenerSystem.ExplodedCount, Is.Zero, "Deleting a nuke that was never set off exploded it.");
+            Assert.That(listenerSystem.ExplodedCount - countBefore, Is.Zero, "Deleting a nuke that was never set off exploded it.");
 
             var nukeUid = server.EntMan.SpawnEntity(_nukePrototype, testMap.GridCoords);
             nukeSystem.ActivateBomb(nukeUid);
-            Assert.That(listenerSystem.ExplodedCount, Is.Zero, "The nuke exploded before its cinematic reached the explosion.");
+            Assert.That(listenerSystem.ExplodedCount - countBefore, Is.Zero, "The nuke exploded before its cinematic reached the explosion.");
 
             server.EntMan.DeleteEntity(nukeUid);
-            Assert.That(listenerSystem.ExplodedCount, Is.EqualTo(1), "A nuke deleted during its cinematic never exploded.");
+            Assert.That(listenerSystem.ExplodedCount - countBefore, Is.EqualTo(1), "A nuke deleted during its cinematic never exploded.");
         });
     }
 
@@ -87,6 +89,8 @@ public sealed class KsNukeCinematicDetonationTest : GameTest
         var testMap = await Pair.CreateTestMap();
         var listenerSystem = server.EntMan.System<KsNukeExplodedListenerSystem>();
 
+        // The count outlives a test on a pair that isn't restarted between them, so only what this test adds counts.
+        var countBefore = listenerSystem.ExplodedCount;
         var nukeUid = EntityUid.Invalid;
         await server.WaitPost(() =>
         {
@@ -95,7 +99,7 @@ public sealed class KsNukeCinematicDetonationTest : GameTest
         });
 
         var tickRate = (int)server.Timing.TickRate;
-        for (var i = 0; i < MaximumLeadUp.TotalSeconds && listenerSystem.ExplodedCount == 0; i++)
+        for (var i = 0; i < MaximumLeadUp.TotalSeconds && listenerSystem.ExplodedCount == countBefore; i++)
         {
             await server.WaitRunTicks(tickRate);
         }
@@ -104,7 +108,7 @@ public sealed class KsNukeCinematicDetonationTest : GameTest
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(listenerSystem.ExplodedCount, Is.EqualTo(1), "The nuke didn't explode exactly once.");
+            Assert.That(listenerSystem.ExplodedCount - countBefore, Is.EqualTo(1), "The nuke didn't explode exactly once.");
             Assert.That(server.EntMan.Deleted(nukeUid), "The nuke outlived its own explosion.");
         }
     }

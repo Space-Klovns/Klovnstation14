@@ -82,8 +82,27 @@ public sealed partial class NukeSystem
     ///     A nuke deleted during its cinematic, which Godmode can't prevent (an admin, a singularity), explodes where
     ///         it was rather than leaving everyone with a cinematic of an explosion that never happened.
     /// </summary>
+    /// <remarks>
+    ///     On terminating rather than on <see cref="ComponentShutdown"/>, because deletion detaches the entity to
+    ///         nullspace before shutting its components down, and with it goes where it was.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnTerminating(Entity<NukeComponent> entity, ref EntityTerminatingEvent args)
+    {
+        DetonateIfLeftMidCinematic(entity);
+    }
+
+    /// <summary>
+    ///     Removing just the nuke's component is leaving the world as a nuke, too. On deletion
+    ///         <see cref="OnTerminating"/> has already detonated it.
+    /// </summary>
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<NukeComponent> entity, ref ComponentShutdown args)
+    {
+        DetonateIfLeftMidCinematic(entity);
+    }
+
+    private void DetonateIfLeftMidCinematic(Entity<NukeComponent> entity)
     {
         if (!entity.Comp.Exploded || entity.Comp.KsDetonated)
             return;
