@@ -1,0 +1,8 @@
+// Draws the texture only where MASK, a texture of the same size and frame, is opaque.
+uniform sampler2D MASK;
+
+void fragment()
+{
+    highp vec4 colour = zTexture(UV);
+    COLOR = vec4(colour.rgb, colour.a * texture(MASK, UV).a);
+}

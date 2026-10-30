@@ -1,5 +1,7 @@
 using System.Numerics;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Emissive;
@@ -9,7 +11,7 @@ namespace Content.Shared._KS14.Emissive;
 ///         The layer MUST exist.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class EmissiveLayersComponent : Component
+public sealed partial class EmissiveLayersComponent : Component, IComponentTreeEntry<EmissiveLayersComponent>
 {
     /// <summary>
     ///     Keys of layers affected.
@@ -33,30 +35,29 @@ public sealed partial class EmissiveLayersComponent : Component
     public float Intensity = 2.2f;
 
     /// <summary>
-    ///     Offset to center of the glow effect.
+    ///     Offset to center of the glow effect, in the layer's own frame.
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
     public Vector2 Offset = Vector2.Zero;
 
     /// <summary>
-    ///     If true, then the sprites rotation/offset and layers rotation/offsets
-    ///         will be applied when rendering emissive layers.
-    ///
-    ///     Eye rotation and <see cref="Offset"/> are both still applied no matter what.
+    ///     Moves only the light the layers cast, not the sprite or its bloom, in the entity's own frame: it turns with the
+    ///         entity even if the sprite doesn't. For wall-mounted things, to light the room in front of them more.
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public bool UseSpriteTransform = true;
+    public Vector2 LightOffset = Vector2.Zero;
 
     /// <summary>
-    ///     Whether the texture lookup should use rotation only and the actual rendering doesnt.
-    ///
-    ///     Good for things that have sprites rotated for each direction, like light tubes etc..
+    ///     If true, the light the layers cast ignores the sprite's and layers' own transforms: it's placed at the entity,
+    ///         turned by the entity's rotation alone, with <see cref="LightOffset"/> turned with it. The sprite and its
+    ///         bloom still follow the sprite. For sprites whose layers are shifted or turned per direction in ways the
+    ///         light shouldn't copy.
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public bool OnlyRotateTexture = false;
+    public bool LightFollowsEntity;
 
     /// <summary>
     ///     Overrides for individual layers in <see cref="Layers"/>, by the same key. Layers without one use the
@@ -65,6 +66,21 @@ public sealed partial class EmissiveLayersComponent : Component
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
     public Dictionary<string, EmissiveLayerParams> LayerParams = new();
+
+    /// <summary>
+    ///     Whether the entity is in a container, and so out of the client's tree of emissives. Kept by the client's
+    ///         emissive tree system; unused on the server.
+    /// </summary>
+    [ViewVariables]
+    public bool InContainer;
+
+    public EntityUid? TreeUid { get; set; }
+
+    public DynamicTree<ComponentTreeEntry<EmissiveLayersComponent>>? Tree { get; set; }
+
+    public bool AddToTree => !InContainer;
+
+    public bool TreeUpdateQueued { get; set; }
 }
 
 /// <summary>

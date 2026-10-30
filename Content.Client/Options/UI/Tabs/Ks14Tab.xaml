@@ -22,6 +22,15 @@
                 <ui:OptionDropDown Name="DropDownLobbyFont"
                                    Title="{Loc 'ks-ui-options-lobby-font'}"/>
                 -->
+                <!-- KS14: ambient occlusion; the first is the same cvar as the Graphics tab's checkbox -->
+                <CheckBox Name="AmbientOcclusionEnabled"
+                          Text="{Loc 'ks-ui-options-ambient-occlusion'}"/>
+                <CheckBox Name="AmbientOcclusionEntitiesEnabled"
+                          Text="{Loc 'ks-ui-options-ambient-occlusion-entities'}"
+                          ToolTip="{Loc 'ks-ui-options-ambient-occlusion-entities-tooltip'}"/>
+                <CheckBox Name="EmissiveBloomEnabled"
+                          Text="{Loc 'ks-ui-options-emissive-bloom'}"
+                          ToolTip="{Loc 'ks-ui-options-emissive-bloom-tooltip'}"/>
                 <CheckBox Name="ActionFoldersEnabled"
                           Text="{Loc 'ks-ui-options-action-folders'}"/>
                 <CheckBox Name="ActionLayoutPersistenceEnabled"

@@ -6,3 +6,95 @@
     ref: 1
     op: Keep
     func: Equal
+
+# A second stencil mask in its own bit, for masks drawn among entities. Nothing can be assumed about the stencil there:
+#     the engine sets every bit across the whole viewport whenever it comes back from drawing into another render
+#     target (Clyde.PopRenderStateFull), which the ambient occlusion pass does before entities are drawn, and the AO
+#     pass then writes the first bit over the floor. So clear the bit with KsStencilResetSecondBit first.
+# Draws to the second stencil bit if the alpha is not set to 0, leaving the other bits as they are.
+- type: shader
+  id: KsStencilMaskSecondBit
+  kind: source
+  path: "/Textures/Shaders/stencil_mask.swsl"
+  stencil:
+    ref: 2
+    writeMask: 2
+    op: Replace
+    func: Always
+
+# Clears the second stencil bit if the alpha is not set to 0, leaving the other bits as they are.
+- type: shader
+  id: KsStencilClearSecondBit
+  kind: source
+  path: "/Textures/Shaders/stencil_mask.swsl"
+  stencil:
+    ref: 0
+    writeMask: 2
+    op: Replace
+    func: Always
+
+# Draws, lit, only where the second stencil bit is set.
+- type: shader
+  id: KsStencilSecondBitDraw
+  kind: canvas
+  stencil:
+    ref: 2
+    readMask: 2
+    op: Keep
+    func: Equal
+
+# Clears the second stencil bit everywhere it's drawn, whatever the texture, leaving the other bits as they are.
+- type: shader
+  id: KsStencilResetSecondBit
+  kind: source
+  path: "/Textures/Shaders/stencil_clear.swsl"
+  stencil:
+    ref: 0
+    writeMask: 2
+    op: Replace
+    func: Always
+
+# A third stencil mask in its own bit, for what covers a closet's open door: the closets drawn in front of it.
+#     Like the second bit, reset it with KsStencilResetThirdBit where you test it before writing the mask.
+# Draws to the third stencil bit if the alpha is not set to 0, leaving the other bits as they are.
+- type: shader
+  id: KsStencilMaskThirdBit
+  kind: source
+  path: "/Textures/Shaders/stencil_mask.swsl"
+  stencil:
+    ref: 4
+    writeMask: 4
+    op: Replace
+    func: Always
+
+# Clears the third stencil bit if the alpha is not set to 0, leaving the other bits as they are.
+- type: shader
+  id: KsStencilClearThirdBit
+  kind: source
+  path: "/Textures/Shaders/stencil_mask.swsl"
+  stencil:
+    ref: 0
+    writeMask: 4
+    op: Replace
+    func: Always
+
+# Clears the third stencil bit everywhere it's drawn, whatever the texture, leaving the other bits as they are.
+- type: shader
+  id: KsStencilResetThirdBit
+  kind: source
+  path: "/Textures/Shaders/stencil_clear.swsl"
+  stencil:
+    ref: 0
+    writeMask: 4
+    op: Replace
+    func: Always
+
+# Draws, lit, only where the third stencil bit is clear. A negative colour still draws unshaded.
+- type: shader
+  id: KsStencilOutsideThirdBitDraw
+  kind: canvas
+  stencil:
+    ref: 0
+    readMask: 4
+    op: Keep
+    func: Equal

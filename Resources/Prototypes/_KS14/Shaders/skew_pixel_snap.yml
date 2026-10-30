@@ -1,0 +1,24 @@
+# Every uniform is per draw: take an InstanceUnique() for each draw, never the shared instance.
+- type: shader
+  id: KsSkewPixelSnap
+  kind: source
+  path: "/Textures/_KS14/Shaders/skew_pixel_snap.swsl"
+
+# For layers drawn unshaded, such as a locker's lock light.
+- type: shader
+  id: KsSkewPixelSnapUnshaded
+  kind: source
+  path: "/Textures/_KS14/Shaders/skew_pixel_snap.swsl"
+  light_mode: unshaded
+
+# Drawn only where the third stencil bit is clear (see KsStencilOutsideThirdBitDraw), for a door partly covered by the
+#     closets in front of it. Lit; a negative colour draws it unshaded.
+- type: shader
+  id: KsSkewPixelSnapOutsideThirdBit
+  kind: source
+  path: "/Textures/_KS14/Shaders/skew_pixel_snap.swsl"
+  stencil:
+    ref: 0
+    readMask: 4
+    op: Keep
+    func: Equal

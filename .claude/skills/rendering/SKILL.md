@@ -159,8 +159,21 @@ What it holds when:
 | Point in the pass | Stencil |
 | --- | --- |
 | Start of a viewport | cleared to 0 (`RenderInRenderTarget` clears colour and stencil) |
-| After `ApplyFovToBuffer` | **1 on every FOV-hidden pixel**, 0 on visible ones. The FOV shader `discard`s visible pixels, so only hidden ones get written. |
-| No FOV this pass (ghost, `DrawFov = false`, lighting off) | still all 0 |
+| After anything comes back from drawing into another target | **`0xFF` everywhere.** `PopRenderStateFull` (`Clyde.Rendering.cs`) clears the restored target's stencil to `0xFF` with a full write mask. It runs at the end of `RenderInRenderTarget` (any overlay's `handle.RenderInRenderTarget`), `CopyRenderTextureToTexture` (an overlay's `RequestScreenTexture`), `BlurRenderTarget` and the `BeforeLighting` overlay pass. |
+| Entering `WorldSpaceEntities` | **Unknown; usually `0xFF`.** The ambient occlusion overlay (`WorldSpaceBelowEntities`) draws into its own target and blurs it, then writes 1 over floor tiles with `StencilMask` (its comment: stencil after the blur "as it will nuke it"). Anything it or a later overlay draws into a target afterwards sets `0xFF` again. |
+| After `ApplyFovToBuffer` | **1 on every FOV-hidden pixel**, 0 on visible ones. FOV clears the stencil first, and its shader `discard`s visible pixels, so only hidden ones get written. |
+| No FOV this pass (ghost, `DrawFov = false`, lighting off) | whatever the world pass left |
+
+**Never assume what the stencil holds in a world pass.** Before testing against a mask, clear the bit you use over
+the whole area you test in (a `stencil_clear.swsl` shader with `ref: 0`, your bit as `writeMask`, `op: Replace`),
+then write the mask, then draw. Use a bit no one else writes (`writeMask`/`readMask`), so you neither depend on nor
+disturb the others.
+
+**Case study: a closing closet's contents spilled out of its doorway.** `KsClosetDoorOverlay` masked the doorway into
+bit 2 and drew the contents with an `Equal` test on bit 2. The mask was in the right place, but the contents drew
+everywhere: the AO pass before it had left the stencil at `0xFF`, so bit 2 was already set across the screen and the
+test always passed. Clearing bit 2 over the view first (`KsStencilResetSecondBit`) fixed it. A headless test can't
+catch this, since nothing is rendered; a debug tint (`klovn.closet_door.debug_mask`) showed it in a single look.
 
 - **A shader sets its own stencil state for its draw.** `ActivateShaderInstance` enables the test only if the
   instance has stencil settings, and then applies `writeMask`, `func`/`ref`/`readMask`, and `op`. `op` happens only

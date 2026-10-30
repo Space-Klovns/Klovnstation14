@@ -395,6 +395,8 @@ path: "/Textures/_KS14/Shaders/ks_lobby_contrast.swsl"  # not this - _KS14/ alre
 ```
 This covers resource files referenced by path and nothing else. Prototype IDs, C# type names (and the `.cs` files named after them), locale keys and style classes still follow the `Ks` prefix rule above, because they share one global namespace with upstream whatever folder they sit in.
 
+**`"metaAtlas": false` for large sprites (RSI)** — by default every `.rsi` is packed into the sprite atlas at startup and so held in VRAM for the whole session. `"metaAtlas": false` in its `meta.json` leaves it out and loads it on demand instead. Use it for large-resolution sprites.
+
 **`TryGet`/`Resolve`/`Ensure` naming (C#)** — `TryGet...` implies a pure lookup: it either finds the thing or it doesn't, with no side effects either way. If a "`TryGet`" actually creates the thing when it's missing, name it `Resolve...` or `Ensure...` instead — whichever reads better for the case — not `TryGet...`:
 ```csharp
 // misleading - this can create a new entity as a side effect, which "TryGet" doesn't promise
@@ -455,6 +457,8 @@ public override void Update(float frameTime)
 ```
 
 This only holds while the setter is the *only* way in: `[Access]` the field to the system (above), and close off VV, the one writer `[Access]` can't stop (below).
+
+**Cheapest rejection first (C#)** — in a filter loop, order the checks so the ones that reject most, cheaply, run first: a field on a component you already have before a `HasComp`, and a `HasComp` before a fixture or layer loop. A broad lookup returns mostly things you skip (decals, cables, pipes), and every check ahead of the one that rejects them runs for nothing.
 
 **ViewVariables (VV) (C#)** — the engine's live inspector. Admins and developers open any entity, component or system in the VV window, or use `vv`/`vvread`/`vvwrite`, to read and change its fields mid-round. Every `[DataField]` and `[ViewVariables]` member shows up there, writable by default, so VV is a writer of your component that your code does not control. It writes by reflection, so `[Access]` does not stop it, and the server is told nothing beyond the component being dirtied. When a field must only change through a setter:
 
@@ -1301,6 +1305,32 @@ nearer obstacle only sometimes, which reads as flicker or a rare overshoot. Noth
 foreach (var result in _physicsSystem.IntersectRay(mapId, ray, length, ignoredEnt: uid, returnOnFirstHit: false))
     length = MathF.Min(length, result.Distance);
 ```
+
+### `Color.Transparent` is white, not black
+
+`Color.Transparent` is `(1, 1, 1, 0)`: white at zero alpha (`Robust.Shared.Maths/Color.cs`). Anything that reads only
+its alpha never notices, which is why it passes for "nothing". Anything that reads its colour gets white:
+
+- **A render target cleared with it** holds white under every empty pixel. Adding that target over the screen washes
+  it white; a sprite blended into it fades towards white at its edges, and a blur spreads that into a whitish halo.
+- **Interpolating towards it** (`Color.InterpolateBetween(color, Color.Transparent, t)`, a fade) passes through
+  paler and paler colours on the way out, not just more transparent ones.
+- **A shader that samples it** sees white wherever alpha is zero, unless it weights by alpha.
+
+Where colour matters, use a black transparent colour instead:
+
+```csharp
+// do this - colour times alpha comes out as 0 where nothing was drawn
+handle.RenderInRenderTarget(target, DrawGlow, new Color(0f, 0f, 0f, 0f));
+
+// not this - fine for an alpha mask, white for anything that reads the colour
+handle.RenderInRenderTarget(target, DrawGlow, Color.Transparent);
+```
+
+A target cleared to black also comes out premultiplied after ordinary blending (colour times alpha), which is what a
+blur or an additive composite needs. `EmissiveOverlay`'s bloom target was cleared with `Color.Transparent`: the bloom
+first washed the whole screen white, then, once weighted by alpha, gave white halos that looked like they had taken
+the ambient light's colour.
 
 ### `Equals` on an enum boxes it
 

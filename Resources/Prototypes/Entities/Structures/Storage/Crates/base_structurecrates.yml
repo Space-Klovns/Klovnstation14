@@ -39,6 +39,18 @@
         layer:
         - MachineLayer
   - type: EntityStorage
+  # KS14 start
+    openSound:
+      path: /Audio/_KS14/Containers/crate_open.ogg
+      params:
+        variation: 0.045
+        volume: -1
+    closeSound:
+      path: /Audio/_KS14/Containers/crate_close.ogg
+      params:
+        variation: 0.045
+        volume: -1
+  # KS14 end
   - type: PlaceableSurface
     isPlaceable: false # defaults to closed.
   - type: Damageable

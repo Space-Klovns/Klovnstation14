@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Client._KS14.Graphics;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -137,7 +138,7 @@ public abstract partial class ChemicalFireOverlay : Overlay
 
             // Snapped the same way the engine snaps a grid's sprites and tiles, so fires don't shimmer against
             //     the floor they sit on while the eye moves.
-            worldMatrix.Translation += GetPixelSnapOffset(worldMatrix.Translation, viewPosition, eyeRotation, viewScale, viewportSize);
+            worldMatrix.Translation += KsPixelSnap.GetOffset(worldMatrix.Translation, viewPosition, eyeRotation, viewScale, viewportSize);
             worldHandle.SetTransform(worldMatrix);
 
             foreach (var entry in _drawEntries)
@@ -148,27 +149,6 @@ public abstract partial class ChemicalFireOverlay : Overlay
 
         worldHandle.UseShader(null);
         worldHandle.SetTransform(Matrix3x2.Identity);
-    }
-
-    /// <summary>
-    ///     The world-space nudge that puts <paramref name="worldPosition"/> on a whole screen pixel.
-    /// </summary>
-    /// <remarks>
-    ///     A copy of the engine's <c>Clyde.GetPixelSnapOffset</c>, which it applies to every grid before drawing
-    ///         that grid's sprites and tiles. It is internal, so it can't be called from here.
-    /// </remarks>
-    private static Vector2 GetPixelSnapOffset(
-        Vector2 worldPosition,
-        Vector2 viewPosition,
-        Angle viewRotation,
-        Vector2 viewScale,
-        Vector2 viewportSize)
-    {
-        var viewPositionRelative = viewRotation.RotateVec(worldPosition - viewPosition);
-        var screenPosition = viewPositionRelative * viewScale + viewportSize / 2f;
-        var screenOffset = screenPosition.Rounded() - screenPosition;
-        var viewOffset = screenOffset / viewScale;
-        return (-viewRotation).RotateVec(viewOffset);
     }
 
     private bool TryGetAnimation(ChemicalFireComponent fireComponent, out Animation animation)

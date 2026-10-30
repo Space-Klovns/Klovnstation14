@@ -1,0 +1,15 @@
+light_mode unshaded;
+
+// Blended `premultiplied` (set on the prototype, as SWSL has no keyword for it): One, OneMinusSrcAlpha. With alpha
+//      0 that adds the colour and leaves the target's alpha exactly as it was. Not `add`, which is
+//      SrcAlpha, DstAlpha on alpha too: it writes alpha everywhere it draws, and the z-level light capture reads that
+//      alpha to tell floor from holes, so a full-screen bloom made every hole look solid.
+
+uniform highp float strength;
+
+void fragment()
+{
+    // Premultiplied, as it was blended over black, so the colour is already weighted by how much glow there is.
+    highp vec4 glow = zTexture(UV);
+    COLOR = vec4(glow.rgb * strength, 0.0);
+}

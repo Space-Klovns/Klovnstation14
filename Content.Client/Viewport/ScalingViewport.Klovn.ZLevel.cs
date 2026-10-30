@@ -237,7 +237,9 @@ namespace Content.Client.Viewport
                 //      through the scaled copy while they're above it mid-transit.
                 _viewport.Eye = isViewerMap && depth <= 0f ? eye : _zLevelEye;
 
+                Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel = !isViewerMap;
                 _viewport.Render();
+                Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel = false;
                 _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
 
                 // Never blur the map the viewer is actually on
@@ -475,9 +477,7 @@ namespace Content.Client.Viewport
                 _zLevelSystem.TryGetZLevelAbove(topZLevel.Owner, out var aboveEntity))
                 CaptureZLevel(handle, aboveEntity.Value, viewerDepth);
 
-            // Top-down. Every z-level but the deepest lights the one under it; the deepest is captured
-            //      only when something is crossing the gap above it, because a gap is the one pass that is
-            //      lit from below rather than from above.
+            // Top-down. Every z-level but the deepest lights the one under it; nothing lights from below.
             var depth = viewerDepth;
             for (var index = _mapsToIterate.Count - 1; index >= 0; index--)
             {
@@ -493,7 +493,7 @@ namespace Content.Client.Viewport
                     //      depth of the z-level it is about to light rather than its own.
                     consumerDepth += _mapsToIterate[index - 1].Comp.Depth;
                 }
-                else if (!WantsGapPass(_mapsToIterate[index].Owner, depth))
+                else
                 {
                     break;
                 }
@@ -537,7 +537,9 @@ namespace Content.Client.Viewport
             // Cleared, unlike the drawing passes: the colour image is about to be used as a mask, and it can
             //      only say where this z-level is solid if nothing else is left in it.
             _viewport.ClearColor = Color.Transparent;
+            KsZLevelRenderPass.Capture = true;
             _viewport.Render();
+            KsZLevelRenderPass.Capture = false;
 
             var capture = EnsureCapture(mapComponent.MapId);
             capture.WorldBounds = GetEyeWorldBounds(_zLevelEye);
