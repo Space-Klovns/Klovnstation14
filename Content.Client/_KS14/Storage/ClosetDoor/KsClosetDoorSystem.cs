@@ -243,7 +243,7 @@ public sealed partial class KsClosetDoorSystem : EntitySystem
         if (!IsAnimating(entity.Owner))
             return open ? entity.Comp.MaxAngle : 0f;
 
-        var progress = (float)((_gameTiming.RealTime - entity.Comp.AnimationStart) / entity.Comp.Duration);
+        var progress = (float)((_frameRealTime - entity.Comp.AnimationStart) / entity.Comp.Duration);
         progress = Math.Clamp(progress, 0f, 1f);
 
         return entity.Comp.MaxAngle * (open ? progress : 1f - progress);

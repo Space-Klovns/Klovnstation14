@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Client._KS14.Light;
+using Content.Client.Graphics;
 using Content.Shared.Placeable;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -18,6 +19,13 @@ public sealed partial class AmbientOcclusionOverlay
     // The AO is blurred into a soft gradient, so it loses nothing visible at half resolution, while drawing, blurring
     //      and sampling it costs a quarter. The blur's radius is in texture coordinates, so it is unchanged.
     private const int TargetResolutionDivisor = 2;
+
+    // A lower z-level is scaled down and blurred again afterwards, so its AO can be far coarser still.
+    private const int LowerLevelTargetResolutionDivisor = 8;
+
+    // Lower z-levels are rendered through the same viewport as the viewer's own, every frame, so a target resized for
+    //      them would be recreated twice a frame. They keep their own.
+    private readonly OverlayResourceCache<CachedResources> _lowerLevelResources = new();
 
     // A pile of items blurs into one blob: past the first few on a tile, another silhouette changes nothing visible.
     private const int MaxItemsPerTile = 3;
@@ -115,9 +123,13 @@ public sealed partial class AmbientOcclusionOverlay
 
     private static Vector2i GetAmbientOcclusionTargetSize(Vector2i viewportTargetSize)
     {
+        var divisor = Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel
+            ? LowerLevelTargetResolutionDivisor
+            : TargetResolutionDivisor;
+
         return new Vector2i(
-            Math.Max(1, viewportTargetSize.X / TargetResolutionDivisor),
-            Math.Max(1, viewportTargetSize.Y / TargetResolutionDivisor));
+            Math.Max(1, viewportTargetSize.X / divisor),
+            Math.Max(1, viewportTargetSize.Y / divisor));
     }
 
     private readonly record struct SilhouetteDatum(Entity<SpriteComponent> SpriteEntity, Vector2 WorldPosition, Angle WorldRotation);

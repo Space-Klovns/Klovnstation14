@@ -55,7 +55,7 @@ public sealed partial class KsEmissiveBloomOverlay : Overlay
     protected override void Draw(in OverlayDrawArgs args)
     {
         if (!OverlayManager.TryGetOverlay<EmissiveOverlay>(out var emissiveOverlay)
-            || !emissiveOverlay.TryGetGlow(args.Viewport, out var target, out var blurBuffer, out _))
+            || !emissiveOverlay.TryGetGlow(args.Viewport, out var target, out var blurBuffer, out var subRegion))
             return;
 
         _clyde.BlurRenderTarget(args.Viewport, target, blurBuffer, args.Viewport.Eye!, _radius);
@@ -63,13 +63,8 @@ public sealed partial class KsEmissiveBloomOverlay : Overlay
         _shader ??= _prototypeManager.Index(Shader).InstanceUnique();
         _shader.SetParameter("strength", _strength);
 
-        // The target is the enlarged light target's size: the viewport's light target plus a fixed skirt of pixels,
-        //      which isn't a fixed distance in the world. So, as AfterLightTargetOverlay does, crop the skirt off and
-        //      stretch the middle over the viewport's own bounds, or the glow drifts from its source with zoom.
-        var lightTargetSize = args.Viewport.LightRenderTarget.Size;
-        var halfDiff = (target.Size - lightTargetSize) / 2;
-        var subRegion = new UIBox2i(halfDiff.X, halfDiff.Y, lightTargetSize.X + halfDiff.X, lightTargetSize.Y + halfDiff.Y);
-
+        // The light target has a skirt of pixels that isn't a fixed distance in the world, so only the part the viewport
+        //      covers is stretched over its bounds, or the glow drifts from its source with zoom.
         var worldHandle = args.WorldHandle;
         worldHandle.UseShader(_shader);
         worldHandle.DrawTextureRectRegion(target.Texture, args.WorldBounds, subRegion: subRegion);

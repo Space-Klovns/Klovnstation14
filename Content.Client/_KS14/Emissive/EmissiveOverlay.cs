@@ -47,6 +47,15 @@ public sealed partial class EmissiveOverlay : Overlay
     private List<Entity<MapGridComponent>> _grids = [];
 
     private readonly OverlayResourceCache<CachedResources> _resources = new();
+
+    // Lower z-levels are rendered through the same viewport every frame, so they keep their own, smaller bloom targets
+    //      rather than resizing the viewer's twice a frame.
+    private readonly OverlayResourceCache<CachedResources> _lowerLevelResources = new();
+
+    /// <summary>
+    ///     How much smaller the bloom target is on a lower z-level, which is scaled down and blurred afterwards anyway.
+    /// </summary>
+    private const int LowerLevelBloomDivisor = 4;
     private readonly List<EmissiveDraw> _draws = [];
 
     public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
@@ -74,9 +83,8 @@ public sealed partial class EmissiveOverlay : Overlay
         var lightTarget = lightOverlay.GetCachedForViewport(args.Viewport).EnlargedLightTarget;
 
         var viewport = args.Viewport;
-        var resources = _resources.GetForViewport(viewport, static _ => new CachedResources());
+        var resources = GetResources(viewport);
         resources.Drawn = false;
-        resources.Bounds = bounds;
 
         _grids.Clear();
         _mapSystem.FindGridsIntersecting(mapId, bounds, ref _grids, approx: true);
@@ -246,17 +254,25 @@ public sealed partial class EmissiveOverlay : Overlay
         if (!OverlayManager.TryGetOverlay<KsEmissiveBloomOverlay>(out var bloomOverlay) || !bloomOverlay.Active)
             return;
 
-        // Same size and frame as the light target, so the light target's matrix maps into it too. Made only once bloom is on.
-        if (resources.Target?.Size != lightTarget.Size)
+        // The light target's frame, at its size or, on a lower z-level, a fraction of it. Made only once bloom is on.
+        var divisor = Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel ? LowerLevelBloomDivisor : 1;
+        var targetSize = Vector2i.ComponentMax(lightTarget.Size / divisor, Vector2i.One);
+        if (resources.Target?.Size != targetSize)
         {
             resources.Target?.Dispose();
             resources.BlurBuffer?.Dispose();
             var format = new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb);
-            resources.Target = _clyde.CreateRenderTarget(lightTarget.Size, format, name: "emissive-target");
-            resources.BlurBuffer = _clyde.CreateRenderTarget(lightTarget.Size, format, name: "emissive-blur-target");
+            resources.Target = _clyde.CreateRenderTarget(targetSize, format, name: "emissive-target");
+            resources.BlurBuffer = _clyde.CreateRenderTarget(targetSize, format, name: "emissive-blur-target");
         }
 
         var target = resources.Target;
+        var bloomMatrix = target.GetWorldToLocalMatrix(viewport.Eye!, scale / divisor);
+
+        // The part of the target the viewport covers: the light target's skirt is cropped off, as AfterLightTargetOverlay does.
+        var viewportLightSize = viewport.LightRenderTarget.Size / divisor;
+        var halfDiff = (targetSize - viewportLightSize) / 2;
+        resources.SubRegion = new UIBox2i(halfDiff.X, halfDiff.Y, viewportLightSize.X + halfDiff.X, viewportLightSize.Y + halfDiff.Y);
 
         resources.Drawn = true;
         worldHandle.RenderInRenderTarget(target,
@@ -270,7 +286,7 @@ public sealed partial class EmissiveOverlay : Overlay
                     if (!draw.InView)
                         continue;
 
-                    worldHandle.SetTransform(draw.LayerToWorldMatrix * lightMatrix);
+                    worldHandle.SetTransform(draw.LayerToWorldMatrix * bloomMatrix);
                     worldHandle.DrawTextureRect(draw.Texture, draw.BloomBox, modulate: draw.Color);
                 }
 
@@ -288,6 +304,12 @@ public sealed partial class EmissiveOverlay : Overlay
         ShaderInstance Shader,
         bool InView);
 
+    private CachedResources GetResources(IClydeViewport viewport)
+    {
+        var cache = Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel ? _lowerLevelResources : _resources;
+        return cache.GetForViewport(viewport, static _ => new CachedResources());
+    }
+
     /// <summary>
     ///     This pass's emissive glow for a viewport, for <see cref="KsEmissiveBloomOverlay"/>, once. False if nothing
     ///         glowed, or lighting wasn't rendered this pass.
@@ -295,12 +317,12 @@ public sealed partial class EmissiveOverlay : Overlay
     public bool TryGetGlow(IClydeViewport viewport,
         [NotNullWhen(true)] out IRenderTexture? target,
         [NotNullWhen(true)] out IRenderTexture? blurBuffer,
-        out Box2Rotated bounds)
+        out UIBox2i subRegion)
     {
-        var resources = _resources.GetForViewport(viewport, static _ => new CachedResources());
+        var resources = GetResources(viewport);
         target = resources.Target;
         blurBuffer = resources.BlurBuffer;
-        bounds = resources.Bounds;
+        subRegion = resources.SubRegion;
 
         // Taken, not just read: this overlay only runs while lighting is rendered, so with lighting off nothing would
         //      reset it, and the last glow would stay on screen.
@@ -322,9 +344,9 @@ public sealed partial class EmissiveOverlay : Overlay
         public IRenderTexture? BlurBuffer;
 
         /// <summary>
-        ///     The world bounds <see cref="Target"/> covers.
+        ///     The part of <see cref="Target"/>, in pixels, that the viewport covers.
         /// </summary>
-        public Box2Rotated Bounds;
+        public UIBox2i SubRegion;
 
         public bool Drawn;
 
@@ -355,6 +377,7 @@ public sealed partial class EmissiveOverlay : Overlay
 
         _shadersByIntensity.Clear();
         _resources.Dispose();
+        _lowerLevelResources.Dispose();
         base.DisposeBehavior();
     }
 }

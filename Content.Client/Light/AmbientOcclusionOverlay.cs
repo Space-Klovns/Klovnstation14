@@ -73,7 +73,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
         var turfSystem = _entManager.System<TurfSystem>();
         var invMatrix = args.Viewport.GetWorldToLocalMatrix();
 
-        var res = _resources.GetForViewport(args.Viewport, static _ => new CachedResources());
+        var res = (Content.Client._KS14.ZLevel.KsZLevelRenderPass.LowerLevel ? _lowerLevelResources : _resources) /* KS14: lower z-levels have their own, smaller targets */.GetForViewport(args.Viewport, static _ => new CachedResources());
 
         if (res.AOTarget?.Texture.Size != aoTargetSize /* KS14: target.Size -> aoTargetSize */)
         {
@@ -188,6 +188,7 @@ public sealed partial class AmbientOcclusionOverlay : Overlay
     protected override void DisposeBehavior()
     {
         _resources.Dispose();
+        _lowerLevelResources.Dispose(); // KS14
         _surfaceResources.Dispose(); // KS14
         UnsubscribeCVars(); // KS14
 

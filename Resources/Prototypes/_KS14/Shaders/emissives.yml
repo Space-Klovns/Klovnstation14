@@ -7,3 +7,4 @@
   id: KsAdditive
   kind: source
   path: "/Textures/_KS14/Shaders/additive.swsl"
+  blend_mode: premultiplied
