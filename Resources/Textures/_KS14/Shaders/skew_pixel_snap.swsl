@@ -1,0 +1,69 @@
+// Draws a transformed quad (a swinging closet door) as BYOND draws a transformed icon: in blocks one pixel of the
+//   sprite it belongs to across, aligned to that sprite's pixel grid. Each block takes the one texel under its centre.
+//   Unlike pixel_snap.swsl, the transform may squeeze, mirror and shear the quad, and the grid is the owning sprite's,
+//   not the quad's, so a door and everything on it step together with the closet behind them.
+//
+// Every uniform is per draw, so each draw needs its own instance of this shader.
+// quadSize is the quad's texture size in pixels.
+// transform and translation take a point on the quad, in pixels from its centre, to the owning sprite, in pixels
+//   from its centre: (x, y) -> (x * transform.x + y * transform.z, x * transform.y + y * transform.w) + translation.
+//   That is a Matrix3x2's (M11, M12, M21, M22) and (M31, M32), with its translation in pixels.
+// The owning sprite must be an even number of pixels across each way, so its pixel grid lies on whole numbers.
+
+uniform highp vec2 quadSize;
+uniform highp vec4 transform;
+uniform highp vec2 translation;
+
+void fragment() {
+    highp vec4 plain = zTexture(UV);
+    COLOR = plain;
+
+#ifdef HAS_DFDX
+    // How UV (atlas) and UV2 (quad) change per screen pixel, so a quad point can be found in the atlas.
+    highp mat2 uvDerivative = mat2(dFdx(UV), dFdy(UV));
+    highp mat2 quadDerivative = mat2(dFdx(UV2), dFdy(UV2));
+    highp float quadDeterminant = quadDerivative[0][0] * quadDerivative[1][1] - quadDerivative[0][1] * quadDerivative[1][0];
+    highp float valid = step(0.0000000001, abs(quadDeterminant));
+    quadDeterminant = mix(1.0, quadDeterminant, valid);
+
+    // GLSL ES 1.0 has no inverse().
+    highp mat2 quadDerivativeInverse = mat2(
+        quadDerivative[1][1], -quadDerivative[0][1],
+        -quadDerivative[1][0], quadDerivative[0][0]
+    ) / quadDeterminant;
+    highp mat2 uvPerQuad = uvDerivative * quadDerivativeInverse;
+
+    // A door swung edge-on has no width.
+    highp float transformDeterminant = transform.x * transform.w - transform.y * transform.z;
+    valid *= step(0.0001, abs(transformDeterminant));
+    transformDeterminant = mix(1.0, transformDeterminant, step(0.0001, abs(transformDeterminant)));
+
+    // This fragment in the owning sprite's pixels, and the centre of the sprite pixel it falls in.
+    highp vec2 quadPixel = (UV2 - vec2(0.5)) * quadSize;
+    highp vec2 spritePixel = vec2(
+        quadPixel.x * transform.x + quadPixel.y * transform.z,
+        quadPixel.x * transform.y + quadPixel.y * transform.w) + translation;
+    highp vec2 blockCentre = floor(spritePixel) + vec2(0.5) - translation;
+
+    // That block centre back on the quad, through the inverse transform.
+    highp vec2 sourcePixel = vec2(
+        blockCentre.x * transform.w - blockCentre.y * transform.z,
+        blockCentre.y * transform.x - blockCentre.x * transform.y) / transformDeterminant;
+    highp vec2 sourceQuad = sourcePixel / quadSize + vec2(0.5);
+
+    // A block whose centre is off the quad is empty, even where part of it lies on the quad.
+    highp float inside = step(0.0, sourceQuad.x) * step(sourceQuad.x, 1.0) * step(0.0, sourceQuad.y) * step(sourceQuad.y, 1.0);
+
+    // The quad's own frame in the atlas, so nothing outside it is sampled: the atlas around it belongs to other sprites.
+    highp vec2 cornerA = UV + uvPerQuad * (vec2(0.0) - UV2);
+    highp vec2 cornerB = UV + uvPerQuad * (vec2(1.0) - UV2);
+    highp vec2 frameMin = min(cornerA, cornerB);
+    highp vec2 frameMax = max(cornerA, cornerB);
+
+    // Nudged a little so a block centre exactly on a texel edge picks the same side everywhere.
+    highp vec2 sampleUv = clamp(UV + uvPerQuad * (sourceQuad - UV2) + TEXTURE_PIXEL_SIZE * 0.0001, frameMin, frameMax);
+    highp vec4 snapped = zTexture(sampleUv) * inside;
+
+    COLOR = mix(plain, snapped, valid);
+#endif
+}

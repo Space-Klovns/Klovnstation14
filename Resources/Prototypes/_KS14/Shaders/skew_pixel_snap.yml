@@ -1,0 +1,12 @@
+# Every uniform is per draw: take an InstanceUnique() for each draw, never the shared instance.
+- type: shader
+  id: KsSkewPixelSnap
+  kind: source
+  path: "/Textures/_KS14/Shaders/skew_pixel_snap.swsl"
+
+# For layers drawn unshaded, such as a locker's lock light.
+- type: shader
+  id: KsSkewPixelSnapUnshaded
+  kind: source
+  path: "/Textures/_KS14/Shaders/skew_pixel_snap.swsl"
+  light_mode: unshaded

@@ -7,7 +7,7 @@
   - type: Lock
   - type: LockVisuals
   - type: Sprite
-    sprite: Structures/Storage/closet.rsi
+    sprite: _KS14/Structures/Storage/closet.rsi # KS14: Structures/Storage/closet.rsi -> _KS14/Structures/Storage/closet.rsi, tgstation's closets
     noRot: true
     layers:
     - state: generic
@@ -31,6 +31,11 @@
     layers:
     - enum.LockVisualLayers.Lock
   # KS14: emissive end
+  # KS14 start: the lock swings with the door
+  - type: KsClosetDoorVisuals
+    layers:
+      enum.LockVisualLayers.Lock: Front
+  # KS14 end
   - type: Destructible
     thresholds:
     - trigger:

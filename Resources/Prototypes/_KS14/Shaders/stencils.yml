@@ -6,3 +6,37 @@
     ref: 1
     op: Keep
     func: Equal
+
+# A second stencil mask in its own bit, for masks drawn among entities. The ambient occlusion pass leaves the first
+#     bit set across every floor tile, so a mask in that bit would let through everything drawn over the floor.
+# Draws to the second stencil bit if the alpha is not set to 0, leaving the other bits as they are.
+- type: shader
+  id: KsStencilMaskSecondBit
+  kind: source
+  path: "/Textures/Shaders/stencil_mask.swsl"
+  stencil:
+    ref: 2
+    writeMask: 2
+    op: Replace
+    func: Always
+
+# Clears the second stencil bit if the alpha is not set to 0, leaving the other bits as they are.
+- type: shader
+  id: KsStencilClearSecondBit
+  kind: source
+  path: "/Textures/Shaders/stencil_mask.swsl"
+  stencil:
+    ref: 0
+    writeMask: 2
+    op: Replace
+    func: Always
+
+# Draws, lit, only where the second stencil bit is set.
+- type: shader
+  id: KsStencilSecondBitDraw
+  kind: canvas
+  stencil:
+    ref: 2
+    readMask: 2
+    op: Keep
+    func: Equal

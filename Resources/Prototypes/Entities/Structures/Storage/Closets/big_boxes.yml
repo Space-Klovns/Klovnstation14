@@ -38,7 +38,8 @@
       damageContainer: Box
     - type: Sprite
       noRot: true
-      sprite: Structures/Storage/closet.rsi
+      sprite: _KS14/Structures/Storage/closet.rsi # KS14: Structures/Storage/closet.rsi -> _KS14/Structures/Storage/closet.rsi, tgstation's closets
+      offset: 0,0.25 # KS14: tgstation's closets are 48px tall and stand on the bottom of their tile
       layers:
       - state: cardboard
         map: ["enum.StorageVisualLayers.Base"]
