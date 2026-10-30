@@ -188,6 +188,44 @@ public sealed class KsClosetDoorTest : InteractionTest
     }
 
     /// <summary>
+    ///     The overlay draws later in the frame than the system decides whether a swing is over. A swing that ends
+    ///         between the two must still be drawn at the angle the system saw, since the sprite's own door stays hidden
+    ///         until the next frame: drawn at the live time's angle, 0, the closet flickered doorless for a frame.
+    /// </summary>
+    [Test]
+    public async Task TestSwingEndingBeforeTheDrawKeepsItsAngle()
+    {
+        await SpawnTarget(ClosetPrototype);
+        await SetOpen(true);
+        await WaitOutSwing();
+
+        TimeSpan duration = default;
+        await Client.WaitPost(() => duration = ClientDoor.Duration);
+
+        await SetOpen(false);
+
+        float frameAngle = default;
+        await Client.WaitAssertion(() =>
+        {
+            var doorSystem = CEntMan.System<KsClosetDoorSystem>();
+            Assert.That(doorSystem.IsClosing((ClientCloset, ClientDoor)), Is.True, "closing didn't start a swing");
+            frameAngle = doorSystem.GetDoorAngle((ClientCloset, ClientDoor));
+        });
+
+        // Past the swing's end in real time, with no frame since.
+        await Task.Delay(duration + TimeSpan.FromMilliseconds(100));
+        await Client.WaitAssertion(() =>
+        {
+            var doorSystem = CEntMan.System<KsClosetDoorSystem>();
+            Assert.That(doorSystem.IsAnimating(ClientCloset), Is.True, "the swing ended without a frame, so this test checks nothing");
+            Assert.That(DoorLayerVisible(), Is.False);
+            Assert.That(doorSystem.GetDoorAngle((ClientCloset, ClientDoor)), Is.EqualTo(frameAngle),
+                "the door's angle moved on between frames, so the overlay can draw a swing the system hasn't seen end");
+            Assert.That(frameAngle, Is.GreaterThan(0f), "the swing was already shut when it started");
+        });
+    }
+
+    /// <summary>
     ///     Going into a container zeroes an entity's rotation. What a closing closet draws inside it still faces the
     ///         way it did before it went in.
     /// </summary>

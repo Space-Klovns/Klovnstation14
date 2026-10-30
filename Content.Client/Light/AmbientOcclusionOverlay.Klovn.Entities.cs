@@ -19,6 +19,15 @@ public sealed partial class AmbientOcclusionOverlay
     //      and sampling it costs a quarter. The blur's radius is in texture coordinates, so it is unchanged.
     private const int TargetResolutionDivisor = 2;
 
+    // A pile of items blurs into one blob: past the first few on a tile, another silhouette changes nothing visible.
+    private const int MaxItemsPerTile = 3;
+
+    // Barely visible sprites (faded wallmounts, cloaked things) cast nothing visible either.
+    private const float MinCasterAlpha = 0.1f;
+
+    // Items drawn so far this frame per world tile, for MaxItemsPerTile.
+    private readonly Dictionary<Vector2i, int> _itemsPerTile = new();
+
     private readonly List<Entity<KsAmbientOcclusionCasterComponent, TransformComponent>> _cachedCasters = new();
 
     // Gathered by DrawEntityAmbientOcclusion for the surface pass; see AmbientOcclusionOverlay.Klovn.Surfaces.cs.
@@ -58,6 +67,7 @@ public sealed partial class AmbientOcclusionOverlay
         }
 
         _cachedCasters.Clear();
+        _itemsPerTile.Clear();
         _entManager.System<KsAmbientOcclusionCasterSystem>().QueryAabb(_cachedCasters, mapId, worldAabb);
 
         if (_cachedCasters.Count == 0)
@@ -70,11 +80,22 @@ public sealed partial class AmbientOcclusionOverlay
         {
             if (!_spriteQuery.TryComp(uid, out var spriteComponent)
                 || !spriteComponent.Visible
-                || spriteComponent.DrawDepth >= KsAmbientOcclusionCasterSystem.MinEffectDrawDepth)
+                || spriteComponent.DrawDepth >= KsAmbientOcclusionCasterSystem.MinEffectDrawDepth
+                || spriteComponent.Color.A < MinCasterAlpha)
                 continue;
 
             var spriteEntity = new Entity<SpriteComponent>(uid, spriteComponent);
             var (worldPosition, worldRotation) = transformSystem.GetWorldPositionRotation(transformComponent);
+
+            if (casterComponent.IsItem)
+            {
+                var tile = new Vector2i((int)MathF.Floor(worldPosition.X), (int)MathF.Floor(worldPosition.Y));
+                _itemsPerTile.TryGetValue(tile, out var itemCount);
+                if (itemCount >= MaxItemsPerTile)
+                    continue;
+
+                _itemsPerTile[tile] = itemCount + 1;
+            }
 
             // Nothing drawn means the sprite is all light (holograms, glowing signs), with no body to occlude with.
             if (!DrawSilhouette(worldHandle, spriteSystem, spriteEntity, worldPosition, worldRotation, eyeRotation, worldToTargetMatrix))

@@ -43,6 +43,14 @@ public sealed partial class KsClosetDoorSystem : EntitySystem
     /// </summary>
     public const float BackFacingAngle = 90f;
 
+    /// <summary>
+    ///     The real time as of this frame's <see cref="FrameUpdate"/>. Swings are timed by it rather than by the live
+    ///         clock, so the overlay, drawing later in the frame, sees the same swing this system just decided on: a
+    ///         swing that ended between the two would be drawn at no angle while the sprite's door was still hidden,
+    ///         and the closet would flicker doorless for a frame.
+    /// </summary>
+    private TimeSpan _frameRealTime;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -152,7 +160,8 @@ public sealed partial class KsClosetDoorSystem : EntitySystem
     {
         base.FrameUpdate(frameTime);
 
-        var now = _gameTiming.RealTime;
+        _frameRealTime = _gameTiming.RealTime;
+        var now = _frameRealTime;
         var animatingEnumerator = EntityQueryEnumerator<KsClosetDoorAnimatingComponent, KsClosetDoorVisualsComponent, SpriteComponent>();
         while (animatingEnumerator.MoveNext(out var uid, out var animatingComponent, out var doorComponent, out var spriteComponent))
         {
@@ -223,8 +232,11 @@ public sealed partial class KsClosetDoorSystem : EntitySystem
     }
 
     /// <summary>
-    ///     How far the door is swung open right now, in degrees: 0 is shut.
+    ///     How far the door is swung open as of this frame, in degrees: 0 is shut.
     /// </summary>
+    /// <remarks>
+    ///     A swing that started this frame, after <see cref="FrameUpdate"/>, is at its start until the next one.
+    /// </remarks>
     public float GetDoorAngle(Entity<KsClosetDoorVisualsComponent> entity)
     {
         var open = entity.Comp.Open == true;

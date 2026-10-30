@@ -113,7 +113,7 @@ public abstract partial class KsClosetDoorOverlay : Overlay
     /// <summary>
     ///     Whether this pass draws anything for a door swung to <paramref name="angle"/>.
     /// </summary>
-    protected abstract bool DrawsAt(float angle, bool closing);
+    protected abstract bool DrawsAt(float angle, bool animating, bool closing);
 
     /// <summary>
     ///     Draws one closet's part of this pass.
@@ -194,7 +194,7 @@ public abstract partial class KsClosetDoorOverlay : Overlay
             var doorEntity = new Entity<KsClosetDoorVisualsComponent>(treeEntry.Uid, treeEntry.Component);
             var angle = _doorSystem.GetDoorAngle(doorEntity);
             var closing = _doorSystem.IsClosing(doorEntity);
-            if (!DrawsAt(angle, closing))
+            if (!DrawsAt(angle, _doorSystem.IsAnimating(doorEntity.Owner), closing))
                 continue;
 
             if (!_spriteQuery.TryComp(doorEntity.Owner, out var spriteComponent) ||
@@ -673,9 +673,11 @@ public abstract partial class KsClosetDoorOverlay : Overlay
 public sealed partial class KsClosetDoorFrontOverlay(ShaderPrototype snapShader, ShaderPrototype snapUnshadedShader)
     : KsClosetDoorOverlay((int)DrawDepth.OverMobs, snapShader, snapUnshadedShader)
 {
-    protected override bool DrawsAt(float angle, bool closing)
+    protected override bool DrawsAt(float angle, bool animating, bool closing)
     {
-        return angle > 0f && angle < KsClosetDoorSystem.BackFacingAngle;
+        // At 0 while swinging, too: the sprite's own door is hidden until the swing is over, and a swing can start
+        //     there, with nothing else to draw the door.
+        return (angle > 0f || animating) && angle < KsClosetDoorSystem.BackFacingAngle;
     }
 
     protected override void DrawCloset(in DrawContext context, in DrawEntry entry)
@@ -698,7 +700,7 @@ public sealed partial class KsClosetDoorBackOverlay(
     KsClosetDoorOcclusionShaders occlusionShaders)
     : KsClosetDoorOverlay((int)DrawDepth.SmallObjects, snapShader, snapUnshadedShader, occlusionShaders)
 {
-    protected override bool DrawsAt(float angle, bool closing)
+    protected override bool DrawsAt(float angle, bool animating, bool closing)
     {
         return closing || angle >= KsClosetDoorSystem.BackFacingAngle;
     }
