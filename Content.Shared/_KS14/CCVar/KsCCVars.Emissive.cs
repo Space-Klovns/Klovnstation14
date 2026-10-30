@@ -20,5 +20,5 @@ public sealed partial class KsCCVars
     /// How far the emissive bloom spreads, as a blur multiplier.
     /// </summary>
     public static readonly CVarDef<float> EmissiveBloomRadius =
-        CVarDef.Create("klovn.emissive.bloom_radius", 7f, CVar.CLIENTONLY);
+        CVarDef.Create("klovn.emissive.bloom_radius", 7.5f, CVar.CLIENTONLY);
 }

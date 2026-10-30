@@ -28,7 +28,7 @@ public sealed partial class AmbientOcclusionOverlay
     private readonly OverlayResourceCache<CachedResources> _lowerLevelResources = new();
 
     // A pile of items blurs into one blob: past the first few on a tile, another silhouette changes nothing visible.
-    private const int MaxItemsPerTile = 3;
+    private const int MaxItemsPerTile = 10;
 
     // Barely visible sprites (faded wallmounts, cloaked things) cast nothing visible either.
     private const float MinCasterAlpha = 0.1f;
