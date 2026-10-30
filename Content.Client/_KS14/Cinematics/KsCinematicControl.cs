@@ -9,7 +9,7 @@ namespace Content.Client._KS14.Cinematics;
 /// <summary>
 ///     One shot of a cinematic. Animated states are stretched or squashed to fit <paramref name="Duration"/>.
 /// </summary>
-public readonly record struct KsCinematicScene(RSI.State State, TimeSpan Duration);
+public readonly record struct KsCinematicShot(RSI.State State, TimeSpan Duration);
 
 /// <summary>
 ///     Full-window control that plays a sequence of RSI states over a black background.
@@ -19,7 +19,7 @@ public sealed partial class KsCinematicControl : Control
 {
     [Dependency] private IGameTiming _timing = default!;
 
-    private readonly KsCinematicScene[] _scenes;
+    private readonly KsCinematicShot[] _scenes;
     private readonly TimeSpan _startTime;
     private readonly TimeSpan _fadeIn;
     private readonly TimeSpan _fadeOut;
@@ -30,7 +30,7 @@ public sealed partial class KsCinematicControl : Control
 
     public bool Finished => Elapsed >= Duration;
 
-    public KsCinematicControl(KsCinematicScene[] scenes, TimeSpan fadeIn, TimeSpan fadeOut)
+    public KsCinematicControl(KsCinematicShot[] scenes, TimeSpan fadeIn, TimeSpan fadeOut)
     {
         IoCManager.InjectDependencies(this);
 
@@ -96,7 +96,7 @@ public sealed partial class KsCinematicControl : Control
         return last.State.GetFrame(RsiDirection.South, last.State.DelayCount - 1);
     }
 
-    private static Texture GetSceneFrame(KsCinematicScene scene, TimeSpan elapsed)
+    private static Texture GetSceneFrame(KsCinematicShot scene, TimeSpan elapsed)
     {
         var state = scene.State;
         if (!state.IsAnimated || state.AnimationLength <= 0f)

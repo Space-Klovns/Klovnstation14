@@ -215,6 +215,25 @@ namespace Content.Server.Nuke
         /// </summary>
         [ViewVariables]
         public (ResolvedSoundSpecifier Sound, TimeSpan StartTime)? PlayedAlertSoundInfo;
+
+        /// <summary>
+        ///     Whether the explosion itself has happened. <see cref="Exploded"/> is set earlier, when the cinematic
+        ///         leading up to it starts.
+        /// </summary>
+        [ViewVariables]
+        public bool KsDetonated;
+
+        /// <summary>
+        ///     The cinematic everyone sees when the nuke detonates.
+        /// </summary>
+        [DataField]
+        public ProtoId<Content.Shared._KS14.Cinematics.KsCinematicPrototype> KsCinematic = "KsCinematicNukeWin";
+
+        /// <summary>
+        ///     The cinematic everyone sees instead when the nuclear operatives' shuttle is on the station's map.
+        /// </summary>
+        [DataField]
+        public ProtoId<Content.Shared._KS14.Cinematics.KsCinematicPrototype> KsShuttleDestroyedCinematic = "KsCinematicNukeTotalAnnihilation";
         // KS14 end
 
         /// <summary>

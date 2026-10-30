@@ -129,6 +129,7 @@ public sealed partial class TestPair : RobustIntegrationTest.TestPair
             entSysMan.LoadExtraSystemType<DeviceNetworkTestSystem>();
             entSysMan.LoadExtraSystemType<TestDestructibleListenerSystem>();
             entSysMan.LoadExtraSystemType<ChemicalFireEventListenerSystem>(); // KS14
+            entSysMan.LoadExtraSystemType<Tests._KS14.Nuke.KsNukeExplodedListenerSystem>(); // KS14
         };
         return opts;
     }

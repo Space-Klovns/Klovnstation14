@@ -77,3 +77,8 @@
   license: "CC0-1.0"
   copyright: "Made by ArcaneMusic, taken from https://github.com/tgstation/tgstation at commit e6c9da8511c11d6bb696a306685885e972a079ca, converted from STEREO to MONO for Klovnstation 14"
   source: "https://github.com/tgstation/tgstation/blob/e6c9da8511c11d6bb696a306685885e972a079ca/sound/effects/node_victory.ogg"
+
+- files: ["ghost.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from https://github.com/tgstation/tgstation at commit e6c9da8511c11d6bb696a306685885e972a079ca"
+  source: "https://github.com/tgstation/tgstation/blob/e6c9da8511c11d6bb696a306685885e972a079ca/sound/effects/ghost.ogg"
