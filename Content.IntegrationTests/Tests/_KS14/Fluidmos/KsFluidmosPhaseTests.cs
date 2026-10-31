@@ -29,6 +29,9 @@ public sealed class KsFluidmosPhaseTests : GameTest
     private static readonly KsFluidReagentKey PlasmaKey = new(PlasmaReagent, null);
     private static readonly KsFluidReagentKey TritiumKey = new(TritiumReagent, null);
 
+    private static readonly ProtoId<ReagentPrototype> AmmoniaReagent = "Ammonia";
+    private static readonly KsFluidReagentKey AmmoniaKey = new(AmmoniaReagent, null);
+
     /// <summary>
     ///     A pipe node's volume, which the Hertz–Knudsen tuning targets.
     /// </summary>
@@ -177,6 +180,55 @@ public sealed class KsFluidmosPhaseTests : GameTest
 
             Assert.That(pressurised.GetMoles(Gas.WaterVapor), Is.LessThan(open.GetMoles(Gas.WaterVapor) * 0.5f),
                 "Pressurised water boiled as fast as water free to flash.");
+        });
+    }
+
+    /// <summary>
+    ///     Warm liquid let into an empty net, as through an expansion valve, flashes until what it boiled has raised the
+    ///         net to the liquid's saturation pressure: it lands at <c>Tb(P)</c>, with as much vapor as its own sensible
+    ///         heat paid for.
+    /// </summary>
+    [Test]
+    public async Task LiquidEnteringALowPressureNetFlashesToItsBoilingPoint()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var atmosphereSystem = server.System<AtmosphereSystem>();
+        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(propertiesSystem.TryGetProperties(AmmoniaReagent, out var ammonia));
+            // Room-temperature liquid, far above its boiling point at the pressure an empty net offers.
+            var startTemperature = Atmospherics.T20C;
+            Assert.That(startTemperature, Is.GreaterThan(ammonia!.BoilingPoint), "Ammonia wouldn't flash at room temperature.");
+
+            // Enough that the flash, at a few percent of it, fills the net long before the liquid is gone.
+            const float liquidUnits = 4000f;
+            var mixture = MakePipe(startTemperature);
+            mixture.Fluid = new KsFluidMixture();
+            mixture.Fluid.AddLiquid(AmmoniaKey, liquidUnits);
+            var startHeatCapacity = atmosphereSystem.GetHeatCapacity(mixture, applyScaling: false);
+
+            for (var i = 0; i < 40; i++)
+                Step(phaseSystem, gameTiming, mixture);
+
+            var landing = KsPhaseMath.BoilingPointAt(ammonia.VaporizationEntropy, ammonia.BoilingPoint, mixture.Pressure);
+            // What the liquid's heat pays for, landing there: C0 T0 = (C_l (u0 - v) + C_v v) T + L v.
+            var expectedVaporUnits = (startHeatCapacity * startTemperature - ammonia.SpecificHeat * liquidUnits * mixture.Temperature) /
+                                     (ammonia.LatentHeat + (ammonia.VaporHeatCapacityPerUnit - ammonia.SpecificHeat) * mixture.Temperature);
+            var vaporUnits = mixture.GetMoles(Gas.Ammonia) / ammonia.MolesPerUnit;
+            Assert.That(mixture.Fluid!.TryGetAmount(AmmoniaKey, out var left));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(mixture.Temperature, Is.LessThan(startTemperature - 10f), "The liquid didn't chill by flashing.");
+                Assert.That(mixture.Temperature, Is.EqualTo(landing).Within(0.5f), "The flashed liquid didn't land at its boiling point at the net's pressure.");
+                Assert.That(left.Liquid, Is.GreaterThan(0.5f * liquidUnits), "The flash boiled off more than the liquid's heat could pay for.");
+                Assert.That(vaporUnits, Is.EqualTo(expectedVaporUnits).Within(0.01f * expectedVaporUnits),
+                    "The flash fraction isn't what the energy balance gives.");
+            }
         });
     }
 
