@@ -299,6 +299,8 @@ public sealed class KsPredictedSpillTest : InteractionTest
 
         // The states that follow: drawn bigger until the server's spill lands, and never twice over.
         var shrankOn = -1;
+        var shrankWhy = "";
+        var lastNetworkedVolume = networkedVolumeBefore;
         var doubleCountedOn = -1;
         var landedOn = -1;
         for (var tick = 0; tick < 20; tick++)
@@ -310,12 +312,19 @@ public sealed class KsPredictedSpillTest : InteractionTest
             {
                 var serverDrawn = ServerDrawn();
                 var drawn = CEntMan.System<KsPredictedSpillSystem>().GetDrawnVolume(clientPuddleUid, serverDrawn);
-                var landed = serverDrawn > serverDrawnBefore + (drawnWithTopUp - serverDrawnBefore) * 0.5f;
-
-                if (landed && landedOn < 0)
+                // The server's spill lands as a jump in its puddle; evaporation only ever takes away.
+                var networkedVolume = NetworkedVolume();
+                if ((float)(networkedVolume - lastNetworkedVolume) > 0.5f * pendingUnits && landedOn < 0)
                     landedOn = currentTick;
-                if (!landed && drawn < drawnWithTopUp - 0.001f && shrankOn < 0)
+                lastNetworkedVolume = networkedVolume;
+                var landed = landedOn >= 0;
+                // By how far it is drawn above the server's puddle, not by its size: the server's puddle evaporates
+                //      meanwhile, and the top-up rightly follows it down.
+                if (!landed && drawn - serverDrawn < drawnWithTopUp - serverDrawnBefore - 0.001f && shrankOn < 0)
+                {
                     shrankOn = currentTick;
+                    shrankWhy = $"Drawn {drawn} over the server's {serverDrawn}, from {drawnWithTopUp} over {serverDrawnBefore}.";
+                }
                 if (drawn > drawnWithTopUp + (drawnWithTopUp - serverDrawnBefore) * 0.5f && doubleCountedOn < 0)
                     doubleCountedOn = currentTick;
             });
@@ -323,7 +332,7 @@ public sealed class KsPredictedSpillTest : InteractionTest
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(shrankOn, Is.EqualTo(-1), $"The top-up stopped being drawn on tick {shrankOn}, before the server's spill landed.");
+            Assert.That(shrankOn, Is.EqualTo(-1), $"The top-up stopped being drawn on tick {shrankOn}, before the server's spill landed. {shrankWhy}");
             Assert.That(doubleCountedOn, Is.EqualTo(-1), $"The top-up was drawn on top of the server's spill on tick {doubleCountedOn}.");
             Assert.That(landedOn >= 0, Is.EqualTo(serverSpills), serverSpills ? "The server's spill never reached the client." : "The puddle grew with no spill.");
         }
