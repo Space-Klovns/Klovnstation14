@@ -52,6 +52,7 @@
   - AtmosphericUpsets
   - AtmosTools
   - Gasses
+  - KsLiquidsInPipes # KS14
 
 - type: guideEntry
   id: GasManipulation

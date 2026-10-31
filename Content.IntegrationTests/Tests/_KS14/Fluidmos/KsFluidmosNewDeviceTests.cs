@@ -237,8 +237,8 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
             Assert.That(propertiesSystem.TryGetProperties(WaterReagent, out var water));
             var valve = server.EntMan.GetComponent<KsExpansionValveComponent>(valveUid);
 
-            // An evaporator fed hot liquid, part of which flashes, and a compressor of fixed displacement drawing the
-            //      vapor off: the more the valve opens, the more vapor and the higher the pressure. Started shut, so the
+            // The head of an evaporator, fed hot liquid, part of which flashes, and a compressor of fixed displacement
+            //      drawing the vapor off: the more the valve opens, the more vapor and the higher the pressure. Started shut, so the
             //      valve has to find its opening.
             const float setpoint = 5f;
             const float inletTemperature = 360f;
@@ -266,6 +266,10 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
                 phaseSystem.UpdatePhases(outlet.Air, holder: null);
 
                 outlet.Air.AdjustMoles(Gas.WaterVapor, -displacement * deltaTime * outlet.Air.GetMoles(Gas.WaterVapor));
+
+                // What doesn't flash goes on into the evaporator, rather than pooling here to flash in bursts.
+                if (outlet.Air.Fluid is { LiquidUnits: > 0f })
+                    outlet.Air.RemoveLiquidRatio(1f);
                 pressures.Add(outlet.Air.Pressure);
             }
 
@@ -283,6 +287,7 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
             {
                 Assert.That(mean, Is.EqualTo(setpoint).Within(0.05f * setpoint), "The automatic valve didn't hold its pressure on average.");
                 Assert.That(worst, Is.LessThan(0.25f * setpoint), "The automatic valve swung far off its setpoint.");
+                Assert.That(valve.Opening, Is.InRange(0.02f, 0.98f), "The valve ended shut or wide open, so the test didn't exercise its control.");
             }
         });
     }

@@ -9,6 +9,22 @@ public sealed partial class HeatExchangerSystem
     [Dependency] private KsFluidmosPhaseSystem _ksFluidmosPhaseSystem = default!;
 
     /// <summary>
+    ///     Takes <paramref name="moles"/> of gas from <paramref name="source"/>, and the same share of its liquid, as
+    ///         vapor flowing along a pipe sweeps its liquid with it.
+    /// </summary>
+    /// <remarks>
+    ///     The radiator works out its flow from the gas's pressure difference alone. Taking it by
+    ///         <see cref="GasMixture.TransferMoles"/>, which counts liquid too, would move only a sliver of that gas out of
+    ///         a net holding much liquid, and a condenser or evaporator full of refrigerant would choke on its own liquid,
+    ///         with its pressure falling steeply from one radiator to the next.
+    /// </remarks>
+    private static GasMixture KsRemoveGasShare(GasMixture source, float moles)
+    {
+        var gasMoles = source.TotalMoles;
+        return gasMoles > 0f ? source.RemoveRatio(MathF.Min(moles / gasMoles, 1f)) : source.Remove(moles);
+    }
+
+    /// <summary>
     ///     Lets the packet passing the radiator condense or boil, with its walls carrying the latent heat to or from its
     ///         surroundings. Without this, vapor a condenser cools only condenses in the pipe after it, whose latent heat
     ///         nothing removes, and a loop whose valve passes only liquid stalls with none.

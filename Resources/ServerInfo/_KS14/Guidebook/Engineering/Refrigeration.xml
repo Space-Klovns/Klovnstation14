@@ -1,0 +1,47 @@
+<Document>
+  # Refrigeration
+  A refrigerator pumps heat out of one place and dumps it somewhere else. It needs no freezer: a loop of pipe, a pump, radiators and an [textlink="expansion valve" link="KsFluidDevices"] will cool a room far below anything the air around you could.
+
+  <Box>
+    <GuideEntityEmbed Entity="GasVolumePump"/>
+    <GuideEntityEmbed Entity="HeatExchanger"/>
+    <GuideEntityEmbed Entity="KsExpansionValve"/>
+    <GuideEntityEmbed Entity="HeatExchanger"/>
+    <GuideEntityEmbed Entity="AmmoniaCanister"/>
+  </Box>
+
+  ## How it works
+  It runs on a refrigerant: something that is a liquid at high pressure and a vapor at low pressure at the temperatures you care about. Ammonia is the easy one.
+  - [bold]The compressor[/bold] squeezes the refrigerant vapor into the high side. Squeezing it raises its boiling point above the temperature outside.
+  - [bold]The condenser[/bold] is a run of radiators somewhere you don't mind warming. The hot vapor gives up its heat there and condenses into liquid.
+  - [bold]The expansion valve[/bold] lets that liquid into the low side, where its boiling point is far below the room's.
+  - [bold]The evaporator[/bold] is a run of radiators in the room you want cold. The cold liquid boils inside them, taking the room's heat with it.
+  - The compressor draws the vapor back off the evaporator, and round it goes.
+
+  ## Building one
+  1. Lay a closed loop: compressor, condenser radiators, expansion valve, evaporator radiators, and back to the compressor's inlet. Gas flows from a pump's and a valve's inlet to their outlet, so mind which way they face.
+  2. Put the condenser where its heat can go: outside on lattice, in a big room, or out in space.
+  3. Put the evaporator in the room to cool. A sealed room cools fastest.
+  4. Charge the loop with refrigerant from a canister at a connector port. Keep it pure: no air in the loop.
+  5. Turn the compressor on, set the valve to hold its outlet pressure, and pick a pressure. The valve's window tells you what temperature that boils at.
+
+  The loop starts from nothing but vapor. Within a minute or so the condenser fills with liquid, the valve starts passing it, and the evaporator turns cold. Check with a gas analyzer: liquid in the condenser radiators, a cold evaporator, and the valve showing a steady flow mean it is working.
+
+  ## Getting it right
+  - [bold]Use a volume pump as the compressor.[/bold] A pressure pump empties the low side into near vacuum, which runs the evaporator far colder than you set and starves the valve. A volume pump draws a steady amount, as a real compressor does.
+  - [bold]If the valve sits wide open and never reaches its pressure[/bold], the compressor is drawing more than the valve can feed. Turn the pump's rate down, or charge more refrigerant.
+  - [bold]A condenser runs warmer than its surroundings.[/bold] That is how it gets rid of the heat, and it is why its liquid makes it to the valve. More condenser radiators let it run cooler and at a lower pressure.
+  - [bold]A condenser can't be too hot.[/bold] Above a refrigerant's critical temperature nothing condenses, however hard you pump. Nitrous oxide's is barely above room temperature, so give it a condenser in space. Ammonia condenses comfortably in an ordinary room.
+  - [bold]Pick the pump for the pressure.[/bold] Nitrous oxide needs more pressure than a pressure pump can give to condense at room temperature; a volume pump gets there.
+  - [bold]Pressure falls along a run of radiators[/bold], so the far end of the evaporator runs colder than the valve says, and the far end of the condenser at a lower pressure.
+  - [bold]An evaporator with nothing to cool floods.[/bold] Once the room is as cold as the evaporator, the liquid has no heat left to boil it and collects in the pipes. That is harmless: it boils again as soon as the room warms.
+  - [bold]Don't freeze your refrigerant.[/bold] Ammonia freezes not far below its boiling point. Ice in the evaporator doesn't flow, and stays until the pipe warms.
+
+  ## Safety
+  - [bold]Keep oxygen out of an ammonia loop.[/bold] Ammonia burns with oxygen once it is warm, and the high side of a loop is warm.
+  - [bold]A broken loop spills its refrigerant.[/bold] Liquid ammonia boils off into the room as ammonia gas, which is harmful to breathe.
+  - [bold]Pumps heat their room.[/bold] Most of the compressor's heat goes into the room it stands in, so keep it out of the room you are cooling.
+
+  ## Moving heat between pipes
+  Nothing moves heat straight from one pipe into another. To cool a pipe with your refrigerator, put its radiators and the evaporator's radiators together in a small sealed chamber, and let the chamber's air carry the heat between them.
+</Document>

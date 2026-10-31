@@ -98,7 +98,7 @@
   parent: GasBinaryBase
   id: KsExpansionValve
   name: expansion valve
-  description: Lets liquid refrigerant through to the low side, where it flashes and chills. Can hold a set superheat by itself.
+  description: Lets liquid refrigerant through to the low side, where it flashes and chills. Can hold its outlet at a set pressure by itself.
   placement:
     mode: AlignAtmosPipeLayers
   components:
@@ -125,3 +125,5 @@
       enum.KsExpansionValveUiKey.Key:
         type: KsExpansionValveBoundUserInterface
   - type: KsExpansionValve
+    # Sized to feed a volume pump at its full rate; automatic mode throttles it down.
+    conductance: 40

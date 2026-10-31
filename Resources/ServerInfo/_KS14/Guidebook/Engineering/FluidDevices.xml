@@ -1,0 +1,34 @@
+<Document>
+  # Fluid Devices
+  Three fittings for working with [textlink="liquids in pipes" link="KsLiquidsInPipes"].
+
+  ## Fluid port
+  <Box>
+    <GuideEntityEmbed Entity="KsFluidPort"/>
+  </Box>
+  A pipe fitting with a small tank, and the only place pipes meet plumbing. Pour reagents into its tank, or plumb them in, and it feeds them into the pipe as liquid. Switch it to extract with its verb, and it draws the pipe's liquid into its tank instead, where plumbing can take it away or you can drain it.
+  - It moves liquid only. Ice and gas stay in the pipe.
+  - Reagents keep what makes them special on the way through: blood stays the blood of whoever it came from.
+  - While it is extracting it won't accept anything from plumbing, so a loop of plumbing can't feed it its own output.
+
+  ## Phase separator
+  <Box>
+    <GuideEntityEmbed Entity="KsPhaseSeparator"/>
+  </Box>
+  Pumps gas and vapor straight through and pushes liquid out of its side. Use it to pull the water out of a wet pipe, or to dry a gas.
+
+  Put a heater ahead of it and it is a still. The vapor coming off a warm mixture is richer in whatever boils easiest, so warm ethanol and water, separate it, and the vapor side carries away more of the ethanol.
+
+  ## Expansion valve
+  <Box>
+    <GuideEntityEmbed Entity="KsExpansionValve"/>
+  </Box>
+  The heart of a [textlink="refrigerator" link="KsRefrigeration"]. It lets liquid through to a lower pressure, where part of it flashes into vapor and chills what is left down to its boiling point at that pressure. Once there is no liquid at its inlet, it lets vapor through instead, so a loop that hasn't condensed anything yet still moves.
+
+  Its window sets how far it is open, and shows:
+  - how much of the liquid flashes on the way through;
+  - the pressure at its outlet and the temperature the refrigerant boils at there, which is the coldest your evaporator will get;
+  - how much liquid is crossing it.
+
+  [bold]Hold outlet pressure automatically[/bold] makes it open and close itself to keep its outlet at the pressure you set. Set the pressure and you have set the temperature your evaporator boils at. Lower is colder.
+</Document>

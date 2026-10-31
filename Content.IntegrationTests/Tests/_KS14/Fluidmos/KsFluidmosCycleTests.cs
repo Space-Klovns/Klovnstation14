@@ -7,7 +7,7 @@ using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos;
-using Content.Shared.Atmos.Components;
+using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Power.EntitySystems;
 using Robust.Shared.GameObjects;
@@ -57,6 +57,7 @@ public sealed class KsFluidmosCycleTests : GameTest
 
         const float chargePressure = 500f;
         const float evaporatorPressure = 150f;
+        const float compressorRate = 100f;
         var roomFloor = new List<Vector2i>();
         for (var x = 5; x <= 7; x++)
         for (var y = 0; y <= 4; y++)
@@ -161,13 +162,14 @@ public sealed class KsFluidmosCycleTests : GameTest
                 net.AdjustMoles(Gas.Ammonia, chargePressure * net.Volume / (Atmospherics.R * Atmospherics.T20C));
             }
 
-
             // The loop is closed: the last evaporator feeds the pump.
             Assert.That(Node(evaporatorUids[^1], "outlet").Air, Is.SameAs(Node(pumpUid, "inlet").Air), "The evaporator doesn't return to the pump.");
             Assert.That(Node(condenserUids[^1], "outlet").Air, Is.SameAs(Node(valveUid, "inlet").Air), "The condenser doesn't feed the valve.");
             Assert.That(Node(valveUid, "outlet").Air, Is.SameAs(Node(evaporatorUids[0], "inlet").Air), "The valve doesn't feed the evaporator.");
 
-            entityManager.GetComponent<GasVolumePumpComponent>(pumpUid).Enabled = true;
+            var pump = entityManager.GetComponent<GasVolumePumpComponent>(pumpUid);
+            pump.Enabled = true;
+            pump.TransferRate = compressorRate;
 
             entityManager.EventBus.RaiseLocalEvent(valveUid, new Content.Shared._KS14.Fluidmos.Devices.KsExpansionValveSetAutomaticMessage(true));
             entityManager.EventBus.RaiseLocalEvent(valveUid, new Content.Shared._KS14.Fluidmos.Devices.KsExpansionValveSetPressureMessage(evaporatorPressure));
@@ -185,46 +187,67 @@ public sealed class KsFluidmosCycleTests : GameTest
         {
             var moles = 0f;
             foreach (var net in nets)
-                moles += net.GetMoles(Gas.Ammonia) + ((net.Fluid?.LiquidUnits ?? 0f) + (net.Fluid?.SolidUnits ?? 0f)) * ammonia!.MolesPerUnit;
+            {
+                var condensedUnits = (net.Fluid?.LiquidUnits ?? 0f) + (net.Fluid?.SolidUnits ?? 0f);
+                moles += net.GetMoles(Gas.Ammonia) + condensedUnits * ammonia!.MolesPerUnit;
+            }
+
             return moles;
         }
 
-        string Liquids()
+        string Describe()
         {
             var text = "";
             foreach (var net in nets)
-                text += $"[{net.Pressure:0}/{net.Temperature:0.0}/{net.Fluid?.LiquidUnits ?? 0f:0}] ";
+                text += $"[{net.Pressure:0} kPa {net.Temperature:0.0} K {net.Fluid?.LiquidUnits ?? 0f:0}u] ";
             return text;
         }
 
-        string Describe(GasMixture air)
-        {
-            return $"{air.Pressure,7:0} kPa {air.Temperature,6:0.0} K liq {air.Fluid?.LiquidUnits ?? 0f,7:0}u";
-        }
-
+        // Ten minutes, sampled every fifteen seconds; the last third is the steady state the loop settles into.
+        const int samples = 40;
+        const int settledFrom = 2 * samples / 3;
         var ticksPerSample = (int)(15f * gameTiming.TickRate);
-        var startRoom = 0f;
+        var startMoles = 0f;
+        var endMoles = 0f;
         var endRoom = 0f;
-        for (var sample = 0; sample <= 40; sample++)
-        {
-            if (sample > 0)
-                await server.WaitRunTicks(ticksPerSample);
+        var settledFlow = 0f;
+        var settledEvaporatorPressure = 0f;
+        var settledCondenserPressure = 0f;
 
+        await server.WaitPost(() => startMoles = AmmoniaMoles());
+        for (var sample = 1; sample <= samples; sample++)
+        {
+            await server.WaitRunTicks(ticksPerSample);
             await server.WaitPost(() =>
             {
                 var valve = entityManager.GetComponent<KsExpansionValveComponent>(valveUid);
-                var room = RoomTemperature();
-                if (sample == 0)
-                    startRoom = room;
-                endRoom = room;
-                TestContext.Out.WriteLine(
-                    $"t={sample * 15,4}s room {room,6:0.0} K | suction {Describe(Node(pumpUid, "inlet").Air)} | discharge {Describe(Node(pumpUid, "outlet").Air)} | " +
-                    $"cond2 {Describe(Node(condenserUids[0], "outlet").Air)} | receiver {Describe(Node(valveUid, "inlet").Air)} | " +
-                    $"evap in {Describe(Node(valveUid, "outlet").Air)} | evap3 {Describe(Node(evaporatorUids[2], "outlet").Air)} | " +
-                    $"valve {valve.Opening:0.00} {valve.FlowRate:0}u/s Tb {valve.OutletBoilingPoint:0.0} | NH3 {AmmoniaMoles():0} mol | liquid by net {Liquids()}");
+                endRoom = RoomTemperature();
+                endMoles = AmmoniaMoles();
+                TestContext.Out.WriteLine($"t={sample * 15,4}s room {endRoom:0.0} K | valve {valve.Opening:0.00}, {valve.FlowRate:0} u/s | nets {Describe()}");
+
+                if (sample < settledFrom)
+                    return;
+
+                const float settledCount = samples - settledFrom + 1;
+                settledFlow += valve.FlowRate / settledCount;
+                settledEvaporatorPressure += Node(valveUid, "outlet").Air.Pressure / settledCount;
+                settledCondenserPressure += Node(condenserUids[0], "outlet").Air.Pressure / settledCount;
             });
         }
 
-        Assert.That(endRoom, Is.LessThan(startRoom - 5f), "The loop didn't cool its sealed room.");
+        var evaporatingTemperature = KsPhaseMath.BoilingPointAt(ammonia!.VaporizationEntropy, ammonia.BoilingPoint, evaporatorPressure);
+        var ambientSaturationPressure = KsPhaseMath.SaturationPressure(ammonia.VaporizationEntropy, ammonia.BoilingPoint, Atmospherics.T20C);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(endMoles, Is.EqualTo(startMoles).Within(1e-3f * startMoles), "The loop gained or lost refrigerant.");
+            Assert.That(settledFlow, Is.GreaterThan(0f), "No liquid reached the valve once the loop settled: it's running on vapor alone.");
+            Assert.That(settledCondenserPressure, Is.GreaterThan(ambientSaturationPressure),
+                "The condenser condenses at its surroundings' temperature, leaving its liquid no margin to reach the valve.");
+            Assert.That(settledEvaporatorPressure, Is.EqualTo(evaporatorPressure).Within(0.1f * evaporatorPressure),
+                "The valve didn't hold its evaporator pressure.");
+            Assert.That(endRoom, Is.LessThan(0.5f * (Atmospherics.T20C + evaporatingTemperature)),
+                "The sealed room didn't cool even halfway to the refrigerant's evaporating temperature.");
+        }
     }
 }

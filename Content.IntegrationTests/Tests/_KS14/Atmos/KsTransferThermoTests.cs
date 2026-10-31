@@ -181,6 +181,38 @@ public sealed class KsTransferThermoTests : GameTest
     }
 
     [Test]
+    public async Task ImmutableAirTakesTheShedHeatButVacuumDoesNot()
+    {
+        var server = Pair.Server;
+        var transferThermoSystem = server.System<KsTransferThermoSystem>();
+        const float fraction = 0.5f;
+        await OverrideCVar(Side.Server, KsCCVars.AtmosPumpCompressionHeatFraction, fraction);
+
+        await server.WaitAssertion(() =>
+        {
+            // A pump standing out under a planet's air: the bath takes the heat and stays as it was.
+            var outdoors = MakeGas(Atmospherics.OneAtmosphere, Atmospherics.T20C, (Gas.Nitrogen, 0.79f), (Gas.Oxygen, 0.21f));
+            outdoors.MarkImmutable();
+            var intoAir = MakeGas(Atmospherics.OneAtmosphere, Atmospherics.T20C, (Gas.Nitrogen, 1f));
+            var intoVacuum = MakeGas(Atmospherics.OneAtmosphere, Atmospherics.T20C, (Gas.Nitrogen, 1f));
+            var alone = MakeGas(Atmospherics.OneAtmosphere, Atmospherics.T20C, (Gas.Nitrogen, 1f));
+
+            transferThermoSystem.Apply(intoAir, Atmospherics.OneAtmosphere, Atmospherics.MaxOutputPressure, doesWork: true, heatSink: outdoors);
+            transferThermoSystem.Apply(intoVacuum, Atmospherics.OneAtmosphere, Atmospherics.MaxOutputPressure, doesWork: true, heatSink: GasMixture.SpaceGas);
+            transferThermoSystem.Apply(alone, Atmospherics.OneAtmosphere, Atmospherics.MaxOutputPressure, doesWork: true);
+
+            var fullRise = alone.Temperature - Atmospherics.T20C;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(intoAir.Temperature - Atmospherics.T20C, Is.EqualTo(fraction * fullRise).Within(0.001f * fullRise),
+                    "A pump in immutable air kept the heat it should have shed.");
+                Assert.That(outdoors.Temperature, Is.EqualTo(Atmospherics.T20C), "Immutable air warmed.");
+                Assert.That(intoVacuum.Temperature, Is.EqualTo(alone.Temperature).Within(0.05f), "Vacuum took a pump's heat.");
+            }
+        });
+    }
+
+    [Test]
     public async Task PlasmaStaysBelowIgnitionButAnOxygenPremixIgnites()
     {
         var server = Pair.Server;
