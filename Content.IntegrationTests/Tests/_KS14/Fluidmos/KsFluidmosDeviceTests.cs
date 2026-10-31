@@ -17,6 +17,7 @@ using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
 
@@ -77,6 +78,15 @@ public sealed class KsFluidmosDeviceTests : GameTest
         air.Fluid = new KsFluidMixture();
         air.Fluid.AddLiquid(WaterKey, WaterUnits);
         air.Fluid.SetAmount(EthanolKey, new KsFluidAmount(0f, 0f, EthanolVaporUnits * ethanol!.MolesPerUnit));
+    }
+
+    /// <summary>
+    ///     The centre of the test map's tile, where something unanchored spills onto it. <see cref="TestMapData.GridCoords"/>
+    ///         is the tile's corner, from which the slightest nudge spills it onto a neighbour instead.
+    /// </summary>
+    private static EntityCoordinates TileCentre(TestMapData testMap)
+    {
+        return new EntityCoordinates(testMap.Grid.Owner, testMap.Tile.GridIndices.X + 0.5f, testMap.Tile.GridIndices.Y + 0.5f);
     }
 
     private bool PuddleHas(TestMapData testMap, ProtoId<ReagentPrototype> reagent)
@@ -224,7 +234,7 @@ public sealed class KsFluidmosDeviceTests : GameTest
         var testMap = await CreateBreathableTestMap();
         EntityUid canisterUid = default;
 
-        await server.WaitPost(() => canisterUid = server.EntMan.SpawnEntity(WaterCanisterPrototype, testMap.GridCoords));
+        await server.WaitPost(() => canisterUid = server.EntMan.SpawnEntity(WaterCanisterPrototype, TileCentre(testMap)));
         await server.WaitRunTicks(5);
 
         await server.WaitPost(() =>
@@ -249,7 +259,7 @@ public sealed class KsFluidmosDeviceTests : GameTest
 
         await server.WaitPost(() =>
         {
-            var tankUid = server.EntMan.SpawnEntity(OxygenTankPrototype, testMap.GridCoords);
+            var tankUid = server.EntMan.SpawnEntity(OxygenTankPrototype, TileCentre(testMap));
             FillWithFluid(server.EntMan.GetComponent<GasTankComponent>(tankUid).Air);
             server.EntMan.DeleteEntity(tankUid);
         });
@@ -271,7 +281,7 @@ public sealed class KsFluidmosDeviceTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var tankUid = server.EntMan.SpawnEntity(OxygenTankPrototype, testMap.GridCoords);
+            var tankUid = server.EntMan.SpawnEntity(OxygenTankPrototype, TileCentre(testMap));
             var tank = new Entity<GasTankComponent>(tankUid, server.EntMan.GetComponent<GasTankComponent>(tankUid));
             Assert.That(tank.Comp.Air.FluidCapable, "Gas tank air cannot hold fluid.");
 
