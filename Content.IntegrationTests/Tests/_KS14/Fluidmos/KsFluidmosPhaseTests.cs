@@ -437,4 +437,64 @@ public sealed class KsFluidmosPhaseTests : GameTest
             }
         });
     }
+
+    /// <summary>
+    ///     Ice takes up room as liquid does: a net packed with it has the same hydraulic pressure, and pumps stop.
+    /// </summary>
+    [Test]
+    public async Task IcePackedNetsStopPumps()
+    {
+        var server = Pair.Server;
+        var atmosphereSystem = server.System<AtmosphereSystem>();
+        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(propertiesSystem.TryGetProperties(WaterReagent, out var water));
+            var inlet = MakePipe(Atmospherics.T20C);
+            inlet.AdjustMoles(Gas.Nitrogen, 5f);
+
+            var outlet = MakePipe(water!.MeltingPoint - 10f);
+            outlet.Fluid = new KsFluidMixture();
+            outlet.Fluid.SetAmount(WaterKey, new KsFluidAmount(NodeVolume / KsFluidmos.LitersPerUnit, 0f, 0f));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(outlet.Pressure, Is.GreaterThan(Atmospherics.MaxOutputPressure), "An ice-packed net has no hydraulic pressure.");
+                Assert.That(atmosphereSystem.PumpGasTo(inlet, outlet, Atmospherics.MaxOutputPressure), Is.False,
+                    "A pump kept feeding an ice-packed net.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A pump drawing from a slurry takes its liquid, and leaves the ice behind.
+    /// </summary>
+    [Test]
+    public async Task PumpDrawingFromASlurryMovesOnlyLiquid()
+    {
+        var server = Pair.Server;
+        var atmosphereSystem = server.System<AtmosphereSystem>();
+        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(propertiesSystem.TryGetProperties(WaterReagent, out var water));
+            const float iceUnits = 100f;
+            var inlet = MakePipe(water!.MeltingPoint);
+            inlet.Fluid = new KsFluidMixture();
+            inlet.Fluid.SetAmount(WaterKey, new KsFluidAmount(iceUnits, 100f, 0f));
+            AddHeadspace(inlet);
+
+            var outlet = MakePipe(water.MeltingPoint);
+            Assert.That(atmosphereSystem.PumpGasTo(inlet, outlet, Atmospherics.MaxOutputPressure), "The pump moved nothing.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(outlet.Fluid?.LiquidUnits ?? 0f, Is.GreaterThan(0f), "The pump left the slurry's liquid behind.");
+                Assert.That(outlet.Fluid?.SolidUnits ?? 0f, Is.Zero, "The pump moved ice.");
+                Assert.That(inlet.Fluid!.SolidUnits, Is.EqualTo(iceUnits).Within(0.01f), "The slurry lost its ice.");
+            }
+        });
+    }
 }
