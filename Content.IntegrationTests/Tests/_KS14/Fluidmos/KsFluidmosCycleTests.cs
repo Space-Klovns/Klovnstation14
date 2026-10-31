@@ -357,6 +357,238 @@ public sealed class KsFluidmosCycleTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     A Linde loop: nitrogen compressed, cooled to ambient, cooled further by its own returning gas, and throttled,
+    ///         chills itself a little more each pass by Joule–Thomson until part of it liquefies.
+    /// </summary>
+    /// <remarks>
+    ///     <para>No device moves heat from one pipe to another, so the counterflow exchanger is a column of one-tile sealed
+    ///         chambers of plasma, each holding a radiator from either stream: the high-pressure stream flows down through
+    ///         them north to south, and the returning stream snakes up through them east and west. One well-mixed chamber
+    ///         would only bring both streams to its own temperature; a column of them is what lets the cold end run away
+    ///         from the warm one.</para>
+    ///
+    ///     <para>Layout, x to the right and y up, for n chambers at y = 1, 3, ... 2n - 1, the warmest on top. Column x = 0 flows
+    ///         south: corner (y = 2n + 6), the compressor (2n + 5), four aftercooler radiators on lattice under the map's
+    ///         293 K air, the chambers, the valve (-1) and a corner (-2). The return runs east to x = 2, up into the coldest
+    ///         chamber, snakes up through each through x = -2 and 2, and back across the top.</para>
+    /// </remarks>
+    [Test]
+    public async Task LindeLoopLiquefiesNitrogen()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var atmosphereSystem = server.System<AtmosphereSystem>();
+        var nodeContainerSystem = server.System<NodeContainerSystem>();
+        var mapSystem = server.System<SharedMapSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+        Assert.That(server.System<KsFluidmosPropertiesSystem>().TryGetProperties(NitrogenReagent, out var nitrogen));
+        var testMap = await Pair.CreateTestMap();
+        var grid = testMap.Grid;
+
+        const int chambers = 8;
+        const float chargePressure = 3000f;
+        const float throttledPressure = 500f;
+        const float compressorRate = 100f;
+        var top = 2 * chambers - 1;
+
+        var chamberFloor = new List<Vector2i>();
+        for (var i = 0; i < chambers; i++)
+            chamberFloor.Add(new Vector2i(0, 2 * i + 1));
+
+        EntityUid pumpUid = default;
+        EntityUid valveUid = default;
+        var deviceUids = new List<EntityUid>();
+
+        await server.WaitPost(() =>
+        {
+            var air = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C };
+            air.SetMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+            air.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+            atmosphereSystem.SetMapAtmosphere(testMap.MapUid, space: false, air);
+
+            var walls = new HashSet<Vector2i>();
+            foreach (var chamber in chamberFloor)
+            {
+                for (var x = -1; x <= 1; x++)
+                for (var y = chamber.Y - 1; y <= chamber.Y + 1; y++)
+                {
+                    if (x != 0 || y != chamber.Y)
+                        walls.Add(new Vector2i(x, y));
+                }
+            }
+
+            var lattice = new Tile(server.ResolveDependency<ITileDefinitionManager>()["Lattice"].TileId);
+            for (var x = -3; x <= 3; x++)
+            for (var y = -3; y <= top + 8; y++)
+            {
+                var indices = new Vector2i(x, y);
+                var floor = walls.Contains(indices) || chamberFloor.Contains(indices);
+                mapSystem.SetTile(grid, indices, floor ? testMap.Tile.Tile : lattice);
+            }
+
+            EntityUid Spawn(EntProtoId prototype, int x, int y, Angle rotation)
+            {
+                var uid = entityManager.SpawnAtPosition(prototype, mapSystem.GridTileToLocal(grid, grid.Comp, new Vector2i(x, y)), rotation);
+                deviceUids.Add(uid);
+                return uid;
+            }
+
+            var down = Angle.Zero;
+            var across = Angle.FromDegrees(90);
+
+            foreach (var wall in walls)
+                entityManager.SpawnAtPosition(WallPrototype, mapSystem.GridTileToLocal(grid, grid.Comp, wall), down);
+
+            // The high-pressure side, flowing south: compressor, aftercooler, the chambers' radiators, the valve.
+            Spawn(CornerPrototype, 0, top + 7, down);
+            pumpUid = Spawn(PumpPrototype, 0, top + 6, down);
+            for (var y = top + 5; y >= top + 2; y--)
+                Spawn(RadiatorPrototype, 0, y, down);
+            for (var y = top + 1; y >= 0; y--)
+                Spawn(y % 2 == 1 ? RadiatorPrototype : PipePrototype, 0, y, down);
+            valveUid = Spawn(ValvePrototype, 0, -1, down);
+            Spawn(CornerPrototype, 0, -2, down);
+
+            // The return: across and up into the coldest chamber, then up through each, alternating sides.
+            Spawn(PipePrototype, 1, -2, across);
+            Spawn(CornerPrototype, 2, -2, down);
+            Spawn(PipePrototype, 2, -1, down);
+            Spawn(PipePrototype, 2, 0, down);
+            for (var i = 0; i < chambers; i++)
+            {
+                var y = 2 * i + 1;
+                // Entered from the east on even steps, from the west on odd ones; leaves by the other side.
+                var exitSide = i % 2 == 0 ? -1 : 1;
+                Spawn(PipePrototype, -exitSide, y, across);
+                Spawn(RadiatorPrototype, 0, y, across);
+                Spawn(PipePrototype, exitSide, y, across);
+                Spawn(CornerPrototype, 2 * exitSide, y, down);
+                if (i == 0)
+                    Spawn(CornerPrototype, 2, y, down);
+
+                var riseTo = i == chambers - 1 ? top + 7 : y + 2;
+                for (var rise = y + 1; rise < riseTo; rise++)
+                    Spawn(PipePrototype, 2 * exitSide, rise, down);
+                Spawn(CornerPrototype, 2 * exitSide, riseTo, down);
+            }
+
+            Spawn(PipePrototype, 1, top + 7, across);
+            server.System<SharedPowerReceiverSystem>().SetNeedsPower(pumpUid, false);
+        });
+
+        await server.WaitRunTicks(30);
+
+        var nets = new List<GasMixture>();
+        await server.WaitPost(() =>
+        {
+            foreach (var chamber in chamberFloor)
+            {
+                var tileAir = atmosphereSystem.GetTileMixture(grid.Owner, null, chamber, excite: true);
+                Assert.That(tileAir, Is.Not.Null, $"Chamber {chamber} has no air.");
+                tileAir!.Clear();
+                tileAir.Temperature = Atmospherics.T20C;
+                tileAir.SetMoles(Gas.Plasma, Atmospherics.OneAtmosphere * tileAir.Volume / (Atmospherics.R * Atmospherics.T20C));
+            }
+
+            foreach (var uid in deviceUids)
+            {
+                if (!entityManager.TryGetComponent(uid, out Content.Shared.NodeContainer.NodeContainerComponent? nodeContainer))
+                    continue;
+
+                foreach (var node in nodeContainer.Nodes.Values)
+                {
+                    // By reference: a mixture's equality compares its contents, and every net starts out the same.
+                    if (node is PipeNode { Air: { } nodeAir } && !nets.Exists(net => ReferenceEquals(net, nodeAir)))
+                        nets.Add(nodeAir);
+                }
+            }
+
+            foreach (var net in nets)
+            {
+                net.Clear();
+                net.Temperature = Atmospherics.T20C;
+                net.AdjustMoles(Gas.Nitrogen, chargePressure * net.Volume / (Atmospherics.R * Atmospherics.T20C));
+            }
+
+            Assert.That(nodeContainerSystem.TryGetNode(pumpUid, "inlet", out PipeNode? pumpInlet));
+            Assert.That(nodeContainerSystem.TryGetNode(valveUid, "outlet", out PipeNode? valveOutlet));
+            Assert.That(nets, Has.Count.EqualTo(4 + 2 * chambers + 2), "The loop isn't one closed circuit of the expected nets.");
+
+            var pump = entityManager.GetComponent<GasVolumePumpComponent>(pumpUid);
+            pump.Enabled = true;
+            pump.TransferRate = compressorRate;
+
+            entityManager.EventBus.RaiseLocalEvent(valveUid, new Content.Shared._KS14.Fluidmos.Devices.KsExpansionValveSetAutomaticMessage(true));
+            entityManager.EventBus.RaiseLocalEvent(valveUid, new Content.Shared._KS14.Fluidmos.Devices.KsExpansionValveSetPressureMessage(throttledPressure));
+        });
+
+        GasMixture ValveOutlet()
+        {
+            nodeContainerSystem.TryGetNode(valveUid, "outlet", out PipeNode? node);
+            return node!.Air;
+        }
+
+        GasMixture ValveInlet()
+        {
+            nodeContainerSystem.TryGetNode(valveUid, "inlet", out PipeNode? node);
+            return node!.Air;
+        }
+
+        float NitrogenMoles()
+        {
+            var moles = 0f;
+            foreach (var net in nets)
+            {
+                var condensedUnits = (net.Fluid?.LiquidUnits ?? 0f) + (net.Fluid?.SolidUnits ?? 0f);
+                moles += net.GetMoles(Gas.Nitrogen) + condensedUnits * nitrogen!.MolesPerUnit;
+            }
+
+            return moles;
+        }
+
+        float LiquidUnits()
+        {
+            var units = 0f;
+            foreach (var net in nets)
+                units += net.Fluid?.LiquidUnits ?? 0f;
+            return units;
+        }
+
+        var startMoles = 0f;
+        await server.WaitPost(() => startMoles = NitrogenMoles());
+
+        // An hour, in minutes.
+        var ticksPerSample = (int)(60f * gameTiming.TickRate);
+        for (var minute = 1; minute <= 60; minute++)
+        {
+            await server.WaitRunTicks(ticksPerSample);
+            await server.WaitPost(() =>
+            {
+                var chamberText = "";
+                foreach (var chamber in chamberFloor)
+                    chamberText += $"{atmosphereSystem.GetTileMixture(grid.Owner, null, chamber)!.Temperature:0} ";
+                var valve = entityManager.GetComponent<KsExpansionValveComponent>(valveUid);
+                TestContext.Out.WriteLine($"t={minute,2} min | valve in {ValveInlet().Pressure:0} kPa {ValveInlet().Temperature:0.0} K, " +
+                                          $"out {ValveOutlet().Pressure:0} kPa {ValveOutlet().Temperature:0.0} K, opening {valve.Opening:0.00} | " +
+                                          $"chambers (coldest first) {chamberText}| liquid {LiquidUnits():0.0}u");
+            });
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            var outlet = ValveOutlet();
+            var landing = KsPhaseMath.BoilingPointAt(nitrogen!.VaporizationEntropy, nitrogen.BoilingPoint, outlet.Pressure);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(NitrogenMoles(), Is.EqualTo(startMoles).Within(1e-3f * startMoles), "The loop gained or lost nitrogen.");
+                Assert.That(LiquidUnits(), Is.GreaterThan(1f), "The loop never liquefied any of its nitrogen.");
+                Assert.That(outlet.Temperature, Is.EqualTo(landing).Within(1f), "The throttled nitrogen isn't boiling at its pressure.");
+            }
+        });
+    }
+
+    private static readonly ProtoId<ReagentPrototype> NitrogenReagent = "Nitrogen";
     private static readonly ProtoId<ReagentPrototype> NitrousOxideReagent = "NitrousOxide";
 
     /// <summary>

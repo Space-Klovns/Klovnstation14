@@ -35,7 +35,7 @@
   - [bold]Pick the pump for the pressure.[/bold] Nitrous oxide needs more pressure than a pressure pump can give to condense at room temperature; a volume pump gets there.
   - [bold]Pressure falls along a run of radiators[/bold], so the far end of the evaporator runs colder than the valve says, and the far end of the condenser at a lower pressure.
   - [bold]An evaporator with nothing to cool floods.[/bold] Once the room is as cold as the evaporator, the liquid has no heat left to boil it and collects in the pipes. That is harmless: it boils again as soon as the room warms.
-  - [bold]Don't freeze your refrigerant.[/bold] Ammonia freezes not far below its boiling point. Ice in the evaporator doesn't flow, and stays until the pipe warms.
+  - [bold]Don't freeze your refrigerant.[/bold] Ammonia and nitrous oxide freeze not far below their boiling points, so the far end of an evaporator can ice up. Ice in the evaporator doesn't flow, and stays until the pipe warms.
 
   ## Safety
   - [bold]Keep oxygen out of an ammonia loop.[/bold] Ammonia burns with oxygen once it is warm, and the high side of a loop is warm.
@@ -44,4 +44,13 @@
 
   ## Moving heat between pipes
   Nothing moves heat straight from one pipe into another. To cool a pipe with your refrigerator, put its radiators and the evaporator's radiators together in a small sealed chamber, and let the chamber's air carry the heat between them.
+
+  ## Liquefying gases
+  A gas no refrigerator can condense, such as nitrogen, can still be liquefied by making it cool itself. Squeezed hard and let out through an expansion valve, nitrogen comes out a little colder than it went in. Send that cold gas back to chill the gas on its way to the valve, and each pass comes out colder than the last, until part of it comes out liquid.
+  1. Build a loop: a volume pump, a few radiators outside to shed its heat, a heat exchanger, and an expansion valve, returning through the heat exchanger to the pump.
+  2. Make the heat exchanger a column of small sealed chambers, one tile each, filled with a gas such as plasma. Run the high-pressure pipe down through every chamber with a radiator in each, and the returning pipe back up through them the other way, with its own radiator in each.
+  3. Charge the loop with nitrogen, run the pump at full rate, and set the valve to hold a low pressure. If the valve stays shut, there is too much nitrogen in the loop for the low side to reach its pressure.
+
+  It takes a while. The cold end creeps down a few degrees a minute, and liquid appears once the gas reaching the valve is about as cold as nitrogen's critical temperature. The liquid collects in the pipe after the valve.
+  - [bold]One big chamber won't do.[/bold] It only brings both pipes to its own temperature. A column of them lets the cold end pull away from the warm end, and more chambers get colder.
 </Document>
