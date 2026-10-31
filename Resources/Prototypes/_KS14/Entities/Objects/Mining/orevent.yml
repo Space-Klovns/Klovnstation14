@@ -47,7 +47,7 @@
   - type: MiningScannerViewable
   - type: KsRadarInterest # a nameless dot until discovered
     data:
-      showText: false
+      text: ""
 
 - type: entity
   parent: KsOreVentBase

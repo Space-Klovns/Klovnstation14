@@ -20,17 +20,10 @@ public sealed partial class KsRadarInterestComponent : Component
 public sealed partial class KsRadarInterestData
 {
     /// <summary>
-    ///     Text to display. If empty, then this will be the
-    ///         name of the thing.
+    ///     Text to display. If null, then this will be the
+    ///         name of the thing; if empty, the interest is a bare dot.
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadOnly)]
-    public string Text = "radar interest";
-
-    /// <summary>
-    ///     If false, the interest is drawn as a bare dot, with no <see cref="Text"/> and no name in its place.
-    /// </summary>
-    [DataField]
-    [ViewVariables(VVAccess.ReadOnly)]
-    public bool ShowText = true;
+    public string? Text;
 }

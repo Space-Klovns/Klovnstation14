@@ -1,9 +1,7 @@
+using Content.Client._KS14.Weapons.Ranged;
 using Content.Client.Gameplay;
 using Content.Shared._KS14.Weapons.Ranged;
-using Content.Shared.Chemistry.Components;
-using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Interaction;
-using Content.Shared.Storage;
 using Content.Shared.Weapons.Ranged.Components;
 using Robust.Shared.Map;
 
@@ -51,10 +49,9 @@ public sealed partial class GunSystem
         if (mouseCoordinates.MapId == MapId.Nullspace || gameplayState.GetClickedEntity(mouseCoordinates) is not { } targetUid)
             return false;
 
-        if (!HasComp<RefillableSolutionComponent>(targetUid)
-            && !HasComp<DrainableSolutionComponent>(targetUid)
-            && !HasComp<StorageComponent>(targetUid)
-            && !HasComp<ItemSlotsComponent>(targetUid))
+        var ev = new KsGunClickInteractsEvent();
+        RaiseLocalEvent(targetUid, ref ev);
+        if (!ev.Interacts)
             return false;
 
         return _interactionSystem.InRangeUnobstructed(userUid, targetUid);
