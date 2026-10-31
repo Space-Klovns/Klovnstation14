@@ -169,10 +169,6 @@ public sealed partial class OreVentSystem : EntitySystem
             !EntityManager.MetaQuery.Resolve(entity.Owner, ref metaDataComponent))
             return;
 
-        // A destroyed drone cancels tapping, and the do-after it breaks then comes back here as cancelled.
-        if (!entity.Comp.BeingTapped)
-            return;
-
         OnTappingEnded(entity!, success: false, metaDataComponent: metaDataComponent);
 
         if (_netManager.IsServer)
