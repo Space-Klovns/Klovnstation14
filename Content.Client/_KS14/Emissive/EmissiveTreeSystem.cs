@@ -54,6 +54,20 @@ public sealed partial class EmissiveTreeSystem : ComponentTreeSystem<EmissiveTre
         SetInContainer((uid, component), inContainer: false);
     }
 
+    [SubscribeLocalEvent]
+    private void OnAppearanceChange(Entity<KsEmissiveAppearanceToggleComponent> entity, ref AppearanceChangeEvent args)
+    {
+        if (!TryComp<EmissiveLayersComponent>(entity, out var layersComponent))
+            return;
+
+        var toggledOff = args.AppearanceData.TryGetValue(entity.Comp.Key, out var value) && value is false;
+        if (layersComponent.ToggledOff == toggledOff)
+            return;
+
+        layersComponent.ToggledOff = toggledOff;
+        QueueTreeUpdate(entity.Owner, layersComponent);
+    }
+
     private void SetInContainer(Entity<EmissiveLayersComponent> entity, bool inContainer)
     {
         if (entity.Comp.InContainer == inContainer)

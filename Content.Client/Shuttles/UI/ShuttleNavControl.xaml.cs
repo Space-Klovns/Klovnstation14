@@ -316,7 +316,7 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
                 continue;
 
             handle.DrawCircle(interestPosition, 5, Color.ToSrgb(Color.DarkGoldenrod), true);
-            handle.DrawString(Font, interestPosition, interest.Data.Text, Color.DarkGoldenrod);
+            handle.DrawString(Font, interestPosition, interest.Data.Text ?? string.Empty, Color.DarkGoldenrod);
         }
     }
 

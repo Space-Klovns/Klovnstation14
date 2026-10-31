@@ -26,7 +26,7 @@ namespace Content.IntegrationTests.Tests._KS14.Atmos;
 [TestOf(typeof(KsVaporSystem))]
 public sealed class KsPredictedFoamShotTest : InteractionTest
 {
-    protected override string PlayerPrototype => "MobHuman"; // hands and combat mode, to fire a gun
+    protected override string PlayerPrototype => "MobHuman"; // hands, to fire a gun
 
     private const string Extinguisher = "FireExtinguisher";
     private const int Ticks = 75;
@@ -67,8 +67,7 @@ public sealed class KsPredictedFoamShotTest : InteractionTest
             }
         });
 
-        var gunNetEntity = await PlaceInHands(Extinguisher); // and takes its safety off
-        await SetCombatMode(true);
+        var gunNetEntity = await PlaceInHands(Extinguisher); // and takes its safety off; it fires out of combat mode
         await RunSeconds(2f); // the pickup cooldown
 
         var targetCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.Grid.Owner, new Vector2(40.5f, 0.5f)));
