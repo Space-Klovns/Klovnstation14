@@ -57,7 +57,7 @@ public sealed partial class PacketSystem : EntitySystem
         _mainThreadId = Environment.CurrentManagedThreadId;
         PreInitJint();
 
-        SubscribeLocalEvent<PacketExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState<BoundUIOpenedEvent>);
+        SubscribeLocalEvent<PacketExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
         SubscribeLocalEvent<PacketExecutorComponent, SaveExecutorCommandMessage>(OnSave);
         SubscribeLocalEvent<PacketExecutorComponent, StartExecutionMessage>(OnExecute);
         SubscribeLocalEvent<PacketExecutorComponent, ReloadModulesMessage>(OnModuleReload);
@@ -109,7 +109,6 @@ public sealed partial class PacketSystem : EntitySystem
     /// <param name="ev"></param>
     private void OnSave(Entity<PacketExecutorComponent> ent, ref SaveExecutorCommandMessage ev)
     {
-        Logger.Info(ent.Comp.Command);
         ent.Comp.Command = ev.Command;
     }
 

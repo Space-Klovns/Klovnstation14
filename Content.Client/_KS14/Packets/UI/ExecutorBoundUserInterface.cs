@@ -38,7 +38,7 @@ namespace Content.Client._KS14.Packets.UI
         {
             if (_menu is not { } menu)
                 return;
-            
+
             menu._closed = true;
             menu.ExecutorLog.TextRope = Rope.Leaf.Empty;
 
