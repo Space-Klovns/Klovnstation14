@@ -174,6 +174,10 @@ public partial class MobStateSystem
         {
             case MobState.Dead:
             case MobState.Critical:
+                // KS14: soft crit lets a few actions through
+                if (_ksSoftCrit.AllowsInCrit(target, args))
+                    break;
+
                 args.Cancel();
                 break;
         }

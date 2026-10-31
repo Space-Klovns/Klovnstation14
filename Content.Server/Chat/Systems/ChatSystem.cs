@@ -24,6 +24,7 @@ using Content.Shared.Players.RateLimiting;
 using Content.Shared.Radio;
 using Content.Shared.Station.Components;
 using Content.Shared._KS14.Language; // KS14
+using Content.Shared._KS14.Mobs.Systems; // KS14
 using Robust.Server.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -61,6 +62,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private KsTranslationSystem _translation = default!; // KS14
     [Dependency] private KsLanguageSystem _ksLanguage = default!; // KS14
+    [Dependency] private KsSoftCritSystem _ksSoftCrit = default!; // KS14
     [Dependency] private EntityQuery<GhostHearingComponent> _ghostHearingQuery = default!;
 
     private bool _loocEnabled = true;
@@ -197,6 +199,10 @@ public sealed partial class ChatSystem : SharedChatSystem
             checkRadioPrefix = false;
             message = message[1..];
         }
+
+        // KS14: soft crit mobs can only whisper
+        if (desiredType == InGameICChatType.Speak && _ksSoftCrit.IsSoftCrit(source))
+            desiredType = InGameICChatType.Whisper;
 
         bool shouldCapitalize = (desiredType != InGameICChatType.Emote);
         bool shouldPunctuate = _configurationManager.GetCVar(CCVars.ChatPunctuation);
