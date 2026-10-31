@@ -43,6 +43,8 @@
     layers:
     - computerLayerScreen
     - computerLayerKeys
+  - type: KsEmissiveAppearanceToggle # the keys stay visible when unpowered, but shouldn't glow
+    key: enum.ComputerVisuals.Powered
   # KS14: emissive end
   - type: Appearance
   - type: GenericVisualizer

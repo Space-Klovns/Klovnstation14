@@ -20,7 +20,6 @@ namespace Content.Client._KS14.Emissive;
 public sealed partial class EmissiveOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> Shader = "Emissive";
-    private static readonly ProtoId<ShaderPrototype> ShadedShader = "shaded";
 
     public override OverlaySpace Space => OverlaySpace.BeforeLighting;
 
@@ -188,9 +187,7 @@ public sealed partial class EmissiveOverlay : Overlay
                         else if (!_spriteSystem.TryGetLayer((ent.Owner, spriteComponent), layerId, out layer, false))
                             continue;
 
-                        // A layer switched back to the stock shaded shader has been turned off, like an unpowered
-                        //      computer's keyboard, which stays visible but should stop glowing.
-                        if (!layer.Visible || layer.ShaderPrototype == ShadedShader)
+                        if (!layer.Visible)
                             continue;
 
                         var state = layer.ActualState;
