@@ -26,4 +26,11 @@ public sealed partial class KsRadarInterestData
     [DataField]
     [ViewVariables(VVAccess.ReadOnly)]
     public string Text = "radar interest";
+
+    /// <summary>
+    ///     If false, the interest is drawn as a bare dot, with no <see cref="Text"/> and no name in its place.
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool ShowText = true;
 }

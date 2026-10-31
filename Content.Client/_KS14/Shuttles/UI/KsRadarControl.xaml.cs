@@ -1293,7 +1293,8 @@ public sealed partial class KsRadarControl : BaseShuttleControl
                 continue;
 
             handle.DrawCircle(interestPosition, 5, Color.ToSrgb(KsHud.Interest), true);
-            handle.DrawString(_ksFont, interestPosition, interest.Data.Text, KsHud.Interest);
+            if (interest.Data.ShowText)
+                handle.DrawString(_ksFont, interestPosition, interest.Data.Text, KsHud.Interest);
         }
     }
 

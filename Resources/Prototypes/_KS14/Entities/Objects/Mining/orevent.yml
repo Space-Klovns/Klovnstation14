@@ -45,6 +45,9 @@
 
   # Scanning
   - type: MiningScannerViewable
+  - type: KsRadarInterest # a nameless dot until discovered
+    data:
+      showText: false
 
 - type: entity
   parent: KsOreVentBase
@@ -58,6 +61,7 @@
     trueName: discovered ore vent
   - type: AddComponentsOnTrigger
     keysIn: [discovered]
+    removeExisting: true # replaces the nameless interest
     components: # copied from PenEmbeddable
     - type: KsRadarInterest
       data:
