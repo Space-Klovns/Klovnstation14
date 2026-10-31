@@ -113,6 +113,8 @@
     price: 100
   - type: Appearance
   - type: WiresVisuals
+  - type: PacketNetwork # KS14
+    frequency: VendFrequency
 
 - type: entity
   id: VendingMachineWallmount

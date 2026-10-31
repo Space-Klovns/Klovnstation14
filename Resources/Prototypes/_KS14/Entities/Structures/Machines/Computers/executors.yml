@@ -6,6 +6,7 @@
   components:
   - type: ActivatableUI
     key: enum.ExecutorUiKey.Key
+    singleUser: true
   - type: UserInterface
     interfaces:
         enum.ExecutorUiKey.Key:

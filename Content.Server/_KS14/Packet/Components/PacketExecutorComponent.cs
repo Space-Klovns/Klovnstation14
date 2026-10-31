@@ -1,3 +1,5 @@
+using Content.Server._KS14.Packet.Modules;
+using Content.Shared._KS14.Packets;
 using Content.Shared._KS14.Packets.Widgets;
 using Content.Shared.DeviceLinking;
 using Jint.Native;
@@ -11,7 +13,7 @@ namespace Content.Server._KS14.Packet.Components;
 /// Can't work without <see cref="PacketNetworkComponent"/>, Frequencies 0-10 are reserved for executors.
 /// </summary>
 [RegisterComponent]
-public sealed partial class PacketExecutorComponent : Component
+public sealed partial class PacketExecutorComponent : SharedPacketExecutorComponent
 {
     /// <summary>
     /// Modules that will be loaded when engine initializes.
@@ -27,12 +29,6 @@ public sealed partial class PacketExecutorComponent : Component
     public string Log = "";
 
     /// <summary>
-    /// Currently saved command for next execution(s).
-    /// </summary>
-    [DataField]
-    public string Command = "";
-
-    /// <summary>
     /// How much time should person wait between executions?
     /// </summary>
     [DataField]
@@ -40,19 +36,6 @@ public sealed partial class PacketExecutorComponent : Component
 
     [DataField]
     public TimeSpan CurrentCooldown = TimeSpan.Zero;
-
-    /// <summary>
-    /// Maximum amount of characters command can have to be executed or saved.
-    /// </summary>
-    [DataField]
-    public int MaxCommandLength = 36500;
-
-    /// <summary>
-    /// Sound that will be played if execution attempt fails (Due to cooldown or code being too long).
-    /// </summary>
-    [DataField]
-    public SoundSpecifier? ExecutionFailSound;
-
 
     /// <summary>
     /// Maximum amount of memory that can be used each execution.

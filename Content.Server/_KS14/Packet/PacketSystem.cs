@@ -68,6 +68,7 @@ public sealed partial class PacketSystem : EntitySystem
         SubscribeLocalEvent<PacketExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
         SubscribeLocalEvent<PacketNetworkComponent, MapInitEvent>(OnPacketInit);
+        SubscribeLocalEvent<PacketExecutorComponent, MapInitEvent>(OnExecutorInit);
 
         SubscribeLocalEvent<FrequenciesPaperComponent, MapInitEvent>(OnFrequencyPaperInit);
 
@@ -201,6 +202,12 @@ public sealed partial class PacketSystem : EntitySystem
     {
         SetupAddress(ent);
         ReloadFrequencies(ent);
+        InitReference(ent);
+    }
+
+    private void OnExecutorInit(Entity<PacketExecutorComponent> ent, ref MapInitEvent ev)
+    {
+        FormatReferences(ent);
     }
 
     private void OnFrequencyPaperInit(Entity<FrequenciesPaperComponent> ent, ref MapInitEvent ev)
@@ -222,5 +229,6 @@ public sealed partial class PacketSystem : EntitySystem
         _engineCts.Clear();
         _frequencies.Clear();
         _networks.Clear();
+        _referenceMap.Clear();
     }
 }
