@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Fluidmos;
@@ -19,8 +20,8 @@ namespace Content.IntegrationTests.Tests._KS14.Fluidmos;
 
 /// <summary>
 ///     The Fluidmos devices: the fluid port moves reagents between its tank and its pipe with their data, the phase
-///         separator splits a pipe by phase, the expansion valve reads out its flash and steers itself towards its
-///         superheat setpoint, and the UI entries sum what a mixture carries.
+///         separator splits a pipe by phase, the expansion valve reads out its flash and steers itself towards its outlet
+///         pressure setpoint, and the UI entries sum what a mixture carries.
 /// </summary>
 [TestOf(typeof(KsFluidPortSystem))]
 public sealed class KsFluidmosNewDeviceTests : GameTest
@@ -138,6 +139,85 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
                 Assert.That(liquidOutlet.Air.Fluid?.LiquidUnits ?? 0f, Is.EqualTo(separator.LiquidRate * deltaTime).Within(0.01f),
                     "The liquid outlet didn't get its rate of liquid.");
                 Assert.That(liquidOutlet.Air.TotalMoles, Is.Zero, "Gas left by the liquid outlet.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Distillation: a heated water and ethanol feed comes to Raoult's-law equilibrium with its vapor, which is richer
+    ///         in the more volatile ethanol than the liquid, and the separator's gas outlet carries that vapor off.
+    /// </summary>
+    [Test]
+    public async Task PhaseSeparatorDistilsAnEthanolEnrichedVapor()
+    {
+        var server = Pair.Server;
+        var separatorUid = await SpawnDevice(PhaseSeparatorPrototype);
+        var nodeContainerSystem = server.System<NodeContainerSystem>();
+        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<Robust.Shared.Timing.IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(nodeContainerSystem.TryGetNodes(separatorUid, "inlet", "outlet", "filter",
+                out PipeNode? inlet, out PipeNode? gasOutlet, out PipeNode? liquidOutlet));
+            Assert.That(propertiesSystem.TryGetProperties(WaterReagent, out var water));
+            Assert.That(propertiesSystem.TryGetProperties(EthanolReagent, out var ethanol));
+            Assert.That(ethanol!.BoilingPoint, Is.LessThan(water!.BoilingPoint), "Ethanol isn't the more volatile of the two.");
+
+            // Hot, but below both boiling points under its nitrogen, so the liquid evaporates towards equilibrium.
+            var feedTemperature = ethanol.BoilingPoint - 5f;
+            SetGas(inlet!.Air, Atmospherics.OneAtmosphere, feedTemperature);
+            inlet.Air.Fluid = new KsFluidMixture();
+            inlet.Air.Fluid.AddLiquid(WaterKey, 500f);
+            inlet.Air.Fluid.AddLiquid(EthanolKey, 100f);
+            gasOutlet!.Air.Clear();
+            liquidOutlet!.Air.Clear();
+
+            // Steps until neither vapor changes any more: by then both are at equilibrium with the liquid.
+            var lastWaterVapor = -1f;
+            var lastEthanolVapor = -1f;
+            var steps = 0;
+            for (; steps < 5000; steps++)
+            {
+                inlet.Air.Fluid!.LastPhaseTime = gameTiming.CurTime - System.TimeSpan.FromSeconds(0.5f);
+                phaseSystem.UpdatePhases(inlet.Air, holder: null);
+                var waterVapor = inlet.Air.GetMoles(Gas.WaterVapor);
+                var ethanolVapor = inlet.Air.Fluid!.TryGetAmount(EthanolKey, out var stepped) ? stepped.Vapor : 0f;
+                if (MathF.Abs(waterVapor - lastWaterVapor) <= 1e-6f * waterVapor &&
+                    MathF.Abs(ethanolVapor - lastEthanolVapor) <= 1e-6f * ethanolVapor)
+                    break;
+                lastWaterVapor = waterVapor;
+                lastEthanolVapor = ethanolVapor;
+            }
+
+            TestContext.Out.WriteLine($"settled after {steps} steps at {inlet.Air.Temperature:0.00} K");
+
+            Assert.That(inlet.Air.Fluid!.TryGetAmount(WaterKey, out var waterAmount));
+            Assert.That(inlet.Air.Fluid.TryGetAmount(EthanolKey, out var ethanolAmount));
+            var temperature = inlet.Air.Temperature;
+            var waterLiquidMoles = waterAmount.Liquid * water.MolesPerUnit;
+            var ethanolLiquidMoles = ethanolAmount.Liquid * ethanol.MolesPerUnit;
+            var liquidRatio = ethanolLiquidMoles / waterLiquidMoles;
+            // Raoult's law: each one's partial pressure is its mole fraction in the liquid times its saturation pressure.
+            var expectedVaporRatio = liquidRatio *
+                                     KsPhaseMath.SaturationPressure(ethanol.VaporizationEntropy, ethanol.BoilingPoint, temperature) /
+                                     KsPhaseMath.SaturationPressure(water.VaporizationEntropy, water.BoilingPoint, temperature);
+            var vaporRatio = ethanolAmount.Vapor / inlet.Air.GetMoles(Gas.WaterVapor);
+
+            Update(server.EntMan, separatorUid, deltaTime: 0.5f);
+            var distilledEthanol = default(KsFluidAmount);
+            Assert.That(gasOutlet.Air.Fluid?.TryGetAmount(EthanolKey, out distilledEthanol) ?? false, "No ethanol vapor left by the gas outlet.");
+            var distilledRatio = distilledEthanol.Vapor / gasOutlet.Air.GetMoles(Gas.WaterVapor);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(vaporRatio, Is.EqualTo(expectedVaporRatio).Within(0.02f * expectedVaporRatio),
+                    "The feed's vapor isn't at Raoult's-law equilibrium with its liquid.");
+                Assert.That(vaporRatio, Is.GreaterThan(liquidRatio), "The vapor isn't richer in ethanol than the liquid.");
+                Assert.That(distilledRatio, Is.EqualTo(vaporRatio).Within(0.01f * vaporRatio),
+                    "The gas outlet didn't carry off the feed's vapor as it was.");
+                Assert.That(gasOutlet.Air.Fluid!.LiquidUnits, Is.Zero, "Liquid left by the gas outlet.");
             }
         });
     }
