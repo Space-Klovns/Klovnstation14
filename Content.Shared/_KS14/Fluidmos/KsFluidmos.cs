@@ -74,7 +74,7 @@ public static class KsFluidmos
 
     /// <summary>
     ///     Hertz–Knudsen evaporation/condensation coefficient inside pipes. A tuning knob, not a physical constant: set so a
-    ///         200 L node of water at 300 K comes most of the way to saturation in a few seconds.
+    ///         200 L node of water at 300 K comes most of the way to saturation in a few seconds (90% in about three).
     /// </summary>
     public const float HertzKnudsenAlpha = 0.0013f;
 

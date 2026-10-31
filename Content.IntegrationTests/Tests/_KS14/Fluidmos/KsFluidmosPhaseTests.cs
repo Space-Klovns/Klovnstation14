@@ -90,10 +90,14 @@ public sealed class KsFluidmosPhaseTests : GameTest
 
             var energyBefore = atmosphereSystem.GetHeatCapacity(mixture, applyScaling: false) * mixture.Temperature;
 
-            // The tuning: most of the way to saturation in about five seconds.
+            // The tuning: most of the way to saturation in a few seconds, between two and five (about three now). The
+            //      early bound keeps a much faster alpha from passing too.
+            var earlyFraction = 0f;
             for (var elapsed = 0f; elapsed < 5f; elapsed += StepSeconds)
             {
                 Step(phaseSystem, gameTiming, mixture);
+                if (elapsed + StepSeconds <= 2f)
+                    earlyFraction = mixture.GetMoles(Gas.WaterVapor) / EquilibriumVaporMoles(water!, mixture);
             }
 
             var vapor = mixture.GetMoles(Gas.WaterVapor);
@@ -105,6 +109,7 @@ public sealed class KsFluidmosPhaseTests : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(vapor, Is.GreaterThanOrEqualTo(0.9f * equilibrium), "Water came nowhere near saturation in five seconds.");
+                Assert.That(earlyFraction, Is.LessThan(0.9f), "Water came most of the way to saturation within two seconds: alpha is far above its tuning.");
                 Assert.That(vapor, Is.LessThanOrEqualTo(1.01f * equilibrium), "Evaporation overshot equilibrium.");
                 Assert.That(mixture.Temperature, Is.LessThan(startTemperature), "Evaporation did not cool the water.");
                 Assert.That(energyAfter, Is.EqualTo(energyBefore).Within(energyBefore * 0.0005f), "Evaporation created or destroyed energy.");
