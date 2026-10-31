@@ -38,9 +38,7 @@ namespace Content.Client._KS14.Packets.UI
         {
             if (_menu is not { } menu)
                 return;
-
-            Logger.Info("Updated");
-            Logger.Info(_component?.Command ?? "");
+            
             menu._closed = true;
             menu.ExecutorLog.TextRope = Rope.Leaf.Empty;
 
@@ -80,7 +78,6 @@ namespace Content.Client._KS14.Packets.UI
 
         protected override void UpdateState(BoundUserInterfaceState state)
         {
-            Logger.Info($"Executor State: {state}");
             base.UpdateState(state);
             if (state is not ExecutorBoundUserInterfaceState rState)
                 return;
