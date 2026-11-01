@@ -51,3 +51,14 @@
   effects:
   - !type:KsCondensationReaction
     gas: Ammonia
+
+# Carbon dioxide frosts out of air past saturation, as after a CO2 extinguisher has chilled a tile full of it.
+- type: gasReaction
+  id: KsCondensationCarbonDioxide
+  priority: 600
+  maximumTemperature: 303.79
+  minimumRequirements:
+    CarbonDioxide: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: CarbonDioxide
