@@ -8,6 +8,7 @@ using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Destructible;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -100,21 +101,26 @@ public sealed partial class KsFluidmosTileSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Spills a deleted pipe's share of its nets' fluid where it stood, on the next update. On termination rather than
-    ///         shutdown, because by shutdown the pipe is already detached from its grid; its nets remove the same share
-    ///         from themselves when they drop its nodes.
+    ///     Spills a pipe's share of its nets' fluid where it stood, on the next update, when damage destroys it outright.
+    ///         Its nets remove the same share from themselves when they drop its nodes. Breaking it (a lesser blow) leaks
+    ///         that share through <c>AtmosUnsafeUnanchorSystem.LeakGas</c> instead. Only destruction spills: a pipe
+    ///         deleted any other way, by an admin say, takes its fluid with it, as it takes its gas.
     /// </summary>
+    /// <remarks>
+    ///     A uid and component rather than an <see cref="Entity{T}"/>: <see cref="DestructionEventArgs"/> is raised by
+    ///         value, which only that form of handler takes.
+    /// </remarks>
     [SubscribeLocalEvent]
-    private void OnNodeContainerTerminating(Entity<NodeContainerComponent> entity, ref EntityTerminatingEvent args)
+    private void OnNodeContainerDestroyed(EntityUid uid, NodeContainerComponent component, DestructionEventArgs args)
     {
-        foreach (var node in entity.Comp.Nodes.Values)
+        foreach (var node in component.Nodes.Values)
         {
             if (node is not PipeNode { NodeGroup: IPipeNet { Air: { Fluid: { } fluid } air } } pipe || air.Volume <= 0f)
                 continue;
 
             var share = fluid.Clone();
             share.Multiply(MathF.Min(pipe.Volume / air.Volume, 1f));
-            QueueSpill(Transform(entity).Coordinates, share, air.Temperature);
+            QueueSpill(Transform(uid).Coordinates, share, air.Temperature);
         }
     }
 

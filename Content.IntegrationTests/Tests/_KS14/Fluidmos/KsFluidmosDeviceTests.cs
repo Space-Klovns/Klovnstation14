@@ -199,31 +199,102 @@ public sealed class KsFluidmosDeviceTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     A pipe deleted outright, as an admin deletes one, takes its fluid with it, as it takes its gas: nothing spills.
+    /// </summary>
     [Test]
-    public async Task DeletedPipeSpillsItsFluid()
+    public async Task DeletedPipeSpillsNothing()
     {
         var server = Pair.Server;
         var testMap = await CreateBreathableTestMap();
-        var nodeContainerSystem = server.System<NodeContainerSystem>();
         EntityUid pipeUid = default;
 
-        await server.WaitPost(() => pipeUid = server.EntMan.SpawnEntity(PipePrototype, testMap.GridCoords));
+        await server.WaitPost(() => pipeUid = server.EntMan.SpawnEntity(PipePrototype, TileCentre(testMap)));
         await server.WaitRunTicks(5);
 
         await server.WaitPost(() =>
         {
-            var pipe = server.EntMan.GetComponent<Content.Shared.NodeContainer.NodeContainerComponent>(pipeUid)
-                .Nodes.Values.OfType<PipeNode>().First();
-            FillWithFluid(pipe.Air);
+            FillWithFluid(PipeAir(pipeUid));
             server.EntMan.DeleteEntity(pipeUid);
         });
-        await server.WaitRunTicks(2);
+        await server.WaitRunTicks(5);
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(PuddleHas(testMap, WaterReagent), "A deleted pipe's liquid vanished instead of spilling.");
-            Assert.That(AnySmokeHas(EthanolReagent), "A deleted pipe's unlinked vapor vanished instead of becoming smoke.");
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(PuddleHas(testMap, WaterReagent), Is.False, "A deleted pipe spilled its liquid.");
+                Assert.That(AnySmokeHas(EthanolReagent), Is.False, "A deleted pipe released its vapor as smoke.");
+            }
         });
+    }
+
+    /// <summary>
+    ///     A pipe broken or destroyed by damage spills its share of its net's liquid once, and its net keeps the rest:
+    ///         nothing is spilled twice, made or lost.
+    /// </summary>
+    [TestCase(150f)] // breaks it
+    [TestCase(300f)] // destroys it outright
+    public async Task DamagedPipeSpillsItsShareOfTheNetOnce(float damage)
+    {
+        var server = Pair.Server;
+        var testMap = await CreateBreathableTestMap();
+        EntityUid damagedUid = default;
+        EntityUid keptUid = default;
+        var keptTile = testMap.Tile.GridIndices + new Robust.Shared.Maths.Vector2i(0, 1);
+
+        await server.WaitPost(() =>
+        {
+            server.System<SharedMapSystem>().SetTile(testMap.Grid.Owner, testMap.Grid.Comp, keptTile, testMap.Tile.Tile);
+            damagedUid = server.EntMan.SpawnEntity(PipePrototype, TileCentre(testMap));
+            keptUid = server.EntMan.SpawnEntity(PipePrototype, new EntityCoordinates(testMap.Grid.Owner, keptTile.X + 0.5f, keptTile.Y + 0.5f));
+        });
+        await server.WaitRunTicks(5);
+
+        var share = 0f;
+        await server.WaitPost(() =>
+        {
+            var netAir = PipeAir(damagedUid);
+            Assert.That(PipeAir(keptUid), Is.SameAs(netAir), "The two pipes aren't one net.");
+            FillWithFluid(netAir);
+            share = PipeNode(damagedUid).Volume / netAir.Volume;
+
+            var damageSpecifier = new DamageSpecifier(server.ProtoMan.Index(BluntDamage), FixedPoint2.New(damage));
+            server.System<DamageableSystem>().TryChangeDamage(damagedUid, damageSpecifier, ignoreResistances: true);
+        });
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.Deleted(damagedUid), "The pipe wasn't broken.");
+            var spilled = PuddleWater(testMap);
+            var kept = PipeAir(keptUid).Fluid?.LiquidUnits ?? 0f;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(spilled, Is.EqualTo(WaterUnits * share).Within(0.1f), "The damaged pipe didn't spill its share of the net's liquid, once.");
+                Assert.That(spilled + kept, Is.EqualTo(WaterUnits).Within(0.1f), "Liquid was made or lost.");
+            }
+        });
+    }
+
+    private PipeNode PipeNode(EntityUid pipeUid)
+    {
+        return Pair.Server.EntMan.GetComponent<Content.Shared.NodeContainer.NodeContainerComponent>(pipeUid)
+            .Nodes.Values.OfType<PipeNode>().First();
+    }
+
+    private GasMixture PipeAir(EntityUid pipeUid)
+    {
+        return PipeNode(pipeUid).Air;
+    }
+
+    private float PuddleWater(TestMapData testMap)
+    {
+        return Pair.Server.System<PuddleSystem>().TryGetCachedPuddle(testMap.Grid.Owner, testMap.Tile.GridIndices, out var puddle) &&
+               puddle.Comp.Solution is { } solution
+            ? (float)solution.Comp.Solution.GetTotalPrototypeQuantity(WaterReagent)
+            : 0f;
     }
 
     [TestCase(350f)]
