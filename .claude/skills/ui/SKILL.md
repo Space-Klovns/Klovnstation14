@@ -76,6 +76,15 @@ localisation (§7).
   - Children with Expand on the main axis share the leftover space by `SizeFlagsStretchRatio`.
   - `<Control VerticalExpand="True"/>` is the spacer.
   - `SeparationOverride` sets the gap between children.
+- **GridContainer: keep `HSeparationOverride` and `VSeparationOverride` equal.** `MeasureOverride` reads
+  `Separations` as (columns, rows) but `ArrangeOverride` unpacks it the other way round (`RT/Controls/GridContainer.cs`),
+  so rows are *placed* with the column gap while the grid's height was *measured* with the row gap (default 4 each).
+  With a wider column gap, every row lands lower than measured, the error builds up row by row, and the last rows
+  spill past the grid's bounds over whatever sits below it. With a narrower one they bunch up and leave a gap. The gas
+  analyzer's reagent table (`KsFluidListControl`) had `HSeparationOverride = 10` alone. With one reagent the spacer
+  under it hid the overflow, with two its bar touched the text, and from three on the bar covered the last row. Set
+  both to the same value, and put any extra column spacing in cell `Margin`s. `KsFluidListControlTests.TableRowsStayClearOfTheBar`
+  checks it by comparing the last cell's bottom with the grid's own bottom and with the next control's top.
 - **ScrollContainer:** `ReturnMeasure="False"` (the default) means the scroll child doesn't push the container's
   desired size.
 - **LayoutContainer** (and so every `UIScreen`): children are placed by anchors and margins, e.g.
