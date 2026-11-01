@@ -4,7 +4,8 @@ namespace Content.Server._KS14.Fluidmos.Devices;
 
 /// <summary>
 ///     Splits a pipe's contents by phase: gas and every vapor are pumped out of the gas outlet, towards a target
-///         pressure, and liquid flows out of the liquid outlet at a set rate. Ice stays behind. With a heater ahead of it,
+///         pressure, and liquid is pushed out of the liquid outlet at a set rate, against any pressure. Ice stays behind.
+///         Runs on power, and does nothing without it. With a heater ahead of it,
 ///         this is a still.
 /// </summary>
 [RegisterComponent, Access(typeof(KsPhaseSeparatorSystem))]
@@ -30,10 +31,4 @@ public sealed partial class KsPhaseSeparatorComponent : Component
     /// </summary>
     [DataField]
     public float LiquidRate = 20f;
-
-    /// <summary>
-    ///     The liquid outlet is fed no further once it reaches this pressure, in kPa.
-    /// </summary>
-    [DataField]
-    public float MaxLiquidOutletPressure = Atmospherics.MaxOutputPressure;
 }

@@ -13,6 +13,8 @@ using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
+using Content.Server.Power.Components;
+using Content.Shared.Power.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 
@@ -55,12 +57,18 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
         mixture.AdjustMoles(Gas.Nitrogen, pressure * mixture.Volume / (Atmospherics.R * temperature));
     }
 
-    private async Task<EntityUid> SpawnDevice(EntProtoId prototype)
+    /// <param name="powered">Whether a device that runs on power has it; the test map has none of its own.</param>
+    private async Task<EntityUid> SpawnDevice(EntProtoId prototype, bool powered = true)
     {
         var server = Pair.Server;
         var testMap = await Pair.CreateTestMap();
         EntityUid deviceUid = default;
-        await server.WaitPost(() => deviceUid = server.EntMan.SpawnEntity(prototype, testMap.GridCoords));
+        await server.WaitPost(() =>
+        {
+            deviceUid = server.EntMan.SpawnEntity(prototype, testMap.GridCoords);
+            if (powered && server.EntMan.HasComponent<ApcPowerReceiverComponent>(deviceUid))
+                server.System<SharedPowerReceiverSystem>().SetNeedsPower(deviceUid, false);
+        });
         await server.WaitRunTicks(5);
         return deviceUid;
     }
@@ -139,6 +147,50 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
                 Assert.That(liquidOutlet.Air.Fluid?.LiquidUnits ?? 0f, Is.EqualTo(separator.LiquidRate * deltaTime).Within(0.01f),
                     "The liquid outlet didn't get its rate of liquid.");
                 Assert.That(liquidOutlet.Air.TotalMoles, Is.Zero, "Gas left by the liquid outlet.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The separator pushes liquid into its liquid outlet at any pressure while it has power, and moves nothing at all
+    ///         without power.
+    /// </summary>
+    [Test]
+    public async Task PhaseSeparatorPushesLiquidAgainstAnyPressureOnlyWithPower([Values(true, false)] bool powered)
+    {
+        var server = Pair.Server;
+        var separatorUid = await SpawnDevice(PhaseSeparatorPrototype, powered);
+        var nodeContainerSystem = server.System<NodeContainerSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(nodeContainerSystem.TryGetNodes(separatorUid, "inlet", "outlet", "filter",
+                out PipeNode? inlet, out PipeNode? gasOutlet, out PipeNode? liquidOutlet));
+            var separator = server.EntMan.GetComponent<KsPhaseSeparatorComponent>(separatorUid);
+
+            SetGas(inlet!.Air, Atmospherics.OneAtmosphere, Atmospherics.T20C);
+            inlet.Air.Fluid = new KsFluidMixture();
+            inlet.Air.Fluid.AddLiquid(WaterKey, 500f);
+            gasOutlet!.Air.Clear();
+            // Far above the inlet, and above what a gas pump may push to.
+            SetGas(liquidOutlet!.Air, 2f * Atmospherics.MaxOutputPressure, Atmospherics.T20C);
+
+            const float deltaTime = 0.5f;
+            Update(server.EntMan, separatorUid, deltaTime);
+
+            var pushed = liquidOutlet.Air.Fluid?.LiquidUnits ?? 0f;
+            using (Assert.EnterMultipleScope())
+            {
+                if (powered)
+                {
+                    Assert.That(pushed, Is.EqualTo(separator.LiquidRate * deltaTime).Within(0.01f),
+                        "The powered separator didn't push its rate of liquid into a high-pressure outlet.");
+                }
+                else
+                {
+                    Assert.That(pushed, Is.Zero, "The separator pushed liquid without power.");
+                    Assert.That(gasOutlet.Air.TotalMoles, Is.Zero, "The separator pumped gas without power.");
+                }
             }
         });
     }

@@ -117,6 +117,9 @@
   placement:
     mode: AlignAtmosPipeLayers
   components:
+  - type: ExtensionCableReceiver
+  - type: ApcPowerReceiver
+    powerLoad: 200
   - type: SubFloorHide
     visibleLayers:
     - enum.SubfloorLayers.FirstLayer

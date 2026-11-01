@@ -2,6 +2,7 @@ using Content.Server._KS14.Atmos;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
+using Content.Server.Power.EntitySystems;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -15,12 +16,15 @@ public sealed partial class KsPhaseSeparatorSystem : EntitySystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
+    [Dependency] private PowerReceiverSystem _powerReceiverSystem = default!;
     [Dependency] private KsTransferThermoSystem _transferThermoSystem = default!;
 
     [SubscribeLocalEvent]
     private void OnDeviceUpdate(Entity<KsPhaseSeparatorComponent> entity, ref AtmosDeviceUpdateEvent args)
     {
-        if (!_nodeContainerSystem.TryGetNodes(entity.Owner,
+        // Both its pump and its liquid feed run on power, and stop without it.
+        if (!_powerReceiverSystem.IsPowered(entity.Owner) ||
+            !_nodeContainerSystem.TryGetNodes(entity.Owner,
                 entity.Comp.InletName,
                 entity.Comp.GasOutletName,
                 entity.Comp.LiquidOutletName,
@@ -51,12 +55,14 @@ public sealed partial class KsPhaseSeparatorSystem : EntitySystem
         _atmosphereSystem.Merge(outlet, removed);
     }
 
+    /// <summary>
+    ///     Pushes liquid out of the side at its rate, whatever the pressure there: it runs on power, which pays for it.
+    /// </summary>
     private void SeparateLiquid(Entity<KsPhaseSeparatorComponent> entity, GasMixture inlet, GasMixture outlet, float deltaTime)
     {
         if (inlet.Fluid is not { } fluid ||
             fluid.LiquidUnits <= KsFluidmos.MinLiquidUnits ||
-            !outlet.FluidCapable ||
-            outlet.Pressure >= entity.Comp.MaxLiquidOutletPressure)
+            !outlet.FluidCapable)
             return;
 
         var units = MathF.Min(entity.Comp.LiquidRate * deltaTime, fluid.LiquidUnits);
