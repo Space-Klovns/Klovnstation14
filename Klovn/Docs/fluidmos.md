@@ -306,6 +306,9 @@ measurable cost on a full station. Rerun them after touching `UpdatePhases`, `Me
 
 ## Out of scope
 
+The original design brief, [fluidmos_plan.md](fluidmos_plan.md), has the full list of planned follow-ups in its
+section 7, and the reasoning behind most of the decisions above. The main ones:
+
 - **Supercritical fluids**, as above.
 - **Henry's law, activity coefficients, and chemistry inside pipes.** Reagents in a pipe don't react with each other,
   and gases don't dissolve in liquids. Raoult's law (ideal mixing) is the only interaction.
