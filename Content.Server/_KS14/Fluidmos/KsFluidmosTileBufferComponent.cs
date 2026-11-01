@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Chemistry.Components;
 
 namespace Content.Server._KS14.Fluidmos;
@@ -20,4 +21,11 @@ public sealed partial class KsFluidmosTileBufferComponent : Component
     /// </summary>
     [DataField]
     public Solution Vapor = new();
+
+    /// <summary>
+    ///     What a release held too little of to make the 0.01u a solution stores, carried into the next release rather
+    ///         than dropped. A device releasing a little every update would otherwise lose a share of each release.
+    /// </summary>
+    [ViewVariables]
+    public KsFluidMixture? Remainder;
 }

@@ -86,8 +86,18 @@ public sealed partial class KsFluidmosTileSystem : EntitySystem
             return;
 
         var bufferComponent = EnsureComp<KsFluidmosTileBufferComponent>(deviceUid);
+        if (bufferComponent.Remainder is { } remainder)
+        {
+            fluid.Add(remainder);
+            bufferComponent.Remainder = null;
+        }
+
         var solid = TakeAll(fluid, released.Temperature, bufferComponent.Liquid, bufferComponent.Vapor);
         _iceSheetSystem.AddIce(Transform(deviceUid).Coordinates, solid);
+
+        // What fell short of a solution's 0.01u, kept for the next release.
+        if (!fluid.IsEmpty)
+            bufferComponent.Remainder = fluid;
 
         var spillLiquid = bufferComponent.Liquid.Volume >= FixedPoint2.New(KsFluidmos.SpillThresholdUnits);
         var spillVapor = bufferComponent.Vapor.Volume >= FixedPoint2.New(KsFluidmos.SmokeThresholdUnits);
@@ -280,13 +290,31 @@ public sealed partial class KsFluidmosTileSystem : EntitySystem
         _pendingSpills.Add((coordinates, new Solution(), vapor));
     }
 
+    /// <summary>
+    ///     Flushes a deleted device's buffer while it still stands somewhere: by its components' shutdown it has been
+    ///         detached, and a spill at its coordinates then goes nowhere. <see cref="OnBufferShutdown"/> finds it empty.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnBufferTerminating(Entity<KsFluidmosTileBufferComponent> entity, ref EntityTerminatingEvent args)
+    {
+        FlushBuffer(entity);
+    }
+
+    /// <summary>
+    ///     Flushes the buffer of a device that keeps standing, with only its buffer removed.
+    /// </summary>
     [SubscribeLocalEvent]
     private void OnBufferShutdown(Entity<KsFluidmosTileBufferComponent> entity, ref ComponentShutdown args)
+    {
+        FlushBuffer(entity);
+    }
+
+    private void FlushBuffer(Entity<KsFluidmosTileBufferComponent> entity)
     {
         if (entity.Comp.Liquid.Volume <= FixedPoint2.Zero && entity.Comp.Vapor.Volume <= FixedPoint2.Zero)
             return;
 
-        // Shutdown can run mid-deletion, so the spill waits for the next update.
+        // Both can run mid-deletion, so the spill waits for the next update.
         _pendingSpills.Add((Transform(entity).Coordinates, SplitAll(entity.Comp.Liquid), SplitAll(entity.Comp.Vapor)));
     }
 

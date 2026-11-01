@@ -166,6 +166,42 @@ public sealed class KsFluidmosDeviceTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     A device releasing a little liquid every update, less than a solution's 0.01u steps each time, loses none of
+    ///         it to rounding: what each release falls short by is carried into the next.
+    /// </summary>
+    [Test]
+    public async Task SmallReleasesAreNotLostToRounding()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateBreathableTestMap();
+        var tileSystem = server.System<KsFluidmosTileSystem>();
+        const int releases = 100;
+        const float unitsPerRelease = 0.015f;
+
+        await server.WaitAssertion(() =>
+        {
+            var deviceUid = server.EntMan.SpawnEntity(null, TileCentre(testMap));
+            for (var i = 0; i < releases; i++)
+            {
+                var released = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C, FluidCapable = true };
+                released.Fluid = new KsFluidMixture();
+                released.Fluid.AddLiquid(WaterKey, unitsPerRelease);
+                tileSystem.ReleaseToTile(deviceUid, released);
+            }
+
+            // The device flushes what it buffered as it goes, on the next update; only a last remainder short of 0.01u
+            //     is left behind.
+            server.EntMan.DeleteEntity(deviceUid);
+        });
+        await server.WaitRunTicks(2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(PuddleWater(testMap), Is.EqualTo(releases * unitsPerRelease).Within(0.02f), "Liquid released a little at a time was lost to rounding.");
+        });
+    }
+
     private async Task ReleasesThroughDevice(EntProtoId devicePrototype)
     {
         var server = Pair.Server;
