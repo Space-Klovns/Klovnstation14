@@ -5,12 +5,20 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.Fluidmos;
 
 /// <summary>
-///     One reagent a mixture carries, for UIs: every data variant (blood of different DNA, say) summed, in units. Vapor of
-///         linked reagents is gas, and shows with the gases instead.
+///     One reagent a mixture carries, for UIs: every data variant (blood of different DNA, say) summed, in units.
 /// </summary>
+/// <param name="Linked">
+///     Whether it evaporates into its own atmos gas rather than into vapor, so that its vapor shows with the gases and it
+///         has none of its own.
+/// </param>
 [Serializable, NetSerializable]
-public readonly record struct KsFluidEntry(ProtoId<ReagentPrototype> Reagent, float Solid, float Liquid, float Vapor)
+public readonly record struct KsFluidEntry(ProtoId<ReagentPrototype> Reagent, float Solid, float Liquid, float Vapor, bool Linked)
 {
+    /// <summary>
+    ///     Everything of it the mixture carries, in units, whatever its phase.
+    /// </summary>
+    public float Total => Solid + Liquid + Vapor;
+
     /// <summary>
     ///     Amounts below this are left out, as gas analyzers leave out trace gases.
     /// </summary>
@@ -27,14 +35,15 @@ public readonly record struct KsFluidEntry(ProtoId<ReagentPrototype> Reagent, fl
         var entries = new List<KsFluidEntry>(fluid.Count);
         foreach (var (key, amount) in fluid.Reagents)
         {
-            var vaporUnits = amount.Vapor > 0f && propertiesSystem.TryGetProperties(key.Prototype, out var properties) && properties.MolesPerUnit > 0f
+            propertiesSystem.TryGetProperties(key.Prototype, out var properties);
+            var vaporUnits = amount.Vapor > 0f && properties is { MolesPerUnit: > 0f }
                 ? amount.Vapor / properties.MolesPerUnit
                 : 0f;
 
             var index = entries.FindIndex(entry => entry.Reagent == key.Prototype);
             if (index < 0)
             {
-                entries.Add(new KsFluidEntry(key.Prototype, amount.Solid, amount.Liquid, vaporUnits));
+                entries.Add(new KsFluidEntry(key.Prototype, amount.Solid, amount.Liquid, vaporUnits, properties is { Linked: true }));
                 continue;
             }
 

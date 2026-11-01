@@ -396,15 +396,19 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
             blood.AddReagent(Blood("CCCC"), FixedPoint2.New(4));
             fluid.AddSolution(blood);
             fluid.SetAmount(EthanolKey, new KsFluidAmount(0f, 0f, 2f * ethanol!.MolesPerUnit));
+            fluid.SetAmount(WaterKey, new KsFluidAmount(0f, 1f, 0f));
 
             var entries = KsFluidEntry.FromMixture(fluid, propertiesSystem);
             Assert.That(entries, Is.Not.Null);
             var bloodEntry = Array.Find(entries!, entry => entry.Reagent == BloodReagent);
             var ethanolEntry = Array.Find(entries!, entry => entry.Reagent == EthanolReagent);
+            var waterEntry = Array.Find(entries!, entry => entry.Reagent == WaterReagent);
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(entries!, Has.Length.EqualTo(2), "Data variants weren't summed into one entry per reagent.");
+                Assert.That(entries!, Has.Length.EqualTo(3), "Data variants weren't summed into one entry per reagent.");
+                Assert.That(waterEntry.Linked, Is.True, "Water evaporates into water vapor, but its entry isn't marked as linked.");
+                Assert.That(ethanolEntry.Linked, Is.False, "Ethanol's vapor is its own, but its entry is marked as linked.");
                 Assert.That(bloodEntry.Liquid, Is.EqualTo(7f).Within(0.01f), "The blood variants didn't sum.");
                 Assert.That(ethanolEntry.Vapor, Is.EqualTo(2f).Within(0.01f), "Vapor wasn't shown in units.");
                 Assert.That(KsFluidEntry.FromMixture(new KsFluidMixture(), propertiesSystem), Is.Null, "An empty mixture listed entries.");
