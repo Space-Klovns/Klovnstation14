@@ -143,12 +143,13 @@ public sealed partial class GasPressureRegulatorSystem : SharedGasPressureRegula
             ksMaxVolume /* KS14: hoisted */);
 
         // We remove the gas from the inlet and merge it into the outlet.
-        // KS14 start: the gas throttles, and liquid crosses by the orifice law, as far as the regulator is open
+        // KS14 start: the gas throttles, and liquid crosses by the orifice law. Over its threshold the regulator relieves
+        //     liquid fully open, down to the threshold: a net packed with liquid is over pressure with almost no gas to move.
         var removed = inletPipeNode.Air.RemoveVolume(actualVolumeToTransfer, includeLiquid: false);
         _ksTransferThermoSystem.Apply(removed, p1, p2, doesWork: false);
         _atmosphere.Merge(outletPipeNode.Air, removed);
-        var ksOpening = ksMaxVolume > 0f ? Math.Clamp(actualVolumeToTransfer / ksMaxVolume, 0f, 1f) : 0f;
-        _ksLiquidFlowSystem.Transfer(inletPipeNode.Air, outletPipeNode.Air, ent.Comp.KsLiquidConductance * ksOpening, args.dt);
+        _ksLiquidFlowSystem.Transfer(inletPipeNode.Air, outletPipeNode.Air, ent.Comp.KsLiquidConductance, args.dt,
+            minimumInletPressure: ent.Comp.Threshold);
         // KS14 end
 
         // Calculate the flow rate in L/s for the UI.

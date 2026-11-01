@@ -27,8 +27,11 @@ public sealed partial class KsLiquidFlowSystem : EntitySystem
     ///         seconds, if the inlet is at the higher pressure.
     /// </summary>
     /// <param name="conductance">Units per second per √kPa.</param>
+    /// <param name="minimumInletPressure">
+    ///     Lowest pressure, in kPa, the inlet may be brought down to, for a device that holds its inlet at a threshold.
+    /// </param>
     /// <returns>Units of liquid moved.</returns>
-    public float Transfer(GasMixture inlet, GasMixture outlet, float conductance, float deltaTime)
+    public float Transfer(GasMixture inlet, GasMixture outlet, float conductance, float deltaTime, float minimumInletPressure = 0f)
     {
         if (conductance <= 0f ||
             deltaTime <= 0f ||
@@ -38,12 +41,13 @@ public sealed partial class KsLiquidFlowSystem : EntitySystem
             outlet.Immutable)
             return 0f;
 
-        var pressureDifference = inlet.Pressure - outlet.Pressure;
-        if (pressureDifference <= 0f)
+        var inletPressure = inlet.Pressure;
+        var pressureDifference = inletPressure - outlet.Pressure;
+        if (pressureDifference <= 0f || inletPressure <= minimumInletPressure)
             return 0f;
 
         var units = MathF.Min(conductance * MathF.Sqrt(pressureDifference) * deltaTime, inletFluid.LiquidUnits);
-        units = CapToPressureBalance(inlet, outlet, units);
+        units = CapToPressureBalance(inlet, outlet, units, minimumInletPressure);
         if (units <= KsFluidmos.MinLiquidUnits)
             return 0f;
 
@@ -52,18 +56,19 @@ public sealed partial class KsLiquidFlowSystem : EntitySystem
     }
 
     /// <summary>
-    ///     The most of <paramref name="units"/> that leaves the inlet's pressure at or above the outlet's. Found by
+    ///     The most of <paramref name="units"/> that leaves the inlet's pressure at or above the outlet's, and at or above
+    ///         <paramref name="minimumInletPressure"/>. Found by
     ///         bisection on each side's pressure as a function of the liquid it would hold, rather than by linearising, as
     ///         near the hydraulic floor a tiny volume swings pressure by thousands of kPa and a linear estimate overshoots,
     ///         sending the liquid back and forth between the nets every update. Taking the lower bound means it never
     ///         overshoots.
     /// </summary>
-    private static float CapToPressureBalance(GasMixture inlet, GasMixture outlet, float units)
+    private static float CapToPressureBalance(GasMixture inlet, GasMixture outlet, float units, float minimumInletPressure)
     {
         var inletCondensed = inlet.Fluid!.CondensedUnits;
         var outletCondensed = outlet.Fluid?.CondensedUnits ?? 0f;
 
-        if (PressureDifference(inlet, outlet, inletCondensed, outletCondensed, units) >= 0f)
+        if (Allowed(units))
             return units;
 
         var low = 0f;
@@ -71,13 +76,19 @@ public sealed partial class KsLiquidFlowSystem : EntitySystem
         for (var i = 0; i < CapIterations; i++)
         {
             var middle = (low + high) * 0.5f;
-            if (PressureDifference(inlet, outlet, inletCondensed, outletCondensed, middle) >= 0f)
+            if (Allowed(middle))
                 low = middle;
             else
                 high = middle;
         }
 
         return low;
+
+        bool Allowed(float moved)
+        {
+            return PressureDifference(inlet, outlet, inletCondensed, outletCondensed, moved) >= 0f &&
+                   inlet.KsPressureWithCondensedUnits(inletCondensed - moved) >= minimumInletPressure;
+        }
     }
 
     private static float PressureDifference(GasMixture inlet, GasMixture outlet, float inletCondensed, float outletCondensed, float units)

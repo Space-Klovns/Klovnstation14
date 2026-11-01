@@ -8,6 +8,7 @@ using Content.Server.Atmos.Piping.Binary.Components;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos.Components;
+using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared._KS14.Atmos;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Fluidmos;
@@ -33,6 +34,7 @@ public sealed class KsTransferThermoTests : GameTest
     private static readonly ProtoId<GasPrototype> TritiumGas = "Tritium";
 
     private static readonly EntProtoId PassiveGatePrototype = "GasPassiveGate";
+    private static readonly EntProtoId PressureRegulatorPrototype = "GasPressureRegulator";
 
     private const float NodeVolume = 200f;
 
@@ -381,6 +383,54 @@ public sealed class KsTransferThermoTests : GameTest
                 Assert.That(outlet.Air.Fluid?.LiquidUnits ?? 0f,
                     Is.LessThan(gateComponent.KsLiquidConductance * MathF.Sqrt(Atmospherics.MaxOutputPressure) * deltaTime),
                     "Liquid rode along with the gas instead of crossing by the orifice law.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A regulator relieves a net packed with liquid, over its threshold with almost no gas in it, down to the
+    ///         threshold and no further.
+    /// </summary>
+    [Test]
+    public async Task RegulatorRelievesALiquidPackedNetDownToItsThreshold()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var nodeContainerSystem = server.System<NodeContainerSystem>();
+        EntityUid regulatorUid = default;
+
+        await server.WaitPost(() => regulatorUid = server.EntMan.SpawnEntity(PressureRegulatorPrototype, testMap.GridCoords));
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(nodeContainerSystem.TryGetNodes(regulatorUid, "inlet", "outlet", out PipeNode? inlet, out PipeNode? outlet));
+            var regulator = server.EntMan.GetComponent<GasPressureRegulatorComponent>(regulatorUid);
+            regulator.Threshold = Atmospherics.OneAtmosphere * 5f;
+
+            inlet!.Air.Clear();
+            inlet.Air.Temperature = Atmospherics.T20C;
+            inlet.Air.AdjustMoles(Gas.Nitrogen, 0.01f);
+            inlet.Air.Fluid = new KsFluidMixture();
+            // Past the hydraulic floor: thousands of kPa, nearly all of it the liquid's.
+            inlet.Air.Fluid.AddLiquid(WaterKey, 1.02f * inlet.Air.Volume / KsFluidmos.LitersPerUnit);
+            outlet!.Air.Clear();
+            outlet.Air.Temperature = Atmospherics.T20C;
+            outlet.Air.AdjustMoles(Gas.Nitrogen, Atmospherics.OneAtmosphere * outlet.Air.Volume / (Atmospherics.R * Atmospherics.T20C));
+            var pressureBefore = inlet.Air.Pressure;
+            Assert.That(pressureBefore, Is.GreaterThan(regulator.Threshold * 2f), "The packed net isn't over the threshold, so this proves nothing.");
+
+            for (var i = 0; i < 20; i++)
+            {
+                var ev = new AtmosDeviceUpdateEvent(0.5f, null, null);
+                server.EntMan.EventBus.RaiseLocalEvent(regulatorUid, ref ev);
+            }
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(outlet.Air.Fluid?.LiquidUnits ?? 0f, Is.GreaterThan(0f), "The regulator didn't relieve the packed net of any liquid.");
+                Assert.That(inlet.Air.Pressure, Is.LessThan(pressureBefore * 0.5f), "The regulator barely relieved the packed net.");
+                Assert.That(inlet.Air.Pressure, Is.GreaterThanOrEqualTo(regulator.Threshold - 1f), "The regulator relieved past its threshold.");
             }
         });
     }
