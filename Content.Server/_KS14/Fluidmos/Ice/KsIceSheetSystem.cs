@@ -60,6 +60,13 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     /// </summary>
     private const float PuddleConductance = 60f;
 
+    /// <summary>
+    ///     The share of a sheet's heat capacity each of its two contacts, the air and the puddle, works with. Both start
+    ///         from the sheet's temperature and are applied together, so with the whole capacity in each, a thin sheet
+    ///         between a colder air and puddle would be carried past both.
+    /// </summary>
+    private const float ContactCapacityShare = 0.5f;
+
     private readonly Dictionary<EntityUid, Dictionary<Vector2i, Entity<KsIceSheetComponent>>> _gridIceCache = new();
 
     /// <summary>
@@ -273,7 +280,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
                 var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
                 var airConductance = conductance * coverage +
                                      KsThermalTransfer.RadiativeConductance(iceTemperature, mixture.Temperature, coverage, emissivity);
-                var heat = KsThermalTransfer.ExchangeQuery(iceCapacity, iceTemperature, airCapacity, mixture.Temperature, airConductance, deltaTime);
+                var heat = KsThermalTransfer.ExchangeQuery(iceCapacity * ContactCapacityShare, iceTemperature, airCapacity,
+                    mixture.Temperature, airConductance, deltaTime);
                 mixture.Temperature -= heat / airCapacity;
                 iceHeat += heat;
             }
@@ -287,7 +295,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             var puddleCapacity = puddleSolution.Comp.Solution.GetHeatCapacity(ProtoMan);
             if (puddleCapacity > 0f)
             {
-                var heat = KsThermalTransfer.ExchangeQuery(iceCapacity, iceTemperature, puddleCapacity,
+                var heat = KsThermalTransfer.ExchangeQuery(iceCapacity * ContactCapacityShare, iceTemperature, puddleCapacity,
                     puddleSolution.Comp.Solution.Temperature, PuddleConductance, deltaTime);
                 iceHeat += heat;
                 _pendingHeat.Add((puddleSolution, -heat));

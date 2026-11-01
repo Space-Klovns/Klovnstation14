@@ -37,6 +37,19 @@ public sealed class KsIceSheetTests : GameTest
 
     private const float ColdTemperature = 253.15f;
 
+    // Deliberately NOT static: it only exists in this test's YAML, and the YAML linter validates static ids.
+    private readonly ProtoId<ReagentPrototype> _inertReagent = "KsTestIceSheetInert";
+
+    // No boiling or melting point, so nothing but heat exchange changes its temperature.
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: reagent
+  id: KsTestIceSheetInert
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+";
+
     private async Task<TestMapData> CreateColdTestMap()
     {
         var server = Pair.Server;
@@ -198,6 +211,43 @@ public sealed class KsIceSheetTests : GameTest
             Assert.That(puddle.Comp.Solution is { } solution &&
                         solution.Comp.Solution.GetReagentQuantity(new ReagentId(BloodReagent, dna)) > FixedPoint2.Zero,
                 "The melted blood lost its DNA, or did not reach the puddle.");
+        });
+    }
+
+    /// <summary>
+    ///     A thin sheet between colder air and a colder puddle cools to their temperature and no further. Both exchanges
+    ///         start from the sheet's temperature and are applied together, so if each could take it all the way, together
+    ///         they would carry it below both.
+    /// </summary>
+    [Test]
+    public async Task ThinIceBetweenColdAirAndAColdPuddleStopsAtTheirTemperature()
+    {
+        const float surroundingTemperature = 150f;
+
+        var server = Pair.Server;
+        var testMap = await CreateColdTestMap();
+
+        await server.WaitPost(() =>
+        {
+            var air = TileAir(testMap);
+            air.Temperature = surroundingTemperature;
+            SpillPuddle(testMap, new Solution(_inertReagent, FixedPoint2.New(20)) { Temperature = surroundingTemperature }, out _);
+            server.System<KsIceSheetSystem>().AddIce(testMap.GridCoords, new Solution(WaterReagent, FixedPoint2.New(0.2f)) { Temperature = ColdTemperature });
+        });
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            // Conductive enough that either contact alone would bring the sheet all the way within the step.
+            server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 1000f, referenceVolume: KsFluidmos.PuddleReferenceVolume, emissivity: 0f);
+            var temperature = IceSolution(testMap, out _).Temperature;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(temperature, Is.GreaterThanOrEqualTo(surroundingTemperature - 0.5f),
+                    $"The sheet fell to {temperature} K, below the {surroundingTemperature} K of the air and puddle it touches.");
+                Assert.That(temperature, Is.LessThan(surroundingTemperature + 20f), "The sheet didn't cool, so this proves nothing.");
+            }
         });
     }
 

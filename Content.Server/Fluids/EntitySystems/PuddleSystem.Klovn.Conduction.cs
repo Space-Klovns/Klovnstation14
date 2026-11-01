@@ -17,10 +17,15 @@ public sealed partial class PuddleSystem
     private const float PuddleConductance = 20f;
 
     /// <summary>
-    ///     The neighbours a puddle can conduct to. Each pair's step works with a quarter of each puddle's heat capacity,
-    ///         so that its exchanges with all four together still can't carry it past the temperature they settle at.
+    ///     The neighbours a puddle can conduct to. Each pair's step works with a quarter of the share of each puddle's
+    ///         heat capacity that the air leaves (<see cref="AirHeatExchangeCapacityShare"/>).
     /// </summary>
     private const int PuddleConductionNeighbours = 4;
+
+    /// <summary>
+    ///     The share of a puddle's heat capacity each neighbour's step works with: what the air leaves, split four ways.
+    /// </summary>
+    private const float PuddleConductionCapacityShare = (1f - AirHeatExchangeCapacityShare) / PuddleConductionNeighbours;
 
     private static readonly Vector2i[] PuddleConductionOffsets = [new(1, 0), new(0, 1)];
 
@@ -46,8 +51,8 @@ public sealed partial class PuddleSystem
             if (MathF.Abs(solution.Temperature - neighborSolution.Temperature) < AirHeatExchangeMinimumDelta)
                 continue;
 
-            var capacity = solution.GetHeatCapacity(ProtoMan) / PuddleConductionNeighbours;
-            var neighborCapacity = neighborSolution.GetHeatCapacity(ProtoMan) / PuddleConductionNeighbours;
+            var capacity = solution.GetHeatCapacity(ProtoMan) * PuddleConductionCapacityShare;
+            var neighborCapacity = neighborSolution.GetHeatCapacity(ProtoMan) * PuddleConductionCapacityShare;
 
             var edgeDepth = MathF.Min(
                 MathF.Min(1f, (float)solution.Volume / AirHeatExchangeReferenceVolume),
