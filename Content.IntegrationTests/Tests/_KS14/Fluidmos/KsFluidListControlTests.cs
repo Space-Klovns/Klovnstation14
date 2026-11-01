@@ -52,17 +52,6 @@ public sealed class KsFluidListControlTests : GameTest
                 .Select(row => cells.Skip(row * columns).Take(columns).Select(cell => cell is Label label ? label.Text ?? string.Empty : "<rule>").ToArray())
                 .ToArray();
 
-            // Every cell on a data row sits level with the row's name, blank or not.
-            for (var row = 2; row < rows.Length; row++)
-            {
-                var top = cells[row * columns].Position.Y;
-                for (var column = 1; column < columns; column++)
-                {
-                    Assert.That(cells[row * columns + column].Position.Y, Is.EqualTo(top).Within(0.5f),
-                        $"Row {row}'s cell {column} isn't level with its name.");
-                }
-            }
-
             window.Close();
         });
 

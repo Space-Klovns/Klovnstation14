@@ -10,8 +10,8 @@
 #
 # Dry ice: its vapor-pressure curve is the solid's, subliming at 194.65 K under one atmosphere (real ΔH_sub 25.2 kJ/mol,
 #     so ΔS/R = 15.6), and its melting point is the 216.55 K triple point. Below about 5 atm it never stays liquid: a
-#     cold puddle of it sublimes, and in a pipe it condenses straight to solid. Fusion keeps real CO2's 8.6 / 25.2 share
-#     of the sublimation heat.
+#     cold puddle of it sublimes, and in a pipe it condenses straight to solid. Subliming costs latentHeat plus
+#     fusionHeat, 10200 together, split in real CO2's 8.6 / 25.2 share of the sublimation heat.
 - type: !PartialOnly reagent
   id: CarbonDioxide
   boilingPoint: 194.65 # where it sublimes at one atmosphere
@@ -21,7 +21,7 @@
     gas: CarbonDioxide
     molesPerUnit: 4
     vaporizationEntropy: 15.6
-    latentHeat: 10200
+    latentHeat: 6700
     fusionHeat: 3500
   tileReactions:
   # Into a puddle it lands on first, which it then boils out of, cooling it.

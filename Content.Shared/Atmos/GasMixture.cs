@@ -214,6 +214,7 @@ namespace Content.Shared.Atmos
             sample.Moles.CopyTo(Moles, 0);
             Temperature = sample.Temperature;
             Fluid = sample.Fluid?.Clone(); // KS14
+            FluidCapable = sample.FluidCapable; // KS14: a copy holds what it copied, or its fluid is dropped at the next merge
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

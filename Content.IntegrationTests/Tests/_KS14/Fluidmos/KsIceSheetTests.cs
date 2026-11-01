@@ -251,6 +251,40 @@ public sealed class KsIceSheetTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     Ice that freezes onto a tile in the same tick its old sheet melted away goes into a sheet that stays, not into
+    ///         the old one on its way out.
+    /// </summary>
+    [Test]
+    public async Task IceFrozenAsTheOldSheetGoesIsKept()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateColdTestMap();
+
+        await server.WaitPost(() =>
+        {
+            TileAir(testMap).Multiply(0.001f);
+            server.System<KsIceSheetSystem>().AddIce(testMap.GridCoords, new Solution(WaterReagent, FixedPoint2.New(0.01f)) { Temperature = ColdTemperature });
+        });
+        await server.WaitRunTicks(1);
+
+        await server.WaitPost(() =>
+        {
+            // Warm enough that the whole sheet melts in one step, and its sheet goes.
+            var oldIce = IceSolution(testMap, out _);
+            oldIce.Temperature = Atmospherics.T0C + 200f;
+            StepIce();
+            Assert.That(oldIce.Volume, Is.EqualTo(FixedPoint2.Zero), "The tiny sheet didn't melt away in one step, so this proves nothing.");
+            server.System<KsIceSheetSystem>().AddIce(testMap.GridCoords, new Solution(WaterReagent, FixedPoint2.New(5)) { Temperature = ColdTemperature });
+        });
+        await server.WaitRunTicks(2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That((float)IceSolution(testMap, out _).Volume, Is.GreaterThan(4f), "The new ice went into the sheet that was being deleted.");
+        });
+    }
+
     [Test]
     public async Task IceInVacuumSublimes()
     {

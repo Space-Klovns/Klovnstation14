@@ -368,6 +368,9 @@ public sealed partial class KsIceSheetSystem : EntitySystem
 
         if (solution.Volume <= FixedPoint2.Zero)
         {
+            // Out of the cache now rather than at shutdown, at the end of the tick: ice that freezes on this tile before
+            //     then would otherwise go into this sheet and be deleted with it.
+            UncacheSheet(sheet);
             QueueDel(sheet);
             return;
         }

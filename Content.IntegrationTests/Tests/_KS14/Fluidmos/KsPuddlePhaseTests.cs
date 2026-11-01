@@ -28,6 +28,7 @@ public sealed class KsPuddlePhaseTests : GameTest
 {
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private static readonly ProtoId<ReagentPrototype> EthanolReagent = "Ethanol";
+    private static readonly ProtoId<ReagentPrototype> AmmoniaReagent = "Ammonia";
 
     private async Task<TestMapData> CreateBreathableTestMap()
     {
@@ -164,6 +165,39 @@ public sealed class KsPuddlePhaseTests : GameTest
             volumeBefore = (float)solution.Volume;
             server.System<KsTileEffectSystem>().TryUpdateTileEffects(puddleUid, testMap.Tile, solution, scale: 1f);
             Assert.That(volumeBefore - (float)solution.Volume, Is.LessThan(dryRate * 0.05f), "A puddle in saturated air kept drying.");
+        });
+    }
+
+    /// <summary>
+    ///     A small puddle of one volatile reagent, given a long step, evaporates only as far as its own heat pays for: it
+    ///         cools to the air's dew point and stops, rather than losing nearly all of itself and with it the heat
+    ///         capacity its new temperature is divided by.
+    /// </summary>
+    [Test]
+    public async Task EvaporationStopsAtTheDewPointHoweverLongTheStep()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.System<KsFluidmosPropertiesSystem>().TryGetProperties(AmmoniaReagent, out var ammonia));
+            // Just under its boiling point, so it evaporates rather than boils, and fast.
+            var solutionEntity = SpillPuddle(testMap, AmmoniaReagent, 1f, ammonia!.BoilingPoint - 5f, out var puddleUid);
+            var solution = solutionEntity.Comp.Solution;
+            var air = TileAir(testMap);
+            var partialPressure = air.GetMoles(Gas.Ammonia) * Atmospherics.R * air.Temperature / air.Volume;
+            var dewPoint = KsPhaseMath.BoilingPointAt(ammonia.VaporizationEntropy, ammonia.BoilingPoint, partialPressure);
+
+            server.System<KsTileEffectSystem>().TryUpdateTileEffects(puddleUid, testMap.Tile, solution, scale: 10f);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(float.IsFinite(solution.Temperature), $"The puddle's temperature became {solution.Temperature}.");
+                Assert.That(solution.Temperature, Is.GreaterThanOrEqualTo(dewPoint - 0.5f),
+                    $"The puddle evaporated itself down to {solution.Temperature} K, below the {dewPoint} K dew point of the air.");
+                Assert.That(air.GetMoles(Gas.Ammonia), Is.GreaterThan(0f), "Nothing evaporated, so this proves nothing.");
+            }
         });
     }
 

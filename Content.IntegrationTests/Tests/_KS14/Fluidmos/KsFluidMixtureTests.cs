@@ -83,6 +83,31 @@ public sealed class KsFluidMixtureTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     A copy made with the copy constructor, as unanchoring a broken pipe leaks one, can hold the fluid it copied: a
+    ///         merge into it keeps that fluid rather than dropping it.
+    /// </summary>
+    [Test]
+    public async Task ACopyHoldsTheFluidItCopied()
+    {
+        var server = Pair.Server;
+        var atmosphereSystem = server.System<AtmosphereSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var source = MakePipeMixture(waterUnits: 40f, ethanolUnits: 0f, ethanolVaporMoles: 0f, iceUnits: 0f);
+            var copy = new GasMixture(source);
+            var more = MakePipeMixture(waterUnits: 10f, ethanolUnits: 0f, ethanolVaporMoles: 0f, iceUnits: 0f);
+            atmosphereSystem.Merge(copy, more);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(copy.FluidCapable, "A copy of a fluid-capable mixture can't hold fluid.");
+                Assert.That(copy.Fluid!.LiquidUnits, Is.EqualTo(50f).Within(Tolerance), "Liquid merged into a copy was dropped.");
+            }
+        });
+    }
+
     [Test]
     public async Task DividingAPipeNetConservesFluidAndSplitsSolidsByVolume()
     {

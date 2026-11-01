@@ -93,6 +93,8 @@ public sealed partial class KsFluidListControl : BoxContainer
                 Text = name,
                 HorizontalExpand = true,
                 ToolTip = entry.Linked ? Loc.GetString("ks-fluid-list-linked-tooltip") : null,
+                // A label ignores the mouse by default, and a tooltip needs it.
+                MouseFilter = entry.Linked ? MouseFilterMode.Pass : MouseFilterMode.Ignore,
             });
             AddAmount(entry.Liquid);
             AddAmount(entry.Solid);

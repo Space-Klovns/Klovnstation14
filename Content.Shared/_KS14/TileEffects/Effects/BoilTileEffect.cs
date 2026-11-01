@@ -159,7 +159,8 @@ public sealed partial class BoilTileEffect : KsTileEffect
                  // A foam blanket over the tile seals the puddle in.
                  !_foamBlanketSystem.TryGetBlanket(tileRef.GridUid, tileRef.GridIndices, out _))
         {
-            boiled = EvaporateIntoAir(tileRef, solution, air, evaporatingGas, properties, available, molesPerUnit, scale);
+            boiled = EvaporateIntoAir(tileRef, solution, air, evaporatingGas, properties, available, molesPerUnit, scale,
+                heatCapacity, latentHeat, specificHeat);
 
             if (boiled > 0f)
                 solution.Temperature = temperature - boiled * latentHeat / (heatCapacity - boiled * specificHeat);
@@ -193,7 +194,10 @@ public sealed partial class BoilTileEffect : KsTileEffect
         KsFluidReagentProperties properties,
         float available,
         float molesPerUnit,
-        float seconds)
+        float seconds,
+        float heatCapacity,
+        float latentHeat,
+        float specificHeat)
     {
         if (air.Volume <= 0f || air.Temperature <= 0f || molesPerUnit <= 0f)
             return 0f;
@@ -211,6 +215,16 @@ public sealed partial class BoilTileEffect : KsTileEffect
         var gapMoles = (saturationPressure - partialPressure) * air.Volume / (Atmospherics.R * air.Temperature);
         var moles = MathF.Min(flux * coverage * seconds, gapMoles);
         var units = MathF.Min(moles / molesPerUnit, available);
+
+        // The latent heat comes out of the solution, so no more goes than cools it to the air's dew point, where it would
+        //     stop. Unbounded, a small puddle that is mostly this reagent could lose nearly all of it in one long step,
+        //     leaving the divisor of its new temperature near zero and that temperature far below absolute zero.
+        var dewPoint = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, partialPressure);
+        var excessTemperature = solution.Temperature - dewPoint;
+        if (excessTemperature <= 0f)
+            return 0f;
+
+        units = MathF.Min(units, excessTemperature * heatCapacity / (latentHeat + excessTemperature * specificHeat));
 
         return RaiseBoil(tileRef, gas, units, molesPerUnit, properties.SpecificHeat * solution.Temperature,
             latentEnergyPerUnitFromAir: 0f, Atmospherics.TCMB);
