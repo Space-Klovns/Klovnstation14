@@ -285,6 +285,98 @@ public sealed class KsIceSheetTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     Ice on a tile with no air of its own at all, as on a grid with no atmosphere, sublimes into the vacuum rather
+    ///         than lasting for ever.
+    /// </summary>
+    [Test]
+    public async Task IceWithNoAirAtAllSublimes()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        FixedPoint2 before = default;
+
+        await server.WaitPost(() =>
+            server.System<KsIceSheetSystem>().AddIce(testMap.GridCoords, new Solution(WaterReagent, FixedPoint2.New(10)) { Temperature = ColdTemperature }));
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.HasComponent<GridAtmosphereComponent>(testMap.Grid.Owner), Is.False,
+                "The grid has an atmosphere, so this proves nothing.");
+            before = IceSolution(testMap, out _).Volume;
+            StepIce();
+            Assert.That(IceSolution(testMap, out _).Volume, Is.LessThan(before), "Ice with no air at all did not sublime.");
+        });
+    }
+
+    /// <summary>
+    ///     A puddle that freezes solid all at once puts its heat into its ice: the ice comes out at what that heat gives,
+    ///         not at the melting point, which would make heat the freezing never released.
+    /// </summary>
+    [Test]
+    public async Task PuddleFrozenSolidKeepsItsHeatInItsIce()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateColdTestMap();
+        var expected = 0f;
+
+        await server.WaitPost(() =>
+        {
+            Assert.That(server.System<KsFluidmosPropertiesSystem>().TryGetProperties(WaterReagent, out var water));
+            // Cold enough that the heat of fusion all of it releases only brings it up to the melting point.
+            var temperature = water!.MeltingPoint - 1.5f * water.FusionHeat / water.SpecificHeat;
+            expected = temperature + water.FusionHeat / water.SpecificHeat;
+            Saturate(testMap, water.MeltingPoint);
+
+            var puddle = SpillPuddle(testMap, new Solution(WaterReagent, FixedPoint2.New(1)) { Temperature = temperature }, out var puddleUid).Comp.Solution;
+            server.System<KsTileEffectSystem>().TryUpdateTileEffects(puddleUid, testMap.Tile, puddle, scale: 1f);
+        });
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            var ice = IceSolution(testMap, out _);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That((float)ice.Volume, Is.EqualTo(1f).Within(0.01f), "The puddle did not freeze solid, so this proves nothing.");
+                Assert.That(ice.Temperature, Is.EqualTo(expected).Within(1f), "The ice did not keep the heat its freezing released.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A sheet that melts away all at once pays its heat of fusion out of its own heat: the melt comes out that much
+    ///         cooler than the sheet was, not at the sheet's temperature.
+    /// </summary>
+    [Test]
+    public async Task SheetMeltedAwayPaysItsFusionOutOfItsHeat()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateColdTestMap();
+        var expected = 0f;
+
+        await server.WaitPost(() =>
+            server.System<KsIceSheetSystem>().AddIce(testMap.GridCoords, new Solution(WaterReagent, FixedPoint2.New(1)) { Temperature = ColdTemperature }));
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.System<KsFluidmosPropertiesSystem>().TryGetProperties(WaterReagent, out var water));
+            var ice = IceSolution(testMap, out _);
+            // Warm enough that it all melts in one step, and its melt stays below its boiling point.
+            ice.Temperature = water!.MeltingPoint + 1.5f * water.FusionHeat / water.SpecificHeat;
+            expected = ice.Temperature - water.FusionHeat / water.SpecificHeat;
+            StepIce();
+
+            Assert.That(ice.Volume, Is.EqualTo(FixedPoint2.Zero), "The sheet did not melt away, so this proves nothing.");
+            Assert.That(server.System<PuddleSystem>().TryGetCachedPuddle(testMap.Grid.Owner, testMap.Tile.GridIndices, out var puddle) &&
+                        puddle.Comp.Solution is { } puddleSolution, "The melt did not spill.");
+            Assert.That(puddle.Comp.Solution!.Value.Comp.Solution.Temperature, Is.EqualTo(expected).Within(1f),
+                "The melt did not pay its heat of fusion out of the sheet's heat.");
+        });
+    }
+
     [Test]
     public async Task IceInVacuumSublimes()
     {

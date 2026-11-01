@@ -39,18 +39,6 @@ public sealed partial class PuddleSystem
     /// <summary>Puddle volume at and above which the full conductance applies; smaller puddles scale down linearly.</summary>
     private const float AirHeatExchangeReferenceVolume = 20f;
 
-    /// <summary>
-    ///     The share of a puddle's heat capacity its step with the air works with; its neighbours share the rest
-    ///         (<see cref="PuddleConductionCapacityShare"/>).
-    /// </summary>
-    /// <remarks>
-    ///     Every step in a pass starts from the same temperatures and they are applied together, so each can only carry
-    ///         its own share as far as its partner's temperature. With the whole capacity in each, a small hot puddle
-    ///         between cold neighbours in cold air was carried past both, below absolute zero. A slow exchange moves the
-    ///         same heat whatever the share; the share only bounds one that would settle within the step.
-    /// </remarks>
-    private const float AirHeatExchangeCapacityShare = 0.5f;
-
     /// <summary>Temperature differences below this (in kelvin) are ignored.</summary>
     private const float AirHeatExchangeMinimumDelta = 0.5f;
 
@@ -89,17 +77,19 @@ public sealed partial class PuddleSystem
 
         foreach (var (gridUid, tilePuddles) in _gridPuddleCache)
         {
-            foreach (var (indices, puddle) in tilePuddles)
-                ConductHeatToNeighbours(puddle, tilePuddles, indices, deltaTime);
-
             // Resolved once per grid; grids without an atmosphere fall back to the map's (immutable) mixture and are skipped.
-            if (!TryComp(gridUid, out GridAtmosphereComponent? gridAtmosphere))
+            var gridHasAir = TryComp(gridUid, out GridAtmosphereComponent? gridAtmosphere);
+
+            foreach (var (indices, puddle) in tilePuddles)
+                ConductHeatToNeighbours(puddle, gridUid, tilePuddles, indices, gridHasAir, deltaTime);
+
+            if (!gridHasAir)
                 continue;
 
             var grid = new Entity<GridAtmosphereComponent?, GasTileOverlayComponent?>(gridUid, gridAtmosphere, null);
 
             foreach (var (indices, puddle) in tilePuddles)
-                ExchangeHeatWithAir(puddle, grid, indices, deltaTime);
+                ExchangeHeatWithAir(puddle, grid, tilePuddles, indices, deltaTime);
         }
 
         // The cache is no longer being walked, so reactions are free to spawn or delete puddles now.
@@ -117,7 +107,12 @@ public sealed partial class PuddleSystem
         _iceSheetSystem.UpdateHeatExchange(deltaTime, AirHeatExchangeConductance, AirHeatExchangeReferenceVolume, _puddleEmissivity);
     }
 
-    private void ExchangeHeatWithAir(Entity<PuddleComponent> puddle, Entity<GridAtmosphereComponent?, GasTileOverlayComponent?> grid, Vector2i indices, float deltaTime)
+    private void ExchangeHeatWithAir(
+        Entity<PuddleComponent> puddle,
+        Entity<GridAtmosphereComponent?, GasTileOverlayComponent?> grid,
+        Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles,
+        Vector2i indices,
+        float deltaTime)
     {
         if (!_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution))
             return;
@@ -149,8 +144,9 @@ public sealed partial class PuddleSystem
             KsThermalTransfer.RadiativeConductance(solutionTemperature, airTemperature, coverage, _puddleEmissivity);
 
         // Stepped exactly, so it never overshoots the shared equilibrium however strong the radiation.
-        var heat = KsThermalTransfer.ExchangeQuery(solutionCapacity * AirHeatExchangeCapacityShare, solutionTemperature,
-            airCapacity, airTemperature, conductance, deltaTime);
+        // Its share of the puddle's capacity, as its neighbours take theirs (CountHeatContacts).
+        var heat = KsThermalTransfer.ExchangeQuery(solutionCapacity / CountHeatContacts(tilePuddles, indices, exchangesWithAir: true),
+            solutionTemperature, airCapacity, airTemperature, conductance, deltaTime);
 
         if (heat == 0f || puddle.Comp.Solution is not { } solutionEntity)
             return;

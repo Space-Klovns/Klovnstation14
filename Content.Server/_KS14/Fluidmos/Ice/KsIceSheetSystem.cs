@@ -60,12 +60,6 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     /// </summary>
     private const float PuddleConductance = 60f;
 
-    /// <summary>
-    ///     The share of a sheet's heat capacity each of its two contacts, the air and the puddle, works with. Both start
-    ///         from the sheet's temperature and are applied together, so with the whole capacity in each, a thin sheet
-    ///         between a colder air and puddle would be carried past both.
-    /// </summary>
-    private const float ContactCapacityShare = 0.5f;
 
     private readonly Dictionary<EntityUid, Dictionary<Vector2i, Entity<KsIceSheetComponent>>> _gridIceCache = new();
 
@@ -272,30 +266,37 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         var iceTemperature = solution.Temperature;
         var iceHeat = 0f;
 
-        if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is { Immutable: false } mixture)
+        // Its air and its puddle each work with a share of its capacity, split between those it has: both start from the
+        //     sheet's temperature and are applied together, so with the whole capacity in each, a thin sheet between a
+        //     colder air and puddle would be carried past both.
+        var mixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is { Immutable: false } tileMixture &&
+                      _atmosphereSystem.GetHeatCapacity(tileMixture, applyScaling: true) >= Atmospherics.MinimumHeatCapacity
+            ? tileMixture
+            : null;
+        var hasPuddle = _puddleSystem.TryGetCachedPuddle(gridUid, indices, out var puddle) &&
+                        puddle.Comp.Solution is { } contactSolution &&
+                        contactSolution.Comp.Solution.Volume > FixedPoint2.Zero;
+        var contactCapacity = iceCapacity / Math.Max((mixture != null ? 1 : 0) + (hasPuddle ? 1 : 0), 1);
+
+        if (mixture != null)
         {
             var airCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
-            if (airCapacity >= Atmospherics.MinimumHeatCapacity)
-            {
-                var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
-                var airConductance = conductance * coverage +
-                                     KsThermalTransfer.RadiativeConductance(iceTemperature, mixture.Temperature, coverage, emissivity);
-                var heat = KsThermalTransfer.ExchangeQuery(iceCapacity * ContactCapacityShare, iceTemperature, airCapacity,
-                    mixture.Temperature, airConductance, deltaTime);
-                mixture.Temperature -= heat / airCapacity;
-                iceHeat += heat;
-            }
+            var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
+            var airConductance = conductance * coverage +
+                                 KsThermalTransfer.RadiativeConductance(iceTemperature, mixture.Temperature, coverage, emissivity);
+            var heat = KsThermalTransfer.ExchangeQuery(contactCapacity, iceTemperature, airCapacity,
+                mixture.Temperature, airConductance, deltaTime);
+            mixture.Temperature -= heat / airCapacity;
+            iceHeat += heat;
         }
 
         // In contact with the puddle on the same tile.
-        if (_puddleSystem.TryGetCachedPuddle(gridUid, indices, out var puddle) &&
-            puddle.Comp.Solution is { } puddleSolution &&
-            puddleSolution.Comp.Solution.Volume > FixedPoint2.Zero)
+        if (hasPuddle && puddle.Comp.Solution is { } puddleSolution)
         {
             var puddleCapacity = puddleSolution.Comp.Solution.GetHeatCapacity(ProtoMan);
             if (puddleCapacity > 0f)
             {
-                var heat = KsThermalTransfer.ExchangeQuery(iceCapacity * ContactCapacityShare, iceTemperature, puddleCapacity,
+                var heat = KsThermalTransfer.ExchangeQuery(contactCapacity, iceTemperature, puddleCapacity,
                     puddleSolution.Comp.Solution.Temperature, PuddleConductance, deltaTime);
                 iceHeat += heat;
                 _pendingHeat.Add((puddleSolution, -heat));
@@ -341,11 +342,18 @@ public sealed partial class KsIceSheetSystem : EntitySystem
                 melted.AddReagent(reagent, FixedPoint2.New(removed));
                 SetTemperatureAfterRemoving(solution, heatCapacity, temperature,
                     removed * (specificHeat * properties.MeltingPoint + properties.FusionHeat), removed * specificHeat);
+
+                // All of it melted: the melt holds the whole sheet's heat, less the fusion it took, which melting only as
+                //     much as that pays for keeps at or above the melting point. The sheet's temperature is what it takes.
+                if (solution.Volume <= FixedPoint2.Zero && removed > 0f)
+                    solution.Temperature = (heatCapacity * temperature - removed * properties.FusionHeat) / (removed * specificHeat);
+
                 changed = true;
             }
             else if (properties.Linked && properties.Volatile && transformComponent.GridUid is { } gridUid)
             {
-                var removed = Sublime(solution, reagent, (float)quantity, properties, gridUid, coordinates, deltaTime, referenceVolume);
+                var removed = Sublime(solution, reagent, (float)quantity, properties, gridUid, coordinates, deltaTime, referenceVolume,
+                    heatCapacity);
                 if (removed <= 0f)
                     continue;
 
@@ -379,8 +387,11 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Linked ice in thin air sublimes straight into the tile's gas, at the Hertz–Knudsen rate towards saturation.
+    ///     Linked ice in thin air sublimes straight into the tile's gas, at the Hertz–Knudsen rate towards saturation, as
+    ///         far as its own heat pays for. On a tile with no air of its own (space, or a grid with no atmosphere) it
+    ///         sublimes into vacuum, and the gas is lost to it, as anything vented there is.
     /// </summary>
+    /// <param name="heatCapacity">The sheet's heat capacity, which pays the sublimation heat.</param>
     /// <returns>Units removed from the sheet.</returns>
     private float Sublime(
         Solution solution,
@@ -390,34 +401,47 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         EntityUid gridUid,
         EntityCoordinates coordinates,
         float deltaTime,
-        float referenceVolume)
+        float referenceVolume,
+        float heatCapacity)
     {
         if (!_gridQuery.TryComp(gridUid, out var gridComponent))
             return 0f;
 
         var indices = _mapSystem.TileIndicesFor(gridUid, gridComponent, coordinates);
-        if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is not { Immutable: false } air ||
-            air.Volume <= 0f || air.Temperature <= 0f)
-            return 0f;
+        var air = _atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is { Immutable: false } tileAir &&
+                  tileAir.Volume > 0f && tileAir.Temperature > 0f
+            ? tileAir
+            : null;
 
         var gas = (Gas)properties.GasIndex;
-        var saturationPressure = KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, solution.Temperature);
-        var partialPressure = air.GetMoles(gas) * Atmospherics.R * air.Temperature / air.Volume;
+        var temperature = solution.Temperature;
+        var saturationPressure = KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature);
+        var partialPressure = air != null ? air.GetMoles(gas) * Atmospherics.R * air.Temperature / air.Volume : 0f;
         if (saturationPressure <= partialPressure)
             return 0f;
 
         var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
         var flux = KsPhaseMath.HertzKnudsenFlux(KsFluidmos.PuddleHertzKnudsenAlpha, saturationPressure - partialPressure,
-            properties.InverseSqrtTwoPiMR, solution.Temperature);
-        var gapMoles = (saturationPressure - partialPressure) * air.Volume / (Atmospherics.R * air.Temperature);
-        var moles = MathF.Min(flux * coverage * deltaTime, gapMoles);
+            properties.InverseSqrtTwoPiMR, temperature);
+        var moles = flux * coverage * deltaTime;
+        if (air != null)
+            moles = MathF.Min(moles, (saturationPressure - partialPressure) * air.Volume / (Atmospherics.R * air.Temperature));
 
-        var units = (float)FixedPoint2.New(MathF.Min(moles / properties.MolesPerUnit, available));
+        // The sublimation heat comes out of the sheet, so no more goes than cools it to where its vapor pressure meets
+        //     the air's, or the floor of the curve in vacuum.
+        var sublimationHeat = properties.LatentHeat + properties.FusionHeat;
+        var excessTemperature = temperature - KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, partialPressure);
+        if (excessTemperature <= 0f)
+            return 0f;
+
+        var heatLimit = excessTemperature * heatCapacity / (sublimationHeat + excessTemperature * properties.SpecificHeat);
+        var units = (float)FixedPoint2.New(MathF.Min(MathF.Min(moles / properties.MolesPerUnit, available), heatLimit));
         if (units <= 0f)
             return 0f;
 
-        if (!_tileEffectAtmosSystem.TryAddGas(gridUid, indices, gas, units * properties.MolesPerUnit,
-                sensibleEnergy: units * properties.SpecificHeat * solution.Temperature))
+        if (air != null &&
+            !_tileEffectAtmosSystem.TryAddGas(gridUid, indices, gas, units * properties.MolesPerUnit,
+                sensibleEnergy: units * properties.SpecificHeat * temperature))
             return 0f;
 
         return (float)solution.RemoveReagent(reagent, FixedPoint2.New(units));

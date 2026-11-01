@@ -16,24 +16,55 @@ public sealed partial class PuddleSystem
     /// </summary>
     private const float PuddleConductance = 20f;
 
-    /// <summary>
-    ///     The neighbours a puddle can conduct to. Each pair's step works with a quarter of the share of each puddle's
-    ///         heat capacity that the air leaves (<see cref="AirHeatExchangeCapacityShare"/>).
-    /// </summary>
-    private const int PuddleConductionNeighbours = 4;
-
-    /// <summary>
-    ///     The share of a puddle's heat capacity each neighbour's step works with: what the air leaves, split four ways.
-    /// </summary>
-    private const float PuddleConductionCapacityShare = (1f - AirHeatExchangeCapacityShare) / PuddleConductionNeighbours;
-
     private static readonly Vector2i[] PuddleConductionOffsets = [new(1, 0), new(0, 1)];
+
+    private static readonly Vector2i[] PuddleNeighbourOffsets = [new(1, 0), new(0, 1), new(-1, 0), new(0, -1)];
+
+    /// <summary>
+    ///     What a puddle exchanges heat with this pass: each neighbouring puddle, and the air over it unless that is out of
+    ///         reach. Every step works with the puddle's heat capacity split evenly between these.
+    /// </summary>
+    /// <remarks>
+    ///     Every step in a pass starts from the same temperatures and they are applied together, so each can carry only
+    ///         its own share as far as its partner's temperature, and together they stay between their partners'. With
+    ///         the whole capacity in each, a small hot puddle between cold neighbours in cold air was carried past all of
+    ///         them, below absolute zero. Splitting only between the contacts it has leaves a puddle with one alone its
+    ///         whole capacity, as before.
+    /// </remarks>
+    private int CountHeatContacts(Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles, Vector2i indices, bool exchangesWithAir)
+    {
+        var contacts = exchangesWithAir ? 1 : 0;
+        foreach (var offset in PuddleNeighbourOffsets)
+        {
+            if (tilePuddles.TryGetValue(indices + offset, out var neighbor) &&
+                _solutionContainerSystem.ResolveSolution(neighbor.Owner, neighbor.Comp.SolutionName, ref neighbor.Comp.Solution, out var neighborSolution) &&
+                neighborSolution.Volume > FixedPoint2.Zero)
+                contacts++;
+        }
+
+        return Math.Max(contacts, 1);
+    }
+
+    /// <summary>
+    ///     Whether the puddle on a tile exchanges heat with the air over it: the grid has air, and no foam blanket seals the
+    ///         puddle in.
+    /// </summary>
+    private bool ExchangesWithAir(EntityUid gridUid, Vector2i indices, bool gridHasAir)
+    {
+        return gridHasAir && !_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _);
+    }
 
     /// <summary>
     ///     Queues the heat that flows between this puddle and its neighbours above and to the right, so that each pair is
     ///         counted once. Taken from the temperatures at the start of the pass, as the air exchange is.
     /// </summary>
-    private void ConductHeatToNeighbours(Entity<PuddleComponent> puddle, Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles, Vector2i indices, float deltaTime)
+    private void ConductHeatToNeighbours(
+        Entity<PuddleComponent> puddle,
+        EntityUid gridUid,
+        Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles,
+        Vector2i indices,
+        bool gridHasAir,
+        float deltaTime)
     {
         if (!_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution) ||
             solution.Volume <= FixedPoint2.Zero ||
@@ -51,8 +82,11 @@ public sealed partial class PuddleSystem
             if (MathF.Abs(solution.Temperature - neighborSolution.Temperature) < AirHeatExchangeMinimumDelta)
                 continue;
 
-            var capacity = solution.GetHeatCapacity(ProtoMan) * PuddleConductionCapacityShare;
-            var neighborCapacity = neighborSolution.GetHeatCapacity(ProtoMan) * PuddleConductionCapacityShare;
+            var neighborIndices = indices + offset;
+            var capacity = solution.GetHeatCapacity(ProtoMan) /
+                CountHeatContacts(tilePuddles, indices, ExchangesWithAir(gridUid, indices, gridHasAir));
+            var neighborCapacity = neighborSolution.GetHeatCapacity(ProtoMan) /
+                CountHeatContacts(tilePuddles, neighborIndices, ExchangesWithAir(gridUid, neighborIndices, gridHasAir));
 
             var edgeDepth = MathF.Min(
                 MathF.Min(1f, (float)solution.Volume / AirHeatExchangeReferenceVolume),

@@ -64,13 +64,19 @@ public sealed partial class FreezeTileEffect : KsTileEffect
         if (units <= 0f)
             return false;
 
-        var ev = new KsTileEffectFreezeEvent(tileRef.GridUid, tileRef.GridIndices, reagent, units, meltingPoint);
+        // The ice leaves at the melting point, and the rest of the solution keeps what that leaves of the heat. If
+        //     nothing is left, the ice holds it all: freezing it all released no more than brings it to the melting point.
+        var remainingHeatCapacity = heatCapacity - units * specificHeat;
+        var iceTemperature = remainingHeatCapacity > 0f
+            ? meltingPoint
+            : (heatCapacity * temperature + units * properties.FusionHeat) / (units * specificHeat);
+
+        var ev = new KsTileEffectFreezeEvent(tileRef.GridUid, tileRef.GridIndices, reagent, units, iceTemperature);
         EntityManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
         if (!ev.Handled)
             return false;
 
         // Temperature is intensive, so removing the frozen units afterwards leaves this in place.
-        var remainingHeatCapacity = heatCapacity - units * specificHeat;
         if (remainingHeatCapacity > 0f)
         {
             solution.Temperature = (heatCapacity * temperature + units * properties.FusionHeat - units * specificHeat * meltingPoint)
