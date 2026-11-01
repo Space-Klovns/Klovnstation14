@@ -11,3 +11,42 @@
   rotation: User
   hasLayers: true
   fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsFluidPort
+  category: AtmosphericUtility
+  sprite: /Textures/_KS14/Interface/Radial/RPD/fluid_port.png
+  mode: ConstructObject
+  prototype: KsFluidPort
+  cost: 3
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  hasLayers: true
+  fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsPhaseSeparator
+  category: AtmosphericUtility
+  sprite: /Textures/_KS14/Interface/Radial/RPD/phase_separator.png
+  mode: ConstructObject
+  prototype: KsPhaseSeparator
+  cost: 3
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  hasLayers: true
+  fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsExpansionValve
+  category: PumpsValves
+  sprite: /Textures/_KS14/Interface/Radial/RPD/expansion_valve.png
+  mode: ConstructObject
+  prototype: KsExpansionValve
+  cost: 3
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  hasLayers: true
+  fx: EffectRCDConstruct0

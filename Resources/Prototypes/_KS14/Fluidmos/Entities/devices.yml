@@ -6,6 +6,8 @@
   id: KsFluidPort
   name: fluid port
   description: A pipe fitting with a small tank. Pour reagents in, or plumb them in, to feed them into the pipe as liquid; or switch it to draw the pipe's liquid out, for plumbing to take.
+  placement:
+    mode: AlignAtmosPipeLayers
   components:
   - type: Sprite
     drawdepth: FloorObjects
@@ -57,7 +59,45 @@
     enabled: false # Injecting by default; extracting enables it
   - type: PlumbingConnectorAppearance
     offset: 0.09375
+  # Its pipe node moves between layers; its plumbing node is a plumbing one, and stays on plumbing's only layer.
+  - type: AtmosPipeLayers
+    alternativePrototypes:
+      Primary: KsFluidPort
+      Secondary: KsFluidPortAlt1
+      Tertiary: KsFluidPortAlt2
   - type: KsFluidPort
+
+- type: entity
+  parent: [ GasPipeLayerAlt1, KsFluidPort ]
+  id: KsFluidPortAlt1
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    drawdepth: FloorObjects
+    sprite: Structures/Piping/Atmospherics/gascanisterport.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt1.rsi
+      state: pipeUnaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: gasCanisterPort
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#6fb8ff"
+
+- type: entity
+  parent: [ GasPipeLayerAlt2, KsFluidPort ]
+  id: KsFluidPortAlt2
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    drawdepth: FloorObjects
+    sprite: Structures/Piping/Atmospherics/gascanisterport.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt2.rsi
+      state: pipeUnaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: gasCanisterPort
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#6fb8ff"
 
 - type: entity
   parent: Solution
@@ -75,7 +115,7 @@
   name: phase separator
   description: Pumps gas and vapor out straight through and pushes liquid out from the side. Put a heater ahead of it and it is a still.
   placement:
-    mode: SnapgridCenter
+    mode: AlignAtmosPipeLayers
   components:
   - type: SubFloorHide
     visibleLayers:
@@ -91,8 +131,44 @@
       color: "#6fb8ff"
   - type: Appearance
   - type: PipeColorVisuals
+  # There is no offset art for a filter's body, so only its connectors move with its layer, as a thermomachine's do.
+  - type: AtmosPipeLayers
+    alternativePrototypes:
+      Primary: KsPhaseSeparator
+      Secondary: KsPhaseSeparatorAlt1
+      Tertiary: KsPhaseSeparatorAlt2
   - type: KsPhaseSeparator
     targetPressure: 4500
+
+- type: entity
+  parent: [ GasPipeLayerAlt1, KsPhaseSeparator ]
+  id: KsPhaseSeparatorAlt1
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/gasfilter.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt1.rsi
+      state: pipeTrinaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: gasFilterOn
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#6fb8ff"
+
+- type: entity
+  parent: [ GasPipeLayerAlt2, KsPhaseSeparator ]
+  id: KsPhaseSeparatorAlt2
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/gasfilter.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt2.rsi
+      state: pipeTrinaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: gasFilterOn
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#6fb8ff"
 
 - type: entity
   parent: GasBinaryBase
@@ -115,7 +191,10 @@
       map: [ "enum.SubfloorLayers.FirstLayer" ]
       color: "#6fb8ff"
   - type: AtmosPipeLayers
-    spriteRsiPaths: {}
+    alternativePrototypes:
+      Primary: KsExpansionValve
+      Secondary: KsExpansionValveAlt1
+      Tertiary: KsExpansionValveAlt2
   - type: Appearance
   - type: PipeColorVisuals
   - type: ActivatableUI
@@ -127,3 +206,33 @@
   - type: KsExpansionValve
     # Sized to feed a volume pump at its full rate; automatic mode throttles it down.
     conductance: 40
+
+- type: entity
+  parent: [ GasPipeLayerAlt1, KsExpansionValve ]
+  id: KsExpansionValveAlt1
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/pump_alt1.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt1.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: pumpPassiveGate
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#6fb8ff"
+
+- type: entity
+  parent: [ GasPipeLayerAlt2, KsExpansionValve ]
+  id: KsExpansionValveAlt2
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/pump_alt2.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt2.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: pumpPassiveGate
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#6fb8ff"
