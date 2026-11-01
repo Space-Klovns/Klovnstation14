@@ -28,6 +28,11 @@ public sealed partial class KsFluidListControl : BoxContainer
     /// </summary>
     private static readonly Color HeadingRuleColor = Color.FromHex("#525252");
 
+    /// <summary>
+    ///     Gap between the table's columns, and between its rows.
+    /// </summary>
+    private const int TableSeparation = 10;
+
     private readonly GridContainer _table;
     private readonly SplitBar _bar;
 
@@ -38,8 +43,11 @@ public sealed partial class KsFluidListControl : BoxContainer
         Orientation = LayoutOrientation.Vertical;
         Visible = false;
 
-        // A grid rather than the gas table's separate columns, so that rows stay level when a cell is left blank.
-        _table = new GridContainer { HSeparationOverride = 10 };
+        // A grid rather than the gas table's separate columns, so that rows stay level when a cell is left blank. Its two
+        //     separations are kept equal: GridContainer measures with them one way round and arranges with them the
+        //     other, so with a wider column gap each row was laid out lower than measured, and from three reagents the
+        //     last row slid under the bar.
+        _table = new GridContainer { HSeparationOverride = TableSeparation, VSeparationOverride = TableSeparation };
         AddChild(_table);
 
         AddChild(new Control { MinSize = new Vector2(0, 14) });

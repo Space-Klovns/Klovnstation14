@@ -1,6 +1,7 @@
 #nullable enable
 using System.Linq;
 using Content.Client._KS14.Fluidmos;
+using Content.Client.UserInterface.Controls;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Chemistry.Reagent;
@@ -20,6 +21,8 @@ public sealed class KsFluidListControlTests : GameTest
 {
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private static readonly ProtoId<ReagentPrototype> EthanolReagent = "Ethanol";
+    private static readonly ProtoId<ReagentPrototype> BicaridineReagent = "Bicaridine";
+    private static readonly ProtoId<ReagentPrototype> CryoxadoneReagent = "Cryoxadone";
 
     /// <summary>
     ///     Lays the control out in a window and returns the text of each table row, by row.
@@ -75,6 +78,49 @@ public sealed class KsFluidListControlTests : GameTest
             Assert.That(rows[2][3], Is.Empty, "Water becomes water vapor, a gas, but has a vapor cell.");
             Assert.That(rows[3][3], Is.Not.Empty, "Ethanol's own vapor isn't shown.");
         }
+    }
+
+    /// <summary>
+    ///     However many reagents are listed, every row of the table is laid out above the share bar under it, not behind it.
+    /// </summary>
+    [TestCase(1)]
+    [TestCase(4)]
+    public async Task TableRowsStayClearOfTheBar(int reagents)
+    {
+        var client = Pair.Client;
+        DefaultWindow window = null!;
+        KsFluidListControl list = null!;
+        ProtoId<ReagentPrototype>[] prototypes = [WaterReagent, EthanolReagent, BicaridineReagent, CryoxadoneReagent];
+
+        await client.WaitPost(() =>
+        {
+            window = new DefaultWindow();
+            list = new KsFluidListControl();
+            list.SetEntries(prototypes.Take(reagents)
+                .Select(reagent => new KsFluidEntry(reagent, Solid: 0f, Liquid: 10f, Vapor: 0f, Linked: false))
+                .ToArray());
+            window.Contents.AddChild(list);
+            window.OpenCentered();
+        });
+        await Pair.RunTicksSync(5);
+
+        await client.WaitPost(() =>
+        {
+            var table = list.Children.OfType<GridContainer>().Single();
+            var bar = list.Children.OfType<SplitBar>().Single();
+            var lastCell = table.Children.Last();
+            var lastRowBottom = lastCell.GlobalPosition.Y + lastCell.Size.Y;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(lastRowBottom, Is.LessThanOrEqualTo(table.GlobalPosition.Y + table.Size.Y + 0.5f),
+                    "The table's last row is laid out past the table's own bounds.");
+                Assert.That(lastRowBottom, Is.LessThanOrEqualTo(bar.GlobalPosition.Y + 0.5f),
+                    "The table's last row is laid out behind the share bar.");
+            }
+
+            window.Close();
+        });
     }
 
     [Test]
