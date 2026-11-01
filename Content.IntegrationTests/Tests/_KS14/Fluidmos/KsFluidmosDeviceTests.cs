@@ -125,6 +125,47 @@ public sealed class KsFluidmosDeviceTests : GameTest
         await ReleasesThroughDevice(PassiveVentPrototype);
     }
 
+    /// <summary>
+    ///     A passive vent lets liquid out only as its pipe's pressure pushes it, by the orifice law: with the pipe at the
+    ///         room's pressure, none spills, however long the gas has been equalising. (Some still evaporates into the dry
+    ///         room, and leaves as water vapor with the gas.)
+    /// </summary>
+    [Test]
+    public async Task PassiveVentKeepsLiquidAtTheRoomsPressure()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateBreathableTestMap();
+        var nodeContainerSystem = server.System<NodeContainerSystem>();
+        var atmosphereSystem = server.System<AtmosphereSystem>();
+        EntityUid ventUid = default;
+        PipeNode pipe = null!;
+        const float waterUnits = 20f;
+
+        await server.WaitPost(() => ventUid = server.EntMan.SpawnEntity(PassiveVentPrototype, testMap.GridCoords));
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(nodeContainerSystem.TryGetNode(ventUid, "pipe", out PipeNode? ventPipe));
+            pipe = ventPipe!;
+            var room = atmosphereSystem.GetTileMixture(testMap.Grid.Owner, null, testMap.Tile.GridIndices)!;
+            pipe.Air.Clear();
+            pipe.Air.Temperature = room.Temperature;
+            pipe.Air.Fluid = new KsFluidMixture();
+            pipe.Air.Fluid.AddLiquid(WaterKey, waterUnits);
+            // The room's pressure in what the liquid leaves of the pipe.
+            pipe.Air.AdjustMoles(Gas.Nitrogen, room.Pressure * pipe.Air.FreeVolume / (Atmospherics.R * pipe.Air.Temperature));
+        });
+
+        await server.WaitRunTicks(150);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(PuddleWater(testMap), Is.Zero, "The vent spilled its liquid with nothing pushing it.");
+            Assert.That(pipe.Air.Fluid?.LiquidUnits ?? 0f, Is.GreaterThan(0f), "The pipe's liquid all went, so this proves nothing.");
+        });
+    }
+
     private async Task ReleasesThroughDevice(EntProtoId devicePrototype)
     {
         var server = Pair.Server;
