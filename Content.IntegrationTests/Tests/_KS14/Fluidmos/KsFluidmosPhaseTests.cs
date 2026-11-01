@@ -32,6 +32,9 @@ public sealed class KsFluidmosPhaseTests : GameTest
     private static readonly ProtoId<ReagentPrototype> AmmoniaReagent = "Ammonia";
     private static readonly KsFluidReagentKey AmmoniaKey = new(AmmoniaReagent, null);
 
+    private static readonly ProtoId<ReagentPrototype> CarbonDioxideReagent = "CarbonDioxide";
+    private static readonly KsFluidReagentKey CarbonDioxideKey = new(CarbonDioxideReagent, null);
+
     /// <summary>
     ///     A pipe node's volume, which the Hertz–Knudsen tuning targets.
     /// </summary>
@@ -234,6 +237,58 @@ public sealed class KsFluidmosPhaseTests : GameTest
                 Assert.That(vaporUnits, Is.EqualTo(expectedVaporUnits).Within(0.01f * expectedVaporUnits),
                     "The flash fraction isn't what the energy balance gives.");
             }
+        });
+    }
+
+    /// <summary>
+    ///     Carbon dioxide gas in a cold pipe at about one atmosphere comes out as dry ice, never as liquid, since that
+    ///         pressure is below its triple point; warmed again, the dry ice sublimes straight back to gas.
+    /// </summary>
+    [Test]
+    public async Task CarbonDioxideDepositsAsDryIceAndSublimesBack()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(propertiesSystem.TryGetProperties(CarbonDioxideReagent, out var carbonDioxide));
+            var coldTemperature = carbonDioxide!.BoilingPoint - 25f;
+            var mixture = MakePipe(coldTemperature);
+            // Well past saturation at that temperature, with the pipe at about one atmosphere.
+            mixture.AdjustMoles(Gas.CarbonDioxide, Atmospherics.OneAtmosphere * NodeVolume / (Atmospherics.R * coldTemperature) / 2f);
+            AddHeadspace(mixture, Atmospherics.OneAtmosphere / 2f);
+            Assert.That(KsPhaseMath.BoilingPointAt(carbonDioxide.VaporizationEntropy, carbonDioxide.BoilingPoint, mixture.Pressure),
+                Is.LessThan(carbonDioxide.MeltingPoint), "The pipe is above carbon dioxide's triple point, so this proves nothing.");
+
+            for (var i = 0; i < 40; i++)
+            {
+                // Held cold, as a radiator in space would hold it, so it keeps depositing.
+                mixture.Temperature = coldTemperature;
+                Step(phaseSystem, gameTiming, mixture);
+            }
+
+            Assert.That(mixture.Fluid, Is.Not.Null, "Carbon dioxide in a cold pipe never came out of the gas.");
+            Assert.That(mixture.Fluid!.TryGetAmount(CarbonDioxideKey, out var deposited));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(deposited.Solid, Is.GreaterThan(0f), "Carbon dioxide in a cold pipe did not deposit as dry ice.");
+                Assert.That(deposited.Liquid, Is.LessThan(deposited.Solid * 0.01f), "Carbon dioxide stayed liquid below its triple point.");
+            }
+
+            // Held warm too, as the sublimation would otherwise cool it straight back down.
+            for (var i = 0; i < 40; i++)
+            {
+                mixture.Temperature = carbonDioxide.BoilingPoint + 30f;
+                Step(phaseSystem, gameTiming, mixture);
+            }
+
+            // A pipe with nothing left in it as fluid drops its fluid altogether.
+            var warmed = default(KsFluidAmount);
+            mixture.Fluid?.TryGetAmount(CarbonDioxideKey, out warmed);
+            Assert.That(warmed.Solid + warmed.Liquid, Is.LessThan(deposited.Solid * 0.5f), "Warm dry ice did not sublime.");
         });
     }
 
