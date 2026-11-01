@@ -42,7 +42,7 @@ public sealed partial class KsFluidListControl : BoxContainer
         _table = new GridContainer { HSeparationOverride = 10 };
         AddChild(_table);
 
-        AddChild(new Control { MinSize = new Vector2(0, 10) });
+        AddChild(new Control { MinSize = new Vector2(0, 14) });
 
         _bar = new SplitBar { MinHeight = 30, MinBarSize = new Vector2(12, 0) };
         AddChild(_bar);
