@@ -132,11 +132,13 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
             ref var amount = ref amounts[i];
             var before = amount;
 
+            var belowTriplePoint = IsBelowTriplePoint(properties, step.Pressure);
+
             if (properties.Volatile)
-                Vaporise(mixture, ref step, properties, ref amount);
+                Vaporise(mixture, ref step, properties, ref amount, belowTriplePoint);
 
             if (properties.Freezable)
-                Freeze(ref step, properties, ref amount);
+                Freeze(ref step, properties, ref amount, belowTriplePoint);
 
             var moved = MathF.Abs(amount.Liquid - before.Liquid) + MathF.Abs(amount.Solid - before.Solid) +
                 MathF.Abs(amount.Vapor - before.Vapor) / properties.MolesPerUnit;
@@ -220,18 +222,34 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Whether <paramref name="pressure"/> is below the reagent's triple point, where it boils below its melting point
+    ///         and so has no stable liquid: carbon dioxide under about 5 atm. It goes straight between solid and gas there.
+    /// </summary>
+    private static bool IsBelowTriplePoint(KsFluidReagentProperties properties, float pressure)
+    {
+        return properties is { Freezable: true, Volatile: true } &&
+               KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure) < properties.MeltingPoint;
+    }
+
+    /// <summary>
     ///     Evaporates or condenses one reagent, or sublimes its solid when it has no liquid.
     /// </summary>
-    private void Vaporise(GasMixture mixture, ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount)
+    /// <param name="belowTriplePoint">
+    ///     Whether it has no stable liquid here (<see cref="IsBelowTriplePoint"/>): its solid sublimes whatever the
+    ///         temperature, and its gas deposits straight back as solid, both at the Hertz–Knudsen rate.
+    /// </param>
+    private void Vaporise(GasMixture mixture, ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount,
+        bool belowTriplePoint)
     {
         var molesPerUnit = properties.MolesPerUnit;
         var vaporMoles = properties.Linked ? mixture.GetMoles(properties.GasIndex) : amount.Vapor;
         var temperature = step.Temperature;
 
-        // A solid with no liquid of its own sublimes, from its own phase.
+        // A solid with no liquid of its own sublimes, from its own phase. Below the triple point that is the only
+        //     condensed phase there is, so with no liquid the gas deposits as solid too, even with none there yet.
         var fromSolid = amount.Liquid <= 0f &&
-                        amount.Solid > 0f &&
-                        (!properties.Freezable || temperature < properties.MeltingPoint);
+                        (belowTriplePoint ||
+                         amount.Solid > 0f && (!properties.Freezable || temperature < properties.MeltingPoint));
         var sourceUnits = fromSolid ? amount.Solid : amount.Liquid;
 
         if (sourceUnits <= 0f && vaporMoles <= 0f)
@@ -314,7 +332,12 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     ///     Freezes liquid below the melting point, or melts solid above it, as far as the sensible heat pays for: the
     ///         mixture sits at the melting point as a slurry until it has.
     /// </summary>
-    private static void Freeze(ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount)
+    /// <param name="belowTriplePoint">
+    ///     Whether it has no stable liquid here (<see cref="IsBelowTriplePoint"/>). Its solid then never melts, and any
+    ///         liquid it has, merged in or condensed at a wall, freezes whatever the temperature, a step's worth of heat
+    ///         at a time. Melting it would only have flashed it to gas below the melting point and frozen it again.
+    /// </param>
+    private static void Freeze(ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount, bool belowTriplePoint)
     {
         var fusionHeat = properties.FusionHeat;
         if (fusionHeat <= 0f)
@@ -324,7 +347,14 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         var meltingPoint = properties.MeltingPoint;
         float frozenUnits;
 
-        if (temperature < meltingPoint && amount.Liquid > 0f)
+        if (belowTriplePoint)
+        {
+            if (amount.Liquid <= 0f)
+                return;
+
+            frozenUnits = MathF.Min(amount.Liquid, step.HeatCapacity * KsFluidmos.MaxPhaseDeltaT / fusionHeat);
+        }
+        else if (temperature < meltingPoint && amount.Liquid > 0f)
             frozenUnits = MathF.Min(amount.Liquid, step.HeatCapacity * (meltingPoint - temperature) / fusionHeat);
         else if (temperature > meltingPoint && amount.Solid > 0f)
             frozenUnits = -MathF.Min(amount.Solid, step.HeatCapacity * (temperature - meltingPoint) / fusionHeat);

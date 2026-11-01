@@ -242,7 +242,8 @@ public sealed class KsFluidmosPhaseTests : GameTest
 
     /// <summary>
     ///     Carbon dioxide gas in a cold pipe at about one atmosphere comes out as dry ice, never as liquid, since that
-    ///         pressure is below its triple point; warmed again, the dry ice sublimes straight back to gas.
+    ///         pressure is below its triple point; warmed again, even past its melting point, the dry ice sublimes
+    ///         straight back to gas, rather than melting and flashing.
     /// </summary>
     [Test]
     public async Task CarbonDioxideDepositsAsDryIceAndSublimesBack()
@@ -278,12 +279,19 @@ public sealed class KsFluidmosPhaseTests : GameTest
                 Assert.That(deposited.Liquid, Is.LessThan(deposited.Solid * 0.01f), "Carbon dioxide stayed liquid below its triple point.");
             }
 
-            // Held warm too, as the sublimation would otherwise cool it straight back down.
+            // Held warm too, as the sublimation would otherwise cool it straight back down; past the melting point.
+            var warmTemperature = carbonDioxide.MeltingPoint + 10f;
+            var mostLiquid = 0f;
             for (var i = 0; i < 40; i++)
             {
-                mixture.Temperature = carbonDioxide.BoilingPoint + 30f;
+                mixture.Temperature = warmTemperature;
                 Step(phaseSystem, gameTiming, mixture);
+                var liquid = default(KsFluidAmount);
+                mixture.Fluid?.TryGetAmount(CarbonDioxideKey, out liquid);
+                mostLiquid = MathF.Max(mostLiquid, liquid.Liquid);
             }
+
+            Assert.That(mostLiquid, Is.LessThan(deposited.Solid * 0.01f), "Dry ice warmed past its melting point melted, below its triple point.");
 
             // A pipe with nothing left in it as fluid drops its fluid altogether.
             var warmed = default(KsFluidAmount);
