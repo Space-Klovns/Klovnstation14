@@ -169,9 +169,15 @@ public sealed class KsPipeCookOffTest : GameTest
         var expectedRuptures = (int)MathF.Ceiling(totalPower / KsPipeCookOffSystem.PowerPerRupture);
         var seconds = Math.Clamp(KsPipeCookOffSystem.ReferenceSeconds / 2f, KsPipeCookOffSystem.MinSeconds, KsPipeCookOffSystem.MaxSeconds);
         Assert.That(expectedRuptures, Is.InRange(2, pipes.Count - 1), "The test's net would rupture every pipe or only the bend, so the bend going first proves nothing.");
+        Assert.That(seconds, Is.GreaterThan(KsPipeCookOffSystem.CheckInterval.TotalSeconds),
+            "The test's net would burst on its first check, so there is no rattling to see.");
 
         await server.WaitPost(() => Fill(Net(bendUid), pipes.Count, powerPerNode, HotTemperature));
-        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        // Up to the first check, and no further: how many checks the build-up lasts is the tuning's business.
+        var checkTicks = (int)(KsPipeCookOffSystem.CheckInterval.TotalSeconds * TicksPerSecond) + 1;
+        for (var i = 0; i < checkTicks && !pipes.Any(uid => server.EntMan.HasComponent<KsPipeCookOffComponent>(uid)); i++)
+            await server.WaitRunTicks(1);
 
         List<EntityUid> rattling = [];
         await server.WaitAssertion(() =>
@@ -186,7 +192,8 @@ public sealed class KsPipeCookOffTest : GameTest
             }
         });
 
-        await server.WaitRunTicks((int)MathF.Ceiling(seconds + 2f) * TicksPerSecond);
+        var chainSeconds = (float)KsPipeCookOffSystem.ChainDelay.TotalSeconds * expectedRuptures;
+        await server.WaitRunTicks((int)MathF.Ceiling(seconds + chainSeconds + 2f) * TicksPerSecond);
 
         await server.WaitAssertion(() =>
         {
@@ -297,7 +304,12 @@ public sealed class KsPipeCookOffTest : GameTest
         await server.WaitAssertion(() => Assert.That(Rattling(pipes), Is.Zero, "A net below its cook-off point rattled."));
 
         await server.WaitPost(() => Net(bendUid).Air.Temperature = HotTemperature);
-        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        // Up to the first check that rattles it, and no further, so no tuning bursts it before it is cooled.
+        var checkTicks = (int)(KsPipeCookOffSystem.CheckInterval.TotalSeconds * TicksPerSecond) + 1;
+        for (var i = 0; i < checkTicks && Rattling(pipes) == 0; i++)
+            await server.WaitRunTicks(1);
+
         await server.WaitAssertion(() => Assert.That(Rattling(pipes), Is.GreaterThan(0), "A hot net did not rattle, so this proves nothing."));
 
         await server.WaitPost(() => Net(bendUid).Air.Temperature = cookOffTemperature - 50f);
