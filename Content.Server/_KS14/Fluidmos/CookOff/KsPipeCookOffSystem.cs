@@ -67,9 +67,9 @@ public sealed partial class KsPipeCookOffSystem : EntitySystem
     ///     Explosive power per node at which a net takes <see cref="ReferenceSeconds"/> to burst. Twice as much takes
     ///         half as long.
     /// </summary>
-    public const float ReferencePowerPerNode = 100f;
+    public const float ReferencePowerPerNode = 75f;
 
-    public const float ReferenceSeconds = 15f;
+    public const float ReferenceSeconds = 5f;
 
     public const float MinSeconds = 3f;
 
@@ -110,10 +110,10 @@ public sealed partial class KsPipeCookOffSystem : EntitySystem
     private const float GroanProgress = 0.5f;
     private const float AboutToBurstProgress = 0.85f;
 
-    private const float MinJitterAmplitude = 2f;
+    private const float MinJitterAmplitude = 4f;
     private const float MaxJitterAmplitude = 20f;
-    private const float MinJitterFrequency = 2f;
-    private const float MaxJitterFrequency = 8f;
+    private const float MinJitterFrequency = 10f;
+    private const float MaxJitterFrequency = 25f;
 
     /// <summary>
     ///     Chance a cooking net groans on a check, from the start of its cook-off to its end.
