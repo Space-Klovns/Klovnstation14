@@ -225,7 +225,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         }
     }
 
-    public void OpenStorage(EntityUid uid, EntityStorageComponent? component = null)
+    public void OpenStorage(EntityUid uid, EntityStorageComponent? component = null, EntityUid? user = null /* KS14: added param */)
     {
         if (!Resolve(uid, ref component))
             return;
@@ -239,14 +239,16 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         Dirty(uid, component);
         EmptyContents(uid, component);
         ModifyComponents(uid, component);
-        if (_net.IsClient && _timing.IsFirstTimePredicted)
-            _audio.PlayPvs(component.OpenSound, uid);
+        // KS14 start: played only on the client before, so nobody but the predicting user heard it
+        if (_net.IsServer || user != null)
+            _audio.PlayPredicted(component.OpenSound, uid, user);
+        // KS14 end
         ReleaseGas(uid, component);
         var afterev = new StorageAfterOpenEvent();
         RaiseLocalEvent(uid, ref afterev);
     }
 
-    public void CloseStorage(EntityUid uid, EntityStorageComponent? component = null)
+    public void CloseStorage(EntityUid uid, EntityStorageComponent? component = null, EntityUid? user = null /* KS14: added param */)
     {
         if (!Resolve(uid, ref component))
             return;
@@ -290,8 +292,10 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
 
         TakeGas(uid, component);
         ModifyComponents(uid, component);
-        if (_net.IsClient && _timing.IsFirstTimePredicted)
-            _audio.PlayPvs(component.CloseSound, uid);
+        // KS14 start: played only on the client before, so nobody but the predicting user heard it
+        if (_net.IsServer || user != null)
+            _audio.PlayPredicted(component.CloseSound, uid, user);
+        // KS14 end
 
         var afterev = new StorageAfterCloseEvent();
         RaiseLocalEvent(uid, ref afterev);
@@ -387,7 +391,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         if (!CanOpen(user, target, silent))
             return false;
 
-        OpenStorage(target);
+        OpenStorage(target, user: user /* KS14: pass user */);
         return true;
     }
 
@@ -398,7 +402,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
             return false;
         }
 
-        CloseStorage(target);
+        CloseStorage(target, user: user /* KS14: pass user */);
         return true;
     }
 

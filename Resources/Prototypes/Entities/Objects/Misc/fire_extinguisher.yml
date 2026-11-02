@@ -35,7 +35,7 @@
     verbToggleOn: fire-extinguisher-component-verb-remove
     verbToggleOff: fire-extinguisher-component-verb-engage
   - type: SpraySafety
-  # KS14 start: full-auto in combat mode
+  # KS14 start: full-auto out of combat mode
   - type: Gun
     clumsyProof: true
     cameraRecoilScalar: 0
@@ -65,6 +65,7 @@
     fireCost: 1.5
   - type: PacifismAllowedGun
   - type: KsGunSpraySafety
+  - type: KsGunFiresOutOfCombat
   # KS14 end
   # KS14 start: itemtoggle size
   - type: ItemToggleSize

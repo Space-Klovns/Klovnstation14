@@ -50,9 +50,8 @@
   - type: AddComponentsOnTrigger
     keysIn: [discovered]
     components: # copied from PenEmbeddable
-    - type: KsRadarInterest
-      data:
-        text: ""
+    - type: KsRadarInterest # named after the discovered geyser
+      data: {}
   - type: SpawnOnTrigger # Placeholder for mining points lol
     keysIn: [discovered]
     proto: SpaceCash1000

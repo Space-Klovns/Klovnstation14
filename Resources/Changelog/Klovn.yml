@@ -2425,3 +2425,9 @@ Entries:
         detonating.
   id: 236
   time: '2026-10-30T12:16:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed emissive glow.
+  id: 237
+  time: '2026-10-31T11:43:37.0000000+00:00'

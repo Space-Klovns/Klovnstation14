@@ -74,11 +74,18 @@ public sealed partial class EmissiveLayersComponent : Component, IComponentTreeE
     [ViewVariables]
     public bool InContainer;
 
+    /// <summary>
+    ///     Whether <see cref="KsEmissiveAppearanceToggleComponent"/> has turned the layers off, and so taken them out of
+    ///         the client's tree of emissives. Kept by the client's emissive tree system; unused on the server.
+    /// </summary>
+    [ViewVariables]
+    public bool ToggledOff;
+
     public EntityUid? TreeUid { get; set; }
 
     public DynamicTree<ComponentTreeEntry<EmissiveLayersComponent>>? Tree { get; set; }
 
-    public bool AddToTree => !InContainer;
+    public bool AddToTree => !InContainer && !ToggledOff;
 
     public bool TreeUpdateQueued { get; set; }
 }

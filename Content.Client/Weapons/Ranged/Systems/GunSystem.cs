@@ -160,7 +160,7 @@ public sealed partial class GunSystem : SharedGunSystem
 
         var entityNull = _player.LocalEntity;
 
-        if (entityNull == null || !TryComp<CombatModeComponent>(entityNull, out var combat) || !combat.IsInCombatMode)
+        if (entityNull == null || !TryComp<CombatModeComponent>(entityNull, out var combat) /* KS14: combat mode checked once the gun is known */)
         {
             return;
         }
@@ -176,6 +176,15 @@ public sealed partial class GunSystem : SharedGunSystem
         }
 
         var useKey = gun.Comp.UseKey ? EngineKeyFunctions.Use : EngineKeyFunctions.UseSecondary;
+
+        // KS14 start: some guns fire out of combat mode instead
+        if (KsCombatModeBlocksFire(gun, entityNull.Value, combat.IsInCombatMode, _inputSystem.CmdStates.GetState(useKey) == BoundKeyState.Down))
+        {
+            if (gun.Comp.ShotCounter != 0)
+                RaisePredictiveEvent(new RequestStopShootEvent { Gun = GetNetEntity(gun) });
+            return;
+        }
+        // KS14 end
 
         if (_inputSystem.CmdStates.GetState(useKey) != BoundKeyState.Down && !gun.Comp.BurstActivated)
         {

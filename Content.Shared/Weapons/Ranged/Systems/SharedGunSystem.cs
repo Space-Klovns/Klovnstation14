@@ -160,9 +160,10 @@ public abstract partial class SharedGunSystem : EntitySystem
         var user = args.SenderSession.AttachedEntity;
 
         // KS14 ghetto mech port start
-        if (user == null ||
-            !_combatMode.IsInCombatMode(user))
+        if (user == null)
             return;
+
+        var inCombatMode = _combatMode.IsInCombatMode(user); // KS14: checked once the gun is known
 
         if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
             user = mechPilot.Mech;
@@ -172,6 +173,9 @@ public abstract partial class SharedGunSystem : EntitySystem
             return;
 
         if (userGun.Owner != GetEntity(msg.Gun))
+            return;
+
+        if (inCombatMode == HasComp<Content.Shared._KS14.Weapons.Ranged.KsGunFiresOutOfCombatComponent>(userGun)) // KS14: some guns fire out of combat mode instead
             return;
         // KS14 ghetto mech port end
         // TODO: once mlgguns come out nuke this entire file and start from scratch

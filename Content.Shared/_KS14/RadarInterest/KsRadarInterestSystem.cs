@@ -82,8 +82,7 @@ public sealed partial class KsRadarInterestSystem : EntitySystem
 
     private void OnInterestStartup(Entity<KsRadarInterestComponent> entity, ref ComponentStartup args)
     {
-        if (entity.Comp.Data.Text.IsWhiteSpace())
-            entity.Comp.Data.Text = MetaData(entity.Owner).EntityName;
+        entity.Comp.Data.Text ??= MetaData(entity.Owner).EntityName;
 
         SetInterest(entity, Transform(entity));
     }

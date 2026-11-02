@@ -1,4 +1,5 @@
 light_mode unshaded;
+blend_mode add;
 
 // Blended `premultiplied` (set on the prototype, as SWSL has no keyword for it): One, OneMinusSrcAlpha. With alpha
 //      0 that adds the colour and leaves the target's alpha exactly as it was. Not `add`, which is
@@ -11,5 +12,5 @@ void fragment()
 {
     // Premultiplied, as it was blended over black, so the colour is already weighted by how much glow there is.
     highp vec4 glow = zTexture(UV);
-    COLOR = vec4(glow.rgb * strength, 0.0);
+    COLOR = vec4(glow.rgb * strength, 1.0);
 }

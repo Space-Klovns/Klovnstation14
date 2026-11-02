@@ -9,7 +9,7 @@ public sealed partial class KsCCVars
     ///         transformed icon, rather than sampled smoothly at screen resolution.
     /// </summary>
     public static readonly CVarDef<bool> ClosetDoorPixelSnap =
-        CVarDef.Create("klovn.closet_door.pixel_snap", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+        CVarDef.Create("klovn.closet_door.pixel_snap", true, CVar.CLIENTONLY);
 
     /// <summary>
     ///     Whether an open closet door is hidden behind the closets in front of it, as it would be if it were part of

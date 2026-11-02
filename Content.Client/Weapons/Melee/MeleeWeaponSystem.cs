@@ -111,7 +111,8 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
         }
 
         // If the gun has AltFireComponent, it can be used to attack.
-        if (TryComp<GunComponent>(weaponUid, out var gun) && gun.UseKey)
+        if (TryComp<GunComponent>(weaponUid, out var gun) && gun.UseKey
+            && !HasComp<Content.Shared._KS14.Weapons.Ranged.KsGunFiresOutOfCombatComponent>(weaponUid) /* KS14: fires out of combat mode, so it can melee in it */)
         {
             if (!TryComp<AltFireMeleeComponent>(weaponUid, out var altFireComponent) || altDown != BoundKeyState.Down)
                 return;
