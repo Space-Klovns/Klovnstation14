@@ -5,8 +5,8 @@
   physicalDesc: reagent-physical-desc-acidic
   flavor: bitter
   color: "#AF14B7"
-  boilingPoint: 328.65 # KS14: 55.5 -> 328.65, Kelvin
-  meltingPoint: 223.15 # KS14: -50.0 -> 223.15, Kelvin
+  boilingPoint: 329.2 # KS14: 55.5 -> 329.2, realistic value
+  meltingPoint: 178.5 # KS14: -50.0 -> 178.5, realistic value
 
 - type: reagent
   id: Phenol
@@ -15,8 +15,8 @@
   physicalDesc: reagent-physical-desc-acidic
   flavor: bitter
   color: "#E7EA91"
-  boilingPoint: 328.65 # KS14: 55.5 -> 328.65, Kelvin
-  meltingPoint: 223.15 # KS14: -50.0 -> 223.15, Kelvin
+  boilingPoint: 454.9 # KS14: 55.5 -> 454.9, realistic value
+  meltingPoint: 314.0 # KS14: -50.0 -> 314.0, realistic value
   metabolisms:
     Bloodstream:
       effects:
@@ -32,8 +32,8 @@
   desc: reagent-desc-charcoal
   physicalDesc: reagent-physical-desc-porous
   color: "#22282b"
-  boilingPoint: 4473.15 # KS14: 4200.0 -> 4473.15, Kelvin
-  meltingPoint: 3823.15 # KS14: 3550.0 -> 3823.15, Kelvin
+  boilingPoint: 3915.0 # KS14: 4200.0 -> 3915.0, realistic value, sublimation point
+  meltingPoint: 3823.0 # KS14: 3550.0 -> 3823.0, realistic value
   metabolisms:
     Bloodstream:
       effects:
@@ -136,8 +136,8 @@
   desc: reagent-desc-hydroxide
   physicalDesc: reagent-physical-desc-alkaline
   color: "white"
-  boilingPoint: 1934.15 # KS14: 1661.0 -> 1934.15, Kelvin
-  meltingPoint: 869.15 # KS14: 596.0 -> 869.15, Kelvin
+  boilingPoint: 1661.0 # KS14: 1661.0 -> 1661.0, realistic value
+  meltingPoint: 596.0 # KS14: 596.0 -> 596.0, realistic value
 
 - type: reagent
   id: SodiumHydroxide
@@ -145,8 +145,8 @@
   desc: reagent-desc-sodium-hydroxide
   physicalDesc: reagent-physical-desc-alkaline
   color: "white"
-  boilingPoint: 1934.15 # KS14: 1661.0 -> 1934.15, Kelvin
-  meltingPoint: 869.15 # KS14: 596.0 -> 869.15, Kelvin
+  boilingPoint: 1661.0 # KS14: 1661.0 -> 1661.0, realistic value
+  meltingPoint: 596.0 # KS14: 596.0 -> 596.0, realistic value
   metabolisms:
     Bloodstream:
       effects:
@@ -168,8 +168,8 @@
   physicalDesc: reagent-physical-desc-crystalline
   flavor: metallic
   color: "#434b4d"
-  boilingPoint: 3235.15 # KS14: 2962.0 -> 3235.15, Kelvin
-  meltingPoint: 1911.15 # KS14: 1638.0 -> 1911.15, Kelvin
+  boilingPoint: 3000.0 # KS14: 2962.0 -> 3000.0, realistic value
+  meltingPoint: 1683.0 # KS14: 1638.0 -> 1683.0, realistic value
 
 - type: reagent
   id: SodiumPolyacrylate
