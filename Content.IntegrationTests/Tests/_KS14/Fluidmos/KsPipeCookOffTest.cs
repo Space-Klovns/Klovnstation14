@@ -32,10 +32,8 @@ namespace Content.IntegrationTests.Tests._KS14.Fluidmos;
 [TestOf(typeof(KsPipeCookOffSystem))]
 public sealed class KsPipeCookOffTest : GameTest
 {
-    // An explosive whose spray stays a puddle, so the test can see it. Fuel boils off at once at a net's temperature,
-    //      and the blast's heat (ExplosionSystem.ExposeToHeat) evaporates whatever it passes over. Whether that blast is
-    //      processed before or after the spray lands depends on its real-time budget per tick, so the spray could be
-    //      there or not. This one boils far above any test temperature and soaks up the blast's heat.
+    // An explosive whose spray stays a puddle, so the test can see it: welding fuel, at a net's temperature, is far past
+    //      its 188 K boiling point and boils off into smoke as soon as the puddles' tile effects next run.
     [TestPrototypes]
     private const string Prototypes = @"
 - type: reagent
@@ -45,7 +43,6 @@ public sealed class KsPipeCookOffTest : GameTest
   physicalDesc: reagent-physical-desc-oily
   boilingPoint: 5000
   meltingPoint: 100
-  specificHeat: 1000
   ksExplosivePower: 1
   ksCookOffTemperature: 400
 ";
