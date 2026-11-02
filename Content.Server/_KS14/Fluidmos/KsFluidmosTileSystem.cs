@@ -135,30 +135,33 @@ public sealed partial class KsFluidmosTileSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Spills a deleted canister's fluid where it stood. Breaking one dumps its air through
-    ///         <c>DumpCanisterBehavior</c>, but a hard enough blow skips that threshold and only deletes it, and only the gas
-    ///         would otherwise reach the room. On termination rather than shutdown, while it is still on its grid.
+    ///     Spills a destroyed canister's fluid where it stood. Breaking one dumps its air through
+    ///         <c>DumpCanisterBehavior</c>, but a hard enough blow skips that threshold and only destroys it, and only the
+    ///         gas would otherwise reach the room. Only destruction spills: a canister deleted any other way, by an admin
+    ///         say, takes its fluid with it, as it takes its gas. Portable scrubbers need nothing here, as their own
+    ///         destruction handler already releases their fluid.
     /// </summary>
+    /// <remarks>
+    ///     A uid and component rather than an <see cref="Entity{T}"/>: <see cref="DestructionEventArgs"/> is raised by
+    ///         value, which only that form of handler takes.
+    /// </remarks>
     [SubscribeLocalEvent]
-    private void OnCanisterTerminating(Entity<Content.Shared.Atmos.Piping.Unary.Components.GasCanisterComponent> entity, ref EntityTerminatingEvent args)
+    private void OnCanisterDestroyed(EntityUid uid, Content.Shared.Atmos.Piping.Unary.Components.GasCanisterComponent component, DestructionEventArgs args)
     {
-        SpillContainedFluid(entity.Owner, entity.Comp.Air);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnGasTankTerminating(Entity<Content.Shared.Atmos.Components.GasTankComponent> entity, ref EntityTerminatingEvent args)
-    {
-        SpillContainedFluid(entity.Owner, entity.Comp.Air);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnPortableScrubberTerminating(Entity<Content.Server.Atmos.Portable.PortableScrubberComponent> entity, ref EntityTerminatingEvent args)
-    {
-        SpillContainedFluid(entity.Owner, entity.Comp.Air);
+        SpillContainedFluid(uid, component.Air);
     }
 
     /// <summary>
-    ///     Queues whatever fluid a dying container still holds to spill on its tile, carried or not. Nothing is spilled if
+    ///     Spills a destroyed gas tank's fluid, as <see cref="OnCanisterDestroyed"/> does a canister's.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnGasTankDestroyed(EntityUid uid, Content.Shared.Atmos.Components.GasTankComponent component, DestructionEventArgs args)
+    {
+        SpillContainedFluid(uid, component.Air);
+    }
+
+    /// <summary>
+    ///     Queues whatever fluid a broken container still holds to spill on its tile, carried or not. Nothing is spilled if
     ///         its grid or map is going too, as at round end.
     /// </summary>
     private void SpillContainedFluid(EntityUid containerUid, GasMixture? air)
@@ -311,6 +314,15 @@ public sealed partial class KsFluidmosTileSystem : EntitySystem
 
     private void FlushBuffer(Entity<KsFluidmosTileBufferComponent> entity)
     {
+        // The sub-0.01u remainder joins the buffer, where it may tip a reagent over a solution's precision.
+        if (entity.Comp.Remainder is { } remainder)
+        {
+            entity.Comp.Remainder = null;
+            var solid = TakeAll(remainder, entity.Comp.Liquid.Temperature, entity.Comp.Liquid, entity.Comp.Vapor);
+            if (solid.Volume > FixedPoint2.Zero)
+                _iceSheetSystem.AddIce(Transform(entity).Coordinates, solid);
+        }
+
         if (entity.Comp.Liquid.Volume <= FixedPoint2.Zero && entity.Comp.Vapor.Volume <= FixedPoint2.Zero)
             return;
 

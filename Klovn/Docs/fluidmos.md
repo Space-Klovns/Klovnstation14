@@ -217,7 +217,8 @@ mixture.**
 
 **Spills on destruction.** A pipe broken or destroyed by damage spills its share of the net's fluid once
 (`OnNodeContainerDestroyed`, on `DestructionEventArgs`). A pipe that is merely *deleted* (an admin, a deconstruct)
-spills nothing, the same as gas. A broken canister or tank spills what it held.
+spills nothing, the same as gas. Canisters, gas tanks and portable scrubbers follow the same rule: a broken one spills
+what it held, and a deleted one takes it along.
 
 ## Puddles and ice: the tile's fluid
 

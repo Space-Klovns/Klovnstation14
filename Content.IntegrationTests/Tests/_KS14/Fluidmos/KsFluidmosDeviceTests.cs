@@ -409,7 +409,7 @@ public sealed class KsFluidmosDeviceTests : GameTest
         {
             var tankUid = server.EntMan.SpawnEntity(OxygenTankPrototype, TileCentre(testMap));
             FillWithFluid(server.EntMan.GetComponent<GasTankComponent>(tankUid).Air);
-            server.EntMan.DeleteEntity(tankUid);
+            server.System<Content.Shared.Destructible.SharedDestructibleSystem>().DestroyEntity(tankUid);
         });
         await server.WaitRunTicks(2);
 
@@ -417,6 +417,36 @@ public sealed class KsFluidmosDeviceTests : GameTest
         {
             Assert.That(PuddleHas(testMap, WaterReagent), "A destroyed gas tank's liquid vanished instead of spilling.");
             Assert.That(AnySmokeHas(EthanolReagent), "A destroyed gas tank's unlinked vapor vanished instead of becoming smoke.");
+        });
+    }
+
+    /// <summary>
+    ///     A canister or gas tank deleted outright, as an admin deletes one, takes its fluid with it, as it takes its gas:
+    ///         only breaking one spills.
+    /// </summary>
+    [Test]
+    public async Task DeletedContainersSpillNothing()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitPost(() =>
+        {
+            var canisterUid = server.EntMan.SpawnEntity(WaterCanisterPrototype, TileCentre(testMap));
+            var tankUid = server.EntMan.SpawnEntity(OxygenTankPrototype, TileCentre(testMap));
+            FillWithFluid(server.EntMan.GetComponent<GasTankComponent>(tankUid).Air);
+            server.EntMan.DeleteEntity(canisterUid);
+            server.EntMan.DeleteEntity(tankUid);
+        });
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(PuddleHas(testMap, WaterReagent), Is.False, "A deleted container spilled its liquid.");
+                Assert.That(AnySmokeHas(EthanolReagent), Is.False, "A deleted container released its vapor as smoke.");
+            }
         });
     }
 
