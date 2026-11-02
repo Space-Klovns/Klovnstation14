@@ -25,18 +25,32 @@ public sealed partial class KsEntryPoint : GameShared
     ];
 
     /// <summary>
-    ///     Files or directories whose prototypes combine with existing ones of the same id instead of throwing a
-    ///         duplicate-id error (see <see cref="IPrototypeManager.PartialDirectory"/>). Kept narrow on purpose:
-    ///         anywhere listed here, an accidental duplicate id silently merges rather than failing the load.
+    ///     Files or directories outside a <see cref="PartialsFolderName"/> folder whose prototypes combine with existing
+    ///         ones of the same id instead of throwing a duplicate-id error (see
+    ///         <see cref="IPrototypeManager.PartialDirectory"/>). Kept narrow on purpose: anywhere listed here, an
+    ///         accidental duplicate id silently merges rather than failing the load.
     /// </summary>
     public static readonly ResPath[] PartialPrototypePaths = [
         new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
-        new("/Prototypes/_KS14/Reagents/Partials/"),
-        new("/Prototypes/_KS14/Fluidmos/Partials/"),
     ];
 
+    /// <summary>
+    ///     Every file under a folder of this name, at any depth below <c>/Prototypes/</c>, is partial without being
+    ///         listed.
+    /// </summary>
+    public const string PartialsFolderName = "Partials";
+
+    /// <summary>
+    ///     Whether a resource path lies inside a <see cref="PartialsFolderName"/> folder. Shared with packaging, which
+    ///         must treat the same files as partial.
+    /// </summary>
+    public static bool IsInPartialsFolder(string path)
+    {
+        return path.Contains(ResPath.Separator + PartialsFolderName + ResPath.Separator, StringComparison.Ordinal);
+    }
+
     private readonly ResPath[] _partialOwnerPaths = [
-        new("/Prototypes/_KsModule/"),
+        new("/Prototypes/"),
         new("/Audio/_KsModule/"),
         new("/Maps/_KsModule/"),
     ];
@@ -57,12 +71,12 @@ public sealed partial class KsEntryPoint : GameShared
 
         _sawmill = Logger.GetSawmill("ks.shared.entrypoint");
 
-        // finds every file under a /Partial/ directory under each directory in _partialOwnerPaths and designates them as
+        // Every file in a Partials folder under each of _partialOwnerPaths is partial: no listing needed.
         foreach (var partialOwnerPath in _partialOwnerPaths)
         {
             foreach (var subPath in _resourceManager.ContentFindFiles(partialOwnerPath))
             {
-                if (!subPath.CanonPath.Contains(ResPath.Separator + "Partials" + ResPath.Separator))
+                if (!IsInPartialsFolder(subPath.CanonPath))
                     continue;
 
                 _prototypeManager.PartialFile(subPath, 0);

@@ -209,16 +209,17 @@ Summarised from the upstream conventions doc — that page stays the authority; 
 
 A partial prototype has the same kind and id as an existing one, and is merged into it instead of failing the load as `Duplicate ID`. It's the way to add to, or take from, an upstream prototype (a sound collection, a loadout group, an entity's components) from a fork-owned file, with no `# KS14:` edit to the upstream file and so nothing to conflict with on the next merge.
 
-**A file is only partial if it's registered.** Anywhere else, a second `LobbyMusic` throws `PrototypeLoadException: Duplicate ID` and the load fails. Register the file, or a whole directory, in `PartialPrototypePaths` in `Content.Shared/_KS14/Entry/KsEntryPoint.cs`, which runs before prototypes load on the client, server and YAML linter alike, and which the packaged localization cache reads too:
+**Put the file in a folder named `Partials`.** Every file under a `Partials` folder anywhere below `Resources/Prototypes/`, subfolders included, is partial, with nothing to register: `Prototypes/_KS14/Reagents/Partials/explosive.yml`, `Prototypes/_KsModule/Lobby/Partials/...`. Anywhere else, a second `LobbyMusic` throws `PrototypeLoadException: Duplicate ID` and the load fails. `KsEntryPoint` (`Content.Shared/_KS14/Entry/KsEntryPoint.cs`) finds these folders before prototypes load on the client, server and YAML linter alike, and the packaged localization cache applies the same rule (`KsEntryPoint.IsInPartialsFolder`).
+
+Keep each `Partials` folder next to the feature it changes, holding only partials: inside one, an id that *accidentally* matches an existing prototype silently merges into it rather than erroring. Don't name a folder `Partials` to hold anything else.
+
+A file that can't move into a `Partials` folder can still be listed by path in `KsEntryPoint.PartialPrototypePaths` instead. Treat that as the exception:
 
 ```csharp
 public static readonly ResPath[] PartialPrototypePaths = [
-    new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),   // a file
-    new("/Prototypes/_KS14/Partials/"),                       // or a directory, with no extension
+    new("/Prototypes/_KsModule/Lobby/soundcollection.yml"),
 ];
 ```
-
-Keep the registrations narrow: inside a partial path, an id that *accidentally* matches an existing prototype silently merges into it rather than erroring. Don't register whole trees like `_KS14/` or `_KsModule/`.
 
 Then write only the fields you're changing. Sequences are appended to, mappings are combined key by key, and plain values are replaced:
 

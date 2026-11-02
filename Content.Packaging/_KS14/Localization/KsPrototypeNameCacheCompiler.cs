@@ -117,7 +117,8 @@ public static class KsPrototypeNameCacheCompiler
                         continue;
 
                     var partialOnly = typeValueNode.Tag == PartialOnlyTag;
-                    if (partialOnly || IsInPartialPath(file.Path, partialPaths))
+                    if (partialOnly || IsInPartialPath(file.Path, partialPaths) ||
+                        file.Path.StartsWith("Prototypes/", StringComparison.Ordinal) && KsEntryPoint.IsInPartialsFolder(file.Path))
                     {
                         partials.Add((mapping, partialOnly, file.Path));
                         continue;
