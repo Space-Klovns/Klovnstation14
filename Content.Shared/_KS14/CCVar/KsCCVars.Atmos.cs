@@ -95,4 +95,13 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosPumpCompressionHeatFraction =
         CVarDef.Create("klovn.atmos.pump_compression_heat_fraction", 0.1f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Share of a cooking-off pipe net's explosive fluid its bursting pipes spray onto their tiles, from 0 to 1, as
+    ///         liquid at the net's temperature. The rest goes into the explosions. 0 makes them pure blasts; 1 sprays
+    ///         everything and explodes nothing.
+    /// </summary>
+    [CVarControl(AdminFlags.Fun)]
+    public static readonly CVarDef<float> AtmosPipeCookOffSpillFraction =
+        CVarDef.Create("klovn.atmos.pipe_cookoff_spill_fraction", 0.3f, CVar.SERVERONLY);
 }

@@ -235,9 +235,9 @@ such as plasma gas, is ordinary atmos, so a hot plasma line doesn't blow up.
 - **Warnings.** The rattling pipes groan (`MetalScrape`) more and more often as it goes on. Halfway, the first one
   "groans under the strain"; at 85% it "bulges, about to burst" (`cookoff.ftl`).
 - **The chain.** At full progress, the first bend bursts, then the rest in order of distance from it, `ChainDelay`
-  apart. Once started, the chain runs to its end even if the net cools. Each burst sprays `SpillFraction` (30%) of
+  apart. Once started, the chain runs to its end even if the net cools. Each burst sprays `klovn.atmos.pipe_cookoff_spill_fraction` (default 30%) of
   its share of the explosive fluid onto its tile as liquid at the net's temperature, then explodes with an equal
-  share of the remaining 70%. Hot enough, the spray lights. Starting the chain takes every explosive out of the net,
+  share of the rest. Hot enough, the spray lights. Starting the chain takes every explosive out of the net,
   so what is left of it doesn't go off again. Destruction spills the rest of each pipe's share of the net as usual.
 
 A sealed net of hot liquid fuel boils, and the latent heat can pull it back below its cook-off point. It has to be

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.Fluidmos.CookOff;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -243,6 +245,44 @@ public sealed class KsPipeCookOffTest : GameTest
         await server.WaitRunTicks((int)MathF.Ceiling((float)KsPipeCookOffSystem.ChainDelay.TotalSeconds * pipes.Count * TicksPerSecond) + 2);
         await server.WaitAssertion(() =>
             Assert.That(pipes.Count(uid => server.EntMan.EntityExists(uid)), Is.Zero, "The chain stopped before bursting every pipe its power takes."));
+    }
+
+    /// <summary>
+    ///     With the spill fraction at 0, a burst sprays nothing and the explosions take it all.
+    /// </summary>
+    [Test]
+    public async Task NoSprayAtZeroSpillFraction()
+    {
+        var server = Pair.Server;
+        await OverrideCVar(Side.Server, KsCCVars.AtmosPipeCookOffSpillFraction, 0f);
+        var (testMap, pipes, bendUid) = await CreateNet();
+
+        var bendTile = Vector2i.Zero;
+        await server.WaitPost(() =>
+        {
+            var transformComponent = server.EntMan.GetComponent<TransformComponent>(bendUid);
+            bendTile = server.System<SharedMapSystem>().TileIndicesFor(transformComponent.GridUid!.Value,
+                server.EntMan.GetComponent<MapGridComponent>(transformComponent.GridUid.Value), transformComponent.Coordinates);
+            FillWithSludge(Net(bendUid), pipes.Count, KsPipeCookOffSystem.InstantPowerPerNode * 1.5f, HotTemperature);
+        });
+
+        var checkTicks = (int)(KsPipeCookOffSystem.CheckInterval.TotalSeconds * TicksPerSecond) + 1;
+        for (var i = 0; i < checkTicks && server.EntMan.EntityExists(bendUid); i++)
+            await server.WaitRunTicks(1);
+
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(server.EntMan.EntityExists(bendUid), Is.False, "The bend did not burst, so this proves nothing.");
+                Assert.That(server.System<PuddleSystem>().TryGetCachedPuddle(testMap.Grid.Owner, bendTile, out var puddle) &&
+                            puddle.Comp.Solution is { } solution &&
+                            solution.Comp.Solution.GetTotalPrototypeQuantity(_sludgeReagent) > FixedPoint2.Zero,
+                    Is.False, "A burst sprayed its explosive with the spill fraction at 0.");
+            }
+        });
     }
 
     /// <summary>

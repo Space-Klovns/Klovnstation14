@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Server._KS14.Chemistry.Explosion;
 using Content.Server.NodeContainer.NodeGroups;
 using Content.Server.NodeContainer.Nodes;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Atmos;
@@ -13,6 +14,7 @@ using Content.Shared.NodeContainer;
 using Content.Shared.Popups;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -30,7 +32,7 @@ namespace Content.Server._KS14.Fluidmos.CookOff;
 ///         The explosive power per node sets how long it takes, from <see cref="MaxSeconds"/> for a net barely past
 ///             <see cref="MinPowerPerNode"/> down to <see cref="MinSeconds"/>, and at <see cref="InstantPowerPerNode"/>
 ///             and above it bursts on the spot. The total power sets how many pipes burst: one per
-///             <see cref="PowerPerRupture"/>, up to every node in the net. <see cref="SpillFraction"/> of the explosive
+///             <see cref="PowerPerRupture"/>, up to every node in the net. <see cref="KsCCVars.AtmosPipeCookOffSpillFraction"/> of the explosive
 ///             fluid sprays out of the ruptures; the rest goes into the explosions.
 ///     </para>
 ///     <para>
@@ -40,6 +42,7 @@ namespace Content.Server._KS14.Fluidmos.CookOff;
 /// </remarks>
 public sealed partial class KsPipeCookOffSystem : EntitySystem
 {
+    [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
@@ -84,9 +87,17 @@ public sealed partial class KsPipeCookOffSystem : EntitySystem
 
     /// <summary>
     ///     The share of the net's explosive fluid the ruptures spray onto their tiles, as liquid: hot enough, it lights.
-    ///         The rest goes into the explosions.
+    ///         The rest goes into the explosions. <see cref="KsCCVars.AtmosPipeCookOffSpillFraction"/>, clamped to 0–1.
     /// </summary>
-    public const float SpillFraction = 0.3f;
+    private float _spillFraction;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(_configurationManager, KsCCVars.AtmosPipeCookOffSpillFraction,
+            value => _spillFraction = Math.Clamp(value, 0f, 1f), invokeImmediately: true);
+    }
 
     /// <summary>
     ///     Time between one pipe in a chain bursting and the next.
@@ -285,7 +296,7 @@ public sealed partial class KsPipeCookOffSystem : EntitySystem
     {
         var spill = TakeExplosives(fluid);
         spill.Multiply(1f / _targets.Count);
-        var explosionPower = power * (1f - SpillFraction) / _targets.Count;
+        var explosionPower = power * (1f - _spillFraction) / _targets.Count;
 
         var firstIndex = _targets.FindIndex(IsBendPipe);
         if (firstIndex > 0)
@@ -422,7 +433,7 @@ public sealed partial class KsPipeCookOffSystem : EntitySystem
     /// <summary>
     ///     Removes every explosive reagent from the fluid, so what is left of the net doesn't go off again.
     /// </summary>
-    /// <returns><see cref="SpillFraction"/> of them, as liquid, for the ruptures to spray.</returns>
+    /// <returns><see cref="_spillFraction"/> of them, as liquid, for the ruptures to spray.</returns>
     private KsFluidMixture TakeExplosives(KsFluidMixture fluid)
     {
         var spill = new KsFluidMixture();
@@ -433,7 +444,7 @@ public sealed partial class KsPipeCookOffSystem : EntitySystem
                 continue;
 
             _explosiveKeys.Add(key);
-            spill.AddLiquid(key, Units(key, amount) * SpillFraction);
+            spill.AddLiquid(key, Units(key, amount) * _spillFraction);
         }
 
         foreach (var key in _explosiveKeys)
