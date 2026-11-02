@@ -221,6 +221,28 @@ mixture.**
 spills nothing, the same as gas. Canisters, gas tanks and portable scrubbers follow the same rule: a broken one spills
 what it held, and a deleted one takes it along.
 
+**Cook-off in pipes** (`KsPipeCookOffSystem`). A pipe net whose fluid holds explosive reagents
+(`ksExplosivePower`) and is hotter than the lowest `ksCookOffTemperature` among them rattles some of its pipes with
+the jitter effect, then ruptures them. Only the net's fluid counts: liquid, solid and unlinked vapor. Linked gas,
+such as plasma gas, is ordinary atmos, so a hot plasma line doesn't blow up.
+
+- **Power per node** (total power ÷ node count) sets the time: `ReferenceSeconds` at `ReferencePowerPerNode`,
+  inversely with density, clamped to `MinSeconds`–`MaxSeconds`. Below `MinPowerPerNode` the net is too dilute
+  and nothing happens. At `InstantPowerPerNode` and above it ruptures on the first check, without rattling.
+- **Total power** sets how many pipes rupture: one per `PowerPerRupture` (half a fuel tank), from one up to every
+  node. Bends are picked first, as the weakest link, then the rest at random. The jitter grows as the cook-off
+  progresses, and stops if the net cools, runs dry or splits off.
+- **Warnings.** The rattling pipes groan (`MetalScrape`) more and more often as it goes on. Halfway, the first one
+  "groans under the strain"; at 85% it "bulges, about to burst" (`cookoff.ftl`).
+- **The chain.** At full progress, the first bend bursts, then the rest in order of distance from it, `ChainDelay`
+  apart. Once started, the chain runs to its end even if the net cools. Each burst sprays `SpillFraction` (30%) of
+  its share of the explosive fluid onto its tile as liquid at the net's temperature, then explodes with an equal
+  share of the remaining 70%. Hot enough, the spray lights. Starting the chain takes every explosive out of the net,
+  so what is left of it doesn't go off again. Destruction spills the rest of each pipe's share of the net as usual.
+
+A sealed net of hot liquid fuel boils, and the latent heat can pull it back below its cook-off point. It has to be
+kept hot to go off.
+
 ## Puddles and ice: the tile's fluid
 
 Tile air holds only gas. Liquid on a tile is a puddle and solid is an ice sheet. Both exchange with the air through tile
