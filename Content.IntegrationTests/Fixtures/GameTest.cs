@@ -235,6 +235,11 @@ public abstract partial class GameTest
             // So not yet.
             if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
             {
+                // KS14 start: the dirty dispose below replaces this failure with a bare "Test was dirty-disposed",
+                //      often reported as NotExecuted, so write the real one to the output where it survives
+                var result = TestContext.CurrentContext.Result;
+                TestContext.Out.WriteLine($"Test failed before teardown: {result.Message}{Environment.NewLine}{result.StackTrace}");
+                // KS14 end
                 _pairDestroyed = true; // Blow it up, we failed and it might be screwed.
                 return;
             }
