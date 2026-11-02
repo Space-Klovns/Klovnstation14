@@ -40,7 +40,7 @@ public sealed partial class KsExpansionValveSystem : EntitySystem
         if (!_nodeContainerSystem.TryGetNodes(entity.Owner, entity.Comp.InletName, entity.Comp.OutletName, out PipeNode? inlet, out PipeNode? outlet))
             return;
 
-        var refrigerant = MainLiquid(inlet.Air) ?? MainLiquid(outlet.Air) ?? MainLinkedGas(outlet.Air) ?? MainLinkedGas(inlet.Air);
+        var refrigerant = MainLiquid(inlet.Air) ?? MainLiquid(outlet.Air) ?? MainLinkedGas(outlet.Air) ?? MainLinkedGas(inlet.Air) ?? MainVapor(inlet.Air);
         UpdateReadout(entity, inlet.Air, outlet.Air, refrigerant);
 
         if (entity.Comp.Automatic && entity.Comp.PressureSetpoint > 0f)
@@ -100,7 +100,9 @@ public sealed partial class KsExpansionValveSystem : EntitySystem
         var inletPressure = inlet.Pressure;
         var outletPressure = outlet.Pressure;
         var pressureDifference = inletPressure - outletPressure;
-        if (pressureDifference <= 0f || inlet.TotalMoles <= 0f || inlet.Temperature <= 0f || outlet.Immutable)
+        // Unlinked vapor lives in the fluid, not the gas moles, and leaves with them by the same ratio.
+        var inletVaporMoles = inlet.TotalMoles + (inlet.Fluid?.VaporMoles ?? 0f);
+        if (pressureDifference <= 0f || inletVaporMoles <= 0f || inlet.Temperature <= 0f || outlet.Immutable)
             return;
 
         var molarMass = refrigerant is { MolesPerUnit: > 0f } ? KsFluidmos.GramsPerUnit / refrigerant.MolesPerUnit : AirMolarMass;
@@ -109,11 +111,11 @@ public sealed partial class KsExpansionValveSystem : EntitySystem
 
         // dP/dn for each side, as a radiator works out its own flow: moving more than this would reverse the difference.
         var pressurePerMole = Atmospherics.R * (inlet.Temperature / inlet.FreeVolume + MathF.Max(outlet.Temperature, Atmospherics.TCMB) / outlet.FreeVolume);
-        var moles = MathF.Min(MathF.Min(grams / molarMass, inlet.TotalMoles), 0.5f * pressureDifference / pressurePerMole);
+        var moles = MathF.Min(MathF.Min(grams / molarMass, inletVaporMoles), 0.5f * pressureDifference / pressurePerMole);
         if (moles <= 0f)
             return;
 
-        var vapor = inlet.RemoveRatio(moles / inlet.TotalMoles, includeLiquid: false);
+        var vapor = inlet.RemoveRatio(moles / inletVaporMoles,includeLiquid: false);
         _transferThermoSystem.Apply(vapor, inletPressure, outletPressure, doesWork: false);
         _atmosphereSystem.Merge(outlet, vapor);
     }
@@ -156,6 +158,28 @@ public sealed partial class KsExpansionValveSystem : EntitySystem
 
             main = properties;
             mainUnits = amount.Liquid;
+        }
+
+        return main;
+    }
+
+    /// <summary>
+    ///     The reagent a mixture holds the most unlinked vapor of, for a valve passing vapor no gas stands for.
+    /// </summary>
+    private KsFluidReagentProperties? MainVapor(GasMixture mixture)
+    {
+        if (mixture.Fluid is not { } fluid)
+            return null;
+
+        KsFluidReagentProperties? main = null;
+        var mainMoles = 0f;
+        foreach (var (key, amount) in fluid.Reagents)
+        {
+            if (amount.Vapor <= mainMoles || !_propertiesSystem.TryGetProperties(key.Prototype, out var properties))
+                continue;
+
+            main = properties;
+            mainMoles = amount.Vapor;
         }
 
         return main;
