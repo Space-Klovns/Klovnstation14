@@ -27,6 +27,7 @@ public sealed class KsReagentTemperatureUnitsTest : GameTest
     private static readonly HashSet<ProtoId<ReagentPrototype>> Sublimers =
     [
         "WeldingFuel", // acetylene sublimes at one atmosphere
+        "CarbonDioxide", // dry ice: its triple point is above one atmosphere
         "SpaceGlue", // upstream's values, kept as they are
     ];
 
