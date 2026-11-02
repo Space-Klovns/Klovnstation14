@@ -294,13 +294,17 @@ public sealed partial class KsFluidmosTileSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Flushes a deleted device's buffer while it still stands somewhere: by its components' shutdown it has been
-    ///         detached, and a spill at its coordinates then goes nowhere. <see cref="OnBufferShutdown"/> finds it empty.
+    ///     Flushes a destroyed device's buffer while it still stands. Only destruction flushes it: a device deleted any
+    ///         other way, by an admin say, takes its buffer with it, as anything deleted takes its contents.
     /// </summary>
+    /// <remarks>
+    ///     A uid and component rather than an <see cref="Entity{T}"/>: <see cref="DestructionEventArgs"/> is raised by
+    ///         value, which only that form of handler takes.
+    /// </remarks>
     [SubscribeLocalEvent]
-    private void OnBufferTerminating(Entity<KsFluidmosTileBufferComponent> entity, ref EntityTerminatingEvent args)
+    private void OnBufferDestroyed(EntityUid uid, KsFluidmosTileBufferComponent component, DestructionEventArgs args)
     {
-        FlushBuffer(entity);
+        FlushBuffer((uid, component));
     }
 
     /// <summary>
@@ -309,7 +313,8 @@ public sealed partial class KsFluidmosTileSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnBufferShutdown(Entity<KsFluidmosTileBufferComponent> entity, ref ComponentShutdown args)
     {
-        FlushBuffer(entity);
+        if (!Terminating(entity.Owner))
+            FlushBuffer(entity);
     }
 
     private void FlushBuffer(Entity<KsFluidmosTileBufferComponent> entity)

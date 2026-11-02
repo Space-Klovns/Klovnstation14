@@ -210,7 +210,8 @@ mixture.**
   - solid becomes an ice sheet;
   - the sub-0.01u remainder is carried in `Remainder` until the next release.
 
-  Buffers are flushed when the device is deleted or the component is removed.
+  Buffers are flushed when the device is destroyed or the component alone is removed. A device deleted outright
+  takes its buffer with it, as anything deleted takes its contents.
 - **`AbsorbFromTile`** is the reverse, for siphoning vents (draining the tile's puddle at `PuddleDrainRate`) and
   scrubbers (taking in smoke).
 - **`QueueSpill` / `QueueCondensate`** defer puddle work out of atmos callbacks to the system's `Update`.

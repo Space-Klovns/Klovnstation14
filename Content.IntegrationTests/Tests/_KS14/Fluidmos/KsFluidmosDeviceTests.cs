@@ -15,6 +15,7 @@ using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Destructible;
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -192,13 +193,49 @@ public sealed class KsFluidmosDeviceTests : GameTest
 
             // The device flushes what it buffered as it goes, on the next update; only a last remainder short of 0.01u
             //     is left behind.
-            server.EntMan.DeleteEntity(deviceUid);
+            server.EntMan.RemoveComponent<KsFluidmosTileBufferComponent>(deviceUid);
         });
         await server.WaitRunTicks(2);
 
         await server.WaitAssertion(() =>
         {
             Assert.That(PuddleWater(testMap), Is.EqualTo(releases * unitsPerRelease).Within(0.02f), "Liquid released a little at a time was lost to rounding.");
+        });
+    }
+
+    /// <summary>
+    ///     A device holding less than a spill's worth in its buffer spills it when destroyed, and takes it along when
+    ///         deleted outright, as anything deleted takes its contents.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task BufferSpillsOnlyWhenTheDeviceIsDestroyed(bool destroyed)
+    {
+        var server = Pair.Server;
+        var testMap = await CreateBreathableTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var deviceUid = server.EntMan.SpawnEntity(null, TileCentre(testMap));
+            var released = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C, FluidCapable = true };
+            released.Fluid = new KsFluidMixture();
+            released.Fluid.AddLiquid(WaterKey, KsFluidmos.SpillThresholdUnits * 0.5f);
+            server.System<KsFluidmosTileSystem>().ReleaseToTile(deviceUid, released);
+            Assert.That(PuddleHas(testMap, WaterReagent), Is.False, "Half a spill's worth spilled straight away, so this proves nothing.");
+
+            if (destroyed)
+                server.System<SharedDestructibleSystem>().DestroyEntity(deviceUid);
+            else
+                server.EntMan.DeleteEntity(deviceUid);
+        });
+        await server.WaitRunTicks(2);
+
+        await server.WaitAssertion(() =>
+        {
+            if (destroyed)
+                Assert.That(PuddleHas(testMap, WaterReagent), "A destroyed device's buffered liquid vanished instead of spilling.");
+            else
+                Assert.That(PuddleHas(testMap, WaterReagent), Is.False, "A deleted device spilled its buffered liquid.");
         });
     }
 
@@ -409,7 +446,7 @@ public sealed class KsFluidmosDeviceTests : GameTest
         {
             var tankUid = server.EntMan.SpawnEntity(OxygenTankPrototype, TileCentre(testMap));
             FillWithFluid(server.EntMan.GetComponent<GasTankComponent>(tankUid).Air);
-            server.System<Content.Shared.Destructible.SharedDestructibleSystem>().DestroyEntity(tankUid);
+            server.System<SharedDestructibleSystem>().DestroyEntity(tankUid);
         });
         await server.WaitRunTicks(2);
 
