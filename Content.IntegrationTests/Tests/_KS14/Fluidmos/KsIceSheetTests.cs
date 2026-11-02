@@ -331,11 +331,11 @@ public sealed class KsIceSheetTests : GameTest
 
             var puddle = SpillPuddle(testMap, new Solution(WaterReagent, FixedPoint2.New(1)) { Temperature = temperature }, out var puddleUid).Comp.Solution;
             server.System<KsTileEffectSystem>().TryUpdateTileEffects(puddleUid, testMap.Tile, puddle, scale: 1f);
-        });
-        await server.WaitRunTicks(1);
 
-        await server.WaitAssertion(() =>
-        {
+            // Drains the queued ice into its sheet now, rather than on the next tick: that tick may also run the
+            //      once-a-second heat exchange, which pulls the new ice towards the cold air before it's read.
+            server.System<KsIceSheetSystem>().Update(0f);
+
             var ice = IceSolution(testMap, out _);
             using (Assert.EnterMultipleScope())
             {
