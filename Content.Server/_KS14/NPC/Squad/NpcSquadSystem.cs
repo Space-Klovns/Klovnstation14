@@ -87,6 +87,49 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
     #region Public API
 
+    /// <summary>
+    ///     Adds everyone else in <paramref name="uid"/>'s squad to <paramref name="squadmates"/>, those that are down
+    ///         included.
+    /// </summary>
+    public void GetSquadmates(EntityUid uid, HashSet<EntityUid> squadmates)
+    {
+        if (!TryGetSquad(uid, out var squadEntity))
+            return;
+
+        foreach (var memberUid in squadEntity.Value.Comp.Members)
+        {
+            if (memberUid != uid)
+                squadmates.Add(memberUid);
+        }
+
+        foreach (var downedUid in squadEntity.Value.Comp.Downed)
+        {
+            if (!TerminatingOrDeleted(downedUid))
+                squadmates.Add(downedUid);
+        }
+    }
+
+    /// <summary>
+    ///     What <paramref name="uid"/> works to: its squad's leader's tactics, or its own with no squad. Null for
+    ///         something that is no <see cref="NpcSquadMemberComponent"/>.
+    /// </summary>
+    public Tactics.NpcSquadTacticsSettings? GetTactics(EntityUid uid)
+    {
+        if (TryGetSquad(uid, out var squadEntity) && _squadMemberQuery.TryComp(squadEntity.Value.Comp.Leader, out var leaderSquadMemberComponent))
+            return leaderSquadMemberComponent.Tactics;
+
+        return _squadMemberQuery.CompOrNull(uid)?.Tactics;
+    }
+
+    /// <summary>
+    ///     <paramref name="uid"/>'s squad, or <paramref name="uid"/> itself with no squad: what holds anything shared by a
+    ///         whole squad, for an NPC that may be on its own.
+    /// </summary>
+    public EntityUid GetSquadOrSelf(EntityUid uid)
+    {
+        return TryGetSquad(uid, out var squadEntity) ? squadEntity.Value.Owner : uid;
+    }
+
     public bool TryGetSquad(EntityUid memberUid, [NotNullWhen(true)] out Entity<NpcSquadComponent>? squadEntity)
     {
         squadEntity = null;
@@ -242,6 +285,9 @@ public sealed partial class NpcSquadSystem : EntitySystem
     {
         if (args.NewMobState == MobState.Alive)
         {
+            if (_squadQuery.TryComp(entity.Comp.LastSquad, out var lastSquadComponent))
+                lastSquadComponent.Downed.Remove(entity.Owner);
+
             // Back on its feet: whatever happens to it now is news for the squad it ends up in, not the old one.
             entity.Comp.LastSquad = null;
             return;
@@ -251,10 +297,15 @@ public sealed partial class NpcSquadSystem : EntitySystem
         //      after going critical has left already: it is reported against the squad it was in, if that is still
         //      about.
         var squadUid = entity.Comp.Squad ?? entity.Comp.LastSquad;
-        if (squadUid is { } downedInUid && _squadQuery.HasComp(downedInUid))
+        if (squadUid is { } downedInUid && _squadQuery.TryComp(downedInUid, out var downedInComponent))
         {
             var ev = new NpcSquadMemberDownedEvent(downedInUid, entity.Owner, args.NewMobState);
             RaiseLocalEvent(ref ev);
+
+            if (args.NewMobState == MobState.Critical)
+                downedInComponent.Downed.Add(entity.Owner);
+            else
+                downedInComponent.Downed.Remove(entity.Owner);
         }
 
         // Succession has to be immediate: a leaderless squad would otherwise hold for up to a whole update.
@@ -661,7 +712,10 @@ public sealed partial class NpcSquadSystem : EntitySystem
         return bestUid;
     }
 
-    private float GetHealthFraction(EntityUid uid)
+    /// <summary>
+    ///     How much health <paramref name="uid"/> has left, as a fraction of its critical threshold.
+    /// </summary>
+    public float GetHealthFraction(EntityUid uid)
     {
         if (!_damageableQuery.TryComp(uid, out var damageableComponent))
             return 1f;

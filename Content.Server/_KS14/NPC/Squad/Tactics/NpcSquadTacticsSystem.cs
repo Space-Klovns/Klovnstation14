@@ -1,6 +1,7 @@
 using Content.Server._KS14.NPC.Doors;
 using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
+using Content.Server._KS14.NPC.Recovery;
 using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Doors.Components;
@@ -42,6 +43,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     [Dependency] private NpcHuntDebugSystem _npcHuntDebugSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
+    [Dependency] private NpcRecoverySystem _npcRecoverySystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
@@ -181,6 +183,21 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
             EndHunt(issuerUid);
             return;
         }
+
+        // Waiting for its meds to work: it will not come, so nothing below may count on it or wait for it. Only after
+        //      the check above, because one with a hostile in sight is still in the fight.
+        for (var i = _members.Count - 1; i >= 0; i--)
+        {
+            var memberUid = _members[i];
+            if (!_npcRecoverySystem.IsRecovering(memberUid))
+                continue;
+
+            ClearOrder(memberUid, issuerUid);
+            _members.RemoveAt(i);
+        }
+
+        if (_members.Count == 0)
+            return;
 
         _huntQuery.TryComp(issuerUid, out var huntComponent);
         var hunt = huntComponent?.Hunt;

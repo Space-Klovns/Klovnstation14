@@ -199,17 +199,21 @@ Consequences:
 1. Play dead
 2. Healing
 3. Grenades
-4. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
-5. Ranged, then Melee
-6. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
-7. Follow
-8. Search open, then Search cover
-9. Door refused (a one-line callout; see Doors below)
-10. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
-11. Sensors
-12. Join squad
-13. Disengage
-14. Squad hold
+4. Recovering: fall back (waiting for meds to work and found; see `recovering.yml`)
+5. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
+6. Ranged, then Melee
+7. Execution, Throw grenade, Suppressive fire, Buddy aid, Tactical reload (opt-in; each has its own file). Execution being
+   below combat is what "nothing left to fight" means
+8. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
+9. Follow
+10. Recovering: hold (nothing below runs until the meds have worked; see `recovering.yml`)
+11. Search open, then Search cover
+12. Door refused (a one-line callout; see Doors below)
+13. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
+14. Sensors
+15. Join squad
+16. Disengage
+17. Squad hold
 
 The header of that file lists every blackboard key and who writes it. Keep it current when you add one.
 
@@ -401,8 +405,42 @@ straight-line distance).
   systems and `EntityQuery<T>` inject. They have no `ProtoMan`; declare `IPrototypeManager` if needed.
 - **Preconditions** subclass `HTNPrecondition` and implement `IsMet(blackboard)`. Read the owner with
   `blackboard.GetValue<EntityUid>(NPCBlackboard.Owner)`.
-- **Utility queries:** a custom query overrides `UtilityQuery.AddEntities`, the way a consideration overrides
-  `UtilityConsideration.GetScore`, so a new one needs no case in `NPCUtilitySystem`.
+- **Picking an entity is a `utilityQuery`.** Anything that gets some entity, whether a target, a squadmate or an item, does
+  so through a YAML query and `UtilityOperator`. Don't write an operator or system method that picks one: an operator acts
+  on the key `UtilityOperator` wrote. YAML shows what is being chosen and why, and a balance pass can change it without
+  touching C#.
+  - **Reuse a query and narrow it with considerations.** A score of 0 drops a candidate, so most "which ones" questions are
+    an existing query plus considerations: hostiles that are down are `PerceivedContactsQuery` with `TargetIsCritCon`, not a
+    new query or a new field on it. A new `UtilityQuery` inheritor is only for entities no existing query can supply, like
+    `SquadmatesQuery`. It overrides `UtilityQuery.AddEntities`, the way a consideration overrides
+    `UtilityConsideration.GetScore`, so it needs no case in `NPCUtilitySystem`.
+  - **One consideration, one question.** If a consideration's `GetScore` asks two things, it is two considerations. Compose
+    them in YAML with `KsLogicAndCon` and `KsLogicOrCon`, which short-circuit, so put the cheapest and most decisive first.
+    Each child has its own curve, and the logic consideration's curve applies to the result: `KsLogicAndCon` with an
+    `InverseBoolCurve` is "not both".
+  - **Only for some NPCs:** a query shared by NPCs that differ goes by the owner with `FitsWhitelistCon { checkOwner: true }`
+    on a marker component. Read the owner first, so NPCs without it pay for nothing else:
+    ```yaml
+    - !type:KsLogicAndCon # one that is down is left for walking up to, by those that do that
+      curve: !type:InverseBoolCurve
+      considerations:
+      - !type:FitsWhitelistCon
+        checkOwner: true
+        whitelist:
+          components:
+          - NpcExecutioner
+        curve: !type:BoolCurve
+      - !type:TargetIsCritCon
+        curve: !type:BoolCurve
+    ```
+  - **A distance curve ranks, it does not reject.** It scores above 0 everywhere inside the query's reach, so anything that
+    needs a cut-off needs a consideration that returns 0. That was how operatives ran from grenades 20 tiles away, until
+    `TargetDangerRangeCon`.
+  - **Hidden hostiles go by belief.** `TargetDistanceCon` and `TargetInLOSCon` read where a hostile really is, which is
+    cheating for one out of sight. Use `ContactDistanceCon`, `ContactInLOSCon` and `ContactClearOfSquadCon`, and
+    `UtilityOperator`'s `believedCoordinates: true`.
+  - **`InventoryQuery` walks worn slots, not hands.** For "the gun in hand, or else something carried", use two compound
+    branches: `GetActiveHeldItemOperator`, then `UtilityOperator`.
 - **Voicelines:** `SpeakOperator` ignores `cooldown` without a `cooldownID`. A line said once per squad uses
   `InSquadPrecondition { leaderOnly: true }`, or-ed with `InSquadPrecondition { invert: true }` for NPCs on their own.
 - **Actions:** `DoActionOperator` and `DoWorldActionOperator` only check that their target key exists at plan time.
@@ -444,6 +482,8 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
 - **Components a system silently requires:** NPC ranged combat skips any NPC without `CombatMode`. Opening a locker
   needs `Hands` (`CanOpen` returns false without them). Steering, and so juking and moving at all, only runs for NPCs
   with `InputMover`. The shared test mobs have none of these, so a live test of movement or shooting needs its own.
+  Damage only lands on an entity with `Injurable`, which they lack too: `Damageable` alone throws it away with no error, so
+  bullets and executions do nothing to them. `DamageableSystem.SetDamage` still works, so staged damage hides this.
 - **Test mobs lack the operative blackboard.** Without `VisionRadius`/`AggroVisionRadius`, `TacticalPositionOperator`
   scores every candidate's distance as the far end of its curve, which with a near-preferring curve is 0: no spot
   is ever found. Stage the keys the branch reads (`KsOperativeHtnRootTest.StageArmed`).

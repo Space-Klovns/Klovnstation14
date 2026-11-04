@@ -92,6 +92,8 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     {
         // Spread across the interval, so a squad spawned together does not all look around on the same tick.
         entity.Comp.NextUpdate = _gameTiming.CurTime + entity.Comp.UpdateInterval * _robustRandom.NextDouble();
+
+        RefreshDarkVision(entity.Owner);
     }
 
     /// <summary>
@@ -350,6 +352,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     private TimeSpan GetReactionTime(Entity<NpcPerceptionComponent> entity, EntityUid targetUid)
     {
         var lightLevel = _npcLightDetectionSystem.GetPerceivedLightLevel(entity.Owner, targetUid, entity.Comp.ProximityRange);
+        lightLevel = GetSeenLightLevel(entity.AsNullable(), lightLevel);
         return entity.Comp.ReactionTime * (1f + entity.Comp.DarknessReactionScale * (1f - lightLevel));
     }
 

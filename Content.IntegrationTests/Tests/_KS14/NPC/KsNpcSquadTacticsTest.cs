@@ -38,6 +38,7 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     ///     Squad mobs and a mob that never leads, all of which skip the watch: straight on to going in after it.
     /// </summary>
     private const string NoWatchMob = "KsTacticsTestMobNoWatch";
+    private const string RecoveringMob = "KsTacticsTestMobRecovering";
     private const string NoWatchLonerMob = "KsTacticsTestMobNoWatchLoner";
     private const string HastyLonerMob = "KsTacticsTestMobHastyLoner";
     private const string CautiousMob = "KsTacticsTestMobCautious";
@@ -62,6 +63,12 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     tactics:
       watchTime: 0
       maxStageDistance: 40 # the walk round the test room to its far door is about 21 tiles
+
+- type: entity
+  parent: KsTacticsTestMobNoWatch
+  id: KsTacticsTestMobRecovering
+  components:
+  - type: NpcRecovery
 
 - type: entity
   parent: KsTacticsTestMobNoWatch
@@ -224,6 +231,39 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                 Assert.That(eliteNt.CanLead && eliteSyndicate.CanLead, "elites lead");
                 Assert.That(regularNt.CanLead || regularSyndicate.CanLead, Is.False, "regulars do not");
             });
+        });
+    }
+
+    /// <summary>
+    ///     A member waiting for its meds to work is not coming, so it is not counted on: it gets no order, and the hunt goes
+    ///         on without it. It is still in the fight, though: a hostile it can see ends the hunt as anyone's would.
+    /// </summary>
+    [Test]
+    public async Task TestRecoveringMemberIsNotCountedOn()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: RecoveringMob);
+        var recoverySystem = scene.EntManager.System<Content.Server._KS14.NPC.Recovery.NpcRecoverySystem>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            recoverySystem.StartRecovery(scene.MemberUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid), Is.Not.Null, "the squad should hunt without it");
+                Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out _), "the leader should have an order");
+                Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out _), Is.False, "one waiting for its meds should not");
+            });
+
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            scene.PerceptionSystem.SetContact(scene.MemberUid, scene.TargetUid, new NpcContact(NpcContactState.Visible,
+                now, now, now, scene.LastKnownCoordinates, default, null, Reacted: true));
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid), Is.Null, "a hostile it can see means a fight, not a hunt");
         });
     }
 

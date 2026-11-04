@@ -1,3 +1,5 @@
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
+using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN.Preconditions;
@@ -11,6 +13,7 @@ public sealed partial class CooldownPrecondition : HTNPrecondition
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private NpcGenericCooldownSystem _genericCooldownSystem = default!;
+    [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
 
     /// <summary>
     ///     ID of the cooldown.
@@ -19,6 +22,11 @@ public sealed partial class CooldownPrecondition : HTNPrecondition
     private int _idHash;
 
     [DataField] public bool Inverted;
+
+    /// <summary>
+    ///     Whether this is a cooldown shared by the owner's whole squad. See <see cref="CooldownOperator.SquadWide"/>.
+    /// </summary>
+    [DataField] public bool SquadWide;
 
     public override void Initialize(IEntitySystemManager sysManager)
     {
@@ -31,6 +39,7 @@ public sealed partial class CooldownPrecondition : HTNPrecondition
         if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager))
             return Inverted;
 
-        return _genericCooldownSystem.IsKeyOnCooldown(ownerUid, _idHash) ^ Inverted;
+        var holderUid = SquadWide ? _npcSquadSystem.GetSquadOrSelf(ownerUid) : ownerUid;
+        return _genericCooldownSystem.IsKeyOnCooldown(holderUid, _idHash) ^ Inverted;
     }
 }

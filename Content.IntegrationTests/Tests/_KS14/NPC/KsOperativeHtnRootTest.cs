@@ -4,10 +4,14 @@ using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Execution;
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Grenades;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Orders;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Squad;
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Suppression;
 using Content.Server._KS14.NPC.Perception;
+using Content.Server._KS14.NPC.Recovery;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Squad.Tactics;
 using Content.Server._KS14.NPC.Systems;
@@ -15,6 +19,9 @@ using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators;
+using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat;
+using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat.Ranged;
+using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Tools.Systems;
@@ -70,7 +77,76 @@ public sealed class KsOperativeHtnRootTest : GameTest
     meter: KsOperativeRootTestCaution
     threshold: 95
     chance: 1
+
+- type: entity
+  parent: KsOperativeRootTestMobWithHands
+  id: KsOperativeRootTestMobRecovering
+  components:
+  - type: NpcRecovery
+
+# Somewhere to carry things, and none of the things only some NPCs do.
+- type: entity
+  parent: KsOperativeRootTestMobWithHands
+  id: KsOperativeRootTestMobCarrying
+  components:
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
+
+- type: entity
+  parent: KsOperativeRootTestMobCarrying
+  id: KsOperativeRootTestMobAllOut
+  components:
+  - type: NpcExecutioner
+  - type: NpcGrenadeThrower
+  - type: NpcBuddyAid
+  - type: NpcSuppressor
+
+- type: entity
+  id: KsOperativeRootTestGrenade
+  components:
+  - type: Item
+  - type: TimerTrigger
+    delay: 1000
+
+- type: entity
+  parent: CombatKnife
+  id: KsOperativeRootTestKnife
+
+- type: entity
+  parent: EmergencyMedipen
+  id: KsOperativeRootTestMedipen
+  components:
+  - type: NpcHealingItem
+
+# A small blast, primed for longer than any test runs.
+- type: entity
+  id: KsOperativeRootTestExplosive
+  components:
+  - type: TimerTrigger
+    delay: 1000
+  - type: Explosive
+    explosionType: Default
+    totalIntensity: 10
+    intensitySlope: 3
+    maxIntensity: 10
+
+# Primed, with nothing to say what it does.
+- type: entity
+  id: KsOperativeRootTestPrimed
+  components:
+  - type: TimerTrigger
+    delay: 1000
 ";
+
+    private const string RecoveringMob = "KsOperativeRootTestMobRecovering";
+    private const string CarryingMob = "KsOperativeRootTestMobCarrying";
+    private const string AllOutMob = "KsOperativeRootTestMobAllOut";
+    private const string TestGrenade = "KsOperativeRootTestGrenade";
+    private const string TestKnife = "KsOperativeRootTestKnife";
+    private const string TestMedipen = "KsOperativeRootTestMedipen";
+    private const string TestExplosive = "KsOperativeRootTestExplosive";
+    private const string TestPrimed = "KsOperativeRootTestPrimed";
 
     private const string CombatMarker = "OpInCombat";
     private const string CombatTimeKey = "TimeOfLastCombat";
@@ -328,24 +404,316 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     A live grenade in sight is run from, in combat or out of it - and so is anything else primed and ticking,
-    ///         like a C4 charge, which is no hand grenade.
+    ///     A live grenade in sight and in reach is run from, in combat or out of it - and so is anything else primed and
+    ///         ticking, like a C4 charge, which is no hand grenade, or something that does not say what it does.
     /// </summary>
-    [TestCase(true, "ExGrenade")]
-    [TestCase(false, "ExGrenade")]
-    [TestCase(true, "C4")]
+    [TestCase(true, TestExplosive)]
+    [TestCase(false, TestExplosive)]
+    [TestCase(true, TestPrimed)]
     public async Task TestLiveGrenadeIsFled(bool inCombat, string explosive)
     {
         var plan = await PlanOperative(pendingSensorData: false, recentlyFought: inCombat, inCombat: inCombat,
             stage: (entManager, _, gridUid) =>
             {
-                var grenadeUid = SpawnAt(entManager, explosive, gridUid, 2, 3);
+                var grenadeUid = SpawnAt(entManager, explosive, gridUid, 3, 3);
                 Assert.That(entManager.System<Content.Shared.Trigger.Systems.TriggerSystem>().ActivateTimerTrigger(grenadeUid),
                     "the grenade should be primed");
             });
 
         Assert.That(plan.Tasks.Any(task => task.Operator is UtilityOperator { Prototype.Id: "KsOperativeNearbyGrenades" }),
             $"expected the grenade to be fled, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     A live grenade in plain view that cannot reach the operative is left alone: it is not run from, the fight is not
+    ///         dropped for it, and it does not make anyone jumpy.
+    /// </summary>
+    [Test]
+    public async Task TestLiveGrenadeOutOfReachIsNotFled()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                // The far end of the room, in plain view, and much further than this small blast goes.
+                var grenadeUid = SpawnAt(entManager, TestExplosive, gridUid, 0, 3);
+                Assert.That(entManager.System<Content.Shared.Trigger.Systems.TriggerSystem>().ActivateTimerTrigger(grenadeUid),
+                    "the grenade should be primed");
+
+                var explosiveComponent = entManager.GetComponent<Content.Shared.Explosion.Components.ExplosiveComponent>(grenadeUid);
+                var reach = entManager.System<Content.Server.Explosion.EntitySystems.ExplosionSystem>().IntensityToRadius(
+                    explosiveComponent.TotalIntensity, explosiveComponent.IntensitySlope, explosiveComponent.MaxIntensity);
+                var transformSystem = entManager.System<SharedTransformSystem>();
+                var distance = (transformSystem.GetWorldPosition(grenadeUid) - transformSystem.GetWorldPosition(mobUid)).Length();
+
+                Assert.That(distance, Is.GreaterThan(reach * 2f), "the test needs the grenade well out of reach");
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is UtilityOperator { Prototype.Id: "KsOperativeNearbyGrenades" }), Is.False,
+            $"a grenade that cannot reach it is no reason to run, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     Waiting for meds to work, an operative stays put: its orders wait.
+    /// </summary>
+    [Test]
+    public async Task TestRecoveringHoldsInsteadOfFollowingOrders()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: RecoveringMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Search);
+                entManager.System<NpcRecoverySystem>().StartRecovery(mobUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is StaticWaitOperator), $"expected it to hold, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is GetOrderOperator), Is.False, $"orders should wait, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     Nor does it go to back up a squadmate.
+    /// </summary>
+    [Test]
+    public async Task TestRecoveringDoesNotAnswerCallouts()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: RecoveringMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCalledOutRoundTheCorner(entManager, mobUid, gridUid);
+                entManager.System<NpcRecoverySystem>().StartRecovery(mobUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is StaticWaitOperator), $"expected it to hold, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is MoveToOperator or TacticalPositionOperator), Is.False,
+                $"it should stay where it is, got: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     It shoots what it sees, and backs away from it, but never closes in. Getting its health back ends that at once.
+    /// </summary>
+    [Test]
+    public async Task TestRecoveringShootsButDoesNotCloseIn()
+    {
+        var recovering = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: RecoveringMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+                StageRecoveringAndSettled(entManager, mobUid);
+            });
+
+        var recovered = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: RecoveringMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(recovering.Tasks.Any(task => task.Operator is GunOperator), $"it should shoot, got: {Describe(recovering)}");
+            Assert.That(recovering.Tasks.Any(task => task.Operator is JukeOperator), $"and back away, got: {Describe(recovering)}");
+            Assert.That(recovering.Tasks.Any(task => task.Operator is MoveToOperator or TacticalPositionOperator), Is.False,
+                $"but go nowhere, got: {Describe(recovering)}");
+            Assert.That(recovered.Tasks.Any(task => task.Operator is MoveToOperator), $"recovered, it should close in again, got: {Describe(recovered)}");
+            Assert.That(Replaces(recovered, recovering), "and getting its health back should end the wait at once");
+        });
+    }
+
+    /// <summary>
+    ///     A hostile finding it there means the spot is no good: it moves, breaking off the shooting to do it.
+    /// </summary>
+    [Test]
+    public async Task TestRecoveringFallsBackFromAHostile()
+    {
+        var shooting = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: RecoveringMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+                StageRecoveringAndSettled(entManager, mobUid);
+            });
+
+        var fallingBack = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: RecoveringMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+                entManager.System<NpcRecoverySystem>().StartRecovery(mobUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(fallingBack.Tasks.Any(task => task.Operator is TacticalPositionOperator), $"expected it to look for a new spot, got: {Describe(fallingBack)}");
+            Assert.That(Replaces(fallingBack, shooting), "falling back should break off the shooting");
+        });
+    }
+
+    /// <summary>
+    ///     An NPC that does this walks up to a hostile left down and executes it, rather than shooting it where it lies. Every
+    ///         other NPC goes on shooting.
+    /// </summary>
+    [TestCase(AllOutMob, true)]
+    [TestCase(CarryingMob, false)]
+    public async Task TestDownedHostileIsExecutedByThoseThatDoThat(string mobPrototype, bool executes)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestKnife);
+                StageDownedHostile(entManager, mobUid, gridUid, 1, 3);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is ExecuteOperator), Is.EqualTo(executes), Describe(plan));
+            Assert.That(plan.Tasks.Any(task => task.Operator is GunOperator), Is.Not.EqualTo(executes), Describe(plan));
+        });
+    }
+
+    /// <summary>
+    ///     Something still on its feet comes first, and drops an execution under way.
+    /// </summary>
+    [Test]
+    public async Task TestHostileOnItsFeetInterruptsAnExecution()
+    {
+        var execution = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestKnife);
+                StageDownedHostile(entManager, mobUid, gridUid, 1, 3);
+            });
+
+        var fight = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestKnife);
+                StageDownedHostile(entManager, mobUid, gridUid, 1, 3);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(fight.Tasks.Any(task => task.Operator is GunOperator), $"expected it to shoot, got: {Describe(fight)}");
+            Assert.That(fight.Tasks.Any(task => task.Operator is ExecuteOperator), Is.False, $"not to walk over, got: {Describe(fight)}");
+            Assert.That(Replaces(fight, execution), "a hostile on its feet should interrupt an execution");
+        });
+    }
+
+    /// <summary>
+    ///     A hostile down where nobody can get to it still has to die: as they leave those for walking up to, nothing else
+    ///         would ever shoot it.
+    /// </summary>
+    [Test]
+    public async Task TestUnreachableDownedHostileIsShot()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestKnife);
+                StageDownedHostile(entManager, mobUid, gridUid, 10, 10);
+            }, withWalledCell: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is GunOperator), $"expected it to be shot, got: {Describe(plan)}");
+            Assert.That(plan.Tasks.Any(task => task.Operator is ExecuteOperator), Is.False, Describe(plan));
+        });
+    }
+
+    /// <summary>
+    ///     A grenade goes after a hostile out of sight, from those that do that.
+    /// </summary>
+    [TestCase(AllOutMob, true)]
+    [TestCase(CarryingMob, false)]
+    public async Task TestHiddenHostileGetsAGrenade(string mobPrototype, bool throws)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageCarried(entManager, mobUid, TestGrenade);
+                StageContact(entManager, mobUid, gridUid, NpcContactState.Lost, new System.Numerics.Vector2(0.5f, 0.5f));
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is ThrowGrenadeOperator), Is.EqualTo(throws), Describe(plan));
+    }
+
+    /// <summary>
+    ///     A hostile that has only just ducked out of sight gets a burst after it, from those that do that.
+    /// </summary>
+    [TestCase(AllOutMob, true)]
+    [TestCase(CarryingMob, false)]
+    public async Task TestHostileThatJustDuckedIsSuppressed(string mobPrototype, bool suppresses)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageContact(entManager, mobUid, gridUid, NpcContactState.Lost);
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is SuppressOperator), Is.EqualTo(suppresses), Describe(plan));
+    }
+
+    /// <summary>
+    ///     A squadmate that is down gets the meds, from those that do that.
+    /// </summary>
+    [TestCase(AllOutMob, true)]
+    [TestCase(CarryingMob, false)]
+    public async Task TestDownedSquadmateIsSeenTo(string mobPrototype, bool seesToIt)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype, withSquadmate: true,
+            stage: (entManager, mobUid, _) =>
+            {
+                StageHands(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestMedipen);
+
+                var squadmates = new HashSet<EntityUid>();
+                entManager.System<NpcSquadSystem>().GetSquadmates(mobUid, squadmates);
+                Assert.That(squadmates, Has.Count.EqualTo(1), "the test needs the two in a squad");
+
+                entManager.System<Content.Shared.Mobs.Systems.MobStateSystem>().ChangeMobState(squadmates.Single(), Content.Shared.Mobs.MobState.Critical);
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is ClaimTargetOperator), Is.EqualTo(seesToIt), Describe(plan));
+    }
+
+    /// <summary>
+    ///     With nothing in sight and a magazine half gone, it swaps it where it stands, if it is the sort to.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestHalfEmptyMagazineIsToppedUp(bool tacticalReload)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: CarryingMob,
+            stage: (entManager, mobUid, _) =>
+            {
+                StageArmed(entManager, mobUid);
+                entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>().AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+                StageHalfEmptyMagazine(entManager, mobUid);
+                StageCarried(entManager, mobUid, "MagazinePistol");
+
+                if (tacticalReload)
+                    entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("TacticalReload", true);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is SwapToFreeHandOperator), Is.EqualTo(tacticalReload), Describe(plan));
+
+            if (tacticalReload)
+                Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator or MoveToOperator), Is.False, $"it should not go anywhere, got: {Describe(plan)}");
+        });
     }
 
     /// <summary>
@@ -382,7 +750,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
             Assert.That(entManager.GetComponent<HTNComponent>(mobUid).Plan, Is.Not.Null, "the operative should be busy with something");
 
             var gridUid = entManager.GetComponent<TransformComponent>(mobUid).ParentUid;
-            grenadeUid = SpawnAt(entManager, "ExGrenade", gridUid, 2, 3);
+            grenadeUid = SpawnAt(entManager, TestExplosive, gridUid, 3, 3);
             entManager.System<Content.Shared.Trigger.Systems.TriggerSystem>().ActivateTimerTrigger(grenadeUid);
         });
 
@@ -549,6 +917,64 @@ public sealed class KsOperativeHtnRootTest : GameTest
         var magazineUid = magazineContainer.ContainedEntities[0];
         var ballisticComponent = entManager.GetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(magazineUid);
         entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().SetBallisticUnspawned((magazineUid, ballisticComponent), ballisticComponent.Capacity);
+    }
+
+    /// <summary>
+    ///     Waiting for meds to work, and only just moved, so that it holds rather than falling back.
+    /// </summary>
+    private static void StageRecoveringAndSettled(IEntityManager entManager, EntityUid mobUid)
+    {
+        entManager.System<NpcRecoverySystem>().StartRecovery(mobUid);
+
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("RecoveryFallBackDueAt", now + System.TimeSpan.FromHours(1));
+    }
+
+    /// <summary>
+    ///     Two empty hands, for an operative with nothing else staged to give it any.
+    /// </summary>
+    private static void StageHands(IEntityManager entManager, EntityUid mobUid)
+    {
+        var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+        handsSystem.AddHand(mobUid, "right", Content.Shared.Hands.Components.HandLocation.Right);
+        handsSystem.AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+    }
+
+    /// <summary>
+    ///     Puts <paramref name="prototype"/> in the operative's pocket.
+    /// </summary>
+    private static void StageCarried(IEntityManager entManager, EntityUid mobUid, string prototype)
+    {
+        var itemUid = entManager.SpawnEntity(prototype, entManager.GetComponent<TransformComponent>(mobUid).Coordinates);
+        Assert.That(entManager.System<Content.Shared.Inventory.InventorySystem>().TryEquip(mobUid, itemUid, "pocket1", silent: true, force: true),
+            $"{prototype} should be in the operative's pocket");
+    }
+
+    /// <summary>
+    ///     Leaves the magazine of the gun the operative holds a quarter full.
+    /// </summary>
+    private static void StageHalfEmptyMagazine(IEntityManager entManager, EntityUid mobUid)
+    {
+        var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+        Assert.That(handsSystem.TryGetHeldItem(mobUid, "right", out var gunUid));
+        Assert.That(entManager.System<Robust.Shared.Containers.SharedContainerSystem>().TryGetContainer(gunUid!.Value, "gun_magazine", out var magazineContainer));
+
+        var magazineUid = magazineContainer!.ContainedEntities[0];
+        var ballisticComponent = entManager.GetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(magazineUid);
+        entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().SetBallisticUnspawned((magazineUid, ballisticComponent), ballisticComponent.Capacity / 4);
+    }
+
+    /// <summary>
+    ///     A hostile in plain view, down, seen and reacted to.
+    /// </summary>
+    private static void StageDownedHostile(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, int x, int y)
+    {
+        var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, x, y);
+        entManager.System<Content.Shared.Mobs.Systems.MobStateSystem>().ChangeMobState(hostileUid, Content.Shared.Mobs.MobState.Critical);
+
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Visible,
+            now, now, now, entManager.GetComponent<TransformComponent>(hostileUid).Coordinates, default, null, Reacted: true));
     }
 
     /// <summary>
@@ -841,12 +1267,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
     /// <summary>
     ///     A hostile out of sight behind the room's walls, that the operative believes was last somewhere in its room.
     /// </summary>
-    private static void StageContact(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, NpcContactState state)
+    private static void StageContact(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, NpcContactState state, System.Numerics.Vector2? believedAt = null)
     {
         var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 10, 10);
         var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
         entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(state,
-            now, now, now, new EntityCoordinates(gridUid, new System.Numerics.Vector2(2.5f, 2.5f)), new System.Numerics.Vector2(1f, 0f),
+            now, now, now, new EntityCoordinates(gridUid, believedAt ?? new System.Numerics.Vector2(2.5f, 2.5f)), new System.Numerics.Vector2(1f, 0f),
             null, Reacted: state != NpcContactState.Reported));
     }
 
@@ -911,13 +1337,15 @@ public sealed class KsOperativeHtnRootTest : GameTest
         bool knownThreat = false,
         bool squadThreat = false,
         string mobPrototype = SyndicateMob,
-        System.Action<IEntityManager, EntityUid, EntityUid>? stage = null)
+        bool withSquadmate = false,
+        System.Action<IEntityManager, EntityUid, EntityUid>? stage = null,
+        bool withWalledCell = false)
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
         if (!protoManager.HasIndex(_operativeRoot))
             Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
 
-        var (entManager, mobUid) = await SetUpOperativeInRoom(mobPrototype);
+        var (entManager, mobUid) = await SetUpOperativeInRoom(mobPrototype, withSquadmate, withWalledCell);
         var sensorSystem = entManager.System<NpcSensorSystem>();
         var squadSystem = entManager.System<NpcSquadSystem>();
         var timing = Pair.Server.ResolveDependency<IGameTiming>();
@@ -977,7 +1405,11 @@ public sealed class KsOperativeHtnRootTest : GameTest
     ///     A lone operative stand-in in a small walled room with one airlock, left long enough for the navmesh
     ///         to build and its one-man squad to form.
     /// </summary>
-    private async Task<(IEntityManager EntManager, EntityUid MobUid)> SetUpOperativeInRoom(string mobPrototype = SyndicateMob)
+    /// <param name="withWalledCell">Also walls in the tile at 10,10 on all sides, before the navmesh builds, so nothing can
+    ///     walk to it.</param>
+    private async Task<(IEntityManager EntManager, EntityUid MobUid)> SetUpOperativeInRoom(string mobPrototype = SyndicateMob,
+        bool withSquadmate = false,
+        bool withWalledCell = false)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -1001,6 +1433,17 @@ public sealed class KsOperativeHtnRootTest : GameTest
             }
 
             mobUid = SpawnAt(entManager, mobPrototype, gridUid, 4, 3);
+
+            if (withSquadmate)
+                SpawnAt(entManager, SyndicateMob, gridUid, 2, 1);
+
+            if (withWalledCell)
+            {
+                foreach (var (x, y) in new[] { (9, 9), (10, 9), (11, 9), (9, 10), (11, 10), (9, 11), (10, 11), (11, 11) })
+                {
+                    SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
         });
 
         await Pair.RunTicksSync(150);

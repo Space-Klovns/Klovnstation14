@@ -192,4 +192,16 @@ public sealed partial class NpcSquadTacticsSettings
     public TimeSpan RegroupQuietTime = TimeSpan.FromSeconds(20);
 
     #endregion
+
+    #region Fighting
+
+    /// <summary>
+    ///     How much members spread out around a hostile they are shooting, from 0 to 1. A firing spot's score is lowered by
+    ///         up to this much the closer it is, seen from the hostile, to a squadmate already shooting it. See
+    ///         <c>TacticalPositionOperator.CrossfireTargetKey</c>.
+    /// </summary>
+    [DataField]
+    public float Crossfire;
+
+    #endregion
 }

@@ -8,6 +8,7 @@ using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.NPC;
 using Content.Server.NPC;
+using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators;
@@ -38,6 +39,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private NPCUtilitySystem _npcUtilitySystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
+    [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private NpcKillZoneSystem _npcKillZoneSystem = default!;
     [Dependency] private NpcExposureSystem _npcExposureSystem = default!;
@@ -65,6 +67,12 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     public string ReferenceCoordinatesKey = string.Empty;
 
     [DataField] public float MaxRange = 15f;
+
+    /// <summary>
+    ///     A blackboard float that overrides <see cref="MaxRange"/> if the owner has it, for reach that goes by the mob
+    ///         rather than the task.
+    /// </summary>
+    [DataField] public string? MaxRangeKey;
 
     [DataField] public int MaxCandidates = 64;
 
@@ -147,6 +155,14 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public float KillZoneAvoidance;
 
     /// <summary>
+    ///     A blackboard key holding the hostile being shot. Set, and with the squad's
+    ///         <see cref="Squad.Tactics.NpcSquadTacticsSettings.Crossfire"/> on, a spot is worth more the wider the angle at
+    ///         the hostile between it and every squadmate already shooting it, so a squad closes in from several sides
+    ///         rather than bunching up on one.
+    /// </summary>
+    [DataField] public string? CrossfireTargetKey;
+
+    /// <summary>
     ///     If set, scores how well hidden a candidate is from the threat at this key - not only from where it stands
     ///         (which <see cref="LosReferenceCoordinatesKey"/> covers), but from floor it could step to within
     ///         <see cref="ExposureReach"/> steps. A spot just round a corner is hidden from where the threat is, and
@@ -196,6 +212,15 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     private readonly List<(PathPoly Candidate, float Score)> _scoredCandidates = new();
 
     /// <summary>
+    ///     How much crossfire counts in this search, and the directions, from the hostile, of the squadmates shooting it.
+    ///         Built after the search's await, as the exposure probes are: see <see cref="_coverStepSightField"/>.
+    /// </summary>
+    private float _crossfire;
+    private Vector2 _crossfireTargetPosition;
+    private readonly List<Vector2> _crossfireDirections = new();
+    private readonly HashSet<EntityUid> _crossfireSquadmates = new();
+
+    /// <summary>
     /// Blackboard float key read at claim time to size the claim's TTL (e.g. CampingTime/AdvanceTime).
     /// </summary>
     [DataField] public string ClaimDurationKey = "CampingTime";
@@ -239,8 +264,12 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         if (!blackboard.TryGetValue<EntityCoordinates>(ReferenceCoordinatesKey, out var reference, _entityManager))
             return (!InvalidatePlanOnNoHighest, new Dictionary<string, object>());
 
+        var maxRange = MaxRangeKey is not null && blackboard.TryGetValue<float>(MaxRangeKey, out var keyMaxRange, _entityManager)
+            ? keyMaxRange
+            : MaxRange;
+
         var candidates = await _pathfindingSystem.GetTacticalCandidates(
-            owner, reference, MaxRange, MaxCandidates, cancelToken, _pathfindingSystem.GetFlags(blackboard));
+            owner, reference, maxRange, MaxCandidates, cancelToken, _pathfindingSystem.GetFlags(blackboard));
 
         if (candidates.Count == 0)
             return (!InvalidatePlanOnNoHighest, new Dictionary<string, object>());
@@ -281,6 +310,8 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
                 LosRadius + 2f,
                 _coverStepSightField);
         }
+
+        GatherCrossfire(blackboard, owner);
 
         var considerationCount = GetConsiderationCount();
 
@@ -377,8 +408,66 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             + (FovReferenceCoordinatesKey is not null ? 1 : 0)
             + (RandomProbability > 0f ? 1 : 0)
             + (KillZoneAvoidance > 0f ? 1 : 0)
+            + (_crossfireDirections.Count > 0 ? 1 : 0)
             + (_exposureProbes.Count > 0 ? 1 : 0)
             + 1; // claim penalty, always applied
+    }
+
+    /// <summary>
+    ///     Works out which way, seen from the hostile at <see cref="CrossfireTargetKey"/>, the owner's squadmates are
+    ///         shooting it from. Leaves nothing to score with, at no cost, for a squad that does not do this.
+    /// </summary>
+    private void GatherCrossfire(NPCBlackboard blackboard, EntityUid owner)
+    {
+        _crossfireDirections.Clear();
+        _crossfire = 0f;
+
+        if (CrossfireTargetKey is null ||
+            !blackboard.TryGetValue<EntityUid>(CrossfireTargetKey, out var targetUid, _entityManager) ||
+            _npcSquadSystem.GetTactics(owner) is not { Crossfire: > 0f } tactics)
+            return;
+
+        _crossfire = tactics.Crossfire;
+        var targetMapCoordinates = _transformSystem.GetMapCoordinates(targetUid);
+        _crossfireTargetPosition = targetMapCoordinates.Position;
+
+        _crossfireSquadmates.Clear();
+        _npcSquadSystem.GetSquadmates(owner, _crossfireSquadmates);
+
+        foreach (var squadmateUid in _crossfireSquadmates)
+        {
+            if (!_entityManager.TryGetComponent<NPCRangedCombatComponent>(squadmateUid, out var rangedCombatComponent) ||
+                rangedCombatComponent.Target != targetUid)
+                continue;
+
+            var squadmateMapCoordinates = _transformSystem.GetMapCoordinates(squadmateUid);
+            var direction = squadmateMapCoordinates.Position - _crossfireTargetPosition;
+
+            if (squadmateMapCoordinates.MapId == targetMapCoordinates.MapId && direction.LengthSquared() > 0f)
+                _crossfireDirections.Add(Vector2.Normalize(direction));
+        }
+    }
+
+    /// <summary>
+    ///     How much crossfire likes <paramref name="candidate"/>, from 0 to 1: 1 for a spot at least a right angle round
+    ///         the hostile from every squadmate shooting it, falling off as it closes on the nearest of them.
+    /// </summary>
+    private float GetCrossfireFactor(PathPoly candidate)
+    {
+        var direction = _transformSystem.ToMapCoordinates(candidate.Coordinates).Position - _crossfireTargetPosition;
+        if (direction.LengthSquared() <= 0f)
+            return 1f - _crossfire;
+
+        direction = Vector2.Normalize(direction);
+
+        // The dot product of two directions: 1 together, 0 at a right angle, -1 opposite.
+        var closest = -1f;
+        foreach (var squadmateDirection in _crossfireDirections)
+        {
+            closest = MathF.Max(closest, Vector2.Dot(direction, squadmateDirection));
+        }
+
+        return 1f - _crossfire * Math.Clamp(closest, 0f, 1f);
     }
 
     /// <summary>
@@ -470,6 +559,14 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         {
             var danger = _npcKillZoneSystem.GetDanger(owner, candidate.Coordinates);
             score *= _npcUtilitySystem.GetAdjustedScore(Math.Clamp(1f - KillZoneAvoidance * danger, 0f, 1f), considerationCount);
+
+            if (score <= 0f)
+                return 0f;
+        }
+
+        if (_crossfireDirections.Count > 0)
+        {
+            score *= _npcUtilitySystem.GetAdjustedScore(GetCrossfireFactor(candidate), considerationCount);
 
             if (score <= 0f)
                 return 0f;

@@ -57,7 +57,7 @@ public sealed partial class NpcPerceptionSystem
         // Cheapest first: the light level is the only part that is not a field read.
         conspicuous = distanceSquared <= entity.Comp.ProximityRange * entity.Comp.ProximityRange ||
             speed >= entity.Comp.RevealSpeed ||
-            _npcLightDetectionSystem.GetLightLevel(targetUid) >= entity.Comp.MinimumLightLevel;
+            GetSeenLightLevel(entity.AsNullable(), _npcLightDetectionSystem.GetLightLevel(targetUid)) >= entity.Comp.MinimumLightLevel;
 
         if (conspicuous)
             return true;

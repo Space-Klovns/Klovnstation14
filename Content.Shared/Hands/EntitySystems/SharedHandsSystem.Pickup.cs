@@ -210,7 +210,7 @@ public abstract partial class SharedHandsSystem
 
             if (_inventory.TryGetSlotEntity(uid, container.ID, out var slotEnt) &&
                 slotEnt == entity &&
-                !_inventory.CanUnequip(uid, entity, container.ID, out _))
+                !_inventory.CanUnequip(uid, /* KS14: entity -> uid, the second argument is whose inventory it is */ uid, container.ID, out _))
                 return false;
         }
 

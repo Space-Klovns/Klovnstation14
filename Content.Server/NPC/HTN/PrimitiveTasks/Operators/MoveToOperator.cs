@@ -173,6 +173,11 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         var targetCoordinates = blackboard.GetValue<EntityCoordinates>(TargetKey);
         var uid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
 
+        // KS14 start: coordinates on a target can outlive it, if it was deleted after planning: there is nowhere to go. Update fails.
+        if (!targetCoordinates.IsValid(_entManager))
+            return;
+        // KS14 end
+
         // Re-use the path we may have if applicable.
         var comp = _steering.Register(uid, targetCoordinates);
         comp.ArriveOnLineOfSight = StopOnLineOfSight;
@@ -211,6 +216,11 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
 
         if (!_entManager.TryGetComponent<NPCSteeringComponent>(owner, out var steering))
             return HTNOperatorStatus.Failed;
+
+        // KS14 start: see Startup. Checked here too, as steering left over from a move in the background says nothing about this one.
+        if (blackboard.TryGetValue<EntityCoordinates>(TargetKey, out var targetCoordinates, _entManager) && !targetCoordinates.IsValid(_entManager))
+            return HTNOperatorStatus.Failed;
+        // KS14 end
 
         // KS14: ANK: start
         if (RequireLosForRangeCheck)

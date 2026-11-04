@@ -16,6 +16,13 @@ public sealed partial class NpcSquadComponent : Component
     public List<EntityUid> Members = new();
 
     /// <summary>
+    ///     Members that went critical. They are no longer in <see cref="Members"/>, but they are still the squad's to get
+    ///         back on their feet.
+    /// </summary>
+    [ViewVariables]
+    public List<EntityUid> Downed = new();
+
+    /// <summary>
     ///     Always one of <see cref="Members"/> while the squad has any.
     /// </summary>
     [ViewVariables]
