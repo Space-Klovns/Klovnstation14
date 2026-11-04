@@ -66,6 +66,9 @@
       Secondary: KsFluidPortAlt1
       Tertiary: KsFluidPortAlt2
   - type: KsFluidPort
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsFluidPort ]
@@ -142,6 +145,9 @@
       Tertiary: KsPhaseSeparatorAlt2
   - type: KsPhaseSeparator
     targetPressure: 4500
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsPhaseSeparator ]
@@ -209,6 +215,9 @@
   - type: KsExpansionValve
     # Sized to feed a volume pump at its full rate; automatic mode throttles it down.
     conductance: 40
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsExpansionValve ]
@@ -336,6 +345,10 @@
       Secondary: KsCatalyticReactorAlt1
       Tertiary: KsCatalyticReactorAlt2
   - type: KsCatalyticReactor
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
+    - KsRefining
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsCatalyticReactor ]

@@ -18,6 +18,9 @@
         <BoxContainer Name="SecondRow" Orientation="Horizontal" HorizontalExpand="True">
             <Label Name="SecondLabel" />
         </BoxContainer>
-        <Label Name="ModeLabel" StyleClasses="LabelSubText" />
+        <BoxContainer Orientation="Vertical">
+            <Label Name="ModeLabel" StyleClasses="LabelSubText" />
+            <Label Name="InvertHintLabel" StyleClasses="LabelSubText" Text="{Loc ks-temperature-gate-ui-invert-hint}" />
+        </BoxContainer>
     </BoxContainer>
 </controls:FancyWindow>

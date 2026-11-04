@@ -32,3 +32,4 @@ ks-temperature-gate-ui-open-when = Открыт, пока вход { $inverted -
     [true] вне
    *[false] в
 } этих пределах.
+ks-temperature-gate-ui-invert-hint = Примените к шлюзу мультитул, чтобы поменять это условие.

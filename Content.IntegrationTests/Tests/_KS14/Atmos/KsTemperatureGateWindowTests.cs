@@ -46,6 +46,33 @@ public sealed class KsTemperatureGateWindowTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     The way to swap the gate isn't in the window's controls, so the window has to say it.
+    /// </summary>
+    [Test]
+    public async Task TheWindowSaysAMultitoolSwapsIt()
+    {
+        var client = Pair.Client;
+        await client.WaitAssertion(() =>
+        {
+            var gateUid = client.EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            var gate = client.EntMan.AddComponent<KsTemperatureGateComponent>(gateUid);
+
+            var window = new KsTemperatureGateWindow();
+            window.UpdateState(gate);
+
+            var hint = window.FindControl<Label>("InvertHintLabel");
+            Assert.Multiple(() =>
+            {
+                Assert.That(hint.Visible, "The hint isn't shown.");
+                Assert.That(hint.Text, Is.Not.Null.And.Not.Empty, "The hint is blank.");
+            });
+
+            window.Dispose();
+            client.EntMan.DeleteEntity(gateUid);
+        });
+    }
+
     [Test]
     public async Task MaximumIsOnlyOfferedForARange()
     {
