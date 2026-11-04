@@ -52,9 +52,10 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.atmos.hot_puddle_check_interval", 0.08f, CVar.SERVERONLY);
 
     /// <summary>
-    ///     How well an uncovered puddle radiates heat to the air over it, from 0 (not at all) to 1 (a black body), over
-    ///         the share of a tile it covers. Radiation grows with the fourth power of temperature, so this mostly
-    ///         decides how hot a burning puddle can get against the fire heating it. 0 turns it off.
+    ///     How well an uncovered puddle, ice sheet or open container radiates heat to the air around it, or into vacuum,
+    ///         from 0 (not at all) to 1 (a black body), over its radiating area. Radiation grows with the fourth power of
+    ///         temperature, so this mostly decides how hot a burning puddle can get against the fire heating it. 0 turns
+    ///         it off.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosPuddleEmissivity =

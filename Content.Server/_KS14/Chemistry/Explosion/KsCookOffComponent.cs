@@ -17,6 +17,12 @@ public sealed partial class KsCookOffComponent : Component
     [DataField]
     public float Conductance = 10f;
 
+    /// <summary>
+    ///     The surface the solution radiates heat from, in m². All the heat it has to lose in vacuum goes this way.
+    /// </summary>
+    [DataField]
+    public float RadiatingArea = 0.01f;
+
     [DataField]
     public TimeSpan CheckInterval = TimeSpan.FromSeconds(1);
 

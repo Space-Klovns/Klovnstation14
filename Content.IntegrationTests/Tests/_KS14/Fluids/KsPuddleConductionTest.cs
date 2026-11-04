@@ -1,4 +1,5 @@
 #nullable enable
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
@@ -47,6 +48,7 @@ public sealed class KsPuddleConductionTest : GameTest
     [Test]
     public async Task TestNeighbouringPuddlesShareHeat([Values(true, false)] bool adjacent)
     {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Only their shared edge moves heat here.
         var server = Pair.Server;
         var entityManager = server.EntMan;
         var testMap = await Pair.CreateTestMap();

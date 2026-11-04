@@ -30,6 +30,7 @@ namespace Content.Server._KS14.Fluidmos.Ice;
 public sealed partial class KsIceSheetSystem : EntitySystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private Content.Server._KS14.Atmos.KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
     [Dependency] private KsTileEffectAtmosSystem _tileEffectAtmosSystem = default!;
     [Dependency] private PuddleSystem _puddleSystem = default!;
@@ -211,7 +212,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     ///     One pass of the ice sheets' heat exchange and phase changes, from <see cref="PuddleSystem"/>'s air heat
     ///         exchange, after it has finished with the puddles.
     /// </summary>
-    public void UpdateHeatExchange(float deltaTime, float conductance, float referenceVolume, float emissivity)
+    public void UpdateHeatExchange(float deltaTime, float conductance, float referenceVolume)
     {
         if (_gridIceCache.Count == 0 || deltaTime <= 0f)
             return;
@@ -224,7 +225,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             foreach (var (indices, sheet) in tiles)
             {
                 _sheets.Add(sheet);
-                ExchangeHeat(sheet, gridUid, indices, deltaTime, conductance, referenceVolume, emissivity);
+                ExchangeHeat(sheet, gridUid, indices, deltaTime, conductance, referenceVolume);
             }
         }
 
@@ -252,8 +253,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         Vector2i indices,
         float deltaTime,
         float conductance,
-        float referenceVolume,
-        float emissivity)
+        float referenceVolume)
     {
         if (!_solutionContainerSystem.TryGetSolution(sheet.Owner, KsIceSheetComponent.SolutionName, out var solutionEntity, out var solution) ||
             solution.Volume <= FixedPoint2.Zero)
@@ -269,26 +269,19 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         // Its air and its puddle each work with a share of its capacity, split between those it has: both start from the
         //     sheet's temperature and are applied together, so with the whole capacity in each, a thin sheet between a
         //     colder air and puddle would be carried past both.
-        var mixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is { Immutable: false } tileMixture &&
-                      _atmosphereSystem.GetHeatCapacity(tileMixture, applyScaling: true) >= Atmospherics.MinimumHeatCapacity
-            ? tileMixture
-            : null;
         var hasPuddle = _puddleSystem.TryGetCachedPuddle(gridUid, indices, out var puddle) &&
                         puddle.Comp.Solution is { } contactSolution &&
                         contactSolution.Comp.Solution.Volume > FixedPoint2.Zero;
-        var contactCapacity = iceCapacity / Math.Max((mixture != null ? 1 : 0) + (hasPuddle ? 1 : 0), 1);
+        var contactCapacity = iceCapacity / (hasPuddle ? 2 : 1);
 
-        if (mixture != null)
-        {
-            var airCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
-            var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
-            var airConductance = conductance * coverage +
-                                 KsThermalTransfer.RadiativeConductance(iceTemperature, mixture.Temperature, coverage, emissivity);
-            var heat = KsThermalTransfer.ExchangeQuery(contactCapacity, iceTemperature, airCapacity,
-                mixture.Temperature, airConductance, deltaTime);
-            mixture.Temperature -= heat / airCapacity;
-            iceHeat += heat;
-        }
+        var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
+        iceHeat += _airHeatExchangeSystem.ExchangeWithTile(gridUid,
+            indices,
+            contactCapacity,
+            iceTemperature,
+            conductance * coverage,
+            radiatingArea: coverage,
+            deltaTime);
 
         // In contact with the puddle on the same tile.
         if (hasPuddle && puddle.Comp.Solution is { } puddleSolution)
@@ -388,8 +381,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
 
     /// <summary>
     ///     Linked ice in thin air sublimes straight into the tile's gas, at the Hertz–Knudsen rate towards saturation, as
-    ///         far as its own heat pays for. On a tile with no air of its own (space, or a grid with no atmosphere) it
-    ///         sublimes into vacuum, and the gas is lost to it, as anything vented there is.
+    ///         far as its own heat pays for. On a tile with no air of its own (space, or an airless grid) it sublimes into
+    ///         vacuum, and the gas is lost to it, as anything vented there is.
     /// </summary>
     /// <param name="heatCapacity">The sheet's heat capacity, which pays the sublimation heat.</param>
     /// <returns>Units removed from the sheet.</returns>
@@ -408,10 +401,14 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             return 0f;
 
         var indices = _mapSystem.TileIndicesFor(gridUid, gridComponent, coordinates);
-        var air = _atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is { Immutable: false } tileAir &&
-                  tileAir.Volume > 0f && tileAir.Temperature > 0f
-            ? tileAir
-            : null;
+        var tileMixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), Transform(gridUid).MapUid, indices, excite: false);
+
+        // A map's atmosphere can't take the gas, so nothing leaves into it, as a puddle doesn't boil into it: ice under it
+        //     is warmed by it and melts instead. Vacuum takes what is lost to it.
+        if (tileMixture is { Immutable: true, TotalMoles: > 0f })
+            return 0f;
+
+        var air = tileMixture is { Immutable: false, Volume: > 0f, Temperature: > 0f } ? tileMixture : null;
 
         var gas = (Gas)properties.GasIndex;
         var temperature = solution.Temperature;

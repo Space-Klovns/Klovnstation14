@@ -46,9 +46,14 @@ public sealed partial class FreezeTileEffect : KsTileEffect
         {
             var airQuery = new KsTileEffectAirQueryEvent(tileRef.GridUid, tileRef.GridIndices);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, ref airQuery);
-            if (airQuery.Mixture is { } air &&
-                KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, air.Pressure) < meltingPoint)
-                return false;
+            if (airQuery.Mixture is { } air)
+            {
+                // Below the triple point it boils instead, until it has cooled too far to: a puddle radiating in vacuum
+                //     does freeze in the end.
+                var boilingPoint = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, air.Pressure);
+                if (boilingPoint < meltingPoint && temperature > boilingPoint)
+                    return false;
+            }
         }
 
         var specificHeat = reagentPrototype.SpecificHeat;

@@ -311,6 +311,7 @@ public sealed class KsHotPuddleTest : GameTest
     [Test]
     public async Task TestHeatsEveryPuddleTouched()
     {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Only what touches it heats it, on an airless map.
         var server = Pair.Server;
         var entityManager = server.EntMan;
 
@@ -670,6 +671,7 @@ public sealed class KsHotPuddleTest : GameTest
     [Test]
     public async Task TestHeatIsBoundedPowerAndTemperature()
     {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Only what touches it heats it, on an airless map.
         var server = Pair.Server;
         var entityManager = server.EntMan;
 
@@ -736,6 +738,7 @@ public sealed class KsHotPuddleTest : GameTest
     [Test]
     public async Task TestReenteringDoesNotHeatFaster()
     {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Only what touches it heats it, on an airless map.
         var server = Pair.Server;
         var entityManager = server.EntMan;
 

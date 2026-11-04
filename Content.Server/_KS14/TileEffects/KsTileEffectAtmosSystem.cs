@@ -17,7 +17,7 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnAirQuery(ref KsTileEffectAirQueryEvent args)
     {
-        args.Mixture ??= _atmosphereSystem.GetTileMixture((args.GridUid, null, null), null, args.Tile, excite: false);
+        args.Mixture ??= _atmosphereSystem.GetTileMixture((args.GridUid, null, null), Transform(args.GridUid).MapUid, args.Tile, excite: false);
     }
 
     [SubscribeLocalEvent]

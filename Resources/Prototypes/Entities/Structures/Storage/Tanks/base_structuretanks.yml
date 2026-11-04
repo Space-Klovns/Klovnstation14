@@ -73,6 +73,7 @@
     solution: tank
   - type: KsCookOff # KS14: explodes once its explosive contents get hot
     solution: tank
+    radiatingArea: 1 # KS14
   - type: ReagentTank
   - type: Transform
     noRot: true
