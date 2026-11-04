@@ -83,5 +83,16 @@ public sealed class KsFluidReagentProperties
 
     public Color Color { get; init; }
 
+    /// <summary>
+    ///     Index of its mixing family in <see cref="KsFluidmosPropertiesSystem"/>'s family table, or -1 for none.
+    /// </summary>
+    public int MixingFamily { get; init; } = -1;
+
+    /// <summary>
+    ///     Whether it mixes non-ideally with anything: it is in a family, or named in a pair interaction. Mixtures with
+    ///         no such reagent skip activity coefficients entirely.
+    /// </summary>
+    public bool HasInteractions { get; init; }
+
     public bool Linked => GasIndex >= 0;
 }

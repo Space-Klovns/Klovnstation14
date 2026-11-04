@@ -57,12 +57,16 @@ public sealed partial class KsFluidmosPhaseSystem
 
         GatherEntries(packet, fluid);
 
-        var liquidMoles = 0f;
-        for (var i = 0; i < _entries.Count; i++)
+        var entryCount = _entries.Count;
+        var amounts = entryCount <= MaxStackEntries ? stackalloc KsFluidAmount[entryCount] : new KsFluidAmount[entryCount];
+        for (var i = 0; i < entryCount; i++)
         {
-            fluid.TryGetAmount(_entries[i].Key, out var amount);
-            liquidMoles += amount.Liquid * _entries[i].Properties.MolesPerUnit;
+            fluid.TryGetAmount(_entries[i].Key, out amounts[i]);
         }
+
+        // Each reagent's activity in the packet's liquid, as it came to the wall.
+        var activities = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
+        ComputeActivities(amounts, activities, temperature);
 
         var vaporTotal = packet.TotalMoles + fluid.VaporMoles;
         var heatOut = 0f;
@@ -79,7 +83,7 @@ public sealed partial class KsFluidmosPhaseSystem
             if (amount.Liquid <= 0f && vaporMoles <= 0f)
                 continue;
 
-            var moleFraction = amount.Liquid > 0f && liquidMoles > 0f ? amount.Liquid * molesPerUnit / liquidMoles : 1f;
+            var moleFraction = amount.Liquid > 0f ? activities[i] : 1f;
             var saturationPressure = moleFraction * KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature);
 
             // At constant pressure: the vapor whose share of the packet's vapor gives the saturation pressure. Past the

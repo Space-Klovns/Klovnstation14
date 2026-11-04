@@ -6,6 +6,7 @@
   fluidmos:
     gas: WaterVapor
     vaporizationEntropy: 13.1
+    mixingFamily: KsAqueous
 
 - type: !PartialOnly reagent
   id: Oxygen

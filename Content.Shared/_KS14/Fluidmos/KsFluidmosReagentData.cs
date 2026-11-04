@@ -1,4 +1,6 @@
+using Content.Shared._KS14.Fluidmos.Mixing;
 using Content.Shared.Atmos;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Fluidmos;
 
@@ -59,4 +61,10 @@ public sealed partial class KsFluidmosReagentData
     /// </summary>
     [DataField]
     public Gas? Gas;
+
+    /// <summary>
+    ///     The family it mixes as, for non-ideal mixing and immiscibility. None mixes ideally with everything.
+    /// </summary>
+    [DataField]
+    public ProtoId<KsFluidMixingFamilyPrototype>? MixingFamily;
 }

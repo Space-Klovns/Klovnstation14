@@ -251,8 +251,13 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
             var waterLiquidMoles = waterAmount.Liquid * water.MolesPerUnit;
             var ethanolLiquidMoles = ethanolAmount.Liquid * ethanol.MolesPerUnit;
             var liquidRatio = ethanolLiquidMoles / waterLiquidMoles;
-            // Raoult's law: each one's partial pressure is its mole fraction in the liquid times its saturation pressure.
-            var expectedVaporRatio = liquidRatio *
+            // Raoult's law with activity coefficients: each one's partial pressure is its mole fraction in the liquid,
+            //      times its two-suffix Margules activity coefficient, times its saturation pressure.
+            var ethanolFraction = ethanolLiquidMoles / (ethanolLiquidMoles + waterLiquidMoles);
+            var margules = KsPhaseMath.MargulesAt(propertiesSystem.Interaction(ethanol, water), temperature);
+            var activityRatio = MathF.Exp(margules * (1f - ethanolFraction) * (1f - ethanolFraction)) /
+                                MathF.Exp(margules * ethanolFraction * ethanolFraction);
+            var expectedVaporRatio = liquidRatio * activityRatio *
                                      KsPhaseMath.SaturationPressure(ethanol.VaporizationEntropy, ethanol.BoilingPoint, temperature) /
                                      KsPhaseMath.SaturationPressure(water.VaporizationEntropy, water.BoilingPoint, temperature);
             var vaporRatio = ethanolAmount.Vapor / inlet.Air.GetMoles(Gas.WaterVapor);
@@ -265,7 +270,7 @@ public sealed class KsFluidmosNewDeviceTests : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(vaporRatio, Is.EqualTo(expectedVaporRatio).Within(0.02f * expectedVaporRatio),
-                    "The feed's vapor isn't at Raoult's-law equilibrium with its liquid.");
+                    "The feed's vapor isn't at (non-ideal) Raoult's-law equilibrium with its liquid.");
                 Assert.That(vaporRatio, Is.GreaterThan(liquidRatio), "The vapor isn't richer in ethanol than the liquid.");
                 Assert.That(distilledRatio, Is.EqualTo(vaporRatio).Within(0.01f * vaporRatio),
                     "The gas outlet didn't carry off the feed's vapor as it was.");
