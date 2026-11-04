@@ -2454,3 +2454,42 @@ Entries:
         gases.
   id: 238
   time: '2026-11-04T07:54:22.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added oil refining: crude oil, sour crude and gas condensate geysers,
+        and a chain of distillation, cracking, reforming and polymerisation. See
+        the new Oil Refining page in the guidebook.
+    - type: Add
+      message: >-
+        Added the catalytic reactor and five catalyst beds, researched under
+        Petrochemistry.
+    - type: Add
+      message: Hydrogen is now a flammable atmos gas, with its own canister at cargo.
+    - type: Add
+      message: >-
+        Added the temperature gate to the RPD. It opens within a tolerance of a
+        target temperature or between a minimum and a maximum, and a multitool
+        inverts it.
+    - type: Add
+      message: >-
+        The JRPACMAN burns gasoline, diesel, kerosene and naphtha. Spilled
+        polyethylene sets into plastic walls, wax into candles, and bitumen
+        paves floors as asphalt.
+    - type: Add
+      message: Gasoline and polyethylene make napalm-B.
+    - type: Tweak
+      message: >-
+        Fluids in pipes now form azeotropes, and dissolved reagents lower a
+        liquid's freezing point.
+    - type: Fix
+      message: Gates no longer lose vapor passing through them.
+    - type: Fix
+      message: Discovered geysers and ore vents now show their names in your language.
+    - type: Tweak
+      message: >-
+        Refinery hydrocarbons can't be split by the ChemMaster, plumbing filters
+        or injector whitelists. Selecting one moves the whole mixture.
+  id: 239
+  time: '2026-11-04T19:20:49.0000000+00:00'
