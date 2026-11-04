@@ -14,6 +14,7 @@ using Content.Server._KS14.NPC.Systems;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.NPC;
 using Content.Server.NPC.Components;
+using Content.Server.NPC.HTN;
 using Content.Server.NPC.Queries.Considerations;
 using Content.Server.NPC.Queries.Curves;
 using Content.Shared._KS14.NPC;
@@ -371,7 +372,7 @@ public sealed class KsNpcQueryTest : GameTest
         {
             var blackboard = new NPCBlackboard();
 
-            claimSystem.Claim(firstUid, targetUid, System.TimeSpan.FromHours(1));
+            Assert.That(claimSystem.TryClaim(firstUid, targetUid, System.TimeSpan.FromHours(1)), "nobody has it yet");
 
             Assert.Multiple(() =>
             {
@@ -380,9 +381,52 @@ public sealed class KsNpcQueryTest : GameTest
                 Assert.That(unclaimed.GetScore(blackboard, secondUid, otherTargetUid), Is.EqualTo(1f), "nobody has claimed this one");
             });
 
-            claimSystem.Claim(firstUid, targetUid, System.TimeSpan.Zero);
+            Assert.That(claimSystem.TryClaim(secondUid, targetUid, System.TimeSpan.FromHours(1)), Is.False, "a squadmate got there first");
+            Assert.That(claimSystem.TryClaim(firstUid, targetUid, System.TimeSpan.Zero), "its own claim is no obstacle to renewing it");
 
             Assert.That(unclaimed.GetScore(blackboard, secondUid, targetUid), Is.EqualTo(1f), "a lapsed claim holds nobody back");
+            Assert.That(claimSystem.TryClaim(secondUid, targetUid, System.TimeSpan.FromHours(1)), "so a squadmate can have it");
+        });
+    }
+
+    /// <summary>
+    ///     Squadmates that planned side by side all reach the claim: the first gets it, and the rest fail and plan again.
+    /// </summary>
+    [Test]
+    public async Task TestOnlyTheFirstToActOnAPlanGetsTheClaim()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid firstUid = default;
+        EntityUid secondUid = default;
+        EntityUid targetUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            firstUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0);
+            secondUid = SpawnAt(entManager, SyndicateMob, gridUid, 1, 0);
+            targetUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 2, 0);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var claim = new ClaimTargetOperator();
+            claim.Initialize(entManager.EntitySysManager);
+
+            HTNOperatorStatus Act(EntityUid uid)
+            {
+                var blackboard = new NPCBlackboard();
+                blackboard.SetValue(NPCBlackboard.Owner, uid);
+                blackboard.SetValue(claim.TargetKey, targetUid);
+                return claim.Update(blackboard, 0f);
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(Act(firstUid), Is.EqualTo(HTNOperatorStatus.Finished));
+                Assert.That(Act(secondUid), Is.EqualTo(HTNOperatorStatus.Failed));
+            });
         });
     }
 
@@ -417,6 +461,50 @@ public sealed class KsNpcQueryTest : GameTest
             {
                 Assert.That(shot.GetScore(blackboard, ownerUid, shotUid), Is.EqualTo(1f));
                 Assert.That(shot.GetScore(blackboard, ownerUid, otherUid), Is.Zero);
+            });
+        });
+    }
+
+    /// <summary>
+    ///     With <see cref="CooldownOperator.FailIfRunning"/>, of squadmates that planned side by side, one gets to go on.
+    /// </summary>
+    [Test]
+    public async Task TestOnlyTheFirstToActOnAPlanStartsTheCooldown()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid firstUid = default;
+        EntityUid secondUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            firstUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0);
+            secondUid = SpawnAt(entManager, SyndicateMob, gridUid, 1, 0);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var cooldown = new CooldownOperator
+            {
+                Id = "KsQueryTestRaceCooldown",
+                Duration = System.TimeSpan.FromHours(1),
+                SquadWide = true,
+                FailIfRunning = true,
+            };
+            cooldown.Initialize(entManager.EntitySysManager);
+
+            HTNOperatorStatus Act(EntityUid uid)
+            {
+                var blackboard = new NPCBlackboard();
+                blackboard.SetValue(NPCBlackboard.Owner, uid);
+                return cooldown.Update(blackboard, 0f);
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(Act(firstUid), Is.EqualTo(HTNOperatorStatus.Finished));
+                Assert.That(Act(secondUid), Is.EqualTo(HTNOperatorStatus.Failed));
             });
         });
     }

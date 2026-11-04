@@ -470,6 +470,56 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     }
 
     /// <summary>
+    ///     Neither the wait for a forced door nor the wait to get inside runs out on someone part way through forcing one:
+    ///         the new order would call it away, and it would start again from nothing. Once it has stopped they run out
+    ///         as usual.
+    /// </summary>
+    [Test]
+    public async Task TestForcingADoorHoldsOffTheHuntTimers()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var doorSystem = scene.EntManager.System<NpcDoorSystem>();
+            var longAgo = System.TimeSpan.FromHours(1);
+            var (securityUid, plainUid) = SplitBySecurity(scene);
+            var jawsUid = GiveInHand(scene.EntManager, plainUid, TestJawsOfLife);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            var eastEntrance = hunt.Entrances[hunt.StagedMembers[plainUid].EntranceIndex];
+            var doorUid = eastEntrance.DoorUid!.Value;
+
+            scene.TransformSystem.SetCoordinates(securityUid, hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].StageCoordinates);
+            scene.TransformSystem.SetCoordinates(plainUid, eastEntrance.StageCoordinates);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Breach));
+
+            Assert.That(doorSystem.TryStartBreach(plainUid, doorUid, jawsUid, NpcDoorSystem.DefaultBreachTimeout, fromSteering: false));
+            hunt.PhaseStartedAt -= longAgo;
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Breach), "the door is part way forced");
+
+            doorSystem.StopBreach(plainUid);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Entry), "with nobody at it, they should go in through whichever are open");
+
+            Assert.That(doorSystem.TryStartBreach(plainUid, doorUid, jawsUid, NpcDoorSystem.DefaultBreachTimeout, fromSteering: true));
+            hunt.PhaseStartedAt -= longAgo;
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Entry), "a member forcing its way in is getting there");
+
+            doorSystem.StopBreach(plainUid);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "and with nobody at it, they should search from where they got to");
+        });
+    }
+
+    /// <summary>
     ///     A room nobody can get into - every door asks for access none of them have, and none of them carries anything
     ///         to force one - is not stacked up on at all: the squad gives up on it. That holds with an open firelock
     ///         under each door too: the airlock is what stands in the way, not the firelock.

@@ -30,6 +30,13 @@ public sealed partial class CooldownOperator : HTNOperator
     /// </summary>
     [DataField] public bool SquadWide;
 
+    /// <summary>
+    ///     Fails if the cooldown is already running, rather than starting it again. For a cooldown that holds something
+    ///         back, placed before the thing itself: <c>CooldownPrecondition</c> alone cannot, as NPCs planning side by
+    ///         side all pass it before any of them gets here. Only the first to get here carries on.
+    /// </summary>
+    [DataField] public bool FailIfRunning;
+
     private int _idHash;
 
     public override void Initialize(IEntitySystemManager sysManager)
@@ -44,6 +51,10 @@ public sealed partial class CooldownOperator : HTNOperator
             return HTNOperatorStatus.Failed;
 
         var holderUid = SquadWide ? _npcSquadSystem.GetSquadOrSelf(ownerUid) : ownerUid;
+
+        if (FailIfRunning && _genericCooldownSystem.IsKeyOnCooldown(holderUid, _idHash))
+            return HTNOperatorStatus.Failed;
+
         _genericCooldownSystem.SetCooldown(holderUid, _idHash, _gameTiming.CurTime + Duration);
         return HTNOperatorStatus.Finished;
     }

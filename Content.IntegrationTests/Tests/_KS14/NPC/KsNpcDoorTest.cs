@@ -634,6 +634,48 @@ public sealed class KsNpcDoorTest : GameTest
     }
 
     /// <summary>
+    ///     Prying takes as long as the tool takes on that door. A timeout shorter than that does not cut it off part way,
+    ///         which would leave the NPC starting over for as long as it tried.
+    /// </summary>
+    [Test]
+    public async Task TestPryIsNotCutOffByTheTimeout()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var doorSystem = entManager.System<NpcDoorSystem>();
+        EntityUid doorUid = default, npcUid = default, crowbarUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 1, 0); // unpowered: a crowbar pries it
+            npcUid = SpawnAt(entManager, BreacherMob, gridUid, 0, 0);
+
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(npcUid, "right", HandLocation.Right);
+            crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(npcUid, crowbarUid, "right"));
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(doorSystem.TryStartBreach(npcUid, doorUid, crowbarUid, System.TimeSpan.Zero, fromSteering: false), "the breach should start");
+        });
+
+        var breaching = true;
+        for (var i = 0; i < 300 && breaching; i++)
+        {
+            await Pair.RunTicksSync(1);
+            await Pair.Server.WaitPost(() => breaching = doorSystem.IsBreaching(npcUid));
+        }
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.GetComponent<DoorComponent>(doorUid).State, Is.AnyOf(DoorState.Opening, DoorState.Open), "the door should be pried open");
+        });
+    }
+
+    /// <summary>
     ///     Live, outside any squad order: an NPC whose only way on is a door that will not open for it - it has no
     ///         power - forces it with the crowbar on its belt, and puts the crowbar back after. One told not to
     ///         (<see cref="NpcDoorUserComponent.BreachWhenBlocked"/>) leaves the door shut.

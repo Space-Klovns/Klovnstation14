@@ -112,6 +112,17 @@ the listener's switch (`NpcContactCalloutEvent`, `NpcKillCalloutEvent`, `NpcDoor
 over squad members by hand to tell them something. The same event instance goes to each member in turn, so a handler
 can leave an answer on it for the caller, as `NpcKillCalloutEvent.News` does.
 
+A plan effect on a key the blackboard works out for itself (`ActiveHand`, `ActiveHandFree`, `FreeHands`, `Inventory`,
+`OwnerCoordinates`, `CanMove`, `Access`; see `NPCBlackboard.IsComputedKey`) is for the planner only. It is never stored
+on the blackboard the NPC runs on, since a stored value would hide the real one for good.
+
+### A check made while planning decides nothing between squadmates
+
+Squadmates plan side by side, so a precondition or consideration reading what another member has done (a claim, a shared
+cooldown) passes for all of them until one acts. Anything only one of them may do needs a check-and-set in `Update`, on
+the main thread, ahead of the act itself, that fails the rest: `ClaimTargetOperator`, or `CooldownOperator` with
+`failIfRunning`. Keep the planning check too: it is what steers the losers elsewhere on their next plan.
+
 ### A running task does not notice the world change unless it asks
 
 Preconditions are checked when a task is planned, never while it runs, and a plan only ends early if a replan beats

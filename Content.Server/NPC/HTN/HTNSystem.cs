@@ -479,6 +479,11 @@ public sealed partial class HTNSystem : EntitySystem
         {
             foreach (var (key, value) in effects)
             {
+                // KS14 start: what the planner expected a swap of hands to lead to, say. Stored, it would outlive the plan.
+                if (NPCBlackboard.IsComputedKey(key))
+                    continue;
+                // KS14 end
+
                 blackboard.SetValue(key, value);
             }
         }

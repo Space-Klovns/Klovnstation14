@@ -519,12 +519,13 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     Leads force their doors - each with what it was given, put away again after - while everyone else waits where
-    ///         they stand. Once every forced door is open, or they have tried long enough, they all go in. Returns whether
-    ///         they do.
+    ///         they stand. Once every forced door is open, or they have tried long enough, they all go in. A door part way
+    ///         through being forced holds that off: going in would call its lead away from it. Returns whether they do.
     /// </summary>
     private bool UpdateBreach(EntityUid issuerUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         var allForced = true;
+        var breaching = false;
 
         foreach (var memberUid in _members)
         {
@@ -535,6 +536,8 @@ public sealed partial class NpcSquadTacticsSystem
 
             if (GetDoorToForce(staging, entrance) is { } doorUid)
             {
+                breaching |= _npcDoorSystem.IsBreaching(memberUid, doorUid);
+
                 SetOrder(memberUid,
                     issuerUid,
                     NpcOrderKind.Breach,
@@ -552,7 +555,7 @@ public sealed partial class NpcSquadTacticsSystem
             SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, entrance.StageCoordinates, entrance.LocalFacing, OrderRange, null, now);
         }
 
-        if (!allForced && now - hunt.PhaseStartedAt < settings.BreachTimeout)
+        if (!allForced && (breaching || now - hunt.PhaseStartedAt < settings.BreachTimeout))
             return false;
 
         SetPhase(hunt, NpcHuntPhase.Entry, now);
@@ -626,6 +629,7 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
 
         var everyoneInside = true;
+        var breaching = false;
 
         foreach (var memberUid in _members)
         {
@@ -636,9 +640,12 @@ public sealed partial class NpcSquadTacticsSystem
             SetOrder(memberUid, issuerUid, NpcOrderKind.Enter, entrance.EntryCoordinates, entrance.LocalFacing, OrderRange, null, now);
 
             everyoneInside &= IsInRoom(hunt, memberUid);
+
+            // Forcing its way in, as steering does on a door nobody was sent to force. A new order would stop it part way.
+            breaching |= _npcDoorSystem.IsBreaching(memberUid);
         }
 
-        if (!everyoneInside && now - hunt.PhaseStartedAt < settings.EntryTimeout)
+        if (!everyoneInside && (breaching || now - hunt.PhaseStartedAt < settings.EntryTimeout))
             return false;
 
         SetPhase(hunt, NpcHuntPhase.Search, now);

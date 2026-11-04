@@ -203,6 +203,47 @@ public sealed class KsNpcHandsTest : GameTest
     }
 
     /// <summary>
+    ///     The hands a plan expected to end up with are for planning. Once the plan is over, the blackboard says what the
+    ///         NPC holds now: an NPC that went on believing it had its gun in hand wielded it mid-pry, over and over.
+    /// </summary>
+    [Test]
+    public async Task TestPlannedHandsDoNotOutliveThePlan()
+    {
+        var (entManager, npcUid, gunUid, beltUid) = await SetUpArmedNpc();
+        EntityUid magazineUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            magazineUid = entManager.SpawnEntity(Magazine, entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
+            Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, magazineUid, out _, playSound: false), "the magazine should go in the belt");
+            Start(entManager, npcUid, "KsHandsTestReloadCompound");
+        });
+
+        await RunUntil(entManager, () => IsWieldedInActiveHand(entManager, npcUid, gunUid) &&
+            entManager.GetComponent<HTNComponent>(npcUid).Plan == null);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(IsWieldedInActiveHand(entManager, npcUid, gunUid), "the reload should have gone through its swaps of hands");
+            Assert.That(entManager.System<SharedWieldableSystem>().TryUnwield((gunUid, entManager.GetComponent<WieldableComponent>(gunUid)), npcUid, force: true));
+            entManager.System<SharedHandsSystem>().SetActiveHand(npcUid, "left");
+        });
+
+        await Pair.RunTicksSync(5); // the wield's virtual item goes at the end of the tick
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var blackboard = entManager.GetComponent<HTNComponent>(npcUid).Blackboard;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(blackboard.GetValue<string>(NPCBlackboard.ActiveHand), Is.EqualTo("left"), "the hand it is really using");
+                Assert.That(blackboard.GetValue<bool>(NPCBlackboard.ActiveHandFree), "which is empty, though the gun's hand was not");
+            });
+        });
+    }
+
+    /// <summary>
     ///     Live: an NPC with a gun wielded in both hands takes the medipen from its belt, uses it on itself, drops it, and
     ///         ends with the gun back in its active hand, wielded.
     /// </summary>

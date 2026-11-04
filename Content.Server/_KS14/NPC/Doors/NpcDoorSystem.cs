@@ -645,8 +645,9 @@ public sealed partial class NpcDoorSystem : EntitySystem
     /// <summary>
     ///     Starts <paramref name="npcUid"/> forcing <paramref name="doorUid"/> with <paramref name="toolUid"/>: the
     ///         weapon in hand is unwielded, and the tool taken from wherever it is carried into a free hand and used.
-    ///         The breach then runs on its own (see <see cref="Update"/>) and ends when the door opens, when the tool
-    ///         fails, or after <paramref name="timeout"/>. However it ends, the tool goes back where it came from and
+    ///         The breach then runs on its own (see <see cref="Update"/>) and ends when the door opens or the tool fails.
+    ///         An access breaker also gets <paramref name="timeout"/>, having no end of its own; prying takes as long as
+    ///         the tool takes on that door, and giving up part way wastes it. However it ends, the tool goes back where it came from and
     ///         the weapon comes back out, wielded if it was. Returns whether it started, or was already under way on
     ///         this door.
     /// </summary>
@@ -737,8 +738,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
 
         // Open: done. Gone: nothing to do.
         if (!_doorQuery.TryComp(breachingComponent.DoorUid, out var doorComponent) ||
-            doorComponent.State is DoorState.Open or DoorState.Opening ||
-            now > breachingComponent.GiveUpAt)
+            doorComponent.State is DoorState.Open or DoorState.Opening)
             return false;
 
         // Steering has moved on: so does it.
@@ -749,7 +749,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
         //      going straight away.
         return breachingComponent.Method == NpcBreachMethod.Pry
             ? _doAfterSystem.GetStatus(breachingComponent.DoAfterId) == DoAfterStatus.Running
-            : doorComponent.State == DoorState.Emagging;
+            : doorComponent.State == DoorState.Emagging && now <= breachingComponent.GiveUpAt;
     }
 
     private bool UseTool(Entity<NpcBreachingComponent> breaching)

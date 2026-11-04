@@ -621,8 +621,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
             {
                 StageArmed(entManager, mobUid);
                 StageCarried(entManager, mobUid, TestKnife);
-                StageDownedHostile(entManager, mobUid, gridUid, 10, 10);
-            }, withWalledCell: true);
+                StageDownedHostile(entManager, mobUid, gridUid, 0, 0);
+            }, withPen: true);
 
         Assert.Multiple(() =>
         {
@@ -1339,13 +1339,13 @@ public sealed class KsOperativeHtnRootTest : GameTest
         string mobPrototype = SyndicateMob,
         bool withSquadmate = false,
         System.Action<IEntityManager, EntityUid, EntityUid>? stage = null,
-        bool withWalledCell = false)
+        bool withPen = false)
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
         if (!protoManager.HasIndex(_operativeRoot))
             Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
 
-        var (entManager, mobUid) = await SetUpOperativeInRoom(mobPrototype, withSquadmate, withWalledCell);
+        var (entManager, mobUid) = await SetUpOperativeInRoom(mobPrototype, withSquadmate, withPen);
         var sensorSystem = entManager.System<NpcSensorSystem>();
         var squadSystem = entManager.System<NpcSquadSystem>();
         var timing = Pair.Server.ResolveDependency<IGameTiming>();
@@ -1405,11 +1405,11 @@ public sealed class KsOperativeHtnRootTest : GameTest
     ///     A lone operative stand-in in a small walled room with one airlock, left long enough for the navmesh
     ///         to build and its one-man squad to form.
     /// </summary>
-    /// <param name="withWalledCell">Also walls in the tile at 10,10 on all sides, before the navmesh builds, so nothing can
-    ///     walk to it.</param>
+    /// <param name="withPen">Also fences off the room's corner at 0,0 with grilles, before the navmesh builds: what is in it
+    ///     can be seen, and nothing can walk to it.</param>
     private async Task<(IEntityManager EntManager, EntityUid MobUid)> SetUpOperativeInRoom(string mobPrototype = SyndicateMob,
         bool withSquadmate = false,
-        bool withWalledCell = false)
+        bool withPen = false)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -1437,11 +1437,11 @@ public sealed class KsOperativeHtnRootTest : GameTest
             if (withSquadmate)
                 SpawnAt(entManager, SyndicateMob, gridUid, 2, 1);
 
-            if (withWalledCell)
+            if (withPen)
             {
-                foreach (var (x, y) in new[] { (9, 9), (10, 9), (11, 9), (9, 10), (11, 10), (9, 11), (10, 11), (11, 11) })
+                foreach (var (x, y) in new[] { (0, 2), (1, 2), (2, 2), (2, 1), (2, 0) })
                 {
-                    SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                    SpawnAt(entManager, "Grille", gridUid, x, y);
                 }
             }
         });

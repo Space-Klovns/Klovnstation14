@@ -37,13 +37,15 @@ public sealed partial class NpcSquadTacticsSettings
     public TimeSpan StageTimeout = TimeSpan.FromSeconds(6);
 
     /// <summary>
-    ///     How long members have to get into the room once they go in, before searching wherever they got to.
+    ///     How long members have to get into the room once they go in, before searching wherever they got to. A member
+    ///         part way through forcing a door holds this off.
     /// </summary>
     [DataField]
     public TimeSpan EntryTimeout = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    ///     Longest the squad waits for its doors to be forced before going in anyway, through whichever are open.
+    ///     How long the squad waits for its doors to be forced before going in anyway, through whichever are open. A door
+    ///         part way through being forced holds this off, however long the tool takes.
     /// </summary>
     [DataField]
     public TimeSpan BreachTimeout = TimeSpan.FromSeconds(10);

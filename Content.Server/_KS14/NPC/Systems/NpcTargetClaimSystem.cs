@@ -20,13 +20,19 @@ public sealed partial class NpcTargetClaimSystem : EntitySystem
 
     /// <summary>
     ///     Claims <paramref name="targetUid"/> for <paramref name="uid"/> for <paramref name="duration"/>, in place of
-    ///         whatever it had claimed before.
+    ///         whatever it had claimed before, unless a squadmate got there first. <c>TargetUnclaimedCon</c> alone cannot
+    ///         settle that: squadmates plan side by side, and to all of them a target is unclaimed until one of them acts
+    ///         on its plan. Returns whether <paramref name="uid"/> has the claim.
     /// </summary>
-    public void Claim(EntityUid uid, EntityUid targetUid, TimeSpan duration)
+    public bool TryClaim(EntityUid uid, EntityUid targetUid, TimeSpan duration)
     {
+        if (IsClaimedBySquadmate(uid, targetUid))
+            return false;
+
         var targetClaimComponent = EnsureComp<NpcTargetClaimComponent>(uid);
         targetClaimComponent.TargetUid = targetUid;
         targetClaimComponent.EndTime = _gameTiming.CurTime + duration;
+        return true;
     }
 
     /// <summary>
