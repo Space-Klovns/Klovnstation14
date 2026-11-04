@@ -9,46 +9,71 @@ namespace Content.Client._KS14.Atmos.TemperatureGate;
 public sealed partial class KsTemperatureGateWindow : FancyWindow
 {
     public event Action<bool>? ToggleStatusButtonPressed;
-    public event Action<float>? TargetTemperatureChanged;
+    public event Action<KsTemperatureGateMode>? ModeChanged;
+    public event Action<float, float>? TargetAndToleranceSet;
+    public event Action<float, float>? RangeSet;
 
-    private float _minTemperature;
+    private KsTemperatureGateMode? _shownMode;
+    private float _shownFirst;
+    private float _shownSecond;
     private float _maxTemperature;
-    private float? _shownTarget;
 
     public KsTemperatureGateWindow()
     {
         RobustXamlLoader.Load(this);
 
-        ToggleStatusButton.OnToggled += _ => ToggleStatusButtonPressed?.Invoke(ToggleStatusButton.Pressed);
-        TemperatureInput.OnValueChanged += _ => SetTemperatureButton.Disabled = false;
+        ModeOption.AddItem(Loc.GetString("ks-temperature-gate-ui-mode-tolerance"), (int)KsTemperatureGateMode.Tolerance);
+        ModeOption.AddItem(Loc.GetString("ks-temperature-gate-ui-mode-range"), (int)KsTemperatureGateMode.Range);
+        ModeOption.OnItemSelected += args => ModeChanged?.Invoke((KsTemperatureGateMode)args.Id);
 
-        SetTemperatureButton.OnPressed += _ =>
+        ToggleStatusButton.OnToggled += _ => ToggleStatusButtonPressed?.Invoke(ToggleStatusButton.Pressed);
+        FirstInput.OnValueChanged += _ => SetButton.Disabled = false;
+        SecondInput.OnValueChanged += _ => SetButton.Disabled = false;
+
+        SetButton.OnPressed += _ =>
         {
-            TemperatureInput.Value = Math.Clamp(TemperatureInput.Value, _minTemperature, _maxTemperature);
-            TargetTemperatureChanged?.Invoke(TemperatureInput.Value);
-            SetTemperatureButton.Disabled = true;
+            if (_shownMode == KsTemperatureGateMode.Range)
+                RangeSet?.Invoke(FirstInput.Value, SecondInput.Value);
+            else
+                TargetAndToleranceSet?.Invoke(FirstInput.Value, SecondInput.Value);
+
+            SetButton.Disabled = true;
         };
 
+        // Whichever field is the top of what can be set in this mode.
         SetMaxButton.OnPressed += _ =>
         {
-            TemperatureInput.Value = _maxTemperature;
-            SetTemperatureButton.Disabled = false;
+            if (_shownMode == KsTemperatureGateMode.Range)
+                SecondInput.Value = _maxTemperature;
+            else
+                FirstInput.Value = _maxTemperature;
+
+            SetButton.Disabled = false;
         };
     }
 
     public void UpdateState(KsTemperatureGateComponent gate)
     {
-        _minTemperature = gate.MinTemperature;
         _maxTemperature = gate.MaxTemperature;
         ToggleStatusButton.Pressed = gate.Enabled;
-        ModeLabel.Text = Loc.GetString("ks-temperature-gate-ui-mode", ("inverted", gate.Inverted));
+        ModeOption.SelectId((int)gate.Mode);
+        ModeLabel.Text = Loc.GetString("ks-temperature-gate-ui-open-when", ("inverted", gate.Inverted));
+
+        var range = gate.Mode == KsTemperatureGateMode.Range;
+        var first = range ? gate.RangeMinimum : gate.TargetTemperature;
+        var second = range ? gate.RangeMaximum : gate.Tolerance;
 
         // The gate's flow changes its state all the time, and that mustn't throw away what is being typed here.
-        if (_shownTarget == gate.TargetTemperature)
+        if (_shownMode == gate.Mode && _shownFirst == first && _shownSecond == second)
             return;
 
-        _shownTarget = gate.TargetTemperature;
-        TemperatureInput.Value = gate.TargetTemperature;
-        SetTemperatureButton.Disabled = true;
+        _shownMode = gate.Mode;
+        _shownFirst = first;
+        _shownSecond = second;
+        FirstLabel.Text = Loc.GetString(range ? "ks-temperature-gate-ui-minimum" : "ks-temperature-gate-ui-target");
+        SecondLabel.Text = Loc.GetString(range ? "ks-temperature-gate-ui-maximum" : "ks-temperature-gate-ui-tolerance");
+        FirstInput.Value = first;
+        SecondInput.Value = second;
+        SetButton.Disabled = true;
     }
 }

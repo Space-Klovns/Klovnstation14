@@ -10,7 +10,7 @@ using Content.Shared.Atmos.Components;
 namespace Content.Server._KS14.Atmos.TemperatureGate;
 
 /// <summary>
-///     Runs <see cref="KsTemperatureGateComponent"/>s: while the inlet's temperature passes, the gate equalizes one way
+///     Runs <see cref="KsTemperatureGateComponent"/>s: while its inlet's temperature passes, the gate equalizes one way
 ///         like a passive gate.
 /// </summary>
 public sealed partial class KsTemperatureGateSystem : KsSharedTemperatureGateSystem
@@ -34,8 +34,7 @@ public sealed partial class KsTemperatureGateSystem : KsSharedTemperatureGateSys
             !_nodeContainerSystem.TryGetNodes(entity.Owner, entity.Comp.InletName, entity.Comp.OutletName, out PipeNode? inlet, out PipeNode? outlet))
             return false;
 
-        var temperature = inlet.Air.Temperature;
-        if (entity.Comp.Inverted ? temperature <= entity.Comp.TargetTemperature : temperature >= entity.Comp.TargetTemperature)
+        if (!Passes(entity.Comp, inlet.Air.Temperature))
             return false;
 
         var inletPressure = inlet.Air.Pressure;

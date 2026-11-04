@@ -7,8 +7,8 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.Atmos.TemperatureGate;
 
 /// <summary>
-///     A one-way gate that lets gas and liquid down from its inlet to its outlet only while the inlet is colder than its
-///         target temperature, or hotter when <see cref="Inverted"/>.
+///     A one-way gate that lets gas and liquid down from its inlet to its outlet while the inlet's temperature is inside
+///         a band, set by a target and tolerance or by its two ends, depending on its <see cref="Mode"/>.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
 [Access(typeof(KsSharedTemperatureGateSystem))]
@@ -18,11 +18,33 @@ public sealed partial class KsTemperatureGateComponent : Component
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public bool Enabled;
 
+    [DataField, AutoNetworkedField]
+    public KsTemperatureGateMode Mode = KsTemperatureGateMode.Tolerance;
+
     /// <summary>
-    ///     Kelvin. The gate compares its inlet against this.
+    ///     Kelvin. In <see cref="KsTemperatureGateMode.Tolerance"/>, the middle of the band that passes.
     /// </summary>
     [DataField, AutoNetworkedField]
     public float TargetTemperature = Atmospherics.T0C;
+
+    /// <summary>
+    ///     Kelvin. In <see cref="KsTemperatureGateMode.Tolerance"/>, how far from <see cref="TargetTemperature"/> the gate
+    ///         stays open, either way.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Tolerance = 10f;
+
+    /// <summary>
+    ///     Kelvin. In <see cref="KsTemperatureGateMode.Range"/>, the bottom of the range that passes.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float RangeMinimum = Atmospherics.T0C;
+
+    /// <summary>
+    ///     Kelvin. In <see cref="KsTemperatureGateMode.Range"/>, the top of the range that passes.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float RangeMaximum = Atmospherics.T20C;
 
     [DataField, AutoNetworkedField]
     public float MinTemperature = Atmospherics.TCMB;
@@ -31,7 +53,7 @@ public sealed partial class KsTemperatureGateComponent : Component
     public float MaxTemperature = 4500f;
 
     /// <summary>
-    ///     If true, the gate opens above <see cref="TargetTemperature"/> rather than below it.
+    ///     If true, the gate is open outside its band rather than inside it.
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool Inverted;
@@ -62,6 +84,22 @@ public sealed partial class KsTemperatureGateComponent : Component
 }
 
 [Serializable, NetSerializable]
+public enum KsTemperatureGateMode : byte
+{
+    /// <summary>
+    ///     Open within <see cref="KsTemperatureGateComponent.Tolerance"/> of
+    ///         <see cref="KsTemperatureGateComponent.TargetTemperature"/>.
+    /// </summary>
+    Tolerance,
+
+    /// <summary>
+    ///     Open between <see cref="KsTemperatureGateComponent.RangeMinimum"/> and
+    ///         <see cref="KsTemperatureGateComponent.RangeMaximum"/>.
+    /// </summary>
+    Range,
+}
+
+[Serializable, NetSerializable]
 public enum KsTemperatureGateUiKey : byte
 {
     Key,
@@ -77,6 +115,25 @@ public sealed class KsTemperatureGateToggleStatusMessage(bool enabled) : BoundUs
 public sealed class KsTemperatureGateChangeTargetMessage(float temperature) : BoundUserInterfaceMessage
 {
     public float Temperature { get; } = temperature;
+}
+
+[Serializable, NetSerializable]
+public sealed class KsTemperatureGateChangeModeMessage(KsTemperatureGateMode mode) : BoundUserInterfaceMessage
+{
+    public KsTemperatureGateMode Mode { get; } = mode;
+}
+
+[Serializable, NetSerializable]
+public sealed class KsTemperatureGateChangeToleranceMessage(float tolerance) : BoundUserInterfaceMessage
+{
+    public float Tolerance { get; } = tolerance;
+}
+
+[Serializable, NetSerializable]
+public sealed class KsTemperatureGateChangeRangeMessage(float minimum, float maximum) : BoundUserInterfaceMessage
+{
+    public float Minimum { get; } = minimum;
+    public float Maximum { get; } = maximum;
 }
 
 [Serializable, NetSerializable]

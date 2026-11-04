@@ -17,7 +17,13 @@ public sealed partial class KsTemperatureGateBoundUserInterface(EntityUid owner,
 
         _window = this.CreateWindow<KsTemperatureGateWindow>();
         _window.ToggleStatusButtonPressed += enabled => SendPredictedMessage(new KsTemperatureGateToggleStatusMessage(enabled));
-        _window.TargetTemperatureChanged += temperature => SendPredictedMessage(new KsTemperatureGateChangeTargetMessage(temperature));
+        _window.ModeChanged += mode => SendPredictedMessage(new KsTemperatureGateChangeModeMessage(mode));
+        _window.RangeSet += (minimum, maximum) => SendPredictedMessage(new KsTemperatureGateChangeRangeMessage(minimum, maximum));
+        _window.TargetAndToleranceSet += (target, tolerance) =>
+        {
+            SendPredictedMessage(new KsTemperatureGateChangeTargetMessage(target));
+            SendPredictedMessage(new KsTemperatureGateChangeToleranceMessage(tolerance));
+        };
         Update();
     }
 

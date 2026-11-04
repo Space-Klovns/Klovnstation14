@@ -46,7 +46,9 @@
   <Box>
     <GuideEntityEmbed Entity="KsTemperatureGate"/>
   </Box>
-  A one-way gate that opens by temperature. While it is on, gas and liquid cross from its input to its output, as through a passive gate, for as long as the input is colder than the temperature you set. It needs power.
-  - Use a [color=yellow]multitool[/color] on it to swap that to hotter, say to let a heated pipe through only once it has got there.
+  A one-way gate that opens by temperature. While it is on, gas and liquid cross from its input to its output, as through a passive gate, for as long as the input's temperature is inside the limits you set. It needs power.
+  - In [bold]tolerance[/bold] mode, set a target and a tolerance: it is open while the input is no more than that many kelvin from the target.
+  - In [bold]min-max[/bold] mode, set the two limits yourself. To pass anything colder than a temperature, set the minimum as low as it will go.
+  - Use a [color=yellow]multitool[/color] on it to swap to the opposite, so that it is open only outside its limits.
   - Turn it off before you unwrench it.
 </Document>

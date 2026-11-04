@@ -1,9 +1,9 @@
-# Ported from tgstation's temperature gate. Lets gas and liquid through one way while its inlet is past a set temperature.
+# Ported from tgstation's temperature gate. Lets gas and liquid through one way while its inlet is inside a band of temperatures.
 - type: entity
   parent: GasBinaryBase
   id: KsTemperatureGate
   name: temperature gate
-  description: A gate that lets gas and liquid through, one way, while its input is colder than the temperature it is set to. A multitool swaps it to hotter.
+  description: A gate that lets gas and liquid through, one way, while its input is close to the temperature it is set to. A multitool swaps it to anything but.
   placement:
     mode: AlignAtmosPipeLayers
   components:

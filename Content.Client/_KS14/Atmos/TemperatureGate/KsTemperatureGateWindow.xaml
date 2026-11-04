@@ -1,16 +1,24 @@
 <controls:FancyWindow xmlns="https://spacestation14.io"
             xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
-            SetSize="340 190" MinSize="340 190" Title="{Loc ks-temperature-gate-ui-title}">
+            SetSize="340 250" MinSize="340 250" Title="{Loc ks-temperature-gate-ui-title}">
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
         <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
             <controls:SwitchButton Name="ToggleStatusButton" HorizontalAlignment="Left" />
             <Control HorizontalExpand="True" />
-            <Button Name="SetTemperatureButton" Text="{Loc ks-temperature-gate-ui-set}" Disabled="True" Margin="0 0 5 0" />
+            <Button Name="SetButton" Text="{Loc ks-temperature-gate-ui-set}" Disabled="True" Margin="0 0 5 0" />
             <Button Name="SetMaxButton" Text="{Loc ks-temperature-gate-ui-max}" />
         </BoxContainer>
         <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
-            <Label Text="{Loc ks-temperature-gate-ui-target}" />
-            <FloatSpinBox Name="TemperatureInput" HorizontalExpand="True" MinSize="70 0" />
+            <Label Text="{Loc ks-temperature-gate-ui-mode-label}" />
+            <OptionButton Name="ModeOption" HorizontalExpand="True" />
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+            <Label Name="FirstLabel" />
+            <FloatSpinBox Name="FirstInput" HorizontalExpand="True" MinSize="70 0" />
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+            <Label Name="SecondLabel" />
+            <FloatSpinBox Name="SecondInput" HorizontalExpand="True" MinSize="70 0" />
         </BoxContainer>
         <Label Name="ModeLabel" StyleClasses="LabelSubText" />
     </BoxContainer>

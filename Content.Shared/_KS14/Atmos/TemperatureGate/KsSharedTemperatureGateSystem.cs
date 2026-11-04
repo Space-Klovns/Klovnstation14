@@ -51,6 +51,24 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
     }
 
     [SubscribeLocalEvent]
+    private void OnChangeModeMessage(Entity<KsTemperatureGateComponent> entity, ref KsTemperatureGateChangeModeMessage args)
+    {
+        SetMode(entity, args.Mode, args.Actor);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnChangeToleranceMessage(Entity<KsTemperatureGateComponent> entity, ref KsTemperatureGateChangeToleranceMessage args)
+    {
+        SetTolerance(entity, args.Tolerance, args.Actor);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnChangeRangeMessage(Entity<KsTemperatureGateComponent> entity, ref KsTemperatureGateChangeRangeMessage args)
+    {
+        SetRange(entity, args.Minimum, args.Maximum, args.Actor);
+    }
+
+    [SubscribeLocalEvent]
     private void OnLeaveAtmosphere(Entity<KsTemperatureGateComponent> entity, ref AtmosDeviceDisabledEvent args)
     {
         entity.Comp.Enabled = false;
@@ -68,10 +86,22 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
 
         using (args.PushGroup(nameof(KsTemperatureGateComponent)))
         {
-            args.PushMarkup(Loc.GetString("ks-temperature-gate-examined",
-                ("enabled", entity.Comp.Enabled),
-                ("inverted", entity.Comp.Inverted),
-                ("temperature", $"{entity.Comp.TargetTemperature:0.#}")));
+            args.PushMarkup(Loc.GetString("ks-temperature-gate-examined-status", ("enabled", entity.Comp.Enabled)));
+
+            if (entity.Comp.Mode == KsTemperatureGateMode.Range)
+            {
+                args.PushMarkup(Loc.GetString("ks-temperature-gate-examined-range",
+                    ("inverted", entity.Comp.Inverted),
+                    ("minimum", $"{entity.Comp.RangeMinimum:0.#}"),
+                    ("maximum", $"{entity.Comp.RangeMaximum:0.#}")));
+            }
+            else
+            {
+                args.PushMarkup(Loc.GetString("ks-temperature-gate-examined-tolerance",
+                    ("inverted", entity.Comp.Inverted),
+                    ("tolerance", $"{entity.Comp.Tolerance:0.#}"),
+                    ("temperature", $"{entity.Comp.TargetTemperature:0.#}")));
+            }
         }
     }
 
@@ -82,13 +112,16 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
             return;
 
         var user = args.User;
-        args.Verbs.Add(new AlternativeVerb
+        if (entity.Comp.Mode == KsTemperatureGateMode.Tolerance)
         {
-            Text = Loc.GetString("ks-temperature-gate-verb-maximize"),
-            Priority = 1,
-            Disabled = entity.Comp.TargetTemperature >= entity.Comp.MaxTemperature,
-            Act = () => SetTarget(entity, entity.Comp.MaxTemperature, user),
-        });
+            args.Verbs.Add(new AlternativeVerb
+            {
+                Text = Loc.GetString("ks-temperature-gate-verb-maximize"),
+                Priority = 1,
+                Disabled = entity.Comp.TargetTemperature >= entity.Comp.MaxTemperature,
+                Act = () => SetTarget(entity, entity.Comp.MaxTemperature, user),
+            });
+        }
 
         args.Verbs.Add(new AlternativeVerb
         {
@@ -149,6 +182,58 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
         _adminLogManager.Add(LogType.AtmosTemperatureChanged,
             LogImpact.Medium,
             $"{ToPrettyString(user):player} set the target on {ToPrettyString(entity):device} to {entity.Comp.TargetTemperature} K");
+    }
+
+    public void SetMode(Entity<KsTemperatureGateComponent> entity, KsTemperatureGateMode mode, EntityUid? user = null)
+    {
+        entity.Comp.Mode = mode;
+        Dirty(entity);
+        UpdateUi(entity);
+
+        _adminLogManager.Add(LogType.AtmosDeviceSetting,
+            LogImpact.Medium,
+            $"{ToPrettyString(user):player} set {ToPrettyString(entity):device} to {mode} mode");
+    }
+
+    public void SetTolerance(Entity<KsTemperatureGateComponent> entity, float tolerance, EntityUid? user = null)
+    {
+        entity.Comp.Tolerance = Math.Clamp(tolerance, 0f, entity.Comp.MaxTemperature);
+        Dirty(entity);
+        UpdateUi(entity);
+
+        _adminLogManager.Add(LogType.AtmosTemperatureChanged,
+            LogImpact.Medium,
+            $"{ToPrettyString(user):player} set the tolerance on {ToPrettyString(entity):device} to {entity.Comp.Tolerance} K");
+    }
+
+    /// <summary>
+    ///     Clamps both ends, and takes them in either order, so the range can't end up empty.
+    /// </summary>
+    public void SetRange(Entity<KsTemperatureGateComponent> entity, float minimum, float maximum, EntityUid? user = null)
+    {
+        minimum = Math.Clamp(minimum, entity.Comp.MinTemperature, entity.Comp.MaxTemperature);
+        maximum = Math.Clamp(maximum, entity.Comp.MinTemperature, entity.Comp.MaxTemperature);
+        entity.Comp.RangeMinimum = MathF.Min(minimum, maximum);
+        entity.Comp.RangeMaximum = MathF.Max(minimum, maximum);
+        Dirty(entity);
+        UpdateUi(entity);
+
+        _adminLogManager.Add(LogType.AtmosTemperatureChanged,
+            LogImpact.Medium,
+            $"{ToPrettyString(user):player} set the range on {ToPrettyString(entity):device} to {entity.Comp.RangeMinimum}-{entity.Comp.RangeMaximum} K");
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="temperature"/> at the inlet leaves the gate open.
+    /// </summary>
+    protected static bool Passes(KsTemperatureGateComponent gate, float temperature)
+    {
+        var (minimum, maximum) = gate.Mode == KsTemperatureGateMode.Range
+            ? (gate.RangeMinimum, gate.RangeMaximum)
+            : (gate.TargetTemperature - gate.Tolerance, gate.TargetTemperature + gate.Tolerance);
+
+        var inside = temperature >= minimum && temperature <= maximum;
+        return inside != gate.Inverted;
     }
 
     /// <summary>

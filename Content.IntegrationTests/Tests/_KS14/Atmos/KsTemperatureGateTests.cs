@@ -81,34 +81,47 @@ public sealed class KsTemperatureGateTests : GameTest
         return (moved, flowing);
     }
 
-    [Test]
-    public async Task PassesOnlyBelowItsTarget()
+    /// <summary>
+    ///     Steps the inlet through temperatures on one gate.
+    /// </summary>
+    private async Task AssertPasses(EntityUid gateUid, params (float Temperature, bool Passes)[] steps)
     {
-        var gateUid = await SpawnGate(enabled: true);
-        var (coldMoved, coldFlowing) = await Run(gateUid, Target - 10f);
-        var (hotMoved, hotFlowing) = await Run(gateUid, Target + 10f);
-
-        using (Assert.EnterMultipleScope())
+        foreach (var (temperature, passes) in steps)
         {
-            Assert.That(coldMoved, Is.GreaterThan(0f), "A gate below its target stayed shut.");
-            Assert.That(coldFlowing, "The gate let gas through without saying so.");
-            Assert.That(hotMoved, Is.Zero, "A gate above its target let gas through.");
-            Assert.That(hotFlowing, Is.False);
+            var (moved, _) = await Run(gateUid, temperature);
+            Assert.That(moved > 0f, Is.EqualTo(passes), $"At {temperature} K.");
         }
     }
 
-    [Test]
-    public async Task InvertedPassesOnlyAboveItsTarget()
+    private async Task Configure(EntityUid gateUid, Action<KsTemperatureGateSystem, Entity<KsTemperatureGateComponent>> configure)
     {
-        var gateUid = await SpawnGate(enabled: true, inverted: true);
-        var (coldMoved, _) = await Run(gateUid, Target - 10f);
-        var (hotMoved, _) = await Run(gateUid, Target + 10f);
+        var server = Pair.Server;
+        await server.WaitPost(() => configure(server.System<KsTemperatureGateSystem>(), (gateUid, server.EntMan.GetComponent<KsTemperatureGateComponent>(gateUid))));
+    }
 
-        using (Assert.EnterMultipleScope())
+    /// <summary>
+    ///     Both modes set the same band, around <see cref="Target"/>, so they have to agree.
+    /// </summary>
+    [TestCase(KsTemperatureGateMode.Tolerance, false)]
+    [TestCase(KsTemperatureGateMode.Tolerance, true)]
+    [TestCase(KsTemperatureGateMode.Range, false)]
+    [TestCase(KsTemperatureGateMode.Range, true)]
+    public async Task OpenInsideItsBandOrOutsideWhenInverted(KsTemperatureGateMode mode, bool inverted)
+    {
+        const float halfWidth = 10f;
+        var gateUid = await SpawnGate(enabled: true, inverted: inverted);
+        await Configure(gateUid, (gateSystem, gate) =>
         {
-            Assert.That(hotMoved, Is.GreaterThan(0f));
-            Assert.That(coldMoved, Is.Zero);
-        }
+            gateSystem.SetMode(gate, mode);
+            gateSystem.SetTolerance(gate, halfWidth);
+            gateSystem.SetRange(gate, Target - halfWidth, Target + halfWidth);
+        });
+
+        await AssertPasses(gateUid,
+            (Target - halfWidth - 1f, inverted),
+            (Target - halfWidth + 1f, !inverted),
+            (Target + halfWidth - 1f, !inverted),
+            (Target + halfWidth + 1f, inverted));
     }
 
     [TestCase(false, true)]
@@ -116,7 +129,7 @@ public sealed class KsTemperatureGateTests : GameTest
     public async Task StaysShutUnlessOnAndPowered(bool enabled, bool powered)
     {
         var gateUid = await SpawnGate(enabled, powered: powered);
-        var (moved, _) = await Run(gateUid, Target - 10f);
+        var (moved, _) = await Run(gateUid, Target);
         Assert.That(moved, Is.Zero);
     }
 
@@ -128,9 +141,9 @@ public sealed class KsTemperatureGateTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var (inlet, outlet) = Air(gateUid, Target - 10f);
+            var (inlet, outlet) = Air(gateUid, Target);
             inlet.Clear();
-            inlet.Temperature = Target - 10f;
+            inlet.Temperature = Target;
             outlet.AdjustMoles(Gas.Nitrogen, 50f);
 
             Update(server.EntMan, gateUid);
@@ -147,7 +160,7 @@ public sealed class KsTemperatureGateTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var (inlet, outlet) = Air(gateUid, Target - 10f);
+            var (inlet, outlet) = Air(gateUid, Target);
             inlet.FluidCapable = true;
             outlet.FluidCapable = true;
             inlet.Fluid = new KsFluidMixture();
@@ -224,6 +237,31 @@ public sealed class KsTemperatureGatePredictionTests : InteractionTest
 
         await SendBui(KsTemperatureGateUiKey.Key, new KsTemperatureGateChangeTargetMessage(float.NegativeInfinity));
         Assert.That(serverGate.TargetTemperature, Is.EqualTo(serverGate.MinTemperature));
+    }
+
+    [Test]
+    public async Task ModeAndRangeChangesArePredictedAndRangeCannotInvert()
+    {
+        await OpenGate();
+        var clientGate = CEntMan.GetComponent<KsTemperatureGateComponent>(CTarget!.Value);
+
+        await Client.WaitPost(() =>
+        {
+            Assert.That(CEntMan.System<SharedUserInterfaceSystem>().TryGetOpenUi(CTarget!.Value, KsTemperatureGateUiKey.Key, out var boundUserInterface));
+            boundUserInterface!.SendPredictedMessage(new KsTemperatureGateChangeModeMessage(KsTemperatureGateMode.Range));
+            boundUserInterface.SendPredictedMessage(new KsTemperatureGateChangeRangeMessage(500f, 200f));
+        });
+
+        await Client.WaitRunTicks(2);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(clientGate.Mode, Is.EqualTo(KsTemperatureGateMode.Range), "Changing mode wasn't predicted.");
+            Assert.That(clientGate.RangeMinimum, Is.EqualTo(200f), "Setting the range wasn't predicted, or its ends stayed swapped.");
+            Assert.That(clientGate.RangeMaximum, Is.EqualTo(500f));
+        }
+
+        await RunTicks(15);
+        Assert.That(SEntMan.GetComponent<KsTemperatureGateComponent>(STarget!.Value).Mode, Is.EqualTo(KsTemperatureGateMode.Range));
     }
 
     [Test]
