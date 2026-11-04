@@ -78,6 +78,13 @@ public sealed partial class KsFluidReactionPrototype : IPrototype
     public float Enthalpy;
 
     /// <summary>
+    ///     A solid catalyst bed the reaction needs. It then runs only in the pipe net of a catalytic reactor holding a
+    ///         bed of it, scaled by the bed's share of the net and its activity, and never on its own.
+    /// </summary>
+    [DataField]
+    public ProtoId<KsFluidCatalystPrototype>? Catalyst;
+
+    /// <summary>
     ///     A reagent that must be present but is not consumed: a homogeneous catalyst, or a diluent such as steam.
     /// </summary>
     [DataField]

@@ -31,6 +31,7 @@ public sealed class KsFluidmosRpdTests : GameTest
         ("KsFluidPort", "KsFluidPort", "pipe"),
         ("KsPhaseSeparator", "KsPhaseSeparator", "outlet"),
         ("KsExpansionValve", "KsExpansionValve", "outlet"),
+        ("KsCatalyticReactor", "KsCatalyticReactor", "pipe"),
     ];
 
     private static readonly EntProtoId[] StraightPipes = ["GasPipeStraight", "GasPipeStraightAlt1", "GasPipeStraightAlt2"];

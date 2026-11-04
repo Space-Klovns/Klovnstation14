@@ -12,3 +12,9 @@ ks-expansion-valve-ui-vapor-fraction = Вскипает в пар: { $percent }%
 ks-expansion-valve-ui-outlet = На выходе: { $pressure } кПа, кипит при { $kelvin } К
 ks-expansion-valve-ui-no-refrigerant = Нет жидкого хладагента.
 ks-expansion-valve-ui-flow-rate = Поток: { $units } ед./с
+
+ks-catalytic-reactor-slot-catalyst = Слой катализатора
+ks-catalytic-reactor-examine-bed = В нём слой катализатора [color=orange]{ $catalyst }[/color], активность [color=yellow]{ $activity }%[/color].
+ks-catalytic-reactor-examine-empty = В нём нет слоя катализатора.
+ks-catalytic-reactor-examine-conditions = Внутри: { $temperature } K, { $pressure } кПа. Слой занимает { $share }% своей трубной сети.
+ks-fluid-catalyst-examine = Слой катализатора [color=orange]{ $catalyst }[/color], активность [color=yellow]{ $activity }%[/color].

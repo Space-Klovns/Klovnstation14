@@ -38,6 +38,7 @@
     - KsFluidPort # KS14: Fluidmos devices
     - KsPhaseSeparator # KS14: Fluidmos devices
     - KsExpansionValve # KS14: Fluidmos devices
+    - KsCatalyticReactor # KS14: Fluidmos devices
   - type: LimitedCharges
     maxCharges: 90
   - type: Sprite

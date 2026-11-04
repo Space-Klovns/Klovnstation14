@@ -239,3 +239,81 @@
     - state: pumpPassiveGate
       map: [ "enum.SubfloorLayers.FirstLayer" ]
       color: "#6fb8ff"
+
+# An inline vessel: one straight-through node, so it joins whatever pipe net it sits in, and pumps either side set how
+#     long the feed spends in it. The catalyst bed goes in its slot.
+- type: entity
+  parent: GasBinaryBase
+  id: KsCatalyticReactor
+  name: catalytic reactor
+  description: A pressure vessel packed with a catalyst bed. The reactions the bed catalyses run in the pipe net it sits in, faster the less pipe there is around it.
+  placement:
+    mode: AlignAtmosPipeLayers
+  components:
+  - type: SubFloorHide
+    visibleLayers:
+    - enum.SubfloorLayers.FirstLayer
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/pump.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: pumpVolume
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#ff9a3c"
+  - type: Appearance
+  - type: PipeColorVisuals
+  - type: NodeContainer
+    nodes:
+      pipe:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: Longitudinal
+        volume: 400
+  - type: ItemSlots
+    slots:
+      catalyst:
+        name: ks-catalytic-reactor-slot-catalyst
+        whitelist:
+          components:
+          - KsFluidCatalyst
+  - type: ContainerContainer
+    containers:
+      catalyst: !type:ContainerSlot
+  - type: AtmosPipeLayers
+    alternativePrototypes:
+      Primary: KsCatalyticReactor
+      Secondary: KsCatalyticReactorAlt1
+      Tertiary: KsCatalyticReactorAlt2
+  - type: KsCatalyticReactor
+
+- type: entity
+  parent: [ GasPipeLayerAlt1, KsCatalyticReactor ]
+  id: KsCatalyticReactorAlt1
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/pump.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt1.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: pumpVolume
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#ff9a3c"
+
+- type: entity
+  parent: [ GasPipeLayerAlt2, KsCatalyticReactor ]
+  id: KsCatalyticReactorAlt2
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/pump.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt2.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: pumpVolume
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      color: "#ff9a3c"

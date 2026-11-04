@@ -61,6 +61,9 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
     private FrozenDictionary<ProtoId<ReagentPrototype>, KsFluidReactionPrototype[]> _byReactant =
         FrozenDictionary<ProtoId<ReagentPrototype>, KsFluidReactionPrototype[]>.Empty;
 
+    private FrozenDictionary<ProtoId<KsFluidCatalystPrototype>, KsFluidReactionPrototype[]> _byCatalyst =
+        FrozenDictionary<ProtoId<KsFluidCatalystPrototype>, KsFluidReactionPrototype[]>.Empty;
+
     private readonly HashSet<KsFluidReactionPrototype> _candidateScratch = new();
 
     public override void Initialize()
@@ -80,8 +83,19 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
     private void RebuildIndex()
     {
         var byReactant = new Dictionary<ProtoId<ReagentPrototype>, List<KsFluidReactionPrototype>>();
+        var byCatalyst = new Dictionary<ProtoId<KsFluidCatalystPrototype>, List<KsFluidReactionPrototype>>();
         foreach (var reaction in ProtoMan.EnumeratePrototypes<KsFluidReactionPrototype>())
         {
+            // Catalysed reactions run only from their reactor, never on their own.
+            if (reaction.Catalyst is { } catalyst)
+            {
+                if (!byCatalyst.TryGetValue(catalyst, out var catalysed))
+                    byCatalyst[catalyst] = catalysed = new List<KsFluidReactionPrototype>();
+
+                catalysed.Add(reaction);
+                continue;
+            }
+
             foreach (var reactant in reaction.Reactants.Keys)
             {
                 if (!byReactant.TryGetValue(reactant, out var list))
@@ -92,6 +106,34 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
         }
 
         _byReactant = byReactant.ToFrozenDictionary(pair => pair.Key, pair => pair.Value.ToArray());
+        _byCatalyst = byCatalyst.ToFrozenDictionary(pair => pair.Key, pair => pair.Value.ToArray());
+    }
+
+    /// <summary>
+    ///     Runs every reaction <paramref name="catalyst"/> catalyses on <paramref name="mixture"/>, for a catalytic
+    ///         reactor in its net.
+    /// </summary>
+    /// <param name="deltaTime">
+    ///     Seconds of reaction, already scaled by how much of the net the bed fills and its activity.
+    /// </param>
+    public void ReactCatalysed(GasMixture mixture, ProtoId<KsFluidCatalystPrototype> catalyst, float deltaTime)
+    {
+        if (deltaTime <= 0f || mixture.Fluid is not { IsEmpty: false } fluid || !_byCatalyst.TryGetValue(catalyst, out var reactions))
+            return;
+
+        foreach (var reaction in reactions)
+        {
+            Step(mixture, fluid, reaction, deltaTime);
+        }
+    }
+
+    /// <summary>
+    ///     Takes <paramref name="units"/> of a reagent from every phase in proportion, its linked gas included.
+    /// </summary>
+    public void RemoveUnits(GasMixture mixture, KsFluidMixture fluid, ProtoId<ReagentPrototype> reagent, float units)
+    {
+        if (units > 0f && _propertiesSystem.TryGetProperties(reagent, out var properties))
+            Consume(mixture, fluid, properties, KsFluidReactionPhase.Any, units);
     }
 
     /// <summary>

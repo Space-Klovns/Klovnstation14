@@ -7,3 +7,6 @@ ent-KsPhaseSeparator = phase separator
 # Resources/Prototypes/_KS14/Fluidmos/Entities/devices.yml
 ent-KsExpansionValve = expansion valve
     .desc = Lets liquid refrigerant through to the low side, where it flashes and chills. Can hold its outlet at a set pressure by itself.
+# Resources/Prototypes/_KS14/Fluidmos/Entities/devices.yml
+ent-KsCatalyticReactor = catalytic reactor
+    .desc = A pressure vessel packed with a catalyst bed. The reactions the bed catalyses run in the pipe net it sits in, faster the less pipe there is around it.
