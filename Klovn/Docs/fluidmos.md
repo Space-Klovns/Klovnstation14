@@ -289,8 +289,9 @@ conduction and radiation (`AtmosPuddleEmissivity`):
 | Vacuum | Radiation alone, to `TCMB`. Check moles first, because space reports a heat capacity. |
 | No mixture at all (a sealed tile) | Nothing. This isn't vacuum. |
 
-Two things follow. A puddle radiating in vacuum falls below its boiling floor, so `FreezeTileEffect` only holds off while it
-could still boil. And immutable air takes no gas, so ice under it melts rather than sublimes.
+Immutable air and vacuum take no gas, which has two consequences. A puddle radiating there falls below its boiling floor with
+nowhere to boil to, so `FreezeTileEffect` lets it freeze; in air that can take gas, a reagent below its triple point still
+never freezes. And ice under a map's air melts rather than sublimes.
 
 **Simultaneous exchanges split their capacity.** Puddle–neighbour, puddle–air and ice–air/puddle steps all start from
 the same temperatures and are applied together. Each one may only work with its share of a body's heat capacity, which

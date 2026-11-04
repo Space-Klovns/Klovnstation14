@@ -53,10 +53,12 @@ public sealed class KsAirHeatExchangeTests : GameTest
     private static readonly EntProtoId WallPrototype = "WallSolid";
     private readonly ProtoId<ReagentPrototype> _inertReagent = "KsTestAirExchangeInert";
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
+    private static readonly ProtoId<ReagentPrototype> CarbonDioxideReagent = "CarbonDioxide";
 
     private const string BeakerSolution = "beaker";
     private const float StartTemperature = 300f;
     private const float MapAirTemperature = 200f;
+    private const float CarbonDioxideTemperature = 194f;
     private const float Seconds = 2f;
     private const int Units = 100;
     private const int TicksPerSecond = 30;
@@ -355,6 +357,74 @@ public sealed class KsAirHeatExchangeTests : GameTest
 
         await server.WaitAssertion(() => Assert.That(server.System<KsIceSheetSystem>().TryGetIceSheet(testMap.Grid.Owner, testMap.Tile.GridIndices, out _),
             "Water far below its boiling floor in vacuum never froze."));
+    }
+
+    /// <summary>
+    ///     Carbon dioxide at one atmosphere is below its triple point, with no liquid to freeze: it goes straight to gas,
+    ///         however cold it lands. Only air that can't take the gas freezes what's below its boiling point.
+    /// </summary>
+    [Test]
+    public async Task ColdCarbonDioxideInAirStillDoesNotFreeze()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var entityManager = server.EntMan;
+
+        await server.WaitPost(() => entityManager.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner));
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            var air = server.System<AtmosphereSystem>().GetTileMixture(testMap.Grid.Owner, testMap.MapUid, testMap.Tile.GridIndices)!;
+            Assert.That(air.Immutable, Is.False, "The tile can't take gas, so this proves nothing.");
+            air.Clear();
+            air.Temperature = Atmospherics.T20C;
+            air.SetMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+            air.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+
+            Assert.That(server.System<PuddleSystem>().TrySpillAt(testMap.Tile,
+                new Solution(CarbonDioxideReagent.Id, FixedPoint2.New(20)) { Temperature = CarbonDioxideTemperature },
+                out _, sound: false, tileReact: false));
+        });
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() => Assert.That(server.System<KsIceSheetSystem>().TryGetIceSheet(testMap.Grid.Owner, testMap.Tile.GridIndices, out _),
+            Is.False, "Carbon dioxide below its triple point formed ice."));
+    }
+
+    /// <summary>
+    ///     A sealed tile isn't vacuum for ice either: nothing leaves it.
+    /// </summary>
+    [Test]
+    public async Task IceOnASealedTileDoesNotSublime()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+
+        await server.WaitPost(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner);
+            entityManager.SpawnEntity(WallPrototype, testMap.GridCoords);
+        });
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitPost(() => server.System<KsIceSheetSystem>().AddIce(testMap.GridCoords,
+            new Solution(WaterReagent.Id, FixedPoint2.New(10)) { Temperature = 260f }));
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.System<AtmosphereSystem>().GetTileMixture(testMap.Grid.Owner, testMap.MapUid, testMap.Tile.GridIndices), Is.Null,
+                "The wall's tile has air, so this proves nothing.");
+            Assert.That(server.System<KsIceSheetSystem>().TryGetIceSheet(testMap.Grid.Owner, testMap.Tile.GridIndices, out var sheet));
+            var solutionContainerSystem = server.System<SharedSolutionContainerSystem>();
+            Assert.That(solutionContainerSystem.TryGetSolution(sheet.Owner, KsIceSheetComponent.SolutionName, out _, out var solution));
+            var volumeBefore = solution.Volume;
+
+            server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 0f, referenceVolume: 20f);
+            Assert.That(solution.Volume, Is.EqualTo(volumeBefore), "Ice sublimed out of a sealed tile.");
+        });
     }
 
     /// <summary>

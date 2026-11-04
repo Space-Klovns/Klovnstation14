@@ -201,6 +201,31 @@ public sealed class KsPumpHeatTests : GameTest
     }
 
     /// <summary>
+    ///     A trickle of work can read under what counts as anything, sample after sample. It must not make the component,
+    ///         which clients are watching, come and go.
+    /// </summary>
+    [Test]
+    public async Task ATrickleOfWorkKeepsTheComponent()
+    {
+        var server = Pair.Server;
+        var site = await BuildSite();
+        var scale = server.ResolveDependency<IConfigurationManager>().GetCVar(Content.Shared.CCVar.CCVars.AtmosHeatScale);
+        EntityUid deviceUid = default;
+
+        await server.WaitPost(() => deviceUid = SpawnDevice(site, 3));
+        await server.WaitRunTicks(TicksPerSecond);
+
+        for (var second = 0; second < 15; second++)
+        {
+            await server.WaitPost(() => server.System<KsPumpHeatSystem>().Record(deviceUid, 0.1f * scale, 0f, 0f));
+            await server.WaitRunTicks(TicksPerSecond);
+
+            await server.WaitAssertion(() => Assert.That(server.EntMan.HasComponent<KsPumpHeatComponent>(deviceUid),
+                $"The component went after {second + 1} s of a trickle of work."));
+        }
+    }
+
+    /// <summary>
     ///     A little more work a little more load: the load tracks what's billed, not only a cap.
     /// </summary>
     [Test]

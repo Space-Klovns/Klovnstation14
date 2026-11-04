@@ -404,8 +404,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         var tileMixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), Transform(gridUid).MapUid, indices, excite: false);
 
         // A map's atmosphere can't take the gas, so nothing leaves into it, as a puddle doesn't boil into it: ice under it
-        //     is warmed by it and melts instead. Vacuum takes what is lost to it.
-        if (tileMixture is { Immutable: true, TotalMoles: > 0f })
+        //     is warmed by it and melts instead. Vacuum takes what is lost to it, and a sealed tile has nowhere to go.
+        if (tileMixture is null or { Immutable: true, TotalMoles: > 0f })
             return 0f;
 
         var air = tileMixture is { Immutable: false, Volume: > 0f, Temperature: > 0f } ? tileMixture : null;

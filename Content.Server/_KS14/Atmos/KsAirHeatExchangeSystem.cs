@@ -46,7 +46,7 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
     {
         base.Initialize();
 
-        Subs.CVar(_configurationManager, KsCCVars.AtmosPuddleEmissivity, value => _emissivity = value, true);
+        Subs.CVar(_configurationManager, KsCCVars.AtmosPuddleEmissivity, value => _emissivity = value, invokeImmediately: true);
     }
 
     /// <summary>

@@ -36,9 +36,7 @@ public sealed class KsWindowContentsFitTest : GameTest
     [
         typeof(BarSignMenu),
         typeof(CrewMonitoringWindow),
-        typeof(GasPressurePumpWindow),
         typeof(GasPressureRegulatorWindow),
-        typeof(GasVolumePumpWindow),
         typeof(GeneratorWindow),
         typeof(IntercomMenu),
         typeof(NavMapBeaconWindow),

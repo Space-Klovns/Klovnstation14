@@ -1,4 +1,5 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared._KS14.Atmos;
 
@@ -57,15 +58,21 @@ public sealed partial class KsPumpHeatComponent : Component
     [ViewVariables]
     public float PendingRecoveredHeat;
 
-    [DataField, AutoPausedField]
+    /// <summary>
+    ///     Samples in a row that had no work in them.
+    /// </summary>
+    [ViewVariables]
+    public int QuietSamples;
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan LastSample;
 
-    [DataField, AutoPausedField]
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan NextSample;
 
     /// <summary>
     ///     Until this time, the device stays at its idle load, after losing power.
     /// </summary>
-    [DataField, AutoPausedField]
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan HoldIdleUntil;
 }

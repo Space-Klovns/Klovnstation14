@@ -140,7 +140,6 @@ public sealed class KsPuddleSpreadTest : GameTest
     public async Task LevelPuddlesInAClosedRoomAreLeftAlone()
     {
         await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Spreading, not cooling, is what this watches.
-        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Spreading, not cooling, is what this watches.
         var testMap = await Pair.CreateTestMap();
         await LayFloor(testMap, radius: 1); // nothing around it but space, which puddles don't spread onto
         await Spill(testMap, new Solution(_thinReagent.Id, FixedPoint2.New(9)));

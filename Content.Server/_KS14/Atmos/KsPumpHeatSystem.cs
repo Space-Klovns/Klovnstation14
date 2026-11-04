@@ -71,6 +71,12 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
     /// </summary>
     private const float MinimumPower = 1f;
 
+    /// <summary>
+    ///     Samples with no work in them before the component goes, so that a device doing a trickle of work doesn't have it
+    ///         added and removed, and networked, every second.
+    /// </summary>
+    private const int QuietSamplesToRemove = 10;
+
     private float _heatRecovery;
     private float _maxLoadMultiplier;
 
@@ -78,8 +84,8 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
     {
         base.Initialize();
 
-        Subs.CVar(_configurationManager, KsCCVars.AtmosPumpHeatRecovery, value => _heatRecovery = Math.Clamp(value, 0f, 1f), true);
-        Subs.CVar(_configurationManager, KsCCVars.AtmosPumpMaxLoadMultiplier, value => _maxLoadMultiplier = Math.Max(value, 0f), true);
+        Subs.CVar(_configurationManager, KsCCVars.AtmosPumpHeatRecovery, value => _heatRecovery = Math.Clamp(value, 0f, 1f), invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.AtmosPumpMaxLoadMultiplier, value => _maxLoadMultiplier = Math.Max(value, 0f), invokeImmediately: true);
     }
 
     /// <summary>
@@ -88,7 +94,7 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
     /// </summary>
     public float RecoverableHeat(EntityUid deviceUid, float heat)
     {
-        return _receiverQuery.TryComp(deviceUid, out var receiver) && receiver is { NeedsPower: true, Powered: true }
+        return _receiverQuery.TryComp(deviceUid, out var receiverComponent) && receiverComponent is { NeedsPower: true, Powered: true }
             ? heat * _heatRecovery
             : 0f;
     }
@@ -128,13 +134,13 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
             if (curTime >= pumpHeatComponent.NextSample)
                 Sample(entity, curTime);
 
-            _receiverQuery.TryComp(uid, out var receiver);
-            if (receiver != null)
-                StepLoad(entity, receiver, curTime, frameTime);
+            _receiverQuery.TryComp(uid, out var receiverComponent);
+            if (receiverComponent != null)
+                StepLoad((uid, pumpHeatComponent, receiverComponent), curTime, frameTime);
 
-            var atIdle = receiver == null || MathF.Abs(receiver.Load - pumpHeatComponent.IdleLoad) < 0.01f;
+            var atIdle = receiverComponent == null || MathF.Abs(receiverComponent.Load - pumpHeatComponent.IdleLoad) < 0.01f;
             if (atIdle &&
-                pumpHeatComponent.PendingGasHeat + pumpHeatComponent.PendingRoomHeat + pumpHeatComponent.PendingRecoveredHeat <= 0f &&
+                pumpHeatComponent.QuietSamples >= QuietSamplesToRemove &&
                 pumpHeatComponent.GasPower + pumpHeatComponent.RoomPower + pumpHeatComponent.RecoveredPower < MinimumPower)
                 RemCompDeferred(uid, pumpHeatComponent);
         }
@@ -153,6 +159,9 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
         if (elapsed <= 0f)
             return;
 
+        var worked = component.PendingGasHeat + component.PendingRoomHeat + component.PendingRecoveredHeat > 0f;
+        component.QuietSamples = worked ? 0 : component.QuietSamples + 1;
+
         var blend = 1f - MathF.Exp(-elapsed / SmoothingSeconds);
         var scale = 1f / (elapsed * _atmosphereSystem.HeatScale);
 
@@ -167,44 +176,44 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
         Dirty(entity);
     }
 
-    private void StepLoad(Entity<KsPumpHeatComponent> entity, ApcPowerReceiverComponent receiver, TimeSpan curTime, float frameTime)
+    private void StepLoad(Entity<KsPumpHeatComponent, ApcPowerReceiverComponent> entity, TimeSpan curTime, float frameTime)
     {
-        var component = entity.Comp;
+        var (_, component, receiverComponent) = entity;
         var idleLoad = component.IdleLoad;
 
-        if (receiver is { NeedsPower: true, Powered: false })
+        if (receiverComponent is { NeedsPower: true, Powered: false })
         {
-            receiver.Load = idleLoad;
+            receiverComponent.Load = idleLoad;
             component.HoldIdleUntil = curTime + PowerLossHold;
             return;
         }
 
         var workRange = idleLoad * _maxLoadMultiplier;
         var target = idleLoad;
-        if (receiver.NeedsPower && curTime >= component.HoldIdleUntil)
+        if (receiverComponent.NeedsPower && curTime >= component.HoldIdleUntil)
             target += Math.Clamp(component.GasPower + component.RoomPower, 0f, workRange);
 
         // Near its limit an APC takes no more, and past it, or running out, it gets some back.
         if (target > idleLoad)
         {
-            var (canClimb, canHold) = ApcHeadroom(receiver);
+            var (canClimb, canHold) = ApcHeadroom(receiverComponent);
             if (!canHold)
                 target = idleLoad;
             else if (!canClimb)
-                target = MathF.Min(target, receiver.Load);
+                target = MathF.Min(target, receiverComponent.Load);
         }
 
         var step = (workRange > 0f ? workRange : idleLoad) / LoadClimbSeconds * frameTime;
-        receiver.Load = Math.Clamp(target, receiver.Load - step, receiver.Load + step);
+        receiverComponent.Load = Math.Clamp(target, receiverComponent.Load - step, receiverComponent.Load + step);
     }
 
     /// <returns>
-    ///     Whether the APC feeding <paramref name="receiver"/> has room for more load, and whether it can go on carrying what
+    ///     Whether the APC feeding <paramref name="receiverComponent"/> has room for more load, and whether it can go on carrying what
     ///         it does: past its charge rate its battery drains, whatever it can supply for now.
     /// </returns>
-    private (bool CanClimb, bool CanHold) ApcHeadroom(ApcPowerReceiverComponent receiver)
+    private (bool CanClimb, bool CanHold) ApcHeadroom(ApcPowerReceiverComponent receiverComponent)
     {
-        if (receiver.Provider?.Net is not ApcNet net)
+        if (receiverComponent.Provider?.Net is not ApcNet net)
             return (false, false);
 
         var canClimb = true;
@@ -229,7 +238,7 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsPumpHeatComponent> entity, ref ComponentShutdown args)
     {
-        if (!TerminatingOrDeleted(entity.Owner) && _receiverQuery.TryComp(entity.Owner, out var receiver))
-            receiver.Load = entity.Comp.IdleLoad;
+        if (!TerminatingOrDeleted(entity.Owner) && _receiverQuery.TryComp(entity.Owner, out var receiverComponent))
+            receiverComponent.Load = entity.Comp.IdleLoad;
     }
 }
