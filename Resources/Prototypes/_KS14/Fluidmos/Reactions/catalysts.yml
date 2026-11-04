@@ -1,0 +1,29 @@
+# Catalyst beds for the catalytic reactor. A poison's number is the activity, out of 1, the bed loses per unit it takes up.
+
+- type: ksFluidCatalyst
+  id: KsPlatinum
+  name: ks-fluid-catalyst-name-platinum
+  poisons:
+    KsOrganosulfur: 0.02
+    KsHydrogenSulfide: 0.01
+
+- type: ksFluidCatalyst
+  id: KsCobaltMolybdenum
+  name: ks-fluid-catalyst-name-cobalt-molybdenum
+
+- type: ksFluidCatalyst
+  id: KsZeolite
+  name: ks-fluid-catalyst-name-zeolite
+  poisons:
+    KsPetroleumCoke: 0.002
+
+- type: ksFluidCatalyst
+  id: KsAlumina
+  name: ks-fluid-catalyst-name-alumina
+
+- type: ksFluidCatalyst
+  id: KsZieglerNatta
+  name: ks-fluid-catalyst-name-ziegler-natta
+  poisons:
+    Water: 0.01
+    KsHydrogenSulfide: 0.02

@@ -17,6 +17,7 @@ namespace Content.IntegrationTests.Tests._KS14.Fluidmos;
 [TestOf(typeof(KsFluidmosPhaseSystem))]
 public sealed class KsPetroleumTests : GameTest
 {
+    private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private static readonly ProtoId<ReagentPrototype> GasOilReagent = "KsGasOil";
     private static readonly ProtoId<ReagentPrototype> WaxReagent = "KsParaffinWax";
     private static readonly ProtoId<ReagentPrototype> KeroseneReagent = "KsKerosene";
@@ -60,7 +61,7 @@ public sealed class KsPetroleumTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(propertiesSystem.TryGetProperties("Water", out var water));
+            Assert.That(propertiesSystem.TryGetProperties(WaterReagent, out var water));
 
             using (Assert.EnterMultipleScope())
             {
