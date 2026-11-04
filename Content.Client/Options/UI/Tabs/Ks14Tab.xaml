@@ -18,6 +18,10 @@
                 <!-- KS14: dim bright lobby art behind the lobby text -->
                 <CheckBox Name="LobbyAdaptiveContrast"
                           Text="{Loc 'ks-ui-options-lobby-adaptive-contrast'}"/>
+                <!-- KS14: restyle the stock windows after tgui -->
+                <CheckBox Name="TguiTheme"
+                          Text="{Loc 'ks-ui-options-tgui-theme'}"
+                          ToolTip="{Loc 'ks-ui-options-tgui-theme-tooltip'}"/>
                 <!-- Lobby font family: disabled, the lobby uses Jura. Re-enable with the block in Ks14Tab.xaml.cs.
                 <ui:OptionDropDown Name="DropDownLobbyFont"
                                    Title="{Loc 'ks-ui-options-lobby-font'}"/>

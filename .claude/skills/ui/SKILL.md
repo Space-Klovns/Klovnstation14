@@ -1,6 +1,6 @@
 ---
 name: ui
-description: How client UI is built in this repo - XAML and its code-behind, layout and mouse filtering, the sheetlet stylesheet system (specificity, the fork's Baron sheetlet overriding global defaults, dead StyleNano classes, flat/translucent styles, the reusable gradient stylebox), UI screens and controllers, windows and BUIs, drawing inside a Control, UI localisation, and testing UI headlessly. Also maps the reworked lobby. Use when writing or restyling any XAML, Control, window, BUI, sheetlet or lobby UI, or when a style silently doesn't apply, a panel is opaque when it shouldn't be, clicks don't reach a button, or a control vanishes.
+description: How client UI is built in this repo - XAML and its code-behind, layout and mouse filtering, the sheetlet stylesheet system (specificity, the fork's Baron sheetlet overriding global defaults, dead StyleNano classes, flat/translucent styles, the reusable gradient stylebox), UI screens and controllers, windows and BUIs, drawing inside a Control, UI localisation, and testing UI headlessly. Also maps the reworked lobby and the tgui toolkit (ported /tg/ tgui windows and the global tgui restyle). Use when writing or restyling any XAML, Control, window, BUI, sheetlet or lobby UI, porting a tgui interface, or when a style silently doesn't apply, a panel is opaque when it shouldn't be, clicks don't reach a button, or a control vanishes.
 ---
 
 # Client UI
@@ -120,10 +120,14 @@ The active sheet is `NanotrasenStylesheet`, built from **sheetlets** (`Sheetlet<
    ```csharp
    GetSheetletRules<PalettedStylesheet>(typeof(KsBaronUiSheetlet), man), // KS14
    GetSheetletRules<PalettedStylesheet>(typeof(Content.Client._KS14.Lobby.KsLobbySheetlet), man), // KS14
+   GetSheetletRules<PalettedStylesheet>(typeof(Content.Client._KS14.UserInterface.Tgui.KsTguiSheetlet), man), // KS14
    ```
 
 A new fork sheetlet is either a `[CommonSheetlet]` (`KsInstrumentSheetlet`) or another explicit line here. Use the
 explicit line when it has to sit after Baron. `SystemStylesheet` registers only Baron.
+
+`KsTguiSheetlet` is the global tgui restyle (see *tgui windows* below). It is last and **on by default**, so for
+the selectors it shares with Baron, what you see in game is tgui's flat look, not Baron's textures.
 
 ### Specificity: classes beat order
 
@@ -154,8 +158,11 @@ PanelContainer rule, wherever either sits.
   `PanelContainer` (opaque `panel_dark_1_clean` texture), `ContainerButton` (`button_3` texture), LineEdit,
   scrollbars, tabs, sliders and tree rows.
   - **A bare `PanelContainer` is opaque in this fork.** For a transparent one, give it a class whose rule sets
-    `.Panel(new StyleBoxEmpty())` (or the box you want), or set `PanelOverride`.
+    `.Panel(new StyleBoxEmpty())` (or the box you want), or set `PanelOverride`. With the tgui restyle on it is
+    tgui's translucent section black (alpha 0.33) instead.
   - Baron's fonts lack some glyphs; its `DefaultFont` class falls back to the base font.
+  - The tgui restyle (`klovn.ui.tgui_theme`) re-dresses most of the same selectors after Baron. Check which one is
+    on before blaming Baron.
 - **ModulateSelf tints flat buttons.** `ButtonSheetlet.MakeButtonRules` sets `ModulateSelf` to a palette colour on
   every `CButton()` pseudo-state. That tint also lands on a `StyleBoxEmpty`, gradient or flat box, and on the label.
   Every state of a flat style must also set
@@ -273,6 +280,38 @@ colours itself (see below), so don't re-solve either.
   both flags say valid is the stale-arrange trap above.
 - **Style results are readable**, even though drawing isn't: `Label.Align` returns the style-resolved alignment
   (`StylePropertyAlignMode`), not just the value set in code.
+
+## tgui windows
+
+Some windows are ports of /tg/'s tgui interfaces in its default Nanotrasen theme. The nuke keypad (`KsNukeMenu`,
+tgui's retro theme) came first and is bespoke. The rest share a toolkit in
+`Content.Client/_KS14/UserInterface/Tgui/`. Its colours come from tgui-core's `styles/colors.scss`: tgui shifts a
+token's HSL lightness by -5 for fills, +5 for coloured text and +10 for hover, as `KsTguiTheme` does.
+
+| tgui | Toolkit |
+| --- | --- |
+| `Window` (title bar, eye, NT watermark) | `KsTguiWindow`, the xaml root. Children go into its padded `Contents` column. |
+| `Section` (`title`, `buttons`, `scrollable`) | `KsTguiSection`. A `KsTguiSectionButtons` child goes to the title row. |
+| `LabeledList` / `.Item` | `KsTguiLabeledList` (a 2-column grid) / `KsTguiLabeledListItem Label="..."`. |
+| `LabeledControls` / `.Item` | `KsTguiLabeledControls` / `KsTguiLabeledControlsItem` |
+| `Button` (`icon`, `color`, `selected`) | `KsTguiButton` (`Icon`, `ButtonColor`, `Selected`). A toggled `ToggleMode` button reads as selected. |
+| `NumberInput`, `Knob` | `KsTguiNumberInput`, `KsTguiKnob`: drag to change, click to type. `OnValueChanged` fires only for the user's values. |
+| `ProgressBar`, `RoundGauge` | `KsTguiProgressBar`, `KsTguiRoundGauge` |
+| Font Awesome icons | `KsTguiIcon`, drawn from primitives. Add a `KsTguiIconKind` when a port needs one. |
+
+- **Ported so far:** the nuke, gas canister, gas tank, pressure and volume pumps, filter, mixer, thermomachine,
+  space heater, reagent dispenser and ChemMaster. Each window keeps the upstream window's API, so its BUI only
+  swaps the type (`/* KS14: X -> KsTguiX */`). The space heater's BUI wired upstream-only controls and has a marked
+  block instead. The upstream windows stay in the tree for merges.
+- **The controls set their own fonts, colours and boxes through overrides**, so a port looks the same whatever the
+  stylesheet does. Use `KsTguiLabel` for text: a plain `Label` takes the sheet's font.
+- **Global restyle:** `KsTguiSheetlet` dresses stock windows, buttons, labels, inputs, panels, tabs, scrollbars,
+  progress bars and check boxes the same way. It's on while `klovn.ui.tgui_theme` is (client, archived, default on;
+  in the KS14 options tab), and `KsTguiThemeUIController` rebuilds the sheet when it changes. `FancyWindow` reads
+  the cvar once, in its constructor (`FancyWindow.Klovn.Tgui.cs`), to swap the Baron header spacing for a 32px title
+  bar, so open windows keep their spacing until reopened.
+- **Testing:** `KsTguiWindowTest` opens every port with busy contents and checks its default size fits them, flips
+  the cvar, and drives a real canister end to end. Add a new port's window to its `MakePopulatedWindows`.
 
 ## The lobby
 

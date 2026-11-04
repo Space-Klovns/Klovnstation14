@@ -1,0 +1,4 @@
+- files: ["nanotrasen.png"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Rasterised from Resources/Textures/Interface/Nano/ntlogo.svg (space-wizards/space-station-14 PR #14258, James Simonson), cropped to the logo"
+  source: "https://github.com/space-wizards/space-station-14/pull/14258"

@@ -1,4 +1,5 @@
-﻿using Content.Client.Power.EntitySystems;
+﻿using Content.Client._KS14.Atmos.UI; // KS14
+using Content.Client.Power.EntitySystems;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Piping.Unary.Components;
 using Content.Shared.Atmos.Piping.Unary.Systems;
@@ -16,7 +17,7 @@ namespace Content.Client.Atmos.UI
     public sealed partial class GasThermomachineBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private GasThermomachineWindow? _window;
+        private KsTguiGasThermomachineWindow /* KS14: GasThermomachineWindow -> KsTguiGasThermomachineWindow, tgui port */? _window;
 
         [ViewVariables]
         private float _minTemp = 0.0f;
@@ -35,7 +36,7 @@ namespace Content.Client.Atmos.UI
         {
             base.Open();
 
-            _window = this.CreateWindow<GasThermomachineWindow>();
+            _window = this.CreateWindow<KsTguiGasThermomachineWindow /* KS14: GasThermomachineWindow -> KsTguiGasThermomachineWindow */>();
 
             _window.ToggleStatusButton.OnToggled += _ => OnToggleStatusButtonPressed();
             _window.TemperatureSpinbox.OnValueChanged += _ => OnTemperatureChanged(_window.TemperatureSpinbox.Value);

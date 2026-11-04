@@ -1,0 +1,22 @@
+<tgui:KsTguiWindow xmlns="https://spacestation14.io"
+                   xmlns:tgui="clr-namespace:Content.Client._KS14.UserInterface.Tgui"
+                   SetSize="335 115"
+                   MinSize="335 115">
+    <tgui:KsTguiSection>
+        <tgui:KsTguiLabeledList>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-power'}">
+                <tgui:KsTguiButton Name="PowerButton"/>
+            </tgui:KsTguiLabeledListItem>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-output-pressure'}">
+                <tgui:KsTguiNumberInput Name="PressureInput"
+                                        SetWidth="75"
+                                        Step="10"
+                                        Unit="{Loc 'ks-tgui-unit-kpa'}"/>
+                <tgui:KsTguiButton Name="MaxButton"
+                                   Icon="Plus"
+                                   Text="{Loc 'ks-tgui-max'}"
+                                   Margin="2 0 0 0"/>
+            </tgui:KsTguiLabeledListItem>
+        </tgui:KsTguiLabeledList>
+    </tgui:KsTguiSection>
+</tgui:KsTguiWindow>

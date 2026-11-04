@@ -1,3 +1,4 @@
+using Content.Client._KS14.Atmos.UI; // KS14
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.EntitySystems;
 using JetBrains.Annotations;
@@ -10,7 +11,7 @@ namespace Content.Client.UserInterface.Systems.Atmos.GasTank
     public sealed partial class GasTankBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private GasTankWindow? _window;
+        private KsTguiGasTankWindow /* KS14: GasTankWindow -> KsTguiGasTankWindow, tgui port */? _window;
 
         public GasTankBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -32,7 +33,7 @@ namespace Content.Client.UserInterface.Systems.Atmos.GasTank
         protected override void Open()
         {
             base.Open();
-            _window = this.CreateWindow<GasTankWindow>();
+            _window = this.CreateWindow<KsTguiGasTankWindow /* KS14: GasTankWindow -> KsTguiGasTankWindow */>();
             _window.Entity = Owner;
             _window.SetTitle(EntMan.GetComponent<MetaDataComponent>(Owner).EntityName);
             _window.OnOutputPressure += SetOutputPressure;

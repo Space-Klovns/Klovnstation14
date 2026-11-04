@@ -1,0 +1,35 @@
+<tgui:KsTguiWindow xmlns="https://spacestation14.io"
+                   xmlns:tgui="clr-namespace:Content.Client._KS14.UserInterface.Tgui"
+                   SetSize="300 150"
+                   MinSize="300 150"
+                   Title="{Loc 'comp-gas-thermomachine-ui-title-freezer'}">
+    <tgui:KsTguiSection Title="{Loc 'ks-tgui-atmos-thermo-controls'}">
+        <tgui:KsTguiSectionButtons>
+            <tgui:KsTguiButton Name="ToggleStatusButton"
+                               Access="Public"
+                               ToggleMode="True"/>
+        </tgui:KsTguiSectionButtons>
+        <tgui:KsTguiLabeledList>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-thermo-target'}">
+                <tgui:KsTguiNumberInput Name="TemperatureSpinbox"
+                                        Access="Public"
+                                        SetWidth="62"
+                                        Step="5"
+                                        StepPixelSize="3"
+                                        MaxValue="1000"
+                                        Unit="{Loc 'ks-tgui-unit-kelvin'}"/>
+            </tgui:KsTguiLabeledListItem>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-thermo-presets'}">
+                <tgui:KsTguiButton Name="MinimumButton"
+                                   Icon="FastBackward"
+                                   ToolTip="{Loc 'ks-tgui-atmos-thermo-preset-min'}"/>
+                <tgui:KsTguiButton Name="RoomButton"
+                                   Icon="Sync"
+                                   ToolTip="{Loc 'ks-tgui-atmos-thermo-preset-room'}"/>
+                <tgui:KsTguiButton Name="MaximumButton"
+                                   Icon="FastForward"
+                                   ToolTip="{Loc 'ks-tgui-atmos-thermo-preset-max'}"/>
+            </tgui:KsTguiLabeledListItem>
+        </tgui:KsTguiLabeledList>
+    </tgui:KsTguiSection>
+</tgui:KsTguiWindow>

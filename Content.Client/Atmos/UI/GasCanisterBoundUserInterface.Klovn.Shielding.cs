@@ -17,6 +17,8 @@ public sealed partial class GasCanisterBoundUserInterface : BoundUserInterface
     {
         base.Update();
 
+        UpdatePressureLimits();
+
         if (_window != null)
         {
             if (EntMan.TryGetComponent(Owner, out BatteryShieldingComponent? shieldingComponent) &&

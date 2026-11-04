@@ -58,6 +58,7 @@ public partial class NanotrasenStylesheet : CommonStylesheet
             GetAllSheetletRules<NanotrasenStylesheet, CommonSheetletAttribute>(man),
             GetSheetletRules<PalettedStylesheet>(typeof(KsBaronUiSheetlet), man), // KS14
             GetSheetletRules<PalettedStylesheet>(typeof(Content.Client._KS14.Lobby.KsLobbySheetlet), man), // KS14
+            GetSheetletRules<PalettedStylesheet>(typeof(Content.Client._KS14.UserInterface.Tgui.KsTguiSheetlet), man), // KS14: global tgui restyle, after Baron
         };
 
         Stylesheet = new Stylesheet(rules.SelectMany(x => x).ToArray());

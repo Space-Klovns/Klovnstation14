@@ -1,3 +1,4 @@
+using Content.Client._KS14.Atmos.UI; // KS14
 using Content.Shared.Atmos.Piping.Portable.Components;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
@@ -12,7 +13,7 @@ namespace Content.Client.Atmos.UI;
 public sealed partial class SpaceHeaterBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
-    private SpaceHeaterWindow? _window;
+    private KsTguiSpaceHeaterWindow /* KS14: SpaceHeaterWindow -> KsTguiSpaceHeaterWindow, tgui port */? _window;
 
     public SpaceHeaterBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
     {
@@ -22,14 +23,23 @@ public sealed partial class SpaceHeaterBoundUserInterface : BoundUserInterface
     {
         base.Open();
 
-        _window = this.CreateWindow<SpaceHeaterWindow>();
+        _window = this.CreateWindow<KsTguiSpaceHeaterWindow /* KS14: SpaceHeaterWindow -> KsTguiSpaceHeaterWindow */>();
 
+        // KS14 start: the tgui window raises plain events instead of exposing its controls
+        _window.OnToggle += OnToggleStatusButtonPressed;
+        _window.OnTemperatureChange += OnTemperatureRangeChanged;
+        _window.OnModeChange += mode => SendMessage(new SpaceHeaterChangeModeMessage(mode));
+        _window.OnPowerLevelChange += level => SendMessage(new SpaceHeaterChangePowerLevelMessage(level));
+        // KS14 end
+        // KS14: replaced by the events above
+        /*
         _window.ToggleStatusButton.OnToggled += _ => OnToggleStatusButtonPressed();
         _window.IncreaseTempRange.OnPressed += _ => OnTemperatureRangeChanged(_window.TemperatureChangeDelta);
         _window.DecreaseTempRange.OnPressed += _ => OnTemperatureRangeChanged(-_window.TemperatureChangeDelta);
         _window.ModeSelector.OnItemSelected += OnModeChanged;
 
         _window.PowerLevelSelector.OnItemSelected += OnPowerLevelChange;
+        */
     }
 
     private void OnToggleStatusButtonPressed()
@@ -42,6 +52,8 @@ public sealed partial class SpaceHeaterBoundUserInterface : BoundUserInterface
         SendMessage(new SpaceHeaterChangeTemperatureMessage(changeAmount));
     }
 
+    // KS14: the tgui window sends modes and power levels itself
+    /*
     private void OnModeChanged(OptionButton.ItemSelectedEventArgs args)
     {
         _window?.ModeSelector.SelectId(args.Id);
@@ -53,6 +65,7 @@ public sealed partial class SpaceHeaterBoundUserInterface : BoundUserInterface
         _window?.PowerLevelSelector.Select(args.Id);
         SendMessage(new SpaceHeaterChangePowerLevelMessage((SpaceHeaterPowerLevel)args.Id));
     }
+    */
 
     /// <summary>
     ///     Update the UI state based on server-sent info
@@ -64,6 +77,9 @@ public sealed partial class SpaceHeaterBoundUserInterface : BoundUserInterface
         if (_window == null || state is not SpaceHeaterBoundUserInterfaceState cast)
             return;
 
+        _window.UpdateState(cast); // KS14: the tgui window takes the whole state
+        // KS14: replaced by UpdateState above
+        /*
         _window.SetActive(cast.Enabled);
         _window.ModeSelector.SelectId((int)cast.Mode);
         _window.PowerLevelSelector.Select((int)cast.PowerLevel);
@@ -71,6 +87,7 @@ public sealed partial class SpaceHeaterBoundUserInterface : BoundUserInterface
         _window.MinTemp = cast.MinTemperature;
         _window.MaxTemp = cast.MaxTemperature;
         _window.SetTemperature(cast.TargetTemperature);
+        */
     }
 
     protected override void Dispose(bool disposing)

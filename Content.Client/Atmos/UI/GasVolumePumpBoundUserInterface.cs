@@ -1,4 +1,5 @@
-﻿using Content.Shared.Atmos.Piping.Binary.Components;
+﻿using Content.Client._KS14.Atmos.UI; // KS14
+using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Localizations;
 using JetBrains.Annotations;
@@ -16,7 +17,7 @@ namespace Content.Client.Atmos.UI
         private float _maxTransferRate;
 
         [ViewVariables]
-        private GasVolumePumpWindow? _window;
+        private KsTguiGasVolumePumpWindow /* KS14: GasVolumePumpWindow -> KsTguiGasVolumePumpWindow, tgui port */? _window;
 
         public GasVolumePumpBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -26,7 +27,7 @@ namespace Content.Client.Atmos.UI
         {
             base.Open();
 
-            _window = this.CreateWindow<GasVolumePumpWindow>();
+            _window = this.CreateWindow<KsTguiGasVolumePumpWindow /* KS14: GasVolumePumpWindow -> KsTguiGasVolumePumpWindow */>();
 
             if (EntMan.TryGetComponent(Owner, out GasVolumePumpComponent? pump))
             {

@@ -1,0 +1,48 @@
+<tgui:KsTguiWindow xmlns="https://spacestation14.io"
+                   xmlns:tgui="clr-namespace:Content.Client._KS14.UserInterface.Tgui"
+                   SetSize="565 620"
+                   MinSize="480 360"
+                   Title="{Loc 'reagent-dispenser-bound-user-interface-title'}">
+    <tgui:KsTguiSection Title="{Loc 'ks-tgui-chem-dispenser-dispense'}">
+        <tgui:KsTguiSectionButtons Name="AmountButtons"/>
+        <GridContainer Name="ReagentList"
+                       Columns="4"
+                       HorizontalExpand="True"
+                       HSeparationOverride="2"
+                       VSeparationOverride="2"/>
+        <tgui:KsTguiLabel Name="NoJugsLabel"
+                          Tone="Label"
+                          Text="{Loc 'ks-tgui-chem-dispenser-no-jugs'}"/>
+    </tgui:KsTguiSection>
+    <tgui:KsTguiSection Title="{Loc 'ks-tgui-chem-dispenser-beaker'}"
+                        VerticalExpand="True"
+                        Scrollable="True">
+        <tgui:KsTguiSectionButtons>
+            <tgui:KsTguiButton Name="ValveButton"
+                               Access="Public"
+                               Icon="Faucet"/>
+            <tgui:KsTguiButton Name="ClearButton"
+                               Access="Public"
+                               Icon="Trash"
+                               Text="{Loc 'ks-tgui-chem-dispenser-clear'}"/>
+            <tgui:KsTguiButton Name="EjectButton"
+                               Access="Public"
+                               Icon="Eject"
+                               Text="{Loc 'ks-tgui-eject'}"/>
+        </tgui:KsTguiSectionButtons>
+        <tgui:KsTguiLabeledList>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-dispenser-beaker'}">
+                <tgui:KsTguiLabel Name="ContainerInfoName"
+                                  Access="Public"/>
+                <tgui:KsTguiLabel Name="ContainerInfoFill"
+                                  Access="Public"
+                                  Tone="Label"/>
+            </tgui:KsTguiLabeledListItem>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-dispenser-contents'}">
+                <BoxContainer Name="ContainerInfo"
+                              Orientation="Vertical"
+                              HorizontalExpand="True"/>
+            </tgui:KsTguiLabeledListItem>
+        </tgui:KsTguiLabeledList>
+    </tgui:KsTguiSection>
+</tgui:KsTguiWindow>

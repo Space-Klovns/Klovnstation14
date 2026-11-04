@@ -1,0 +1,93 @@
+<tgui:KsTguiWindow xmlns="https://spacestation14.io"
+                   xmlns:tgui="clr-namespace:Content.Client._KS14.UserInterface.Tgui"
+                   SetSize="350 405"
+                   MinSize="350 405"
+                   Title="{Loc 'ks-tgui-atmos-canister-title'}">
+    <tgui:KsTguiSection Title="{Loc 'ks-tgui-atmos-canister-title'}">
+        <tgui:KsTguiSectionButtons>
+            <tgui:KsTguiButton Name="ShieldToggleButton"
+                               Access="Public"
+                               Visible="False"/>
+        </tgui:KsTguiSectionButtons>
+        <tgui:KsTguiLabeledControls>
+            <tgui:KsTguiLabeledControlsItem Label="{Loc 'ks-tgui-atmos-canister-pressure'}"
+                                            MinWidth="66">
+                <tgui:KsTguiRoundGauge Name="CanisterGauge"
+                                       DialSize="1.75"/>
+            </tgui:KsTguiLabeledControlsItem>
+            <tgui:KsTguiLabeledControlsItem Label="{Loc 'ks-tgui-atmos-canister-regulator'}">
+                <BoxContainer Orientation="Vertical"
+                              SeparationOverride="2">
+                    <tgui:KsTguiKnob Name="ReleaseKnob"
+                                     HorizontalAlignment="Center"
+                                     Step="5"
+                                     StepPixelSize="1"
+                                     Unit="{Loc 'ks-tgui-unit-kpa'}"/>
+                    <tgui:KsTguiLabel Name="ReleaseLabel"
+                                      HorizontalAlignment="Center"/>
+                </BoxContainer>
+                <BoxContainer Orientation="Vertical"
+                              SeparationOverride="0">
+                    <tgui:KsTguiButton Name="ReleaseMaxButton"
+                                       ButtonColor="Transparent"
+                                       Icon="FastForward"
+                                       ToolTip="{Loc 'ks-tgui-atmos-canister-regulator-max'}"/>
+                    <tgui:KsTguiButton Name="ReleaseResetButton"
+                                       ButtonColor="Transparent"
+                                       Icon="Undo"
+                                       ToolTip="{Loc 'ks-tgui-atmos-canister-regulator-reset'}"/>
+                </BoxContainer>
+            </tgui:KsTguiLabeledControlsItem>
+            <tgui:KsTguiLabeledControlsItem Label="{Loc 'ks-tgui-atmos-canister-valve'}">
+                <tgui:KsTguiButton Name="ValveButton"
+                                   SetWidth="50"
+                                   MinHeight="24"
+                                   FontSize="11"
+                                   TextAlign="Center"
+                                   VerticalAlignment="Center"/>
+            </tgui:KsTguiLabeledControlsItem>
+            <tgui:KsTguiLabeledControlsItem Label="{Loc 'ks-tgui-atmos-canister-port'}">
+                <tgui:KsTguiIcon Name="PortIcon"
+                                 SetSize="16 16"
+                                 VerticalAlignment="Center"
+                                 MouseFilter="Pass"/>
+            </tgui:KsTguiLabeledControlsItem>
+        </tgui:KsTguiLabeledControls>
+    </tgui:KsTguiSection>
+    <tgui:KsTguiSection Name="ShieldSettingsContainer"
+                        Visible="False">
+        <tgui:KsTguiLabeledList>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-canister-cell-charge'}">
+                <tgui:KsTguiProgressBar Name="ShieldChargeBar"/>
+            </tgui:KsTguiLabeledListItem>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-canister-shield-draw'}">
+                <tgui:KsTguiLabel Name="ShieldWattage"/>
+            </tgui:KsTguiLabeledListItem>
+        </tgui:KsTguiLabeledList>
+    </tgui:KsTguiSection>
+    <tgui:KsTguiSection Title="{Loc 'ks-tgui-atmos-canister-holding-tank'}"
+                        VerticalExpand="True">
+        <tgui:KsTguiSectionButtons>
+            <tgui:KsTguiButton Name="TankEjectButton"
+                               Icon="Eject"
+                               Text="{Loc 'ks-tgui-eject'}"
+                               Visible="False"/>
+        </tgui:KsTguiSectionButtons>
+        <tgui:KsTguiLabeledList Name="TankInfo"
+                                Visible="False">
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-canister-tank-label'}">
+                <tgui:KsTguiLabel Name="TankLabelLabel"
+                                  ClipText="True"
+                                  HorizontalExpand="True"/>
+            </tgui:KsTguiLabeledListItem>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-canister-tank-pressure'}">
+                <tgui:KsTguiRoundGauge Name="TankGauge"
+                                       HorizontalAlignment="Left"
+                                       DialSize="1.75"/>
+            </tgui:KsTguiLabeledListItem>
+        </tgui:KsTguiLabeledList>
+        <tgui:KsTguiLabel Name="NoTankLabel"
+                          Tone="Average"
+                          Text="{Loc 'ks-tgui-atmos-canister-no-tank'}"/>
+    </tgui:KsTguiSection>
+</tgui:KsTguiWindow>

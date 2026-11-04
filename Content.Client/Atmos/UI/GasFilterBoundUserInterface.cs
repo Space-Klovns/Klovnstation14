@@ -1,4 +1,5 @@
-﻿using Content.Client.Atmos.EntitySystems;
+﻿using Content.Client._KS14.Atmos.UI; // KS14
+using Content.Client.Atmos.EntitySystems;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Piping.Trinary.Components;
 using Content.Shared.Localizations;
@@ -17,7 +18,7 @@ namespace Content.Client.Atmos.UI
         private const float MaxTransferRate = Atmospherics.MaxTransferRate;
 
         [ViewVariables]
-        private GasFilterWindow? _window;
+        private KsTguiGasFilterWindow /* KS14: GasFilterWindow -> KsTguiGasFilterWindow, tgui port */? _window;
 
         public GasFilterBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -29,7 +30,7 @@ namespace Content.Client.Atmos.UI
 
             var atmosSystem = EntMan.System<AtmosphereSystem>();
 
-            _window = this.CreateWindow<GasFilterWindow>();
+            _window = this.CreateWindow<KsTguiGasFilterWindow /* KS14: GasFilterWindow -> KsTguiGasFilterWindow */>();
             _window.PopulateGasList(atmosSystem.Gases);
 
             _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;

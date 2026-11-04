@@ -1,0 +1,30 @@
+<tgui:KsTguiWindow xmlns="https://spacestation14.io"
+                   xmlns:tgui="clr-namespace:Content.Client._KS14.UserInterface.Tgui"
+                   SetSize="400 235"
+                   MinSize="400 235"
+                   Title="{Loc 'comp-space-heater-ui-title'}">
+    <tgui:KsTguiSection Title="{Loc 'ks-tgui-atmos-heater-power'}">
+        <tgui:KsTguiSectionButtons>
+            <tgui:KsTguiButton Name="PowerButton"/>
+        </tgui:KsTguiSectionButtons>
+        <tgui:KsTguiLabeledList>
+            <tgui:KsTguiLabeledListItem Name="PowerLevelRow"
+                                        Label="{Loc 'ks-tgui-atmos-heater-power-level'}"
+                                        SeparationOverride="2"/>
+        </tgui:KsTguiLabeledList>
+    </tgui:KsTguiSection>
+    <tgui:KsTguiSection Title="{Loc 'ks-tgui-atmos-heater-thermostat'}"
+                        VerticalExpand="True">
+        <tgui:KsTguiLabeledList>
+            <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-atmos-heater-target'}">
+                <tgui:KsTguiNumberInput Name="TargetInput"
+                                        SetWidth="65"
+                                        StepPixelSize="4"
+                                        Unit="{Loc 'ks-tgui-unit-celsius'}"/>
+            </tgui:KsTguiLabeledListItem>
+            <tgui:KsTguiLabeledListItem Name="ModeRow"
+                                        Label="{Loc 'ks-tgui-atmos-heater-mode'}"
+                                        SeparationOverride="2"/>
+        </tgui:KsTguiLabeledList>
+    </tgui:KsTguiSection>
+</tgui:KsTguiWindow>

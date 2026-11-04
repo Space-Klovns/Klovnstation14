@@ -1,0 +1,125 @@
+<tgui:KsTguiWindow xmlns="https://spacestation14.io"
+                   xmlns:tgui="clr-namespace:Content.Client._KS14.UserInterface.Tgui"
+                   SetSize="620 700"
+                   MinSize="560 400"
+                   Title="{Loc 'chem-master-bound-user-interface-title'}">
+    <ScrollContainer HScrollEnabled="False"
+                     VerticalExpand="True">
+        <BoxContainer Orientation="Vertical"
+                      HorizontalExpand="True"
+                      SeparationOverride="6">
+            <tgui:KsTguiSection Title="{Loc 'ks-tgui-chem-master-beaker'}">
+                <tgui:KsTguiSectionButtons>
+                    <tgui:KsTguiLabel Name="InputVolumeLabel"
+                                      Tone="Label"
+                                      Margin="0 0 6 0"/>
+                    <tgui:KsTguiButton Name="ValveButton"
+                                       Access="Public"
+                                       Icon="Faucet"/>
+                    <tgui:KsTguiButton Name="InputEjectButton"
+                                       Access="Public"
+                                       Icon="Eject"
+                                       Text="{Loc 'ks-tgui-eject'}"/>
+                </tgui:KsTguiSectionButtons>
+                <BoxContainer Name="InputContainerInfo"
+                              Orientation="Vertical"
+                              SeparationOverride="2"/>
+            </tgui:KsTguiSection>
+            <tgui:KsTguiSection Title="{Loc 'ks-tgui-chem-master-buffer'}">
+                <tgui:KsTguiSectionButtons>
+                    <tgui:KsTguiLabel Name="BufferVolumeLabel"
+                                      Tone="Label"
+                                      Margin="0 0 6 0"/>
+                    <tgui:KsTguiButton Name="BufferSortButton"
+                                       Access="Public"
+                                       Icon="Sort"/>
+                    <!-- One of these shows at a time: the current mode, which switches to the other when pressed. -->
+                    <tgui:KsTguiButton Name="BufferTransferButton"
+                                       Access="Public"
+                                       Icon="Trash"
+                                       ButtonColor="Bad"
+                                       Text="{Loc 'ks-tgui-chem-master-destroying'}"/>
+                    <tgui:KsTguiButton Name="BufferDiscardButton"
+                                       Access="Public"
+                                       Icon="Exchange"
+                                       ButtonColor="Good"
+                                       Text="{Loc 'ks-tgui-chem-master-moving'}"/>
+                </tgui:KsTguiSectionButtons>
+                <BoxContainer Name="BufferInfo"
+                              Orientation="Vertical"
+                              SeparationOverride="2"/>
+            </tgui:KsTguiSection>
+            <tgui:KsTguiSection Title="{Loc 'ks-tgui-chem-master-packaging'}">
+                <tgui:KsTguiSectionButtons>
+                    <tgui:KsTguiButton Name="OutputEjectButton"
+                                       Access="Public"
+                                       Icon="Eject"
+                                       Text="{Loc 'ks-tgui-eject'}"/>
+                </tgui:KsTguiSectionButtons>
+                <tgui:KsTguiLabeledList>
+                    <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-master-container'}">
+                        <BoxContainer Name="OutputContainerInfo"
+                                      Orientation="Vertical"
+                                      HorizontalExpand="True"
+                                      SeparationOverride="2"/>
+                    </tgui:KsTguiLabeledListItem>
+                    <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-master-draw-from'}">
+                        <tgui:KsTguiButton Name="OutputBufferDraw"
+                                           Access="Public"
+                                           Text="{Loc 'ks-tgui-chem-master-draw-buffer'}"/>
+                        <tgui:KsTguiButton Name="OutputBeakerDraw"
+                                           Access="Public"
+                                           Text="{Loc 'ks-tgui-chem-master-draw-beaker'}"/>
+                        <tgui:KsTguiLabel Name="BufferCurrentVolume"
+                                          Tone="Label"
+                                          Margin="4 0 0 0"/>
+                    </tgui:KsTguiLabeledListItem>
+                    <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-master-label'}">
+                        <tgui:KsTguiInput Name="LabelLineEdit"
+                                          HorizontalExpand="True"/>
+                    </tgui:KsTguiLabeledListItem>
+                    <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-master-pill-type'}">
+                        <GridContainer Name="Grid"
+                                       Columns="10"
+                                       HSeparationOverride="2"
+                                       VSeparationOverride="2"/>
+                    </tgui:KsTguiLabeledListItem>
+                    <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-master-pills'}">
+                        <tgui:KsTguiNumberInput Name="PillNumber"
+                                                Access="Public"
+                                                SetWidth="80"
+                                                Step="1"
+                                                StepPixelSize="4"
+                                                ToolTip="{Loc 'ks-tgui-chem-master-count'}"
+                                                Unit="{Loc 'ks-tgui-unit-pills'}"/>
+                        <tgui:KsTguiNumberInput Name="PillDosage"
+                                                Access="Public"
+                                                SetWidth="60"
+                                                Step="1"
+                                                StepPixelSize="4"
+                                                MinValue="1"
+                                                ToolTip="{Loc 'ks-tgui-chem-master-dose'}"
+                                                Unit="{Loc 'ks-tgui-unit-reagent'}"/>
+                        <tgui:KsTguiButton Name="CreatePillButton"
+                                           Access="Public"
+                                           Icon="Flask"
+                                           Text="{Loc 'ks-tgui-chem-master-create'}"/>
+                    </tgui:KsTguiLabeledListItem>
+                    <tgui:KsTguiLabeledListItem Label="{Loc 'ks-tgui-chem-master-bottle'}">
+                        <tgui:KsTguiNumberInput Name="BottleDosage"
+                                                Access="Public"
+                                                SetWidth="60"
+                                                Step="1"
+                                                StepPixelSize="4"
+                                                ToolTip="{Loc 'ks-tgui-chem-master-dose'}"
+                                                Unit="{Loc 'ks-tgui-unit-reagent'}"/>
+                        <tgui:KsTguiButton Name="CreateBottleButton"
+                                           Access="Public"
+                                           Icon="Flask"
+                                           Text="{Loc 'ks-tgui-chem-master-create'}"/>
+                    </tgui:KsTguiLabeledListItem>
+                </tgui:KsTguiLabeledList>
+            </tgui:KsTguiSection>
+        </BoxContainer>
+    </ScrollContainer>
+</tgui:KsTguiWindow>

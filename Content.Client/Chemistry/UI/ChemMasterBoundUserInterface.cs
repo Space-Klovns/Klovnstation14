@@ -1,3 +1,4 @@
+using Content.Client._KS14.Chemistry.UI; // KS14
 using Content.Shared.Chemistry;
 using Content.Shared.Containers.ItemSlots;
 using JetBrains.Annotations;
@@ -13,7 +14,7 @@ namespace Content.Client.Chemistry.UI
     public sealed partial class ChemMasterBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private ChemMasterWindow? _window;
+        private KsTguiChemMasterWindow /* KS14: ChemMasterWindow -> KsTguiChemMasterWindow, tgui port */? _window;
 
         public ChemMasterBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -28,7 +29,7 @@ namespace Content.Client.Chemistry.UI
             base.Open();
 
             // Setup window layout/elements
-            _window = this.CreateWindow<ChemMasterWindow>();
+            _window = this.CreateWindow<KsTguiChemMasterWindow /* KS14: ChemMasterWindow -> KsTguiChemMasterWindow */>();
             _window.Title = EntMan.GetComponent<MetaDataComponent>(Owner).EntityName;
 
             // Setup static button actions.
