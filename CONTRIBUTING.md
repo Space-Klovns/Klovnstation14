@@ -983,6 +983,41 @@ several tests, a failed `GameTest` can show as `Skipped` or `NotExecuted`, with 
 trx and the console. Treat that as a failure. Rerun that test alone with `--logger "console;verbosity=detailed"` to see
 the assertion that actually failed.
 
+### Mechanism tests use their own prototypes
+
+**YAML is the prime vector for balance and gameplay tweaks in this codebase.** Prototype values, reagent properties and
+map layouts exist to be changed, often, by people who aren't thinking about tests and shouldn't have to. So treat live
+YAML as something that moves under your test: a test that leans on it turns an ordinary tweak into a failure with no bug
+present.
+
+A test either proves that a *mechanism* works or that *content* is right, and the two take different data. Decide which
+one you're writing before you pick a prototype.
+
+| | Mechanism test | Content test |
+| --- | --- | --- |
+| Proves | The system does what it says, whatever it is given | This real prototype, map or chain is set up as designed |
+| Data | `[TestPrototypes]`, with whatever numbers suit the test | Live prototypes, with every number derived (next entry) |
+| Example | "A catalysed reaction runs only in a reactor holding its catalyst" (`KsCatalyticReactorTests`) | "Sulfur must be removed before reforming" (`KsRefineryReactionTests`) |
+
+- **Default to a mechanism test.** Most tests are, and a test reagent or entity is a few lines of YAML in the test. Spawning
+  a real machine to exercise it is fine: the machine is the subject. Its feed, catalyst and temperatures are what should be
+  the test's own.
+- **Rely on what already enforces a behaviour.** Before adding a test, find out what fails today if that behaviour breaks.
+  A behaviour needs one test that catches it, not one for every feature that happens to use it. A new feature built on a
+  tested system tests only what it adds. "My reagent also boils" is the boiling test's job.
+- **Generalize instead of adding a case.** If what you're adding is another instance of something already tested, extend
+  that test to cover the whole kind rather than copying it for one more name. A test named after a feature that really
+  exercises something generic should lose the feature's name and data. A hardcoded list of ids is the usual sign: walk
+  whatever defines the kind, so new ones are covered without touching the test. `KsRpdPipeLayerTests` walks the RPD's own
+  settings and so covers every layered device, upstream's included.
+- **Assert what a thing does, not how its prototype is written.** Testing prototypes is fine, and content tests exist to do
+  it. What adds nothing is checking a prototype against a copy of itself: "this entity has this component", "this field is
+  this value". Such a test fails only when someone changes that on purpose, which is the tweak this section is about. Check
+  the behaviour instead, such as a mob being stopped by the machine, or leave it out. The YAML linter and
+  `UninitializedSaveTest` already catch malformed prototypes.
+- **Content tests find things by what they are**, not by id, coordinates or count, and assert the design rather than a
+  yield. `KsRefineryGridTests` takes the tank holding the most bitumen as the residue, rather than the one at a given tile.
+
 ### A test bound to today's tuning breaks on the next balance pass
 
 A test that copies a prototype's numbers into itself (a loop count, a wait, a threshold) is checking those numbers, not
