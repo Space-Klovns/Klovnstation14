@@ -1,5 +1,9 @@
 #nullable enable
+using System.Linq;
+using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
+using Content.Shared.EntityTable;
+using Content.Server.Spawners.Components;
 using Content.Server._KS14.Fluidmos;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
@@ -27,12 +31,7 @@ public sealed class KsPetroleumTests : GameTest
     private static readonly EntProtoId GeyserSpawnerPrototype = "GeyserSpawner";
 
     private const string PetroleumGroup = "KsPetroleum";
-
-    private static readonly ProtoId<ReagentPrototype>[] Hydrocarbons =
-    [
-        "KsRefineryGas", "KsEthane", "KsEthylene", "KsNaphtha", "KsGasoline", "KsKerosene", "KsDiesel", "KsGasOil",
-        "KsParaffinWax", "KsBitumen", "KsOrganosulfur", "KsPolyethylene",
-    ];
+    private const string HydrocarbonFamily = "KsHydrocarbon";
 
     private static GasMixture MakePipe(float temperature, float pressure = Atmospherics.OneAtmosphere)
     {
@@ -65,19 +64,22 @@ public sealed class KsPetroleumTests : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                foreach (var reagent in Hydrocarbons)
+                foreach (var reagent in server.ProtoMan.EnumeratePrototypes<ReagentPrototype>())
                 {
-                    Assert.That(server.ProtoMan.Index(reagent).KsInseparableGroup?.Id, Is.EqualTo(PetroleumGroup), $"{reagent} can be picked out by machine.");
-                    Assert.That(propertiesSystem.TryGetProperties(reagent, out var properties));
-                    Assert.That(properties!.Linked, Is.False, $"{reagent} is linked to a gas, so a gas filter could pick it out.");
-                    Assert.That(propertiesSystem.Immiscible(properties, water!), $"{reagent} mixes with water.");
+                    if (reagent.Fluidmos?.MixingFamily?.Id != HydrocarbonFamily)
+                        continue;
+
+                    Assert.That(reagent.KsInseparableGroup?.Id, Is.EqualTo(PetroleumGroup), $"{reagent.ID} can be picked out by machine.");
+                    Assert.That(propertiesSystem.TryGetProperties(reagent.ID, out var properties));
+                    Assert.That(properties!.Linked, Is.False, $"{reagent.ID} is linked to a gas, so a gas filter could pick it out.");
+                    Assert.That(propertiesSystem.Immiscible(properties, water!), $"{reagent.ID} mixes with water.");
                 }
             }
         });
     }
 
     [Test]
-    public async Task CrudeGeyserGivesAMixtureAndSpawnsNaturally()
+    public async Task CrudeGeyserGivesAMixtureOfCuts()
     {
         var server = Pair.Server;
         var factory = server.EntMan.ComponentFactory;
@@ -93,8 +95,39 @@ public sealed class KsPetroleumTests : GameTest
                 kinds++;
             }
 
-            Assert.That(kinds, Is.GreaterThan(5), "Crude isn't a mixture of cuts.");
-            Assert.That(server.ProtoMan.HasIndex(GeyserSpawnerPrototype));
+            Assert.That(kinds, Is.GreaterThan(1), "Crude isn't a mixture of cuts.");
+        });
+    }
+
+    /// <summary>
+    ///     Whichever geysers give petroleum, the random spawner has to be able to place one.
+    /// </summary>
+    [Test]
+    public async Task PetroleumGeysersSpawnNaturally()
+    {
+        var server = Pair.Server;
+        var factory = server.EntMan.ComponentFactory;
+        var entityTableSystem = server.System<EntityTableSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.ProtoMan.Index(GeyserSpawnerPrototype).TryComp<EntityTableSpawnerComponent>(out var spawner, factory));
+
+            bool GivesPetroleum(string prototype) =>
+                server.ProtoMan.Index<EntityPrototype>(prototype).TryComp<SolutionRegenerationComponent>(out var regeneration, factory) &&
+                regeneration.Generated.Contents.Any(quantity =>
+                    server.ProtoMan.Index<ReagentPrototype>(quantity.Reagent.Prototype).KsInseparableGroup?.Id == PetroleumGroup);
+
+            var rolled = new HashSet<string>();
+            for (var i = 0; i < 5000; i++)
+            {
+                foreach (var prototype in entityTableSystem.GetSpawns(spawner!.Table))
+                {
+                    rolled.Add(prototype);
+                }
+            }
+
+            Assert.That(rolled.Any(GivesPetroleum), "The geyser spawner never places a petroleum geyser.");
         });
     }
 

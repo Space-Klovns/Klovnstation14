@@ -35,6 +35,12 @@ namespace Content.IntegrationTests.Tests._KS14.Fluidmos;
 [TestOf(typeof(KsCatalyticReactorSystem))]
 public sealed class KsRefineryGridTests : GameTest
 {
+    /// <summary>
+    ///     How far a working train has to have moved a cut from crude. Light ends flash off unheated pipe, so any difference
+    ///         at all would pass with the stills doing nothing.
+    /// </summary>
+    private const float MinimumEnrichment = 2f;
+
     public override PoolSettings PoolSettings => new() { Connected = false, Dirty = true };
 
     private static readonly ResPath GridPath = new("/Maps/_KS14/Grids/refinery.yml");
@@ -141,8 +147,8 @@ public sealed class KsRefineryGridTests : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(unpowered, Is.Empty, "Something on the refinery has no power.");
-                Assert.That(Share(residue!, BitumenReagent), Is.GreaterThan(crudeBitumenShare), "No tank is richer in bitumen than crude is, so the stills split nothing.");
-                Assert.That(Share(residue!, NaphthaReagent), Is.LessThan(crudeNaphthaShare), "The heaviest cut holds as much naphtha as crude does.");
+                Assert.That(Share(residue!, BitumenReagent), Is.GreaterThan(crudeBitumenShare * MinimumEnrichment), "The heaviest tank isn't much richer in bitumen than crude is, so the stills barely split anything.");
+                Assert.That(Share(residue!, NaphthaReagent), Is.LessThan(crudeNaphthaShare / MinimumEnrichment), "The heaviest cut still holds nearly as much naphtha as crude does.");
                 Assert.That(gasoline, Is.GreaterThan(0f), "The reformer made no gasoline.");
                 Assert.That(hydrogenMoles, Is.GreaterThan(0f), "No hydrogen gas reached a canister.");
             }

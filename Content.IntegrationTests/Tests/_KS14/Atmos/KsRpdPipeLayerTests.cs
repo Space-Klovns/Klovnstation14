@@ -30,23 +30,49 @@ public sealed class KsRpdPipeLayerTests : GameTest
 
     private static readonly AtmosPipeLayer[] Layers = [AtmosPipeLayer.Primary, AtmosPipeLayer.Secondary, AtmosPipeLayer.Tertiary];
 
+    /// <summary>
+    ///     Upstream devices that take a layer but name no variants, so the RPD builds them on the primary one. Only ever
+    ///         take from this: anything of ours gets its variants instead.
+    /// </summary>
+    private static readonly HashSet<string> PrimaryOnly =
+    [
+        "GasDualPortVentPump",
+        "GasFilter",
+        "GasMixer",
+        "GasOutletInjector",
+        "GasPassiveVent",
+        "GasPort",
+        "GasVentPump",
+        "GasVentScrubber",
+        "MolarMixer",
+        "PressureControlledValve",
+    ];
+
     private List<EntProtoId> LayeredDevices()
     {
         var server = Pair.Server;
         var factory = server.EntMan.ComponentFactory;
         Assert.That(server.ProtoMan.Index(RpdPrototype).TryGetComponent<RCDComponent>(out var rpd, factory), "The RPD has no RCD component.");
 
-        // Some settings take a layer but name no variants, and the RPD then builds them on the primary one, so only those
-        //     that name them have anything to prove.
-        var devices = rpd!.AvailablePrototypes
+        var layered = rpd!.AvailablePrototypes
             .Select(setting => server.ProtoMan.Index(setting))
             .Where(setting => setting.HasLayers && setting.Prototype != null)
             .Select(setting => new EntProtoId(setting.Prototype!))
             .Distinct()
-            .Where(device => server.ProtoMan.Index(device).TryGetComponent<AtmosPipeLayersComponent>(out var pipeLayers, factory) &&
-                             pipeLayers.AlternativePrototypes.Count > 0)
             .ToList();
 
+        bool HasVariants(EntProtoId device) =>
+            server.ProtoMan.Index(device).TryGetComponent<AtmosPipeLayersComponent>(out var pipeLayers, factory) &&
+            pipeLayers.AlternativePrototypes.Count > 0;
+
+        var withoutVariants = layered.Where(device => !HasVariants(device)).Select(device => device.Id).ToHashSet();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(withoutVariants.Except(PrimaryOnly), Is.Empty, "These take a layer on the RPD but name no layer variants.");
+            Assert.That(PrimaryOnly.Except(withoutVariants), Is.Empty, "These have variants now, so take them off the list.");
+        }
+
+        var devices = layered.Where(HasVariants).ToList();
         Assert.That(devices, Is.Not.Empty, "The RPD offers nothing on layers.");
         return devices;
     }
@@ -130,6 +156,7 @@ public sealed class KsRpdPipeLayerTests : GameTest
         await server.WaitAssertion(() =>
         {
             var nodeContainerSystem = server.System<NodeContainerSystem>();
+            var checkedDevices = 0;
             using (Assert.EnterMultipleScope())
             {
                 foreach (var (name, deviceUid, sameLayerPipe, otherLayerPipe) in placed)
@@ -145,8 +172,11 @@ public sealed class KsRpdPipeLayerTests : GameTest
                     Assert.That(nodeContainerSystem.TryGetNode(otherLayerPipe, "pipe", out PipeNode? otherNode));
                     Assert.That(deviceNode.NodeGroup, Is.SameAs(sameNode!.NodeGroup), $"{name} didn't join the pipe on its own layer.");
                     Assert.That(deviceNode.NodeGroup, Is.Not.SameAs(otherNode!.NodeGroup), $"{name} joined a pipe on another layer.");
+                    checkedDevices++;
                 }
             }
+
+            Assert.That(checkedDevices, Is.GreaterThan(0), "No device reached the pipes laid for it, so this proved nothing.");
         });
     }
 }

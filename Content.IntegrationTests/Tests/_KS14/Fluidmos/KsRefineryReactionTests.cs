@@ -43,7 +43,9 @@ public sealed class KsRefineryReactionTests : GameTest
 
     private static KsFluidAmount Amount(GasMixture mixture, ProtoId<ReagentPrototype> reagent)
     {
-        mixture.Fluid!.TryGetAmount(new KsFluidReagentKey(reagent, null), out var amount);
+        // A mixture with nothing left in it has no fluid at all.
+        var amount = default(KsFluidAmount);
+        mixture.Fluid?.TryGetAmount(new KsFluidReagentKey(reagent, null), out amount);
         return amount;
     }
 
@@ -131,7 +133,7 @@ public sealed class KsRefineryReactionTests : GameTest
     }
 
     [Test]
-    public async Task ResidueCokesAtOneAtmosphereButBoilsBelowThatUnderVacuum()
+    public async Task GasOilCokesUnderPressureButBoilsFirstUnderVacuum()
     {
         var server = Pair.Server;
         var phaseSystem = server.System<KsFluidmosPhaseSystem>();
@@ -144,8 +146,8 @@ public sealed class KsRefineryReactionTests : GameTest
             var reaction = server.ProtoMan.Index(ThermalCrackingReaction);
 
             var atmospheric = KsPhaseMath.BoilingPointAt(gasOil!.VaporizationEntropy, gasOil.BoilingPoint, Atmospherics.OneAtmosphere);
-            var vacuum = KsPhaseMath.BoilingPointAt(gasOil.VaporizationEntropy, gasOil.BoilingPoint, 10f);
 
+            var boiledUnits = 0f;
             var temperature = reaction.ReferenceTemperature;
             var mixture = new GasMixture(200f) { Temperature = temperature, FluidCapable = true, Fluid = new KsFluidMixture() };
             mixture.AdjustMoles(Gas.Nitrogen, 500f * mixture.Volume / (Atmospherics.R * temperature));
@@ -160,11 +162,32 @@ public sealed class KsRefineryReactionTests : GameTest
                 phaseSystem.UpdatePhases(mixture, holder: null);
             }
 
+            // Just short of cracking, under a vacuum pump.
+            var vacuumTemperature = reaction.MinTemp - 5f;
+            var evacuated = new GasMixture(200f) { Temperature = vacuumTemperature, FluidCapable = true, Fluid = new KsFluidMixture() };
+            evacuated.AdjustMoles(Gas.Nitrogen, 0.5f * evacuated.Volume / (Atmospherics.R * vacuumTemperature));
+            evacuated.Fluid.AddLiquid(new KsFluidReagentKey(GasOilReagent, null), 200f);
+            for (var i = 0; i < 20 && evacuated.Fluid != null; i++)
+            {
+                evacuated.Temperature = vacuumTemperature;
+                evacuated.Fluid!.LastPhaseTime = gameTiming.CurTime - TimeSpan.FromSeconds(0.5f);
+                phaseSystem.UpdatePhases(evacuated, holder: null);
+                if (evacuated.Fluid == null)
+                    break;
+
+                // The pump: whatever boiled leaves, so the pressure never builds.
+                evacuated.Fluid.TryGetAmount(new KsFluidReagentKey(GasOilReagent, null), out var boiling);
+                boiledUnits += boiling.Vapor / gasOil.MolesPerUnit;
+                boiling.Vapor = 0f;
+                evacuated.Fluid.SetAmount(new KsFluidReagentKey(GasOilReagent, null), boiling);
+            }
+
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(atmospheric, Is.GreaterThan(reaction.MinTemp), "Gas oil boils at one atmosphere before it cracks, so vacuum isn't needed.");
-                Assert.That(vacuum, Is.LessThan(reaction.MinTemp), "Gas oil doesn't boil under vacuum before it cracks.");
                 Assert.That(Amount(mixture, CokeReagent).Solid, Is.GreaterThan(0f), "Overheated gas oil didn't coke.");
+                Assert.That(boiledUnits, Is.GreaterThan(1f), "Gas oil under vacuum didn't boil short of cracking.");
+                Assert.That(Amount(evacuated, CokeReagent).Solid, Is.Zero, "Gas oil coked short of its cracking temperature.");
             }
         });
     }
