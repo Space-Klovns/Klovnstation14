@@ -7,6 +7,8 @@ using Content.Shared.Atmos.Components;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Examine;
 
+using Content.Shared.Atmos.Piping.Components;
+
 namespace Content.Server._KS14.Fluidmos.Devices;
 
 /// <summary>
@@ -26,6 +28,12 @@ public sealed partial class KsCatalyticReactorSystem : EntitySystem
     private void OnDeviceUpdate(Entity<KsCatalyticReactorComponent> entity, ref AtmosDeviceUpdateEvent args)
     {
         SetReacting(entity, React(entity, args.dt));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnDeviceDisabled(Entity<KsCatalyticReactorComponent> entity, ref AtmosDeviceDisabledEvent args)
+    {
+        SetReacting(entity, false);
     }
 
     private bool React(Entity<KsCatalyticReactorComponent> entity, float deltaTime)

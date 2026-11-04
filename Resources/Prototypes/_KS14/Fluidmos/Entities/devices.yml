@@ -292,11 +292,11 @@
         damage: 100
       behaviors:
       - !type:EmptyAllContainersBehaviour
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
       - !type:PlaySoundBehavior
         sound:
           collection: MetalBreak
+      - !type:DoActsBehavior # Breakage, as on a pipe, is what leaks the net; it deletes the reactor too.
+        acts: [ "Breakage" ]
   - type: RCDDeconstructable
     cost: 1
     delay: 2

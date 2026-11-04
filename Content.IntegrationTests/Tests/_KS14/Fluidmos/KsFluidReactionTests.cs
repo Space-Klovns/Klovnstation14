@@ -4,6 +4,7 @@ using Content.Server._KS14.Fluidmos;
 using Content.Server._KS14.Fluidmos.Reactions;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Fluidmos;
+using Content.Shared._KS14.Fluidmos.Reactions;
 using Content.Shared.Atmos;
 using Content.Shared.Chemistry.Reagent;
 using Robust.Shared.Prototypes;
@@ -88,6 +89,109 @@ public sealed class KsFluidReactionTests : GameTest
   referenceTemperature: 700
   minPartialPressure:
     Oxygen: 50
+
+- type: reagent
+  id: KsTestReactionWindowFeed
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+
+- type: reagent
+  id: KsTestReactionSteamFeed
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+
+- type: reagent
+  id: KsTestReactionHeavyFeed
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+
+- type: reagent
+  id: KsTestReactionGasFeed
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+
+- type: reagent
+  id: KsTestReactionTraceFeed
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+
+- type: reagent
+  id: KsTestReactionTraceProduct
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+
+- type: ksFluidReaction
+  id: KsTestWindowReaction
+  reactants:
+    KsTestReactionWindowFeed: { amount: 1, phase: Liquid }
+  products:
+    KsTestReactionProduct: { amount: 1, phase: Liquid }
+  minTemp: 600
+  maxTemp: 800
+  rate: 0.5
+  referenceTemperature: 700
+
+- type: ksFluidReaction
+  id: KsTestSteamReaction
+  catalystReagent: KsTestReactionProduct
+  catalystReagentUnits: 5
+  reactants:
+    KsTestReactionSteamFeed: { amount: 1, phase: Liquid }
+  products:
+    KsTestReactionTraceProduct: { amount: 1, phase: Liquid }
+  minTemp: 600
+  rate: 0.5
+  referenceTemperature: 700
+
+- type: ksFluidReaction
+  id: KsTestViolentReaction
+  reactants:
+    KsTestReactionHeavyFeed: { amount: 1, phase: Liquid }
+  products:
+    KsTestReactionProduct: { amount: 1, phase: Liquid }
+  minTemp: 600
+  rate: 5
+  referenceTemperature: 700
+  enthalpy: 50000
+
+- type: ksFluidReaction
+  id: KsTestGasMakingReaction
+  reactants:
+    KsTestReactionGasFeed: { amount: 1, phase: Liquid }
+  products:
+    Hydrogen: { amount: 1, phase: Vapor }
+  minTemp: 600
+  rate: 5
+  referenceTemperature: 700
+
+- type: ksFluidReaction
+  id: KsTestTraceReaction
+  reactants:
+    KsTestReactionTraceFeed: { amount: 1, phase: Liquid }
+  products:
+    KsTestReactionProduct: { amount: 0.999, phase: Liquid }
+    KsTestReactionTraceProduct: { amount: 0.001, phase: Liquid }
+  minTemp: 600
+  rate: 0.5
+  referenceTemperature: 700
 ";
 
     // Instance fields: these ids exist only in the test prototypes above.
@@ -95,6 +199,12 @@ public sealed class KsFluidReactionTests : GameTest
     private readonly ProtoId<ReagentPrototype> _exoFeedReagent = "KsTestReactionExoFeed";
     private readonly ProtoId<ReagentPrototype> _gatedFeedReagent = "KsTestReactionGatedFeed";
     private readonly ProtoId<ReagentPrototype> _productReagent = "KsTestReactionProduct";
+    private readonly ProtoId<ReagentPrototype> _windowFeedReagent = "KsTestReactionWindowFeed";
+    private readonly ProtoId<ReagentPrototype> _steamFeedReagent = "KsTestReactionSteamFeed";
+    private readonly ProtoId<ReagentPrototype> _heavyFeedReagent = "KsTestReactionHeavyFeed";
+    private readonly ProtoId<ReagentPrototype> _gasFeedReagent = "KsTestReactionGasFeed";
+    private readonly ProtoId<ReagentPrototype> _traceFeedReagent = "KsTestReactionTraceFeed";
+    private readonly ProtoId<ReagentPrototype> _traceProductReagent = "KsTestReactionTraceProduct";
 
     private const float NodeVolume = 200f;
     private const float StepSeconds = 0.5f;
@@ -195,11 +305,227 @@ public sealed class KsFluidReactionTests : GameTest
                 Assert.That(exothermicExtent, Is.GreaterThan(0f));
                 Assert.That(endothermic.Temperature, Is.LessThan(startTemperature), "An endothermic reaction did not cool its mixture.");
                 Assert.That(exothermic.Temperature, Is.GreaterThan(startTemperature), "An exothermic reaction did not heat its mixture.");
-                Assert.That(endothermicAfter, Is.EqualTo(endothermicEnergy).Within(endothermicEnergy * 0.01f), "The endothermic reaction did not conserve energy.");
-                Assert.That(exothermicAfter, Is.EqualTo(exothermicEnergy).Within(exothermicEnergy * 0.01f), "The exothermic reaction did not conserve energy.");
-                Assert.That(endothermic.Temperature, Is.GreaterThanOrEqualTo(startTemperature - KsFluidReactionSystem.MaxReactionDeltaT - 0.01f),
-                    "One reaction step moved the temperature past its cap.");
+                // Against the heat the reaction moved, which is far smaller than the mixture's whole energy.
+                Assert.That(endothermicAfter, Is.EqualTo(endothermicEnergy).Within(enthalpy * endothermicExtent * 0.05f), "The endothermic reaction did not conserve energy.");
+                Assert.That(exothermicAfter, Is.EqualTo(exothermicEnergy).Within(enthalpy * exothermicExtent * 0.05f), "The exothermic reaction did not conserve energy.");
             }
+        });
+    }
+
+    /// <summary>
+    ///     The first with far more heat than the cap allows, and the second with none, moving the temperature only by
+    ///         what it does to the heat capacity.
+    /// </summary>
+    [Test]
+    public async Task OneStepNeverMovesTheTemperaturePastTheCap()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            const float startTemperature = 700f;
+            var violent = MakePipe(startTemperature);
+            violent.Fluid!.AddLiquid(new KsFluidReagentKey(_heavyFeedReagent, null), 100f);
+            var gasMaking = MakePipe(startTemperature);
+            gasMaking.Fluid!.AddLiquid(new KsFluidReagentKey(_gasFeedReagent, null), 100f);
+
+            Step(phaseSystem, gameTiming, violent);
+            Step(phaseSystem, gameTiming, gasMaking);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Liquid(violent, _productReagent), Is.GreaterThan(0f));
+                Assert.That(gasMaking.GetMoles(Gas.Hydrogen), Is.GreaterThan(0f));
+                Assert.That(startTemperature - violent.Temperature, Is.LessThanOrEqualTo(KsFluidReactionSystem.MaxReactionDeltaT + 0.01f),
+                    "A strongly endothermic step passed the cap.");
+                Assert.That(MathF.Abs(startTemperature - gasMaking.Temperature), Is.LessThanOrEqualTo(KsFluidReactionSystem.MaxReactionDeltaT + 0.01f),
+                    "A step that raises the heat capacity passed the cap.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task RateFollowsArrheniusAroundItsReferenceTemperature()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+        var reaction = server.ProtoMan.Index<KsFluidReactionPrototype>("KsTestEndothermicReaction");
+
+        await server.WaitAssertion(() =>
+        {
+            float Extent(float temperature)
+            {
+                var pipe = MakePipe(temperature);
+                pipe.Fluid!.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 100f);
+                Step(phaseSystem, gameTiming, pipe);
+                return Liquid(pipe, _productReagent);
+            }
+
+            float Expected(float temperature)
+            {
+                var rate = reaction.Rate * MathF.Exp(reaction.ActivationTemperature * (1f / reaction.ReferenceTemperature - 1f / temperature));
+                return 100f * (1f - MathF.Exp(-rate * 0.5f));
+            }
+
+            var below = reaction.ReferenceTemperature - 50f;
+            var above = reaction.ReferenceTemperature + 50f;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Extent(below), Is.EqualTo(Expected(below)).Within(Expected(below) * 0.05f), "Below its reference temperature it ran at the wrong rate.");
+                Assert.That(Extent(above), Is.EqualTo(Expected(above)).Within(Expected(above) * 0.05f), "Above its reference temperature it ran at the wrong rate.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task StopsAboveItsMaximumTemperature()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            var inside = MakePipe(700f);
+            inside.Fluid!.AddLiquid(new KsFluidReagentKey(_windowFeedReagent, null), 100f);
+            var above = MakePipe(900f);
+            above.Fluid!.AddLiquid(new KsFluidReagentKey(_windowFeedReagent, null), 100f);
+
+            Step(phaseSystem, gameTiming, inside);
+            Step(phaseSystem, gameTiming, above);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Liquid(inside, _productReagent), Is.GreaterThan(0f), "It didn't run inside its window.");
+                Assert.That(Liquid(above, _productReagent), Is.Zero, "It ran above its maximum temperature.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task NeedsItsCatalystReagentAndKeepsIt()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            const float catalystUnits = 10f;
+            var without = MakePipe(700f);
+            without.Fluid!.AddLiquid(new KsFluidReagentKey(_steamFeedReagent, null), 100f);
+            var with = MakePipe(700f);
+            with.Fluid!.AddLiquid(new KsFluidReagentKey(_steamFeedReagent, null), 100f);
+            with.Fluid.AddLiquid(new KsFluidReagentKey(_productReagent, null), catalystUnits);
+
+            Step(phaseSystem, gameTiming, without);
+            Step(phaseSystem, gameTiming, with);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Liquid(without, _traceProductReagent), Is.Zero, "It ran without its catalyst reagent.");
+                Assert.That(Liquid(with, _traceProductReagent), Is.GreaterThan(0f), "It didn't run with its catalyst reagent.");
+                Assert.That(Liquid(with, _productReagent), Is.EqualTo(catalystUnits).Within(0.001f), "Its catalyst reagent was used up.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     What a reaction might do is worked out once and kept, so a reagent arriving later has to refresh that.
+    /// </summary>
+    [Test]
+    public async Task AReactantArrivingLaterStillReacts()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            var pipe = MakePipe(700f);
+            pipe.Fluid!.AddLiquid(new KsFluidReagentKey(_productReagent, null), 10f);
+            Step(phaseSystem, gameTiming, pipe);
+
+            pipe.Fluid.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 100f);
+            Step(phaseSystem, gameTiming, pipe);
+
+            Assert.That(Liquid(pipe, _feedReagent), Is.LessThan(100f), "A reactant that wasn't there at first was never picked up.");
+        });
+    }
+
+    /// <summary>
+    ///     A prototype reload replaces the reactions a mixture has cached, and those have to go even if its reagents didn't
+    ///         change.
+    /// </summary>
+    [Test]
+    public async Task ReloadedReactionsReplaceCachedOnes()
+    {
+        var server = Pair.Server;
+        await server.WaitAssertion(() =>
+        {
+            var fluid = new KsFluidMixture();
+            fluid.SetReactionCandidates([], float.PositiveInfinity, indexVersion: 1);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(fluid.ReactionCandidatesStale(1), Is.False);
+                Assert.That(fluid.ReactionCandidatesStale(2), "Cached reactions outlived a reload.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A table drops anything under its minimum, so a product too small to keep has to wait until it can be kept.
+    /// </summary>
+    [Test]
+    public async Task ATraceOfProductIsKeptRatherThanLost()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            const float feed = 3f;
+            var pipe = MakePipe(700f);
+            pipe.Fluid!.AddLiquid(new KsFluidReagentKey(_traceFeedReagent, null), feed);
+
+            for (var i = 0; i < 40; i++)
+            {
+                Step(phaseSystem, gameTiming, pipe);
+            }
+
+            var total = Liquid(pipe, _traceFeedReagent) + Liquid(pipe, _productReagent) + Liquid(pipe, _traceProductReagent);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Liquid(pipe, _traceProductReagent), Is.GreaterThan(0f), "The trace product never appeared.");
+                // Feed's last dust goes under the table's minimum, as any reagent's does; the trace product would be 0.003.
+                Assert.That(total, Is.EqualTo(feed).Within(KsFluidmos.MinLiquidUnits * 1.5f), "Mass was lost with the trace product.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task EqualMixturesHashTheSameWhateverOrderTheyFilledIn()
+    {
+        var server = Pair.Server;
+        await server.WaitAssertion(() =>
+        {
+            var forwards = new KsFluidMixture();
+            forwards.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 0.1f);
+            forwards.AddLiquid(new KsFluidReagentKey(_productReagent, null), 1000f);
+            forwards.AddLiquid(new KsFluidReagentKey(_traceFeedReagent, null), 0.2f);
+
+            var backwards = new KsFluidMixture();
+            backwards.AddLiquid(new KsFluidReagentKey(_traceFeedReagent, null), 0.2f);
+            backwards.AddLiquid(new KsFluidReagentKey(_productReagent, null), 1000f);
+            backwards.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 0.1f);
+
+            Assert.That(forwards, Is.EqualTo(backwards));
+            Assert.That(forwards.GetHashCode(), Is.EqualTo(backwards.GetHashCode()));
         });
     }
 

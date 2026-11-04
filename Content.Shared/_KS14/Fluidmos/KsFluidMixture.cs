@@ -78,6 +78,10 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
 
     [NonSerialized]
     private int _reactionKeysVersion = -1;
+    [NonSerialized]
+    private int _reactionIndexVersion;
+    [NonSerialized]
+    private Dictionary<KsFluidReactionPrototype, float>? _deferredExtents;
 
     /// <summary>
     ///     Lowest <see cref="KsFluidReactionPrototype.MinTemp"/> among the candidates: colder than this, none can run.
@@ -130,15 +134,20 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
     public int Count => Reagents.Count;
 
     /// <summary>
-    ///     Whether <see cref="SetReactionCandidates"/> needs calling again: a reagent entered or left since.
+    ///     Whether <see cref="SetReactionCandidates"/> needs calling again: a reagent entered or left since, or the
+    ///         reactions were reloaded.
     /// </summary>
-    public bool ReactionCandidatesStale => !ReferenceEquals(_reactionTable, Reagents) || _reactionKeysVersion != Reagents.KeysVersion;
+    public bool ReactionCandidatesStale(int indexVersion)
+    {
+        return !ReferenceEquals(_reactionTable, Reagents) || _reactionKeysVersion != Reagents.KeysVersion || _reactionIndexVersion != indexVersion;
+    }
 
     [ViewVariables]
     public KsFluidReactionPrototype[] ReactionCandidates => _reactionCandidates;
 
-    public void SetReactionCandidates(KsFluidReactionPrototype[] candidates, float floorTemperature)
+    public void SetReactionCandidates(KsFluidReactionPrototype[] candidates, float floorTemperature, int indexVersion)
     {
+        _reactionIndexVersion = indexVersion;
         _reactionCandidates = candidates;
         _reactionTable = Reagents;
         _reactionKeysVersion = Reagents.KeysVersion;
@@ -400,6 +409,29 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Reagents.Count, Reagents.LiquidTotal, Reagents.SolidTotal, Reagents.VaporTotal);
+        // Order-independent, as ContentEquals is. The totals can't go in: they're float sums, so they depend on the order.
+        var hash = Reagents.Count;
+        for (var i = 0; i < Reagents.Count; i++)
+        {
+            hash ^= Reagents.GetKey(i).Prototype.GetHashCode();
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    ///     Extent of a reaction too small so far to leave its products, which waits here rather than being lost.
+    /// </summary>
+    public float DeferredExtent(KsFluidReactionPrototype reaction)
+    {
+        return _deferredExtents != null && _deferredExtents.TryGetValue(reaction, out var extent) ? extent : 0f;
+    }
+
+    public void SetDeferredExtent(KsFluidReactionPrototype reaction, float extent)
+    {
+        if (extent > 0f)
+            (_deferredExtents ??= new Dictionary<KsFluidReactionPrototype, float>())[reaction] = extent;
+        else
+            _deferredExtents?.Remove(reaction);
     }
 }

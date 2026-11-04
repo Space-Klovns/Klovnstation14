@@ -66,6 +66,12 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
 
     private readonly HashSet<KsFluidReactionPrototype> _candidateScratch = new();
 
+    /// <summary>
+    ///     Which build of the index a mixture's cached candidates came from, as those hold prototype instances that a
+    ///         reload replaces.
+    /// </summary>
+    private int _indexVersion;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -82,6 +88,7 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
 
     private void RebuildIndex()
     {
+        _indexVersion++;
         var byReactant = new Dictionary<ProtoId<ReagentPrototype>, List<KsFluidReactionPrototype>>();
         var byCatalyst = new Dictionary<ProtoId<KsFluidCatalystPrototype>, List<KsFluidReactionPrototype>>();
         foreach (var reaction in ProtoMan.EnumeratePrototypes<KsFluidReactionPrototype>())
@@ -145,7 +152,7 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
     /// </summary>
     public void React(GasMixture mixture, KsFluidMixture fluid, IGasMixtureHolder? holder)
     {
-        if (fluid.ReactionCandidatesStale)
+        if (fluid.ReactionCandidatesStale(_indexVersion))
             RefreshCandidates(fluid);
 
         if (fluid.ReactionCandidates.Length == 0 || mixture.Temperature < fluid.ReactionFloorTemperature)
@@ -192,7 +199,7 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
 
         if (_candidateScratch.Count == 0)
         {
-            fluid.SetReactionCandidates([], float.PositiveInfinity);
+            fluid.SetReactionCandidates([], float.PositiveInfinity, _indexVersion);
             return;
         }
 
@@ -207,7 +214,7 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
             floor = MathF.Min(floor, reaction.MinTemp);
         }
 
-        fluid.SetReactionCandidates(candidates, floor);
+        fluid.SetReactionCandidates(candidates, floor, _indexVersion);
         _candidateScratch.Clear();
     }
 
@@ -230,6 +237,8 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
         //     changes included.
         var limit = float.PositiveInfinity;
         var energyPerExtent = reaction.Enthalpy;
+        var heatCapacityPerExtent = 0f;
+        var leastExtent = MinExtent;
 
         foreach (var (reagent, reactant) in reaction.Reactants)
         {
@@ -242,6 +251,7 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
 
             limit = MathF.Min(limit, available.Total / reactant.Amount);
             energyPerExtent -= reactant.Amount * available.MeanEnergyOffset(properties);
+            heatCapacityPerExtent -= reactant.Amount * available.MeanHeatCapacity(properties);
         }
 
         var pressure = mixture.Pressure;
@@ -250,7 +260,10 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
             if (!_propertiesSystem.TryGetProperties(reagent, out var properties))
                 return false;
 
-            energyPerExtent += product.Amount * EnergyOffset(properties, ProductPhase(properties, product.Phase, temperature, pressure));
+            var phase = ProductPhase(properties, product.Phase, temperature, pressure);
+            energyPerExtent += product.Amount * EnergyOffset(properties, phase);
+            heatCapacityPerExtent += product.Amount * HeatCapacity(properties, phase);
+            leastExtent = MathF.Max(leastExtent, LeastExtentToKeep(fluid, properties, phase) / product.Amount);
         }
 
         var rateConstant = reaction.Rate;
@@ -260,14 +273,26 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
             rateConstant *= MathF.Exp(Math.Clamp(exponent, -50f, 20f));
         }
 
-        var extent = limit * (1f - MathF.Exp(-rateConstant * deltaTime));
+        var stepExtent = limit * (1f - MathF.Exp(-rateConstant * deltaTime));
+        var extent = MathF.Min(stepExtent + fluid.DeferredExtent(reaction), limit);
 
+        // The temperature moves by both the reaction's heat and what it does to the mixture's heat capacity.
+        var temperatureDrive = MathF.Abs(energyPerExtent + heatCapacityPerExtent * temperature) + MaxReactionDeltaT * MathF.Abs(heatCapacityPerExtent);
         var heatCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: false);
-        if (energyPerExtent != 0f && heatCapacity > 0f)
-            extent = MathF.Min(extent, heatCapacity * MaxReactionDeltaT / MathF.Abs(energyPerExtent));
+        if (temperatureDrive > 0f && heatCapacity > 0f)
+            extent = MathF.Min(extent, heatCapacity * MaxReactionDeltaT / temperatureDrive);
 
-        if (!(extent > MinExtent))
+        if (float.IsNaN(extent))
             return false;
+
+        // Too little to leave a product that a table would keep: wait until there's enough, rather than lose it.
+        if (extent < leastExtent)
+        {
+            fluid.SetDeferredExtent(reaction, extent);
+            return stepExtent > MinExtent;
+        }
+
+        fluid.SetDeferredExtent(reaction, 0f);
 
         var energy = heatCapacity * temperature - energyPerExtent * extent;
 
@@ -288,6 +313,32 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
             mixture.Temperature = MathF.Max(energy / heatCapacityAfter, Atmospherics.TCMB);
 
         return true;
+    }
+
+    /// <summary>
+    ///     Units of a reagent a reaction must make for the fluid to keep them: enough to clear the table's minimum for that
+    ///         phase, or nothing if it's already there. A linked gas has no minimum.
+    /// </summary>
+    private static float LeastExtentToKeep(KsFluidMixture fluid, KsFluidReagentProperties properties, KsFluidReactionPhase phase)
+    {
+        if (phase == KsFluidReactionPhase.Vapor && properties.Linked)
+            return 0f;
+
+        fluid.TryGetAmount(new KsFluidReagentKey(properties.Id, null), out var amount);
+        return phase switch
+        {
+            KsFluidReactionPhase.Solid => amount.Solid > 0f ? 0f : KsFluidmos.MinLiquidUnits,
+            KsFluidReactionPhase.Vapor => amount.Vapor > 0f ? 0f : KsFluidmos.MinVaporMoles / properties.MolesPerUnit,
+            _ => amount.Liquid > 0f ? 0f : KsFluidmos.MinLiquidUnits,
+        };
+    }
+
+    /// <summary>
+    ///     A reagent's heat capacity, per unit, in a phase.
+    /// </summary>
+    private static float HeatCapacity(KsFluidReagentProperties properties, KsFluidReactionPhase phase)
+    {
+        return phase == KsFluidReactionPhase.Vapor ? properties.VaporHeatCapacityPerUnit : properties.SpecificHeat;
     }
 
     /// <summary>
@@ -425,6 +476,19 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
 
             return (Liquid * EnergyOffset(properties, KsFluidReactionPhase.Liquid) +
                     Vapor * EnergyOffset(properties, KsFluidReactionPhase.Vapor)) / total;
+        }
+
+        /// <summary>
+        ///     The heat capacity of a unit taken in proportion from every phase here.
+        /// </summary>
+        public float MeanHeatCapacity(KsFluidReagentProperties properties)
+        {
+            var total = Total;
+            if (total <= 0f)
+                return 0f;
+
+            return ((Solid + Liquid) * HeatCapacity(properties, KsFluidReactionPhase.Liquid) +
+                    Vapor * HeatCapacity(properties, KsFluidReactionPhase.Vapor)) / total;
         }
     }
 }

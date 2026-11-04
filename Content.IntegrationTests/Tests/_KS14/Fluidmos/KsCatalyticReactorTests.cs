@@ -3,6 +3,7 @@ using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Fluidmos;
 using Content.Server._KS14.Fluidmos.Devices;
+using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared._KS14.Fluidmos;
@@ -80,12 +81,21 @@ public sealed class KsCatalyticReactorTests : GameTest
   - type: Item
   - type: KsFluidCatalyst
     catalyst: KsTestCatalyst
+
+- type: entity
+  parent: KsTestCatalystBed
+  id: KsTestWornCatalystBed
+  components:
+  - type: KsFluidCatalyst
+    catalyst: KsTestCatalyst
+    activity: 0.5
 ";
 
     private static readonly EntProtoId ReactorPrototype = "KsCatalyticReactor";
 
     // Instance fields: these ids exist only in the test prototypes above.
     private readonly EntProtoId _bedPrototype = "KsTestCatalystBed";
+    private readonly EntProtoId _wornBedPrototype = "KsTestWornCatalystBed";
     private readonly ProtoId<ReagentPrototype> _feedReagent = "KsTestCatalysisFeed";
     private readonly ProtoId<ReagentPrototype> _productReagent = "KsTestCatalysisProduct";
     private readonly ProtoId<ReagentPrototype> _poisonReagent = "KsTestCatalysisPoison";
@@ -220,6 +230,128 @@ public sealed class KsCatalyticReactorTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     What a bed does scales with how worn it is and how much of its net it fills.
+    /// </summary>
+    [Test]
+    public async Task BedActivityAndShareOfItsNetScaleItsRate()
+    {
+        var server = Pair.Server;
+        var nodeContainerSystem = server.System<NodeContainerSystem>();
+        var itemSlotsSystem = server.System<ItemSlotsSystem>();
+        var freshUid = await SpawnReactor();
+        var wornUid = await SpawnReactor();
+        var dilutedUid = await SpawnReactor();
+
+        await server.WaitAssertion(() =>
+        {
+            float Product(EntityUid reactorUid, EntProtoId bed, float volumeScale)
+            {
+                Assert.That(nodeContainerSystem.TryGetNode(reactorUid, "pipe", out PipeNode? node));
+                var reactor = server.EntMan.GetComponent<KsCatalyticReactorComponent>(reactorUid);
+                var bedUid = server.EntMan.SpawnEntity(bed, server.EntMan.GetComponent<TransformComponent>(reactorUid).Coordinates);
+                Assert.That(itemSlotsSystem.TryInsert(reactorUid, reactor.CatalystSlotId, bedUid, user: null));
+
+                node!.Air.Volume *= volumeScale;
+                Fill(node.Air, _feedReagent, 100f);
+                Update(server.EntMan, reactorUid, 0.1f);
+                return Liquid(node.Air, _productReagent);
+            }
+
+            var reaction = server.ProtoMan.Index<KsFluidReactionPrototype>("KsTestCatalysedReaction");
+            float Expected(float scale) => 100f * (1f - MathF.Exp(-reaction.Rate * 0.1f * scale));
+
+            // Twice its bed's volume, whatever that is, so that the bed fills half its net.
+            var reactorVolume = server.EntMan.GetComponent<KsCatalyticReactorComponent>(dilutedUid).BedVolume;
+            Assert.That(nodeContainerSystem.TryGetNode(dilutedUid, "pipe", out PipeNode? dilutedNode));
+            var dilution = 2f * reactorVolume / dilutedNode!.Air.Volume;
+
+            var fresh = Product(freshUid, _bedPrototype, 1f);
+            var worn = Product(wornUid, _wornBedPrototype, 1f);
+            var diluted = Product(dilutedUid, _bedPrototype, dilution);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(fresh, Is.EqualTo(Expected(1f)).Within(0.05f));
+                Assert.That(worn, Is.EqualTo(Expected(0.5f)).Within(0.05f), "A half-worn bed didn't run at half rate.");
+                Assert.That(diluted, Is.EqualTo(Expected(0.5f)).Within(0.05f), "A bed filling half its net didn't run at half rate.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task UnanchoringStopsShowingAReaction()
+    {
+        var server = Pair.Server;
+        var reactorUid = await SpawnReactor();
+        var nodeContainerSystem = server.System<NodeContainerSystem>();
+        var itemSlotsSystem = server.System<ItemSlotsSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(nodeContainerSystem.TryGetNode(reactorUid, "pipe", out PipeNode? node));
+            var reactor = server.EntMan.GetComponent<KsCatalyticReactorComponent>(reactorUid);
+            var bedUid = server.EntMan.SpawnEntity(_bedPrototype, server.EntMan.GetComponent<TransformComponent>(reactorUid).Coordinates);
+            Assert.That(itemSlotsSystem.TryInsert(reactorUid, reactor.CatalystSlotId, bedUid, user: null));
+            Fill(node!.Air, _feedReagent, 100f);
+            Update(server.EntMan, reactorUid, 0.5f);
+            Assert.That(reactor.Reacting, "The reactor never started.");
+
+            server.System<SharedTransformSystem>().Unanchor(reactorUid);
+            Assert.That(reactor.Reacting, Is.False, "A reactor taken off its pipes still shows a reaction.");
+        });
+    }
+
+    /// <summary>
+    ///     As a pipe does: the gas goes into the room, not away with the reactor.
+    /// </summary>
+    [Test]
+    public async Task BreakingAReactorLeaksItsGas()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var atmosphereSystem = server.System<AtmosphereSystem>();
+        await server.WaitAssertion(() =>
+        {
+            var mixture = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C };
+            mixture.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+            atmosphereSystem.SetMapAtmosphere(testMap.MapUid, space: false, mixture);
+            server.EntMan.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner);
+        });
+        await server.WaitRunTicks(30);
+
+        EntityUid reactorUid = default;
+        await server.WaitPost(() => reactorUid = server.EntMan.SpawnEntity(ReactorPrototype, testMap.GridCoords));
+        await server.WaitRunTicks(5);
+
+        const float leakedOxygen = 50f;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.System<NodeContainerSystem>().TryGetNode(reactorUid, "pipe", out PipeNode? node));
+            node!.Air.Clear();
+            node.Air.Temperature = Atmospherics.T20C;
+            node.Air.SetMoles(Gas.Oxygen, leakedOxygen);
+
+            var thresholds = server.EntMan.GetComponent<DestructibleComponent>(reactorUid).Thresholds
+                .Select(threshold => threshold.Trigger)
+                .OfType<DamageTrigger>()
+                .Select(trigger => trigger.Damage)
+                .ToList();
+
+            var damage = new DamageSpecifier();
+            damage.DamageDict.Add("Blunt", thresholds.Min());
+            server.System<DamageableSystem>().TryChangeDamage(reactorUid, damage, ignoreResistances: true);
+        });
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.Deleted(reactorUid), "Breaking the reactor didn't remove it.");
+            var tile = atmosphereSystem.GetTileMixture(testMap.Grid.Owner, testMap.MapUid, testMap.Tile.GridIndices);
+            Assert.That(tile?.GetMoles(Gas.Oxygen), Is.GreaterThan(leakedOxygen * 0.5f), "The reactor's gas didn't reach the room.");
+        });
+    }
+
     [Test]
     public async Task PoisonsAreTakenUpAndWearTheBedDown()
     {
@@ -239,8 +371,9 @@ public sealed class KsCatalyticReactorTests : GameTest
             Fill(node!.Air, _poisonReagent, 5f);
             Update(server.EntMan, reactorUid, 1f);
 
-            // A bed filling its net (400 L of 400 L) takes up 1 - e^-1 of the poison in one second.
-            var taken = 5f * (1f - MathF.Exp(-1f));
+            // A bed takes up its share of the net's poison, 1 - e^-share of it in one second.
+            var share = MathF.Min(1f, reactor.BedVolume / node.Air.Volume);
+            var taken = 5f * (1f - MathF.Exp(-share));
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(Liquid(node.Air, _poisonReagent), Is.EqualTo(5f - taken).Within(0.01f), "The bed didn't take up its share of the poison.");
