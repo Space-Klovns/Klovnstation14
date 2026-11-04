@@ -1,0 +1,95 @@
+# Ported from tgstation's temperature gate. Lets gas and liquid through one way while its inlet is past a set temperature.
+- type: entity
+  parent: GasBinaryBase
+  id: KsTemperatureGate
+  name: temperature gate
+  description: A gate that lets gas and liquid through, one way, while its input is colder than the temperature it is set to. A multitool swaps it to hotter.
+  placement:
+    mode: AlignAtmosPipeLayers
+  components:
+  - type: ExtensionCableReceiver
+  - type: ApcPowerReceiver
+    powerLoad: 200
+  - type: Rotatable
+  - type: Transform
+    noRot: false
+  - type: SubFloorHide
+    visibleLayers:
+    - enum.SubfloorLayers.FirstLayer
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Atmospherics/temperature_gate.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: off
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+  - type: AtmosPipeLayers
+    spriteRsiPaths:
+      Primary: _KS14/Structures/Piping/Atmospherics/temperature_gate.rsi
+      Secondary: _KS14/Structures/Piping/Atmospherics/temperature_gate_alt1.rsi
+      Tertiary: _KS14/Structures/Piping/Atmospherics/temperature_gate_alt2.rsi
+    alternativePrototypes:
+      Primary: KsTemperatureGate
+      Secondary: KsTemperatureGateAlt1
+      Tertiary: KsTemperatureGateAlt2
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsTemperatureGateVisuals.State:
+        enum.SubfloorLayers.FirstLayer:
+          Off: { state: off }
+          On: { state: on }
+          Flowing: { state: flow }
+  - type: PipeColorVisuals
+  - type: KsTemperatureGate
+  - type: ActivatableUI
+    key: enum.KsTemperatureGateUiKey.Key
+  - type: ActivatableUIRequiresAnchor
+  - type: UserInterface
+    interfaces:
+      enum.KsTemperatureGateUiKey.Key:
+        type: KsTemperatureGateBoundUserInterface
+  - type: AtmosMonitoringConsoleDevice
+    navMapBlip: GasFlowRegulator
+
+- type: entity
+  parent: [ GasPipeLayerAlt1, KsTemperatureGate ]
+  id: KsTemperatureGateAlt1
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Atmospherics/temperature_gate_alt1.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt1.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: off
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+
+- type: entity
+  parent: [ GasPipeLayerAlt2, KsTemperatureGate ]
+  id: KsTemperatureGateAlt2
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Atmospherics/temperature_gate_alt2.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt2.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: off
+      map: [ "enum.SubfloorLayers.FirstLayer" ]
+
+- type: rcd
+  id: KsTemperatureGate
+  category: AtmosphericUtility
+  sprite: /Textures/_KS14/Interface/Radial/RPD/temperature_gate.png
+  mode: ConstructObject
+  prototype: KsTemperatureGate
+  cost: 3
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  hasLayers: true
+  fx: EffectRCDConstruct0

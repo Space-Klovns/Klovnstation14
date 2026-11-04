@@ -1,6 +1,6 @@
 <Document>
   # Fluid Devices
-  Four fittings for working with [textlink="liquids in pipes" link="KsLiquidsInPipes"].
+  Five fittings for working with [textlink="liquids in pipes" link="KsLiquidsInPipes"].
 
   ## Fluid port
   <Box>
@@ -40,4 +40,13 @@
   - It needs no power. It is a pipe with a catalyst in it.
   - The less pipe around it, the faster it works. Put a pump either side, and those pumps set how long the feed spends inside.
   - Beds wear out as poisons reach them. Examine the reactor to see how much activity its bed has left.
+  - Unlike the others it is a full machine: it fills its tile, and nothing can walk through it.
+
+  ## Temperature gate
+  <Box>
+    <GuideEntityEmbed Entity="KsTemperatureGate"/>
+  </Box>
+  A one-way gate that opens by temperature. While it is on, gas and liquid cross from its input to its output, as through a passive gate, for as long as the input is colder than the temperature you set. It needs power.
+  - Use a [color=yellow]multitool[/color] on it to swap that to hotter, say to let a heated pipe through only once it has got there.
+  - Turn it off before you unwrench it.
 </Document>
