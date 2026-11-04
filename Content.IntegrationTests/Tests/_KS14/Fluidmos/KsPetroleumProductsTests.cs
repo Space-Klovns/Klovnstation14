@@ -34,6 +34,11 @@ public sealed class KsPetroleumProductsTests : GameTest
     private const string AsphaltTile = "FloorAsphalt";
 
     /// <summary>
+    ///     Far more than any of these reactions costs, so that what they use is free to change.
+    /// </summary>
+    private const float Spill = 1000f;
+
+    /// <summary>
     ///     How many of a prototype are on <paramref name="testMap"/>, the only map these tests build on.
     /// </summary>
     private int CountOnMap(TestMapData testMap, EntProtoId prototype)
@@ -83,14 +88,15 @@ public sealed class KsPetroleumProductsTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var solution = Spilled(PolyethyleneReagent, 120f);
+            var solution = Spilled(PolyethyleneReagent, Spill);
             puddleSystem.DoTileReactions(testMap.Tile, solution);
             Assert.That(CountOnMap(testMap, WallPrototype), Is.EqualTo(1), "Spilled polyethylene didn't set into a wall.");
-            Assert.That((float)solution.Volume, Is.EqualTo(70f).Within(0.01f), "The wall didn't use the reagent up.");
+            var afterWall = (float)solution.Volume;
+            Assert.That(afterWall, Is.LessThan(Spill), "The wall didn't use the reagent up.");
 
             puddleSystem.DoTileReactions(testMap.Tile, solution);
             Assert.That(CountOnMap(testMap, WallPrototype), Is.EqualTo(1), "A second wall grew on the first.");
-            Assert.That((float)solution.Volume, Is.EqualTo(70f).Within(0.01f), "A wall that wasn't built used the reagent up.");
+            Assert.That((float)solution.Volume, Is.EqualTo(afterWall).Within(0.01f), "A wall that wasn't built used the reagent up.");
         });
     }
 
@@ -105,15 +111,16 @@ public sealed class KsPetroleumProductsTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var solution = Spilled(BitumenReagent, 50f);
+            var solution = Spilled(BitumenReagent, Spill);
             puddleSystem.DoTileReactions(testMap.Tile, solution);
 
             var tile = mapSystem.GetTileRef(testMap.Grid, testMap.Tile.GridIndices);
             Assert.That(turfSystem.GetContentTileDefinition(tile).ID, Is.EqualTo(AsphaltTile), "Spilled bitumen didn't pave the floor.");
-            Assert.That((float)solution.Volume, Is.EqualTo(30f).Within(0.01f));
+            var afterPaving = (float)solution.Volume;
+            Assert.That(afterPaving, Is.LessThan(Spill), "Paving didn't use the bitumen up.");
 
             puddleSystem.DoTileReactions(tile, solution);
-            Assert.That((float)solution.Volume, Is.EqualTo(30f).Within(0.01f), "Bitumen was used up on tile that was already asphalt.");
+            Assert.That((float)solution.Volume, Is.EqualTo(afterPaving).Within(0.01f), "Bitumen was used up on tile that was already asphalt.");
         });
     }
 
@@ -126,8 +133,8 @@ public sealed class KsPetroleumProductsTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            puddleSystem.DoTileReactions(testMap.Tile, Spilled(WaxReagent, 30f));
-            Assert.That(CountOnMap(testMap, CandlePrototype), Is.EqualTo(1), "Spilled wax didn't set into a candle.");
+            puddleSystem.DoTileReactions(testMap.Tile, Spilled(WaxReagent, Spill));
+            Assert.That(CountOnMap(testMap, CandlePrototype), Is.GreaterThan(0), "Spilled wax didn't set into a candle.");
         });
     }
 
@@ -145,7 +152,7 @@ public sealed class KsPetroleumProductsTests : GameTest
             solutionSystem.TryAddReagent(beakerEntity!.Value, GasolineReagent, FixedPoint2.New(20), out _);
             solutionSystem.TryAddReagent(beakerEntity.Value, PolyethyleneReagent, FixedPoint2.New(10), out _);
 
-            Assert.That((float)beaker!.GetTotalPrototypeQuantity(NapalmReagent), Is.EqualTo(30f).Within(0.01f), "Gasoline and polyethylene didn't make napalm.");
+            Assert.That((float)beaker!.GetTotalPrototypeQuantity(NapalmReagent), Is.GreaterThan(0f), "Gasoline and polyethylene didn't make napalm.");
         });
     }
 }

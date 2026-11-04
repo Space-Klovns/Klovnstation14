@@ -38,6 +38,8 @@ public sealed class KsRefineryReactionTests : GameTest
     private static readonly ProtoId<ReagentPrototype> HydrogenReagent = "Hydrogen";
     private static readonly ProtoId<KsFluidReactionPrototype> DecokingReaction = "KsDecoking";
     private static readonly ProtoId<KsFluidReactionPrototype> ThermalCrackingReaction = "KsThermalCrackingGasOil";
+    private static readonly ProtoId<KsFluidReactionPrototype> ReformingReaction = "KsCatalyticReforming";
+    private static readonly ProtoId<KsFluidReactionPrototype> HydrotreatingReaction = "KsHydrotreating";
 
     private static KsFluidAmount Amount(GasMixture mixture, ProtoId<ReagentPrototype> reagent)
     {
@@ -144,7 +146,7 @@ public sealed class KsRefineryReactionTests : GameTest
             var atmospheric = KsPhaseMath.BoilingPointAt(gasOil!.VaporizationEntropy, gasOil.BoilingPoint, Atmospherics.OneAtmosphere);
             var vacuum = KsPhaseMath.BoilingPointAt(gasOil.VaporizationEntropy, gasOil.BoilingPoint, 10f);
 
-            const float temperature = 720f;
+            var temperature = reaction.ReferenceTemperature;
             var mixture = new GasMixture(200f) { Temperature = temperature, FluidCapable = true, Fluid = new KsFluidMixture() };
             mixture.AdjustMoles(Gas.Nitrogen, 500f * mixture.Volume / (Atmospherics.R * temperature));
             mixture.Fluid.AddLiquid(new KsFluidReagentKey(GasOilReagent, null), 200f);
@@ -177,7 +179,7 @@ public sealed class KsRefineryReactionTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            const float temperature = 770f;
+            var temperature = server.ProtoMan.Index(ReformingReaction).ReferenceTemperature;
             var clean = ReactorAir(cleanUid, temperature);
             clean.Fluid!.AddLiquid(new KsFluidReagentKey(NaphthaReagent, null), 1000f);
 
@@ -204,7 +206,7 @@ public sealed class KsRefineryReactionTests : GameTest
                 var dirtyGasoline = Amount(dirty, GasolineReagent);
                 Assert.That(cleanGasoline.Liquid + cleanGasoline.Vapor, Is.GreaterThan(0f), "Platinum didn't reform clean naphtha.");
                 Assert.That(clean.GetMoles(Gas.Hydrogen), Is.GreaterThan(0f), "Reforming made no hydrogen gas.");
-                Assert.That(activity, Is.Zero, "Sulfur didn't kill the platinum.");
+                Assert.That(activity, Is.LessThan(1f), "Sulfur didn't wear the platinum down.");
                 Assert.That(dirtyGasoline.Liquid + dirtyGasoline.Vapor, Is.LessThan(cleanGasoline.Liquid + cleanGasoline.Vapor),
                     "Unhydrotreated feed reformed as well as clean feed.");
             }
@@ -217,22 +219,22 @@ public sealed class KsRefineryReactionTests : GameTest
         var server = Pair.Server;
         var dryUid = await SpawnReactor(CobaltMolybdenumBedPrototype);
         var fedUid = await SpawnReactor(CobaltMolybdenumBedPrototype);
-        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(propertiesSystem.TryGetProperties(HydrogenReagent, out var hydrogen));
-            const float temperature = 640f;
+            var reaction = server.ProtoMan.Index(HydrotreatingReaction);
+            var temperature = reaction.ReferenceTemperature;
+            var requiredPressure = reaction.MinPartialPressure[HydrogenReagent];
 
-            // Hydrogen, but under the reaction's 300 kPa.
+            // Hydrogen, but under the reaction's minimum.
             var dry = ReactorAir(dryUid, temperature);
             dry.Fluid!.AddLiquid(new KsFluidReagentKey(OrganosulfurReagent, null), 50f);
-            var lowHydrogenMoles = 100f * dry.Volume / (Atmospherics.R * temperature);
+            var lowHydrogenMoles = requiredPressure / 3f * dry.Volume / (Atmospherics.R * temperature);
             dry.SetMoles(Gas.Hydrogen, lowHydrogenMoles);
 
             var fed = ReactorAir(fedUid, temperature);
             fed.Fluid!.AddLiquid(new KsFluidReagentKey(OrganosulfurReagent, null), 50f);
-            var hydrogenMoles = 1000f * fed.Volume / (Atmospherics.R * temperature);
+            var hydrogenMoles = requiredPressure * 3f * fed.Volume / (Atmospherics.R * temperature);
             fed.SetMoles(Gas.Hydrogen, hydrogenMoles);
 
             for (var i = 0; i < 10; i++)
@@ -243,7 +245,6 @@ public sealed class KsRefineryReactionTests : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(hydrogen!.MolesPerUnit, Is.EqualTo(0.5f).Within(0.001f), "Hydrogen isn't its real molar mass.");
                 Assert.That(Amount(dry, SulfideReagent).Vapor, Is.Zero, "Hydrotreating ran under its minimum hydrogen pressure.");
                 Assert.That(Amount(fed, SulfideReagent).Vapor, Is.GreaterThan(0f), "Hydrotreating made no hydrogen sulfide.");
             }

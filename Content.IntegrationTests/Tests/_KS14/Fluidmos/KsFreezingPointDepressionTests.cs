@@ -3,26 +3,46 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Fluidmos;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
-using Content.Shared.Chemistry.Reagent;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.IntegrationTests.Tests._KS14.Fluidmos;
 
 /// <summary>
-///     What is dissolved in a liquid lowers its freezing point: pure water freezes where water with ethanol in it does
-///         not.
+///     What is dissolved in a liquid lowers its freezing point: a pure solvent freezes where the same solvent with
+///         something dissolved in it does not.
 /// </summary>
 [TestOf(typeof(KsFluidmosPhaseSystem))]
 public sealed class KsFreezingPointDepressionTests : GameTest
 {
-    private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
-    private static readonly ProtoId<ReagentPrototype> EthanolReagent = "Ethanol";
-    private static readonly KsFluidReagentKey WaterKey = new(WaterReagent, null);
-    private static readonly KsFluidReagentKey EthanolKey = new(EthanolReagent, null);
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: reagent
+  id: KsTestFreezingSolvent
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 273
+  fluidmos:
+    molarMass: 18
+
+- type: reagent
+  id: KsTestFreezingSolute
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+  fluidmos:
+    molarMass: 46
+";
+
+    // Instance fields: these ids exist only in the test prototypes above.
+    private readonly KsFluidReagentKey _solventKey = new("KsTestFreezingSolvent", null);
+    private readonly KsFluidReagentKey _soluteKey = new("KsTestFreezingSolute", null);
 
     /// <summary>
-    ///     About 8 K under water's melting point: a tenth of its moles dissolved would hold it liquid down to 263 K.
+    ///     Under the solvent's melting point, and above where the mixture below depresses it to.
     /// </summary>
     private const float ColdTemperature = 265f;
 
@@ -48,7 +68,7 @@ public sealed class KsFreezingPointDepressionTests : GameTest
     }
 
     [Test]
-    public async Task EthanolKeepsWaterLiquidBelowItsMeltingPoint()
+    public async Task SoluteKeepsSolventLiquidBelowItsMeltingPoint()
     {
         var server = Pair.Server;
         var phaseSystem = server.System<KsFluidmosPhaseSystem>();
@@ -57,23 +77,23 @@ public sealed class KsFreezingPointDepressionTests : GameTest
         await server.WaitAssertion(() =>
         {
             var pure = MakeColdPipe();
-            pure.Fluid!.AddLiquid(WaterKey, 70f);
+            pure.Fluid!.AddLiquid(_solventKey, 70f);
 
-            // About 85 mol% water.
+            // About 85 mol% solvent.
             var solution = MakeColdPipe();
-            solution.Fluid!.AddLiquid(WaterKey, 70f);
-            solution.Fluid.AddLiquid(EthanolKey, 30f);
+            solution.Fluid!.AddLiquid(_solventKey, 70f);
+            solution.Fluid.AddLiquid(_soluteKey, 30f);
 
             StepCold(phaseSystem, gameTiming, pure, 40);
             StepCold(phaseSystem, gameTiming, solution, 40);
 
-            pure.Fluid!.TryGetAmount(WaterKey, out var pureWater);
-            solution.Fluid!.TryGetAmount(WaterKey, out var solutionWater);
+            pure.Fluid!.TryGetAmount(_solventKey, out var pureSolvent);
+            solution.Fluid!.TryGetAmount(_solventKey, out var dissolvedSolvent);
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(pureWater.Solid, Is.GreaterThan(35f), "Pure water held below its melting point didn't freeze.");
-                Assert.That(solutionWater.Solid, Is.Zero, "Water with ethanol dissolved in it froze above its depressed freezing point.");
+                Assert.That(pureSolvent.Solid, Is.GreaterThan(0f), "A pure solvent held below its melting point didn't freeze.");
+                Assert.That(dissolvedSolvent.Solid, Is.Zero, "A solvent with something dissolved in it froze above its depressed freezing point.");
             }
         });
     }

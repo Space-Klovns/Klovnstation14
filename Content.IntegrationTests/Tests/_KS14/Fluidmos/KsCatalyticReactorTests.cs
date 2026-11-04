@@ -150,6 +150,7 @@ public sealed class KsCatalyticReactorTests : GameTest
             }
 
             var emptyProduct = Liquid(node.Air, _productReagent);
+            var emptyReacting = reactor.Reacting;
 
             // The reactor, with a bed.
             var bedUid = server.EntMan.SpawnEntity(_bedPrototype, server.EntMan.GetComponent<TransformComponent>(reactorUid).Coordinates);
@@ -163,6 +164,8 @@ public sealed class KsCatalyticReactorTests : GameTest
             {
                 Assert.That(Liquid(pipe, _productReagent), Is.Zero, "A catalysed reaction ran in a pipe with no reactor.");
                 Assert.That(emptyProduct, Is.Zero, "A catalysed reaction ran in a reactor with no bed.");
+                Assert.That(emptyReacting, Is.False, "A reactor with no bed says it's reacting.");
+                Assert.That(reactor.Reacting, "A reacting reactor doesn't say so, so its sprite shows it idle.");
                 Assert.That(Liquid(node.Air, _productReagent), Is.GreaterThan(1f), "A reactor holding the catalyst didn't run its reaction.");
                 Assert.That(Liquid(node.Air, _feedReagent) + Liquid(node.Air, _productReagent), Is.EqualTo(100f).Within(0.01f));
             }

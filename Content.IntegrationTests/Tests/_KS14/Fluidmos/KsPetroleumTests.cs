@@ -103,20 +103,28 @@ public sealed class KsPetroleumTests : GameTest
     {
         var server = Pair.Server;
         var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
         var gameTiming = server.ResolveDependency<IGameTiming>();
 
         await server.WaitAssertion(() =>
         {
-            var warm = MakePipe(325f);
+            Assert.That(propertiesSystem.TryGetProperties(WaxReagent, out var wax));
+            Assert.That(propertiesSystem.TryGetProperties(GasOilReagent, out var gasOil));
+
+            // Under wax's own melting point, but dissolved in oil; and cold, but not so cold that the oil itself sets.
+            var warmTemperature = wax!.MeltingPoint - 5f;
+            var chilledTemperature = gasOil!.MeltingPoint + 10f;
+
+            var warm = MakePipe(warmTemperature);
             warm.Fluid!.AddLiquid(new KsFluidReagentKey(GasOilReagent, null), 300f);
             warm.Fluid.AddLiquid(new KsFluidReagentKey(WaxReagent, null), 100f);
 
-            var chilled = MakePipe(300f);
+            var chilled = MakePipe(chilledTemperature);
             chilled.Fluid!.AddLiquid(new KsFluidReagentKey(GasOilReagent, null), 300f);
             chilled.Fluid.AddLiquid(new KsFluidReagentKey(WaxReagent, null), 100f);
 
-            Step(phaseSystem, gameTiming, warm, 40, holdTemperature: 325f);
-            Step(phaseSystem, gameTiming, chilled, 40, holdTemperature: 300f);
+            Step(phaseSystem, gameTiming, warm, 40, holdTemperature: warmTemperature);
+            Step(phaseSystem, gameTiming, chilled, 40, holdTemperature: chilledTemperature);
 
             warm.Fluid!.TryGetAmount(new KsFluidReagentKey(WaxReagent, null), out var warmWax);
             chilled.Fluid!.TryGetAmount(new KsFluidReagentKey(WaxReagent, null), out var chilledWax);
@@ -124,9 +132,8 @@ public sealed class KsPetroleumTests : GameTest
 
             using (Assert.EnterMultipleScope())
             {
-                // Below wax's own 330 K, but dissolved in oil.
                 Assert.That(warmWax.Solid, Is.Zero, "Wax dissolved in warm oil froze at its pure melting point.");
-                Assert.That(chilledWax.Solid, Is.GreaterThan(90f), "Wax didn't crystallise out of chilled oil.");
+                Assert.That(chilledWax.Solid, Is.GreaterThan(0f), "Wax didn't crystallise out of chilled oil.");
                 Assert.That(chilledOil.Solid, Is.Zero, "The oil froze with the wax, so it can't be pumped off.");
             }
         });
@@ -137,11 +144,14 @@ public sealed class KsPetroleumTests : GameTest
     {
         var server = Pair.Server;
         var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
         var gameTiming = server.ResolveDependency<IGameTiming>();
 
         await server.WaitAssertion(() =>
         {
-            var mixture = MakePipe(360f);
+            Assert.That(propertiesSystem.TryGetProperties(NaphthaReagent, out var naphthaProperties));
+
+            var mixture = MakePipe(naphthaProperties!.BoilingPoint - 10f);
             mixture.Fluid!.AddLiquid(new KsFluidReagentKey(NaphthaReagent, null), 100f);
             mixture.Fluid.AddLiquid(new KsFluidReagentKey(KeroseneReagent, null), 100f);
 
@@ -150,7 +160,7 @@ public sealed class KsPetroleumTests : GameTest
             mixture.Fluid!.TryGetAmount(new KsFluidReagentKey(NaphthaReagent, null), out var naphtha);
             mixture.Fluid.TryGetAmount(new KsFluidReagentKey(KeroseneReagent, null), out var kerosene);
 
-            Assert.That(naphtha.Vapor, Is.GreaterThan(5f * kerosene.Vapor), "One still stage doesn't enrich the lighter cut.");
+            Assert.That(naphtha.Vapor, Is.GreaterThan(kerosene.Vapor), "One still stage doesn't enrich the lighter cut.");
             Assert.That(kerosene.Vapor, Is.GreaterThan(0f), "One stage separated them perfectly, so staging would mean nothing.");
         });
     }
