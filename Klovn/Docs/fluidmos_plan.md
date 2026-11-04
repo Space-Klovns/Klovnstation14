@@ -973,10 +973,10 @@ A binary device, under `Server/_KS14/Fluidmos/Devices/` and `Shared/_KS14/Fluidm
 
 - A reagent mode on `GasFilter`.
 - Showing liquid in pipe visuals.
-- Freezing-point depression in mixtures, and pipes fully blocking flow when frozen solid (beyond the
-  hydraulic-pressure clog). Tile freezing is covered by the ice sheet in 4b.
-- **Second phase** (the planned follow-up, not this work): Henry's-law gas solubility, Margules activity coefficients (azeotropes), and chemical
-  reactions inside pipe networks (throttled, only on fluid-bearing networks whose composition changed).
+- Pipes fully blocking flow when frozen solid (beyond the hydraulic-pressure clog). Tile freezing is covered by the ice
+  sheet in 4b.
+- **Second phase**: Henry's-law gas solubility. Margules activity coefficients, freezing-point depression and chemical
+  reactions inside pipe networks are done: see [fluidmos.md](fluidmos.md).
 - **Separate project**: finite-volume pipes (a cell per pipe node, with friction-driven flow). Judge it against a
   profile of a real station's pipe count.
 - Supercritical fluids. Linked gases stop condensing above their van der Waals `Tc`; unlinked reagents keep the
