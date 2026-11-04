@@ -39,9 +39,16 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
     private static readonly TimeSpan TriggerHeldGrace = TimeSpan.FromSeconds(0.2);
 
     /// <summary>
-    ///     The least recoil moves the aim by per shot, since many guns have next to no angle increase of their own.
+    ///     The lowest the least recoil can move the aim by per shot. Each shot rolls that least between this and
+    ///         <see cref="HighestDriftFloor"/>, as many guns have too little angle increase of their own to notice.
     /// </summary>
-    private static readonly Angle MinimumDriftPerShot = Angle.FromDegrees(1.5);
+    public static readonly Angle LowestDriftFloor = Angle.FromDegrees(2);
+
+    /// <summary>
+    ///     The highest the least recoil can move the aim by per shot.
+    /// </summary>
+    /// <seealso cref="LowestDriftFloor"/>
+    public static readonly Angle HighestDriftFloor = Angle.FromDegrees(6);
 
     private const float MinimumDriftScale = 0.5f;
     private const float MaximumDriftScale = 1.5f;
@@ -200,8 +207,9 @@ public sealed partial class KsTriggerSpasmSystem : EntitySystem
             return false;
 
         var random = SharedRandomExtensions.PredictedRandom(_gameTiming, GetNetEntity(gun));
-        var drift = Math.Max(Math.Abs(gun.Comp.AngleIncreaseModified.Theta), MinimumDriftPerShot.Theta)
-            * random.NextFloat(MinimumDriftScale, MaximumDriftScale);
+        var drift = Math.Max(
+            Math.Abs(gun.Comp.AngleIncreaseModified.Theta) * random.NextFloat(MinimumDriftScale, MaximumDriftScale),
+            random.NextFloat((float)LowestDriftFloor.Theta, (float)HighestDriftFloor.Theta));
 
         entity.Comp.AimAngle = new Angle(entity.Comp.AimAngle.Theta + entity.Comp.DriftSign * drift);
         Dirty(entity);

@@ -223,7 +223,7 @@ public sealed class KsTriggerSpasmTest : InteractionTest
         var driftSign = spasmComponent.DriftSign;
         var previousAim = spasmComponent.AimAngle.Theta;
         var previousAmmo = Ammo(gunUid);
-        var shots = 0;
+        var steps = new List<double>();
 
         // Stops at the last round, as the empty click after it ends the spasm.
         while (Ammo(gunUid) > 0)
@@ -242,13 +242,19 @@ public sealed class KsTriggerSpasmTest : InteractionTest
                 Assert.That(Angle.ShortestDistance(firedTowards.ToAngle(), new Angle(previousAim)).Theta, Is.EqualTo(0d).Within(0.001d),
                     "The shot didn't go where the aim was pointing.");
 
+                steps.Add(Math.Abs(aim - previousAim));
                 previousAim = aim;
                 previousAmmo = Ammo(gunUid);
-                shots++;
             });
         }
 
-        Assert.That(shots, Is.GreaterThan(1), "Too few shots were seen for the aim to have walked.");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(steps, Has.Count.GreaterThan(1), "Too few shots were seen for the aim to have walked.");
+            Assert.That(steps, Is.All.GreaterThanOrEqualTo(KsTriggerSpasmSystem.LowestDriftFloor.Theta - 0.0001d),
+                "This gun's recoil is tiny, so the aim should have moved by the floor at least.");
+            Assert.That(steps.Distinct().Count(), Is.GreaterThan(1), "Every step was the same, so the floor isn't being rolled.");
+        }
     }
 
     /// <summary>
