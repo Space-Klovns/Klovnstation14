@@ -11,7 +11,6 @@ ks-temperature-gate-examined-range = Он пропускает газ, пока 
    *[false] в диапазоне
 } от [color=lightblue]{ $minimum } К[/color] до [color=lightblue]{ $maximum } К[/color].
 
-ks-temperature-gate-verb-maximize = Задать максимальную температуру
 ks-temperature-gate-verb-on = Включить
 ks-temperature-gate-verb-off = Выключить
 

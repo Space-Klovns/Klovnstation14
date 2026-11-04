@@ -12,13 +12,11 @@
             <Label Text="{Loc ks-temperature-gate-ui-mode-label}" />
             <OptionButton Name="ModeOption" HorizontalExpand="True" />
         </BoxContainer>
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+        <BoxContainer Name="FirstRow" Orientation="Horizontal" HorizontalExpand="True">
             <Label Name="FirstLabel" />
-            <FloatSpinBox Name="FirstInput" HorizontalExpand="True" MinSize="70 0" />
         </BoxContainer>
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+        <BoxContainer Name="SecondRow" Orientation="Horizontal" HorizontalExpand="True">
             <Label Name="SecondLabel" />
-            <FloatSpinBox Name="SecondInput" HorizontalExpand="True" MinSize="70 0" />
         </BoxContainer>
         <Label Name="ModeLabel" StyleClasses="LabelSubText" />
     </BoxContainer>

@@ -18,32 +18,33 @@ public sealed partial class KsTemperatureGateComponent : Component
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public bool Enabled;
 
-    [DataField, AutoNetworkedField]
+    /// <seealso cref="KsSharedTemperatureGateSystem.SetMode"/>
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public KsTemperatureGateMode Mode = KsTemperatureGateMode.Tolerance;
 
     /// <summary>
     ///     Kelvin. In <see cref="KsTemperatureGateMode.Tolerance"/>, the middle of the band that passes.
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public float TargetTemperature = Atmospherics.T0C;
 
     /// <summary>
     ///     Kelvin. In <see cref="KsTemperatureGateMode.Tolerance"/>, how far from <see cref="TargetTemperature"/> the gate
     ///         stays open, either way.
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public float Tolerance = 10f;
 
     /// <summary>
     ///     Kelvin. In <see cref="KsTemperatureGateMode.Range"/>, the bottom of the range that passes.
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public float RangeMinimum = Atmospherics.T0C;
 
     /// <summary>
     ///     Kelvin. In <see cref="KsTemperatureGateMode.Range"/>, the top of the range that passes.
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public float RangeMaximum = Atmospherics.T20C;
 
     [DataField, AutoNetworkedField]

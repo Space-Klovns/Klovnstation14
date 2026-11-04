@@ -14,7 +14,6 @@ ks-temperature-gate-examined-range = It lets gas through while its input is { $i
    *[false] between
 } [color=lightblue]{ $minimum } K[/color] and [color=lightblue]{ $maximum } K[/color].
 
-ks-temperature-gate-verb-maximize = Set target to maximum
 ks-temperature-gate-verb-on = Turn on
 ks-temperature-gate-verb-off = Turn off
 

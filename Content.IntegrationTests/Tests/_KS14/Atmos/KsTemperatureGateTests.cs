@@ -28,6 +28,8 @@ public sealed class KsTemperatureGateTests : GameTest
 
     private const float Target = 300f;
 
+    private static readonly ProtoId<ReagentPrototype> EthanolReagent = "Ethanol";
+
     private async Task<EntityUid> SpawnGate(bool enabled, bool inverted = false, bool powered = true)
     {
         var server = Pair.Server;
@@ -88,8 +90,12 @@ public sealed class KsTemperatureGateTests : GameTest
     {
         foreach (var (temperature, passes) in steps)
         {
-            var (moved, _) = await Run(gateUid, temperature);
-            Assert.That(moved > 0f, Is.EqualTo(passes), $"At {temperature} K.");
+            var (moved, flowing) = await Run(gateUid, temperature);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(moved > 0f, Is.EqualTo(passes), $"At {temperature} K.");
+                Assert.That(flowing, Is.EqualTo(passes), $"Its flow isn't what it shows at {temperature} K.");
+            }
         }
     }
 
@@ -141,14 +147,110 @@ public sealed class KsTemperatureGateTests : GameTest
 
         await server.WaitAssertion(() =>
         {
+            const float inletMoles = 1f;
             var (inlet, outlet) = Air(gateUid, Target);
             inlet.Clear();
             inlet.Temperature = Target;
-            outlet.AdjustMoles(Gas.Nitrogen, 50f);
+            inlet.SetMoles(Gas.Nitrogen, inletMoles);
+            outlet.Clear();
+            outlet.Temperature = Target;
+            outlet.SetMoles(Gas.Nitrogen, 50f);
 
             Update(server.EntMan, gateUid);
 
-            Assert.That(inlet.TotalMoles, Is.Zero, "Gas came back through the gate.");
+            Assert.That(inlet.TotalMoles, Is.EqualTo(inletMoles), "Gas crossed the gate uphill.");
+        });
+    }
+
+    /// <summary>
+    ///     Vapor counts towards pressure but not towards gas moles, so an inlet holding only that used to give no valid
+    ///         fraction, and lost it all.
+    /// </summary>
+    [Test]
+    public async Task CarriesVaporWithNoGasAndLosesNone()
+    {
+        var server = Pair.Server;
+        var gateUid = await SpawnGate(enabled: true);
+
+        await server.WaitAssertion(() =>
+        {
+            const float vapor = 5f;
+            var (inlet, outlet) = Air(gateUid, Target);
+            inlet.Clear();
+            outlet.Clear();
+            inlet.Temperature = Target;
+            outlet.Temperature = Target;
+            inlet.FluidCapable = true;
+            outlet.FluidCapable = true;
+            var key = new KsFluidReagentKey(EthanolReagent, null);
+            inlet.Fluid = new KsFluidMixture();
+            inlet.Fluid.SetAmount(key, new KsFluidAmount { Vapor = vapor });
+
+            Update(server.EntMan, gateUid);
+
+            float Vapor(GasMixture air) => air.Fluid != null && air.Fluid.TryGetAmount(key, out var amount) ? amount.Vapor : 0f;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Vapor(outlet), Is.GreaterThan(0f), "Vapor didn't cross the gate.");
+                Assert.That(Vapor(inlet) + Vapor(outlet), Is.EqualTo(vapor).Within(0.001f), "Vapor was lost crossing the gate.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task IgnoresAModeThatDoesNotExist()
+    {
+        var server = Pair.Server;
+        var gateUid = await SpawnGate(enabled: true);
+        await Configure(gateUid, (gateSystem, gate) => gateSystem.SetMode(gate, (KsTemperatureGateMode)200));
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.GetComponent<KsTemperatureGateComponent>(gateUid).Mode, Is.EqualTo(KsTemperatureGateMode.Tolerance));
+        });
+    }
+
+    [Test]
+    public async Task CannotBeTurnedOnOffItsPipes()
+    {
+        var server = Pair.Server;
+        var gateUid = await SpawnGate(enabled: false);
+        await server.WaitPost(() => server.System<SharedTransformSystem>().Unanchor(gateUid));
+        await Configure(gateUid, (gateSystem, gate) => gateSystem.SetEnabled(gate, true));
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.GetComponent<KsTemperatureGateComponent>(gateUid).Enabled, Is.False);
+        });
+    }
+
+    /// <summary>
+    ///     These are read-only to VV, so <c>vvwrite</c> only lands through a registered path, which goes through the setter
+    ///         and so gets clamped.
+    /// </summary>
+    [Test]
+    public async Task VvWritesGoThroughTheSetters()
+    {
+        var server = Pair.Server;
+        var gateUid = await SpawnGate(enabled: true);
+        var consoleHost = server.ResolveDependency<Robust.Shared.Console.IConsoleHost>();
+        var name = nameof(KsTemperatureGateComponent).Replace("Component", string.Empty);
+
+        await server.WaitPost(() =>
+        {
+            consoleHost.ExecuteCommand($"vvwrite /entity/{gateUid.Id}/{name}/{nameof(KsTemperatureGateComponent.Tolerance)} -5");
+            consoleHost.ExecuteCommand($"vvwrite /entity/{gateUid.Id}/{name}/{nameof(KsTemperatureGateComponent.RangeMinimum)} 900");
+        });
+
+        await server.WaitAssertion(() =>
+        {
+            var gate = server.EntMan.GetComponent<KsTemperatureGateComponent>(gateUid);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(gate.Tolerance, Is.Zero, "vvwrite went past the setter's clamp.");
+                Assert.That(gate.RangeMinimum, Is.LessThanOrEqualTo(gate.RangeMaximum), "vvwrite left the range upside down.");
+                Assert.That(gate.RangeMaximum, Is.EqualTo(900f), "vvwrite didn't reach the range.");
+            }
         });
     }
 

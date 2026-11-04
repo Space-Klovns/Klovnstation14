@@ -23,8 +23,50 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedPowerReceiverSystem _powerReceiverSystem = default!;
+    [Dependency] private IViewVariablesManager _viewVariablesManager = default!;
     [Dependency] private SharedToolSystem _toolSystem = default!;
     [Dependency] protected SharedUserInterfaceSystem UserInterfaceSystem = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        AddViewVariablesPath(nameof(KsTemperatureGateComponent.Enabled), gate => gate.Enabled, (entity, value) => SetEnabled(entity, value));
+        AddViewVariablesPath(nameof(KsTemperatureGateComponent.Mode), gate => gate.Mode, (entity, value) => SetMode(entity, value));
+        AddViewVariablesPath(nameof(KsTemperatureGateComponent.TargetTemperature), gate => gate.TargetTemperature, (entity, value) => SetTarget(entity, value));
+        AddViewVariablesPath(nameof(KsTemperatureGateComponent.Tolerance), gate => gate.Tolerance, (entity, value) => SetTolerance(entity, value));
+        AddViewVariablesPath(nameof(KsTemperatureGateComponent.RangeMinimum), gate => gate.RangeMinimum, (entity, value) => SetRange(entity, value, entity.Comp.RangeMaximum));
+        AddViewVariablesPath(nameof(KsTemperatureGateComponent.RangeMaximum), gate => gate.RangeMaximum, (entity, value) => SetRange(entity, entity.Comp.RangeMinimum, value));
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        // The manager outlives this system, and its lambdas would keep it alive.
+        var handler = _viewVariablesManager.GetTypeHandler<KsTemperatureGateComponent>();
+        handler.RemovePath(nameof(KsTemperatureGateComponent.Enabled));
+        handler.RemovePath(nameof(KsTemperatureGateComponent.Mode));
+        handler.RemovePath(nameof(KsTemperatureGateComponent.TargetTemperature));
+        handler.RemovePath(nameof(KsTemperatureGateComponent.Tolerance));
+        handler.RemovePath(nameof(KsTemperatureGateComponent.RangeMinimum));
+        handler.RemovePath(nameof(KsTemperatureGateComponent.RangeMaximum));
+    }
+
+    /// <summary>
+    ///     Makes <c>vvwrite</c> on a field go through its setter, which is what clamps it and keeps its sprite right.
+    /// </summary>
+    private void AddViewVariablesPath<T>(string name, Func<KsTemperatureGateComponent, T> getter, Action<Entity<KsTemperatureGateComponent>, T> setter)
+    {
+        _viewVariablesManager.GetTypeHandler<KsTemperatureGateComponent>().AddPath(
+            name,
+            (_, gate) => getter(gate),
+            (uid, value, gate) =>
+            {
+                if (gate != null)
+                    setter((uid, gate), value);
+            });
+    }
 
     [SubscribeLocalEvent]
     private void OnInit(Entity<KsTemperatureGateComponent> entity, ref ComponentInit args)
@@ -112,17 +154,6 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
             return;
 
         var user = args.User;
-        if (entity.Comp.Mode == KsTemperatureGateMode.Tolerance)
-        {
-            args.Verbs.Add(new AlternativeVerb
-            {
-                Text = Loc.GetString("ks-temperature-gate-verb-maximize"),
-                Priority = 1,
-                Disabled = entity.Comp.TargetTemperature >= entity.Comp.MaxTemperature,
-                Act = () => SetTarget(entity, entity.Comp.MaxTemperature, user),
-            });
-        }
-
         args.Verbs.Add(new AlternativeVerb
         {
             Text = Loc.GetString(entity.Comp.Enabled ? "ks-temperature-gate-verb-off" : "ks-temperature-gate-verb-on"),
@@ -144,7 +175,7 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
 
         _adminLogManager.Add(LogType.AtmosDeviceSetting,
             LogImpact.Medium,
-            $"{ToPrettyString(args.User):player} set {ToPrettyString(entity):device} to open {(entity.Comp.Inverted ? "above" : "below")} its target");
+            $"{ToPrettyString(args.User):player} set {ToPrettyString(entity):device} to open {(entity.Comp.Inverted ? "outside" : "inside")} its limits");
         _popupSystem.PopupEntity(KsPopupMessage.Create(entity.Comp.Inverted ? "ks-temperature-gate-inverted" : "ks-temperature-gate-restored"),
             entity,
             args.User);
@@ -163,6 +194,10 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
 
     public void SetEnabled(Entity<KsTemperatureGateComponent> entity, bool enabled, EntityUid? user = null)
     {
+        // Leaving its pipes turned it off, and nothing can come of turning it on until it's back on them.
+        if (enabled && !Transform(entity).Anchored)
+            return;
+
         entity.Comp.Enabled = enabled;
         Dirty(entity);
         UpdateAppearance(entity);
@@ -186,6 +221,10 @@ public abstract partial class KsSharedTemperatureGateSystem : EntitySystem
 
     public void SetMode(Entity<KsTemperatureGateComponent> entity, KsTemperatureGateMode mode, EntityUid? user = null)
     {
+        // A client can send any byte here, and every viewer's window would then fail to show it.
+        if (!Enum.IsDefined(mode))
+            return;
+
         entity.Comp.Mode = mode;
         Dirty(entity);
         UpdateUi(entity);

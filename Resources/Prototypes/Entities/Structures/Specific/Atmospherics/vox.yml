@@ -16,6 +16,7 @@
       NitrousOxide: stationNO
       Frezon: danger
       Zipion: stationZipion # KS14
+      Hydrogen: stationHydrogen # KS14
 
 - type: entity
   parent: [AirSensorVoxBase, AirSensor]
