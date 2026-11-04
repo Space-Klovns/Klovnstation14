@@ -1,0 +1,105 @@
+# The liquid fuel cuts. Each lights itself at its autoignition temperature, so a hot leak burns.
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsNaphtha
+  name: reagent-name-ks-naphtha
+  desc: reagent-desc-ks-naphtha
+  color: "#d9c98a"
+  boilingPoint: 370
+  meltingPoint: 180
+  fluidmos:
+    molarMass: 100
+    latentHeat: 170
+    mixingFamily: KsHydrocarbon
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 520
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 2
+  tileReactions:
+  - !type:FlammableTileReaction {}
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsGasoline
+  name: reagent-name-ks-gasoline
+  desc: reagent-desc-ks-gasoline
+  color: "#e0b040"
+  boilingPoint: 380
+  meltingPoint: 180
+  fluidmos:
+    molarMass: 105
+    latentHeat: 170
+    mixingFamily: KsHydrocarbon
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 520
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 2
+  tileReactions:
+  - !type:FlammableTileReaction {}
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsKerosene
+  name: reagent-name-ks-kerosene
+  desc: reagent-desc-ks-kerosene
+  color: "#c8a860"
+  boilingPoint: 480
+  meltingPoint: 230
+  fluidmos:
+    molarMass: 170
+    latentHeat: 160
+    mixingFamily: KsHydrocarbon
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 490
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 2
+  tileReactions:
+  - !type:FlammableTileReaction {}
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsDiesel
+  name: reagent-name-ks-diesel
+  desc: reagent-desc-ks-diesel
+  color: "#a88040"
+  boilingPoint: 570
+  meltingPoint: 265
+  fluidmos:
+    molarMass: 230
+    latentHeat: 150
+    mixingFamily: KsHydrocarbon
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 530
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 2
+  tileReactions:
+  - !type:FlammableTileReaction {}

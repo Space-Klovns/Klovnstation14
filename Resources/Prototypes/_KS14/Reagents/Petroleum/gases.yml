@@ -1,0 +1,52 @@
+# Light ends: boil away at room temperature, so a spill leaves as smoke.
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsRefineryGas
+  name: reagent-name-ks-refinery-gas
+  desc: reagent-desc-ks-refinery-gas
+  physicalDesc: reagent-physical-desc-gaseous
+  color: "#c9d8a0"
+  boilingPoint: 240
+  meltingPoint: 100
+  fluidmos:
+    molarMass: 50
+    latentHeat: 150
+    mixingFamily: KsHydrocarbon
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsEthane
+  name: reagent-name-ks-ethane
+  desc: reagent-desc-ks-ethane
+  physicalDesc: reagent-physical-desc-gaseous
+  color: "#b8e0c8"
+  boilingPoint: 184
+  meltingPoint: 90
+  fluidmos:
+    molarMass: 30
+    latentHeat: 150
+    mixingFamily: KsHydrocarbon
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsEthylene
+  name: reagent-name-ks-ethylene
+  desc: reagent-desc-ks-ethylene
+  physicalDesc: reagent-physical-desc-gaseous
+  color: "#d8f0e8"
+  boilingPoint: 169
+  meltingPoint: 104
+  fluidmos:
+    molarMass: 28
+    latentHeat: 150
+    mixingFamily: KsHydrocarbon
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true

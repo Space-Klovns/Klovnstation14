@@ -32,6 +32,12 @@
     molarMass: 46
     vaporizationEntropy: 13.2
 
+# Unlinked, as there is no hydrogen gas: it stays in the pipe as vapor, and leaves it as smoke.
+- type: !PartialOnly reagent
+  id: Hydrogen
+  fluidmos:
+    molarMass: 2
+
 # Linked, so ammonia makes a refrigerant a pressure pump can run: Psat(293 K) is about 840 kPa, under the pump's cap.
 - type: !PartialOnly reagent
   id: Ammonia
