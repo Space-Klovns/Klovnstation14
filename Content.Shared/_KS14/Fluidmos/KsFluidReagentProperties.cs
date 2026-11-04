@@ -67,6 +67,11 @@ public sealed class KsFluidReagentProperties
     public float FusionHeat { get; init; }
 
     /// <summary>
+    ///     <c>k_fus = ΔS_fus / R</c>: how far what is dissolved in it lowers its freezing point.
+    /// </summary>
+    public float FusionEntropy { get; init; }
+
+    /// <summary>
     ///     The linked gas's index, or -1 for none.
     /// </summary>
     public int GasIndex { get; init; }

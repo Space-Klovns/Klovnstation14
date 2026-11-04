@@ -41,6 +41,14 @@ public sealed partial class KsFluidmosReagentData
     public float? FusionHeat;
 
     /// <summary>
+    ///     <c>k_fus = ΔS_fus / R</c> (dimensionless, real and per mole), which sets how far what is dissolved in it lowers
+    ///         its freezing point. Defaults to water's, <see cref="KsFluidmos.DefaultFusionEntropy"/>. Never derived from
+    ///         <see cref="FusionHeat"/>.
+    /// </summary>
+    [DataField]
+    public float? FusionEntropy;
+
+    /// <summary>
     ///     Moles of vapor a unit becomes. Defaults to one gram per unit over the molar mass.
     /// </summary>
     [DataField]

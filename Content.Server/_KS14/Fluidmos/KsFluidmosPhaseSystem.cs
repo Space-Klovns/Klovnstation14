@@ -130,7 +130,9 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         // Each reagent's activity in its liquid (Raoult's mole fraction, times its activity coefficient when it mixes
         //     non-ideally), and the bubble point the liquid flashes down to if it is boiling.
         var activities = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
-        ComputeActivities(amounts, activities, temperature);
+        var gammas = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
+        var phaseMoles = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
+        ComputeActivities(amounts, activities, gammas, phaseMoles, temperature);
         var bubbleTemperature = BubbleTemperature(amounts, activities, temperature, pressure);
 
         var unitsMoved = 0f;
@@ -147,8 +149,9 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
             if (properties.Volatile)
                 Vaporise(mixture, ref step, properties, ref amount, activities[i], belowTriplePoint);
 
+            // What is dissolved in it lowers where it freezes; worked out from before this step moved anything.
             if (properties.Freezable)
-                Freeze(ref step, properties, ref amount, belowTriplePoint);
+                Freeze(ref step, properties, ref amount, EffectiveMeltingPoint(properties, before, gammas[i], phaseMoles[i]), belowTriplePoint);
 
             var moved = MathF.Abs(amount.Liquid - before.Liquid) + MathF.Abs(amount.Solid - before.Solid) +
                 MathF.Abs(amount.Vapor - before.Vapor) / properties.MolesPerUnit;
@@ -349,14 +352,17 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     ///         liquid it has, merged in or condensed at a wall, freezes whatever the temperature, a step's worth of heat
     ///         at a time. Melting it would only have flashed it to gas below the melting point and frozen it again.
     /// </param>
-    private static void Freeze(ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount, bool belowTriplePoint)
+    /// <param name="meltingPoint">
+    ///     Where it freezes in this mixture: its melting point, depressed by what is dissolved in it.
+    /// </param>
+    private static void Freeze(ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount, float meltingPoint,
+        bool belowTriplePoint)
     {
         var fusionHeat = properties.FusionHeat;
         if (fusionHeat <= 0f)
             return;
 
         var temperature = step.Temperature;
-        var meltingPoint = properties.MeltingPoint;
         float frozenUnits;
 
         if (belowTriplePoint)

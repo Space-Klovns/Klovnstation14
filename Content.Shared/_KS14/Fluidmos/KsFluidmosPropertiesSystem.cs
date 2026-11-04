@@ -221,6 +221,7 @@ public sealed partial class KsFluidmosPropertiesSystem : EntitySystem
             Freezable = freezable,
             MeltingPoint = meltingPoint,
             FusionHeat = data?.FusionHeat ?? KsPhaseMath.DefaultFusionHeat(meltingPoint, specificHeat),
+            FusionEntropy = data?.FusionEntropy ?? KsFluidmos.DefaultFusionEntropy,
             GasIndex = gasIndex,
             CriticalTemperature = criticalTemperature,
             InverseSqrtTwoPiMR = KsPhaseMath.InverseSqrtTwoPiMR(molarMass),

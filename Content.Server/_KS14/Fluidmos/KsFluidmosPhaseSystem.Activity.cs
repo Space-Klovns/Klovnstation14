@@ -20,7 +20,14 @@ public sealed partial class KsFluidmosPhaseSystem
     ///             full vapor pressure; a reagent in no family dissolves in every phase.
     ///     </para>
     /// </remarks>
-    private void ComputeActivities(ReadOnlySpan<KsFluidAmount> amounts, Span<float> activities, float temperature)
+    /// <param name="gammas">Each entry's activity coefficient, at infinite dilution for one with no liquid.</param>
+    /// <param name="phaseMoles">Moles of liquid in the phase each entry would dissolve in, its own included.</param>
+    private void ComputeActivities(
+        ReadOnlySpan<KsFluidAmount> amounts,
+        Span<float> activities,
+        Span<float> gammas,
+        Span<float> phaseMoles,
+        float temperature)
     {
         var count = _entries.Count;
         var moles = count <= MaxStackEntries ? stackalloc float[count] : new float[count];
@@ -39,6 +46,8 @@ public sealed partial class KsFluidmosPhaseSystem
             for (var i = 0; i < count; i++)
             {
                 activities[i] = moles[i] > 0f && totalMoles > 0f ? moles[i] / totalMoles : 1f;
+                gammas[i] = 1f;
+                phaseMoles[i] = totalMoles;
             }
 
             return;
@@ -60,17 +69,19 @@ public sealed partial class KsFluidmosPhaseSystem
 
         for (var i = 0; i < count; i++)
         {
-            if (moles[i] <= 0f)
-            {
-                activities[i] = 1f;
-                continue;
-            }
-
-            var phaseMoles = 0f;
+            var phase = 0f;
             for (var j = 0; j < count; j++)
             {
                 if (miscible[i * count + j])
-                    phaseMoles += moles[j];
+                    phase += moles[j];
+            }
+
+            phaseMoles[i] = phase;
+            if (phase <= 0f)
+            {
+                activities[i] = 1f;
+                gammas[i] = 1f;
+                continue;
             }
 
             var logGamma = 0f;
@@ -79,7 +90,7 @@ public sealed partial class KsFluidmosPhaseSystem
                 if (moles[j] <= 0f || !miscible[i * count + j])
                     continue;
 
-                var fractionJ = moles[j] / phaseMoles;
+                var fractionJ = moles[j] / phase;
                 logGamma += margules[i * count + j] * fractionJ;
 
                 // -½ Σ_j Σ_k over the pairs, which is -Σ over each unordered pair once.
@@ -88,11 +99,12 @@ public sealed partial class KsFluidmosPhaseSystem
                     if (moles[k] <= 0f || !miscible[i * count + k])
                         continue;
 
-                    logGamma -= margules[j * count + k] * fractionJ * moles[k] / phaseMoles;
+                    logGamma -= margules[j * count + k] * fractionJ * moles[k] / phase;
                 }
             }
 
-            activities[i] = moles[i] / phaseMoles * MathF.Exp(Math.Clamp(logGamma, -KsPhaseMath.MaxMargules, KsPhaseMath.MaxMargules));
+            gammas[i] = MathF.Exp(Math.Clamp(logGamma, -KsPhaseMath.MaxMargules, KsPhaseMath.MaxMargules));
+            activities[i] = moles[i] > 0f ? moles[i] / phase * gammas[i] : 1f;
         }
     }
 
@@ -139,4 +151,35 @@ public sealed partial class KsFluidmosPhaseSystem
 
         return KsPhaseMath.BubbleTemperature(liquidActivities, entropies, boilingPoints, pressure, temperature);
     }
+
+    /// <summary>
+    ///     The temperature an entry's solid and its solution are in equilibrium at: its melting point, lowered by what is
+    ///         dissolved in its liquid. <c>Tm' = Tm / (1 - ln(x γ) / k_fus)</c>, the freezing-point depression (and ideal
+    ///         solubility) equation.
+    /// </summary>
+    /// <remarks>
+    ///     <c>x</c> counts the entry's own solid as if it had melted, so a little ice in a lot of something else melts
+    ///         only as far as the heat and the depression allow, not all at once; and it never falls below
+    ///         <see cref="MinFreezingActivity"/>.
+    /// </remarks>
+    private static float EffectiveMeltingPoint(KsFluidReagentProperties properties, KsFluidAmount amount, float gamma, float phaseMoles)
+    {
+        var molesPerUnit = properties.MolesPerUnit;
+        var ownMoles = (amount.Liquid + amount.Solid) * molesPerUnit;
+        var solutionMoles = phaseMoles + amount.Solid * molesPerUnit;
+        if (ownMoles <= 0f || solutionMoles <= 0f || properties.FusionEntropy <= 0f)
+            return properties.MeltingPoint;
+
+        var activity = Math.Clamp(ownMoles / solutionMoles * gamma, MinFreezingActivity, 1f);
+        if (activity >= 1f)
+            return properties.MeltingPoint;
+
+        return properties.MeltingPoint / (1f - MathF.Log(activity) / properties.FusionEntropy);
+    }
+
+    /// <summary>
+    ///     Least activity <see cref="EffectiveMeltingPoint"/> uses, so a trace of a reagent is not depressed without
+    ///         limit.
+    /// </summary>
+    private const float MinFreezingActivity = 0.1f;
 }
