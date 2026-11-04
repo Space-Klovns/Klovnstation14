@@ -31,6 +31,10 @@
     fusionHeat: 60
     fusionEntropy: 20
     mixingFamily: KsHydrocarbon
+  tileReactions:
+  - !type:CreateEntityTileReaction
+    entity: Candle
+    usage: 10
 
 # Solid at room temperature once nothing lighter is dissolving it, so it clogs cold pipes.
 - type: reagent
@@ -46,6 +50,10 @@
     molarMass: 800
     latentHeat: 120
     mixingFamily: KsHydrocarbon
+  tileReactions:
+  - !type:KsSetTileTileReaction
+    tile: FloorAsphalt
+    usage: 20
 
 # Sulfur compounds, as one lump. Boils with kerosene, so distillation cannot get it out: that takes hydrotreating.
 - type: reagent
@@ -73,3 +81,10 @@
   fluidmos:
     molarMass: 10000
     mixingFamily: KsHydrocarbon
+  tileReactions:
+  - !type:CreateEntityTileReaction
+    entity: WallPlastic
+    usage: 50
+    maxOnTileWhitelist:
+      tags:
+      - Wall

@@ -41,6 +41,11 @@
   desc: reagent-desc-ks-ethylene
   physicalDesc: reagent-physical-desc-gaseous
   color: "#d8f0e8"
+  # The gas that ripens fruit, for real.
+  plantMetabolism:
+  - !type:PlantAffectGrowth
+    probability: 0.2
+    amount: 1
   boilingPoint: 169
   meltingPoint: 104
   fluidmos:

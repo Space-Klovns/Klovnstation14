@@ -1,0 +1,10 @@
+# Refined fuels burn in the same generator as welding fuel, longer the better refined they are.
+- type: !PartialOnly entity
+  id: PortableGeneratorJrPacman
+  components:
+  - type: ChemicalFuelGeneratorAdapter
+    reagents:
+      KsGasoline: 2
+      KsDiesel: 1.8
+      KsKerosene: 1.5
+      KsNaphtha: 1
