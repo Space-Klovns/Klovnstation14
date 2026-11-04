@@ -203,7 +203,7 @@ public sealed class KsRefineryReactionTests : GameTest
                 var cleanGasoline = Amount(clean, GasolineReagent);
                 var dirtyGasoline = Amount(dirty, GasolineReagent);
                 Assert.That(cleanGasoline.Liquid + cleanGasoline.Vapor, Is.GreaterThan(0f), "Platinum didn't reform clean naphtha.");
-                Assert.That(Amount(clean, HydrogenReagent).Vapor, Is.GreaterThan(0f), "Reforming made no hydrogen.");
+                Assert.That(clean.GetMoles(Gas.Hydrogen), Is.GreaterThan(0f), "Reforming made no hydrogen gas.");
                 Assert.That(activity, Is.Zero, "Sulfur didn't kill the platinum.");
                 Assert.That(dirtyGasoline.Liquid + dirtyGasoline.Vapor, Is.LessThan(cleanGasoline.Liquid + cleanGasoline.Vapor),
                     "Unhydrotreated feed reformed as well as clean feed.");
@@ -228,12 +228,12 @@ public sealed class KsRefineryReactionTests : GameTest
             var dry = ReactorAir(dryUid, temperature);
             dry.Fluid!.AddLiquid(new KsFluidReagentKey(OrganosulfurReagent, null), 50f);
             var lowHydrogenMoles = 100f * dry.Volume / (Atmospherics.R * temperature);
-            dry.Fluid.SetAmount(new KsFluidReagentKey(HydrogenReagent, null), new KsFluidAmount(0f, 0f, lowHydrogenMoles));
+            dry.SetMoles(Gas.Hydrogen, lowHydrogenMoles);
 
             var fed = ReactorAir(fedUid, temperature);
             fed.Fluid!.AddLiquid(new KsFluidReagentKey(OrganosulfurReagent, null), 50f);
             var hydrogenMoles = 1000f * fed.Volume / (Atmospherics.R * temperature);
-            fed.Fluid.SetAmount(new KsFluidReagentKey(HydrogenReagent, null), new KsFluidAmount(0f, 0f, hydrogenMoles));
+            fed.SetMoles(Gas.Hydrogen, hydrogenMoles);
 
             for (var i = 0; i < 10; i++)
             {

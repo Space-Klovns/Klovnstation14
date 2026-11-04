@@ -34,6 +34,12 @@
   ksVanDerWaalsA: 425
   ksVanDerWaalsB: 0.0371
 
+# Inverts at about 200 K, so it warms on throttling at room temperature.
+- type: !PartialOnly gas
+  id: Hydrogen
+  ksVanDerWaalsA: 24.8
+  ksVanDerWaalsB: 0.0266
+
 # Hydrogen's values: inverts at about 200 K, so it warms on throttling at room temperature. Its atmos heat capacity
 #     (10) is below the physical floor of 1.5 R, so its heat capacity ratio is set to real T2's instead of derived.
 - type: !PartialOnly gas

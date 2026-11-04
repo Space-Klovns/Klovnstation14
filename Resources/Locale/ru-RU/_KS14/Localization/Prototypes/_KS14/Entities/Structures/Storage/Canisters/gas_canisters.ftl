@@ -18,3 +18,11 @@ ent-ZipionCanister = контейнер «zipion»
 # Resources\Prototypes\_KS14\Entities\Structures\Storage\Canisters\gas_canisters.yml
 ent-ZipionCanisterBroken = сломанный газовый баллон
     .desc = Сломанный газовый баллон. Пока ещё не бесполезен, так как из него можно добыть высококачественные материалы.
+
+# Resources\Prototypes\_KS14\Entities\Structures\Storage\Canisters\gas_canisters.yml
+ent-KsHydrogenCanister = канистра с водородом
+    .desc = Канистра, в которую можно наполнить любой вид газа. В данном случае она должна содержать водород. Её можно присоединить к соединительным разъёмам с помощью гаечного ключа.
+
+# Resources\Prototypes\_KS14\Entities\Structures\Storage\Canisters\gas_canisters.yml
+ent-KsHydrogenCanisterBroken = сломанная газовая канистра
+    .desc = Сломанная газовая канистра. Пока ещё не бесполезна, поскольку её можно разобрать на высококачественные материалы.

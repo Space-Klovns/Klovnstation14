@@ -33,6 +33,16 @@
     gas: Nitrogen
 
 - type: gasReaction
+  id: KsCondensationHydrogen
+  priority: 600
+  maximumTemperature: 33.2
+  minimumRequirements:
+    Hydrogen: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: Hydrogen
+
+- type: gasReaction
   id: KsCondensationNitrousOxide
   priority: 600
   maximumTemperature: 308.79

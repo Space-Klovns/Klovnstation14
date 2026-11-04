@@ -28,6 +28,7 @@
       Zipion: stationZipion # KS14
       Encalite: GasEncalite # KS14
       Evaporin: stationEvaporin # KS14
+      Hydrogen: stationHydrogen # KS14
   - type: Tag
     tags:
       - AirSensor
