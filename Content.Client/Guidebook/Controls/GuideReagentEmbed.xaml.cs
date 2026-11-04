@@ -130,6 +130,8 @@ public sealed partial class GuideReagentEmbed : BoxContainer, IDocumentTag, ISea
         }
         #endregion
 
+        KsGenerateFluidReactions(reagent); // KS14
+
         #region Effects
         if (_chemistryGuideData.ReagentGuideRegistry.TryGetValue(reagent.ID, out var guideEntryRegistry) &&
             guideEntryRegistry.GuideEntries != null &&
