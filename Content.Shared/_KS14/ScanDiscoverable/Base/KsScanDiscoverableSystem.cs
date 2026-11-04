@@ -34,6 +34,11 @@ public sealed partial class KsScanDiscoverableSystem : EntitySystem
             return;
 
         _metaDataSystem.SetEntityName(entity.Owner, Loc.GetString(entity.Comp.TrueName));
+
+        var discoveredNameComponent = EnsureComp<KsDiscoveredNameComponent>(entity);
+        discoveredNameComponent.Name = entity.Comp.TrueName;
+        Dirty(entity.Owner, discoveredNameComponent);
+
         if (entity.Comp.DiscoveryPopupLoc is { } popupLoc)
         {
             _popupSystem.PopupPredicted(
