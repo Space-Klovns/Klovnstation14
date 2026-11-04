@@ -514,15 +514,18 @@ public sealed class KsFluidReactionTests : GameTest
         var server = Pair.Server;
         await server.WaitAssertion(() =>
         {
+            // Past where a float can count in ones, so a total of these depends on what was added first.
+            const float large = 16777216f;
+
             var forwards = new KsFluidMixture();
-            forwards.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 0.1f);
-            forwards.AddLiquid(new KsFluidReagentKey(_productReagent, null), 1000f);
-            forwards.AddLiquid(new KsFluidReagentKey(_traceFeedReagent, null), 0.2f);
+            forwards.AddLiquid(new KsFluidReagentKey(_productReagent, null), large);
+            forwards.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 1f);
+            forwards.AddLiquid(new KsFluidReagentKey(_traceFeedReagent, null), 1f);
 
             var backwards = new KsFluidMixture();
-            backwards.AddLiquid(new KsFluidReagentKey(_traceFeedReagent, null), 0.2f);
-            backwards.AddLiquid(new KsFluidReagentKey(_productReagent, null), 1000f);
-            backwards.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 0.1f);
+            backwards.AddLiquid(new KsFluidReagentKey(_traceFeedReagent, null), 1f);
+            backwards.AddLiquid(new KsFluidReagentKey(_feedReagent, null), 1f);
+            backwards.AddLiquid(new KsFluidReagentKey(_productReagent, null), large);
 
             Assert.That(forwards, Is.EqualTo(backwards));
             Assert.That(forwards.GetHashCode(), Is.EqualTo(backwards.GetHashCode()));
