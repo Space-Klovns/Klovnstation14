@@ -1,4 +1,5 @@
 #nullable enable
+using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Fluidmos;
 using Content.Server._KS14.Fluidmos.Devices;
@@ -10,6 +11,11 @@ using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Destructible;
+using Content.Shared.Destructible.Thresholds.Triggers;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -114,6 +120,48 @@ public sealed class KsCatalyticReactorTests : GameTest
         await server.WaitPost(() => reactorUid = server.EntMan.SpawnEntity(ReactorPrototype, testMap.GridCoords));
         await server.WaitRunTicks(5);
         return reactorUid;
+    }
+
+    /// <summary>
+    ///     A reactor's bed comes out at each of its damage thresholds. They're read from the reactor, so a change to its
+    ///         durability doesn't change what's being tested.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task WreckingAReactorDropsItsBed(bool obliterated)
+    {
+        var server = Pair.Server;
+        var reactorUid = await SpawnReactor();
+        var itemSlotsSystem = server.System<ItemSlotsSystem>();
+        var damageableSystem = server.System<DamageableSystem>();
+        var containerSystem = server.System<SharedContainerSystem>();
+
+        EntityUid bedUid = default;
+        await server.WaitAssertion(() =>
+        {
+            var reactor = server.EntMan.GetComponent<KsCatalyticReactorComponent>(reactorUid);
+            bedUid = server.EntMan.SpawnEntity(_bedPrototype, server.EntMan.GetComponent<TransformComponent>(reactorUid).Coordinates);
+            Assert.That(itemSlotsSystem.TryInsert(reactorUid, reactor.CatalystSlotId, bedUid, user: null));
+
+            var thresholds = server.EntMan.GetComponent<DestructibleComponent>(reactorUid).Thresholds
+                .Select(threshold => threshold.Trigger)
+                .OfType<DamageTrigger>()
+                .Select(trigger => trigger.Damage)
+                .ToList();
+            Assert.That(thresholds, Is.Not.Empty);
+
+            var damage = new DamageSpecifier();
+            damage.DamageDict.Add("Blunt", obliterated ? thresholds.Max() : thresholds.Min());
+            damageableSystem.TryChangeDamage(reactorUid, damage, ignoreResistances: true);
+        });
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.Deleted(reactorUid), "The reactor survived its own damage thresholds.");
+            Assert.That(server.EntMan.EntityExists(bedUid), "The catalyst bed was destroyed with its reactor.");
+            Assert.That(containerSystem.IsEntityInContainer(bedUid), Is.False, "The bed is still in a container.");
+        });
     }
 
     [Test]
