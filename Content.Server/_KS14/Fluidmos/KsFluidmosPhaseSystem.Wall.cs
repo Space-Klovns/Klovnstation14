@@ -66,9 +66,9 @@ public sealed partial class KsFluidmosPhaseSystem
 
         // Each reagent's activity in the packet's liquid, as it came to the wall.
         var activities = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
-        var gammas = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
+        var freezingGammas = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
         var phaseMoles = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
-        ComputeActivities(amounts, activities, gammas, phaseMoles, temperature);
+        ComputeActivities(amounts, activities, freezingGammas, phaseMoles, temperature);
 
         var vaporTotal = packet.TotalMoles + fluid.VaporMoles;
         var heatOut = 0f;

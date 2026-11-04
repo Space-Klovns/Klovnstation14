@@ -99,5 +99,10 @@ public sealed class KsFluidReagentProperties
     /// </summary>
     public bool HasInteractions { get; init; }
 
+    /// <summary>
+    ///     Whether a <see cref="Mixing.KsFluidPairInteractionPrototype"/> names this reagent, so nothing else need look.
+    /// </summary>
+    public bool InNamedPair { get; init; }
+
     public bool Linked => GasIndex >= 0;
 }

@@ -68,7 +68,7 @@ public sealed partial class KsFluidmosPropertiesSystem : EntitySystem
     /// </summary>
     public float Interaction(KsFluidReagentProperties first, KsFluidReagentProperties second)
     {
-        if (_pairInteractions.TryGetValue((first.Id, second.Id), out var margules))
+        if (first.InNamedPair && second.InNamedPair && _pairInteractions.TryGetValue((first.Id, second.Id), out var margules))
             return margules;
 
         if (first.MixingFamily < 0 || second.MixingFamily < 0)
@@ -228,6 +228,7 @@ public sealed partial class KsFluidmosPropertiesSystem : EntitySystem
             Color = reagentPrototype.SubstanceColor,
             MixingFamily = mixingFamily,
             HasInteractions = mixingFamily >= 0 || _pairedReagents.Contains(reagentPrototype.ID),
+            InNamedPair = _pairedReagents.Contains(reagentPrototype.ID),
         };
     }
 }

@@ -34,15 +34,85 @@ public sealed class KsActivityCoefficientTests : GameTest
   fluidmos:
     molarMass: 100
     mixingFamily: KsTestOilFamily
+
+- type: reagent
+  id: KsTestActivityIce
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 273
+  fluidmos:
+    molarMass: 20
+    fusionHeat: 300
+    fusionEntropy: 2.65
+
+- type: reagent
+  id: KsTestActivitySolvent
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 50
+  fluidmos:
+    molarMass: 20
+
+- type: ksFluidPairInteraction
+  id: KsTestActivityPair
+  first: KsTestActivityIce
+  second: KsTestActivitySolvent
+  margules: 2
+
+- type: reagent
+  id: KsTestWallFirst
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 360
+  meltingPoint: 100
+  fluidmos:
+    molarMass: 40
+
+- type: reagent
+  id: KsTestWallSecond
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+  fluidmos:
+    molarMass: 40
+
+- type: reagent
+  id: KsTestWallIdealSecond
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  boilingPoint: 5000
+  meltingPoint: 100
+  fluidmos:
+    molarMass: 40
+
+- type: ksFluidPairInteraction
+  id: KsTestWallPair
+  first: KsTestWallFirst
+  second: KsTestWallSecond
+  margules: 2
 ";
 
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private static readonly ProtoId<ReagentPrototype> EthanolReagent = "Ethanol";
+    private static readonly ProtoId<ReagentPrototype> CarbonDioxideReagent = "CarbonDioxide";
     private static readonly KsFluidReagentKey WaterKey = new(WaterReagent, null);
     private static readonly KsFluidReagentKey EthanolKey = new(EthanolReagent, null);
 
     // Instance field: this id exists only in the test prototypes above.
     private readonly ProtoId<ReagentPrototype> _oilReagent = "KsTestImmiscibleOil";
+    private readonly ProtoId<ReagentPrototype> _freezingReagent = "KsTestActivityIce";
+    private readonly ProtoId<ReagentPrototype> _freezingSolvent = "KsTestActivitySolvent";
+    private readonly ProtoId<ReagentPrototype> _wallFirst = "KsTestWallFirst";
+    private readonly ProtoId<ReagentPrototype> _wallSecond = "KsTestWallSecond";
+    private readonly ProtoId<ReagentPrototype> _wallIdealSecond = "KsTestWallIdealSecond";
 
     private const float NodeVolume = 200f;
 
@@ -86,6 +156,138 @@ public sealed class KsActivityCoefficientTests : GameTest
         var waterLiquid = waterAmount.Liquid * water.MolesPerUnit;
         var ethanolLiquid = ethanolAmount.Liquid * ethanol.MolesPerUnit;
         return (ethanolAmount.Vapor / (ethanolAmount.Vapor + waterVapor), ethanolLiquid / (ethanolLiquid + waterLiquid));
+    }
+
+    private static void Step(KsFluidmosPhaseSystem phaseSystem, IGameTiming gameTiming, GasMixture mixture, int steps, float holdTemperature)
+    {
+        for (var i = 0; i < steps; i++)
+        {
+            mixture.Temperature = holdTemperature;
+            mixture.Fluid!.LastPhaseTime = gameTiming.CurTime - TimeSpan.FromSeconds(0.5f);
+            phaseSystem.UpdatePhases(mixture, holder: null);
+        }
+    }
+
+    /// <summary>
+    ///     Where a reagent freezes depends on the mixture as a whole, not on how much of it has frozen so far: between its
+    ///         depressed melting point and its pure one, ice in the same mixture has to melt.
+    /// </summary>
+    [Test]
+    public async Task FreezingDoesNotRaiseItsOwnFreezingPoint()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+        var melting = server.ProtoMan.Index(_freezingReagent).MeltingPoint!.Value;
+
+        await server.WaitAssertion(() =>
+        {
+            // Equal moles at the clamped Margules 2: ln γ = 0.5, so x γ = 0.82 and it melts about 7% lower.
+            var between = melting / 1.03f;
+            var mixture = MakePipe(between);
+            mixture.Fluid!.AddLiquid(new KsFluidReagentKey(_freezingSolvent, null), 100f);
+            mixture.Fluid.AddLiquid(new KsFluidReagentKey(_freezingReagent, null), 5f);
+            mixture.Fluid.SetAmount(new KsFluidReagentKey(_freezingReagent, null), new KsFluidAmount { Liquid = 5f, Solid = 95f });
+            AddHeadspace(mixture);
+
+            Step(phaseSystem, gameTiming, mixture, 400, between);
+
+            mixture.Fluid.TryGetAmount(new KsFluidReagentKey(_freezingReagent, null), out var amount);
+            Assert.That(amount.Solid, Is.Zero, "Ice stayed frozen in a mixture that melts below this temperature.");
+        });
+    }
+
+    /// <summary>
+    ///     A pure reagent below its triple point has no stable liquid, but one dissolved in something can have.
+    /// </summary>
+    [Test]
+    public async Task ADissolvedReagentStaysLiquidBelowItsPureTriplePoint()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            const float temperature = 300f;
+            var mixture = MakePipe(temperature);
+            mixture.Fluid!.AddLiquid(new KsFluidReagentKey(_freezingSolvent, null), 100f);
+            mixture.Fluid.AddLiquid(new KsFluidReagentKey(CarbonDioxideReagent, null), 10f);
+            AddHeadspace(mixture);
+
+            Step(phaseSystem, gameTiming, mixture, 4, temperature);
+
+            mixture.Fluid.TryGetAmount(new KsFluidReagentKey(CarbonDioxideReagent, null), out var amount);
+            Assert.That(amount.Solid, Is.Zero, "A dissolved reagent froze at room temperature.");
+        });
+    }
+
+    /// <summary>
+    ///     However a liquid's reagents came to be in their order, each takes its fair part of a flash.
+    /// </summary>
+    [Test]
+    public async Task AFlashDoesNotFavourWhicheverReagentIsFirst()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gameTiming = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitAssertion(() =>
+        {
+            GasMixture Flash(KsFluidReagentKey first, KsFluidReagentKey second)
+            {
+                var mixture = MakePipe(370f);
+                mixture.Fluid!.AddLiquid(first, 500f);
+                mixture.Fluid.AddLiquid(second, 500f);
+                AddHeadspace(mixture);
+                mixture.Fluid!.LastPhaseTime = gameTiming.CurTime - TimeSpan.FromSeconds(0.5f);
+                phaseSystem.UpdatePhases(mixture, holder: null);
+                return mixture;
+            }
+
+            var waterFirst = Flash(WaterKey, EthanolKey);
+            var ethanolFirst = Flash(EthanolKey, WaterKey);
+            waterFirst.Fluid!.TryGetAmount(EthanolKey, out var ethanolLast);
+            ethanolFirst.Fluid!.TryGetAmount(EthanolKey, out var ethanolEarly);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(ethanolEarly.Vapor, Is.GreaterThan(0f), "Nothing flashed, so this proved nothing.");
+                Assert.That(ethanolLast.Vapor, Is.EqualTo(ethanolEarly.Vapor).Within(ethanolEarly.Vapor * 0.1f),
+                    "How much ethanol flashed depends on the order of the mixture's reagents.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The same pair of reagents at the same fractions boils differently at a wall when they mix non-ideally.
+    /// </summary>
+    [Test]
+    public async Task WallsUseActivitiesToo()
+    {
+        var server = Pair.Server;
+        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            const float temperature = 350f;
+            float Heat(ProtoId<ReagentPrototype> second)
+            {
+                var packet = MakePipe(temperature);
+                // Some vapor already, as that's what sets the plateau the wall works against.
+                packet.Fluid!.SetAmount(new KsFluidReagentKey(_wallFirst, null), new KsFluidAmount { Liquid = 50f, Vapor = 1f });
+                packet.Fluid.AddLiquid(new KsFluidReagentKey(second, null), 50f);
+                AddHeadspace(packet);
+                // Little enough that the wall limits what boils, at a plateau set by how readily the mixture does.
+                var wall = new KsWallHeatTransfer(100f, 380f, 0f, 0f);
+                return phaseSystem.ExchangeAtWall(packet, 0.5f * Atmospherics.OneAtmosphere, wall, 0.5f);
+            }
+
+            var ideal = Heat(_wallIdealSecond);
+            var nonIdeal = Heat(_wallSecond);
+            Assert.That(nonIdeal, Is.Not.EqualTo(ideal).Within(MathF.Abs(ideal) * 0.05f + 0.001f),
+                "A non-ideal mixture behaved as an ideal one at a wall.");
+        });
     }
 
     [Test]
