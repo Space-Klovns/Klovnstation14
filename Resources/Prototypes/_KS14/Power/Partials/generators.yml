@@ -1,4 +1,5 @@
-# Refined fuels burn in the same generator as welding fuel, longer the better refined they are.
+# Refined fuels burn in the same generator as welding fuel, longer the better refined they are. Every other part of a
+#     petroleum cut is listed too, however badly it burns: no machine can pick a cut clean, and anything unlisted clogs.
 - type: !PartialOnly entity
   id: PortableGeneratorJrPacman
   components:
@@ -8,3 +9,12 @@
       KsDiesel: 1.8
       KsKerosene: 1.5
       KsNaphtha: 1
+      KsGasOil: 0.5
+      KsRefineryGas: 0.5
+      KsEthane: 0.5
+      KsEthylene: 0.5
+      KsParaffinWax: 0.25
+      KsOrganosulfur: 0.25
+      KsBitumen: 0.1
+      KsPolyethylene: 0.1
+      Napalm: 1 # Gasoline and polyethylene make it as soon as they meet, in the tank too.

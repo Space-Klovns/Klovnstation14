@@ -13,8 +13,6 @@
     latentHeat: 170
     mixingFamily: KsHydrocarbon
   tileEffects:
-  - !type:BoilTileEffect
-    smoke: true
   - !type:LogicAndTileEffect
     conditions:
     - !type:CheckTemperatureTileEffect
@@ -23,6 +21,8 @@
     - !type:ChemicalFireTileEffect
       removed: 2
       durationScale: 2
+  - !type:BoilTileEffect
+    smoke: true
   tileReactions:
   - !type:FlammableTileReaction {}
 
@@ -39,8 +39,6 @@
     latentHeat: 170
     mixingFamily: KsHydrocarbon
   tileEffects:
-  - !type:BoilTileEffect
-    smoke: true
   - !type:LogicAndTileEffect
     conditions:
     - !type:CheckTemperatureTileEffect
@@ -49,6 +47,8 @@
     - !type:ChemicalFireTileEffect
       removed: 2
       durationScale: 2
+  - !type:BoilTileEffect
+    smoke: true
   tileReactions:
   - !type:FlammableTileReaction {}
 
@@ -65,8 +65,6 @@
     latentHeat: 160
     mixingFamily: KsHydrocarbon
   tileEffects:
-  - !type:BoilTileEffect
-    smoke: true
   - !type:LogicAndTileEffect
     conditions:
     - !type:CheckTemperatureTileEffect
@@ -75,6 +73,8 @@
     - !type:ChemicalFireTileEffect
       removed: 2
       durationScale: 2
+  - !type:BoilTileEffect
+    smoke: true
   tileReactions:
   - !type:FlammableTileReaction {}
 
@@ -91,8 +91,6 @@
     latentHeat: 150
     mixingFamily: KsHydrocarbon
   tileEffects:
-  - !type:BoilTileEffect
-    smoke: true
   - !type:LogicAndTileEffect
     conditions:
     - !type:CheckTemperatureTileEffect
@@ -101,5 +99,7 @@
     - !type:ChemicalFireTileEffect
       removed: 2
       durationScale: 2
+  - !type:BoilTileEffect
+    smoke: true
   tileReactions:
   - !type:FlammableTileReaction {}

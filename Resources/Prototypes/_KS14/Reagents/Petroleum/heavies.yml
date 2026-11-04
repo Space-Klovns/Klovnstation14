@@ -35,6 +35,11 @@
   - !type:CreateEntityTileReaction
     entity: Candle
     usage: 10
+    maxOnTile: 3
+    maxOnTileWhitelist:
+      tags:
+      - Candle
+    ksCountLoose: true
 
 # Solid at room temperature once nothing lighter is dissolving it, so it clogs cold pipes.
 - type: reagent

@@ -5,13 +5,10 @@
   parent: BaseItem
   id: KsCatalystBedBase
   components:
-  - type: Sprite
-    sprite: Objects/Materials/materials.rsi
-    state: ash
   - type: Item
     size: Small
   - type: StaticPrice
-    price: 200
+    price: 30 # Under what a lathe spends on one, so printing them for sale loses money.
 
 - type: entity
   parent: KsCatalystBedBase
@@ -20,6 +17,8 @@
   description: Platinum on alumina pellets, for reforming naphtha. Sulfur ruins it.
   components:
   - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
     color: "#d8d8e0"
   - type: KsFluidCatalyst
     catalyst: KsPlatinum
@@ -31,6 +30,8 @@
   description: Cobalt and molybdenum sulfides on alumina, for hydrotreating sulfur out of oil.
   components:
   - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
     color: "#5a78c8"
   - type: KsFluidCatalyst
     catalyst: KsCobaltMolybdenum
@@ -42,6 +43,8 @@
   description: Porous aluminosilicate, for cracking gas oil into gasoline. Coke fouls it.
   components:
   - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
     color: "#e8e0c8"
   - type: KsFluidCatalyst
     catalyst: KsZeolite
@@ -53,6 +56,8 @@
   description: Activated alumina, for the Claus process that turns hydrogen sulfide into sulfur.
   components:
   - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
     color: "#f0f0f0"
   - type: KsFluidCatalyst
     catalyst: KsAlumina
@@ -64,6 +69,8 @@
   description: Titanium chloride on magnesia, for polymerising ethylene. Water and sulfur kill it.
   components:
   - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
     color: "#c85a78"
   - type: KsFluidCatalyst
     catalyst: KsZieglerNatta
@@ -132,3 +139,4 @@
   position: 1,-2
   technologyPrerequisites:
   - SalvageEquipment
+  - AdvancedAtmospherics

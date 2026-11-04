@@ -9,7 +9,8 @@ using Robust.Shared.Prototypes;
 namespace Content.Server._KS14.Chemistry.TileReactions;
 
 /// <summary>
-///     Uses a reagent up to turn the floor it lands on into another tile. Open space has nothing to pave.
+///     Uses a reagent up to turn the floor it lands on into another tile. Open space has nothing to pave, and an
+///         indestructible tile can't be replaced.
 /// </summary>
 [UsedImplicitly]
 [DataDefinition]
@@ -31,7 +32,11 @@ public sealed partial class KsSetTileTileReaction : ITileReaction
         List<ReagentData>? data)
     {
         var turfSystem = entityManager.System<TurfSystem>();
-        if (reactVolume < Usage || turfSystem.IsSpace(tile) || turfSystem.GetContentTileDefinition(tile).ID == Tile)
+        if (reactVolume < Usage || turfSystem.IsSpace(tile))
+            return FixedPoint2.Zero;
+
+        var current = turfSystem.GetContentTileDefinition(tile);
+        if (current.Indestructible || current.ID == Tile)
             return FixedPoint2.Zero;
 
         var replacement = IoCManager.Resolve<IPrototypeManager>().Index(Tile);

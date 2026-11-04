@@ -80,7 +80,7 @@
   # Geyser
   - type: KsScanDiscoverable
     discoveryPopupLoc: ks-specific-geyser-discovered
-    trueName: discovered geyser
+    trueName: ks-scan-discovered-discovered-geyser
   - type: MiningScannerViewable
 
 - type: entity
@@ -107,7 +107,7 @@
   - type: Solution
     solution: *plasma_sol
   - type: KsScanDiscoverable
-    trueName: plasma geyser
+    trueName: ks-scan-discovered-plasma-geyser
 
 - type: entity
   parent: KsGeyserBase
@@ -123,7 +123,7 @@
   - type: Solution
     solution: *co2_sol
   - type: KsScanDiscoverable
-    trueName: liquid carbon dioxide geyser
+    trueName: ks-scan-discovered-liquid-carbon-dioxide-geyser
 
 - type: entity
   parent: KsGeyserBase
@@ -139,7 +139,7 @@
   - type: Solution
     solution: *n2_sol
   - type: KsScanDiscoverable
-    trueName: liquid nitrogen geyser
+    trueName: ks-scan-discovered-liquid-nitrogen-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -155,7 +155,7 @@
   - type: Solution
     solution: *fresium_sol
   - type: KsScanDiscoverable
-    trueName: fresium geyser
+    trueName: ks-scan-discovered-fresium-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -170,7 +170,7 @@
   - type: Solution
     solution: *klovnide_sol
   - type: KsScanDiscoverable
-    trueName: klovnide geyser
+    trueName: ks-scan-discovered-klovnide-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -185,7 +185,7 @@
   - type: Solution
     solution: *zipium_sol
   - type: KsScanDiscoverable
-    trueName: zipium geyser
+    trueName: ks-scan-discovered-zipium-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -200,7 +200,7 @@
   - type: Solution
     solution: *artifexium_sol
   - type: KsScanDiscoverable
-    trueName: artifexium geyser
+    trueName: ks-scan-discovered-artifexium-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -215,7 +215,7 @@
   - type: Solution
     solution: *wittel_sol
   - type: KsScanDiscoverable
-    trueName: wittel geyser
+    trueName: ks-scan-discovered-wittel-geyser
 
 - type: entity
   parent: KsGeyserBase
@@ -245,7 +245,7 @@
   - type: Solution
     solution: *crude_sol
   - type: KsScanDiscoverable
-    trueName: crude oil geyser
+    trueName: ks-scan-discovered-crude-oil-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -277,7 +277,7 @@
   - type: Solution
     solution: *sour_sol
   - type: KsScanDiscoverable
-    trueName: sour crude geyser
+    trueName: ks-scan-discovered-sour-crude-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -299,4 +299,4 @@
   - type: Solution
     solution: *condensate_sol
   - type: KsScanDiscoverable
-    trueName: gas condensate geyser
+    trueName: ks-scan-discovered-gas-condensate-geyser

@@ -69,7 +69,7 @@ That is the link:
 - **Linked** reagents name an atmos gas (`fluidmos: gas: WaterVapor`). Their vapor *is* that gas's moles in the
   `GasMixture`, so `KsFluidAmount.Vapor` stays 0 for them. Their vapor spreads across tiles as gas, shows in the gas
   table, and condenses back in pipes. Their molar mass comes from the gas.
-  Currently linked: Water, Oxygen, Nitrogen, NitrousOxide, Ammonia, CarbonDioxide.
+  Currently linked: Water, Oxygen, Nitrogen, NitrousOxide, Ammonia, CarbonDioxide, Hydrogen.
 - **Unlinked** reagents keep their vapor in `KsFluidAmount.Vapor` (moles). It leaves a pipe as smoke.
 
 **Plasma must stay unlinked.** With its real boiling point (about 352 K), a linked plasma gas would condense at room
@@ -327,6 +327,10 @@ and a slot for a bed (`KsFluidCatalystComponent`). It steps the bed's reactions 
 either side set the residence time. The bed also takes up the `poisons` of its `ksFluidCatalyst`, which leave the
 mixture and cost it activity.
 
+A step's extent is capped so the temperature moves at most `MaxReactionDeltaT`, counting both the reaction's heat and what
+it does to the heat capacity. An extent too small to leave a product the reagent table would keep isn't run: it waits on
+the mixture (`KsFluidMixture.DeferredExtent`) until it's big enough, so a trace product isn't lost to the table's minimum.
+
 ## Non-ideal mixing
 
 Raoult's mole fraction is now an activity, `x γ`, in the phase step and at radiator walls (`ComputeActivities` in
@@ -353,6 +357,10 @@ same equation is ideal solubility, which is how wax crystallises out of chilled 
 `fusionEntropy` of 20 for this.
 
 ## Inseparable groups and the refinery
+
+`KsReagentSeparationSystem.SplitGroup` rounds each member's share up or down at random, weighted so its expected value
+is exact, and the shares always add up to what was asked for. Any fixed rounding would be a separator: a trace member
+would stay behind through any number of small transfers.
 
 Reagents with `ksInseparableGroup` can't be picked apart by machines. `KsReagentSeparationSystem` moves a selected
 member's whole group in proportion: ChemMaster transfer and discard, every plumbing pull (a group passes an outlet if

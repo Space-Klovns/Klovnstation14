@@ -37,14 +37,16 @@
   </Box>
   Distilling only sorts what crude already holds. To make anything new, you need a [textlink="catalytic reactor" link="KsFluidDevices"] and a catalyst bed from a protolathe, once Petrochemistry is researched. Each bed does one job, and only inside a set range of temperatures.
 
+  Reforming, catalytic cracking and steam cracking all run hotter than an ordinary heater can reach, so they need a [bold]hellfire heater[/bold]. Advanced Atmospherics unlocks the hellfire freezer board, and a screwdriver turns that board into a heater's.
+
   - [bold]Hydrotreating[/bold] (cobalt-molybdenum). Hot, with hydrogen under pressure, it turns organosulfur compounds into diesel and [bold]hydrogen sulfide[/bold], a toxic gas you can flash off in a separator.
   - [bold]The Claus process[/bold] (alumina). Hydrogen sulfide and oxygen become sulfur and steam, so the toxic gas ends up useful.
-  - [bold]Reforming[/bold] (platinum). Very hot, it turns naphtha into [bold]gasoline[/bold] and hydrogen, and that hydrogen feeds hydrotreating. Start it off with a hydrogen canister, or hydrogen from a chemical dispenser, which boils into the gas as soon as it reaches a pipe. Reforming soaks up heat and stalls itself, so reheat between reactors in a row. Sulfur kills platinum, so hydrotreat the naphtha first.
+  - [bold]Reforming[/bold] (platinum). Very hot, it turns naphtha into [bold]gasoline[/bold] and hydrogen, and that hydrogen feeds hydrotreating. Start it off with a hydrogen canister from cargo, or hydrogen from a chemical dispenser, which boils into the gas as soon as it reaches a pipe. Reforming soaks up heat and stalls itself, so reheat between reactors in a row. Sulfur kills platinum, so hydrotreat the naphtha first.
   - [bold]Catalytic cracking[/bold] (zeolite). Hotter still, it breaks gas oil into gasoline, refinery gas and diesel. The coke it leaves wears the bed out.
-  - [bold]Polymerising[/bold] (Ziegler-Natta). Ethylene under pressure becomes [bold]polyethylene[/bold]. It gives off a great deal of heat, so cool it. Below the polymer's melting point it sets solid in the reactor; let it run away and it falls apart again. Water and sulfur kill the bed.
+  - [bold]Polymerising[/bold] (Ziegler-Natta). Ethylene under pressure becomes [bold]polyethylene[/bold]. It gives off a great deal of heat, so cool it. Below the polymer's melting point it sets solid in the reactor. Let it overheat and it simply stops until it cools; only a heater can take the polymer hot enough to fall apart again. Water and sulfur kill the bed.
 
   ## Steam cracking
-  This one needs no reactor, just a great deal of heat. Naphtha or ethane in a pipe with plenty of steam, heated nearly as hot as a heater can go, cracks into [bold]ethylene[/bold] and a mix of lighter things. Take it away and quench it quickly: left hot, ethylene breaks down into coke and clogs the cracker.
+  This one needs no reactor, just a great deal of heat. Naphtha or ethane in a pipe with plenty of steam, heated nearly as hot as a hellfire heater can go, cracks into [bold]ethylene[/bold] and a mix of lighter things. Take it away and quench it quickly: left hot, ethylene breaks down into coke and clogs the cracker.
 
   Ethylene and [bold]ethane[/bold] boil very close together, far below room temperature. Splitting them takes a long, cold column, with an [textlink="expansion valve" link="KsFluidDevices"] and plenty of stages.
 
@@ -52,7 +54,7 @@
   Coke won't flow or melt. Burn it out: oxygen in a very hot pipe turns it into carbon dioxide.
 
   ## What it's all for
-  - [bold]Fuel.[/bold] A J.R.P.A.C.M.A.N. generator burns gasoline, diesel, kerosene and naphtha as well as welding fuel, and the better refined the fuel, the longer it lasts.
+  - [bold]Fuel.[/bold] A J.R.P.A.C.M.A.N. generator burns gasoline, diesel, kerosene and naphtha as well as welding fuel, and the better refined the fuel, the longer it lasts. Heavier and dirtier cuts burn too, just badly.
   - [bold]Plastic walls.[/bold] Spill enough polyethylene and it sets into a wall where it lands.
   - [bold]Asphalt.[/bold] Spilled bitumen paves the floor under it.
   - [bold]Candles.[/bold] Spilled wax sets into one.

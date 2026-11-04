@@ -58,7 +58,7 @@
     keyOut: discovered
   - type: KsScanDiscoverable
     discoveryPopupLoc: ks-specific-orevent-discovered
-    trueName: discovered ore vent
+    trueName: ks-scan-discovered-discovered-ore-vent
   - type: AddComponentsOnTrigger
     keysIn: [discovered]
     removeExisting: true # replaces the nameless interest
@@ -151,7 +151,7 @@
   abstract: true
   components:
   - type: KsScanDiscoverable
-    trueName: common ore vent
+    trueName: ks-scan-discovered-common-ore-vent
   - type: AddComponentsOnTrigger
     keysIn: [discovered]
     components: # copied from PenEmbeddable
@@ -177,7 +177,7 @@
   abstract: true
   components:
   - type: KsScanDiscoverable
-    trueName: rare ore vent
+    trueName: ks-scan-discovered-rare-ore-vent
   - type: AddComponentsOnTrigger
     keysIn: [discovered]
     components: # copied from PenEmbeddable

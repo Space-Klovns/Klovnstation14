@@ -99,7 +99,8 @@
   activationTemperature: 10000
   enthalpy: 200
 
-# Outruns thermal cracking at these temperatures, which would otherwise turn the feed to coke.
+# Outruns thermal cracking at these temperatures while its bed is fresh and fills most of its net. A worn bed, or one in
+#     a long net, loses that race, and the feed turns to coke.
 - type: ksFluidReaction
   id: KsFluidCatalyticCracking
   catalyst: KsZeolite
@@ -181,9 +182,9 @@
   activationTemperature: 3000
   enthalpy: -300
   minPartialPressure:
-    KsEthylene: 1000
+    KsEthylene: 150
 
-# What a runaway polymer reactor ends in.
+# Well past where it forms, which takes a heater: the reaction's own heat stalls it at its maximum long before this.
 - type: ksFluidReaction
   id: KsPolyethyleneDepolymerisation
   reactants:

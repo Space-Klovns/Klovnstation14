@@ -42,14 +42,14 @@ ent-KsGeyserZipium = необнаруженный гейзер
 # Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
 ent-KsGeyserCrudeOil = необнаруженный гейзер
     .desc = Это гейзер. При сканировании он будет удобно отображаться на масс-сканерах.
-    .suffix = Crude Oil
+    .suffix = Сырая нефть
 
 # Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
 ent-KsGeyserSourCrude = необнаруженный гейзер
     .desc = Это гейзер. При сканировании он будет удобно отображаться на масс-сканерах.
-    .suffix = Sour Crude
+    .suffix = Сернистая нефть
 
 # Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
 ent-KsGeyserGasCondensate = необнаруженный гейзер
     .desc = Это гейзер. При сканировании он будет удобно отображаться на масс-сканерах.
-    .suffix = Gas Condensate
+    .suffix = Газовый конденсат

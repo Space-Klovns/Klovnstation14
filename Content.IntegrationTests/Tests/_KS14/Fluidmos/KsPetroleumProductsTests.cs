@@ -1,4 +1,6 @@
 #nullable enable
+using Content.Server.Chemistry.TileReactions;
+using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Power.Generator;
 using Content.Shared.Chemistry.Components;
@@ -79,6 +81,37 @@ public sealed class KsPetroleumProductsTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     No machine can pick a cut clean, so a tank holding any of the group's reagents has to run.
+    /// </summary>
+    [Test]
+    public async Task NoPetroleumCutCloggsTheGenerator()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var solutionSystem = server.System<SharedSolutionContainerSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var generatorUid = server.EntMan.SpawnEntity(GeneratorPrototype, testMap.GridCoords);
+            var adapter = server.EntMan.GetComponent<ChemicalFuelGeneratorAdapterComponent>(generatorUid);
+            Assert.That(solutionSystem.TryGetSolution(generatorUid, adapter.SolutionName, out var tankEntity, out _));
+
+            var cut = new Solution();
+            foreach (var reagent in server.ProtoMan.EnumeratePrototypes<ReagentPrototype>())
+            {
+                if (reagent.KsInseparableGroup == server.ProtoMan.Index(GasolineReagent).KsInseparableGroup)
+                    cut.AddReagent(reagent.ID, FixedPoint2.New(1));
+            }
+
+            Assert.That(solutionSystem.TryAddSolution(tankEntity!.Value, cut), "The cut didn't fit in the tank.");
+
+            var ev = new GeneratorGetCloggedEvent();
+            server.EntMan.EventBus.RaiseLocalEvent(generatorUid, ref ev);
+            Assert.That(ev.Clogged, Is.False, "Part of a petroleum cut clogs the generator.");
+        });
+    }
+
     [Test]
     public async Task SpilledPolyethyleneSetsIntoOneWallPerTile()
     {
@@ -121,6 +154,47 @@ public sealed class KsPetroleumProductsTests : GameTest
 
             puddleSystem.DoTileReactions(tile, solution);
             Assert.That((float)solution.Volume, Is.EqualTo(afterPaving).Within(0.01f), "Bitumen was used up on tile that was already asphalt.");
+        });
+    }
+
+    [Test]
+    public async Task BitumenLeavesIndestructibleFloorsAlone()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var puddleSystem = server.System<SharedPuddleSystem>();
+        var turfSystem = server.System<TurfSystem>();
+        var mapSystem = server.System<SharedMapSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var indestructible = server.ProtoMan.EnumeratePrototypes<ContentTileDefinition>().First(tile => tile.Indestructible && !tile.MapAtmosphere);
+            mapSystem.SetTile(testMap.Grid, testMap.Tile.GridIndices, new Tile(indestructible.TileId));
+
+            var tile = mapSystem.GetTileRef(testMap.Grid, testMap.Tile.GridIndices);
+            puddleSystem.DoTileReactions(tile, Spilled(BitumenReagent, Spill));
+
+            tile = mapSystem.GetTileRef(testMap.Grid, testMap.Tile.GridIndices);
+            Assert.That(turfSystem.GetContentTileDefinition(tile).ID, Is.EqualTo(indestructible.ID), "Bitumen replaced an indestructible floor.");
+        });
+    }
+
+    [Test]
+    public async Task SpilledWaxStopsPilingUpCandles()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var puddleSystem = server.System<SharedPuddleSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var reaction = server.ProtoMan.Index(WaxReagent).TileReactions!.OfType<CreateEntityTileReaction>().Single();
+            for (var i = 0; i < reaction.MaxOnTile * 3; i++)
+            {
+                puddleSystem.DoTileReactions(testMap.Tile, Spilled(WaxReagent, Spill));
+            }
+
+            Assert.That(CountOnMap(testMap, CandlePrototype), Is.EqualTo(reaction.MaxOnTile), "Wax piled up candles past its limit.");
         });
     }
 
