@@ -40,7 +40,7 @@
   ## Safety
   - [bold]Keep oxygen out of an ammonia loop.[/bold] Ammonia burns with oxygen once it is warm, and the high side of a loop is warm.
   - [bold]A broken loop spills its refrigerant.[/bold] Liquid ammonia boils off into the room as ammonia gas, which is harmful to breathe.
-  - [bold]Pumps heat their room.[/bold] Most of the compressor's heat goes into the room it stands in, so keep it out of the room you are cooling.
+  - [bold]Pumps heat their room.[/bold] A powered compressor turns most of its heat back into electricity, but some still goes into the room it stands in, and more the less power it has. Keep it out of the room you are cooling.
 
   ## Moving heat between pipes
   Nothing moves heat straight from one pipe into another. To cool a pipe with your refrigerator, put its radiators and the evaporator's radiators together in a small sealed chamber, and let the chamber's air carry the heat between them.

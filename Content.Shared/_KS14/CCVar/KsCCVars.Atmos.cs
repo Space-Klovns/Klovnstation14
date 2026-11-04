@@ -98,6 +98,24 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.atmos.pump_compression_heat_fraction", 0.1f, CVar.SERVERONLY);
 
     /// <summary>
+    ///     Share of the compression heat a powered device doesn't keep in its gas that it turns back into electricity, from
+    ///         0 to 1, rather than heating its room. The device isn't billed for what it recovers. The balance knob for how
+    ///         hot a working pump's room gets. A device off the grid recovers nothing.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPumpHeatRecovery =
+        CVarDef.Create("klovn.atmos.pump_heat_recovery", 0.95f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How far past its idle load a compressing device's electrical load can climb, as a multiple of that idle load: at
+    ///         4, a 200 W pump draws at most 1 kW. What is left of its work past that goes unpaid. Mind that this adds up:
+    ///         an APC with many devices on it stops them climbing past what it can sustain.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPumpMaxLoadMultiplier =
+        CVarDef.Create("klovn.atmos.pump_max_load_multiplier", 4f, CVar.SERVERONLY);
+
+    /// <summary>
     ///     Share of a cooking-off pipe net's explosive fluid its bursting pipes spray onto their tiles, from 0 to 1, as
     ///         liquid at the net's temperature. The rest goes into the explosions. 0 makes them pure blasts; 1 sprays
     ///         everything and explodes nothing.

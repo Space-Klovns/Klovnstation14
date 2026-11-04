@@ -31,6 +31,8 @@ public sealed class KsFluidGuidebookTests : GameTest
 
     private const string TestReaction = "KsTestGuideReaction";
 
+    private static readonly Regex EmbedRegex = new("<KsGuideFluidReactionEmbed Reactions=\"([^\"]*)\"", RegexOptions.Compiled);
+
     [TestPrototypes]
     private const string Prototypes = @"
 - type: reagent
@@ -153,7 +155,7 @@ public sealed class KsFluidGuidebookTests : GameTest
             using var reader = resourceManager.ContentFileReadText(new ResPath(page));
             var text = reader.ReadToEnd();
 
-            var embedded = Regex.Matches(text, "<KsGuideFluidReactionEmbed Reactions=\"([^\"]*)\"")
+            var embedded = EmbedRegex.Matches(text)
                 .SelectMany(match => match.Groups[1].Value.Split(','))
                 .ToHashSet();
 

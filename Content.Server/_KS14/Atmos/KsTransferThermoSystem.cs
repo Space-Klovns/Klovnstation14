@@ -23,6 +23,7 @@ public sealed partial class KsTransferThermoSystem : EntitySystem
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private KsGasThermoSystem _gasThermoSystem = default!;
+    [Dependency] private KsPumpHeatSystem _pumpHeatSystem = default!;
 
     private float _pumpEfficiency;
     private float _compressionHeatFraction;
@@ -45,7 +46,8 @@ public sealed partial class KsTransferThermoSystem : EntitySystem
     /// </param>
     /// <param name="deviceUid">
     ///     The pump, whose surroundings take the share of its compression heat that the gas doesn't
-    ///         (<see cref="KsCCVars.AtmosPumpCompressionHeatFraction"/>). Looked up only when there is such a share.
+    ///         (<see cref="KsCCVars.AtmosPumpCompressionHeatFraction"/>), and which recovers most of that, and is billed for
+    ///         the rest, through <see cref="KsPumpHeatSystem"/>.
     /// </param>
     /// <param name="heatSink">
     ///     The surroundings themselves, when the caller already has them (a vent's tile). Takes precedence over
@@ -53,8 +55,9 @@ public sealed partial class KsTransferThermoSystem : EntitySystem
     /// </param>
     /// <remarks>
     ///     Compression heat is never destroyed: the pump's whole work goes into the packet and its surroundings between
-    ///         them, as an aftercooler would shed it. Destroying part of it would let a refrigeration loop cool for less
-    ///         work than the second law allows. With nowhere to shed it (no device, vacuum, a wall), it all stays in the gas.
+    ///         them, as an aftercooler would shed it, or back into the grid as electricity it isn't billed for. With nowhere
+    ///         to shed it (no device, vacuum, a wall), it stays in the gas. Recovery is deliberately generous, so a powered
+    ///         refrigeration loop can beat Carnot: the first law is what is kept here, not the second.
     /// </remarks>
     public void Apply(GasMixture packet,
         float inPressure,
@@ -80,8 +83,16 @@ public sealed partial class KsTransferThermoSystem : EntitySystem
             var heatCapacityRatio = _gasThermoSystem.MixtureHeatCapacityRatio(packet);
             var compressed = KsThrottling.CompressedTemperature(heatCapacityRatio, _pumpEfficiency, temperature, inPressure, outPressure);
             var work = gasHeatCapacity * (compressed - temperature);
-            var keptWork = work - ShedHeat(work * (1f - Math.Clamp(_compressionHeatFraction, 0f, 1f)), deviceUid, heatSink);
+            var unkeptWork = work * (1f - Math.Clamp(_compressionHeatFraction, 0f, 1f));
+
+            // First, so that it doesn't depend on there being anything to shed the rest into.
+            var recovered = deviceUid is { } recoveringUid ? _pumpHeatSystem.RecoverableHeat(recoveringUid, unkeptWork) : 0f;
+            var shed = ShedHeat(unkeptWork - recovered, deviceUid, heatSink);
+            var keptWork = work - recovered - shed;
             gasTemperature = temperature + keptWork / gasHeatCapacity;
+
+            if (deviceUid is { } workingUid)
+                _pumpHeatSystem.Record(workingUid, keptWork, shed, recovered);
         }
         else if (outPressure < inPressure)
         {

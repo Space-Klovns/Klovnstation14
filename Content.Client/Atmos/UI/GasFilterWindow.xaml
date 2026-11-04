@@ -1,6 +1,7 @@
 <DefaultWindow xmlns="https://spacestation14.io"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+            xmlns:atmos="clr-namespace:Content.Client._KS14.Atmos.UI"
             MinSize="480 400" Title="Filter">
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
         <controls:SwitchButton
@@ -39,5 +40,6 @@
 
             <GridContainer HorizontalExpand="True" Name="GasContainer" Columns="3" Margin="0 5 0 0" VerticalExpand="True" />
         </BoxContainer>
+        <atmos:KsPumpHeatFootnote Name="HeatFootnote" Access="Public" /> <!-- KS14 -->
     </BoxContainer>
 </DefaultWindow>

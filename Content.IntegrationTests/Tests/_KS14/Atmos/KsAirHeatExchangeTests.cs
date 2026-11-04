@@ -1,4 +1,3 @@
-#nullable enable
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;

@@ -211,7 +211,7 @@ namespace Content.Server.Atmos.EntitySystems
         /// <summary>
         ///     Scrubs specified gases from a gas mixture into a <see cref="destination"/> gas mixture.
         /// </summary>
-        public void ScrubInto(GasMixture mixture, GasMixture destination, IReadOnlyCollection<Gas> filterGases, float? ksInletPressure = null, GasMixture? ksHeatSink = null /* KS14: added, compresses what is scrubbed from this pressure, shedding heat into the sink */)
+        public void ScrubInto(GasMixture mixture, GasMixture destination, IReadOnlyCollection<Gas> filterGases, float? ksInletPressure = null, GasMixture? ksHeatSink = null /* KS14: added, compresses what is scrubbed from this pressure, shedding heat into the sink */, EntityUid? ksDeviceUid = null /* KS14: added, the device doing it, which is billed for the work */)
         {
             var buffer = new GasMixture(mixture.Volume) { Temperature = mixture.Temperature };
 
@@ -222,7 +222,7 @@ namespace Content.Server.Atmos.EntitySystems
             }
 
             if (ksInletPressure is { } ksPressure) // KS14
-                _ksTransferThermoSystem.Apply(buffer, ksPressure, destination.Pressure, doesWork: true, heatSink: ksHeatSink); // KS14
+                _ksTransferThermoSystem.Apply(buffer, ksPressure, destination.Pressure, doesWork: true, deviceUid: ksDeviceUid, heatSink: ksHeatSink); // KS14
 
             Merge(destination, buffer);
         }
