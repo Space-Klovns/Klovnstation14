@@ -7,6 +7,18 @@ namespace Content.Client._KS14.ScanDiscoverable;
 /// <summary>
 ///     Shows a discovered entity's name in this client's language, over the server's copy of it.
 /// </summary>
+/// <remarks>
+///     <para>
+///         This only covers the client's own copy of the name. Whenever the server sends this entity's metadata again,
+///             <c>MetaDataSystem.OnMetaDataHandle</c> writes the server's name straight over it and raises nothing, so
+///             the server's language shows until the next language change or reconnect. Geysers and ore vents rarely
+///             change, so it should be rare, but anything that renames or redescribes one would trigger it.
+///     </para>
+///     <para>
+///         Anything that reads the name on the server gets the server's language too: logs, and any string the server
+///             formats and sends. To follow the reader's language there, pass the locale key along instead.
+///     </para>
+/// </remarks>
 public sealed partial class KsDiscoveredNameSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
