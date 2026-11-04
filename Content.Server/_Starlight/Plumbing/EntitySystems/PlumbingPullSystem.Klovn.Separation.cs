@@ -82,15 +82,18 @@ public sealed partial class PlumbingPullSystem
             if (!_ksReagentSeparationSystem.TryGetGroup(quantity.Reagent.Prototype, out var reagentGroup) || reagentGroup != group)
                 continue;
 
-            var share = FixedPoint2.New((float)quantity.Quantity * fraction);
+            // A cap is per reagent, so it counts all of the reagent's data variants.
+            var reagentTotal = source.GetTotalPrototypeQuantity(quantity.Reagent.Prototype);
+            var share = FixedPoint2.New((float)reagentTotal * fraction);
             var intoEv = new PlumbingPullIntoAttemptEvent(sourceOwner, quantity.Reagent.Prototype, share);
             RaiseLocalEvent(puller, ref intoEv);
 
             if (intoEv.Cancelled)
                 return new Solution();
 
-            if (intoEv.MaxAllowed < share && quantity.Quantity > FixedPoint2.Zero)
-                fraction = MathF.Min(fraction, (float)intoEv.MaxAllowed / (float)quantity.Quantity);
+            // Less a hundredth of a unit, as a share can round up by that much.
+            if (intoEv.MaxAllowed < share)
+                fraction = MathF.Min(fraction, MathF.Max(0f, (float)intoEv.MaxAllowed - 0.01f) / (float)reagentTotal);
         }
 
         var moved = _ksReagentSeparationSystem.SplitGroup(source, group, FixedPoint2.New((float)groupTotal * fraction));

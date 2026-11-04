@@ -5,6 +5,7 @@ using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Collections;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 
 namespace Content.Shared._KS14.Chemistry.Separation;
 
@@ -15,6 +16,8 @@ namespace Content.Shared._KS14.Chemistry.Separation;
 /// </summary>
 public sealed partial class KsReagentSeparationSystem : EntitySystem
 {
+    [Dependency] private IRobustRandom _random = default!;
+
     private FrozenDictionary<string, ProtoId<KsReagentSeparationGroupPrototype>> _groupOf =
         FrozenDictionary<string, ProtoId<KsReagentSeparationGroupPrototype>>.Empty;
 
@@ -115,7 +118,7 @@ public sealed partial class KsReagentSeparationSystem : EntitySystem
         expanded = false;
         if (!_groupOf.TryGetValue(selected.Prototype, out var group))
         {
-            var taken = new Solution();
+            var taken = new Solution { Temperature = source.Temperature };
             var removed = source.RemoveReagent(selected, amount, preserveOrder: true);
             if (removed > FixedPoint2.Zero)
                 taken.AddReagent(selected, removed);
@@ -126,7 +129,7 @@ public sealed partial class KsReagentSeparationSystem : EntitySystem
         var groupTaken = SplitGroup(source, group, amount);
         foreach (var quantity in groupTaken.Contents)
         {
-            if (quantity.Reagent != selected)
+            if (quantity.Reagent.Prototype != selected.Prototype)
             {
                 expanded = true;
                 break;
@@ -138,48 +141,44 @@ public sealed partial class KsReagentSeparationSystem : EntitySystem
 
     /// <summary>
     ///     Takes up to <paramref name="amount"/> of <paramref name="group"/> out of <paramref name="source"/>, keeping its
-    ///         order, with each member's share of what is taken matching its share of the group there.
+    ///         order, at the source's temperature, with each member's share of what is taken matching its share of the
+    ///         group there.
     /// </summary>
+    /// <remarks>
+    ///     A solution holds whole hundredths of a unit, so most shares have to round. Rounding the same way every time
+    ///         would be a way to separate the group: a trace member could stay behind through any number of small
+    ///         transfers. So each share rounds up or down at random, weighted so that its expected value is exact. The
+    ///         shares still add up to exactly <paramref name="amount"/>, by sampling them all from one random offset.
+    /// </remarks>
     public Solution SplitGroup(Solution source, ProtoId<KsReagentSeparationGroupPrototype> group, FixedPoint2 amount)
     {
-        var taken = new Solution();
+        var taken = new Solution { Temperature = source.Temperature };
         var groupTotal = GroupQuantity(source, group);
         amount = FixedPoint2.Min(amount, groupTotal);
         if (amount <= FixedPoint2.Zero)
             return taken;
 
         var members = new ValueList<ReagentQuantity>();
-        var largest = -1;
         foreach (var quantity in source.Contents)
         {
             if (!_groupOf.TryGetValue(quantity.Reagent.Prototype, out var reagentGroup) || reagentGroup != group)
                 continue;
 
-            if (largest < 0 || quantity.Quantity > members[largest].Quantity)
-                largest = members.Count;
-
             members.Add(quantity);
         }
 
-        // Each member's share, truncated to what a solution holds; what truncation leaves goes to the largest member.
-        var fraction = (float)amount / (float)groupTotal;
-        var shares = new FixedPoint2[members.Count];
-        var assigned = FixedPoint2.Zero;
+        var fraction = (double)amount.Value / groupTotal.Value;
+        var cumulative = _random.NextDouble();
         for (var i = 0; i < members.Count; i++)
         {
-            shares[i] = FixedPoint2.Min(FixedPoint2.New((float)members[i].Quantity * fraction), members[i].Quantity);
-            assigned += shares[i];
-        }
+            var next = cumulative + members[i].Quantity.Value * fraction;
+            var share = FixedPoint2.Min(FixedPoint2.FromCents((int)(Math.Floor(next) - Math.Floor(cumulative))), members[i].Quantity);
+            cumulative = next;
 
-        if (largest >= 0)
-            shares[largest] = FixedPoint2.Min(shares[largest] + (amount - assigned), members[largest].Quantity);
-
-        for (var i = 0; i < members.Count; i++)
-        {
-            if (shares[i] <= FixedPoint2.Zero)
+            if (share <= FixedPoint2.Zero)
                 continue;
 
-            var removed = source.RemoveReagent(members[i].Reagent, shares[i], preserveOrder: true);
+            var removed = source.RemoveReagent(members[i].Reagent, share, preserveOrder: true);
             if (removed > FixedPoint2.Zero)
                 taken.AddReagent(members[i].Reagent, removed);
         }

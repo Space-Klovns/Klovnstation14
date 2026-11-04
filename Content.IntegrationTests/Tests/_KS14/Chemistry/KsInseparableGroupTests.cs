@@ -1,4 +1,7 @@
 #nullable enable
+using Content.Shared.Labels.EntitySystems;
+using Content.Shared.Interaction;
+using Content.Server._Starlight.Plumbing.Components;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Chemistry.Components;
 using Content.Server.Chemistry.EntitySystems;
@@ -51,17 +54,39 @@ public sealed class KsInseparableGroupTests : GameTest
   name: reagent-name-water
   desc: reagent-desc-water
   physicalDesc: reagent-physical-desc-translucent
+
+- type: reagent
+  id: KsTestGroupTrigger
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+
+- type: reaction
+  id: KsTestGroupReaction
+  reactants:
+    KsTestGroupHeavy:
+      amount: 1
+    KsTestGroupTrigger:
+      amount: 1
+  products:
+    KsTestGroupLoner: 2
 ";
 
     private static readonly EntProtoId ChemMasterPrototype = "ChemMaster";
     private static readonly EntProtoId BeakerPrototype = "Beaker";
     private static readonly EntProtoId FilterPrototype = "PlumbingFilter";
     private static readonly EntProtoId TankPrototype = "PlumbingTank";
+    private static readonly EntProtoId ReactorPrototype = "PlumbingReactor";
+    private static readonly EntProtoId FridgePrototype = "PlumbingSmartFridge";
+    private static readonly EntProtoId JugPrototype = "Jug";
+    private static readonly ProtoId<ReagentPrototype> DieselReagent = "KsDiesel";
+    private static readonly ProtoId<ReagentPrototype> GasolineReagent = "KsGasoline";
 
     // Instance fields: these ids exist only in the test prototypes above.
     private readonly ProtoId<ReagentPrototype> _heavyReagent = "KsTestGroupHeavy";
     private readonly ProtoId<ReagentPrototype> _lightReagent = "KsTestGroupLight";
     private readonly ProtoId<ReagentPrototype> _lonerReagent = "KsTestGroupLoner";
+    private readonly ProtoId<ReagentPrototype> _triggerReagent = "KsTestGroupTrigger";
 
     /// <summary>
     ///     30u heavy, 10u light (a 3:1 group) and 20u of an ordinary reagent, all times <paramref name="scale"/>.
@@ -108,6 +133,205 @@ public sealed class KsInseparableGroupTests : GameTest
 
                 Assert.That(separationSystem.ExpandToGroups([_lightReagent]), Is.EquivalentTo(new[] { _lightReagent, _heavyReagent }),
                     "A whitelist naming one member doesn't pick its whole group.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Fifty 1u transfers of a mixture with half a percent of a trace member. Rounding one way every time would leave
+    ///         the trace behind, which would be a way to separate the group.
+    /// </summary>
+    [Test]
+    public async Task SmallTransfersDoNotLeaveATraceMemberBehind()
+    {
+        var server = Pair.Server;
+        var separationSystem = server.System<KsReagentSeparationSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var group = server.ProtoMan.Index(_heavyReagent).KsInseparableGroup!.Value;
+            var source = new Solution();
+            source.AddReagent(_heavyReagent, FixedPoint2.New(99.5f));
+            source.AddReagent(_lightReagent, FixedPoint2.New(0.5f));
+
+            var taken = FixedPoint2.Zero;
+            var trace = FixedPoint2.Zero;
+            for (var i = 0; i < 50; i++)
+            {
+                var part = separationSystem.SplitGroup(source, group, FixedPoint2.New(1));
+                Assert.That(part.Volume, Is.EqualTo(FixedPoint2.New(1)), "A transfer didn't move exactly what was asked for.");
+                taken += part.Volume;
+                trace += part.GetTotalPrototypeQuantity(_lightReagent);
+            }
+
+            // A quarter of a unit expected. The bounds are about four standard deviations out.
+            Assert.That((float)trace, Is.InRange(0.1f, 0.4f), "Small transfers didn't carry the trace member in proportion.");
+        });
+    }
+
+    [Test]
+    public async Task WhatIsTakenKeepsItsTemperature()
+    {
+        var server = Pair.Server;
+        var separationSystem = server.System<KsReagentSeparationSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var mixture = MakeMixture();
+            mixture.Temperature = 900f;
+            var taken = separationSystem.SplitSelected(mixture, new ReagentId(_heavyReagent, null), FixedPoint2.New(10), out _);
+            Assert.That(taken.Temperature, Is.EqualTo(900f), "Hot liquid cooled just by being moved.");
+        });
+    }
+
+    private async Task<EntityUid> SpawnAnchoredReactor(TestMapData testMap)
+    {
+        var server = Pair.Server;
+        EntityUid reactorUid = default;
+        await server.WaitPost(() =>
+        {
+            reactorUid = server.EntMan.SpawnEntity(ReactorPrototype, testMap.GridCoords);
+            if (!server.EntMan.GetComponent<TransformComponent>(reactorUid).Anchored)
+                server.System<SharedTransformSystem>().AnchorEntity(reactorUid);
+        });
+        await server.WaitRunTicks(5);
+        return reactorUid;
+    }
+
+    /// <summary>
+    ///     A mixture too thin in its target can't reach it in the buffer, and it mustn't leave the reactor stuck.
+    /// </summary>
+    [Test]
+    public async Task ReactorPassesAGroupThroughWhenItsTargetCannotFit()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var solutionSystem = server.System<SharedSolutionContainerSystem>();
+        var reactorUid = await SpawnAnchoredReactor(testMap);
+
+        await server.WaitAssertion(() =>
+        {
+            var reactor = server.EntMan.GetComponent<PlumbingReactorComponent>(reactorUid);
+            reactor.ReagentTargets[_heavyReagent] = FixedPoint2.New(60);
+            Assert.That(solutionSystem.TryGetSolution(reactorUid, reactor.BufferSolutionName, out var bufferEntity, out var buffer));
+            Assert.That(solutionSystem.TryGetSolution(reactorUid, reactor.OutputSolutionName, out _, out var output));
+
+            var mixture = new Solution();
+            mixture.AddReagent(_heavyReagent, buffer!.MaxVolume / 3);
+            mixture.AddReagent(_lightReagent, buffer.MaxVolume - buffer.MaxVolume / 3);
+            Assert.That(solutionSystem.TryAddSolution(bufferEntity!.Value, mixture));
+
+            var ev = new PlumbingDeviceUpdateEvent(1f);
+            server.EntMan.EventBus.RaiseLocalEvent(reactorUid, ref ev);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(buffer.Volume, Is.EqualTo(FixedPoint2.Zero), "A full buffer that can't reach its target stayed stuck.");
+                Assert.That(Quantity(output!, _lightReagent) / Quantity(output!, _heavyReagent), Is.EqualTo(2f).Within(0.05f),
+                    "The group didn't pass through as it came in.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     After a pass, what's left of a target's group leaves with it, or each pass would leave the buffer fuller.
+    /// </summary>
+    [Test]
+    public async Task ReactorSendsATargetsGroupOnAfterAPass()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var solutionSystem = server.System<SharedSolutionContainerSystem>();
+        var reactorUid = await SpawnAnchoredReactor(testMap);
+
+        await server.WaitAssertion(() =>
+        {
+            var reactor = server.EntMan.GetComponent<PlumbingReactorComponent>(reactorUid);
+            reactor.ReagentTargets[_heavyReagent] = FixedPoint2.New(10);
+            Assert.That(solutionSystem.TryGetSolution(reactorUid, reactor.BufferSolutionName, out var bufferEntity, out var buffer));
+            Assert.That(solutionSystem.TryGetSolution(reactorUid, reactor.OutputSolutionName, out _, out var output));
+
+            var mixture = new Solution { Temperature = reactor.TargetTemperature };
+            mixture.AddReagent(_heavyReagent, FixedPoint2.New(10));
+            mixture.AddReagent(_lightReagent, FixedPoint2.New(30));
+            Assert.That(solutionSystem.TryAddSolution(bufferEntity!.Value, mixture));
+            Assert.That(solutionSystem.TryAddReagent(bufferEntity.Value, _triggerReagent, FixedPoint2.New(5), out _));
+
+            var ev = new PlumbingDeviceUpdateEvent(1f);
+            server.EntMan.EventBus.RaiseLocalEvent(reactorUid, ref ev);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Quantity(output!, _lonerReagent), Is.GreaterThan(0f), "The reaction never ran, so this proved nothing.");
+                Assert.That(Quantity(buffer!, _lightReagent), Is.Zero, "A group-mate stayed behind in the buffer.");
+                Assert.That(Quantity(output!, _lightReagent), Is.EqualTo(30f).Within(0.02f), "A group-mate didn't reach the output.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A jug labelled for a trace of the mixture still gets the mixture, as much as it has room for.
+    /// </summary>
+    [Test]
+    public async Task SmartFridgeFillsAJugWithTheWholeGroup()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var solutionSystem = server.System<SharedSolutionContainerSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var fridgeUid = server.EntMan.SpawnEntity(FridgePrototype, testMap.GridCoords);
+            var jugUid = server.EntMan.SpawnEntity(JugPrototype, testMap.GridCoords);
+            var fridge = server.EntMan.GetComponent<PlumbingSmartFridgeComponent>(fridgeUid);
+            Assert.That(solutionSystem.TryGetSolution(fridgeUid, fridge.SolutionName, out var fridgeEntity, out var stock));
+
+            var mixture = new Solution();
+            mixture.AddReagent(DieselReagent, FixedPoint2.New(98));
+            mixture.AddReagent(GasolineReagent, FixedPoint2.New(2));
+            Assert.That(solutionSystem.TryAddSolution(fridgeEntity!.Value, mixture));
+
+            server.System<LabelSystem>().Label(jugUid, server.ProtoMan.Index(GasolineReagent).LocalizedName);
+            var ev = new InteractUsingEvent(jugUid, jugUid, fridgeUid, testMap.GridCoords);
+            server.EntMan.EventBus.RaiseLocalEvent(fridgeUid, ev);
+
+            Assert.That(solutionSystem.TryGetRefillableSolution(jugUid, out _, out var jugSolution));
+            var dispensed = (float)jugSolution!.Volume;
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(dispensed, Is.EqualTo(100f).Within(0.01f), "The dispense was sized by the labelled reagent's own stock.");
+                Assert.That((float)stock!.Volume, Is.Zero);
+                Assert.That((float)jugSolution.GetTotalPrototypeQuantity(GasolineReagent), Is.EqualTo(2f).Within(0.02f), "The jug's mixture isn't the stock's.");
+            }
+        });
+    }
+
+    [Test]
+    public async Task ChemMasterTransfersAGroupBackWhole()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var chemMasterSystem = server.System<ChemMasterSystem>();
+        var solutionSystem = server.System<SharedSolutionContainerSystem>();
+        var itemSlotsSystem = server.System<ItemSlotsSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var chemMasterUid = server.EntMan.SpawnEntity(ChemMasterPrototype, testMap.GridCoords);
+            var beakerUid = server.EntMan.SpawnEntity(BeakerPrototype, testMap.GridCoords);
+            Assert.That(solutionSystem.TryGetSolution(beakerUid, "beaker", out var beakerEntity, out var beakerSolution));
+            Assert.That(solutionSystem.TryAddSolution(beakerEntity!.Value, MakeMixture()));
+            Assert.That(itemSlotsSystem.TryInsert(chemMasterUid, SharedChemMaster.InputSlotName, beakerUid, user: null));
+
+            var chemMaster = (chemMasterUid, server.EntMan.GetComponent<ChemMasterComponent>(chemMasterUid));
+            chemMasterSystem.TransferReagents(chemMaster, new ReagentId(_heavyReagent, null), FixedPoint2.New(40), fromBuffer: false);
+            Assert.That(Quantity(beakerSolution!, _heavyReagent), Is.Zero);
+
+            chemMasterSystem.TransferReagents(chemMaster, new ReagentId(_lightReagent, null), FixedPoint2.New(20), fromBuffer: true);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Quantity(beakerSolution!, _heavyReagent), Is.EqualTo(15f).Within(0.02f), "Transferring back moved a member by itself.");
+                Assert.That(Quantity(beakerSolution!, _lightReagent), Is.EqualTo(5f).Within(0.02f), "Transferring back moved a member by itself.");
             }
         });
     }
