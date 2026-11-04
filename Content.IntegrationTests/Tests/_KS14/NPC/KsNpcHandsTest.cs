@@ -237,8 +237,8 @@ public sealed class KsNpcHandsTest : GameTest
 
             Assert.Multiple(() =>
             {
-                Assert.That(blackboard.GetValue<string>(NPCBlackboard.ActiveHand), Is.EqualTo("left"), "the hand it is really using");
-                Assert.That(blackboard.GetValue<bool>(NPCBlackboard.ActiveHandFree), "which is empty, though the gun's hand was not");
+                Assert.That(blackboard.GetValueOrDefault<string>(NPCBlackboard.ActiveHand, entManager), Is.EqualTo("left"), "the hand it is really using");
+                Assert.That(blackboard.GetValueOrDefault<bool>(NPCBlackboard.ActiveHandFree, entManager), "which is empty, though the gun's hand was not");
             });
         });
     }

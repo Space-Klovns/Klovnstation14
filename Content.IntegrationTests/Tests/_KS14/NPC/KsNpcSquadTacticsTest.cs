@@ -59,6 +59,7 @@ public sealed class KsNpcSquadTacticsTest : GameTest
   id: KsTacticsTestMobNoWatch
   components:
   - type: Hands # to open lockers with: a locker nobody could open is not searched
+  - type: DoAfter # to force doors with
   - type: NpcSquadMember
     tactics:
       watchTime: 0
