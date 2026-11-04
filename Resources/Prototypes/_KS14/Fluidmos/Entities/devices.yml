@@ -254,15 +254,20 @@
     visibleLayers:
     - enum.SubfloorLayers.FirstLayer
   - type: Sprite
-    sprite: Structures/Piping/Atmospherics/pump.rsi
+    sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
     layers:
     - sprite: Structures/Piping/Atmospherics/pipe.rsi
       state: pipeStraight
       map: [ "enum.PipeVisualLayers.Pipe" ]
-    - state: pumpVolume
+    - state: reactor
       map: [ "enum.SubfloorLayers.FirstLayer" ]
-      color: "#ff9a3c"
   - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsCatalyticReactorVisuals.Reacting:
+        enum.SubfloorLayers.FirstLayer:
+          True: { state: reactor_on }
+          False: { state: reactor }
   - type: PipeColorVisuals
   - type: NodeContainer
     nodes:
@@ -281,7 +286,12 @@
   - type: ContainerContainer
     containers:
       catalyst: !type:ContainerSlot
+  # One RSI for every layer: only the pipe under the body moves, as on a filter.
   - type: AtmosPipeLayers
+    spriteRsiPaths:
+      Primary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+      Secondary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+      Tertiary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
     alternativePrototypes:
       Primary: KsCatalyticReactor
       Secondary: KsCatalyticReactorAlt1
@@ -294,14 +304,13 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Structures/Piping/Atmospherics/pump.rsi
+    sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
     layers:
     - sprite: Structures/Piping/Atmospherics/pipe_alt1.rsi
       state: pipeStraight
       map: [ "enum.PipeVisualLayers.Pipe" ]
-    - state: pumpVolume
+    - state: reactor
       map: [ "enum.SubfloorLayers.FirstLayer" ]
-      color: "#ff9a3c"
 
 - type: entity
   parent: [ GasPipeLayerAlt2, KsCatalyticReactor ]
@@ -309,11 +318,10 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Structures/Piping/Atmospherics/pump.rsi
+    sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
     layers:
     - sprite: Structures/Piping/Atmospherics/pipe_alt2.rsi
       state: pipeStraight
       map: [ "enum.PipeVisualLayers.Pipe" ]
-    - state: pumpVolume
+    - state: reactor
       map: [ "enum.SubfloorLayers.FirstLayer" ]
-      color: "#ff9a3c"

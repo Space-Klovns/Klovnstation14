@@ -19,22 +19,38 @@ public sealed partial class KsCatalyticReactorSystem : EntitySystem
     [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
     [Dependency] private KsFluidReactionSystem _reactionSystem = default!;
     [Dependency] private KsFluidCatalystSystem _catalystSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private EntityQuery<KsFluidCatalystComponent> _catalystQuery = default!;
 
     [SubscribeLocalEvent]
     private void OnDeviceUpdate(Entity<KsCatalyticReactorComponent> entity, ref AtmosDeviceUpdateEvent args)
     {
+        SetReacting(entity, React(entity, args.dt));
+    }
+
+    private bool React(Entity<KsCatalyticReactorComponent> entity, float deltaTime)
+    {
         if (!TryGetBed(entity, out var bed) ||
             bed.Comp.Activity <= 0f ||
             !_nodeContainerSystem.TryGetNode(entity.Owner, entity.Comp.NodeName, out PipeNode? node) ||
             node.Air.Volume <= 0f)
-            return;
+            return false;
 
         var mixture = node.Air;
         var share = MathF.Min(1f, entity.Comp.BedVolume / mixture.Volume);
 
-        _reactionSystem.ReactCatalysed(mixture, bed.Comp.Catalyst, args.dt * share * bed.Comp.Activity);
-        TakeUpPoisons(bed, mixture, share, args.dt);
+        var reacted = _reactionSystem.ReactCatalysed(mixture, bed.Comp.Catalyst, deltaTime * share * bed.Comp.Activity);
+        TakeUpPoisons(bed, mixture, share, deltaTime);
+        return reacted;
+    }
+
+    private void SetReacting(Entity<KsCatalyticReactorComponent> entity, bool reacting)
+    {
+        if (entity.Comp.Reacting == reacting)
+            return;
+
+        entity.Comp.Reacting = reacting;
+        _appearanceSystem.SetData(entity.Owner, KsCatalyticReactorVisuals.Reacting, reacting);
     }
 
     /// <summary>

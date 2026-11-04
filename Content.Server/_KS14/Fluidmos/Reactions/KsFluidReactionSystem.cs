@@ -116,15 +116,19 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
     /// <param name="deltaTime">
     ///     Seconds of reaction, already scaled by how much of the net the bed fills and its activity.
     /// </param>
-    public void ReactCatalysed(GasMixture mixture, ProtoId<KsFluidCatalystPrototype> catalyst, float deltaTime)
+    /// <returns>Whether any of them got anywhere.</returns>
+    public bool ReactCatalysed(GasMixture mixture, ProtoId<KsFluidCatalystPrototype> catalyst, float deltaTime)
     {
         if (deltaTime <= 0f || mixture.Fluid is not { IsEmpty: false } fluid || !_byCatalyst.TryGetValue(catalyst, out var reactions))
-            return;
+            return false;
 
+        var reacted = false;
         foreach (var reaction in reactions)
         {
-            Step(mixture, fluid, reaction, deltaTime);
+            reacted |= Step(mixture, fluid, reaction, deltaTime);
         }
+
+        return reacted;
     }
 
     /// <summary>
@@ -207,19 +211,19 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
         _candidateScratch.Clear();
     }
 
-    private void Step(GasMixture mixture, KsFluidMixture fluid, KsFluidReactionPrototype reaction, float deltaTime)
+    private bool Step(GasMixture mixture, KsFluidMixture fluid, KsFluidReactionPrototype reaction, float deltaTime)
     {
         var temperature = mixture.Temperature;
         if (temperature < reaction.MinTemp || temperature > reaction.MaxTemp)
-            return;
+            return false;
 
         if (reaction.CatalystReagent is { } catalystReagent && TotalUnits(mixture, fluid, catalystReagent) < reaction.CatalystReagentUnits)
-            return;
+            return false;
 
         foreach (var (reagent, minimumPressure) in reaction.MinPartialPressure)
         {
             if (PartialPressure(mixture, fluid, reagent) < minimumPressure)
-                return;
+                return false;
         }
 
         // How many units of reaction the limiting reactant allows, and the energy one unit of reaction takes, phase
@@ -230,11 +234,11 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
         foreach (var (reagent, reactant) in reaction.Reactants)
         {
             if (!_propertiesSystem.TryGetProperties(reagent, out var properties))
-                return;
+                return false;
 
             var available = Available(mixture, fluid, properties, reactant.Phase);
             if (available.Total <= 0f)
-                return;
+                return false;
 
             limit = MathF.Min(limit, available.Total / reactant.Amount);
             energyPerExtent -= reactant.Amount * available.MeanEnergyOffset(properties);
@@ -244,7 +248,7 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
         foreach (var (reagent, product) in reaction.Products)
         {
             if (!_propertiesSystem.TryGetProperties(reagent, out var properties))
-                return;
+                return false;
 
             energyPerExtent += product.Amount * EnergyOffset(properties, ProductPhase(properties, product.Phase, temperature, pressure));
         }
@@ -263,7 +267,7 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
             extent = MathF.Min(extent, heatCapacity * MaxReactionDeltaT / MathF.Abs(energyPerExtent));
 
         if (!(extent > MinExtent))
-            return;
+            return false;
 
         var energy = heatCapacity * temperature - energyPerExtent * extent;
 
@@ -282,6 +286,8 @@ public sealed partial class KsFluidReactionSystem : EntitySystem
         var heatCapacityAfter = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: false);
         if (heatCapacityAfter > 0f)
             mixture.Temperature = MathF.Max(energy / heatCapacityAfter, Atmospherics.TCMB);
+
+        return true;
     }
 
     /// <summary>

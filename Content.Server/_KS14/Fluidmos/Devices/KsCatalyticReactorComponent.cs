@@ -20,4 +20,10 @@ public sealed partial class KsCatalyticReactorComponent : Component
     /// </summary>
     [DataField]
     public float BedVolume = 400f;
+
+    /// <summary>
+    ///     Whether the bed got anything done on the last update, which is what the sprite shows.
+    /// </summary>
+    [ViewVariables]
+    public bool Reacting;
 }
