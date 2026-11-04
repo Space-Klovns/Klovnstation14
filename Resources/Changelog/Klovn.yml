@@ -2493,3 +2493,11 @@ Entries:
         or injector whitelists. Selecting one moves the whole mixture.
   id: 239
   time: '2026-11-04T19:20:49.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Thermomachines no longer lose their body while running, and their lights
+        now show in the dark.
+  id: 240
+  time: '2026-11-04T20:24:47.0000000+00:00'
