@@ -5,6 +5,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.TileEffects;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
+using Content.Shared._KS14.Fluidmos;
 using Content.Shared._KS14.TileEffects.Effects;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -53,13 +54,13 @@ public sealed class KsCarbonDioxideTest : GameTest
 
     private const float SprayTemperature = 194f;
     /// <summary>
-    ///     Where carbon dioxide sublimes, in kelvin: its reagent's boiling point, which is in Celsius.
+    ///     Where carbon dioxide sublimes, in kelvin: its reagent's boiling point.
     /// </summary>
     private float SublimationPoint()
     {
         var boilingPoint = SProtoMan.Index(CarbonDioxideReagent).BoilingPoint;
         Assert.That(boilingPoint, Is.Not.Null, "Carbon dioxide has no boiling point, so it never sublimes.");
-        return boilingPoint!.Value + Atmospherics.T0C;
+        return boilingPoint!.Value;
     }
     private const int TicksPerSecond = 30;
 
@@ -176,11 +177,16 @@ public sealed class KsCarbonDioxideTest : GameTest
             var reaction = reagent.TileReactions.OfType<KsVaporizeTileReaction>().Single();
             var boil = reagent.KsTileEffects.OfType<BoilTileEffect>().Single();
             var gasHeatCapacity = atmosphereSystem.GasMolarHeatCapacities[(int)Gas.CarbonDioxide];
+            Assert.That(Pair.Server.System<KsFluidmosPropertiesSystem>().TryGetProperties(CarbonDioxideReagent, out var properties),
+                "Carbon dioxide has no Fluidmos properties.");
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(reaction.MolesPerUnit, Is.EqualTo(boil.MolesPerUnit), "The spray and the puddle make different amounts of gas.");
-                Assert.That(reagent.SpecificHeat, Is.EqualTo(reaction.MolesPerUnit!.Value * gasHeatCapacity).Within(0.01f),
+                Assert.That(properties!.GasIndex, Is.EqualTo((int)Gas.CarbonDioxide), "Carbon dioxide is not linked to its gas.");
+                // Both take it from the link, so that a pipe, a puddle and a spray all make the same gas of a unit.
+                Assert.That(reaction.MolesPerUnit ?? boil.MolesPerUnit, Is.Null, "The spray or the puddle sets its own moles per unit.");
+                Assert.That(properties.MolesPerUnit, Is.EqualTo(MolesPerUnit), "A unit of carbon dioxide does not become as much gas as the tests expect.");
+                Assert.That(reagent.SpecificHeat, Is.EqualTo(properties.MolesPerUnit * gasHeatCapacity).Within(0.01f),
                     "Carbon dioxide's specific heat does not match the gas a unit becomes.");
                 Assert.That(SublimationPoint(), Is.LessThan(Atmospherics.T0C), "Carbon dioxide does not sublime below freezing.");
                 Assert.That(boil.Sublimate && boil.Displace && reaction.Displace, "Carbon dioxide does not always turn to gas, or does not displace air.");
@@ -231,6 +237,38 @@ public sealed class KsCarbonDioxideTest : GameTest
     ///     The gas pushes as much of the tile's air out into its neighbours as it adds: the oxygen on the tile drops, the
     ///         tile holds as many moles as before, and every mole is accounted for.
     /// </summary>
+    /// <summary>
+    ///     Into thin air the spray flashes colder than it can at one atmosphere: it sublimes at the tile's pressure.
+    /// </summary>
+    [Test]
+    public async Task SprayIntoThinAirFlashesColder()
+    {
+        var testMap = await CreateRoom();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var reagent = SProtoMan.Index(CarbonDioxideReagent);
+            var reaction = WithoutSpilling(reagent.TileReactions.OfType<KsVaporizeTileReaction>().Single());
+            Assert.That(Pair.Server.System<KsFluidmosPropertiesSystem>().TryGetProperties(CarbonDioxideReagent, out var properties));
+
+            var mixture = TileMixture(testMap, Centre);
+            mixture.Multiply(0.1f);
+            var localSublimationPoint = KsPhaseMath.BoilingPointAt(properties!.VaporizationEntropy, properties.BoilingPoint, mixture.Pressure);
+
+            // Far more than the air can pay for, so it cools the tile as far as it may.
+            using (Pair.Server.EntMan.System<PuddleSystem>().KsBeginTileReactionTemperature(SprayTemperature))
+                reaction.TileReact(CentreTileRef(testMap), reagent, FixedPoint2.New(100), Pair.Server.EntMan, null);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(mixture.Temperature, Is.LessThan(SublimationPoint() - 5f),
+                    "The spray stopped where carbon dioxide sublimes at one atmosphere, though the air is far thinner.");
+                Assert.That(mixture.Temperature, Is.GreaterThanOrEqualTo(localSublimationPoint - 0.5f),
+                    "The spray cooled the tile below where carbon dioxide sublimes at its pressure.");
+            }
+        });
+    }
+
     [Test]
     public async Task SprayDisplacesTheAir()
     {
@@ -252,7 +290,7 @@ public sealed class KsCarbonDioxideTest : GameTest
             using (entityManager.System<PuddleSystem>().KsBeginTileReactionTemperature(SprayTemperature))
                 used = reaction.TileReact(CentreTileRef(testMap), reagent, FixedPoint2.New(3), entityManager, null);
 
-            var added = (float)used * reaction.MolesPerUnit!.Value;
+            var added = (float)used * MolesPerUnit;
             using (Assert.EnterMultipleScope())
             {
                 Assert.That((float)used, Is.GreaterThan(0f), "Nothing turned to gas.");

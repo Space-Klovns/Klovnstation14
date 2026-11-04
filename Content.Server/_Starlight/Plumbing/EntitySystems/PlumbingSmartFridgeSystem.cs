@@ -78,7 +78,7 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.SolutionName, out _, out var solution))
             return;
 
-        var current = solution.GetReagentQuantity(new ReagentId(args.ReagentPrototype, null));
+        var current = solution.GetTotalPrototypeQuantity(args.ReagentPrototype); // KS14: GetReagentQuantity(new ReagentId(args.ReagentPrototype, null)) -> GetTotalPrototypeQuantity, as plumbing keeps reagent data
         var room = ent.Comp.MaxPerReagent - current;
 
         if (room <= FixedPoint2.Zero)

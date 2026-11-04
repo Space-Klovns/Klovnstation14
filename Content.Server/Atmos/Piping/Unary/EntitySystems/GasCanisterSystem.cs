@@ -19,6 +19,8 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems;
 public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
 {
     [Dependency] private AtmosphereSystem _atmos = default!;
+    [Dependency] private Content.Shared._KS14.Fluidmos.KsFluidmosPropertiesSystem _ksFluidmosPropertiesSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
     [Dependency] private Shared._KS14.Atmos.Piping.Unary.GasCanisterOverlayDataSystem _ksGasCanisterOverlayDataSystem = default!; // KS14
     [Dependency] private SharedAppearanceSystem _appearance = default!;
@@ -43,9 +45,12 @@ public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
             return;
 
         var environment = _atmos.GetContainingMixture((uid, transform), false, true);
+        _ksFluidmosTileSystem.ReleaseToTile(uid, canister.Air); // KS14: puddles need no tile air, and the Clear below would destroy the fluid
 
         if (environment is not null)
+        {
             _atmos.Merge(environment, canister.Air);
+        }
 
         AdminLogger.Add(LogType.CanisterPurged, LogImpact.Medium, $"Canister {ToPrettyString(uid):canister} purged its contents of {canister.Air:gas} into the environment.");
         canister.Air.Clear();
@@ -71,7 +76,10 @@ public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
 
         UI.SetUiState(uid,
             GasCanisterUiKey.Key,
-            new GasCanisterBoundUserInterfaceState(canister.Air.Pressure, portStatus, tankPressure));
+            new GasCanisterBoundUserInterfaceState(canister.Air.Pressure, portStatus, tankPressure)
+            {
+                KsFluid = Content.Shared._KS14.Fluidmos.KsFluidEntry.FromMixture(canister.Air.Fluid, _ksFluidmosPropertiesSystem), // KS14
+            });
     }
 
     protected override void SafetyMeasures(Entity<GasCanisterComponent> entity)
@@ -122,7 +130,7 @@ public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
                 : CompOrNull<GasTankComponent>(entity.Comp.GasTankSlot.Item.Value)?.Air;
 
             // Only let gas flow one way!
-            _atmos.ReleaseGasTo(entity.Comp.Air, output, entity.Comp.ReleasePressure);
+            _atmos.ReleaseGasTo(entity.Comp.Air, output, entity.Comp.ReleasePressure, ksThrottle: true /* KS14: added */);
         }
 
         // If last pressure is very close to the current pressure, do nothing.
@@ -157,7 +165,7 @@ public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
     /// </summary>
     public void MixContainerWithPipeNet(GasMixture containerAir, GasMixture pipeNetAir)
     {
-        var buffer = new GasMixture(pipeNetAir.Volume + containerAir.Volume);
+        var buffer = new GasMixture(pipeNetAir.Volume + containerAir.Volume) { FluidCapable = true /* KS14: added */ };
 
         _atmos.Merge(buffer, pipeNetAir);
         _atmos.Merge(buffer, containerAir);

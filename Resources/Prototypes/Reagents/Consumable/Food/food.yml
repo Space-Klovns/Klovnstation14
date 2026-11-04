@@ -84,7 +84,7 @@
   physicalDesc: reagent-physical-desc-sweet
   flavor: sweet
   color: white
-  meltingPoint: 146.0
+  meltingPoint: 419.15 # KS14: 146.0 -> 419.15, Kelvin
   metabolisms:
     Metabolites:
       effects:

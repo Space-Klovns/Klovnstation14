@@ -145,7 +145,7 @@ public abstract partial class SharedPuddleSystem
         Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> evaporatingSpeeds = [];
         foreach (var solProto in solution.GetReagentPrototypes(ProtoMan).Keys)
         {
-            if (solProto.EvaporationSpeed > FixedPoint2.Zero)
+            if (solProto.EvaporationSpeed > FixedPoint2.Zero && !KsEvaporatesThroughFluidmos(solProto) /* KS14: added */)
             {
                 evaporatingSpeeds.Add(solProto.ID, solProto.EvaporationSpeed);
             }

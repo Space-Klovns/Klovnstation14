@@ -1,3 +1,5 @@
+using System.Numerics;
+using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.EntitySystems;
 using Content.Shared.Atmos.Piping.Unary.Components;
@@ -11,6 +13,7 @@ public sealed partial class GasCanisterOverlayDataSystem : EntitySystem
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private SharedAtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private SharedGasTileOverlaySystem _gasTileOverlaySystem = default!;
+    [Dependency] private KsFluidmosPropertiesSystem _fluidmosPropertiesSystem = default!;
 
     [Dependency] private EntityQuery<GasCanisterComponent> _canisterQuery = default!;
 
@@ -34,7 +37,8 @@ public sealed partial class GasCanisterOverlayDataSystem : EntitySystem
         {
             var allGasId = _gasTileOverlaySystem.VisibleGasId[i];
 
-            var newValue = (byte)(canisterComponent.Air[allGasId] / totalMoles * byte.MaxValue);
+            // A canister of nothing but liquid has no moles to divide by.
+            var newValue = totalMoles > 0f ? (byte)(canisterComponent.Air[allGasId] / totalMoles * byte.MaxValue) : (byte)0;
             if (entity.Comp.AppearanceGasPercentages[i] == newValue)
                 similars++;
 
@@ -55,6 +59,66 @@ public sealed partial class GasCanisterOverlayDataSystem : EntitySystem
             entity.Comp.FireState = canisterComponent.Air.Temperature > 750f ? (byte)3 : (byte)2;
 
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.FireState));
+
+        UpdateFluidAppearance((entity.Owner, entity.Comp), canisterComponent.Air.Fluid);
+    }
+
+    /// <summary>
+    ///     The liquid and ice levels in the canister's window, and the liquid's colour. Dirtied only when they change.
+    /// </summary>
+    private void UpdateFluidAppearance(Entity<GasCanisterOverlayComponent> entity, KsFluidMixture? fluid)
+    {
+        var liquidFill = Fill(entity.Comp, fluid?.LiquidUnits ?? 0f);
+        var solidFill = Fill(entity.Comp, fluid?.SolidUnits ?? 0f);
+        var liquidColor = entity.Comp.LiquidColor;
+
+        if (fluid != null && liquidFill > 0)
+        {
+            var mixed = Vector4.Zero;
+            var weight = 0f;
+            foreach (var (key, amount) in fluid.Reagents)
+            {
+                if (amount.Liquid <= 0f || !_fluidmosPropertiesSystem.TryGetProperties(key.Prototype, out var properties))
+                    continue;
+
+                var color = properties.Color;
+                mixed += new Vector4(color.R, color.G, color.B, color.A) * amount.Liquid;
+                weight += amount.Liquid;
+            }
+
+            if (weight > 0f)
+            {
+                mixed /= weight;
+                liquidColor = new Color(mixed.X, mixed.Y, mixed.Z, mixed.W);
+            }
+        }
+
+        if (liquidFill != entity.Comp.LiquidFill)
+        {
+            entity.Comp.LiquidFill = liquidFill;
+            DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.LiquidFill));
+        }
+
+        if (solidFill != entity.Comp.SolidFill)
+        {
+            entity.Comp.SolidFill = solidFill;
+            DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.SolidFill));
+        }
+
+        if (liquidColor != entity.Comp.LiquidColor)
+        {
+            entity.Comp.LiquidColor = liquidColor;
+            DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.LiquidColor));
+        }
+    }
+
+    private static byte Fill(GasCanisterOverlayComponent component, float units)
+    {
+        if (units <= 0f || component.FullWindowUnits <= 0f)
+            return 0;
+
+        // At least one step, so any liquid at all shows.
+        return (byte)Math.Clamp(MathF.Ceiling(units / component.FullWindowUnits * byte.MaxValue), 1f, byte.MaxValue);
     }
 
     [SubscribeLocalEvent(after: [typeof(SharedGasCanisterSystem)])]

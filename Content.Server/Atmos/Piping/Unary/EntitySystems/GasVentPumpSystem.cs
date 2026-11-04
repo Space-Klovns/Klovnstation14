@@ -37,6 +37,8 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
     {
         [Dependency] private ISharedAdminLogManager _adminLogger = default!;
         [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
+        [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
         [Dependency] private DeviceNetworkSystem _deviceNetSystem = default!;
         [Dependency] private DeviceLinkSystem _signalSystem = default!;
         [Dependency] private NodeContainerSystem _nodeContainer = default!;
@@ -158,7 +160,13 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
                     transferMoles = MathF.Min(transferMoles, maxTransfer);
                 }
 
-                _atmosphereSystem.Merge(environment, pipe.Air.Remove(transferMoles));
+                // KS14 start: liquid and unlinked vapor leave as a puddle and smoke; the released gas heats or throttles
+                var ksPipePressure = pipe.Air.Pressure;
+                var released = pipe.Air.Remove(transferMoles);
+                _ksTransferThermoSystem.Apply(released, ksPipePressure, environment.Pressure, doesWork: true, heatSink: environment);
+                _ksFluidmosTileSystem.ReleaseToTile(uid, released);
+                _atmosphereSystem.Merge(environment, released);
+                // KS14 end
             }
             else if (vent.PumpDirection == VentPumpDirection.Siphoning && environment.Pressure > 0)
             {
@@ -188,7 +196,13 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
                     transferMoles = MathF.Min(transferMoles, maxTransfer);
                 }
 
-                _atmosphereSystem.Merge(pipe.Air, environment.Remove(transferMoles));
+                // KS14 start: the siphoned gas is compressed into the pipe
+                var ksEnvironmentPressure = environment.Pressure;
+                var ksSiphoned = environment.Remove(transferMoles);
+                _ksTransferThermoSystem.Apply(ksSiphoned, ksEnvironmentPressure, pipe.Air.Pressure, doesWork: true, heatSink: environment);
+                _atmosphereSystem.Merge(pipe.Air, ksSiphoned);
+                // KS14 end
+                _ksFluidmosTileSystem.AbsorbFromTile(uid, pipe.Air, fraction: 0f, smoke: false, puddleUnits: Content.Shared._KS14.Fluidmos.KsFluidmos.PuddleDrainRate * args.dt); // KS14: siphons drain the puddle
             }
         }
 

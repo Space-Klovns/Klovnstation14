@@ -25,6 +25,7 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
         [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
         [Dependency] private IAdminLogManager _adminLogger = default!;
         [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
         [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
         [Dependency] private SharedAppearanceSystem _appearance = default!;
         [Dependency] private NodeContainerSystem _nodeContainer = default!;
@@ -114,14 +115,18 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
             if (transferMolesOne > 0f)
             {
                 transferred = true;
+                var ksInletPressure = inletOne.Air.Pressure; // KS14
                 var removed = inletOne.Air.Remove(transferMolesOne);
+                _ksTransferThermoSystem.Apply(removed, ksInletPressure, outlet.Air.Pressure, doesWork: true, deviceUid: uid); // KS14
                 _atmosphereSystem.Merge(outlet.Air, removed);
             }
 
             if (transferMolesTwo > 0f)
             {
                 transferred = true;
+                var ksInletPressure = inletTwo.Air.Pressure; // KS14
                 var removed = inletTwo.Air.Remove(transferMolesTwo);
+                _ksTransferThermoSystem.Apply(removed, ksInletPressure, outlet.Air.Pressure, doesWork: true, deviceUid: uid); // KS14
                 _atmosphereSystem.Merge(outlet.Air, removed);
             }
 

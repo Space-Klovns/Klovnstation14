@@ -22,8 +22,8 @@
   contrabandSeverity: Minor
   flavor: bitter
   color: "#757245"
-  boilingPoint: 2977.0 # Aluminum oxide
-  meltingPoint: 2030.0
+  boilingPoint: 3250.15 # KS14: 2977.0 -> 3250.15, Kelvin. Aluminum oxide
+  meltingPoint: 2303.15 # KS14: 2030.0 -> 2303.15, Kelvin
   # KS14 start
   tileEffects:
   - !type:ChemicalFireTileEffect
@@ -177,8 +177,8 @@
   physicalDesc: reagent-physical-desc-foamy
   flavor: bitter
   color: "#215263"
-  boilingPoint: 418.0 # I went with ammonium lauryl sulfate as the basis for this
-  meltingPoint: 7.4 # I made this up
+  boilingPoint: 691.15 # KS14: 418.0 -> 691.15, Kelvin. I went with ammonium lauryl sulfate as the basis for this
+  meltingPoint: 280.55 # KS14: 7.4 -> 280.55, Kelvin. I made this up
 
 - type: reagent
   id: WeldingFuel
@@ -192,8 +192,8 @@
   flavorMinimum: 0.01
   color: "#a76b1c"
   recognizable: true
-  boilingPoint: -84.7 # Acetylene. Close enough.
-  meltingPoint: -80.7
+  boilingPoint: 188.45 # KS14: -84.7 -> 188.45, Kelvin. Acetylene. Close enough.
+  meltingPoint: 192.45 # KS14: -80.7 -> 192.45, Kelvin
   friction: 0.4
   # KS14 start
   tileEffects:
@@ -235,5 +235,5 @@
   physicalDesc: reagent-physical-desc-opaque
   flavor: bitter
   color: "#9e6b38"
-  boilingPoint: 190.0 # Perfluorooctanoic Acid.
-  meltingPoint: 45.0
+  boilingPoint: 463.15 # KS14: 190.0 -> 463.15, Kelvin. Perfluorooctanoic Acid.
+  meltingPoint: 318.15 # KS14: 45.0 -> 318.15, Kelvin

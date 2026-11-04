@@ -78,4 +78,30 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosFlameSpreadRate =
         CVarDef.Create("klovn.atmos.flame_spread_rate", 6f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Isentropic efficiency of atmos pumps, from 0 to 1: a pump compressing gas heats it by the ideal adiabatic rise
+    ///         over this. Lower is hotter.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPumpEfficiency =
+        CVarDef.Create("klovn.atmos.pump_efficiency", 0.7f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Share of a pump's compression heat that stays in the gas it moves, as if through an aftercooler; the rest goes
+    ///         into the pump's tile air, so no heat is created or destroyed. 1 keeps it all in the gas. The balance knob
+    ///         for pump heat: the default leaves pumped gas a little warm and the pump's room warmer.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPumpCompressionHeatFraction =
+        CVarDef.Create("klovn.atmos.pump_compression_heat_fraction", 0.1f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Share of a cooking-off pipe net's explosive fluid its bursting pipes spray onto their tiles, from 0 to 1, as
+    ///         liquid at the net's temperature. The rest goes into the explosions. 0 makes them pure blasts; 1 sprays
+    ///         everything and explodes nothing.
+    /// </summary>
+    [CVarControl(AdminFlags.Fun)]
+    public static readonly CVarDef<float> AtmosPipeCookOffSpillFraction =
+        CVarDef.Create("klovn.atmos.pipe_cookoff_spill_fraction", 0.3f, CVar.SERVERONLY);
 }

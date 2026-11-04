@@ -204,8 +204,8 @@
   physicalDesc: reagent-physical-desc-pungent
   flavor: bitter
   color: "#77b58e"
-  boilingPoint: -33.0
-  meltingPoint: -77.7
+  boilingPoint: 240.15 # KS14: -33.0 -> 240.15, Kelvin
+  meltingPoint: 195.45 # KS14: -77.7 -> 195.45, Kelvin
   plantMetabolism:
   - !type:PlantAdjustNutrition
     amount: 1
@@ -286,8 +286,8 @@
   physicalDesc: reagent-physical-desc-strong-smelling
   flavor: bitter
   color: "#a1000b"
-  boilingPoint: 55.5
-  meltingPoint: -50.0
+  boilingPoint: 328.65 # KS14: 55.5 -> 328.65, Kelvin
+  meltingPoint: 223.15 # KS14: -50.0 -> 223.15, Kelvin
   plantMetabolism:
   - !type:PlantAdjustNutrition
     amount: 0.1

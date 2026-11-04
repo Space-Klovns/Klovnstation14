@@ -364,11 +364,13 @@ public sealed class KsHotPuddleTest : GameTest
         {
             using (Assert.EnterMultipleScope())
             {
-                // The puddle left behind still warms a little, by conduction from its heated neighbour, but far less.
+                // The puddle left behind still warms, by conduction from its heated neighbour, so it can only lag behind
+                //      it. How far depends on how many of the once-a-second conduction passes fall in the window, which
+                //      is set by the server's clock, not by this test. Still heated, it would keep pace instead.
                 var firstGain = Temperature(firstPuddleUid) - firstTemperature;
                 var secondGain = Temperature(secondPuddleUid) - secondTemperature;
                 Assert.That(secondGain, Is.GreaterThan(1f), "The puddle the item stayed in stopped being heated.");
-                Assert.That(firstGain, Is.LessThan(secondGain * 0.5f), "The puddle the item left was still heated.");
+                Assert.That(firstGain, Is.LessThan(secondGain - 1f), "The puddle the item left was still heated.");
             }
         });
 

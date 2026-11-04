@@ -7,8 +7,8 @@
   physicalDesc: reagent-physical-desc-foamy
   flavor: bitter
   color: "#e8eef2"
-  boilingPoint: 100.0
-  meltingPoint: 0.0
+  boilingPoint: 373.15
+  meltingPoint: 273.15
   evaporationSpeed: 0.1
   friction: 0.4
   slipData:

@@ -106,9 +106,19 @@ namespace Content.Shared.Chemistry.Reagent
         [DataField]
         public float SpecificHeat { get; private set; } = 1.0f;
 
+        // KS14 start: units documented
+        /// <summary>
+        ///     Kelvin, at 101.325 kPa.
+        /// </summary>
+        // KS14 end
         [DataField]
         public float? BoilingPoint { get; private set; }
 
+        // KS14 start: units documented
+        /// <summary>
+        ///     Kelvin, at 101.325 kPa.
+        /// </summary>
+        // KS14 end
         [DataField]
         public float? MeltingPoint { get; private set; }
 

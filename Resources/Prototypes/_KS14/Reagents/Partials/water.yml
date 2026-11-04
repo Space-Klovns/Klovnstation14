@@ -1,8 +1,10 @@
-# Water boils off a puddle hotter than its boiling point, taking its latent heat with it.
+# Water boils off a puddle hotter than its boiling point at the tile's pressure, taking its latent heat with it, and
+#     below it evaporates into the tile as humidity (Fluidmos), rather than vanishing at a fixed rate.
 - type: !PartialOnly reagent
   id: Water
   tileEffects:
-  - !type:BoilTileEffect { }
+  - !type:BoilTileEffect
+    evaporate: true
 
 # Water, space cleaner and bleach wash stains off. See KsStainCleaning.
 - type: !PartialOnly reagent

@@ -36,6 +36,7 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
 {
     // The great wall of dependencies
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
     [Dependency] private EntityManager _entityManager = default!;
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
     [Dependency] private NodeGroupSystem _nodeGroupSystem = default!;
@@ -168,7 +169,7 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
         _appearance.SetData(uid, ReactorVisuals.Input, inlet.Air.TotalMoles > 20);
         _appearance.SetData(uid, ReactorVisuals.Output, outlet.Air.TotalMoles > 20);
 
-        var AirContents = new GasMixture();
+        var AirContents = new GasMixture { FluidCapable = true /* KS14: added */ };
 
         var TempRads = 0;
 
@@ -362,7 +363,10 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
 
         var T = _atmosphereSystem.GetTileMixture(ent.Owner, excite: true);
         if (T != null)
+        {
+            _ksFluidmosTileSystem.ReleaseToTile(ent, comp.AirContents); // KS14
             _atmosphereSystem.Merge(T, comp.AirContents);
+        }
 
         _adminLog.Add(LogType.Explosion, LogImpact.High, $"{ToPrettyString(ent):reactor} catastrophically overloads, meltdown badness: {MeltdownBadness}");
 

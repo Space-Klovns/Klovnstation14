@@ -113,7 +113,7 @@ namespace Content.Server.Atmos.EntitySystems
             }
 
             float? sourceHeatCapacity = null;
-            var buffer = new float[Atmospherics.AdjustedNumberOfGases];
+            Span<float> buffer = stackalloc float[Atmospherics.AdjustedNumberOfGases]; // KS14: new float[] -> stackalloc, server-only so no sandbox
 
             foreach (var receiver in receivers)
             {
@@ -141,6 +141,7 @@ namespace Content.Server.Atmos.EntitySystems
                 // transfer moles
                 NumericsHelpers.Multiply(source.Moles, fraction, buffer);
                 NumericsHelpers.Add(receiver.Moles, buffer);
+                KsDivideFluidInto(source, receiver, fraction); // KS14
             }
         }
 
@@ -149,7 +150,7 @@ namespace Content.Server.Atmos.EntitySystems
         ///     If the output mixture is null, then this is being released into space.
         ///     It can't transfer air to a mixture with higher pressure.
         /// </summary>
-        public bool ReleaseGasTo(GasMixture mixture, GasMixture? output, float targetPressure)
+        public bool ReleaseGasTo(GasMixture mixture, GasMixture? output, float targetPressure, bool ksThrottle = false /* KS14: added, true applies Joule-Thomson; tile-to-tile flow leaves it off */)
         {
             var outputStartingPressure = output?.Pressure ?? 0;
             var inputStartingPressure = mixture.Pressure;
@@ -159,7 +160,7 @@ namespace Content.Server.Atmos.EntitySystems
                 // Need at least 10 kPa difference to overcome friction in the mechanism.
                 return false;
 
-            if (!(mixture.TotalMoles > 0) || !(mixture.Temperature > 0)) return false;
+            if (!(mixture.TransferMoles /* KS14: TotalMoles -> TransferMoles, so pure-liquid pipes still flow */ > 0) || !(mixture.Temperature > 0)) return false;
 
             // We calculate the necessary moles to transfer with the ideal gas law.
             var pressureDelta = MathF.Min(targetPressure - outputStartingPressure, (inputStartingPressure - outputStartingPressure) / 2f);
@@ -167,6 +168,9 @@ namespace Content.Server.Atmos.EntitySystems
 
             // And now we transfer the gas.
             var removed = mixture.Remove(transferMoles);
+
+            if (ksThrottle) // KS14
+                _ksTransferThermoSystem.Apply(removed, inputStartingPressure, outputStartingPressure, doesWork: false); // KS14
 
             if (output != null)
                 Merge(output, removed);
@@ -191,13 +195,15 @@ namespace Content.Server.Atmos.EntitySystems
                 // No need to pump gas, we've reached the target.
                 return false;
 
-            if (!(mixture.TotalMoles > 0) || !(mixture.Temperature > 0)) return false;
+            if (!(mixture.TransferMoles /* KS14: TotalMoles -> TransferMoles, so pure-liquid pipes still flow */ > 0) || !(mixture.Temperature > 0)) return false;
 
             // We calculate the necessary moles to transfer with the ideal gas law.
             var transferMoles = pressureDelta * output.Volume / (mixture.Temperature * Atmospherics.R);
 
             // And now we transfer the gas.
+            var ksInputPressure = mixture.Pressure; // KS14
             var removed = mixture.Remove(transferMoles);
+            _ksTransferThermoSystem.Apply(removed, ksInputPressure, outputStartingPressure, doesWork: true); // KS14
             Merge(output, removed);
             return true;
         }
@@ -205,7 +211,7 @@ namespace Content.Server.Atmos.EntitySystems
         /// <summary>
         ///     Scrubs specified gases from a gas mixture into a <see cref="destination"/> gas mixture.
         /// </summary>
-        public void ScrubInto(GasMixture mixture, GasMixture destination, IReadOnlyCollection<Gas> filterGases)
+        public void ScrubInto(GasMixture mixture, GasMixture destination, IReadOnlyCollection<Gas> filterGases, float? ksInletPressure = null, GasMixture? ksHeatSink = null /* KS14: added, compresses what is scrubbed from this pressure, shedding heat into the sink */)
         {
             var buffer = new GasMixture(mixture.Volume) { Temperature = mixture.Temperature };
 
@@ -214,6 +220,9 @@ namespace Content.Server.Atmos.EntitySystems
                 buffer.AdjustMoles(gas, mixture.GetMoles(gas));
                 mixture.SetMoles(gas, 0f);
             }
+
+            if (ksInletPressure is { } ksPressure) // KS14
+                _ksTransferThermoSystem.Apply(buffer, ksPressure, destination.Pressure, doesWork: true, heatSink: ksHeatSink); // KS14
 
             Merge(destination, buffer);
         }
@@ -288,6 +297,7 @@ namespace Content.Server.Atmos.EntitySystems
         [PublicAPI]
         public override ReactionResult React(GasMixture mixture, IGasMixtureHolder? holder)
         {
+            if (mixture.FluidCapable) _ksFluidmosPhaseSystem.UpdatePhases(mixture, holder); // KS14: reagent phase changes
             var reaction = ReactionResult.NoReaction;
             var temperature = mixture.Temperature;
             var energy = GetThermalEnergy(mixture);

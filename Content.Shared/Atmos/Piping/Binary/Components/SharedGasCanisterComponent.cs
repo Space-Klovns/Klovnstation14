@@ -46,6 +46,11 @@ namespace Content.Shared.Atmos.Piping.Binary.Components
         public bool PortStatus { get; }
         public float TankPressure { get; }
 
+        /// <summary>
+        /// KS14: the reagents the canister carries as liquid, solid or unlinked vapor, or null for none.
+        /// </summary>
+        public Content.Shared._KS14.Fluidmos.KsFluidEntry[]? KsFluid { get; init; } // KS14
+
         public GasCanisterBoundUserInterfaceState(float canisterPressure, bool portStatus, float tankPressure)
         {
             CanisterPressure = canisterPressure;

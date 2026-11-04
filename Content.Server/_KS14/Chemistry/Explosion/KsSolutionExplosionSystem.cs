@@ -4,6 +4,7 @@ using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Explosion.Components;
+using Robust.Shared.Map;
 
 namespace Content.Server._KS14.Chemistry.Explosion;
 
@@ -111,7 +112,21 @@ public sealed partial class KsSolutionExplosionSystem : EntitySystem
             return true;
         }
 
-        _explosionSystem.QueueExplosion(_transformSystem.ToMapCoordinates(coordinates), DefaultExplosionType, intensity,
+        return QueueExplosion(_transformSystem.ToMapCoordinates(coordinates), GetExplosivePower(spilled), cause);
+    }
+
+    /// <summary>
+    ///     Queues an explosion of <paramref name="explosivePower"/> at <paramref name="coordinates"/>, in
+    ///         <see cref="DefaultExplosionType"/>'s shape. Does nothing if it is too weak to.
+    /// </summary>
+    /// <returns>Whether it exploded.</returns>
+    public bool QueueExplosion(MapCoordinates coordinates, float explosivePower, EntityUid? cause = null)
+    {
+        var intensity = GetIntensity(explosivePower);
+        if (intensity < MinimumIntensity)
+            return false;
+
+        _explosionSystem.QueueExplosion(coordinates, DefaultExplosionType, intensity,
             slope: 1f, maxTileIntensity: 4f, cause, tileBreakScale: 0f);
         return true;
     }

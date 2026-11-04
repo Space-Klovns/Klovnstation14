@@ -79,7 +79,7 @@ namespace Content.Server.Chemistry.TileReactions
             {
                 var temperature = environment.Temperature;
                 var floorTemperature = reagent.BoilingPoint is { } boilingPoint
-                    ? boilingPoint + Atmospherics.T0C // BoilingPoint is in Celsius
+                    ? boilingPoint /* KS14: + Atmospherics.T0C removed, BoilingPoint is in Kelvin */
                     : FallbackMinimumTemperature;
                 var target = MathF.Max(
                     MathF.Min(temperature - (_coolingTemperature * 1000f), temperature / _coolingTemperature),

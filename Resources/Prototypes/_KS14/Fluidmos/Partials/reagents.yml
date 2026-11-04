@@ -1,0 +1,107 @@
+# Fluidmos properties for reagents carried in pipes. Linked reagents' vapor is their atmos gas (molar mass from the gas);
+#     vaporizationEntropy is the real ΔH_vap / (R Tb), which shapes the vapor-pressure curve.
+
+- type: !PartialOnly reagent
+  id: Water
+  fluidmos:
+    gas: WaterVapor
+    vaporizationEntropy: 13.1
+
+- type: !PartialOnly reagent
+  id: Oxygen
+  fluidmos:
+    gas: Oxygen
+    vaporizationEntropy: 9.1
+
+- type: !PartialOnly reagent
+  id: Nitrogen
+  fluidmos:
+    gas: Nitrogen
+    vaporizationEntropy: 8.7
+
+- type: !PartialOnly reagent
+  id: NitrousOxide
+  fluidmos:
+    gas: NitrousOxide
+    vaporizationEntropy: 10.7
+
+- type: !PartialOnly reagent
+  id: Ethanol
+  fluidmos:
+    molarMass: 46
+    vaporizationEntropy: 13.2
+
+# Linked, so ammonia makes a refrigerant a pressure pump can run: Psat(293 K) is about 840 kPa, under the pump's cap.
+- type: !PartialOnly reagent
+  id: Ammonia
+  fluidmos:
+    gas: Ammonia
+    vaporizationEntropy: 11.7
+
+# Cryo puddles boil off into their gas, limited by the heat available, and evaporate below their boiling point.
+- type: !PartialOnly reagent
+  id: Oxygen
+  tileEffects:
+  - !type:BoilTileEffect
+    evaporate: true
+
+- type: !PartialOnly reagent
+  id: Nitrogen
+  tileEffects:
+  - !type:BoilTileEffect
+    evaporate: true
+
+- type: !PartialOnly reagent
+  id: NitrousOxide
+  tileEffects:
+  - !type:BoilTileEffect
+    evaporate: true
+
+- type: !PartialOnly reagent
+  id: Ammonia
+  tileEffects:
+  - !type:BoilTileEffect
+    evaporate: true
+
+# Volatile reagents with no gas boil off a hot puddle as smoke. WeldingFuel is left out: its acetylene boiling point
+#     (188 K) would boil every room-temperature fuel puddle away into smoke, and chemfires burn those puddles.
+- type: !PartialOnly reagent
+  id: Ethanol
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+
+- type: !PartialOnly reagent
+  id: Chlorine
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+
+- type: !PartialOnly reagent
+  id: SpaceCleaner
+  tileEffects:
+  - !type:BoilTileEffect
+    smoke: true
+
+# Puddles colder than their melting point freeze into the tile's ice sheet (FreezeTileEffect).
+- type: !PartialOnly reagent
+  id: Water
+  tileEffects:
+  - !type:FreezeTileEffect { }
+
+# Blood freezes a little below water.
+- type: !PartialOnly reagent
+  id: Blood
+  meltingPoint: 272.65
+  tileEffects:
+  - !type:FreezeTileEffect { }
+
+- type: !PartialOnly reagent
+  id: Oxygen
+  tileEffects:
+  - !type:FreezeTileEffect { }
+
+- type: !PartialOnly reagent
+  id: Nitrogen
+  tileEffects:
+  - !type:FreezeTileEffect { }

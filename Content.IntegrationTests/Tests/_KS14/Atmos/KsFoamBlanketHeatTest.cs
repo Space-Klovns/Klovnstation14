@@ -37,7 +37,7 @@ public sealed class KsFoamBlanketHeatTest : GameTest
   desc: reagent-desc-nothing
   physicalDesc: reagent-physical-desc-nothing
   boilingPoint: 5000
-  meltingPoint: -200
+  meltingPoint: 1 # Kelvin: never freezes
 ";
 
     // Deliberately NOT static: it only exists in the test YAML above, and the YAML linter validates static ids.

@@ -15,6 +15,12 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     private readonly List<GasMixture> _displacementTargets = [];
 
     [SubscribeLocalEvent]
+    private void OnAirQuery(ref KsTileEffectAirQueryEvent args)
+    {
+        args.Mixture ??= _atmosphereSystem.GetTileMixture((args.GridUid, null, null), null, args.Tile, excite: false);
+    }
+
+    [SubscribeLocalEvent]
     private void OnBoil(ref KsTileEffectBoilEvent args)
     {
         if (args.BoiledUnits > 0f)

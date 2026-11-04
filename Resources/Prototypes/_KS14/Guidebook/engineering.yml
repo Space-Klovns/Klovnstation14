@@ -36,3 +36,21 @@
   id: Packets
   name: guide-entry-packets
   text: "/ServerInfo/_KS14/Guidebook/Engineering/Packets.xml"
+
+- type: guideEntry
+  id: KsLiquidsInPipes
+  name: guide-entry-ks-liquids-in-pipes
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/LiquidsInPipes.xml"
+  children:
+  - KsFluidDevices
+  - KsRefrigeration
+
+- type: guideEntry
+  id: KsFluidDevices
+  name: guide-entry-ks-fluid-devices
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/FluidDevices.xml"
+
+- type: guideEntry
+  id: KsRefrigeration
+  name: guide-entry-ks-refrigeration
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/Refrigeration.xml"

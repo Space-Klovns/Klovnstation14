@@ -24,6 +24,7 @@ public sealed partial class PuddleSystem
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
+    [Dependency] private Content.Server._KS14.Fluidmos.Ice.KsIceSheetSystem _iceSheetSystem = default!;
 
     /// <summary>
     ///     <see cref="KsCCVars.AtmosPuddleEmissivity"/>.
@@ -76,17 +77,19 @@ public sealed partial class PuddleSystem
 
         foreach (var (gridUid, tilePuddles) in _gridPuddleCache)
         {
-            foreach (var (indices, puddle) in tilePuddles)
-                ConductHeatToNeighbours(puddle, tilePuddles, indices, deltaTime);
-
             // Resolved once per grid; grids without an atmosphere fall back to the map's (immutable) mixture and are skipped.
-            if (!TryComp(gridUid, out GridAtmosphereComponent? gridAtmosphere))
+            var gridHasAir = TryComp(gridUid, out GridAtmosphereComponent? gridAtmosphere);
+
+            foreach (var (indices, puddle) in tilePuddles)
+                ConductHeatToNeighbours(puddle, gridUid, tilePuddles, indices, gridHasAir, deltaTime);
+
+            if (!gridHasAir)
                 continue;
 
             var grid = new Entity<GridAtmosphereComponent?, GasTileOverlayComponent?>(gridUid, gridAtmosphere, null);
 
             foreach (var (indices, puddle) in tilePuddles)
-                ExchangeHeatWithAir(puddle, grid, indices, deltaTime);
+                ExchangeHeatWithAir(puddle, grid, tilePuddles, indices, deltaTime);
         }
 
         // The cache is no longer being walked, so reactions are free to spawn or delete puddles now.
@@ -99,9 +102,17 @@ public sealed partial class PuddleSystem
         }
 
         _pendingAirHeatExchanges.Clear();
+
+        // Ice sheets in the same pass, with the same conductance and coverage, now that the puddles are done.
+        _iceSheetSystem.UpdateHeatExchange(deltaTime, AirHeatExchangeConductance, AirHeatExchangeReferenceVolume, _puddleEmissivity);
     }
 
-    private void ExchangeHeatWithAir(Entity<PuddleComponent> puddle, Entity<GridAtmosphereComponent?, GasTileOverlayComponent?> grid, Vector2i indices, float deltaTime)
+    private void ExchangeHeatWithAir(
+        Entity<PuddleComponent> puddle,
+        Entity<GridAtmosphereComponent?, GasTileOverlayComponent?> grid,
+        Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles,
+        Vector2i indices,
+        float deltaTime)
     {
         if (!_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution))
             return;
@@ -133,7 +144,9 @@ public sealed partial class PuddleSystem
             KsThermalTransfer.RadiativeConductance(solutionTemperature, airTemperature, coverage, _puddleEmissivity);
 
         // Stepped exactly, so it never overshoots the shared equilibrium however strong the radiation.
-        var heat = KsThermalTransfer.ExchangeQuery(solutionCapacity, solutionTemperature, airCapacity, airTemperature, conductance, deltaTime);
+        // Its share of the puddle's capacity, as its neighbours take theirs (CountHeatContacts).
+        var heat = KsThermalTransfer.ExchangeQuery(solutionCapacity / CountHeatContacts(tilePuddles, indices, exchangesWithAir: true),
+            solutionTemperature, airCapacity, airTemperature, conductance, deltaTime);
 
         if (heat == 0f || puddle.Comp.Solution is not { } solutionEntity)
             return;

@@ -1,6 +1,8 @@
 #nullable enable
 using Content.IntegrationTests.Fixtures;
+using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
+using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
@@ -22,6 +24,21 @@ public sealed class KsPuddleConductionTest : GameTest
     private const int TicksPerSecond = 30;
     private const float HotTemperature = 360f;
     private const float ColdTemperature = 280f;
+
+    // Deliberately NOT static: it only exists in this test's YAML, and the YAML linter validates static ids.
+    private readonly ProtoId<ReagentPrototype> _inertReagent = "KsTestPuddleConductionInert";
+
+    // No boiling or melting point, so nothing but heat exchange changes its temperature. A low specific heat makes a small
+    //     puddle of it settle with whatever it touches within one exchange.
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: reagent
+  id: KsTestPuddleConductionInert
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+  specificHeat: 0.2
+";
 
     /// <summary>
     ///     Two touching puddles head for the same temperature, and the heat one loses is the heat the other gains. Two with bare
@@ -79,5 +96,82 @@ public sealed class KsPuddleConductionTest : GameTest
             // Same volume of the same reagent, so the mean temperature is the conserved energy.
             Assert.That((hot.Temperature + cold.Temperature) / 2f, Is.EqualTo((HotTemperature + ColdTemperature) / 2f).Within(0.1f));
         });
+    }
+
+    /// <summary>
+    ///     A small hot puddle between cold puddles, in cold air, cools towards them and stops there. Its exchanges with the
+    ///         air and with its neighbours are each worked out from the same starting temperature and applied together, so
+    ///         if each could take it all the way to its partner, together they would carry it far below both, past
+    ///         absolute zero.
+    /// </summary>
+    [Test]
+    public async Task TestPuddleBetweenColdNeighboursInColdAirStopsAtTheirTemperature()
+    {
+        const float startTemperature = 400f;
+        const float surroundingTemperature = 120f;
+
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+        var atmosphereSystem = entityManager.System<AtmosphereSystem>();
+        Vector2i[] neighbours = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
+
+        await server.WaitPost(() =>
+        {
+            var mapSystem = entityManager.System<SharedMapSystem>();
+            for (var x = -1; x <= 1; x++)
+            {
+                for (var y = -1; y <= 1; y++)
+                    mapSystem.SetTile(gridUid, testMap.Grid.Comp, new Vector2i(x, y), testMap.Tile.Tile);
+            }
+
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        EntityUid hotUid = default;
+        await server.WaitPost(() =>
+        {
+            for (var x = -1; x <= 1; x++)
+            {
+                for (var y = -1; y <= 1; y++)
+                {
+                    var mixture = atmosphereSystem.GetTileMixture((gridUid, null, null), null, new Vector2i(x, y), excite: true)!;
+                    mixture.Clear();
+                    mixture.SetMoles(Gas.Nitrogen, Atmospherics.MolesCellStandard);
+                    mixture.Temperature = surroundingTemperature;
+                }
+            }
+
+            var puddleSystem = entityManager.System<PuddleSystem>();
+            var mapSystem = entityManager.System<SharedMapSystem>();
+            foreach (var neighbour in neighbours)
+            {
+                puddleSystem.TrySpillAt(mapSystem.GetTileRef(gridUid, testMap.Grid.Comp, neighbour),
+                    new Solution(_inertReagent.Id, FixedPoint2.New(15)) { Temperature = surroundingTemperature }, out _, sound: false);
+            }
+
+            puddleSystem.TrySpillAt(mapSystem.GetTileRef(gridUid, testMap.Grid.Comp, Vector2i.Zero),
+                new Solution(_inertReagent.Id, FixedPoint2.New(0.5f)) { Temperature = startTemperature }, out hotUid, sound: false);
+        });
+
+        var solutionContainerSystem = entityManager.System<SharedSolutionContainerSystem>();
+        var coldest = float.MaxValue;
+        for (var tick = 0; tick < TicksPerSecond * 3; tick++)
+        {
+            await server.WaitRunTicks(1);
+            await server.WaitPost(() =>
+            {
+                Assert.That(solutionContainerSystem.TryGetSolution(hotUid, "puddle", out _, out var hot), Is.True);
+                coldest = MathF.Min(coldest, hot!.Temperature);
+            });
+        }
+
+        // The cold puddles and air warm a little as it cools, so it settles a little above where they started.
+        Assert.That(coldest, Is.GreaterThanOrEqualTo(surroundingTemperature - 0.5f),
+            $"The puddle fell to {coldest} K, below the {surroundingTemperature} K of everything it touches.");
+        Assert.That(coldest, Is.LessThan(surroundingTemperature + 20f), "The puddle didn't cool, so this proves nothing.");
     }
 }

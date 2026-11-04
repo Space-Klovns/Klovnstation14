@@ -11,6 +11,7 @@ using Content.Server.Chemistry.TileReactions;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Atmos.FoamBlanket;
+using Content.Shared._KS14.Fluidmos;
 using Content.Shared._KS14.TileEffects;
 using Content.Shared._KS14.TileEffects.Effects;
 using Content.Shared.Atmos;
@@ -281,8 +282,12 @@ public sealed class KsFirefightingTest : GameTest
             solution.Temperature = HotPuddleTemperature;
             var air = atmosphereSystem.GetTileMixture(gridUid, null, testMap.Tile.GridIndices, excite: true)!;
 
-            var boilingPoint = protoMan.Index(WaterReagent).BoilingPoint!.Value + Atmospherics.T0C;
-            var latentHeat = protoMan.Index(WaterReagent).KsTileEffects.OfType<BoilTileEffect>().Single().LatentHeat;
+            // Water's boil effect takes its latent heat from Fluidmos, so pipes and puddles agree, and boils at the
+            //     boiling point for the tile's pressure.
+            Assert.That(entityManager.System<KsFluidmosPropertiesSystem>().TryGetProperties(WaterReagent, out var waterProperties));
+            var boilingPoint = KsPhaseMath.BoilingPointAt(waterProperties!.VaporizationEntropy, waterProperties.BoilingPoint, air.Pressure);
+            var latentHeat = protoMan.Index(WaterReagent).KsTileEffects.OfType<BoilTileEffect>().Single().LatentHeat
+                ?? waterProperties!.LatentHeat;
 
             var volumeBefore = (float)solution.Volume;
             var energyBefore = solution.GetHeatCapacity(protoMan) * solution.Temperature
@@ -319,6 +324,12 @@ public sealed class KsFirefightingTest : GameTest
         {
             var solutionEntity = SpillPuddle(testMap, WaterReagent, 50f, Atmospherics.T20C, out var puddleUid);
             var solution = solutionEntity.Comp.Solution;
+
+            // Saturate the air, so the puddle has nothing to evaporate into either: below its boiling point, nothing leaves.
+            Assert.That(entityManager.System<KsFluidmosPropertiesSystem>().TryGetProperties(WaterReagent, out var water));
+            var air = entityManager.System<AtmosphereSystem>().GetTileMixture(testMap.Grid.Owner, null, testMap.Tile.GridIndices, excite: true)!;
+            var saturationPressure = KsPhaseMath.SaturationPressure(water!.VaporizationEntropy, water.BoilingPoint, solution.Temperature);
+            air.SetMoles(Gas.WaterVapor, saturationPressure * air.Volume / (Atmospherics.R * air.Temperature));
 
             entityManager.System<KsTileEffectSystem>().TryUpdateTileEffects(puddleUid, testMap.Tile, solution, scale: 1f);
 

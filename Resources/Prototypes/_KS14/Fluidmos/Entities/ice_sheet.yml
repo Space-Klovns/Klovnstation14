@@ -1,0 +1,66 @@
+# What freezes out of a tile's puddle (FreezeTileEffect), one sheet per tile (KsIceSheetSystem). Modelled on IceCrust but
+#     not parented to it: its temperature is its solution's, not a Temperature component's. Tinted by what froze into it,
+#     and slippery only once it is more than frost.
+- type: entity
+  id: KsIceSheet
+  categories: [ HideSpawnMenu ]
+  name: ice
+  description: A sheet of frozen liquid. Cold and slippery.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: MeleeSound
+    soundGroups:
+      Brute:
+        collection: GlassBreak
+  - type: Sprite
+    sprite: Objects/Misc/ice_crust.rsi
+    layers:
+    - state: ice
+    drawdepth: FloorObjects
+    color: "#ffffff44"
+  - type: Appearance
+  - type: Clickable
+  - type: Physics
+  - type: Fixtures
+    fixtures:
+      fix1:
+        hard: false
+        density: 7
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.4,-0.4,0.4,0.4"
+        layer:
+        - MidImpassable
+  - type: Damageable
+    damageModifierSet: Wood
+  - type: Injurable
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 10
+      behaviors:
+      - !type:SpillBehavior
+        solution: ice
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: FrictionContacts
+  - type: TileFrictionModifier
+    modifier: 0.05
+  - type: SolutionManager
+    solutions:
+    - SolutionKsIceSheet
+  - type: KsIceSheet
+
+- type: entity
+  parent: Solution
+  id: SolutionKsIceSheet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    id: ice
+    solution:
+      maxVol: 1000

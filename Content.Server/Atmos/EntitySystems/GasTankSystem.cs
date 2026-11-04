@@ -16,6 +16,8 @@ namespace Content.Server.Atmos.EntitySystems;
 public sealed partial class GasTankSystem : SharedGasTankSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private SharedTransformSystem _xform = default!;
@@ -98,10 +100,14 @@ public sealed partial class GasTankSystem : SharedGasTankSystem
         if (deltaP < entity.Comp.SafetyPressure)
             deltaP = Math.Min(entity.Comp.ReleasePressure, deltaP);
 
+        var ksTankPressure = entity.Comp.Air.Pressure; // KS14
         var removed = _atmosphereSystem.FlowGas(entity.Comp.Air, deltaP, dt, ReleaseArea);
 
         if (removed == null)
             return;
+
+        _ksTransferThermoSystem.Apply(removed, ksTankPressure, environment?.Pressure ?? 0f, doesWork: false); // KS14
+        _ksFluidmosTileSystem.ReleaseToTile(entity, removed); // KS14
 
         if (environment != null)
             _atmosphereSystem.Merge(environment, removed);
@@ -134,6 +140,9 @@ public sealed partial class GasTankSystem : SharedGasTankSystem
         // We resize the volume because lungs breathe in volume rather than being pressure based atm.
         // If we don't do this, they won't consume all of the outputted gas or will consume way too much.
         mixture.Volume = volume;
+
+        mixture.ReturnFluidTo(gasTank.Comp.Air); // KS14: nobody inhales fluid; it stays in the tank
+
         return mixture;
     }
 

@@ -108,7 +108,7 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
         foreach (var (reagentProtoId, targetAmount) in ent.Comp.ReagentTargets)
         {
             var reagentId = reagentProtoId.Id;
-            var currentAmount = buffer.GetReagentQuantity(new ReagentId(reagentId, null));
+            var currentAmount = buffer.GetTotalPrototypeQuantity(reagentId); // KS14: GetReagentQuantity(new ReagentId(reagentId, null)) -> GetTotalPrototypeQuantity, as plumbing keeps reagent data
             var needed = targetAmount - currentAmount;
             if (needed > 0)
             {

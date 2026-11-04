@@ -41,6 +41,15 @@ public sealed partial class CanisterOverlay : Overlay
     /// </summary>
     private const float WindowMaskSizeMultiplier = 0.8f;
 
+    /// <summary>
+    ///     Where the window sits in the mask texture, in tiles from the texture's bottom edge: rows 5 to 10 of its 32
+    ///         pixels. Liquid and ice fill the window from its bottom.
+    /// </summary>
+    private const float WindowBottom = 5f / 32f;
+    private const float WindowHeight = 5f / 32f;
+
+    private static readonly Color IceColor = Color.FromHex("#d6efffdd");
+
     // see: DoAfterOverlay.cs
     private const float Scale = 1f;
     private static readonly Matrix3x2 ScaleMatrix = Matrix3Helpers.CreateScale(new Vector2(Scale, Scale));
@@ -150,7 +159,9 @@ public sealed partial class CanisterOverlay : Overlay
             while (canisterEnumerator.MoveNext(out var uid, out var canisterComponent, out var transformComponent))
             {
                 // save some performance if we can, because canisters with no moles don't matter
-                if (canisterComponent.NetworkedMoles <= float.Epsilon)
+                if (canisterComponent.NetworkedMoles <= float.Epsilon &&
+                    canisterComponent.LiquidFill == 0 &&
+                    canisterComponent.SolidFill == 0)
                     continue;
 
                 if (_appearanceSystem.TryGetData<bool>(uid, GasCanisterVisuals.TankInserted, out var tankInserted) &&
@@ -194,6 +205,7 @@ public sealed partial class CanisterOverlay : Overlay
         foreach (var (overlayComponent, canisterWorldMatrix) in _drawDataCache)
         {
             worldHandle.SetTransform(canisterWorldMatrix);
+            DrawFluid(worldHandle, overlayComponent);
             for (var i = 0; i < _visibleGasCount; i++)
             {
                 // 0 to 1
@@ -238,5 +250,25 @@ public sealed partial class CanisterOverlay : Overlay
 
         worldHandle.SetTransform(Matrix3x2.Identity);
         worldHandle.UseShader(null);
+    }
+
+    /// <summary>
+    ///     Ice at the bottom of the window, liquid over it, each as high as the canister's gauge reads. The stencil keeps
+    ///         them inside the window, so they span the tile's width.
+    /// </summary>
+    private static void DrawFluid(DrawingHandleWorld worldHandle, GasCanisterOverlayComponent overlayComponent)
+    {
+        var bottom = HalfNegativeVector2.Y + WindowBottom;
+        var solidHeight = overlayComponent.SolidFill / (float)byte.MaxValue * WindowHeight;
+        var liquidHeight = MathF.Min(overlayComponent.LiquidFill / (float)byte.MaxValue * WindowHeight, WindowHeight - solidHeight);
+
+        if (solidHeight > 0f)
+            worldHandle.DrawRect(new Box2(HalfNegativeVector2.X, bottom, -HalfNegativeVector2.X, bottom + solidHeight), IceColor);
+
+        if (liquidHeight > 0f)
+        {
+            worldHandle.DrawRect(new Box2(HalfNegativeVector2.X, bottom + solidHeight, -HalfNegativeVector2.X, bottom + solidHeight + liquidHeight),
+                overlayComponent.LiquidColor.WithAlpha(0.85f));
+        }
     }
 }

@@ -29,6 +29,8 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
     {
         [Dependency] private ISharedAdminLogManager _adminLogger = default!;
         [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
+        [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
         [Dependency] private DeviceNetworkSystem _deviceNetSystem = default!;
         [Dependency] private NodeContainerSystem _nodeContainer = default!;
         [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
@@ -71,6 +73,14 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
 
             Scrub(timeDelta, scrubber, environment, outlet);
 
+            // KS14 start: smoke is drawn in with the air
+            if (scrubber.KsScrubAerosols && environment != null)
+            {
+                var smokeFraction = MathF.Min(1f, timeDelta * scrubber.TransferRate * _atmosphereSystem.PumpSpeedup() / environment.Volume);
+                _ksFluidmosTileSystem.AbsorbFromTile(uid, outlet.Air, smokeFraction, smoke: true, puddleUnits: 0f);
+            }
+            // KS14 end
+
             if (!scrubber.WideNet)
                 return;
 
@@ -107,6 +117,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
 
             // Take a gas sample.
             var ratio = MathF.Min(1f, timeDelta * transferRate / tile.Volume);
+            var ksTilePressure = tile.Pressure; // KS14
             var removed = tile.RemoveRatio(ratio);
 
             // Nothing left to remove from the tile.
@@ -115,13 +126,14 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
 
             if (mode == ScrubberPumpDirection.Scrubbing)
             {
-                _atmosphereSystem.ScrubInto(removed, destination, filterGases);
+                _atmosphereSystem.ScrubInto(removed, destination, filterGases, ksInletPressure: ksTilePressure, ksHeatSink: tile /* KS14: added */);
 
                 // Remix the gases.
                 _atmosphereSystem.Merge(tile, removed);
             }
             else if (mode == ScrubberPumpDirection.Siphoning)
             {
+                _ksTransferThermoSystem.Apply(removed, ksTilePressure, destination.Pressure, doesWork: true, heatSink: tile); // KS14
                 _atmosphereSystem.Merge(destination, removed);
             }
             return true;

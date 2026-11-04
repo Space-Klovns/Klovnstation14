@@ -18,6 +18,7 @@ namespace Content.Server.PneumaticCannon;
 public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
 {
     [Dependency] private AtmosphereSystem _atmos = default!;
+    [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
     [Dependency] private GasTankSystem _gasTank = default!;
     [Dependency] private GunSystem _gun = default!;
     [Dependency] private StunSystem _stun = default!;
@@ -95,6 +96,7 @@ public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
         var removed = _gasTank.RemoveAir(gas.Value, component.GasUsage);
         if (environment != null && removed != null)
         {
+            _ksFluidmosTileSystem.ReleaseToTile(uid, removed); // KS14
             _atmos.Merge(environment, removed);
         }
 

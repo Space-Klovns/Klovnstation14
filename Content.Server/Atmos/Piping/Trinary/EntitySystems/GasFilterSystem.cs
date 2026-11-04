@@ -25,6 +25,7 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
         [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
         [Dependency] private IAdminLogManager _adminLogger = default!;
         [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
         [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
         [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
         [Dependency] private SharedPopupSystem _popupSystem = default!;
@@ -72,6 +73,7 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
                 return;
             }
 
+            var ksInletPressure = inletNode.Air.Pressure; // KS14
             var removed = inletNode.Air.RemoveVolume(transferVol);
 
             // Funky - removed for filtering of multiple gases
@@ -101,6 +103,7 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
                 }
 
                 var target = filterNode.Air.Pressure < Atmospherics.MaxOutputPressure ? filterNode : inletNode;
+                _ksTransferThermoSystem.Apply(filteredOut, ksInletPressure, target.Air.Pressure, doesWork: true, deviceUid: uid); // KS14
                 _atmosphereSystem.Merge(target.Air, filteredOut);
                 _ambientSoundSystem.SetAmbience(uid, hasFilteredMoles);
             }
@@ -112,6 +115,7 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
             // This might end up negative, but such cases are handled correctly by the `RemoveRatio` method
             var passthrough = removed.RemoveRatio(limitRatioOutlet);
 
+            _ksTransferThermoSystem.Apply(passthrough, ksInletPressure, outletNode.Air.Pressure, doesWork: true, deviceUid: uid); // KS14
             _atmosphereSystem.Merge(outletNode.Air, passthrough);
             _atmosphereSystem.Merge(inletNode.Air, removed);
         }

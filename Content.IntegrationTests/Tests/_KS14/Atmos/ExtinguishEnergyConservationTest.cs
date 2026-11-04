@@ -103,10 +103,10 @@ public sealed class ExtinguishEnergyConservationTest : GameTest
             var energyAfter = capacityAfter * air.Temperature + (float) used * reaction.EnergyPerUnit;
 
             // Same target the reaction aims for (default coolingTemperature of 2), whatever HeatScale is.
-            // The cooling floor is the reagent's boiling point (Celsius in the prototype).
+            // The cooling floor is the reagent's boiling point.
             var waterBoilingPoint = protoMan.Index(WaterReagent).BoilingPoint;
             Assert.That(waterBoilingPoint, Is.Not.Null, "Water has no boiling point.");
-            var boilingFloor = waterBoilingPoint!.Value + Atmospherics.T0C;
+            var boilingFloor = waterBoilingPoint!.Value;
             var target = MathF.Max(MathF.Min(temperatureBefore - 2000f, temperatureBefore / 2f), boilingFloor);
             // Boiled water adds heat capacity, so the air lands at or just under the target when it is reached.
             var targetFloor = capacityBefore * target / capacityAfter;

@@ -32,3 +32,53 @@ public record struct KsTileEffectBoilEvent(
     /// </summary>
     public float BoiledUnits;
 }
+
+/// <summary>
+///     Raised by tile effects to read a tile's air, which only the server can reach. Whoever has it sets
+///         <see cref="Mixture"/>, which the effect only reads: changes to it go through events like
+///         <see cref="KsTileEffectBoilEvent"/>.
+/// </summary>
+[ByRefEvent]
+public record struct KsTileEffectAirQueryEvent(EntityUid GridUid, Vector2i Tile)
+{
+    public GasMixture? Mixture;
+}
+
+/// <summary>
+///     Raised by <see cref="Effects.BoilTileEffect"/> in smoke mode: a reagent with no gas of its own boiled off a
+///         solution, and leaves as smoke over the tile.
+/// </summary>
+/// <param name="Reagent">The reagent that boiled, data included.</param>
+/// <param name="Units">How much boiled.</param>
+/// <param name="Temperature">The temperature it boiled at, in kelvin.</param>
+[ByRefEvent]
+public record struct KsTileEffectSmokeEvent(
+    EntityUid GridUid,
+    Vector2i Tile,
+    Content.Shared.Chemistry.Reagent.ReagentId Reagent,
+    float Units,
+    float Temperature)
+{
+    /// <summary>
+    ///     Whether anyone took the smoke.
+    /// </summary>
+    public bool Handled;
+}
+
+/// <summary>
+///     Raised by <see cref="Effects.FreezeTileEffect"/>: units of a reagent froze out of a solution, and go into the
+///         tile's ice sheet at <paramref name="Temperature"/>. Only the server can make the sheet.
+/// </summary>
+[ByRefEvent]
+public record struct KsTileEffectFreezeEvent(
+    EntityUid GridUid,
+    Vector2i Tile,
+    Content.Shared.Chemistry.Reagent.ReagentId Reagent,
+    float Units,
+    float Temperature)
+{
+    /// <summary>
+    ///     Whether anyone took the ice.
+    /// </summary>
+    public bool Handled;
+}
