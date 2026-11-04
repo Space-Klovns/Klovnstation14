@@ -19,4 +19,11 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> GunPenetrationMinShots =
         CVarDef.Create("klovn.gun.penetration_min_shots", 2f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     The chance that someone who goes down while firing a full-auto gun clenches on it and keeps firing.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> GunTriggerSpasmChance =
+        CVarDef.Create("klovn.gun.trigger_spasm_chance", 0.33f, CVar.SERVER | CVar.REPLICATED);
 }
