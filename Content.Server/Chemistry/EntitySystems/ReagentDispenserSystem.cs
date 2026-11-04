@@ -64,6 +64,7 @@ namespace Content.Server.Chemistry.EntitySystems
             // Starlight Start
             SubscribeLocalEvent<ReagentDispenserComponent, ReagentDispenserToggleValveMessage>(OnToggleValveMessage);
             // Starlight End
+            KsInitializeInfinite(); // KS14: the chem dispenser makes its reagents from nothing, as /tg/'s does
         }
 
         private void SubscribeUpdateUiState<T>(Entity<ReagentDispenserComponent> ent, ref T ev)

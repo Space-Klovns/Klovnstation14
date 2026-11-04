@@ -22,13 +22,6 @@ ks-tgui-atmos-thermo-preset-min = Минимальная температура
 ks-tgui-atmos-thermo-preset-room = Комнатная температура
 ks-tgui-atmos-thermo-preset-max = Максимальная температура
 
-# Обогреватель
-ks-tgui-atmos-heater-power = Питание
-ks-tgui-atmos-heater-power-level = Мощность
-ks-tgui-atmos-heater-thermostat = Термостат
-ks-tgui-atmos-heater-target = Целевая температура
-ks-tgui-atmos-heater-mode = Режим
-
 # Канистра
 ks-tgui-atmos-canister-title = Канистра
 ks-tgui-atmos-canister-pressure = Давление
@@ -50,13 +43,3 @@ ks-tgui-atmos-canister-holding-tank = Вставленный баллон
 ks-tgui-atmos-canister-tank-label = Баллон
 ks-tgui-atmos-canister-tank-pressure = Давление
 ks-tgui-atmos-canister-no-tank = Баллон не вставлен
-
-# Газовый баллон
-ks-tgui-atmos-tank-pressure = Давление
-ks-tgui-atmos-tank-regulator = Регулятор давления
-ks-tgui-atmos-tank-regulator-min = Минимальное выпускное давление
-ks-tgui-atmos-tank-regulator-max = Максимальное выпускное давление
-ks-tgui-atmos-tank-regulator-reset = Выпускное давление по умолчанию
-ks-tgui-atmos-tank-internals = Маска
-ks-tgui-atmos-tank-internals-connected = Подключена
-ks-tgui-atmos-tank-internals-disconnected = Не подключена

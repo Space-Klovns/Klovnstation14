@@ -5,12 +5,19 @@
                    Title="{Loc 'reagent-dispenser-bound-user-interface-title'}">
     <tgui:KsTguiSection Title="{Loc 'ks-tgui-chem-dispenser-dispense'}">
         <tgui:KsTguiSectionButtons Name="AmountButtons"/>
+        <GridContainer Name="InfiniteList"
+                       Columns="4"
+                       HorizontalExpand="True"
+                       HSeparationOverride="2"
+                       VSeparationOverride="2"
+                       Visible="False"/>
         <GridContainer Name="ReagentList"
                        Columns="4"
                        HorizontalExpand="True"
                        HSeparationOverride="2"
-                       VSeparationOverride="2"/>
-        <tgui:KsTguiLabel Name="NoJugsLabel"
+                       VSeparationOverride="2"
+                       Visible="False"/>
+        <tgui:KsTguiLabel Name="NoReagentsLabel"
                           Tone="Label"
                           Text="{Loc 'ks-tgui-chem-dispenser-no-jugs'}"/>
     </tgui:KsTguiSection>

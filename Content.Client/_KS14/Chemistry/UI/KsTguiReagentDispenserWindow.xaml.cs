@@ -11,10 +11,9 @@ using Robust.Shared.Prototypes;
 namespace Content.Client._KS14.Chemistry.UI;
 
 /// <summary>
-///     The reagent dispenser, after /tg/'s ChemDispenser UI: the dispense amounts across the top, a grid of drop
-///         buttons tinted with each reagent's colour, and the beaker's contents below. Here the reagents come from jugs,
-///         so each button also says how much is left and has an eject button. Exposes the same API as the upstream
-///         <c>ReagentDispenserWindow</c>, so <c>ReagentDispenserBoundUserInterface</c> can use either.
+///     The chem dispenser, after /tg/'s ChemDispenser UI: the dispense amounts across the top, a grid of drop buttons
+///         tinted with each reagent's colour, and the beaker's contents below. The reagents it makes from nothing come
+///         first. Any jugs put in it follow, each saying how much is left and with an eject button.
 /// </summary>
 [GenerateTypedNameReferences]
 public sealed partial class KsTguiReagentDispenserWindow : KsTguiWindow
@@ -26,6 +25,7 @@ public sealed partial class KsTguiReagentDispenserWindow : KsTguiWindow
     private readonly List<KsTguiButton> _reagentButtons = new();
     private readonly List<ReagentInventoryItem> _inventory = new();
 
+    public event Action<ProtoId<ReagentPrototype>>? OnDispenseInfiniteReagentButtonPressed;
     public event Action<ItemStorageLocation>? OnDispenseReagentButtonPressed;
     public event Action<ItemStorageLocation>? OnEjectJugButtonPressed;
     public event Action? OnToggleValveButtonPressed; // Starlight-edit: Plumbing valve
@@ -44,28 +44,63 @@ public sealed partial class KsTguiReagentDispenserWindow : KsTguiWindow
     /// </summary>
     public KsTguiChoiceButtons AmountGrid { get; }
 
-    public void UpdateState(BoundUserInterfaceState state)
+    public void UpdateState(ReagentDispenserBoundUserInterfaceState state)
     {
-        var castState = (ReagentDispenserBoundUserInterfaceState)state;
-        UpdateContainerInfo(castState);
-        UpdateReagentsList(castState.Inventory);
+        UpdateContainerInfo(state);
+        UpdateReagentsList(state.Inventory);
 
-        ClearButton.Disabled = castState.OutputContainer is null;
-        EjectButton.Disabled = castState.OutputContainer is null;
+        ClearButton.Disabled = state.OutputContainer is null;
+        EjectButton.Disabled = state.OutputContainer is null;
 
         // Starlight-start
-        ValveButton.Text = Loc.GetString(castState.ValveOpen ? "ks-tgui-chem-valve-open" : "ks-tgui-chem-valve-closed");
-        ValveButton.Selected = castState.ValveOpen;
+        ValveButton.Text = Loc.GetString(state.ValveOpen ? "ks-tgui-chem-valve-open" : "ks-tgui-chem-valve-closed");
+        ValveButton.Selected = state.ValveOpen;
         // Starlight-end
 
-        AmountGrid.Selected = ((int)castState.SelectedDispenseAmount).ToString();
+        AmountGrid.Selected = ((int)state.SelectedDispenseAmount).ToString();
     }
 
     /// <summary>
-    ///     Fills the grid of dispense buttons, sorted by name. Buttons are reused while the jugs stay the same, so a
-    ///         state update doesn't drop the one under the mouse.
+    ///     Adds a drop button for each reagent the dispenser makes from nothing, sorted by name. They never change, so
+    ///         this is called once, when the window opens.
     /// </summary>
-    public void UpdateReagentsList(List<ReagentInventoryItem> inventory)
+    public void SetInfiniteReagents(IEnumerable<ProtoId<ReagentPrototype>> reagents)
+    {
+        InfiniteList.RemoveAllChildren();
+
+        var known = new List<ReagentPrototype>();
+        foreach (var id in reagents)
+        {
+            if (_prototypeManager.TryIndex(id, out var reagent))
+                known.Add(reagent);
+        }
+
+        known.Sort((x, y) => string.Compare(x.LocalizedName, y.LocalizedName, StringComparison.CurrentCulture));
+
+        foreach (var reagent in known)
+        {
+            var id = new ProtoId<ReagentPrototype>(reagent.ID);
+            var button = new KsTguiButton
+            {
+                Icon = KsTguiIconKind.Tint,
+                IconColor = reagent.SubstanceColor,
+                Text = reagent.LocalizedName,
+                HorizontalExpand = true,
+                ClipText = true,
+            };
+            button.OnPressed += _ => OnDispenseInfiniteReagentButtonPressed?.Invoke(id);
+            InfiniteList.AddChild(button);
+        }
+
+        InfiniteList.Visible = known.Count > 0;
+        NoReagentsLabel.Visible = known.Count == 0 && _inventory.Count == 0;
+    }
+
+    /// <summary>
+    ///     Fills the grid of jug buttons, sorted by name. Buttons are reused while the jugs stay the same, so a state
+    ///         update doesn't drop the one under the mouse.
+    /// </summary>
+    private void UpdateReagentsList(List<ReagentInventoryItem> inventory)
     {
         inventory.Sort((x, y) => string.Compare(x.ReagentLabel, y.ReagentLabel, StringComparison.CurrentCulture));
 
@@ -82,7 +117,8 @@ public sealed partial class KsTguiReagentDispenserWindow : KsTguiWindow
 
         _inventory.Clear();
         _inventory.AddRange(inventory);
-        NoJugsLabel.Visible = inventory.Count == 0;
+        ReagentList.Visible = inventory.Count > 0;
+        NoReagentsLabel.Visible = inventory.Count == 0 && InfiniteList.ChildCount == 0;
 
         for (var i = 0; i < inventory.Count; i++)
         {
@@ -130,7 +166,7 @@ public sealed partial class KsTguiReagentDispenserWindow : KsTguiWindow
     /// <summary>
     ///     Shows the beaker's fill and, as tgui's BeakerDisplay does, one "N units of Name" line per reagent.
     /// </summary>
-    public void UpdateContainerInfo(ReagentDispenserBoundUserInterfaceState state)
+    private void UpdateContainerInfo(ReagentDispenserBoundUserInterfaceState state)
     {
         ContainerInfo.RemoveAllChildren();
 

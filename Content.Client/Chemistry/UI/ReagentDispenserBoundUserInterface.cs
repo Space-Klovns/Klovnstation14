@@ -1,5 +1,3 @@
-using Content.Client._KS14.Chemistry.UI; // KS14
-using Content.Client._KS14.UserInterface.Tgui; // KS14
 using Content.Client.Guidebook.Components;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Chemistry;
@@ -17,7 +15,7 @@ namespace Content.Client.Chemistry.UI
     public sealed partial class ReagentDispenserBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private KsTguiReagentDispenserWindow /* KS14: ReagentDispenserWindow -> KsTguiReagentDispenserWindow, tgui port */? _window;
+        private ReagentDispenserWindow? _window;
 
         public ReagentDispenserBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -33,7 +31,7 @@ namespace Content.Client.Chemistry.UI
             base.Open();
 
             // Setup window layout/elements
-            _window = this.CreateWindow<KsTguiReagentDispenserWindow /* KS14: ReagentDispenserWindow -> KsTguiReagentDispenserWindow */>();
+            _window = this.CreateWindow<ReagentDispenserWindow>();
             _window.SetInfoFromEntity(EntMan, Owner);
 
             // Setup static button actions.

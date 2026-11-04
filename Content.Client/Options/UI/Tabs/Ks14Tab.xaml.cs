@@ -25,7 +25,6 @@ public sealed partial class Ks14Tab : Control
 
         Control.AddOptionCheckBox(KsCCVars.SlurFilterEnabled, SlurFilterEnabled);
         Control.AddOptionCheckBox(KsCCVars.LobbyAdaptiveContrast, LobbyAdaptiveContrast);
-        Control.AddOptionCheckBox(KsCCVars.TguiTheme, TguiTheme);
         // Lobby font family, applied live by KsLobbyFontUIController. Disabled: the lobby uses Jura, and the cvar is
         //      no longer archived. Still switchable from the console with `cvar klovn.lobby.font <id>`.
         /*

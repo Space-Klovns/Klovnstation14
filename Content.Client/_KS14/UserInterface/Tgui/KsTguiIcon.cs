@@ -23,9 +23,6 @@ public enum KsTguiIconKind : byte
     CheckSquare,
     Tint,
     Plug,
-    Fire,
-    Snowflake,
-    Thermometer,
     Flask,
     Exchange,
     Trash,
@@ -146,23 +143,6 @@ public sealed class KsTguiIcon : Control
                 shapes.Rect(0.2f, 0.3f, 0.8f, 0.5f);
                 shapes.Triangle(new Vector2(0.2f, 0.5f), new Vector2(0.8f, 0.5f), new Vector2(0.5f, 0.76f));
                 shapes.Rect(0.44f, 0.66f, 0.56f, 0.95f);
-                break;
-            case KsTguiIconKind.Fire:
-                shapes.Disc(new Vector2(0.5f, 0.66f), 0.28f);
-                shapes.Triangle(new Vector2(0.6f, 0.04f), new Vector2(0.78f, 0.58f), new Vector2(0.22f, 0.58f));
-                shapes.Triangle(new Vector2(0.24f, 0.22f), new Vector2(0.46f, 0.5f), new Vector2(0.22f, 0.6f));
-                break;
-            case KsTguiIconKind.Snowflake:
-                for (var spoke = 0; spoke < 3; spoke++)
-                {
-                    var angle = MathF.PI / 2f + spoke * MathF.PI / 3f;
-                    var arm = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 0.42f;
-                    shapes.Line(center - arm, center + arm, Stroke * 0.85f);
-                }
-                break;
-            case KsTguiIconKind.Thermometer:
-                shapes.Rect(0.42f, 0.08f, 0.58f, 0.66f);
-                shapes.Disc(new Vector2(0.5f, 0.76f), 0.18f);
                 break;
             case KsTguiIconKind.Flask:
                 shapes.Rect(0.4f, 0.06f, 0.6f, 0.4f);

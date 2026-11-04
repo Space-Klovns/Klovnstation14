@@ -11,7 +11,6 @@ ks-tgui-eject = Извлечь
 
 ks-tgui-unit-kpa = кПа
 ks-tgui-unit-kelvin = К
-ks-tgui-unit-celsius = °C
 ks-tgui-unit-litres-per-second = л/с
 ks-tgui-unit-percent = %
 ks-tgui-unit-reagent = ед.

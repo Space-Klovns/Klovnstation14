@@ -7,19 +7,17 @@ using Content.Client._KS14.Atmos.UI;
 using Content.Client._KS14.Chemistry.UI;
 using Content.Client._KS14.UserInterface.Tgui;
 using Content.Client.Atmos.EntitySystems;
+using Content.Client.Chemistry.UI;
 using Content.IntegrationTests.Fixtures;
-using Content.IntegrationTests.Fixtures.Attributes;
-using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Chemistry.InfiniteDispenser;
 using Content.Shared.Atmos;
-using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.Piping.Binary.Components;
-using Content.Shared.Atmos.Piping.Portable.Components;
 using Content.Shared.Atmos.Piping.Unary.Components;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
+using Content.Shared.Power.Components;
 using Content.Shared.Storage;
-using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -32,8 +30,8 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     The tgui ports: every window fits what it shows at the size it opens at, the global restyle follows its cvar,
-///         and a real canister opens the tgui window and keeps it in step with the server.
+///     The tgui ports: every window fits what it shows at the size it opens at, a real canister opens the tgui window
+///         and keeps it in step with the server, and only the chem dispenser of the reagent dispensers opens one.
 /// </summary>
 [TestOf(typeof(KsTguiWindow))]
 public sealed class KsTguiWindowTest : GameTest
@@ -41,6 +39,8 @@ public sealed class KsTguiWindowTest : GameTest
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private static readonly EntProtoId AirCanister = "AirCanister";
+    private static readonly EntProtoId ChemDispenser = "ChemDispenser";
+    private static readonly EntProtoId SodaDispenser = "SodaDispenser";
     private static readonly EntProtoId MobHuman = "MobHuman";
     private static readonly ProtoId<ReagentPrototype> Water = "Water";
     private static readonly ProtoId<ReagentPrototype> Ethanol = "Ethanol";
@@ -100,45 +100,6 @@ public sealed class KsTguiWindowTest : GameTest
     }
 
     /// <summary>
-    ///     The global restyle lands on top of the Baron sheet for a stock button, and switching it off brings Baron back
-    ///         without reopening anything.
-    /// </summary>
-    [Test]
-    public async Task GlobalRestyleFollowsItsCVar()
-    {
-        Button button = null!;
-        DefaultWindow window = null!;
-        await Client.WaitPost(() =>
-        {
-            button = new Button { Text = "Test" };
-            window = new DefaultWindow();
-            window.Contents.AddChild(button);
-            window.OpenCentered();
-        });
-        await Pair.RunTicksSync(3);
-
-        await Client.WaitAssertion(() =>
-        {
-            Assert.That(button.TryGetStyleProperty<StyleBox>(ContainerButton.StylePropertyStyleBox, out var box), Is.True,
-                "the button has a box from the sheet");
-            Assert.That(box, Is.TypeOf<StyleBoxFlat>(), "it's tgui's flat button while the theme is on");
-            Assert.That(((StyleBoxFlat)box).BackgroundColor, Is.EqualTo(KsTguiTheme.Background(KsTguiTheme.Primary)),
-                "in tgui's default button blue");
-        });
-
-        await OverrideCVar(Side.Client, KsCCVars.TguiTheme, false);
-        await Pair.RunTicksSync(3);
-
-        await Client.WaitAssertion(() =>
-        {
-            Assert.That(button.TryGetStyleProperty<StyleBox>(ContainerButton.StylePropertyStyleBox, out var box), Is.True,
-                "the button still has a box from the sheet");
-            Assert.That(box, Is.Not.TypeOf<StyleBoxFlat>(), "and it's the Baron texture again once the theme is off");
-            window.Close();
-        });
-    }
-
-    /// <summary>
     ///     The server's echo of a value must not be reported back as the user's change, or every state update would
     ///         send another message.
     /// </summary>
@@ -182,7 +143,7 @@ public sealed class KsTguiWindowTest : GameTest
         var loc = Client.ResolveDependency<ILocalizationManager>();
         await Client.WaitAssertion(() =>
         {
-            var window = OpenCanisterWindow();
+            var window = OpenWindow<KsTguiGasCanisterWindow>("the canister's interface opened the tgui window");
             Assert.That(window.Title, Is.EqualTo(CEntMan.GetComponent<MetaDataComponent>(ToClientUid(canister)).EntityName),
                 "titled after the canister");
             Assert.That(window.FindControl<KsTguiButton>("ValveButton").Text,
@@ -197,21 +158,71 @@ public sealed class KsTguiWindowTest : GameTest
             "precondition: the server opened the valve"));
         await Client.WaitAssertion(() =>
         {
-            var window = OpenCanisterWindow();
+            var window = OpenWindow<KsTguiGasCanisterWindow>("the canister's window stayed open");
             Assert.That(window.FindControl<KsTguiButton>("ValveButton").Text,
                 Is.EqualTo(loc.GetString("ks-tgui-atmos-canister-valve-open")), "the window shows it open");
             window.Close();
         });
     }
 
-    private KsTguiGasCanisterWindow OpenCanisterWindow()
+    /// <summary>
+    ///     The soda dispenser shares the chem dispenser's machine and upstream interface, but only the chem dispenser is
+    ///         ported: it opens the tgui window, with a button for each reagent it makes, and the soda one the upstream
+    ///         window.
+    /// </summary>
+    [Test]
+    public async Task OnlyTheChemDispenserOpensTheTguiWindow()
+    {
+        var testMap = await Pair.CreateTestMap();
+        EntityUid chemDispenser = default;
+        await Server.WaitPost(() =>
+        {
+            chemDispenser = SEntMan.SpawnEntity(ChemDispenser, testMap.GridCoords);
+            var sodaDispenser = SEntMan.SpawnEntity(SodaDispenser, testMap.GridCoords);
+            var actor = SEntMan.SpawnEntity(MobHuman, testMap.GridCoords);
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, actor);
+
+            var ui = Server.System<UserInterfaceSystem>();
+            foreach (var dispenser in new[] { chemDispenser, sodaDispenser })
+            {
+                // Nothing powers the test map. Opening directly skips the power check, but a power change would close it.
+                SEntMan.RemoveComponent<ActivatableUIRequiresPowerComponent>(dispenser);
+                ui.TryOpenUi(dispenser, ReagentDispenserUiKey.Key, actor);
+            }
+        });
+        await Pair.RunTicksSync(10);
+
+        await Client.WaitAssertion(() =>
+        {
+            // DIAG
+            var diagUi = Client.System<SharedUserInterfaceSystem>();
+            foreach (var w in Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children)
+                TestContext.Out.WriteLine($"DIAG window {w.GetType().Name} open={(w as BaseWindow)?.IsOpen}");
+            foreach (var q in CEntMan.EntityQuery<Robust.Shared.GameObjects.UserInterfaceComponent>(true))
+            {
+                foreach (var (key, data) in q.Interfaces)
+                    TestContext.Out.WriteLine($"DIAG ent {CEntMan.ToPrettyString(q.Owner)} key {key} type {data.ClientType} open={diagUi.IsUiOpen(q.Owner, key)}");
+            }
+            var tgui = OpenWindow<KsTguiReagentDispenserWindow>("the chem dispenser opened the tgui window");
+            var upstream = OpenWindow<ReagentDispenserWindow>("the soda dispenser opened the upstream window");
+
+            var reagents = CEntMan.GetComponent<KsInfiniteReagentDispenserComponent>(ToClientUid(chemDispenser)).Reagents;
+            Assert.That(tgui.FindControl<GridContainer>("InfiniteList").ChildCount, Is.EqualTo(reagents.Count),
+                "with a button for each reagent the chem dispenser makes");
+
+            tgui.Close();
+            upstream.Close();
+        });
+    }
+
+    private T OpenWindow<T>(string message) where T : BaseWindow
     {
         var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children
-            .OfType<KsTguiGasCanisterWindow>()
+            .OfType<T>()
             .Where(window => window.IsOpen)
             .ToArray();
 
-        Assert.That(windows, Has.Length.EqualTo(1), "the canister's interface opened the tgui window");
+        Assert.That(windows, Has.Length.EqualTo(1), message);
         return windows[0];
     }
 
@@ -249,11 +260,6 @@ public sealed class KsTguiWindowTest : GameTest
         thermomachine.SetTemperature(Atmospherics.T20C);
         yield return thermomachine;
 
-        var heater = new KsTguiSpaceHeaterWindow();
-        heater.UpdateState(new SpaceHeaterBoundUserInterfaceState(Atmospherics.T0C, Atmospherics.T0C + 100f, Atmospherics.T20C,
-            true, SpaceHeaterMode.Auto, SpaceHeaterPowerLevel.Medium));
-        yield return heater;
-
         var canister = new KsTguiGasCanisterWindow();
         canister.SetCanisterLabel("air canister");
         canister.SetCanisterPressure(4500f);
@@ -267,12 +273,6 @@ public sealed class KsTguiWindowTest : GameTest
         canister.UpdateShieldState(enabled: true, dischargeRate: 50f, lastCharge: 600f, maxCharge: 1000f);
         yield return canister;
 
-        var tank = new KsTguiGasTankWindow();
-        tank.SetTitle("emergency oxygen tank");
-        tank.UpdateState(new GasTankBoundUserInterfaceState { TankPressure = 2500f });
-        tank.Update(canConnectInternals: true, internalsConnected: true, outputPressure: 21.3f);
-        yield return tank;
-
         var reagents = new List<ReagentQuantity>
         {
             new(new ReagentId(Water, null), FixedPoint2.New(30)),
@@ -281,16 +281,21 @@ public sealed class KsTguiWindowTest : GameTest
             new(new ReagentId(Dylovene, null), FixedPoint2.New(2)),
         };
 
+        // The chem dispenser's own reagents, and a few extra jugs put in it.
         var dispenser = new KsTguiReagentDispenserWindow();
-        var inventory = new List<ReagentInventoryItem>();
-        for (var i = 0; i < 24; i++)
+        Assert.That(Client.ResolveDependency<IPrototypeManager>().Index(ChemDispenser)
+            .TryGetComponent<KsInfiniteReagentDispenserComponent>(out var infinite, Client.ResolveDependency<IComponentFactory>()),
+            "precondition: the chem dispenser makes its own reagents");
+        dispenser.SetInfiniteReagents(infinite!.Reagents);
+        var jugs = new List<ReagentInventoryItem>();
+        for (var i = 0; i < 6; i++)
         {
-            inventory.Add(new ReagentInventoryItem(new ItemStorageLocation(Angle.Zero, new Vector2i(i, 0)),
-                $"reagent number {i}", FixedPoint2.New(300 - i), new Color(i / 24f, 0.6f, 1f - i / 24f)));
+            jugs.Add(new ReagentInventoryItem(new ItemStorageLocation(Angle.Zero, new Vector2i(i, 0)),
+                $"reagent number {i}", FixedPoint2.New(300 - i), new Color(i / 6f, 0.6f, 1f - i / 6f)));
         }
         dispenser.UpdateState(new ReagentDispenserBoundUserInterfaceState(
             new ContainerInfo("large beaker", FixedPoint2.New(49.5f), FixedPoint2.New(100)) { Reagents = reagents },
-            null, inventory, ReagentDispenserDispenseAmount.U10, valveOpen: false));
+            null, jugs, ReagentDispenserDispenseAmount.U10, valveOpen: false));
         yield return dispenser;
 
         var chemMaster = new KsTguiChemMasterWindow { Title = "ChemMaster 4000" };

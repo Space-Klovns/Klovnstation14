@@ -73,6 +73,36 @@
         layer:
         - MachineLayer
   - type: StationAiWhitelist #KS14: New items whitelisted for AI
+  # KS14 start: makes its reagents from nothing, as /tg/'s does, in the tgui window. Jugs put in it still pour too.
+  - type: KsInfiniteReagentDispenser
+    reagents:
+    - Aluminium
+    - Carbon
+    - Chlorine
+    - Copper
+    - Ethanol
+    - Fluorine
+    - Sugar
+    - Hydrogen
+    - Iodine
+    - Iron
+    - Lithium
+    - Mercury
+    - Nitrogen
+    - Oxygen
+    - Phosphorus
+    - Potassium
+    - Radium
+    - Silicon
+    - Sodium
+    - Sulfur
+  - type: UserInterface
+    interfaces:
+      enum.ReagentDispenserUiKey.Key:
+        type: KsTguiReagentDispenserBoundUserInterface
+      enum.StorageUiKey.Key:
+        type: StorageBoundUserInterface
+  # KS14 end
 
 - type: entity
   id: ChemDispenser
@@ -80,27 +110,28 @@
   parent: ChemDispenserEmpty
   components:
   - type: ReagentDispenser
-  - type: EntityTableContainerFill
-    containers:
-      storagebase: !type:AllSelector
-        children:
-        - id: JugAluminium
-        - id: JugCarbon
-        - id: JugChlorine
-        - id: JugCopper
-        - id: JugEthanol
-        - id: JugFluorine
-        - id: JugSugar
-        - id: JugHydrogen
-        - id: JugIodine
-        - id: JugIron
-        - id: JugLithium
-        - id: JugMercury
-        - id: JugNitrogen
-        - id: JugOxygen
-        - id: JugPhosphorus
-        - id: JugPotassium
-        - id: JugRadium
-        - id: JugSilicon
-        - id: JugSodium
-        - id: JugSulfur
+  # KS14: no jugs. ChemDispenserEmpty makes their reagents from nothing (KsInfiniteReagentDispenser).
+  # - type: EntityTableContainerFill
+  #   containers:
+  #     storagebase: !type:AllSelector
+  #       children:
+  #       - id: JugAluminium
+  #       - id: JugCarbon
+  #       - id: JugChlorine
+  #       - id: JugCopper
+  #       - id: JugEthanol
+  #       - id: JugFluorine
+  #       - id: JugSugar
+  #       - id: JugHydrogen
+  #       - id: JugIodine
+  #       - id: JugIron
+  #       - id: JugLithium
+  #       - id: JugMercury
+  #       - id: JugNitrogen
+  #       - id: JugOxygen
+  #       - id: JugPhosphorus
+  #       - id: JugPotassium
+  #       - id: JugRadium
+  #       - id: JugSilicon
+  #       - id: JugSodium
+  #       - id: JugSulfur

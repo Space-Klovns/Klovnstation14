@@ -22,13 +22,6 @@ ks-tgui-atmos-thermo-preset-min = Minimum temperature
 ks-tgui-atmos-thermo-preset-room = Room Temperature
 ks-tgui-atmos-thermo-preset-max = Maximum Temperature
 
-# Space heater
-ks-tgui-atmos-heater-power = Power
-ks-tgui-atmos-heater-power-level = Power Level
-ks-tgui-atmos-heater-thermostat = Thermostat
-ks-tgui-atmos-heater-target = Target Temperature
-ks-tgui-atmos-heater-mode = Mode
-
 # Canister
 ks-tgui-atmos-canister-title = Canister
 ks-tgui-atmos-canister-pressure = Pressure
@@ -50,13 +43,3 @@ ks-tgui-atmos-canister-holding-tank = Holding Tank
 ks-tgui-atmos-canister-tank-label = Label
 ks-tgui-atmos-canister-tank-pressure = Pressure
 ks-tgui-atmos-canister-no-tank = No Holding Tank
-
-# Gas tank
-ks-tgui-atmos-tank-pressure = Pressure
-ks-tgui-atmos-tank-regulator = Pressure Regulator
-ks-tgui-atmos-tank-regulator-min = Minimum release pressure
-ks-tgui-atmos-tank-regulator-max = Maximum release pressure
-ks-tgui-atmos-tank-regulator-reset = Default release pressure
-ks-tgui-atmos-tank-internals = Internals
-ks-tgui-atmos-tank-internals-connected = Connected
-ks-tgui-atmos-tank-internals-disconnected = Disconnected

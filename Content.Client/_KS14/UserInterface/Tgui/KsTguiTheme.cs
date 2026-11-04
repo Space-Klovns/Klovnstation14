@@ -52,7 +52,6 @@ public static class KsTguiTheme
     public static readonly Color TitleBar = Color.FromHex("#393939");
     public static readonly Color Section = new(0f, 0f, 0f, 0.33f);
     public static readonly Color InputBackground = Color.FromHex("#0D0D0D");
-    public static readonly Color ScrollbarThumb = Color.FromHex("#3E3E3E");
     public static readonly Color Watermark = new(0f, 0f, 0f, 0.33f);
 
     // Text and lines.

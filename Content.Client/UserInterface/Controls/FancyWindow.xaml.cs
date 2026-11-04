@@ -30,7 +30,6 @@ namespace Content.Client.UserInterface.Controls
             CloseButton.OnPressed += _ => Close();
             HelpButton.OnPressed += _ => Help();
             XamlChildren = ContentsContainer.Children;
-            KsApplyTguiTitleBar(); // KS14: tgui restyle swaps the Baron frame's header spacing for a 32px title bar
         }
 
         public string? Title
