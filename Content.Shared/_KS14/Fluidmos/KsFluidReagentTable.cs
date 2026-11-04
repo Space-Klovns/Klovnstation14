@@ -49,6 +49,12 @@ public sealed class KsFluidReagentTable
     /// </summary>
     public int Version { get; private set; }
 
+    /// <summary>
+    ///     Bumped only when a reagent is added or removed, not when an amount changes: what a cache of the reagents present
+    ///         (such as the candidate pipe reactions) needs to watch.
+    /// </summary>
+    public int KeysVersion { get; private set; }
+
     public KsFluidReagentTable() : this(DefaultCapacity)
     {
     }
@@ -212,6 +218,7 @@ public sealed class KsFluidReagentTable
     {
         Array.Clear(_keys, 0, _count);
         _count = 0;
+        KeysVersion++;
         Recount();
     }
 
@@ -224,6 +231,7 @@ public sealed class KsFluidReagentTable
         Array.Copy(other._liquid, _liquid, other._count);
         Array.Copy(other._vapor, _vapor, other._count);
         _count = other._count;
+        KeysVersion++;
         Recount();
     }
 
@@ -279,6 +287,7 @@ public sealed class KsFluidReagentTable
         _keys[_count] = key;
         Write(_count, amount);
         _count++;
+        KeysVersion++;
     }
 
     /// <summary>
@@ -300,6 +309,7 @@ public sealed class KsFluidReagentTable
         _liquid[last] = 0f;
         _vapor[last] = 0f;
         _count = last;
+        KeysVersion++;
     }
 
     private void EnsureCapacity(int capacity)

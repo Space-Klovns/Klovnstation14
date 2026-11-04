@@ -1,3 +1,4 @@
+using Content.Server._KS14.Fluidmos.Reactions;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
@@ -38,6 +39,7 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private KsFluidReactionSystem _reactionSystem = default!;
 
     /// <summary>
     ///     The longest time step a single phase step takes, however long the mixture went unprocessed.
@@ -77,9 +79,14 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         if (mixture.Immutable || !mixture.FluidCapable)
             return;
 
+        var fluid = mixture.Fluid;
+
+        // Reactions first, so whatever they make settles into its phase on this same step.
+        if (fluid != null)
+            _reactionSystem.React(mixture, fluid, holder);
+
         var temperature = mixture.Temperature;
         var pressure = mixture.Pressure;
-        var fluid = mixture.Fluid;
 
         if (fluid == null)
         {

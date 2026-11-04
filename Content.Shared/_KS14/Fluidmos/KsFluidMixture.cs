@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Fluidmos.Reactions;
 using Content.Shared._KS14.Fluidmos.Serialization;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.FixedPoint;
@@ -65,6 +66,31 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
     [ViewVariables]
     public TimeSpan? LastPhaseTime;
 
+    /// <summary>
+    ///     The pipe reactions any of whose reactants this mixture holds, valid while <see cref="_reactionTable"/> and
+    ///         <see cref="_reactionKeysVersion"/> match <see cref="Reagents"/>. Runtime only, never saved or sent.
+    /// </summary>
+    [NonSerialized]
+    private KsFluidReactionPrototype[] _reactionCandidates = [];
+
+    [NonSerialized]
+    private KsFluidReagentTable? _reactionTable;
+
+    [NonSerialized]
+    private int _reactionKeysVersion = -1;
+
+    /// <summary>
+    ///     Lowest <see cref="KsFluidReactionPrototype.MinTemp"/> among the candidates: colder than this, none can run.
+    /// </summary>
+    [ViewVariables, NonSerialized]
+    public float ReactionFloorTemperature;
+
+    /// <summary>
+    ///     When the last reaction step ran, for its time step; null while no reaction can run.
+    /// </summary>
+    [ViewVariables, NonSerialized]
+    public TimeSpan? LastReactionTime;
+
     public KsFluidMixture()
     {
     }
@@ -102,6 +128,22 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
     public bool IsEmpty => Reagents.Count == 0;
 
     public int Count => Reagents.Count;
+
+    /// <summary>
+    ///     Whether <see cref="SetReactionCandidates"/> needs calling again: a reagent entered or left since.
+    /// </summary>
+    public bool ReactionCandidatesStale => !ReferenceEquals(_reactionTable, Reagents) || _reactionKeysVersion != Reagents.KeysVersion;
+
+    [ViewVariables]
+    public KsFluidReactionPrototype[] ReactionCandidates => _reactionCandidates;
+
+    public void SetReactionCandidates(KsFluidReactionPrototype[] candidates, float floorTemperature)
+    {
+        _reactionCandidates = candidates;
+        _reactionTable = Reagents;
+        _reactionKeysVersion = Reagents.KeysVersion;
+        ReactionFloorTemperature = floorTemperature;
+    }
 
     /// <summary>
     ///     Records that a phase step has just finished, so <see cref="CompositionChanged"/> reads false until the next
