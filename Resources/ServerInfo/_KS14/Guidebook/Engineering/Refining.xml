@@ -6,7 +6,7 @@
   Crude comes out of geysers on planets. Scan one to find out what it holds: [bold]crude oil[/bold], the harsher [bold]sour crude[/bold] with far more sulfur in it, or [bold]gas condensate[/bold], which is mostly light ends. Plumb the geyser to a [textlink="fluid port" link="KsFluidDevices"] to get it into pipes.
 
   ## Machines can't sort oil
-  Nothing can pick one cut out of a mixture of oils. Select naphtha in a ChemMaster, a plumbing filter, a plumbing reactor or a smart fridge, and the whole mixture moves together, in the same proportions it started in. The only way to split oil is physics: boil it, condense it, or freeze it, in pipes. Gas filters can't see any of it.
+  Nothing can pick one cut out of a mixture of oils. Select naphtha in a ChemMaster, a plumbing filter, a plumbing reactor or a smart fridge, and the whole mixture moves together, in the same proportions it started in. The only way to split oil is physics: boil it, condense it, or freeze it, in pipes. Gas filters can't see any of it, though they do see hydrogen, which is an ordinary gas.
 
   ## Distilling
   Heat the crude and put it through a [textlink="phase separator" link="KsFluidDevices"]. The vapor is richer in whatever boils easiest, and the liquid in whatever boils hardest. Condense the vapor in a radiator and you have one stage of a still. One stage is never clean: repeat it, and each stage gets you a purer cut. From lightest to heaviest:
@@ -39,7 +39,7 @@
 
   - [bold]Hydrotreating[/bold] (cobalt-molybdenum). Hot, with hydrogen under pressure, it turns organosulfur compounds into diesel and [bold]hydrogen sulfide[/bold], a toxic gas you can flash off in a separator.
   - [bold]The Claus process[/bold] (alumina). Hydrogen sulfide and oxygen become sulfur and steam, so the toxic gas ends up useful.
-  - [bold]Reforming[/bold] (platinum). Very hot, it turns naphtha into [bold]gasoline[/bold] and hydrogen, and that hydrogen feeds hydrotreating. Start it off with hydrogen from a chemical dispenser. Reforming soaks up heat and stalls itself, so reheat between reactors in a row. Sulfur kills platinum, so hydrotreat the naphtha first.
+  - [bold]Reforming[/bold] (platinum). Very hot, it turns naphtha into [bold]gasoline[/bold] and hydrogen, and that hydrogen feeds hydrotreating. Start it off with a hydrogen canister, or hydrogen from a chemical dispenser, which boils into the gas as soon as it reaches a pipe. Reforming soaks up heat and stalls itself, so reheat between reactors in a row. Sulfur kills platinum, so hydrotreat the naphtha first.
   - [bold]Catalytic cracking[/bold] (zeolite). Hotter still, it breaks gas oil into gasoline, refinery gas and diesel. The coke it leaves wears the bed out.
   - [bold]Polymerising[/bold] (Ziegler-Natta). Ethylene under pressure becomes [bold]polyethylene[/bold]. It gives off a great deal of heat, so cool it. Below the polymer's melting point it sets solid in the reactor; let it run away and it falls apart again. Water and sulfur kill the bed.
 
@@ -61,6 +61,8 @@
 
   ## Tips
   - [bold]Mind your leaks.[/bold] Hot fuel on the floor lights itself.
+  - [bold]Keep hydrogen away from oxygen.[/bold] It has no colour and no overlay, and with oxygen it burns fiercely from a spark or anything hot, leaving steam.
+  - [bold]Don't pump a still dry.[/bold] An empty pipe at low pressure boils everything at once. Set a slow pump after a phase separator and a low liquid rate on it, so that liquid builds up, the pressure rises and the heater can do its work.
   - [bold]Keep reactors short of pipe.[/bold] A bed works on the whole pipe net it sits in, and more pipe around it dilutes it. Pumps either side of a reactor set how long the feed spends inside.
   - [bold]Examine a reactor[/bold] to see its bed's activity. Once that hits zero, the bed is spent.
 </Document>
