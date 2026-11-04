@@ -2,3 +2,4 @@
 
 gases-encalite = Энкалит
 gases-zipion = Zipion
+gases-hydrogen = Водород

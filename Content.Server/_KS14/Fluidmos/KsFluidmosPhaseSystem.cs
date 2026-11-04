@@ -1,3 +1,4 @@
+using Content.Server._KS14.Fluidmos.Reactions;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
@@ -38,6 +39,7 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private KsFluidReactionSystem _reactionSystem = default!;
 
     /// <summary>
     ///     The longest time step a single phase step takes, however long the mixture went unprocessed.
@@ -77,9 +79,14 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         if (mixture.Immutable || !mixture.FluidCapable)
             return;
 
+        var fluid = mixture.Fluid;
+
+        // Reactions first, so whatever they make settles into its phase on this same step.
+        if (fluid != null)
+            _reactionSystem.React(mixture, fluid, holder);
+
         var temperature = mixture.Temperature;
         var pressure = mixture.Pressure;
-        var fluid = mixture.Fluid;
 
         if (fluid == null)
         {
@@ -115,16 +122,21 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
             ? stackalloc KsFluidAmount[entryCount]
             : new KsFluidAmount[entryCount];
 
-        // Raoult's law: each reagent's share of the liquid's moles, which solids don't count towards.
-        var liquidMoles = 0f;
         for (var i = 0; i < entryCount; i++)
         {
             fluid.TryGetAmount(_entries[i].Key, out amounts[i]);
-            liquidMoles += amounts[i].Liquid * _entries[i].Properties.MolesPerUnit;
         }
 
+        // Each reagent's activity in its liquid (Raoult's mole fraction, times its activity coefficient when it mixes
+        //     non-ideally), and the bubble point the liquid flashes down to if it is boiling.
+        var activities = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
+        var freezingGammas = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
+        var phaseMoles = entryCount <= MaxStackEntries ? stackalloc float[entryCount] : new float[entryCount];
+        ComputeActivities(amounts, activities, freezingGammas, phaseMoles, temperature);
+        var bubbleTemperature = BubbleTemperature(amounts, activities, temperature, pressure, out var flashWeight);
+
         var unitsMoved = 0f;
-        var step = new PhaseStep(heatCapacity, temperature, pressure, freeVolume, interfaceArea, deltaTime, liquidMoles);
+        var step = new PhaseStep(heatCapacity, temperature, pressure, freeVolume, interfaceArea, deltaTime, bubbleTemperature, flashWeight);
 
         for (var i = 0; i < entryCount; i++)
         {
@@ -132,13 +144,18 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
             ref var amount = ref amounts[i];
             var before = amount;
 
-            var belowTriplePoint = IsBelowTriplePoint(properties, step.Pressure);
+            // What is dissolved in it lowers where it freezes; worked out from before this step moved anything.
+            var meltingPoint = properties.Freezable
+                ? EffectiveMeltingPoint(properties, before, freezingGammas[i], phaseMoles[i])
+                : properties.MeltingPoint;
+
+            var belowTriplePoint = IsBelowTriplePoint(properties, step.Pressure, amount.Liquid > 0f ? activities[i] : 1f, meltingPoint);
 
             if (properties.Volatile)
-                Vaporise(mixture, ref step, properties, ref amount, belowTriplePoint);
+                Vaporise(mixture, ref step, properties, ref amount, activities[i], belowTriplePoint);
 
             if (properties.Freezable)
-                Freeze(ref step, properties, ref amount, belowTriplePoint);
+                Freeze(ref step, properties, ref amount, meltingPoint, belowTriplePoint);
 
             var moved = MathF.Abs(amount.Liquid - before.Liquid) + MathF.Abs(amount.Solid - before.Solid) +
                 MathF.Abs(amount.Vapor - before.Vapor) / properties.MolesPerUnit;
@@ -224,11 +241,14 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     /// <summary>
     ///     Whether <paramref name="pressure"/> is below the reagent's triple point, where it boils below its melting point
     ///         and so has no stable liquid: carbon dioxide under about 5 atm. It goes straight between solid and gas there.
+    ///         Dissolved, it boils higher and melts lower, so a solution holds as a liquid where the pure reagent can't.
     /// </summary>
-    private static bool IsBelowTriplePoint(KsFluidReagentProperties properties, float pressure)
+    /// <param name="activity">Its activity in its liquid, which raises where it boils.</param>
+    /// <param name="meltingPoint">Where it melts, lowered by what is dissolved in it.</param>
+    private static bool IsBelowTriplePoint(KsFluidReagentProperties properties, float pressure, float activity, float meltingPoint)
     {
         return properties is { Freezable: true, Volatile: true } &&
-               KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure) < properties.MeltingPoint;
+               KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure / MathF.Min(activity, 1f)) < meltingPoint;
     }
 
     /// <summary>
@@ -238,8 +258,11 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     ///     Whether it has no stable liquid here (<see cref="IsBelowTriplePoint"/>): its solid sublimes whatever the
     ///         temperature, and its gas deposits straight back as solid, both at the Hertz–Knudsen rate.
     /// </param>
+    /// <param name="activity">
+    ///     Its activity in the liquid: Raoult's mole fraction, times its activity coefficient. Unused for a solid.
+    /// </param>
     private void Vaporise(GasMixture mixture, ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount,
-        bool belowTriplePoint)
+        float activity, bool belowTriplePoint)
     {
         var molesPerUnit = properties.MolesPerUnit;
         var vaporMoles = properties.Linked ? mixture.GetMoles(properties.GasIndex) : amount.Vapor;
@@ -277,21 +300,25 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
 
             // Its own phase when it has no liquid in the mixture yet: dissolving into another liquid is Henry's law,
             //     which this does not model.
-            var moleFraction = !fromSolid && amount.Liquid > 0f && step.LiquidMoles > 0f
-                ? amount.Liquid * molesPerUnit / step.LiquidMoles
-                : 1f;
+            var moleFraction = !fromSolid && amount.Liquid > 0f ? activity : 1f;
 
             var equilibriumMoles = moleFraction * saturationPressure * step.FreeVolume / (Atmospherics.R * temperature);
             var gap = equilibriumMoles - vaporMoles;
             if (gap < 0f && !canCondense)
                 return;
 
-            var flashPoint = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, step.Pressure);
+            // The liquid boils as a whole, at its bubble point: a single reagent's own boiling point at this pressure.
+            var flashPoint = step.BubbleTemperature;
             if (!fromSolid && gap > 0f && temperature > flashPoint && amount.Liquid > 0f)
             {
-                // Flash: limited by energy, down to the boiling point at this pressure, and by equilibrium.
+                // Flash: limited by energy, down to the bubble point at this pressure, and by equilibrium. The energy
+                //     is shared by what each reagent adds to the vapor pressure, so no reagent gets it for being first.
+                var weight = moleFraction * KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, step.StartTemperature);
+                var flashShare = step.FlashWeight > 0f ? MathF.Min(weight / step.FlashWeight, 1f) : 1f;
+                step.FlashWeight -= weight;
+
                 var units = KsPhaseMath.UnitsToReach(step.HeatCapacity, temperature, flashPoint, latentHeat, heatCapacityChange);
-                moles = MathF.Min(MathF.Max(units, 0f) * molesPerUnit, gap);
+                moles = MathF.Min(MathF.Max(units, 0f) * flashShare * molesPerUnit, gap);
             }
             else
             {
@@ -337,14 +364,17 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     ///         liquid it has, merged in or condensed at a wall, freezes whatever the temperature, a step's worth of heat
     ///         at a time. Melting it would only have flashed it to gas below the melting point and frozen it again.
     /// </param>
-    private static void Freeze(ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount, bool belowTriplePoint)
+    /// <param name="meltingPoint">
+    ///     Where it freezes in this mixture: its melting point, depressed by what is dissolved in it.
+    /// </param>
+    private static void Freeze(ref PhaseStep step, KsFluidReagentProperties properties, ref KsFluidAmount amount, float meltingPoint,
+        bool belowTriplePoint)
     {
         var fusionHeat = properties.FusionHeat;
         if (fusionHeat <= 0f)
             return;
 
         var temperature = step.Temperature;
-        var meltingPoint = properties.MeltingPoint;
         float frozenUnits;
 
         if (belowTriplePoint)
@@ -377,7 +407,8 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         float freeVolume,
         float interfaceArea,
         float deltaTime,
-        float liquidMoles)
+        float bubbleTemperature,
+        float flashWeight)
     {
         /// <summary>
         ///     Unscaled J/K, updated as each phase change alters it.
@@ -385,10 +416,19 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         public float HeatCapacity = heatCapacity;
 
         public float Temperature = temperature;
+        public readonly float StartTemperature = temperature;
         public readonly float Pressure = pressure;
         public readonly float FreeVolume = freeVolume;
         public readonly float InterfaceArea = interfaceArea;
         public readonly float DeltaTime = deltaTime;
-        public readonly float LiquidMoles = liquidMoles;
+        /// <summary>
+        ///     Kelvin the liquid flashes down to while boiling; infinity while it is not.
+        /// </summary>
+        public readonly float BubbleTemperature = bubbleTemperature;
+
+        /// <summary>
+        ///     What's left of the sum the flash's energy is shared out by, as reagents take their turn at it.
+        /// </summary>
+        public float FlashWeight = flashWeight;
     }
 }

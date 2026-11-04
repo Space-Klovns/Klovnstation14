@@ -32,7 +32,8 @@ namespace Content.Server.Atmos.Portable
             Gas.Frezon,
             Gas.Zipion, // KS14
             Gas.Encalite, // KS14
-            Gas.Evaporin // KS14
+            Gas.Evaporin, // KS14
+            Gas.Hydrogen // KS14
             };
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Enabled = true;

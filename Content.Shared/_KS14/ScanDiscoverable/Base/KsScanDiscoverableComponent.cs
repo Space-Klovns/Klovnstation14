@@ -10,7 +10,7 @@ public sealed partial class KsScanDiscoverableComponent : Component
     /// </summary>
     [DataField(required: true)]
     [ViewVariables(VVAccess.ReadWrite)]
-    public string TrueName = "discovered thing";
+    public LocId TrueName = "ks-scan-discovered-thing";
 
     /// <summary>
     ///     Locale shown when examining the entity before it's discovered.

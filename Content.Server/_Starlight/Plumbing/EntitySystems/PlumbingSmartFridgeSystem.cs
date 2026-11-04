@@ -132,7 +132,18 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
             return;
         }
 
+        // KS14 start: an inseparable reagent is dispensed with its whole group, in proportion
+        if (_ksReagentSeparationSystem.TryGetGroup(reagentId, out var ksGroup))
+        {
+            KsDispenseGroup(fridgeSolnEnt.Value, fridgeSolution, jugSolnEnt.Value, ksGroup.Value, jugAvailable, ent.Owner, args.User);
+            args.Handled = true;
+            UpdateUiState(ent);
+            return;
+        }
+        // KS14 end
+
         var transferAmount = FixedPoint2.Min(available, jugAvailable);
+
         var removed = _solutionSystem.RemoveReagent(fridgeSolnEnt.Value, sourceReagent.Reagent, transferAmount);
 
         if (removed > FixedPoint2.Zero)

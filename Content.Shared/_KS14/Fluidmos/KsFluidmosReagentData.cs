@@ -1,4 +1,6 @@
+using Content.Shared._KS14.Fluidmos.Mixing;
 using Content.Shared.Atmos;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Fluidmos;
 
@@ -39,6 +41,14 @@ public sealed partial class KsFluidmosReagentData
     public float? FusionHeat;
 
     /// <summary>
+    ///     <c>k_fus = ΔS_fus / R</c> (dimensionless, real and per mole), which sets how far what is dissolved in it lowers
+    ///         its freezing point. Defaults to water's, <see cref="KsFluidmos.DefaultFusionEntropy"/>. Never derived from
+    ///         <see cref="FusionHeat"/>.
+    /// </summary>
+    [DataField]
+    public float? FusionEntropy;
+
+    /// <summary>
     ///     Moles of vapor a unit becomes. Defaults to one gram per unit over the molar mass.
     /// </summary>
     [DataField]
@@ -59,4 +69,10 @@ public sealed partial class KsFluidmosReagentData
     /// </summary>
     [DataField]
     public Gas? Gas;
+
+    /// <summary>
+    ///     The family it mixes as, for non-ideal mixing and immiscibility. None mixes ideally with everything.
+    /// </summary>
+    [DataField]
+    public ProtoId<KsFluidMixingFamilyPrototype>? MixingFamily;
 }

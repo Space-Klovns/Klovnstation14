@@ -164,6 +164,11 @@ namespace Content.Server.Chemistry.EntitySystems
                 return;
             }
 
+            // KS14 start: an inseparable reagent moves with its whole group, in proportion
+            if (KsTryTransferGroup(chemMaster, id, amount, fromBuffer, containerSoln.Value, containerSolution, bufferSoln.Value, bufferSolution))
+                return;
+            // KS14 end
+
             if (fromBuffer) // Buffer to container
             {
                 amount = FixedPoint2.Min(amount, containerSolution.AvailableVolume);
@@ -184,6 +189,9 @@ namespace Content.Server.Chemistry.EntitySystems
 
         public void DiscardReagents(Entity<ChemMasterComponent> chemMaster, ReagentId id, FixedPoint2 amount, bool fromBuffer) // KS14 - Make it public for Packets
         {
+            if (KsTryDiscardGroup(chemMaster, id, amount, fromBuffer)) // KS14: an inseparable reagent goes with its whole group
+                return; // KS14
+
             if (fromBuffer)
             {
                 if (_solutionContainerSystem.TryGetSolution(chemMaster.Owner, SharedChemMaster.BufferSolutionName, out _, out var bufferSolution))

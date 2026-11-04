@@ -1,0 +1,95 @@
+# The heavy end. These crack into coke rather than boil at one atmosphere, so they come over only under vacuum.
+
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsGasOil
+  name: reagent-name-ks-gas-oil
+  desc: reagent-desc-ks-gas-oil
+  physicalDesc: reagent-physical-desc-viscous
+  color: "#6a4a20"
+  boilingPoint: 700
+  meltingPoint: 290
+  fluidmos:
+    molarMass: 400
+    latentHeat: 130
+    mixingFamily: KsHydrocarbon
+
+# fusionEntropy is a long paraffin's real one, far above water's, so wax stays dissolved in warm oil and crystallises
+#     out of it when chilled: about 310 K from straight gas oil.
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsParaffinWax
+  name: reagent-name-ks-paraffin-wax
+  desc: reagent-desc-ks-paraffin-wax
+  physicalDesc: reagent-physical-desc-viscous
+  color: "#efe8d0"
+  boilingPoint: 650
+  meltingPoint: 330
+  fluidmos:
+    molarMass: 350
+    latentHeat: 130
+    fusionHeat: 60
+    fusionEntropy: 20
+    mixingFamily: KsHydrocarbon
+  tileReactions:
+  - !type:CreateEntityTileReaction
+    entity: Candle
+    usage: 10
+    maxOnTile: 3
+    maxOnTileWhitelist:
+      tags:
+      - Candle
+    ksCountLoose: true
+
+# Solid at room temperature once nothing lighter is dissolving it, so it clogs cold pipes.
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsBitumen
+  name: reagent-name-ks-bitumen
+  desc: reagent-desc-ks-bitumen
+  physicalDesc: reagent-physical-desc-viscous
+  color: "#1c1814"
+  boilingPoint: 850
+  meltingPoint: 340
+  fluidmos:
+    molarMass: 800
+    latentHeat: 120
+    mixingFamily: KsHydrocarbon
+  tileReactions:
+  - !type:KsSetTileTileReaction
+    tile: FloorAsphalt
+    usage: 20
+
+# Sulfur compounds, as one lump. Boils with kerosene, so distillation cannot get it out: that takes hydrotreating.
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsOrganosulfur
+  name: reagent-name-ks-organosulfur
+  desc: reagent-desc-ks-organosulfur
+  color: "#8a7a30"
+  boilingPoint: 490
+  meltingPoint: 240
+  fluidmos:
+    molarMass: 150
+    latentHeat: 180
+    mixingFamily: KsHydrocarbon
+
+# Never boils. Freezes in anything colder than 400 K, so a polymer reactor has to run hot enough to drain.
+- type: reagent
+  parent: KsBaseHydrocarbon
+  id: KsPolyethylene
+  name: reagent-name-ks-polyethylene
+  desc: reagent-desc-ks-polyethylene
+  physicalDesc: reagent-physical-desc-viscous
+  color: "#e8e8e8"
+  meltingPoint: 400
+  fluidmos:
+    molarMass: 10000
+    mixingFamily: KsHydrocarbon
+  tileReactions:
+  - !type:CreateEntityTileReaction
+    entity: WallPlastic
+    usage: 50
+    maxOnTileWhitelist:
+      tags:
+      - Wall

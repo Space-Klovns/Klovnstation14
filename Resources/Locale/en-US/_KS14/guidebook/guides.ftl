@@ -9,4 +9,5 @@ guide-entry-anchorless = Anchorless
 guide-entry-chemical-fires = Chemical Fires
 guide-entry-ks-liquids-in-pipes = Liquids in Pipes
 guide-entry-ks-fluid-devices = Fluid Devices
+guide-entry-ks-refining = Oil Refining
 guide-entry-ks-refrigeration = Refrigeration

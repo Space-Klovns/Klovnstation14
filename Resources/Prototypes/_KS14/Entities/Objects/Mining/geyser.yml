@@ -80,7 +80,7 @@
   # Geyser
   - type: KsScanDiscoverable
     discoveryPopupLoc: ks-specific-geyser-discovered
-    trueName: discovered geyser
+    trueName: ks-scan-discovered-discovered-geyser
   - type: MiningScannerViewable
 
 - type: entity
@@ -107,7 +107,7 @@
   - type: Solution
     solution: *plasma_sol
   - type: KsScanDiscoverable
-    trueName: plasma geyser
+    trueName: ks-scan-discovered-plasma-geyser
 
 - type: entity
   parent: KsGeyserBase
@@ -123,7 +123,7 @@
   - type: Solution
     solution: *co2_sol
   - type: KsScanDiscoverable
-    trueName: liquid carbon dioxide geyser
+    trueName: ks-scan-discovered-liquid-carbon-dioxide-geyser
 
 - type: entity
   parent: KsGeyserBase
@@ -139,7 +139,7 @@
   - type: Solution
     solution: *n2_sol
   - type: KsScanDiscoverable
-    trueName: liquid nitrogen geyser
+    trueName: ks-scan-discovered-liquid-nitrogen-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -155,7 +155,7 @@
   - type: Solution
     solution: *fresium_sol
   - type: KsScanDiscoverable
-    trueName: fresium geyser
+    trueName: ks-scan-discovered-fresium-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -170,7 +170,7 @@
   - type: Solution
     solution: *klovnide_sol
   - type: KsScanDiscoverable
-    trueName: klovnide geyser
+    trueName: ks-scan-discovered-klovnide-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -185,7 +185,7 @@
   - type: Solution
     solution: *zipium_sol
   - type: KsScanDiscoverable
-    trueName: zipium geyser
+    trueName: ks-scan-discovered-zipium-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -200,7 +200,7 @@
   - type: Solution
     solution: *artifexium_sol
   - type: KsScanDiscoverable
-    trueName: artifexium geyser
+    trueName: ks-scan-discovered-artifexium-geyser
 
 - type: entity
   parent: KsGeyserBaseRare
@@ -215,4 +215,88 @@
   - type: Solution
     solution: *wittel_sol
   - type: KsScanDiscoverable
-    trueName: wittel geyser
+    trueName: ks-scan-discovered-wittel-geyser
+
+- type: entity
+  parent: KsGeyserBase
+  id: KsGeyserCrudeOil
+  suffix: Crude Oil
+  components:
+  - type: SolutionRegeneration
+    generated: &crude_sol
+      reagents:
+      - ReagentId: KsRefineryGas
+        Quantity: 120
+      - ReagentId: KsNaphtha
+        Quantity: 375
+      - ReagentId: KsKerosene
+        Quantity: 225
+      - ReagentId: KsDiesel
+        Quantity: 300
+      - ReagentId: KsGasOil
+        Quantity: 225
+      - ReagentId: KsParaffinWax
+        Quantity: 75
+      - ReagentId: KsBitumen
+        Quantity: 150
+      - ReagentId: KsOrganosulfur
+        Quantity: 30
+      temperature: 330
+  - type: Solution
+    solution: *crude_sol
+  - type: KsScanDiscoverable
+    trueName: ks-scan-discovered-crude-oil-geyser
+
+- type: entity
+  parent: KsGeyserBaseRare
+  id: KsGeyserSourCrude
+  suffix: Sour Crude
+  components:
+  - type: SolutionRegeneration
+    generated: &sour_sol
+      reagents:
+      - ReagentId: KsRefineryGas
+        Quantity: 90
+      - ReagentId: KsNaphtha
+        Quantity: 270
+      - ReagentId: KsKerosene
+        Quantity: 180
+      - ReagentId: KsDiesel
+        Quantity: 270
+      - ReagentId: KsGasOil
+        Quantity: 270
+      - ReagentId: KsParaffinWax
+        Quantity: 75
+      - ReagentId: KsBitumen
+        Quantity: 195
+      - ReagentId: KsOrganosulfur
+        Quantity: 120
+      - ReagentId: KsHydrogenSulfide
+        Quantity: 30
+      temperature: 340
+  - type: Solution
+    solution: *sour_sol
+  - type: KsScanDiscoverable
+    trueName: ks-scan-discovered-sour-crude-geyser
+
+- type: entity
+  parent: KsGeyserBaseRare
+  id: KsGeyserGasCondensate
+  suffix: Gas Condensate
+  components:
+  - type: SolutionRegeneration
+    generated: &condensate_sol
+      reagents:
+      - ReagentId: KsRefineryGas
+        Quantity: 600
+      - ReagentId: KsEthane
+        Quantity: 225
+      - ReagentId: KsNaphtha
+        Quantity: 600
+      - ReagentId: KsHydrogenSulfide
+        Quantity: 75
+      temperature: 290
+  - type: Solution
+    solution: *condensate_sol
+  - type: KsScanDiscoverable
+    trueName: ks-scan-discovered-gas-condensate-geyser

@@ -50,3 +50,16 @@
   rotation: User
   hasLayers: true
   fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsCatalyticReactor
+  category: AtmosphericUtility
+  sprite: /Textures/_KS14/Interface/Radial/RPD/catalytic_reactor.png
+  mode: ConstructObject
+  prototype: KsCatalyticReactor
+  cost: 3
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  hasLayers: true
+  fx: EffectRCDConstruct0

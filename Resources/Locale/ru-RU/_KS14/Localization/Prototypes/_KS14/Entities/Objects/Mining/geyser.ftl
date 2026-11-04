@@ -38,3 +38,18 @@ ent-KsGeyserWittel = необнаруженный гейзер
 ent-KsGeyserZipium = необнаруженный гейзер
     .desc = Это гейзер. При сканировании он будет удобно отображаться на масс-сканерах.
     .suffix = Zipium
+
+# Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
+ent-KsGeyserCrudeOil = необнаруженный гейзер
+    .desc = Это гейзер. При сканировании он будет удобно отображаться на масс-сканерах.
+    .suffix = Сырая нефть
+
+# Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
+ent-KsGeyserSourCrude = необнаруженный гейзер
+    .desc = Это гейзер. При сканировании он будет удобно отображаться на масс-сканерах.
+    .suffix = Сернистая нефть
+
+# Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
+ent-KsGeyserGasCondensate = необнаруженный гейзер
+    .desc = Это гейзер. При сканировании он будет удобно отображаться на масс-сканерах.
+    .suffix = Газовый конденсат

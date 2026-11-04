@@ -21,3 +21,11 @@ ent-ZipionCanister = zipion canister
 # Resources\Prototypes\_KS14\Entities\Structures\Storage\Canisters\gas_canisters.yml
 ent-ZipionCanisterBroken = broken gas canister
     .desc = A broken gas canister. Not useless yet, as it can be salvaged for high quality materials.
+
+# Resources\Prototypes\_KS14\Entities\Structures\Storage\Canisters\gas_canisters.yml
+ent-KsHydrogenCanister = hydrogen canister
+    .desc = A canister that can contain any type of gas. This one is supposed to contain hydrogen. It can be attached to connector ports using a wrench.
+
+# Resources\Prototypes\_KS14\Entities\Structures\Storage\Canisters\gas_canisters.yml
+ent-KsHydrogenCanisterBroken = broken gas canister
+    .desc = A broken gas canister. Not useless yet, as it can be salvaged for high quality materials.

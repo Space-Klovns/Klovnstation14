@@ -1,6 +1,6 @@
 ---
 name: ui
-description: How client UI is built in this repo - XAML and its code-behind, layout and mouse filtering, the sheetlet stylesheet system (specificity, the fork's Baron sheetlet overriding global defaults, dead StyleNano classes, flat/translucent styles, the reusable gradient stylebox), UI screens and controllers, windows and BUIs, drawing inside a Control, UI localisation, and testing UI headlessly. Also maps the reworked lobby. Use when writing or restyling any XAML, Control, window, BUI, sheetlet or lobby UI, or when a style silently doesn't apply, a panel is opaque when it shouldn't be, clicks don't reach a button, or a control vanishes.
+description: How client UI is built in this repo - XAML and its code-behind, layout and mouse filtering, the sheetlet stylesheet system (specificity, the fork's Baron sheetlet overriding global defaults, dead StyleNano classes, flat/translucent styles, the reusable gradient stylebox), UI screens and controllers, windows and BUIs, drawing inside a Control, UI localisation, and testing UI headlessly. Also maps the reworked lobby. Use when writing or restyling any XAML, Control, window, BUI, sheetlet or lobby UI, or when a window's bottom is cut off, a style silently doesn't apply, a panel is opaque when it shouldn't be, clicks don't reach a button, or a control vanishes.
 ---
 
 # Client UI
@@ -226,10 +226,38 @@ colours itself (see below), so don't re-solve either.
   - Its event and cvar subscriptions need no teardown. Anything a short-lived control registers does.
 - **Windows:** `BaseWindow` is the base of `DefaultWindow` and `FancyWindow` (content). Open one with `OpenCentered()`
   and listen to `OnClose`.
+- **Window height: leave it to the contents.** A window whose bottom is cut off is a very common bug here. See the next
+  section before giving any window a `SetSize`.
 - **BUIs:** in `Open()`, use `_window = this.CreateWindow<T>()`. It disposes with the BUI, wires `OnClose` to
   `Close`, and restores position. Don't `new` and hand-dispose. Keep the window dumb: state arrives in `UpdateState`.
 - **`UiControlTest`** instantiates every content `BaseWindow` with a parameterless constructor and no injection. A
   window constructor must not need state, and its ignore list says not to add to it.
+
+## Sizing a window
+
+**This is a very common issue: a window's bottom row is cut off, and it comes from a hard-coded height.** Writing
+`SetSize="340 250" MinSize="340 250"` in XAML means guessing the contents' height, and nothing checks the guess:
+
+- **`SetHeight` beats what the contents ask for** (`Control.MeasureCore`, `Control.Layout.cs:600`). The window doesn't
+  grow. A window with no `SetSize` is sized to its contents.
+- **`MinSize` is only your guess again.** It knows nothing about the contents, and neither does `FancyWindow`.
+- **`FancyWindow`'s `ContentsContainer` has `RectClipContent="True"`.** What doesn't fit is clipped with no error, and a
+  squeezed `BoxContainer` looks fine until its last row.
+- **`FancyWindow`'s header is 71 px, and only the rest of the height is yours.** The Baron frame added 41 px to it, so
+  numbers copied from an upstream window or an older one come up short. Add a row and the guess is wrong again.
+
+Pick by what the window holds:
+
+| Contents | Do |
+| --- | --- |
+| A form with a fixed set of rows (most BUIs) | `MinWidth="340" Resizable="False"`, no `SetSize`, no height at all. Sizing to the contents can't go wrong in any language. |
+| Something that wants the room (a list, a map, a log) | `SetSize` and `MinSize`, with a `ScrollContainer` or an expanding child taking the slack, so a smaller window shrinks that and not the rows. |
+| Wrapping text in a resizable window | The minimum has to follow the contents: CLAUDE.md §6, *A window's `MinSize` does not protect contents that wrap*. |
+
+Don't fix a cut-off window by raising the number; that's how the pressure pump went from 110 to 160 and was still 2.6 px
+short. `KsWindowContentsFitTest` measures every `FancyWindow` that can be built empty and fails on a new one that doesn't
+fit. It can't see rows added by state, so check a window that grows at runtime yourself. Its list of known windows only
+ever shrinks.
 
 ## Drawing inside a Control
 

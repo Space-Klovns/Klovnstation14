@@ -12,3 +12,9 @@ ks-expansion-valve-ui-vapor-fraction = Flashes to vapor: { $percent }%
 ks-expansion-valve-ui-outlet = Outlet: { $pressure } kPa, boils at { $kelvin } K
 ks-expansion-valve-ui-no-refrigerant = No liquid refrigerant.
 ks-expansion-valve-ui-flow-rate = Flow: { $units } u/s
+
+ks-catalytic-reactor-slot-catalyst = Catalyst bed
+ks-catalytic-reactor-examine-bed = It holds a bed of [color=orange]{ $catalyst }[/color], at [color=yellow]{ $activity }%[/color] activity.
+ks-catalytic-reactor-examine-empty = It has no catalyst bed.
+ks-catalytic-reactor-examine-conditions = Inside: { $temperature } K, { $pressure } kPa. The bed fills { $share }% of its pipe net.
+ks-fluid-catalyst-examine = A bed of [color=orange]{ $catalyst }[/color], at [color=yellow]{ $activity }%[/color] activity.

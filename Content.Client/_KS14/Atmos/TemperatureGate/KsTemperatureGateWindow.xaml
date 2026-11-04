@@ -1,0 +1,23 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+            xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+            MinWidth="340" Resizable="False" Title="{Loc ks-temperature-gate-ui-title}">
+    <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
+        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+            <controls:SwitchButton Name="ToggleStatusButton" HorizontalAlignment="Left" />
+            <Control HorizontalExpand="True" />
+            <Button Name="SetButton" Text="{Loc ks-temperature-gate-ui-set}" Disabled="True" Margin="0 0 5 0" />
+            <Button Name="SetMaxButton" Text="{Loc ks-temperature-gate-ui-max}" />
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+            <Label Text="{Loc ks-temperature-gate-ui-mode-label}" />
+            <OptionButton Name="ModeOption" HorizontalExpand="True" />
+        </BoxContainer>
+        <BoxContainer Name="FirstRow" Orientation="Horizontal" HorizontalExpand="True">
+            <Label Name="FirstLabel" />
+        </BoxContainer>
+        <BoxContainer Name="SecondRow" Orientation="Horizontal" HorizontalExpand="True">
+            <Label Name="SecondLabel" />
+        </BoxContainer>
+        <Label Name="ModeLabel" StyleClasses="LabelSubText" />
+    </BoxContainer>
+</controls:FancyWindow>

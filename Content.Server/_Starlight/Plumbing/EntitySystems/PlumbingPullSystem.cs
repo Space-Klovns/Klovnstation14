@@ -185,6 +185,17 @@ public sealed partial class PlumbingPullSystem : EntitySystem
                 if (attemptEv.Cancelled)
                     continue;
 
+                // KS14 start: an inseparable target comes with its whole group, in proportion
+                if (_ksReagentSeparationSystem.TryGetGroup(reagentId, out var ksGroup))
+                {
+                    var (ksTarget, ksTotal) = KsPullGroupForTarget(puller, plumbingNode.Owner, sourceSoln, destination, ksGroup.Value,
+                        reagentId, stillNeeded, remaining, pulled);
+                    stillNeeded -= ksTarget;
+                    remaining -= ksTotal;
+                    continue;
+                }
+                // KS14 end
+
                 var toPull = FixedPoint2.Min(available, stillNeeded);
                 toPull = FixedPoint2.Min(toPull, remaining);
 
@@ -263,6 +274,8 @@ public sealed partial class PlumbingPullSystem : EntitySystem
                 allowedReagents.Add((reagent.Reagent, reagent.Quantity));
         }
 
+        KsAllowWholeGroups(sourceSolution, allowedReagents); // KS14: a filter passes a whole inseparable group or none of it
+
         if (allowedReagents.Count == 0)
             return FixedPoint2.Zero;
 
@@ -272,6 +285,20 @@ public sealed partial class PlumbingPullSystem : EntitySystem
         {
             if (remaining <= 0)
                 break;
+
+            // KS14 start: an inseparable group is pulled once, whole and in proportion
+            if (_ksReagentSeparationSystem.TryGetGroup(reagent.Prototype, out var ksGroup))
+            {
+                if (_ksPulledGroups.Add(ksGroup.Value))
+                {
+                    var ksMoved = KsPullGroup(puller, sourceOwner, sourceSoln, destination, ksGroup.Value, remaining).Volume;
+                    totalPulled += ksMoved;
+                    remaining -= ksMoved;
+                }
+
+                continue;
+            }
+            // KS14 end
 
             var toPull = FixedPoint2.Min(quantity, remaining);
             if (toPull <= 0)
@@ -304,6 +331,7 @@ public sealed partial class PlumbingPullSystem : EntitySystem
             }
         }
 
+        _ksPulledGroups.Clear(); // KS14
         return totalPulled;
     }
 

@@ -69,7 +69,7 @@ That is the link:
 - **Linked** reagents name an atmos gas (`fluidmos: gas: WaterVapor`). Their vapor *is* that gas's moles in the
   `GasMixture`, so `KsFluidAmount.Vapor` stays 0 for them. Their vapor spreads across tiles as gas, shows in the gas
   table, and condenses back in pipes. Their molar mass comes from the gas.
-  Currently linked: Water, Oxygen, Nitrogen, NitrousOxide, Ammonia, CarbonDioxide.
+  Currently linked: Water, Oxygen, Nitrogen, NitrousOxide, Ammonia, CarbonDioxide, Hydrogen.
 - **Unlinked** reagents keep their vapor in `KsFluidAmount.Vapor` (moles). It leaves a pipe as smoke.
 
 **Plasma must stay unlinked.** With its real boiling point (about 352 K), a linked plasma gas would condense at room
@@ -302,6 +302,95 @@ established convention throughout the puddle code, not a bug.
 4. Before linking, ask whether the gas condenses at station conditions. If it does and the station relies on it as a
    gas, don't link it (see plasma, above).
 
+## Reactions in pipes
+
+`ksFluidReaction` prototypes (`Content.Shared/_KS14/Fluidmos/Reactions/`) run inside fluid mixtures, at a rate, stepped by
+`KsFluidReactionSystem` from the top of `UpdatePhases`, so whatever they make settles into its phase the same tick.
+Beaker `ReactionPrototype`s never run in pipes, and these never run in beakers. Keep it that way: a refinery
+intermediate in an upstream recipe is a way round the refinery, and `KsRefineryReactionTests` rejects one.
+
+- **Rate.** `ξ = n (1 - exp(-k dt))`, where `n` is the reaction units the limiting reactant allows and
+  `k = rate * exp(activationTemperature * (1/referenceTemperature - 1/T))`. Exact first order, so it never overshoots.
+- **Heat.** `enthalpy` is J per unit of reaction, game scale, positive endothermic. One step moves the temperature at
+  most `MaxReactionDeltaT` (20 K), so a runaway takes several ticks. Energy is kept as the phase step keeps it, with
+  each reagent's offset by phase (fusion heat as liquid, fusion plus latent as vapor), so a reaction that makes vapor
+  from liquid pays to boil it, and `enthalpy` is only the chemistry.
+- **Linked reagents** react from and into gas moles. Candidates are found from the fluid table, so every reaction
+  needs at least one unlinked or condensed reactant. Only a reagent's entry with no extra data takes part.
+- **Idle cost.** Candidates are cached on the mixture against the table's `KeysVersion`; a mixture colder than every
+  candidate's `minTemp` returns after one comparison. Otherwise at most one step per `StepInterval` (0.5 s).
+- **Gates.** `minTemp`/`maxTemp`, `minPartialPressure`, and `catalystReagent` (present, not consumed, such as steam).
+
+A reaction with a `catalyst` runs only from a `KsCatalyticReactor`: an inline pipe vessel with one straight-through node
+and a slot for a bed (`KsFluidCatalystComponent`). It steps the bed's reactions on its own pipe net with
+`dt * share * activity`, where `share` is `BedVolume / net volume`, capped at 1. It has no chamber or flow setting: pumps
+either side set the residence time. The bed also takes up the `poisons` of its `ksFluidCatalyst`, which leave the
+mixture and cost it activity.
+
+A step's extent is capped so the temperature moves at most `MaxReactionDeltaT`, counting both the reaction's heat and what
+it does to the heat capacity. An extent too small to leave a product the reagent table would keep isn't run: it waits on
+the mixture (`KsFluidMixture.DeferredExtent`) until it's big enough, so a trace product isn't lost to the table's minimum.
+
+## Non-ideal mixing
+
+Raoult's mole fraction is now an activity, `x γ`, in the phase step and at radiator walls (`ComputeActivities` in
+`KsFluidmosPhaseSystem.Activity.cs`). A mixture with no non-ideal reagent takes the old path and does no lookups.
+
+- **Margules.** `ln γ_i = Σ_j A_ij x_j - ½ Σ_j Σ_k A_jk x_j x_k`, with `A(T) = A * 298 / T`, clamped to 2, past which
+  the two-suffix model predicts a false liquid split.
+- **Where A comes from.** A `ksFluidPairInteraction` for two named reagents, else their `ksFluidMixingFamily` entries,
+  else zero. A reagent joins a family with `mixingFamily` in its Fluidmos block. Prefer families: they avoid an N×N table.
+- **Immiscible families** form separate liquid phases: `x` is taken within the phase, so each keeps its full vapor
+  pressure, which is steam distillation. A reagent in no family dissolves in every phase.
+- **Flashing.** A boiling liquid flashes down to its bubble point, where `Σ x_i γ_i Psat_i(T) = P`, by a few Newton steps
+  (`KsPhaseMath.BubbleTemperature`). A single reagent still boils at its own `Tb(P)`.
+
+Ethanol and water are fitted to their real azeotrope, about 89 mol% ethanol. Past it the vapor is poorer in ethanol than
+the liquid.
+
+### Freezing-point depression
+
+`Tm' = Tm / (1 - ln(x γ) / k_fus)`, with `k_fus` from the optional `fusionEntropy` (default water's 2.65). `x` counts the
+reagent's own solid as if it had melted and `x γ` is floored at 0.1, so ice dropped into a solvent doesn't melt all at
+once. That also means a reagent past its depressed point freezes entirely, rather than down to a solubility limit. The
+same equation is ideal solubility, which is how wax crystallises out of chilled gas oil; paraffin wax sets a real
+`fusionEntropy` of 20 for this.
+
+## Inseparable groups and the refinery
+
+`KsReagentSeparationSystem.SplitGroup` rounds each member's share up or down at random, weighted so its expected value
+is exact, and the shares always add up to what was asked for. Any fixed rounding would be a separator: a trace member
+would stay behind through any number of small transfers.
+
+Reagents with `ksInseparableGroup` can't be picked apart by machines. `KsReagentSeparationSystem` moves a selected
+member's whole group in proportion: ChemMaster transfer and discard, every plumbing pull (a group passes an outlet if
+any member may, and is pulled as one bundle, since plumbing otherwise pulls reagent by reagent, which separates a
+mixture by itself), a plumbing reactor's targets and output, the smart fridge, and injector whitelists. Nothing is
+refused, so tanks don't strand a mixture and filters don't deadlock. Passive physics is left alone.
+
+The refinery's reagents are pseudo-components by boiling range (`Resources/Prototypes/_KS14/Reagents/Petroleum/`). Every
+hydrocarbon stays unlinked, so gas filters can't see it, and has no cook-off value, since refinery nets run far past any
+sensible cook-off point. Hydrogen is linked to its own atmos gas, so it can be filtered, pumped into canisters and burned
+(`KsHydrogenFireReaction`, 2 H2 + O2 to steam). Hydrogen sulfide is unlinked vapor, and leaves a pipe as inert smoke.
+Reactions are in `Resources/Prototypes/_KS14/Fluidmos/Reactions/`; the player's view of the chain is the guidebook's
+Oil Refining page.
+
+### The demonstration refinery
+
+`Resources/Maps/_KS14/Grids/refinery.yml` is a working plant (`loadgrid`): crude geyser, three stills, a platinum
+reformer, debug power. `KsRefineryGridTests` loads it and runs it. It was generated by a throwaway script that built the
+layout on an uninitialised map and saved it, and is the reference for the settings below, each of which took measuring:
+
+- **A separator evacuates its inlet.** Its pump stops only when its *outlet* reaches `targetPressure`. Near vacuum,
+  everything boils, even bitumen, so a still needs its vapor metered: a low `targetPressure` and a slow pump just
+  after it, so that the outlet stays at target. Inlet pressure then rises to the bubble point.
+- **A thermomachine heats what is in the net at that moment**, clamped so it can't overshoot. A net that drains at once
+  can't take heat, whatever the heater's power. Keep `liquidRate` below what arrives, so liquid builds up.
+- **Pump volumes are multiplied by `atmos.speedup`** (8 by default). The nominal rates in the map are an eighth of the
+  real ones.
+- **A pump doesn't limit feed**: a net just holds more until the same flow passes. The fluid port's `rate` does.
+- **Crude chills itself as it flashes**, and wax will freeze in the feed line without a preheater.
+
 ## Testing
 
 Tests live in `Content.IntegrationTests/Tests/_KS14/Fluidmos/`:
@@ -334,8 +423,7 @@ The original design brief, [fluidmos_plan.md](fluidmos_plan.md), has the full li
 section 7, and the reasoning behind most of the decisions above. The main ones:
 
 - **Supercritical fluids**, as above.
-- **Henry's law, activity coefficients, and chemistry inside pipes.** Reagents in a pipe don't react with each other,
-  and gases don't dissolve in liquids. Raoult's law (ideal mixing) is the only interaction.
+- **Henry's law.** Gases don't dissolve in liquids.
 - **Finite-volume pipes.** A pipe net is still one well-mixed mixture, so pressure drop along a run of radiators comes
   only from the radiators' own packet handling.
 - **Direct heat transfer between two pipe nets.** The guidebook's answer is a small sealed chamber holding both sets of
