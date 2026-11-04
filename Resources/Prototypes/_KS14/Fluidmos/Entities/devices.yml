@@ -241,18 +241,19 @@
       color: "#6fb8ff"
 
 # An inline vessel: one straight-through node, so it joins whatever pipe net it sits in, and pumps either side set how
-#     long the feed spends in it. The catalyst bed goes in its slot.
+#     long the feed spends in it. The catalyst bed goes in its slot. A machine rather than a pipe fitting: it fills its
+#     tile, blocks the way, and stays in sight above a floor, as a thermomachine does.
 - type: entity
-  parent: GasBinaryBase
+  parent: BaseMachine
   id: KsCatalyticReactor
   name: catalytic reactor
   description: A pressure vessel packed with a catalyst bed. The reactions the bed catalyses run in the pipe net it sits in, faster the less pipe there is around it.
   placement:
     mode: AlignAtmosPipeLayers
   components:
-  - type: SubFloorHide
-    visibleLayers:
-    - enum.SubfloorLayers.FirstLayer
+  - type: Transform
+    anchored: true
+    noRot: false
   - type: Sprite
     sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
     layers:
@@ -260,15 +261,29 @@
       state: pipeStraight
       map: [ "enum.PipeVisualLayers.Pipe" ]
     - state: reactor
-      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      map: [ "base" ]
   - type: Appearance
   - type: GenericVisualizer
     visuals:
       enum.KsCatalyticReactorVisuals.Reacting:
-        enum.SubfloorLayers.FirstLayer:
+        base:
           True: { state: reactor_on }
           False: { state: reactor }
   - type: PipeColorVisuals
+  - type: AtmosPipeColor
+  - type: AtmosDevice
+  - type: Rotatable
+  - type: PipeRestrictOverlap
+  - type: AtmosUnsafeUnanchor
+  - type: AtmosMonitoringConsoleDevice
+  - type: StaticPrice
+    price: 30
+  - type: RCDDeconstructable
+    cost: 1
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpd: true
+  - type: KsRcdPlacementNoHint
   - type: NodeContainer
     nodes:
       pipe:
@@ -292,6 +307,11 @@
       Primary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
       Secondary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
       Tertiary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+    spriteLayersRsiPaths:
+      enum.PipeVisualLayers.Pipe:
+        Primary: Structures/Piping/Atmospherics/pipe.rsi
+        Secondary: Structures/Piping/Atmospherics/pipe_alt1.rsi
+        Tertiary: Structures/Piping/Atmospherics/pipe_alt2.rsi
     alternativePrototypes:
       Primary: KsCatalyticReactor
       Secondary: KsCatalyticReactorAlt1
@@ -310,7 +330,7 @@
       state: pipeStraight
       map: [ "enum.PipeVisualLayers.Pipe" ]
     - state: reactor
-      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      map: [ "base" ]
 
 - type: entity
   parent: [ GasPipeLayerAlt2, KsCatalyticReactor ]
@@ -324,4 +344,4 @@
       state: pipeStraight
       map: [ "enum.PipeVisualLayers.Pipe" ]
     - state: reactor
-      map: [ "enum.SubfloorLayers.FirstLayer" ]
+      map: [ "base" ]
