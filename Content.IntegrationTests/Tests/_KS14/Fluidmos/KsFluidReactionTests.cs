@@ -196,6 +196,7 @@ public sealed class KsFluidReactionTests : GameTest
 
     // Instance fields: these ids exist only in the test prototypes above.
     private readonly ProtoId<ReagentPrototype> _feedReagent = "KsTestReactionFeed";
+    private readonly ProtoId<KsFluidReactionPrototype> _endothermicReaction = "KsTestEndothermicReaction";
     private readonly ProtoId<ReagentPrototype> _exoFeedReagent = "KsTestReactionExoFeed";
     private readonly ProtoId<ReagentPrototype> _gatedFeedReagent = "KsTestReactionGatedFeed";
     private readonly ProtoId<ReagentPrototype> _productReagent = "KsTestReactionProduct";
@@ -352,7 +353,7 @@ public sealed class KsFluidReactionTests : GameTest
         var server = Pair.Server;
         var phaseSystem = server.System<KsFluidmosPhaseSystem>();
         var gameTiming = server.ResolveDependency<IGameTiming>();
-        var reaction = server.ProtoMan.Index<KsFluidReactionPrototype>("KsTestEndothermicReaction");
+        var reaction = server.ProtoMan.Index(_endothermicReaction);
 
         await server.WaitAssertion(() =>
         {

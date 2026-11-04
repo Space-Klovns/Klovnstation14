@@ -96,6 +96,7 @@ public sealed class KsCatalyticReactorTests : GameTest
     // Instance fields: these ids exist only in the test prototypes above.
     private readonly EntProtoId _bedPrototype = "KsTestCatalystBed";
     private readonly EntProtoId _wornBedPrototype = "KsTestWornCatalystBed";
+    private readonly ProtoId<KsFluidReactionPrototype> _reaction = "KsTestCatalysedReaction";
     private readonly ProtoId<ReagentPrototype> _feedReagent = "KsTestCatalysisFeed";
     private readonly ProtoId<ReagentPrototype> _productReagent = "KsTestCatalysisProduct";
     private readonly ProtoId<ReagentPrototype> _poisonReagent = "KsTestCatalysisPoison";
@@ -258,7 +259,7 @@ public sealed class KsCatalyticReactorTests : GameTest
                 return Liquid(node.Air, _productReagent);
             }
 
-            var reaction = server.ProtoMan.Index<KsFluidReactionPrototype>("KsTestCatalysedReaction");
+            var reaction = server.ProtoMan.Index(_reaction);
             float Expected(float scale) => 100f * (1f - MathF.Exp(-reaction.Rate * 0.1f * scale));
 
             // Twice its bed's volume, whatever that is, so that the bed fills half its net.
