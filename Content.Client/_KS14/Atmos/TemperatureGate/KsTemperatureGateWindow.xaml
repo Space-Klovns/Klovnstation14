@@ -1,6 +1,6 @@
 <controls:FancyWindow xmlns="https://spacestation14.io"
             xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
-            SetSize="340 250" MinSize="340 250" Title="{Loc ks-temperature-gate-ui-title}">
+            MinWidth="340" Resizable="False" Title="{Loc ks-temperature-gate-ui-title}">
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
         <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
             <controls:SwitchButton Name="ToggleStatusButton" HorizontalAlignment="Left" />

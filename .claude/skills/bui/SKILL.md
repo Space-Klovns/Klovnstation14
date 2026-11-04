@@ -1,12 +1,12 @@
 ---
 name: bui
-description: How bound user interfaces (BUIs) connect a window to the player and the game in this repo - the BoundUserInterface class, UI key enums, prototype wiring (UserInterface, ActivatableUI, ActivatableUIRequires*), CreateWindow, the Open/UpdateState/Update lifecycle, opening and closing from code, range and access checks, choosing component state vs BUI state vs messages, BuiPredictionState and InputCoalescer, SendPredictedMessage and shared handlers, and the bugs simple BUIs have (stale values, state overwriting what the player types, snap-back). Use when adding or changing a BUI, its state or messages, when a window shows old values, reverts input, flickers, sends too many messages, never opens, or stays blank. For XAML, layout and styling use the ui skill.
+description: How bound user interfaces (BUIs) connect a window to the player and the game in this repo - the BoundUserInterface class, UI key enums, prototype wiring (UserInterface, ActivatableUI, ActivatableUIRequires*), CreateWindow, the Open/UpdateState/Update lifecycle, opening and closing from code, range and access checks, choosing component state vs BUI state vs messages, BuiPredictionState and InputCoalescer, SendPredictedMessage and shared handlers, and the bugs simple BUIs have (stale values, state overwriting what the player types, snap-back). Use when adding or changing a BUI, its state or messages, when a window shows old values, reverts input, flickers, sends too many messages, never opens, or stays blank. For XAML, layout, styling and windows cut off at the bottom use the ui skill.
 ---
 
 # Bound user interfaces
 
 Read from `RobustToolbox` v291 and content. `SUIS` = `Robust.Shared/GameObjects/Systems/SharedUserInterfaceSystem.cs`.
-XAML, layout, styles and UI tests are in the `ui` skill. ECS and naming rules are in `CLAUDE.md` §4, and localisation in §7.
+XAML, layout, styles, window sizing and UI tests are in the `ui` skill. Read its *Sizing a window* before giving a BUI window a size. ECS and naming rules are in `CLAUDE.md` §4, and localisation in §7.
 
 ## Getting a window on screen
 
