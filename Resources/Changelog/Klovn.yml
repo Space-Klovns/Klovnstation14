@@ -2431,3 +2431,26 @@ Entries:
       message: Fixed emissive glow.
   id: 237
   time: '2026-10-31T11:43:37.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Reagents can now be present in atmospherics networks as in solid,
+        liquid, and vapor forms. Solids will not be moved by pumps at all.
+    - type: Add
+      message: >-
+        Added the fluid port, expansion valve, and phase separator to the atmos
+        RPD. The fluid port is used to transfer reagents from/into atmos pipes,
+        either manually or via plumbing. The expansion valve flashes and chills
+        liquid refrigerant to its low side. The phase separator is used to
+        filter gas and vapor from liquid.
+    - type: Add
+      message: >-
+        Added 3 pages about fluid atmospherics under Engineering -> Atmospherics
+        in the guidebook. You gotta read it
+    - type: Tweak
+      message: >-
+        Volumetric and pressure pumps now release some heat as they compress
+        gases.
+  id: 238
+  time: '2026-11-04T07:54:22.0000000+00:00'
