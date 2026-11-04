@@ -42,6 +42,7 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private PuddleSystem _puddle = default!;
+    [Dependency] private Content.Shared._KS14.Chemistry.Separation.KsReagentSeparationSystem _ksReagentSeparationSystem = default!; // KS14
 
     /// <summary>
     ///     Temperature tolerance for considering target reached (in Kelvin).
@@ -154,6 +155,10 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
             {
                 // Skip target reagents still in the input buffer and only move products
                 if (ent.Comp.ReagentTargets.ContainsKey(new ProtoId<ReagentPrototype>(reagent.Reagent.Prototype)))
+                    continue;
+
+                // KS14: an inseparable reagent stays with a target from its group, so the output never splits the group
+                if (_ksReagentSeparationSystem.SharesGroupWithAny(reagent.Reagent.Prototype, ent.Comp.ReagentTargets.Keys))
                     continue;
 
                 products.Add((reagent.Reagent, reagent.Quantity));

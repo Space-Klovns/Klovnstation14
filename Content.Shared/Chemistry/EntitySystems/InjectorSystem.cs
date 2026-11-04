@@ -40,6 +40,7 @@ public sealed partial class InjectorSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private ReactiveSystem _reactiveSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
+    [Dependency] private Content.Shared._KS14.Chemistry.Separation.KsReagentSeparationSystem _ksReagentSeparationSystem = default!; // KS14
     [Dependency] private StandingStateSystem _standingState = default!;
     [Dependency] private UseDelaySystem _useDelay = default!;
 
@@ -562,7 +563,8 @@ public sealed partial class InjectorSystem : EntitySystem
         var temporarilyRemovedSolution = new Solution();
         if (injector.Comp.ReagentWhitelist is { } reagentWhitelist)
         {
-            temporarilyRemovedSolution = applicableTargetSolution.SplitSolutionWithout(applicableTargetSolution.Volume, reagentWhitelist.ToArray());
+            temporarilyRemovedSolution = applicableTargetSolution.SplitSolutionWithout(applicableTargetSolution.Volume,
+                _ksReagentSeparationSystem.ExpandToGroups(reagentWhitelist) /* KS14: reagentWhitelist.ToArray() -> whole inseparable groups */);
         }
 
         // If transferAmount is null, fallback to 5 units.
