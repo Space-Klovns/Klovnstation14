@@ -27,6 +27,7 @@ namespace Content.Client.Atmos.UI
             base.Open();
 
             _window = this.CreateWindow<GasVolumePumpWindow>();
+            _window.HeatFootnote.Device = Owner; // KS14
 
             if (EntMan.TryGetComponent(Owner, out GasVolumePumpComponent? pump))
             {

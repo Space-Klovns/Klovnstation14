@@ -71,7 +71,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
             var position = _transformSystem.GetGridTilePositionOrDefault(uid);
             var environment = _atmosphereSystem.GetTileMixture(grid, args.Map, position, true);
 
-            Scrub(timeDelta, scrubber, environment, outlet);
+            Scrub(timeDelta, scrubber, environment, outlet, uid /* KS14: added */);
 
             // KS14 start: smoke is drawn in with the air
             if (scrubber.KsScrubAerosols && environment != null)
@@ -88,7 +88,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
             var enumerator = _atmosphereSystem.GetAdjacentTileMixtures(grid, position, false, true);
             while (enumerator.MoveNext(out var adjacent))
             {
-                Scrub(timeDelta, scrubber, adjacent, outlet);
+                Scrub(timeDelta, scrubber, adjacent, outlet, uid /* KS14: added */);
             }
         }
 
@@ -98,15 +98,15 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
         private void OnVentScrubberEnterAtmosphere(EntityUid uid, GasVentScrubberComponent component,
             AtmosDeviceEnabledEvent args) => UpdateState(uid, component);
 
-        private void Scrub(float timeDelta, GasVentScrubberComponent scrubber, GasMixture? tile, PipeNode outlet)
+        private void Scrub(float timeDelta, GasVentScrubberComponent scrubber, GasMixture? tile, PipeNode outlet, EntityUid ksDeviceUid /* KS14: added */)
         {
-            Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), scrubber.PumpDirection, scrubber.FilterGases, tile, outlet.Air);
+            Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), scrubber.PumpDirection, scrubber.FilterGases, tile, outlet.Air, ksDeviceUid: ksDeviceUid /* KS14: added */);
         }
 
         /// <summary>
         /// True if we were able to scrub, false if we were not.
         /// </summary>
-        public bool Scrub(float timeDelta, float transferRate, ScrubberPumpDirection mode, HashSet<Gas> filterGases, GasMixture? tile, GasMixture destination)
+        public bool Scrub(float timeDelta, float transferRate, ScrubberPumpDirection mode, HashSet<Gas> filterGases, GasMixture? tile, GasMixture destination, EntityUid? ksDeviceUid = null /* KS14: added, the device doing it, which is billed for the work */)
         {
             // Cannot scrub if tile is null or air-blocked.
             if (tile == null
@@ -126,14 +126,14 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
 
             if (mode == ScrubberPumpDirection.Scrubbing)
             {
-                _atmosphereSystem.ScrubInto(removed, destination, filterGases, ksInletPressure: ksTilePressure, ksHeatSink: tile /* KS14: added */);
+                _atmosphereSystem.ScrubInto(removed, destination, filterGases, ksInletPressure: ksTilePressure, ksHeatSink: tile, ksDeviceUid: ksDeviceUid /* KS14: added */);
 
                 // Remix the gases.
                 _atmosphereSystem.Merge(tile, removed);
             }
             else if (mode == ScrubberPumpDirection.Siphoning)
             {
-                _ksTransferThermoSystem.Apply(removed, ksTilePressure, destination.Pressure, doesWork: true, heatSink: tile); // KS14
+                _ksTransferThermoSystem.Apply(removed, ksTilePressure, destination.Pressure, doesWork: true, deviceUid: ksDeviceUid, heatSink: tile); // KS14: compression heat
                 _atmosphereSystem.Merge(destination, removed);
             }
             return true;

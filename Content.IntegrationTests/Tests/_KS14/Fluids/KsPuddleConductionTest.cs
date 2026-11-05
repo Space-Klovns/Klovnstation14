@@ -1,4 +1,6 @@
 #nullable enable
+using System.Collections.Generic;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
@@ -20,7 +22,7 @@ namespace Content.IntegrationTests.Tests._KS14.Fluids;
 /// </summary>
 public sealed class KsPuddleConductionTest : GameTest
 {
-    private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
+    private static readonly EntProtoId WallPrototype = "WallSolid";
     private const int TicksPerSecond = 30;
     private const float HotTemperature = 360f;
     private const float ColdTemperature = 280f;
@@ -47,6 +49,7 @@ public sealed class KsPuddleConductionTest : GameTest
     [Test]
     public async Task TestNeighbouringPuddlesShareHeat([Values(true, false)] bool adjacent)
     {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // Only their shared edge moves heat here.
         var server = Pair.Server;
         var entityManager = server.EntMan;
         var testMap = await Pair.CreateTestMap();
@@ -70,9 +73,9 @@ public sealed class KsPuddleConductionTest : GameTest
             var puddleSystem = entityManager.System<PuddleSystem>();
             var mapSystem = entityManager.System<SharedMapSystem>();
             puddleSystem.TrySpillAt(mapSystem.GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(0, 0)),
-                new Solution(WaterReagent.Id, FixedPoint2.New(15)) { Temperature = HotTemperature }, out hotUid, sound: false);
+                new Solution(_inertReagent.Id, FixedPoint2.New(15)) { Temperature = HotTemperature }, out hotUid, sound: false);
             puddleSystem.TrySpillAt(mapSystem.GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, otherTile),
-                new Solution(WaterReagent.Id, FixedPoint2.New(15)) { Temperature = ColdTemperature }, out coldUid, sound: false);
+                new Solution(_inertReagent.Id, FixedPoint2.New(15)) { Temperature = ColdTemperature }, out coldUid, sound: false);
         });
 
         await server.WaitRunTicks(TicksPerSecond * 10);
@@ -95,6 +98,70 @@ public sealed class KsPuddleConductionTest : GameTest
 
             // Same volume of the same reagent, so the mean temperature is the conserved energy.
             Assert.That((hot.Temperature + cold.Temperature) / 2f, Is.EqualTo((HotTemperature + ColdTemperature) / 2f).Within(0.1f));
+        });
+    }
+
+    /// <summary>
+    ///     A puddle shares its capacity between the contacts it has, and a sealed tile has no air to count as one. So puddles
+    ///         on sealed tiles settle with each other sooner than the same pair on open tiles.
+    /// </summary>
+    [Test]
+    public async Task SealedPuddlesKeepNoCapacityBackForAir()
+    {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f); // So that the open tiles' air takes nothing itself.
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var mapSystem = entityManager.System<SharedMapSystem>();
+        var sealedTiles = new[] { new Vector2i(0, 0), new Vector2i(1, 0) };
+        var openTiles = new[] { new Vector2i(4, 0), new Vector2i(5, 0) };
+
+        await server.WaitPost(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner);
+            for (var x = 0; x <= 5; x++)
+                mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, 0), testMap.Tile.Tile);
+
+            foreach (var tile in sealedTiles)
+                entityManager.SpawnEntity(WallPrototype, mapSystem.GridTileToLocal(testMap.Grid.Owner, testMap.Grid.Comp, tile));
+        });
+        await server.WaitRunTicks(TicksPerSecond * 5);
+
+        var puddleUids = new List<EntityUid>();
+        await server.WaitPost(() =>
+        {
+            foreach (var tile in sealedTiles)
+            {
+                Assert.That(entityManager.System<AtmosphereSystem>().GetTileMixture(testMap.Grid.Owner, testMap.MapUid, tile), Is.Null,
+                    "The wall's tile has air, so this proves nothing.");
+            }
+
+            foreach (var tiles in new[] { sealedTiles, openTiles })
+            {
+                for (var i = 0; i < tiles.Length; i++)
+                {
+                    var solution = new Solution(_inertReagent.Id, FixedPoint2.New(15)) { Temperature = i == 0 ? HotTemperature : ColdTemperature };
+                    Assert.That(entityManager.System<PuddleSystem>().TrySpillAt(mapSystem.GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, tiles[i]), solution,
+                        out var puddleUid, sound: false));
+                    puddleUids.Add(puddleUid);
+                }
+            }
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            var solutionContainerSystem = entityManager.System<SharedSolutionContainerSystem>();
+            float Difference(int first)
+            {
+                Assert.That(solutionContainerSystem.TryGetSolution(puddleUids[first], "puddle", out _, out var hot), Is.True);
+                Assert.That(solutionContainerSystem.TryGetSolution(puddleUids[first + 1], "puddle", out _, out var cold), Is.True);
+                return hot!.Temperature - cold!.Temperature;
+            }
+
+            Assert.That(Difference(2), Is.GreaterThan(0.1f), "The open pair has already settled, so this proves nothing.");
+            Assert.That(Difference(0), Is.LessThan(Difference(2) * 0.75f), "Puddles on sealed tiles held back capacity for air that isn't there.");
         });
     }
 

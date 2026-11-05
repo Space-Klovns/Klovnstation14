@@ -35,3 +35,4 @@ ks-temperature-gate-ui-open-when = Open while the input is { $inverted ->
     [true] outside
    *[false] inside
 } these limits.
+ks-temperature-gate-ui-invert-hint = Use a multitool on the gate to swap this.

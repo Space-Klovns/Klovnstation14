@@ -16,8 +16,16 @@
 
   [bold]Organosulfur compounds[/bold] boil with the kerosene, so distilling will never get them out.
 
+  These are the temperatures each cut boils and melts at one atmosphere. Lower the pressure and every one of them boils cooler. A mixture boils somewhere between its parts, so heat a still to just past the cut you want and no further.
+
+  <KsGuideReagentPointsEmbed Reagents="KsRefineryGas,KsNaphtha,KsGasoline,KsKerosene,KsOrganosulfur,KsDiesel,KsParaffinWax,KsGasOil,KsBitumen"/>
+
   ## Vacuum distilling
   Don't try to boil the residue at normal pressure. Past a certain heat it cracks instead of boiling, and turns to [bold]petroleum coke[/bold], a solid that stays in your pipes. Lower the pressure and everything boils cooler: pump the still down hard, and the gas oil and wax come over before they can coke. The bitumen stays at the bottom.
+
+  Past these temperatures, the heavy cuts crack on their own, in any pipe:
+
+  <KsGuideFluidReactionEmbed Reactions="KsThermalCrackingGasOil,KsThermalCrackingBitumen"/>
 
   Oil and water don't mix, so each keeps its own full vapor pressure. A mixture of oil and steam boils cooler than either, which is another way of getting heavy oil over without coking it.
 
@@ -45,13 +53,23 @@
   - [bold]Catalytic cracking[/bold] (zeolite). Hotter still, it breaks gas oil into gasoline, refinery gas and diesel. The coke it leaves wears the bed out.
   - [bold]Polymerising[/bold] (Ziegler-Natta). Ethylene under pressure becomes [bold]polyethylene[/bold]. It gives off a great deal of heat, so cool it. Below the polymer's melting point it sets solid in the reactor. Let it overheat and it simply stops until it cools; only a heater can take the polymer hot enough to fall apart again. Water and sulfur kill the bed.
 
+  The temperatures each one needs:
+
+  <KsGuideFluidReactionEmbed Reactions="KsHydrotreating,KsClausProcess,KsCatalyticReforming,KsFluidCatalyticCracking,KsEthylenePolymerisation,KsPolyethyleneDepolymerisation"/>
+
   ## Steam cracking
   This one needs no reactor, just a great deal of heat. Naphtha or ethane in a pipe with plenty of steam, heated nearly as hot as a hellfire heater can go, cracks into [bold]ethylene[/bold] and a mix of lighter things. Take it away and quench it quickly: left hot, ethylene breaks down into coke and clogs the cracker.
 
   Ethylene and [bold]ethane[/bold] boil very close together, far below room temperature. Splitting them takes a long, cold column, with an [textlink="expansion valve" link="KsFluidDevices"] and plenty of stages.
 
+  <KsGuideFluidReactionEmbed Reactions="KsSteamCrackingNaphtha,KsSteamCrackingEthane,KsEthyleneDecomposition"/>
+
+  <KsGuideReagentPointsEmbed Reagents="KsEthylene,KsEthane,KsHydrogenSulfide,KsPolyethylene,KsPetroleumCoke"/>
+
   ## Clearing coke
   Coke won't flow or melt. Burn it out: oxygen in a very hot pipe turns it into carbon dioxide.
+
+  <KsGuideFluidReactionEmbed Reactions="KsDecoking"/>
 
   ## What it's all for
   - [bold]Fuel.[/bold] A J.R.P.A.C.M.A.N. generator burns gasoline, diesel, kerosene and naphtha as well as welding fuel, and the better refined the fuel, the longer it lasts. Heavier and dirtier cuts burn too, just badly.

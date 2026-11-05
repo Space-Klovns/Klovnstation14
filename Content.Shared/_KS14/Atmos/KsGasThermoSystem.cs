@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Prototypes;
 using Robust.Shared.Prototypes;
@@ -11,6 +12,8 @@ namespace Content.Shared._KS14.Atmos;
 /// </summary>
 public sealed partial class KsGasThermoSystem : EntitySystem
 {
+    [Dependency] private KsFluidmosPropertiesSystem _fluidmosPropertiesSystem = default!;
+
     /// <summary>
     ///     The monatomic limit. No gas compresses hotter than this ratio says.
     /// </summary>
@@ -78,6 +81,13 @@ public sealed partial class KsGasThermoSystem : EntitySystem
             heatCapacity += gasMoles * RatioHeatCapacities[i];
         }
 
+        // Unlinked vapor has no gas to take a ratio from, so its molar heat capacity stands in, as for a gas with no override.
+        if (mixture.Fluid is { } fluid)
+        {
+            totalMoles += fluid.VaporMoles;
+            heatCapacity += fluid.GetVaporHeatCapacity(_fluidmosPropertiesSystem);
+        }
+
         return totalMoles > 0f ? HeatCapacityRatio(heatCapacity / totalMoles) : 0f;
     }
 
@@ -86,7 +96,17 @@ public sealed partial class KsGasThermoSystem : EntitySystem
     /// </summary>
     public (float A, float B) MixtureVanDerWaals(GasMixture mixture)
     {
-        return KsThrottling.MixConstants(mixture.Moles, SqrtVanDerWaalsA, VanDerWaalsB);
+        var (a, b) = KsThrottling.MixConstants(mixture.Moles, SqrtVanDerWaalsA, VanDerWaalsB);
+
+        // Unlinked vapor has no constants of its own, so it only dilutes, as a gas with none does.
+        if (mixture.Fluid is { VaporMoles: > 0f } fluid)
+        {
+            var gasFraction = mixture.TotalMoles / (mixture.TotalMoles + fluid.VaporMoles);
+            a *= gasFraction * gasFraction;
+            b *= gasFraction;
+        }
+
+        return (a, b);
     }
 
     private void Rebuild()

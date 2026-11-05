@@ -234,6 +234,37 @@ public sealed class KsCarbonDioxideTest : GameTest
     }
 
     /// <summary>
+    ///     Under a map's air, the spray turns to gas that is lost to it, paid for by air that doesn't cool, if the air is warm
+    ///         enough to pay at all.
+    /// </summary>
+    [Test]
+    public async Task SprayFlashesUnderAMapsAirIfWarmEnough([Values(true, false)] bool warm)
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        const float offered = 20f;
+
+        await server.WaitAssertion(() =>
+        {
+            var airTemperature = warm ? Atmospherics.T20C : SublimationPoint() - 20f;
+            var air = new GasMixture(Atmospherics.CellVolume) { Temperature = airTemperature };
+            air.SetMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+            air.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+            var entityManager = server.EntMan;
+            entityManager.System<AtmosphereSystem>().SetMapAtmosphere(testMap.MapUid, space: false, air);
+
+            var reagent = SProtoMan.Index(CarbonDioxideReagent);
+            var reaction = WithoutSpilling(reagent.TileReactions.OfType<KsVaporizeTileReaction>().Single());
+
+            FixedPoint2 used;
+            using (entityManager.System<PuddleSystem>().KsBeginTileReactionTemperature(SprayTemperature))
+                used = reaction.TileReact(testMap.Tile, reagent, FixedPoint2.New(offered), entityManager, null);
+
+            Assert.That((float)used, Is.EqualTo(warm ? offered : 0f), warm ? "The spray did not flash into a map's warm air." : "Air too cold to pay the latent heat paid it.");
+        });
+    }
+
+    /// <summary>
     ///     The gas pushes as much of the tile's air out into its neighbours as it adds: the oxygen on the tile drops, the
     ///         tile holds as many moles as before, and every mole is accounted for.
     /// </summary>

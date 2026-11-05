@@ -41,8 +41,12 @@ public sealed class KsDiscoveredNameTest : GameTest
     private readonly EntProtoId _discoverablePrototype = "KsTestDiscoverable";
     private readonly EntProtoId _scannerPrototype = "KsTestDiscoveringScanner";
 
+    /// <summary>
+    ///     Both ways a client learns of a discovery: on an entity new to it, the state comes before the component starts up,
+    ///         and on one it can already see, after. <paramref name="clientSeesItFirst"/> is what someone standing nearby gets.
+    /// </summary>
     [Test]
-    public async Task ClientsShowTheNameInTheirOwnLanguage()
+    public async Task ClientsShowTheNameInTheirOwnLanguage([Values(true, false)] bool clientSeesItFirst)
     {
         var testMap = await Pair.CreateTestMap();
         var clientLocalization = Client.ResolveDependency<ILocalizationManager>();
@@ -54,6 +58,13 @@ public sealed class KsDiscoveredNameTest : GameTest
         await Server.WaitPost(() =>
         {
             serverUid = Server.EntMan.SpawnEntity(_discoverablePrototype, testMap.GridCoords);
+        });
+
+        if (clientSeesItFirst)
+            await Pair.RunTicksSync(5);
+
+        await Server.WaitPost(() =>
+        {
             var scannerUid = Server.EntMan.SpawnEntity(_scannerPrototype, testMap.GridCoords);
             var ev = new InteractUsingEvent(scannerUid, scannerUid, serverUid, testMap.GridCoords);
             Server.EntMan.EventBus.RaiseLocalEvent(serverUid, ev);

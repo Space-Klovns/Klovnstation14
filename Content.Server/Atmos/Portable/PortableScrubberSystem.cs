@@ -74,7 +74,7 @@ namespace Content.Server.Atmos.Portable
             var position = _transformSystem.GetGridTilePositionOrDefault(uid);
             var environment = _atmosphereSystem.GetTileMixture(grid, args.Map, position, true);
 
-            var running = Scrub(timeDelta, component, environment);
+            var running = Scrub(timeDelta, component, environment, uid /* KS14: added */);
 
             // KS14 start: smoke is drawn in with the air
             if (running && component.KsScrubAerosols && environment != null)
@@ -93,7 +93,7 @@ namespace Content.Server.Atmos.Portable
             var enumerator = _atmosphereSystem.GetAdjacentTileMixtures(grid, position, false, true);
             while (enumerator.MoveNext(out var adjacent))
             {
-                Scrub(timeDelta, component, adjacent);
+                Scrub(timeDelta, component, adjacent, uid /* KS14: added */);
             }
         }
 
@@ -145,9 +145,9 @@ namespace Content.Server.Atmos.Portable
             component.Air.Clear();
         }
 
-        private bool Scrub(float timeDelta, PortableScrubberComponent scrubber, GasMixture? tile)
+        private bool Scrub(float timeDelta, PortableScrubberComponent scrubber, GasMixture? tile, EntityUid ksDeviceUid /* KS14: added */)
         {
-            return _scrubberSystem.Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), ScrubberPumpDirection.Scrubbing, scrubber.FilterGases, tile, scrubber.Air);
+            return _scrubberSystem.Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), ScrubberPumpDirection.Scrubbing, scrubber.FilterGases, tile, scrubber.Air, ksDeviceUid: ksDeviceUid /* KS14: added */);
         }
 
         private void UpdateAppearance(EntityUid uid, bool isFull, bool isRunning)

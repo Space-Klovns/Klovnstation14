@@ -21,8 +21,8 @@ public sealed partial class PuddleSystem
     private static readonly Vector2i[] PuddleNeighbourOffsets = [new(1, 0), new(0, 1), new(-1, 0), new(0, -1)];
 
     /// <summary>
-    ///     What a puddle exchanges heat with this pass: each neighbouring puddle, and the air over it unless that is out of
-    ///         reach. Every step works with the puddle's heat capacity split evenly between these.
+    ///     What a puddle exchanges heat with this pass: each neighbouring puddle, and what is over it unless that is sealed
+    ///         off. Every step works with the puddle's heat capacity split evenly between these.
     /// </summary>
     /// <remarks>
     ///     Every step in a pass starts from the same temperatures and they are applied together, so each can carry only
@@ -46,12 +46,12 @@ public sealed partial class PuddleSystem
     }
 
     /// <summary>
-    ///     Whether the puddle on a tile exchanges heat with the air over it: the grid has air, and no foam blanket seals the
-    ///         puddle in.
+    ///     Whether the puddle on a tile exchanges heat with what is over it, which even vacuum does, by radiation: only a
+    ///         foam blanket or a sealed tile shuts it off.
     /// </summary>
-    private bool ExchangesWithAir(EntityUid gridUid, Vector2i indices, bool gridHasAir)
+    private bool ExchangesWithAir(EntityUid gridUid, Vector2i indices)
     {
-        return gridHasAir && !_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _);
+        return !_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _) && _airHeatExchangeSystem.HasAir(gridUid, indices);
     }
 
     /// <summary>
@@ -63,7 +63,6 @@ public sealed partial class PuddleSystem
         EntityUid gridUid,
         Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles,
         Vector2i indices,
-        bool gridHasAir,
         float deltaTime)
     {
         if (!_solutionContainerSystem.ResolveSolution(puddle.Owner, puddle.Comp.SolutionName, ref puddle.Comp.Solution, out var solution) ||
@@ -84,9 +83,9 @@ public sealed partial class PuddleSystem
 
             var neighborIndices = indices + offset;
             var capacity = solution.GetHeatCapacity(ProtoMan) /
-                CountHeatContacts(tilePuddles, indices, ExchangesWithAir(gridUid, indices, gridHasAir));
+                CountHeatContacts(tilePuddles, indices, ExchangesWithAir(gridUid, indices));
             var neighborCapacity = neighborSolution.GetHeatCapacity(ProtoMan) /
-                CountHeatContacts(tilePuddles, neighborIndices, ExchangesWithAir(gridUid, neighborIndices, gridHasAir));
+                CountHeatContacts(tilePuddles, neighborIndices, ExchangesWithAir(gridUid, neighborIndices));
 
             var edgeDepth = MathF.Min(
                 MathF.Min(1f, (float)solution.Volume / AirHeatExchangeReferenceVolume),

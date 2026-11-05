@@ -86,7 +86,7 @@ public sealed partial class KsVaporizeTileReaction : KsTileReaction
         var sourceTemperature = _puddleSystem.KsTileReactionSourceTemperature ?? Atmospherics.T20C;
         var minimumTemperature = reagent.BoilingPoint ?? Atmospherics.TCMB;
         if (properties is { Volatile: true } &&
-            _atmosphereSystem.GetTileMixture((tile.GridUid, null, null), null, tile.GridIndices) is { Immutable: false } air)
+            _tileEffectAtmosSystem.GetTileAir(tile.GridUid, tile.GridIndices) is { } air)
             minimumTemperature = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, air.Pressure);
 
         var units = _tileEffectAtmosSystem.TryChangePhase(

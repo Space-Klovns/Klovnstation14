@@ -164,6 +164,26 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
     }
 
     /// <summary>
+    ///     Unscaled heat capacity, in J/K, of its unlinked vapor alone: what compresses, along with the gas.
+    /// </summary>
+    public float GetVaporHeatCapacity(KsFluidmosPropertiesSystem propertiesSystem)
+    {
+        var heatCapacity = 0f;
+        foreach (var (key, amount) in Reagents)
+        {
+            if (amount.Vapor > 0f && propertiesSystem.TryGetProperties(key.Prototype, out var properties))
+                heatCapacity += VaporHeatCapacity(amount, properties);
+        }
+
+        return heatCapacity;
+    }
+
+    private static float VaporHeatCapacity(in KsFluidAmount amount, KsFluidReagentProperties properties)
+    {
+        return amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
+    }
+
+    /// <summary>
     ///     Unscaled heat capacity, in J/K, of everything in the mixture.
     /// </summary>
     public float GetHeatCapacity(KsFluidmosPropertiesSystem propertiesSystem)
@@ -182,7 +202,7 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
 
             heatCapacity += (amount.Solid + amount.Liquid) * properties.SpecificHeat;
             if (amount.Vapor > 0f)
-                heatCapacity += amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
+                heatCapacity += VaporHeatCapacity(amount, properties);
         }
 
         SetHeatCapacity(heatCapacity);

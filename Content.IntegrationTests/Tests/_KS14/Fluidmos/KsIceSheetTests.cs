@@ -1,9 +1,11 @@
 #nullable enable
 using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.Fluidmos.Ice;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared._KS14.Fluidmos.Ice;
 using Content.Shared._KS14.TileEffects;
@@ -49,6 +51,15 @@ public sealed class KsIceSheetTests : GameTest
   desc: reagent-desc-water
   physicalDesc: reagent-physical-desc-translucent
 ";
+
+    /// <summary>
+    ///     These pin the phases and the sheet's contacts. Radiation has its own tests, in KsAirHeatExchangeTests.
+    /// </summary>
+    [SetUp]
+    public async Task TurnOffRadiation()
+    {
+        await OverrideCVar(Side.Server, KsCCVars.AtmosPuddleEmissivity, 0f);
+    }
 
     private async Task<TestMapData> CreateColdTestMap()
     {
@@ -124,7 +135,7 @@ public sealed class KsIceSheetTests : GameTest
     /// </summary>
     private void StepIce()
     {
-        Pair.Server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 0f, referenceVolume: KsFluidmos.PuddleReferenceVolume, emissivity: 0f);
+        Pair.Server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 0f, referenceVolume: KsFluidmos.PuddleReferenceVolume);
     }
 
     [Test]
@@ -239,7 +250,7 @@ public sealed class KsIceSheetTests : GameTest
         await server.WaitAssertion(() =>
         {
             // Conductive enough that either contact alone would bring the sheet all the way within the step.
-            server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 1000f, referenceVolume: KsFluidmos.PuddleReferenceVolume, emissivity: 0f);
+            server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 1000f, referenceVolume: KsFluidmos.PuddleReferenceVolume);
             var temperature = IceSolution(testMap, out _).Temperature;
 
             using (Assert.EnterMultipleScope())

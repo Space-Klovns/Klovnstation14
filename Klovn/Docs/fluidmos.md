@@ -111,6 +111,13 @@ calibrated to water's 540 J/u from `BoilTileEffect`, and `FusionHeatRatio`, Rich
 game-scale latent heat gives water `k ≈ 3.1` and `Psat(293 K)` near 43 kPa instead of about 2.3, so rooms would hold
 twenty times too much humidity.
 
+**The latent heat has one ceiling from the curve.** Clapeyron ties the two together at `k R Tb` a mole. A loop's compression
+cost follows the curve and its cooling follows the latent heat, so a reagent above that beats Carnot however fairly its pump
+is paid. Below it just means a worse refrigerant, which is why the game-scale numbers can stay: water sits at 0.44 of the
+ceiling, ammonia at 0.28. `MaximumLatentHeat` caps the default, which only bites past a molar mass of about 60, so mostly on
+reagents with the default 100. What a mole takes is `L + Tb ΔC`, not `L`, since atmos stores `E = C T`. A latent heat written in
+YAML is not capped; `KsLatentHeatLimitTests` walks every reagent and fails on one above its ceiling.
+
 Every reagent has `SpecificHeat` 1 J/(K·u). Moles per unit treat 1u as 1 g (`GramsPerUnit`), the convention
 `BoilTileEffect` already used, so pipes and puddles turn the same reagent into the same amount of gas. All reagent
 temperatures in YAML are kelvin.
@@ -151,13 +158,34 @@ bounded by the clamp on the exponent in `SaturationPressure`. This is a delibera
 
 - **Compression**: a pump pushing uphill heats the packet adiabatically, with an efficiency
   (`KsCCVars.AtmosPumpEfficiency`). The packet keeps only `AtmosPumpCompressionHeatFraction` (default 0.1) of that
-  heat. The rest goes to the pump's room, or to an immutable heat sink with moles (planet air, lattice). A pump in
-  vacuum keeps it all.
+  heat. A device on the grid recovers `AtmosPumpHeatRecovery` (default 0.95) of the rest as electricity. What's left
+  goes to the pump's room, or to an immutable heat sink with moles (planet air, lattice). With nothing to shed it into,
+  in vacuum, it stays in the packet. Unlinked vapor counts as gas here, with its molar heat capacity standing in for a heat
+  capacity ratio, even though it lives in the fluid rather than the gas moles.
 - **Throttling**: gas let downhill changes temperature by Joule–Thomson (`KsThrottling`, Shared). It uses the van der
   Waals constants only as a thermal correction. A gas without them is ideal and doesn't change. Tritium's inversion
   temperature is low enough that it warms.
 
 This applies to all of atmos, not only fluid-carrying mixtures.
+
+Every device goes through `Apply`, and `KsPumpHeatSystem` keeps the books, so no device has heat logic of its own.
+
+- **The bill.** What the device doesn't recover is what it pays: gas heat plus room heat, divided by the heat scale,
+  since `Apply` works in unscaled joules and a device's watts are scaled. Its load is its idle load plus that, up to
+  `AtmosPumpMaxLoadMultiplier` times the idle load on top. Past that the work goes unpaid: throughput never changes.
+- **Energy, not entropy.** The first law holds. The second doesn't: a powered refrigeration loop can beat Carnot,
+  because its room no longer has to take the compressor's heat. This is a deliberate choice for #403, not an oversight:
+  recovering only what entropy allows would leave a pump's room at least half the work at 3:1, against 4.5% now. The cycle
+  tests run their pumps with `NeedsPower` off, which recovers nothing, so they still check the real balance.
+- **Not blinking the APC.** `IsPoweredCalculate` asks for supply to match load, so one shortfall on an APC unpowers
+  everything on it. An APC covers a jump of `supplyRampTolerance` and then ramps at `supplyRampRate`. Loads therefore
+  climb every tick rather than in steps, and only while the APC's supply is within half its tolerance of its ramp and
+  under 80% of its charge rate. A count-based slew limit isn't enough: a dozen pumps out-climb a 500 W/s ramp. Past its
+  charge rate, or under a quarter charge, the APC gets its load back. A device that loses power holds idle for 10 s.
+- **Saves.** `Load` is a `[DataField]` (`powerLoad`), so a raised load is saved. `KsPumpHeatComponent.IdleLoad` is saved
+  with it, and the component stays until the load is back at idle, or each reload would ratchet the idle upward.
+- **The readout.** `KsPumpHeatFootnote` reads the networked component, so a window only places it. The numbers are
+  smoothed over 5 s, on the load's scale, so gas plus room is what the device is billed.
 
 ## Moving liquid through devices
 
@@ -257,13 +285,36 @@ effects and reactions, not through `KsFluidMixture`.
 | Ice melts back when warm; in vacuum it sublimes without melting | `KsIceSheetSystem`: exchanges heat with its air and its puddle, melts into the puddle, sublimes into the air capped at the frost point | `Content.Server/_KS14/Fluidmos/Ice/KsIceSheetSystem.cs` |
 | Cold liquid boils off into its gas | `KsVaporizeTileReaction` (sprays, e.g. the CO2 extinguisher) and `BoilTileEffect` | `Content.Server/_KS14/TileEffects/KsVaporizeTileReaction.cs` |
 
-Puddles also conduct heat to their neighbours and to the air (`PuddleSystem.Klovn.Conduction.cs`,
-`PuddleSystem.Klovn.AirHeatExchange.cs`). Ice sheets are cached per tile like puddles.
+Puddles also conduct heat to their neighbours (`PuddleSystem.Klovn.Conduction.cs`). Ice sheets are cached per tile like
+puddles.
+
+**Heat with the air.** Puddles, ice sheets, foam blankets and containers with `KsCookOff` all go through
+`KsAirHeatExchangeSystem`, by conduction and radiation (`AtmosPuddleEmissivity`, or a blanket's own `Emissivity`):
+
+| Around it | What happens |
+| --- | --- |
+| Air with moles | Exchanged exactly, and the air changes. A big enough change excites the tile. |
+| Immutable air (a map's atmosphere) | A bath: the body heads for its temperature, and the air doesn't change. |
+| Vacuum | Radiation alone, to `TCMB`. Check moles first, because space reports a heat capacity. |
+| No mixture at all (a sealed tile) | Nothing. This isn't vacuum. |
+
+**Immutable air loses what it's given.** A map's air and vacuum take gas and heat and stay as they were
+(`KsTileEffectAtmosSystem.TryAddGas`), so matter and energy are lost to them. This is deliberate: it beats a puddle sitting
+there doing nothing. Puddles boil and evaporate, ice sublimes, sprays flash, and foam boils into them. Only a sealed tile, with
+no mixture at all, refuses.
+
+- **It pays for latent heat too**, without cooling, if it's warmer than the caller's minimum. Vacuum never is, so vacuum heats
+  nothing. Hot planet air boils foam at the full rate.
+- **It only ever takes.** Nothing condenses out of it, which would make matter from nothing.
+- **It feeds chemfires** that burn what it holds, without running out. Vacuum starves them, by `IsStarved`, not by a check for
+  immutability.
+- **Below the boiling floor**, a puddle radiating there can cool past the point it could boil, so `FreezeTileEffect` lets it
+  freeze. In mutable air, a reagent below its triple point still never freezes.
 
 **Simultaneous exchanges split their capacity.** Puddle–neighbour, puddle–air and ice–air/puddle steps all start from
 the same temperatures and are applied together. Each one may only work with its share of a body's heat capacity, which
-is the capacity divided by the number of contacts the body actually has (`CountHeatContacts`; the air counts only if
-the grid has air and no foam blanket covers the tile). If each step used the whole capacity, a small hot puddle between
+is the capacity divided by the number of contacts the body actually has (`CountHeatContacts`; what's over a puddle
+counts unless a foam blanket covers the tile). If each step used the whole capacity, a small hot puddle between
 cold neighbours in cold air would be carried past all of them, below absolute zero. That was a real bug, found as a
 `HeatContainer` debug assert at about −132 K.
 
@@ -373,7 +424,8 @@ hydrocarbon stays unlinked, so gas filters can't see it, and has no cook-off val
 sensible cook-off point. Hydrogen is linked to its own atmos gas, so it can be filtered, pumped into canisters and burned
 (`KsHydrogenFireReaction`, 2 H2 + O2 to steam). Hydrogen sulfide is unlinked vapor, and leaves a pipe as inert smoke.
 Reactions are in `Resources/Prototypes/_KS14/Fluidmos/Reactions/`; the player's view of the chain is the guidebook's
-Oil Refining page.
+Oil Refining page. That page and reagent cards draw reactions from their prototypes (`KsGuideFluidReactionEmbed`,
+`KsGuideReagentPointsEmbed`), so a new reaction only has to be added to the page, and `KsFluidGuidebookTests` fails until it is.
 
 ### The demonstration refinery
 
@@ -404,6 +456,8 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/Fluidmos/`:
 | `KsRadiatorFluidTests` | Radiator sweep and wall exchange |
 | `KsFluidmosCycleTests` | Whole refrigeration loops: ammonia, N2O in space, a Linde nitrogen liquefier, the loop's energy balance |
 | `KsCanisterFillTests`, `KsFluidmosRpdTests`, `KsFluidListControlTests` | Canister fills, RPD, the analyzer UI |
+| `KsFluidGuidebookTests` | Pipe reactions on reagent cards and the Oil Refining page |
+| `Atmos/KsAirHeatExchangeTests`, `Atmos/KsPumpHeatTests` | Heat with the air; pump recovery, load and APC safety |
 
 The cycle tests are what the Refrigeration guidebook page is built from. If one starts failing after a balance pass,
 the page probably needs updating too. Each loop uses a **volume pump** as the compressor: a pressure pump has no

@@ -1,3 +1,4 @@
+using Content.IntegrationTests.Fixtures.Attributes;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Chemistry.EntitySystems;
@@ -218,6 +219,7 @@ public sealed class SolutionHeatExchangeTest : GameTest
     [Test]
     public async Task TestMovingVaporCoolsHotPuddle()
     {
+        await OverrideCVar(Side.Server, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity, 0f);
         var pair = Pair;
         var server = pair.Server;
 
@@ -240,8 +242,8 @@ public sealed class SolutionHeatExchangeTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            // The puddle-air exchange would also cool the puddle if the grid had an atmosphere; this test needs
-            //     the vapor-puddle exchange to be the only heat path.
+            // The puddle-air exchange would also cool the puddle if the grid had an atmosphere, and it radiates into the
+            //     vacuum unless that's turned off; this test needs the vapor-puddle exchange to be the only heat path.
             Assert.That(entityManager.HasComponent<GridAtmosphereComponent>(grid.Owner), Is.False,
                 "Test grid has an atmosphere, so puddle-air heat exchange would skew the result.");
 

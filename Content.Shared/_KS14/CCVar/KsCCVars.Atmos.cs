@@ -52,9 +52,10 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.atmos.hot_puddle_check_interval", 0.08f, CVar.SERVERONLY);
 
     /// <summary>
-    ///     How well an uncovered puddle radiates heat to the air over it, from 0 (not at all) to 1 (a black body), over
-    ///         the share of a tile it covers. Radiation grows with the fourth power of temperature, so this mostly
-    ///         decides how hot a burning puddle can get against the fire heating it. 0 turns it off.
+    ///     How well an uncovered puddle, ice sheet or open container radiates heat to the air around it, or into vacuum,
+    ///         from 0 (not at all) to 1 (a black body), over its radiating area. Radiation grows with the fourth power of
+    ///         temperature, so this mostly decides how hot a burning puddle can get against the fire heating it. 0 turns
+    ///         it off.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosPuddleEmissivity =
@@ -95,6 +96,27 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosPumpCompressionHeatFraction =
         CVarDef.Create("klovn.atmos.pump_compression_heat_fraction", 0.1f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Share of the compression heat a powered device doesn't keep in its gas that it turns back into electricity, from
+    ///         0 to 1, rather than heating its room. The device isn't billed for what it recovers. The balance knob for how
+    ///         hot a working pump's room gets. A device off the grid recovers nothing.
+    /// </summary>
+    /// <remarks>
+    ///     The default breaks the second law on purpose: see <c>KsTransferThermoSystem.Apply</c>.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPumpHeatRecovery =
+        CVarDef.Create("klovn.atmos.pump_heat_recovery", 0.95f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     How far past its idle load a compressing device's electrical load can climb, as a multiple of that idle load: at
+    ///         4, a 200 W pump draws at most 1 kW. What is left of its work past that goes unpaid. Mind that this adds up:
+    ///         an APC with many devices on it stops them climbing past what it can sustain.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosPumpMaxLoadMultiplier =
+        CVarDef.Create("klovn.atmos.pump_max_load_multiplier", 4f, CVar.SERVERONLY);
 
     /// <summary>
     ///     Share of a cooking-off pipe net's explosive fluid its bursting pipes spray onto their tiles, from 0 to 1, as

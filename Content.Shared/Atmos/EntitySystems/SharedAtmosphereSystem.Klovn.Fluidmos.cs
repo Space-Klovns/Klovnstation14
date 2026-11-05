@@ -19,11 +19,15 @@ public abstract partial class SharedAtmosphereSystem
     }
 
     /// <summary>
-    ///     A mixture's heat capacity from its gas alone, leaving out any fluid it carries.
+    ///     A mixture's heat capacity from what compresses: its gas and any unlinked vapor, which lives in the fluid. Leaves out
+    ///         liquid and solid.
     /// </summary>
-    public float KsGetGasHeatCapacity(GasMixture mixture, bool applyScaling)
+    public float KsGetCompressibleHeatCapacity(GasMixture mixture, bool applyScaling)
     {
         var scale = GetHeatCapacityCalculation(mixture.Moles, mixture.Immutable);
+        if (mixture.Fluid is { } fluid)
+            scale += fluid.GetVaporHeatCapacity(_ksFluidmosPropertiesSystem) / HeatScale;
+
         return applyScaling ? scale : scale * HeatScale;
     }
 

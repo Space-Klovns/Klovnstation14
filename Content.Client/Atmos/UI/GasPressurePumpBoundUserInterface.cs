@@ -21,6 +21,7 @@ public sealed partial class GasPressurePumpBoundUserInterface(EntityUid owner, E
         base.Open();
 
         _window = this.CreateWindow<GasPressurePumpWindow>();
+        _window.HeatFootnote.Device = Owner; // KS14
 
         _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;
         _window.PumpOutputPressureChanged += OnPumpOutputPressurePressed;

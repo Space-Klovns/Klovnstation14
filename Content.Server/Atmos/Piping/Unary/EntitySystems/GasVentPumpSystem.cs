@@ -163,7 +163,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
                 // KS14 start: liquid and unlinked vapor leave as a puddle and smoke; the released gas heats or throttles
                 var ksPipePressure = pipe.Air.Pressure;
                 var released = pipe.Air.Remove(transferMoles);
-                _ksTransferThermoSystem.Apply(released, ksPipePressure, environment.Pressure, doesWork: true, heatSink: environment);
+                _ksTransferThermoSystem.Apply(released, ksPipePressure, environment.Pressure, doesWork: true, deviceUid: uid, heatSink: environment);
                 _ksFluidmosTileSystem.ReleaseToTile(uid, released);
                 _atmosphereSystem.Merge(environment, released);
                 // KS14 end
@@ -199,7 +199,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
                 // KS14 start: the siphoned gas is compressed into the pipe
                 var ksEnvironmentPressure = environment.Pressure;
                 var ksSiphoned = environment.Remove(transferMoles);
-                _ksTransferThermoSystem.Apply(ksSiphoned, ksEnvironmentPressure, pipe.Air.Pressure, doesWork: true, heatSink: environment);
+                _ksTransferThermoSystem.Apply(ksSiphoned, ksEnvironmentPressure, pipe.Air.Pressure, doesWork: true, deviceUid: uid, heatSink: environment);
                 _atmosphereSystem.Merge(pipe.Air, ksSiphoned);
                 // KS14 end
                 _ksFluidmosTileSystem.AbsorbFromTile(uid, pipe.Air, fraction: 0f, smoke: false, puddleUnits: Content.Shared._KS14.Fluidmos.KsFluidmos.PuddleDrainRate * args.dt); // KS14: siphons drain the puddle

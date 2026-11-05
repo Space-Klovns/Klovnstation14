@@ -9,6 +9,9 @@
     size: Small
   - type: StaticPrice
     price: 30 # Under what a lathe spends on one, so printing them for sale loses money.
+  - type: GuideHelp
+    guides:
+    - KsRefining
 
 - type: entity
   parent: KsCatalystBedBase

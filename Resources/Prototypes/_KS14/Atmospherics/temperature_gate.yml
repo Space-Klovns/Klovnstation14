@@ -52,6 +52,9 @@
         type: KsTemperatureGateBoundUserInterface
   - type: AtmosMonitoringConsoleDevice
     navMapBlip: GasFlowRegulator
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsTemperatureGate ]
