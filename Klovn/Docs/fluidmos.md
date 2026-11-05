@@ -111,6 +111,13 @@ calibrated to water's 540 J/u from `BoilTileEffect`, and `FusionHeatRatio`, Rich
 game-scale latent heat gives water `k ≈ 3.1` and `Psat(293 K)` near 43 kPa instead of about 2.3, so rooms would hold
 twenty times too much humidity.
 
+**The latent heat has one ceiling from the curve.** Clapeyron ties the two together at `k R Tb` a mole. A loop's compression
+cost follows the curve and its cooling follows the latent heat, so a reagent above that beats Carnot however fairly its pump
+is paid. Below it just means a worse refrigerant, which is why the game-scale numbers can stay: water sits at 0.44 of the
+ceiling, ammonia at 0.28. `MaximumLatentHeat` caps the default, which only bites past a molar mass of about 60, so mostly on
+reagents with the default 100. What a mole takes is `L + Tb ΔC`, not `L`, since atmos stores `E = C T`. A latent heat written in
+YAML is not capped; `KsLatentHeatLimitTests` walks every reagent and fails on one above its ceiling.
+
 Every reagent has `SpecificHeat` 1 J/(K·u). Moles per unit treat 1u as 1 g (`GramsPerUnit`), the convention
 `BoilTileEffect` already used, so pipes and puddles turn the same reagent into the same amount of gas. All reagent
 temperatures in YAML are kelvin.
@@ -166,8 +173,9 @@ Every device goes through `Apply`, and `KsPumpHeatSystem` keeps the books, so no
   since `Apply` works in unscaled joules and a device's watts are scaled. Its load is its idle load plus that, up to
   `AtmosPumpMaxLoadMultiplier` times the idle load on top. Past that the work goes unpaid: throughput never changes.
 - **Energy, not entropy.** The first law holds. The second doesn't: a powered refrigeration loop can beat Carnot,
-  because its room no longer has to take the compressor's heat. The cycle tests run their pumps with `NeedsPower` off,
-  which recovers nothing, so they still check the real balance.
+  because its room no longer has to take the compressor's heat. This is a deliberate choice for #403, not an oversight:
+  recovering only what entropy allows would leave a pump's room at least half the work at 3:1, against 4.5% now. The cycle
+  tests run their pumps with `NeedsPower` off, which recovers nothing, so they still check the real balance.
 - **Not blinking the APC.** `IsPoweredCalculate` asks for supply to match load, so one shortfall on an APC unpowers
   everything on it. An APC covers a jump of `supplyRampTolerance` and then ramps at `supplyRampRate`. Loads therefore
   climb every tick rather than in steps, and only while the APC's supply is within half its tolerance of its ramp and

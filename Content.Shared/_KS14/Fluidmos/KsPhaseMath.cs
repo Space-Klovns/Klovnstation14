@@ -65,6 +65,20 @@ public static class KsPhaseMath
     }
 
     /// <summary>
+    ///     The most latent heat, in joules per unit, that fits the vapor-pressure curve: Clapeyron makes that <c>k R Tb</c> a
+    ///         mole, and atmos storing <c>E = C T</c> adds <c>Tb ΔC</c> to whatever is written as the latent heat.
+    /// </summary>
+    /// <remarks>
+    ///     A loop's compression cost follows the curve, and its cooling follows the latent heat, so going over this beats
+    ///         Carnot however fairly the pump is paid. The game-scale default stays under it up to a molar mass of about 60.
+    /// </remarks>
+    /// <param name="heatCapacityChangePerUnit">What a unit's heat capacity gains as vapor, in J/K.</param>
+    public static float MaximumLatentHeat(float vaporizationEntropy, float boilingPoint, float molesPerUnit, float heatCapacityChangePerUnit)
+    {
+        return boilingPoint * (vaporizationEntropy * Atmospherics.R * molesPerUnit - heatCapacityChangePerUnit);
+    }
+
+    /// <summary>
     ///     Default heat of fusion, in joules per unit, on the game's specific-heat scale.
     /// </summary>
     public static float DefaultFusionHeat(float meltingPoint, float specificHeat)

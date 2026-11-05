@@ -53,7 +53,7 @@
   meltingPoint: 340
   fluidmos:
     molarMass: 800
-    latentHeat: 120
+    latentHeat: 90
     mixingFamily: KsHydrocarbon
   tileReactions:
   - !type:KsSetTileTileReaction
