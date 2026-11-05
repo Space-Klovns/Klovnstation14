@@ -44,7 +44,7 @@ namespace Content.Server.Shuttles.Systems
             SubscribeLocalEvent<DockingComponent, ComponentStartup>(OnStartup);
             SubscribeLocalEvent<DockingComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<DockingComponent, AnchorStateChangedEvent>(OnAnchorChange);
-            SubscribeLocalEvent<DockingComponent, ReAnchorEvent>(OnDockingReAnchor);
+            SubscribeLocalEvent<DockingComponent, MoveEvent /* KS14: ReAnchorEvent -> MoveEvent, upstream #45353 */>(OnDockingReAnchor);
 
             SubscribeLocalEvent<DockingComponent, BeforeDoorAutoCloseEvent>(OnAutoClose);
 
@@ -178,12 +178,12 @@ namespace Content.Server.Shuttles.Systems
             }
         }
 
-        private void OnDockingReAnchor(Entity<DockingComponent> entity, ref ReAnchorEvent args)
+        private void OnDockingReAnchor(Entity<DockingComponent> entity, ref MoveEvent /* KS14: ReAnchorEvent -> MoveEvent, upstream #45353 */ args)
         {
             var uid = entity.Owner;
             var component = entity.Comp;
 
-            if (!component.Docked)
+            if (!component.Docked || args.OnlyRotation /* KS14: upstream #45353, only refresh joints on translation */)
                 return;
 
             var otherDock = component.DockedWith;

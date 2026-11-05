@@ -83,20 +83,6 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
     private void OnRadarSourceAnchor(EntityUid uid, KsRadarSourceComponent comp, ref AnchorStateChangedEvent args) => DirtySignatureGrid(uid);
 
     [SubscribeLocalEvent]
-    private void OnThermalSourceReAnchor(EntityUid uid, KsThermalSourceComponent comp, ref ReAnchorEvent args)
-    {
-        _dirtySignatureGrids.Add(args.OldGrid);
-        _dirtySignatureGrids.Add(args.Grid);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnRadarSourceReAnchor(EntityUid uid, KsRadarSourceComponent comp, ref ReAnchorEvent args)
-    {
-        _dirtySignatureGrids.Add(args.OldGrid);
-        _dirtySignatureGrids.Add(args.Grid);
-    }
-
-    [SubscribeLocalEvent]
     private void OnGridTileChanged(EntityUid uid, MapGridComponent comp, ref TileChangedEvent args) => _dirtySignatureGrids.Add(uid);
 
     // Not <MapGridComponent, ComponentShutdown>: lifecycle events allow one
