@@ -401,14 +401,11 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             return 0f;
 
         var indices = _mapSystem.TileIndicesFor(gridUid, gridComponent, coordinates);
-        var tileMixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), Transform(gridUid).MapUid, indices, excite: false);
-
-        // A map's atmosphere can't take the gas, so nothing leaves into it, as a puddle doesn't boil into it: ice under it
-        //     is warmed by it and melts instead. Vacuum takes what is lost to it, and a sealed tile has nowhere to go.
-        if (tileMixture is null or { Immutable: true, TotalMoles: > 0f })
+        // A sealed tile has nowhere for the gas to go. Anything else takes it, and a map's air or vacuum simply loses it.
+        if (_tileEffectAtmosSystem.GetTileAir(gridUid, indices) is not { } tileMixture)
             return 0f;
 
-        var air = tileMixture is { Immutable: false, Volume: > 0f, Temperature: > 0f } ? tileMixture : null;
+        var air = tileMixture is { Volume: > 0f, Temperature: > 0f } ? tileMixture : null;
 
         var gas = (Gas)properties.GasIndex;
         var temperature = solution.Temperature;
@@ -436,8 +433,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         if (units <= 0f)
             return 0f;
 
-        if (air != null &&
-            !_tileEffectAtmosSystem.TryAddGas(gridUid, indices, gas, units * properties.MolesPerUnit,
+        if (!_tileEffectAtmosSystem.TryAddGas(gridUid, indices, gas, units * properties.MolesPerUnit,
                 sensibleEnergy: units * properties.SpecificHeat * temperature))
             return 0f;
 

@@ -63,7 +63,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     {
         // Not IsHotspotActive: chemfires answer that for their tiles too, which would sizzle over one the foam cannot
         //     touch. The chemfires on the tile are the shared system's to deal with.
-        if (!_atmosphereSystem.HasGasHotspot(gridUid, tile) || !HoldsBackGasFire(blanket.Comp, GetTileAir(gridUid, tile)))
+        if (!_atmosphereSystem.HasGasHotspot(gridUid, tile) || !HoldsBackGasFire(blanket.Comp, _tileEffectAtmosSystem.GetTileAir(gridUid, tile)))
             return false;
 
         _atmosphereSystem.HotspotExtinguish(gridUid, tile);
@@ -94,14 +94,8 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (blanket.Comp.LocalGridUid is not { } gridUid)
             return true;
 
-        return HoldsBackGasFire(blanket.Comp, GetTileAir(gridUid, blanket.Comp.LocalTile));
+        return HoldsBackGasFire(blanket.Comp, _tileEffectAtmosSystem.GetTileAir(gridUid, blanket.Comp.LocalTile));
     }
-
-    /// <summary>
-    ///     The air over a tile, which on a grid with no atmosphere of its own, or over a lattice, is the map's.
-    /// </summary>
-    private GasMixture? GetTileAir(EntityUid gridUid, Vector2i tile)
-        => _atmosphereSystem.GetTileMixture((gridUid, null, null), Transform(gridUid).MapUid, tile, excite: false);
 
     public override void Update(float frameTime)
     {
@@ -168,7 +162,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         var component = blanket.Comp;
         var tile = component.LocalTile;
 
-        if (GetTileAir(gridUid, tile) is not { } mixture)
+        if (_tileEffectAtmosSystem.GetTileAir(gridUid, tile) is not { } mixture)
             return;
 
         BoilSuperheatedFoam(blanket, gridUid, tile);
@@ -362,15 +356,11 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         component.RadiatingTiles.Clear();
     }
 
-    /// <summary>
-    ///     Boils foam off into the tile's air. Immutable air takes the gas without changing, as it takes heat.
-    /// </summary>
-    /// <returns>False on a tile with no mixture at all, in which case nothing changed.</returns>
+    /// <returns>False on a sealed tile, in which case nothing changed.</returns>
     private bool AddBoiledGas(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile, float boiled)
     {
         var component = blanket.Comp;
-        if (GetTileAir(gridUid, tile) is not { } air ||
-            !air.Immutable && !_tileEffectAtmosSystem.TryAddBoiledGas(gridUid, tile, component.BoiledGas, boiled, boiled * component.SpecificHeat * component.BoilingPoint))
+        if (!_tileEffectAtmosSystem.TryAddBoiledGas(gridUid, tile, component.BoiledGas, boiled, boiled * component.SpecificHeat * component.BoilingPoint))
             return false;
 
         SetFoam(blanket, component.Foam - boiled);

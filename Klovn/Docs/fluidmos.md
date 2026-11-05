@@ -289,14 +289,18 @@ puddles.
 | Vacuum | Radiation alone, to `TCMB`. Check moles first, because space reports a heat capacity. |
 | No mixture at all (a sealed tile) | Nothing. This isn't vacuum. |
 
-Immutable air and vacuum take no gas, which has two consequences. A puddle radiating there falls below its boiling floor with
-nowhere to boil to, so `FreezeTileEffect` lets it freeze; in air that can take gas, a reagent below its triple point still
-never freezes. And ice under a map's air melts rather than sublimes.
+**Immutable air loses what it's given.** A map's air and vacuum take gas and heat and stay as they were
+(`KsTileEffectAtmosSystem.TryAddGas`), so matter and energy are lost to them. This is deliberate: it beats a puddle sitting
+there doing nothing. Puddles boil and evaporate, ice sublimes, sprays flash, and foam boils into them. Only a sealed tile, with
+no mixture at all, refuses.
 
-A foam blanket is the exception: it has nothing to leave behind, so on immutable air its vapor just goes, and the air
-pays nothing for it. Hot planet air boils foam at the full rate without cooling, and a hot puddle boils the foam over it
-as it would indoors. A blanket stops a puddle's own exchange with the air, so skipping immutable air here would seal the
-puddle's heat in.
+- **It pays for latent heat too**, without cooling, if it's warmer than the caller's minimum. Vacuum never is, so vacuum heats
+  nothing. Hot planet air boils foam at the full rate.
+- **It only ever takes.** Nothing condenses out of it, which would make matter from nothing.
+- **It feeds chemfires** that burn what it holds, without running out. Vacuum starves them, by `IsStarved`, not by a check for
+  immutability.
+- **Below the boiling floor**, a puddle radiating there can cool past the point it could boil, so `FreezeTileEffect` lets it
+  freeze. In mutable air, a reagent below its triple point still never freezes.
 
 **Simultaneous exchanges split their capacity.** Puddle–neighbour, puddle–air and ice–air/puddle steps all start from
 the same temperatures and are applied together. Each one may only work with its share of a body's heat capacity, which

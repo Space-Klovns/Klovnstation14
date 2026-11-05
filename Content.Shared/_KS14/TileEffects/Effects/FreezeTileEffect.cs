@@ -48,8 +48,8 @@ public sealed partial class FreezeTileEffect : KsTileEffect
             EntityManager.EventBus.RaiseEvent(EventSource.Local, ref airQuery);
             if (airQuery.Mixture is { } air)
             {
-                // Below the triple point it boils instead, so there's nothing to freeze. Air that can't take the gas is the
-                //     exception once it's cooled past that: a puddle radiating in vacuum has no other way to go.
+                // Below the triple point it boils instead, so there's nothing to freeze. Immutable air is the exception once
+                //     it's cooled past that: a puddle radiating under a map's air or in vacuum has no other way to go.
                 var boilingPoint = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, air.Pressure);
                 if (boilingPoint < meltingPoint && (!air.Immutable || temperature > boilingPoint))
                     return false;

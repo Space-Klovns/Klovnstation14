@@ -21,7 +21,6 @@ namespace Content.IntegrationTests.Tests._KS14.Fluids;
 /// </summary>
 public sealed class KsPuddleConductionTest : GameTest
 {
-    private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private const int TicksPerSecond = 30;
     private const float HotTemperature = 360f;
     private const float ColdTemperature = 280f;
@@ -72,9 +71,9 @@ public sealed class KsPuddleConductionTest : GameTest
             var puddleSystem = entityManager.System<PuddleSystem>();
             var mapSystem = entityManager.System<SharedMapSystem>();
             puddleSystem.TrySpillAt(mapSystem.GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(0, 0)),
-                new Solution(WaterReagent.Id, FixedPoint2.New(15)) { Temperature = HotTemperature }, out hotUid, sound: false);
+                new Solution(_inertReagent.Id, FixedPoint2.New(15)) { Temperature = HotTemperature }, out hotUid, sound: false);
             puddleSystem.TrySpillAt(mapSystem.GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, otherTile),
-                new Solution(WaterReagent.Id, FixedPoint2.New(15)) { Temperature = ColdTemperature }, out coldUid, sound: false);
+                new Solution(_inertReagent.Id, FixedPoint2.New(15)) { Temperature = ColdTemperature }, out coldUid, sound: false);
         });
 
         await server.WaitRunTicks(TicksPerSecond * 10);

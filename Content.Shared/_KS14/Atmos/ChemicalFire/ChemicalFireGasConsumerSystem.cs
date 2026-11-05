@@ -23,8 +23,8 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     /// <remarks>
     ///     A missing mixture is treated as "unknown", not "no gas" - this is what happens on the client, which
     ///         has no atmos data to check against; it predicts optimistically and lets the server's own answer
-    ///         correct it if it turns out to be wrong. An immutable mixture (space) is real data, so that still
-    ///         vetoes.
+    ///         correct it if it turns out to be wrong. Immutable air is real data: a map's atmosphere feeds a fire
+    ///         if it holds what the fire burns, and vacuum starves it.
     /// </remarks>
     [SubscribeLocalEvent]
     private void OnCanSustain(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireCanSustainEvent args)
@@ -32,7 +32,7 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
         if (args.Mixture is not { } mixture)
             return;
 
-        if (mixture.Immutable || IsStarved(entity.Comp, mixture))
+        if (IsStarved(entity.Comp, mixture))
             args.Deny();
     }
 
@@ -64,7 +64,7 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnHeatTile(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
-        if (args.Mixture is not { } mixture || mixture.Immutable)
+        if (args.Mixture is not { } mixture)
             return;
 
         // Starved before it eats anything this tick: crowded out, rather than burnt through.
@@ -76,6 +76,10 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
             _chemicalFireSystem.ExtinguishChemicalFire((entity.Owner, starvedFireComponent), playSound: true);
             return;
         }
+
+        // A map's air feeds the fire and takes what it makes without changing, so it can't burn through it.
+        if (mixture.Immutable)
+            return;
 
         var consumedAmount = 0f;
         foreach (var (gas, molesPerSecond) in entity.Comp.Gases)

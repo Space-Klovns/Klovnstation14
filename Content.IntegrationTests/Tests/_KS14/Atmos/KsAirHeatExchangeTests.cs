@@ -361,7 +361,7 @@ public sealed class KsAirHeatExchangeTests : GameTest
 
     /// <summary>
     ///     Carbon dioxide at one atmosphere is below its triple point, with no liquid to freeze: it goes straight to gas,
-    ///         however cold it lands. Only air that can't take the gas freezes what's below its boiling point.
+    ///         however cold it lands. Only immutable air freezes what's below its boiling point.
     /// </summary>
     [Test]
     public async Task ColdCarbonDioxideInAirStillDoesNotFreeze()
@@ -428,10 +428,10 @@ public sealed class KsAirHeatExchangeTests : GameTest
     }
 
     /// <summary>
-    ///     A map's air takes no gas, so ice warmed by it melts rather than subliming into nothing.
+    ///     Ice sublimes into a map's air as it would into any air without its vapor, and the gas is lost to it.
     /// </summary>
     [Test]
-    public async Task IceUnderImmutableAirDoesNotSublime()
+    public async Task IceUnderImmutableAirSublimes()
     {
         var server = Pair.Server;
         var testMap = await Pair.CreateTestMap();
@@ -453,7 +453,7 @@ public sealed class KsAirHeatExchangeTests : GameTest
             volumeBefore = solution!.Volume;
 
             server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 0f, referenceVolume: 20f);
-            Assert.That(solution.Volume, Is.EqualTo(volumeBefore), "Ice sublimed into air that can't take the gas.");
+            Assert.That(solution.Volume, Is.LessThan(volumeBefore), "Ice did not sublime into a map's air.");
         });
     }
 }

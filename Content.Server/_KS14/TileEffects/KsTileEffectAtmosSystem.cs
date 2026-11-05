@@ -8,6 +8,11 @@ namespace Content.Server._KS14.TileEffects;
 /// <summary>
 ///     The atmos half of the tile effects: shared effects cannot reach a tile's air, so they ask through events.
 /// </summary>
+/// <remarks>
+///     Immutable air (a map's atmosphere, or vacuum) takes whatever is put into it and stays as it was, so matter and energy
+///         are lost to it. That is deliberate: losing them beats a puddle sitting there doing nothing. It only ever takes,
+///         though. Nothing may condense out of it or draw on it for matter, which would make matter from nothing.
+/// </remarks>
 public sealed partial class KsTileEffectAtmosSystem : EntitySystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
@@ -17,8 +22,15 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnAirQuery(ref KsTileEffectAirQueryEvent args)
     {
-        args.Mixture ??= _atmosphereSystem.GetTileMixture((args.GridUid, null, null), Transform(args.GridUid).MapUid, args.Tile, excite: false);
+        args.Mixture ??= GetTileAir(args.GridUid, args.Tile);
     }
+
+    /// <summary>
+    ///     The air over a tile: the map's, on a grid with no atmosphere of its own or over a lattice, and null on a sealed
+    ///         tile, which has none at all.
+    /// </summary>
+    public GasMixture? GetTileAir(EntityUid gridUid, Vector2i tile, bool excite = false)
+        => _atmosphereSystem.GetTileMixture((gridUid, null, null), Transform(gridUid).MapUid, tile, excite);
 
     [SubscribeLocalEvent]
     private void OnBoil(ref KsTileEffectBoilEvent args)
@@ -50,7 +62,7 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     /// <param name="sensibleEnergyPerUnit">Thermal energy each unit carries into the air, in joules.</param>
     /// <param name="latentEnergyPerUnit">Thermal energy each unit takes out of the air to change phase, in joules.</param>
     /// <param name="minimumTemperature">The air is not cooled below this, in kelvin, by the latent heat it pays.</param>
-    /// <returns>Units turned to gas, floored to the 0.01u a solution stores; zero if none, or if the tile has no air.</returns>
+    /// <returns>Units turned to gas, floored to the 0.01u a solution stores; zero if none, or on a sealed tile.</returns>
     public float TryChangePhase(
         EntityUid gridUid,
         Vector2i tile,
@@ -62,13 +74,17 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
         float minimumTemperature,
         bool displace)
     {
-        if (maxUnits <= 0f ||
-            molesPerUnit <= 0f ||
-            _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false) is not { Immutable: false } mixture)
+        if (maxUnits <= 0f || molesPerUnit <= 0f || GetTileAir(gridUid, tile) is not { } mixture)
             return 0f;
 
         var units = maxUnits;
-        if (latentEnergyPerUnit > 0f)
+        if (latentEnergyPerUnit > 0f && mixture.Immutable)
+        {
+            // It pays whatever is asked of it without cooling, so long as it's warm enough to pay at all. Vacuum never is.
+            if (mixture.Temperature <= minimumTemperature)
+                return 0f;
+        }
+        else if (latentEnergyPerUnit > 0f)
         {
             // (C T + u (s - l)) / (C + u m c_gas) >= T_min, solved for the units u.
             var heatCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
@@ -119,12 +135,14 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     ///     Whether the gas pushes as much of the tile's other gases out into its open neighbours, rather than adding to
     ///         them (<see cref="Displace"/>).
     /// </param>
-    /// <returns>False if the tile has no mutable mixture (space) to take the gas, in which case nothing changed.</returns>
+    /// <returns>False on a sealed tile, which has no air to take the gas, in which case nothing changed.</returns>
     public bool TryAddGas(EntityUid gridUid, Vector2i tile, Gas gas, float moles, float sensibleEnergy, float latentEnergy = 0f, bool displace = false)
     {
-        if (moles <= 0f ||
-            _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: true) is not { Immutable: false } mixture)
+        if (moles <= 0f || GetTileAir(gridUid, tile, excite: true) is not { } mixture)
             return false;
+
+        if (mixture.Immutable)
+            return true;
 
         var molesBefore = mixture.TotalMoles;
         var heatCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
