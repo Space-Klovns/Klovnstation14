@@ -79,6 +79,44 @@ public sealed class KsFoamBlanketHeatTest : GameTest
         return testMap;
     }
 
+    /// <summary>
+    ///     A floor on a grid with no atmosphere of its own, under a map's air, or under vacuum when that is null.
+    /// </summary>
+    private async Task<TestMapData> CreatePlanetTestMap(float? airTemperature)
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            if (airTemperature is { } temperature)
+            {
+                var mixture = new GasMixture(Atmospherics.CellVolume) { Temperature = temperature };
+                mixture.SetMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+                mixture.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+                server.EntMan.System<AtmosphereSystem>().SetMapAtmosphere(testMap.MapUid, space: false, mixture);
+            }
+
+            var mapSystem = server.EntMan.System<SharedMapSystem>();
+            for (var x = -1; x <= BareTile.X + 1; x++)
+                mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, 0), testMap.Tile.Tile);
+
+            Assert.That(server.EntMan.HasComponent<GridAtmosphereComponent>(testMap.Grid.Owner), Is.False,
+                "The grid has its own atmosphere, so this isn't testing the map's.");
+        });
+
+        return testMap;
+    }
+
+    private GasMixture MapAir(TestMapData testMap)
+        => Pair.Server.EntMan.GetComponent<MapAtmosphereComponent>(testMap.MapUid).Mixture;
+
+    private KsFoamBlanketComponent BlanketPrototypeComponent()
+    {
+        Assert.That(Pair.Server.ProtoMan.Index(BlanketPrototype).TryComp<KsFoamBlanketComponent>(out var blanketPrototype, Pair.Server.EntMan.ComponentFactory));
+        return blanketPrototype!;
+    }
+
     private TileRef TileRef(TestMapData testMap, Vector2i tile)
         => Pair.Server.EntMan.System<SharedMapSystem>().GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, tile);
 
@@ -314,5 +352,143 @@ public sealed class KsFoamBlanketHeatTest : GameTest
                     "Foam above its boiling point did not boil off its heat over that point.");
             }
         });
+    }
+
+    /// <summary>
+    ///     A map's air is a bath: a blanket settles at its temperature, from either side, and the air stays as it was.
+    /// </summary>
+    [Test]
+    public async Task TestBlanketSettlesAtPlanetAirTemperature([Values(250f, 340f)] float airTemperature)
+    {
+        var testMap = await CreatePlanetTestMap(airTemperature);
+        var server = Pair.Server;
+
+        await server.WaitPost(() => FillBlanket(testMap, BareTile));
+        await server.WaitRunTicks(TicksPerSecond * 5);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(BlanketTemperature(testMap, BareTile), Is.EqualTo(airTemperature).Within(1f), "The blanket did not settle at the planet air's temperature.");
+                Assert.That(MapAir(testMap).Temperature, Is.EqualTo(airTemperature), "The blanket changed a map's air.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A blanket stops a puddle's own exchange with the air, so it has to carry the heat itself: under a map's air, a
+    ///         covered puddle still cools.
+    /// </summary>
+    [Test]
+    public async Task TestBlanketCarriesPuddleHeatToPlanetAir()
+    {
+        var testMap = await CreatePlanetTestMap(Atmospherics.T20C);
+        var server = Pair.Server;
+        EntityUid puddleUid = default;
+
+        await server.WaitPost(() =>
+        {
+            puddleUid = Spill(testMap, CoveredTile, _probeReagent, 20f, WarmTemperature);
+            FillBlanket(testMap, CoveredTile);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 10);
+
+        await server.WaitAssertion(() => Assert.That(PuddleTemperature(puddleUid), Is.LessThan(WarmTemperature - 1f),
+            "A covered puddle under a map's air kept its heat."));
+    }
+
+    /// <summary>
+    ///     Air above the foam's boiling point boils it at the rate the air's temperature gives, and a map's air doesn't cool
+    ///         or fill with vapor for it.
+    /// </summary>
+    [Test]
+    public async Task TestHotPlanetAirBoilsBlanket()
+    {
+        var airTemperature = BlanketPrototypeComponent().BoilingPoint + 50f;
+        var testMap = await CreatePlanetTestMap(airTemperature);
+        var server = Pair.Server;
+        var foamBefore = 0f;
+        var boilRate = 0f;
+        var molesBefore = 0f;
+
+        await server.WaitPost(() =>
+        {
+            FillBlanket(testMap, BareTile);
+            Assert.That(server.EntMan.System<KsFoamBlanketSystem>().TryGetBlanket(testMap.Grid.Owner, BareTile, out var blanket));
+            foamBefore = blanket.Comp.Foam;
+            boilRate = blanket.Comp.BoilRate;
+            molesBefore = MapAir(testMap).TotalMoles;
+        });
+
+        const int seconds = 5;
+        await server.WaitRunTicks(TicksPerSecond * seconds);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.System<KsFoamBlanketSystem>().TryGetBlanket(testMap.Grid.Owner, BareTile, out var blanket));
+            using (Assert.EnterMultipleScope())
+            {
+                // Half the seconds: the foam only boils once the air has warmed it to the boiling point.
+                Assert.That(blanket.Comp.Foam, Is.LessThan(foamBefore - boilRate * seconds / 2f), "Air hotter than the foam's boiling point did not boil it.");
+                Assert.That(blanket.Comp.Heat.Temperature, Is.LessThanOrEqualTo(blanket.Comp.BoilingPoint + 0.01f), "The foam was heated past its boiling point.");
+                Assert.That(MapAir(testMap).Temperature, Is.EqualTo(airTemperature), "Boiling the foam cooled a map's air.");
+                Assert.That(MapAir(testMap).TotalMoles, Is.EqualTo(molesBefore), "Boiling the foam added gas to a map's air.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A puddle hotter than the foam's boiling point boils it under a map's air as it does under a room's, and pays for
+    ///         it: the gas having nowhere mutable to go doesn't stop it.
+    /// </summary>
+    [Test]
+    public async Task TestHotPuddleBoilsBlanketUnderPlanetAir()
+    {
+        var testMap = await CreatePlanetTestMap(Atmospherics.T20C);
+        var server = Pair.Server;
+        var puddleTemperature = BlanketPrototypeComponent().BoilingPoint + 200f;
+        EntityUid puddleUid = default;
+        var foamBefore = 0f;
+        var decay = 0f;
+
+        await server.WaitPost(() =>
+        {
+            puddleUid = Spill(testMap, CoveredTile, _probeReagent, 100f, puddleTemperature);
+            FillBlanket(testMap, CoveredTile);
+            Assert.That(server.EntMan.System<KsFoamBlanketSystem>().TryGetBlanket(testMap.Grid.Owner, CoveredTile, out var blanket));
+            foamBefore = blanket.Comp.Foam;
+            decay = blanket.Comp.DecayRate;
+        });
+
+        const int seconds = 3;
+        await server.WaitRunTicks(TicksPerSecond * seconds);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.System<KsFoamBlanketSystem>().TryGetBlanket(testMap.Grid.Owner, CoveredTile, out var blanket));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(blanket.Comp.Foam, Is.LessThan(foamBefore - decay * (seconds + 1)), "A hot puddle under a map's air did not boil the foam over it.");
+                Assert.That(PuddleTemperature(puddleUid), Is.LessThan(puddleTemperature - 1f), "The puddle did not pay for what it boiled.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     In vacuum there is nothing to conduct to, but a blanket still radiates, to the cosmic background.
+    /// </summary>
+    [Test]
+    public async Task TestBlanketRadiatesInVacuum()
+    {
+        var testMap = await CreatePlanetTestMap(airTemperature: null);
+        var server = Pair.Server;
+
+        await server.WaitPost(() => FillBlanket(testMap, BareTile));
+        await server.WaitRunTicks(TicksPerSecond * 3);
+
+        await server.WaitAssertion(() => Assert.That(BlanketTemperature(testMap, BareTile), Is.LessThan(Atmospherics.T20C - 10f),
+            "A blanket in vacuum did not radiate."));
     }
 }

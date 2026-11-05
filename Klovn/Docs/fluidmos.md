@@ -279,8 +279,8 @@ effects and reactions, not through `KsFluidMixture`.
 Puddles also conduct heat to their neighbours (`PuddleSystem.Klovn.Conduction.cs`). Ice sheets are cached per tile like
 puddles.
 
-**Heat with the air.** Puddles, ice sheets and containers with `KsCookOff` all go through `KsAirHeatExchangeSystem`, by
-conduction and radiation (`AtmosPuddleEmissivity`):
+**Heat with the air.** Puddles, ice sheets, foam blankets and containers with `KsCookOff` all go through
+`KsAirHeatExchangeSystem`, by conduction and radiation (`AtmosPuddleEmissivity`, or a blanket's own `Emissivity`):
 
 | Around it | What happens |
 | --- | --- |
@@ -292,6 +292,11 @@ conduction and radiation (`AtmosPuddleEmissivity`):
 Immutable air and vacuum take no gas, which has two consequences. A puddle radiating there falls below its boiling floor with
 nowhere to boil to, so `FreezeTileEffect` lets it freeze; in air that can take gas, a reagent below its triple point still
 never freezes. And ice under a map's air melts rather than sublimes.
+
+A foam blanket is the exception: it has nothing to leave behind, so on immutable air its vapor just goes, and the air
+pays nothing for it. Hot planet air boils foam at the full rate without cooling, and a hot puddle boils the foam over it
+as it would indoors. A blanket stops a puddle's own exchange with the air, so skipping immutable air here would seal the
+puddle's heat in.
 
 **Simultaneous exchanges split their capacity.** Puddle–neighbour, puddle–air and ice–air/puddle steps all start from
 the same temperatures and are applied together. Each one may only work with its share of a body's heat capacity, which

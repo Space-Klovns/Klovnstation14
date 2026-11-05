@@ -25,6 +25,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
     [Dependency] private KsTileEffectAtmosSystem _tileEffectAtmosSystem = default!;
     [Dependency] private PuddleSystem _puddleSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
@@ -62,8 +63,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     {
         // Not IsHotspotActive: chemfires answer that for their tiles too, which would sizzle over one the foam cannot
         //     touch. The chemfires on the tile are the shared system's to deal with.
-        if (!_atmosphereSystem.HasGasHotspot(gridUid, tile) ||
-            !HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false)))
+        if (!_atmosphereSystem.HasGasHotspot(gridUid, tile) || !HoldsBackGasFire(blanket.Comp, GetTileAir(gridUid, tile)))
             return false;
 
         _atmosphereSystem.HotspotExtinguish(gridUid, tile);
@@ -78,7 +78,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     ///     Above it, the foam is boiling, and the gas burns by itself: plasma burns from 373 K, the foam's boiling point,
     ///         without any flame to light it. So a blanket can stop a spark, or a fire spreading onto cool air, but
     ///         not a fire that has heated the air it burns in. Venting or carbon dioxide is for that.
-    ///     A tile with no air, or air that does not change (space), has nothing to burn, so it does not matter.
+    ///     A tile with no air has nothing to burn, so it does not matter, and vacuum counts as cold.
     /// </remarks>
     private static bool HoldsBackGasFire(KsFoamBlanketComponent component, GasMixture? air)
         => air == null || air.Temperature < component.BoilingPoint;
@@ -94,8 +94,14 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (blanket.Comp.LocalGridUid is not { } gridUid)
             return true;
 
-        return HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetTileMixture((gridUid, null, null), null, blanket.Comp.LocalTile, excite: false));
+        return HoldsBackGasFire(blanket.Comp, GetTileAir(gridUid, blanket.Comp.LocalTile));
     }
+
+    /// <summary>
+    ///     The air over a tile, which on a grid with no atmosphere of its own, or over a lattice, is the map's.
+    /// </summary>
+    private GasMixture? GetTileAir(EntityUid gridUid, Vector2i tile)
+        => _atmosphereSystem.GetTileMixture((gridUid, null, null), Transform(gridUid).MapUid, tile, excite: false);
 
     public override void Update(float frameTime)
     {
@@ -149,8 +155,9 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     ///         Boiling a unit takes <c>c (T_boil - T_foam) + L</c>, and puts the unit into the air as gas carrying
     ///             <c>c T_boil</c>. The latent heat leaves with the vapor, as
     ///             <see cref="Content.Server.Chemistry.TileReactions.ExtinguishTileReaction"/> and
-    ///             <see cref="Shared._KS14.TileEffects.Effects.BoilTileEffect"/> account it. Nothing boils on a tile with
-    ///             no air to take the gas.
+    ///             <see cref="Shared._KS14.TileEffects.Effects.BoilTileEffect"/> account it. Only a sealed tile, with no
+    ///             mixture at all, stops any of this. A map's air and vacuum are baths: they take the heat and the gas and
+    ///             stay as they are, so hot planet air boils foam at the full rate, without cooling.
     ///     </para>
     /// </remarks>
     private void Boil(Entity<KsFoamBlanketComponent> blanket, float seconds)
@@ -161,7 +168,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         var component = blanket.Comp;
         var tile = component.LocalTile;
 
-        if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false) is not { Immutable: false } mixture)
+        if (GetTileAir(gridUid, tile) is not { } mixture)
             return;
 
         BoilSuperheatedFoam(blanket, gridUid, tile);
@@ -172,7 +179,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (ExchangeHeatWithPuddle(blanket, gridUid, tile, seconds) || component.Foam <= 0f)
             return;
 
-        ExchangeHeatWithAir(blanket, mixture, seconds);
+        ExchangeHeatWithAir(blanket, gridUid, tile, seconds);
 
         if (mixture.Temperature <= component.BoilingPoint)
             return;
@@ -183,13 +190,17 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (airHeatCapacity < Atmospherics.MinimumHeatCapacity)
             return;
 
-        var airBoiled = MathF.Min(MathF.Min(GetAirBoilRate(component, mixture.Temperature) * seconds, component.Foam),
-            (mixture.Temperature - component.BoilingPoint) * airHeatCapacity / energyPerUnit);
+        var airBoiled = MathF.Min(GetAirBoilRate(component, mixture.Temperature) * seconds, component.Foam);
+        if (!mixture.Immutable)
+            airBoiled = MathF.Min(airBoiled, (mixture.Temperature - component.BoilingPoint) * airHeatCapacity / energyPerUnit);
+
         if (airBoiled <= 0f)
             return;
 
         // The air pays before the gas joins it, so the gas is added at the energy it actually carries.
-        mixture.Temperature -= airBoiled * energyPerUnit / airHeatCapacity;
+        if (!mixture.Immutable)
+            mixture.Temperature -= airBoiled * energyPerUnit / airHeatCapacity;
+
         AddBoiledGas(blanket, gridUid, tile, airBoiled);
     }
 
@@ -263,25 +274,18 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
     ///     Conducts and radiates heat between the blanket and the air over it, without taking the foam past its
     ///         boiling point: air hot enough to boil it does so at the rates in <see cref="Boil"/>.
     /// </summary>
-    private void ExchangeHeatWithAir(Entity<KsFoamBlanketComponent> blanket, GasMixture mixture, float seconds)
+    private void ExchangeHeatWithAir(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile, float seconds)
     {
         var component = blanket.Comp;
-        var airCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
-        if (airCapacity < Atmospherics.MinimumHeatCapacity)
-            return;
-
         var foamHeat = component.Heat;
-        var conductance = component.AirConductance +
-            KsThermalTransfer.RadiativeConductance(foamHeat.Temperature, mixture.Temperature, TileArea, component.Emissivity);
 
-        var toFoam = MathF.Min(
-            KsThermalTransfer.ExchangeQuery(foamHeat.HeatCapacity, foamHeat.Temperature, airCapacity, mixture.Temperature, conductance, seconds),
-            (component.BoilingPoint - foamHeat.Temperature) * foamHeat.HeatCapacity);
-        if (toFoam == 0f)
-            return;
+        var toFoam = _airHeatExchangeSystem.ExchangeWithTile(gridUid, tile, foamHeat.HeatCapacity, foamHeat.Temperature,
+            component.AirConductance, TileArea, seconds,
+            emissivity: component.Emissivity,
+            maxHeat: (component.BoilingPoint - foamHeat.Temperature) * foamHeat.HeatCapacity);
 
-        HeatContainerHelpers.AddHeat(ref component.Heat, toFoam);
-        mixture.Temperature -= toFoam / airCapacity;
+        if (toFoam != 0f)
+            HeatContainerHelpers.AddHeat(ref component.Heat, toFoam);
     }
 
     /// <summary>
@@ -358,10 +362,15 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         component.RadiatingTiles.Clear();
     }
 
+    /// <summary>
+    ///     Boils foam off into the tile's air. Immutable air takes the gas without changing, as it takes heat.
+    /// </summary>
+    /// <returns>False on a tile with no mixture at all, in which case nothing changed.</returns>
     private bool AddBoiledGas(Entity<KsFoamBlanketComponent> blanket, EntityUid gridUid, Vector2i tile, float boiled)
     {
         var component = blanket.Comp;
-        if (!_tileEffectAtmosSystem.TryAddBoiledGas(gridUid, tile, component.BoiledGas, boiled, boiled * component.SpecificHeat * component.BoilingPoint))
+        if (GetTileAir(gridUid, tile) is not { } air ||
+            !air.Immutable && !_tileEffectAtmosSystem.TryAddBoiledGas(gridUid, tile, component.BoiledGas, boiled, boiled * component.SpecificHeat * component.BoilingPoint))
             return false;
 
         SetFoam(blanket, component.Foam - boiled);

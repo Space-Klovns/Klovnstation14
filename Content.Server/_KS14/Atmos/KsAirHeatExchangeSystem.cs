@@ -8,7 +8,7 @@ namespace Content.Server._KS14.Atmos;
 
 /// <summary>
 ///     Heat flowing between something warm or cold and the air around it, by conduction and thermal radiation. Puddles,
-///         ice sheets and open containers all go through here, so they all treat every kind of air alike:
+///         ice sheets, foam blankets and open containers all go through here, so they all treat every kind of air alike:
 /// </summary>
 /// <remarks>
 ///     <list type="table">
@@ -56,6 +56,8 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
     /// <param name="temperature">The body's temperature, in kelvin.</param>
     /// <param name="conductance">Thermal conductance to the air, in W/K. Air is needed for this to count.</param>
     /// <param name="radiatingArea">The body's radiating area, in m².</param>
+    /// <param name="emissivity">How well the body radiates, from 0 to 1, if not <see cref="KsCCVars.AtmosPuddleEmissivity"/>.</param>
+    /// <param name="maxHeat">The most joules that may flow into the body, for a body that does something else with the rest.</param>
     /// <returns>The joules that flowed into the body, which the caller applies: negative when it gave heat away.</returns>
     public float ExchangeWithTile(
         EntityUid gridUid,
@@ -64,11 +66,13 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
         float temperature,
         float conductance,
         float radiatingArea,
-        float seconds)
+        float seconds,
+        float? emissivity = null,
+        float maxHeat = float.PositiveInfinity)
     {
         var mapUid = Transform(gridUid).MapUid;
         var mixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), mapUid, indices, excite: false);
-        var heat = Exchange(mixture, capacity, temperature, conductance, radiatingArea, seconds, out var airTemperatureChange);
+        var heat = Exchange(mixture, capacity, temperature, conductance, radiatingArea, seconds, emissivity ?? _emissivity, maxHeat, out var airTemperatureChange);
 
         if (MathF.Abs(airTemperatureChange) >= ExciteDelta)
             _atmosphereSystem.GetTileMixture((gridUid, null, null), mapUid, indices, excite: true);
@@ -94,7 +98,7 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
             return 0f;
 
         var mixture = _atmosphereSystem.GetContainingMixture(uid, excite: false);
-        var heat = Exchange(mixture, capacity, temperature, conductance, radiatingArea, seconds, out var airTemperatureChange);
+        var heat = Exchange(mixture, capacity, temperature, conductance, radiatingArea, seconds, _emissivity, float.PositiveInfinity, out var airTemperatureChange);
 
         if (MathF.Abs(airTemperatureChange) >= ExciteDelta)
             _atmosphereSystem.GetContainingMixture(uid, excite: true);
@@ -109,6 +113,8 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
         float conductance,
         float radiatingArea,
         float seconds,
+        float emissivity,
+        float maxHeat,
         out float airTemperatureChange)
     {
         airTemperatureChange = 0f;
@@ -118,29 +124,29 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
         // Moles first: space reports a heat capacity even empty.
         var airCapacity = mixture.TotalMoles > 0f ? _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true) : 0f;
         if (airCapacity < Atmospherics.MinimumHeatCapacity)
-            return ExchangeWithReservoir(capacity, temperature, Atmospherics.TCMB, conductance: 0f, radiatingArea, seconds);
+            return MathF.Min(ExchangeWithReservoir(capacity, temperature, Atmospherics.TCMB, conductance: 0f, radiatingArea, emissivity, seconds), maxHeat);
 
         if (mixture.Immutable)
-            return ExchangeWithReservoir(capacity, temperature, mixture.Temperature, conductance, radiatingArea, seconds);
+            return MathF.Min(ExchangeWithReservoir(capacity, temperature, mixture.Temperature, conductance, radiatingArea, emissivity, seconds), maxHeat);
 
         var airTemperature = mixture.Temperature;
         if (MathF.Abs(airTemperature - temperature) < MinimumDelta)
             return 0f;
 
-        var heat = KsThermalTransfer.ExchangeQuery(capacity, temperature, airCapacity, airTemperature,
-            conductance + KsThermalTransfer.RadiativeConductance(temperature, airTemperature, radiatingArea, _emissivity), seconds);
+        var heat = MathF.Min(maxHeat, KsThermalTransfer.ExchangeQuery(capacity, temperature, airCapacity, airTemperature,
+            conductance + KsThermalTransfer.RadiativeConductance(temperature, airTemperature, radiatingArea, emissivity), seconds));
 
         airTemperatureChange = heat / airCapacity;
         mixture.Temperature = airTemperature - airTemperatureChange;
         return heat;
     }
 
-    private float ExchangeWithReservoir(float capacity, float temperature, float reservoirTemperature, float conductance, float radiatingArea, float seconds)
+    private static float ExchangeWithReservoir(float capacity, float temperature, float reservoirTemperature, float conductance, float radiatingArea, float emissivity, float seconds)
     {
         if (MathF.Abs(reservoirTemperature - temperature) < MinimumDelta)
             return 0f;
 
         return KsThermalTransfer.ExchangeWithReservoirQuery(capacity, temperature, reservoirTemperature,
-            conductance + KsThermalTransfer.RadiativeConductance(temperature, reservoirTemperature, radiatingArea, _emissivity), seconds);
+            conductance + KsThermalTransfer.RadiativeConductance(temperature, reservoirTemperature, radiatingArea, emissivity), seconds);
     }
 }
