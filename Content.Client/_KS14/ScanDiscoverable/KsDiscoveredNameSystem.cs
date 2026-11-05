@@ -55,6 +55,12 @@ public sealed partial class KsDiscoveredNameSystem : EntitySystem
 
     private void Apply(Entity<KsDiscoveredNameComponent> entity)
     {
+        // Added to a live entity, this starts up before it has a name: a state adds it and starts it before handling that
+        //      state, and predicting a discovery sets the name after adding it. The name comes through OnAfterState,
+        //      or from the discovery itself.
+        if (entity.Comp.Name == default)
+            return;
+
         _metaDataSystem.SetEntityName(entity.Owner, Loc.GetString(entity.Comp.Name));
     }
 }
