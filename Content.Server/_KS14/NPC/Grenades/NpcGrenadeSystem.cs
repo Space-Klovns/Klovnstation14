@@ -1,21 +1,37 @@
 using Content.Server._KS14.NPC.Hands;
+using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Systems;
 using Content.Server.Hands.Systems;
 using Content.Shared._Trauma.Hands;
+using Content.Shared.Throwing;
+using Content.Shared.Trigger;
 using Content.Shared.Trigger.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.Grenades;
 
 /// <summary>
 ///     Has an NPC throw a grenade. It all happens at once rather than as a chain of tasks, and the fuse is only lit once the
-///         grenade has left its hand, so nothing can leave a live grenade in its hand or back in its belt.
+///         grenade has left its hand, so nothing can leave a live grenade in its hand or back in its belt. When it goes off,
+///         the thrower and the squadmates it tells go in on the spot (<see cref="NpcGrenadePusherComponent"/>). HTN does the
+///         going.
 /// </summary>
 public sealed partial class NpcGrenadeSystem : EntitySystem
 {
     [Dependency] private HandsSystem _handsSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private NpcHandsSystem _npcHandsSystem = default!;
+    [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
+    [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private PredictedHandsSystem _predictedHandsSystem = default!;
     [Dependency] private TriggerSystem _triggerSystem = default!;
+
+    [Dependency] private EntityQuery<NpcGrenadePusherComponent> _grenadePusherQuery = default!;
+    [Dependency] private EntityQuery<NpcGrenadePushComponent> _grenadePushQuery = default!;
+    [Dependency] private EntityQuery<NpcGrenadeThrowerComponent> _grenadeThrowerQuery = default!;
+    [Dependency] private EntityQuery<NpcThrownGrenadeComponent> _thrownGrenadeQuery = default!;
+    [Dependency] private EntityQuery<ThrownItemComponent> _thrownItemQuery = default!;
 
     /// <summary>
     ///     Takes <paramref name="grenadeUid"/> out, throws it at <paramref name="coordinates"/>, lights it, and gets the
@@ -29,9 +45,94 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
         var thrown = _predictedHandsSystem.ThrowHeldItem(uid, coordinates) && !_handsSystem.IsHolding(uid, grenadeUid);
 
         if (thrown)
+        {
+            var thrownGrenadeComponent = EnsureComp<NpcThrownGrenadeComponent>(grenadeUid);
+            thrownGrenadeComponent.ThrowerUid = uid;
+            thrownGrenadeComponent.Coordinates = coordinates;
+
             _triggerSystem.ActivateTimerTrigger(grenadeUid, uid);
+        }
 
         _npcHandsSystem.PutBack(uid, takenOut);
         return thrown;
+    }
+
+    /// <summary>
+    ///     Where <paramref name="grenadeUid"/> is coming down, if it is a grenade an NPC threw and it is still in the air.
+    /// </summary>
+    public bool TryGetLanding(EntityUid grenadeUid, out EntityCoordinates coordinates)
+    {
+        coordinates = default;
+
+        if (!_thrownItemQuery.HasComp(grenadeUid) || !_thrownGrenadeQuery.TryComp(grenadeUid, out var thrownGrenadeComponent))
+            return false;
+
+        coordinates = thrownGrenadeComponent.Coordinates;
+        return true;
+    }
+
+    /// <summary>
+    ///     Sends <paramref name="entity"/> in on <paramref name="coordinates"/>, in place of anything it was already going in
+    ///         on. Does nothing for an NPC without <see cref="NpcGrenadePusherComponent"/>.
+    /// </summary>
+    public void StartPush(Entity<NpcGrenadePusherComponent?> entity, EntityCoordinates coordinates)
+    {
+        if (!_grenadePusherQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false))
+            return;
+
+        var grenadePushComponent = EnsureComp<NpcGrenadePushComponent>(entity.Owner);
+        grenadePushComponent.Coordinates = coordinates;
+        grenadePushComponent.EndTime = _gameTiming.CurTime + entity.Comp.Duration;
+
+        _npcSensorSystem.RequestReplan(entity.Owner);
+    }
+
+    /// <summary>
+    ///     Where <paramref name="uid"/> should be going in on right now, if anywhere.
+    /// </summary>
+    public bool TryGetPush(EntityUid uid, out EntityCoordinates coordinates)
+    {
+        coordinates = default;
+
+        if (!_grenadePushQuery.TryComp(uid, out var grenadePushComponent) || _gameTiming.CurTime >= grenadePushComponent.EndTime)
+            return false;
+
+        coordinates = grenadePushComponent.Coordinates;
+        return true;
+    }
+
+    /// <summary>
+    ///     <paramref name="uid"/> has got where it was going. Does nothing for one that was not.
+    /// </summary>
+    public void StopPush(EntityUid uid)
+    {
+        RemComp<NpcGrenadePushComponent>(uid);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnThrownGrenadeTriggered(Entity<NpcThrownGrenadeComponent> entity, ref TriggerEvent args)
+    {
+        var throwerUid = entity.Comp.ThrowerUid;
+        var coordinates = entity.Comp.Coordinates;
+
+        // Deferred: the rest of the grenade's trigger effects are still being raised.
+        RemCompDeferred<NpcThrownGrenadeComponent>(entity);
+
+        if (!Exists(throwerUid))
+            return;
+
+        StartPush(throwerUid, coordinates);
+
+        if (!_grenadeThrowerQuery.TryComp(throwerUid, out var grenadeThrowerComponent) || !grenadeThrowerComponent.CallsOutBlasts)
+            return;
+
+        var ev = new NpcGrenadeBlastCalloutEvent(throwerUid, coordinates);
+        _npcSquadSystem.CallOut(throwerUid, ref ev);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnBlastCallout(Entity<NpcGrenadePusherComponent> entity, ref NpcGrenadeBlastCalloutEvent args)
+    {
+        StartPush((entity.Owner, entity.Comp), args.Coordinates);
     }
 }

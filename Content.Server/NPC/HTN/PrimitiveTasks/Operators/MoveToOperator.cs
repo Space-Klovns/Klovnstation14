@@ -170,11 +170,13 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
 
         // Need to remove the planning value for execution.
         blackboard.Remove<EntityCoordinates>(NPCBlackboard.OwnerCoordinates);
-        var targetCoordinates = blackboard.GetValue<EntityCoordinates>(TargetKey);
         var uid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
 
         // KS14 start: coordinates on a target can outlive it, if it was deleted after planning: there is nowhere to go. Update fails.
-        if (!targetCoordinates.IsValid(_entManager))
+        // So can a plan outlive its coordinates: a key left by the plan before can pass a check while planning, and be gone
+        //      once that plan has shut down.
+        if (!blackboard.TryGetValue<EntityCoordinates>(TargetKey, out var targetCoordinates, _entManager) ||
+            !targetCoordinates.IsValid(_entManager))
             return;
         // KS14 end
 
@@ -218,7 +220,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
             return HTNOperatorStatus.Failed;
 
         // KS14 start: see Startup. Checked here too, as steering left over from a move in the background says nothing about this one.
-        if (blackboard.TryGetValue<EntityCoordinates>(TargetKey, out var targetCoordinates, _entManager) && !targetCoordinates.IsValid(_entManager))
+        if (!blackboard.TryGetValue<EntityCoordinates>(TargetKey, out var targetCoordinates, _entManager) || !targetCoordinates.IsValid(_entManager))
             return HTNOperatorStatus.Failed;
         // KS14 end
 

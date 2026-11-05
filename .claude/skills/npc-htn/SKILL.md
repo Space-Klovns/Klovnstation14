@@ -64,6 +64,10 @@ A pure read in `Plan` is fine, including an on-demand raycast that only that ope
 this: it works out where a dive would land when planning. Sense-layer systems are for facts that must be kept up to
 date whether or not anything asks.
 
+The same goes for anything `Plan`, a precondition or a consideration raises. To ask the game something, raise a
+`Can...Event`, never an `...AttemptEvent`, whose handlers may respond to a try that never happened. See *Events* in
+CONTRIBUTING.
+
 ### The blackboard holds the plan's working values, not world state
 
 The chosen target and where to go belong on the blackboard. What the NPC knows belongs on a component.
@@ -122,6 +126,10 @@ Squadmates plan side by side, so a precondition or consideration reading what an
 cooldown) passes for all of them until one acts. Anything only one of them may do needs a check-and-set in `Update`, on
 the main thread, ahead of the act itself, that fails the rest: `ClaimTargetOperator`, or `CooldownOperator` with
 `failIfRunning`. Keep the planning check too: it is what steers the losers elsewhere on their next plan.
+
+The same goes for a chance. `ProbabilityPrecondition` rolls on every plan, so on its own it comes up within a second or
+two. For a chance per occasion, give it a branch and start a cooldown in that branch and in the branch after it, as
+`suppression.yml` does: the roll then stands until the cooldown is up.
 
 ### A running task does not notice the world change unless it asks
 
@@ -209,22 +217,26 @@ Consequences:
 
 1. Play dead
 2. Healing
-3. Grenades
+3. Grenades (getting away from a live one)
 4. Recovering: fall back (waiting for meds to work and found; see `recovering.yml`)
 5. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
-6. Ranged, then Melee
-7. Execution, Throw grenade, Suppressive fire, Buddy aid, Tactical reload (opt-in; each has its own file). Execution being
-   below combat is what "nothing left to fight" means
-8. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
-9. Follow
-10. Recovering: hold (nothing below runs until the meds have worked; see `recovering.yml`)
-11. Search open, then Search cover
-12. Door refused (a one-line callout; see Doors below)
-13. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
-14. Sensors
-15. Join squad
-16. Disengage
-17. Squad hold
+6. Throw grenade (opt-in; at a hostile in the fight or out of sight; interrupts a fight for a tick; see `grenade_throw.yml`)
+7. Ranged, then Melee
+8. Execution (opt-in; being below combat is what "nothing left to fight" means; see `execution.yml`)
+9. Suppressive fire (opt-in; see `suppression.yml`)
+10. Grenade push (opt-in; going in on a squad grenade that just went off; see `grenade_throw.yml`)
+11. Buddy aid (opt-in; see `buddy_aid.yml`)
+12. Tactical reload (opt-in, through `TacticalReload` on the blackboard)
+13. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
+14. Follow
+15. Recovering: hold (nothing below runs until the meds have worked; see `recovering.yml`)
+16. Search open, then Search cover
+17. Door refused (a one-line callout; see Doors below)
+18. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
+19. Sensors
+20. Join squad
+21. Disengage
+22. Squad hold
 
 The header of that file lists every blackboard key and who writes it. Keep it current when you add one.
 

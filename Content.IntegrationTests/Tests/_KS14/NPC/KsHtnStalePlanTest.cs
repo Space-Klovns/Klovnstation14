@@ -131,4 +131,36 @@ public sealed class KsHtnStalePlanTest : GameTest
             Assert.That(moveToOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Failed));
         });
     }
+
+    /// <summary>
+    ///     A key left by the plan before can pass a check while planning, and be gone by the time the move starts, when that
+    ///         plan's own move shuts down and takes it along. There is nowhere to go, and the move fails as above, rather
+    ///         than throwing and taking the server's tick with it.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestMoveToCoordinatesGoneSincePlanningFails(bool steeringLeftOver)
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var mobUid = entManager.SpawnEntity("KsHtnStaleTestMob", map.GridCoords);
+
+            if (steeringLeftOver)
+                entManager.System<NPCSteeringSystem>().Register(mobUid, map.GridCoords);
+
+            var moveToOperator = new MoveToOperator();
+            moveToOperator.Initialize(entManager.EntitySysManager);
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, mobUid);
+
+            moveToOperator.Startup(blackboard);
+
+            Assert.That(moveToOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Failed));
+        });
+    }
 }

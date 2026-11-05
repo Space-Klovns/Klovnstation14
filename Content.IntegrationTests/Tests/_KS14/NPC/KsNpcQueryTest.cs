@@ -18,7 +18,9 @@ using Content.Server.NPC.HTN;
 using Content.Server.NPC.Queries.Considerations;
 using Content.Server.NPC.Queries.Curves;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Explosion.Components;
+using Content.Shared.Inventory;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Trigger.Components.Effects;
@@ -60,6 +62,10 @@ public sealed class KsNpcQueryTest : GameTest
     private const string TestExplosive = "KsQueryTestExplosive";
     private const string TestFlash = "KsQueryTestFlash";
     private const string TestPrimed = "KsQueryTestPrimed";
+    private const string FlashProofMob = "KsQueryTestMobFlashProof";
+    private const string ClothedMob = "KsQueryTestMobClothed";
+    private const string HurtByFlashesMob = "KsQueryTestMobHurtByFlashes";
+    private const string FlashGoggles = "KsQueryTestFlashGoggles";
 
     /// <summary>
     ///     Squad updates run once a second: long enough for mobs spawned together to form one.
@@ -91,7 +97,119 @@ public sealed class KsNpcQueryTest : GameTest
 
 - type: entity
   id: KsQueryTestPrimed
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsQueryTestMobFlashProof
+  components:
+  - type: FlashImmunity
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsQueryTestMobClothed
+  components:
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
+
+- type: entity
+  id: KsQueryTestFlashGoggles
+  components:
+  - type: Item
+  - type: Clothing
+    slots: [ eyes ]
+  - type: FlashImmunity
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsQueryTestMobHurtByFlashes
+  components:
+  - type: Injurable
+  - type: DamagedByFlashing
+    flashDamage:
+      types:
+        Heat: 10
 ";
+
+    /// <summary>
+    ///     A flash is nothing to run from for an NPC it would do nothing to, even at its feet, where the margin would have it
+    ///         run from any reach at all. That goes for flashes only: the same NPC runs from an explosive.
+    /// </summary>
+    [Test]
+    public async Task TestFlashProtectionRulesOutFlashes()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var danger = new TargetDangerRangeCon { Curve = new BoolCurve() };
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            danger.Initialise(entManager.EntitySysManager.DependencyCollection);
+
+            var flashProofUid = SpawnAt(entManager, FlashProofMob, gridUid, 0, 0);
+            var flashUid = SpawnAt(entManager, TestFlash, gridUid, 0, 0);
+            var explosiveUid = SpawnAt(entManager, TestExplosive, gridUid, 0, 0);
+            var blackboard = new NPCBlackboard();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(danger.GetScore(blackboard, flashProofUid, flashUid), Is.Zero, "a flash cannot touch it");
+                Assert.That(danger.GetScore(blackboard, flashProofUid, explosiveUid), Is.EqualTo(1f), "an explosive still can");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     What protects an NPC from a flash may be what it wears, and stops when taken off.
+    /// </summary>
+    [Test]
+    public async Task TestWornFlashProtection()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var inventorySystem = entManager.System<InventorySystem>();
+        var danger = new TargetDangerRangeCon { Curve = new BoolCurve() };
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            danger.Initialise(entManager.EntitySysManager.DependencyCollection);
+
+            var ownerUid = SpawnAt(entManager, ClothedMob, gridUid, 0, 0);
+            var flashUid = SpawnAt(entManager, TestFlash, gridUid, 0, 0);
+            var gogglesUid = SpawnAt(entManager, FlashGoggles, gridUid, 0, 0);
+            var blackboard = new NPCBlackboard();
+
+            Assert.That(danger.GetScore(blackboard, ownerUid, flashUid), Is.EqualTo(1f), "bare-eyed, it should run");
+
+            Assert.That(inventorySystem.TryEquip(ownerUid, gogglesUid, "eyes", silent: true, force: true));
+            Assert.That(danger.GetScore(blackboard, ownerUid, flashUid), Is.Zero, "with them on, it need not");
+
+            Assert.That(inventorySystem.TryUnequip(ownerUid, "eyes", silent: true, force: true));
+            Assert.That(danger.GetScore(blackboard, ownerUid, flashUid), Is.EqualTo(1f), "and with them off it should run again");
+        });
+    }
+
+    /// <summary>
+    ///     Asking whether a flash would matter does not flash anything: a consideration changes nothing.
+    /// </summary>
+    [Test]
+    public async Task TestWeighingAFlashDoesNotHurt()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var danger = new TargetDangerRangeCon { Curve = new BoolCurve() };
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            danger.Initialise(entManager.EntitySysManager.DependencyCollection);
+
+            var ownerUid = SpawnAt(entManager, HurtByFlashesMob, gridUid, 0, 0);
+            var flashUid = SpawnAt(entManager, TestFlash, gridUid, 0, 0);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(danger.GetScore(new NPCBlackboard(), ownerUid, flashUid), Is.EqualTo(1f), "it should run from something that would hurt it");
+                Assert.That(entManager.System<DamageableSystem>().GetTotalDamage(ownerUid).Float(), Is.Zero, "without having been hurt by the thought");
+            });
+        });
+    }
 
     /// <summary>
     ///     Squadmates are everyone else in the squad, those that have gone down and left it included. Nobody else is.

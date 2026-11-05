@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Flash;
 using Content.Shared.Gravity;
 using Content.Shared.StatusEffectNew.Components;
 
@@ -7,6 +8,7 @@ public sealed partial class StatusEffectsSystem
 {
     private void KsInitializeRelay()
     {
+        SubscribeLocalEvent<StatusEffectContainerComponent, KsCanFlashEvent>(RefRelayStatusEffectEvent);
         SubscribeLocalEvent<StatusEffectContainerComponent, IsWeightlessEvent>(RefRelayStatusEffectEvent);
     }
 }

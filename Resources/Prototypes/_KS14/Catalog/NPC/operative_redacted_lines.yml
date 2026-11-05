@@ -1,7 +1,9 @@
-# The Redacted say nothing, ever, apart from the one line an execution comes with: every line the operative HTN speaks
-#   is silenced here. Applied by giving the mob NpcVoiceSet with this set.
+# The Redacted say nothing but what a kill or an execution calls for: every other line the operative HTN speaks is
+#   silenced here. Applied by giving the mob NpcVoiceSet with this set.
 - type: npcVoiceSet
   id: KsOperativeRedacted
+  replacements:
+    KsOperativeTargetDown: KsOperativeRedactedTargetDown
   silenced:
   - KsOperativeAdvancing
   - KsOperativeContact
@@ -26,8 +28,13 @@
   - KsOperativeEntering
   - KsOperativeSearchingArea
   - KsOperativeRegrouping
-  - KsOperativeTargetDown
   - KsOperativeNtSacrifice
+
+- type: localizedDataset
+  id: KsOperativeRedactedTargetDown
+  values:
+    prefix: ks-operative-redacted-line-target-down-
+    count: 7
 
 - type: localizedDataset
   id: KsOperativeExecution

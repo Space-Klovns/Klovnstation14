@@ -9,6 +9,7 @@ using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Grenades;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Orders;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Squad;
+using Content.Server._KS14.NPC.Grenades;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Suppression;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Recovery;
@@ -97,8 +98,10 @@ public sealed class KsOperativeHtnRootTest : GameTest
   parent: KsOperativeRootTestMobCarrying
   id: KsOperativeRootTestMobAllOut
   components:
+  - type: NpcRecovery
   - type: NpcExecutioner
   - type: NpcGrenadeThrower
+  - type: NpcGrenadePusher
   - type: NpcBuddyAid
   - type: NpcSuppressor
 
@@ -649,20 +652,170 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     A hostile that has only just ducked out of sight gets a burst after it, from those that do that.
+    ///     A grenade goes into the fight too, from those that do that, interrupting the shooting for the throw. Every other
+    ///         NPC goes on shooting.
     /// </summary>
     [TestCase(AllOutMob, true)]
     [TestCase(CarryingMob, false)]
-    public async Task TestHostileThatJustDuckedIsSuppressed(string mobPrototype, bool suppresses)
+    public async Task TestHostileInTheFightGetsAGrenade(string mobPrototype, bool throws)
+    {
+        var fight = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestGrenade);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is ThrowGrenadeOperator), Is.EqualTo(throws), Describe(plan));
+            Assert.That(Replaces(plan, fight), Is.EqualTo(throws), $"the throw should interrupt the shooting: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     A hostile already down is not worth one.
+    /// </summary>
+    [Test]
+    public async Task TestDownedHostileGetsNoGrenade()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestGrenade);
+                StageDownedHostile(entManager, mobUid, gridUid, 1, 3);
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is ThrowGrenadeOperator), Is.False, Describe(plan));
+    }
+
+    /// <summary>
+    ///     Too far to shoot from here and no firing spot due, an NPC that sticks to cover makes for a wall on the way. Every
+    ///         other NPC walks straight at the target.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestClosingInGoesFromWallToWall(bool coverOnly)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+
+                var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+                blackboard.SetValue("RangedRange", 1f);
+                blackboard.SetValue("RepositionDueAt", Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime + System.TimeSpan.FromHours(1));
+
+                if (coverOnly)
+                    blackboard.SetValue("CoverOnly", true);
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "BoundPosition" }), Is.EqualTo(coverOnly), Describe(plan));
+    }
+
+    /// <summary>
+    ///     Anywhere not recognisably a room, with no threat to hide from, an NPC that sticks to cover holds at a wall. Every other
+    ///         NPC takes a spot at random, a new one every hold.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestHoldOnOpenGroundGoesToAWall(bool coverOnly)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                entManager.System<SharedTransformSystem>().SetCoordinates(mobUid, new EntityCoordinates(gridUid, new System.Numerics.Vector2(9.5f, 3.5f)));
+
+                if (coverOnly)
+                    entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("CoverOnly", true);
+            });
+
+        var search = plan.Tasks.Select(task => task.Operator).OfType<TacticalPositionOperator>().FirstOrDefault();
+
+        Assert.That(search, Is.Not.Null, Describe(plan));
+        Assert.That(search!.WallCurve is not null, Is.EqualTo(coverOnly), Describe(plan));
+    }
+
+    /// <summary>
+    ///     A hostile that has only just ducked out of sight may get a burst after it, from those that do that. If the
+    ///         chance does not come up the moment passes: the plan still starts the cooldown, or the next plan would just
+    ///         roll again.
+    /// </summary>
+    [TestCase(AllOutMob, 100f, true)]
+    [TestCase(AllOutMob, 0f, false)]
+    [TestCase(CarryingMob, 100f, false)]
+    public async Task TestHostileThatJustDuckedIsSuppressed(string mobPrototype, float chance, bool suppresses)
     {
         var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
             stage: (entManager, mobUid, gridUid) =>
             {
                 StageArmed(entManager, mobUid);
                 StageContact(entManager, mobUid, gridUid, NpcContactState.Lost);
+                entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("SuppressionChance", chance);
             });
 
-        Assert.That(plan.Tasks.Any(task => task.Operator is SuppressOperator), Is.EqualTo(suppresses), Describe(plan));
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is SuppressOperator), Is.EqualTo(suppresses), Describe(plan));
+            Assert.That(plan.Tasks.Any(task => task.Operator is CooldownOperator), Is.EqualTo(mobPrototype == AllOutMob), Describe(plan));
+        });
+    }
+
+    /// <summary>
+    ///     A grenade from its squad having gone off, those that do that go in on it, ahead of whatever order they had. Not
+    ///         while waiting for meds to work, and a hostile in sight comes first.
+    /// </summary>
+    [TestCase(AllOutMob, false, false, true)]
+    [TestCase(CarryingMob, false, false, false)]
+    [TestCase(AllOutMob, true, false, false)]
+    [TestCase(AllOutMob, false, true, false)]
+    public async Task TestGrenadeBlastIsPushedOn(string mobPrototype, bool recovering, bool hostileInSight, bool pushes)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StagePush(entManager, mobUid, gridUid);
+
+                if (recovering)
+                    StageRecoveringAndSettled(entManager, mobUid);
+
+                if (hostileInSight)
+                    StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is EndGrenadePushOperator), Is.EqualTo(pushes), Describe(plan));
+    }
+
+    [Test]
+    public async Task TestGrenadeBlastInterruptsAnOrder()
+    {
+        var order = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Stage));
+        var push = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageOrder(entManager, mobUid, gridUid, NpcOrderKind.Stage);
+                StagePush(entManager, mobUid, gridUid);
+            });
+
+        Assert.That(Replaces(push, order), "going in should interrupt an order, so that nobody waits for the next phase of a hunt");
+    }
+
+    private static void StagePush(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
+    {
+        entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("GrenadePushRange", 1f);
+        entManager.System<NpcGrenadeSystem>().StartPush(mobUid, new EntityCoordinates(gridUid, new System.Numerics.Vector2(1.5f, 1.5f)));
     }
 
     /// <summary>

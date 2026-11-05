@@ -76,6 +76,13 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
     [DataField] public int MaxCandidates = 64;
 
+    /// <summary>
+    ///     A blackboard float that overrides <see cref="MaxCandidates"/> if the owner has it. The candidates are half the
+    ///         nearest tiles and half spread over the rest of the flood, so in a big room any one corner is rarely among
+    ///         them: more of them cost more, and miss fewer.
+    /// </summary>
+    [DataField] public string? MaxCandidatesKey;
+
     [DataField] public IUtilityCurve DistanceCurve = new PresetCurve { Preset = "KsTargetDistanceLessClose" };
 
     /// <summary>
@@ -85,6 +92,11 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public string? LosReferenceCoordinatesKey;
 
     [DataField] public float LosRadius = 10f;
+
+    /// <summary>
+    ///     A blackboard float that overrides <see cref="LosRadius"/> if the owner has it.
+    /// </summary>
+    [DataField] public string? LosRadiusKey;
 
     [DataField] public IUtilityCurve LosCurve = new BoolCurve();
 
@@ -96,6 +108,21 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     ///         Needs <see cref="LosReferenceCoordinatesKey"/>.
     /// </summary>
     [DataField] public IUtilityCurve? CoverStepCurve;
+
+    /// <summary>
+    ///     A blackboard bool that, true on the owner, rules out every candidate without cover a step away (see
+    ///         <see cref="CoverStepCurve"/>) rather than only scoring it down, for an NPC that would sooner have no spot
+    ///         than one in the open. The candidate must also be right beside something: the shadow of a pillar runs on
+    ///         across a big room, and the edge of it is a step from being out of sight with nothing to stand behind.
+    ///         Works with or without the curve. Needs <see cref="LosReferenceCoordinatesKey"/>.
+    /// </summary>
+    [DataField] public string? CoverOnlyKey;
+
+    /// <summary>
+    ///     If set, scores how tucked in a candidate is, with no threat needed: 0 on open floor, 0.5 beside something it
+    ///         cannot stand on, 1 in the corner of two such sides. For somewhere to wait with nothing to take cover from.
+    /// </summary>
+    [DataField] public IUtilityCurve? WallCurve;
 
     private static readonly Vector2i[] CoverStepOffsets =
     [
@@ -114,6 +141,13 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     ///         <see cref="_coverStepSightField"/>.
     /// </summary>
     private bool _scoreCoverStep;
+
+    /// <summary>
+    ///     This plan's reach for line of sight, and whether <see cref="CoverOnlyKey"/> is on. Set up as
+    ///         <see cref="_scoreCoverStep"/> is.
+    /// </summary>
+    private float _losRadius;
+    private bool _coverOnly;
 
     /// <summary>
     /// If set, adds a directional-cone consideration (owner facing this coordinates key, is the candidate
@@ -264,12 +298,11 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         if (!blackboard.TryGetValue<EntityCoordinates>(ReferenceCoordinatesKey, out var reference, _entityManager))
             return (!InvalidatePlanOnNoHighest, new Dictionary<string, object>());
 
-        var maxRange = MaxRangeKey is not null && blackboard.TryGetValue<float>(MaxRangeKey, out var keyMaxRange, _entityManager)
-            ? keyMaxRange
-            : MaxRange;
+        var maxRange = GetKeyedValue(blackboard, MaxRangeKey, MaxRange);
+        var maxCandidates = (int) GetKeyedValue(blackboard, MaxCandidatesKey, MaxCandidates);
 
         var candidates = await _pathfindingSystem.GetTacticalCandidates(
-            owner, reference, maxRange, MaxCandidates, cancelToken, _pathfindingSystem.GetFlags(blackboard));
+            owner, reference, maxRange, maxCandidates, cancelToken, _pathfindingSystem.GetFlags(blackboard));
 
         if (candidates.Count == 0)
             return (!InvalidatePlanOnNoHighest, new Dictionary<string, object>());
@@ -299,15 +332,17 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         }
 
         // Built after the search's await, as the exposure probes are: see _coverStepSightField.
+        _losRadius = GetKeyedValue(blackboard, LosRadiusKey, LosRadius);
+        _coverOnly = CoverOnlyKey is not null && blackboard.TryGetValue<bool>(CoverOnlyKey, out var coverOnly, _entityManager) && coverOnly;
         _scoreCoverStep = false;
-        if (CoverStepCurve is not null &&
+        if ((CoverStepCurve is not null || _coverOnly) &&
             LosReferenceCoordinatesKey is not null &&
             blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var coverStepReference, _entityManager))
         {
             _scoreCoverStep = true;
             // Past the candidates' own reach by a step, so every tile next to one is in range.
             _npcLineOfSightSystem.BuildSightField(_transformSystem.ToMapCoordinates(coverStepReference),
-                LosRadius + 2f,
+                _losRadius + 2f,
                 _coverStepSightField);
         }
 
@@ -390,6 +425,14 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         });
     }
 
+    /// <summary>
+    ///     The blackboard float at <paramref name="key"/> if the owner has it, or <paramref name="fallback"/>.
+    /// </summary>
+    private float GetKeyedValue(NPCBlackboard blackboard, string? key, float fallback)
+    {
+        return key is not null && blackboard.TryGetValue<float>(key, out var value, _entityManager) ? value : fallback;
+    }
+
     private TacticalPositionDebugClaim ToDebugClaim((EntityCoordinates Coordinates, float ClearanceRadius) claim)
     {
         return new TacticalPositionDebugClaim(_entityManager.GetNetCoordinates(claim.Coordinates), claim.ClearanceRadius);
@@ -405,6 +448,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             + (AvoidFireLanes && _npcSquadFireLaneSystem.Enabled ? 1 : 0)
             + (LosReferenceCoordinatesKey is not null ? 1 : 0)
             + (CoverStepCurve is not null && LosReferenceCoordinatesKey is not null ? 1 : 0)
+            + (WallCurve is not null ? 1 : 0)
             + (FovReferenceCoordinatesKey is not null ? 1 : 0)
             + (RandomProbability > 0f ? 1 : 0)
             + (KillZoneAvoidance > 0f ? 1 : 0)
@@ -505,7 +549,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             var losRaw = _npcLineOfSightSystem.InLineOfSight(
                 _transformSystem.ToMapCoordinates(candidate.Coordinates),
                 _transformSystem.ToMapCoordinates(losReference),
-                LosRadius + 0.5f) ? 1f : 0f;
+                _losRadius + 0.5f) ? 1f : 0f;
 
             score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(LosCurve, losRaw), considerationCount);
 
@@ -515,8 +559,22 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
         if (_scoreCoverStep)
         {
-            var coverStepRaw = HasCoverAStepAway(candidate) ? 1f : 0f;
-            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(CoverStepCurve!, coverStepRaw), considerationCount);
+            var hasCover = HasCoverAStepAway(candidate);
+            if (_coverOnly && (!hasCover || !IsBesideSomething(candidate)))
+                return 0f;
+
+            if (CoverStepCurve is not null)
+            {
+                score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(CoverStepCurve, hasCover ? 1f : 0f), considerationCount);
+
+                if (score <= 0f)
+                    return 0f;
+            }
+        }
+
+        if (WallCurve is not null)
+        {
+            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(WallCurve, GetWallRaw(candidate)), considerationCount);
 
             if (score <= 0f)
                 return 0f;
@@ -601,20 +659,67 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
         foreach (var offset in CoverStepOffsets)
         {
-            var neighbourCoordinates = new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector(grid, tile + offset));
-
-            // Somewhere it can stand: no wall, door, table or anything else the navmesh has there.
-            if (_pathfindingSystem.GetPoly(neighbourCoordinates) is not { } neighbourPoly ||
-                !neighbourPoly.Data.IsFreeSpace ||
-                neighbourPoly.Data.CollisionLayer != 0 ||
-                neighbourPoly.Data.CollisionMask != 0)
+            if (!IsFreeFloor(grid, tile + offset))
                 continue;
+
+            var neighbourCoordinates = new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector(grid, tile + offset));
 
             if (!_npcLineOfSightSystem.InLineOfSight(_coverStepSightField, _transformSystem.ToMapCoordinates(neighbourCoordinates)))
                 return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Whether any tile next to <paramref name="candidate"/>'s, diagonals included, is one nothing can stand on.
+    /// </summary>
+    private bool IsBesideSomething(PathPoly candidate)
+    {
+        if (!_entityManager.TryGetComponent<MapGridComponent>(candidate.GraphUid, out var mapGridComponent))
+            return false;
+
+        var grid = new Entity<MapGridComponent>(candidate.GraphUid, mapGridComponent);
+        var tile = _mapSystem.TileIndicesFor(grid, candidate.Coordinates);
+
+        foreach (var offset in CoverStepOffsets)
+        {
+            if (!IsFreeFloor(grid, tile + offset))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether something can stand on <paramref name="tile"/>: no wall, door, table or anything else the navmesh has there.
+    /// </summary>
+    private bool IsFreeFloor(Entity<MapGridComponent> grid, Vector2i tile)
+    {
+        return _pathfindingSystem.GetPoly(new EntityCoordinates(grid, _mapSystem.TileCenterToVector(grid, tile))) is { } poly &&
+            poly.Data.IsFreeSpace &&
+            poly.Data.CollisionLayer == 0 &&
+            poly.Data.CollisionMask == 0;
+    }
+
+    /// <summary>
+    ///     How tucked in <paramref name="candidate"/> is. See <see cref="WallCurve"/>.
+    /// </summary>
+    private float GetWallRaw(PathPoly candidate)
+    {
+        if (!_entityManager.TryGetComponent<MapGridComponent>(candidate.GraphUid, out var mapGridComponent))
+            return 0f;
+
+        var grid = new Entity<MapGridComponent>(candidate.GraphUid, mapGridComponent);
+        var tile = _mapSystem.TileIndicesFor(grid, candidate.Coordinates);
+
+        var blockedAlongX = !IsFreeFloor(grid, tile + new Vector2i(1, 0)) || !IsFreeFloor(grid, tile + new Vector2i(-1, 0));
+        var blockedAlongY = !IsFreeFloor(grid, tile + new Vector2i(0, 1)) || !IsFreeFloor(grid, tile + new Vector2i(0, -1));
+
+        if (blockedAlongX && blockedAlongY)
+            return 1f;
+
+        return blockedAlongX || blockedAlongY ? 0.5f : 0f;
     }
 
     /// <summary>

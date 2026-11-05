@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 using Content.Server.NPC.Systems;
 using Content.Shared.Hands.Components;
@@ -112,6 +113,16 @@ public sealed class KsNpcHandsTest : GameTest
     - !type:HTNPrimitiveTask
       operator: !type:WieldOperator
 
+- type: htnCompound
+  id: KsHandsTestSwapAndHoldCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:SwapToFreeHandOperator
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: KsHandsTestHold
+
 - type: utilityQuery
   id: KsHandsTestInventoryAmmo
   query:
@@ -203,33 +214,24 @@ public sealed class KsNpcHandsTest : GameTest
     }
 
     /// <summary>
-    ///     The hands a plan expected to end up with are for planning. Once the plan is over, the blackboard says what the
-    ///         NPC holds now: an NPC that went on believing it had its gun in hand wielded it mid-pry, over and over.
+    ///     The hands a plan expected to end up with are for planning. Once it has started, the blackboard says what the NPC
+    ///         holds now: an NPC that went on believing it had its gun in hand wielded it mid-pry, over and over.
     /// </summary>
     [Test]
     public async Task TestPlannedHandsDoNotOutliveThePlan()
     {
-        var (entManager, npcUid, gunUid, beltUid) = await SetUpArmedNpc();
-        EntityUid magazineUid = default;
+        var (entManager, npcUid, _, _) = await SetUpArmedNpc();
 
         await Pair.Server.WaitPost(() =>
         {
-            magazineUid = entManager.SpawnEntity(Magazine, entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
-            Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, magazineUid, out _, playSound: false), "the magazine should go in the belt");
-            Start(entManager, npcUid, "KsHandsTestReloadCompound");
+            entManager.GetComponent<HTNComponent>(npcUid).Blackboard.SetValue("KsHandsTestHold", 600f);
+            Start(entManager, npcUid, "KsHandsTestSwapAndHoldCompound");
         });
 
-        await RunUntil(entManager, () => IsWieldedInActiveHand(entManager, npcUid, gunUid) &&
-            entManager.GetComponent<HTNComponent>(npcUid).Plan == null);
+        await RunUntil(entManager, () => entManager.GetComponent<HTNComponent>(npcUid).Plan?.CurrentOperator is StaticWaitOperator);
 
-        await Pair.Server.WaitAssertion(() =>
-        {
-            Assert.That(IsWieldedInActiveHand(entManager, npcUid, gunUid), "the reload should have gone through its swaps of hands");
-            Assert.That(entManager.System<SharedWieldableSystem>().TryUnwield((gunUid, entManager.GetComponent<WieldableComponent>(gunUid)), npcUid, force: true));
-            entManager.System<SharedHandsSystem>().SetActiveHand(npcUid, "left");
-        });
-
-        await Pair.RunTicksSync(5); // the wield's virtual item goes at the end of the tick
+        await Pair.Server.WaitPost(() => entManager.System<SharedHandsSystem>().SetActiveHand(npcUid, "right"));
+        await Pair.RunTicksSync(5);
 
         await Pair.Server.WaitAssertion(() =>
         {
@@ -237,8 +239,9 @@ public sealed class KsNpcHandsTest : GameTest
 
             Assert.Multiple(() =>
             {
-                Assert.That(blackboard.GetValueOrDefault<string>(NPCBlackboard.ActiveHand, entManager), Is.EqualTo("left"), "the hand it is really using");
-                Assert.That(blackboard.GetValueOrDefault<bool>(NPCBlackboard.ActiveHandFree, entManager), "which is empty, though the gun's hand was not");
+                Assert.That(entManager.GetComponent<HTNComponent>(npcUid).Plan?.CurrentOperator, Is.InstanceOf<StaticWaitOperator>(), "the plan should still be on");
+                Assert.That(blackboard.GetValueOrDefault<string>(NPCBlackboard.ActiveHand, entManager), Is.EqualTo("right"), "the hand it is really using, not the free one it planned on");
+                Assert.That(blackboard.GetValueOrDefault<bool>(NPCBlackboard.ActiveHandFree, entManager), Is.False, "which has the gun in it");
             });
         });
     }

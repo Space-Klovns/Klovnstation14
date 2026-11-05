@@ -11,6 +11,7 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 /// </summary>
 public sealed partial class ProbabilityPrecondition : HTNPrecondition
 {
+    [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private NpcMeterSystem _npcMeterSystem = default!;
 
@@ -21,6 +22,13 @@ public sealed partial class ProbabilityPrecondition : HTNPrecondition
     public float Probability = 100f;
 
     /// <summary>
+    ///     A blackboard key holding the chance in place of <see cref="Probability"/>, if the NPC has it, for one that varies
+    ///         from NPC to NPC.
+    /// </summary>
+    [DataField]
+    public string? ProbabilityKey;
+
+    /// <summary>
     ///     A meter on the NPC, such as anger, each point of which adds a percent to the chance.
     /// </summary>
     [DataField]
@@ -29,6 +37,9 @@ public sealed partial class ProbabilityPrecondition : HTNPrecondition
     public override bool IsMet(NPCBlackboard blackboard)
     {
         var probability = Probability;
+        if (ProbabilityKey is { } probabilityKey && blackboard.TryGetValue<float>(probabilityKey, out var keyedProbability, _entityManager))
+            probability = keyedProbability;
+
         if (Meter is { } meter)
             probability += _npcMeterSystem.GetValue(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), meter);
 
