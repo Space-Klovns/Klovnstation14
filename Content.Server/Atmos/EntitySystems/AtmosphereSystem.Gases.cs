@@ -222,7 +222,7 @@ namespace Content.Server.Atmos.EntitySystems
             }
 
             if (ksInletPressure is { } ksPressure) // KS14
-                _ksTransferThermoSystem.Apply(buffer, ksPressure, destination.Pressure, doesWork: true, deviceUid: ksDeviceUid, heatSink: ksHeatSink); // KS14
+                _ksTransferThermoSystem.Apply(buffer, ksPressure, destination.Pressure, doesWork: true, deviceUid: ksDeviceUid, heatSink: ksHeatSink); // KS14: compression heat
 
             Merge(destination, buffer);
         }

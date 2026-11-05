@@ -21,6 +21,6 @@
             <Control HorizontalExpand="True" />
             <Button Name="SetTransferRateButton" Text="{Loc comp-gas-pump-ui-pump-set-rate}" HorizontalAlignment="Right" Disabled="True"/>
         </BoxContainer>
-        <atmos:KsPumpHeatFootnote Name="HeatFootnote" Access="Public" /> <!-- KS14 -->
+        <atmos:KsPumpHeatFootnote Name="HeatFootnote" Access="Public" /> <!-- KS14: heat footnote, which also needs xmlns:atmos above -->
     </BoxContainer>
 </controls:FancyWindow>

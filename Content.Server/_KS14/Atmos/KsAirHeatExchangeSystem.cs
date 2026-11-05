@@ -50,6 +50,15 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Whether anything lies over a tile to exchange heat with: even vacuum does, by radiation, so only a sealed tile has
+    ///         nothing. A caller splitting a body's capacity between its contacts counts this as one.
+    /// </summary>
+    public bool HasAir(EntityUid gridUid, Vector2i indices)
+    {
+        return _atmosphereSystem.GetTileMixture((gridUid, null, null), Transform(gridUid).MapUid, indices, excite: false) != null;
+    }
+
+    /// <summary>
     ///     Exchanges heat between a body lying on a tile and that tile's air.
     /// </summary>
     /// <param name="capacity">The body's heat capacity, or the share of it this exchange may work with, in J/K.</param>
@@ -123,11 +132,12 @@ public sealed partial class KsAirHeatExchangeSystem : EntitySystem
 
         // Moles first: space reports a heat capacity even empty.
         var airCapacity = mixture.TotalMoles > 0f ? _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true) : 0f;
-        if (airCapacity < Atmospherics.MinimumHeatCapacity)
-            return MathF.Min(ExchangeWithReservoir(capacity, temperature, Atmospherics.TCMB, conductance: 0f, radiatingArea, emissivity, seconds), maxHeat);
-
-        if (mixture.Immutable)
-            return MathF.Min(ExchangeWithReservoir(capacity, temperature, mixture.Temperature, conductance, radiatingArea, emissivity, seconds), maxHeat);
+        var vacuum = airCapacity < Atmospherics.MinimumHeatCapacity;
+        if (vacuum || mixture.Immutable)
+        {
+            var bathTemperature = vacuum ? Atmospherics.TCMB : mixture.Temperature;
+            return MathF.Min(ExchangeWithReservoir(capacity, temperature, bathTemperature, vacuum ? 0f : conductance, radiatingArea, emissivity, seconds), maxHeat);
+        }
 
         var airTemperature = mixture.Temperature;
         if (MathF.Abs(airTemperature - temperature) < MinimumDelta)

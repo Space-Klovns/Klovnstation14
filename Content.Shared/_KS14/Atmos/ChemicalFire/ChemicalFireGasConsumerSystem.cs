@@ -67,9 +67,9 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
         if (args.Mixture is not { } mixture)
             return;
 
-        // Starved before it eats anything this tick: crowded out, rather than burnt through.
+        // Starved before it eats anything this tick: crowded out, rather than burnt through, or its air gone from under it.
         if (entity.Comp.ExtinguishWhenDepleted &&
-            entity.Comp.MinimumMoleFraction > 0f &&
+            (entity.Comp.MinimumMoleFraction > 0f || mixture.Immutable) &&
             IsStarved(entity.Comp, mixture) &&
             _chemicalFireQuery.TryGetComponent(entity.Owner, out var starvedFireComponent))
         {

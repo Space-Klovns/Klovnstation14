@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Content.Client._KS14.Atmos.UI;
 using Content.Client.Atmos.UI;
+using Robust.Client.UserInterface.CustomControls;
 using Content.Client.Message;
 using Content.Client.UserInterface.Controls;
 using Content.IntegrationTests.Fixtures;
@@ -591,6 +592,27 @@ public sealed class KsPumpHeatTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     A scrubber in clean air or a filter with nothing to filter hands over an empty packet. That's no work, and a device
+    ///         doing none has no business holding the component.
+    /// </summary>
+    [Test]
+    public async Task AnEmptyPacketIsNoWork()
+    {
+        var server = Pair.Server;
+        var site = await BuildSite();
+
+        await server.WaitAssertion(() =>
+        {
+            var deviceUid = SpawnDevice(site, 3);
+            var empty = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C };
+
+            server.System<KsTransferThermoSystem>().Apply(empty, Atmospherics.OneAtmosphere, 3f * Atmospherics.OneAtmosphere, doesWork: true, deviceUid: deviceUid);
+
+            Assert.That(server.EntMan.HasComponent<KsPumpHeatComponent>(deviceUid), Is.False, "An empty packet was recorded as work.");
+        });
+    }
+
     private static void FillWithNitrogen(GasMixture mixture, float pressure)
     {
         mixture.Clear();
@@ -599,14 +621,14 @@ public sealed class KsPumpHeatTests : GameTest
     }
 
     /// <summary>
-    ///     The pump windows have a fixed size, so the footnote has to fit even at its longest, or it pushes something out.
+    ///     The footnote has to fit even at its longest, or it pushes something out of the bottom.
     /// </summary>
     [Test]
-    public async Task TheFootnoteFitsTheFixedSizeWindows()
+    public async Task TheFootnoteFitsEveryWindowAtItsSmallest()
     {
         var client = Pair.Client;
         var localizationManager = client.ResolveDependency<ILocalizationManager>();
-        var windows = new List<(FancyWindow Window, KsPumpHeatFootnote Footnote)>();
+        var windows = new List<(BaseWindow Window, KsPumpHeatFootnote Footnote)>();
 
         await client.WaitPost(() =>
         {
@@ -614,6 +636,13 @@ public sealed class KsPumpHeatTests : GameTest
             var pressureWindow = new GasPressurePumpWindow();
             windows.Add((volumeWindow, volumeWindow.HeatFootnote));
             windows.Add((pressureWindow, pressureWindow.HeatFootnote));
+
+            var filterWindow = new GasFilterWindow();
+            var mixerWindow = new GasMixerWindow();
+            var molarMixerWindow = new MolarMixerWindow();
+            windows.Add((filterWindow, filterWindow.HeatFootnote));
+            windows.Add((mixerWindow, mixerWindow.HeatFootnote));
+            windows.Add((molarMixerWindow, molarMixerWindow.HeatFootnote));
 
             var longest = localizationManager.GetString("ks-pump-heat-footnote", ("text", localizationManager.GetString(
                 "ks-pump-heat-footnote-recovering", ("gas", 888888f), ("room", 888888f), ("recovered", 888888f))));
@@ -632,8 +661,9 @@ public sealed class KsPumpHeatTests : GameTest
             {
                 foreach (var (window, _) in windows)
                 {
-                    window.Measure(new Vector2(window.SetWidth, float.PositiveInfinity));
-                    Assert.That(window.DesiredSize.Y, Is.LessThanOrEqualTo(window.SetHeight), $"{window.GetType().Name} is too short for its footnote.");
+                    // Its smallest, since a footnote that wraps gets taller as the window gets narrower.
+                    window.Measure(new Vector2(window.MinWidth, float.PositiveInfinity));
+                    Assert.That(window.DesiredSize.Y, Is.LessThanOrEqualTo(window.MinHeight), $"{window.GetType().Name} is too short for its footnote.");
                 }
             }
 

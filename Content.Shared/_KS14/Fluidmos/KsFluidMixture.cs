@@ -172,10 +172,15 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
         foreach (var (key, amount) in Reagents)
         {
             if (amount.Vapor > 0f && propertiesSystem.TryGetProperties(key.Prototype, out var properties))
-                heatCapacity += amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
+                heatCapacity += VaporHeatCapacity(amount, properties);
         }
 
         return heatCapacity;
+    }
+
+    private static float VaporHeatCapacity(in KsFluidAmount amount, KsFluidReagentProperties properties)
+    {
+        return amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
     }
 
     /// <summary>
@@ -197,7 +202,7 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
 
             heatCapacity += (amount.Solid + amount.Liquid) * properties.SpecificHeat;
             if (amount.Vapor > 0f)
-                heatCapacity += amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
+                heatCapacity += VaporHeatCapacity(amount, properties);
         }
 
         SetHeatCapacity(heatCapacity);

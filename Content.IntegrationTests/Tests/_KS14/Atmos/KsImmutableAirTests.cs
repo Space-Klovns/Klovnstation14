@@ -224,6 +224,27 @@ public sealed class KsImmutableAirTests : GameTest
     }
 
     /// <summary>
+    ///     A chemfire whose tile turns to vacuum under it, as an explosion does, is starved like any other.
+    /// </summary>
+    [Test]
+    public async Task ChemfireGoesOutWhenItsAirGoes()
+    {
+        var server = Pair.Server;
+        var testMap = await CreateMap(MakeAir(Atmospherics.T20C));
+        Entity<ChemicalFireComponent> fire = default;
+
+        await server.WaitAssertion(() =>
+        {
+            fire = server.System<SharedChemicalFireSystem>().SpawnChemicalFire(_firePrototype, testMap.Tile)!.Value;
+            server.System<AtmosphereSystem>().SetMapAtmosphere(testMap.MapUid, space: true, new GasMixture(Atmospherics.CellVolume));
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 5);
+
+        await server.WaitAssertion(() => Assert.That(server.EntMan.EntityExists(fire.Owner), Is.False, "A chemfire burned on in vacuum."));
+    }
+
+    /// <summary>
     ///     Immutable air is still real data: without what a chemfire burns, it can't start.
     /// </summary>
     [Test]

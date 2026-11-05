@@ -1,5 +1,4 @@
 using Content.Server._KS14.TileEffects;
-using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared._KS14.Fluidmos.Ice;
@@ -29,7 +28,6 @@ namespace Content.Server._KS14.Fluidmos.Ice;
 /// </remarks>
 public sealed partial class KsIceSheetSystem : EntitySystem
 {
-    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private Content.Server._KS14.Atmos.KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
     [Dependency] private KsTileEffectAtmosSystem _tileEffectAtmosSystem = default!;
@@ -272,7 +270,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         var hasPuddle = _puddleSystem.TryGetCachedPuddle(gridUid, indices, out var puddle) &&
                         puddle.Comp.Solution is { } contactSolution &&
                         contactSolution.Comp.Solution.Volume > FixedPoint2.Zero;
-        var contactCapacity = iceCapacity / (hasPuddle ? 2 : 1);
+        var contacts = (_airHeatExchangeSystem.HasAir(gridUid, indices) ? 1 : 0) + (hasPuddle ? 1 : 0);
+        var contactCapacity = iceCapacity / Math.Max(contacts, 1);
 
         var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
         iceHeat += _airHeatExchangeSystem.ExchangeWithTile(gridUid,

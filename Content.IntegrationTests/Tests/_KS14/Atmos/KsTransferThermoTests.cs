@@ -282,6 +282,37 @@ public sealed class KsTransferThermoTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     Vapor has no van der Waals constants, so in a mixture it only dilutes the gas's, as a gas without any does: a trace of
+    ///         real gas mustn't chill a packet that is mostly vapor as though the whole of it were that gas.
+    /// </summary>
+    [Test]
+    public async Task VaporDilutesTheConstantsOfWhatItThrottlesWith()
+    {
+        var server = Pair.Server;
+
+        await server.WaitAssertion(() =>
+        {
+            const float inletPressure = 50f * Atmospherics.OneAtmosphere;
+            const float outletPressure = Atmospherics.OneAtmosphere;
+            const float gasFraction = 0.25f;
+
+            var (pureA, pureB) = server.System<KsGasThermoSystem>().MixtureVanDerWaals(MakeGas(inletPressure, Atmospherics.T20C, (Gas.Nitrogen, 1f)));
+
+            var packet = MakeVapor(inletPressure, Atmospherics.T20C, vaporFraction: 1f - gasFraction);
+            var moles = packet.TotalMoles + packet.Fluid!.VaporMoles;
+            var molarHeatCapacity = server.System<AtmosphereSystem>().KsGetCompressibleHeatCapacity(packet, applyScaling: false) / moles;
+
+            var expected = KsThrottling.ThrottledTemperature(pureA * gasFraction * gasFraction, pureB * gasFraction, molarHeatCapacity,
+                Atmospherics.T20C, inletPressure, outletPressure);
+            var undiluted = KsThrottling.ThrottledTemperature(pureA, pureB, molarHeatCapacity, Atmospherics.T20C, inletPressure, outletPressure);
+            Assert.That(MathF.Abs(expected - undiluted), Is.GreaterThan(0.1f), "Diluting changes nothing here, so this proves nothing.");
+
+            server.System<KsTransferThermoSystem>().Apply(packet, inletPressure, outletPressure, doesWork: false);
+            Assert.That(packet.Temperature, Is.EqualTo(expected).Within(0.01f), "Vapor didn't dilute the gas it throttled with.");
+        });
+    }
+
     [Test]
     public async Task ImmutableAirTakesTheShedHeatButVacuumDoesNot()
     {

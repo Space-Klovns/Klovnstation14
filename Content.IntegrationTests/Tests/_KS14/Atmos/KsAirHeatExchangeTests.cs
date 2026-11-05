@@ -17,6 +17,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Maps;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._KS14.Atmos;
@@ -424,6 +425,75 @@ public sealed class KsAirHeatExchangeTests : GameTest
 
             server.System<KsIceSheetSystem>().UpdateHeatExchange(1f, conductance: 0f, referenceVolume: 20f);
             Assert.That(solution.Volume, Is.EqualTo(volumeBefore), "Ice sublimed out of a sealed tile.");
+        });
+    }
+
+    /// <summary>
+    ///     A sheet shares its capacity between the contacts it has, and a sealed tile has no air to count as one. So ice on a
+    ///         sealed tile gives its puddle the whole of it, and takes more heat from it than the same ice on an open tile.
+    /// </summary>
+    [Test]
+    public async Task IceOnASealedTileSharesNoCapacityWithAir()
+    {
+        await OverrideCVar(Side.Server, KsCCVars.AtmosPuddleEmissivity, 0f); // So that the open tile's air takes nothing itself.
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var testMap = await Pair.CreateTestMap();
+        var mapSystem = entityManager.System<SharedMapSystem>();
+        var sealedTile = testMap.Tile.GridIndices;
+        var openTile = sealedTile + new Vector2i(3, 0);
+        const float puddleTemperature = 280f;
+
+        await server.WaitPost(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner);
+            for (var x = sealedTile.X; x <= openTile.X; x++)
+                mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, sealedTile.Y), testMap.Tile.Tile);
+
+            entityManager.SpawnEntity(WallPrototype, mapSystem.GridTileToLocal(testMap.Grid.Owner, testMap.Grid.Comp, sealedTile));
+        });
+        await server.WaitRunTicks(TicksPerSecond * 5);
+
+        EntityUid sealedPuddleUid = default;
+        EntityUid openPuddleUid = default;
+        var iceSystem = server.System<KsIceSheetSystem>();
+        await server.WaitPost(() =>
+        {
+            Assert.That(server.System<AtmosphereSystem>().GetTileMixture(testMap.Grid.Owner, testMap.MapUid, sealedTile), Is.Null,
+                "The wall's tile has air, so this proves nothing.");
+
+            var puddleSystem = server.System<PuddleSystem>();
+            foreach (var tile in new[] { sealedTile, openTile })
+            {
+                iceSystem.AddIce(mapSystem.GridTileToLocal(testMap.Grid.Owner, testMap.Grid.Comp, tile),
+                    new Solution(WaterReagent.Id, FixedPoint2.New(5)) { Temperature = 250f });
+            }
+
+            Assert.That(puddleSystem.TrySpillAt(mapSystem.GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, sealedTile),
+                new Solution(_inertReagent.Id, FixedPoint2.New(10)) { Temperature = puddleTemperature }, out sealedPuddleUid, sound: false, tileReact: false));
+            Assert.That(puddleSystem.TrySpillAt(mapSystem.GetTileRef(testMap.Grid.Owner, testMap.Grid.Comp, openTile),
+                new Solution(_inertReagent.Id, FixedPoint2.New(10)) { Temperature = puddleTemperature }, out openPuddleUid, sound: false, tileReact: false));
+        });
+        await server.WaitRunTicks(2);
+
+        await server.WaitAssertion(() =>
+        {
+            float Temperature(EntityUid puddleUid)
+            {
+                var puddleComponent = entityManager.GetComponent<Content.Shared.Fluids.Components.PuddleComponent>(puddleUid);
+                Assert.That(server.System<SharedSolutionContainerSystem>().ResolveSolution(puddleUid, puddleComponent.SolutionName, ref puddleComponent.Solution, out var solution));
+                return solution!.Temperature;
+            }
+
+            var openBefore = Temperature(openPuddleUid);
+            var sealedBefore = Temperature(sealedPuddleUid);
+
+            iceSystem.UpdateHeatExchange(0.1f, conductance: 0f, referenceVolume: 20f);
+
+            var openDrop = openBefore - Temperature(openPuddleUid);
+            Assert.That(openDrop, Is.GreaterThan(0f), "The ice took no heat from its puddle, so this proves nothing.");
+            Assert.That(sealedBefore - Temperature(sealedPuddleUid), Is.GreaterThan(openDrop * 1.1f),
+                "Ice on a sealed tile held back capacity for air that isn't there.");
         });
     }
 

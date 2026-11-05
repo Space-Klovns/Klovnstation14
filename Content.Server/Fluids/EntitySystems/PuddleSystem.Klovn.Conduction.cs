@@ -47,11 +47,11 @@ public sealed partial class PuddleSystem
 
     /// <summary>
     ///     Whether the puddle on a tile exchanges heat with what is over it, which even vacuum does, by radiation: only a
-    ///         foam blanket seals the puddle in.
+    ///         foam blanket or a sealed tile shuts it off.
     /// </summary>
     private bool ExchangesWithAir(EntityUid gridUid, Vector2i indices)
     {
-        return !_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _);
+        return !_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _) && _airHeatExchangeSystem.HasAir(gridUid, indices);
     }
 
     /// <summary>

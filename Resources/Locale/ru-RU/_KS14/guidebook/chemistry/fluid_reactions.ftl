@@ -3,11 +3,11 @@ ks-mixing-verb-fluid-reactor = реакция в каталитическом р
 
 ks-guidebook-fluid-reaction-uses-header = Реагирует в трубах
 ks-guidebook-fluid-reaction-catalyst = со слоем катализатора [bold]{ $catalyst }[/bold]
-ks-guidebook-fluid-reaction-catalyst-reagent = если в трубе не меньше { $units } ед. вещества «{ $reagent }»
-ks-guidebook-fluid-reaction-pressure = если давление вещества «{ $reagent }» выше { $pressure } кПа
+ks-guidebook-fluid-reaction-catalyst-reagent = если в трубе не меньше { NATURALFIXED($units, 2) } ед. вещества «{ $reagent }»
+ks-guidebook-fluid-reaction-pressure = если давление вещества «{ $reagent }» выше { NATURALFIXED($pressure, 2) } кПа
 
 ks-guidebook-reagent-points-reagent = Вещество
 ks-guidebook-reagent-points-boils = Кипит при
 ks-guidebook-reagent-points-melts = Плавится при
-ks-guidebook-reagent-points-kelvin = { $kelvin } K
+ks-guidebook-reagent-points-kelvin = { NATURALFIXED($kelvin, 2) } K
 ks-guidebook-reagent-points-none = —

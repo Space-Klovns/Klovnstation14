@@ -78,11 +78,12 @@ public sealed partial class KsTransferThermoSystem : EntitySystem
         EntityUid? deviceUid = null,
         GasMixture? heatSink = null)
     {
-        if (packet.Immutable || packet.Temperature <= 0f)
+        // Not only gas moles: unlinked vapor lives in the fluid, and compressing it is work all the same.
+        var moles = packet.TotalMoles + (packet.Fluid?.VaporMoles ?? 0f);
+        if (packet.Immutable || moles <= 0f || packet.Temperature <= 0f)
             return;
 
         var temperature = packet.Temperature;
-        // Not only gas moles: unlinked vapor lives in the fluid, and compressing it is work all the same.
         var gasHeatCapacity = _atmosphereSystem.KsGetCompressibleHeatCapacity(packet, applyScaling: false);
         if (gasHeatCapacity <= 0f)
             return;
@@ -112,7 +113,7 @@ public sealed partial class KsTransferThermoSystem : EntitySystem
             var (mixedA, mixedB) = _gasThermoSystem.MixtureVanDerWaals(packet);
             gasTemperature = KsThrottling.ThrottledTemperature(mixedA,
                 mixedB,
-                gasHeatCapacity / (packet.TotalMoles + (packet.Fluid?.VaporMoles ?? 0f)),
+                gasHeatCapacity / moles,
                 temperature,
                 inPressure,
                 outPressure);

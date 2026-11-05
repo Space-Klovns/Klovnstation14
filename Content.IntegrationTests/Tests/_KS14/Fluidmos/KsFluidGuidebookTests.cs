@@ -53,6 +53,18 @@ public sealed class KsFluidGuidebookTests : GameTest
   desc: reagent-desc-nothing
   physicalDesc: reagent-physical-desc-nothing
 
+- type: reagent
+  id: KsTestGuideCatalystReagent
+  name: reagent-name-nothing
+  desc: reagent-desc-nothing
+  physicalDesc: reagent-physical-desc-nothing
+
+- type: reagent
+  id: KsTestGuidePressureReagent
+  name: reagent-name-nothing
+  desc: reagent-desc-nothing
+  physicalDesc: reagent-physical-desc-nothing
+
 - type: ksFluidReaction
   id: KsTestGuideReaction
   reactants:
@@ -62,11 +74,16 @@ public sealed class KsFluidGuidebookTests : GameTest
   minTemp: 123.5
   maxTemp: 456.5
   catalyst: KsPlatinum
+  catalystReagent: KsTestGuideCatalystReagent
+  minPartialPressure:
+    KsTestGuidePressureReagent: 1
 ";
 
     private readonly ProtoId<ReagentPrototype> _feedReagent = "KsTestGuideFeed";
     private readonly ProtoId<ReagentPrototype> _madeReagent = "KsTestGuideMade";
     private readonly ProtoId<ReagentPrototype> _bystanderReagent = "KsTestGuideBystander";
+    private readonly ProtoId<ReagentPrototype> _catalystReagent = "KsTestGuideCatalystReagent";
+    private readonly ProtoId<ReagentPrototype> _pressureReagent = "KsTestGuidePressureReagent";
 
     private const string ReactionTemperature = "123.5";
 
@@ -94,6 +111,8 @@ public sealed class KsFluidGuidebookTests : GameTest
             var feed = new GuideReagentEmbed(protoMan.Index(_feedReagent));
             var made = new GuideReagentEmbed(protoMan.Index(_madeReagent));
             var bystander = new GuideReagentEmbed(protoMan.Index(_bystanderReagent));
+            var catalyst = new GuideReagentEmbed(protoMan.Index(_catalystReagent));
+            var pressure = new GuideReagentEmbed(protoMan.Index(_pressureReagent));
 
             using (Assert.EnterMultipleScope())
             {
@@ -109,11 +128,18 @@ public sealed class KsFluidGuidebookTests : GameTest
 
                 Assert.That(Section(bystander, "RecipesContainer").Visible || Section(bystander, "KsFluidReactionsContainer").Visible, Is.False,
                     "A reagent with nothing to do with the reaction lists it.");
+
+                Assert.That(HasReactionIn(catalyst, "KsFluidReactionsContainer", "KsFluidReactionsDescriptionContainer"),
+                    "A reagent a reaction needs in the pipe doesn't say so on its card.");
+                Assert.That(HasReactionIn(pressure, "KsFluidReactionsContainer", "KsFluidReactionsDescriptionContainer"),
+                    "A reagent a reaction needs a pressure of doesn't say so on its card.");
             }
 
             feed.Dispose();
             made.Dispose();
             bystander.Dispose();
+            catalyst.Dispose();
+            pressure.Dispose();
         });
     }
 

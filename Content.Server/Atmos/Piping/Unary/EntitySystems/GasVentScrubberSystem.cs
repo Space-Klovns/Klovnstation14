@@ -100,7 +100,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
 
         private void Scrub(float timeDelta, GasVentScrubberComponent scrubber, GasMixture? tile, PipeNode outlet, EntityUid ksDeviceUid /* KS14: added */)
         {
-            Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), scrubber.PumpDirection, scrubber.FilterGases, tile, outlet.Air, ksDeviceUid /* KS14: added */);
+            Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), scrubber.PumpDirection, scrubber.FilterGases, tile, outlet.Air, ksDeviceUid: ksDeviceUid /* KS14: added */);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
             }
             else if (mode == ScrubberPumpDirection.Siphoning)
             {
-                _ksTransferThermoSystem.Apply(removed, ksTilePressure, destination.Pressure, doesWork: true, deviceUid: ksDeviceUid, heatSink: tile); // KS14
+                _ksTransferThermoSystem.Apply(removed, ksTilePressure, destination.Pressure, doesWork: true, deviceUid: ksDeviceUid, heatSink: tile); // KS14: compression heat
                 _atmosphereSystem.Merge(destination, removed);
             }
             return true;

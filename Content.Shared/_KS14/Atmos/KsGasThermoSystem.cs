@@ -96,7 +96,17 @@ public sealed partial class KsGasThermoSystem : EntitySystem
     /// </summary>
     public (float A, float B) MixtureVanDerWaals(GasMixture mixture)
     {
-        return KsThrottling.MixConstants(mixture.Moles, SqrtVanDerWaalsA, VanDerWaalsB);
+        var (a, b) = KsThrottling.MixConstants(mixture.Moles, SqrtVanDerWaalsA, VanDerWaalsB);
+
+        // Unlinked vapor has no constants of its own, so it only dilutes, as a gas with none does.
+        if (mixture.Fluid is { VaporMoles: > 0f } fluid)
+        {
+            var gasFraction = mixture.TotalMoles / (mixture.TotalMoles + fluid.VaporMoles);
+            a *= gasFraction * gasFraction;
+            b *= gasFraction;
+        }
+
+        return (a, b);
     }
 
     private void Rebuild()

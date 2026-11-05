@@ -147,7 +147,7 @@ namespace Content.Server.Atmos.Portable
 
         private bool Scrub(float timeDelta, PortableScrubberComponent scrubber, GasMixture? tile, EntityUid ksDeviceUid /* KS14: added */)
         {
-            return _scrubberSystem.Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), ScrubberPumpDirection.Scrubbing, scrubber.FilterGases, tile, scrubber.Air, ksDeviceUid /* KS14: added */);
+            return _scrubberSystem.Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), ScrubberPumpDirection.Scrubbing, scrubber.FilterGases, tile, scrubber.Air, ksDeviceUid: ksDeviceUid /* KS14: added */);
         }
 
         private void UpdateAppearance(EntityUid uid, bool isFull, bool isRunning)

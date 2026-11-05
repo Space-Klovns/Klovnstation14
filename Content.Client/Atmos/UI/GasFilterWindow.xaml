@@ -40,6 +40,6 @@
 
             <GridContainer HorizontalExpand="True" Name="GasContainer" Columns="3" Margin="0 5 0 0" VerticalExpand="True" />
         </BoxContainer>
-        <atmos:KsPumpHeatFootnote Name="HeatFootnote" Access="Public" /> <!-- KS14 -->
+        <atmos:KsPumpHeatFootnote Name="HeatFootnote" Access="Public" /> <!-- KS14: heat footnote, which also needs xmlns:atmos above -->
     </BoxContainer>
 </DefaultWindow>

@@ -164,6 +164,7 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
 
         var blend = 1f - MathF.Exp(-elapsed / SmoothingSeconds);
         var scale = 1f / (elapsed * _atmosphereSystem.HeatScale);
+        var (gasBefore, roomBefore, recoveredBefore) = (component.GasPower, component.RoomPower, component.RecoveredPower);
 
         component.GasPower += (component.PendingGasHeat * scale - component.GasPower) * blend;
         component.RoomPower += (component.PendingRoomHeat * scale - component.RoomPower) * blend;
@@ -173,7 +174,11 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
         component.PendingRoomHeat = 0f;
         component.PendingRecoveredHeat = 0f;
 
-        Dirty(entity);
+        // Every device holding the component samples each second, and a footnote is rarely open on any of them.
+        if (MathF.Abs(component.GasPower - gasBefore) +
+            MathF.Abs(component.RoomPower - roomBefore) +
+            MathF.Abs(component.RecoveredPower - recoveredBefore) >= MinimumPower)
+            Dirty(entity);
     }
 
     private void StepLoad(Entity<KsPumpHeatComponent, ApcPowerReceiverComponent> entity, TimeSpan curTime, float frameTime)
