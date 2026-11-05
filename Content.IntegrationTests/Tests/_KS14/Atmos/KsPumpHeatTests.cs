@@ -29,6 +29,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Content.Shared._KS14.Fluidmos;
+using Content.Shared.Chemistry.Reagent;
 using Robust.Shared.Utility;
 
 namespace Content.IntegrationTests.Tests._KS14.Atmos;
@@ -89,10 +91,21 @@ public sealed class KsPumpHeatTests : GameTest
   - type: ApcPowerReceiver
     powerLoad: 200
   - type: ExtensionCableReceiver
+
+# Boils far below anything here, and no gas of its own, so its vapor lives in the fluid.
+- type: reagent
+  id: KsTestPumpVapor
+  name: reagent-name-nothing
+  desc: reagent-desc-nothing
+  physicalDesc: reagent-physical-desc-nothing
+  boilingPoint: 150
+  fluidmos:
+    molarMass: 60
 ";
 
     private readonly EntProtoId _apcPrototype = "KsTestPumpApc";
     private readonly EntProtoId _devicePrototype = "KsTestPumpDevice";
+    private readonly ProtoId<ReagentPrototype> _vaporReagent = "KsTestPumpVapor";
     private static readonly EntProtoId ApcExtensionPrototype = "CableApcExtension";
     private static readonly EntProtoId VolumePumpPrototype = "GasVolumePump";
 
@@ -473,17 +486,13 @@ public sealed class KsPumpHeatTests : GameTest
     }
 
     /// <summary>
-    ///     A real pump, on a real APC, pushing air from one atmosphere into three as fast as it goes.
+    ///     Pushes <paramref name="fillInlet"/>'s gas from one atmosphere into three, as fast as a real pump on a real APC goes.
     /// </summary>
-    [Test]
-    public async Task ARealPumpPaysForItsWorkAndSparesItsRoom()
+    private async Task<EntityUid> RunRealPump(Site site, Action<GasMixture> fillInlet)
     {
         var server = Pair.Server;
         var entityManager = server.EntMan;
-        var site = await BuildSite();
         var nodeContainerSystem = server.System<NodeContainerSystem>();
-        var recovery = server.CfgMan.GetCVar(KsCCVars.AtmosPumpHeatRecovery);
-        var keptFraction = server.CfgMan.GetCVar(KsCCVars.AtmosPumpCompressionHeatFraction);
         const float deltaTime = 0.5f;
         EntityUid pumpUid = default;
 
@@ -508,7 +517,7 @@ public sealed class KsPumpHeatTests : GameTest
             await server.WaitPost(() =>
             {
                 Assert.That(nodeContainerSystem.TryGetNodes(pumpUid, "inlet", "outlet", out PipeNode? inlet, out PipeNode? outlet));
-                FillWithNitrogen(inlet!.Air, Atmospherics.OneAtmosphere);
+                fillInlet(inlet!.Air);
                 FillWithNitrogen(outlet!.Air, 3f * Atmospherics.OneAtmosphere);
 
                 var ev = new AtmosDeviceUpdateEvent(deltaTime, null, null);
@@ -516,6 +525,22 @@ public sealed class KsPumpHeatTests : GameTest
             });
             await server.WaitRunTicks((int)(TicksPerSecond * deltaTime));
         }
+
+        return pumpUid;
+    }
+
+    /// <summary>
+    ///     A real pump, on a real APC, pushing air from one atmosphere into three as fast as it goes.
+    /// </summary>
+    [Test]
+    public async Task ARealPumpPaysForItsWorkAndSparesItsRoom()
+    {
+        var server = Pair.Server;
+        var entityManager = server.EntMan;
+        var site = await BuildSite();
+        var recovery = server.CfgMan.GetCVar(KsCCVars.AtmosPumpHeatRecovery);
+        var keptFraction = server.CfgMan.GetCVar(KsCCVars.AtmosPumpCompressionHeatFraction);
+        var pumpUid = await RunRealPump(site, inlet => FillWithNitrogen(inlet, Atmospherics.OneAtmosphere));
 
         await server.WaitAssertion(() =>
         {
@@ -533,6 +558,35 @@ public sealed class KsPumpHeatTests : GameTest
                 Assert.That(pumpHeat.GasPower, Is.EqualTo(keptFraction * total).Within(total * 0.01f), "The gas didn't keep its share.");
                 Assert.That(LoadOf(pumpUid), Is.GreaterThan(IdleLoad + 100f), "Working hard didn't raise the pump's load.");
                 Assert.That(LoadOf(pumpUid), Is.LessThanOrEqualTo(MaximumLoad() + 1f), "The pump went past its maximum load.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The same pump on vapor with no gas of its own, which lives in the fluid: it does work, and pays for it, all the same.
+    /// </summary>
+    [Test]
+    public async Task ARealPumpPaysToCompressUnlinkedVapor()
+    {
+        var server = Pair.Server;
+        var site = await BuildSite();
+        var pumpUid = await RunRealPump(site, inlet =>
+        {
+            Assert.That(inlet.FluidCapable, "A pipe can't hold the vapor, so this proves nothing.");
+            inlet.Clear();
+            inlet.Temperature = Atmospherics.T20C;
+            inlet.Fluid = new KsFluidMixture();
+            inlet.Fluid.SetAmount(new KsFluidReagentKey(_vaporReagent, null),
+                new KsFluidAmount { Vapor = Atmospherics.OneAtmosphere * inlet.Volume / (Atmospherics.R * Atmospherics.T20C) });
+        });
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.TryGetComponent<KsPumpHeatComponent>(pumpUid, out var pumpHeat), "The pump did no work on the vapor.");
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(pumpHeat!.GasPower + pumpHeat.RoomPower + pumpHeat.RecoveredPower, Is.GreaterThan(0f), "The pump did no work on the vapor.");
+                Assert.That(LoadOf(pumpUid), Is.GreaterThan(IdleLoad + 100f), "Compressing vapor didn't raise the pump's load.");
             }
         });
     }

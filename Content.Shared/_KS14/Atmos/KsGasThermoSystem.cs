@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Prototypes;
 using Robust.Shared.Prototypes;
@@ -11,6 +12,8 @@ namespace Content.Shared._KS14.Atmos;
 /// </summary>
 public sealed partial class KsGasThermoSystem : EntitySystem
 {
+    [Dependency] private KsFluidmosPropertiesSystem _fluidmosPropertiesSystem = default!;
+
     /// <summary>
     ///     The monatomic limit. No gas compresses hotter than this ratio says.
     /// </summary>
@@ -76,6 +79,13 @@ public sealed partial class KsGasThermoSystem : EntitySystem
 
             totalMoles += gasMoles;
             heatCapacity += gasMoles * RatioHeatCapacities[i];
+        }
+
+        // Unlinked vapor has no gas to take a ratio from, so its molar heat capacity stands in, as for a gas with no override.
+        if (mixture.Fluid is { } fluid)
+        {
+            totalMoles += fluid.VaporMoles;
+            heatCapacity += fluid.GetVaporHeatCapacity(_fluidmosPropertiesSystem);
         }
 
         return totalMoles > 0f ? HeatCapacityRatio(heatCapacity / totalMoles) : 0f;

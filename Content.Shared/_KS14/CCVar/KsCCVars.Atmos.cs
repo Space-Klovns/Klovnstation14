@@ -102,6 +102,9 @@ public sealed partial class KsCCVars
     ///         0 to 1, rather than heating its room. The device isn't billed for what it recovers. The balance knob for how
     ///         hot a working pump's room gets. A device off the grid recovers nothing.
     /// </summary>
+    /// <remarks>
+    ///     The default breaks the second law on purpose: see <c>KsTransferThermoSystem.Apply</c>.
+    /// </remarks>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> AtmosPumpHeatRecovery =
         CVarDef.Create("klovn.atmos.pump_heat_recovery", 0.95f, CVar.SERVERONLY);

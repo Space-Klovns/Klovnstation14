@@ -164,6 +164,21 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
     }
 
     /// <summary>
+    ///     Unscaled heat capacity, in J/K, of its unlinked vapor alone: what compresses, along with the gas.
+    /// </summary>
+    public float GetVaporHeatCapacity(KsFluidmosPropertiesSystem propertiesSystem)
+    {
+        var heatCapacity = 0f;
+        foreach (var (key, amount) in Reagents)
+        {
+            if (amount.Vapor > 0f && propertiesSystem.TryGetProperties(key.Prototype, out var properties))
+                heatCapacity += amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
+        }
+
+        return heatCapacity;
+    }
+
+    /// <summary>
     ///     Unscaled heat capacity, in J/K, of everything in the mixture.
     /// </summary>
     public float GetHeatCapacity(KsFluidmosPropertiesSystem propertiesSystem)

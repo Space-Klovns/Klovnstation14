@@ -160,7 +160,8 @@ bounded by the clamp on the exponent in `SaturationPressure`. This is a delibera
   (`KsCCVars.AtmosPumpEfficiency`). The packet keeps only `AtmosPumpCompressionHeatFraction` (default 0.1) of that
   heat. A device on the grid recovers `AtmosPumpHeatRecovery` (default 0.95) of the rest as electricity. What's left
   goes to the pump's room, or to an immutable heat sink with moles (planet air, lattice). With nothing to shed it into,
-  in vacuum, it stays in the packet.
+  in vacuum, it stays in the packet. Unlinked vapor counts as gas here, with its molar heat capacity standing in for a heat
+  capacity ratio, even though it lives in the fluid rather than the gas moles.
 - **Throttling**: gas let downhill changes temperature by Joule–Thomson (`KsThrottling`, Shared). It uses the van der
   Waals constants only as a thermal correction. A gas without them is ideal and doesn't change. Tritium's inversion
   temperature is low enough that it warms.
