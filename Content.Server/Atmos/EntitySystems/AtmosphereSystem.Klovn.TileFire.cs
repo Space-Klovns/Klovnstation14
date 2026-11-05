@@ -27,4 +27,20 @@ public sealed partial class AtmosphereSystem
 
         return grid.Comp.Tiles.TryGetValue(tile, out var tileAtmosphere) && tileAtmosphere.Hotspot.Valid;
     }
+
+    /// <summary>
+    ///     Adds every tile with a gas fire on it, on every grid, to <paramref name="tiles"/>.
+    /// </summary>
+    public void GetGasFires(List<(EntityUid Grid, Vector2i Tile)> tiles)
+    {
+        var enumerator = EntityQueryEnumerator<GridAtmosphereComponent>();
+        while (enumerator.MoveNext(out var gridUid, out var gridAtmosphereComponent))
+        {
+            foreach (var tileAtmosphere in gridAtmosphereComponent.HotspotTiles)
+            {
+                if (tileAtmosphere.Hotspot.Valid)
+                    tiles.Add((gridUid, tileAtmosphere.GridIndices));
+            }
+        }
+    }
 }

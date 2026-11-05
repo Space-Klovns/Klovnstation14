@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Dangers; // KS14
 using Content.Shared.NPC;
 
 namespace Content.Server.NPC.Pathfinding;
@@ -47,7 +48,14 @@ public sealed partial class PathfindingSystem
             return 0f;
 
         var modifier = GetTileModifier(request.Flags, request.CollisionLayer, request.CollisionMask, end);
-        return modifier.Equals(0f) ? 0f : modifier * OctileDistance(end, start);
+        if (modifier.Equals(0f))
+            return 0f;
+
+        // Fire and the like: see PathfindingSystem.Klovn.Danger.cs
+        if (request.AvoidedDangers != NpcTileDangerKind.None && IsDangerous(end, request.AvoidedDangers))
+            modifier *= request.DangerCost;
+
+        return modifier * OctileDistance(end, start);
     }
 
     /// <summary>

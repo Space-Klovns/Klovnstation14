@@ -266,6 +266,22 @@ down goes through `NpcSquadMemberDownedEvent`, which the squad system raises bef
 subscribe to `MobStateChangedEvent` on squad members yourself: the squad system already does, and only one system
 may. `ks_squaddebug` draws every meter a member has as a bar under it.
 
+## Tile dangers
+
+Fires start and go out too often for the navmesh, which every NPC shares and which is dear to rebuild, so dangers sit
+beside it (`PathfindingSystem.Klovn.Danger.cs`), in a small array per burning chunk. They raise what a poly costs a path
+request that avoids them, and are never walls, so an NPC with no other way still gets through.
+
+- **What is dangerous:** an entity with `NpcTileDanger` makes its whole tile so. Gas fires have no entity and come from
+  `AtmosphereSystem.GetGasFires`. A new sort of danger is a value in `NpcTileDangerKind`.
+- **Who cares:** only an NPC with `NpcAvoidsTileDanger`, for the sorts it lists. Everything else ignores all of them,
+  which is what a firebot needs, and an NPC that fire cannot hurt leaves `Fire` out.
+- **Cost:** worked out on demand, at most every 0.5s, and only for an NPC that avoids something, so it is nothing with
+  none about, and otherwise what is burning rather than the size of the map.
+- **Steering:** a straight-line chase takes a path instead while there are dangers about, and a path looks ahead for a
+  fire that started on it after it was found. `TacticalPositionOperator` is never offered a tile that poses one.
+  `GetRandomPath` does not take dangers into account.
+
 ## Kill zones
 
 `NpcKillZoneSystem` remembers where NPCs' own went down, per faction, on the grid it happened on. A zone is flooded

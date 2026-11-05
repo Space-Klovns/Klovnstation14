@@ -395,6 +395,12 @@ public sealed partial class PathfindingSystem
         return (byte)(x * ChunkSize + y);
     }
 
+    // KS14: for a tile rather than a position
+    private static Vector2i GetOrigin(Vector2i tile)
+    {
+        return new Vector2i((int) MathF.Floor(tile.X / (float) ChunkSize), (int) MathF.Floor(tile.Y / (float) ChunkSize));
+    }
+
     private Vector2i GetOrigin(Vector2 localPos)
     {
         return new Vector2i((int)Math.Floor(localPos.X / ChunkSize), (int)Math.Floor(localPos.Y / ChunkSize));

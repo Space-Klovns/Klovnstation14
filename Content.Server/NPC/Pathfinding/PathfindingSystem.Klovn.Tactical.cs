@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Dangers;
 using Content.Server._KS14.NPC.Pathfinding;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Map;
@@ -42,7 +43,7 @@ public sealed partial class PathfindingSystem
             (layer, mask) = _physics.GetHardCollision(entity, fixtures);
         }
 
-        var request = new TacticalPathRequest(reference, maxRange, maxCandidates, flags, layer, mask, cancelToken);
+        var request = WithAvoidedDangers(new TacticalPathRequest(reference, maxRange, maxCandidates, flags, layer, mask, cancelToken), entity);
         RentTacticalSearchState(request);
         _pathRequests.Add(request);
 
@@ -197,7 +198,10 @@ public sealed partial class PathfindingSystem
 
         foreach (var (poly, _) in request.CostSoFar)
         {
-            if (poly.IsValid() && seenTiles.Add((poly.GraphUid, poly.ChunkOrigin, poly.TileIndex)))
+            // Nowhere to stand, for one that avoids it, however much it may have to cross one getting somewhere.
+            if (poly.IsValid() &&
+                (request.AvoidedDangers == NpcTileDangerKind.None || !IsDangerous(poly, request.AvoidedDangers)) &&
+                seenTiles.Add((poly.GraphUid, poly.ChunkOrigin, poly.TileIndex)))
                 tilePolys.Add(poly);
         }
 

@@ -103,6 +103,13 @@ public sealed partial class NPCSteeringComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite)] public float RepathRange = 1.5f;
 
+    // KS14 start
+    /// <summary>
+    /// When to next look along the path for a danger that has started up on it since it was found.
+    /// </summary>
+    [ViewVariables] public TimeSpan NextDangerCheck;
+    // KS14 end
+
     public const int FailedPathLimit = 3;
 
     /// <summary>

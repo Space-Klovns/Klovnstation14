@@ -5,6 +5,7 @@ using Content.Server._KS14.NPC.Components; // KS14
 using Content.Server.Administration.Managers;
 using Content.Server.Destructible;
 using Content.Server.DoAfter;
+using Content.Server._KS14.NPC.Dangers; // KS14
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Events;
 using Content.Server.NPC.Pathfinding;
@@ -442,6 +443,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         // Thanks past sloth I already realised.
         if (targetPoly != null &&
             steering.Coordinates.Position.Equals(Vector2.Zero) &&
+            _pathfindingSystem.GetAvoidedDangers(uid) == NpcTileDangerKind.None && // KS14: a straight line goes through whatever is in the way
             TryComp<PhysicsComponent>(uid, out var physics) &&
             _interaction.InRangeUnobstructed(uid, steering.Coordinates.EntityId, range: 30f, (CollisionGroup)physics.CollisionMask))
         {

@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using Content.Server._KS14.NPC.Dangers; // KS14
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.Power.EntitySystems; // KS14
@@ -410,6 +411,8 @@ public sealed partial class NPCSteeringSystem
             {
                 needsPath = true;
             }
+
+            // KS14: a fire has started on the way since this path was found
         }
 
         // Request the new path.
@@ -418,6 +421,44 @@ public sealed partial class NPCSteeringSystem
             RequestPath(uid, steering, xform, targetDistance);
         }
     }
+
+    // KS14 start
+    private static readonly TimeSpan DangerCheckInterval = TimeSpan.FromSeconds(0.5);
+
+    /// <summary>
+    /// How far along its path to look for a danger: a few tiles' worth.
+    /// </summary>
+    private const int DangerCheckPolys = 12;
+
+    /// <summary>
+    /// Whether what <paramref name="uid"/> avoids lies on the next stretch of its path. So not every tick, as a path
+    /// that has to cross a danger finds it again every time, and only so far ahead, as the rest may have burnt out by then.
+    /// </summary>
+    private bool HasNewDanger(EntityUid uid, NPCSteeringComponent steering)
+    {
+        var now = _timing.CurTime;
+        if (now < steering.NextDangerCheck)
+            return false;
+
+        steering.NextDangerCheck = now + DangerCheckInterval;
+
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None)
+            return false;
+
+        var checkedPolys = 0;
+        foreach (var poly in steering.CurrentPath)
+        {
+            if (_pathfindingSystem.IsDangerous(poly, dangers))
+                return true;
+
+            if (++checkedPolys >= DangerCheckPolys)
+                break;
+        }
+
+        return false;
+    }
+    // KS14 end
 
     /// <summary>
     /// We may be pathfinding and moving at the same time in which case early nodes may be out of date.

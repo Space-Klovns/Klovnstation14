@@ -45,6 +45,8 @@
         variation: 0.3
 
   - type: AlwaysHot
+  - type: NpcTileDanger # NPCs that avoid fire path round it
+    dangers: Fire
   - type: KsDecalOnSpawn # a scorch mark, as a tile fire leaves
   - type: StepTrigger
     requiredTriggeredSpeed: 0
