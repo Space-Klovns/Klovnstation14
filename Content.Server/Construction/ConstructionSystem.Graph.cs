@@ -368,9 +368,11 @@ namespace Content.Server.Construction
 
             // Transform transferring.
             var newTransform = Transform(newUid);
-            TransformSystem.AttachToGridOrMap(newUid, newTransform); // in case in hands or a container
-            newTransform.LocalRotation = transform.LocalRotation;
-            newTransform.Anchored = transform.Anchored;
+            // KS14 start: upstream #45353, use the anchor API removed from TransformComponent in v292.
+            TransformSystem.SetLocalRotationNoLerp(newUid, transform.LocalRotation);
+            if (!transform.Anchored || !TransformSystem.AnchorEntity((newUid, newTransform, null)))
+                TransformSystem.AttachToGridOrMap(newUid, newTransform);
+            // KS14 end
 
             // Container transferring.
             if (containerManager != null)

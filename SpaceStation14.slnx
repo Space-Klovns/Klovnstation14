@@ -77,12 +77,7 @@
     <File Path="RobustToolbox/MSBuild/Robust.Trimming.targets" />
     <File Path="RobustToolbox/MSBuild/XamlIL.targets" />
   </Folder>
-  <Folder Name="/RobustToolbox/NetSerializer/">
-    <Project Path="RobustToolbox/NetSerializer/NetSerializer/NetSerializer.csproj">
-      <BuildType Solution="DebugOpt|*" Project="Debug" />
-      <BuildType Solution="Tools|*" Project="Release" />
-    </Project>
-  </Folder>
+  <!-- KS14: NetSerializer moved from an engine submodule to NuGet in v295.0.0. -->
   <Folder Name="/RobustToolbox/Project Files/">
     <File Path="RobustToolbox/Directory.Build.props" />
     <File Path="RobustToolbox/Directory.Packages.props" />
