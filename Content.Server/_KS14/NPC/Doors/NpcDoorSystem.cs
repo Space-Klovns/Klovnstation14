@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Server._KS14.NPC.Hands;
 using Content.Server._KS14.NPC.Squad;
@@ -207,10 +208,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
         if (!_doorQuery.TryComp(doorUid, out var doorComponent) || doorComponent.State != DoorState.Closed)
             return false;
 
-        if (!_pryingQuery.TryComp(itemUid, out var pryingComponent))
-            return false;
-
-        if (!pryingComponent.Enabled && !HasPryingMode(itemUid))
+        if (!IsPryingTool(itemUid, out var pryingComponent))
             return false;
 
         var beforePryEvent = new BeforePryEvent(npcUid, pryingComponent.PryPowered, pryingComponent.Force, StrongPry: true);
@@ -236,6 +234,32 @@ public sealed partial class NpcDoorSystem : EntitySystem
             _doorQuery.TryComp(doorUid, out var doorComponent) &&
             doorComponent.State == DoorState.Closed &&
             !(_doorBoltQuery.TryComp(doorUid, out var doorBoltComponent) && doorBoltComponent.BoltsDown);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="npcUid"/> carries something that pries and forces doors in its way with it, so a door only
+    ///         prying gets through is a way through for its paths. Which door is left to <see cref="TryGetBreachTool"/>.
+    /// </summary>
+    public bool PriesDoorsInItsWay(EntityUid npcUid)
+    {
+        if (!BreachesWhenBlocked(npcUid))
+            return false;
+
+        GetCarriedItems(npcUid);
+
+        foreach (var itemUid in _carriedItems)
+        {
+            if (IsPryingTool(itemUid, out _))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsPryingTool(EntityUid itemUid, [NotNullWhen(true)] out PryingComponent? pryingComponent)
+    {
+        return _pryingQuery.TryComp(itemUid, out pryingComponent) &&
+            (pryingComponent.Enabled || HasPryingMode(itemUid));
     }
 
     private bool HasPryingMode(EntityUid itemUid)
@@ -624,13 +648,17 @@ public sealed partial class NpcDoorSystem : EntitySystem
     private bool CanForceFromSteering(EntityUid npcUid, EntityUid doorUid, out EntityUid toolUid)
     {
         toolUid = default;
-        var breachWhenBlocked = _doorUserQuery.TryComp(npcUid, out var doorUserComponent)
-            ? doorUserComponent.BreachWhenBlocked
-            : NpcDoorUserComponent.DefaultBreachWhenBlocked;
 
-        return breachWhenBlocked &&
+        return BreachesWhenBlocked(npcUid) &&
             IsMovingInForeground(npcUid) &&
             TryGetBreachTool(npcUid, doorUid, out toolUid, out _);
+    }
+
+    private bool BreachesWhenBlocked(EntityUid npcUid)
+    {
+        return _doorUserQuery.TryComp(npcUid, out var doorUserComponent)
+            ? doorUserComponent.BreachWhenBlocked
+            : NpcDoorUserComponent.DefaultBreachWhenBlocked;
     }
 
     /// <summary>

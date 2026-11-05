@@ -662,7 +662,9 @@ public sealed partial class PathfindingSystem
                             flags &= ~(PathfindingBreadcrumbFlag.Door |
                                 PathfindingBreadcrumbFlag.Access |
                                 PathfindingBreadcrumbFlag.Bolted |
-                                PathfindingBreadcrumbFlag.Welded);
+                                PathfindingBreadcrumbFlag.Welded |
+                                PathfindingBreadcrumbFlag.PryOnly |
+                                PathfindingBreadcrumbFlag.Sealed);
                         }
                         // KS14 end
 

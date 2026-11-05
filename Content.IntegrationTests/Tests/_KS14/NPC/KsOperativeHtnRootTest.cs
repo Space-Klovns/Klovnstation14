@@ -652,6 +652,57 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     Memory is not the same as news. A hostile long gone is remembered for a good while yet, but a grenade only goes
+    ///         after one lost a moment ago: going by the memory alone, they lobbed one into a room with nobody in it.
+    /// </summary>
+    [TestCase(NpcContactState.Lost, 1, true)]
+    [TestCase(NpcContactState.Lost, 30, false)]
+    [TestCase(NpcContactState.Reported, 1, true)]
+    [TestCase(NpcContactState.Reported, 30, false)]
+    public async Task TestOnlyAFreshContactGetsAGrenade(NpcContactState state, int secondsAgo, bool throws)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageCarried(entManager, mobUid, TestGrenade);
+                StageContact(entManager, mobUid, gridUid, state, new System.Numerics.Vector2(0.5f, 0.5f), System.TimeSpan.FromSeconds(secondsAgo));
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is ThrowGrenadeOperator), Is.EqualTo(throws), Describe(plan));
+    }
+
+    /// <summary>
+    ///     Glass can be seen through, and a grenade thrown at it lands at the thrower's feet. So one in sight behind glass gets
+    ///         none, nor does one lost behind it.
+    /// </summary>
+    [TestCase(NpcContactState.Visible, false, true)]
+    [TestCase(NpcContactState.Visible, true, false)]
+    [TestCase(NpcContactState.Lost, false, true)]
+    [TestCase(NpcContactState.Lost, true, false)]
+    public async Task TestHostileBehindGlassGetsNoGrenade(NpcContactState state, bool glass, bool throws)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestGrenade);
+
+                // In line with the operative, at the far side of its room.
+                var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 0, 3);
+                entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid);
+
+                if (glass)
+                    SpawnAt(entManager, "Window", gridUid, 2, 3);
+
+                var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+                entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(state, now, now, now,
+                    entManager.GetComponent<TransformComponent>(hostileUid).Coordinates, default, null, Reacted: true));
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is ThrowGrenadeOperator), Is.EqualTo(throws), Describe(plan));
+    }
+
+    /// <summary>
     ///     A grenade goes into the fight too, from those that do that, interrupting the shooting for the throw. Every other
     ///         NPC goes on shooting.
     /// </summary>
@@ -1420,12 +1471,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
     /// <summary>
     ///     A hostile out of sight behind the room's walls, that the operative believes was last somewhere in its room.
     /// </summary>
-    private static void StageContact(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, NpcContactState state, System.Numerics.Vector2? believedAt = null)
+    private static void StageContact(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, NpcContactState state, System.Numerics.Vector2? believedAt = null, System.TimeSpan age = default)
     {
         var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 10, 10);
-        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        var seenAt = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime - age;
         entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(state,
-            now, now, now, new EntityCoordinates(gridUid, believedAt ?? new System.Numerics.Vector2(2.5f, 2.5f)), new System.Numerics.Vector2(1f, 0f),
+            seenAt, seenAt, seenAt, new EntityCoordinates(gridUid, believedAt ?? new System.Numerics.Vector2(2.5f, 2.5f)), new System.Numerics.Vector2(1f, 0f),
             null, Reacted: state != NpcContactState.Reported));
     }
 

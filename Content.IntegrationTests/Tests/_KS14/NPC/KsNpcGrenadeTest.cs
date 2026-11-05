@@ -138,6 +138,46 @@ public sealed class KsNpcGrenadeTest : GameTest
     }
 
     /// <summary>
+    ///     What <see cref="ContactThrowClearCon"/> has to get right: glass stops a throw, and a table does not.
+    /// </summary>
+    [TestCase(null, true)]
+    [TestCase("Window", false)]
+    [TestCase("Table", true)]
+    public async Task TestWhatStopsAThrow(string? inTheWay, bool getsPast)
+    {
+        var (entManager, npcUid, _, grenadeUid) = await SetUp();
+        var grenadeSystem = entManager.System<NpcGrenadeSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var start = Vector2.Zero;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            if (inTheWay != null)
+                SpawnAt(entManager, inTheWay, entManager.GetComponent<TransformComponent>(npcUid).ParentUid, 2, 0);
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            start = transformSystem.GetWorldPosition(npcUid);
+            var coordinates = entManager.GetComponent<TransformComponent>(npcUid).Coordinates.Offset(new Vector2(4f, 0f));
+            Assert.That(grenadeSystem.TryThrow(npcUid, grenadeUid, coordinates), "the grenade should be thrown");
+        });
+
+        await Pair.RunTicksSync(90);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var travelled = transformSystem.GetWorldPosition(grenadeUid).X - start.X;
+            if (getsPast)
+                Assert.That(travelled, Is.GreaterThan(2.5f), "it should have carried on past");
+            else
+                Assert.That(travelled, Is.LessThan(2f), "it should have stopped this side");
+        });
+    }
+
+    /// <summary>
     ///     A grenade leaves from the thrower's feet. While in the air it counts from where it is coming down, so nobody runs
     ///         from their own throw, and whoever is under it knows. Once down it counts from where it really is, which is
     ///         what keeps one that fell short from being ignored.

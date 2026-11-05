@@ -327,6 +327,11 @@ Server-only prototype types (`npcMeter`, `npcVoiceSet`, `htnCompound`, ...) must
   round it as it would a really locked door (`TryDetourAroundDoor` with `believedLocked`), so access added behind its
   back is found out by trying the door, never known. Nothing in steering may ask the door itself (`IsAllowed`): collision
   avoidance goes by `HasAdvertisedAccess` too.
+- **Doors no hand opens:** shutters and blast doors (no `clickOpen`, no `bumpOpen`) open from their buttons. The navmesh
+  flags them `PryOnly` and `Sealed`, so paths treat them as walls, not as public doors. Shutters are a way through for
+  an NPC that pries for itself (`PathFlags.Prying`), or carries something that pries and forces doors in its way
+  (`PathFlags.PryingTool`, from `NpcDoorSystem.PriesDoorsInItsWay`). Nothing pries a blast door, so only smashing gets
+  through one.
 
 **Words.** "Breach" means forcing a door with a tool and nothing else; going in is "entry" (`NpcHuntPhase.Entry`,
 `NpcOrderKind.Enter`). Keep them apart in new code.

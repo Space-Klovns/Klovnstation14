@@ -260,6 +260,44 @@ public sealed class KsNpcQueryTest : GameTest
     }
 
     /// <summary>
+    ///     Whether a throw at where a hostile is believed to be gets there. Glass is the reason it is not the same as line of
+    ///         sight. A table is no reason at all: what is thrown goes over it.
+    /// </summary>
+    [TestCase(null, 1f)]
+    [TestCase("WallSolid", 0f)]
+    [TestCase("Window", 0f)]
+    [TestCase("Table", 1f)]
+    public async Task TestThrowClearOfWhatIsInTheWay(string? inTheWay, float expected)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var throwClear = new ContactThrowClearCon { Curve = new BoolCurve() };
+        EntityUid ownerUid = default;
+        EntityUid hostileUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            ownerUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0);
+            hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 0, 3); // not where it is believed to be
+
+            if (inTheWay != null)
+                SpawnAt(entManager, inTheWay, gridUid, 2, 0);
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            throwClear.Initialise(entManager.EntitySysManager.DependencyCollection);
+
+            var now = Pair.Server.ResolveDependency<IGameTiming>().CurTime;
+            entManager.System<NpcPerceptionSystem>().SetContact(ownerUid, hostileUid, new NpcContact(NpcContactState.Lost, now, now, now,
+                new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)), default, null, Reacted: true));
+
+            Assert.That(throwClear.GetScore(new NPCBlackboard(), ownerUid, hostileUid), Is.EqualTo(expected));
+        });
+    }
+
+    /// <summary>
     ///     The three considerations about a hostile out of sight go by where the owner believes it to be. So move it
     ///         somewhere else entirely and they should not change.
     /// </summary>

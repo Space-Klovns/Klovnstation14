@@ -197,6 +197,10 @@ public sealed partial class PathfindingSystem
 
             if (doorComponent!.State == DoorState.Welded)
                 flags |= PathfindingBreadcrumbFlag.Welded;
+
+            // Doors that open from their button and never by hand: shutters, and blast doors, which cannot be pried either.
+            if (!doorComponent.ClickOpen && !doorComponent.BumpOpen)
+                flags |= doorComponent.CanPry ? PathfindingBreadcrumbFlag.PryOnly : PathfindingBreadcrumbFlag.Sealed;
         }
 
         if (_climbableQuery.HasComponent(uid))

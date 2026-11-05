@@ -72,14 +72,24 @@ public sealed partial class PathfindingSystem
             var isAccess = (end.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimb = (end.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
 
-            // KS14 start: a bolted or welded door opens for nobody and pries for nothing; only smashing it is a way
-            var isShut = (end.Data.Flags & (PathfindingBreadcrumbFlag.Bolted | PathfindingBreadcrumbFlag.Welded)) != 0x0;
+            // KS14 start: a bolted, welded or blast door opens for nobody and pries for nothing; only smashing it is a way
+            var isShut = (end.Data.Flags & (PathfindingBreadcrumbFlag.Bolted | PathfindingBreadcrumbFlag.Welded | PathfindingBreadcrumbFlag.Sealed)) != 0x0;
             if (isDoor && isShut)
             {
                 if ((flags /* KS14: request.Flags -> flags */ & PathFlags.Smashing) == 0x0 || end.Data.Damage <= 0f)
                     return 0f;
 
                 modifier += 10f + end.Data.Damage / 10f;
+            }
+            // Shutters: no hand opens them, so it takes prying or smashing, and nothing else gets anywhere walking up to them
+            else if (isDoor && (end.Data.Flags & PathfindingBreadcrumbFlag.PryOnly) != 0x0)
+            {
+                if ((flags & (PathFlags.Prying | PathFlags.PryingTool)) != 0x0)
+                    modifier += 10f;
+                else if ((flags & PathFlags.Smashing) != 0x0 && end.Data.Damage > 0f)
+                    modifier += 10f + end.Data.Damage / 10f;
+                else
+                    return 0f;
             }
             // KS14 end
             // TODO: Handling power + door prying

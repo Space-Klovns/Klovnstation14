@@ -61,6 +61,24 @@ public sealed class KsNpcDoorTest : GameTest
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
+  id: KsDoorTestUnbreakableWall
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: ""-0.5,-0.5,0.5,0.5""
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+
+- type: entity
   parent: KsSquadTestMobSyndicate
   id: KsDoorTestMobSecurity
   components:
@@ -1283,6 +1301,88 @@ public sealed class KsNpcDoorTest : GameTest
     }
 
     /// <summary>
+    ///     Shutters and blast doors open from their buttons, so walking up to one gets nobody anywhere. To paths they are
+    ///         walls, not doors: they used to cost what a public airlock does, and so were often the shortest way. Only
+    ///         prying gets through shutters, with a tool or without, and an NPC with a crowbar that does not use it on doors
+    ///         in its way is no better off. Nothing pries a blast door, which leaves smashing it.
+    /// </summary>
+    [TestCase("ShuttersNormal", null, null, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase("ShuttersNormal", "KsTestCrowbar", null, BlockedWalkerMob, PathResult.Path)]
+    [TestCase("ShuttersNormal", "KsTestCrowbar", null, PatientWalkerMob, PathResult.NoPath)]
+    [TestCase("ShuttersNormal", null, NPCBlackboard.NavPry, BlockedWalkerMob, PathResult.Path)]
+    [TestCase("ShuttersNormal", null, NPCBlackboard.NavSmash, BlockedWalkerMob, PathResult.Path)]
+    [TestCase("BlastDoor", null, null, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase("BlastDoor", "KsTestCrowbar", null, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase("BlastDoor", null, NPCBlackboard.NavPry, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase("BlastDoor", null, NPCBlackboard.NavSmash, BlockedWalkerMob, PathResult.Path)]
+    public async Task TestDoorsNoHandOpensAreWallsToPaths(string door, string? tool, string? navKey, string mob, PathResult expected)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var pathfindingSystem = entManager.System<PathfindingSystem>();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            for (var y = -6; y <= 6; y++)
+            {
+                if (y == 0)
+                    SpawnPoweredDoorAt(entManager, door, gridUid, 2, 0);
+                else
+                    SpawnAt(entManager, "KsDoorTestUnbreakableWall", gridUid, 2, y); // or smashing just goes through a wall
+            }
+
+            npcUid = SpawnAt(entManager, mob, gridUid, 0, 0);
+            if (tool != null)
+                GiveInHand(entManager, npcUid, tool);
+
+            var blackboard = entManager.GetComponent<HTNComponent>(npcUid).Blackboard;
+            blackboard.SetValue(NPCBlackboard.NavInteract, true);
+            if (navKey != null)
+                blackboard.SetValue(navKey, true);
+        });
+
+        await Pair.RunTicksSync(90);
+
+        Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid, pathfindingSystem.GetFlags(npcUid)), Is.EqualTo(expected));
+    }
+
+    /// <summary>
+    ///     Shutters are only a wall while they are shut: once their button has opened them, anyone can walk through.
+    /// </summary>
+    [Test]
+    public async Task TestOpenShuttersAreAWayThrough()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var pathfindingSystem = entManager.System<PathfindingSystem>();
+        EntityUid shuttersUid = default, npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            for (var y = -6; y <= 6; y++)
+            {
+                if (y == 0)
+                    shuttersUid = SpawnPoweredDoorAt(entManager, "ShuttersNormal", gridUid, 2, 0);
+                else
+                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+            }
+
+            npcUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
+        });
+
+        await Pair.RunTicksSync(90);
+
+        Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid), Is.EqualTo(PathResult.NoPath), "shut, it should be a wall");
+
+        await Pair.Server.WaitPost(() => entManager.System<SharedDoorSystem>().StartOpening(shuttersUid));
+        await Pair.RunTicksSync(180);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(entManager.GetComponent<DoorComponent>(shuttersUid).State, Is.EqualTo(DoorState.Open), "the shutters should have opened"));
+
+        Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid), Is.EqualTo(PathResult.Path), "open, it should not be");
+    }
+
+    /// <summary>
     ///     Somebody else gets the door open, or destroys it, while an NPC is still prying at it. The breach ends there,
     ///         with the crowbar put away - and the door left open: prying a door that is already open shuts it.
     /// </summary>
@@ -1491,7 +1591,7 @@ public sealed class KsNpcDoorTest : GameTest
         Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid), Is.EqualTo(expectPath ? PathResult.Path : PathResult.NoPath));
     }
 
-    private async Task<PathResult> FindPath(IEntityManager entManager, PathfindingSystem pathfindingSystem, EntityUid npcUid, EntityUid gridUid)
+    private async Task<PathResult> FindPath(IEntityManager entManager, PathfindingSystem pathfindingSystem, EntityUid npcUid, EntityUid gridUid, PathFlags flags = PathFlags.Interact)
     {
         System.Threading.Tasks.Task<PathResultEvent> pathTask = default!;
         await Pair.Server.WaitPost(() => pathTask = pathfindingSystem.GetPath(npcUid,
@@ -1499,7 +1599,7 @@ public sealed class KsNpcDoorTest : GameTest
             new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)),
             0.5f,
             default,
-            PathFlags.Interact));
+            flags));
 
         for (var i = 0; i < 120 && !pathTask.IsCompleted; i++)
         {

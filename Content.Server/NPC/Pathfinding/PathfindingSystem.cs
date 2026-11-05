@@ -489,6 +489,12 @@ namespace Content.Server.NPC.Pathfinding
             // KS14 start
             if (blackboard.TryGetValue<bool>(NPCBlackboard.NavPush, out var push, EntityManager) && push)
                 flags |= PathFlags.Pushing;
+
+            // Steering forces doors for an NPC that interacts: see NPCSteeringSystem.Obstacles.cs
+            if ((flags & PathFlags.Interact) != 0x0 &&
+                blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var owner, EntityManager) &&
+                _npcDoorSystem.PriesDoorsInItsWay(owner))
+                flags |= PathFlags.PryingTool;
             // KS14 end
 
             return flags;
