@@ -160,6 +160,7 @@
     - FootstepSound
     - DoorBumpOpener
     - AnomalyHost
+  - type: KsSoftCrit # KS14
 
 - type: entity
   abstract: true
