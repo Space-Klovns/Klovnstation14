@@ -142,9 +142,11 @@ public sealed partial class NPCCombatSystem
             {
                 comp.LOSAccumulator += UnoccludedCooldown;
 
-                // For consistency with NPC steering.
-                var collisionGroup = comp.UseOpaqueForLOSChecks ? CollisionGroup.Opaque : (CollisionGroup.Impassable | CollisionGroup.InteractImpassable);
-                comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, collisionGroup);
+                // KS14 start: not a fixed mask: what this gun's shot would hit. See NpcLineOfFireSystem
+                comp.TargetInLOS = comp.UseOpaqueForLOSChecks
+                    ? _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque)
+                    : _npcLineOfFireSystem.HasLineOfFire(uid, comp.Target, distance + 0.1f);
+                // KS14 end
             }
 
             KsUpdateSight(uid, comp.Target, comp.TargetInLOS); // KS14: lock-on and laser sight

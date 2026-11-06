@@ -73,6 +73,12 @@ public sealed partial class NPCSteeringComponent : Component
     public bool ArriveOnLineOfSight = false;
 
     /// <summary>
+    /// KS14: for <see cref="ArriveOnLineOfSight"/>, whether what counts is having a clear shot rather than a clear way.
+    /// </summary>
+    [ViewVariables]
+    public bool KsArriveOnLineOfFire;
+
+    /// <summary>
     /// How long the target has been in line of sight if applicable.
     /// </summary>
     [DataField("lineOfSightTimer")]

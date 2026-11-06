@@ -383,7 +383,8 @@ namespace Content.Server.Atmos.EntitySystems
         }
 
         public void Resist(EntityUid uid,
-            FlammableComponent? flammable = null)
+            FlammableComponent? flammable = null,
+            bool keepHold = false /* KS14: see NpcStopDropRollSystem */)
         {
             if (!Resolve(uid, ref flammable))
                 return;
@@ -394,7 +395,7 @@ namespace Content.Server.Atmos.EntitySystems
             flammable.ResistCompleteTime = _timing.CurTime + flammable.ResistTime;
 
             _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flammable-component-resist-message"), uid, uid);
-            _stunSystem.TryUpdateParalyzeDuration(uid, flammable.ResistTime);
+            _stunSystem.TryUpdateParalyzeDuration(uid, flammable.ResistTime, drop: !keepHold /* KS14 */);
         }
 
         public override void Update(float frameTime)

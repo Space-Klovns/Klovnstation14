@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Events;
 using Content.Shared.NPC;
+using Content.Shared.Physics;
 using Robust.Shared.Map;
 using Robust.Shared.Random;
 
@@ -17,10 +18,12 @@ public sealed partial class NPCJukeSystem
     ///         lose sight of the target is turned around. True if it steered.
     /// </summary>
     /// <param name="localTargetDirection">Unit direction to the target, in the steering's (grid-relative) frame.</param>
+    /// <param name="shotMask">What its gun's next shot would collide with.</param>
     private bool KsTryStrafe(NPCJukeComponent component,
         ref NPCSteeringEvent args,
         Vector2 localTargetDirection,
-        MapCoordinates targetMapCoordinates)
+        MapCoordinates targetMapCoordinates,
+        CollisionGroup shotMask)
     {
         if (component.KsStrafeDuration is not { } duration || duration <= 0f)
             return false;
@@ -56,7 +59,7 @@ public sealed partial class NPCJukeSystem
                 continue;
 
             var stepWorldPosition = args.WorldPosition + toWorld.RotateVec(NPCSteeringSystem.Directions[i]);
-            if (!_interactionSystem.InRangeUnobstructed(new MapCoordinates(stepWorldPosition, targetMapCoordinates.MapId), targetMapCoordinates, range: -1f))
+            if (!_npcLineOfFireSystem.IsClear(new MapCoordinates(stepWorldPosition, targetMapCoordinates.MapId), targetMapCoordinates, shotMask))
                 continue;
 
             args.Steering.Interest[i] = MathF.Max(args.Steering.Interest[i], result);

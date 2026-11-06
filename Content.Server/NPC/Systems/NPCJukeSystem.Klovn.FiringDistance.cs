@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server.Examine;
 using Content.Server.Interaction;
 using Content.Server.Weapons.Ranged.Systems;
@@ -15,13 +16,10 @@ namespace Content.Server.NPC.Systems;
 public sealed partial class NPCJukeSystem : EntitySystem
 {
     [Dependency] private GunSystem _gunSystem = default!;
-    [Dependency] private InteractionSystem _interactionSystem = default!;
-    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
 
-    [Dependency] private EntityQuery<BallisticAmmoProviderComponent> _ballisticAmmoProviderQuery = default!;
     [Dependency] private EntityQuery<CartridgeAmmoComponent> _cartridgeAmmoQuery = default!;
     [Dependency] private EntityQuery<ProjectileSpreadComponent> _projectileSpreadQuery = default!;
-    [Dependency] private EntityQuery<RevolverAmmoProviderComponent> _revolverAmmoProviderQuery = default!;
 
     /// <summary>
     ///     The whole cone <paramref name="gunEntity"/>'s next shot can land in, and how many projectiles it throws
@@ -33,7 +31,7 @@ public sealed partial class NPCJukeSystem : EntitySystem
     {
         var gunSpread = gunEntity.Comp.MaxAngleModified;
 
-        if (!TryGetNextAmmo(gunEntity.Owner, out var ammoUid, out var ammoPrototype) ||
+        if (!_npcLineOfFireSystem.TryGetNextAmmo(gunEntity.Owner, out var ammoUid, out var ammoPrototype) ||
             !TryGetProjectileSpread(ammoUid, ammoPrototype, out var projectileSpread))
             return (gunSpread, 1);
 
@@ -42,52 +40,6 @@ public sealed partial class NPCJukeSystem : EntitySystem
         RaiseLocalEvent(gunEntity.Owner, ref spreadEvent);
 
         return (gunSpread + spreadEvent.Spread, Math.Max(projectileSpread.Count, 1));
-    }
-
-    /// <summary>
-    ///     The round <paramref name="gunUid"/> will fire next, either as a spawned entity or, where it has not been
-    ///         spawned yet, as a prototype. Covers the common providers; others report nothing.
-    /// </summary>
-    private bool TryGetNextAmmo(EntityUid gunUid, out EntityUid? ammoUid, out EntProtoId? ammoPrototype)
-    {
-        ammoUid = null;
-        ammoPrototype = null;
-
-        // Anything chambered goes first.
-        if (_gunSystem.GetChamberEntity(gunUid) is { } chamberedUid)
-        {
-            ammoUid = chamberedUid;
-            return true;
-        }
-
-        if (_revolverAmmoProviderQuery.TryComp(gunUid, out var revolverComponent) &&
-            revolverComponent.CurrentIndex < revolverComponent.Chambers.Length)
-        {
-            if (revolverComponent.CurrentIndex < revolverComponent.AmmoSlots.Count &&
-                revolverComponent.AmmoSlots[revolverComponent.CurrentIndex] is { } slotUid)
-                ammoUid = slotUid;
-            else if (revolverComponent.Chambers[revolverComponent.CurrentIndex] == true)
-                ammoPrototype = revolverComponent.FillPrototype;
-
-            return ammoUid != null || ammoPrototype != null;
-        }
-
-        // A detachable magazine, or ammo held by the gun itself (a pump shotgun's tube).
-        var providerUid = _containerSystem.TryGetContainer(gunUid, SharedGunSystem.MagazineSlot, out var container) &&
-            container is ContainerSlot { ContainedEntity: { } magazineUid }
-                ? magazineUid
-                : gunUid;
-
-        if (!_ballisticAmmoProviderQuery.TryComp(providerUid, out var ballisticComponent))
-            return false;
-
-        // Spawned rounds are fired from the end of the list before any unspawned ones are made.
-        if (ballisticComponent.Entities.Count > 0)
-            ammoUid = ballisticComponent.Entities[^1];
-        else if (ballisticComponent.UnspawnedCount > 0)
-            ammoPrototype = ballisticComponent.Proto;
-
-        return ammoUid != null || ammoPrototype != null;
     }
 
     /// <summary>

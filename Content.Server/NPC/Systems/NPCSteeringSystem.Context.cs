@@ -118,7 +118,10 @@ public sealed partial class NPCSteeringSystem
         if (!steering.ForceMove && steering.ArriveOnLineOfSight)
         {
             // TODO: use vision range
-            inLos = _interaction.InRangeUnobstructed(uid, steering.Coordinates, 10f);
+            // KS14: or a clear shot
+            inLos = steering.KsArriveOnLineOfFire
+                ? _npcLineOfFireSystem.HasLineOfFire(uid, steering.Coordinates, 10f)
+                : _interaction.InRangeUnobstructed(uid, steering.Coordinates, 10f);
 
             if (inLos)
             {
@@ -151,6 +154,16 @@ public sealed partial class NPCSteeringSystem
             ResetStuck(steering, ourCoordinates);
             return true;
         }
+
+        // KS14 start: this is as close as it goes. It stops dead, unlike arriving, where it goes on steering for the spot: with
+        //      nothing to steer for, what is left of its last direction would carry it on through
+        if (EndsInDanger(uid, steering, targetDistance))
+        {
+            steering.Status = SteeringStatus.InRange;
+            ResetStuck(steering, ourCoordinates);
+            return false;
+        }
+        // KS14 end
 
         // Grab the target position, either the next path node or our end goal..
         var targetCoordinates = GetTargetCoordinates(steering);
@@ -413,6 +426,7 @@ public sealed partial class NPCSteeringSystem
             }
 
             // KS14: a fire has started on the way since this path was found
+            needsPath |= HasNewDanger(uid, steering);
         }
 
         // Request the new path.
@@ -431,8 +445,83 @@ public sealed partial class NPCSteeringSystem
     private const int DangerCheckPolys = 12;
 
     /// <summary>
-    /// Whether what <paramref name="uid"/> avoids lies on the next stretch of its path. So not every tick, as a path
-    /// that has to cross a danger finds it again every time, and only so far ahead, as the rest may have burnt out by then.
+    /// How far ahead of a juke to look for a danger, in tiles. A tile: steering turns over a few ticks, not at once.
+    /// </summary>
+    private const float DangerStepReach = 1f;
+
+    /// <summary>
+    /// Whether <paramref name="uid"/> is stopped on a tile posing what it avoids. A path that has to cross a danger is
+    /// not stopped on it: turned back from the far side of a fire every time, it would never get across.
+    /// </summary>
+    public bool IsStandingInDanger(EntityUid uid)
+    {
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || !_pathfindingSystem.IsDangerous(Transform(uid).Coordinates, dangers))
+            return false;
+
+        return !IsFollowingPath(uid);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="uid"/> is on its way somewhere, along a path or waiting on one. Not so while juking, path
+    /// or no path.
+    /// </summary>
+    public bool IsFollowingPath(EntityUid uid)
+    {
+        return TryComp<NPCSteeringComponent>(uid, out var steering) &&
+            steering.Status == SteeringStatus.Moving &&
+            steering.CanSeek &&
+            (steering.CurrentPath.Count > 0 || steering.Pathfind);
+    }
+
+    /// <summary>
+    /// Whether all that is left of the way is on tiles posing what <paramref name="uid"/> avoids, so that it should go no
+    /// further. Crossing a danger gets it somewhere; ending on one, say a hostile standing in a fire, only leaves it there.
+    /// </summary>
+    private bool EndsInDanger(EntityUid uid, NPCSteeringComponent steering, float targetDistance)
+    {
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || !_pathfindingSystem.IsDangerous(steering.Coordinates, dangers))
+            return false;
+
+        // Close enough that no path is asked for, and it goes straight there.
+        if (steering.CurrentPath.Count == 0)
+            return targetDistance < steering.RepathRange;
+
+        foreach (var poly in steering.CurrentPath)
+        {
+            if (!_pathfindingSystem.IsDangerous(poly, dangers))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Rules out the directions that would step onto a tile posing what <paramref name="uid"/> avoids. For a juke, which
+    /// picks its own way, so that no path keeps it off one.
+    /// </summary>
+    private void AvoidDangerousSteps(EntityUid uid, NPCSteeringComponent steering, TransformComponent xform, Span<float> danger)
+    {
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || xform.GridUid is not { } gridUid || xform.ParentUid != gridUid)
+            return;
+
+        // Steering's directions are relative to the grid, so on one they are in the same terms as its local position.
+        for (var i = 0; i < InterestDirections; i++)
+        {
+            var step = xform.LocalPosition + Directions[i] * DangerStepReach;
+
+            // At full strength now, not blended in over a few ticks: a juke writes its interest straight in, and would lead
+            //      the danger by long enough to get there.
+            if (_pathfindingSystem.IsDangerous(gridUid, step.Floored(), dangers))
+                danger[i] = steering.Danger[i] = 1f;
+        }
+    }
+
+    /// <summary>
+    /// Whether what <paramref name="uid"/> avoids lies on or right beside the next stretch of its path. So not every tick, as
+    /// a path that has to pass one finds it again every time, and only so far ahead, as the rest may have burnt out by then.
     /// </summary>
     private bool HasNewDanger(EntityUid uid, NPCSteeringComponent steering)
     {
@@ -449,7 +538,7 @@ public sealed partial class NPCSteeringSystem
         var checkedPolys = 0;
         foreach (var poly in steering.CurrentPath)
         {
-            if (_pathfindingSystem.IsDangerous(poly, dangers))
+            if (_pathfindingSystem.IsNearDanger(poly, dangers))
                 return true;
 
             if (++checkedPolys >= DangerCheckPolys)

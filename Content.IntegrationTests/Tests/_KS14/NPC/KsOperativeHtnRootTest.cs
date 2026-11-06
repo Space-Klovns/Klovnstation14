@@ -23,6 +23,7 @@ using Content.Server.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat.Ranged;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
+using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Tools.Systems;
@@ -140,6 +141,47 @@ public sealed class KsOperativeHtnRootTest : GameTest
   components:
   - type: TimerTrigger
     delay: 1000
+
+- type: entity
+  parent: KsOperativeRootTestMobWithHands
+  id: KsOperativeRootTestMobWalking
+  components:
+  - type: InputMover
+  - type: MobMover
+  - type: MovementSpeedModifier
+
+# Shut, and seen through, like a glass firelock, without one's need for air on the map.
+- type: entity
+  id: KsOperativeRootTestGlassDoor
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: -0.5,-0.5,0.5,0.5
+        layer:
+        - GlassAirlockLayer
+  - type: Door
+    state: Closed
+    bumpOpen: false
+    clickOpen: false
+
+- type: entity
+  parent: KsOperativeRootTestMobFaker
+  id: KsOperativeRootTestMobFireShy
+  components:
+  - type: NpcAvoidsTileDanger
+    dangers: Fire
+
+- type: entity
+  id: KsOperativeRootTestFire
+  components:
+  - type: NpcTileDanger
+    dangers: Fire
 ";
 
     private const string RecoveringMob = "KsOperativeRootTestMobRecovering";
@@ -150,6 +192,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
     private const string TestMedipen = "KsOperativeRootTestMedipen";
     private const string TestExplosive = "KsOperativeRootTestExplosive";
     private const string TestPrimed = "KsOperativeRootTestPrimed";
+    private const string FireShyMob = "KsOperativeRootTestMobFireShy";
+    private const string TestFire = "KsOperativeRootTestFire";
 
     private const string CombatMarker = "OpInCombat";
     private const string CombatTimeKey = "TimeOfLastCombat";
@@ -383,8 +427,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     An operative playing dead does nothing else: its branch is the first in the root, so not even healing or a
-    ///         target in reach gets it up early.
+    ///     An operative playing dead does nothing else: its branch comes before healing and combat, so not even a target in
+    ///         reach gets it up early.
     /// </summary>
     [Test]
     public async Task TestPlayingDeadComesFirst()
@@ -398,11 +442,43 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 Assert.That(playDeadSystem.IsPlayingDead(mobUid), "a rattled operative on its own should be playing dead");
             });
 
+        Assert.That(plan.Tasks.Single().Operator, Is.TypeOf<Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.PlayDead.PlayDeadOperator>(),
+            $"expected only playing dead, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     An operative that finds itself in a fire gets out before anything else, even playing dead. Only what it avoids
+    ///         counts.
+    /// </summary>
+    [TestCase(FireShyMob, true)]
+    [TestCase(SyndicateMob, false)]
+    public async Task TestFireUnderItComesFirst(string mobPrototype, bool leaves)
+    {
+        var plan = await PlanOperative(pendingSensorData: true, recentlyFought: true, mobPrototype: mobPrototype,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                var tile = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition.Floored();
+                SpawnAt(entManager, TestFire, gridUid, tile.X, tile.Y);
+
+                entManager.System<PathfindingSystem>().RefreshTileDangersNow();
+
+                if (!leaves)
+                    return;
+
+                entManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>().Set(mobUid, "KsOperativeRootTestCaution", 100f);
+                var playDeadSystem = entManager.System<Content.Server._KS14.NPC.PlayDead.NpcPlayDeadSystem>();
+                playDeadSystem.UpdateNow(mobUid);
+                Assert.That(playDeadSystem.IsPlayingDead(mobUid), "the test needs it playing dead");
+            });
+
+        var pickedAnExit = plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "DangerExit" });
+
         Assert.Multiple(() =>
         {
-            Assert.That(plan.BranchTraversalRecord[0], Is.Zero, "playing dead should be the root's first branch");
-            Assert.That(plan.Tasks.Single().Operator, Is.TypeOf<Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.PlayDead.PlayDeadOperator>(),
-                $"expected only playing dead, got: {Describe(plan)}");
+            Assert.That(pickedAnExit, Is.EqualTo(leaves), $"got: {Describe(plan)}");
+
+            if (leaves)
+                Assert.That(plan.BranchTraversalRecord[0], Is.Zero, "getting out of a fire should be the root's first branch");
         });
     }
 
@@ -972,6 +1048,133 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     Live: a hostile seen through a window that stops its gun is gone round to, however far that is, for the shot it
+    ///         cannot get from here. It used to shuffle from spot to spot beside the glass, each of which could see the hostile.
+    /// </summary>
+    [Test]
+    public async Task TestHostileBehindGlassIsGoneRoundTo()
+    {
+        var (entManager, mobUid, _) = await SetUpBehindGlass(y => y is >= -4 and <= 4 ? "Window" : y == 11 ? null : "WallSolid");
+        var position = System.Numerics.Vector2.Zero;
+
+        for (var i = 0; i < 900 && position.X < 4f; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() => position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition);
+        }
+
+        Assert.That(position.X, Is.GreaterThanOrEqualTo(4f), "it never went round");
+    }
+
+    /// <summary>
+    ///     Live: with no way round either, there is no shot to wait for, and it gets on with something else. It used to stand
+    ///         there behind its gun for as long as it could see the hostile.
+    /// </summary>
+    [TestCase("Window", "Window")]
+    [TestCase("KsOperativeRootTestGlassDoor", "WallSolid")]
+    public async Task TestHostileSealedBehindGlassIsNotWaitedOn(string glass, string rest)
+    {
+        var (entManager, mobUid, _) = await SetUpBehindGlass(y => y == 0 ? glass : rest);
+
+        await Pair.RunTicksSync(90);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = entManager.GetComponent<HTNComponent>(mobUid).Plan;
+            Assert.That(plan?.Tasks.Any(task => task.Operator is Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat.Ranged.GunOperator), Is.Not.True,
+                plan is null ? "no plan" : $"it is waiting on a shot it cannot take: {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     Live: glass is nothing to a laser. It stays this side and fires, rather than walking round to do so, whether it has
+    ///         a spot to fight from or is only closing in.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestLaserShootsThroughGlass(bool spotDue)
+    {
+        var timing = Pair.Server.ResolveDependency<IGameTiming>();
+        var (entManager, mobUid, _) = await SetUpBehindGlass(y => y is >= -4 and <= 4 ? "Window" : y == 11 ? null : "WallSolid", "WeaponLaserCarbine",
+            blackboard =>
+            {
+                if (!spotDue)
+                    blackboard.SetValue("RepositionDueAt", timing.CurTime + System.TimeSpan.FromHours(1));
+            });
+
+        var ammoAtFirst = 0;
+        await Pair.Server.WaitPost(() => ammoAtFirst = GetHeldAmmo(entManager, mobUid));
+
+        await Pair.RunTicksSync(150);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetHeldAmmo(entManager, mobUid), Is.LessThan(ammoAtFirst), "it should have been firing");
+
+            var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
+            Assert.That(position.X < 3f && position.Y < 7f, $"it should not be going round, but is at {position}");
+        });
+    }
+
+    private static int GetHeldAmmo(IEntityManager entManager, EntityUid mobUid)
+    {
+        Assert.That(entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().TryGetGun(mobUid, out var gunEntity), "it should be holding its gun");
+
+        var ammoEvent = new Content.Shared.Weapons.Ranged.Events.GetAmmoCountEvent();
+        entManager.EventBus.RaiseLocalEvent(gunEntity.Owner, ref ammoEvent);
+        return ammoEvent.Count;
+    }
+
+    /// <summary>
+    ///     An armed operative walking the real root at 0,0, and a hostile it can see at 6,0, past a line of whatever
+    ///         <paramref name="barrier"/> says is at each y along x = 3, right across the grid.
+    /// </summary>
+    private async Task<(IEntityManager EntManager, EntityUid MobUid, EntityUid HostileUid)> SetUpBehindGlass(System.Func<int, string?> barrier,
+        string gun = "WeaponPistolMk58",
+        System.Action<NPCBlackboard>? stage = null)
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid mobUid = default, hostileUid = default;
+
+        await server.WaitPost(() =>
+        {
+            var gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-8, -8), new Vector2i(12, 12)).Owner;
+
+            for (var y = -8; y <= 12; y++)
+            {
+                if (barrier(y) is { } what)
+                    SpawnAt(entManager, what, gridUid, 3, y);
+            }
+
+            mobUid = SpawnAt(entManager, "KsOperativeRootTestMobWalking", gridUid, 0, 0);
+            hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
+            entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid); // a fight that lasts
+        });
+
+        await Pair.RunTicksSync(150);
+
+        await server.WaitPost(() =>
+        {
+            StageArmed(entManager, mobUid, gun);
+
+            var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+            stage?.Invoke(htnComponent.Blackboard);
+            htnComponent.RootTask = new HTNCompoundTask { Task = _operativeRoot };
+            entManager.System<HTNSystem>().SetHTNEnabled((mobUid, htnComponent), true);
+            entManager.System<NPCSystem>().WakeNPC(mobUid, htnComponent);
+        });
+
+        return (entManager, mobUid, hostileUid);
+    }
+
+    /// <summary>
     ///     An armed operative with a hostile in plain view, due a new spot to fight from, finds one; one that has just
     ///         found one shoots from where it is, closing in as before, until the next is due. Either way it shoots.
     /// </summary>
@@ -1085,12 +1288,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
     /// <summary>
     ///     Puts a loaded pistol, a round chambered, in the operative's hand.
     /// </summary>
-    private static void StageArmed(IEntityManager entManager, EntityUid mobUid)
+    private static void StageArmed(IEntityManager entManager, EntityUid mobUid, string gun = "WeaponPistolMk58")
     {
         var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
         handsSystem.AddHand(mobUid, "right", Content.Shared.Hands.Components.HandLocation.Right);
 
-        var gunUid = entManager.SpawnEntity("WeaponPistolMk58", entManager.GetComponent<TransformComponent>(mobUid).Coordinates);
+        var gunUid = entManager.SpawnEntity(gun, entManager.GetComponent<TransformComponent>(mobUid).Coordinates);
         Assert.That(handsSystem.TryPickup(mobUid, gunUid, "right"), "the operative should be holding the pistol");
 
         // What the operative prototypes put on the blackboard for fighting with it, which the test mob lacks.
@@ -1103,8 +1306,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
         blackboard.SetValue("RetreatClaimDuration", 10f);
 
         // Chamber a round, as racking would.
-        entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().UseChambered(gunUid,
-            entManager.GetComponent<Content.Shared.Weapons.Ranged.Components.ChamberMagazineAmmoProviderComponent>(gunUid), mobUid);
+        if (entManager.TryGetComponent<Content.Shared.Weapons.Ranged.Components.ChamberMagazineAmmoProviderComponent>(gunUid, out var chamberComponent))
+            entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().UseChambered(gunUid, chamberComponent, mobUid);
     }
 
     /// <summary>
@@ -1293,11 +1496,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
     {
         var transformSystem = entManager.System<SharedTransformSystem>();
 
-        // The open doorway: an open door occludes nothing.
+        // The open doorway: an open door occludes nothing, and stops nothing.
         var doorEnumerator = entManager.EntityQueryEnumerator<Content.Shared.Doors.Components.DoorComponent, OccluderComponent>();
         while (doorEnumerator.MoveNext(out var doorUid, out _, out var occluderComponent))
         {
             entManager.System<OccluderSystem>().SetEnabled(doorUid, false, occluderComponent);
+            entManager.System<Robust.Shared.Physics.Systems.SharedPhysicsSystem>().SetCanCollide(doorUid, false);
         }
 
         var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, -4, 0);

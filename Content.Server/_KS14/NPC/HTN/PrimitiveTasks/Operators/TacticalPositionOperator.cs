@@ -3,10 +3,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Content.Server._KS14.NPC.Exposure;
 using Content.Server._KS14.NPC.KillZones;
+using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Physics;
 using Content.Server.NPC;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
@@ -43,6 +45,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private NpcKillZoneSystem _npcKillZoneSystem = default!;
     [Dependency] private NpcExposureSystem _npcExposureSystem = default!;
+    [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -99,6 +102,19 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public string? LosRadiusKey;
 
     [DataField] public IUtilityCurve LosCurve = new BoolCurve();
+
+    /// <summary>
+    ///     Whether line of sight here is for shooting: a candidate only counts as seeing <see cref="LosReferenceCoordinatesKey"/>
+    ///         if what the owner is holding could hit it from there. A spot that sees it through a window is no use to a
+    ///         gun that the window stops. See <see cref="NpcLineOfFireSystem"/>.
+    /// </summary>
+    [DataField] public bool LineOfFire;
+
+    /// <summary>
+    ///     What this plan's shots collide with, if it goes by <see cref="LineOfFire"/>. Set up as
+    ///         <see cref="_scoreCoverStep"/> is.
+    /// </summary>
+    private CollisionGroup _shotMask;
 
     /// <summary>
     ///     If set, scores whether a candidate is a step from cover from <see cref="LosReferenceCoordinatesKey"/>: whether
@@ -346,6 +362,9 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
                 _coverStepSightField);
         }
 
+        if (LineOfFire)
+            _shotMask = _npcLineOfFireSystem.GetShotMask(owner);
+
         GatherCrossfire(blackboard, owner);
 
         var considerationCount = GetConsiderationCount();
@@ -546,10 +565,14 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         if (LosReferenceCoordinatesKey is not null &&
             blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var losReference, _entityManager))
         {
-            var losRaw = _npcLineOfSightSystem.InLineOfSight(
-                _transformSystem.ToMapCoordinates(candidate.Coordinates),
-                _transformSystem.ToMapCoordinates(losReference),
-                _losRadius + 0.5f) ? 1f : 0f;
+            var candidateMapCoordinates = _transformSystem.ToMapCoordinates(candidate.Coordinates);
+            var losMapCoordinates = _transformSystem.ToMapCoordinates(losReference);
+
+            var inLineOfSight = _npcLineOfSightSystem.InLineOfSight(candidateMapCoordinates, losMapCoordinates, _losRadius + 0.5f);
+            if (inLineOfSight && LineOfFire)
+                inLineOfSight = _npcLineOfFireSystem.IsClear(candidateMapCoordinates, losMapCoordinates, _shotMask);
+
+            var losRaw = inLineOfSight ? 1f : 0f;
 
             score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(LosCurve, losRaw), considerationCount);
 

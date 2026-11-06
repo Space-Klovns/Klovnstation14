@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Dangers; // KS14
 using System.Runtime.InteropServices; // KS14
 using Content.Server._KS14.NPC.Pathfinding; // KS14
 using Content.Shared.NPC;
@@ -186,6 +187,16 @@ public sealed partial class PathfindingSystem
                 request.PolyFrontier.Add(fScore, neighbor); // KS14: request.Frontier.Add((fScore, neighbor)) -> PolyFrontier
             }
         }
+
+        // KS14 start: a danger must never be what leaves it with no path: three of those and steering gives up on it. The
+        //      coarse maps know nothing of dangers, so a fire across open floor has the search flood everything in front of
+        //      it. Out of nodes, it goes again without them. Steering looks again as it gets nearer, where a search fits
+        if (!arrived && count >= _aStarNodeLimit && request.AvoidedDangers != NpcTileDangerKind.None)
+        {
+            RestartIgnoringDangers(request, startNode);
+            return PathResult.Continuing;
+        }
+        // KS14 end
 
         if (!arrived)
         {

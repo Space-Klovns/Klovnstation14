@@ -47,12 +47,13 @@ public abstract class PathRequest
     public HashSet<(EntityUid Grid, Vector2i Tile)>? AvoidedTiles;
 
     /// <summary>
-    ///     The dangers this request's NPC steers clear of, and how many times over a tile posing one costs. See
-    ///         <c>PathfindingSystem.Klovn.Danger.cs</c>.
+    ///     The dangers this request's NPC steers clear of, and how many times over a tile posing one, or touching one,
+    ///         costs. See <c>PathfindingSystem.Klovn.Danger.cs</c>.
     /// </summary>
     public NpcTileDangerKind AvoidedDangers;
 
     public float DangerCost = 1f;
+    public float DangerMarginCost = 1f;
     // KS14 end
 
     #endregion

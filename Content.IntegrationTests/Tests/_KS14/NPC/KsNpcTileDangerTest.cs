@@ -10,8 +10,10 @@ using Content.Server.NPC.HTN;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared._KS14.CCVar;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -30,6 +32,7 @@ public sealed class KsNpcTileDangerTest : GameTest
 
     private const string Avoider = "KsTileDangerTestAvoider";
     private const string Walker = "KsTileDangerTestWalker";
+    private const string Burner = "KsTileDangerTestBurner";
     private const string Fire = "KsTileDangerTestFire";
 
     /// <summary>
@@ -64,6 +67,49 @@ public sealed class KsNpcTileDangerTest : GameTest
   components:
   - type: NpcTileDanger
     dangers: Fire
+
+- type: entity
+  parent: KsTileDangerTestAvoider
+  id: KsTileDangerTestBurner
+  components:
+  - type: Flammable
+    canResistFire: true
+    damage:
+      types:
+        Heat: 1.5
+  - type: StandingState
+  - type: StatusEffectContainer
+
+# The branch a root needs, with something else to be getting on with below it.
+- type: htnCompound
+  id: KsTileDangerTestRoot
+  branches:
+  - preconditions:
+    - !type:StandingInDangerPrecondition
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:TacticalPositionOperator
+        key: TestExit
+        keyCoordinates: TestExitCoordinates
+        referenceCoordinatesKey: OwnerCoordinates
+        maxRange: 4
+        distanceCurve: !type:PresetCurve
+          preset: TargetDistance
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        targetKey: TestExitCoordinates
+        pathfindKey: TestExitPathfind
+        rangeKey: MovementRangeClose
+  - preconditions:
+    - !type:KeyExistsPrecondition
+      key: TestGoal
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        targetKey: TestGoal
+        pathfindKey: TestGoalPathfind
+        rangeKey: MovementRangeClose
+        removeKeyOnFinish: false
 ";
 
     /// <summary>
@@ -142,6 +188,311 @@ public sealed class KsNpcTileDangerTest : GameTest
     }
 
     /// <summary>
+    ///     Live, with the branch that gets it out of a danger on top: crossing is not standing. The fire is too deep to cross
+    ///         between two replans, so turned back by the first, for as long as the way back is the nearest way out, it would
+    ///         go back and forth forever.
+    /// </summary>
+    [Test]
+    public async Task TestCrossingAFireGetsAcross()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, Avoider, gridUid, -5, 0);
+
+            for (var x = -3; x <= 3; x++)
+            {
+                for (var y = -6; y <= 6; y++)
+                {
+                    SpawnAt(entManager, y == 0 ? Fire : "WallSolid", gridUid, x, y);
+                }
+            }
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+        await Pair.Server.WaitPost(() =>
+        {
+            var htnComponent = StartRoot(entManager, npcUid);
+            htnComponent.Blackboard.SetValue("TestGoal", new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
+        });
+
+        var position = Vector2.Zero;
+
+        for (var i = 0; i < 300 && position.X < 4.5f; i += 5)
+        {
+            await Pair.RunTicksSync(5);
+            await Pair.Server.WaitPost(() => position = entManager.GetComponent<TransformComponent>(npcUid).LocalPosition);
+        }
+
+        Assert.That(position.X, Is.GreaterThanOrEqualTo(4.5f), "it never got across the fire");
+    }
+
+    /// <summary>
+    ///     Live: a fire that starts under it is left, whatever it was doing, for the nearest tile that is not burning. Every
+    ///         other NPC stays where it is.
+    /// </summary>
+    [TestCase(Avoider, true)]
+    [TestCase(Walker, false)]
+    public async Task TestFireUnderItIsLeft(string mob, bool leaves)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() => npcUid = SpawnAt(entManager, mob, gridUid, 0, 0));
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            StartRoot(entManager, npcUid);
+            SpawnAt(entManager, Fire, gridUid, 0, 0);
+        });
+
+        await Pair.RunTicksSync(90);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var tile = entManager.GetComponent<TransformComponent>(npcUid).LocalPosition.Floored();
+            Assert.That(tile != Vector2i.Zero, Is.EqualTo(leaves), $"it is on {tile}");
+        });
+    }
+
+    /// <summary>
+    ///     Stopped on a danger counts, however it got there, for one that avoids it. Following a path across one does not.
+    /// </summary>
+    [Test]
+    public async Task TestWhatCountsAsStandingInDanger()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var steeringSystem = entManager.System<NPCSteeringSystem>();
+        var pathfindingSystem = entManager.System<PathfindingSystem>();
+        EntityUid avoiderUid = default, walkerUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            avoiderUid = SpawnAt(entManager, Avoider, gridUid, 0, 0);
+            walkerUid = SpawnAt(entManager, Walker, gridUid, 3, 3);
+            SpawnAt(entManager, Fire, gridUid, 0, 0);
+            SpawnAt(entManager, Fire, gridUid, 3, 3);
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(steeringSystem.IsStandingInDanger(avoiderUid), "with no steering at all, it is stopped");
+            Assert.That(steeringSystem.IsStandingInDanger(walkerUid), Is.False, "this one avoids nothing");
+
+            var steeringComponent = steeringSystem.Register(avoiderUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            Assert.That(steeringSystem.IsStandingInDanger(avoiderUid), "steering with no path yet is not going anywhere");
+
+            steeringComponent.CurrentPath.Enqueue(pathfindingSystem.GetPoly(new EntityCoordinates(gridUid, new Vector2(1.5f, 0.5f)))!);
+            Assert.That(steeringSystem.IsStandingInDanger(avoiderUid), Is.False, "following a path, it is on its way across");
+
+            steeringComponent.CanSeek = false;
+            Assert.That(steeringSystem.IsStandingInDanger(avoiderUid), "juking, it is going nowhere, path or no path");
+            steeringComponent.CanSeek = true;
+
+            steeringComponent.CurrentPath.Clear();
+            steeringComponent.PathfindToken = new System.Threading.CancellationTokenSource();
+            Assert.That(steeringSystem.IsStandingInDanger(avoiderUid), Is.False, "waiting on a path, it is on its way too");
+            steeringComponent.PathfindToken = null;
+
+            steeringComponent.Status = SteeringStatus.NoPath;
+            Assert.That(steeringSystem.IsStandingInDanger(avoiderUid), "steering has given up");
+
+            steeringSystem.Unregister(avoiderUid);
+        });
+    }
+
+    /// <summary>
+    ///     Live: a goal in a fire, like a hostile standing in one, is walked up to and no further, from far enough to need a
+    ///         path and from so close that none is asked for. Every other NPC walks right in.
+    /// </summary>
+    [TestCase(Avoider, 0, false)]
+    [TestCase(Avoider, 3, false)]
+    [TestCase(Walker, 0, true)]
+    public async Task TestGoalInAFireIsStoppedShortOf(string mob, int startX, bool entersFire)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var fire = new Box2(4, 0, 5, 1);
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, mob, gridUid, startX, 0);
+            SpawnAt(entManager, Fire, gridUid, 4, 0);
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.System<NPCSteeringSystem>().Register(npcUid, new EntityCoordinates(gridUid, fire.Center));
+            entManager.System<NPCSystem>().WakeNPC(npcUid, entManager.GetComponent<HTNComponent>(npcUid));
+        });
+
+        var position = Vector2.Zero;
+        var entered = false;
+
+        for (var i = 0; i < 150; i += 2)
+        {
+            await Pair.RunTicksSync(2);
+            await Pair.Server.WaitPost(() => position = entManager.GetComponent<TransformComponent>(npcUid).LocalPosition);
+            entered |= fire.Contains(position);
+        }
+
+        Assert.That(entered, Is.EqualTo(entersFire), $"it ended up at {position}");
+
+        if (!entersFire)
+        {
+            await Pair.Server.WaitAssertion(() =>
+                Assert.That(entManager.GetComponent<NPCSteeringComponent>(npcUid).Status, Is.EqualTo(SteeringStatus.InRange)));
+            Assert.That(position.X, Is.GreaterThan(2.5f), "it should have got as close as it could");
+        }
+    }
+
+    /// <summary>
+    ///     Live: a juke picks its own way, with no path to keep it off a fire, so steering does. Ringed by fire, it stays put.
+    ///         Every other NPC steps out.
+    /// </summary>
+    [TestCase(Avoider, false)]
+    [TestCase(Walker, true)]
+    public async Task TestJukeDoesNotStepOntoFire(string mob, bool stepsOut)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, mob, gridUid, 0, 0);
+
+            for (var x = -1; x <= 1; x++)
+            {
+                for (var y = -1; y <= 1; y++)
+                {
+                    if (x != 0 || y != 0)
+                        SpawnAt(entManager, Fire, gridUid, x, y);
+                }
+            }
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.EnsureComponent<NPCJukeComponent>(npcUid).JukeType = JukeType.AdjacentTile;
+            entManager.System<NPCSteeringSystem>().Register(npcUid, entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
+            entManager.System<NPCSystem>().WakeNPC(npcUid, entManager.GetComponent<HTNComponent>(npcUid));
+        });
+
+        var steppedOut = false;
+
+        for (var i = 0; i < 90; i += 2)
+        {
+            await Pair.RunTicksSync(2);
+            await Pair.Server.WaitPost(() =>
+                steppedOut |= entManager.GetComponent<TransformComponent>(npcUid).LocalPosition.Floored() != Vector2i.Zero);
+        }
+
+        Assert.That(steppedOut, Is.EqualTo(stepsOut));
+    }
+
+    /// <summary>
+    ///     A path leaves a gap beside a fire where that is a short way round: hugging one, a mob at a run swings over the edge
+    ///         of its tile on the turn. With no such cost, it is the shortest way.
+    /// </summary>
+    [TestCase(2f, false)]
+    [TestCase(1f, true)]
+    public async Task TestFireIsGivenRoom(float marginCost, bool hugs)
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, Avoider, gridUid, 0, 0);
+            entManager.GetComponent<NpcAvoidsTileDangerComponent>(npcUid).MarginCost = marginCost;
+            SpawnFireLine(entManager, gridUid, 2, -1, 1);
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        var path = await FindPath(entManager, npcUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+        var besideFire = new Box2(1, -2, 4, 3);
+
+        Assert.That(path.Path.Any(poly => besideFire.Contains(poly.Box.Center)), Is.EqualTo(hugs));
+    }
+
+    /// <summary>
+    ///     The room round a fire does not stop at the edge of its chunk: this one is at the corner of four.
+    /// </summary>
+    [Test]
+    public async Task TestRoomRoundAFireCrossesChunks()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var pathfindingSystem = entManager.System<PathfindingSystem>();
+
+        await Pair.Server.WaitPost(() => SpawnAt(entManager, Fire, gridUid, -1, -1));
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            pathfindingSystem.RefreshTileDangersNow();
+
+            bool IsNear(int x, int y)
+            {
+                var poly = pathfindingSystem.GetPoly(new EntityCoordinates(gridUid, new Vector2(x + 0.5f, y + 0.5f)));
+                Assert.That(poly, Is.Not.Null);
+                return pathfindingSystem.IsNearDanger(poly!, NpcTileDangerKind.Fire);
+            }
+
+            Assert.That(IsNear(-1, -1), "the fire itself");
+            Assert.That(IsNear(-2, -2), "next to it, in its chunk");
+            Assert.That(IsNear(0, -1), "next to it, in the chunk across");
+            Assert.That(IsNear(-1, 0), "next to it, in the chunk above");
+            Assert.That(IsNear(0, 0), "next to it, in the chunk across its corner");
+            Assert.That(IsNear(1, 1), Is.False, "two tiles off");
+            Assert.That(IsNear(-3, -1), Is.False, "two tiles off");
+        });
+    }
+
+    /// <summary>
+    ///     A search going by dangers can cost more nodes than one that does not, and runs out sooner. That must not be what
+    ///         leaves an NPC with no path: three of those and steering gives up on it, stranded by a fire it could have
+    ///         walked through. It searches again as if there were no danger.
+    /// </summary>
+    [Test]
+    public async Task TestRunningOutOfNodesStillFindsAPath()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, Avoider, gridUid, -4, 0);
+            SpawnFireLine(entManager, gridUid, 2, -6, 6);
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        var configurationManager = Pair.Server.ResolveDependency<IConfigurationManager>();
+        var nodeLimit = configurationManager.GetCVar(KsCCVars.NpcPathNodeLimit);
+        await Pair.Server.WaitPost(() => configurationManager.SetCVar(KsCCVars.NpcPathNodeLimit, 16));
+
+        try
+        {
+            var path = await FindPath(entManager, npcUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f)));
+            Assert.That(path.Result, Is.EqualTo(PathResult.Path));
+        }
+        finally
+        {
+            await Pair.Server.WaitPost(() => configurationManager.SetCVar(KsCCVars.NpcPathNodeLimit, nodeLimit));
+        }
+    }
+
+    /// <summary>
     ///     Once a fire goes out, the tile is a tile again.
     /// </summary>
     [Test]
@@ -151,17 +502,18 @@ public sealed class KsNpcTileDangerTest : GameTest
         EntityUid npcUid = default;
         var fires = new List<EntityUid>();
 
+        // All in one chunk, room round it included, so that the new fire below gets back the very array this one used.
         await Pair.Server.WaitPost(() =>
         {
-            npcUid = SpawnAt(entManager, Avoider, gridUid, 0, 0);
-            fires.AddRange(SpawnFireLine(entManager, gridUid, 2, -1, 1));
+            npcUid = SpawnAt(entManager, Avoider, gridUid, 0, 2);
+            fires.AddRange(SpawnFireLine(entManager, gridUid, 2, 1, 3));
         });
 
         await Pair.RunTicksSync(NavmeshTicks);
 
-        var target = new EntityCoordinates(gridUid, new Vector2(4.5f, 0.5f));
+        var target = new EntityCoordinates(gridUid, new Vector2(4.5f, 2.5f));
         var burning = await FindPath(entManager, npcUid, target);
-        Assert.That(burning.Path.Any(poly => IsOnFireLine(poly, 2, -1, 1)), Is.False, "it should go round while it burns");
+        Assert.That(burning.Path.Any(poly => IsOnFireLine(poly, 2, 1, 3)), Is.False, "it should go round while it burns");
 
         await Pair.Server.WaitPost(() =>
         {
@@ -174,7 +526,14 @@ public sealed class KsNpcTileDangerTest : GameTest
         await Pair.RunTicksSync(RefreshTicks);
 
         var burntOut = await FindPath(entManager, npcUid, target);
-        Assert.That(burntOut.Path.Any(poly => IsOnFireLine(poly, 2, -1, 1)), "with the fire out, the straight way is the way");
+        Assert.That(burntOut.Path.Any(poly => IsOnFireLine(poly, 2, 1, 3)), "with the fire out, the straight way is the way");
+
+        // Well off the way, but sharing the chunk where the fire was: none of that fire may come back with it.
+        await Pair.Server.WaitPost(() => SpawnAt(entManager, Fire, gridUid, 3, 5));
+        await Pair.RunTicksSync(RefreshTicks);
+
+        var relit = await FindPath(entManager, npcUid, target);
+        Assert.That(relit.Path.Any(poly => IsOnFireLine(poly, 2, 1, 3)), "only the new fire is burning");
     }
 
     /// <summary>
@@ -256,7 +615,7 @@ public sealed class KsNpcTileDangerTest : GameTest
         });
 
         await Pair.RunTicksSync(NavmeshTicks);
-        await Walk(entManager, npcUid, new EntityCoordinates(targetUid, Vector2.Zero), 240, 2, -1, 1, 4f);
+        await Walk(entManager, npcUid, new EntityCoordinates(targetUid, Vector2.Zero), 240, new Box2(2, -1, 3, 2), 4f);
     }
 
     /// <summary>
@@ -285,7 +644,32 @@ public sealed class KsNpcTileDangerTest : GameTest
             Assert.That(entManager.GetComponent<NPCSteeringComponent>(npcUid).CurrentPath, Is.Not.Empty, "it should have a path before the fire starts"));
 
         await Pair.Server.WaitPost(() => SpawnFireLine(entManager, gridUid, 6, -2, 2));
-        await Walk(entManager, npcUid, target, 300, 6, -2, 2, 9f);
+        await Walk(entManager, npcUid, target, 300, new Box2(6, -2, 7, 3), 9f);
+    }
+
+    /// <summary>
+    ///     Live: so is one that starts right beside it, which it would otherwise walk past within a graze of.
+    /// </summary>
+    [Test]
+    public async Task TestFireStartingBesideThePathIsGivenRoom()
+    {
+        var (entManager, gridUid) = await SetUpGrid(14);
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() => npcUid = SpawnAt(entManager, Avoider, gridUid, -12, 0));
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        var target = new EntityCoordinates(gridUid, new Vector2(12.5f, 0.5f));
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.System<NPCSteeringSystem>().Register(npcUid, target);
+            entManager.System<NPCSystem>().WakeNPC(npcUid, entManager.GetComponent<HTNComponent>(npcUid));
+        });
+
+        await Pair.RunTicksSync(15);
+
+        await Pair.Server.WaitPost(() => SpawnFireLine(entManager, gridUid, 6, 1, 3));
+        await Walk(entManager, npcUid, target, 300, new Box2(5, 0, 8, 5), 9f);
     }
 
     /// <summary>
@@ -296,7 +680,6 @@ public sealed class KsNpcTileDangerTest : GameTest
     public async Task TestFireIsNoPlaceToStand(string mob, bool offered)
     {
         var (entManager, gridUid) = await SetUpGrid();
-        var pathfindingSystem = entManager.System<PathfindingSystem>();
         EntityUid npcUid = default;
 
         await Pair.Server.WaitPost(() =>
@@ -307,18 +690,107 @@ public sealed class KsNpcTileDangerTest : GameTest
 
         await Pair.RunTicksSync(NavmeshTicks);
 
-        System.Threading.Tasks.Task<List<PathPoly>> candidatesTask = default!;
-        await Pair.Server.WaitPost(() => candidatesTask = pathfindingSystem.GetTacticalCandidates(npcUid,
-            entManager.GetComponent<TransformComponent>(npcUid).Coordinates, 4f, 64, default));
-
-        for (var i = 0; i < 120 && !candidatesTask.IsCompleted; i++)
-        {
-            await Pair.RunTicksSync(1);
-        }
-
-        var candidates = await candidatesTask;
+        var candidates = await GetCandidates(entManager, npcUid);
         Assert.That(candidates, Is.Not.Empty);
         Assert.That(candidates.Any(poly => IsOnFireLine(poly, 2, -1, 1)), Is.EqualTo(offered));
+    }
+
+    /// <summary>
+    ///     Nor is the tile next to it, while there is anywhere else, or it would get out of a fire only to stand beside it.
+    /// </summary>
+    [Test]
+    public async Task TestBesideFireIsNoPlaceToStand()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, Avoider, gridUid, 0, 0);
+            SpawnFireLine(entManager, gridUid, 2, -1, 1);
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        var candidates = await GetCandidates(entManager, npcUid);
+        var besideFire = new Box2(1, -2, 4, 3);
+
+        Assert.That(candidates, Is.Not.Empty);
+        Assert.That(candidates.Any(poly => besideFire.Contains(poly.Box.Center)), Is.False);
+    }
+
+    /// <summary>
+    ///     With nowhere else, beside a fire will do: better than no spot at all.
+    /// </summary>
+    [Test]
+    public async Task TestBesideFireWillDoIfThereIsNothingElse()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, Avoider, gridUid, 0, 0);
+            SpawnAt(entManager, Fire, gridUid, 1, 0);
+
+            for (var x = -1; x <= 2; x++)
+            {
+                for (var y = -1; y <= 1; y++)
+                {
+                    if (y != 0 || x == -1 || x == 2)
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        Assert.That(await GetCandidates(entManager, npcUid), Is.Not.Empty);
+    }
+
+    /// <summary>
+    ///     Live, the two together: set alight on a fire, it gets off it, and only then rolls.
+    /// </summary>
+    [Test]
+    public async Task TestBurningNpcGetsOffTheFireBeforeRolling()
+    {
+        var (entManager, gridUid) = await SetUpGrid();
+        var flammableSystem = entManager.System<FlammableSystem>();
+        var timing = Pair.Server.ResolveDependency<Robust.Shared.Timing.IGameTiming>();
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() => npcUid = SpawnAt(entManager, Burner, gridUid, 0, 0));
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            SpawnAt(entManager, Fire, gridUid, 0, 0);
+
+            // Held at this, with no air here for it to burn in.
+            var flammableComponent = entManager.GetComponent<FlammableComponent>(npcUid);
+            flammableComponent.NextUpdate = timing.CurTime + System.TimeSpan.FromHours(1);
+            flammableSystem.AdjustFireStacks(npcUid, 3f, flammableComponent, ignite: true);
+
+            StartRoot(entManager, npcUid);
+        });
+
+        var rolled = false;
+
+        for (var i = 0; i < 150 && !rolled; i += 2)
+        {
+            await Pair.RunTicksSync(2);
+
+            await Pair.Server.WaitAssertion(() =>
+            {
+                rolled = entManager.GetComponent<FlammableComponent>(npcUid).Resisting;
+                var tile = entManager.GetComponent<TransformComponent>(npcUid).LocalPosition.Floored();
+
+                if (rolled)
+                    Assert.That(tile, Is.Not.EqualTo(Vector2i.Zero), "it rolled on the fire");
+            });
+        }
+
+        Assert.That(rolled, "it never put itself out");
     }
 
     /// <summary>
@@ -348,9 +820,9 @@ public sealed class KsNpcTileDangerTest : GameTest
 
     /// <summary>
     ///     Sets it steering, if it is not already, and has it walk to within <paramref name="reach"/> of x = 0, or further,
-    ///         never setting foot on the fire.
+    ///         never setting foot in <paramref name="keepOut"/>.
     /// </summary>
-    private async Task Walk(IEntityManager entManager, EntityUid npcUid, EntityCoordinates target, int ticks, int x, int fromY, int toY, float reach)
+    private async Task Walk(IEntityManager entManager, EntityUid npcUid, EntityCoordinates target, int ticks, Box2 keepOut, float reach)
     {
         var transformSystem = entManager.System<SharedTransformSystem>();
 
@@ -369,7 +841,7 @@ public sealed class KsNpcTileDangerTest : GameTest
             await Pair.Server.WaitAssertion(() =>
             {
                 position = entManager.GetComponent<TransformComponent>(npcUid).LocalPosition;
-                Assert.That((int) MathF.Floor(position.X) == x && position.Y >= fromY && position.Y < toY + 1, Is.False, $"it walked into the fire, at {position}");
+                Assert.That(keepOut.Contains(position), Is.False, $"it walked into {keepOut}, at {position}");
             });
 
             if (position.X >= reach)
@@ -377,6 +849,15 @@ public sealed class KsNpcTileDangerTest : GameTest
         }
 
         Assert.Fail($"it never got past the fire: it is at {position}");
+    }
+
+    private static HTNComponent StartRoot(IEntityManager entManager, EntityUid npcUid)
+    {
+        var htnComponent = entManager.GetComponent<HTNComponent>(npcUid);
+        htnComponent.RootTask = new HTNCompoundTask { Task = "KsTileDangerTestRoot" };
+        entManager.System<HTNSystem>().SetHTNEnabled((npcUid, htnComponent), true);
+        entManager.System<NPCSystem>().WakeNPC(npcUid, htnComponent);
+        return htnComponent;
     }
 
     private List<EntityUid> SpawnFireLine(IEntityManager entManager, EntityUid gridUid, int x, int fromY, int toY)
@@ -395,6 +876,20 @@ public sealed class KsNpcTileDangerTest : GameTest
     {
         var center = poly.Box.Center;
         return (int) MathF.Floor(center.X) == x && center.Y >= fromY && center.Y < toY + 1;
+    }
+
+    private async Task<List<PathPoly>> GetCandidates(IEntityManager entManager, EntityUid npcUid)
+    {
+        System.Threading.Tasks.Task<List<PathPoly>> candidatesTask = default!;
+        await Pair.Server.WaitPost(() => candidatesTask = entManager.System<PathfindingSystem>().GetTacticalCandidates(npcUid,
+            entManager.GetComponent<TransformComponent>(npcUid).Coordinates, 4f, 64, default));
+
+        for (var i = 0; i < 120 && !candidatesTask.IsCompleted; i++)
+        {
+            await Pair.RunTicksSync(1);
+        }
+
+        return await candidatesTask;
     }
 
     private async Task<PathResultEvent> FindPath(IEntityManager entManager, EntityUid npcUid, EntityCoordinates target)

@@ -52,8 +52,8 @@ public sealed partial class PathfindingSystem
             return 0f;
 
         // Fire and the like: see PathfindingSystem.Klovn.Danger.cs
-        if (request.AvoidedDangers != NpcTileDangerKind.None && IsDangerous(end, request.AvoidedDangers))
-            modifier *= request.DangerCost;
+        if (request.AvoidedDangers != NpcTileDangerKind.None)
+            modifier *= GetDangerCost(request, end);
 
         return modifier * OctileDistance(end, start);
     }

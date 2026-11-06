@@ -238,6 +238,7 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     : (idealDistance - targetDistance) / idealDistance;
 
                 var anythingDone = false;
+                var shotMask = _npcLineOfFireSystem.GetShotMask(uid); // KS14
                 for (var i = 0; i < SharedNPCSteeringSystem.InterestDirections; i++)
                 {
                     var result = -Vector2.Dot(targetUnitDirection, NPCSteeringSystem.Directions[i]) * weight;
@@ -248,10 +249,10 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     // Assumes tile size is 1f
                     var interestDirection = new Angle(i * SharedNPCSteeringSystem.InterestRadians).ToVec();
                     var interestWorldPosition = interestDirection + args.WorldPosition;
-                    if (!_interactionSystem.InRangeUnobstructed(
+                    if (!_npcLineOfFireSystem.IsClear(
                         new Robust.Shared.Map.MapCoordinates(interestWorldPosition, targetTransformComponent.MapID),
                         new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID),
-                        range: -1f))
+                        shotMask)) // KS14: what its gun can shoot through, not what stops a hand
                     {
                         continue;
                     }
@@ -265,7 +266,7 @@ public sealed partial class NPCJukeSystem : EntitySystem
 
                 // If no or barely any juking was done, don't cancel seeking
                 if (!anythingDone &&
-                    !KsTryStrafe(component, ref args, targetUnitDirection, new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID))) // KS14: sidestep instead of standing still
+                    !KsTryStrafe(component, ref args, targetUnitDirection, new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID), shotMask)) // KS14: sidestep instead of standing still
                     return;
             }
             // KS14: ANK end

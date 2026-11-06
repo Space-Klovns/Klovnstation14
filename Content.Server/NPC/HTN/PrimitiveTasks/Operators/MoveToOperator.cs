@@ -20,6 +20,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     private PathfindingSystem _pathfind = default!;
     private SharedTransformSystem _transform = default!;
     [Dependency] private Interaction.InteractionSystem _interactionSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.NPC.LineOfFire.NpcLineOfFireSystem _npcLineOfFireSystem = default!; // KS14
 
     /// <summary>
     /// When to shut the task down.
@@ -74,6 +75,15 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     public bool RequireLosForRangeCheck;
 
     // KS14
+    /// <summary>
+    ///     For a move that is about getting a shot: with this, line of sight in <see cref="StopOnLineOfSight"/> and
+    ///         <see cref="RequireLosForRangeCheck"/> means a clear shot with what it is holding. A window stops a hand and
+    ///         lets through a laser, and stops a bullet.
+    /// </summary>
+    [DataField]
+    public bool LineOfFire;
+
+    // KS14
     [DataField]
     public bool WeAreAtTargetCoordsAfterSuccessfullyPlanning = true;
 
@@ -114,7 +124,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         var targetMapCoords = _transform.ToMapCoordinates(targetCoordinates);
         var distance = (targetMapCoords.Position - ownerMapCoords.Position).Length();
 
-        if (RequireLosForRangeCheck ? _interactionSystem.InRangeUnobstructed(ownerMapCoords, targetMapCoords, range: range) : distance <= range)
+        if (RequireLosForRangeCheck ? IsClear(owner, ownerMapCoords, targetMapCoords, distance, range) : distance <= range)
         // KS14: ANK: end
         {
             // In range
@@ -141,7 +151,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
             blackboard.GetValue<EntityUid>(NPCBlackboard.Owner),
             xform.Coordinates,
                 targetCoordinates,
-            RequireLosForRangeCheck ? MathF.Min(_interactionSystem.UnobstructedDistance(ownerMapCoords, targetMapCoords), range) : range, // KS14: RequireLosForRangeCheck
+            RequireLosForRangeCheck ? MathF.Min(GetClearDistance(owner, ownerMapCoords, targetMapCoords), range) : range, // KS14: RequireLosForRangeCheck
             cancelToken,
             _pathfind.GetFlags(blackboard));
 
@@ -161,6 +171,21 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         return (true, pathEffects);
         // KS14 end
     }
+
+    // KS14 start
+    private bool IsClear(EntityUid owner, MapCoordinates from, MapCoordinates to, float distance, float range)
+    {
+        if (!LineOfFire)
+            return _interactionSystem.InRangeUnobstructed(from, to, range: range);
+
+        return distance <= range && _npcLineOfFireSystem.IsClear(from, to, _npcLineOfFireSystem.GetShotMask(owner));
+    }
+
+    private float GetClearDistance(EntityUid owner, MapCoordinates from, MapCoordinates to)
+    {
+        return LineOfFire ? _npcLineOfFireSystem.GetClearDistance(owner, from, to) : _interactionSystem.UnobstructedDistance(from, to);
+    }
+    // KS14 end
 
     // Given steering is complicated we'll hand it off to a dedicated system rather than this singleton operator.
 
@@ -183,6 +208,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // Re-use the path we may have if applicable.
         var comp = _steering.Register(uid, targetCoordinates);
         comp.ArriveOnLineOfSight = StopOnLineOfSight;
+        comp.KsArriveOnLineOfFire = LineOfFire; // KS14
 
         // KS14: ANK: add RequireLosForRangeCheck
         comp.Range = RequireLosForRangeCheck ? 0f : blackboard.GetValueOrDefault<float>(RangeKey, _entManager);
@@ -228,7 +254,11 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         if (RequireLosForRangeCheck)
         {
             var range = blackboard.GetValueOrDefault<float>(RangeKey, _entManager);
-            steering.Range = _interactionSystem.InRangeUnobstructed(owner, steering.Coordinates, range: range) ?
+            var inRange = LineOfFire
+                ? _npcLineOfFireSystem.HasLineOfFire(owner, steering.Coordinates, range)
+                : _interactionSystem.InRangeUnobstructed(owner, steering.Coordinates, range: range);
+
+            steering.Range = inRange ?
                 range :
                 0f;
         }

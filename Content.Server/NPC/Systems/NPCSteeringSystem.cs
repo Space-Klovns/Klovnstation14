@@ -69,6 +69,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     [Dependency] private PryingSystem _pryingSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedInteractionSystem _interaction = default!;
+    [Dependency] private Content.Server._KS14.NPC.LineOfFire.NpcLineOfFireSystem _npcLineOfFireSystem = default!; // KS14
     [Dependency] private SharedMeleeWeaponSystem _melee = default!;
     [Dependency] private SharedMoverController _mover = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
@@ -387,6 +388,10 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         DebugTools.Assert(!float.IsNaN(danger[0]));
 
         Separation(uid, offsetRot, worldPos, agentRadius, layer, mask, body, xform, danger);
+
+        // KS14: a juke takes no path
+        if (!steering.CanSeek)
+            AvoidDangerousSteps(uid, steering, xform, danger);
 
         // Blend last and current tick
         Blend(steering, frameTime, interest, danger);

@@ -270,7 +270,8 @@ may. `ks_squaddebug` draws every meter a member has as a bar under it.
 
 Fires start and go out too often for the navmesh, which every NPC shares and which is dear to rebuild, so dangers sit
 beside it (`PathfindingSystem.Klovn.Danger.cs`), in a small array per burning chunk. They raise what a poly costs a path
-request that avoids them, and are never walls, so an NPC with no other way still gets through.
+request that avoids them, and are never walls, so an NPC with no other way still gets through. Tiles touching a danger
+cost a little more (`marginCost`), so a path leaves a gap where that is a short way round.
 
 - **What is dangerous:** an entity with `NpcTileDanger` makes its whole tile so. Gas fires have no entity and come from
   `AtmosphereSystem.GetGasFires`. A new sort of danger is a value in `NpcTileDangerKind`.
@@ -279,8 +280,45 @@ request that avoids them, and are never walls, so an NPC with no other way still
 - **Cost:** worked out on demand, at most every 0.5s, and only for an NPC that avoids something, so it is nothing with
   none about, and otherwise what is burning rather than the size of the map.
 - **Steering:** a straight-line chase takes a path instead while there are dangers about, and a path looks ahead for a
-  fire that started on it after it was found. `TacticalPositionOperator` is never offered a tile that poses one.
-  `GetRandomPath` does not take dangers into account.
+  fire that started on or beside it after it was found. `TacticalPositionOperator` is never offered a tile that poses one,
+  nor one touching it unless there is nothing else.
+  `GetRandomPath` does not take dangers into account, though steering still stops short of one at the end of it.
+- **Never stopped on one:** crossing is allowed, stopping is not. Steering calls a move done when all that is left of the
+  way is dangerous, so a goal in a fire is walked up to and no further. A juke takes no path, so steering rules out the
+  directions that would step onto a danger. A danger can still start under an NPC, so `StandingInDangerPrecondition` gates
+  a branch at the top of the root (`danger.yml` for operatives) that goes to the nearest safe tile. **An NPC with
+  `NpcAvoidsTileDanger` needs that branch in its own root.** The precondition does not count an NPC following a path: turned
+  back mid-crossing, it would never get to the far side of a fire.
+- **Running out of nodes:** the coarse maps know nothing of dangers, so a fire across open floor can flood a search to the
+  node limit. A search that does starts again ignoring dangers, as `NoPath` three times over stops an NPC for good, and
+  steering looks again as it gets nearer, where a search fits.
+
+## Line of fire
+
+Seeing a hostile and being able to hit it are different things, and an NPC that confuses them stands there aiming at a
+window. Sight goes by what blocks light. A shot goes by what that shot collides with: glass stops bullets and lets through
+lasers and some energy bolts, and a locker stops both while hiding nothing. `NpcLineOfFireSystem` reads what the next shot
+from what the NPC is holding collides with, and answers from that.
+
+Anything deciding about shooting goes through it, not `NpcLineOfSightSystem` and not `InRangeUnobstructed`'s default
+mask: `NPCCombatSystem` firing, jukes staying on target, `TacticalPositionOperator.lineOfFire` for a spot to shoot from,
+`MoveToOperator.lineOfFire` for "close enough to shoot", and `LineOfFirePrecondition`. Mobs in the way do not count as
+barriers.
+
+A contact stays `Visible` behind glass, as it should: the NPC can see it. So a gun branch must not assume that visible means
+shootable. `GunOperator` with no shot waits, which is right while something is walking it to one and wrong if nothing is. A
+plan with neither a shot nor a way to one must fail, so that the rest of the root gets a turn: see the last branch of
+`KsOperativeGunCombatMovementCompound`.
+
+## Stop, drop and roll
+
+`NpcStopDropRollSystem` has every awake NPC that can resist fire do what a player does with the fire alert, once it has
+`klovn.npc.fire_roll_min_stacks` stacks. It is a reflex in a system, not a branch, so that it needs nothing from each root,
+and the stun that comes with it interrupts whatever the plan was doing, like any other stun. It waits while the NPC is on
+a burning tile, for any NPC and not only one that avoids fire, and while it is walking away from one it is touching. So
+an operative gets out of a fire through `danger.yml`, and rolls once it is clear. `NpcStopDropRoll` changes how it goes:
+`keepsHold` keeps what is in its hands, as otherwise a lighter disarms it, and `busyKey` is a blackboard key that means it
+has somewhere more urgent to be.
 
 ## Kill zones
 

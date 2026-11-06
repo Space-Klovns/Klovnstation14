@@ -19,6 +19,7 @@ public sealed partial class NPCCombatSystem : EntitySystem
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private GunSystem _gun = default!;
     [Dependency] private InteractionSystem _interaction = default!;
+    [Dependency] private Content.Server._KS14.NPC.LineOfFire.NpcLineOfFireSystem _npcLineOfFireSystem = default!; // KS14
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private NPCSteeringSystem _steering = default!;
     [Dependency] private SharedMapSystem _map = default!;
