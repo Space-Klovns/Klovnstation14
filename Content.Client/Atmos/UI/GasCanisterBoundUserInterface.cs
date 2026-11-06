@@ -1,4 +1,5 @@
-﻿using Content.Shared.Atmos.Components;
+﻿using Content.Client._KS14.Tgui.Windows.Atmos; // KS14
+using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared.Atmos.Piping.Unary.Components;
 using Content.Shared.IdentityManagement;
@@ -15,7 +16,7 @@ namespace Content.Client.Atmos.UI
     public sealed partial class GasCanisterBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private GasCanisterWindow? _window;
+        private IKsGasCanisterWindow? _window; // KS14: GasCanisterWindow -> the interface, which the tgui window shares
 
         public GasCanisterBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -26,7 +27,7 @@ namespace Content.Client.Atmos.UI
         {
             base.Open();
 
-            _window = this.CreateWindow<GasCanisterWindow>();
+            _window = KsTguiAtmosWindows.Create<GasCanisterWindow, KsTguiGasCanisterWindow, IKsGasCanisterWindow>(this); // KS14
 
             _window.ReleaseValveCloseButtonPressed += OnReleaseValveClosePressed;
             _window.ReleaseValveOpenButtonPressed += OnReleaseValveOpenPressed;
@@ -77,7 +78,7 @@ namespace Content.Client.Atmos.UI
             _window.SetReleasePressureRange(component.MinReleasePressure, component.MaxReleasePressure);
             _window.SetReleasePressure(component.ReleasePressure);
             _window.SetReleaseValve(component.ReleaseValveOpen);
-            _window.KsFluidList.SetEntries(cast.KsFluid); // KS14
+            _window.SetKsFluid(cast.KsFluid); // KS14
         }
 
         protected override void Dispose(bool disposing)

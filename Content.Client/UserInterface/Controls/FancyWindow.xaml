@@ -3,7 +3,8 @@
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                       MouseFilter="Stop"
                       MinWidth="200" MinHeight="150">
-    <PanelContainer StyleClasses="BackgroundPanel" />
+    <!-- KS14: added KsTguiWindowBackground, BackgroundPanel is used all over the UI -->
+    <PanelContainer StyleClasses="BackgroundPanel KsTguiWindowBackground" />
 
     <BoxContainer Orientation="Vertical">
         <Control>
@@ -12,7 +13,8 @@
             <PanelContainer StyleClasses="KsBaronPanelGrey1" Name="WindowHeader" />
             <!-- KS14 -->
             <!-- Upstream UI retained for mergeability: <BoxContainer Margin="4 2 4 0" Orientation="Horizontal"> -->
-            <BoxContainer Margin="15 15 15 28" Orientation="Horizontal">
+            <!-- KS14: Baron's margin is now in its sheetlet, as each theme has its own -->
+            <BoxContainer StyleClasses="KsFancyWindowHeaderRow" Orientation="Horizontal">
                 <Label Name="WindowTitle"
                        HorizontalExpand="True" VAlign="Center" StyleClasses="FancyWindowTitle" ClipText="true" />
                 <TextureButton Name="HelpButton" StyleClasses="windowHelpButton" VerticalAlignment="Center" Disabled="True" Visible="False" Access="Public" />

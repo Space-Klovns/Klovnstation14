@@ -11,7 +11,7 @@ namespace Content.Client.Power.APC
     public sealed partial class ApcBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private ApcMenu? _menu;
+        private Content.Client._KS14.Tgui.Windows.Apc.IKsApcWindow? _menu; /* KS14: ApcMenu -> either window */
 
         public ApcBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -20,7 +20,9 @@ namespace Content.Client.Power.APC
         protected override void Open()
         {
             base.Open();
-            _menu = this.CreateWindow<ApcMenu>();
+            _menu = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled() /* KS14: tgui window */
+                ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.Apc.KsTguiApcWindow>()
+                : this.CreateWindow<ApcMenu>();
             _menu.SetEntity(Owner);
             _menu.OnBreaker += BreakerPressed;
 

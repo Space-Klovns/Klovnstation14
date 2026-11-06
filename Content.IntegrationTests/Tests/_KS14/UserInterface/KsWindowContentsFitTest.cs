@@ -14,6 +14,7 @@ using Content.Client.Radio.Ui;
 using Content.Client.Shuttles.UI;
 using Content.Client.UserInterface.Controls;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -32,7 +33,7 @@ public sealed class KsWindowContentsFitTest : GameTest
     /// <summary>
     ///     Windows already too short. Only ever take from this: a new window that's cut off gets fixed, not listed.
     /// </summary>
-    private static readonly HashSet<Type> KnownCutOff =
+    private static readonly HashSet<Type> KnownCutOffBaron =
     [
         typeof(BarSignMenu),
         typeof(CrewMonitoringWindow),
@@ -47,11 +48,32 @@ public sealed class KsWindowContentsFitTest : GameTest
     ];
 
     /// <summary>
+    ///     As above, for the tgui style, whose header is a lot shorter than Baron's.
+    /// </summary>
+    private static readonly HashSet<Type> KnownCutOffTgui =
+    [
+        typeof(CrewMonitoringWindow),
+        typeof(PowerMonitoringWindow),
+        typeof(RadarConsoleWindow),
+    ];
+
+    /// <summary>
     ///     Windows are measured as built, before any state fills them, so this only sees what they always show.
     /// </summary>
-    [Test]
-    public async Task ContentsFitInTheOpeningSize()
+    /// <remarks>
+    ///     For each theme, because the header's height is the theme's, and a window that fits under one can clip under the
+    ///         other. Fonts differ too: this measures DejaVu Sans where a player with Verdana gets Verdana, so passing doesn't
+    ///         prove a tight fit for them.
+    /// </remarks>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ContentsFitInTheOpeningSize(bool tgui)
     {
+        await OverrideCVar(Side.Client, Content.Shared._KS14.CCVar.KsCCVars.TguiStyle, tgui);
+        await Pair.RunTicksSync(2); // The theme restyles on the frame after the cvar changes.
+
+        var knownCutOff = tgui ? KnownCutOffTgui : KnownCutOffBaron;
+
         var reflectionManager = Client.ResolveDependency<IReflectionManager>();
         var modLoader = Client.ResolveDependency<IModLoader>();
         var typeFactory = Client.ResolveDependency<IDynamicTypeFactory>();
@@ -83,9 +105,9 @@ public sealed class KsWindowContentsFitTest : GameTest
 
             Assert.Multiple(() =>
             {
-                Assert.That(cutOff.Except(KnownCutOff).ToList(), Is.Empty,
+                Assert.That(cutOff.Except(knownCutOff).ToList(), Is.Empty,
                     $"These windows clip their contents, so leave their height to the contents: {string.Join(", ", messages)}");
-                Assert.That(KnownCutOff.Except(cutOff).ToList(), Is.Empty,
+                Assert.That(knownCutOff.Except(cutOff).ToList(), Is.Empty,
                     "These windows fit now, so take them off the list");
             });
         });
@@ -106,6 +128,10 @@ public sealed class KsWindowContentsFitTest : GameTest
         var neededHeight = 0f;
         foreach (var child in window.ContentsContainer.Children)
         {
+            // Whatever doesn't fit in this scrolls rather than clips.
+            if (child is Robust.Client.UserInterface.Controls.ScrollContainer)
+                continue;
+
             child.Measure(new Vector2(window.DesiredSize.X, float.PositiveInfinity));
             neededHeight = MathF.Max(neededHeight, child.DesiredSize.Y);
         }

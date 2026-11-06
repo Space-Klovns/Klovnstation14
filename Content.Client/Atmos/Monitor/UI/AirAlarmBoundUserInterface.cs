@@ -7,7 +7,7 @@ namespace Content.Client.Atmos.Monitor.UI;
 
 public sealed partial class AirAlarmBoundUserInterface : BoundUserInterface
 {
-    private AirAlarmWindow? _window;
+    private Content.Client._KS14.Tgui.Windows.AirAlarm.IKsAirAlarmWindow? _window; /* KS14: AirAlarmWindow -> either window */
 
     public AirAlarmBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
     {
@@ -17,7 +17,9 @@ public sealed partial class AirAlarmBoundUserInterface : BoundUserInterface
     {
         base.Open();
 
-        _window = this.CreateWindow<AirAlarmWindow>();
+        _window = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled() /* KS14: tgui window */
+            ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.AirAlarm.KsTguiAirAlarmWindow>()
+            : this.CreateWindow<AirAlarmWindow>();
         _window.SetEntity(Owner);
 
         _window.AtmosDeviceDataChanged += OnDeviceDataChanged;

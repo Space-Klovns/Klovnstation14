@@ -1,6 +1,6 @@
 namespace Content.Client.Stylesheets;
 
-// Partial so the fork can rebuild the Nanotrasen sheet at runtime (lobby font switching).
+// Partial so the fork can rebuild the Nanotrasen sheet at runtime (lobby font switching, the tgui toggle).
 public sealed partial class StylesheetManager
 {
     /// <summary>
@@ -13,5 +13,18 @@ public sealed partial class StylesheetManager
         Stylesheets[baseSheet.StylesheetName] = baseSheet.Stylesheet;
         SheetNanotrasen = baseSheet.Stylesheet;
         _userInterfaceManager.Stylesheet = SheetNanotrasen;
+    }
+
+    /// <summary>
+    ///     Rebuilds both live sheets. Controls that hold the old <see cref="SheetSystem"/> keep it until they're moved off it,
+    ///         so a caller that needs them restyled has to do that.
+    /// </summary>
+    public void KsRebuildAll()
+    {
+        var systemSheet = new Stylesheets.SystemStylesheet(new BaseStylesheet.NoConfig(), this);
+        Stylesheets[systemSheet.StylesheetName] = systemSheet.Stylesheet;
+        SheetSystem = systemSheet.Stylesheet;
+
+        KsRebuildNanotrasen();
     }
 }

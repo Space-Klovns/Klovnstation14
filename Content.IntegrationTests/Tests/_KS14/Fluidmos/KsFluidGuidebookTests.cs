@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using Content.Client._KS14.Guidebook.Controls;
 using Content.Client.Guidebook.Controls;
@@ -11,6 +12,8 @@ using Content.Shared._KS14.Fluidmos.Reactions;
 using Content.Shared.Chemistry.Reagent;
 using Robust.Client.UserInterface;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -79,6 +82,7 @@ public sealed class KsFluidGuidebookTests : GameTest
     KsTestGuidePressureReagent: 1
 ";
 
+    private readonly ProtoId<KsFluidReactionPrototype> _reaction = TestReaction;
     private readonly ProtoId<ReagentPrototype> _feedReagent = "KsTestGuideFeed";
     private readonly ProtoId<ReagentPrototype> _madeReagent = "KsTestGuideMade";
     private readonly ProtoId<ReagentPrototype> _bystanderReagent = "KsTestGuideBystander";
@@ -163,6 +167,37 @@ public sealed class KsFluidGuidebookTests : GameTest
             }
 
             embed.Dispose();
+        });
+    }
+
+    /// <summary>
+    ///     The conditions of a pipe reaction are long lines. At a guidebook's width they wrap inside their card instead of
+    ///         running out of its right side.
+    /// </summary>
+    [Test]
+    public async Task ReactionConditionsStayInsideTheirCard([Values(360f, 480f)] float cardWidth)
+    {
+        var client = Pair.Client;
+        var protoMan = client.ProtoMan;
+        var systemManager = client.ResolveDependency<IEntitySystemManager>();
+
+        await client.WaitAssertion(() =>
+        {
+            var card = new GuideReagentReaction(protoMan.Index(_reaction), protoMan, systemManager);
+            card.Measure(new Vector2(cardWidth, float.PositiveInfinity));
+            card.Arrange(new UIBox2(0f, 0f, cardWidth, card.DesiredSize.Y));
+
+            var label = card.MixLabel;
+            var right = label.GlobalPosition.X + label.Size.X;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(right, Is.LessThanOrEqualTo(cardWidth + 0.5f), "The conditions run out of the card's right side.");
+                Assert.That(label.Size.X, Is.LessThanOrEqualTo(GuideReagentReaction.KsFluidConditionsMaxWidth + 3f),
+                    "The conditions don't wrap.");
+            }
+
+            card.Dispose();
         });
     }
 

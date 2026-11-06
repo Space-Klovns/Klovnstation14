@@ -13,7 +13,7 @@ public sealed partial class FaxBoundUi : BoundUserInterface
     [Dependency] private IFileDialogManager _fileDialogManager = default!;
 
     [ViewVariables]
-    private FaxWindow? _window;
+    private Content.Client._KS14.Tgui.Windows.Fax.IKsFaxWindow? _window; // KS14: FaxWindow -> either fax window
 
     private bool _dialogIsOpen = false;
 
@@ -25,7 +25,11 @@ public sealed partial class FaxBoundUi : BoundUserInterface
     {
         base.Open();
 
-        _window = this.CreateWindow<FaxWindow>();
+        // KS14 start: the tgui theme gets its own layout
+        _window = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled()
+            ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.Fax.KsTguiFaxWindow>()
+            : (Content.Client._KS14.Tgui.Windows.Fax.IKsFaxWindow)this.CreateWindow<FaxWindow>();
+        // KS14 end
         _window.FileButtonPressed += OnFileButtonPressed;
         _window.CopyButtonPressed += OnCopyButtonPressed;
         _window.SendButtonPressed += OnSendButtonPressed;
@@ -43,7 +47,7 @@ public sealed partial class FaxBoundUi : BoundUserInterface
         await using var file = await _fileDialogManager.OpenFile(filters, FileAccess.Read);
         _dialogIsOpen = false;
 
-        if (_window == null || _window.Disposed || file == null)
+        if (_window == null || (_window as Robust.Client.UserInterface.Control)?.Disposed == true /* KS14: interface */ || file == null)
         {
             return;
         }

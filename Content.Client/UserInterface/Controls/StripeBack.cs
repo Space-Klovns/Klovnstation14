@@ -4,7 +4,7 @@ using Robust.Client.UserInterface.Controls;
 
 namespace Content.Client.UserInterface.Controls
 {
-    public sealed class StripeBack : Container
+    public sealed partial /* KS14: made partial, see .Klovn.Tgui.cs */ class StripeBack : Container
     {
         private const float PadSize = 4;
         private const float EdgeSize = 2;
@@ -51,9 +51,9 @@ namespace Content.Client.UserInterface.Controls
             var padSize = HasMargins ? PadSize : 0;
             var padSizeTotal = 0f;
 
-            if (HasBottomEdge)
+            if (KsDrawBottomEdge /* KS14: HasBottomEdge -> off when flat */)
                 padSizeTotal += padSize + EdgeSize;
-            if (HasTopEdge)
+            if (KsDrawTopEdge /* KS14: HasTopEdge -> off when flat */)
                 padSizeTotal += padSize + EdgeSize;
 
             var size = Vector2.Zero;
@@ -75,12 +75,12 @@ namespace Content.Client.UserInterface.Controls
 
             var padSize = HasMargins ? PadSize : 0;
 
-            if (HasTopEdge)
+            if (KsDrawTopEdge /* KS14: HasTopEdge -> off when flat */)
             {
                 box += (0, padSize + EdgeSize, 0, 0);
             }
 
-            if (HasBottomEdge)
+            if (KsDrawBottomEdge /* KS14: HasBottomEdge -> off when flat */)
             {
                 box += (0, 0, 0, -(padSize + EdgeSize));
             }
@@ -100,13 +100,13 @@ namespace Content.Client.UserInterface.Controls
 
             var padSize = HasMargins ? PadSize : 0;
 
-            if (HasTopEdge)
+            if (KsDrawTopEdge /* KS14: HasTopEdge -> off when flat */)
             {
                 centerBox += (0, (padSize + EdgeSize) * UIScale, 0, 0);
                 handle.DrawRect(new UIBox2(0, padSize * UIScale, PixelWidth, centerBox.Top), EdgeColor);
             }
 
-            if (HasBottomEdge)
+            if (KsDrawBottomEdge /* KS14: HasBottomEdge -> off when flat */)
             {
                 centerBox += (0, 0, 0, -((padSize + EdgeSize) * UIScale));
                 handle.DrawRect(new UIBox2(0, centerBox.Bottom, PixelWidth, PixelHeight - padSize * UIScale),

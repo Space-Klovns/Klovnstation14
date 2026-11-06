@@ -15,6 +15,9 @@
                        StyleClasses="LabelSubText"/>
                 <CheckBox Name="SlurFilterEnabled"
                           Text="{Loc 'ks-ui-options-slurfilter'}"/>
+                <!-- KS14: the tgui style; off leaves Baron -->
+                <CheckBox Name="TguiStyleEnabled"
+                          Text="{Loc 'ks-ui-options-tgui-style'}"/>
                 <!-- KS14: dim bright lobby art behind the lobby text -->
                 <CheckBox Name="LobbyAdaptiveContrast"
                           Text="{Loc 'ks-ui-options-lobby-adaptive-contrast'}"/>

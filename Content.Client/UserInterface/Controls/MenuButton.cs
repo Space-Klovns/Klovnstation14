@@ -13,6 +13,7 @@ public sealed partial class MenuButton : ContainerButton
 {
     [Dependency] private IInputManager _inputManager = default!;
     public const string StyleClassLabelTopButton = "topButtonLabel";
+    public const string KsStylePropertyChildColor = "ks-child-color"; // KS14: see UpdateChildColors
     // public const string StyleClassRedTopButton = "topButtonLabel";
 
     // TODO: KIIIIIILLLLLLLLLLLLLLLLLLLLLLLLLLL --kaylie.
@@ -110,6 +111,14 @@ public sealed partial class MenuButton : ContainerButton
     private void UpdateChildColors()
     {
         if (_buttonIcon == null || _buttonLabel == null) return;
+        // KS14 start: the tgui theme sets these from the stylesheet
+        if (TryGetStyleProperty<Color>(KsStylePropertyChildColor, out var ksChildColor))
+        {
+            _buttonIcon.ModulateSelfOverride = ksChildColor;
+            _buttonLabel.ModulateSelfOverride = ksChildColor;
+            return;
+        }
+        // KS14 end
         switch (DrawMode)
         {
             case DrawModeEnum.Normal:

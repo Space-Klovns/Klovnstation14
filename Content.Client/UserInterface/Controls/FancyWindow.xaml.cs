@@ -30,12 +30,19 @@ namespace Content.Client.UserInterface.Controls
             CloseButton.OnPressed += _ => Close();
             HelpButton.OnPressed += _ => Help();
             XamlChildren = ContentsContainer.Children;
+            KsAddEdgeGrip(); // KS14: resize from the edges even under edge-to-edge contents
         }
 
         public string? Title
         {
-            get => WindowTitle.Text;
-            set => WindowTitle.Text = value;
+            get => _ksRawTitle; // KS14: WindowTitle.Text -> the title as it was given, not as shown
+            // KS14 start: the tgui theme shows lowercase titles in title case
+            set
+            {
+                _ksRawTitle = value;
+                KsRefreshTitle();
+            }
+            // KS14 end
         }
 
         private string? _stylesheet;
@@ -74,6 +81,11 @@ namespace Content.Client.UserInterface.Controls
 
         protected override DragMode GetDragModeFor(Vector2 relativeMousePos)
         {
+            // KS14 start: tgui moves from the title bar only, and resizes from the south and east only
+            if (KsChromed)
+                return KsTguiDragMode(relativeMousePos);
+            // KS14 end
+
             var mode = DragMode.Move;
 
             if (Resizable)
