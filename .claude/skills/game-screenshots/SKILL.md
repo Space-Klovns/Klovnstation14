@@ -36,6 +36,7 @@ The client gets a `UIController` that runs a step list once gameplay has been up
   `hand` (pick the item up), `panel` (open the wiring panel), `wires` (open the wires UI key), `k1` (use the 2nd UI
   key; the default is the first key of the prototype's UserInterface). For other state (power, gas, reagents) edit the
   server file: it is ordinary server code with an `IEntityManager`.
+- `store` (balance 100 TC / 10 WizCoin, lifts owner/faction limits) and `usehand` (open through the real use-in-hand: `hand usehand`). **Stores must use `hand store usehand`**: a bare `OpenUi` skips `BeforeActivatableUIOpenEvent`, so listings stay empty. Tested: `tempks BaseUplinkRadio hand store usehand`, `tempks WizardsGrimoire hand store usehand`.
 - Client-only windows (late join, guidebook, chat): an `Act(...)` step that opens it from code, then `Shot`. Private
   members are reached by reflection (fine in a throwaway file; a real commit would trip the sandbox).
 - Cvar toggles (`ui.layout` = `Default` or `Separated`, `klovn.ui.tgui`): `_configurationManager.SetCVar` in an `Act`.

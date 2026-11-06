@@ -63,7 +63,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
     private readonly KsTguiSection _statusSection;
     private readonly KsTguiLabeledListItem _accountItem;
     private readonly KsTguiLabeledListItem _capacityItem;
-    private readonly Label _balanceLabel;
+    private readonly KsTguiAnimatedNumber _balanceLabel;
 
     private readonly KsTguiSection _tabsSection;
     private readonly KsTguiTabs _pageTabs;
@@ -90,7 +90,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
     private readonly KsTguiButton _accountActionButton;
     private readonly KsTguiButton _limitToggleButton;
 
-    private readonly KsTguiCargoOrderWindow _orderWindow;
+    private readonly KsTguiCargoOrderModal _orderWindow;
 
     public List<ProtoId<CargoProductPrototype>> ProductCatalogue = new();
 
@@ -126,7 +126,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         SetSize = new Vector2(800f, 700f);
         MinSize = new Vector2(600f, 500f);
 
-        _orderWindow = new KsTguiCargoOrderWindow();
+        _orderWindow = new KsTguiCargoOrderModal();
         _orderWindow.OnSubmitted += (requester, reason, product, amount) => OnOrderSubmitted?.Invoke(requester, reason, product, amount);
 
         var root = new BoxContainer
@@ -138,10 +138,11 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
 
         // Status
         _statusSection = new KsTguiSection();
-        _balanceLabel = new Label
+        _balanceLabel = new KsTguiAnimatedNumber
         {
             FontColorOverride = Gold,
-            Text = Loc.GetString("cargo-console-menu-points-amount", ("amount", 0)),
+            Format = points => Loc.GetString("cargo-console-menu-points-amount", ("amount", (int)MathF.Round(points))),
+            Value = 0f,
         };
         _statusSection.Buttons = _balanceLabel;
         var statusList = new KsTguiLabeledList();
@@ -276,7 +277,11 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         _fundsPage.AddChild(fundsSection);
         root.AddChild(_fundsPage);
 
-        ContentsContainer.AddChild(root);
+        // The order form is a modal over the whole window: the host stacks it on the page.
+        var host = new Control();
+        host.AddChild(root);
+        host.AddChild(_orderWindow);
+        ContentsContainer.AddChild(host);
 
         SelectPage(Page.Catalog);
     }
@@ -629,7 +634,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         }
 
         var balance = _cargoSystem.GetBalanceFromAccount((_station.Value, bankAccount), orderConsole.Account);
-        _balanceLabel.Text = Loc.GetString("cargo-console-menu-points-amount", ("amount", balance));
+        _balanceLabel.Value = (float)balance;
         _transferLimitLabel.Text = Loc.GetString("ks-tgui-cargo-transfer-limit-value", ("limit", (int)(balance * orderConsole.TransferLimit)));
 
         _unlimitedLabel.Visible = orderConsole.TransferUnbounded;
@@ -647,13 +652,5 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
             _pageTabs.Select((KsTguiTabItem)_pageTabs.GetChild(0));
             SelectPage(Page.Catalog); // Select doesn't raise OnTabSelected.
         }
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-
-        if (disposing)
-            _orderWindow.Dispose();
     }
 }

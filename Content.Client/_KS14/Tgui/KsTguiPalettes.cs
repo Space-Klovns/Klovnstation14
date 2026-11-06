@@ -131,10 +131,28 @@ public static class KsTguiPalettes
     /// </summary>
     public static Color Translucent(Color color, float cssOpacity, Color backdrop)
     {
-        var overlay = Color.FromSrgb(color).G;
-        var under = Color.FromSrgb(backdrop).G;
-        var wanted = Color.FromSrgb(new Color(0f, color.G * cssOpacity + backdrop.G * (1f - cssOpacity), 0f)).G;
+        // Alpha is one number for three channels, so it is worked out on the channel that carries the backdrop's light: for a
+        //      grey they are all alike (green is taken then), and for the red window of a Syndicate-themed one it is red.
+        var channel = backdrop.R > backdrop.G && backdrop.R >= backdrop.B ? 0 : backdrop.B > backdrop.G ? 2 : 1;
+        var colorValue = Channel(color, channel);
+        var backdropValue = Channel(backdrop, channel);
+
+        var overlay = Linear(colorValue);
+        var under = Linear(backdropValue);
+        var wanted = Linear(colorValue * cssOpacity + backdropValue * (1f - cssOpacity));
+        if (overlay == under)
+            return color.WithAlpha(cssOpacity);
 
         return color.WithAlpha(Math.Clamp((wanted - under) / (overlay - under), 0f, 1f));
+    }
+
+    private static float Channel(Color color, int channel)
+    {
+        return channel == 0 ? color.R : channel == 2 ? color.B : color.G;
+    }
+
+    private static float Linear(float srgb)
+    {
+        return Color.FromSrgb(new Color(0f, srgb, 0f)).G;
     }
 }

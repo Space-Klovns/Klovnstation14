@@ -10,7 +10,7 @@ public sealed class KsTguiTitleBarStyleBox : StyleBox
 {
     private const float ShadowHeight = 6f;
 
-    private static readonly Color BorderColor = KsTguiPalettes.Translucent(Color.Black, 0.33f, KsTguiPalettes.TitleBar);
+    private readonly Color _borderColor;
 
     /// <summary>
     ///     Black at zero alpha, not <see cref="Color.Transparent"/>, which is white and would pale the shadow as it fades.
@@ -25,12 +25,13 @@ public sealed class KsTguiTitleBarStyleBox : StyleBox
     public KsTguiTitleBarStyleBox(Color backgroundColor)
     {
         BackgroundColor = backgroundColor;
+        _borderColor = KsTguiPalettes.Translucent(Color.Black, 0.33f, backgroundColor);
     }
 
     protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box, float uiScale)
     {
         handle.DrawRect(box, BackgroundColor);
-        handle.DrawRect(new UIBox2(box.Left, box.Bottom - uiScale, box.Right, box.Bottom), BorderColor);
+        handle.DrawRect(new UIBox2(box.Left, box.Bottom - uiScale, box.Right, box.Bottom), _borderColor);
 
         _shadow.Draw(handle, new UIBox2(box.Left, box.Bottom, box.Right, box.Bottom + ShadowHeight * uiScale), uiScale);
     }

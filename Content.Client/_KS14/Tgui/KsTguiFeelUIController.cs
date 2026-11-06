@@ -267,6 +267,10 @@ public sealed partial class KsTguiFeelUIController : UIController
         if (!_configurationManager.GetCVar(KsCCVars.TguiStyle))
             return;
 
+        // A tooltip of a control in a themed window wears the window's theme: the popup layer is outside the window.
+        if (KsTguiWindowThemes.FindThemedSheet(UIManager.CurrentlyHovered) is { } themedSheet)
+            control.Stylesheet = themedSheet;
+
         if (control is not Tooltip && !control.HasStyleClass(StyleClass.TooltipPanel))
             return;
 
@@ -293,10 +297,17 @@ public sealed partial class KsTguiFeelUIController : UIController
     ///     Tags an <see cref="OptionButton"/>'s entries as it opens. They are plain buttons in an unclassed box, so no rule
     ///         can select them through their parents, and the option button adds its entries' classes for itself.
     /// </summary>
-    private static void OnModalRootChildAdded(Control control)
+    private void OnModalRootChildAdded(Control control)
     {
-        if (control.HasStyleClass(OptionButton.StyleClassPopup))
-            TagDropdownEntries(control);
+        if (!control.HasStyleClass(OptionButton.StyleClassPopup))
+            return;
+
+        TagDropdownEntries(control);
+
+        // A dropdown of a themed window wears its theme: the modal layer is outside the window. The option button is under
+        //      the mouse when it opens.
+        if (KsTguiWindowThemes.FindThemedSheet(UIManager.CurrentlyHovered) is { } themedSheet)
+            control.Stylesheet = themedSheet;
     }
 
     private static void TagDropdownEntries(Control control)

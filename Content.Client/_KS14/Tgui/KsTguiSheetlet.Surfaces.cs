@@ -23,14 +23,14 @@ public sealed partial class KsTguiSheetlet
     ///         the section border between sectors. The sectors are drawn in code, so the colours go through style properties
     ///         <see cref="RadialMenuButtonWithSector"/> reads. A colour a caller sets itself still wins.
     /// </summary>
-    private static void AddRadialRules(List<StyleRule> rules)
+    private void AddRadialRules(List<StyleRule> rules)
     {
         rules.Add(E<RadialMenuButtonWithSector>()
-            .Prop(RadialMenuButtonWithSector.KsStylePropertyBackground, KsTguiPalettes.Translucent(KsTguiPalettes.Base, 0.85f, Color.White))
-            .Prop(RadialMenuButtonWithSector.KsStylePropertyHoverBackground, KsTguiPalettes.PrimaryElement.WithAlpha(0.9f))
-            .Prop(RadialMenuButtonWithSector.KsStylePropertyBorder, KsTguiPalettes.Border)
-            .Prop(RadialMenuButtonWithSector.KsStylePropertyHoverBorder, KsTguiPalettes.PrimaryBase)
-            .Prop(RadialMenuButtonWithSector.KsStylePropertySeparator, KsTguiPalettes.Border));
+            .Prop(RadialMenuButtonWithSector.KsStylePropertyBackground, KsTguiPalettes.Translucent(_palette.Base, 0.85f, Color.White))
+            .Prop(RadialMenuButtonWithSector.KsStylePropertyHoverBackground, _palette.Primary.Element.WithAlpha(0.9f))
+            .Prop(RadialMenuButtonWithSector.KsStylePropertyBorder, Border)
+            .Prop(RadialMenuButtonWithSector.KsStylePropertyHoverBorder, _palette.PrimaryBase)
+            .Prop(RadialMenuButtonWithSector.KsStylePropertySeparator, Border));
     }
 
     /// <summary>
@@ -44,14 +44,14 @@ public sealed partial class KsTguiSheetlet
     public const string StyleClassSectionHeading = "KsTguiSectionHeading";
     public const string StylePropertySectionLine = "ks-tgui-section-line";
 
-    private static void AddRetrofitRules(List<StyleRule> rules)
+    private void AddRetrofitRules(List<StyleRule> rules)
     {
-        rules.Add(E<Label>().Class(StyleClassLabelKey).FontColor(KsTguiPalettes.Label));
+        rules.Add(E<Label>().Class(StyleClassLabelKey).FontColor(_palette.Label));
 
         // A heading in an existing window, as a Section's title: white.
         rules.Add(E<Label>().Class(StyleClassSectionHeading).FontColor(Color.White));
 
         // The separator under such a heading becomes the Section's blue underline.
-        rules.Add(E<HSeparator>().Class(StyleClassSectionLine).Prop(StylePropertySectionLine, true));
+        rules.Add(E<HSeparator>().Class(StyleClassSectionLine).Prop(StylePropertySectionLine, true).Prop(StylePropertySectionLineColor, _palette.PrimaryBase));
     }
 }

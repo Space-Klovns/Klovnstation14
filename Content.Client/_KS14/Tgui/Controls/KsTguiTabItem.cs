@@ -16,6 +16,10 @@ public sealed class KsTguiTabItem : ContainerButton
     private static readonly XColor HoverWash = KsTguiPalettes.Translucent(XColor.FromHex("#606060"), 0.25f, KsTguiPalettes.Base);
     private static readonly XColor SelectedWash = KsTguiPalettes.Translucent(XColor.FromHex("#606060"), 0.4f, KsTguiPalettes.Base);
 
+    private XColor _hoverWash = HoverWash;
+    private XColor _selectedWash = SelectedWash;
+    private XColor? _selectedText;
+
     private readonly KsTguiStyleBox _box = new(Clear);
     private readonly Control _leftSlot;
     private readonly KsTguiIcon _icon;
@@ -118,6 +122,16 @@ public sealed class KsTguiTabItem : ContainerButton
         }
     }
 
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+
+        _hoverWash = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyTabHoverWash, out var hover) ? hover : HoverWash;
+        _selectedWash = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyTabSelectedWash, out var selected) ? selected : SelectedWash;
+        _selectedText = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyTabSelectedText, out var text) ? text : null;
+        RefreshLook();
+    }
+
     protected override void DrawModeChanged()
     {
         base.DrawModeChanged();
@@ -129,11 +143,11 @@ public sealed class KsTguiTabItem : ContainerButton
         if (!_built)
             return;
 
-        var bright = KsTguiColors.Bright(_color);
+        var bright = _color == KsTguiColor.Default && _selectedText is { } themed ? themed : KsTguiColors.Bright(_color);
         var hovered = DrawMode == DrawModeEnum.Hover;
         var pressed = DrawMode == DrawModeEnum.Pressed;
 
-        _box.BackgroundColor = _selected ? SelectedWash : hovered ? HoverWash : Clear;
+        _box.BackgroundColor = _selected ? _selectedWash : hovered ? _hoverWash : Clear;
         _box.BorderColor = _selected ? bright : Clear;
         _box.BorderThickness = _vertical ? new Thickness(0f, 0f, 2f, 0f) : new Thickness(0f, 0f, 0f, 2f);
         _box.RadiusTopLeft = 3f;

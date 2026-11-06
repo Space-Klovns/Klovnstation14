@@ -14,19 +14,21 @@ public sealed class KsTguiBlockQuote : PanelContainer
 {
     private readonly BoxContainer _content;
     private readonly RichTextLabel _label;
+    private readonly StyleBoxFlat _box;
     private string? _text;
+    private Color _labelColor = KsTguiPalettes.Label;
 
     public KsTguiBlockQuote()
     {
-        var box = new StyleBoxFlat
+        _box = new StyleBoxFlat
         {
             BackgroundColor = Color.Transparent,
             BorderColor = KsTguiPalettes.Label,
             BorderThickness = new Thickness(2f, 0f, 0f, 0f),
         };
-        box.SetContentMarginOverride(StyleBox.Margin.Left, 8f);
-        box.SetContentMarginOverride(StyleBox.Margin.Bottom, 6f);
-        PanelOverride = box;
+        _box.SetContentMarginOverride(StyleBox.Margin.Left, 8f);
+        _box.SetContentMarginOverride(StyleBox.Margin.Bottom, 6f);
+        PanelOverride = _box;
 
         _label = new RichTextLabel { Visible = false };
         _content = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
@@ -45,8 +47,22 @@ public sealed class KsTguiBlockQuote : PanelContainer
         set
         {
             _text = value;
-            _label.SetMessage(FormattedMessage.FromUnformatted(value ?? string.Empty), defaultColor: KsTguiPalettes.Label);
-            _label.Visible = !string.IsNullOrEmpty(value);
+            RefreshText();
         }
+    }
+
+    private void RefreshText()
+    {
+        _label.SetMessage(FormattedMessage.FromUnformatted(_text ?? string.Empty), defaultColor: _labelColor);
+        _label.Visible = !string.IsNullOrEmpty(_text);
+    }
+
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+
+        _labelColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyLabelColor, out var color) ? color : KsTguiPalettes.Label;
+        _box.BorderColor = _labelColor;
+        RefreshText();
     }
 }

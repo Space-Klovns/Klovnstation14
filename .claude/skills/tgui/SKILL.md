@@ -61,6 +61,12 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `ColorBox` | `KsTguiColorBox` | `BoxColor`, 12px swatch |
 | `Divider` | `KsTguiDivider` | 2px line, 6px space either side; `Vertical` |
 | `BlockQuote` | `KsTguiBlockQuote` | `Text`, label colour, left bar |
+| `ImageButton` | `KsTguiImageButton` | `: ContainerButton`, drawn from its own state. `ImagePrototype` or `ImageTexture`, `ImageSize` (tg's 64), `Text` (bar at the bottom), `TopLeftText`/`TopRightText` or `AltButtons` (top overlay), `Buttons` (above the bar), `Color` (`Default` is tg's grey, `Primary` the blue; `Transparent` for pickers), `Selected`, `Fluid` (row, `Content` replaces `Text`). Not ported: pressed glow, text outline, `title`, contrast on a disabled row |
+| a wrapping grid of `ImageButton` cards | `KsTguiCardGrid` | Columns = how many minimum-size cards fit, the width then shared out equally: constant `Gap`, first and last card flush with the edges at any width and after a resize. `HorizontalExpand` it. Use it for every card grid |
+| `RoundGauge` | `KsTguiRoundGauge` | Smooth geometry from tg's 100x50 view box, sharp at any scale. `MinValue`, `MaxValue`, `AddRange`, `AlertAfter`/`AlertBefore`, `Format`, `GaugeSize`. Pass only real ranges: no data, no range. Needle snaps (tg eases) |
+| `AnimatedNumber` | `KsTguiAnimatedNumber` | `: Label`. Set `Value`; eases by frame time and does nothing once settled. `Format`, `Initial` (start from 0 on first show). For a figure that changes in place; keep one instance, don't rebuild it with its row |
+| `Dimmer` | `KsTguiDimmer` | `KsTguiDimmer.Over(target, out dimmer)` returns a host that stacks the target and the dimmer; add the host where the target was, toggle `dimmer.Visible`. `Content` is centred. Takes the clicks. The standard way to show a locked section (lock icon + the swipe text), with the notice kept above |
+| `Modal` | `KsTguiModal` | A dimmer with a panel. Put it in a stacking host beside the page, `Body`, `Open()`/`Close()`, `Closed`. Takes keyboard focus, Esc closes (a focused text box eats the first Esc) |
 | `Input` | `LineEdit` | Already themed |
 | `Dropdown` | `OptionButton` | Already themed |
 
@@ -198,6 +204,17 @@ ejectButton.Disabled = state.OutputContainer is null;
 <BoxContainer Orientation="Vertical" SeparationOverride="4" Margin="10 5">
 ```
 
+**A grid of cards fills the width.** tg's cards are fixed and leave the remainder at the right. Here that reads as a hole:
+
+```csharp
+// do this: columns from the minimum card, the width shared out, edges flush
+var grid = new KsTguiCardGrid { HorizontalExpand = true };
+grid.AddChild(new KsTguiImageButton { ImagePrototype = id, Text = name });
+
+// not this: fixed-width cards in a WrapContainer, with the leftover as a gap on the right
+var wrap = new WrapContainer { SeparationOverride = 4, CrossSeparationOverride = 4 };
+```
+
 **A lost feature is a bug, however good the layout looks.** The fax port kept the dropdown's default-destination
 behaviour when it turned recipients into tg's list of buttons. Going from a dropdown to buttons is fine. Dropping what
 the dropdown did isn't.
@@ -278,6 +295,55 @@ _highlight = TryGetStyleProperty<Color>("ks-my-highlight", out var color) ? colo
 // not this - frozen at construction, so a live toggle leaves it wrong
 _highlight = KsTguiTheme.ReadEnabled() ? KsTguiPalettes.PrimaryElement : DefaultHighlight;
 ```
+
+## Window themes (syndicate, wizard)
+
+tg's `<Window theme="syndicate">` swaps the whole palette of one window. Here a theme is a **complete extra stylesheet**
+(`StylesheetManager.KsGetThemedSheet`: the Nanotrasen sheet built from a `KsTguiThemePalette`) that a window sets as its own
+`Control.Stylesheet`, so it reaches everything inside the window and nothing outside. `KsTguiWindowTheme` (Shared) is
+Nanotrasen, Syndicate or Wizard.
+
+```csharp
+// do this: FancyWindow has the property; any other window (a DefaultWindow, as StoreMenu is) uses the extension
+window.KsTheme = KsTguiWindowTheme.Syndicate;
+storeMenu.SetKsTheme(KsTguiWindowTheme.Wizard);   // KsTguiWindowThemes, in Content.Client._KS14.Tgui
+
+// not this: the sheet is replaced and nothing remembers why, so the toggle, a rebuild and a reopened window all lose it
+window.Stylesheet = stylesheetManager.KsGetThemedSheet(KsTguiWindowTheme.Syndicate);
+```
+
+- **Data-driven for stores**: `StoreComponent.KsUiTheme` (`ksUiTheme:`, default Syndicate), read by `StoreBoundUserInterface`.
+  Say it in a `Partials/` prototype (`Prototypes/_KS14/Store/Partials/ui_theme.yml`), not by editing the upstream file.
+- **Under Baron it does nothing**, and the toggle puts windows back on the UI's sheet and onto the rebuilt themed one.
+  A window that was closed catches up in `KsTguiChromeUIController.SyncWindow`.
+- **A control reads its colours from the sheet it is in.** A rule that needs a colour a theme changes (primary, label,
+  selected, notice, input border, title bar, window gradient, logo) takes it from `_palette` in `KsTguiSheetlet`, never from
+  `KsTguiPalettes`, which is the Nanotrasen theme's values written out and stays for what no theme changes (good, average, bad).
+  A control that draws itself reads a **style property** that `KsTguiSheetlet.Themes.cs` sets, with the Nanotrasen colour as its
+  fallback (what Baron gets).
+
+```csharp
+// do this: in StylePropertiesChanged, so it follows the window it's in and the toggle
+_edge = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyInputBorder, out var border) ? border : KsTguiPalettes.InputBorder;
+
+// not this: Nanotrasen blue in a Syndicate window, with nothing to say why
+_edge = KsTguiPalettes.InputBorder;
+```
+
+- **Every derived token is worked out, not read off a picture.** `KsTguiThemePalette` holds each theme's SCSS tokens (HSL) and
+  works the rest out as tgui-core does: button `l-5`, hover `+10`, pressed `-7.5`, disabled the element at .5 over the base;
+  title bar the base at `+--secondary-lightness-adjustment` unless `--color-secondary` is set; gradient `base +- spread`;
+  label the primary's hue at 17.5/57.5; tab text the primary at 90; input border the primary's hue at 100/75, .75 over the
+  input background unless `--color-border-primary` is set; NoticeBox the oklch step. `KsTguiWindowThemeTest` checks the
+  Nanotrasen result against the hand-written values, so a wrong derivation shows. To add a theme: read its
+  `styles/themes/<name>.scss`, add a `Tokens`, a logo (below) and an enum value.
+- **Logos** are `bg-<theme>.svg` rasterised white on clear (PNG, 2x the viewBox, even-odd fill), with an attributions entry.
+  `KsTguiWindowBackgroundStyleBox` draws it black at .33, fitted to 70% of the window below the title bar by the PNG's aspect.
+- **Popups are outside the window.** A dropdown (ModalRoot) and a tooltip (PopupRoot) are not its children, so
+  `KsTguiFeelUIController` gives them the sheet of the window under the mouse (`KsTguiWindowThemes.FindThemedSheet`). Anything
+  else in those layers (a context menu, a window opened from the window) stays on the UI's theme. A sub-window needs its own `KsTheme`.
+- **Pitfall: a palette field is instance state.** The sheetlet is built once per sheet, so `KsTguiSheetlet` rule methods that
+  read `_palette` are instance methods. A `static` method or field that bakes in a colour is a Nanotrasen colour in every theme.
 
 ## Traps
 

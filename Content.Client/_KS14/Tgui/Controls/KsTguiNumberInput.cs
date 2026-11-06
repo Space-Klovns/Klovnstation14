@@ -50,6 +50,11 @@ public sealed class KsTguiNumberInput : Control
     private static readonly XColor Background = XColor.FromHex("#0D0D0D");
     private static readonly XColor BorderIdle = XColor.FromHex("#6392C2");
 
+    // The window theme's, from style properties; these are the default theme's where the sheet doesn't say.
+    private XColor _background = Background;
+    private XColor _borderIdle = BorderIdle;
+    private XColor _borderFocused = KsTguiPalettes.InputBorder;
+
     private readonly LineEdit _edit;
     private readonly Label _content;
     private readonly KsTguiStyleBox _box = new(Background, 2f) { BorderThickness = new Thickness(1f) };
@@ -536,11 +541,21 @@ public sealed class KsTguiNumberInput : Control
         return finalSize;
     }
 
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+
+        _background = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyInputBackground, out var background) ? background : Background;
+        _borderIdle = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyInputBorderIdle, out var idle) ? idle : BorderIdle;
+        _borderFocused = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyInputBorder, out var focused) ? focused : KsTguiPalettes.InputBorder;
+        _content.FontColorOverride = _borderFocused;
+    }
+
     protected override void Draw(DrawingHandleScreen handle)
     {
         var active = _pressed || _editing;
-        _box.BackgroundColor = Background;
-        _box.BorderColor = active ? KsTguiPalettes.InputBorder : BorderIdle;
+        _box.BackgroundColor = _background;
+        _box.BorderColor = active ? _borderFocused : _borderIdle;
         _box.Draw(handle, PixelSizeBox, UIScale);
 
         // The bar sits in the padding box, inset on every side but the right, and grows from its bottom.
@@ -550,7 +565,7 @@ public sealed class KsTguiNumberInput : Control
         if (barHeight > 0f)
         {
             var left = (1f + BarInset) * UIScale;
-            handle.DrawRect(new UIBox2(left, barBottom - barHeight, left + BarWidth * UIScale, barBottom), KsTguiPalettes.InputBorder);
+            handle.DrawRect(new UIBox2(left, barBottom - barHeight, left + BarWidth * UIScale, barBottom), _borderFocused);
         }
 
         // Children draw after this, so the text is over the bar, as in tgui.

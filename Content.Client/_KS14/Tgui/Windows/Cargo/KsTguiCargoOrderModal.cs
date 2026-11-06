@@ -1,6 +1,5 @@
 using System.Numerics;
 using Content.Client._KS14.Tgui.Controls;
-using Content.Client.UserInterface.Controls;
 using Content.Shared.Cargo.Prototypes;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -10,10 +9,11 @@ using Robust.Shared.Utility;
 namespace Content.Client._KS14.Tgui.Windows.Cargo;
 
 /// <summary>
-///     The order form the catalog opens for one product (stock <c>CargoConsoleOrderMenu</c>), laid out as a tgui section.
-///         tgui adds an item straight to the cart; here the player also says who is asking, why, and how many.
+///     The order form the catalog opens for one product (stock <c>CargoConsoleOrderMenu</c>), laid out as a tgui section in a
+///         <see cref="KsTguiModal"/> over the console window, as tgui shows its pack contents. tgui adds an item straight to
+///         the cart; here the player also says who is asking, why, and how many.
 /// </summary>
-public sealed class KsTguiCargoOrderWindow : FancyWindow
+public sealed class KsTguiCargoOrderModal : KsTguiModal
 {
     private readonly Label _productLabel;
     private readonly RichTextLabel _descriptionLabel;
@@ -35,20 +35,18 @@ public sealed class KsTguiCargoOrderWindow : FancyWindow
     /// </summary>
     public int Capacity { get; set; }
 
-    public KsTguiCargoOrderWindow()
+    public KsTguiCargoOrderModal()
     {
-        Title = Loc.GetString("cargo-console-order-menu-title");
-        MinSize = new Vector2(460f, 280f);
-        SetSize = new Vector2(460f, 280f);
-
         var root = new BoxContainer
         {
             Orientation = BoxContainer.LayoutOrientation.Vertical,
             SeparationOverride = KsTguiSection.Gap,
-            Margin = new Thickness(6f),
+            MinSize = new Vector2(420f, 0f),
         };
 
-        var section = new KsTguiSection { VerticalExpand = true };
+        var closeButton = new KsTguiButton { Icon = KsTguiIcons.Times, Color = KsTguiColor.Danger, Compact = true };
+        closeButton.OnPressed += _ => Close();
+        var section = new KsTguiSection { Title = Loc.GetString("cargo-console-order-menu-title"), Buttons = closeButton };
         var list = new KsTguiLabeledList();
 
         _productLabel = new Label();
@@ -83,7 +81,7 @@ public sealed class KsTguiCargoOrderWindow : FancyWindow
         _submitButton.OnPressed += _ => Submit();
         root.AddChild(_submitButton);
 
-        ContentsContainer.AddChild(root);
+        Body = root;
     }
 
     /// <summary>
@@ -104,8 +102,7 @@ public sealed class KsTguiCargoOrderWindow : FancyWindow
         _amountSpinBox.MaxValue = MathF.Max(1f, (float)Capacity);
         _amountSpinBox.SetValue(1f);
 
-        if (!IsOpen)
-            OpenCentered();
+        Open();
     }
 
     private void Submit()

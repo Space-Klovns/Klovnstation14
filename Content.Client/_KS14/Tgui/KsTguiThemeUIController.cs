@@ -92,6 +92,9 @@ public sealed partial class KsTguiThemeUIController : UIController
             if (ReferenceEquals(control.Stylesheet, oldSheet))
                 control.Stylesheet = newSheet;
 
+            // A window with a theme of its own takes the rebuilt sheet of that theme, or none once the theme is off.
+            KsTguiWindowThemes.Reapply(control);
+
             foreach (var child in control.Children)
                 queue.Enqueue(child);
         }

@@ -35,7 +35,7 @@ public sealed partial class HSeparator : Control
     }
 
     private readonly StyleBox _defaultBox;
-    private StyleBox? _sectionLineBox;
+    private StyleBoxFlat? _sectionLineBox;
 
     protected override void StylePropertiesChanged()
     {
@@ -43,11 +43,15 @@ public sealed partial class HSeparator : Control
 
         // The tgui theme turns a separator carrying the KsTguiSectionLine class into a section's 2px underline.
         if (TryGetStyleProperty<bool>(Content.Client._KS14.Tgui.KsTguiSheetlet.StylePropertySectionLine, out var line) && line)
-            _panel.PanelOverride = _sectionLineBox ??= new StyleBoxFlat
-            {
-                BackgroundColor = Content.Client._KS14.Tgui.KsTguiPalettes.PrimaryBase,
-                ContentMarginBottomOverride = 2,
-            };
+        {
+            _sectionLineBox ??= new StyleBoxFlat { ContentMarginBottomOverride = 2 };
+
+            // The window theme's primary, as the sheet sets it.
+            _sectionLineBox.BackgroundColor = TryGetStyleProperty<Color>(Content.Client._KS14.Tgui.KsTguiSheetlet.StylePropertySectionLineColor, out var lineColor)
+                ? lineColor
+                : Content.Client._KS14.Tgui.KsTguiPalettes.PrimaryBase;
+            _panel.PanelOverride = _sectionLineBox;
+        }
         else
             _panel.PanelOverride = _defaultBox;
     }

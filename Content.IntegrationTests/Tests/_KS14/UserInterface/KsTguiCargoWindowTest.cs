@@ -124,12 +124,12 @@ public sealed class KsTguiCargoWindowTest : GameTest
             Assert.That(rows, Is.Not.Empty, "the catalog lists the console's products");
             Press(rows[0]);
 
-            var orderWindow = (KsTguiCargoOrderWindow)typeof(KsTguiCargoConsoleWindow).GetField("_orderWindow", Any)!.GetValue(tguiWindow);
+            var orderWindow = (KsTguiCargoOrderModal)typeof(KsTguiCargoConsoleWindow).GetField("_orderWindow", Any)!.GetValue(tguiWindow);
             Assert.That(orderWindow.IsOpen, "pressing a product opens the form");
 
             var submit = new List<KsTguiButton>();
             Collect(orderWindow, submit);
-            Press(submit.Single());
+            Press(submit.Single(button => button.Icon == KsTguiIcons.Check));
             Assert.That(submitted, Has.Count.EqualTo(1));
             Assert.That(submitted[0].Item4, Is.EqualTo(1));
             Assert.That(products.Select(id => (string)id), Does.Contain(submitted[0].Item3));
@@ -148,6 +148,10 @@ public sealed class KsTguiCargoWindowTest : GameTest
     {
         foreach (var child in control.Children)
         {
+            // The order form is a modal inside the window; its own buttons are looked at from the form.
+            if (child is KsTguiModal)
+                continue;
+
             if (child is T match)
                 found.Add(match);
             Collect(child, found);

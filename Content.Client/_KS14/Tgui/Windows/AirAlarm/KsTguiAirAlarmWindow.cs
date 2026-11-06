@@ -41,6 +41,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
     private readonly KsTguiLabeledList _statusList;
 
     private readonly KsTguiSection _screenSection;
+    private readonly KsTguiDimmer _lockDimmer;
     private readonly KsTguiButton _backButton;
     private readonly Dictionary<Screen, BoxContainer> _screens = new();
     private readonly Dictionary<Screen, string> _screenTitles = new()
@@ -203,7 +204,20 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
         thresholds.AddChild(_sensorContainer);
         AddScreen(Screen.Thresholds, thresholds);
 
-        root.AddChild(_screenSection);
+        // Without access the controls are dimmed under a lock, with the notice above still telling what to do. tg hides
+        //      the section instead.
+        var airControls = KsTguiDimmer.Over(_screenSection, out _lockDimmer);
+        airControls.VerticalExpand = true;
+        var lockedContent = new BoxContainer
+        {
+            Orientation = BoxContainer.LayoutOrientation.Vertical,
+            SeparationOverride = KsTguiSection.Gap,
+        };
+        lockedContent.AddChild(new KsTguiIcon { Glyph = KsTguiIcons.Lock, IconSize = 4f, Align = Label.AlignMode.Center, IconColor = KsTguiPalettes.TextDim });
+        lockedContent.AddChild(new Label { Text = Loc.GetString("ks-tgui-airalarm-locked"), Align = Label.AlignMode.Center });
+        _lockDimmer.Content = lockedContent;
+        _lockDimmer.Visible = true; // starts locked, like the notice
+        root.AddChild(airControls);
         ContentsContainer.AddChild(root);
 
         ShowScreen(Screen.Home);
@@ -220,6 +234,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
     {
         _hasAccess = hasAccess;
         _lockedNotice.Visible = !hasAccess;
+        _lockDimmer.Visible = !hasAccess;
         _resyncButton.Disabled = !hasAccess;
         RefreshModes();
 

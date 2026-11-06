@@ -30,6 +30,9 @@ public sealed class KsTguiProgressBar : Control
 
     private readonly List<(KsTguiColor Color, float Min, float Max)> _ranges = new();
 
+    private XColor _defaultElement = KsTguiColors.Element(KsTguiColor.Default);
+    private XColor _backdrop = XColor.Black.WithAlpha(0f);
+
     private float _value;
     private float _minValue;
     private float _maxValue = 1f;
@@ -173,6 +176,19 @@ public sealed class KsTguiProgressBar : Control
         InvalidateMeasure();
     }
 
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+
+        // The default colour is the theme's primary, and a backdrop is a theme's own: both come from the sheet.
+        _defaultElement = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyProgressColor, out var element)
+            ? element
+            : KsTguiColors.Element(KsTguiColor.Default);
+        _backdrop = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyProgressBackdrop, out var backdrop)
+            ? backdrop
+            : XColor.Black.WithAlpha(0f);
+    }
+
     protected override Vector2 MeasureOverride(Vector2 availableSize)
     {
         _label.Measure(new Vector2(MathF.Max(0f, availableSize.X - 2f * TextPadding), availableSize.Y));
@@ -192,8 +208,12 @@ public sealed class KsTguiProgressBar : Control
         base.Draw(handle);
 
         var box = PixelSizeBox;
-        var element = KsTguiColors.Element(ResolvedColor);
+        var resolved = ResolvedColor;
+        var element = resolved == KsTguiColor.Default ? _defaultElement : KsTguiColors.Element(resolved);
         var border = MathF.Max(1f, MathF.Round(UIScale));
+
+        if (_backdrop.A > 0f)
+            handle.DrawRect(box, _backdrop);
 
         var inner = new UIBox2(box.Left + border, box.Top + border, box.Right - border, box.Bottom - border);
         var fillRight = inner.Left + inner.Width * Fraction;

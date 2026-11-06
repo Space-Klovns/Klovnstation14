@@ -8,7 +8,10 @@ namespace Content.Client._KS14.Tgui;
 /// </summary>
 public sealed class KsTguiTabPanelStyleBox : StyleBox
 {
-    private static readonly Color BarColor = KsTguiPalettes.Section;
+    /// <summary>
+    ///     The bar's colour, <c>--tabs-container-background</c>, which is the theme's Section.
+    /// </summary>
+    public Color BarColor = KsTguiPalettes.Section;
 
     /// <summary>
     ///     The height of the tab row, in virtual pixels.

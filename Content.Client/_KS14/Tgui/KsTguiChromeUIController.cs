@@ -86,6 +86,9 @@ public sealed partial class KsTguiChromeUIController : UIController
 
     private void SyncWindow(Control control)
     {
+        // A window opened again may have come back after a rebuild, with the sheet of the old one.
+        KsTguiWindowThemes.Reapply(control);
+
         if (control is not (DefaultWindow or FancyWindow))
             return;
 

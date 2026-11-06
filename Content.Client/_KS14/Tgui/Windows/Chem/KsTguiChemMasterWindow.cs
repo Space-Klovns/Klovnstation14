@@ -35,7 +35,10 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
     private readonly BoxContainer _bufferInfo;
     private readonly BoxContainer _outputInfo;
     private readonly Label _drawSourceLabel;
-    private readonly Label _bufferVolumeLabel;
+    private readonly KsTguiAnimatedNumber _bufferVolumeLabel;
+    private readonly KsTguiAnimatedNumber _bufferListVolume = MakeVolume();
+    private readonly KsTguiAnimatedNumber _inputVolume = MakeVolume();
+    private readonly KsTguiAnimatedNumber _outputVolume = MakeVolume();
     private readonly KsTguiButton _sortButton;
 
     public event Action<ItemSlotButtonPressedEvent>? OnInputEjectPressed;
@@ -103,7 +106,7 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         OutputBeakerDraw.OnPressed += _ => OnDrawSourcePressed?.Invoke(ChemMasterDrawSource.External);
 
         _drawSourceLabel = new Label();
-        _bufferVolumeLabel = new Label { StyleClasses = { StyleClass.LabelWeak } };
+        _bufferVolumeLabel = MakeVolume();
 
         var sourceTitle = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, VerticalAlignment = Control.VAlignment.Center };
         sourceTitle.AddChild(new Label
@@ -191,7 +194,7 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
     public KsTguiButton SortButton => _sortButton;
 
-    public KsTguiButton[] PillTypeButtons { get; }
+    public KsTguiImageButton[] PillTypeButtons { get; }
 
     public LineEdit LabelLineEdit { get; }
 
@@ -212,6 +215,19 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         return new Label { Text = Loc.GetString(key), StyleClasses = { StyleClass.LabelWeak }, Margin = new Thickness(5f, 0f, 3f, 0f) };
     }
 
+    /// <summary>
+    ///     A volume that eases to its new value, as tgui's <c>AnimatedNumber</c> in the container headers, starting from 0.
+    /// </summary>
+    private static KsTguiAnimatedNumber MakeVolume()
+    {
+        return new KsTguiAnimatedNumber { Initial = 0f, StyleClasses = { StyleClass.LabelWeak } };
+    }
+
+    private static string Units(float volume)
+    {
+        return volume.ToString("0.##");
+    }
+
     private static BoxContainer MakeInfoBox()
     {
         return new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true };
@@ -228,24 +244,26 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         return row;
     }
 
-    private KsTguiButton[] MakePillTypeButtons(out GridContainer grid)
+    private KsTguiImageButton[] MakePillTypeButtons(out KsTguiCardGrid grid)
     {
         var sprite = _entityManager.System<SpriteSystem>();
         var resourcePath = new ResPath(PillsRsiPath);
 
-        grid = new GridContainer { Columns = 10, HSeparationOverride = 1, VSeparationOverride = 1 };
-        var buttons = new KsTguiButton[SharedChemMaster.PillTypes];
+        // tgui's pill buttons are ImageButtons that pick one; the small card lets all 20 fit in two rows.
+        grid = new KsTguiCardGrid { HorizontalExpand = true, Gap = 4f, VerticalGap = 4f };
+        var buttons = new KsTguiImageButton[SharedChemMaster.PillTypes];
         for (uint i = 0; i < buttons.Length; i++)
         {
             var pillType = i;
-            var button = new KsTguiButton { MaxSize = new Vector2(42f, 28f) };
-            button.AddChild(new TextureRect
+            var button = new KsTguiImageButton
             {
-                Texture = sprite.Frame0(new SpriteSpecifier.Rsi(resourcePath, "pill" + (i + 1))),
-                TextureScale = new Vector2(1.75f, 1.75f),
-                Stretch = TextureRect.StretchMode.KeepCentered,
-                MouseFilter = Control.MouseFilterMode.Ignore,
-            });
+                ImageSize = 40f,
+                Color = KsTguiColor.Default, // a visible card, so the row reads as a picker; the chosen one turns green
+
+                // The pill is small in the middle of its 32px frame: the middle 24px fill the slot, as at 1.67x.
+                ImageTexture = KsTguiImageButton.CropTexture(
+                    sprite.Frame0(new SpriteSpecifier.Rsi(resourcePath, "pill" + (i + 1))), UIBox2.FromDimensions(4f, 4f, 24f, 24f)),
+            };
             button.OnPressed += _ => OnPillTypePressed?.Invoke(pillType);
             buttons[i] = button;
             grid.AddChild(button);
@@ -287,7 +305,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
     private void SetBufferText(FixedPoint2? volume, string text)
     {
-        _bufferVolumeLabel.Text = $" {volume ?? FixedPoint2.Zero}u";
+        _bufferVolumeLabel.Format = displayed => $" {Units(displayed)}u";
+        _bufferVolumeLabel.Value = (float)(volume ?? FixedPoint2.Zero);
         _drawSourceLabel.Text = Loc.GetString(text);
     }
 
@@ -354,8 +373,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         BufferTransferButton.Selected = state.Mode == ChemMasterMode.Transfer;
         BufferDiscardButton.Color = state.Mode == ChemMasterMode.Discard ? KsTguiColor.Red : KsTguiColor.Default;
 
-        BuildContainerUi(_inputInfo, state.InputContainerInfo, addReagentButtons: true);
-        BuildContainerUi(_outputInfo, state.OutputContainerInfo, addReagentButtons: false);
+        BuildContainerUi(_inputInfo, state.InputContainerInfo, addReagentButtons: true, _inputVolume);
+        BuildContainerUi(_outputInfo, state.OutputContainerInfo, addReagentButtons: false, _outputVolume);
 
         _bufferInfo.RemoveAllChildren();
 
@@ -378,7 +397,10 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
         var volumeRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
         volumeRow.AddChild(new Label { Text = $"{Loc.GetString("chem-master-window-buffer-label")} " });
-        volumeRow.AddChild(new Label { Text = $"{state.BufferCurrentVolume}u", StyleClasses = { StyleClass.LabelWeak } });
+        _bufferListVolume.Format = displayed => $"{Units(displayed)}u";
+        _bufferListVolume.Value = (float)(state.BufferCurrentVolume ?? FixedPoint2.Zero);
+        _bufferListVolume.Orphan();
+        volumeRow.AddChild(_bufferListVolume);
         _bufferInfo.AddChild(volumeRow);
 
         var reagentList = new List<(ReagentId ReagentId, string Name, Color Color, FixedPoint2 Quantity)>();
@@ -408,7 +430,7 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         }
     }
 
-    private void BuildContainerUi(BoxContainer control, ContainerInfo? info, bool addReagentButtons)
+    private void BuildContainerUi(BoxContainer control, ContainerInfo? info, bool addReagentButtons, KsTguiAnimatedNumber volume)
     {
         control.RemoveAllChildren();
 
@@ -420,7 +442,11 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
         var header = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
         header.AddChild(new Label { Text = $"{info.DisplayName}: " });
-        header.AddChild(new Label { Text = $"{info.CurrentVolume}/{info.MaxVolume}", StyleClasses = { StyleClass.LabelWeak } });
+        var maxVolume = info.MaxVolume;
+        volume.Format = displayed => $"{Units(displayed)}/{maxVolume}";
+        volume.Value = (float)info.CurrentVolume;
+        volume.Orphan(); // still inside the last state's header
+        header.AddChild(volume);
         control.AddChild(header);
 
         if (info.Entities != null)

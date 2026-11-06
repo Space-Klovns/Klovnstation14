@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Client._KS14.Tgui;
+using Content.Shared._KS14.Tgui;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
@@ -23,6 +24,17 @@ public partial class FancyWindow
             _ksChromed = value;
             KsRefreshTitle();
         }
+    }
+
+    /// <summary>
+    ///     This window's tgui theme (tgui's <c>theme="syndicate"</c>), or null for the UI's own. Takes effect while the tgui
+    ///         style is on, and follows the toggle. A <see cref="DefaultWindow"/> is not a <see cref="FancyWindow"/>, and
+    ///         takes one with <see cref="KsTguiWindowThemes.SetKsTheme"/>.
+    /// </summary>
+    public KsTguiWindowTheme? KsTheme
+    {
+        get => this.GetKsTheme();
+        set => this.SetKsTheme(value);
     }
 
     public PanelContainer KsHeader => WindowHeader;

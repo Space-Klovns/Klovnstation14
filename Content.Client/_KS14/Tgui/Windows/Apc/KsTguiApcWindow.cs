@@ -15,6 +15,8 @@ namespace Content.Client._KS14.Tgui.Windows.Apc;
 public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
 {
     private readonly KsTguiNoticeBox _lockNotice;
+    private readonly KsTguiDimmer _lockDimmer;
+    private readonly KsTguiAnimatedNumber _loadNumber;
     private readonly KsTguiLabeledListItem _breakerItem;
     private readonly KsTguiButton _breakerButton;
     private readonly KsTguiProgressBar _chargeBar;
@@ -59,9 +61,18 @@ public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
         cellItem.XamlChildren.Add(_chargeBar);
 
         _loadItem = list.AddItem(Loc.GetString("ks-tgui-apc-total-load"));
+        _loadNumber = new KsTguiAnimatedNumber { Format = power => Loc.GetString("apc-menu-power-state-label-text", ("power", (int)MathF.Round(power))) };
+        _loadItem.XamlChildren.Add(_loadNumber);
 
         section.AddChild(list);
-        root.AddChild(section);
+
+        // Without access the status is dimmed under a lock, with the notice above still telling why.
+        var dimmed = KsTguiDimmer.Over(section, out _lockDimmer);
+        var lockedContent = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = KsTguiSection.Gap };
+        lockedContent.AddChild(new KsTguiIcon { Glyph = KsTguiIcons.Lock, IconSize = 4f, Align = Label.AlignMode.Center, IconColor = KsTguiPalettes.TextDim });
+        lockedContent.AddChild(new Label { Text = Loc.GetString("apc-component-insufficient-access"), Align = Label.AlignMode.Center });
+        _lockDimmer.Content = lockedContent;
+        root.AddChild(dimmed);
         ContentsContainer.AddChild(root);
 
         RefreshBreaker();
@@ -76,6 +87,7 @@ public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
     {
         _hasAccess = hasAccess;
         _lockNotice.Visible = !hasAccess;
+        _lockDimmer.Visible = !hasAccess;
         RefreshBreaker();
     }
 
@@ -98,7 +110,7 @@ public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
         _chargeBar.Value = apcState.Charge;
         _chargeBar.Text = Loc.GetString("apc-menu-charge-label", ("percent", apcState.Charge.ToString("P0")));
 
-        _loadItem.Text = Loc.GetString("apc-menu-power-state-label-text", ("power", apcState.Power));
+        _loadNumber.Value = (float)apcState.Power;
     }
 
     private void RefreshBreaker()

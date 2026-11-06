@@ -50,15 +50,15 @@ public sealed partial class KsTguiSheetlet
         AddSectionRules(rules);
         AddNoticeBoxRules(rules);
         AddColoredButtonRules(rules);
-        rules.Add(E().Class(StyleClassCandystripe).Prop(StylePropertyCandystripe, KsTguiPalettes.Candystripe));
+        rules.Add(E().Class(StyleClassCandystripe).Prop(StylePropertyCandystripe, _palette.Candystripe));
     }
 
-    private static void AddSectionRules(List<StyleRule> rules)
+    private void AddSectionRules(List<StyleRule> rules)
     {
         // tgui's section title: 6px around the text and a 2px line under it, which counts in the bottom margin.
         var titleBox = new KsTguiStyleBox(Clear)
         {
-            BorderColor = KsTguiPalettes.PrimaryBase,
+            BorderColor = _palette.PrimaryBase,
             BorderThickness = new Thickness(0f, 0f, 0f, 2f),
         };
         titleBox.SetContentMarginOverride(StyleBox.Margin.Top, 6f);
@@ -68,7 +68,7 @@ public sealed partial class KsTguiSheetlet
         // A nested section's title text starts at the outer body's edge: tgui pulls it out over the outer padding.
         var nestedTitleBox = new KsTguiStyleBox(Clear)
         {
-            BorderColor = KsTguiPalettes.PrimaryBase,
+            BorderColor = _palette.PrimaryBase,
             BorderThickness = new Thickness(0f, 0f, 0f, 2f),
         };
         nestedTitleBox.SetContentMarginOverride(StyleBox.Margin.Top, 6f);
@@ -92,11 +92,11 @@ public sealed partial class KsTguiSheetlet
         });
     }
 
-    private static void AddNoticeBoxRules(List<StyleRule> rules)
+    private void AddNoticeBoxRules(List<StyleRule> rules)
     {
         var colors = new (KsTguiNoticeColor Name, Color Color)[]
         {
-            (KsTguiNoticeColor.Default, KsTguiPalettes.Notice),
+            (KsTguiNoticeColor.Default, _palette.Notice),
             (KsTguiNoticeColor.Info, KsTguiPalettes.NoticeInfo),
             (KsTguiNoticeColor.Success, KsTguiPalettes.NoticeGood),
             (KsTguiNoticeColor.Warning, NoticeWarning),
@@ -120,7 +120,7 @@ public sealed partial class KsTguiSheetlet
             .FontColor(Color.White));
     }
 
-    private static void AddColoredButtonRules(List<StyleRule> rules)
+    private void AddColoredButtonRules(List<StyleRule> rules)
     {
         // Selected: tgui's green, whatever the button's colour.
         AddButtonColorRules(rules, StyleClassButtonSelected, KsTguiColor.Green, KsTguiColors.Text(KsTguiColor.Green));
@@ -140,7 +140,7 @@ public sealed partial class KsTguiSheetlet
         }
     }
 
-    private static void AddButtonColorRules(List<StyleRule> rules, string styleClass, KsTguiColor color, Color text)
+    private void AddButtonColorRules(List<StyleRule> rules, string styleClass, KsTguiColor color, Color text)
     {
         rules.AddRange(new StyleRule[]
         {
@@ -154,7 +154,7 @@ public sealed partial class KsTguiSheetlet
         });
     }
 
-    private static void AddTransparentButtonRules(List<StyleRule> rules)
+    private void AddTransparentButtonRules(List<StyleRule> rules)
     {
         var styleClass = KsTguiColors.ButtonClass(KsTguiColor.Transparent);
 

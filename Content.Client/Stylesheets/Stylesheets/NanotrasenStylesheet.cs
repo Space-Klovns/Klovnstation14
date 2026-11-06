@@ -37,6 +37,7 @@ public partial class NanotrasenStylesheet : CommonStylesheet
 
     public NanotrasenStylesheet(object config, StylesheetManager man) : base(config)
     {
+        _ksPalette = Content.Client._KS14.Tgui.KsTguiThemePalette.For(config); // KS14: the window theme, if the config names one
         BaseFont = Content.Client._KS14.Tgui.KsTguiTheme.CreateBaseFont(ResCache, _ksTgui); // KS14: new NotoFontFamilyStack(ResCache) -> follows the theme
         var rules = new[]
         {

@@ -98,11 +98,18 @@ public static class KsTguiGeometry
     /// </summary>
     public static UIBox2 FitLogo(UIBox2 area)
     {
-        var scale = MathF.Min(
-            area.Width * LogoFill / LogoAspectWidth,
-            area.Height * LogoFill / LogoAspectHeight);
+        return FitLogo(area, LogoAspectWidth / LogoAspectHeight);
+    }
 
-        var size = new Vector2(LogoAspectWidth, LogoAspectHeight) * scale;
+    /// <summary>
+    ///     As <see cref="FitLogo(UIBox2)"/>, for a logo of another shape: an svg's <c>background-size: 70% 70%</c> keeps its
+    ///         aspect and fits inside that box.
+    /// </summary>
+    public static UIBox2 FitLogo(UIBox2 area, float aspect)
+    {
+        var scale = MathF.Min(area.Width * LogoFill / aspect, area.Height * LogoFill);
+
+        var size = new Vector2(aspect, 1f) * scale;
         var center = area.Center;
         return new UIBox2(center - size / 2f, center + size / 2f);
     }

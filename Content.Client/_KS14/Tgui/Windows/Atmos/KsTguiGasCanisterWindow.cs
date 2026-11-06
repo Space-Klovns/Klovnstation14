@@ -12,8 +12,8 @@ namespace Content.Client._KS14.Tgui.Windows.Atmos;
 /// <summary>
 ///     The canister after tgui's Canister: a section for the canister itself (pressure, regulator, valve, port, and the
 ///         shielding KS14 adds), one for the holding tank, and the reagents the canister carries. tg's relabel and recolor
-///         have no counterpart here, and its pressure gauges are plain readings, since a canister's burst pressure is not
-///         something the client is told.
+///         have no counterpart here, and its pressure gauges are round gauges without the danger ranges, since a canister's burst pressure is not
+///         something the client is told, so they have no danger range.
 /// </summary>
 public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 {
@@ -25,6 +25,8 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     public event Action? ShieldToggleButtonPressed;
 
     private readonly KsTguiLabeledListItem _pressureItem;
+    private readonly KsTguiRoundGauge _canisterGauge = MakeGauge();
+    private readonly KsTguiRoundGauge _tankGauge = MakeGauge();
     private readonly KsTguiLabeledListItem _portItem;
     private readonly KsTguiLabeledListItem _labelItem;
     private readonly KsTguiLabeledListItem _tankPressureItem;
@@ -65,6 +67,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         var canisterBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 6 };
         var canisterList = new KsTguiLabeledList();
         _pressureItem = canisterList.AddItem(Loc.GetString("ks-tgui-atmos-pressure"));
+        _pressureItem.XamlChildren.Add(_canisterGauge);
 
         var regulatorItem = canisterList.AddItem(Loc.GetString("ks-tgui-atmos-regulator"));
         regulatorItem.XamlChildren.Add(ReleaseInput);
@@ -101,6 +104,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         _tankList = new KsTguiLabeledList();
         _labelItem = _tankList.AddItem(Loc.GetString("ks-tgui-atmos-tank-label"));
         _tankPressureItem = _tankList.AddItem(Loc.GetString("ks-tgui-atmos-pressure"));
+        _tankPressureItem.XamlChildren.Add(_tankGauge);
         _noTankLabel = new Label { Text = Loc.GetString("ks-tgui-atmos-no-tank"), FontColorOverride = KsTguiPalettes.Average };
         tankBody.AddChild(_tankList);
         tankBody.AddChild(_noTankLabel);
@@ -131,6 +135,21 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     public KsFluidListControl FluidList => _fluidList;
 
+    /// <summary>
+    ///     tg's pressure gauge at size 1.75, without its ranges and alert: they are drawn from the canister's burst and leak
+    ///         pressures, which the client is not sent.
+    /// </summary>
+    private static KsTguiRoundGauge MakeGauge()
+    {
+        return new KsTguiRoundGauge
+        {
+            GaugeSize = 1.75f,
+            MinValue = 0f,
+            HorizontalAlignment = Control.HAlignment.Left,
+            Format = pressure => Loc.GetString("comp-gas-canister-ui-pressure", ("pressure", Math.Round(pressure))),
+        };
+    }
+
     private void SetPressureAndSend(float pressure)
     {
         ReleaseInput.SetValue(pressure);
@@ -144,7 +163,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     public void SetCanisterPressure(float pressure)
     {
-        _pressureItem.Text = Loc.GetString("comp-gas-canister-ui-pressure", ("pressure", Math.Round(pressure)));
+        _canisterGauge.Value = pressure;
     }
 
     public void SetPortStatus(bool status)
@@ -165,13 +184,17 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     public void SetTankPressure(float pressure)
     {
-        _tankPressureItem.Text = Loc.GetString("comp-gas-canister-ui-pressure", ("pressure", Math.Round(pressure)));
+        _tankGauge.Value = pressure;
     }
 
     public void SetReleasePressureRange(float min, float max)
     {
         ReleaseInput.MinValue = min;
         ReleaseInput.MaxValue = max;
+
+        // The regulator's top is the one pressure scale the client is told.
+        _canisterGauge.MaxValue = max;
+        _tankGauge.MaxValue = max;
     }
 
     public void SetReleasePressure(float pressure)

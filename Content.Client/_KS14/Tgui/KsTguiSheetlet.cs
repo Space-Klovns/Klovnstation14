@@ -82,23 +82,51 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     private const float TabHeight = 27f;
 
     private static readonly Color Clear = Color.Black.WithAlpha(0f);
-    private static readonly Color White50 = KsTguiPalettes.Translucent(Color.White, 0.5f, KsTguiPalettes.Base);
-    private static readonly Color White75 = KsTguiPalettes.Translucent(Color.White, 0.75f, KsTguiPalettes.Base);
-    private static readonly Color Dim = KsTguiPalettes.TextDim;
-    private static readonly Color Border = KsTguiPalettes.Border;
-    private static readonly Color MenuColor = KsTguiPalettes.Translucent(Color.FromHex("#181818"), 0.85f, KsTguiPalettes.Base);
-    private static readonly Color TabWash = KsTguiPalettes.Translucent(Color.FromHex("#606060"), 0.4f, KsTguiPalettes.Base);
-    private static readonly Color TabActiveText = Color.FromHex("#DCE6EF");
-    private static readonly Color InputColor = Color.FromHex("#0D0D0D");
-    private static readonly Color TooltipColor = KsTguiPalettes.Translucent(InputColor, 0.85f, KsTguiPalettes.Base);
-    private static readonly Color Hovered = KsTguiPalettes.Translucent(KsTguiPalettes.Wash, 0.25f, KsTguiPalettes.Base);
-    private static readonly Color Pressed = KsTguiPalettes.Translucent(KsTguiPalettes.Wash, 0.3f, KsTguiPalettes.Base);
-    private static readonly Color Selected = KsTguiPalettes.Translucent(KsTguiPalettes.Wash, 0.4f, KsTguiPalettes.Base);
-    private static readonly Color InputBorderIdle = Color.FromHex("#6392C2");
-    private static readonly Color ScrollThumb = Color.FromHex("#3E3E3E");
+
+    /// <summary>
+    ///     The theme this sheet is built for, set by <see cref="GetRules"/>. A sheetlet is made anew for every sheet, so it is
+    ///         the sheet's own.
+    /// </summary>
+    private KsTguiThemePalette _palette = KsTguiThemePalette.Nanotrasen;
+
+    private Color White50;
+    private Color White75;
+    private Color Dim;
+    private Color Border;
+    private Color MenuColor;
+    private Color TabWash;
+    private Color TabActiveText;
+    private Color InputColor;
+    private Color TooltipColor;
+    private Color Hovered;
+    private Color Pressed;
+    private Color Selected;
+    private Color InputBorderIdle;
+    private Color ScrollThumb;
+
+    private void UsePalette(KsTguiThemePalette palette)
+    {
+        _palette = palette;
+        White50 = KsTguiPalettes.Translucent(Color.White, 0.5f, palette.Base);
+        White75 = KsTguiPalettes.Translucent(Color.White, 0.75f, palette.Base);
+        Dim = palette.TextDim;
+        Border = palette.Border;
+        MenuColor = palette.Menu;
+        TabWash = palette.TabSelectedWash;
+        TabActiveText = palette.TabSelectedText;
+        InputColor = palette.InputBackground;
+        TooltipColor = palette.Tooltip;
+        Hovered = palette.Hovered;
+        Pressed = palette.Pressed;
+        Selected = palette.Selected;
+        InputBorderIdle = palette.InputBorderIdle;
+        ScrollThumb = palette.ScrollThumb;
+    }
 
     public override StyleRule[] GetRules(PalettedStylesheet sheet, object config)
     {
+        UsePalette(KsTguiThemePalette.For(config));
+
         var rules = new List<StyleRule>();
 
         AddButtonRules(rules);
@@ -116,6 +144,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         AddSurfaceRules(rules);
         AddChatPanelRules(rules);
         AddPortedWindowRules(rules);
+        AddThemeRules(rules);
 
         return rules.ToArray();
     }
@@ -196,12 +225,12 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             CButton().Prop(StylePropertyRestyleChildren, true),
 
             // tgui's selected button. Upstream's button palette is a step darker: that shade is tgui's held colour.
-            CButton().PseudoPressed().Modulate(KsTguiPalettes.SelectedElement),
+            CButton().PseudoPressed().Modulate(_palette.SelectedButton.Element),
 
             // Fades start from here.
-            CButton().Prop(StylePropertyNormalColor, KsTguiPalettes.Primary.Element),
-            CButton().Class(StyleClass.Positive).Prop(StylePropertyNormalColor, KsTguiPalettes.Positive.Element),
-            CButton().Class(StyleClass.Negative).Prop(StylePropertyNormalColor, KsTguiPalettes.Negative.Element),
+            CButton().Prop(StylePropertyNormalColor, _palette.Primary.Element),
+            CButton().Class(StyleClass.Positive).Prop(StylePropertyNormalColor, _palette.PositivePalette.Element),
+            CButton().Class(StyleClass.Negative).Prop(StylePropertyNormalColor, _palette.NegativePalette.Element),
 
             CButton().PseudoDisabled().ParentOf(E<Label>()).FontColor(Dim),
             CButton().PseudoDisabled().ParentOf(E()).ParentOf(E<Label>()).FontColor(Dim),
@@ -212,8 +241,8 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             E<MenuButton>().Class(StyleClass.ButtonOpenRight).Box(OpenRightBox()),
             E<MenuButton>().Class(StyleClass.ButtonOpenBoth).Box(ButtonBox(radius: 0f)),
             E<MenuButton>().Class(StyleClass.ButtonSquare).Box(ButtonBox(radius: 0f)),
-            E<MenuButton>().PseudoPressed().Modulate(KsTguiPalettes.SelectedElement),
-            E<MenuButton>().Prop(StylePropertyNormalColor, KsTguiPalettes.Primary.Element),
+            E<MenuButton>().PseudoPressed().Modulate(_palette.SelectedButton.Element),
+            E<MenuButton>().Prop(StylePropertyNormalColor, _palette.Primary.Element),
         });
 
         // Transparent buttons. Monotone ones never have the button class either.
@@ -262,7 +291,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             E<TextureRect>().Class(CheckBox.StyleClassCheckBox).Class(CheckBox.StyleClassCheckBoxChecked)
                 .Prop(TextureRect.StylePropertyTexture, slot)
                 .Prop(TextureRect.StylePropertyShader, tick)
-                .Modulate(KsTguiPalettes.SelectedHovered),
+                .Modulate(_palette.SelectedButton.Hovered),
             E<BoxContainer>().Class(CheckBox.StyleClassCheckBox).Prop(BoxContainer.StylePropertySeparation, 4),
 
             E<TextureRect>().Class(MonotoneCheckBox.StyleClassMonotoneCheckBox)
@@ -272,7 +301,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             E<TextureRect>().Class(MonotoneCheckBox.StyleClassMonotoneCheckBox).Class(CheckBox.StyleClassCheckBoxChecked)
                 .Prop(TextureRect.StylePropertyTexture, slot)
                 .Prop(TextureRect.StylePropertyShader, tick)
-                .Modulate(KsTguiPalettes.SelectedHovered),
+                .Modulate(_palette.SelectedButton.Hovered),
 
             // The fork draws a SwitchButton as this one texture, so it alone has to show the state.
             E<SwitchButton>().Prop(SwitchButton.StylePropertySeparation, 4),
@@ -285,11 +314,11 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
                 .ParentOf(E<TextureRect>().Class(SwitchButton.StyleClassTrackOutline))
                 .Prop(TextureRect.StylePropertyTexture, slot)
                 .Prop(TextureRect.StylePropertyShader, tick)
-                .Modulate(KsTguiPalettes.SelectedHovered),
+                .Modulate(_palette.SelectedButton.Hovered),
         });
     }
 
-    private static KsTguiStyleBox InputBox(Color border)
+    private KsTguiStyleBox InputBox(Color border)
     {
         var box = new KsTguiStyleBox(InputColor, 2f)
         {
@@ -304,7 +333,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     private void AddInputRules(List<StyleRule> rules)
     {
         var inputBox = InputBox(InputBorderIdle);
-        var focusedBox = InputBox(KsTguiPalettes.InputBorder);
+        var focusedBox = InputBox(_palette.InputBorder);
 
         rules.AddRange(new StyleRule[]
         {
@@ -344,7 +373,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         });
     }
 
-    private static KsTguiStyleBox MenuBox()
+    private KsTguiStyleBox MenuBox()
     {
         return new KsTguiStyleBox(MenuColor, 6f)
         {
@@ -355,11 +384,15 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
 
     private void AddWindowRules(List<StyleRule> rules, PalettedStylesheet sheet)
     {
-        var windowBackground = new KsTguiWindowBackgroundStyleBox(Icon("nanotrasen_logo.png"));
-        var titleBar = new KsTguiTitleBarStyleBox(KsTguiPalettes.TitleBar);
+        var windowBackground = new KsTguiWindowBackgroundStyleBox(
+            Icon(_palette.LogoTexture),
+            _palette.BaseStart,
+            _palette.BaseEnd,
+            KsTguiPalettes.Translucent(Color.Black, 0.33f, _palette.Base));
+        var titleBar = new KsTguiTitleBarStyleBox(_palette.TitleBar);
         var alertTitleBar = new KsTguiTitleBarStyleBox(KsTguiPalettes.NoticeBad);
 
-        var borderedBox = new KsTguiStyleBox(KsTguiPalettes.Base)
+        var borderedBox = new KsTguiStyleBox(_palette.Base)
         {
             BorderColor = Border,
             BorderThickness = new Thickness(1f),
@@ -381,32 +414,32 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             E<PanelContainer>().Class("WindowHeadingBackground").Panel(titleBar),
             E<BoxContainer>().Class(StyleClassHeaderRow).Margin(0f),
 
-            E<Label>().Class(DefaultWindow.StyleClassWindowTitle).Font(titleFont).FontColor(KsTguiPalettes.TextTitle),
-            E<Label>().Class("FancyWindowTitle").Font(titleFont).FontColor(KsTguiPalettes.TextTitle),
+            E<Label>().Class(DefaultWindow.StyleClassWindowTitle).Font(titleFont).FontColor(_palette.TextTitle),
+            E<Label>().Class("FancyWindowTitle").Font(titleFont).FontColor(_palette.TextTitle),
             E<Label>().Class("windowTitleAlert").Font(titleFont).FontColor(Color.White),
         });
     }
 
-    private static KsTguiStyleBox SectionBox()
+    private KsTguiStyleBox SectionBox()
     {
-        return new KsTguiStyleBox(KsTguiPalettes.Section);
+        return new KsTguiStyleBox(_palette.Section);
     }
 
-    private static void AddPanelRules(List<StyleRule> rules)
+    private void AddPanelRules(List<StyleRule> rules)
     {
-        var solidBox = new KsTguiStyleBox(KsTguiPalettes.Base);
-        var lightBox = new KsTguiStyleBox(KsTguiPalettes.TitleBar);
+        var solidBox = new KsTguiStyleBox(_palette.Base);
+        var lightBox = new KsTguiStyleBox(_palette.TitleBar);
 
         var sectionTitleBox = new KsTguiStyleBox(Clear)
         {
-            BorderColor = KsTguiPalettes.PrimaryBase,
+            BorderColor = _palette.PrimaryBase,
             BorderThickness = new Thickness(0f, 0f, 0f, 2f),
         };
         sectionTitleBox.SetContentMarginOverride(StyleBox.Margin.Top, 6f);
         sectionTitleBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, 6f);
         sectionTitleBox.SetContentMarginOverride(StyleBox.Margin.Bottom, 8f);
 
-        var stripeBox = new KsTguiNoticeStyleBox(KsTguiPalettes.Notice);
+        var stripeBox = new KsTguiNoticeStyleBox(_palette.Notice);
         stripeBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 4f);
         stripeBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, 6f);
 
@@ -438,7 +471,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
 
             // The chat panel's class is this literal string, a leftover of upstream's. ChatUIController reads the colour.
             E<PanelContainer>().Class("StyleNano.StyleClassChatPanel")
-                .Panel(new StyleBoxFlat(KsTguiPalettes.Base.WithAlpha(221f / 255f))),
+                .Panel(new StyleBoxFlat(_palette.Base.WithAlpha(221f / 255f))),
 
             E<Button>().Class(ChatInputBox.StyleClassChatFilterOptionButton).Box(ButtonBox()),
             E<ContainerButton>().Class(ChatInputBox.StyleClassChatFilterOptionButton).Box(ButtonBox()),
@@ -449,15 +482,15 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         });
     }
 
-    private static void AddTextRules(List<StyleRule> rules, PalettedStylesheet sheet)
+    private void AddTextRules(List<StyleRule> rules, PalettedStylesheet sheet)
     {
         rules.AddRange(new StyleRule[]
         {
             E<Label>().Class(StyleClass.LabelHeading).Font(sheet.BaseFont.GetFont(14, FontKind.Bold)),
             E<Label>().Class(StyleClass.LabelHeadingBigger).Font(sheet.BaseFont.GetFont(16, FontKind.Bold)),
-            E<Label>().Class(StyleClass.LabelKeyText).Font(sheet.BaseFont.GetFont(12)).FontColor(KsTguiPalettes.Label),
-            E<Label>().Class(StyleClass.LabelSubText).FontColor(KsTguiPalettes.Label),
-            E<Label>().Class(StyleClass.LabelWeak).FontColor(KsTguiPalettes.Label),
+            E<Label>().Class(StyleClass.LabelKeyText).Font(sheet.BaseFont.GetFont(12)).FontColor(_palette.Label),
+            E<Label>().Class(StyleClass.LabelSubText).FontColor(_palette.Label),
+            E<Label>().Class(StyleClass.LabelWeak).FontColor(_palette.Label),
 
             E<Label>().Class(StyleClass.StatusGood).FontColor(KsTguiPalettes.Good),
             E<Label>().Class(StyleClass.StatusOkay).FontColor(KsTguiPalettes.Average),
@@ -475,20 +508,20 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         });
     }
 
-    private static KsTguiStyleBox RangeBackgroundBox()
+    private KsTguiStyleBox RangeBackgroundBox()
     {
         var box = new KsTguiStyleBox(Clear, 2f)
         {
-            BorderColor = KsTguiPalettes.PrimaryElement,
+            BorderColor = _palette.Primary.Element,
             BorderThickness = new Thickness(1f),
         };
         box.SetContentMarginOverride(StyleBox.Margin.Vertical, 10f);
         return box;
     }
 
-    private static void AddRangeRules(List<StyleRule> rules)
+    private void AddRangeRules(List<StyleRule> rules)
     {
-        var fillBox = new StyleBoxFlat(KsTguiPalettes.PrimaryElement);
+        var fillBox = new StyleBoxFlat(_palette.Primary.Element);
         fillBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 10f);
 
         var grabberBox = new KsTguiSliderGrabberStyleBox();
@@ -521,7 +554,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
                 .Prop(Slider.StylePropertyGrabber, grabberBox),
 
             E<TabContainer>()
-                .Prop(TabContainer.StylePropertyPanelStyleBox, new KsTguiTabPanelStyleBox { BarHeight = TabHeight })
+                .Prop(TabContainer.StylePropertyPanelStyleBox, new KsTguiTabPanelStyleBox { BarHeight = TabHeight, BarColor = _palette.Section })
                 .Prop(TabContainer.StylePropertyTabStyleBox, tabActiveBox)
                 .Prop(TabContainer.StylePropertyTabStyleBoxInactive, tabInactiveBox)
                 .Prop(TabContainer.stylePropertyTabFontColor, TabActiveText)
@@ -537,7 +570,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         return box;
     }
 
-    private static void AddListRules(List<StyleRule> rules)
+    private void AddListRules(List<StyleRule> rules)
     {
         var treeHovered = new StyleBoxFlat(Hovered);
         var treeSelected = new StyleBoxFlat(Selected);
@@ -573,7 +606,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         });
     }
 
-    private static void AddTooltipRules(List<StyleRule> rules)
+    private void AddTooltipRules(List<StyleRule> rules)
     {
         var tooltipBox = new KsTguiStyleBox(TooltipColor, 4f);
         tooltipBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, 9f);
@@ -591,7 +624,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     ///     Context and verb menus. tg has no equivalent, since it uses native OS popups, so this is tgui's Dropdown menu
     ///         rather than a port. Remove this method to leave them on the palette.
     /// </summary>
-    private static void AddMenuRules(List<StyleRule> rules)
+    private void AddMenuRules(List<StyleRule> rules)
     {
         var menuBox = MenuBox();
         menuBox.SetContentMarginOverride(StyleBox.Margin.All, ContextMenuElement.ElementMargin);
@@ -612,7 +645,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         });
     }
 
-    private static void AddScrollBarRules(List<StyleRule> rules)
+    private void AddScrollBarRules(List<StyleRule> rules)
     {
         var verticalThumb = new StyleBoxFlat(ScrollThumb)
         {

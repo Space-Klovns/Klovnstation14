@@ -32,7 +32,10 @@ public sealed partial class StoreBoundUserInterface : BoundUserInterface
 
         _menu = this.CreateWindow<StoreMenu>();
         if (_storeSystem.TryGetStore(Owner, out var store))
+        {
             _menu.Title = Loc.GetString(store.Value.Comp.Name);
+            Content.Client._KS14.Tgui.KsTguiWindowThemes.SetKsTheme(_menu, store.Value.Comp.KsUiTheme); // KS14: the store says which tgui theme its window has
+        }
 
         _menu.OnListingButtonPressed += (_, listing) =>
         {

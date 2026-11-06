@@ -7,3 +7,13 @@
   license: "CC-BY-4.0"
   copyright: "Font Awesome Free 6.7.2 by Fonticons, Inc. Glyphs rasterised to PNG."
   source: "https://github.com/FortAwesome/Font-Awesome"
+
+- files: ["syndicate_logo.png"]
+  license: "CC-BY-SA-4.0"
+  copyright: "Syndicate logo from tgui-core (bg-syndicate.svg) by /tg/station contributors, rasterised to PNG."
+  source: "https://github.com/tgstation/tgui-core"
+
+- files: ["wizard_logo.png"]
+  license: "CC-BY-SA-4.0"
+  copyright: "Wizard logo from tgui-core (bg-wizard.svg) by /tg/station contributors, rasterised to PNG. It is Font Awesome Free's 'meteor' glyph by Fonticons, Inc. (CC-BY-4.0)."
+  source: "https://github.com/FortAwesome/Font-Awesome"

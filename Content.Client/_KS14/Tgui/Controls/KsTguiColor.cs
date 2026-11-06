@@ -100,7 +100,10 @@ public static class KsTguiColors
         return Shade(color, 17.5f);
     }
 
-    private static Color Shade(KsTguiColor color, float lightnessShift)
+    /// <summary>
+    ///     The token with its HSL lightness moved by this many percent, as tgui's <c>hsl(from ... calc(l + n))</c>.
+    /// </summary>
+    public static Color Shade(KsTguiColor color, float lightnessShift)
     {
         var (hue, saturation, lightness) = Tokens[(int)color];
         return FromHsl(hue, saturation, Math.Clamp(lightness + lightnessShift, 0f, 100f));

@@ -149,8 +149,8 @@ public sealed partial class KsTguiVendingWindow : FancyWindow
             _selectedCategory = present.Contains(InventoryType.Regular) ? InventoryType.Regular : _inventory[0].Type;
 
         Control container = _gridLayout
-            ? new WrapContainer { SeparationOverride = 4, CrossSeparationOverride = 4, HorizontalExpand = true }
-            : new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true };
+            ? new KsTguiCardGrid { HorizontalExpand = true } // fills the width, so no gap is left at the right
+            : new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 4, HorizontalExpand = true };
         _productsBody.AddChild(container);
 
         foreach (var entry in _inventory)
