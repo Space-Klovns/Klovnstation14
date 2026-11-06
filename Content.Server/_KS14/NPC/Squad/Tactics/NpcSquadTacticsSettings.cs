@@ -195,6 +195,54 @@ public sealed partial class NpcSquadTacticsSettings
 
     #endregion
 
+    #region Planning
+
+    /// <summary>
+    ///     Whether the squad makes a plan for a hostile it can see and cannot get at, rather than leaving each member to it.
+    ///         See <see cref="NpcSquadGoap"/>.
+    /// </summary>
+    [DataField]
+    public bool Planning;
+
+    /// <summary>
+    ///     How long nobody has to have a shot before it counts as a problem: someone ducking behind a pillar is not one.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanGrace = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    ///     How long a plan may take before it is given up on.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanTimeout = TimeSpan.FromSeconds(40);
+
+    /// <summary>
+    ///     How long after a plan that could not be made or carried out before trying again.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanCooldown = TimeSpan.FromSeconds(20);
+
+    /// <summary>
+    ///     How long after a plan that worked before planning again. Short: it is only there for a shot that comes and goes.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanSuccessCooldown = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///     The most damage something may take to break for it to be worth shooting out. Enough for ordinary windows, at 50, and
+    ///         not for reinforced ones, at 75, or grilles, so that nobody can drain a squad's ammo from behind armoured glass.
+    /// </summary>
+    [DataField]
+    public float PlanBreakDamage = 60f;
+
+    /// <summary>
+    ///     How long members shoot at something before giving up on it.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanBreakTimeout = TimeSpan.FromSeconds(15);
+
+    #endregion
+
     #region Fighting
 
     /// <summary>

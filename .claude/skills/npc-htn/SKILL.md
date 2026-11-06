@@ -310,6 +310,27 @@ shootable. `GunOperator` with no shot waits, which is right while something is w
 plan with neither a shot nor a way to one must fail, so that the rest of the root gets a turn: see the last branch of
 `KsOperativeGunCombatMovementCompound`.
 
+## Squad plans
+
+A hostile the squad can see and nobody can hit is a fight, so hunts stay out of it, and no member can do anything about it
+alone: each walks up to the door and stops. `tactics.planning` has a squad make a plan for that. It lives in
+`NpcSquadTacticsSystem.Plan.cs` and runs before the fight check in `UpdateGroup`.
+
+- **`NpcSquadGoap` only picks an order of steps.** It is pure: facts in, costs in, steps out. To add an action, add a row to
+  `Actions` with what it needs and adds, a cost, and a case in `RunPlanSteps`. Facts live in `NpcSquadFact`.
+- **Carrying it out is the hunt's code.** A plan keeps an `NpcHunt` of its own, never on `NpcHuntComponent`, and drives
+  `UpdateStage`, `UpdateBreach` and `UpdateEntry` a step at a time, with no leader and no target so that `Exhaust` touches
+  nothing.
+- **Plan orders come before combat.** `NpcOrder.OverCombat` is set on every order given during a step, and one root branch
+  above combat picks those up. Orders below combat would never beat a running gun plan. So a plan has to end the moment
+  anyone has a shot: `LookForShot` runs first on every update, and combat replans once the order goes.
+- **No plan while a way is free.** It asks for a path first, and a member walks a free one by itself.
+- **A plan that fails bans its action** and plans again. One that can do nothing cools down for `planCooldown`, so a squad
+  does not spend its time finding that out twice a second. Idle squads pay for one `TryComp`, as the component only
+  exists from when nobody has a shot until the cooldown ends.
+
+`ks_squadplandebug` shows all of it, and `ks_lineoffiredebug` shows any NPC's shot.
+
 ## Stop, drop and roll
 
 `NpcStopDropRollSystem` has every awake NPC that can resist fire do what a player does with the fire alert, once it has

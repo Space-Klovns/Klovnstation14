@@ -174,6 +174,10 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
                 ClearOrder((memberUid, orderComponent));
         }
 
+        // A hostile nobody can get at is the one fight that needs orders, so this comes before the check below.
+        if (UpdateSquadPlan(issuerUid, leaderUid, settings, now))
+            return;
+
         // A fight on: combat comes first, and a hostile in sight is not lost.
         foreach (var memberUid in _members)
         {
@@ -289,9 +293,12 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         NpcOrderKind kind,
         EntityCoordinates coordinates,
         EntityUid? targetUid = null,
-        EntityUid? toolUid = null)
+        EntityUid? toolUid = null,
+        bool overCombat = false)
     {
+        _givingPlanOrders = overCombat;
         SetOrder(memberUid, memberUid, kind, coordinates, Angle.Zero, OrderRange, targetUid, _gameTiming.CurTime, toolUid: toolUid);
+        _givingPlanOrders = false;
     }
 
     /// <summary>
@@ -315,12 +322,13 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
             existing.IssuerUid == issuerUid &&
             existing.TargetUid == targetUid &&
             existing.ToolUid == toolUid &&
+            existing.OverCombat == _givingPlanOrders &&
             Math.Abs(Angle.ShortestDistance(existing.Facing, facing).Degrees) < OrderTurnTolerance &&
             existing.Coordinates.TryDistance(EntityManager, _transformSystem, coordinates, out var moved) &&
             moved < OrderMoveTolerance)
             return;
 
-        orderComponent.Order = new NpcOrder(++_lastOrderId, kind, issuerUid, coordinates, facing, range, targetUid, now, toolUid);
+        orderComponent.Order = new NpcOrder(++_lastOrderId, kind, issuerUid, coordinates, facing, range, targetUid, now, toolUid, _givingPlanOrders);
         _npcSensorSystem.RequestReplan(memberUid);
     }
 

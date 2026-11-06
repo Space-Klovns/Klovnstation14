@@ -441,6 +441,22 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Adds every hostile <paramref name="observer"/> can see and has reacted to, as <see cref="InCombatContact"/> counts
+    ///         them, to <paramref name="results"/>.
+    /// </summary>
+    public void GetCombatContacts(Entity<NpcPerceptionComponent?> observer, List<EntityUid> results)
+    {
+        if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false))
+            return;
+
+        foreach (var (targetUid, contact) in observer.Comp.Contacts)
+        {
+            if (contact is { State: NpcContactState.Visible, Reacted: true })
+                results.Add(targetUid);
+        }
+    }
+
+    /// <summary>
     ///     Whether <paramref name="observer"/> can see any hostile it has reacted to: it is in a fight.
     /// </summary>
     public bool InCombatContact(Entity<NpcPerceptionComponent?> observer)

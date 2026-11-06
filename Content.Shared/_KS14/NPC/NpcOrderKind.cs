@@ -51,6 +51,11 @@ public enum NpcOrderKind : byte
     ///     Nothing is going on: get back to the leader.
     /// </summary>
     Regroup,
+
+    /// <summary>
+    ///     Shoot out what stands between it and a hostile it can see.
+    /// </summary>
+    BreakBarrier,
 }
 
 /// <summary>

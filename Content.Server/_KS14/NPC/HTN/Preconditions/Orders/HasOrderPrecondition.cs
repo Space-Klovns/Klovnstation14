@@ -20,10 +20,16 @@ public sealed partial class HasOrderPrecondition : HTNPrecondition
     /// </summary>
     [DataField] public bool? WithTarget;
 
+    /// <summary>
+    ///     If set, also whether the order comes before fighting. See <see cref="NpcOrder.OverCombat"/>.
+    /// </summary>
+    [DataField] public bool? OverCombat;
+
     public override bool IsMet(NPCBlackboard blackboard)
     {
         if (!_npcSquadTacticsSystem.TryGetOrder(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), out var order) ||
-            Kinds.Count > 0 && !Kinds.Contains(order.Kind))
+            Kinds.Count > 0 && !Kinds.Contains(order.Kind) ||
+            OverCombat is { } overCombat && order.OverCombat != overCombat)
             return false;
 
         return WithTarget is not { } withTarget || (order.TargetUid != null) == withTarget;

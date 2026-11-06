@@ -230,6 +230,7 @@ public sealed partial class SquadDebugOverlay : Overlay
             NpcOrderKind.Search => Color.Cyan,
             NpcOrderKind.HoldArea => Color.Gray,
             NpcOrderKind.Regroup => Color.LimeGreen,
+            NpcOrderKind.BreakBarrier => Color.HotPink,
             _ => Color.White,
         };
     }

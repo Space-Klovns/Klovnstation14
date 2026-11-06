@@ -56,6 +56,44 @@ public sealed partial class NpcSquadTacticsSystem
     private void PrepareSearch(EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         var walkerUid = leaderUid ?? _members[0];
+        var grid = PrepareRoom(leaderUid, hunt, settings);
+
+        BuildSearchPoints(walkerUid, hunt, grid, settings);
+
+        var anyoneInside = false;
+        foreach (var memberUid in _members)
+        {
+            anyoneInside |= IsInRoom(hunt, memberUid);
+        }
+
+        // Stacking up is for a team going into a room they are not in yet. Anyone already inside, or anyone on their
+        //      own, just starts looking.
+        // A room every way into is shut to all of them - no access, nothing to force it with - is not getting
+        //      searched: they hold outside it and give up.
+        if (!anyoneInside && hunt.Entrances.Count > 0 && !CanAnyoneGetIn(hunt))
+        {
+            Exhaust(leaderUid, hunt, now);
+            return;
+        }
+
+        if (settings.CanStackUp && _members.Count >= 2 && hunt.Entrances.Count > 0 && !anyoneInside)
+        {
+            SetPhase(hunt, NpcHuntPhase.Stage, now);
+            AssignEntrances(hunt, settings);
+
+            if (hunt.StagedMembers.Count > 0)
+                return;
+        }
+
+        SetPhase(hunt, NpcHuntPhase.Search, now);
+    }
+
+    /// <summary>
+    ///     Works out which room the hostile is in and the ways into it. Returns the grid it is on, if there is a room.
+    /// </summary>
+    private Entity<MapGridComponent>? PrepareRoom(EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings)
+    {
+        var walkerUid = leaderUid ?? _members[0];
         var walkerCoordinates = Transform(walkerUid).Coordinates;
         var coverSettings = _squadMemberQuery.TryComp(walkerUid, out var squadMemberComponent) ? squadMemberComponent.Cover : new NpcSquadCoverSettings();
 
@@ -86,34 +124,7 @@ public sealed partial class NpcSquadTacticsSystem
             }
         }
 
-        BuildSearchPoints(walkerUid, hunt, grid, settings);
-
-        var anyoneInside = false;
-        foreach (var memberUid in _members)
-        {
-            anyoneInside |= IsInRoom(hunt, memberUid);
-        }
-
-        // Stacking up is for a team going into a room they are not in yet. Anyone already inside, or anyone on their
-        //      own, just starts looking.
-        // A room every way into is shut to all of them - no access, nothing to force it with - is not getting
-        //      searched: they hold outside it and give up.
-        if (!anyoneInside && hunt.Entrances.Count > 0 && !CanAnyoneGetIn(hunt))
-        {
-            Exhaust(leaderUid, hunt, now);
-            return;
-        }
-
-        if (settings.CanStackUp && _members.Count >= 2 && hunt.Entrances.Count > 0 && !anyoneInside)
-        {
-            SetPhase(hunt, NpcHuntPhase.Stage, now);
-            AssignEntrances(hunt, settings);
-
-            if (hunt.StagedMembers.Count > 0)
-                return;
-        }
-
-        SetPhase(hunt, NpcHuntPhase.Search, now);
+        return grid;
     }
 
     /// <summary>

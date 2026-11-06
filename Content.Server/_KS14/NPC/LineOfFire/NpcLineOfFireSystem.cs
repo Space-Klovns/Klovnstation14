@@ -10,6 +10,7 @@ using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.NPC.LineOfFire;
@@ -26,7 +27,7 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     [Dependency] private GunSystem _gunSystem = default!;
     [Dependency] private InteractionSystem _interactionSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
-    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
 
     [Dependency] private EntityQuery<BallisticAmmoProviderComponent> _ballisticAmmoProviderQuery = default!;
     [Dependency] private EntityQuery<BasicEntityAmmoProviderComponent> _basicEntityAmmoProviderQuery = default!;
@@ -115,7 +116,36 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     /// </summary>
     public float GetClearDistance(EntityUid shooterUid, MapCoordinates from, MapCoordinates to)
     {
-        return _interactionSystem.UnobstructedDistance(from, to, (int) GetShotMask(shooterUid), _isMob);
+        return TryGetFirstHit(from, to, GetShotMask(shooterUid), out var hit) ? hit.Distance : (to.Position - from.Position).Length();
+    }
+
+    /// <summary>
+    ///     What a shot colliding with <paramref name="shotMask"/> would hit first on its way from one place to the other, if
+    ///         anything. Mobs do not count: see <see cref="IsClear"/>.
+    /// </summary>
+    public bool TryGetFirstHit(MapCoordinates from, MapCoordinates to, CollisionGroup shotMask, out RayCastResults hit)
+    {
+        hit = default;
+
+        var direction = to.Position - from.Position;
+        if (from.MapId != to.MapId || direction.LengthSquared() < 0.0001f)
+            return false;
+
+        var distance = direction.Length();
+        var ray = new CollisionRay(from.Position, direction / distance, (int) shotMask);
+        var nearest = float.MaxValue;
+
+        // Every hit, not the first: the first is the first the broadphase came across, not the nearest.
+        foreach (var result in _physicsSystem.IntersectRayWithPredicate(from.MapId, ray, distance, _isMob.Invoke, returnOnFirstHit: false))
+        {
+            if (result.Distance >= nearest)
+                continue;
+
+            nearest = result.Distance;
+            hit = result;
+        }
+
+        return nearest < float.MaxValue;
     }
 
     /// <summary>

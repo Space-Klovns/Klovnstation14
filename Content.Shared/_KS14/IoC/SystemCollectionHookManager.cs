@@ -47,12 +47,18 @@ public sealed partial class SystemCollectionHookManager
 
     public void TryInit()
     {
-        if (_initalisedCollection)
-            return;
+        if (!_initalisedCollection)
+        {
+            _sawmill.Info($"Collectionsysman initialised on {(_netManager.IsServer ? "server" : "client")}");
+            _initalisedCollection = true;
+        }
 
-        _sawmill.Info($"Collectionsysman initialised on {(_netManager.IsServer ? "server" : "client")}");
-        _initalisedCollection = true;
-        _onSystemCollectionAvailable?.Invoke(DependencyCollection);
+        // Not only the first time. A client that reconnects initialises its systems again, before the collection is back,
+        //      so they hook in here again, and returning early left every one of them waiting for good. Cleared, so
+        //      that nothing is called twice.
+        var hooked = _onSystemCollectionAvailable;
+        _onSystemCollectionAvailable = null;
+        hooked?.Invoke(DependencyCollection);
     }
 
     public void Reset()

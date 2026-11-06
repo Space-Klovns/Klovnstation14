@@ -405,7 +405,10 @@ public sealed partial class NpcDoorSystem : EntitySystem
     {
         foreach (var (doorUid, expiresAt) in doors)
         {
-            if (expiresAt > now && !TerminatingOrDeleted(doorUid))
+            // Open now, by whatever means: nothing to go round, and a squad that forced it has to be able to go through.
+            if (expiresAt > now &&
+                !TerminatingOrDeleted(doorUid) &&
+                (!_doorQuery.TryComp(doorUid, out var doorComponent) || doorComponent.State is not (DoorState.Open or DoorState.Opening)))
                 doorUids.Add(doorUid);
         }
     }
@@ -474,7 +477,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     /// <summary>
     ///     Whether <paramref name="path"/> goes through a door <paramref name="npcUid"/> cannot open by hand.
     /// </summary>
-    private bool RunsThroughShutDoor(EntityUid npcUid, List<PathPoly> path)
+    public bool RunsThroughShutDoor(EntityUid npcUid, List<PathPoly> path)
     {
         // A door's tile is several polys in a row: each tile is looked at once.
         (EntityUid GridUid, Vector2i Tile)? lastTile = null;

@@ -171,6 +171,17 @@ public sealed class KsOperativeHtnRootTest : GameTest
     clickOpen: false
 
 - type: entity
+  parent: KsOperativeRootTestMobWalking
+  id: KsOperativeRootTestMobPlanner
+  components:
+  - type: DoAfter
+  - type: NpcSquadMember
+    tactics:
+      planning: true
+      planGrace: 1s
+      stageTimeout: 3s
+
+- type: entity
   parent: KsOperativeRootTestMobFaker
   id: KsOperativeRootTestMobFireShy
   components:
@@ -1103,26 +1114,210 @@ public sealed class KsOperativeHtnRootTest : GameTest
             });
 
         var ammoAtFirst = 0;
-        await Pair.Server.WaitPost(() => ammoAtFirst = GetHeldAmmo(entManager, mobUid));
+        EntityUid gunUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Assert.That(entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().TryGetGun(mobUid, out var gunEntity), "it should be holding its gun");
+            gunUid = gunEntity.Owner;
+            ammoAtFirst = GetAmmo(entManager, gunUid);
+        });
 
         await Pair.RunTicksSync(150);
 
         await Pair.Server.WaitAssertion(() =>
         {
-            Assert.That(GetHeldAmmo(entManager, mobUid), Is.LessThan(ammoAtFirst), "it should have been firing");
+            Assert.That(GetAmmo(entManager, gunUid), Is.LessThan(ammoAtFirst), "it should have been firing");
 
             var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
             Assert.That(position.X < 3f && position.Y < 7f, $"it should not be going round, but is at {position}");
         });
     }
 
-    private static int GetHeldAmmo(IEntityManager entManager, EntityUid mobUid)
+    private static int GetAmmo(IEntityManager entManager, EntityUid gunUid)
     {
-        Assert.That(entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().TryGetGun(mobUid, out var gunEntity), "it should be holding its gun");
-
         var ammoEvent = new Content.Shared.Weapons.Ranged.Events.GetAmmoCountEvent();
-        entManager.EventBus.RaiseLocalEvent(gunEntity.Owner, ref ammoEvent);
+        entManager.EventBus.RaiseLocalEvent(gunUid, ref ammoEvent);
         return ammoEvent.Count;
+    }
+
+    /// <summary>
+    ///     A plan's order comes before fighting, or an operative with a gun in its hand would never get to it. An ordinary
+    ///         order does not: a hostile in sight is shot first.
+    /// </summary>
+    [TestCase(true, true)]
+    [TestCase(false, false)]
+    public async Task TestPlanOrderComesBeforeFighting(bool overCombat, bool ordered)
+    {
+        var fighting = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+
+                var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+                tacticsSystem.UpdatesPaused = true;
+                tacticsSystem.IssueOrder(mobUid, NpcOrderKind.Stage, new EntityCoordinates(gridUid, new System.Numerics.Vector2(2.5f, 2.5f)), overCombat: overCombat);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is GetOrderOperator), Is.EqualTo(ordered), Describe(plan));
+            Assert.That(Replaces(plan, fighting), Is.EqualTo(ordered), "it has to be able to break off the shooting");
+        });
+    }
+
+    /// <summary>
+    ///     Live, the whole thing through the real root: a squad that can see a hostile through a window in a sealed room, with
+    ///         one of them carrying a way through its locked door, goes and forces it, and gets a shot.
+    /// </summary>
+    [Test]
+    public async Task TestSquadForcesItsWayToAHostileBehindGlass()
+    {
+        var carried = false;
+
+        var (entManager, gunUids, doorUid, _) = await SetUpSquadOutsideGlassRoom("Window", "AirlockSecurityLocked",
+            (stagedEntManager, mobUid) =>
+            {
+                if (carried)
+                    return;
+
+                carried = true;
+
+                var handsSystem = stagedEntManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+                handsSystem.AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+                var toolUid = stagedEntManager.SpawnEntity(TestJawsOfLife, stagedEntManager.GetComponent<TransformComponent>(mobUid).Coordinates);
+                Assert.That(handsSystem.TryPickup(mobUid, toolUid, "left"), "the test needs it carrying the tool");
+            });
+
+        var ammoAtFirst = 0;
+        await Pair.Server.WaitPost(() => ammoAtFirst = gunUids.Sum(gunUid => GetAmmo(entManager, gunUid)));
+
+        var doorForced = false;
+
+        for (var i = 0; i < 1800 && !doorForced; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() =>
+                doorForced = entManager.GetComponent<Content.Shared.Doors.Components.DoorComponent>(doorUid).State is
+                    Content.Shared.Doors.Components.DoorState.Open or Content.Shared.Doors.Components.DoorState.Opening);
+        }
+
+        Assert.That(doorForced, "nobody forced the door");
+
+        var fired = false;
+
+        for (var i = 0; i < 900 && !fired; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() => fired = gunUids.Sum(gunUid => GetAmmo(entManager, gunUid)) < ammoAtFirst);
+        }
+
+        Assert.That(fired, "through the door, somebody should have opened fire");
+    }
+
+    /// <summary>
+    ///     Live: with no door to force, an ordinary window is shot out to get at who is behind it. Armoured glass is not worth
+    ///         the ammo, so nobody can drain a squad's magazines from behind it.
+    /// </summary>
+    [TestCase("Window", true)]
+    [TestCase("ReinforcedWindow", false)]
+    public async Task TestSquadShootsOutAWindow(string window, bool breaks)
+    {
+        var (entManager, mobUids, _, windowUid) = await SetUpSquadOutsideGlassRoom(window, "WallSolid");
+
+        var broken = false;
+
+        for (var i = 0; i < 900 && !broken; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() => broken = entManager.Deleted(windowUid));
+        }
+
+        Assert.That(broken, Is.EqualTo(breaks));
+    }
+
+    /// <summary>
+    ///     Three armed operatives on the real root, outside a sealed room with <paramref name="window"/> and
+    ///         <paramref name="door"/> in its west wall, and a hostile inside that they can see through the window.
+    /// </summary>
+    private async Task<(IEntityManager EntManager, List<EntityUid> GunUids, EntityUid DoorUid, EntityUid WindowUid)> SetUpSquadOutsideGlassRoom(
+        string window,
+        string door,
+        System.Action<IEntityManager, EntityUid>? stage = null)
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        var mobUids = new List<EntityUid>();
+        var gunUids = new List<EntityUid>();
+        EntityUid doorUid = default, windowUid = default;
+
+        await server.WaitPost(() =>
+        {
+            entManager.System<NpcSquadTacticsSystem>().UpdatesPaused = false; // a test before this one on this server may not have
+            var gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-8, -8), new Vector2i(14, 12)).Owner;
+
+            for (var x = 3; x <= 11; x++)
+            {
+                for (var y = -5; y <= 5; y++)
+                {
+                    if (x is > 3 and < 11 && y is > -5 and < 5)
+                        continue;
+
+                    if (x == 3 && y == 0)
+                        windowUid = SpawnAt(entManager, window, gridUid, x, y);
+                    else if (x == 3 && y == -2 && door != "WallSolid")
+                        doorUid = SpawnPoweredDoorAt(entManager, door, gridUid, x, y);
+                    else
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
+
+            var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 7, 0);
+            entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid); // a fight that lasts
+
+            for (var y = -1; y <= 1; y++)
+            {
+                var mobUid = SpawnAt(entManager, "KsOperativeRootTestMobPlanner", gridUid, 0, y);
+                mobUids.Add(mobUid);
+
+                // Before anything else: tactics are not paused, and a squad with nothing to shoot with has nothing to plan.
+                StageArmed(entManager, mobUid);
+                KeepLoaded(entManager, mobUid);
+                stage?.Invoke(entManager, mobUid);
+
+                Assert.That(entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().TryGetGun(mobUid, out var gunEntity), "it should be holding its gun");
+                gunUids.Add(gunEntity.Owner);
+            }
+        });
+
+        await Pair.RunTicksSync(150);
+
+        await server.WaitPost(() =>
+        {
+            foreach (var mobUid in mobUids)
+            {
+                var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+                htnComponent.RootTask = new HTNCompoundTask { Task = _operativeRoot };
+                entManager.System<HTNSystem>().SetHTNEnabled((mobUid, htnComponent), true);
+                entManager.System<NPCSystem>().WakeNPC(mobUid, htnComponent);
+            }
+        });
+
+        return (entManager, gunUids, doorUid, windowUid);
     }
 
     /// <summary>
@@ -1304,6 +1499,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
         blackboard.SetValue("MaxFiringDistance", 9f);
         blackboard.SetValue("CampingRange", 0.75f);
         blackboard.SetValue("RetreatClaimDuration", 10f);
+        blackboard.SetValue("HoldTime", 6f);
 
         // Chamber a round, as racking would.
         if (entManager.TryGetComponent<Content.Shared.Weapons.Ranged.Components.ChamberMagazineAmmoProviderComponent>(gunUid, out var chamberComponent))
