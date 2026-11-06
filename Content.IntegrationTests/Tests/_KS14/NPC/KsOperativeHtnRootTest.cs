@@ -53,6 +53,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     // Not static: the YAML linter validates every static ProtoId field against the client's prototypes too, and
     //      the client has no HTN prototypes at all, so a static one fails the lint.
     private readonly ProtoId<HTNCompoundPrototype> _operativeRoot = "KsOperativeCombatCompound";
+    private readonly ProtoId<HTNCompoundPrototype> _operativeNtRoot = "KsOperativeNtWrapperCombatCompound";
 
     private const string HandsMob = "KsOperativeRootTestMobWithHands";
     private const string FakerMob = "KsOperativeRootTestMobFaker";
@@ -171,6 +172,21 @@ public sealed class KsOperativeHtnRootTest : GameTest
     clickOpen: false
 
 - type: entity
+  parent: KsOperativeRootTestMobWithHands
+  id: KsOperativeRootTestMobForfeit
+  components:
+  - type: Flammable
+    canResistFire: true
+    damage:
+      types:
+        Heat: 1.5
+  - type: StandingState
+  - type: StatusEffectContainer
+  - type: Stamina
+  - type: Cuffable
+  - type: Implanted
+
+- type: entity
   parent: KsOperativeRootTestMobWalking
   id: KsOperativeRootTestMobPlanner
   components:
@@ -205,6 +221,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     private const string TestPrimed = "KsOperativeRootTestPrimed";
     private const string FireShyMob = "KsOperativeRootTestMobFireShy";
     private const string TestFire = "KsOperativeRootTestFire";
+    private const string ForfeitMob = "KsOperativeRootTestMobForfeit";
 
     private const string CombatMarker = "OpInCombat";
     private const string CombatTimeKey = "TimeOfLastCombat";
@@ -1142,6 +1159,52 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     An NT operative blows itself up rather than be taken: beaten down, or cuffed. Not for going down of its own accord
+    ///         to put itself out, nor for a moment's stun, which only hands a player an easy way to set it off.
+    /// </summary>
+    [TestCase("nothing", false)]
+    [TestCase("rolling", false)]
+    [TestCase("brief stun", false)]
+    [TestCase("stamina crit", true)]
+    [TestCase("cuffed", true)]
+    public async Task TestForfeitsOnlyWhenTaken(string state, bool forfeits)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: ForfeitMob, root: _operativeNtRoot,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageHands(entManager, mobUid);
+
+                var implantSystem = entManager.System<Content.Shared.Implants.SharedSubdermalImplantSystem>();
+                Assert.That(implantSystem.AddImplant(mobUid, "KsOperativeNtVoluntaryMicroBombImplant"), Is.Not.Null, "the test needs the implant in it");
+
+                switch (state)
+                {
+                    case "rolling":
+                        var flammableSystem = entManager.System<Content.Server.Atmos.EntitySystems.FlammableSystem>();
+                        var flammableComponent = entManager.GetComponent<Content.Shared.Atmos.Components.FlammableComponent>(mobUid);
+                        flammableSystem.AdjustFireStacks(mobUid, 2f, flammableComponent, ignite: true);
+                        flammableSystem.Resist(mobUid, flammableComponent, keepHold: true);
+                        Assert.That(flammableComponent.Resisting, "the test needs it rolling");
+                        break;
+                    case "brief stun":
+                        entManager.System<Content.Shared.Stunnable.SharedStunSystem>().TryUpdateParalyzeDuration(mobUid, System.TimeSpan.FromSeconds(1));
+                        break;
+                    case "stamina crit":
+                        entManager.System<Content.Shared.Damage.Systems.SharedStaminaSystem>().TakeStaminaDamage(mobUid, 1000f);
+                        break;
+                    case "cuffed":
+                        var cuffsUid = entManager.SpawnEntity("Handcuffs", entManager.GetComponent<TransformComponent>(mobUid).Coordinates);
+                        Assert.That(entManager.System<Content.Shared.Cuffs.SharedCuffableSystem>().TryAddNewCuffs(mobUid, mobUid, cuffsUid), "the test needs it cuffed");
+                        break;
+                }
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Actions.DoActionOperator),
+            Is.EqualTo(forfeits),
+            Describe(plan));
+    }
+
+    /// <summary>
     ///     A plan's order comes before fighting, or an operative with a gun in its hand would never get to it. An ordinary
     ///         order does not: a hostile in sight is shot first.
     /// </summary>
@@ -1943,7 +2006,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
         string mobPrototype = SyndicateMob,
         bool withSquadmate = false,
         System.Action<IEntityManager, EntityUid, EntityUid>? stage = null,
-        bool withPen = false)
+        bool withPen = false,
+        ProtoId<HTNCompoundPrototype>? root = null)
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
         if (!protoManager.HasIndex(_operativeRoot))
@@ -1983,7 +2047,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
             job = new HTNPlanJob(
                 maxTime: 10,
                 protoManager,
-                new HTNCompoundTask { Task = _operativeRoot },
+                new HTNCompoundTask { Task = root ?? _operativeRoot },
                 blackboard,
                 branchTraversal: null);
         });
