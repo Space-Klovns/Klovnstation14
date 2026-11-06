@@ -164,10 +164,10 @@ public sealed class KsTguiChatTest : GameTest
             ui.WindowRoot.AddChild(separated);
             var floating = separated.ChatBox;
             Assert.That(floating.KsSayFloating, Is.True);
-            Assert.That(floating.KsSayWindow.Parent, Is.SameAs(separated), "the window lives in the screen");
             Assert.That(floating.KsSayWindow.Visible, Is.False, "there is no bar until chat is asked for");
 
             floating.Focus();
+            Assert.That(floating.KsSayWindow.Parent, Is.SameAs(separated), "the window lives in the screen");
             Assert.That(floating.KsSayWindow.Visible, Is.True, "the focus keybinds open it");
 
             floating.KsSay.SetText("ks floating", notify: true);
@@ -250,6 +250,24 @@ public sealed class KsTguiChatTest : GameTest
 
             Assert.That(bar.Text, Is.EqualTo("half typed"), "coming back gives the unsent text back");
             Assert.That(bar.HistoryPosition, Is.Zero);
+        });
+    }
+
+    [Test]
+    public async Task TheChannelButtonFollowsItsText()
+    {
+        await Client.WaitPost(() =>
+        {
+            var bar = new KsTguiSayBar();
+            bar.SetChannel("OOC", Robust.Shared.Maths.Color.White);
+            bar.Measure(Robust.Shared.Maths.Vector2Helpers.Infinity);
+            var short_ = bar.DesiredSize.X;
+
+            // A fresh bar: a measured one keeps its answer until the layout system invalidates it.
+            var longBar = new KsTguiSayBar();
+            longBar.SetChannel("Служба безопасности и охраны", Robust.Shared.Maths.Color.White);
+            longBar.Measure(Robust.Shared.Maths.Vector2Helpers.Infinity);
+            Assert.That(longBar.DesiredSize.X, Is.GreaterThan(short_ + 40f), "a long name widens the button instead of clipping");
         });
     }
 }

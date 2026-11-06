@@ -73,6 +73,25 @@ public sealed class KsTguiFontTest : GameTest
     /// <summary>
     ///     A nested stack would silently turn every <c>[bold size=16]</c> back into 12.
     /// </summary>
+    /// <summary>
+    ///     The engine's sizes are points, and 12 of them draw at 16px, a third bigger than tgui's text.
+    /// </summary>
+    [Test]
+    public async Task SizesArePixelsAndGlyphsStillDraw()
+    {
+        var fonts = Client.ResolveDependency<KsTguiFonts>();
+
+        await Client.WaitAssertion(() =>
+        {
+            var font = (StackedFont)fonts.GetFont(12);
+
+            Assert.That(((VectorFont)font._main).Size, Is.EqualTo(9));
+            Assert.That(font.GetHeight(1f), Is.GreaterThan(0), "Metrics have to come from the real font, not the empty one");
+            Assert.That(font.GetCharMetrics(new System.Text.Rune('A'), 1f), Is.Not.Null, "Glyphs have to fall through the empty font");
+            Assert.That(font.Stack[0].GetCharMetrics(new System.Text.Rune('A'), 1f, fallback: false), Is.Null, "The size carrier must have no glyphs");
+        });
+    }
+
     [Test]
     public async Task MarkupSizesSurvive()
     {

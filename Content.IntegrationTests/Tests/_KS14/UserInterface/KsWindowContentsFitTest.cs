@@ -53,7 +53,6 @@ public sealed class KsWindowContentsFitTest : GameTest
     private static readonly HashSet<Type> KnownCutOffTgui =
     [
         typeof(CrewMonitoringWindow),
-        typeof(PowerMonitoringWindow),
         typeof(RadarConsoleWindow),
     ];
 
@@ -86,6 +85,10 @@ public sealed class KsWindowContentsFitTest : GameTest
             foreach (var type in reflectionManager.GetAllChildren(typeof(FancyWindow)))
             {
                 if (type.IsAbstract || !modLoader.IsContentType(type) || type.GetConstructor(Type.EmptyTypes) == null)
+                    continue;
+
+                // tgui's own windows never open under Baron, whose header is taller.
+                if (!tgui && type.Namespace?.StartsWith("Content.Client._KS14.Tgui") == true)
                     continue;
 
                 var window = (FancyWindow)typeFactory.CreateInstance(type, oneOff: true, inject: false);

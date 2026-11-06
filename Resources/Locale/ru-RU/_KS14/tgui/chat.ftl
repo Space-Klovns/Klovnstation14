@@ -10,7 +10,7 @@ ks-tgui-chat-settings-general = Общие
 ks-tgui-chat-settings-pages = Вкладки чата
 ks-tgui-chat-settings-highlights = Подсветка текста
 ks-tgui-chat-settings-font-size = Размер шрифта
-ks-tgui-chat-font-size-value = { $size } пт
+ks-tgui-chat-font-size-value = { $size } пикс.
 
 ks-tgui-chat-move-left = Сдвинуть вкладку влево
 ks-tgui-chat-move-right = Сдвинуть вкладку вправо

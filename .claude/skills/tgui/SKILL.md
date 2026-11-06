@@ -107,8 +107,163 @@ For a window that keeps its layout, the look comes from the same containers, and
 
 Mark each with `<!-- KS14: ... -->` (CLAUDE.md §3). No layout changes. Leave panels whose colour means something.
 
+## Examples: creating a window
+
+**A status block.** tg's is a `Section` holding a `LabeledList`, with colour on the values:
+
+```xml
+<!-- do this -->
+<BoxContainer Orientation="Vertical" SeparationOverride="6" Margin="6">
+    <tg:KsTguiSection Title="{Loc 'ks-tgui-example-status'}">
+        <tg:KsTguiLabeledList Name="StatusList"/>
+    </tg:KsTguiSection>
+</BoxContainer>
+```
+```csharp
+StatusList.AddItem(Loc.GetString("ks-tgui-example-pressure"), pressureText, KsTguiPalettes.Good);
+```
+```xml
+<!-- not this - a hand-built imitation: wrong sizes, no theme support, nothing lines up with real sections -->
+<PanelContainer>
+    <PanelContainer.PanelOverride>
+        <gfx:StyleBoxFlat BackgroundColor="#171717" BorderColor="#48739E" BorderThickness="0 0 0 2"/>
+    </PanelContainer.PanelOverride>
+    <BoxContainer Orientation="Horizontal">
+        <Label Text="Pressure:" FontColorOverride="#8F9FB0"/>
+        <Label Text="101 kPa" FontColorOverride="#67BA2B"/>
+    </BoxContainer>
+</PanelContainer>
+```
+
+**Actions belong on the section.** tg puts a section's controls in its title row:
+
+```csharp
+// do this
+var refreshButton = new KsTguiButton { Icon = KsTguiIcons.Sync, Text = Loc.GetString("ks-tgui-example-refresh"), Compact = true };
+section.Buttons = refreshButton;
+
+// not this - a stock button in a row of its own, under the section it acts on
+root.AddChild(section);
+root.AddChild(new Button { Text = "Refresh" });
+```
+
+**Say what a state means with its tgui colour.** A button's colour is a `KsTguiColor`, and a selected toggle is `Selected`:
+
+```csharp
+// do this
+var sendButton = new KsTguiButton { Text = Loc.GetString("ks-tgui-example-send"), Color = KsTguiColor.Green };
+powerButton.Selected = isPowered;
+
+// not this - bypasses the per-state rules, so it loses hover, press and disabled colours
+var sendButton = new KsTguiButton { Text = "Send", ModulateSelfOverride = Color.Green };
+```
+
+**Tell the player why something's unavailable.** tg uses a notice, not an empty section:
+
+```csharp
+// do this
+section.AddChild(new KsTguiNoticeBox { Text = Loc.GetString("ks-tgui-example-no-peers"), NoticeColor = KsTguiNoticeColor.Danger });
+
+// not this - in tg's colours, but not tg's component, and it doesn't wrap
+section.AddChild(new Label { Text = "No peers.", FontColorOverride = KsTguiPalettes.Bad });
+```
+
+**Spacing comes from tgui's units.**
+
+```xml
+<!-- do this: tg's <Stack vertical> around sections, inside the 6px window margin -->
+<BoxContainer Orientation="Vertical" SeparationOverride="6" Margin="6">
+
+<!-- not this: SS14's habitual values look nearly right, and everything ends up slightly off -->
+<BoxContainer Orientation="Vertical" SeparationOverride="4" Margin="10 5">
+```
+
+**A lost feature is a bug, however good the layout looks.** The fax port kept the dropdown's default-destination
+behaviour when it turned recipients into tg's list of buttons. Going from a dropdown to buttons is fine. Dropping what
+the dropdown did isn't.
+
+## Examples: retrofitting a window
+
+**A dark panel.** Real change, from `MicrowaveMenu.xaml`:
+
+```xml
+<!-- do this: the old colour moves to BaronColor, and every other attribute stays -->
+<!-- KS14: tgui Section body under the tgui theme, flat colour under Baron -->
+<ksTgui:KsSectionPanel
+    Name="IngredientsPanel"
+    MinSize="300 128"
+    Margin="5 5" BaronColor="#1B1B1E">
+```
+```xml
+<!-- not this: Baron loses its colour -->
+<ksTgui:KsSectionPanel Name="IngredientsPanel" MinSize="300 128" Margin="5 5">
+
+<!-- not this: the override beats every style rule, so tgui can never apply. Nothing warns -->
+<ksTgui:KsSectionPanel Name="IngredientsPanel" MinSize="300 128" Margin="5 5" BaronColor="#1B1B1E">
+    <PanelContainer.PanelOverride>
+        <gfx:StyleBoxFlat BackgroundColor="#1B1B1E"/>
+    </PanelContainer.PanelOverride>
+```
+
+**A heading with a separator.** Real change, from `BarSignMenu.xaml`:
+
+```xml
+<!-- do this: classes only, so Baron doesn't change, and there's still one line -->
+<!-- KS14: heading and its separator are a tgui Section title and underline under the tgui theme -->
+<Label Text="{Loc 'barsign-ui-set-label'}" StyleClasses="LabelSubText KsTguiSectionHeading" Margin="30 0"/>
+<customControls:HSeparator Margin="0 0 0 5" StyleClasses="KsTguiSectionLine"/>
+```
+```xml
+<!-- not this: two lines under tgui, and Baron gains padding -->
+<tg:KsSectionTitle><Label Text="{Loc 'barsign-ui-set-label'}" StyleClasses="LabelSubText"/></tg:KsSectionTitle>
+<customControls:HSeparator Margin="0 0 0 5"/>
+```
+
+**A label column.**
+
+```xml
+<!-- do this: the rule exists only in the tgui sheet -->
+<Label Text="{Loc 'id-card-console-window-full-name-label'}" StyleClasses="KsTguiLabelKey"/>
+
+<!-- not this: LabelKeyText is styled under Baron too, so it changes -->
+<Label Text="{Loc 'id-card-console-window-full-name-label'}" StyleClasses="LabelKeyText"/>
+
+<!-- not this: permanent, on both themes, and it survives a toggle -->
+<Label Text="{Loc 'id-card-console-window-full-name-label'}" FontColorOverride="#8F9FB0"/>
+```
+
+**Keep the layout.** A retrofit swaps containers and classes.
+
+```xml
+<!-- not this: moving rows into a KsTguiSection reflows the window and changes Baron. That's a port -->
+<tg:KsTguiSection Title="{Loc 'id-card-console-window-full-name-label'}">
+    <LineEdit Name="FullNameLineEdit"/>
+</tg:KsTguiSection>
+```
+
+**Leave a colour that means something.** A panel that's red for an alert or green for a department is information, so
+it stays. Convert only neutral greys.
+
+```xml
+<!-- leave this one alone -->
+<gfx:StyleBoxFlat BackgroundColor="#A22824"/>
+```
+
+**In C#, gate on a style property, not the cvar.** Under a sheet swap this needs no subscription:
+
+```csharp
+// do this, in StylePropertiesChanged
+_highlight = TryGetStyleProperty<Color>("ks-my-highlight", out var color) ? color : DefaultHighlight;
+
+// not this - frozen at construction, so a live toggle leaves it wrong
+_highlight = KsTguiTheme.ReadEnabled() ? KsTguiPalettes.PrimaryElement : DefaultHighlight;
+```
+
 ## Traps
 
+- **A code-built `FancyWindow` adds to `ContentsContainer`, not to itself.** `AddChild(root)` compiles and puts the
+  contents over the title bar and close button.
+- **Clear a section with `ClearBody()`.** `RemoveAllChildren` takes the section's own title and body with it.
 - **Prefer a style rule to reading the cvar.** A rule swaps on a live toggle. A value in XAML or code beats the sheet
   permanently on that control.
 - **A rule belongs to a theme.** Add it to `KsTguiSheetlet` in the partial for its area, and don't assume Baron has it.

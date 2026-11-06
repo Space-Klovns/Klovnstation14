@@ -26,7 +26,7 @@ public sealed partial class KsTguiSheetlet
     private static void AddRadialRules(List<StyleRule> rules)
     {
         rules.Add(E<RadialMenuButtonWithSector>()
-            .Prop(RadialMenuButtonWithSector.KsStylePropertyBackground, Color.Black.WithAlpha(0.6f))
+            .Prop(RadialMenuButtonWithSector.KsStylePropertyBackground, KsTguiPalettes.Translucent(KsTguiPalettes.Base, 0.85f, Color.White))
             .Prop(RadialMenuButtonWithSector.KsStylePropertyHoverBackground, KsTguiPalettes.PrimaryElement.WithAlpha(0.9f))
             .Prop(RadialMenuButtonWithSector.KsStylePropertyBorder, KsTguiPalettes.Border)
             .Prop(RadialMenuButtonWithSector.KsStylePropertyHoverBorder, KsTguiPalettes.PrimaryBase)

@@ -39,7 +39,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     private bool _hasTank;
     private bool _shieldEnabled;
 
-    public KsTguiNumberInput ReleaseInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-kpa") };
+    public KsTguiNumberInput ReleaseInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-kpa"), Step = 5f, WidthPixels = 75f };
     public KsTguiButton ReleaseMaxButton { get; } = new() { Icon = KsTguiIcons.FastForward, Color = KsTguiColor.Transparent };
     public KsTguiButton ReleaseDefaultButton { get; } = new() { Icon = KsTguiIcons.Undo, Color = KsTguiColor.Transparent };
     public KsTguiButton ValveButton { get; } = new();
@@ -48,8 +48,8 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     public KsTguiGasCanisterWindow()
     {
-        MinSize = new Vector2(350f, 0f);
-        SetSize = new Vector2(350f, 0f);
+        MinWidth = 350f;
+        SetWidth = 350f; // The height is the contents'.
 
         var root = new BoxContainer
         {
@@ -72,7 +72,8 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         regulatorButtons.AddChild(ReleaseMaxButton);
         regulatorItem.Buttons = regulatorButtons;
 
-        canisterList.AddItem(Loc.GetString("ks-tgui-atmos-valve")).XamlChildren.Add(ValveButton);
+        canisterList.AddItem(Loc.GetString("ks-tgui-atmos-valve")).Buttons = ValveButton;
+        ValveButton.MinWidth = 72f;
         _portItem = canisterList.AddItem(Loc.GetString("ks-tgui-atmos-port"));
         canisterBody.AddChild(canisterList);
 

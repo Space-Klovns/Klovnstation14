@@ -40,7 +40,7 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
 
     private readonly KsTguiSection _editor;
     private readonly Label _editorText;
-    private readonly FloatSpinBox _editorSpin;
+    private readonly KsTguiNumberInput _editorSpin;
     private readonly KsTguiButton _editorToggle;
 
     private ThresholdRow? _editingRow;
@@ -106,8 +106,8 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         _section.AddChild(grid);
 
         _editorText = new Label { Margin = new Thickness(0f, 0f, 0f, 6f) };
-        _editorSpin = new FloatSpinBox(1f, 2) { HorizontalAlignment = HAlignment.Left, MinWidth = 160f, IsValid = value => value > 0f };
-        _editorSpin.OnValueChanged += _ => EditorValueChanged();
+        _editorSpin = new KsTguiNumberInput { WidthPixels = 75f, MinValue = 0.01f, MaxValue = 100000f, Step = 10f };
+        _editorSpin.OnCommitted += _ => EditorValueChanged();
         _editorToggle = new KsTguiButton { Margin = new Thickness(0f, 6f, 0f, 0f) };
         _editorToggle.OnPressed += _ => EditorToggled();
 
@@ -287,7 +287,8 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         _editingRow = row;
         _editingLimit = limit;
         _editor.Visible = true;
-        _editorSpin.Value = SettingOf(row.Threshold, limit).Value * row.Scale;
+        _editorSpin.Unit = row.Unit;
+        _editorSpin.SetValue(SettingOf(row.Threshold, limit).Value * row.Scale);
         RefreshEditor();
     }
 
@@ -309,8 +310,8 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         _editorSpin.Visible = setting.Enabled;
         _editorToggle.Text = Loc.GetString(setting.Enabled ? "ks-tgui-airalarm-disable" : "ks-tgui-airalarm-enable");
 
-        if (setting.Enabled && !_editorSpin.HasKeyboardFocus())
-            _editorSpin.Value = setting.Value * _editingRow.Scale;
+        if (setting.Enabled && !_editorSpin.IsEditing)
+            _editorSpin.SetValue(setting.Value * _editingRow.Scale);
     }
 
     private static string LimitKey(AtmosMonitorLimitType limit)

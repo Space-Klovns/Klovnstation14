@@ -42,6 +42,20 @@ public sealed class KsTguiLabeledListItem : Control
     }
 
     /// <summary>
+    ///     <c>AddChild</c> from code goes to the value cell, as XAML children do.
+    /// </summary>
+    protected override void ChildAdded(Control newChild)
+    {
+        base.ChildAdded(newChild);
+
+        if (newChild == _labelControl || newChild == _value || newChild == _buttonsSlot)
+            return;
+
+        newChild.Orphan();
+        _value.AddChild(newChild);
+    }
+
+    /// <summary>
     ///     The text of the label cell.
     /// </summary>
     public string? Label
@@ -78,6 +92,16 @@ public sealed class KsTguiLabeledListItem : Control
             _valueLabel.Text = value;
             _valueLabel.Visible = !string.IsNullOrEmpty(value);
         }
+    }
+
+    /// <summary>
+    ///     The colour of the label cell; null is the label style's own colour. It wins over the style, which the wires window
+    ///         needs to draw a wire's name in the wire's colour.
+    /// </summary>
+    public Color? LabelColor
+    {
+        get => _labelControl.FontColorOverride;
+        set => _labelControl.FontColorOverride = value;
     }
 
     /// <summary>
@@ -159,9 +183,9 @@ public sealed class KsTguiLabeledListItem : Control
         var buttonsLeft = finalSize.X - buttonsWidth;
         var valueRight = buttonsWidth > 0f ? buttonsLeft - gap : finalSize.X;
 
-        _labelControl.Arrange(UIBox2.FromDimensions(0f, 0f, _labelColumn, _labelControl.DesiredSize.Y));
+        _labelControl.Arrange(UIBox2.FromDimensions(0f, MathF.Max(0f, (finalSize.Y - _labelControl.DesiredSize.Y) / 2f), _labelColumn, _labelControl.DesiredSize.Y)); // KS: centred in the row
         _value.Arrange(new UIBox2(valueLeft, 0f, MathF.Max(valueLeft, valueRight), finalSize.Y));
-        _buttonsSlot.Arrange(UIBox2.FromDimensions(buttonsLeft, 0f, buttonsWidth, _buttonsSlot.DesiredSize.Y));
+        _buttonsSlot.Arrange(UIBox2.FromDimensions(buttonsLeft, MathF.Max(0f, (finalSize.Y - _buttonsSlot.DesiredSize.Y) / 2f), buttonsWidth, _buttonsSlot.DesiredSize.Y)); // KS: centred in the row
         return finalSize;
     }
 }

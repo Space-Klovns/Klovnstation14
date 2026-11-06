@@ -24,7 +24,7 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
     private readonly KsTguiButton _powerButton;
     private readonly KsTguiButton _directionButton;
     private readonly KsTguiButton _wideNetButton;
-    private readonly FloatSpinBox _volumeRate;
+    private readonly KsTguiNumberInput _volumeRate;
     private readonly Dictionary<Gas, KsTguiButton> _gasButtons = new();
 
     public event Action<string, IAtmosDeviceData>? ScrubberDataChanged;
@@ -92,8 +92,8 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
         modeItem.XamlChildren.Add(modeBox);
 
         var rateItem = list.AddItem(Loc.GetString("air-alarm-ui-scrubber-volume-rate-label"));
-        _volumeRate = new FloatSpinBox { HorizontalAlignment = HAlignment.Left, MinWidth = 140f, IsValid = value => value >= 0f };
-        _volumeRate.OnValueChanged += _ =>
+        _volumeRate = new KsTguiNumberInput { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), WidthPixels = 75f, MinValue = 0f, MaxValue = Atmospherics.MaxTransferRate, Step = 10f };
+        _volumeRate.OnCommitted += _ =>
         {
             _data.VolumeRate = _volumeRate.Value;
             ScrubberDataChanged?.Invoke(_address, _data);
@@ -163,7 +163,7 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
         section.AddChild(list);
         AddChild(section);
 
-        _volumeRate.Value = _data.VolumeRate;
+        _volumeRate.SetValue(_data.VolumeRate);
         Refresh();
     }
 
@@ -176,8 +176,8 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
         _data.VolumeRate = data.VolumeRate;
         _data.AirAlarmPanicWireCut = data.AirAlarmPanicWireCut;
 
-        if (!_volumeRate.HasKeyboardFocus())
-            _volumeRate.Value = _data.VolumeRate;
+        if (!_volumeRate.IsEditing)
+            _volumeRate.SetValue(_data.VolumeRate);
 
         Refresh();
     }

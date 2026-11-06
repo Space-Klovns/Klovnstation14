@@ -86,7 +86,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
     private readonly Label _transferLimitLabel;
     private readonly Label _unlimitedLabel;
     private readonly OptionButton _actionOptions;
-    private readonly SpinBox _transferSpinBox;
+    private readonly KsTguiNumberInput _transferSpinBox;
     private readonly KsTguiButton _accountActionButton;
     private readonly KsTguiButton _limitToggleButton;
 
@@ -243,8 +243,8 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         _actionOptions.OnItemSelected += args => _actionOptions.SelectId(args.Id);
         fundsList.AddItem(Loc.GetString("ks-tgui-cargo-account-action")).AddChild(_actionOptions);
 
-        _transferSpinBox = new SpinBox { HorizontalExpand = true, Value = 10 };
-        _transferSpinBox.IsValid = IsTransferValid;
+        _transferSpinBox = new KsTguiNumberInput { Format = "0", WidthPixels = 75f, MinValue = 0f };
+        _transferSpinBox.SetValue(10f);
         fundsList.AddItem(Loc.GetString("ks-tgui-cargo-amount")).AddChild(_transferSpinBox);
         fundsSection.AddChild(fundsList);
 
@@ -258,8 +258,8 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         };
         _accountActionButton.OnPressed += _ =>
         {
-            var account = (ProtoId<CargoAccountPrototype>?)_actionOptions.SelectedMetadata;
-            OnAccountAction?.Invoke(account, _transferSpinBox.Value);
+            var account = SelectedAccount();
+            OnAccountAction?.Invoke(account, (int)_transferSpinBox.Value);
         };
         fundsSection.AddChild(_accountActionButton);
 
@@ -279,6 +279,17 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         ContentsContainer.AddChild(root);
 
         SelectPage(Page.Catalog);
+    }
+
+    /// <summary>
+    ///     The account picked in the action list; null for a withdrawal, which has none.
+    /// </summary>
+    private ProtoId<CargoAccountPrototype>? SelectedAccount()
+    {
+        if (_actionOptions.ItemCount == 0)
+            return null;
+
+        return (ProtoId<CargoAccountPrototype>?)_actionOptions.SelectedMetadata;
     }
 
     private bool IsTransferValid(int value)
@@ -575,12 +586,13 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
             !_orderConsoleQuery.TryComp(_owner, out var console))
             return;
 
-        var selectedAccount = _actionOptions.SelectedMetadata;
+        var selectedAccount = SelectedAccount();
         var selectedId = _actionOptions.SelectedId;
 
         var i = 0;
         _actionOptions.Clear();
         _actionOptions.AddItem(Loc.GetString("cargo-console-menu-account-action-option-withdraw"), i);
+        _actionOptions.SetItemMetadata(i, null!);
         i++;
         foreach (var account in bank.Accounts.Keys)
         {
@@ -594,7 +606,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         }
 
         // Keep the player's choice across the state updates that rebuild the list.
-        if (selectedId > 0 && selectedId < i && Equals(_actionOptions.GetItemMetadata(selectedId), selectedAccount))
+        if (selectedId > 0 && selectedId < i && Equals(_actionOptions.GetItemMetadata(selectedId), (object?)selectedAccount))
             _actionOptions.SelectId(selectedId);
         else
             _actionOptions.SelectId(0);
@@ -615,6 +627,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         _transferLimitLabel.Text = Loc.GetString("ks-tgui-cargo-transfer-limit-value", ("limit", (int)(balance * orderConsole.TransferLimit)));
 
         _unlimitedLabel.Visible = orderConsole.TransferUnbounded;
+        _transferSpinBox.MaxValue = (int)(orderConsole.TransferLimit * balance);
         _accountActionButton.Disabled = _transferSpinBox.Value <= 0 ||
                                         _transferSpinBox.Value > bankAccount.Accounts[orderConsole.Account] * orderConsole.TransferLimit ||
                                         _timing.CurTime < orderConsole.NextAccountActionTime;
@@ -624,7 +637,10 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         _requestsTab.Visible = !printSlip;
         _checkoutTab.Visible = !printSlip;
         if (printSlip && (_page == Page.Requests || _page == Page.Checkout))
+        {
             _pageTabs.Select((KsTguiTabItem)_pageTabs.GetChild(0));
+            SelectPage(Page.Catalog); // Select doesn't raise OnTabSelected.
+        }
     }
 
     protected override void Dispose(bool disposing)

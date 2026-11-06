@@ -47,8 +47,8 @@ public sealed class KsTguiLatheWindowTest : GameTest
             Server.PlayerMan.SetAttachedEntity(ServerSession!, user);
 
             var materials = SEntMan.System<SharedMaterialStorageSystem>();
-            materials.TryChangeMaterialAmount(lathe, SteelMaterial, 100000);
-            materials.TryChangeMaterialAmount(lathe, GlassMaterial, 100000);
+            Assert.That(materials.TryChangeMaterialAmount(lathe, SteelMaterial, 100000), Is.True, "The lathe should take steel.");
+            Assert.That(materials.TryChangeMaterialAmount(lathe, GlassMaterial, 100000), Is.True, "The lathe should take glass.");
 
             SEntMan.System<SharedUserInterfaceSystem>().OpenUi(lathe, LatheUiKey.Key, user);
         });
@@ -79,7 +79,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
     private static void Press(BaseButton button)
     {
         var field = typeof(BaseButton).GetField("OnPressed", BindingFlags.Instance | BindingFlags.NonPublic)!;
-        ((Action<BaseButton.ButtonEventArgs>?)field.GetValue(button))?.Invoke(null!);
+        ((Action<BaseButton.ButtonEventArgs>?)field.GetValue(button))?.Invoke(new BaseButton.ButtonEventArgs(button, null!));
     }
 
     private static IEnumerable<T> Descendants<T>(Control root) where T : Control
@@ -139,7 +139,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
         // Queue a design, then x5, through the real BUI.
         await Client.WaitPost(() =>
         {
-            var first = Descendants<ContainerButton>(window).First(button => button is not KsTguiTabItem && button is not Button);
+            var first = Descendants<ContainerButton>(window).First(button => button is not KsTguiTabItem && button is not Button && !button.Disabled);
             Press(first);
         });
         await Pair.RunTicksSync(10);
@@ -154,7 +154,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
 
         await Client.WaitPost(() =>
         {
-            var times = Descendants<KsTguiButton>(window).First(button => button.Text == "×5");
+            var times = Descendants<KsTguiButton>(window).First(button => button.Text == "×5" && !button.Disabled);
             Press(times);
         });
         await Pair.RunTicksSync(10);

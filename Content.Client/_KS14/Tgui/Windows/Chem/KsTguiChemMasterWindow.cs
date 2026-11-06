@@ -119,12 +119,10 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
         PillTypeButtons = MakePillTypeButtons(out var pillGrid);
 
-        PillNumber = new SpinBox { MinSize = new Vector2(100f, 0f), Value = 0 };
-        PillDosage = new SpinBox { MinSize = new Vector2(100f, 0f), Value = 1 };
-        BottleDosage = new SpinBox { MinSize = new Vector2(100f, 0f), Value = 0 };
-        PillDosage.InitDefaultButtons();
-        PillNumber.InitDefaultButtons();
-        BottleDosage.InitDefaultButtons();
+        PillNumber = new KsTguiNumberInput { Format = "0", WidthPixels = 100f };
+        PillDosage = new KsTguiNumberInput { Format = "0", WidthPixels = 100f, MinValue = 1f };
+        PillDosage.SetValue(1f);
+        BottleDosage = new KsTguiNumberInput { Format = "0", WidthPixels = 100f };
 
         CreatePillButton = new KsTguiButton { Text = Loc.GetString("chem-master-window-create-button"), Icon = KsTguiIcons.Flask };
         CreatePillButton.OnPressed += _ => OnCreatePillsPressed?.Invoke(
@@ -133,9 +131,7 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         CreateBottleButton.OnPressed += _ => OnCreateBottlePressed?.Invoke((uint)BottleDosage.Value, LabelLine);
 
         var packagingList = new KsTguiLabeledList();
-        var sourceRow = packagingList.AddItem(Loc.GetString("chem-master-output-source").TrimEnd(':'));
-        sourceRow.XamlChildren.Add(_drawSourceLabel);
-        sourceRow.XamlChildren.Add(_bufferVolumeLabel);
+        // The source is the toggle in the title row, so it has no row of its own.
         var labelRow = packagingList.AddItem(Loc.GetString("chem-master-current-text-label").TrimEnd(':'));
         labelRow.XamlChildren.Add(LabelLineEdit);
         var typeRow = packagingList.AddItem(Loc.GetString("chem-master-window-pill-type-label").TrimEnd(':'));
@@ -198,11 +194,11 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
     public LineEdit LabelLineEdit { get; }
 
-    public SpinBox PillNumber { get; }
+    public KsTguiNumberInput PillNumber { get; }
 
-    public SpinBox PillDosage { get; }
+    public KsTguiNumberInput PillDosage { get; }
 
-    public SpinBox BottleDosage { get; }
+    public KsTguiNumberInput BottleDosage { get; }
 
     public string LabelLine
     {
@@ -313,28 +309,23 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
             _ => 0,
         };
 
-        PillDosage.Value = (int)Math.Min(outputVolume, state.PillDosageLimit);
+        PillDosage.MaxValue = state.PillDosageLimit;
+        PillDosage.SetValue((int)Math.Min(outputVolume, state.PillDosageLimit));
 
         for (var i = 0; i < PillTypeButtons.Length; i++)
         {
             PillTypeButtons[i].Selected = i == state.SelectedPillType;
         }
 
-        PillNumber.IsValid = x => x >= 0 && x <= pillNumberMax;
-        PillDosage.IsValid = x => x > 0 && x <= state.PillDosageLimit;
-        BottleDosage.IsValid = x => x >= 0 && x <= bottleAmountMax;
-
-        if (PillNumber.Value > pillNumberMax)
-            PillNumber.Value = pillNumberMax;
-        if (BottleDosage.Value > bottleAmountMax)
-            BottleDosage.Value = bottleAmountMax;
+        PillNumber.MaxValue = pillNumberMax;
+        BottleDosage.MaxValue = bottleAmountMax;
 
         // Avoid division by zero
-        PillNumber.Value = PillDosage.Value > 0
+        PillNumber.SetValue(PillDosage.Value > 0
             ? Math.Min(outputVolume / PillDosage.Value, pillNumberMax)
-            : 0;
+            : 0);
 
-        BottleDosage.Value = Math.Min(bottleAmountMax, outputVolume);
+        BottleDosage.SetValue(Math.Min(bottleAmountMax, outputVolume));
     }
 
     /// <summary>

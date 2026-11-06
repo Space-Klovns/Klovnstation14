@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui.Controls;
 using Content.IntegrationTests.Fixtures;
@@ -89,6 +90,11 @@ public sealed class KsTguiControlsTest : GameTest
 
         await Client.WaitAssertion(() =>
         {
+            // Left on the panel itself, a child added from code would sit over the title with no padding.
+            var labelTop = (bodyLabel.GlobalPosition - section.GlobalPosition).Y;
+            Assert.That(labelTop, Is.GreaterThanOrEqualTo(section.Children.First().Children.First().Size.Y), "A child added from code must sit below the title row");
+            Assert.That((bodyLabel.GlobalPosition - section.GlobalPosition).X, Is.GreaterThanOrEqualTo(6f), "A child added from code must get the body's padding");
+
             foreach (var control in new Control[]
                      {
                          section, list, notice, plainButton, iconButton, tabs, progress, retrofitPanel, retrofitTitle,

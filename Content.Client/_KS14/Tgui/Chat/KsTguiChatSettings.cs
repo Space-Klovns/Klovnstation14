@@ -17,6 +17,11 @@ namespace Content.Client._KS14.Tgui.Chat;
 /// </summary>
 public sealed partial class KsTguiChatSettings : Control
 {
+    /// <summary>
+    ///     On the settings' inputs, for the sheetlet's 12px font rule.
+    /// </summary>
+    public const string StyleClassInput = "KsTguiChatSettingsInput";
+
     public const int MinFontSize = 8;
     public const int MaxFontSize = 32;
 
@@ -83,7 +88,8 @@ public sealed partial class KsTguiChatSettings : Control
         var fontButtons = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 4 };
         var smaller = new KsTguiButton { Icon = KsTguiIcons.Minus, Compact = true };
         smaller.OnPressed += _ => ChangeFontSize(-1);
-        _fontSizeLabel = new Label { MinWidth = 36f, Align = Label.AlignMode.Center, VerticalAlignment = VAlignment.Center };
+        var font = IoCManager.Resolve<KsTguiFonts>().GetFont(12);
+        _fontSizeLabel = new Label { FontOverride = font, MinWidth = 36f, Align = Label.AlignMode.Center, VerticalAlignment = VAlignment.Center };
         var larger = new KsTguiButton { Icon = KsTguiIcons.Plus, Compact = true };
         larger.OnPressed += _ => ChangeFontSize(1);
         fontButtons.AddChild(smaller);
@@ -97,7 +103,7 @@ public sealed partial class KsTguiChatSettings : Control
         var topRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 4 };
         _moveLeftButton = new KsTguiButton { Icon = KsTguiChatGlyphs.Left, Color = KsTguiColor.Blue, ToolTip = Loc.GetString("ks-tgui-chat-move-left") };
         _moveLeftButton.OnPressed += _ => MoveCurrent(-1);
-        _nameEdit = new LineEdit { HorizontalExpand = true, MinWidth = 80f };
+        _nameEdit = new LineEdit { HorizontalExpand = true, MinWidth = 80f, StyleClasses = { StyleClassInput } };
         _nameEdit.OnTextEntered += _ => CommitName();
         _nameEdit.OnFocusExit += _ => CommitName();
         _moveRightButton = new KsTguiButton { Icon = KsTguiChatGlyphs.Right, Color = KsTguiColor.Blue, ToolTip = Loc.GetString("ks-tgui-chat-move-right") };
@@ -125,8 +131,8 @@ public sealed partial class KsTguiChatSettings : Control
 
         // Text highlight.
         var highlights = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 6 };
-        highlights.AddChild(new Label { Text = Loc.GetString("hud-chatbox-highlights") });
-        _highlightEdit = new TextEdit { MinHeight = 90f, VerticalExpand = true };
+        highlights.AddChild(new Label { Text = Loc.GetString("hud-chatbox-highlights"), FontOverride = font });
+        _highlightEdit = new TextEdit { MinHeight = 90f, VerticalExpand = true, StyleClasses = { StyleClassInput } };
         _highlightEdit.Placeholder = new Rope.Leaf(Loc.GetString("hud-chatbox-highlights-placeholder"));
         highlights.AddChild(_highlightEdit);
         var submit = new KsTguiButton { Text = Loc.GetString("hud-chatbox-highlights-button"), ToolTip = Loc.GetString("hud-chatbox-highlights-tooltip") };

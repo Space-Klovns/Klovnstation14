@@ -206,6 +206,7 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
             Disabled = item.Quantity == FixedPoint2.Zero,
         };
         dispense.Label.ClipText = true;
+        dispense.LeftAligned = true; // a long name is cut at its end, not at both ends
         dispense.OnPressed += _ => OnDispenseReagentButtonPressed?.Invoke(item.StorageLocation);
 
         var quantity = new Label

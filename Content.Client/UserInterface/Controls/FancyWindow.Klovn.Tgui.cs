@@ -43,7 +43,7 @@ public partial class FancyWindow
     private void KsAddEdgeGrip()
     {
         AddChild(new KsWindowEdgeGrip(
-            point => (GetDragModeFor(point) & ~DragMode.Move) != DragMode.None,
+            point => (GetDragModeFor(point) & ~DragMode.Move) != DragMode.None && (_ksChromed || KsInEdgeStrip(point)),
             point =>
             {
                 var mode = GetDragModeFor(point) & ~DragMode.Move;
@@ -56,6 +56,18 @@ public partial class FancyWindow
                     _ => CursorShape.Arrow,
                 };
             }));
+    }
+
+    /// <summary>
+    ///     The stock zones are 7 wide, which would take most of a scrollbar lying against the edge. They're still there behind
+    ///         the grip, wherever the contents leave a gap.
+    /// </summary>
+    private bool KsInEdgeStrip(Vector2 point)
+    {
+        const float stripWidth = 3f;
+
+        return point.X <= stripWidth || point.Y <= stripWidth
+            || point.X >= Size.X - stripWidth || point.Y >= Size.Y - stripWidth;
     }
 
     private DragMode KsTguiDragMode(Vector2 relativeMousePos)

@@ -21,8 +21,8 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
     private readonly KsTguiButton _externalCheckButton;
     private readonly KsTguiLabeledListItem _internalTargetItem;
     private readonly KsTguiLabeledListItem _externalTargetItem;
-    private readonly FloatSpinBox _internalBound;
-    private readonly FloatSpinBox _externalBound;
+    private readonly KsTguiNumberInput _internalBound;
+    private readonly KsTguiNumberInput _externalBound;
 
     public event Action<string, IAtmosDeviceData>? PumpDataChanged;
     public event Action<IAtmosDeviceData>? PumpDataCopied;
@@ -94,8 +94,8 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
         regulatorItem.XamlChildren.Add(regulatorBox);
 
         _internalTargetItem = list.AddItem(Loc.GetString("ks-tgui-airalarm-internal-target"));
-        _internalBound = new FloatSpinBox { HorizontalAlignment = HAlignment.Left, MinWidth = 140f, IsValid = value => value >= 0f };
-        _internalBound.OnValueChanged += _ =>
+        _internalBound = new KsTguiNumberInput { Unit = Loc.GetString("ks-tgui-atmos-unit-kpa"), WidthPixels = 75f, MinValue = 0f, MaxValue = 5066f, Step = 10f };
+        _internalBound.OnCommitted += _ =>
         {
             _data.InternalPressureBound = _internalBound.Value;
             PumpDataChanged?.Invoke(_address, _data);
@@ -103,8 +103,8 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
         _internalTargetItem.XamlChildren.Add(_internalBound);
 
         _externalTargetItem = list.AddItem(Loc.GetString("ks-tgui-airalarm-external-target"));
-        _externalBound = new FloatSpinBox { HorizontalAlignment = HAlignment.Left, MinWidth = 140f, IsValid = value => value >= 0f };
-        _externalBound.OnValueChanged += _ =>
+        _externalBound = new KsTguiNumberInput { Unit = Loc.GetString("ks-tgui-atmos-unit-kpa"), WidthPixels = 75f, MinValue = 0f, MaxValue = 5066f, Step = 10f };
+        _externalBound.OnCommitted += _ =>
         {
             _data.ExternalPressureBound = _externalBound.Value;
             PumpDataChanged?.Invoke(_address, _data);
@@ -114,8 +114,8 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
         section.AddChild(list);
         AddChild(section);
 
-        _internalBound.Value = _data.InternalPressureBound;
-        _externalBound.Value = _data.ExternalPressureBound;
+        _internalBound.SetValue(_data.InternalPressureBound);
+        _externalBound.SetValue(_data.ExternalPressureBound);
         Refresh();
     }
 
@@ -127,11 +127,11 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
         _data.ExternalPressureBound = data.ExternalPressureBound;
         _data.InternalPressureBound = data.InternalPressureBound;
 
-        if (!_externalBound.HasKeyboardFocus())
-            _externalBound.Value = _data.ExternalPressureBound;
+        if (!_externalBound.IsEditing)
+            _externalBound.SetValue(_data.ExternalPressureBound);
 
-        if (!_internalBound.HasKeyboardFocus())
-            _internalBound.Value = _data.InternalPressureBound;
+        if (!_internalBound.IsEditing)
+            _internalBound.SetValue(_data.InternalPressureBound);
 
         Refresh();
     }

@@ -28,7 +28,7 @@ public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasTh
 
     public KsTguiButton PowerButton => _power.Button;
 
-    public KsTguiNumberInput TemperatureInput { get; } = new() { Unit = "K", Format = "0.#" };
+    public KsTguiNumberInput TemperatureInput { get; } = new() { Unit = "K", Format = "0.#", Step = 5f, StepPixelSize = 3f, WidthPixels = 62f, TickWhileDragging = true };
     public KsTguiButton MinimumButton { get; } = new() { Icon = KsTguiIcons.FastBackward, ToolTip = Loc.GetString("ks-tgui-atmos-preset-min") };
     public KsTguiButton RoomButton { get; } = new() { Icon = KsTguiIcons.Sync, ToolTip = Loc.GetString("ks-tgui-atmos-preset-room") };
     public KsTguiButton MaximumButton { get; } = new() { Icon = KsTguiIcons.FastForward, ToolTip = Loc.GetString("ks-tgui-atmos-preset-max") };
@@ -42,8 +42,8 @@ public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasTh
     {
         IoCManager.InjectDependencies(this);
 
-        MinSize = new Vector2(300f, 0f);
-        SetSize = new Vector2(300f, 0f);
+        MinWidth = 300f;
+        SetWidth = 300f; // The height is the contents'.
 
         var section = new KsTguiSection
         {
@@ -58,7 +58,7 @@ public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasTh
         presets.AddChild(MinimumButton);
         presets.AddChild(RoomButton);
         presets.AddChild(MaximumButton);
-        list.AddItem(Loc.GetString("ks-tgui-atmos-presets")).XamlChildren.Add(presets);
+        list.AddItem(Loc.GetString("ks-tgui-atmos-presets")).Buttons = presets;
         section.AddChild(list);
 
         var root = new BoxContainer

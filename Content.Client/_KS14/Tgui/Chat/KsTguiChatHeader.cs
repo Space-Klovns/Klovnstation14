@@ -17,6 +17,11 @@ public sealed partial class KsTguiChatHeader : PanelContainer
     /// <summary>
     ///     How often the ping label is read.
     /// </summary>
+    /// <summary>
+    ///     On the message output, for the sheetlet's font rule.
+    /// </summary>
+    public const string StyleClassOutput = "KsTguiChatOutput";
+
     private static readonly TimeSpan PingInterval = TimeSpan.FromSeconds(1);
 
     [Dependency] private IClientNetManager _netManager = default!;
@@ -57,7 +62,7 @@ public sealed partial class KsTguiChatHeader : PanelContainer
         _addButton = new KsTguiButton { Icon = KsTguiIcons.Plus, Color = KsTguiColor.Transparent, ToolTip = Loc.GetString("ks-tgui-chat-add-page") };
         _addButton.OnPressed += _ => OnAddPressed?.Invoke();
 
-        _pingLabel = new Label { Margin = new Thickness(6f, 0f), VerticalAlignment = VAlignment.Center };
+        _pingLabel = new Label { FontOverride = IoCManager.Resolve<KsTguiFonts>().GetFont(12), Margin = new Thickness(6f, 0f), VerticalAlignment = VAlignment.Center };
 
         _settingsButton = new KsTguiButton { Icon = KsTguiIcons.Cog, ToolTip = Loc.GetString("ks-tgui-chat-open-settings") };
         _settingsButton.OnPressed += _ => OnSettingsPressed?.Invoke();

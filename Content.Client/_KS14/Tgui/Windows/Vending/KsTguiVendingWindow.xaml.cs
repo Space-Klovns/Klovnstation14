@@ -149,7 +149,7 @@ public sealed partial class KsTguiVendingWindow : FancyWindow
             _selectedCategory = present.Contains(InventoryType.Regular) ? InventoryType.Regular : _inventory[0].Type;
 
         Control container = _gridLayout
-            ? new GridContainer { Columns = 5, HorizontalExpand = true }
+            ? new WrapContainer { SeparationOverride = 4, CrossSeparationOverride = 4, HorizontalExpand = true }
             : new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true };
         _productsBody.AddChild(container);
 
@@ -185,7 +185,7 @@ public sealed partial class KsTguiVendingWindow : FancyWindow
 
     private void RebuildCategories(HashSet<InventoryType> present)
     {
-        CategorySection.RemoveAllChildren();
+        CategorySection.ClearBody();
         CategorySection.Visible = !Searching && present.Count > 1;
         if (!CategorySection.Visible)
             return;

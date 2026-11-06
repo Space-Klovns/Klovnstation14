@@ -52,6 +52,7 @@ public partial class ChatBox
         _ksPages = _controller.KsPages;
 
         _ksColumn = ChatInput.Parent as BoxContainer;
+        Contents.AddStyleClass(KsTguiChatHeader.StyleClassOutput);
 
         _ksHeader = new KsTguiChatHeader(_ksPages) { Visible = false };
         _ksHeader.OnAddPressed += KsOnAddPage;
@@ -115,9 +116,8 @@ public partial class ChatBox
         _ksPages.FilterChanged -= KsOnFilterChanged;
         _ksPages.Changed -= _ksHeader.Refresh;
 
-        // The window lives in the screen, not in this box, so it goes when the box does.
+        // The window lives in the screen, so it goes with it; here it is only hidden.
         _ksSayWindow.Close();
-        _ksSayWindow.Orphan();
         _ksScreen = null;
     }
 
@@ -148,12 +148,7 @@ public partial class ChatBox
 
         if (floating)
         {
-            if (_ksSayWindow.Parent != _ksScreen)
-            {
-                _ksSayWindow.Orphan();
-                _ksScreen!.AddChild(_ksSayWindow);
-            }
-
+            // The window joins the screen when first opened: the screen is still adding its children as this runs.
             _ksSayWindow.Host(_ksSay);
             _ksSay.Visible = true;
             return;
@@ -213,7 +208,7 @@ public partial class ChatBox
     }
 
     /// <summary>
-    ///     The message at the configured font size. 12 is the font every message is drawn with already.
+    ///     The message at the configured font size, tgui-panel's 13 by default.
     /// </summary>
     private string KsSized(string message)
     {
@@ -221,7 +216,7 @@ public partial class ChatBox
             return message;
 
         var size = _ksConfig.GetCVar(KsCCVars.TguiChatFontSize);
-        return size == 12 ? message : $"[font size={size}]{message}[/font]";
+        return $"[font size={size}]{message}[/font]";
     }
 
     /// <summary>
@@ -289,8 +284,16 @@ public partial class ChatBox
             ChatInput.ChannelSelector.Select(channel.Value);
 
         KsRefreshSayChannel();
-        if (KsSayFloating)
+        if (KsSayFloating && _ksScreen != null)
+        {
+            if (_ksSayWindow.Parent != _ksScreen)
+            {
+                _ksSayWindow.Orphan();
+                _ksScreen.AddChild(_ksSayWindow);
+            }
+
             _ksSayWindow.Open();
+        }
 
         _ksSay.FocusInput();
     }

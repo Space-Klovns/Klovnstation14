@@ -78,7 +78,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
             VerticalExpand = true,
         };
 
-        _button = new SayButton { MinWidth = ButtonWidth, MaxWidth = ButtonWidth };
+        _button = new SayButton { MinWidth = ButtonWidth };
         _button.OnPressed += _ => OnChannelClicked?.Invoke();
 
         _edit = new TextEdit
@@ -331,6 +331,10 @@ public sealed partial class KsTguiSayBar : PanelContainer
             }
             else
             {
+                // Down on what was being typed already: nothing to come back to.
+                if (_historyIndex == -1)
+                    return;
+
                 _historyIndex = -1;
                 text = _historyTemp ?? string.Empty;
                 _historyTemp = null;
@@ -376,7 +380,9 @@ public sealed partial class KsTguiSayBar : PanelContainer
     private sealed class SayButton : ContainerButton
     {
         private readonly KsTguiStyleBox _box = new(KsTguiSayPalette.Button, radius: 4f);
-        private readonly Label _label;
+        // ContainerButton's constructor calls DrawModeChanged before this exists.
+        private readonly Label _label = null!;
+        private bool _built;
         private Color _color = Color.White;
 
         public SayButton()
@@ -385,7 +391,6 @@ public sealed partial class KsTguiSayBar : PanelContainer
             ModulateSelfOverride = Color.White;
             _label = new Label
             {
-                ClipText = true,
                 Align = Label.AlignMode.Center,
                 VerticalAlignment = VAlignment.Center,
                 HorizontalExpand = true,
@@ -393,6 +398,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
             };
             _label.FontOverride = IoCManager.Resolve<KsTguiFonts>().GetFont(11, FontKind.Bold);
             AddChild(_label);
+            _built = true;
             Refresh();
         }
 
@@ -401,6 +407,10 @@ public sealed partial class KsTguiSayBar : PanelContainer
             _label.Text = text;
             _color = color;
             Refresh();
+
+            // Wide enough for any channel's name, so the button takes its text's width and never clips it.
+            InvalidateMeasure();
+            Parent?.InvalidateMeasure();
         }
 
         protected override void DrawModeChanged()
@@ -411,6 +421,9 @@ public sealed partial class KsTguiSayBar : PanelContainer
 
         private void Refresh()
         {
+            if (!_built)
+                return;
+
             var hovered = DrawMode == DrawModeEnum.Hover || DrawMode == DrawModeEnum.Pressed;
             _box.BackgroundColor = hovered ? KsTguiSayPalette.ButtonHovered : KsTguiSayPalette.Button;
             _label.FontColorOverride = hovered ? KsTguiSayPalette.Lighten(_color, 5f) : _color;

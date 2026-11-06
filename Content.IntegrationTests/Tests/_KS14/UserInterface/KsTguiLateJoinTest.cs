@@ -11,6 +11,7 @@ using Content.Shared._KS14.CCVar;
 using Content.Shared.Roles;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
@@ -37,6 +38,9 @@ public sealed class KsTguiLateJoinTest : GameTest
 
         await Client.WaitPost(() =>
         {
+            // The stock window warns that no stations exist, and a warning fails a test.
+            Client.ResolveDependency<ILogManager>().GetSawmill("latejoin.panel").Level = LogLevel.Error;
+
             var window = KsLateJoinWindowFactory.Create();
             try
             {

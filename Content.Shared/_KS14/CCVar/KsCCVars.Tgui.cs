@@ -17,10 +17,10 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.ui.tgui.chat_pages", "", CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
-    ///     The tgui chat panel's message font size, in points. tgui's own default is 13.
+    ///     The tgui chat panel's message font size, in points. tgui-panel's own default is 13, at line height 1.2.
     /// </summary>
     public static readonly CVarDef<int> TguiChatFontSize =
-        CVarDef.Create("klovn.ui.tgui.chat_font_size", 12, CVar.CLIENTONLY | CVar.ARCHIVE);
+        CVarDef.Create("klovn.ui.tgui.chat_font_size", 13, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
     ///     Where the floating say window was dragged to, as <c>x,y</c> fractions of the screen; empty is its default spot.

@@ -27,7 +27,7 @@ public sealed class KsTguiButton : Button
 
     public KsTguiButton()
     {
-        _icon = new KsTguiIcon { Visible = false, IconColor = null };
+        _icon = new KsTguiIcon { Visible = false, IconColor = null, Align = Label.AlignMode.Center /* a narrow glyph, such as the X, sits in the middle of the icon's box */ };
         AddChild(_icon);
 
         AddStyleClass(KsTguiColors.ButtonClass(_color));
@@ -111,6 +111,22 @@ public sealed class KsTguiButton : Button
         {
             HorizontalExpand = value;
             HorizontalAlignment = value ? HAlignment.Stretch : HAlignment.Left;
+        }
+    }
+
+    /// <summary>
+    ///     The text sits at the left, with a clean cut at the end of a long one, instead of centred. A style rule does this, because
+    ///         the button style's own alignment beats <see cref="Button.TextAlign"/>.
+    /// </summary>
+    public bool LeftAligned
+    {
+        get => Label.HasStyleClass(KsTguiSheetlet.StyleClassButtonLabelLeft);
+        set
+        {
+            if (value)
+                Label.AddStyleClass(KsTguiSheetlet.StyleClassButtonLabelLeft);
+            else
+                Label.RemoveStyleClass(KsTguiSheetlet.StyleClassButtonLabelLeft);
         }
     }
 

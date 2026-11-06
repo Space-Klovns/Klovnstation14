@@ -37,6 +37,37 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
 
     private static readonly ProtoId<DepartmentPrototype> CommandDepartment = "Command";
 
+    /// <summary>
+    ///     tgui's department colours, sampled from its late join screen, by department prototype id. Specific is SS14's
+    ///         catch-all, which is tgui's "No Department".
+    /// </summary>
+    private static readonly Dictionary<string, Color> DepartmentColors = new()
+    {
+        ["Command"] = Color.FromHex("#FCD203"),
+        ["Security"] = Color.FromHex("#D92626"),
+        ["Engineering"] = Color.FromHex("#F26C0D"),
+        ["Medical"] = Color.FromHex("#00B3B3"),
+        ["Science"] = Color.FromHex("#B333CC"),
+        ["Cargo"] = Color.FromHex("#A96A3C"),
+        ["Civilian"] = Color.FromHex("#1FAD4E"),
+        ["Silicon"] = Color.FromHex("#D9268E"),
+        ["Specific"] = Color.FromHex("#9689DB"),
+    };
+
+    /// <summary>
+    ///     The card colour of a department and the colour of the text on it: black on tgui's bright colours.
+    /// </summary>
+    public static (Color Card, Color Text) DepartmentLook(DepartmentPrototype department)
+    {
+        if (DepartmentColors.TryGetValue(department.ID, out var known))
+            return (known, Color.Black);
+
+        // Another department: its own colour, with whichever of black and white reads better on it.
+        var card = department.Color;
+        var luminance = 0.2126f * card.R + 0.7152f * card.G + 0.0722f * card.B;
+        return (card, luminance > 0.5f ? Color.Black : Color.White);
+    }
+
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IClientConsoleHost _consoleHost = default!;
     [Dependency] private IConfigurationManager _configManager = default!;
@@ -83,7 +114,6 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         _crewManifestButton = new KsTguiButton
         {
             Text = Loc.GetString("crew-manifest-button-label"),
-            Compact = true,
             Visible = _configManager.GetCVar(CCVars.CrewManifestWithoutEntity),
             Margin = new Thickness(0f, 0f, 4f, 0f),
         };
@@ -97,7 +127,6 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         var randomButton = new KsTguiButton
         {
             Text = Loc.GetString("ks-tgui-late-join-random"),
-            Compact = true,
             ToolTip = Loc.GetString("ks-tgui-late-join-random-tooltip"),
         };
         randomButton.OnPressed += _ => SelectRandomJob();
@@ -279,12 +308,12 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         Dictionary<ProtoId<JobPrototype>, int?> available,
         StationView view)
     {
-        var color = department.Color;
+        var (color, textColor) = DepartmentLook(department);
         var titleLabel = new Label
         {
             Text = Loc.GetString(department.Name),
             FontOverride = _fonts.GetFont(15, FontKind.Bold),
-            FontColorOverride = Darken(color, 80f),
+            FontColorOverride = textColor,
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
             ClipText = true,
@@ -293,7 +322,7 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         var slotsLabel = new Label
         {
             FontOverride = _fonts.GetFont(13),
-            FontColorOverride = Darken(color, 60f),
+            FontColorOverride = textColor,
             VerticalAlignment = VAlignment.Center,
         };
 
@@ -335,7 +364,7 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         foreach (var job in jobs)
         {
             var icon = _sprites.Frame0(_prototypeManager.Index(job.Icon).Icon);
-            var entry = new KsTguiJobEntry(job.ID, job.LocalizedName, color, isCommand, icon, _fonts);
+            var entry = new KsTguiJobEntry(job.ID, job.LocalizedName, color, textColor, isCommand, icon, _fonts);
             entry.SetAmount(available[job.ID]);
 
             if (!_jobRequirements.IsAllowed(job, profile, out var reason))
@@ -479,12 +508,13 @@ public sealed class KsTguiJobEntry : ContainerButton
         string jobId,
         string jobName,
         Color departmentColor,
+        Color textColor,
         bool command,
         Texture? icon,
         KsTguiFonts fonts)
     {
         JobId = jobId;
-        _text = KsTguiLateJoinWindow.Darken(departmentColor, 90f);
+        _text = textColor;
 
         _normalBox = MakeBox(KsTguiLateJoinWindow.Darken(departmentColor, 10f));
         _hoveredBox = MakeBox(departmentColor);

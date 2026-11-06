@@ -218,7 +218,9 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
             Color = KsTguiColor.Transparent,
             Icon = KsTguiIcons.Eject,
             Text = Loc.GetString("ks-tgui-pda-eject-pai"),
+            LeftAligned = true,
         };
+        _ejectPaiButton.Label.FontColorOverride = Color.White;
         _paiSection.AddChild(_ejectPaiButton);
         homeBox.AddChild(_paiSection);
 
@@ -281,7 +283,9 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
             Icon = icon,
             Text = Loc.GetString(textKey),
             ToolTip = Loc.GetString(descriptionKey),
+            LeftAligned = true,
         };
+        button.Label.FontColorOverride = Color.White;
         parent.AddChild(button);
         return button;
     }
@@ -414,7 +418,9 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
                 Fluid = true,
                 Color = KsTguiColor.Transparent,
                 Text = Loc.GetString(component.ProgramName),
+                LeftAligned = true,
             };
+            open.Label.FontColorOverride = Color.White;
             open.OnPressed += _ => OnProgramItemPressed?.Invoke(uid);
             row.AddChild(open);
 

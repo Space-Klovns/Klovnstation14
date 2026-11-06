@@ -185,6 +185,29 @@ public sealed class KsTguiSection : KsSectionPanel
         RefreshBodyPadding();
     }
 
+    /// <summary>
+    ///     Removes everything in the body. <c>RemoveAllChildren</c> would take the section's own parts with it.
+    /// </summary>
+    public void ClearBody()
+    {
+        _content.RemoveAllChildren();
+    }
+
+    /// <summary>
+    ///     <c>AddChild</c> from code goes to the body, as XAML children do. Left on the panel, a child would sit over the title
+    ///         row with no padding.
+    /// </summary>
+    protected override void ChildAdded(Control newChild)
+    {
+        base.ChildAdded(newChild);
+
+        if (newChild == _root)
+            return;
+
+        newChild.Orphan();
+        _content.AddChild(newChild);
+    }
+
     private void RefreshBodyPadding()
     {
         // Nested, tgui pulls the body out over the outer padding, which nets to the outer body's own edge.

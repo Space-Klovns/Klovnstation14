@@ -30,7 +30,7 @@ public sealed class KsTguiWiresWindow : FancyWindow
     public KsTguiWiresWindow()
     {
         Title = Loc.GetString("ks-tgui-wires-title");
-        SetSize = new Vector2(350f, 330f);
+        SetSize = new Vector2(350f, 330f); // Populate sets the height from the wire count
         MinSize = new Vector2(350f, 150f);
 
         _root = new BoxContainer
@@ -41,7 +41,16 @@ public sealed class KsTguiWiresWindow : FancyWindow
         };
 
         _notice = new KsTguiNoticeBox { HorizontalExpand = true };
-        _root.AddChild(_notice);
+
+        var noticeRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = KsTguiSection.Gap };
+        noticeRow.AddChild(_notice);
+        noticeRow.AddChild(new KsTguiButton
+        {
+            Icon = KsTguiIcons.Question,
+            ToolTip = Loc.GetString("wires-menu-help-popup"),
+            VerticalAlignment = VAlignment.Stretch,
+        });
+        _root.AddChild(noticeRow);
 
         var wireSection = new KsTguiSection { Fill = true, Scrollable = true, VerticalExpand = true };
         _wireList = new KsTguiLabeledList();
@@ -62,12 +71,18 @@ public sealed class KsTguiWiresWindow : FancyWindow
     {
         _notice.Text = Loc.GetString("ks-tgui-wires-configuration", ("name", state.BoardName));
 
+        // tgui's window height, 150 + wires * 30, with room for the statuses. Without it the wire list takes the whole window and the statuses vanish.
+        var height = 150f + (float)state.WiresList.Length * 30f + (float)state.Statuses.Length * 16f + (state.SerialNumber != null ? 16f : 0f);
+        if (!MathHelper.CloseTo(SetSize.Y, height))
+            SetSize = new Vector2(350f, height);
+
         _wireList.RemoveAllChildren();
         foreach (var wire in state.WiresList)
         {
             var wireId = wire.Id;
             var isCut = wire.IsCut;
-            var row = _wireList.AddItem(wire.Color.Name(), textColor: wire.Color.ColorValue());
+            var row = _wireList.AddItem(wire.Color.Name());
+            row.LabelColor = wire.Color.ColorValue();
             row.Colon = false;
 
             var letter = new Label

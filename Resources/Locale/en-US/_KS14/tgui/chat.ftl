@@ -10,7 +10,7 @@ ks-tgui-chat-settings-general = General
 ks-tgui-chat-settings-pages = Chat Tabs
 ks-tgui-chat-settings-highlights = Text Highlight
 ks-tgui-chat-settings-font-size = Font size
-ks-tgui-chat-font-size-value = { $size } pt
+ks-tgui-chat-font-size-value = { $size } px
 
 ks-tgui-chat-move-left = Reorder tab to the left
 ks-tgui-chat-move-right = Reorder tab to the right

@@ -23,8 +23,8 @@ public abstract class KsTguiGasDeviceWindow : FancyWindow
 
     protected KsTguiGasDeviceWindow(float width, string? sectionTitle = null)
     {
-        MinSize = new Vector2(width, 0f);
-        SetSize = new Vector2(width, 0f);
+        MinWidth = width;
+        SetWidth = width; // The height is the contents'.
 
         RootBox = new BoxContainer
         {
@@ -33,6 +33,8 @@ public abstract class KsTguiGasDeviceWindow : FancyWindow
             Margin = new Thickness(6f),
             VerticalExpand = true,
         };
+
+        Power.Button.MinWidth = ActionWidth;
 
         Section = new KsTguiSection { Title = sectionTitle, Fill = true };
         var body = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 6 };
@@ -54,9 +56,14 @@ public abstract class KsTguiGasDeviceWindow : FancyWindow
 
     protected static string Kpa => Loc.GetString("ks-tgui-atmos-unit-kpa");
 
+    /// <summary>
+    ///     The width the power and Max buttons share, so they make one column.
+    /// </summary>
+    protected const float ActionWidth = 72f;
+
     protected static KsTguiButton MaxButton()
     {
-        return new KsTguiButton { Icon = KsTguiIcons.Plus, Text = Loc.GetString("comp-gas-pump-ui-pump-set-max") };
+        return new KsTguiButton { Icon = KsTguiIcons.Plus, Text = Loc.GetString("comp-gas-pump-ui-pump-set-max"), MinWidth = ActionWidth };
     }
 }
 
@@ -68,12 +75,12 @@ public sealed class KsTguiGasPressurePumpWindow : KsTguiGasDeviceWindow, IKsGasP
     public event Action<bool>? ToggleStatusButtonPressed;
     public event Action<float>? PumpOutputPressureChanged;
 
-    public KsTguiNumberInput PressureInput { get; } = new() { Unit = Kpa, MaxValue = Atmospherics.MaxOutputPressure };
+    public KsTguiNumberInput PressureInput { get; } = new() { Unit = Kpa, MaxValue = Atmospherics.MaxOutputPressure, Step = 10f, WidthPixels = 75f };
     public KsTguiButton MaxButtonControl { get; } = MaxButton();
 
     public KsTguiGasPressurePumpWindow() : base(width: 340f)
     {
-        List.AddItem(Loc.GetString("ks-tgui-atmos-power")).XamlChildren.Add(Power.Button);
+        List.AddItem(Loc.GetString("ks-tgui-atmos-power")).Buttons = Power.Button;
 
         var row = List.AddItem(Loc.GetString("ks-tgui-atmos-output-pressure"));
         row.XamlChildren.Add(PressureInput);
@@ -120,12 +127,12 @@ public sealed class KsTguiGasVolumePumpWindow : KsTguiGasDeviceWindow, IKsGasVol
     public event Action<bool>? ToggleStatusButtonPressed;
     public event Action<string>? PumpTransferRateChanged;
 
-    public KsTguiNumberInput RateInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), MaxValue = Atmospherics.MaxTransferRate };
+    public KsTguiNumberInput RateInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), MaxValue = Atmospherics.MaxTransferRate, WidthPixels = 63f };
     public KsTguiButton MaxButtonControl { get; } = MaxButton();
 
     public KsTguiGasVolumePumpWindow() : base(width: 340f)
     {
-        List.AddItem(Loc.GetString("ks-tgui-atmos-power")).XamlChildren.Add(Power.Button);
+        List.AddItem(Loc.GetString("ks-tgui-atmos-power")).Buttons = Power.Button;
 
         var row = List.AddItem(Loc.GetString("ks-tgui-atmos-transfer-rate"));
         row.XamlChildren.Add(RateInput);

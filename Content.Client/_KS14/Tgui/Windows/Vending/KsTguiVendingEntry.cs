@@ -1,7 +1,9 @@
 using System.Numerics;
 using Content.Client._KS14.Tgui.Controls;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.Tgui.Windows.Vending;
@@ -12,12 +14,18 @@ namespace Content.Client._KS14.Tgui.Windows.Vending;
 /// </summary>
 public sealed class KsTguiVendingEntry : ContainerButton
 {
-    private static readonly Color Normal = KsTguiPalettes.Translucent(Color.Black, 0.2f, KsTguiPalettes.Section);
+    /// <summary>
+    ///     The size of a tile's sprite, and so of the tile.
+    /// </summary>
+    private const float SpriteSize = 64f;
+
+    private static readonly Color Normal = KsTguiPalettes.Translucent(Color.White, 0.04f, KsTguiPalettes.Section);
     private static readonly Color Hover = KsTguiPalettes.Translucent(Color.White, 0.1f, KsTguiPalettes.Section);
-    private static readonly Color PressedColor = KsTguiPalettes.Translucent(Color.White, 0.2f, KsTguiPalettes.Section);
+    private static readonly Color PressedColor = KsTguiPalettes.Translucent(Color.White, 0.16f, KsTguiPalettes.Section);
+    private static readonly Color NameBar = KsTguiPalettes.Translucent(Color.White, 0.1f, KsTguiPalettes.Section);
     private static readonly Color Dim = Color.FromHex("#B4B4B4");
 
-    private readonly KsTguiStyleBox _box = new(Normal, 2f);
+    private Color _background = Normal;
     private readonly bool _grid;
     private readonly Label _stockLabel;
     private readonly Control _content;
@@ -26,7 +34,7 @@ public sealed class KsTguiVendingEntry : ContainerButton
     public KsTguiVendingEntry(bool grid, EntProtoId prototypeId, string name)
     {
         _grid = grid;
-        StyleBoxOverride = _box;
+        StyleBoxOverride = new StyleBoxEmpty(); // drawn by Draw, which no style rule can change
 
         var view = new EntityPrototypeView
         {
@@ -35,6 +43,13 @@ public sealed class KsTguiVendingEntry : ContainerButton
             VerticalAlignment = VAlignment.Center,
             MouseFilter = MouseFilterMode.Ignore,
         };
+        if (grid)
+        {
+            // Fills the 64px box whatever size the sprite is.
+            view.MinSize = new Vector2(SpriteSize, SpriteSize);
+            view.Stretch = SpriteView.StretchMode.Fill;
+            view.WorldRotation = Angle.Zero; // else the view sizes the sprite by its rotated diagonal and fills only 70%
+        }
         view.SetPrototype(prototypeId);
 
         var nameLabel = new Label { Text = name, ClipText = true, HorizontalExpand = true, MouseFilter = MouseFilterMode.Ignore };
@@ -42,16 +57,24 @@ public sealed class KsTguiVendingEntry : ContainerButton
 
         if (grid)
         {
-            MinSize = new Vector2(74f, 92f);
+            MinSize = new Vector2(SpriteSize + 8f, 0f);
             _stockLabel.HorizontalAlignment = HAlignment.Right;
-            _stockLabel.Margin = new Thickness(0f, 2f, 4f, 0f);
-            view.VerticalExpand = true;
-            nameLabel.Margin = new Thickness(4f, 0f, 4f, 3f);
+            _stockLabel.Margin = new Thickness(0f, 1f, 4f, 0f);
+            nameLabel.Margin = new Thickness(4f, 1f, 4f, 1f);
+            nameLabel.Align = Label.AlignMode.Left;
+
+            var nameBar = new PanelContainer
+            {
+                PanelOverride = new StyleBoxFlat { BackgroundColor = NameBar },
+                MouseFilter = MouseFilterMode.Ignore,
+            };
+            nameBar.AddChild(nameLabel);
 
             var column = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, MouseFilter = MouseFilterMode.Ignore };
             column.AddChild(_stockLabel);
             column.AddChild(view);
-            column.AddChild(nameLabel);
+            column.AddChild(new Control { MinHeight = 3f });
+            column.AddChild(nameBar);
             _content = column;
         }
         else
@@ -89,6 +112,12 @@ public sealed class KsTguiVendingEntry : ContainerButton
         RefreshLook();
     }
 
+    protected override void Draw(DrawingHandleScreen handle)
+    {
+        base.Draw(handle);
+        handle.DrawRect(PixelSizeBox, _background);
+    }
+
     protected override void DrawModeChanged()
     {
         base.DrawModeChanged();
@@ -100,7 +129,7 @@ public sealed class KsTguiVendingEntry : ContainerButton
         if (!_built)
             return;
 
-        _box.BackgroundColor = DrawMode switch
+        _background = DrawMode switch
         {
             DrawModeEnum.Pressed => PressedColor,
             DrawModeEnum.Hover => Hover,

@@ -112,7 +112,10 @@ public sealed partial class KsTguiSayWindow : Control
             return;
 
         var centre = new Vector2(Position.X + KsTguiSayBar.WindowWidth / 2f, Position.Y);
-        var text = string.Create(CultureInfo.InvariantCulture, $"{centre.X / Parent.Size.X:0.####},{centre.Y / Parent.Size.Y:0.####}");
+        // TODO SANDBOX: string.Create(CultureInfo.InvariantCulture, $"...") would say this in one line, but isn't whitelisted.
+        var fractionX = (centre.X / Parent.Size.X).ToString("0.####", CultureInfo.InvariantCulture);
+        var fractionY = (centre.Y / Parent.Size.Y).ToString("0.####", CultureInfo.InvariantCulture);
+        var text = fractionX + "," + fractionY;
         _configurationManager.SetCVar(KsCCVars.TguiSayPosition, text);
     }
 

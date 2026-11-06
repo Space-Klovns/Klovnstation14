@@ -15,6 +15,16 @@ public sealed partial class KsTguiFonts
     private const string BundledRoot = "/Fonts/_KS14/Tgui/";
     private const string IconFontFileName = "fa-solid-900.ttf";
 
+    /// <summary>
+    ///     A font with no glyphs and no height. See <see cref="GetFont"/>.
+    /// </summary>
+    private const string SizeCarrierFileName = "size_carrier.ttf";
+
+    /// <summary>
+    ///     The smallest size in points, so that upstream's small print stays legible.
+    /// </summary>
+    private const int MinPointSize = 7;
+
     private static readonly string[] FallbackPaths =
     [
         "/Fonts/NotoSans/NotoSans-Regular.ttf",
@@ -31,23 +41,43 @@ public sealed partial class KsTguiFonts
     private Dictionary<FontKind, ISystemFontFace>? _systemFaces;
 
     /// <summary>
-    ///     A font of this size and kind, with the Noto stack behind it for glyphs the primary lacks.
+    ///     A font of this size in pixels and kind, with the Noto stack behind it for glyphs the primary lacks.
     /// </summary>
+    /// <remarks>
+    ///     The engine's font sizes are points at 96 DPI, so 12 draws at 16px, and tgui's sizes are pixels, so everything
+    ///         here is converted to points. Markup then needs one more thing. <c>FontTag.GetSizeForFontTag</c> reads a
+    ///         nested tag's size from <c>Stack[0]</c>, so that has to report pixels too, or <c>[bold]</c> would be converted
+    ///         a second time and shrink. A <see cref="StackedFont"/> takes its metrics from the font it was built with and
+    ///         not from <c>Stack[0]</c>, so <c>Stack[0]</c> is swapped afterwards for an empty font of the pixel size. It has
+    ///         no glyphs, so drawing falls through it to the real font behind.
+    /// </remarks>
     public Font GetFont(int size, FontKind kind = FontKind.Regular)
     {
         if (_fonts.TryGetValue((kind, size), out var font))
             return font;
 
-        // Flat, with the primary first and unwrapped: FontTag.GetSizeForFontTag only reads a size from a VectorFont at
-        //      Stack[0], so anything else there silently drops markup sizes to 12.
-        var stack = new Font[FallbackPaths.Length + 1];
-        stack[0] = LoadPrimary(kind, size);
+        var pointSize = PointSize(size);
+        var primary = LoadPrimary(kind, pointSize);
+
+        var stack = new Font[FallbackPaths.Length + 2];
+        stack[0] = primary;
+        stack[1] = primary;
         for (var i = 0; i < FallbackPaths.Length; i++)
-            stack[i + 1] = _resourceCache.GetFont(FallbackPaths[i], size);
+            stack[i + 2] = _resourceCache.GetFont(FallbackPaths[i], pointSize);
 
         font = new StackedFont(stack);
+        stack[0] = _resourceCache.GetFont(BundledRoot + SizeCarrierFileName, size);
+
         _fonts[(kind, size)] = font;
         return font;
+    }
+
+    /// <summary>
+    ///     The engine's size for a font this many pixels tall.
+    /// </summary>
+    public static int PointSize(int pixelSize)
+    {
+        return Math.Max(MinPointSize, (int)MathF.Round((float)pixelSize * 0.75f, MidpointRounding.AwayFromZero));
     }
 
     /// <summary>
@@ -56,7 +86,7 @@ public sealed partial class KsTguiFonts
     /// </summary>
     public Font GetIconFont(int size)
     {
-        return _resourceCache.GetFont(BundledRoot + IconFontFileName, size);
+        return _resourceCache.GetFont(BundledRoot + IconFontFileName, PointSize(size));
     }
 
     /// <summary>

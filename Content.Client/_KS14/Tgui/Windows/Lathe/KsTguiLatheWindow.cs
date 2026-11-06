@@ -35,7 +35,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     private readonly KsTguiButton _serverListButton;
     private readonly KsTguiSection _designsSection;
     private readonly LineEdit _searchBar;
-    private readonly LineEdit _amountLineEdit;
+    private readonly KsTguiNumberInput _amountInput;
     private readonly Label _recipeCount;
     private readonly BoxContainer _recipeList;
     private readonly BoxContainer _fabricatingContainer;
@@ -91,15 +91,19 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _searchBar = new LineEdit { PlaceHolder = Loc.GetString("lathe-menu-search-designs"), HorizontalExpand = true };
         _searchBar.OnTextChanged += _ => PopulateRecipes();
 
-        _amountLineEdit = new LineEdit { PlaceHolder = "0", Text = "1", MinWidth = 60 };
-        _amountLineEdit.OnTextChanged += OnAmountChanged;
+        _amountInput = new KsTguiNumberInput
+        {
+            Format = "0", WidthPixels = 60f, MinValue = 1f, MaxValue = (float)LatheSystem.MaxItemsPerRequest, TickWhileDragging = true,
+        };
+        _amountInput.SetValue(1f);
+        _amountInput.OnCommitted += _ => PopulateRecipes();
 
         _recipeCount = new Label { Align = Label.AlignMode.Right, HorizontalExpand = true };
 
         var searchRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 6 };
         searchRow.AddChild(_searchBar);
         searchRow.AddChild(new Label { Text = Loc.GetString("lathe-menu-amount"), VerticalAlignment = VAlignment.Center });
-        searchRow.AddChild(_amountLineEdit);
+        searchRow.AddChild(_amountInput);
 
         _recipeList = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true };
 
@@ -154,7 +158,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = KsTguiSection.Gap, Margin = new Thickness(6f) };
         root.AddChild(topRow);
         root.AddChild(materialsSection);
-        AddChild(root);
+        ContentsContainer.AddChild(root);
 
         RefreshDesignsTitle();
     }
@@ -169,7 +173,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             if (!latheComponent.DynamicPacks.Any())
                 _serverListButton.Visible = false;
 
-            _amountLineEdit.SetText(latheComponent.DefaultProductionAmount.ToString());
+            _amountInput.SetValue(Math.Clamp(latheComponent.DefaultProductionAmount, 1, LatheSystem.MaxItemsPerRequest));
         }
 
         _materialsList.SetOwner(Entity);
@@ -178,19 +182,6 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     public void SetRecipes(List<ProtoId<LatheRecipePrototype>> recipes)
     {
         Recipes = recipes;
-    }
-
-    private void OnAmountChanged(LineEdit.LineEditEventArgs args)
-    {
-        if (int.TryParse(_amountLineEdit.Text, out var amount))
-        {
-            if (amount > LatheSystem.MaxItemsPerRequest)
-                _amountLineEdit.Text = LatheSystem.MaxItemsPerRequest.ToString();
-            else if (amount < 0)
-                _amountLineEdit.Text = "0";
-        }
-
-        PopulateRecipes();
     }
 
     private void OnCategorySelected(KsTguiTabItem item)
@@ -250,8 +241,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         foreach (var (category, tabItem) in _categoryTabItems)
             tabItem.Count = $"{categoryCounts.GetValueOrDefault(category)}";
 
-        if (!int.TryParse(_amountLineEdit.Text, out var quantity) || quantity <= 0)
-            quantity = 1;
+        var quantity = Math.Max(1, (int)_amountInput.Value);
 
         _recipeCount.Text = Loc.GetString("lathe-menu-recipe-count", ("count", recipesToShow.Count));
 
@@ -274,8 +264,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
                 row = new KsTguiLatheRecipeRow(_lathe);
                 row.OnBuild += (recipeId, amount) =>
                 {
-                    if (amount <= 0 && (!int.TryParse(_amountLineEdit.Text, out amount) || amount <= 0))
-                        amount = 1;
+                    if (amount <= 0)
+                        amount = Math.Max(1, (int)_amountInput.Value);
 
                     RecipeQueueAction?.Invoke(recipeId, amount);
                 };

@@ -20,7 +20,7 @@ public sealed class KsTguiCargoOrderWindow : FancyWindow
     private readonly Label _costLabel;
     private readonly LineEdit _requesterEdit;
     private readonly LineEdit _reasonEdit;
-    private readonly SpinBox _amountSpinBox;
+    private readonly KsTguiNumberInput _amountSpinBox;
     private readonly KsTguiButton _submitButton;
 
     private ProtoId<CargoProductPrototype>? _product;
@@ -66,9 +66,8 @@ public sealed class KsTguiCargoOrderWindow : FancyWindow
         _reasonEdit = new LineEdit { HorizontalExpand = true };
         list.AddItem(Loc.GetString("cargo-console-order-menu-reason-label")).AddChild(_reasonEdit);
 
-        _amountSpinBox = new SpinBox { HorizontalExpand = true, Value = 1 };
-        _amountSpinBox.SetButtons(new List<int> { -3, -2, -1 }, new List<int> { 1, 2, 3 });
-        _amountSpinBox.IsValid = amount => amount > 0;
+        _amountSpinBox = new KsTguiNumberInput { Format = "0", WidthPixels = 75f, MinValue = 1f };
+        _amountSpinBox.SetValue(1f);
         list.AddItem(Loc.GetString("cargo-console-order-menu-amount-label")).AddChild(_amountSpinBox);
 
         section.AddChild(list);
@@ -102,7 +101,8 @@ public sealed class KsTguiCargoOrderWindow : FancyWindow
 
         _requesterEdit.Text = requester;
         _reasonEdit.Text = "";
-        _amountSpinBox.Value = 1;
+        _amountSpinBox.MaxValue = MathF.Max(1f, (float)Capacity);
+        _amountSpinBox.SetValue(1f);
 
         if (!IsOpen)
             OpenCentered();
@@ -113,7 +113,10 @@ public sealed class KsTguiCargoOrderWindow : FancyWindow
         if (_product == null)
             return;
 
-        var amount = _amountSpinBox.Value;
+        if (_amountSpinBox.IsEditing)
+            _amountSpinBox.Commit();
+
+        var amount = (int)_amountSpinBox.Value;
         if (amount < 1 || amount > Capacity)
             return;
 

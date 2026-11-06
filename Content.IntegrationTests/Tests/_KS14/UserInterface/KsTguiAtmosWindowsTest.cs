@@ -39,7 +39,7 @@ public sealed class KsTguiAtmosWindowsTest : GameTest
     private static readonly EntProtoId VolumePump = "GasVolumePump";
     private static readonly EntProtoId Filter = "GasFilter";
     private static readonly EntProtoId Mixer = "GasMixer";
-    private static readonly EntProtoId Canister = "GasCanister";
+    private static readonly EntProtoId Canister = "AirCanister";
     private static readonly EntProtoId Thermomachine = "GasThermoMachineFreezer";
     private static readonly EntProtoId Human = "MobHuman";
 
