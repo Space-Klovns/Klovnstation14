@@ -19,7 +19,7 @@ public sealed class KsTguiGasFilterWindow : KsTguiGasDeviceWindow, IKsGasFilterW
 
     private readonly Dictionary<Gas, KsTguiButton> _gasButtons = new();
     private readonly HashSet<Gas> _selectedGases = new();
-    private readonly BoxContainer _gasBox;
+    private readonly WrapContainer _gasBox;
 
     public KsTguiNumberInput RateInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), MaxValue = Atmospherics.MaxTransferRate, WidthPixels = 63f, TickWhileDragging = true };
     public KsTguiButton MaxButtonControl { get; } = MaxButton();
@@ -28,17 +28,14 @@ public sealed class KsTguiGasFilterWindow : KsTguiGasDeviceWindow, IKsGasFilterW
 
     public KsTguiGasFilterWindow() : base(width: 440f, sectionTitle: Loc.GetString("ks-tgui-atmos-filter-title"))
     {
+        Title = Loc.GetString("ks-tgui-atmos-filter-title");
         Section.Buttons = Power.Button;
 
         var rateRow = List.AddItem(Loc.GetString("ks-tgui-atmos-transfer-rate"));
         rateRow.XamlChildren.Add(RateInput);
         rateRow.Buttons = MaxButtonControl;
 
-        _gasBox = new BoxContainer
-        {
-            Orientation = BoxContainer.LayoutOrientation.Vertical,
-            SeparationOverride = 2,
-        };
+        _gasBox = new WrapContainer { SeparationOverride = 2, CrossSeparationOverride = 2, HorizontalExpand = true };
         List.AddItem(Loc.GetString("ks-tgui-atmos-filter-types")).XamlChildren.Add(_gasBox);
 
         SelectAllButton = new KsTguiButton { Text = Loc.GetString("ks-tgui-atmos-select-all"), Compact = true };
@@ -79,29 +76,21 @@ public sealed class KsTguiGasFilterWindow : KsTguiGasDeviceWindow, IKsGasFilterW
 
     public void PopulateGasList(IEnumerable<GasPrototype> gases)
     {
-        // Three buttons to a row, as the stock window lays them out.
-        BoxContainer? row = null;
+        // They wrap, as tg's inline checkboxes do. Equal columns squeeze the longer names under their own tick.
         foreach (var gasPrototype in gases)
         {
             if (!Enum.TryParse<Gas>(gasPrototype.ID, out var gas) || _gasButtons.ContainsKey(gas))
                 continue;
 
-            if (row == null || row.ChildCount >= 3)
-            {
-                row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 2 };
-                _gasBox.AddChild(row);
-            }
-
             var button = new KsTguiButton
             {
                 Text = Loc.GetString(gasPrototype.Name),
-                HorizontalAlignment = Control.HAlignment.Stretch,
-                HorizontalExpand = true,
+                Color = KsTguiColor.Transparent,
             };
             var capturedGas = gas;
             button.OnPressed += _ => ToggleGas(capturedGas);
             _gasButtons.Add(gas, button);
-            row.AddChild(button);
+            _gasBox.AddChild(button);
             RefreshButton(gas, button);
         }
     }
@@ -130,7 +119,8 @@ public sealed class KsTguiGasFilterWindow : KsTguiGasDeviceWindow, IKsGasFilterW
     private void RefreshButton(Gas gas, KsTguiButton button)
     {
         var selected = _selectedGases.Contains(gas);
-        button.Selected = selected;
+        // tg's Button.Checkbox: transparent, with the tick alone saying what is chosen. Selected would turn every ticked
+        //      gas bright green.
         button.Icon = selected ? KsTguiIcons.CheckSquare : KsTguiIcons.Square;
     }
 }

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 
 namespace Content.Client._KS14.Tgui.Controls;
@@ -25,8 +26,88 @@ public sealed class KsTguiLabeledList : Control
     /// </summary>
     private const float LabelMinWidth = 60f;
 
+    /// <summary>
+    ///     A row's padding: 3px above and below, and 6px either side, which the list's negative margin carries to the edge of
+    ///         the section around it.
+    /// </summary>
+    private const float StripePaddingY = 3f;
+
+    private const float StripePaddingX = 6f;
+
     private float _labelColumn;
     private float _buttonsColumn;
+    private bool _candystripe;
+    private Color? _stripeColor;
+
+    public KsTguiLabeledList()
+    {
+        AddStyleClass(KsTguiSheetlet.StyleClassCandystripe);
+    }
+
+    /// <summary>
+    ///     tgui's <c>candystripe</c> on every row: the first, third and so on of the visible rows are darkened, from the
+    ///         section's edge to its edge. Hiding or adding a row re-alternates the rest.
+    /// </summary>
+    public bool Candystripe
+    {
+        get => _candystripe;
+        set => _candystripe = value;
+    }
+
+    /// <summary>
+    ///     Whether a row is drawn dark: striping is on and it is an odd row among the visible ones.
+    /// </summary>
+    public bool IsStriped(KsTguiLabeledListItem row)
+    {
+        if (!_candystripe)
+            return false;
+
+        var index = 0;
+        foreach (var child in Children)
+        {
+            if (child is not KsTguiLabeledListItem { Visible: true } other)
+                continue;
+
+            if (other == row)
+                return index % 2 == 0;
+
+            index++;
+        }
+
+        return false;
+    }
+
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+        _stripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripe, out var color) ? color : null;
+    }
+
+    protected override void Draw(DrawingHandleScreen handle)
+    {
+        base.Draw(handle);
+
+        if (!_candystripe || _stripeColor is not { } color)
+            return;
+
+        KsTguiLabeledListItem? last = null;
+        foreach (var child in Children)
+        {
+            if (child is KsTguiLabeledListItem { Visible: true } visible)
+                last = visible;
+        }
+
+        foreach (var child in Children)
+        {
+            if (child is not KsTguiLabeledListItem { Visible: true } item || !IsStriped(item))
+                continue;
+
+            // tgui's last row has no padding below it.
+            var top = (float)item.PixelPosition.Y - StripePaddingY * UIScale;
+            var bottom = (float)(item.PixelPosition.Y + item.PixelHeight) + (item == last ? 0f : StripePaddingY * UIScale);
+            handle.DrawRect(new UIBox2(-StripePaddingX * UIScale, top, (float)PixelWidth + StripePaddingX * UIScale, bottom), color);
+        }
+    }
 
     /// <summary>
     ///     Adds a row, and returns it.

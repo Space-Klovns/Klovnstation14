@@ -1,0 +1,23 @@
+# Content.Client/_KS14/Tgui/Windows/Battery/KsTguiBatteryWindow.cs
+ks-tgui-battery-stored-energy = Накопленная энергия
+ks-tgui-battery-input = Вход
+ks-tgui-battery-output = Выход
+ks-tgui-battery-auto = Авто
+ks-tgui-battery-charge-mode = Режим зарядки
+ks-tgui-battery-fully-charged = Полностью заряжен
+ks-tgui-battery-charging = Заряжается
+ks-tgui-battery-not-charging = Не заряжается
+ks-tgui-battery-output-mode = Режим выхода
+ks-tgui-battery-sending = Отдаёт
+ks-tgui-battery-not-sending = Не отдаёт
+ks-tgui-battery-no-charge = Нет заряда
+ks-tgui-battery-target-input = Целевой вход
+ks-tgui-battery-target-output = Целевой выход
+ks-tgui-battery-receiving = Получает
+ks-tgui-battery-supplying = Подаёт
+ks-tgui-battery-into-cells = В ячейки
+ks-tgui-battery-from-cells = Из ячеек
+ks-tgui-battery-network = Сеть
+ks-tgui-battery-network-powered = Есть питание
+ks-tgui-battery-network-unpowered = Нет питания
+ks-tgui-battery-unit-kw = кВт

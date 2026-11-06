@@ -3,6 +3,7 @@ using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Chemistry;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Content.Shared.Storage;
@@ -46,7 +47,7 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
     public event Action<ReagentDispenserDispenseAmount>? OnAmountPressed;
     public event Action<ItemStorageLocation>? OnDispenseReagentButtonPressed;
     public event Action<ItemStorageLocation>? OnEjectJugButtonPressed;
-    public event Action? OnEjectPressed;
+    public event Action<ItemSlotButtonPressedEvent>? OnEjectPressed;
     public event Action? OnClearPressed;
     public event Action? OnToggleValveButtonPressed;
 
@@ -100,8 +101,8 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
         dispenseSection.AddChild(ReagentGrid);
 
         // Beaker: name and fill with its eject and clear buttons, then its contents, with the beaker drawn beside them.
-        EjectButton = new KsTguiButton { Text = Loc.GetString("reagent-dispenser-window-eject-button"), Icon = KsTguiIcons.Eject };
-        EjectButton.OnPressed += _ => OnEjectPressed?.Invoke();
+        EjectButton = new KsTguiItemSlotButton { SlotId = SharedReagentDispenser.OutputSlotName };
+        EjectButton.SlotPressed += message => OnEjectPressed?.Invoke(message);
         ClearButton = new KsTguiButton { Text = Loc.GetString("reagent-dispenser-window-clear-button"), Icon = KsTguiIcons.Trash };
         ClearButton.OnPressed += _ => OnClearPressed?.Invoke();
 
@@ -145,7 +146,7 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
         ContentsContainer.AddChild(root);
     }
 
-    public KsTguiButton EjectButton { get; }
+    public KsTguiItemSlotButton EjectButton { get; }
 
     public KsTguiButton ClearButton { get; }
 
@@ -164,7 +165,7 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
         _beakerView.SetEntity(outputContainerEntity);
 
         ClearButton.Disabled = state.OutputContainer is null;
-        EjectButton.Disabled = state.OutputContainer is null;
+        EjectButton.Filled = state.OutputContainer is not null;
 
         ValveButton.Text = Loc.GetString(state.ValveOpen
             ? "reagent-dispenser-window-valve-open"

@@ -25,7 +25,7 @@ public sealed partial class ReagentDispenserBoundUserInterface
         _ksTguiWindow = window;
         window.SetInfoFromEntity(EntMan, Owner);
 
-        window.OnEjectPressed += () => SendMessage(new ItemSlotButtonPressedEvent(SharedReagentDispenser.OutputSlotName));
+        window.OnEjectPressed += message => SendMessage(message);
         window.OnClearPressed += () => SendMessage(new ReagentDispenserClearContainerSolutionMessage());
         window.OnAmountPressed += amount => SendMessage(new ReagentDispenserSetDispenseAmountMessage(amount));
         window.OnDispenseReagentButtonPressed += location => SendMessage(new ReagentDispenserDispenseReagentMessage(location));

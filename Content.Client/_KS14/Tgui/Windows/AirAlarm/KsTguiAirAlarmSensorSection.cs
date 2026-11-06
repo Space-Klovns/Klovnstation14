@@ -13,8 +13,8 @@ namespace Content.Client._KS14.Tgui.Windows.AirAlarm;
 
 /// <summary>
 ///     One sensor: its readings, then tgui's Alarm Thresholds table (danger below, warning below, warning above, danger above)
-///         for pressure, temperature and every gas. Picking a value opens the editor under the table, as tgui opens its
-///         Threshold Value Editor.
+///         for pressure, temperature and every gas. Each value is edited in place, with a toggle that enables it, and each
+///         row has the toggle for ignoring the reading altogether.
 /// </summary>
 public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
 {
@@ -25,6 +25,11 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         AtmosMonitorLimitType.UpperWarning,
         AtmosMonitorLimitType.UpperDanger,
     ];
+
+    // One value cell: the enable toggle, then the number. The header labels are as wide, so the columns line up.
+    private const float ToggleWidth = 22f;
+    private const float InputWidth = 54f;
+    private const float CellWidth = ToggleWidth + 2f + InputWidth;
 
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IEntityManager _entityManager = default!;
@@ -38,13 +43,8 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
     private readonly Dictionary<Gas, KsTguiLabeledListItem> _gasItems = new();
     private readonly List<ThresholdRow> _rows = new();
 
-    private readonly KsTguiSection _editor;
-    private readonly Label _editorText;
-    private readonly KsTguiNumberInput _editorSpin;
-    private readonly KsTguiButton _editorToggle;
-
-    private ThresholdRow? _editingRow;
-    private AtmosMonitorLimitType _editingLimit;
+    private readonly KsTguiButton _copyButton;
+    private bool _hasAccess = true;
 
     private AtmosSensorData _data;
 
@@ -64,13 +64,13 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         _address = address;
 
         _section = new KsTguiSection { HorizontalExpand = true };
-        var copyButton = new KsTguiButton
+        _copyButton = new KsTguiButton
         {
             Icon = KsTguiIcons.Copy,
             ToolTip = Loc.GetString("air-alarm-ui-thresholds-copy-tooltip"),
         };
-        copyButton.OnPressed += _ => SensorDataCopied?.Invoke(_data);
-        _section.Buttons = copyButton;
+        _copyButton.OnPressed += _ => SensorDataCopied?.Invoke(_data);
+        _section.Buttons = _copyButton;
 
         _readings = new KsTguiLabeledList();
         _statusItem = _readings.AddItem(Loc.GetString("air-alarm-ui-window-alarm-state-label"));
@@ -85,46 +85,26 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
 
         _section.AddChild(_readings);
 
-        // The table. Both separations are the same: GridContainer measures with one and places with the other.
-        var grid = new GridContainer { Columns = 6, HSeparationOverride = 3, VSeparationOverride = 3, Margin = new Thickness(0f, 8f, 0f, 0f) };
-        grid.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-threshold"), null));
-        grid.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-danger-below"), KsTguiPalettes.Bad));
-        grid.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-warning-below"), KsTguiPalettes.Average));
-        grid.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-warning-above"), KsTguiPalettes.Average));
-        grid.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-danger-above"), KsTguiPalettes.Bad));
-        grid.AddChild(HeaderLabel(string.Empty, null));
+        // The table, as tgui's: a header row, then a candystriped row per reading. The header counts for odd and even.
+        var table = new KsTguiTable { Margin = new Thickness(0f, 8f, 0f, 0f) };
+        var header = new KsTguiTableRow { Header = true };
+        header.AddChild(new Label { Text = Loc.GetString("ks-tgui-airalarm-threshold"), HorizontalExpand = true, StyleClasses = { "LabelHeading" } });
+        header.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-danger-below"), KsTguiPalettes.Bad));
+        header.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-warning-below"), KsTguiPalettes.Average));
+        header.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-warning-above"), KsTguiPalettes.Average));
+        header.AddChild(HeaderLabel(Loc.GetString("ks-tgui-airalarm-danger-above"), KsTguiPalettes.Bad));
+        table.AddChild(header);
 
-        AddRow(grid, Loc.GetString("ks-tgui-airalarm-row-pressure"), AtmosMonitorThresholdType.Pressure, null, 1f, "kPa");
-        AddRow(grid, Loc.GetString("ks-tgui-airalarm-row-temperature"), AtmosMonitorThresholdType.Temperature, null, 1f, "K");
+        AddRow(table, Loc.GetString("ks-tgui-airalarm-row-pressure"), AtmosMonitorThresholdType.Pressure, null, 1f, 100000f, 10f, "kPa");
+        AddRow(table, Loc.GetString("ks-tgui-airalarm-row-temperature"), AtmosMonitorThresholdType.Temperature, null, 1f, 100000f, 10f, "K");
         foreach (var gas in data.Gases.Keys)
         {
             ProtoId<GasPrototype> gasProtoId = atmosphereSystem.GetGas(gas);
             var gasName = _prototypeManager.Index(gasProtoId).Name;
-            AddRow(grid, Loc.GetString(gasName), AtmosMonitorThresholdType.Gas, gas, 100f, "%");
+            AddRow(table, Loc.GetString(gasName), AtmosMonitorThresholdType.Gas, gas, 100f, 100f, 1f, "%");
         }
 
-        _section.AddChild(grid);
-
-        _editorText = new Label { Margin = new Thickness(0f, 0f, 0f, 6f) };
-        _editorSpin = new KsTguiNumberInput { WidthPixels = 75f, MinValue = 0.01f, MaxValue = 100000f, Step = 10f };
-        _editorSpin.OnCommitted += _ => EditorValueChanged();
-        _editorToggle = new KsTguiButton { Margin = new Thickness(0f, 6f, 0f, 0f) };
-        _editorToggle.OnPressed += _ => EditorToggled();
-
-        var closeButton = new KsTguiButton { Icon = KsTguiIcons.Times, Color = KsTguiColor.Red };
-        closeButton.OnPressed += _ => CloseEditor();
-
-        _editor = new KsTguiSection
-        {
-            Title = Loc.GetString("ks-tgui-airalarm-editor-title"),
-            Buttons = closeButton,
-            Visible = false,
-            Margin = new Thickness(0f, 8f, 0f, 0f),
-        };
-        _editor.AddChild(_editorText);
-        _editor.AddChild(_editorSpin);
-        _editor.AddChild(_editorToggle);
-        _section.AddChild(_editor);
+        _section.AddChild(table);
 
         AddChild(_section);
 
@@ -182,7 +162,6 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
             RefreshRow(row, current);
         }
 
-        RefreshEditor();
     }
 
     private static float GasFraction(AtmosSensorData data, Gas gas)
@@ -198,14 +177,25 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
 
     private static Label HeaderLabel(string text, Color? color)
     {
-        var label = new Label { Text = text, HorizontalExpand = true };
+        var label = new Label { Text = text, MinWidth = CellWidth };
         if (color != null)
             label.FontColorOverride = color;
 
         return label;
     }
 
-    private void AddRow(GridContainer grid, string name, AtmosMonitorThresholdType type, Gas? gas, float scale, string unit)
+    /// <summary>
+    ///     Without access every control is disabled; the server refuses the messages either way.
+    /// </summary>
+    public void SetAccessEnabled(bool hasAccess)
+    {
+        _hasAccess = hasAccess;
+        _copyButton.Disabled = !hasAccess;
+        foreach (var row in _rows)
+            RefreshRow(row, row.Current);
+    }
+
+    private void AddRow(KsTguiTable table, string name, AtmosMonitorThresholdType type, Gas? gas, float scale, float maxValue, float step, string unit)
     {
         var threshold = type switch
         {
@@ -215,15 +205,6 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         };
 
         var row = new ThresholdRow(name, type, gas, scale, unit, threshold);
-        grid.AddChild(new Label { Text = name, HorizontalExpand = true });
-        for (var i = 0; i < LimitColumns.Length; i++)
-        {
-            var limit = LimitColumns[i];
-            var button = new KsTguiButton { Fluid = true, Compact = true };
-            button.OnPressed += _ => OpenEditor(row, limit);
-            row.Buttons[i] = button;
-            grid.AddChild(button);
-        }
 
         row.IgnoreButton = new KsTguiButton
         {
@@ -237,7 +218,56 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
             row.IgnoreButton.Selected = !row.Threshold.Ignore;
             OnThresholdUpdate?.Invoke(_address, row.Type, row.Threshold, row.Gas);
         };
-        grid.AddChild(row.IgnoreButton);
+
+        var tableRow = new KsTguiTableRow { Candystripe = true };
+        var title = new BoxContainer { Orientation = LayoutOrientation.Horizontal, SeparationOverride = 4, HorizontalExpand = true };
+        title.AddChild(row.IgnoreButton);
+        title.AddChild(new Label { Text = name, VerticalAlignment = VAlignment.Center });
+        tableRow.AddChild(title);
+
+        for (var i = 0; i < LimitColumns.Length; i++)
+        {
+            var limit = LimitColumns[i];
+
+            var toggle = new KsTguiButton
+            {
+                Icon = KsTguiIcons.Square,
+                Compact = true,
+                MinWidth = ToggleWidth,
+                ToolTip = Loc.GetString("ks-tgui-airalarm-toggle-limit"),
+            };
+            var input = new KsTguiNumberInput
+            {
+                Unit = unit,
+                WidthPixels = InputWidth,
+                MinValue = 0.01f,
+                MaxValue = maxValue,
+                Step = step,
+            };
+
+            toggle.OnPressed += _ =>
+            {
+                row.Threshold.SetEnabled(limit, !SettingOf(row.Threshold, limit).Enabled);
+                OnThresholdUpdate?.Invoke(_address, row.Type, row.Threshold, row.Gas);
+                RefreshRow(row, row.Current);
+            };
+            input.OnCommitted += _ =>
+            {
+                row.Threshold.SetLimit(limit, input.Value / row.Scale);
+                OnThresholdUpdate?.Invoke(_address, row.Type, row.Threshold, row.Gas);
+                RefreshRow(row, row.Current);
+            };
+
+            row.Toggles[i] = toggle;
+            row.Inputs[i] = input;
+
+            var cell = new BoxContainer { Orientation = LayoutOrientation.Horizontal, SeparationOverride = 2 };
+            cell.AddChild(toggle);
+            cell.AddChild(input);
+            tableRow.AddChild(cell);
+        }
+
+        table.AddChild(tableRow);
 
         _rows.Add(row);
     }
@@ -258,17 +288,23 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         {
             var limit = LimitColumns[i];
             var setting = SettingOf(row.Threshold, limit);
-            var button = row.Buttons[i]!;
-            button.Text = setting.Enabled
-                ? $"{setting.Value * row.Scale:0.##} {row.Unit}"
-                : Loc.GetString("ks-tgui-airalarm-disabled");
+            var toggle = row.Toggles[i]!;
+            var input = row.Inputs[i]!;
 
-            button.Color = limit == violatedLimit
+            toggle.Selected = setting.Enabled;
+            toggle.Icon = setting.Enabled ? KsTguiIcons.CheckSquare : KsTguiIcons.Square;
+            toggle.Disabled = !_hasAccess;
+            toggle.Color = limit == violatedLimit
                 ? alarm == AtmosAlarmType.Danger ? KsTguiColor.Bad : KsTguiColor.Average
                 : KsTguiColor.Default;
+
+            input.Disabled = !_hasAccess || !setting.Enabled;
+            if (!input.IsEditing)
+                input.SetValue(setting.Value * row.Scale);
         }
 
         row.IgnoreButton!.Selected = !row.Threshold.Ignore;
+        row.IgnoreButton.Disabled = !_hasAccess;
     }
 
     private static AlarmThresholdSetting SettingOf(AtmosAlarmThreshold threshold, AtmosMonitorLimitType limit)
@@ -282,71 +318,6 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         };
     }
 
-    private void OpenEditor(ThresholdRow row, AtmosMonitorLimitType limit)
-    {
-        _editingRow = row;
-        _editingLimit = limit;
-        _editor.Visible = true;
-        _editorSpin.Unit = row.Unit;
-        _editorSpin.SetValue(SettingOf(row.Threshold, limit).Value * row.Scale);
-        RefreshEditor();
-    }
-
-    private void CloseEditor()
-    {
-        _editingRow = null;
-        _editor.Visible = false;
-    }
-
-    private void RefreshEditor()
-    {
-        if (_editingRow == null)
-            return;
-
-        var setting = SettingOf(_editingRow.Threshold, _editingLimit);
-        _editorText.Text = Loc.GetString("ks-tgui-airalarm-editing",
-            ("limit", Loc.GetString(LimitKey(_editingLimit))),
-            ("name", _editingRow.Name));
-        _editorSpin.Visible = setting.Enabled;
-        _editorToggle.Text = Loc.GetString(setting.Enabled ? "ks-tgui-airalarm-disable" : "ks-tgui-airalarm-enable");
-
-        if (setting.Enabled && !_editorSpin.IsEditing)
-            _editorSpin.SetValue(setting.Value * _editingRow.Scale);
-    }
-
-    private static string LimitKey(AtmosMonitorLimitType limit)
-    {
-        return limit switch
-        {
-            AtmosMonitorLimitType.LowerDanger => "ks-tgui-airalarm-danger-below",
-            AtmosMonitorLimitType.LowerWarning => "ks-tgui-airalarm-warning-below",
-            AtmosMonitorLimitType.UpperWarning => "ks-tgui-airalarm-warning-above",
-            _ => "ks-tgui-airalarm-danger-above",
-        };
-    }
-
-    private void EditorValueChanged()
-    {
-        if (_editingRow == null)
-            return;
-
-        _editingRow.Threshold.SetLimit(_editingLimit, _editorSpin.Value / _editingRow.Scale);
-        OnThresholdUpdate?.Invoke(_address, _editingRow.Type, _editingRow.Threshold, _editingRow.Gas);
-    }
-
-    private void EditorToggled()
-    {
-        if (_editingRow == null)
-            return;
-
-        var enabled = SettingOf(_editingRow.Threshold, _editingLimit).Enabled;
-        _editingRow.Threshold.SetEnabled(_editingLimit, !enabled);
-        OnThresholdUpdate?.Invoke(_address, _editingRow.Type, _editingRow.Threshold, _editingRow.Gas);
-
-        RefreshRow(_editingRow, _editingRow.Current);
-        RefreshEditor();
-    }
-
     private sealed class ThresholdRow
     {
         public readonly string Name;
@@ -354,7 +325,8 @@ public sealed partial class KsTguiAirAlarmSensorSection : BoxContainer
         public readonly Gas? Gas;
         public readonly float Scale;
         public readonly string Unit;
-        public readonly KsTguiButton?[] Buttons = new KsTguiButton?[LimitColumns.Length];
+        public readonly KsTguiButton?[] Toggles = new KsTguiButton?[LimitColumns.Length];
+        public readonly KsTguiNumberInput?[] Inputs = new KsTguiNumberInput?[LimitColumns.Length];
         public AtmosAlarmThreshold Threshold;
         public float Current;
         public KsTguiButton? IgnoreButton;

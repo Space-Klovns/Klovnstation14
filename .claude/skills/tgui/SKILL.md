@@ -51,9 +51,16 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `LabeledList` | `KsTguiLabeledList`, `KsTguiLabeledListItem` | `AddItem(label, text, color)`; `Buttons` slot. Put it inside a Section |
 | `NoticeBox` | `KsTguiNoticeBox` | `NoticeColor` |
 | `Button` | `KsTguiButton` | `: Button`. `Icon`, `Color`, `Compact`, `Fluid`, `Selected` |
+| `Button` on an item slot | `KsTguiItemSlotButton` | `: KsTguiButton`. `Filled`, `SlotId`. Eject while filled, Insert while empty, never disabled |
 | `Icon` | `KsTguiIcon`, `KsTguiIcons` | FA6 Solid glyphs. Add a `const string` when one is missing |
 | `Tabs` | `KsTguiTabs`, `KsTguiTabItem` | Vertical too. `Count` is the badge. Use this, not the engine `TabContainer`, in a ported window |
 | `ProgressBar` | `KsTguiProgressBar` | `AddRange` for good/average/bad. Text right-aligned, as tgui |
+| `NumberInput` | `KsTguiNumberInput` | Value bar at the left, vertical drag, click selects everything. Use it, not `FloatSpinBox`, in a ported window |
+| `candystripe` class, `Stack zebra` | `KsTguiLabeledList.Candystripe`, `KsTguiTabs.Candystripe`, `KsTguiCandystripe` | Odd visible rows darkened edge to edge, so hiding a row re-alternates. `KsTguiCandystripe` is a vertical box for any rows. The dark colour is only given by the tgui sheet |
+| `Table`, `Table.Row`, `Table.Cell` | `KsTguiTable`, `KsTguiTableRow` | Cells are the row's children; columns size to the widest cell. `HorizontalExpand` on a cell marks an expanding column (tgui marks the others `collapsing`). `Header` for 6px under it, `Candystripe` per row (the header counts in the odd/even) |
+| `ColorBox` | `KsTguiColorBox` | `BoxColor`, 12px swatch |
+| `Divider` | `KsTguiDivider` | 2px line, 6px space either side; `Vertical` |
+| `BlockQuote` | `KsTguiBlockQuote` | `Text`, label colour, left bar |
 | `Input` | `LineEdit` | Already themed |
 | `Dropdown` | `OptionButton` | Already themed |
 
@@ -168,6 +175,19 @@ section.AddChild(new KsTguiNoticeBox { Text = Loc.GetString("ks-tgui-example-no-
 section.AddChild(new Label { Text = "No peers.", FontColorOverride = KsTguiPalettes.Bad });
 ```
 
+**A slot that can be empty.** tg disables its Eject button then. Here the button becomes Insert, which puts the held item in:
+
+```csharp
+// do this: Filled follows the state; SlotId makes a press the message the server's ItemSlotsSystem handles
+var ejectButton = new KsTguiItemSlotButton { SlotId = SharedReagentDispenser.OutputSlotName };
+ejectButton.SlotPressed += message => OnEjectPressed?.Invoke(message); // the BUI SendMessage()s it
+ejectButton.Filled = state.OutputContainer is not null;
+// not an ItemSlots slot (a material, a plain container): no SlotId, handle ejectButton.EjectPressed / InsertPressed
+
+// not this - an Eject nobody can press, so the player must go and use the item on the machine
+ejectButton.Disabled = state.OutputContainer is null;
+```
+
 **Spacing comes from tgui's units.**
 
 ```xml
@@ -261,6 +281,11 @@ _highlight = KsTguiTheme.ReadEnabled() ? KsTguiPalettes.PrimaryElement : Default
 
 ## Traps
 
+- **`KsTguiFonts` sizes are pixels; the engine's are points.** 12 at the engine draws at 16px. Ask `sheet.BaseFont.GetFont(12)` for
+  tgui's 12px and it converts. Don't load a font size yourself, or compensate for it. `Stack[0]` of its fonts is an
+  empty font that only carries the pixel size for markup, so read metrics from the font, not from `Stack[0]`.
+- **Check a window with `game-screenshots`.** Nothing headless draws, and both of the biggest bugs in the port, the wrong
+  text size and sections with no padding, passed every test.
 - **A code-built `FancyWindow` adds to `ContentsContainer`, not to itself.** `AddChild(root)` compiles and puts the
   contents over the title bar and close button.
 - **Clear a section with `ClearBody()`.** `RemoveAllChildren` takes the section's own title and body with it.

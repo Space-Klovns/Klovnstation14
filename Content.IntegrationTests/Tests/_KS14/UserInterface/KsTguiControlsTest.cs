@@ -141,6 +141,108 @@ public sealed class KsTguiControlsTest : GameTest
         return float.NaN;
     }
 
+    /// <summary>
+    ///     A button toggled disabled while shown dims its icon with its text. <c>Button</c> restyles only its own label when its
+    ///         state changes, so an icon child kept its enabled colour.
+    /// </summary>
+    [Test]
+    public async Task DisabledButtonsDimTheirIcons()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        KsTguiButton tguiButton = null;
+        KsRestylingButton stockButton = null;
+        Label stockIcon = null;
+        DefaultWindow window = null;
+
+        await Client.WaitPost(() =>
+        {
+            var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
+            tguiButton = new KsTguiButton { Text = "Eject", Icon = KsTguiIcons.Cart };
+            stockButton = new KsRestylingButton { Text = "" };
+            stockIcon = new Label { Text = "x" };
+            stockButton.AddChild(stockIcon);
+            root.AddChild(tguiButton);
+            root.AddChild(stockButton);
+
+            window = new DefaultWindow { Title = "Icons" };
+            window.Contents.AddChild(root);
+            window.OpenCentered();
+        });
+
+        await Pair.RunTicksSync(3);
+
+        var tguiIcon = tguiButton.Children.OfType<KsTguiIcon>().Single();
+
+        static Color Colour(Control control)
+        {
+            return control.TryGetStyleProperty<Color>(Label.StylePropertyFontColor, out var colour) ? colour : Color.White;
+        }
+
+        Color enabledIcon = default;
+        Color enabledStock = default;
+        await Client.WaitPost(() =>
+        {
+            enabledIcon = Colour(tguiIcon);
+            enabledStock = Colour(stockIcon);
+            tguiButton.Disabled = true;
+            stockButton.Disabled = true;
+        });
+
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(Colour(tguiIcon), Is.Not.EqualTo(enabledIcon), "The icon keeps its enabled colour");
+            Assert.That(Colour(tguiIcon), Is.EqualTo(Colour(tguiButton.Label)), "The icon dims as the text does");
+            Assert.That(Colour(stockIcon), Is.Not.EqualTo(enabledStock), "A stock button's icon label keeps its enabled colour");
+            window.Close();
+        });
+    }
+
+    /// <summary>
+    ///     Stripes follow the visible index, as CSS <c>nth-child(odd)</c> does: hiding a row or adding one re-alternates the
+    ///         rest, and a table counts its header row.
+    /// </summary>
+    [Test]
+    public async Task CandystripeAlternatesByVisibleIndex()
+    {
+        await Client.WaitAssertion(() =>
+        {
+            var list = new KsTguiLabeledList { Candystripe = true };
+            var items = Enumerable.Range(0, 5).Select(i => list.AddItem("row" + i)).ToArray();
+            Assert.That(items.Select(list.IsStriped), Is.EqualTo(new[] { true, false, true, false, true }));
+
+            items[1].Visible = false;
+            Assert.That(items.Where(item => item.Visible).Select(list.IsStriped), Is.EqualTo(new[] { true, false, true, false }));
+
+            list.AddItem("added");
+            Assert.That(list.IsStriped(items[4]), Is.False);
+
+            list.Candystripe = false;
+            Assert.That(items.Any(list.IsStriped), Is.False);
+
+            var table = new KsTguiTable();
+            var header = new KsTguiTableRow { Header = true };
+            var first = new KsTguiTableRow { Candystripe = true };
+            var second = new KsTguiTableRow { Candystripe = true };
+            var third = new KsTguiTableRow { Candystripe = true };
+            table.AddChild(header);
+            table.AddChild(first);
+            table.AddChild(second);
+            table.AddChild(third);
+            Assert.That(new[] { header, first, second, third }.Select(table.IsStriped), Is.EqualTo(new[] { false, false, true, false }));
+
+            var stack = new KsTguiCandystripe();
+            var children = Enumerable.Range(0, 4).Select(_ => new Label()).ToArray();
+            foreach (var child in children)
+                stack.AddChild(child);
+            children[0].Visible = false;
+            Assert.That(children.Skip(1).Select(stack.IsStriped), Is.EqualTo(new[] { true, false, true }));
+        });
+    }
+
     [Test]
     public void ColourShadesMatchTguiCore()
     {

@@ -2,6 +2,7 @@ using System.Linq;
 using System.Numerics;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client.UserInterface.Controls;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Fax;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -35,11 +36,13 @@ public sealed class KsTguiFaxWindow : FancyWindow, IKsFaxWindow
     public event Action? SendButtonPressed;
     public event Action? RefreshButtonPressed;
     public event Action<string>? PeerSelected;
+    public event Action<ItemSlotButtonPressedEvent>? PaperSlotPressed;
 
     public bool OfficePaper { get; private set; }
 
     private readonly KsTguiLabeledListItem _fromItem;
     private readonly KsTguiLabeledListItem _paperItem;
+    private readonly KsTguiItemSlotButton _paperButton;
     private readonly KsTguiNoticeBox _noPeersNotice;
     private readonly BoxContainer _peerBox;
     private readonly KsTguiButton _copyButton;
@@ -66,6 +69,11 @@ public sealed class KsTguiFaxWindow : FancyWindow, IKsFaxWindow
         var aboutList = new KsTguiLabeledList();
         _fromItem = aboutList.AddItem(Loc.GetString("fax-machine-ui-from"));
         _paperItem = aboutList.AddItem(Loc.GetString("fax-machine-ui-paper"));
+
+        // FaxSystem's PaperSlotId.
+        _paperButton = new KsTguiItemSlotButton { SlotId = "Paper", Compact = true };
+        _paperButton.SlotPressed += message => PaperSlotPressed?.Invoke(message);
+        _paperItem.Buttons = _paperButton;
         about.AddChild(aboutList);
         root.AddChild(about);
 
@@ -139,6 +147,7 @@ public sealed class KsTguiFaxWindow : FancyWindow, IKsFaxWindow
             ? "fax-machine-ui-paper-inserted"
             : "fax-machine-ui-paper-not-inserted");
         _paperItem.TextColor = state.IsPaperInserted ? KsTguiPalettes.Good : KsTguiPalettes.Bad;
+        _paperButton.Filled = state.IsPaperInserted;
 
         // There must always be a destination.
         if (string.IsNullOrEmpty(state.DestinationAddress) && state.AvailablePeers.Count != 0)

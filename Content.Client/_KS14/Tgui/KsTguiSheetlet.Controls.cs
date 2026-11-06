@@ -27,6 +27,16 @@ public sealed partial class KsTguiSheetlet
     public const string StyleClassButtonSelected = "KsTguiButtonSelected";
 
     /// <summary>
+    ///     On a control that stripes its rows; the tgui sheet gives it <see cref="StylePropertyCandystripe"/>, so Baron draws none.
+    /// </summary>
+    public const string StyleClassCandystripe = "KsTguiCandystripe";
+
+    /// <summary>
+    ///     The colour of the dark rows of a candystripe, set by the tgui sheet alone.
+    /// </summary>
+    public const string StylePropertyCandystripe = "ks-tgui-candystripe";
+
+    /// <summary>
     ///     The NoticeBox colour <c>warning</c> (<c>--color-orange</c> at oklch lightness x0.825, chroma x0.75); the others are
     ///         already in <see cref="KsTguiPalettes"/>.
     /// </summary>
@@ -40,6 +50,7 @@ public sealed partial class KsTguiSheetlet
         AddSectionRules(rules);
         AddNoticeBoxRules(rules);
         AddColoredButtonRules(rules);
+        rules.Add(E().Class(StyleClassCandystripe).Prop(StylePropertyCandystripe, KsTguiPalettes.Candystripe));
     }
 
     private static void AddSectionRules(List<StyleRule> rules)

@@ -18,6 +18,7 @@ namespace Content.Client._KS14.Tgui.Windows.Atmos;
 public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 {
     public event Action? TankEjectButtonPressed;
+    public event Action? TankInsertButtonPressed;
     public event Action<float>? ReleasePressureSet;
     public event Action? ReleaseValveCloseButtonPressed;
     public event Action? ReleaseValveOpenButtonPressed;
@@ -44,7 +45,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     public KsTguiButton ReleaseDefaultButton { get; } = new() { Icon = KsTguiIcons.Undo, Color = KsTguiColor.Transparent };
     public KsTguiButton ValveButton { get; } = new();
     public KsTguiButton ShieldButton { get; } = new();
-    public KsTguiButton EjectButton { get; } = new() { Icon = KsTguiIcons.Eject, Text = Loc.GetString("comp-gas-canister-ui-holding-tank-eject") };
+    public KsTguiItemSlotButton EjectButton { get; } = new();
 
     public KsTguiGasCanisterWindow()
     {
@@ -120,7 +121,8 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
                 ReleaseValveOpenButtonPressed?.Invoke();
         };
         ShieldButton.OnPressed += _ => ShieldToggleButtonPressed?.Invoke();
-        EjectButton.OnPressed += _ => TankEjectButtonPressed?.Invoke();
+        EjectButton.EjectPressed += () => TankEjectButtonPressed?.Invoke();
+        EjectButton.InsertPressed += () => TankInsertButtonPressed?.Invoke();
 
         SetValveVisual();
         SetShieldVisual();
@@ -154,7 +156,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     public void SetTankLabel(string? label)
     {
         _hasTank = label != null;
-        EjectButton.Visible = _hasTank;
+        EjectButton.Filled = _hasTank;
         _tankList.Visible = _hasTank;
         _noTankLabel.Visible = !_hasTank;
         _labelItem.Text = label;

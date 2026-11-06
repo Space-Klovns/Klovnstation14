@@ -21,6 +21,7 @@ public sealed partial class AirAlarmBoundUserInterface : BoundUserInterface
             ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.AirAlarm.KsTguiAirAlarmWindow>()
             : this.CreateWindow<AirAlarmWindow>();
         _window.SetEntity(Owner);
+        RefreshAccess(); // KS14: tgui window disables its controls without access
 
         _window.AtmosDeviceDataChanged += OnDeviceDataChanged;
         _window.AtmosDeviceDataCopied += OnDeviceDataCopied;
@@ -69,8 +70,20 @@ public sealed partial class AirAlarmBoundUserInterface : BoundUserInterface
             return;
         }
 
+        RefreshAccess(); // KS14: the player's ID may have changed
         _window.UpdateState(cast);
     }
+
+    // KS14 start: same check as the APC's, since the server only answers a denied change with a popup
+    private void RefreshAccess()
+    {
+        var hasAccess = false;
+        if (PlayerManager.LocalEntity is { } localEntity)
+            hasAccess = EntMan.System<Content.Shared.Access.Systems.AccessReaderSystem>().IsAllowed(localEntity, Owner);
+
+        _window?.SetAccessEnabled(hasAccess);
+    }
+    // KS14 end
 
     protected override void Dispose(bool disposing)
     {

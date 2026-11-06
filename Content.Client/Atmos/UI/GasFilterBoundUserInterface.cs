@@ -81,7 +81,8 @@ namespace Content.Client.Atmos.UI
             if (_window == null || state is not GasFilterBoundUserInterfaceState cast)
                 return;
 
-            _window.Title = (cast.FilterLabel);
+            if (!string.IsNullOrEmpty(cast.FilterLabel)) // KS14: keep the window's own title over an unnamed filter
+                _window.Title = (cast.FilterLabel);
             _window.SetFilterStatus(cast.Enabled);
             _window.SetTransferRate(cast.TransferRate);
 

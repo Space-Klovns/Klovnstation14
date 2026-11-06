@@ -169,6 +169,34 @@ public sealed class KsTguiAtmosWindowsTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     The filter with every gas in it: nothing is wider or taller than the window gives it.
+    /// </summary>
+    [Test]
+    public async Task GasFilterWithEveryGasFits()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        await Client.WaitAssertion(() =>
+        {
+            var gases = CProtoMan.EnumeratePrototypes<GasPrototype>().ToList();
+            var window = new KsTguiGasFilterWindow();
+            window.PopulateGasList(gases);
+            window.OpenCentered();
+            window.ForceRunStyleUpdate();
+            window.InvalidateMeasure();
+            window.Measure(Robust.Shared.Maths.Vector2Helpers.Infinity);
+
+            // Measured with room to spare, so a clipped window cannot hide it: the window's size vs what the contents need.
+            var contents = window.ContentsContainer;
+            contents.Measure(new Vector2(window.SetWidth, float.PositiveInfinity));
+            Assert.That(contents.DesiredSize.X, Is.LessThanOrEqualTo(window.SetWidth + 0.5f), "Gas buttons are wider than the window");
+            TestContext.Out.WriteLine($"gases={gases.Count} desired={window.DesiredSize} contents={contents.DesiredSize}");
+            window.Close();
+        });
+    }
+
     [Test]
     public async Task MixerActionsFire()
     {

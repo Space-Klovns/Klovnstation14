@@ -35,6 +35,8 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
     [Dependency] private IEntityManager _entityManager = default!;
 
     private readonly KsTguiNoticeBox _panicWireNotice;
+    private readonly KsTguiNoticeBox _lockedNotice;
+    private readonly KsTguiButton _resyncButton;
     private readonly KsTguiSection _statusSection;
     private readonly KsTguiLabeledList _statusList;
 
@@ -68,6 +70,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
     private AirAlarmMode _mode = AirAlarmMode.None;
     private bool _autoMode;
     private bool _panicWireCut;
+    private bool _hasAccess;
 
     public event Action<string, IAtmosDeviceData>? AtmosDeviceDataChanged;
     public event Action<IAtmosDeviceData>? AtmosDeviceDataCopied;
@@ -81,8 +84,9 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
         IoCManager.InjectDependencies(this);
 
         Title = Loc.GetString("air-alarm-ui-title");
-        SetSize = new Vector2(475f, 650f);
-        MinSize = new Vector2(475f, 300f);
+        // Wider than tg's 475: the threshold table edits four values per row in place.
+        SetSize = new Vector2(600f, 650f);
+        MinSize = new Vector2(600f, 300f);
 
         var root = new BoxContainer
         {
@@ -100,6 +104,14 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
             Visible = false,
         };
         root.AddChild(_panicWireNotice);
+
+        // Starts locked: the BUI says whether the player has access once it knows.
+        _lockedNotice = new KsTguiNoticeBox
+        {
+            HorizontalExpand = true,
+            Text = Loc.GetString("ks-tgui-airalarm-locked"),
+        };
+        root.AddChild(_lockedNotice);
 
         _statusSection = new KsTguiSection { Title = Loc.GetString("ks-tgui-airalarm-air-status") };
         _statusList = new KsTguiLabeledList();
@@ -126,7 +138,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
         home.AddChild(NavigationButton(KsTguiIcons.Filter, "ks-tgui-airalarm-screen-scrubbers", Screen.Scrubbers));
         home.AddChild(NavigationButton(KsTguiIcons.Cog, "ks-tgui-airalarm-screen-modes", Screen.Modes));
         home.AddChild(NavigationButton(KsTguiIcons.ChartBar, "ks-tgui-airalarm-screen-thresholds", Screen.Thresholds));
-        var resyncButton = new KsTguiButton { Icon = KsTguiIcons.Sync, Text = Loc.GetString("air-alarm-ui-window-resync-devices-label") };
+        var resyncButton = _resyncButton = new KsTguiButton { Icon = KsTguiIcons.Sync, Text = Loc.GetString("air-alarm-ui-window-resync-devices-label") };
         resyncButton.OnPressed += _ => Resync();
         home.AddChild(resyncButton);
         AddScreen(Screen.Home, home);
@@ -173,6 +185,9 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
         };
         _autoModeButton.OnPressed += _ =>
         {
+            if (!_hasAccess)
+                return;
+
             _autoMode = !_autoMode;
             RefreshModes();
             AutoModeChanged?.Invoke(_autoMode);
@@ -199,6 +214,23 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
     public void SetEntity(EntityUid uid)
     {
         // tg's window has no picture of the machine.
+    }
+
+    public void SetAccessEnabled(bool hasAccess)
+    {
+        _hasAccess = hasAccess;
+        _lockedNotice.Visible = !hasAccess;
+        _resyncButton.Disabled = !hasAccess;
+        RefreshModes();
+
+        foreach (var vent in _vents.Values)
+            vent.SetAccessEnabled(hasAccess);
+
+        foreach (var scrubber in _scrubbers.Values)
+            scrubber.SetAccessEnabled(hasAccess);
+
+        foreach (var sensor in _sensors.Values)
+            sensor.SetAccessEnabled(hasAccess);
     }
 
     public void UpdateState(AirAlarmUIState state)
@@ -230,6 +262,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
                 var newVent = new KsTguiAirAlarmVentSection(pump, address);
                 newVent.PumpDataChanged += (changedAddress, data) => AtmosDeviceDataChanged?.Invoke(changedAddress, data);
                 newVent.PumpDataCopied += data => AtmosDeviceDataCopied?.Invoke(data);
+                newVent.SetAccessEnabled(_hasAccess);
                 _vents.Add(address, newVent);
                 _ventContainer.AddChild(newVent);
                 break;
@@ -243,6 +276,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
                 var newScrubber = new KsTguiAirAlarmScrubberSection(scrubber, address);
                 newScrubber.ScrubberDataChanged += (changedAddress, data) => AtmosDeviceDataChanged?.Invoke(changedAddress, data);
                 newScrubber.ScrubberDataCopied += data => AtmosDeviceDataCopied?.Invoke(data);
+                newScrubber.SetAccessEnabled(_hasAccess);
                 _scrubbers.Add(address, newScrubber);
                 _scrubberContainer.AddChild(newScrubber);
                 break;
@@ -257,6 +291,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
                 newSensor.OnThresholdUpdate += (changedAddress, type, threshold, gas) =>
                     AtmosAlarmThresholdChanged?.Invoke(changedAddress, type, threshold, gas);
                 newSensor.SensorDataCopied += data => AtmosDeviceDataCopied?.Invoke(data);
+                newSensor.SetAccessEnabled(_hasAccess);
                 _sensors.Add(address, newSensor);
                 _sensorContainer.AddChild(newSensor);
                 break;
@@ -344,20 +379,21 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
     {
         _panicButton.Icon = _mode == AirAlarmMode.Panic ? KsTguiIcons.Warning : KsTguiIcons.Exclamation;
         _panicButton.Color = _mode == AirAlarmMode.Panic ? KsTguiColor.Danger : KsTguiColor.Default;
-        _panicButton.Disabled = _panicWireCut;
+        _panicButton.Disabled = _panicWireCut || !_hasAccess;
 
         foreach (var (mode, button) in _modeButtons)
         {
             var selected = mode == _mode;
             button.Icon = selected ? KsTguiIcons.CheckSquare : KsTguiIcons.Square;
             button.Color = selected ? (mode == AirAlarmMode.Panic ? KsTguiColor.Red : KsTguiColor.Green) : KsTguiColor.Default;
-            button.Disabled = _panicWireCut;
+            button.Disabled = _panicWireCut || !_hasAccess;
         }
 
         _modesNotice.Visible = _panicWireCut;
 
         _autoModeButton.Icon = _autoMode ? KsTguiIcons.CheckSquare : KsTguiIcons.Square;
         _autoModeButton.Color = _autoMode ? KsTguiColor.Green : KsTguiColor.Default;
+        _autoModeButton.Disabled = !_hasAccess;
     }
 
     private void RefreshEmptyNotices()
@@ -369,7 +405,7 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
 
     private void SetMode(AirAlarmMode mode)
     {
-        if (_panicWireCut)
+        if (_panicWireCut || !_hasAccess)
             return;
 
         _mode = mode;
@@ -379,6 +415,9 @@ public sealed partial class KsTguiAirAlarmWindow : FancyWindow, IKsAirAlarmWindo
 
     private void Resync()
     {
+        if (!_hasAccess)
+            return;
+
         _ventContainer.RemoveAllChildren();
         _vents.Clear();
         _scrubberContainer.RemoveAllChildren();

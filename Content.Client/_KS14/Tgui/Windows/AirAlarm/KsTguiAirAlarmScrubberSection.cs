@@ -22,6 +22,10 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
     private readonly string _address;
 
     private readonly KsTguiButton _powerButton;
+    private readonly KsTguiButton _copyButton;
+    private readonly KsTguiButton _selectAllButton;
+    private readonly KsTguiButton _deselectAllButton;
+    private bool _hasAccess = true;
     private readonly KsTguiButton _directionButton;
     private readonly KsTguiButton _wideNetButton;
     private readonly KsTguiNumberInput _volumeRate;
@@ -58,13 +62,13 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
         };
         titleButtons.AddChild(_powerButton);
 
-        var copyButton = new KsTguiButton
+        _copyButton = new KsTguiButton
         {
             Icon = KsTguiIcons.Copy,
             ToolTip = Loc.GetString("air-alarm-ui-widget-copy-tooltip"),
         };
-        copyButton.OnPressed += _ => ScrubberDataCopied?.Invoke(_data);
-        titleButtons.AddChild(copyButton);
+        _copyButton.OnPressed += _ => ScrubberDataCopied?.Invoke(_data);
+        titleButtons.AddChild(_copyButton);
         section.Buttons = titleButtons;
 
         var list = new KsTguiLabeledList();
@@ -105,7 +109,7 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
 
         var allGases = Enum.GetValues<Gas>();
         var allButtons = new BoxContainer { Orientation = LayoutOrientation.Horizontal };
-        var selectAll = new KsTguiButton
+        var selectAll = _selectAllButton = new KsTguiButton
         {
             Icon = KsTguiIcons.CheckSquare,
             Text = Loc.GetString("air-alarm-ui-scrubber-select-all-gases-label"),
@@ -116,7 +120,7 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
             Refresh();
             ScrubberDataChanged?.Invoke(_address, _data);
         };
-        var deselectAll = new KsTguiButton
+        var deselectAll = _deselectAllButton = new KsTguiButton
         {
             Icon = KsTguiIcons.Square,
             Text = Loc.GetString("air-alarm-ui-scrubber-deselect-all-gases-label"),
@@ -182,6 +186,15 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
         Refresh();
     }
 
+    /// <summary>
+    ///     Without access every control is disabled; the server refuses the messages either way.
+    /// </summary>
+    public void SetAccessEnabled(bool hasAccess)
+    {
+        _hasAccess = hasAccess;
+        Refresh();
+    }
+
     private void Refresh()
     {
         _powerButton.Icon = _data.Enabled ? KsTguiIcons.Power : KsTguiIcons.Times;
@@ -194,7 +207,14 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
             ? "air-alarm-ui-pump-direction-scrubbing"
             : "air-alarm-ui-pump-direction-siphoning");
         _directionButton.Color = scrubbing ? KsTguiColor.Default : KsTguiColor.Danger;
-        _directionButton.Disabled = _data.AirAlarmPanicWireCut;
+        _directionButton.Disabled = _data.AirAlarmPanicWireCut || !_hasAccess;
+
+        _powerButton.Disabled = !_hasAccess;
+        _copyButton.Disabled = !_hasAccess;
+        _wideNetButton.Disabled = !_hasAccess;
+        _selectAllButton.Disabled = !_hasAccess;
+        _deselectAllButton.Disabled = !_hasAccess;
+        _volumeRate.Disabled = !_hasAccess;
 
         _wideNetButton.Icon = _data.WideNet ? KsTguiIcons.Expand : KsTguiIcons.Compress;
         _wideNetButton.Text = Loc.GetString(_data.WideNet ? "ks-tgui-airalarm-expanded" : "ks-tgui-airalarm-normal");
@@ -205,6 +225,7 @@ public sealed partial class KsTguiAirAlarmScrubberSection : BoxContainer
             var enabled = _data.FilterGases.Contains(gas);
             button.Selected = enabled;
             button.Icon = enabled ? KsTguiIcons.CheckSquare : KsTguiIcons.Square;
+            button.Disabled = !_hasAccess;
         }
     }
 }

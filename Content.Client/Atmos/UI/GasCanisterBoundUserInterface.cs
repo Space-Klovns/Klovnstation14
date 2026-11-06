@@ -33,6 +33,7 @@ namespace Content.Client.Atmos.UI
             _window.ReleaseValveOpenButtonPressed += OnReleaseValveOpenPressed;
             _window.ReleasePressureSet += OnReleasePressureSet;
             _window.TankEjectButtonPressed += OnTankEjectPressed;
+            _window.TankInsertButtonPressed += OnTankInsertPressed; // KS14
             _window.ShieldToggleButtonPressed += OnToggleShieldingPressed; // KS14
         }
 
@@ -40,6 +41,14 @@ namespace Content.Client.Atmos.UI
         {
             SendPredictedMessage(new GasCanisterHoldingTankEjectMessage());
         }
+
+        // KS14 start: the tgui window's eject button is an insert button when the tank is out
+        private void OnTankInsertPressed()
+        {
+            SendPredictedMessage(new Content.Shared.Containers.ItemSlots.ItemSlotButtonPressedEvent(
+                EntMan.GetComponent<GasCanisterComponent>(Owner).ContainerName, tryEject: false, tryInsert: true));
+        }
+        // KS14 end
 
         private void OnReleasePressureSet(float value)
         {

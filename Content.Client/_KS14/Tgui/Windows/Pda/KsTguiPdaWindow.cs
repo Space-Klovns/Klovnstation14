@@ -35,8 +35,8 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
     private readonly BoxContainer _programView;
 
     private readonly KsTguiButton _flashlightButton;
-    private readonly KsTguiButton _ejectPenButton;
-    private readonly KsTguiButton _ejectIdButton;
+    private readonly KsTguiItemSlotButton _ejectPenButton;
+    private readonly KsTguiItemSlotButton _ejectIdButton;
     private readonly KsTguiLabeledListItem _ownerRow;
     private readonly KsTguiLabeledListItem _idNameRow;
     private readonly KsTguiLabeledListItem _assignmentRow;
@@ -46,7 +46,7 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
     private readonly RichTextLabel _instructionsLabel;
 
     private readonly KsTguiSection _paiSection;
-    private readonly KsTguiButton _ejectPaiButton;
+    private readonly KsTguiItemSlotButton _ejectPaiButton;
 
     private readonly KsTguiSection _runningSection;
     private readonly KsTguiButton _resumeButton;
@@ -174,15 +174,15 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
             ToggleMode = true,
             ToolTip = Loc.GetString("comp-pda-ui-toggle-flashlight-button"),
         };
-        _ejectPenButton = new KsTguiButton
+        _ejectPenButton = new KsTguiItemSlotButton
         {
-            Icon = KsTguiIcons.Pencil,
-            Text = Loc.GetString("comp-pda-ui-eject-pen-button"),
+            FilledText = Loc.GetString("comp-pda-ui-eject-pen-button"),
+            EmptyText = Loc.GetString("ks-tgui-pda-insert-pen"),
         };
-        _ejectIdButton = new KsTguiButton
+        _ejectIdButton = new KsTguiItemSlotButton
         {
-            Icon = KsTguiIcons.Eject,
-            Text = Loc.GetString("comp-pda-ui-eject-id-button"),
+            FilledText = Loc.GetString("comp-pda-ui-eject-id-button"),
+            EmptyText = Loc.GetString("ks-tgui-pda-insert-id"),
         };
         detailsButtons.AddChild(_flashlightButton);
         detailsButtons.AddChild(_ejectPenButton);
@@ -211,13 +211,13 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
         details.AddChild(detailsBox);
         homeBox.AddChild(details);
 
-        _paiSection = new KsTguiSection { Title = Loc.GetString("ks-tgui-pda-pai"), Visible = false };
-        _ejectPaiButton = new KsTguiButton
+        _paiSection = new KsTguiSection { Title = Loc.GetString("ks-tgui-pda-pai") };
+        _ejectPaiButton = new KsTguiItemSlotButton
         {
             Fluid = true,
             Color = KsTguiColor.Transparent,
-            Icon = KsTguiIcons.Eject,
-            Text = Loc.GetString("ks-tgui-pda-eject-pai"),
+            FilledText = Loc.GetString("ks-tgui-pda-eject-pai"),
+            EmptyText = Loc.GetString("ks-tgui-pda-insert-pai"),
             LeftAligned = true,
         };
         _ejectPaiButton.Label.FontColorOverride = Color.White;
@@ -373,9 +373,9 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
 
         _addressLabel.Text = state.Address?.ToUpper() ?? " - ";
 
-        _ejectIdButton.Disabled = !hasId;
-        _ejectPenButton.Disabled = !state.HasPen;
-        _paiSection.Visible = state.HasPai;
+        _ejectIdButton.Filled = hasId;
+        _ejectPenButton.Filled = state.HasPen;
+        _ejectPaiButton.Filled = state.HasPai; // the pAI slot always shows, as Insert when empty
         _musicButton.Visible = state.CanPlayMusic;
         _showUplinkButton.Visible = state.HasUplink;
         _lockUplinkButton.Visible = state.HasUplink;

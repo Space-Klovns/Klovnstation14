@@ -4,6 +4,7 @@ using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Chemistry;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Robust.Client.GameObjects;
@@ -37,8 +38,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
     private readonly Label _bufferVolumeLabel;
     private readonly KsTguiButton _sortButton;
 
-    public event Action? OnInputEjectPressed;
-    public event Action? OnOutputEjectPressed;
+    public event Action<ItemSlotButtonPressedEvent>? OnInputEjectPressed;
+    public event Action<ItemSlotButtonPressedEvent>? OnOutputEjectPressed;
     public event Action? OnToggleValveButtonPressed;
     public event Action<ChemMasterMode>? OnModePressed;
     public event Action? OnSortPressed;
@@ -59,8 +60,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         // Input container.
         ValveButton = new KsTguiButton { Text = Loc.GetString("chem-master-window-valve-closed") };
         ValveButton.OnPressed += _ => OnToggleValveButtonPressed?.Invoke();
-        InputEjectButton = MakeEjectButton();
-        InputEjectButton.OnPressed += _ => OnInputEjectPressed?.Invoke();
+        InputEjectButton = new KsTguiItemSlotButton { SlotId = SharedChemMaster.InputSlotName };
+        InputEjectButton.SlotPressed += message => OnInputEjectPressed?.Invoke(message);
         _inputInfo = MakeInfoBox();
         _inputSection = new KsTguiSection
         {
@@ -85,8 +86,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         _bufferSection.AddChild(_bufferInfo);
 
         // Output container.
-        OutputEjectButton = MakeEjectButton();
-        OutputEjectButton.OnPressed += _ => OnOutputEjectPressed?.Invoke();
+        OutputEjectButton = new KsTguiItemSlotButton { SlotId = SharedChemMaster.OutputSlotName };
+        OutputEjectButton.SlotPressed += message => OnOutputEjectPressed?.Invoke(message);
         _outputInfo = MakeInfoBox();
         _outputSection = new KsTguiSection
         {
@@ -172,9 +173,9 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
     public KsTguiButton ValveButton { get; }
 
-    public KsTguiButton InputEjectButton { get; }
+    public KsTguiItemSlotButton InputEjectButton { get; }
 
-    public KsTguiButton OutputEjectButton { get; }
+    public KsTguiItemSlotButton OutputEjectButton { get; }
 
     public KsTguiButton BufferTransferButton { get; }
 
@@ -209,11 +210,6 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
     private static Label LabelOf(string key)
     {
         return new Label { Text = Loc.GetString(key), StyleClasses = { StyleClass.LabelWeak }, Margin = new Thickness(5f, 0f, 3f, 0f) };
-    }
-
-    private static KsTguiButton MakeEjectButton()
-    {
-        return new KsTguiButton { Text = Loc.GetString("chem-master-window-eject-button"), Icon = KsTguiIcons.Eject };
     }
 
     private static BoxContainer MakeInfoBox()
@@ -277,8 +273,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
                 throw new($"Chemmaster {state.OutputContainerInfo} draw source is not set");
         }
 
-        InputEjectButton.Disabled = state.InputContainerInfo is null;
-        OutputEjectButton.Disabled = state.OutputContainerInfo is null;
+        InputEjectButton.Filled = state.InputContainerInfo is not null;
+        OutputEjectButton.Filled = state.OutputContainerInfo is not null;
         CreateBottleButton.Disabled = state.OutputContainerInfo?.Reagents == null;
 
         ValveButton.Text = Loc.GetString(state.ValveOpen
@@ -353,8 +349,10 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
     private void UpdatePanelInfo(ChemMasterBoundUserInterfaceState state)
     {
+        // tg's one toggle is green while moving reagents and red while destroying them (ChemMaster.tsx:199), so the chosen
+        //      mode takes its colour here and not Selected's green.
         BufferTransferButton.Selected = state.Mode == ChemMasterMode.Transfer;
-        BufferDiscardButton.Selected = state.Mode == ChemMasterMode.Discard;
+        BufferDiscardButton.Color = state.Mode == ChemMasterMode.Discard ? KsTguiColor.Red : KsTguiColor.Default;
 
         BuildContainerUi(_inputInfo, state.InputContainerInfo, addReagentButtons: true);
         BuildContainerUi(_outputInfo, state.OutputContainerInfo, addReagentButtons: false);

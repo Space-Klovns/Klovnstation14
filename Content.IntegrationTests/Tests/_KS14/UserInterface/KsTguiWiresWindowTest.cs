@@ -67,6 +67,7 @@ public sealed class KsTguiWiresWindowTest : GameTest
 
             var buttons = new List<KsTguiButton>();
             Collect(tguiWindow, buttons);
+            buttons.RemoveAll(button => string.IsNullOrEmpty(button.Text)); // the help button has only an icon
             Assert.That(buttons, Has.Count.EqualTo(4));
 
             var press = typeof(BaseButton).GetField("OnPressed", Any)!;

@@ -53,7 +53,7 @@ public sealed class KsTguiWiresWindow : FancyWindow
         _root.AddChild(noticeRow);
 
         var wireSection = new KsTguiSection { Fill = true, Scrollable = true, VerticalExpand = true };
-        _wireList = new KsTguiLabeledList();
+        _wireList = new KsTguiLabeledList { Candystripe = true };
         wireSection.AddChild(_wireList);
         _root.AddChild(wireSection);
 

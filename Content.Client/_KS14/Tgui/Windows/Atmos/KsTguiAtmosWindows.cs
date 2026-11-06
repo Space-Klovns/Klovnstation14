@@ -74,6 +74,7 @@ public interface IKsGasMixerWindow : IKsHeatWindow
 public interface IKsGasCanisterWindow : IKsAtmosWindow
 {
     event Action? TankEjectButtonPressed;
+    event Action? TankInsertButtonPressed;
     event Action<float>? ReleasePressureSet;
     event Action? ReleaseValveCloseButtonPressed;
     event Action? ReleaseValveOpenButtonPressed;

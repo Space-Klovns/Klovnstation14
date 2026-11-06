@@ -105,7 +105,7 @@ public sealed class KsTguiChemWindowTest : GameTest
             window.OnAmountPressed += amount => log.Add($"amount {(int)amount}");
             window.OnDispenseReagentButtonPressed += location => log.Add($"dispense {location.Position}");
             window.OnEjectJugButtonPressed += location => log.Add($"jug {location.Position}");
-            window.OnEjectPressed += () => log.Add("eject");
+            window.OnEjectPressed += message => log.Add($"eject {message.TryEject} {message.TryInsert}");
             window.OnClearPressed += () => log.Add("clear");
             window.OnToggleValveButtonPressed += () => log.Add("valve");
 
@@ -127,7 +127,7 @@ public sealed class KsTguiChemWindowTest : GameTest
             Assert.That(window.AmountButtons, Has.Count.EqualTo(9));
             Assert.That(window.AmountButtons[ReagentDispenserDispenseAmount.U10].Selected, Is.True);
             Assert.That(window.AmountButtons[ReagentDispenserDispenseAmount.U5].Selected, Is.False);
-            Assert.That(window.EjectButton.Disabled, Is.False);
+            Assert.That(window.EjectButton.Filled, Is.True);
 
             foreach (var (amount, button) in window.AmountButtons)
             {
@@ -150,12 +150,12 @@ public sealed class KsTguiChemWindowTest : GameTest
             Press(window.ValveButton);
             Assert.That(log, Is.EqualTo(new[]
             {
-                $"dispense {jug.Position}", $"jug {jug.Position}", "eject", "clear", "valve",
+                $"dispense {jug.Position}", $"jug {jug.Position}", "eject True False", "clear", "valve",
             }));
 
             window.UpdateState(new ReagentDispenserBoundUserInterfaceState(
                 null, null, new List<ReagentInventoryItem>(), ReagentDispenserDispenseAmount.U1, valveOpen: false));
-            Assert.That(window.EjectButton.Disabled, Is.True);
+            Assert.That(window.EjectButton.Filled, Is.False, "An empty slot offers Insert instead of a disabled Eject.");
             Assert.That(window.ClearButton.Disabled, Is.True);
             window.Dispose();
         });
@@ -171,8 +171,8 @@ public sealed class KsTguiChemWindowTest : GameTest
         await Client.WaitPost(() =>
         {
             window = new KsTguiChemMasterWindow();
-            window.OnInputEjectPressed += () => log.Add("input eject");
-            window.OnOutputEjectPressed += () => log.Add("output eject");
+            window.OnInputEjectPressed += message => log.Add($"input eject {message.SlotId}");
+            window.OnOutputEjectPressed += message => log.Add($"output eject {message.SlotId}");
             window.OnToggleValveButtonPressed += () => log.Add("valve");
             window.OnModePressed += mode => log.Add($"mode {mode}");
             window.OnSortPressed += () => log.Add("sort");
@@ -227,7 +227,7 @@ public sealed class KsTguiChemWindowTest : GameTest
 
             Assert.That(log, Is.EqualTo(new[]
             {
-                "input eject", "output eject", "valve", $"mode {ChemMasterMode.Transfer}", $"mode {ChemMasterMode.Discard}",
+                $"input eject {SharedChemMaster.InputSlotName}", $"output eject {SharedChemMaster.OutputSlotName}", "valve", $"mode {ChemMasterMode.Transfer}", $"mode {ChemMasterMode.Discard}",
                 "sort", $"source {ChemMasterDrawSource.Internal}", $"source {ChemMasterDrawSource.External}", "pill type 5",
                 $"pills {(uint)window.PillDosage.Value} {(uint)window.PillNumber.Value} {window.LabelLine}",
                 $"bottle {(uint)window.BottleDosage.Value} {window.LabelLine}",

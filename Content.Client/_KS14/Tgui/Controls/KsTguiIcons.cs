@@ -76,4 +76,9 @@ public static class KsTguiIcons
     public const string FastForward = "\uf050";
     public const string FastBackward = "\uf049";
     public const string Undo = "\uf2ea";
+    public const string ToggleOn = "";
+    public const string ToggleOff = "";
+    public const string Backward = "";
+    public const string Forward = "";
+    public const string SyncAlt = "";
 }

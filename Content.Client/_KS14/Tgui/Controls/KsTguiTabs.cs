@@ -1,3 +1,4 @@
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using static Robust.Client.UserInterface.Controls.BaseButton;
@@ -14,6 +15,8 @@ public sealed class KsTguiTabs : BoxContainer
 {
     private bool _vertical;
     private bool _fluid;
+    private bool _candystripe;
+    private Color? _stripeColor;
 
     public KsTguiTabs()
     {
@@ -30,6 +33,71 @@ public sealed class KsTguiTabs : BoxContainer
     ///     Selects the clicked tab itself. Turn off to decide in <see cref="OnTabSelected"/>.
     /// </summary>
     public bool AutoSelect { get; set; } = true;
+
+    /// <summary>
+    ///     tgui's <c>candystripe</c> class on every tab: the first, third and so on of the visible tabs are darkened across
+    ///         the whole width.
+    /// </summary>
+    public bool Candystripe
+    {
+        get => _candystripe;
+        set
+        {
+            _candystripe = value;
+            if (value)
+                AddStyleClass(KsTguiSheetlet.StyleClassCandystripe);
+            else
+                RemoveStyleClass(KsTguiSheetlet.StyleClassCandystripe);
+        }
+    }
+
+    /// <summary>
+    ///     Whether a tab is drawn dark: striping is on and it is an odd tab among the visible ones.
+    /// </summary>
+    public bool IsStriped(KsTguiTabItem tab)
+    {
+        if (!_candystripe)
+            return false;
+
+        var index = 0;
+        foreach (var child in Children)
+        {
+            if (!child.Visible)
+                continue;
+
+            if (child == tab)
+                return index % 2 == 0;
+
+            index++;
+        }
+
+        return false;
+    }
+
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+        _stripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripe, out var color) ? color : null;
+    }
+
+    protected override void Draw(DrawingHandleScreen handle)
+    {
+        base.Draw(handle);
+
+        if (!_candystripe || _stripeColor is not { } color)
+            return;
+
+        foreach (var child in Children)
+        {
+            if (child is not KsTguiTabItem { Visible: true } tab || !IsStriped(tab))
+                continue;
+
+            var box = Vertical
+                ? new UIBox2(0f, tab.PixelPosition.Y, PixelWidth, tab.PixelPosition.Y + tab.PixelHeight)
+                : new UIBox2(tab.PixelPosition.X, 0f, tab.PixelPosition.X + tab.PixelWidth, PixelHeight);
+            handle.DrawRect(box, color);
+        }
+    }
 
     public bool Vertical
     {

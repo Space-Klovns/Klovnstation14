@@ -25,8 +25,8 @@ public sealed partial class ChemMasterBoundUserInterface
         _ksTguiWindow = window;
         window.Title = EntMan.GetComponent<MetaDataComponent>(Owner).EntityName;
 
-        window.OnInputEjectPressed += () => SendMessage(new ItemSlotButtonPressedEvent(SharedChemMaster.InputSlotName));
-        window.OnOutputEjectPressed += () => SendMessage(new ItemSlotButtonPressedEvent(SharedChemMaster.OutputSlotName));
+        window.OnInputEjectPressed += message => SendMessage(message);
+        window.OnOutputEjectPressed += message => SendMessage(message);
         window.OnModePressed += mode => SendMessage(new ChemMasterSetModeMessage(mode));
         window.OnCreatePillsPressed += (dosage, number, label) => SendMessage(new ChemMasterCreatePillsMessage(dosage, number, label));
         window.OnCreateBottlePressed += (dosage, label) => SendMessage(new ChemMasterOutputToBottleMessage(dosage, label));

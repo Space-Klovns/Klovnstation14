@@ -57,6 +57,14 @@ version is newer (version-compare loop in PowerShell; only reads the user's fold
 
 **Trap: a running server or client in `bin/kstest` locks its dlls**, so the next build fails with `MSB3027 Could not copy ...`. Stop your own processes (section 7) before rebuilding. Another agent's half-edited UI file can also break the client build; wait and retry.
 
+**Trap: build the client first, then the server.** The dll downgrade happens only when the client build runs last; client
+then server leaves the newer dlls in `bin/kstest` with no copying (hand-overwriting dlls may be refused by the permission classifier).
+
+**Trap: teleporting the player onto a wall-mounted machine (to use the map's real one) puts them in vacuum.** They crit,
+and every later window silently fails to open. Offset by the machine's rotation (`LocalRotation.RotateVec((0,-1))`).
+
+**Trap: queue a lathe after adding its materials**, or `TryAddToQueue` returns false and the queue shot is empty.
+
 ## 3. Launch (separate port, separate data)
 
 From `bin/kstest`, in bash (`S` = your scratch folder):

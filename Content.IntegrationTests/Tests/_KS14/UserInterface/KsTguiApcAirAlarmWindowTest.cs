@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui.Controls;
@@ -105,6 +106,7 @@ public sealed class KsTguiApcAirAlarmWindowTest : GameTest
             }
 
             var airWindow = (KsTguiAirAlarmWindow)window;
+            airWindow.SetAccessEnabled(true);
             var fired = new HashSet<string>();
             airWindow.AtmosDeviceDataChanged += (_, _) => fired.Add("changed");
             airWindow.AtmosDeviceDataCopied += _ => fired.Add("copied");
@@ -123,6 +125,59 @@ public sealed class KsTguiApcAirAlarmWindowTest : GameTest
 
             bui.Dispose();
         });
+    }
+
+    [Test]
+    public async Task AirAlarmWithoutAccessDisablesEveryEditableControl()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        AirAlarmBoundUserInterface bui = null;
+        await Client.WaitPost(() =>
+        {
+            var owner = Client.EntMan.SpawnEntity(null, new Robust.Shared.Map.MapCoordinates(0f, 0f, Robust.Shared.Map.MapId.Nullspace));
+            bui = new AirAlarmBoundUserInterface(owner, SharedAirAlarmInterfaceKey.Key);
+            typeof(BoundUserInterface).GetMethod("Open", Any)!.Invoke(bui, null);
+            typeof(BoundUserInterface).GetMethod("UpdateState", Any)!.Invoke(bui, [MakeState()]);
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            var airWindow = (KsTguiAirAlarmWindow)typeof(AirAlarmBoundUserInterface).GetField("_window", Any)!.GetValue(bui);
+
+            // The test player has no entity, so no access.
+            var buttons = new List<KsTguiButton>();
+            Collect(airWindow, buttons);
+            var inputs = new List<KsTguiNumberInput>();
+            CollectInputs(airWindow, inputs);
+            Assert.That(inputs, Is.Not.Empty);
+
+            // Only the navigation to the other screens stays usable: Vents, Scrubbers, Modes, Thresholds.
+            Assert.That(buttons.Count(button => !button.Disabled), Is.EqualTo(4), "Without access only navigation should work.");
+            Assert.That(inputs.All(input => input.Disabled), Is.True, "Without access no number can be edited.");
+
+            airWindow.SetAccessEnabled(true);
+            Assert.That(buttons.Count(button => !button.Disabled), Is.GreaterThan(20));
+            Assert.That(inputs.Count(input => !input.Disabled), Is.GreaterThan(4));
+
+            airWindow.SetAccessEnabled(false);
+            Assert.That(buttons.Count(button => !button.Disabled), Is.EqualTo(4));
+            Assert.That(inputs.All(input => input.Disabled), Is.True);
+
+            bui.Dispose();
+        });
+    }
+
+    private static void CollectInputs(Control control, List<KsTguiNumberInput> inputs)
+    {
+        foreach (var child in control.Children)
+        {
+            if (child is KsTguiNumberInput input)
+                inputs.Add(input);
+            CollectInputs(child, inputs);
+        }
     }
 
     private static AirAlarmUIState MakeState()

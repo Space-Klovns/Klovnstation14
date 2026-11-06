@@ -10,7 +10,8 @@ namespace Content.Client._KS14.Tgui.Controls;
 ///         selected state. Colours come from the sheetlet's per-colour classes, which also give the hover fade its
 ///         start colour (<see cref="KsTguiSheetlet.StylePropertyNormalColor"/>), so the button fades like any other.
 /// </summary>
-public sealed class KsTguiButton : Button
+[Virtual]
+public class KsTguiButton : Button
 {
     /// <summary>
     ///     tgui's <c>.Button--icon</c> min-width, 1.333em.
@@ -128,6 +129,14 @@ public sealed class KsTguiButton : Button
             else
                 Label.RemoveStyleClass(KsTguiSheetlet.StyleClassButtonLabelLeft);
         }
+    }
+
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+
+        // Button restyles only its own label when its pseudo-class changes, so the icon would keep its enabled colour.
+        _icon.Restyle();
     }
 
     private bool HasText => !string.IsNullOrEmpty(Label.Text);

@@ -16,6 +16,8 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
     private readonly string _address;
 
     private readonly KsTguiButton _powerButton;
+    private readonly KsTguiButton _copyButton;
+    private bool _hasAccess = true;
     private readonly KsTguiButton _directionButton;
     private readonly KsTguiButton _internalCheckButton;
     private readonly KsTguiButton _externalCheckButton;
@@ -52,13 +54,13 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
         };
         titleButtons.AddChild(_powerButton);
 
-        var copyButton = new KsTguiButton
+        _copyButton = new KsTguiButton
         {
             Icon = KsTguiIcons.Copy,
             ToolTip = Loc.GetString("air-alarm-ui-widget-copy-tooltip"),
         };
-        copyButton.OnPressed += _ => PumpDataCopied?.Invoke(_data);
-        titleButtons.AddChild(copyButton);
+        _copyButton.OnPressed += _ => PumpDataCopied?.Invoke(_data);
+        titleButtons.AddChild(_copyButton);
         section.Buttons = titleButtons;
 
         var list = new KsTguiLabeledList();
@@ -136,6 +138,15 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
         Refresh();
     }
 
+    /// <summary>
+    ///     Without access every control is disabled; the server refuses the messages either way.
+    /// </summary>
+    public void SetAccessEnabled(bool hasAccess)
+    {
+        _hasAccess = hasAccess;
+        Refresh();
+    }
+
     private void ToggleBound(VentPressureBound bound)
     {
         _data.PressureChecks ^= bound;
@@ -161,5 +172,14 @@ public sealed class KsTguiAirAlarmVentSection : BoxContainer
         _externalCheckButton.Selected = hasExternal;
         _internalTargetItem.Visible = hasInternal;
         _externalTargetItem.Visible = hasExternal;
+
+        var editable = _hasAccess;
+        _powerButton.Disabled = !editable;
+        _copyButton.Disabled = !editable;
+        _directionButton.Disabled = !editable;
+        _internalCheckButton.Disabled = !editable;
+        _externalCheckButton.Disabled = !editable;
+        _internalBound.Disabled = !editable;
+        _externalBound.Disabled = !editable;
     }
 }

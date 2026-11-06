@@ -19,5 +19,10 @@ public interface IKsAirAlarmWindow : IDisposable
 
     void SetEntity(EntityUid uid);
 
+    /// <summary>
+    ///     Whether the local player may change settings. The server decides regardless.
+    /// </summary>
+    void SetAccessEnabled(bool hasAccess);
+
     void UpdateState(AirAlarmUIState state);
 }

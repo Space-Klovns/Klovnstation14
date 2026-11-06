@@ -35,6 +35,8 @@ public sealed partial class FaxBoundUi : BoundUserInterface
         _window.SendButtonPressed += OnSendButtonPressed;
         _window.RefreshButtonPressed += OnRefreshButtonPressed;
         _window.PeerSelected += OnPeerSelected;
+        if (_window is Content.Client._KS14.Tgui.Windows.Fax.KsTguiFaxWindow tguiWindow) // KS14: tg's paper eject and insert
+            tguiWindow.PaperSlotPressed += message => SendMessage(message);
     }
 
     private async void OnFileButtonPressed()

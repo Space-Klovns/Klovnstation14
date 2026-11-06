@@ -44,6 +44,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     private readonly KsTguiButton _deleteFabricating;
     private readonly BoxContainer _queueList;
     private readonly Label _queueEmptyLabel;
+    private bool _isFabricating;
+    private int _queuedBatches;
     private readonly KsTguiLatheMaterials _materialsList;
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
@@ -375,7 +377,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
     public void PopulateQueueList(IReadOnlyCollection<LatheRecipeBatch> queue)
     {
-        _queueEmptyLabel.Visible = queue.Count == 0;
+        _queuedBatches = queue.Count;
+        RefreshQueueEmptyLabel();
 
         var oldChildCount = _queueList.ChildCount;
 
@@ -416,9 +419,19 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         }
     }
 
+    /// <summary>
+    ///     The notice is only true when the lathe is neither printing something nor holding a queue.
+    /// </summary>
+    private void RefreshQueueEmptyLabel()
+    {
+        _queueEmptyLabel.Visible = !_isFabricating && _queuedBatches == 0;
+    }
+
     public void SetQueueInfo(ProtoId<LatheRecipePrototype>? recipeProto)
     {
         _fabricatingContainer.Visible = recipeProto != null;
+        _isFabricating = recipeProto != null;
+        RefreshQueueEmptyLabel();
         if (recipeProto == null)
             return;
 

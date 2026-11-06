@@ -100,6 +100,39 @@ public sealed class KsTguiLatheWindowTest : GameTest
     }
 
     [Test]
+    public async Task EmptyQueueNoticeShowsOnlyWhenNothingIsPrinting()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        await OpenLathe();
+
+        KsTguiLatheWindow window = null!;
+        var emptyText = string.Empty;
+        await Client.WaitPost(() =>
+        {
+            window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+            emptyText = Robust.Shared.Localization.Loc.GetString("ks-tgui-lathe-queue-empty");
+        });
+
+        bool NoticeShown() => Descendants<Label>(window).Single(label => label.Text == emptyText).Visible;
+
+        await Client.WaitAssertion(() => Assert.That(NoticeShown(), Is.True, "Nothing is printing and nothing is queued."));
+
+        // The lathe has taken the only design off its queue and is printing it: the queue is empty, but so is no claim.
+        await Client.WaitPost(() =>
+        {
+            window.PopulateQueueList(new List<LatheRecipeBatch>());
+            window.SetQueueInfo(window.Recipes.First());
+        });
+        await Client.WaitAssertion(() => Assert.That(NoticeShown(), Is.False, "A design is printing, so the queue is not empty."));
+
+        // And once it is done, nothing is left.
+        await Client.WaitPost(() => window.SetQueueInfo(null));
+        await Client.WaitAssertion(() => Assert.That(NoticeShown(), Is.True, "The print finished and the queue is empty."));
+    }
+
+    [Test]
     public async Task EveryActionReachesTheServer()
     {
         await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);

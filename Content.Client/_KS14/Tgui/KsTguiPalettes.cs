@@ -12,6 +12,12 @@ public static class KsTguiPalettes
     public static readonly Color Base = Color.FromHex("#262626");
     public static readonly Color TitleBar = Color.FromHex("#393939");
     public static readonly Color Section = Translucent(Color.Black, 0.33f, Base);
+
+    /// <summary>
+    ///     tgui's <c>--candystripe-odd</c>, black at CSS opacity .25, over a Section body (the window darkened .33).
+    /// </summary>
+    public static readonly Color Candystripe = Translucent(Color.Black, 0.25f, new Color(Base.R * 0.67f, Base.G * 0.67f, Base.B * 0.67f));
+
     public static readonly Color Label = Color.FromHex("#8F9FB0");
     public static readonly Color Good = Color.FromHex("#67BA2B");
     public static readonly Color Average = Color.FromHex("#F49525");

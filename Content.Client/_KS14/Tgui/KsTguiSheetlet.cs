@@ -42,6 +42,11 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     ///     Added to an <c>OptionButton</c>'s entries by <see cref="KsTguiFeelUIController"/>. They are plain buttons inside an
     ///         unclassed box, so no rule can reach them through their parents.
     /// </summary>
+    /// <summary>
+    ///     Gives a panel a Section body's translucent background in place of the solid one of its other classes.
+    /// </summary>
+    public const string StyleClassSectionBackground = "KsTguiSectionBackground";
+
     public const string StyleClassDropdownEntry = "KsTguiDropdownEntry";
 
     /// <summary>
@@ -115,6 +120,16 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         return rules.ToArray();
     }
 
+    /// <summary>
+    ///     tgui's <c>--space-xs</c>, the right and bottom margin of every Button.
+    /// </summary>
+    private static readonly Thickness ButtonGap = new(0f, 0f, 2f, 2f);
+
+    /// <summary>
+    ///     Set on every button by this sheet alone: <see cref="Content.Client._KS14.Tgui.Controls.KsRestylingButton"/> restyles its children only under tgui.
+    /// </summary>
+    public const string StylePropertyRestyleChildren = "ks-tgui-restyle-children";
+
     private static MutableSelectorElement CButton()
     {
         return E<ContainerButton>().Class(ContainerButton.StyleClassButton);
@@ -164,11 +179,21 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         rules.AddRange(new StyleRule[]
         {
             CButton().Box(ButtonBox()),
-            CButton().Class(StyleClass.ButtonOpenLeft).Box(OpenLeftBox()),
-            CButton().Class(StyleClass.ButtonOpenRight).Box(OpenRightBox()),
-            CButton().Class(StyleClass.ButtonOpenBoth).Box(ButtonBox(radius: 0f)),
+
+            // tg has no joined buttons: the open variants are plain rounded buttons. The top bar's MenuButtons below keep theirs.
+            CButton().Class(StyleClass.ButtonOpenLeft).Box(ButtonBox()),
+            CButton().Class(StyleClass.ButtonOpenRight).Box(ButtonBox()),
+            CButton().Class(StyleClass.ButtonOpenBoth).Box(ButtonBox()),
             CButton().Class(StyleClass.ButtonSquare).Box(ButtonBox(radius: 0f)),
             CButton().Class(StyleClass.ButtonSmall).Box(compactBox),
+
+            // tg's Button has margin-right and margin-bottom of --space-xs (2px). A Button, so KsTguiButton too; dropdown
+            //      entries, lists and tabs are other ContainerButtons and get none. The chat filter sits in a row of its own.
+            E<Button>().Class(ContainerButton.StyleClassButton).Margin(ButtonGap),
+            E<Button>().Class(ChatInputBox.StyleClassChatFilterOptionButton).Margin(0f),
+
+            // A child of a button does not restyle when the button's pseudo-class changes; KsRestylingButton reads this.
+            CButton().Prop(StylePropertyRestyleChildren, true),
 
             // tgui's selected button. Upstream's button palette is a step darker: that shade is tgui's held colour.
             CButton().PseudoPressed().Modulate(KsTguiPalettes.SelectedElement),
@@ -392,6 +417,9 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             E<PanelContainer>().Class(StyleClass.BackgroundPanelOpenLeft).Panel(solidBox).Modulate(Color.White),
             E<PanelContainer>().Class(StyleClass.BackgroundPanelOpenRight).Panel(solidBox).Modulate(Color.White),
             E<PanelContainer>().Class("BackgroundDark").Panel(solidBox).Modulate(Color.White),
+
+            // A panel that sits on a Section body, such as a bounty, is translucent like one rather than solid.
+            E<PanelContainer>().Class(StyleClassSectionBackground).Panel(SectionBox()).Modulate(Color.White),
 
             // tgui's Section.
             E<PanelContainer>().Class(StyleClass.BackgroundPanelDark).Panel(SectionBox()).Modulate(Color.White),

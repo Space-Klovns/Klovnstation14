@@ -17,7 +17,7 @@ public sealed partial class BatteryBoundUserInterface : BoundUserInterface, IBui
     [Dependency] private IClientGameTiming _gameTiming = null!;
 
     [ViewVariables]
-    private BatteryMenu? _menu;
+    private Content.Client._KS14.Tgui.Windows.Battery.IKsBatteryMenu? _menu; /* KS14: BatteryMenu -> either window */
 
     private BuiPredictionState? _pred;
     private InputCoalescer<float> _chargeRateCoalescer;
@@ -34,7 +34,9 @@ public sealed partial class BatteryBoundUserInterface : BoundUserInterface, IBui
 
         _pred = new BuiPredictionState(this, _gameTiming);
 
-        _menu = this.CreateWindow<BatteryMenu>();
+        _menu = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled() /* KS14: tgui window */
+            ? this.CreateWindow<Content.Client._KS14.Tgui.Windows.Battery.KsTguiBatteryWindow>()
+            : this.CreateWindow<BatteryMenu>();
         _menu.SetEntity(Owner);
 
         _menu.OnInBreaker += val => _pred!.SendMessage(new BatterySetInputBreakerMessage(val));

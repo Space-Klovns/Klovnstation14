@@ -7,4 +7,8 @@ namespace Content.Client.Atmos.Monitor.UI;
 /// </summary>
 public sealed partial class AirAlarmWindow : IKsAirAlarmWindow
 {
+    // The stock window has never shown the lack of access; the server refuses the change and says so in a popup.
+    public void SetAccessEnabled(bool hasAccess)
+    {
+    }
 }

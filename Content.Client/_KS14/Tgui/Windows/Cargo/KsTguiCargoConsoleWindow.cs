@@ -192,7 +192,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         _searchBar = new LineEdit { PlaceHolder = Loc.GetString("cargo-console-menu-search-bar-placeholder"), HorizontalExpand = true };
         _searchBar.OnTextChanged += _ => PopulateProducts();
         sidebarBox.AddChild(_searchBar);
-        _categoryTabs = new KsTguiTabs { Vertical = true };
+        _categoryTabs = new KsTguiTabs { Vertical = true, Candystripe = true };
         _categoryTabs.OnTabSelected += OnCategorySelected;
         var categoryScroll = new ScrollContainer { VerticalExpand = true, HScrollEnabled = false };
         categoryScroll.AddChild(_categoryTabs);
@@ -475,17 +475,23 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         var canApprove = requests && orderConsole != null && orderConsole.Mode != CargoOrderConsoleMode.SendToPrimary;
         var full = _orderCount >= (_orderWindow.Capacity);
 
-        var grid = new GridContainer { Columns = 7, HSeparationOverride = 10, VSeparationOverride = 6, HorizontalExpand = true };
-        AddHeader(grid, "ks-tgui-cargo-column-id", expand: false);
-        AddHeader(grid, "ks-tgui-cargo-column-object", expand: true);
-        AddHeader(grid, "ks-tgui-cargo-column-orderer", expand: false);
-        AddHeader(grid, requests ? "ks-tgui-cargo-column-reason" : "ks-tgui-cargo-column-approver", expand: true);
-        AddHeader(grid, "ks-tgui-cargo-column-account", expand: false);
-        AddHeader(grid, "ks-tgui-cargo-column-cost", expand: false);
-        AddHeader(grid, requests ? "ks-tgui-cargo-column-actions" : "ks-tgui-cargo-column-dispatched", expand: false);
+        var table = new KsTguiTable { HorizontalExpand = true };
+        var headerRow = new KsTguiTableRow { Header = true };
+        table.AddChild(headerRow);
+        AddHeader(headerRow, "ks-tgui-cargo-column-id", expand: false);
+        AddHeader(headerRow, "ks-tgui-cargo-column-object", expand: true);
+        AddHeader(headerRow, "ks-tgui-cargo-column-orderer", expand: false);
+        AddHeader(headerRow, requests ? "ks-tgui-cargo-column-reason" : "ks-tgui-cargo-column-approver", expand: true);
+        AddHeader(headerRow, "ks-tgui-cargo-column-account", expand: false);
+        AddHeader(headerRow, "ks-tgui-cargo-column-cost", expand: false);
+        AddHeader(headerRow, requests ? "ks-tgui-cargo-column-actions" : "ks-tgui-cargo-column-dispatched", expand: false);
 
         foreach (var order in orders)
         {
+            // tgui stripes the rows of the cart and the request list, the header row counting as the first.
+            var orderRow = new KsTguiTableRow { Candystripe = true };
+            table.AddChild(orderRow);
+
             var productProto = _protoManager.Index(order.Product);
             var product = _protoManager.Index<EntityPrototype>(productProto.Product);
             var account = _protoManager.Index(order.Account);
@@ -493,7 +499,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
                 ? order.Requester
                 : Loc.GetString("cargo-console-menu-order-row-alerts-requester-unknown");
 
-            grid.AddChild(new Label { Text = $"#{order.OrderId}", FontColorOverride = KsTguiPalettes.Label });
+            orderRow.AddChild(new Label { Text = $"#{order.OrderId}", FontColorOverride = KsTguiPalettes.Label });
 
             var objectCell = new BoxContainer
             {
@@ -513,9 +519,9 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
                 Text = $"{productProto.Name} x{order.OrderQuantity}",
                 VerticalAlignment = Control.VAlignment.Center,
             });
-            grid.AddChild(objectCell);
+            orderRow.AddChild(objectCell);
 
-            grid.AddChild(new Label { Text = requester, FontColorOverride = XColor.White });
+            orderRow.AddChild(new Label { Text = requester, FontColorOverride = XColor.White });
 
             var detail = requests ? order.Reason : order.Approver;
             var detailMessage = new FormattedMessage();
@@ -524,10 +530,10 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
                 : requests ? Loc.GetString("cargo-console-menu-order-row-alerts-reason-absent") : "-");
             var detailLabel = new RichTextLabel { HorizontalExpand = true, Modulate = XColor.LightGray };
             detailLabel.SetMessage(detailMessage);
-            grid.AddChild(detailLabel);
+            orderRow.AddChild(detailLabel);
 
-            grid.AddChild(new Label { Text = Loc.GetString(account.Code), FontColorOverride = account.Color });
-            grid.AddChild(new Label
+            orderRow.AddChild(new Label { Text = Loc.GetString(account.Code), FontColorOverride = account.Color });
+            orderRow.AddChild(new Label
             {
                 Text = Loc.GetString("cargo-console-menu-points-amount", ("amount", productProto.Cost * order.OrderQuantity)),
                 FontColorOverride = Gold,
@@ -559,20 +565,20 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
                 var deniedOrder = order;
                 deny.OnPressed += _ => OnOrderCanceled?.Invoke(deniedOrder);
                 actions.AddChild(deny);
-                grid.AddChild(actions);
+                orderRow.AddChild(actions);
             }
             else
             {
-                grid.AddChild(new Label { Text = $"{order.NumDispatched}/{order.OrderQuantity}" });
+                orderRow.AddChild(new Label { Text = $"{order.NumDispatched}/{order.OrderQuantity}" });
             }
         }
 
-        into.AddChild(grid);
+        into.AddChild(table);
     }
 
-    private static void AddHeader(GridContainer grid, string key, bool expand)
+    private static void AddHeader(KsTguiTableRow headerRow, string key, bool expand)
     {
-        grid.AddChild(new Label
+        headerRow.AddChild(new Label
         {
             Text = Loc.GetString(key),
             FontColorOverride = XColor.Gray,
