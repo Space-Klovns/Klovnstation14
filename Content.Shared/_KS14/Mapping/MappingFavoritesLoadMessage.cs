@@ -1,0 +1,21 @@
+// KS14 start: mapping editor overhaul port
+using Lidgren.Network;
+using Robust.Shared.Network;
+using Robust.Shared.Serialization;
+
+namespace Content.Shared._KS14.Mapping;
+
+public sealed class MappingFavoritesLoadMessage : NetMessage
+{
+    public override MsgGroups MsgGroup => MsgGroups.Command;
+    public override NetDeliveryMethod DeliveryMethod => NetDeliveryMethod.ReliableUnordered;
+
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
+    {
+    }
+
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
+    {
+    }
+}
+// KS14 end
