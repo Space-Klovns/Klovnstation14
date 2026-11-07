@@ -25,5 +25,5 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> GunTriggerSpasmChance =
-        CVarDef.Create("klovn.gun.trigger_spasm_chance", 0.33f, CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.gun.trigger_spasm_chance", 0.220f, CVar.SERVER | CVar.REPLICATED);
 }
