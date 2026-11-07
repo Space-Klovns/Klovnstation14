@@ -19,6 +19,8 @@ public sealed partial class ExecutorMenu : FancyWindow
     public event Action? OnLoadButton;
     public event Action? OnTerminateButton;
 
+    public bool _closed = false;
+
     public static string? FormattedDefinitions;
     public ExecutorMenu()
     {
@@ -32,13 +34,19 @@ public sealed partial class ExecutorMenu : FancyWindow
             Definitions.TextRope = Rope.Concat(Rope.Leaf.Empty, FormattedDefinitions);
     }
 
-    public void UpdateState(ExecutorBoundUserInterfaceState state)
+    public void UpdateState(ExecutorBoundUserInterfaceState state, PacketExecutorComponent? component)
     {
+        if (_closed)
+            return;
+
+        component?.Command = state.Command;
+        var command = component?.Command ?? state.Command;
+
         DataLabel.Text = Loc.GetString("executor-menu-data",  ("maxMemory", state.MaxMemory), ("maxStatements", state.MaxStatements));
 
         Input.TextRope = Rope.Leaf.Empty;
         Input.CursorPosition = new TextEdit.CursorPos();
-        Input.InsertAtCursor(state.Command);
+        Input.InsertAtCursor(command);
     }
 
     public void UpdateDefinitions(List<DeviceCallEntry>? entries)
