@@ -11,9 +11,12 @@ using Content.Client.Lathe.UI;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.Tgui;
 using Content.Shared.Lathe;
 using Content.Shared.Materials;
+using Content.Client.Lathe;
 using Robust.Client.UserInterface;
+using Robust.Shared.Maths;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -32,18 +35,20 @@ public sealed class KsTguiLatheWindowTest : GameTest
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private static readonly EntProtoId LatheProto = "Autolathe";
+    private static readonly EntProtoId HyperAutolatheProto = "AutolatheHyperConvection";
+    private static readonly EntProtoId ProtolatheProto = "Protolathe";
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly ProtoId<MaterialPrototype> SteelMaterial = "Steel";
     private static readonly ProtoId<MaterialPrototype> GlassMaterial = "Glass";
 
-    private async Task<EntityUid> OpenLathe()
+    private async Task<EntityUid> OpenLathe(EntProtoId? prototype = null)
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid lathe = default;
         EntityUid user = default;
         await Server.WaitPost(() =>
         {
-            lathe = SEntMan.SpawnEntity(LatheProto, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f)));
+            lathe = SEntMan.SpawnEntity(prototype ?? LatheProto, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f)));
             user = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 1.5f)));
             Server.PlayerMan.SetAttachedEntity(ServerSession!, user);
 
@@ -114,7 +119,8 @@ public sealed class KsTguiLatheWindowTest : GameTest
         await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
         await Pair.RunTicksSync(2);
 
-        await OpenLathe();
+        // The Fabricator layout: the Autolathe's queue is not there at all while it is empty.
+        await OpenLathe(ProtolatheProto);
 
         KsTguiLatheWindow window = null!;
         var emptyText = string.Empty;
@@ -233,7 +239,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
         await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
         await Pair.RunTicksSync(2);
 
-        var lathe = await OpenLathe();
+        var lathe = await OpenLathe(ProtolatheProto);
 
         var steelBefore = 0;
         var glassBefore = 0;
@@ -505,6 +511,417 @@ public sealed class KsTguiLatheWindowTest : GameTest
 
             Press(tabs[1]);
             Assert.That(tabs[1].Selected && !tabs[0].Selected, Is.True);
+        });
+    }
+
+    private KsTguiLatheWindow Window()
+    {
+        return Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+    }
+
+    private async Task UseTgui()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+    }
+
+    /// <summary>
+    ///     Sets what the lathe holds and its limit exactly, whatever it held.
+    /// </summary>
+    private async Task SetStorage(EntityUid lathe, int? limit, params (ProtoId<MaterialPrototype> Material, int Volume)[] stored)
+    {
+        await Server.WaitPost(() =>
+        {
+            var materials = SEntMan.System<SharedMaterialStorageSystem>();
+            var component = SEntMan.GetComponent<MaterialStorageComponent>(lathe);
+            component.StorageLimit = null;
+
+            foreach (var material in new[] { SteelMaterial, GlassMaterial, PlasticMaterial })
+            {
+                var wanted = stored.Where(entry => entry.Material == material).Select(entry => entry.Volume).FirstOrDefault();
+                var delta = wanted - materials.GetMaterialAmount(lathe, material);
+                if (delta != 0)
+                    Assert.That(materials.TryChangeMaterialAmount(lathe, material, delta), Is.True);
+            }
+
+            component.StorageLimit = limit;
+            SEntMan.Dirty(lathe, component);
+        });
+        await Pair.RunTicksSync(15);
+    }
+
+    private static readonly ProtoId<MaterialPrototype> PlasticMaterial = "Plastic";
+
+    [TestCase("Autolathe", true)]
+    [TestCase("AutolatheHyperConvection", true)]
+    [TestCase("Protolathe", false)]
+    public async Task OnlyAutolathesGetTheTotalMaterialsLayout(string prototype, bool autolathe)
+    {
+        await UseTgui();
+        await OpenLathe(prototype);
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = Window();
+            Assert.That(window.IsAutolatheLayout, Is.EqualTo(autolathe));
+            Assert.That(Descendants<KsTguiLatheMaterialSummary>(window).Any(), Is.EqualTo(autolathe), "Total Materials is the Autolathe's.");
+            Assert.That(Descendants<KsTguiMaterialList>(window).Any(), Is.EqualTo(!autolathe), "The material bar is the Fabricator's.");
+            if (autolathe)
+                Assert.That(window.SetSize.X, Is.EqualTo(670f), "tg's Autolathe window is 670 wide.");
+        });
+    }
+
+    /// <summary>
+    ///     tg: value materialtotal over materialsmax, good from 85%, average from 25%, bad below, text in sheets.
+    /// </summary>
+    [TestCase(9000, "Good", "90/100 sheets")]
+    [TestCase(8500, "Good", "85/100 sheets")]
+    [TestCase(5000, "Average", "50/100 sheets")]
+    [TestCase(2500, "Average", "25/100 sheets")]
+    [TestCase(1000, "Bad", "10/100 sheets")]
+    public async Task TotalBarShowsHowFullTheStorageIs(int volume, string range, string text)
+    {
+        await UseTgui();
+        var lathe = await OpenLathe();
+        await SetStorage(lathe, 10000, (SteelMaterial, volume));
+
+        await Client.WaitAssertion(() =>
+        {
+            var bar = Descendants<KsTguiLatheMaterialSummary>(Window()).Single().TotalBar;
+            Assert.That(bar.Value, Is.EqualTo((float)volume));
+            Assert.That(bar.MaxValue, Is.EqualTo(10000f));
+            Assert.That(bar.ShownText, Is.EqualTo(text));
+            Assert.That(bar.ResolvedColor, Is.EqualTo(Enum.Parse<KsTguiColor>(range)));
+        });
+    }
+
+    /// <summary>
+    ///     The autolathe has no limit of its own, so there is no maximum to be a fraction of.
+    /// </summary>
+    [Test]
+    public async Task WithoutALimitTheTotalBarIsFullAndHasNoRange()
+    {
+        await UseTgui();
+        var lathe = await OpenLathe();
+        await SetStorage(lathe, null, (SteelMaterial, 1000), (GlassMaterial, 250));
+
+        await Client.WaitAssertion(() =>
+        {
+            var bar = Descendants<KsTguiLatheMaterialSummary>(Window()).Single().TotalBar;
+            Assert.That(bar.Value, Is.EqualTo(1250f));
+            Assert.That(bar.MaxValue, Is.EqualTo(1250f));
+            Assert.That(bar.ShownText, Is.EqualTo("12.5 sheets"));
+            Assert.That(bar.ResolvedColor, Is.EqualTo(KsTguiColor.Default));
+        });
+    }
+
+    [Test]
+    public async Task MaterialsCollapsibleListsStoredMaterialsAndEjectsThem()
+    {
+        await UseTgui();
+        var lathe = await OpenLathe();
+
+        // Nothing stored: tg shows no Collapsible.
+        await SetStorage(lathe, 10000);
+        await Client.WaitAssertion(() =>
+            Assert.That(Descendants<KsTguiLatheMaterialSummary>(Window()).Single().MaterialsCollapsible.Visible, Is.False));
+
+        var steelSheet = 0;
+        var glassSheet = 0;
+        await Server.WaitPost(() =>
+        {
+            var materials = SEntMan.System<SharedMaterialStorageSystem>();
+            steelSheet = materials.GetSheetVolume(SProtoMan.Index(SteelMaterial));
+            glassSheet = materials.GetSheetVolume(SProtoMan.Index(GlassMaterial));
+        });
+
+        // Ten sheets of steel, three of glass, and less than a sheet of plastic.
+        var plasticSheet = 100;
+        await SetStorage(lathe, 100000, (SteelMaterial, steelSheet * 10), (GlassMaterial, glassSheet * 3), (PlasticMaterial, plasticSheet / 2));
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                var summary = Descendants<KsTguiLatheMaterialSummary>(Window()).Single();
+                Assert.That(summary.MaterialsCollapsible.Visible, Is.True);
+                Assert.That(summary.Rows.Keys, Is.EquivalentTo(new[] { SteelMaterial, GlassMaterial, PlasticMaterial }));
+
+                // Rows are labelled with the capitalised name, as tg's capitalize.
+                foreach (var row in summary.Rows.Values)
+                {
+                    var name = Robust.Shared.Localization.Loc.GetString(CProtoMan.Index(row.Material).Name);
+                    Assert.That(row.Item.Label, Is.EqualTo(char.ToUpperInvariant(name[0]) + name[1..]));
+                    Assert.That(row.Bar.Mirrored, Is.True);
+                    Assert.That(row.Bar.BackgroundColor, Is.EqualTo(CProtoMan.Index(row.Material).Color), "The track is the material's colour.");
+                    Assert.That(row.Bar.Color, Is.EqualTo(KsTguiColor.Black));
+                }
+
+                var steel = summary.Rows[SteelMaterial];
+                Assert.That(steel.EjectButtons.Select(button => button.Sheets), Is.EqualTo(new[] { 1, 5, 10 }), "x1, x5 and all, sorted.");
+                Assert.That(steel.EjectButtons.All(button => !button.Button.Disabled), Is.True);
+                Assert.That(steel.EjectButtons.Select(button => button.Button.Text), Is.EqualTo(new[] { "x1", "x5", "x10" }));
+                Assert.That(steel.Bar.Value, Is.EqualTo(summary.TotalBar.MaxValue - steelSheet * 10), "The fill is max - amount.");
+                Assert.That(steel.Bar.MaxValue, Is.EqualTo(summary.TotalBar.MaxValue));
+
+                var glass = summary.Rows[GlassMaterial];
+                Assert.That(glass.EjectButtons.Select(button => button.Sheets), Is.EqualTo(new[] { 1, 3, 5 }), "Three sheets sort between x1 and x5.");
+                Assert.That(glass.EjectButtons.Select(button => button.Button.Disabled), Is.EqualTo(new[] { false, false, true }));
+
+                var plastic = summary.Rows[PlasticMaterial];
+                Assert.That(plastic.EjectButtons.Select(button => button.Sheets), Is.EqualTo(new[] { 1, 5 }), "No x0 under a sheet.");
+                Assert.That(plastic.EjectButtons.All(button => button.Button.Disabled), Is.True, "Not even one sheet.");
+            });
+        });
+
+        // Eject x5 of the steel: the same message the Fabricator's entries send.
+        var steelBefore = 0;
+        await Server.WaitPost(() => steelBefore = SEntMan.System<SharedMaterialStorageSystem>().GetMaterialAmount(lathe, SteelMaterial));
+        await Client.WaitPost(() =>
+        {
+            var steel = Descendants<KsTguiLatheMaterialSummary>(Window()).Single().Rows[SteelMaterial];
+            Press(steel.EjectButtons.Single(button => button.Sheets == 5).Button);
+        });
+        await Pair.RunTicksSync(15);
+
+        await Server.WaitAssertion(() =>
+        {
+            var steelAfter = SEntMan.System<SharedMaterialStorageSystem>().GetMaterialAmount(lathe, SteelMaterial);
+            Assert.That(steelBefore - steelAfter, Is.EqualTo(steelSheet * 5), "Five sheets should leave the lathe.");
+        });
+    }
+
+    [Test]
+    public async Task SearchingTitlesTheResultsAndListsEveryCategoryByName()
+    {
+        await UseTgui();
+        await OpenLathe();
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                var window = Window();
+                var all = Robust.Shared.Localization.Loc.GetString("ks-tgui-lathe-all-designs");
+                Assert.That(window.DesignsTitle, Is.EqualTo(all));
+
+                var searchBar = Descendants<KsTguiSearchBar>(window).Single();
+                Assert.That(searchBar.PlaceHolder, Is.EqualTo(Robust.Shared.Localization.Loc.GetString("ks-tgui-lathe-search")));
+                Assert.That(searchBar.PlaceHolder, Is.EqualTo("Search all designs..."));
+
+                // The search is in a Section of its own inside the titled one.
+                var sections = new List<KsTguiSection>();
+                for (Control? parent = searchBar.Parent; parent != null; parent = parent.Parent)
+                {
+                    if (parent is KsTguiSection section)
+                        sections.Add(section);
+                }
+                Assert.That(sections, Has.Count.GreaterThanOrEqualTo(2));
+                Assert.That(sections[0].Title, Is.Null, "The search's own section has no title.");
+                Assert.That(sections[1].Title, Is.EqualTo(all));
+
+                // A category, then a search that reaches past it.
+                var tabs = Descendants<KsTguiFabricatorTab>(window).ToList();
+                Press(tabs[1]);
+                var categoryRows = Descendants<KsTguiLatheRecipeRow>(window).Select(row => row.RecipeId.Id).ToList();
+                Assert.That(window.DesignsTitle, Is.Not.EqualTo(all));
+                var categoryTitle = window.DesignsTitle;
+
+                const string query = "e";
+                searchBar.Input.SetText(query, invokeEvent: true);
+                Assert.That(window.DesignsTitle, Is.EqualTo(Robust.Shared.Localization.Loc.GetString("ks-tgui-lathe-results", ("query", query))));
+                Assert.That(window.DesignsTitle, Does.Contain("Results for"));
+
+                var lathe = CEntMan.System<LatheSystem>();
+                var expected = window.Recipes
+                    .Where(recipe => lathe.GetRecipeName(recipe).ToLowerInvariant().Contains(query))
+                    .OrderBy(recipe => lathe.GetRecipeName(recipe))
+                    .Select(recipe => recipe.Id)
+                    .ToList();
+                var shown = Descendants<KsTguiLatheRecipeRow>(window).Select(row => row.RecipeId.Id).ToList();
+
+                Assert.That(shown, Is.EqualTo(expected), "Every matching design, sorted by name.");
+                Assert.That(shown.Except(categoryRows), Is.Not.Empty, "The search should reach designs outside the selected category.");
+
+                // Clearing it brings the category back.
+                searchBar.Input.SetText(string.Empty, invokeEvent: true);
+                Assert.That(window.DesignsTitle, Is.EqualTo(categoryTitle));
+                Assert.That(Descendants<KsTguiLatheRecipeRow>(window).Select(row => row.RecipeId.Id), Is.EqualTo(categoryRows));
+            });
+        });
+    }
+
+    [Test]
+    public async Task ChangingCategoryClearsTheSearch()
+    {
+        await UseTgui();
+        await OpenLathe();
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = Window();
+            var searchBar = Descendants<KsTguiSearchBar>(window).Single();
+            var tabs = Descendants<KsTguiFabricatorTab>(window).ToList();
+
+            searchBar.Input.SetText("e", invokeEvent: true);
+            Assert.That(window.DesignsTitle, Does.Contain("Results for"));
+
+            // The category already selected (All) is left alone, as tg's early return.
+            Press(tabs[0]);
+            Assert.That(searchBar.Input.Text, Is.EqualTo("e"));
+
+            Press(tabs[2]);
+            Assert.That(searchBar.Input.Text, Is.Empty, "A new category clears the search.");
+            Assert.That(window.DesignsTitle, Does.Not.Contain("Results for"));
+            Assert.That(tabs[2].Selected, Is.True);
+
+            // And selecting the same one again, with a search typed, keeps it.
+            searchBar.Input.SetText("e", invokeEvent: true);
+            Press(tabs[2]);
+            Assert.That(searchBar.Input.Text, Is.EqualTo("e"));
+        });
+    }
+
+    /// <summary>
+    ///     tg's <c>multiplier: 1</c>, with no amount box to say otherwise.
+    /// </summary>
+    [Test]
+    public async Task ClickingADesignsTitleQueuesOneAndThereIsNoAmountInput()
+    {
+        await UseTgui();
+        await OpenLathe();
+
+        await Client.WaitPost(() =>
+        {
+            var window = Window();
+            Assert.That(Descendants<KsTguiNumberInput>(window), Is.Empty, "tg has no amount input.");
+            Assert.That(Descendants<Label>(window).Any(label => label.Text == Robust.Shared.Localization.Loc.GetString("lathe-menu-amount")), Is.False);
+
+            var sent = new List<(string Recipe, int Amount)>();
+            window.RecipeQueueAction += (recipe, amount) => sent.Add((recipe, amount));
+
+            var row = Descendants<KsTguiLatheRecipeRow>(window).First(row => row.CanBuild(1));
+            Press(Title(row));
+            Assert.That(sent, Is.EqualTo(new[] { (row.RecipeId.Id, 1) }));
+        });
+    }
+
+    /// <summary>
+    ///     The Autolathe layout keeps the queue out of the way while it is empty.
+    /// </summary>
+    [Test]
+    public async Task AutolatheQueueShowsOnlyWhileThereIsSomethingInIt()
+    {
+        await UseTgui();
+        await OpenLathe();
+
+        await Client.WaitAssertion(() => Assert.That(Window().QueueShown, Is.False));
+
+        await Client.WaitPost(() => Window().SetQueueInfo(Window().Recipes.First()));
+        await Client.WaitAssertion(() => Assert.That(Window().QueueShown, Is.True, "Something is printing."));
+
+        await Client.WaitPost(() => Window().SetQueueInfo(null));
+        await Client.WaitAssertion(() => Assert.That(Window().QueueShown, Is.False));
+    }
+
+    private static UIBox2 BoxOf(Control control)
+    {
+        return UIBox2.FromDimensions(control.GlobalPosition, control.Size);
+    }
+
+    private static bool Intersects(UIBox2 first, UIBox2 second)
+    {
+        const float tolerance = 0.5f;
+        return first.Left < second.Right - tolerance && second.Left < first.Right - tolerance
+            && first.Top < second.Bottom - tolerance && second.Top < first.Bottom - tolerance;
+    }
+
+    private static bool Contains(UIBox2 outer, UIBox2 inner)
+    {
+        const float tolerance = 0.5f;
+        return inner.Left >= outer.Left - tolerance && inner.Top >= outer.Top - tolerance
+            && inner.Right <= outer.Right + tolerance && inner.Bottom <= outer.Bottom + tolerance;
+    }
+
+    /// <summary>
+    ///     The window laid out at the size it opens at, with designs, a queue and (on an autolathe) the materials open: nothing
+    ///         leaves the window and the queue sits clear of the designs. The list is the part that gives way.
+    ///     <see cref="KsWindowContentsFitTest"/> measures a window as built, with no state in it, so an empty design list and no
+    ///         queue never showed this.
+    /// </summary>
+    [TestCase("Autolathe", true)]
+    [TestCase("Autolathe", false)]
+    [TestCase("Protolathe", false)]
+    public async Task NothingLeavesTheWindowOrOverlaps(string prototype, bool materialsOpen)
+    {
+        await UseTgui();
+        await OpenLathe(prototype);
+
+        await Client.WaitPost(() =>
+        {
+            var window = Window();
+            Assert.That(Descendants<KsTguiLatheRecipeRow>(window), Is.Not.Empty);
+
+            // A queue, and something printing.
+            var recipes = window.Recipes;
+            window.SetQueueInfo(recipes[0]);
+            window.PopulateQueueList(new List<LatheRecipeBatch>
+            {
+                new(recipes[1], 0, 5), new(recipes[2], 0, 1), new(recipes[3], 0, 2), new(recipes[4], 0, 1),
+            });
+
+            foreach (var summary in Descendants<KsTguiLatheMaterialSummary>(window))
+                summary.MaterialsCollapsible.Open = materialsOpen;
+
+        });
+
+        // Let the interface lay itself out with the new state, then lay it out again at the opening size.
+        await Pair.RunTicksSync(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = Window();
+            window.InvalidateMeasure();
+            var size = window.SetSize;
+            window.Measure(size);
+            window.Arrange(UIBox2.FromDimensions(Vector2.Zero, size));
+
+            var contents = BoxOf(window.ContentsContainer);
+            var sections = Descendants<KsTguiSection>(window).Where(section => section.Visible).ToList();
+            Assert.That(sections, Is.Not.Empty);
+
+            Assert.Multiple(() =>
+            {
+                foreach (var section in sections)
+                    Assert.That(Contains(contents, BoxOf(section)), Is.True, $"Section '{section.Title}' {BoxOf(section)} is outside the window's contents {contents}.");
+
+                var row = Descendants<KsTguiLatheRecipeRow>(window).First();
+                var rowSections = new List<KsTguiSection>();
+                for (Control? parent = row.Parent; parent != null; parent = parent.Parent)
+                {
+                    if (parent is KsTguiSection section)
+                        rowSections.Add(section);
+                }
+
+                var queue = sections.FirstOrDefault(section => section.Title == Robust.Shared.Localization.Loc.GetString("lathe-menu-queue-title"));
+                Assert.That(queue, Is.Not.Null);
+                Assert.That(queue!.Size.Y, Is.GreaterThanOrEqualTo(140f), "The queue was squeezed below the room it needs. " + string.Join("; ", sections.Select(section => $"{section.Title}={BoxOf(section)}")));
+                foreach (var designs in rowSections)
+                    Assert.That(Intersects(BoxOf(queue!), BoxOf(designs)), Is.False, $"The queue {BoxOf(queue!)} overlaps '{designs.Title}' {BoxOf(designs)}.");
+
+                // The list still has room to show something.
+                Assert.That(BoxOf(rowSections[0]).Height, Is.GreaterThan(40f), "The design list was squeezed out.");
+
+                // Every section the window has lies clear of its siblings: the Fabricator's bar is one of them.
+                var materials = sections.FirstOrDefault(section => section.Title == Robust.Shared.Localization.Loc.GetString("lathe-menu-materials-title"));
+                if (!window.IsAutolatheLayout)
+                {
+                    Assert.That(materials, Is.Not.Null);
+                    Assert.That(materials!.Size.Y, Is.GreaterThan(30f), "The material bar was squeezed to nothing.");
+                    Assert.That(Intersects(BoxOf(materials), BoxOf(queue!)), Is.False);
+                    Assert.That(Intersects(BoxOf(materials), BoxOf(rowSections[^1])), Is.False);
+                }
+            });
         });
     }
 }

@@ -301,7 +301,7 @@ public sealed class KsLatheMaterialTest : InteractionTest
 
         await Server.WaitPost(() =>
         {
-            foreach (var hand in Hands.Hands.Keys.ToList())
+            foreach (var hand in Hands!.Hands.Keys.ToList())
             {
                 var filler = SEntMan.SpawnEntity("Crowbar", SEntMan.GetComponent<TransformComponent>(SPlayer).Coordinates);
                 Assert.That(HandSys.TryPickup(SPlayer, filler, hand), Is.True);

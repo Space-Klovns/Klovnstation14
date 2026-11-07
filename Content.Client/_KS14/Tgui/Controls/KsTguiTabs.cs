@@ -2,6 +2,9 @@ using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Graphics;
+using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using static Robust.Client.UserInterface.Controls.BaseButton;
@@ -336,6 +339,8 @@ public sealed class KsTguiTabs : BoxContainer
             _watchedParent.OnChildRemoved -= OnSiblingsChanged;
             _watchedParent = null;
         }
+
+        ReleaseMask();
     }
 
     private void OnSiblingsChanged(Control _)
@@ -442,6 +447,132 @@ public sealed class KsTguiTabs : BoxContainer
     ///     Whether the scroll buttons are showing, for tests: left, then right.
     /// </summary>
     public (bool Left, bool Right) ScrollButtonsShown => (_leftHost.Visible, _rightHost.Visible);
+
+    public const string MaskShader = "KsTguiTabsMask";
+
+    private IRenderTexture? _maskTarget;
+    private ShaderInstance? _maskShaderInstance;
+    private bool _maskDrawn;
+
+    /// <summary>
+    ///     What the mask shader is given for the strip as it is now, in pixels at the current UI scale.
+    /// </summary>
+    public KsTguiTabsMaskParameters MaskParameters => KsTguiTabsMask.Parameters(LeftFade, RightFade, PixelWidth, UIScale);
+
+    /// <summary>
+    ///     Whether the tabs are drawn through the mask: scrolling, with more to scroll on a side.
+    /// </summary>
+    public bool Masked => LeftFade > 0f || RightFade > 0f;
+
+    /// <summary>
+    ///     Sets the mask shader's every uniform.
+    /// </summary>
+    public static void ApplyMask(ShaderInstance shader, KsTguiTabsMaskParameters parameters)
+    {
+        shader.SetParameter("stripWidth", parameters.StripWidth);
+        shader.SetParameter("leftFade", parameters.LeftFade);
+        shader.SetParameter("rightFade", parameters.RightFade);
+        shader.SetParameter("opaqueFraction", MaskOpaqueFraction);
+    }
+
+    protected override void PreRenderChildren(ref ControlRenderArguments args)
+    {
+        base.PreRenderChildren(ref args);
+        _maskDrawn = false;
+    }
+
+    /// <summary>
+    ///     tgui's <c>mask-image</c> on the scrolling content: all the tabs are drawn into a transparent target the size of the
+    ///         strip, which is drawn back through <c>tgui_tabs_mask.swsl</c> in place of them. That happens in place of the
+    ///         first tab, so the scroll buttons, which come after, are over it and not masked, as in tgui.
+    /// </summary>
+    protected override void RenderChildOverride(ref ControlRenderArguments args, int childIndex, Vector2i position)
+    {
+        if (GetChild(childIndex) is not KsTguiTabItem || !Masked || PixelWidth <= 0 || PixelHeight <= 0)
+        {
+            base.RenderChildOverride(ref args, childIndex, position);
+            return;
+        }
+
+        if (_maskDrawn)
+            return;
+
+        _maskDrawn = true;
+
+        // The child is placed at the strip's corner plus its own offset, so that gives the corner whatever frame this is
+        //      drawn in. Not args.Position or GlobalPixelPosition, which are not it when drawn out of the tree.
+        var origin = position - (Vector2i)Vector2.Transform(GetChild(childIndex).PixelPosition, args.CoordinateTransform);
+        var size = PixelSize;
+        var handle = args.Handle;
+        var target = EnsureMaskTarget(size);
+
+        var drawing = handle.DrawingHandleScreen;
+        var oldTransform = drawing.GetTransform();
+        var oldModulate = drawing.Modulate;
+
+        // Transparent black and not Color.Transparent, which is white: what the tabs leave empty must add no colour.
+        handle.RenderInRenderTarget(target, () =>
+        {
+            drawing.SetTransform(Matrix3x2.Identity);
+            drawing.Modulate = Color.White;
+            var total = 0;
+            var transform = Matrix3x2.Identity;
+            foreach (var child in Children)
+            {
+                if (child is not KsTguiTabItem)
+                    continue;
+
+                var tabArguments = new ControlRenderArguments
+                {
+                    Handle = handle,
+                    Total = ref total,
+                    Position = child.PixelPosition,
+                    Modulate = Color.White,
+                    ScissorBox = UIBox2i.FromDimensions(Vector2i.Zero, size),
+                    CoordinateTransform = ref transform,
+                };
+
+                UserInterfaceManager.RenderControl(in tabArguments, child);
+            }
+
+            handle.SetScissor(null);
+        }, new Color(0f, 0f, 0f, 0f));
+
+        _maskShaderInstance ??= IoCManager.Resolve<IPrototypeManager>().Index<ShaderPrototype>(MaskShader).InstanceUnique();
+        ApplyMask(_maskShaderInstance, MaskParameters);
+
+        drawing.SetTransform(Matrix3x2.Identity);
+        drawing.Modulate = Color.White;
+        drawing.UseShader(_maskShaderInstance);
+        drawing.DrawTextureRect(target.Texture, UIBox2.FromDimensions(origin, size), args.Modulate);
+        drawing.UseShader(null);
+        drawing.Modulate = oldModulate;
+        drawing.SetTransform(oldTransform);
+    }
+
+    private IRenderTexture EnsureMaskTarget(Vector2i size)
+    {
+        if (_maskTarget != null && _maskTarget.Size == size)
+            return _maskTarget;
+
+        _maskTarget?.Dispose();
+
+        // Unfiltered: it is drawn back one to one. Premultiplied by the blending that fills it.
+        _maskTarget = IoCManager.Resolve<IClyde>().CreateRenderTarget(
+            size,
+            new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb),
+            new TextureSampleParameters { Filter = false },
+            "ks-tgui-tabs-mask");
+        return _maskTarget;
+    }
+
+    private void ReleaseMask()
+    {
+        _maskTarget?.Dispose();
+        _maskTarget = null;
+        _maskShaderInstance?.Dispose();
+        _maskShaderInstance = null;
+    }
 
     private void RefreshScrollable()
     {
@@ -620,13 +751,12 @@ public sealed class KsTguiTabs : BoxContainer
     }
 
     /// <summary>
-    ///     What sits over the scrolled tabs: the fade at each edge, and above that the scroll buttons. The fade is the strip's
-    ///         colour at the mask's alpha, which is what tgui's <c>mask-image</c> lets show through.
+    ///     What sits over the scrolled tabs: the scroll buttons. The fade is not drawn here but is a mask on the tabs
+    ///         themselves, see <see cref="RenderChildOverride"/>.
     /// </summary>
     private sealed class ScrollChrome : Control
     {
         private readonly KsTguiTabs _owner;
-        private readonly DrawVertexUV2DColor[] _vertices = new DrawVertexUV2DColor[6];
 
         public ScrollChrome(KsTguiTabs owner)
         {
@@ -652,43 +782,6 @@ public sealed class KsTguiTabs : BoxContainer
             left.Arrange(UIBox2.FromDimensions(0f, 0f, leftWidth, finalSize.Y));
             right.Arrange(UIBox2.FromDimensions(finalSize.X - rightWidth, 0f, rightWidth, finalSize.Y));
             return finalSize;
-        }
-
-        protected override void Draw(DrawingHandleScreen handle)
-        {
-            var scale = UIScale;
-            var colour = _owner._inSection ? KsTguiPalettes.Section : StripColor;
-            var width = PixelWidth;
-            var height = PixelHeight;
-
-            var left = _owner.LeftFade * scale;
-            if (left > 0f)
-            {
-                var opaque = left * MaskOpaqueFraction;
-                handle.DrawRect(new UIBox2(0f, 0f, opaque, height), colour);
-                DrawRamp(handle, opaque, left, height, colour, 1f, 0f);
-            }
-
-            var right = _owner.RightFade * scale;
-            if (right > 0f)
-            {
-                var opaque = right * MaskOpaqueFraction;
-                handle.DrawRect(new UIBox2(width - opaque, 0f, width, height), colour);
-                DrawRamp(handle, width - right, width - opaque, height, colour, 0f, 1f);
-            }
-        }
-
-        private void DrawRamp(DrawingHandleScreen handle, float x0, float x1, float height, Color colour, float alpha0, float alpha1)
-        {
-            var start = colour.WithAlpha(alpha0);
-            var end = colour.WithAlpha(alpha1);
-            _vertices[0] = new DrawVertexUV2DColor(new Vector2(x0, 0f), start);
-            _vertices[1] = new DrawVertexUV2DColor(new Vector2(x1, 0f), end);
-            _vertices[2] = new DrawVertexUV2DColor(new Vector2(x1, height), end);
-            _vertices[3] = new DrawVertexUV2DColor(new Vector2(x0, 0f), start);
-            _vertices[4] = new DrawVertexUV2DColor(new Vector2(x1, height), end);
-            _vertices[5] = new DrawVertexUV2DColor(new Vector2(x0, height), start);
-            handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White, _vertices);
         }
     }
 }

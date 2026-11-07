@@ -52,6 +52,12 @@ public class KsTguiButton : Button
     private const float CompactLineHeight = 16f;
 
     /// <summary>
+    ///     On a compact button, so the sheet can undo the 8pt label the engine's small button brings: tgui's compact keeps the
+    ///         font size and only trims the padding.
+    /// </summary>
+    public const string StyleClassCompact = "KsTguiButtonCompact";
+
+    /// <summary>
     ///     tgui's <c>--button-transition</c>.
     /// </summary>
     private const float TextFadeSeconds = 0.2f;
@@ -249,9 +255,15 @@ public class KsTguiButton : Button
 
             _compact = value;
             if (value)
+            {
                 AddStyleClass(StyleClass.ButtonSmall);
+                AddStyleClass(StyleClassCompact);
+            }
             else
+            {
                 RemoveStyleClass(StyleClass.ButtonSmall);
+                RemoveStyleClass(StyleClassCompact);
+            }
 
             InvalidateMeasure();
         }

@@ -120,8 +120,10 @@ public sealed class KsTguiTooltipHost : Control
         if (Backdrop != null)
         {
             _blur ??= new KsTguiBackdropBlur(Backdrop);
-            var box = UIBox2.FromDimensions(args.Position, (Vector2)PixelSize * Scale);
-            _blur.Draw(args.Handle, this, args.Position, box, PixelSize, Radius * UIScale * Scale, args.Modulate);
+            // Not args.Position: the engine leaves that unset for PreRenderChildren, so it is always the screen's corner.
+            var position = GlobalPixelPosition;
+            var box = UIBox2.FromDimensions(position, (Vector2)PixelSize * Scale);
+            _blur.Draw(args.Handle, this, position, box, PixelSize, Radius * UIScale * Scale, args.Modulate);
         }
 
         if (Scale >= 1f)

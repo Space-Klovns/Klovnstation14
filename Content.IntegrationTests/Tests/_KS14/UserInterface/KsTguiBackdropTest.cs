@@ -102,7 +102,7 @@ public sealed class KsTguiBackdropTest : GameTest
     private static void Press(BaseButton button)
     {
         var field = typeof(BaseButton).GetField(nameof(BaseButton.OnPressed), BindingFlags.Instance | BindingFlags.NonPublic);
-        var handler = (Action<BaseButton.ButtonEventArgs>?)field!.GetValue(button);
+        var handler = (Action<BaseButton.ButtonEventArgs>)field.GetValue(button);
         handler?.Invoke(new BaseButton.ButtonEventArgs(button, null!));
     }
 
@@ -116,7 +116,7 @@ public sealed class KsTguiBackdropTest : GameTest
     /// <summary>
     ///     A dropdown, opened. The popup comes out for the test to close.
     /// </summary>
-    private (OptionButton Option, Popup Popup, KsTguiScaleHost Host) OpenDropdown(OptionButton? existing = null)
+    private (OptionButton Option, Popup Popup, KsTguiScaleHost Host) OpenDropdown(OptionButton existing = null)
     {
         var option = existing ?? new OptionButton();
         if (existing == null)

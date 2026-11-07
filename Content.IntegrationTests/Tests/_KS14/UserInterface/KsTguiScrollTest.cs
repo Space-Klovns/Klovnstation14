@@ -10,9 +10,11 @@ using Content.Client._KS14.Tgui.Windows.Pda;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
@@ -44,7 +46,7 @@ public sealed class KsTguiScrollTest : GameTest
         private float _height = 20f;
         private float _width = 50f;
 
-        public float Height
+        public float ContentHeight
         {
             get => _height;
             set
@@ -54,7 +56,7 @@ public sealed class KsTguiScrollTest : GameTest
             }
         }
 
-        public float Width
+        public float ContentWidth
         {
             get => _width;
             set
@@ -69,7 +71,7 @@ public sealed class KsTguiScrollTest : GameTest
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             LastAvailable = availableSize;
-            return new Vector2(Width, Height);
+            return new Vector2(ContentWidth, ContentHeight);
         }
     }
 
@@ -133,7 +135,6 @@ public sealed class KsTguiScrollTest : GameTest
 
             Assert.Multiple(() =>
             {
-                Assert.That(probe.Width, Is.EqualTo(50f));
                 Assert.That(probe.Size.X, Is.EqualTo(85f), "The content is arranged 15px narrower");
                 Assert.That(probe.LastAvailable.X, Is.EqualTo(85f), "and was measured at the width it is arranged at");
                 Assert.That(bar.Visible, Is.True, "The track shows although nothing overflows");
@@ -161,7 +162,7 @@ public sealed class KsTguiScrollTest : GameTest
             Assert.That(bar.Visible, Is.False, "overflow-y: auto shows nothing while it fits");
             Assert.That(probe.Size.X, Is.EqualTo(100f));
 
-            probe.Height = 400f;
+            probe.ContentHeight = 400f;
             Layout(scroll);
 
             Assert.Multiple(() =>
@@ -186,7 +187,7 @@ public sealed class KsTguiScrollTest : GameTest
 
         await Client.WaitAssertion(() =>
         {
-            var probe = new Probe { Height = 400f };
+            var probe = new Probe { ContentHeight = 400f };
             var scroll = Scroll(probe, reserve: true);
 
             scroll.VScroll = 130f;
@@ -194,12 +195,12 @@ public sealed class KsTguiScrollTest : GameTest
             Assert.That(probe.Position.Y, Is.EqualTo(-130f));
 
             // Shrinking the content so that it only just overflows clamps the value rather than losing the room.
-            probe.Height = 150f;
+            probe.ContentHeight = 150f;
             probe.InvalidateMeasure();
             Layout(scroll);
             Assert.That(probe.Position.Y, Is.EqualTo(-50f));
 
-            probe.Height = 20f;
+            probe.ContentHeight = 20f;
             Layout(scroll);
             Assert.That(probe.Position.Y, Is.EqualTo(0f), "Nothing to scroll: back to the top");
             Assert.That(scroll.GetScrollValue(), Is.EqualTo(Vector2.Zero));
@@ -215,7 +216,7 @@ public sealed class KsTguiScrollTest : GameTest
 
         await Client.WaitAssertion(() =>
         {
-            var probe = new Probe { Width = 300f, Height = 20f };
+            var probe = new Probe { ContentWidth = 300f, ContentHeight = 20f };
             var scroll = Scroll(probe, reserve: true, horizontal: true, reserveHorizontal: true);
             var vertical = Bar<VScrollBar>(scroll);
             var horizontal = Bar<HScrollBar>(scroll);
@@ -249,7 +250,7 @@ public sealed class KsTguiScrollTest : GameTest
 
             Assert.That(Wheel(scroll), Is.False, "A browser's reserved bar with nothing to scroll lets the wheel through");
 
-            probe.Height = 400f;
+            probe.ContentHeight = 400f;
             Layout(scroll);
             Assert.That(Wheel(scroll), Is.True);
             Assert.That(scroll.VScrollTarget, Is.GreaterThan(0f));
@@ -272,7 +273,7 @@ public sealed class KsTguiScrollTest : GameTest
 
         await Client.WaitAssertion(() =>
         {
-            var probe = new Probe { Height = 20f, HorizontalExpand = true };
+            var probe = new Probe { ContentHeight = 20f, HorizontalExpand = true };
             var section = new KsTguiSection { Title = "S", Scrollable = true, Fill = true, MinSize = new Vector2(200f, 120f), MaxSize = new Vector2(200f, 120f) };
             section.AddChild(probe);
             UiManager.PopupRoot.AddChild(section);
@@ -282,7 +283,7 @@ public sealed class KsTguiScrollTest : GameTest
             section.Arrange(UIBox2.FromDimensions(Vector2.Zero, new Vector2(200f, 120f)));
             var wide = probe.Size.X;
 
-            probe.Height = 600f;
+            probe.ContentHeight = 600f;
 
             // The queue the UI manager would run: the change reaches the section through each parent.
             for (var parent = probe.Parent; parent != null && parent != UiManager.PopupRoot; parent = parent.Parent)
@@ -534,10 +535,110 @@ public sealed class KsTguiScrollTest : GameTest
         });
     }
 
+    [Test]
+    public void MaskAlphaFollowsTguisGradientOnEachSide()
+    {
+        const float width = 300f;
+        const float fade = KsTguiTabs.MaskWidth;
+        var start = fade * KsTguiTabs.MaskOpaqueFraction;
+
+        Assert.Multiple(() =>
+        {
+            // Left only: transparent up to 0.66 of the fade, a straight ramp to opaque at the fade, opaque after.
+            Assert.That(KsTguiTabsMask.Alpha(0f, width, fade, 0f), Is.EqualTo(0f));
+            Assert.That(KsTguiTabsMask.Alpha(start, width, fade, 0f), Is.EqualTo(0f).Within(1e-5f));
+            Assert.That(KsTguiTabsMask.Alpha((start + fade) / 2f, width, fade, 0f), Is.EqualTo(0.5f).Within(1e-5f));
+            Assert.That(KsTguiTabsMask.Alpha(fade, width, fade, 0f), Is.EqualTo(1f).Within(1e-5f));
+            Assert.That(KsTguiTabsMask.Alpha(fade + 50f, width, fade, 0f), Is.EqualTo(1f));
+            Assert.That(KsTguiTabsMask.Alpha(width, width, fade, 0f), Is.EqualTo(1f), "Nothing fades at the right");
+
+            // Right only: the mirror image.
+            Assert.That(KsTguiTabsMask.Alpha(0f, width, 0f, fade), Is.EqualTo(1f), "Nothing fades at the left");
+            Assert.That(KsTguiTabsMask.Alpha(width - fade, width, 0f, fade), Is.EqualTo(1f).Within(1e-5f));
+            Assert.That(KsTguiTabsMask.Alpha(width - (start + fade) / 2f, width, 0f, fade), Is.EqualTo(0.5f).Within(1e-5f));
+            Assert.That(KsTguiTabsMask.Alpha(width - start, width, 0f, fade), Is.EqualTo(0f).Within(1e-5f));
+            Assert.That(KsTguiTabsMask.Alpha(width, width, 0f, fade), Is.EqualTo(0f), "The last pixels are fully faded");
+
+            // Both: the two multiply, and the middle is untouched.
+            Assert.That(KsTguiTabsMask.Alpha(0f, width, fade, fade), Is.EqualTo(0f));
+            Assert.That(KsTguiTabsMask.Alpha(width, width, fade, fade), Is.EqualTo(0f));
+            Assert.That(KsTguiTabsMask.Alpha(width / 2f, width, fade, fade), Is.EqualTo(1f));
+
+            // Neither: no mask at all, even at the very edge.
+            Assert.That(KsTguiTabsMask.Alpha(0f, width, 0f, 0f), Is.EqualTo(1f));
+            Assert.That(KsTguiTabsMask.Alpha(width, width, 0f, 0f), Is.EqualTo(1f));
+        });
+    }
+
+    [Test]
+    public void MaskParametersScaleWithTheUi()
+    {
+        var one = KsTguiTabsMask.Parameters(KsTguiTabs.MaskWidth, 0f, 300f, 1f);
+        var two = KsTguiTabsMask.Parameters(KsTguiTabs.MaskWidth, 0f, 600f, 2f);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(one, Is.EqualTo(new KsTguiTabsMaskParameters(300f, 39f, 0f)));
+            Assert.That(two, Is.EqualTo(new KsTguiTabsMaskParameters(600f, 78f, 0f)));
+
+            // Twice the pixels, the same picture.
+            Assert.That(KsTguiTabsMask.Alpha(60f, two), Is.EqualTo(KsTguiTabsMask.Alpha(30f, one)).Within(1e-5f));
+        });
+    }
+
+    [Test]
+    public async Task TheMaskShaderIsGivenTheScrollStateOfTheStrip()
+    {
+        KsTguiTabs tabs = null!;
+        await Client.WaitPost(() => tabs = Strip(10, 300f));
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(Client.ResolveDependency<IPrototypeManager>().HasIndex<ShaderPrototype>(KsTguiTabs.MaskShader), "The shader prototype exists");
+                Assert.That(tabs.Masked);
+                Assert.That(tabs.MaskParameters, Is.EqualTo(new KsTguiTabsMaskParameters(tabs.PixelWidth, 0f, KsTguiTabs.MaskWidth * tabs.UIScale)),
+                    "At the start only the right side fades");
+            });
+        });
+
+        await Client.WaitPost(() => Press(tabs.ScrollRightButton));
+        await Settle(tabs);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(tabs.MaskParameters.LeftFade, Is.EqualTo(KsTguiTabs.MaskWidth * tabs.UIScale));
+            Assert.That(tabs.MaskParameters.RightFade, Is.EqualTo(KsTguiTabs.MaskWidth * tabs.UIScale), "More both ways");
+        });
+
+        for (var i = 0; i < 10; i++)
+        {
+            await Client.WaitPost(() => Press(tabs.ScrollRightButton));
+            await Settle(tabs);
+        }
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(tabs.MaskParameters.RightFade, Is.EqualTo(0f), "At the end the right side stops fading");
+            Assert.That(tabs.MaskParameters.LeftFade, Is.EqualTo(KsTguiTabs.MaskWidth * tabs.UIScale));
+            tabs.Parent!.Orphan();
+        });
+
+        var fits = default(KsTguiTabs);
+        await Client.WaitAssertion(() =>
+        {
+            fits = Strip(2, 300f);
+            Assert.That(fits.Masked, Is.False, "Tabs that fit are not masked");
+            Assert.That(fits.MaskParameters.LeftFade + fits.MaskParameters.RightFade, Is.EqualTo(0f));
+            fits.Parent!.Orphan();
+        });
+    }
+
     private static void Press(BaseButton button)
     {
         var field = typeof(BaseButton).GetField(nameof(BaseButton.OnPressed), BindingFlags.Instance | BindingFlags.NonPublic);
-        var handler = (Action<BaseButton.ButtonEventArgs>?)field!.GetValue(button);
+        var handler = (Action<BaseButton.ButtonEventArgs>)field.GetValue(button);
         handler?.Invoke(new BaseButton.ButtonEventArgs(button, null!));
     }
 }

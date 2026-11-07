@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using Content.Client._KS14.Tgui.Controls;
+using Content.Shared._KS14.Tgui;
 using Content.Client.Lathe;
 using Content.Client._KS14.Tgui.Windows.Materials;
 using Content.Client.Materials;
@@ -16,9 +17,15 @@ using Robust.Shared.Prototypes;
 namespace Content.Client._KS14.Tgui.Windows.Lathe;
 
 /// <summary>
-///     The lathe laid out as tgui's Fabricator: a category sidebar, the search and the designs, the build queue (which tg's
-///         fabricator has no room for, so it takes a column of its own) and the material bar along the bottom. Every lathe
-///         opens this when the tgui theme is on.
+///     The lathe in tgui's design browser: a category sidebar, the search and the designs, and the build queue, which tg has no
+///         equivalent of. Every lathe opens this when the tgui theme is on, in one of two layouts:
+///         <list type="bullet">
+///             <item>tg's Fabricator, for every lathe but the autolathe: the browser with the queue in a column of its own,
+///                 and the material bar along the bottom.</item>
+///             <item>tg's Autolathe, for a lathe with <see cref="KsTguiAutolatheLayoutComponent"/>: a Total Materials section on
+///                 top, then the browser, 670 wide as tg's window is. The queue goes under the designs, in a section that is
+///                 there only while something is printing or waiting, so the designs keep the width.</item>
+///         </list>
 /// </summary>
 public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 {
@@ -30,13 +37,18 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     private readonly MaterialStorageSystem _materialStorage;
 
     private readonly BoxContainer _categoryTabs;
+    private readonly BoxContainer _categoriesColumn;
+    private readonly KsTguiSection _queueSection;
+    private readonly KsTguiSection _materialsSection;
+    private readonly KsTguiLatheMaterialSummary _materialSummary;
+    private bool _autolatheLayout;
     private readonly KsTguiFabricatorTab _allCategoryTab;
     private readonly Dictionary<ProtoId<LatheCategoryPrototype>, KsTguiFabricatorTab> _categoryTabItems = new();
     private readonly KsTguiButton _serverListButton;
     private readonly KsTguiSection _designsSection;
     private readonly KsTguiSearchBar _searchBar;
-    private readonly KsTguiNumberInput _amountInput;
-    private readonly Label _recipeCount;
+    private readonly KsTguiSection _searchSection;
+    private readonly KsTguiSection _recipeListSection;
     private readonly BoxContainer _recipeList;
     private readonly BoxContainer _fabricatingContainer;
     private readonly BoxContainer _fabricatingDisplayContainer;
@@ -73,8 +85,6 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _materialStorage = _entityManager.System<MaterialStorageSystem>();
 
         Title = Loc.GetString("lathe-menu-title");
-        MinSize = new Vector2(760f, 450f);
-        SetSize = new Vector2(940f, 600f);
 
         // Categories.
         _categoryTabs = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
@@ -84,37 +94,30 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _serverListButton = new KsTguiButton { Text = Loc.GetString("lathe-menu-server-list"), Icon = KsTguiIcons.Cog, Fluid = true };
         _serverListButton.OnPressed += args => OnServerListButtonPressed?.Invoke(args);
 
-        var categoriesSection = new KsTguiSection { Title = Loc.GetString("ks-tgui-lathe-categories"), Fill = true, Scrollable = true, MinWidth = 180 };
-        categoriesSection.AddChild(_categoryTabs);
-        var categoriesColumn = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = KsTguiSection.Gap, MinWidth = 180 };
-        categoriesColumn.AddChild(categoriesSection);
-        categoriesColumn.AddChild(_serverListButton);
+        var categoriesSection = new KsTguiSection { Title = Loc.GetString("ks-tgui-lathe-categories"), Fill = true, MinWidth = 180 };
+        // Not the section's own Scrollable: that reports the whole content as its height, so a long list could not shrink and
+        //      would push the button under it out of the window. A scroll container reports nothing and takes what is left.
+        categoriesSection.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _categoryTabs } });
+        _categoriesColumn = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = KsTguiSection.Gap, MinWidth = 180 };
+        _categoriesColumn.AddChild(categoriesSection);
+        _categoriesColumn.AddChild(_serverListButton);
 
-        // Designs.
-        _searchBar = new KsTguiSearchBar { PlaceHolder = Loc.GetString("lathe-menu-search-designs") };
+        // Designs, as DesignBrowser.tsx: the titled section holds the search in a section of its own and the designs in
+        //      another, which scrolls.
+        _searchBar = new KsTguiSearchBar { PlaceHolder = Loc.GetString("ks-tgui-lathe-search") };
         _searchBar.Input.OnTextChanged += _ => PopulateRecipes();
-
-        _amountInput = new KsTguiNumberInput
-        {
-            Format = "0", WidthPixels = 60f, MinValue = 1f, MaxValue = (float)LatheSystem.MaxItemsPerRequest, TickWhileDragging = true,
-        };
-        _amountInput.SetValue(1f);
-        _amountInput.OnCommitted += _ => PopulateRecipes();
-
-        _recipeCount = new Label { Align = Label.AlignMode.Right, HorizontalExpand = true };
-
-        var searchRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 6 };
-        searchRow.AddChild(_searchBar);
-        searchRow.AddChild(new Label { Text = Loc.GetString("lathe-menu-amount"), VerticalAlignment = VAlignment.Center });
-        searchRow.AddChild(_amountInput);
+        _searchSection = new KsTguiSection();
+        _searchSection.AddChild(_searchBar);
 
         _recipeList = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true };
+        // The list is the flexible part: a scroll container asks for no height of its own and takes what the rest leaves.
+        _recipeListSection = new KsTguiSection { Fill = true };
+        _recipeListSection.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _recipeList } });
 
         _designsSection = new KsTguiSection { Fill = true, HorizontalExpand = true };
-        var designsBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true, SeparationOverride = 6 };
-        designsBody.AddChild(searchRow);
-        designsBody.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _recipeList } });
-        designsBody.AddChild(_recipeCount);
+        var designsBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
+        designsBody.AddChild(_searchSection);
+        designsBody.AddChild(_recipeListSection);
         _designsSection.AddChild(designsBody);
 
         // Queue.
@@ -141,29 +144,103 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _queueList = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true };
         _queueEmptyLabel = new Label { Text = Loc.GetString("ks-tgui-lathe-queue-empty"), HorizontalAlignment = HAlignment.Center };
 
-        var queueSection = new KsTguiSection { Title = Loc.GetString("lathe-menu-queue-title"), Fill = true, MinWidth = 250 };
+        _queueSection = new KsTguiSection { Title = Loc.GetString("lathe-menu-queue-title") };
         var queueBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true };
         queueBody.AddChild(_fabricatingContainer);
         queueBody.AddChild(_queueEmptyLabel);
         queueBody.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _queueList } });
-        queueSection.AddChild(queueBody);
+        _queueSection.AddChild(queueBody);
 
-        // Materials.
+        // Materials: the Fabricator's bar along the bottom, or the Autolathe's Total Materials section on top.
         _materialsList = new KsTguiMaterialList();
-        var materialsSection = new KsTguiSection { Title = Loc.GetString("lathe-menu-materials-title") };
-        materialsSection.AddChild(_materialsList);
+        _materialsSection = new KsTguiSection { Title = Loc.GetString("lathe-menu-materials-title") };
+        _materialsSection.AddChild(_materialsList);
+        _materialSummary = new KsTguiLatheMaterialSummary();
 
-        var topRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
-        topRow.AddChild(categoriesColumn);
-        topRow.AddChild(_designsSection);
-        topRow.AddChild(queueSection);
+        ApplyLayout(autolathe: false);
+        RefreshDesignsTitle();
+    }
+
+    /// <summary>
+    ///     What the Autolathe layout's queue section keeps: the print notice, a row or two and the section around them.
+    /// </summary>
+    private const float QueueMinHeight = 150f;
+
+    /// <summary>
+    ///     Which of the two layouts the window is in.
+    /// </summary>
+    public bool IsAutolatheLayout => _autolatheLayout;
+
+    /// <summary>
+    ///     The designs section's title: the search text as tg's <c>Results for "..."</c>, else the category.
+    /// </summary>
+    public string? DesignsTitle => _designsSection.Title;
+
+    /// <summary>
+    ///     Whether the build queue section is on show. The Autolathe layout hides it while the queue is empty.
+    /// </summary>
+    public bool QueueShown => _queueSection.Visible;
+
+    /// <summary>
+    ///     Arranges the controls the window is made of as one of its two layouts. They are kept, so this can be run again when
+    ///         the machine turns out to be an autolathe.
+    /// </summary>
+    private void ApplyLayout(bool autolathe)
+    {
+        _autolatheLayout = autolathe;
+
+        ContentsContainer.RemoveAllChildren();
+        foreach (var control in new Control[] { _categoriesColumn, _designsSection, _queueSection, _materialsSection, _materialSummary })
+        {
+            if (control.Parent != null)
+                control.Orphan();
+        }
 
         var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = KsTguiSection.Gap, Margin = new Thickness(6f) };
-        root.AddChild(topRow);
-        root.AddChild(materialsSection);
-        ContentsContainer.AddChild(root);
 
-        RefreshDesignsTitle();
+        if (autolathe)
+        {
+            // Autolathe.tsx is 670x600. The queue sits under the designs, so they keep the width: beside them they would be left
+            //      with less than half of it. It is only there while it has something to show.
+            MinSize = new Vector2(670f, 450f);
+            SetSize = new Vector2(670f, 600f);
+
+            _queueSection.Fill = false;
+            _queueSection.MinWidth = 0f;
+            _queueSection.MinHeight = QueueMinHeight;
+            _queueSection.Visible = _isFabricating || _queuedBatches > 0;
+
+            var designsColumn = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
+            designsColumn.AddChild(_designsSection);
+            designsColumn.AddChild(_queueSection);
+
+            var browser = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
+            browser.AddChild(_categoriesColumn);
+            browser.AddChild(designsColumn);
+
+            root.AddChild(_materialSummary);
+            root.AddChild(browser);
+        }
+        else
+        {
+            MinSize = new Vector2(760f, 450f);
+            SetSize = new Vector2(940f, 600f);
+
+            _queueSection.Fill = true;
+            _queueSection.MinWidth = 250f;
+            _queueSection.MinHeight = 0f;
+            _queueSection.Visible = true;
+
+            var topRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
+            topRow.AddChild(_categoriesColumn);
+            topRow.AddChild(_designsSection);
+            topRow.AddChild(_queueSection);
+
+            root.AddChild(topRow);
+            root.AddChild(_materialsSection);
+        }
+
+        ContentsContainer.AddChild(root);
     }
 
     public void SetEntity(EntityUid uid)
@@ -175,11 +252,14 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         {
             if (!latheComponent.DynamicPacks.Any())
                 _serverListButton.Visible = false;
-
-            _amountInput.SetValue(Math.Clamp(latheComponent.DefaultProductionAmount, 1, LatheSystem.MaxItemsPerRequest));
         }
 
+        var autolathe = _entityManager.HasComponent<KsTguiAutolatheLayoutComponent>(Entity);
+        if (autolathe != _autolatheLayout)
+            ApplyLayout(autolathe);
+
         _materialsList.SetOwner(Entity);
+        _materialSummary.SetOwner(Entity);
     }
 
     public void SetRecipes(List<ProtoId<LatheRecipePrototype>> recipes)
@@ -206,6 +286,10 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
     private void OnCategorySelected(KsTguiFabricatorTab item)
     {
+        // tg's onCategorySelected: the category it already shows is left alone, and a new one clears the search.
+        if (item.Selected)
+            return;
+
         SelectCategoryTab(item);
         CurrentCategory = null;
         foreach (var (category, tabItem) in _categoryTabItems)
@@ -214,12 +298,13 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
                 CurrentCategory = category;
         }
 
+        _searchBar.Input.SetText(string.Empty, invokeEvent: false);
         PopulateRecipes();
     }
 
     private void RefreshDesignsTitle()
     {
-        var query = _searchBar.Input.Text.Trim();
+        var query = _searchBar.Input.Text;
         if (query.Length > 0)
         {
             _designsSection.Title = Loc.GetString("ks-tgui-lathe-results", ("query", query));
@@ -237,7 +322,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         var recipesToShow = new List<LatheRecipePrototype>();
         var categoryCounts = new Dictionary<ProtoId<LatheCategoryPrototype>, int>();
-        var search = _searchBar.Input.Text.Trim().ToLowerInvariant();
+        // tg searches every design whatever the category, by the text as typed.
+        var search = _searchBar.Input.Text.ToLowerInvariant();
         foreach (var recipe in Recipes)
         {
             if (!_prototypeManager.Resolve(recipe, out var proto))
@@ -246,7 +332,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             foreach (var category in proto.Categories)
                 categoryCounts[category] = categoryCounts.GetValueOrDefault(category) + 1;
 
-            if (CurrentCategory != null)
+            if (CurrentCategory != null && search.Length == 0)
             {
                 if (proto.Categories.Count <= 0 || !proto.Categories.Any(category => category == CurrentCategory))
                     continue;
@@ -262,9 +348,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         foreach (var (category, tabItem) in _categoryTabItems)
             tabItem.Count = categoryCounts.GetValueOrDefault(category);
 
-        var quantity = Math.Max(1, (int)_amountInput.Value);
-
-        _recipeCount.Text = Loc.GetString("lathe-menu-recipe-count", ("count", recipesToShow.Count));
+        const int quantity = 1;
 
         var sortedRecipesToShow = recipesToShow.OrderBy(_lathe.GetRecipeName);
 
@@ -283,13 +367,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             if (idx >= oldChildCount)
             {
                 row = new KsTguiLatheRecipeRow(_lathe);
-                row.OnBuild += (recipeId, amount) =>
-                {
-                    if (amount <= 0)
-                        amount = Math.Max(1, (int)_amountInput.Value);
-
-                    RecipeQueueAction?.Invoke(recipeId, amount);
-                };
+                row.OnBuild += (recipeId, amount) => RecipeQueueAction?.Invoke(recipeId, amount);
                 _recipeList.AddChild(row);
             }
             else
@@ -399,6 +477,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     {
         _queuedBatches = queue.Count;
         RefreshQueueEmptyLabel();
+        RefreshQueueSection();
 
         var oldChildCount = _queueList.ChildCount;
 
@@ -444,6 +523,13 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     /// <summary>
     ///     The notice is only true when the lathe is neither printing something nor holding a queue.
     /// </summary>
+    private void RefreshQueueSection()
+    {
+        // The Autolathe layout shows the queue only while it has something in it; the other has a column for it.
+        if (_autolatheLayout)
+            _queueSection.Visible = _isFabricating || _queuedBatches > 0;
+    }
+
     private void RefreshQueueEmptyLabel()
     {
         _queueEmptyLabel.Visible = !_isFabricating && _queuedBatches == 0;
@@ -454,6 +540,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _fabricatingContainer.Visible = recipeProto != null;
         _isFabricating = recipeProto != null;
         RefreshQueueEmptyLabel();
+        RefreshQueueSection();
         if (recipeProto == null)
             return;
 

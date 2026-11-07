@@ -73,6 +73,8 @@ public sealed class KsTguiProgressBar : Control
     private bool _hideText;
     private bool _showingNumber;
     private Label.AlignMode _textAlign = Label.AlignMode.Right;
+    private XColor? _backgroundColor;
+    private bool _mirrored;
 
     public KsTguiProgressBar()
     {
@@ -166,6 +168,26 @@ public sealed class KsTguiProgressBar : Control
             _hideText = value;
             RefreshText();
         }
+    }
+
+    /// <summary>
+    ///     tgui's <c>backgroundColor</c>: the track behind the fill, in place of the theme's own backdrop.
+    /// </summary>
+    public XColor? BackgroundColor
+    {
+        get => _backgroundColor;
+        set => _backgroundColor = value;
+    }
+
+    /// <summary>
+    ///     tg's <c>transform: scaleX(-1)</c> on the bar (with the text flipped back, so it still reads and sits at the right):
+    ///         the fill grows from the right edge. Autolathe draws each material this way, with the fill black and the track
+    ///         the material's colour, so what is left of the track is the amount.
+    /// </summary>
+    public bool Mirrored
+    {
+        get => _mirrored;
+        set => _mirrored = value;
     }
 
     /// <summary>
@@ -422,13 +444,23 @@ public sealed class KsTguiProgressBar : Control
         var box = PixelSizeBox;
         var border = MathF.Max(1f, MathF.Round(UIScale));
 
-        if (_backdrop.A > 0f)
-            handle.DrawRect(box, _backdrop);
+        var backdrop = _backgroundColor ?? _backdrop;
+        if (backdrop.A > 0f)
+            handle.DrawRect(box, backdrop);
+
+        // Drawn once before it is laid out, at no size: the inner box would invert.
+        if (box.Width < 2f * border || box.Height < 2f * border)
+            return;
 
         var inner = new UIBox2(box.Left + border, box.Top + border, box.Right - border, box.Bottom - border);
-        var fillRight = inner.Left + inner.Width * DisplayedFraction;
-        if (fillRight > inner.Left)
-            handle.DrawRect(new UIBox2(inner.Left, inner.Top, fillRight, inner.Bottom), DisplayedFillColor);
+        var fillWidth = inner.Width * DisplayedFraction;
+        if (fillWidth > 0f)
+        {
+            var fill = _mirrored
+                ? new UIBox2(inner.Right - fillWidth, inner.Top, inner.Right, inner.Bottom)
+                : new UIBox2(inner.Left, inner.Top, inner.Left + fillWidth, inner.Bottom);
+            handle.DrawRect(fill, DisplayedFillColor);
+        }
 
         _border.BorderColor = DisplayedBorderColor;
         _border.Draw(handle, box, UIScale);

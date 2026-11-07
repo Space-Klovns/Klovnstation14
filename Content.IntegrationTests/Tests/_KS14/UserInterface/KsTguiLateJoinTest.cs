@@ -120,7 +120,7 @@ public sealed class KsTguiLateJoinTest : GameTest
     {
         // OnPressed is a field-like event; invoking its delegate is what a click does once it passes the button's own checks.
         var field = typeof(BaseButton).GetField(nameof(BaseButton.OnPressed), BindingFlags.Instance | BindingFlags.NonPublic);
-        var handler = (Action<BaseButton.ButtonEventArgs>?)field!.GetValue(button);
+        var handler = (Action<BaseButton.ButtonEventArgs>)field.GetValue(button);
         handler?.Invoke(new BaseButton.ButtonEventArgs(button, null!));
     }
 }

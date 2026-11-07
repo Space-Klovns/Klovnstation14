@@ -95,7 +95,7 @@ public sealed class KsTguiGlyphTest : GameTest
             var collapsible = new Collapsible(heading, new CollapsibleBody());
             UiManager.PopupRoot.AddChild(collapsible);
 
-            Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox? Box()
+            Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox Box()
             {
                 heading.ForceRunStyleUpdate();
                 heading.TryGetStyleProperty<StyleBox>(ContainerButton.StylePropertyStyleBox, out var box);

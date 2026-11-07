@@ -8,3 +8,10 @@
   id: KsTguiBackdropComposite
   kind: source
   path: "/Textures/_KS14/Shaders/backdrop_composite.swsl"
+
+# tgui's scrollable Tabs mask-image. The tabs are drawn into a transparent target, which is premultiplied.
+- type: shader
+  id: KsTguiTabsMask
+  kind: source
+  path: "/Textures/_KS14/Shaders/tgui_tabs_mask.swsl"
+  blend_mode: premultiplied

@@ -13,7 +13,7 @@ namespace Content.Client._KS14.Tgui.Windows.Lathe;
 
 /// <summary>
 ///     One design in the tgui fabricator's list (tg's <c>AutolatheRecipe</c> and <c>.FabricatorRecipe</c>): a description
-///         button, the design itself (queues the amount the window is set to) and the x5 and x10 buttons, with a line under
+///         button, the design itself (queues one, as tg's <c>multiplier: 1</c>) and the x5 and x10 buttons, with a line under
 ///         each row but the last. Hovering the design or an amount shows what it costs.
 /// </summary>
 public sealed class KsTguiLatheRecipeRow : BoxContainer
@@ -80,7 +80,7 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
         _titleButton.OnPressed += _ =>
         {
             if (_canProduce)
-                OnBuild?.Invoke(_recipeId, 0);
+                OnBuild?.Invoke(_recipeId, 1); // tg: multiplier: 1
         };
         _titleButton.DrawModeRefreshed += () => RefreshLook(_titleButton);
         AddChild(_titleButton);
@@ -124,7 +124,7 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
     }
 
     /// <summary>
-    ///     The recipe and an amount; 0 asks for the window's own amount.
+    ///     The recipe and how many to make.
     /// </summary>
     public event Action<string, int>? OnBuild;
 

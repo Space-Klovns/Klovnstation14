@@ -34,7 +34,7 @@ public sealed class KsTguiThemeControlsTest : GameTest
     private static void Press(BaseButton button)
     {
         var field = typeof(BaseButton).GetField(nameof(BaseButton.OnPressed), BindingFlags.Instance | BindingFlags.NonPublic);
-        var handler = (Action<BaseButton.ButtonEventArgs>?)field!.GetValue(button);
+        var handler = (Action<BaseButton.ButtonEventArgs>)field.GetValue(button);
         handler?.Invoke(new BaseButton.ButtonEventArgs(button, null!));
     }
 
@@ -144,6 +144,32 @@ public sealed class KsTguiThemeControlsTest : GameTest
             Assert.That(thumb!.MinimumSize.X, Is.EqualTo(15f));
 
             scroll.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     The pill is 9px across, centred in a 15px bar. A bar laid out narrower than that, as a dropdown's list can be
+    ///         mid-layout, once made an inverted box, which the engine asserts against and a Debug client died of.
+    /// </summary>
+    [Test]
+    public async Task TheThumbIsANinePixelPillAndNeverInverts()
+    {
+        await Client.WaitAssertion(() =>
+        {
+            var normal = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, 15f, 40f), 1f, horizontal: false);
+            Assert.That(normal.Left, Is.EqualTo(3f));
+            Assert.That(normal.Width, Is.EqualTo(9f));
+            Assert.That(normal.Height, Is.EqualTo(40f));
+
+            var sideways = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, 80f, 30f), 2f, horizontal: true);
+            Assert.That(sideways.Top, Is.EqualTo(6f), "Scaled with the UI");
+            Assert.That(sideways.Height, Is.EqualTo(18f));
+
+            foreach (var across in new[] { 0f, 4f, 9f, 12f })
+            {
+                var squeezed = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, across, 40f), 1f, horizontal: false);
+                Assert.That(squeezed.Left, Is.LessThanOrEqualTo(squeezed.Right), $"Inverted at {across}px across");
+            }
         });
     }
 

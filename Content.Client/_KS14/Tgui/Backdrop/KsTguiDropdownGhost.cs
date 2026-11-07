@@ -95,6 +95,7 @@ public sealed class KsTguiDropdownGhost : Control
 
         Host.BackdropAnchor = this;
         Host.BackdropAnchorPosition = GlobalPixelPosition;
+        Host.BackdropHostPosition = PopupPosition + Host.PixelPosition;
         try
         {
             UserInterfaceManager.RenderControl(in args, Host);

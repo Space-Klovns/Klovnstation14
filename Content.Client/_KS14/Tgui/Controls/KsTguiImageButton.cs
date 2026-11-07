@@ -574,6 +574,14 @@ public class KsTguiImageButton : ContainerButton
             var inset = 2f * scale;
             var line = MathF.Max(1f, MathF.Round(scale * Border));
             var imageBottom = _barTop * scale;
+
+            // Drawn once before it is laid out, at no size: these boxes would invert.
+            if (box.Width < 2f * inset || imageBottom < inset || box.Height < imageBottom)
+            {
+                handle.Modulate = XColor.White;
+                return;
+            }
+
             handle.DrawRect(new UIBox2(inset, 0f, box.Width - inset, line), border);
             handle.DrawRect(new UIBox2(0f, inset, line, imageBottom), border);
             handle.DrawRect(new UIBox2(box.Width - line, inset, box.Width, imageBottom), border);

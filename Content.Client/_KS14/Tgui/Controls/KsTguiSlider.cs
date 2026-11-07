@@ -822,6 +822,10 @@ public sealed class KsTguiSlider : Control
         if (_backdrop.A > 0f)
             handle.DrawRect(box, _backdrop);
 
+        // Drawn once before it is laid out, at no size: the inner box would invert.
+        if (box.Width < 2f * border || box.Height < 2f * border)
+            return;
+
         var inner = new UIBox2(box.Left + border, box.Top + border, box.Right - border, box.Bottom - border);
 
         // The wide fill is the fill colour at .4 under the real one; where they are the same width it is covered.

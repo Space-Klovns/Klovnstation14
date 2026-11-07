@@ -200,8 +200,28 @@ public sealed partial class KsTguiDialog : Control
         {
             _bodySlot.RemoveAllChildren();
             if (value != null)
+            {
+                InheritMonoFont(value, _fonts.GetMonoFont(FontSize));
                 _bodySlot.AddChild(value);
+            }
         }
+    }
+
+    /// <summary>
+    ///     tg sets <c>font-family: mono</c> at 14px on the whole dialog, and the body's text inherits it. The engine has no
+    ///         inheritance, so text in the body that hasn't chosen a font of its own is given the dialog's.
+    /// </summary>
+    public static void InheritMonoFont(Control control, Font font)
+    {
+        switch (control)
+        {
+            case Label { FontOverride: null } label:
+                label.FontOverride = font;
+                break;
+        }
+
+        foreach (var child in control.Children)
+            InheritMonoFont(child, font);
     }
 
     public KsTguiButton CloseButton => _closeButton;

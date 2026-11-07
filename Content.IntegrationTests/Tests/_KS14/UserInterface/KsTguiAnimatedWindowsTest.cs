@@ -46,7 +46,7 @@ public sealed class KsTguiAnimatedWindowsTest : GameTest
     private static readonly EntProtoId Canister = "AirCanister";
     private static readonly EntProtoId Tank = "OxygenTank";
     private static readonly EntProtoId Thermomachine = "GasThermoMachineFreezer";
-    private static readonly EntProtoId Lathe = "Autolathe";
+    private static readonly EntProtoId Lathe = "Protolathe";
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly ProtoId<MaterialPrototype> SteelMaterial = "Steel";
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";

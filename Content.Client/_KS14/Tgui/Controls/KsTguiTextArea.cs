@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -105,7 +106,31 @@ public sealed partial class KsTguiTextArea : Control
         _edit.OnTextChanged += OnEditChanged;
         _edit.OnKeyBindDown += OnEditKeyBindDown;
         AddChild(_edit);
+
+        // tg's text area is scrollbar-width thin with scrollbar-gutter stable: the bar's column is always kept, and the
+        //      bar is only drawn while there is something to scroll. The engine's TextEdit lays its text across its whole
+        //      width with the bar over it, and never hides the bar, so both are done here, on its two children.
+        _scrollBar = _edit.Children.OfType<VScrollBar>().First();
+        _scrollBar.AddStyleClass(KsTguiSheetlet.StyleClassThinScrollBar);
+        _scrollBar.Visible = false;
+        foreach (var child in _edit.Children)
+        {
+            if (child != _scrollBar)
+                child.Margin = new Thickness(0f, 0f, KsTguiScrollBarGeometry.ThinBarWidth, 0f);
+        }
     }
+
+    private readonly VScrollBar _scrollBar;
+
+    /// <summary>
+    ///     Whether the text overflows the box, and so its thin scroll bar is shown.
+    /// </summary>
+    public bool ScrollBarShown => _scrollBar.Visible;
+
+    /// <summary>
+    ///     The bar, for tests.
+    /// </summary>
+    public VScrollBar ScrollBar => _scrollBar;
 
     /// <summary>
     ///     The text inside.
@@ -258,6 +283,9 @@ public sealed partial class KsTguiTextArea : Control
     protected override void FrameUpdate(FrameEventArgs args)
     {
         base.FrameUpdate(args);
+
+        // The engine sets the bar's range as it lays the text out, and raises nothing when it does.
+        _scrollBar.Visible = _scrollBar.MaxValue > _scrollBar.Page + 0.5f;
 
         var focused = UserInterfaceManager.KeyboardFocused == _edit;
         if (focused == _focused)

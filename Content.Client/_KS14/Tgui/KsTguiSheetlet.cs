@@ -60,6 +60,11 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     public const string StyleClassTextArea = "KsTguiTextArea";
 
     /// <summary>
+    ///     A scroll bar drawn as CSS <c>scrollbar-width: thin</c>: narrower, with no arrows.
+    /// </summary>
+    public const string StyleClassThinScrollBar = "KsTguiScrollBarThin";
+
+    /// <summary>
     ///     tgui's <c>Input--monospace</c>: the input's text in <c>--font-family-mono</c>. On a <c>LineEdit</c> or <c>TextEdit</c>.
     /// </summary>
     public const string StyleClassMonospace = "KsTguiMonospace";
@@ -131,7 +136,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
 
         var rules = new List<StyleRule>();
 
-        AddButtonRules(rules);
+        AddButtonRules(rules, sheet);
         AddToggleRules(rules);
         AddInputRules(rules);
         AddWindowRules(rules, sheet);
@@ -201,7 +206,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         return box;
     }
 
-    private void AddButtonRules(List<StyleRule> rules)
+    private void AddButtonRules(List<StyleRule> rules, PalettedStylesheet sheet)
     {
         var compactBox = ButtonBox();
         compactBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 0f);
@@ -217,6 +222,10 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             CButton().Class(StyleClass.ButtonOpenBoth).Box(ButtonBox()),
             CButton().Class(StyleClass.ButtonSquare).Box(ButtonBox(radius: 0f)),
             CButton().Class(StyleClass.ButtonSmall).Box(compactBox),
+
+            // The engine's small button has an 8pt label; tgui's compact button has the usual 12px one.
+            CButton().Class(StyleClass.ButtonSmall).Class(Content.Client._KS14.Tgui.Controls.KsTguiButton.StyleClassCompact)
+                .ParentOf(E<Label>()).Font(sheet.BaseFont.GetFont(12)),
 
             // tg's Button has margin-right and margin-bottom of --space-xs (2px). A Button, so KsTguiButton too; dropdown
             //      entries, lists and tabs are other ContainerButtons and get none. The chat filter sits in a row of its own.
@@ -714,6 +723,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
 
         // With nothing to scroll a browser draws no thumb, and its arrows pale.
         var verticalDisabledThumb = new KsTguiScrollThumbStyleBox(Color.Transparent, horizontal: false);
+        var thinThumb = new KsTguiScrollThumbStyleBox(ScrollThumb, horizontal: false, thin: true);
         var horizontalDisabledThumb = new KsTguiScrollThumbStyleBox(Color.Transparent, horizontal: true);
         var verticalDisabledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb.WithAlpha(0.5f), horizontal: false);
         var horizontalDisabledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb.WithAlpha(0.5f), horizontal: true);
@@ -730,6 +740,14 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, horizontalThumb).Prop(ScrollBar.StylePropertyTrack, horizontalTrack).Margin(horizontalInset),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, horizontalThumb),
             E<HScrollBar>().Pseudo(ScrollBar.StylePseudoClassGrabbed).Prop(ScrollBar.StylePropertyGrabber, horizontalThumb),
+
+            // tgui's text area is scrollbar-width thin: a narrower bar with no arrows.
+            E<VScrollBar>().Class(StyleClassThinScrollBar)
+                .Prop(ScrollBar.StylePropertyGrabber, thinThumb)
+                .Prop(ScrollBar.StylePropertyTrack, new StyleBoxEmpty())
+                .Margin(new Thickness(0f)),
+            E<VScrollBar>().Class(StyleClassThinScrollBar).PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, thinThumb),
+            E<VScrollBar>().Class(StyleClassThinScrollBar).Pseudo(ScrollBar.StylePseudoClassGrabbed).Prop(ScrollBar.StylePropertyGrabber, thinThumb),
 
             // A bar shown with nothing to scroll (KsTguiScrollContainer.ReserveVertical): no thumb, dimmed arrows.
             E<VScrollBar>().Class(Controls.KsTguiScrollContainer.StyleClassDisabled).Prop(ScrollBar.StylePropertyGrabber, verticalDisabledThumb).Prop(ScrollBar.StylePropertyTrack, verticalDisabledTrack),

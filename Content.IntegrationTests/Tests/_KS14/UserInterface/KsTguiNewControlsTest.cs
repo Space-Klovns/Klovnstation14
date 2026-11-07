@@ -152,6 +152,29 @@ public sealed class KsTguiNewControlsTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     tg's <c>Dialog__content</c> is mono at 14px and the body inherits it, unless the body's text chose its own font.
+    /// </summary>
+    [Test]
+    public async Task DialogBodyTextIsTheDialogsMonoFont()
+    {
+        await Client.WaitPost(() =>
+        {
+            var fonts = Client.ResolveDependency<KsTguiFonts>();
+            var plain = new Label { Text = "Are you sure?" };
+            var chosen = new Label { Text = "own", FontOverride = fonts.GetFont(12) };
+            var body = new BoxContainer();
+            body.AddChild(plain);
+            body.AddChild(chosen);
+
+            var dialog = new KsTguiDialog { Body = body };
+
+            Assert.That(plain.FontOverride, Is.SameAs(fonts.GetMonoFont(KsTguiDialog.FontSize)));
+            Assert.That(chosen.FontOverride, Is.SameAs(fonts.GetFont(12)), "A font the caller chose is kept.");
+            dialog.Body = null;
+        });
+    }
+
     [Test]
     public async Task DialogCloseButtonRaisesClosed()
     {

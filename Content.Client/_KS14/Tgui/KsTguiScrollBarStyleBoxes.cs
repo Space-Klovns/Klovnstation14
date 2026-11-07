@@ -11,6 +11,13 @@ public static class KsTguiScrollBarGeometry
 {
     public const float BarWidth = 15f;
     public const float ThumbWidth = 9f;
+
+    /// <summary>
+    ///     <c>scrollbar-width: thin</c>, as tgui's text area has: a narrower bar with no arrows, its thumb keeping the
+    ///         normal bar's 3px either side.
+    /// </summary>
+    public const float ThinBarWidth = 11f;
+    public const float ThinThumbWidth = ThinBarWidth - (BarWidth - ThumbWidth);
     public const float ThumbMinLength = 20f;
 
     /// <summary>
@@ -71,21 +78,25 @@ public sealed class KsTguiScrollThumbStyleBox : StyleBox
 {
     private readonly KsTguiStyleBox _pill;
     private readonly bool _horizontal;
+    private readonly float _barWidth;
+    private readonly float _thumbWidth;
 
-    public KsTguiScrollThumbStyleBox(Color color, bool horizontal)
+    public KsTguiScrollThumbStyleBox(Color color, bool horizontal, bool thin = false)
     {
         _horizontal = horizontal;
-        _pill = new KsTguiStyleBox(color, KsTguiScrollBarGeometry.ThumbWidth / 2f);
+        _barWidth = thin ? KsTguiScrollBarGeometry.ThinBarWidth : KsTguiScrollBarGeometry.BarWidth;
+        _thumbWidth = thin ? KsTguiScrollBarGeometry.ThinThumbWidth : KsTguiScrollBarGeometry.ThumbWidth;
+        _pill = new KsTguiStyleBox(color, _thumbWidth / 2f);
 
         // The engine reads the bar's own size, and the thumb's shortest length, from these.
         if (horizontal)
         {
-            SetContentMarginOverride(Margin.Top, KsTguiScrollBarGeometry.BarWidth);
+            SetContentMarginOverride(Margin.Top, _barWidth);
             SetContentMarginOverride(Margin.Left, KsTguiScrollBarGeometry.ThumbMinLength);
         }
         else
         {
-            SetContentMarginOverride(Margin.Left, KsTguiScrollBarGeometry.BarWidth);
+            SetContentMarginOverride(Margin.Left, _barWidth);
             SetContentMarginOverride(Margin.Top, KsTguiScrollBarGeometry.ThumbMinLength);
         }
     }
@@ -94,12 +105,26 @@ public sealed class KsTguiScrollThumbStyleBox : StyleBox
 
     protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box, float uiScale)
     {
-        var inset = (KsTguiScrollBarGeometry.BarWidth - KsTguiScrollBarGeometry.ThumbWidth) / 2f * uiScale;
-        var thumb = _horizontal
+        _pill.Draw(handle, ThumbBox(box, uiScale, _horizontal, _barWidth, _thumbWidth), uiScale);
+    }
+
+    /// <summary>
+    ///     The pill inside the box the engine gives the thumb: <see cref="KsTguiScrollBarGeometry.ThumbWidth"/> across,
+    ///         centred in the bar.
+    /// </summary>
+    public static UIBox2 ThumbBox(UIBox2 box, float uiScale, bool horizontal,
+        float barWidth = KsTguiScrollBarGeometry.BarWidth, float thumbWidth = KsTguiScrollBarGeometry.ThumbWidth)
+    {
+        var inset = (barWidth - thumbWidth) / 2f * uiScale;
+
+        // A bar laid out narrower than its style asks (a dropdown's list, mid-layout) would invert the box; the thumb then
+        //      just fills what there is.
+        var across = horizontal ? box.Height : box.Width;
+        inset = MathF.Max(0f, MathF.Min(inset, (across - thumbWidth * uiScale) / 2f));
+
+        return horizontal
             ? new UIBox2(box.Left, box.Top + inset, box.Right, box.Bottom - inset)
             : new UIBox2(box.Left + inset, box.Top, box.Right - inset, box.Bottom);
-
-        _pill.Draw(handle, thumb, uiScale);
     }
 }
 

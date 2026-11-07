@@ -36,6 +36,11 @@ public sealed class KsTguiScaleHost : Control
 
     public Vector2i BackdropAnchorPosition { get; set; }
 
+    /// <summary>
+    ///     Where on screen this host is drawn while <see cref="BackdropAnchor"/> is set, as a ghost draws it out of the tree.
+    /// </summary>
+    public Vector2i BackdropHostPosition { get; set; }
+
     private KsTguiBackdropBlur? _blur;
     private float _lastUiScale = 1f;
 
@@ -63,9 +68,12 @@ public sealed class KsTguiScaleHost : Control
         {
             _blur ??= new KsTguiBackdropBlur(Backdrop);
 
-            var box = UIBox2.FromDimensions(args.Position + new Vector2(pivotShift, 0f), (Vector2)PixelSize * Scale);
+            // Not args.Position: the engine leaves that unset for PreRenderChildren, so it is always the screen's corner.
+            //      Out of the tree, drawn by a ghost, the ghost says where.
+            var position = BackdropAnchor != null ? BackdropHostPosition : GlobalPixelPosition;
+            var box = UIBox2.FromDimensions(position + new Vector2(pivotShift, 0f), (Vector2)PixelSize * Scale);
             var anchor = BackdropAnchor ?? this;
-            var anchorPosition = BackdropAnchor != null ? BackdropAnchorPosition : args.Position;
+            var anchorPosition = BackdropAnchor != null ? BackdropAnchorPosition : GlobalPixelPosition;
             _blur.Draw(args.Handle, anchor, anchorPosition, box, PixelSize, MenuRadius * _lastUiScale * Scale, args.Modulate);
         }
 

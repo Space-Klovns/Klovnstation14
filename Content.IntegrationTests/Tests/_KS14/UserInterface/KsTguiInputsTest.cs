@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -620,6 +621,47 @@ public sealed class KsTguiInputsTest : GameTest
             area.Disabled = true;
             Assert.That(area.BorderColor, Is.EqualTo(KsTguiTextArea.BorderDisabled));
             Assert.That(area.Edit.Editable, Is.False);
+            area.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     tg's text area is <c>scrollbar-width: thin</c> with <c>scrollbar-gutter: stable</c>: the text always stops short of
+    ///         the thin bar's column, and the bar, with no arrows, is only there while the text overflows.
+    /// </summary>
+    [Test]
+    public async Task TextAreaKeepsAThinBarsColumnAndShowsItOnlyToScroll()
+    {
+        await SetTheme(true);
+        KsTguiTextArea area = null;
+
+        await Client.WaitPost(() =>
+        {
+            area = new KsTguiTextArea { Rows = 2, Fluid = true, MinSize = new Vector2(200f, 0f) };
+            UiManager.PopupRoot.AddChild(area);
+            LayoutContainer.SetPosition(area, new Vector2(10f, 10f));
+        });
+
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            var bar = area.ScrollBar;
+            var text = area.Edit.Children.First(child => child != bar);
+            Assert.That(area.ScrollBarShown, Is.False, "Nothing to scroll: no bar.");
+            Assert.That(text.Margin.Right, Is.EqualTo(KsTguiScrollBarGeometry.ThinBarWidth), "The column is kept anyway.");
+            Assert.That(bar.Margin, Is.EqualTo(new Thickness(0f)), "A thin bar runs the full height: it has no arrows.");
+            Assert.That(bar.TryGetStyleProperty<StyleBox>(ScrollBar.StylePropertyGrabber, out var thumb));
+            Assert.That(thumb!.MinimumSize.X, Is.EqualTo(KsTguiScrollBarGeometry.ThinBarWidth));
+
+            area.SetText(string.Join("\n", Enumerable.Range(0, 30).Select(i => $"line {i}")));
+        });
+
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(area.ScrollBarShown, Is.True, "Thirty lines in two rows scroll.");
             area.Orphan();
         });
     }
