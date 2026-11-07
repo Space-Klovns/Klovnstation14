@@ -127,6 +127,8 @@
     interfaces:
         enum.ShuttleConsoleUiKey.Key:
           type: ShuttleConsoleBoundUserInterface
+        enum.WiresUiKey.Key:
+          type: WiresBoundUserInterface
   - type: RadarConsole
   - type: PointLight
     radius: 1.5
