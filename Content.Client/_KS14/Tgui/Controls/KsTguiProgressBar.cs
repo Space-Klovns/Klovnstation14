@@ -22,7 +22,7 @@ public sealed class KsTguiProgressBar : Control
     /// </summary>
     private const float TextPadding = 6f;
 
-    private readonly Label _label;
+    private readonly KsTguiAnimatedNumber _label;
     private readonly KsTguiStyleBox _border = new(XColor.Black.WithAlpha(0f), 2f)
     {
         BorderThickness = new Thickness(1f),
@@ -39,11 +39,12 @@ public sealed class KsTguiProgressBar : Control
     private KsTguiColor _color;
     private string? _text;
     private bool _hideText;
+    private bool _showingNumber;
     private Label.AlignMode _textAlign = Label.AlignMode.Right;
 
     public KsTguiProgressBar()
     {
-        _label = new Label { Align = _textAlign };
+        _label = new KsTguiAnimatedNumber { Align = _textAlign };
         AddChild(_label);
         RefreshText();
     }
@@ -96,6 +97,7 @@ public sealed class KsTguiProgressBar : Control
         set
         {
             _text = value;
+            _showingNumber = false;
             RefreshText();
         }
     }
@@ -170,9 +172,30 @@ public sealed class KsTguiProgressBar : Control
         }
     }
 
+    /// <summary>
+    ///     What the bar's text says right now.
+    /// </summary>
+    public string? ShownText => _label.Text;
+
+    /// <summary>
+    ///     Replaces the percentage with a number that eases to its value, as an <c>AnimatedNumber</c> inside a tgui ProgressBar.
+    ///         Setting <see cref="Text"/> ends it.
+    /// </summary>
+    public void ShowNumber(float value, Func<float, string> format, float? initial = null)
+    {
+        _showingNumber = true;
+        _label.Initial = initial;
+        _label.Format = format;
+        _label.Value = value;
+        InvalidateMeasure();
+    }
+
     private void RefreshText()
     {
-        _label.Text = _hideText ? string.Empty : _text ?? (Fraction * 100f).ToString("0") + "%";
+        if (_showingNumber)
+            return;
+
+        _label.ShowText(_hideText ? string.Empty : _text ?? (Fraction * 100f).ToString("0") + "%");
         InvalidateMeasure();
     }
 

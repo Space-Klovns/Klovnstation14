@@ -1,6 +1,7 @@
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
+using Robust.Shared.Timing;
 using XColor = Robust.Shared.Maths.Color;
 
 namespace Content.Client._KS14.Tgui.Controls;
@@ -9,8 +10,8 @@ namespace Content.Client._KS14.Tgui.Controls;
 ///     tgui-core's RoundGauge: a half ring split into coloured <see cref="AddRange">ranges</see>, a red needle from the
 ///         centre, an alert triangle that lights in the colour of the range the value is in, and the value in text below
 ///         (an <see cref="KsTguiAnimatedNumber"/>, so it eases as the needle does not). Drawn as triangles in device pixels from
-///         the same 100 by 50 view box tgui's SVG uses, with soft edges, so it stays sharp at any UI scale. Not ported: the
-///         needle's .2 s ease and its shake and the alert's pulse while in alert.
+///         the same 100 by 50 view box tgui's SVG uses, with soft edges, so it stays sharp at any UI scale. As in tgui's CSS
+///         the needle takes .2 s to reach a new value, and while in alert it shakes and the alert pulses.
 /// </summary>
 public sealed class KsTguiRoundGauge : Control
 {
@@ -30,6 +31,26 @@ public sealed class KsTguiRoundGauge : Control
     ///     How far, in device pixels, the soft edge reaches past the shape.
     /// </summary>
     private const float Fringe = 0.75f;
+
+    /// <summary>
+    ///     <c>--round-gauge-transition</c>, which the needle's <c>transform</c> takes.
+    /// </summary>
+    private const float NeedleSeconds = 0.2f;
+
+    /// <summary>
+    ///     <c>--round-gauge-alert-animation</c>.
+    /// </summary>
+    private const float AlertSeconds = 1f;
+
+    /// <summary>
+    ///     <c>--round-gauge-needle-alert-animation</c>.
+    /// </summary>
+    private const float ShakeSeconds = 0.1f;
+
+    /// <summary>
+    ///     <c>--round-gauge-needle-alert-rotation</c>.
+    /// </summary>
+    private const float ShakeRangeDegrees = 2.5f;
 
     private static readonly XColor Track = new(1f, 1f, 1f, 0.1f);
 
@@ -55,6 +76,16 @@ public sealed class KsTguiRoundGauge : Control
     private float _maxValue = 1f;
     private float _size = 1f;
 
+    private bool _hasValue;
+    private bool _needlePlaced;
+    private bool _needleMoving;
+    private float _needleFrom;
+    private float _needleTo = -90f;
+    private float _needleShown = -90f;
+    private float _needleElapsed;
+    private bool _wasActive;
+    private float _activeElapsed;
+
     public KsTguiRoundGauge()
     {
         AddChild(_text);
@@ -67,19 +98,29 @@ public sealed class KsTguiRoundGauge : Control
         {
             _value = value;
             _text.Value = value;
+            _hasValue = true;
+            RefreshNeedle();
         }
     }
 
     public float MinValue
     {
         get => _minValue;
-        set => _minValue = value;
+        set
+        {
+            _minValue = value;
+            RefreshNeedle();
+        }
     }
 
     public float MaxValue
     {
         get => _maxValue;
-        set => _maxValue = value;
+        set
+        {
+            _maxValue = value;
+            RefreshNeedle();
+        }
     }
 
     /// <summary>
@@ -162,6 +203,10 @@ public sealed class KsTguiRoundGauge : Control
     /// </summary>
     public KsTguiColor? MatchingRange()
     {
+        // tgui's default is one range, primary, over the whole dial.
+        if (_ranges.Count == 0)
+            return KsTguiColor.Primary;
+
         var fraction = FractionOf(_value, _minValue, _maxValue);
         foreach (var (color, min, max) in _ranges)
         {
@@ -174,7 +219,7 @@ public sealed class KsTguiRoundGauge : Control
     }
 
     /// <summary>
-    ///     Whether the alert is lit: past <see cref="AlertAfter"/>, or under <see cref="AlertBefore"/>.
+    ///     Whether the value is past <see cref="AlertAfter"/>, or under <see cref="AlertBefore"/>.
     /// </summary>
     public bool InAlert
     {
@@ -182,6 +227,159 @@ public sealed class KsTguiRoundGauge : Control
         {
             return AlertAfter is { } after && _value > after || AlertBefore is { } before && _value < before;
         }
+    }
+
+    /// <summary>
+    ///     tgui's <c>active</c> class: in alert with the needle on a range, so the alert pulses in that range's colour and the
+    ///         needle shakes.
+    /// </summary>
+    public bool AlertActive => InAlert && MatchingRange() != null;
+
+    /// <summary>
+    ///     Where the needle is drawn, in the degrees of <see cref="NeedleDegrees"/>, before any shake.
+    /// </summary>
+    public float NeedleShown => _needleShown;
+
+    /// <summary>
+    ///     The angle the needle is drawn at: <see cref="NeedleShown"/>, and its shake while the alert is active.
+    /// </summary>
+    public float NeedleDrawn => _needleShown + (AlertActive ? ShakeDegrees(_activeElapsed) : 0f);
+
+    /// <summary>
+    ///     The opacity the alert is drawn at while active.
+    /// </summary>
+    public float AlertOpacityNow => AlertOpacity(_activeElapsed);
+
+    /// <summary>
+    ///     Whether the needle is still on its way to the value.
+    /// </summary>
+    public bool NeedleMoving => _needleMoving;
+
+    /// <summary>
+    ///     CSS's <c>cubic-bezier(x1, y1, x2, y2)</c> at a progress of 0 to 1.
+    /// </summary>
+    public static float CubicBezier(float x1, float y1, float x2, float y2, float progress)
+    {
+        if (progress <= 0f)
+            return 0f;
+
+        if (progress >= 1f)
+            return 1f;
+
+        // x grows with t for every curve CSS allows, so halving always finds the t for this progress.
+        var low = 0f;
+        var high = 1f;
+        var t = progress;
+        for (var i = 0; i < 16; i++)
+        {
+            if (BezierAxis(x1, x2, t) < progress)
+                low = t;
+            else
+                high = t;
+
+            t = (low + high) / 2f;
+        }
+
+        return BezierAxis(y1, y2, t);
+    }
+
+    private static float BezierAxis(float first, float second, float t)
+    {
+        var inverse = 1f - t;
+        return 3f * inverse * inverse * t * first + 3f * inverse * t * t * second + t * t * t;
+    }
+
+    /// <summary>
+    ///     How far the needle has turned towards a new value after a fraction of its .2 s, as CSS's <c>ease-in-out</c>.
+    /// </summary>
+    public static float NeedleEase(float progress)
+    {
+        return CubicBezier(0.42f, 0f, 0.58f, 1f, progress);
+    }
+
+    /// <summary>
+    ///     The shake on top of the needle's angle, this long into the alert. tgui's keyframes give only 0% and 50%, +2.5 and
+    ///         -2.5 degrees, so 100% is the needle's own line, and it jumps back to +2.5 as the next cycle starts. Each leg is
+    ///         CSS's default <c>ease</c>.
+    /// </summary>
+    public static float ShakeDegrees(float seconds)
+    {
+        var phase = seconds % ShakeSeconds / ShakeSeconds;
+        return phase < 0.5f
+            ? MathHelper.Lerp(ShakeRangeDegrees, -ShakeRangeDegrees, ShakeEase(phase * 2f))
+            : MathHelper.Lerp(-ShakeRangeDegrees, 0f, ShakeEase((phase - 0.5f) * 2f));
+    }
+
+    private static float ShakeEase(float progress)
+    {
+        return CubicBezier(0.25f, 0.1f, 0.25f, 1f, progress);
+    }
+
+    /// <summary>
+    ///     The alert's opacity, this long into the alert: .1 to 1 and back in a second, with an easing that overshoots, and
+    ///         an opacity can't go past 0 or 1.
+    /// </summary>
+    public static float AlertOpacity(float seconds)
+    {
+        var phase = seconds % AlertSeconds / AlertSeconds;
+        var opacity = phase < 0.5f
+            ? MathHelper.Lerp(0.1f, 1f, AlertEase(phase * 2f))
+            : MathHelper.Lerp(1f, 0.1f, AlertEase((phase - 0.5f) * 2f));
+
+        return Math.Clamp(opacity, 0f, 1f);
+    }
+
+    private static float AlertEase(float progress)
+    {
+        return CubicBezier(0.34f, 1.56f, 0.64f, 1f, progress);
+    }
+
+    private void RefreshNeedle()
+    {
+        var target = NeedleDegrees(_value, _minValue, _maxValue);
+
+        // tgui draws the first value in place, and a window sets its value and scale in one go.
+        if (!_needlePlaced)
+        {
+            _needleTo = target;
+            _needleShown = target;
+            return;
+        }
+
+        if (target == _needleTo)
+            return;
+
+        // A CSS transition starts over from wherever the needle has got to.
+        _needleFrom = _needleShown;
+        _needleTo = target;
+        _needleElapsed = 0f;
+        _needleMoving = true;
+    }
+
+    /// <summary>
+    ///     Moves the animations on by this much time.
+    /// </summary>
+    public void Advance(float seconds)
+    {
+        _needlePlaced |= _hasValue;
+
+        if (_needleMoving)
+        {
+            _needleElapsed += seconds;
+            var progress = _needleElapsed / NeedleSeconds;
+            _needleMoving = progress < 1f;
+            _needleShown = _needleMoving ? MathHelper.Lerp(_needleFrom, _needleTo, NeedleEase(progress)) : _needleTo;
+        }
+
+        var active = AlertActive;
+        _activeElapsed = active && _wasActive ? (_activeElapsed + seconds) % AlertSeconds : 0f;
+        _wasActive = active;
+    }
+
+    protected override void FrameUpdate(FrameEventArgs args)
+    {
+        base.FrameUpdate(args);
+        Advance(args.DeltaSeconds);
     }
 
     protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -210,8 +408,9 @@ public sealed class KsTguiRoundGauge : Control
 
         _vertices.Clear();
 
+        var active = AlertActive;
         if (AlertAfter != null || AlertBefore != null)
-            AppendAlert(origin, unit, fringe, InAlert ? MatchingRange() : null, InAlert);
+            AppendAlert(origin, unit, fringe, active ? MatchingRange() : null);
 
         AppendRing(origin, unit, fringe, 0f, 1f, Track);
         if (_ranges.Count == 0)
@@ -274,7 +473,7 @@ public sealed class KsTguiRoundGauge : Control
     {
         var red = KsTguiColors.Shade(KsTguiColor.Red, 0f);
         var centre = new Vector2(50f, 50f);
-        var radians = NeedleDegrees(_value, _minValue, _maxValue) * MathF.PI / 180f;
+        var radians = NeedleDrawn * MathF.PI / 180f;
         var rotation = Matrix3x2.CreateRotation(radians, centre);
 
         // tgui's polygon, base on the centre line and tip at the top.
@@ -296,9 +495,15 @@ public sealed class KsTguiRoundGauge : Control
         AppendConvex(origin, unit, hub, red, fringe);
     }
 
-    private void AppendAlert(Vector2 origin, float unit, float fringe, KsTguiColor? range, bool lit)
+    private void AppendAlert(Vector2 origin, float unit, float fringe, KsTguiColor? activeRange)
     {
-        var fill = lit && range != null ? KsTguiColors.Shade(range.Value, 0f) : Track;
+        var fill = Track;
+        var cut = _windowBase;
+        if (activeRange is { } range)
+        {
+            fill = KsTguiColors.Shade(range, 0f).WithAlpha(AlertOpacityNow);
+            cut = cut.WithAlpha(cut.A * AlertOpacityNow);
+        }
 
         // tgui scales the glyph to .9 from the top centre.
         static Vector2 Squash(float x, float y)
@@ -308,8 +513,7 @@ public sealed class KsTguiRoundGauge : Control
 
         AppendConvex(origin, unit, [Squash(50f, 13.5f), Squash(64f, 40.5f), Squash(36f, 40.5f)], fill, fringe);
 
-        // The exclamation mark is cut out of the triangle, here painted in the window's colour.
-        var cut = _windowBase;
+        // The exclamation mark is cut out of the triangle, here painted in the window's colour, fading with the triangle.
         AppendConvex(origin, unit, [Squash(47f, 22f), Squash(53f, 22f), Squash(51.5f, 32.5f), Squash(48.5f, 32.5f)], cut, fringe);
 
         var dot = new Vector2[12];

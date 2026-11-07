@@ -130,6 +130,9 @@ public sealed class KsTguiLabeledListItem : Control
                 value.Orphan();
                 _buttonsSlot.AddChild(value);
             }
+
+            // The buttons column is sized from every row, as the label column is.
+            Parent?.InvalidateMeasure();
         }
     }
 
@@ -139,7 +142,15 @@ public sealed class KsTguiLabeledListItem : Control
 
     private void RefreshLabel()
     {
-        _labelControl.Text = _colon && !string.IsNullOrEmpty(_label) ? _label + ":" : _label;
+        var text = _colon && !string.IsNullOrEmpty(_label) ? _label + ":" : _label;
+        if (_labelControl.Text == text)
+            return;
+
+        _labelControl.Text = text;
+
+        // The list sizes the label column from every row. A row re-measured alone gets the column as it was, so its own size
+        //      doesn't change and the list never hears: the new label overruns the column and the rows' values fall out of line.
+        Parent?.InvalidateMeasure();
     }
 
     /// <summary>

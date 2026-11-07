@@ -86,6 +86,14 @@ public sealed class KsTguiDisposalBatteryWindowTest : GameTest
         await Client.WaitPost(() =>
         {
             var owner = Client.EntMan.SpawnEntity(null, new MapCoordinates(0f, 0f, MapId.Nullspace));
+
+            var mailingComponent = Client.EntMan.AddComponent<MailingUnitComponent>(owner);
+#pragma warning disable RA0002 // Standing in for the state the server sends.
+            mailingComponent.Tag = "tag";
+            mailingComponent.Target = "b";
+            mailingComponent.TargetList = new List<string> { "a", "b", "c" };
+#pragma warning restore RA0002
+
             bui = new MailingUnitBoundUserInterface(owner, MailingUnitUiKey.Key);
             typeof(BoundUserInterface).GetMethod("Open", Any)!.Invoke(bui, null);
         });
@@ -102,7 +110,6 @@ public sealed class KsTguiDisposalBatteryWindowTest : GameTest
                 var window = (KsTguiMailingWindow)tguiWindow;
                 var fired = new List<string>();
                 window.OnTargetSelected += target => fired.Add(target);
-                window.SetTargets("tag", "b", new List<string> { "a", "b", "c" });
 
                 var buttons = new List<KsTguiButton>();
                 Collect(window, buttons);
@@ -175,6 +182,85 @@ public sealed class KsTguiDisposalBatteryWindowTest : GameTest
                 inputs[0].Commit();
                 Assert.That(chargeRates, Is.EqualTo(new[] { 20000f }));
             }
+
+            bui.Dispose();
+        });
+    }
+
+    /// <summary>
+    ///     The input breaker reads On like the output's (the battery does not auto-charge), and the Stored Energy values start
+    ///         at the same x after real layout.
+    /// </summary>
+    [TestCase(5000f, 1000f)] // Charging, then discharging: ETA to full, then to empty.
+    [TestCase(1000f, 5000f)] // The reverse.
+    [TestCase(0f, 0f)] // Idle: ETA not applicable.
+    public async Task BatteryWindowInputSaysOnAndStoredValuesAlign(float receiving, float supply)
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        BatteryBoundUserInterface bui = null;
+        await Client.WaitPost(() =>
+        {
+            var owner = Client.EntMan.SpawnEntity(null, new MapCoordinates(0f, 0f, MapId.Nullspace));
+            bui = new BatteryBoundUserInterface(owner, BatteryUiKey.Key);
+            typeof(BoundUserInterface).GetMethod("Open", Any)!.Invoke(bui, null);
+            var state = MakeState();
+            state.CurrentReceiving = receiving;
+            state.CurrentSupply = supply;
+            typeof(BoundUserInterface).GetMethod("UpdateState", Any)!.Invoke(bui, [state]);
+        });
+        await Pair.RunTicksSync(5);
+
+        // Then the other way, as a battery that starts discharging does: the ETA label changes width while the window is
+        //      already laid out, and the rows must follow it together.
+        await Client.WaitPost(() =>
+        {
+            var state = MakeState();
+            state.CurrentReceiving = supply;
+            state.CurrentSupply = receiving;
+            typeof(BoundUserInterface).GetMethod("UpdateState", Any)!.Invoke(bui, [state]);
+        });
+        await Pair.RunTicksSync(5);
+
+        // And a later state with other numbers, as the server sends every few ticks: its texts change width.
+        await Client.WaitPost(() =>
+        {
+            var state = MakeState();
+            state.CurrentReceiving = supply;
+            state.CurrentSupply = receiving;
+            state.Charge = 90000f;
+            typeof(BoundUserInterface).GetMethod("UpdateState", Any)!.Invoke(bui, [state]);
+        });
+        await Pair.RunTicksSync(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = (KsTguiBatteryWindow)typeof(BatteryBoundUserInterface).GetField("_menu", Any)!.GetValue(bui);
+
+            var buttons = new List<KsTguiButton>();
+            Collect(window, buttons);
+            // Breakers are the first button of each side: input, then output.
+            Assert.That(buttons[0].Text, Is.EqualTo("On"));
+            Assert.That(buttons[5].Text, Is.EqualTo("Off"));
+
+            var energyItem = (KsTguiLabeledListItem)typeof(KsTguiBatteryWindow).GetField("_energyItem", Any)!.GetValue(window);
+            var etaItem = (KsTguiLabeledListItem)typeof(KsTguiBatteryWindow).GetField("_etaItem", Any)!.GetValue(window);
+            var valueField = typeof(KsTguiLabeledListItem).GetField("_valueLabel", Any)!;
+            var energyValue = (Label)valueField.GetValue(energyItem);
+            var etaValue = (Label)valueField.GetValue(etaItem);
+
+            foreach (var item in new[] { energyItem, etaItem })
+            {
+                var label = (Label)typeof(KsTguiLabeledListItem).GetField("_labelControl", Any)!.GetValue(item);
+                Assert.That(label.Size.X, Is.GreaterThanOrEqualTo(label.DesiredSize.X - 0.01f),
+                    $"label '{label.Text}' is clipped by a column that was not widened for it");
+            }
+
+            Assert.That(energyValue.Text, Is.Not.Empty);
+            Assert.That(etaValue.Text, Is.Not.Empty);
+            Assert.That(etaValue.GlobalPosition.X, Is.EqualTo(energyValue.GlobalPosition.X).Within(0.01f),
+                $"energy '{energyValue.Text}' at {energyValue.GlobalPosition.X}, eta '{etaValue.Text}' at {etaValue.GlobalPosition.X}");
 
             bui.Dispose();
         });

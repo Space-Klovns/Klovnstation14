@@ -1,7 +1,9 @@
 using System.Numerics;
+using Content.Client.Guidebook;
 using Content.Client.Resources;
 using Content.Client.UserInterface.Controls;
 using Content.Shared._KS14.CCVar;
+using Content.Shared.Guidebook;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
@@ -11,6 +13,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.Tgui;
@@ -43,12 +46,16 @@ public sealed partial class KsTguiChromeUIController : UIController
         public required Thickness TitleMargin;
         public required TextureButton StockCloseButton;
         public required KsTguiCloseButton CloseButton;
+        public TextureButton? HelpButton;
         public Control? Contents;
         public Control? Handle;
     }
 
     private static readonly AttachedProperty<Chrome?> ChromeProperty =
         AttachedProperty<Chrome?>.CreateNull("KsTguiChrome", typeof(KsTguiChromeUIController));
+
+    private static readonly AttachedProperty<List<ProtoId<GuideEntryPrototype>>?> GuidesProperty =
+        AttachedProperty<List<ProtoId<GuideEntryPrototype>>?>.CreateNull("KsTguiGuides", typeof(KsTguiChromeUIController));
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IInputManager _inputManager = default!;
@@ -82,6 +89,43 @@ public sealed partial class KsTguiChromeUIController : UIController
     public static bool HasChrome(BaseWindow window)
     {
         return window.GetValue(ChromeProperty) != null;
+    }
+
+    /// <summary>
+    ///     Whether a <see cref="DefaultWindow"/> has a guidebook button in its title bar.
+    /// </summary>
+    public static bool HasHelpButton(DefaultWindow window)
+    {
+        return window.GetValue(ChromeProperty)?.HelpButton != null;
+    }
+
+    /// <summary>
+    ///     The guides a <see cref="DefaultWindow"/>'s title bar opens. <see cref="FancyWindow"/> has a button of its own, and the
+    ///         engine's window has none, so this is a part of the chrome: it comes and goes with the theme.
+    /// </summary>
+    public void SetGuides(DefaultWindow window, List<ProtoId<GuideEntryPrototype>> guides)
+    {
+        window.SetValue(GuidesProperty, guides);
+
+        if (window.GetValue(ChromeProperty) is { } chrome)
+            AddHelpButton(chrome, guides);
+    }
+
+    private void AddHelpButton(Chrome chrome, List<ProtoId<GuideEntryPrototype>> guides)
+    {
+        if (chrome.HelpButton != null)
+            return;
+
+        chrome.HelpButton = new TextureButton
+        {
+            StyleClasses = { FancyWindow.StyleClassWindowHelpButton },
+            VerticalAlignment = Control.VAlignment.Center,
+        };
+        chrome.HelpButton.OnPressed += _ => EntityManager.System<GuidebookSystem>().OpenHelp(guides);
+
+        var row = chrome.CloseButton.Parent!;
+        row.AddChild(chrome.HelpButton);
+        chrome.HelpButton.SetPositionInParent(chrome.CloseButton.GetPositionInParent());
     }
 
     private void SyncWindow(Control control)
@@ -123,6 +167,9 @@ public sealed partial class KsTguiChromeUIController : UIController
             chromedFancyWindow.KsChromed = true;
 
         window.SetValue(ChromeProperty, chrome);
+
+        if (window.GetValue(GuidesProperty) is { } guides)
+            AddHelpButton(chrome, guides);
     }
 
     private Chrome? AttachDefaultWindow(DefaultWindow window)
@@ -170,6 +217,7 @@ public sealed partial class KsTguiChromeUIController : UIController
         chrome.Title.Margin = chrome.TitleMargin;
         chrome.StockCloseButton.Visible = true;
         chrome.CloseButton.Orphan();
+        chrome.HelpButton?.Orphan();
         chrome.Handle?.Orphan();
 
         if (chrome.Contents is { } contents)

@@ -344,6 +344,32 @@ public sealed partial class KsInstrumentWindow : KsBaseWindow
         _pendingTab = _prefs.Tab;
     }
 
+    /// <summary>
+    ///     For a console with no sensor picture, the normal shuttle console: this window on the upstream console's data. Every
+    ///         grid shows, as it does there, and what only reads the sensor picture goes, since it would only ever read nothing.
+    /// </summary>
+    public void KsSetOpenPicture()
+    {
+        KsOpenPicture = true;
+        RadarContainer.KsSetOpenPicture();
+        MapContainer.KsOpenPicture = true;
+
+        EsmTabButton.Visible = false;
+        Sep3.Visible = false;
+        StatusStrip.Visible = false;
+
+        if (_pendingTab == KsInstrumentTab.Esm)
+            _pendingTab = KsInstrumentTab.Radar;
+    }
+
+    public bool KsOpenPicture { get; private set; }
+
+    public bool KsEsmTabShown => EsmTabButton.Visible;
+
+    public bool KsMapOpenPicture => MapContainer.KsOpenPicture;
+
+    public bool KsRadarOpenPicture => RadarContainer.KsOpenPicture;
+
     public void UpdateState(EntityUid owner, ShuttleBoundUserInterfaceState cState)
     {
         var coordinates = _entManager.GetCoordinates(cState.NavState.Coordinates);

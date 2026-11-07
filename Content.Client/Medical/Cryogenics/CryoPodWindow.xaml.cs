@@ -54,6 +54,8 @@ public sealed partial class CryoPodWindow : FancyWindow
         LowPressureWarning.Visible = showsPressureWarning;
         Pressure.Text = Loc.GetString("gas-analyzer-window-pressure-val-text",
                                       ("pressure", $"{msg.GasMix.Pressure:0.00}"));
+        // KS14: moved to KsShowTemperature, which eases it under tgui
+        /*
         Temperature.Text = Loc.GetString("generic-not-available-shorthand");
 
         if (hasGas)
@@ -63,6 +65,8 @@ public sealed partial class CryoPodWindow : FancyWindow
                                              ("tempK", $"{msg.GasMix.Temperature:0.0}"),
                                              ("tempC", $"{celsius:0.0}"));
         }
+        */
+        KsShowTemperature(hasGas ? msg.GasMix.Temperature : null); // KS14
 
         // Gas mix segmented bar chart
         GasMixChart.Clear();

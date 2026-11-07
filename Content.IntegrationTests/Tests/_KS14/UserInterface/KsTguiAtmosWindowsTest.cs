@@ -178,21 +178,39 @@ public sealed class KsTguiAtmosWindowsTest : GameTest
         await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
         await Pair.RunTicksSync(2);
 
+        KsTguiGasFilterWindow window = null!;
+        await Client.WaitPost(() =>
+        {
+            window = new KsTguiGasFilterWindow();
+            window.PopulateGasList(CProtoMan.EnumeratePrototypes<GasPrototype>());
+            window.OpenCentered();
+        });
+        await Pair.RunTicksSync(3);
+
         await Client.WaitAssertion(() =>
         {
-            var gases = CProtoMan.EnumeratePrototypes<GasPrototype>().ToList();
-            var window = new KsTguiGasFilterWindow();
-            window.PopulateGasList(gases);
-            window.OpenCentered();
-            window.ForceRunStyleUpdate();
-            window.InvalidateMeasure();
-            window.Measure(Robust.Shared.Maths.Vector2Helpers.Infinity);
+            static IEnumerable<KsTguiButton> Buttons(Control root)
+            {
+                foreach (var child in root.Children)
+                {
+                    if (child is KsTguiButton button)
+                        yield return button;
 
-            // Measured with room to spare, so a clipped window cannot hide it: the window's size vs what the contents need.
-            var contents = window.ContentsContainer;
-            contents.Measure(new Vector2(window.SetWidth, float.PositiveInfinity));
-            Assert.That(contents.DesiredSize.X, Is.LessThanOrEqualTo(window.SetWidth + 0.5f), "Gas buttons are wider than the window");
-            TestContext.Out.WriteLine($"gases={gases.Count} desired={window.DesiredSize} contents={contents.DesiredSize}");
+                    foreach (var inner in Buttons(child))
+                        yield return inner;
+                }
+            }
+
+            // Where they landed, not what they measure: measured inside a width, a control can't report wider than it, whatever it wants.
+            var gasButtons = Buttons(window.ContentsContainer).Where(button => button.Text != null && button.Parent is WrapContainer).ToList();
+            Assert.That(gasButtons, Has.Count.GreaterThan(1), "The filter should list the gases.");
+
+            var windowRight = window.GlobalPosition.X + window.Size.X;
+            foreach (var button in gasButtons)
+            {
+                Assert.That(button.GlobalPosition.X + button.Size.X, Is.LessThanOrEqualTo(windowRight + 0.5f), $"{button.Text} runs past the window");
+            }
+
             window.Close();
         });
     }

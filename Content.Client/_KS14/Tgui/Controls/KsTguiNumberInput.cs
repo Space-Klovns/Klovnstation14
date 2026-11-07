@@ -56,7 +56,7 @@ public sealed class KsTguiNumberInput : Control
     private XColor _borderFocused = KsTguiPalettes.InputBorder;
 
     private readonly LineEdit _edit;
-    private readonly Label _content;
+    private readonly KsTguiAnimatedNumber _content;
     private readonly KsTguiStyleBox _box = new(Background, 2f) { BorderThickness = new Thickness(1f) };
 
     private float _value;
@@ -73,6 +73,8 @@ public sealed class KsTguiNumberInput : Control
     private string _format = "0.##";
     private string? _unit;
     private bool _disabled;
+    private bool _animated;
+    private bool _hasOutsideValue;
 
     private bool _pressed;
     private bool _dragging;
@@ -93,7 +95,13 @@ public sealed class KsTguiNumberInput : Control
         DefaultCursorShape = CursorShape.VResize;
         RectClipContent = true;
 
-        _content = new Label { Align = Label.AlignMode.Right, VerticalAlignment = VAlignment.Center };
+        _content = new KsTguiAnimatedNumber
+        {
+            Align = Label.AlignMode.Right,
+            VerticalAlignment = VAlignment.Center,
+            Instant = true,
+            Format = FormatContent,
+        };
         _content.MouseFilter = MouseFilterMode.Ignore;
         _content.FontColorOverride = KsTguiPalettes.InputBorder;
 
@@ -258,6 +266,25 @@ public sealed class KsTguiNumberInput : Control
         set => _tickWhileDragging = value;
     }
 
+    /// <summary>
+    ///     tgui's <c>animated</c>: the number eases to a new value, except its first, and while it is dragged, when it follows
+    ///         the drag.
+    /// </summary>
+    public bool Animated
+    {
+        get => _animated;
+        set
+        {
+            _animated = value;
+            RefreshContent();
+        }
+    }
+
+    /// <summary>
+    ///     The text in the box right now, which is on its way to <see cref="Value"/> while it eases.
+    /// </summary>
+    public string? ShownText => _content.Text;
+
     public bool Disabled
     {
         get => _disabled;
@@ -293,6 +320,7 @@ public sealed class KsTguiNumberInput : Control
             _edit.Text = value.ToString(_format, CultureInfo.CurrentCulture);
 
         RefreshContent();
+        _hasOutsideValue = true;
     }
 
     /// <summary>
@@ -452,9 +480,19 @@ public sealed class KsTguiNumberInput : Control
 
     private void RefreshContent()
     {
-        var text = Value.ToString(_format, CultureInfo.CurrentCulture);
-        _content.Text = string.IsNullOrEmpty(_unit) ? text : text + " " + _unit;
+        // The box exists before its window's first state. That first value is what it opens on, not a change to ease across.
+        _content.Instant = !_animated || _dragging || !_hasOutsideValue;
+        _content.Value = Value;
+
+        // Set again for the sake of a changed unit or format, which the number can't see.
+        _content.Format = FormatContent;
         InvalidateMeasure();
+    }
+
+    private string FormatContent(float value)
+    {
+        var text = value.ToString(_format, CultureInfo.CurrentCulture);
+        return string.IsNullOrEmpty(_unit) ? text : text + " " + _unit;
     }
 
     protected override void KeyBindDown(GUIBoundKeyEventArgs args)

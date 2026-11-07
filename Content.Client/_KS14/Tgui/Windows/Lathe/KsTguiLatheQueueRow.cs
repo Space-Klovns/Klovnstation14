@@ -1,6 +1,8 @@
 using Content.Client._KS14.Tgui.Controls;
+using Content.Shared.Research.Prototypes;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.Tgui.Windows.Lathe;
 
@@ -9,6 +11,8 @@ namespace Content.Client._KS14.Tgui.Windows.Lathe;
 /// </summary>
 public sealed class KsTguiLatheQueueRow : BoxContainer
 {
+    private ProtoId<LatheRecipePrototype>? _recipe;
+
     private readonly BoxContainer _displayContainer;
     private readonly Label _nameLabel;
 
@@ -48,6 +52,18 @@ public sealed class KsTguiLatheQueueRow : BoxContainer
     public void SetDisplayText(string displayText)
     {
         _nameLabel.Text = displayText;
+    }
+
+    /// <summary>
+    ///     Notes the recipe this row shows. False means it already showed it, and has the right icon.
+    /// </summary>
+    public bool TakeRecipe(ProtoId<LatheRecipePrototype> recipe)
+    {
+        if (_recipe == recipe)
+            return false;
+
+        _recipe = recipe;
+        return true;
     }
 
     public void SetDisplayControl(Control displayControl)

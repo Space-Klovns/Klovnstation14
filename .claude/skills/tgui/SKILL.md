@@ -35,7 +35,9 @@ The window size is on `<Window width={} height={}>`: use it for `SetSize`. Base 
 | `<Box color="good|average|bad">` | `KsTguiPalettes.Good|Average|Bad` |
 | `<Box bold>`, `italic` | `sheet.BaseFont` kinds, or `FontKind` on a label class |
 | `<Window.Content scrollable>` | `ScrollContainer` around the root box, or `KsTguiSection Scrollable` |
-| `<Dimmer>` | Not ported: use a `KsTguiNoticeBox` or disable the controls |
+| `<Dimmer>` | `KsTguiDimmer`, see the table below |
+
+**The guidebook `?` is automatic.** `KsBoundUserInterfaceExt` takes the place of the engine's `CreateWindow` helpers for all of `Content.Client.*`, and gives any window whose entity has `GuideHelpComponent` its button. A window made with `new` in a BUI needs `this.WithGuide(window)`; `KsGuideHelpWindowTest` walks the prototypes and fails if one is missed. A `DefaultWindow` gets its button from the tgui chrome, so only under tgui. A bare `BaseWindow` has no title bar to put one in.
 
 Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on the root box. Stacked sections use
 `SeparationOverride = KsTguiSection.Gap` in their parent.
@@ -54,8 +56,8 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `Button` on an item slot | `KsTguiItemSlotButton` | `: KsTguiButton`. `Filled`, `SlotId`. Eject while filled, Insert while empty, never disabled |
 | `Icon` | `KsTguiIcon`, `KsTguiIcons` | FA6 Solid glyphs. Add a `const string` when one is missing |
 | `Tabs` | `KsTguiTabs`, `KsTguiTabItem` | Vertical too. `Count` is the badge. Use this, not the engine `TabContainer`, in a ported window |
-| `ProgressBar` | `KsTguiProgressBar` | `AddRange` for good/average/bad. Text right-aligned, as tgui |
-| `NumberInput` | `KsTguiNumberInput` | Value bar at the left, vertical drag, click selects everything. Use it, not `FloatSpinBox`, in a ported window |
+| `ProgressBar` | `KsTguiProgressBar` | `AddRange` for good/average/bad. Text right-aligned, as tgui. `ShowNumber` puts an easing number in place of the text, as an `AnimatedNumber` inside tg's bar |
+| `NumberInput` | `KsTguiNumberInput` | Value bar at the left, vertical drag, click selects everything. `Animated` is tg's `animated` prop: set it where tg does. Use it, not `FloatSpinBox`, in a ported window |
 | `candystripe` class, `Stack zebra` | `KsTguiLabeledList.Candystripe`, `KsTguiTabs.Candystripe`, `KsTguiCandystripe` | Odd visible rows darkened edge to edge, so hiding a row re-alternates. `KsTguiCandystripe` is a vertical box for any rows. The dark colour is only given by the tgui sheet |
 | `Table`, `Table.Row`, `Table.Cell` | `KsTguiTable`, `KsTguiTableRow` | Cells are the row's children; columns size to the widest cell. `HorizontalExpand` on a cell marks an expanding column (tgui marks the others `collapsing`). `Header` for 6px under it, `Candystripe` per row (the header counts in the odd/even) |
 | `ColorBox` | `KsTguiColorBox` | `BoxColor`, 12px swatch |
@@ -63,8 +65,8 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `BlockQuote` | `KsTguiBlockQuote` | `Text`, label colour, left bar |
 | `ImageButton` | `KsTguiImageButton` | `: ContainerButton`, drawn from its own state. `ImagePrototype` or `ImageTexture`, `ImageSize` (tg's 64), `Text` (bar at the bottom), `TopLeftText`/`TopRightText` or `AltButtons` (top overlay), `Buttons` (above the bar), `Color` (`Default` is tg's grey, `Primary` the blue; `Transparent` for pickers), `Selected`, `Fluid` (row, `Content` replaces `Text`). Not ported: pressed glow, text outline, `title`, contrast on a disabled row |
 | a wrapping grid of `ImageButton` cards | `KsTguiCardGrid` | Columns = how many minimum-size cards fit, the width then shared out equally: constant `Gap`, first and last card flush with the edges at any width and after a resize. `HorizontalExpand` it. Use it for every card grid |
-| `RoundGauge` | `KsTguiRoundGauge` | Smooth geometry from tg's 100x50 view box, sharp at any scale. `MinValue`, `MaxValue`, `AddRange`, `AlertAfter`/`AlertBefore`, `Format`, `GaugeSize`. Pass only real ranges: no data, no range. Needle snaps (tg eases) |
-| `AnimatedNumber` | `KsTguiAnimatedNumber` | `: Label`. Set `Value`; eases by frame time and does nothing once settled. `Format`, `Initial` (start from 0 on first show). For a figure that changes in place; keep one instance, don't rebuild it with its row |
+| `RoundGauge` | `KsTguiRoundGauge` | Smooth geometry from tg's 100x50 view box, sharp at any scale. `MinValue`, `MaxValue`, `AddRange`, `AlertAfter`/`AlertBefore`, `Format`, `GaugeSize`. Pass only real ranges: no data, no range. The needle takes tg's .2 s to a new value, and while in alert (`AlertAfter`, on a range) it shakes and the alert pulses. The first value is drawn in place. Nothing to call: it runs off `FrameUpdate` |
+| `AnimatedNumber` | `KsTguiAnimatedNumber` | `: Label`. Set `Value`; eases by frame time and does nothing once settled. `Format`, `Initial` (where a number's first value eases from). **Nothing counts up as a window opens**, even where tg's source says `initial={0}`: a value in the window's first state is placed, and `Initial = 0` is only for what arrives after it (`NewVolumeStart` in `KsTguiChemMasterWindow`). For a figure that changes in place; keep one instance. In rows that get rebuilt, get it from a `KsTguiAnimatedNumberPool` keyed by what the row shows, or each state starts it over. `ShowText` for a non-number such as N/A. `Instant` in a stock window, set from `!KsTguiTheme.ReadEnabled()`, so Baron doesn't change |
 | `Dimmer` | `KsTguiDimmer` | `KsTguiDimmer.Over(target, out dimmer)` returns a host that stacks the target and the dimmer; add the host where the target was, toggle `dimmer.Visible`. `Content` is centred. Takes the clicks. The standard way to show a locked section (lock icon + the swipe text), with the notice kept above |
 | `Modal` | `KsTguiModal` | A dimmer with a panel. Put it in a stacking host beside the page, `Body`, `Open()`/`Close()`, `Closed`. Takes keyboard focus, Esc closes (a focused text box eats the first Esc) |
 | `Input` | `LineEdit` | Already themed |

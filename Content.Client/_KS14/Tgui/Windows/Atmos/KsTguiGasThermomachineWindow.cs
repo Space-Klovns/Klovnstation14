@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Numerics;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client.UserInterface.Controls;
@@ -10,9 +11,9 @@ using Robust.Shared.Timing;
 namespace Content.Client._KS14.Tgui.Windows.Atmos;
 
 /// <summary>
-///     The heater and freezer after tgui's ThermoMachine: power in the header of a Controls section, the target temperature,
-///         and presets for the lowest, room and highest temperature the machine can be set to. tg's Status section (the
-///         gas it holds) has no data here, so it is omitted.
+///     The heater and freezer after tgui's ThermoMachine: a Status section with the gas it is working on, then power in the
+///         header of a Controls section, the target temperature, and presets for the lowest, room and highest temperature
+///         the machine can be set to.
 /// </summary>
 public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasThermomachineWindow
 {
@@ -28,7 +29,13 @@ public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasTh
 
     public KsTguiButton PowerButton => _power.Button;
 
-    public KsTguiNumberInput TemperatureInput { get; } = new() { Unit = "K", Format = "0.#", Step = 5f, StepPixelSize = 3f, WidthPixels = 62f, TickWhileDragging = true };
+    public KsTguiNumberInput TemperatureInput { get; } = new() { Unit = "K", Format = "0.#", Step = 5f, StepPixelSize = 3f, WidthPixels = 62f, TickWhileDragging = true, Animated = true };
+    public KsTguiAnimatedNumber GasTemperature { get; } = new() { Format = temperature => temperature.ToString("F2", CultureInfo.CurrentCulture) + " K" };
+    public KsTguiAnimatedNumber GasPressure { get; } = new()
+    {
+        Format = pressure => pressure.ToString("F2", CultureInfo.CurrentCulture) + " " + Loc.GetString("ks-tgui-atmos-unit-kpa"),
+    };
+
     public KsTguiButton MinimumButton { get; } = new() { Icon = KsTguiIcons.FastBackward, ToolTip = Loc.GetString("ks-tgui-atmos-preset-min") };
     public KsTguiButton RoomButton { get; } = new() { Icon = KsTguiIcons.Sync, ToolTip = Loc.GetString("ks-tgui-atmos-preset-room") };
     public KsTguiButton MaximumButton { get; } = new() { Icon = KsTguiIcons.FastForward, ToolTip = Loc.GetString("ks-tgui-atmos-preset-max") };
@@ -44,6 +51,12 @@ public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasTh
 
         MinWidth = 300f;
         SetWidth = 300f; // The height is the contents'.
+
+        var statusSection = new KsTguiSection { Title = Loc.GetString("ks-tgui-atmos-status") };
+        var statusList = new KsTguiLabeledList();
+        statusList.AddItem(Loc.GetString("ks-tgui-atmos-temperature")).XamlChildren.Add(GasTemperature);
+        statusList.AddItem(Loc.GetString("ks-tgui-atmos-pressure")).XamlChildren.Add(GasPressure);
+        statusSection.AddChild(statusList);
 
         var section = new KsTguiSection
         {
@@ -64,9 +77,11 @@ public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasTh
         var root = new BoxContainer
         {
             Orientation = BoxContainer.LayoutOrientation.Vertical,
+            SeparationOverride = KsTguiSection.Gap,
             Margin = new Thickness(6f),
             VerticalExpand = true,
         };
+        root.AddChild(statusSection);
         root.AddChild(section);
         ContentsContainer.AddChild(root);
 
@@ -102,6 +117,12 @@ public sealed partial class KsTguiGasThermomachineWindow : FancyWindow, IKsGasTh
         _maxTemperature = max;
         TemperatureInput.MinValue = min;
         TemperatureInput.MaxValue = max;
+    }
+
+    public void SetGasStatus(float temperature, float pressure)
+    {
+        GasTemperature.Value = temperature;
+        GasPressure.Value = pressure;
     }
 
     protected override void FrameUpdate(FrameEventArgs args)

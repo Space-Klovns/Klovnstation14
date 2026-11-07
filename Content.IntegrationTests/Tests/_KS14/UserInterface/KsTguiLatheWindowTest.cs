@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client._KS14.Tgui.Windows.Lathe;
+using Content.Client._KS14.Tgui.Windows.Materials;
 using Content.Client.Lathe.UI;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
@@ -213,27 +214,48 @@ public sealed class KsTguiLatheWindowTest : GameTest
         {
             Assert.That(SEntMan.GetComponent<LatheComponent>(lathe).Queue.Count, Is.LessThan(queuedBefore), "Delete should remove the batch.");
         });
+    }
 
-        // Material eject.
+    /// <summary>
+    ///     On a lathe with nothing queued, so that printing can't account for the material going.
+    /// </summary>
+    [Test]
+    public async Task MaterialEjectTakesOutOneSheet()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        var lathe = await OpenLathe();
+
         var steelBefore = 0;
+        var glassBefore = 0;
         SharedMaterialStorageSystem materials = null!;
         await Server.WaitPost(() =>
         {
             materials = SEntMan.System<SharedMaterialStorageSystem>();
             steelBefore = materials.GetMaterialAmount(lathe, SteelMaterial);
+            glassBefore = materials.GetMaterialAmount(lathe, GlassMaterial);
         });
+
         await Client.WaitPost(() =>
         {
-            var eject = Descendants<KsTguiLatheMaterials>(window).Single();
-            var buttons = Descendants<KsTguiButton>(eject).Where(button => button.Text == "×1").ToList();
-            Assert.That(buttons, Is.Not.Empty, "The material bar should offer ejecting.");
-            Press(buttons[0]);
+            var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+            var eject = Descendants<KsTguiMaterialList>(window).Single();
+            Press(Descendants<KsTguiButton>(eject).First(button => button.Text == "×1"));
         });
         await Pair.RunTicksSync(10);
-        await Server.WaitPost(() =>
+
+        await Server.WaitAssertion(() =>
         {
-            Assert.That(materials.GetMaterialAmount(lathe, SteelMaterial) + materials.GetMaterialAmount(lathe, GlassMaterial),
-                Is.LessThan(steelBefore + 100000), "Ejecting a sheet should take material out.");
+            var steelTaken = steelBefore - materials.GetMaterialAmount(lathe, SteelMaterial);
+            var glassTaken = glassBefore - materials.GetMaterialAmount(lathe, GlassMaterial);
+            var steelSheet = materials.GetSheetVolume(SProtoMan.Index(SteelMaterial));
+            var glassSheet = materials.GetSheetVolume(SProtoMan.Index(GlassMaterial));
+
+            Assert.That(
+                steelTaken == steelSheet && glassTaken == 0 || steelTaken == 0 && glassTaken == glassSheet,
+                Is.True,
+                $"One sheet of one material should go; {steelTaken} steel and {glassTaken} glass went.");
         });
     }
 }

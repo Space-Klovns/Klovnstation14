@@ -16,7 +16,6 @@ public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
 {
     private readonly KsTguiNoticeBox _lockNotice;
     private readonly KsTguiDimmer _lockDimmer;
-    private readonly KsTguiAnimatedNumber _loadNumber;
     private readonly KsTguiLabeledListItem _breakerItem;
     private readonly KsTguiButton _breakerButton;
     private readonly KsTguiProgressBar _chargeBar;
@@ -61,8 +60,6 @@ public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
         cellItem.XamlChildren.Add(_chargeBar);
 
         _loadItem = list.AddItem(Loc.GetString("ks-tgui-apc-total-load"));
-        _loadNumber = new KsTguiAnimatedNumber { Format = power => Loc.GetString("apc-menu-power-state-label-text", ("power", (int)MathF.Round(power))) };
-        _loadItem.XamlChildren.Add(_loadNumber);
 
         section.AddChild(list);
 
@@ -110,7 +107,7 @@ public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
         _chargeBar.Value = apcState.Charge;
         _chargeBar.Text = Loc.GetString("apc-menu-charge-label", ("percent", apcState.Charge.ToString("P0")));
 
-        _loadNumber.Value = (float)apcState.Power;
+        _loadItem.Text = Loc.GetString("apc-menu-power-state-label-text", ("power", apcState.Power));
     }
 
     private void RefreshBreaker()

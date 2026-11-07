@@ -39,6 +39,13 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
     private readonly KsTguiAnimatedNumber _bufferListVolume = MakeVolume();
     private readonly KsTguiAnimatedNumber _inputVolume = MakeVolume();
     private readonly KsTguiAnimatedNumber _outputVolume = MakeVolume();
+
+    private bool _firstStateShown;
+
+    // Each list's reagent rows are rebuilt on every state, and their amounts outlive them.
+    private readonly KsTguiAnimatedNumberPool<(string Name, ReagentId Reagent)> _inputNumbers = new(MakeRowVolume);
+    private readonly KsTguiAnimatedNumberPool<(string Name, ReagentId Reagent)> _outputNumbers = new(MakeRowVolume);
+    private readonly KsTguiAnimatedNumberPool<(string Name, ReagentId Reagent)> _bufferNumbers = new(MakeRowVolume);
     private readonly KsTguiButton _sortButton;
 
     public event Action<ItemSlotButtonPressedEvent>? OnInputEjectPressed;
@@ -216,11 +223,24 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
     }
 
     /// <summary>
-    ///     A volume that eases to its new value, as tgui's <c>AnimatedNumber</c> in the container headers, starting from 0.
+    ///     A volume that eases to its new value, as tgui's <c>AnimatedNumber</c> in the container headers.
     /// </summary>
     private static KsTguiAnimatedNumber MakeVolume()
     {
-        return new KsTguiAnimatedNumber { Initial = 0f, StyleClasses = { StyleClass.LabelWeak } };
+        return new KsTguiAnimatedNumber { StyleClasses = { StyleClass.LabelWeak } };
+    }
+
+    /// <summary>
+    ///     Where a volume seen for the first time starts. tgui starts them all from 0 (<c>initial={0}</c>), which counts every
+    ///         one up each time the window opens, so that is kept for what arrives while it is open.
+    /// </summary>
+    private float? NewVolumeStart => _firstStateShown ? 0f : null;
+
+    private static KsTguiAnimatedNumber MakeRowVolume()
+    {
+        var number = MakeVolume();
+        number.Format = displayed => $"{Units(displayed)}u";
+        return number;
     }
 
     private static string Units(float volume)
@@ -301,10 +321,12 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         ValveButton.Selected = state.ValveOpen;
 
         UpdateDosageFields(state);
+        _firstStateShown = true;
     }
 
     private void SetBufferText(FixedPoint2? volume, string text)
     {
+        _bufferVolumeLabel.Initial = NewVolumeStart;
         _bufferVolumeLabel.Format = displayed => $" {Units(displayed)}u";
         _bufferVolumeLabel.Value = (float)(volume ?? FixedPoint2.Zero);
         _drawSourceLabel.Text = Loc.GetString(text);
@@ -373,8 +395,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         BufferTransferButton.Selected = state.Mode == ChemMasterMode.Transfer;
         BufferDiscardButton.Color = state.Mode == ChemMasterMode.Discard ? KsTguiColor.Red : KsTguiColor.Default;
 
-        BuildContainerUi(_inputInfo, state.InputContainerInfo, addReagentButtons: true, _inputVolume);
-        BuildContainerUi(_outputInfo, state.OutputContainerInfo, addReagentButtons: false, _outputVolume);
+        BuildContainerUi(_inputInfo, state.InputContainerInfo, addReagentButtons: true, _inputVolume, _inputNumbers);
+        BuildContainerUi(_outputInfo, state.OutputContainerInfo, addReagentButtons: false, _outputVolume, _outputNumbers);
 
         _bufferInfo.RemoveAllChildren();
 
@@ -397,6 +419,7 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
         var volumeRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
         volumeRow.AddChild(new Label { Text = $"{Loc.GetString("chem-master-window-buffer-label")} " });
+        _bufferListVolume.Initial = NewVolumeStart;
         _bufferListVolume.Format = displayed => $"{Units(displayed)}u";
         _bufferListVolume.Value = (float)(state.BufferCurrentVolume ?? FixedPoint2.Zero);
         _bufferListVolume.Orphan();
@@ -426,23 +449,32 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
 
         foreach (var reagent in reagentList)
         {
-            _bufferInfo.AddChild(BuildReagentRow(reagent.Color, reagent.Name, reagent.ReagentId, reagent.Quantity, true, true));
+            _bufferInfo.AddChild(BuildReagentRow(reagent.Color, reagent.Name, reagent.ReagentId, reagent.Quantity, true, true, _bufferNumbers));
         }
+
+        _bufferNumbers.Sweep();
     }
 
-    private void BuildContainerUi(BoxContainer control, ContainerInfo? info, bool addReagentButtons, KsTguiAnimatedNumber volume)
+    private void BuildContainerUi(
+        BoxContainer control,
+        ContainerInfo? info,
+        bool addReagentButtons,
+        KsTguiAnimatedNumber volume,
+        KsTguiAnimatedNumberPool<(string Name, ReagentId Reagent)> rowNumbers)
     {
         control.RemoveAllChildren();
 
         if (info is null)
         {
             control.AddChild(new Label { Text = Loc.GetString("chem-master-window-no-container-loaded-text") });
+            rowNumbers.Sweep();
             return;
         }
 
         var header = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
         header.AddChild(new Label { Text = $"{info.DisplayName}: " });
         var maxVolume = info.MaxVolume;
+        volume.Initial = NewVolumeStart;
         volume.Format = displayed => $"{Units(displayed)}/{maxVolume}";
         volume.Value = (float)info.CurrentVolume;
         volume.Orphan(); // still inside the last state's header
@@ -453,7 +485,7 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         {
             foreach (var (id, quantity) in info.Entities.Select(x => (x.Id, x.Quantity)))
             {
-                control.AddChild(BuildReagentRow(default, id, default, quantity, false, addReagentButtons));
+                control.AddChild(BuildReagentRow(default, id, default, quantity, false, addReagentButtons, rowNumbers));
             }
         }
 
@@ -464,9 +496,11 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
                 _prototypeManager.TryIndex(reagent.Reagent.Prototype, out ReagentPrototype? prototype);
                 var name = prototype?.LocalizedName ?? Loc.GetString("chem-master-window-unknown-reagent-text");
                 control.AddChild(BuildReagentRow(
-                    prototype?.SubstanceColor ?? default(Color), name, reagent.Reagent, reagent.Quantity, false, addReagentButtons));
+                    prototype?.SubstanceColor ?? default(Color), name, reagent.Reagent, reagent.Quantity, false, addReagentButtons, rowNumbers));
             }
         }
+
+        rowNumbers.Sweep();
     }
 
     /// <summary>
@@ -478,11 +512,15 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         ReagentId reagent,
         FixedPoint2 quantity,
         bool isBuffer,
-        bool addReagentButtons)
+        bool addReagentButtons,
+        KsTguiAnimatedNumberPool<(string Name, ReagentId Reagent)> rowNumbers)
     {
         var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 1 };
         row.AddChild(new Label { Text = $"{name}: " });
-        row.AddChild(new Label { Text = $"{quantity}u", StyleClasses = { StyleClass.LabelWeak } });
+        var quantityNumber = rowNumbers.Get((name, reagent));
+        quantityNumber.Initial = NewVolumeStart;
+        quantityNumber.Value = (float)quantity;
+        row.AddChild(quantityNumber);
         row.AddChild(new Control { HorizontalExpand = true });
 
         if (!addReagentButtons)

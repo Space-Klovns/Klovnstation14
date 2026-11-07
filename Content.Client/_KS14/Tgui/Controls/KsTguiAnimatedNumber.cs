@@ -30,6 +30,7 @@ public sealed class KsTguiAnimatedNumber : Label
     private float? _initial;
     private bool _hasValue;
     private bool _animating;
+    private bool _instant;
     private int _decimals;
     private Func<float, string>? _format;
 
@@ -40,6 +41,25 @@ public sealed class KsTguiAnimatedNumber : Label
     {
         get => _initial;
         set => _initial = value;
+    }
+
+    /// <summary>
+    ///     Shows each value at once rather than easing to it: tgui's <c>NumberInput</c> while it is dragged, or a stock window
+    ///         under the Baron theme.
+    /// </summary>
+    public bool Instant
+    {
+        get => _instant;
+        set
+        {
+            _instant = value;
+            if (!value || !_animating)
+                return;
+
+            _current = _target;
+            _animating = false;
+            Refresh();
+        }
     }
 
     /// <summary>
@@ -65,7 +85,7 @@ public sealed class KsTguiAnimatedNumber : Label
                 _current = _initial ?? value;
             }
 
-            _animating = _current != value;
+            _animating = !_instant && _current != value;
             if (!_animating)
                 _current = value;
 
@@ -94,6 +114,17 @@ public sealed class KsTguiAnimatedNumber : Label
             _format = value;
             Refresh();
         }
+    }
+
+    /// <summary>
+    ///     Shows text in place of a number, as tgui does for a value that isn't one. The next <see cref="Value"/> starts
+    ///         over, as the first one does.
+    /// </summary>
+    public void ShowText(string text)
+    {
+        _hasValue = false;
+        _animating = false;
+        Text = text;
     }
 
     /// <summary>

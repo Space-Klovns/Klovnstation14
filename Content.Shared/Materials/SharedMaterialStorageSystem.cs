@@ -27,6 +27,7 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
     [Dependency] private SharedStackSystem _heap = default!; // KS14
     [Dependency] private SharedAudioSystem _audio = default!; // KS14: Added to shared
     [Dependency] private SharedPopupSystem _popup = default!; // KS14: Added to shared
+    [Dependency] private Content.Shared.Power.EntitySystems.SharedPowerReceiverSystem _ksPowerReceiver = default!; // KS14
 
     /// <summary>
     /// Default volume for a sheet if the material's entity prototype has no material composition.
@@ -391,6 +392,11 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
         if (!Resolve(toInsert, ref material, ref composition, false))
             return false;
 
+        // KS14 start: moved from the server, or the client predicts an insert that the server then refuses
+        if (!_ksPowerReceiver.IsPowered(receiver))
+            return false;
+        // KS14 end
+
         if (_whitelistSystem.IsWhitelistFail(storage.Whitelist, toInsert))
             return false;
 
@@ -486,8 +492,12 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
                 ("item", Identity.Name(toInsert, EntityManager))),
             receiver, user);
 
-        if (shouldDelete)
-            PredictedQueueDel(toInsert);
+        // KS14 start: PredictedQueueDel -> the server's alone. A predicted delete takes the stack out of the user's hand, so the
+        //      click replayed after the next state has nothing to insert and the machine's amount falls back until the
+        //      server's arrives. In the lathe's window that shows as the material dropping out for a round trip.
+        if (shouldDelete && _net.IsServer)
+            QueueDel(toInsert);
+        // KS14 end
 
         return true;
     }

@@ -75,7 +75,7 @@ public sealed class KsTguiGasPressurePumpWindow : KsTguiGasDeviceWindow, IKsGasP
     public event Action<bool>? ToggleStatusButtonPressed;
     public event Action<float>? PumpOutputPressureChanged;
 
-    public KsTguiNumberInput PressureInput { get; } = new() { Unit = Kpa, MaxValue = Atmospherics.MaxOutputPressure, Step = 10f, WidthPixels = 75f };
+    public KsTguiNumberInput PressureInput { get; } = new() { Unit = Kpa, MaxValue = Atmospherics.MaxOutputPressure, Step = 10f, WidthPixels = 75f, Animated = true };
     public KsTguiButton MaxButtonControl { get; } = MaxButton();
 
     public KsTguiGasPressurePumpWindow() : base(width: 340f)
@@ -127,7 +127,7 @@ public sealed class KsTguiGasVolumePumpWindow : KsTguiGasDeviceWindow, IKsGasVol
     public event Action<bool>? ToggleStatusButtonPressed;
     public event Action<string>? PumpTransferRateChanged;
 
-    public KsTguiNumberInput RateInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), MaxValue = Atmospherics.MaxTransferRate, WidthPixels = 63f };
+    public KsTguiNumberInput RateInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), MaxValue = Atmospherics.MaxTransferRate, WidthPixels = 63f, Animated = true };
     public KsTguiButton MaxButtonControl { get; } = MaxButton();
 
     public KsTguiGasVolumePumpWindow() : base(width: 340f)

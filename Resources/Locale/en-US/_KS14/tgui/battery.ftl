@@ -2,7 +2,6 @@
 ks-tgui-battery-stored-energy = Stored Energy
 ks-tgui-battery-input = Input
 ks-tgui-battery-output = Output
-ks-tgui-battery-auto = Auto
 ks-tgui-battery-charge-mode = Charge Mode
 ks-tgui-battery-fully-charged = Fully Charged
 ks-tgui-battery-charging = Charging

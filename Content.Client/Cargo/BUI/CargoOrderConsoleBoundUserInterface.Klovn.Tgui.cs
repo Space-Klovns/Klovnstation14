@@ -38,6 +38,7 @@ public sealed partial class CargoOrderConsoleBoundUserInterface
             orderRequester);
 
         _ksTguiMenu.OnClose += Close;
+        this.WithGuide(_ksTguiMenu);
         _ksTguiMenu.OnOrderApproved += ApproveOrder;
         _ksTguiMenu.OnOrderCanceled += RemoveOrder;
         _ksTguiMenu.OnOrderSubmitted += (requester, reason, product, amount) =>

@@ -85,6 +85,11 @@ namespace Content.Client.Atmos.UI
             _window.SetTankLabel(tankLabel);
             _window.SetTankPressure(cast.TankPressure);
             _window.SetReleasePressureRange(component.MinReleasePressure, component.MaxReleasePressure);
+            // KS14 start: the limits the tgui window's gauges are drawn from
+            _window.SetCanisterLimit(component.Overpressure);
+            if (component.GasTankSlot.Item is { } tankUid && EntMan.TryGetComponent(tankUid, out Content.Shared.Atmos.Components.GasTankComponent? tankComponent))
+                _window.SetTankLimits(tankComponent.SafetyPressure, tankComponent.Overpressure);
+            // KS14 end
             _window.SetReleasePressure(component.ReleasePressure);
             _window.SetReleaseValve(component.ReleaseValveOpen);
             _window.SetKsFluid(cast.KsFluid); // KS14

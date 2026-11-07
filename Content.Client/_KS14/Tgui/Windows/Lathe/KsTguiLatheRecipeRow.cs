@@ -73,8 +73,13 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
         return button;
     }
 
-    public void SetRecipe(LatheRecipePrototype recipe, Func<string> tooltipSupplier, bool canProduce, bool canProduceFive, bool canProduceTen, Control displayControl)
+    /// <param name="displayControl">
+    ///     Makes the icon, only when the row's recipe changes. This runs on every state, so on every change of materials, and a
+    ///         new icon is a new entity.
+    /// </param>
+    public void SetRecipe(LatheRecipePrototype recipe, Func<string> tooltipSupplier, bool canProduce, bool canProduceFive, bool canProduceTen, Func<Control> displayControl)
     {
+        var sameRecipe = _recipeId == recipe.ID && _displayContainer.ChildCount > 0;
         _recipeId = recipe.ID;
         _nameLabel.Text = _latheSystem.GetRecipeName(recipe);
         _description = _latheSystem.GetRecipeDescription(recipe);
@@ -85,8 +90,12 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
         _fiveButton.Disabled = !canProduceFive;
         _tenButton.Disabled = !canProduceTen;
 
-        _displayContainer.Children.Clear();
-        _displayContainer.AddChild(displayControl);
+        if (!sameRecipe)
+        {
+            _displayContainer.Children.Clear();
+            _displayContainer.AddChild(displayControl());
+        }
+
         RefreshLook(_titleButton);
     }
 

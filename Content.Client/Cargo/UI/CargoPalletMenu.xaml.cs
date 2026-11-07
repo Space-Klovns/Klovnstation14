@@ -21,7 +21,12 @@ public sealed partial class CargoPalletMenu : FancyWindow
 
     public void SetAppraisal(int amount)
     {
-        AppraisalLabel.Text = Loc.GetString("cargo-console-menu-points-amount", ("amount", amount.ToString()));
+        // KS14 start: eases under tgui, as tg's cargo hold terminal
+        // AppraisalLabel.Text = Loc.GetString("cargo-console-menu-points-amount", ("amount", amount.ToString()));
+        AppraisalLabel.Instant = !Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled();
+        AppraisalLabel.Format = shown => Loc.GetString("cargo-console-menu-points-amount", ("amount", ((int)MathF.Round(shown)).ToString()));
+        AppraisalLabel.Value = amount;
+        // KS14 end
     }
 
     public void SetCount(int count)

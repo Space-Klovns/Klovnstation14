@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Numerics;
 using Content.Client._KS14.Fluidmos;
 using Content.Client._KS14.Tgui.Controls;
@@ -12,8 +13,8 @@ namespace Content.Client._KS14.Tgui.Windows.Atmos;
 /// <summary>
 ///     The canister after tgui's Canister: a section for the canister itself (pressure, regulator, valve, port, and the
 ///         shielding KS14 adds), one for the holding tank, and the reagents the canister carries. tg's relabel and recolor
-///         have no counterpart here, and its pressure gauges are round gauges without the danger ranges, since a canister's burst pressure is not
-///         something the client is told, so they have no danger range.
+///         have no counterpart here. The canister's gauge reads up to the pressure it starts to fail at, tg's
+///         <c>pressureLimit</c>, and the tank's to 15% past the pressure it starts to fail at, as tg's.
 /// </summary>
 public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 {
@@ -135,9 +136,12 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     public KsFluidListControl FluidList => _fluidList;
 
+    public KsTguiRoundGauge CanisterGauge => _canisterGauge;
+
+    public KsTguiRoundGauge TankGauge => _tankGauge;
+
     /// <summary>
-    ///     tg's pressure gauge at size 1.75, without its ranges and alert: they are drawn from the canister's burst and leak
-    ///         pressures, which the client is not sent.
+    ///     tg's pressure gauge at size 1.75. Its ranges and alert come with the limits.
     /// </summary>
     private static KsTguiRoundGauge MakeGauge()
     {
@@ -146,8 +150,22 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
             GaugeSize = 1.75f,
             MinValue = 0f,
             HorizontalAlignment = Control.HAlignment.Left,
-            Format = pressure => Loc.GetString("comp-gas-canister-ui-pressure", ("pressure", Math.Round(pressure))),
+            Format = FormatPressure,
         };
+    }
+
+    /// <summary>
+    ///     tg's <c>formatPressure</c>: whole kPa, and megapascals from 10000 kPa, to three figures.
+    /// </summary>
+    private static string FormatPressure(float pressure)
+    {
+        if (pressure < 10000f)
+            return Loc.GetString("comp-gas-canister-ui-pressure", ("pressure", Math.Round(pressure)));
+
+        var megapascals = pressure / 1000f;
+        return Loc.GetString(
+            "ks-tgui-atmos-pressure-mpa",
+            ("pressure", megapascals.ToString(megapascals < 100f ? "0.0" : "0", CultureInfo.CurrentCulture)));
     }
 
     private void SetPressureAndSend(float pressure)
@@ -191,10 +209,31 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     {
         ReleaseInput.MinValue = min;
         ReleaseInput.MaxValue = max;
+    }
 
-        // The regulator's top is the one pressure scale the client is told.
-        _canisterGauge.MaxValue = max;
-        _tankGauge.MaxValue = max;
+    public void SetCanisterLimit(float pressureLimit)
+    {
+        var warning = pressureLimit * 0.7f;
+        var danger = pressureLimit * 0.85f;
+        SetDial(_canisterGauge, pressureLimit, warning, danger, warning);
+    }
+
+    public void SetTankLimits(float leakPressure, float fragmentPressure)
+    {
+        SetDial(_tankGauge, fragmentPressure * 1.15f, leakPressure, fragmentPressure, leakPressure);
+    }
+
+    /// <summary>
+    ///     Green to <paramref name="warning"/>, yellow to <paramref name="danger"/>, and red from there to the end of the dial.
+    /// </summary>
+    private static void SetDial(KsTguiRoundGauge gauge, float maximum, float warning, float danger, float alertAfter)
+    {
+        gauge.MaxValue = maximum;
+        gauge.AlertAfter = alertAfter;
+        gauge.ClearRanges();
+        gauge.AddRange(KsTguiColor.Good, 0f, warning);
+        gauge.AddRange(KsTguiColor.Average, warning, danger);
+        gauge.AddRange(KsTguiColor.Bad, danger, maximum);
     }
 
     public void SetReleasePressure(float pressure)

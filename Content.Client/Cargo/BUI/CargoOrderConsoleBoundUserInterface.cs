@@ -64,6 +64,7 @@ namespace Content.Client.Cargo.BUI
             _orderMenu = new CargoConsoleOrderMenu();
 
             _menu.OnClose += Close;
+            this.WithGuide(_menu); // KS14: made with new, so the guidebook button has to be asked for
 
             _menu.OnItemSelected += (row) =>
             {

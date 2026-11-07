@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui.Controls;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
+using Robust.Client.UserInterface;
+using Robust.Shared.Input;
 
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
@@ -94,6 +98,50 @@ public sealed class KsTguiNumberInputTest : GameTest
             Assert.That(input.Edit.Visible);
             Assert.That(input.Edit.Text, Is.EqualTo("50"));
             Assert.That(input.Edit.SelectionLength, Is.EqualTo(input.Edit.Text.Length));
+            Assert.That(commits, Is.Empty);
+        });
+    }
+
+    /// <summary>
+    ///     The box exists before its window's first state, showing 0. That state is what the window opens on, and a pump shouldn't
+    ///         count up to its pressure every time it is opened.
+    /// </summary>
+    [Test]
+    public async Task AnimatedInputOpensOnItsFirstValue()
+    {
+        await Client.WaitPost(() =>
+        {
+            var input = new KsTguiNumberInput { MaxValue = 1000f, Unit = "kPa", Animated = true };
+
+            input.SetValue(250f);
+            Assert.That(input.ShownText, Is.EqualTo("250 kPa"));
+
+            input.SetValue(300f);
+            Assert.That(input.ShownText, Is.EqualTo("250 kPa"), "A later value should ease.");
+        });
+    }
+
+    /// <summary>
+    ///     What pressing Escape raises on the focused box, which is where the player reaches <see cref="KsTguiNumberInput.Cancel"/>.
+    /// </summary>
+    [Test]
+    public async Task EscapeKeyInTheBoxRevertsIt()
+    {
+        var commits = new List<float>();
+        await Client.WaitPost(() =>
+        {
+            var input = Make(commits);
+            input.BeginDrag(200f);
+            input.EndDrag();
+            input.Edit.Text = "80";
+
+            var escape = new GUIBoundKeyEventArgs(EngineKeyFunctions.TextReleaseFocus, BoundKeyState.Down, default, false, default, default);
+            var field = typeof(Control).GetField(nameof(Control.OnKeyBindDown), BindingFlags.Instance | BindingFlags.NonPublic);
+            ((Action<GUIBoundKeyEventArgs>)field.GetValue(input.Edit)).Invoke(escape);
+
+            Assert.That(escape.Handled, Is.True);
+            Assert.That(input.IsEditing, Is.False);
+            Assert.That(input.Value, Is.EqualTo(50f));
             Assert.That(commits, Is.Empty);
         });
     }

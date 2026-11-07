@@ -7,7 +7,8 @@ game-ticker-unknown-role = Unknown
 game-ticker-delay-start = Round start has been delayed for {$seconds} seconds.
 game-ticker-pause-start = Round start has been paused.
 game-ticker-pause-start-resumed = Round start countdown is now resumed.
-game-ticker-player-join-game-message = Welcome to Space Station 14! If this is your first time playing, be sure to read the game rules, and don't be afraid to ask for help in LOOC (local OOC) or OOC (usually available only between rounds).
+# KS14: changed joingame message
+game-ticker-player-join-game-message = Welcome to Klovnstation 14. If this is your first time playing, don't be afraid to ask for help in OOC. You may enable voice-chat in settings or by pressing the keybind (default N).
 # KS14: removed the "Hi and welcome to Space Station 14!" line
 game-ticker-get-info-text =
                             The current round is: [color=white]#{$roundId}[/color]

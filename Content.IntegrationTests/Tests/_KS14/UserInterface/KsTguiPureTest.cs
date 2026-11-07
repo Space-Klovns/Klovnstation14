@@ -20,9 +20,10 @@ public sealed class KsTguiPureTest
     public void RoundedLoopStaysOnTheBoxSides()
     {
         var box = new UIBox2(10f, 20f, 110f, 40f);
-        var loop = new Vector2[KsTguiGeometry.RoundedLoopLength(segments: 3)];
+        const int segments = 3;
+        var loop = new Vector2[KsTguiGeometry.RoundedLoopLength(segments)];
 
-        KsTguiGeometry.RoundedLoop(box, 2f, 2f, 2f, 2f, segments: 3, fringe: CornerSoftness, loop);
+        KsTguiGeometry.RoundedLoop(box, 2f, 2f, 2f, 2f, segments, fringe: CornerSoftness, loop);
 
         foreach (var point in loop)
         {
@@ -30,8 +31,59 @@ public sealed class KsTguiPureTest
             Assert.That(point.Y, Is.InRange(box.Top - 0.01f, box.Bottom + 0.01f));
         }
 
-        // Where an arc meets a side it ends exactly on the side, or the straight edges go soft too.
-        Assert.That(loop[0].X, Is.EqualTo(box.Left).Within(0.001f));
+        // Where an arc meets a side it ends exactly on the side, or the straight edges go soft too. Clockwise from the top left.
+        var arcEnds = new[]
+        {
+            new Vector2(box.Left, box.Top + 2f), new Vector2(box.Left + 2f, box.Top),
+            new Vector2(box.Right - 2f, box.Top), new Vector2(box.Right, box.Top + 2f),
+            new Vector2(box.Right, box.Bottom - 2f), new Vector2(box.Right - 2f, box.Bottom),
+            new Vector2(box.Left + 2f, box.Bottom), new Vector2(box.Left, box.Bottom - 2f),
+        };
+
+        for (var i = 0; i < arcEnds.Length; i++)
+        {
+            var end = loop[i / 2 * (segments + 1) + i % 2 * segments];
+            Assert.That(Vector2.Distance(end, arcEnds[i]), Is.LessThan(0.001f), $"The end of the arc at {arcEnds[i]} is off its side.");
+        }
+    }
+
+    /// <summary>
+    ///     A true radius everywhere but the middle of the arc, which the fringe pushes out, so only the corners go soft.
+    /// </summary>
+    [Test]
+    public void FringeBulgesOnlyTheMiddleOfAnArc()
+    {
+        const int segments = 4;
+        const float radius = 8f;
+        const float fringe = 0.2f; // Small enough that nothing reaches the sides and gets clamped.
+        var loop = new Vector2[KsTguiGeometry.RoundedLoopLength(segments)];
+
+        KsTguiGeometry.RoundedLoop(new UIBox2(0f, 0f, 100f, 100f), radius, radius, radius, radius, segments, fringe, loop);
+
+        var centre = new Vector2(radius, radius);
+        for (var i = 0; i <= segments; i++)
+        {
+            var expected = radius + fringe * MathF.Sin(MathF.PI * i / segments);
+            Assert.That(Vector2.Distance(loop[i], centre), Is.EqualTo(expected).Within(0.001f));
+        }
+    }
+
+    /// <summary>
+    ///     A fringe bigger than the corner would carry the arc past the box's sides, which a border's corner doesn't.
+    /// </summary>
+    [Test]
+    public void FringeLargerThanTheCornerStaysInTheBox()
+    {
+        var box = new UIBox2(0f, 0f, 20f, 20f);
+        var loop = new Vector2[KsTguiGeometry.RoundedLoopLength(segments: 4)];
+
+        KsTguiGeometry.RoundedLoop(box, 1f, 1f, 1f, 1f, segments: 4, fringe: 2f, loop);
+
+        foreach (var point in loop)
+        {
+            Assert.That(point.X, Is.InRange(0f, 20f));
+            Assert.That(point.Y, Is.InRange(0f, 20f));
+        }
     }
 
     [Test]
@@ -42,11 +94,12 @@ public sealed class KsTguiPureTest
 
         KsTguiGeometry.RoundedLoop(box, 100f, 100f, 100f, 100f, segments: 6, fringe: 0f, loop);
 
+        // Half the shorter side at most, so this box is a circle. Being inside the box alone proves nothing: the loop is clamped to it.
+        var centre = new Vector2(2f, 2f);
         foreach (var point in loop)
         {
             Assert.That(float.IsFinite(point.X) && float.IsFinite(point.Y));
-            Assert.That(point.X, Is.InRange(-0.01f, 4.01f));
-            Assert.That(point.Y, Is.InRange(-0.01f, 4.01f));
+            Assert.That(Vector2.Distance(point, centre), Is.EqualTo(2f).Within(0.001f));
         }
     }
 

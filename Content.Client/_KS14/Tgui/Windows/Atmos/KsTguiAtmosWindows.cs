@@ -86,6 +86,17 @@ public interface IKsGasCanisterWindow : IKsAtmosWindow
     void SetTankLabel(string? label);
     void SetTankPressure(float pressure);
     void SetReleasePressureRange(float min, float max);
+
+    /// <summary>
+    ///     The pressure the canister starts to fail at.
+    /// </summary>
+    void SetCanisterLimit(float pressureLimit);
+
+    /// <summary>
+    ///     The pressures the holding tank starts to vent at and to fail at.
+    /// </summary>
+    void SetTankLimits(float leakPressure, float fragmentPressure);
+
     void SetReleasePressure(float pressure);
     void SetReleaseValve(bool valve);
     void SetShieldSettingsVisible(bool visible);
@@ -107,6 +118,11 @@ public interface IKsGasThermomachineWindow : IKsAtmosWindow
     ///     The range the machine can be set within, for the window's presets.
     /// </summary>
     void SetTemperatureRange(float min, float max);
+
+    /// <summary>
+    ///     The gas the machine is working on.
+    /// </summary>
+    void SetGasStatus(float temperature, float pressure);
 }
 
 /// <summary>

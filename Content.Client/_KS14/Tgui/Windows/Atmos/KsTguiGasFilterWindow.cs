@@ -21,7 +21,7 @@ public sealed class KsTguiGasFilterWindow : KsTguiGasDeviceWindow, IKsGasFilterW
     private readonly HashSet<Gas> _selectedGases = new();
     private readonly WrapContainer _gasBox;
 
-    public KsTguiNumberInput RateInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), MaxValue = Atmospherics.MaxTransferRate, WidthPixels = 63f, TickWhileDragging = true };
+    public KsTguiNumberInput RateInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-ls"), MaxValue = Atmospherics.MaxTransferRate, WidthPixels = 63f, TickWhileDragging = true, Animated = true };
     public KsTguiButton MaxButtonControl { get; } = MaxButton();
     public KsTguiButton SelectAllButton { get; }
     public KsTguiButton DeselectAllButton { get; }

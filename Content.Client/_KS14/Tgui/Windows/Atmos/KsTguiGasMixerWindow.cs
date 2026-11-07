@@ -15,9 +15,9 @@ public sealed class KsTguiGasMixerWindow : KsTguiGasDeviceWindow, IKsGasMixerWin
 
     public bool NodeOneLastEdited { get; private set; } = true;
 
-    public KsTguiNumberInput PressureInput { get; } = new() { Unit = Kpa, MaxValue = Atmospherics.MaxOutputPressure, Step = 10f, WidthPixels = 75f };
-    public KsTguiNumberInput NodeOneInput { get; } = new() { Unit = "%", MaxValue = 100f, StepPixelSize = 2f, WidthPixels = 60f, TickWhileDragging = true };
-    public KsTguiNumberInput NodeTwoInput { get; } = new() { Unit = "%", MaxValue = 100f, StepPixelSize = 2f, WidthPixels = 60f, TickWhileDragging = true };
+    public KsTguiNumberInput PressureInput { get; } = new() { Unit = Kpa, MaxValue = Atmospherics.MaxOutputPressure, Step = 10f, WidthPixels = 75f, Animated = true };
+    public KsTguiNumberInput NodeOneInput { get; } = new() { Unit = "%", MaxValue = 100f, StepPixelSize = 2f, WidthPixels = 60f, TickWhileDragging = true, Animated = true };
+    public KsTguiNumberInput NodeTwoInput { get; } = new() { Unit = "%", MaxValue = 100f, StepPixelSize = 2f, WidthPixels = 60f, TickWhileDragging = true, Animated = true };
     public KsTguiButton MaxButtonControl { get; } = MaxButton();
 
     public KsTguiGasMixerWindow() : base(width: 370f)

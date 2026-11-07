@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Lathe;
+using Content.Client._KS14.Tgui.Windows.Materials;
 using Content.Client.Materials;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Lathe;
@@ -40,13 +41,14 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     private readonly BoxContainer _recipeList;
     private readonly BoxContainer _fabricatingContainer;
     private readonly BoxContainer _fabricatingDisplayContainer;
+    private ProtoId<LatheRecipePrototype>? _fabricatingRecipe;
     private readonly Label _fabricatingName;
     private readonly KsTguiButton _deleteFabricating;
     private readonly BoxContainer _queueList;
     private readonly Label _queueEmptyLabel;
     private bool _isFabricating;
     private int _queuedBatches;
-    private readonly KsTguiLatheMaterials _materialsList;
+    private readonly KsTguiMaterialList _materialsList;
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     public event Action<string, int>? RecipeQueueAction;
@@ -148,7 +150,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         queueSection.AddChild(queueBody);
 
         // Materials.
-        _materialsList = new KsTguiLatheMaterials();
+        _materialsList = new KsTguiMaterialList();
         var materialsSection = new KsTguiSection { Title = Loc.GetString("lathe-menu-materials-title") };
         materialsSection.AddChild(_materialsList);
 
@@ -278,7 +280,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
                 row = (KsTguiLatheRecipeRow)_recipeList.GetChild(idx);
             }
 
-            row.SetRecipe(prototype, tooltipFunction, canProduce, canProduceFive, canProduceTen, GetRecipeDisplayControl(prototype));
+            row.SetRecipe(prototype, tooltipFunction, canProduce, canProduceFive, canProduceTen, () => GetRecipeDisplayControl(prototype));
             idx++;
         }
 
@@ -397,6 +399,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             if (idx >= oldChildCount)
             {
                 var queuedRecipeBox = new KsTguiLatheQueueRow(displayText, idx, GetRecipeDisplayControl(recipe));
+                queuedRecipeBox.TakeRecipe(batch.Recipe);
                 queuedRecipeBox.OnDeletePressed += index => QueueDeleteAction?.Invoke(index);
                 queuedRecipeBox.OnMoveUpPressed += index => QueueMoveUpAction?.Invoke(index);
                 queuedRecipeBox.OnMoveDownPressed += index => QueueMoveDownAction?.Invoke(index);
@@ -407,7 +410,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
                 var child = (KsTguiLatheQueueRow)_queueList.GetChild(idx);
                 child.SetDisplayText(displayText);
                 child.SetIndex(idx);
-                child.SetDisplayControl(GetRecipeDisplayControl(recipe));
+                if (child.TakeRecipe(batch.Recipe))
+                    child.SetDisplayControl(GetRecipeDisplayControl(recipe));
             }
 
             idx++;
@@ -437,8 +441,13 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         var recipe = _prototypeManager.Index(recipeProto.Value);
 
-        _fabricatingDisplayContainer.Children.Clear();
-        _fabricatingDisplayContainer.AddChild(GetRecipeDisplayControl(recipe));
+        // Only when it changes: this runs on every state, and a new icon is a new entity.
+        if (_fabricatingRecipe != recipeProto)
+        {
+            _fabricatingRecipe = recipeProto;
+            _fabricatingDisplayContainer.Children.Clear();
+            _fabricatingDisplayContainer.AddChild(GetRecipeDisplayControl(recipe));
+        }
 
         _fabricatingName.Text = _lathe.GetRecipeName(recipe);
     }

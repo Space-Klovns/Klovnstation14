@@ -9,10 +9,11 @@ using Robust.Shared.Map;
 namespace Content.Client._KS14.Shuttles.BUI;
 
 /// <summary>
-///     Fork counterpart of the upstream ShuttleConsoleBoundUserInterface, bound to a KS14
-///         console prototype's ShuttleConsoleUiKey in YAML so that console opens a
+///     Fork counterpart of the upstream ShuttleConsoleBoundUserInterface, bound to a console
+///         prototype's ShuttleConsoleUiKey in YAML so that console opens a
 ///         <see cref="KsInstrumentWindow"/> instead of the vanilla window. FTL and docking
-///         wiring is identical to upstream.
+///         wiring is identical to upstream. A console without <see cref="KsSensorConsoleComponent"/>
+///         gets the window with an open picture: see <see cref="KsInstrumentWindow.KsSetOpenPicture"/>.
 ///     <para>
 ///         The class name must NOT end with "ShuttleConsoleBoundUserInterface": the
 ///             client resolves a console's BUI from its ClientType string via
@@ -39,6 +40,8 @@ public sealed partial class KsSensorConsoleBoundUserInterface : BoundUserInterfa
         // Before any state lands, so the face never flashes default switch
         // positions before snapping to the remembered ones.
         _window.KsLoadPrefs(Owner);
+        if (!EntMan.HasComponent<KsSensorConsoleComponent>(Owner))
+            _window.KsSetOpenPicture();
 
         _window.RequestFTL += OnFTLRequest;
         _window.RequestBeaconFTL += OnFTLBeaconRequest;

@@ -40,6 +40,10 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
 
     private readonly Dictionary<ReagentDispenserDispenseAmount, KsTguiButton> _amountButtons = new();
     private readonly KsTguiProgressBar _fillBar;
+
+    // tgui's AnimatedNumber on each reagent's volume. The rows are rebuilt on every state, and these outlive them.
+    private readonly KsTguiAnimatedNumberPool<ReagentId> _quantityNumbers = new(MakeQuantityNumber);
+    private bool _firstStateShown;
     private readonly BoxContainer _beakerContents;
     private readonly Label _beakerName;
     private readonly SpriteView _beakerView;
@@ -233,7 +237,34 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
         return card;
     }
 
+    private static string FormatVolume(float volume)
+    {
+        return volume.ToString("0.##");
+    }
+
+    private static KsTguiAnimatedNumber MakeQuantityNumber()
+    {
+        return new KsTguiAnimatedNumber
+        {
+            StyleClasses = { StyleClass.LabelWeak },
+            Format = displayed => Loc.GetString("reagent-dispenser-window-quantity-label-text", ("quantity", FormatVolume(displayed))),
+        };
+    }
+
+    /// <summary>
+    ///     Where a volume seen for the first time starts. tgui starts them all from 0 (<c>initial={0}</c>), which counts every
+    ///         one up each time the window opens, so that is kept for what arrives while it is open.
+    /// </summary>
+    private float? NewVolumeStart => _firstStateShown ? 0f : null;
+
     private void UpdateContainerInfo(ReagentDispenserBoundUserInterfaceState state)
+    {
+        UpdateBeaker(state);
+        _quantityNumbers.Sweep();
+        _firstStateShown = true;
+    }
+
+    private void UpdateBeaker(ReagentDispenserBoundUserInterfaceState state)
     {
         _beakerContents.RemoveAllChildren();
 
@@ -251,7 +282,11 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
         _fillBar.Value = container.MaxVolume > FixedPoint2.Zero
             ? (float)container.CurrentVolume / (float)container.MaxVolume
             : 0f;
-        _fillBar.Text = $"{container.CurrentVolume}/{container.MaxVolume}";
+        var maxVolume = container.MaxVolume;
+        _fillBar.ShowNumber(
+            (float)container.CurrentVolume,
+            displayed => $"{FormatVolume(displayed)}/{maxVolume}",
+            initial: NewVolumeStart);
 
         if (container.Reagents is not { Count: > 0 })
         {
@@ -267,11 +302,10 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
 
             var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
             row.AddChild(new Label { Text = $"{localizedName}: " });
-            row.AddChild(new Label
-            {
-                Text = Loc.GetString("reagent-dispenser-window-quantity-label-text", ("quantity", quantity)),
-                StyleClasses = { StyleClass.LabelWeak },
-            });
+            var quantityNumber = _quantityNumbers.Get(reagent);
+            quantityNumber.Initial = NewVolumeStart;
+            quantityNumber.Value = (float)quantity;
+            row.AddChild(quantityNumber);
             _beakerContents.AddChild(row);
         }
     }

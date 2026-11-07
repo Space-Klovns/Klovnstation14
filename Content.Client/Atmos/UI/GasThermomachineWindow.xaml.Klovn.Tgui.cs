@@ -27,4 +27,9 @@ public sealed partial class GasThermomachineWindow : IKsGasThermomachineWindow
     {
         // The stock window has no presets.
     }
+
+    public void SetGasStatus(float temperature, float pressure)
+    {
+        // The stock window doesn't show the gas.
+    }
 }

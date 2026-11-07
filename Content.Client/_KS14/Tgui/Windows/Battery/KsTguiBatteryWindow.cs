@@ -120,7 +120,7 @@ public sealed partial class KsTguiBatteryWindow : FancyWindow, IKsBatteryMenu
         UpdateEta(state, storageDelta);
 
         // Input.
-        _input.SetBreaker(state.CanCharge, "ks-tgui-battery-auto");
+        _input.SetBreaker(state.CanCharge);
         _input.Mode.Text = Loc.GetString(fraction >= 1f
             ? "ks-tgui-battery-fully-charged"
             : storageDelta > 0f ? "ks-tgui-battery-charging" : "ks-tgui-battery-not-charging");
@@ -131,7 +131,7 @@ public sealed partial class KsTguiBatteryWindow : FancyWindow, IKsBatteryMenu
         _input.SetNetwork(state.SupplyingNetworkHasPower);
 
         // Output.
-        _output.SetBreaker(state.CanDischarge, "ks-tgui-apc-on");
+        _output.SetBreaker(state.CanDischarge);
         var sending = outValue > 0f;
         _output.Mode.Text = Loc.GetString(sending
             ? "ks-tgui-battery-sending"
@@ -235,11 +235,11 @@ public sealed partial class KsTguiBatteryWindow : FancyWindow, IKsBatteryMenu
             Section.AddChild(List);
         }
 
-        public void SetBreaker(bool on, string onKey)
+        public void SetBreaker(bool on)
         {
             BreakerOn = on;
             Breaker.Icon = on ? KsTguiIcons.SyncAlt : KsTguiIcons.Times;
-            Breaker.Text = Loc.GetString(on ? onKey : "ks-tgui-apc-off");
+            Breaker.Text = Loc.GetString(on ? "ks-tgui-apc-on" : "ks-tgui-apc-off");
             Breaker.Selected = on;
         }
 

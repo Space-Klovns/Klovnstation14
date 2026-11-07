@@ -2,7 +2,6 @@
 ks-tgui-battery-stored-energy = Накопленная энергия
 ks-tgui-battery-input = Вход
 ks-tgui-battery-output = Выход
-ks-tgui-battery-auto = Авто
 ks-tgui-battery-charge-mode = Режим зарядки
 ks-tgui-battery-fully-charged = Полностью заряжен
 ks-tgui-battery-charging = Заряжается

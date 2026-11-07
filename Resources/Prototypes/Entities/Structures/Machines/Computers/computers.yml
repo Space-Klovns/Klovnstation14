@@ -127,8 +127,6 @@
     interfaces:
         enum.ShuttleConsoleUiKey.Key:
           type: ShuttleConsoleBoundUserInterface
-        enum.WiresUiKey.Key:
-          type: WiresBoundUserInterface
   - type: RadarConsole
   - type: PointLight
     radius: 1.5
@@ -1821,3 +1819,4 @@
     name: store-preset-name-nukie-delivery
     categories:
     - NukieDelivery
+    ksUiTheme: Syndicate # KS14
