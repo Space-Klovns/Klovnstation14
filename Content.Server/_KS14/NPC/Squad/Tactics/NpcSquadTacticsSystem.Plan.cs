@@ -1,13 +1,28 @@
 using System.Threading;
 using Content.Server._KS14.NPC.Doors;
+using Content.Server._KS14.NPC.Components;
+using Content.Server._KS14.NPC.Grenades;
 using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.Components.SolutionManager;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Destructible;
 using Content.Shared.Doors.Components;
+using Content.Shared.Explosion.Components;
+using Content.Shared.Flash;
+using Content.Shared.NPC.Components;
+using Content.Shared.Sticky.Components;
+using Content.Shared.Trigger.Components;
+using Content.Shared.Trigger.Components.Effects;
 using Content.Shared.Physics;
+using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
+using Content.Shared.Weapons.Ranged.Systems;
+using Content.Shared.Whitelist;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 
@@ -25,15 +40,29 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 /// </summary>
 public sealed partial class NpcSquadTacticsSystem
 {
+    [Dependency] private EntityWhitelistSystem _entityWhitelistSystem = default!;
     [Dependency] private GunSystem _gunSystem = default!;
+    [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
     [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
     [Dependency] private NpcSquadPlanDebugSystem _npcSquadPlanDebugSystem = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private SharedDestructibleSystem _destructibleSystem = default!;
+    [Dependency] private SharedFlashSystem _flashSystem = default!;
 
+    [Dependency] private EntityQuery<BallisticAmmoProviderComponent> _ballisticAmmoQuery = default!;
+    [Dependency] private EntityQuery<ExplosiveComponent> _explosiveQuery = default!;
     [Dependency] private EntityQuery<FirelockComponent> _firelockQuery = default!;
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
+    [Dependency] private EntityQuery<FlashOnTriggerComponent> _flashOnTriggerQuery = default!;
+    [Dependency] private EntityQuery<ItemSlotsComponent> _itemSlotsQuery = default!;
+    [Dependency] private EntityQuery<NpcHealingItemComponent> _healingItemQuery = default!;
+    [Dependency] private EntityQuery<NPCRecentlyInjectedComponent> _recentlyInjectedQuery = default!;
     [Dependency] private EntityQuery<NpcSquadPlanComponent> _squadPlanQuery = default!;
+    [Dependency] private EntityQuery<NpcThrownGrenadeComponent> _thrownGrenadeQuery = default!;
+    [Dependency] private EntityQuery<SolutionComponent> _solutionQuery = default!;
+    [Dependency] private EntityQuery<SolutionManagerComponent> _solutionManagerQuery = default!;
+    [Dependency] private EntityQuery<StickyComponent> _stickyQuery = default!;
+    [Dependency] private EntityQuery<TimerTriggerComponent> _timerTriggerQuery = default!;
 
     /// <summary>
     ///     How close to the hostile the search for a way to it has to get.
@@ -49,6 +78,26 @@ public sealed partial class NpcSquadTacticsSystem
     private const float EnterCost = 2f;
     private const float BreakGlassBaseCost = 4f;
     private const float BreakGlassDamagePerSecond = 10f;
+    private const float FlashbangCost = 2f;
+    private const float FragCost = 3f;
+    private const float TakeCoverCost = 4f;
+    private const float PatchUpCost = 3f;
+    private const float TopUpCost = 1.5f;
+
+    /// <summary>
+    ///     How long something to throw has to leave a hand, once ordered, before something is taken to be wrong.
+    /// </summary>
+    private static readonly TimeSpan ThrowTimeout = TimeSpan.FromSeconds(4);
+
+    /// <summary>
+    ///     The longest to wait on a grenade that was thrown, should it never go off.
+    /// </summary>
+    private static readonly TimeSpan FragWaitLimit = TimeSpan.FromSeconds(8);
+
+    /// <summary>
+    ///     How far off the spot it was sent to a member getting out of sight may stop.
+    /// </summary>
+    private const float CoverOrderRange = 12f;
 
     private static readonly TimeSpan PlanReviewInterval = TimeSpan.FromSeconds(5);
 
@@ -58,6 +107,7 @@ public sealed partial class NpcSquadTacticsSystem
     private bool _givingPlanOrders;
 
     private readonly List<EntityUid> _combatContacts = new();
+    private readonly List<EntityUid> _carried = new();
 
     /// <summary>
     ///     What the members who can see a hostile make of it.
@@ -77,11 +127,23 @@ public sealed partial class NpcSquadTacticsSystem
     {
         if (!_squadPlanQuery.TryComp(issuerUid, out var planComponent))
         {
-            if (!settings.Planning || LookForShot(out var targetUid) != NpcSquadSight.Stuck)
+            if (!settings.Planning)
                 return false;
 
-            planComponent = EnsureComp<NpcSquadPlanComponent>(issuerUid);
-            planComponent.Plan = new NpcSquadPlan { TargetUid = targetUid, StartedAt = now, Reason = "nobody has a shot" };
+            if (ShouldWithdraw(settings, out var threatUid))
+            {
+                planComponent = EnsureComp<NpcSquadPlanComponent>(issuerUid);
+                planComponent.Plan = StartWithdrawal(threatUid, now);
+            }
+            else if (LookForShot(out var targetUid) == NpcSquadSight.Stuck)
+            {
+                planComponent = EnsureComp<NpcSquadPlanComponent>(issuerUid);
+                planComponent.Plan = new NpcSquadPlan { TargetUid = targetUid, StartedAt = now, Reason = "nobody has a shot" };
+            }
+            else
+            {
+                return false;
+            }
         }
 
         var plan = planComponent.Plan;
@@ -141,6 +203,55 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         return targetUid.IsValid() ? NpcSquadSight.Stuck : NpcSquadSight.Nothing;
+    }
+
+    /// <summary>
+    ///     Whether the squad is in a fight and too hurt to be in one. Goes by the health left among its members and not by who
+    ///         has gone down, so that a squad all carrying wounds pulls back as readily as one that lost a member.
+    /// </summary>
+    private bool ShouldWithdraw(NpcSquadTacticsSettings settings, out EntityUid threatUid)
+    {
+        threatUid = default;
+
+        if (settings.PlanWithdrawHealth <= 0f || _members.Count < 2)
+            return false;
+
+        var health = 0f;
+
+        foreach (var memberUid in _members)
+        {
+            health += _npcSquadSystem.GetHealthFraction(memberUid);
+
+            if (threatUid.IsValid())
+                continue;
+
+            _combatContacts.Clear();
+            _npcPerceptionSystem.GetCombatContacts(memberUid, _combatContacts);
+
+            if (_combatContacts.Count > 0)
+                threatUid = _combatContacts[0];
+        }
+
+        return threatUid.IsValid() && health / _members.Count <= settings.PlanWithdrawHealth;
+    }
+
+    private static NpcSquadPlan StartWithdrawal(EntityUid threatUid, TimeSpan now)
+    {
+        var plan = new NpcSquadPlan
+        {
+            TargetUid = threatUid,
+            StartedAt = now,
+            StepStartedAt = now,
+            NextReview = TimeSpan.MaxValue,
+            State = NpcSquadPlanState.Running,
+            Goal = NpcSquadFact.OutOfSight,
+            Facts = NpcSquadFact.Threatened,
+            StepCount = 1,
+            Reason = "too hurt to fight on",
+        };
+
+        plan.Steps[0] = NpcSquadAction.TakeCover;
+        return plan;
     }
 
     /// <summary>
@@ -235,6 +346,7 @@ public sealed partial class NpcSquadTacticsSystem
         {
             TargetUid = null,
             Settings = settings,
+            AllowCharges = true,
             LastKnownCoordinates = targetCoordinates,
             PredictedCoordinates = targetCoordinates,
             StartedAt = now,
@@ -242,8 +354,11 @@ public sealed partial class NpcSquadTacticsSystem
             Phase = NpcHuntPhase.Stage,
         };
 
-        PrepareRoom(leaderUid, plan.Hunt, settings);
+        if (PrepareRoom(leaderUid, plan.Hunt, settings) == null)
+            PrepareSealedRoom(plan);
+
         AssignEntrances(plan.Hunt, settings);
+        LeaveAWatcher(plan);
         plan.MemberCount = _members.Count;
 
         if (!TryMakePlan(plan, now))
@@ -266,7 +381,10 @@ public sealed partial class NpcSquadTacticsSystem
             return true;
         }
 
-        if (LookForShot(out _) == NpcSquadSight.HasShot)
+        // Getting out of a fight does not stop for having a shot. Nor does a door they have just opened on a hostile they
+        //      mean to soften up, as that is a moment and the shot it gives them is the thing to soften up first, nor a charge
+        //      that is on, with everyone on their way out of the blast.
+        if (plan.Goal == NpcSquadFact.HasShot && LookForShot(out _) == NpcSquadSight.HasShot && !IsCommitted(plan))
         {
             EndPlan(issuerUid, plan, settings.PlanSuccessCooldown, now, "somebody has a shot");
             return true;
@@ -279,6 +397,8 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         // Waiting for its meds to work: it will not come.
+        var recovering = 0;
+
         for (var i = _members.Count - 1; i >= 0; i--)
         {
             if (!_npcRecoverySystem.IsRecovering(_members[i]))
@@ -286,6 +406,7 @@ public sealed partial class NpcSquadTacticsSystem
 
             ClearOrder(_members[i], issuerUid);
             _members.RemoveAt(i);
+            recovering++;
         }
 
         if (_members.Count == 0)
@@ -296,17 +417,19 @@ public sealed partial class NpcSquadTacticsSystem
 
         var replan = false;
 
-        // Somebody down, or somebody joined: who does what has to be worked out again.
-        if (_members.Count != plan.MemberCount)
+        // Somebody down, or somebody joined: who does what has to be worked out again. One that is only seeing to itself is
+        //      still where it was sent, and a charge that is on carries on regardless.
+        if (plan.Hunt != null && plan.Charge == null && _members.Count + recovering != plan.MemberCount)
         {
-            plan.MemberCount = _members.Count;
-            AssignEntrances(plan.Hunt!, settings);
+            plan.MemberCount = _members.Count + recovering;
+            AssignEntrances(plan.Hunt, settings);
+            LeaveAWatcher(plan);
             plan.Stacked = false;
-            SetPhase(plan.Hunt!, NpcHuntPhase.Stage, now);
+            SetPhase(plan.Hunt, NpcHuntPhase.Stage, now);
             replan = true;
         }
 
-        if (now >= plan.NextReview)
+        if (plan.Hunt != null && plan.Charge == null && now >= plan.NextReview)
         {
             plan.NextReview = now + PlanReviewInterval;
             replan |= GetFacts(plan, settings) != plan.Facts;
@@ -342,7 +465,28 @@ public sealed partial class NpcSquadTacticsSystem
                     finished = RunForceDoor(issuerUid, plan, settings, now);
                     break;
                 case NpcSquadAction.Enter:
+                case NpcSquadAction.EnterSoftened:
                     finished = RunEnter(issuerUid, plan, settings, now);
+                    break;
+                case NpcSquadAction.Flashbang:
+                case NpcSquadAction.FragRoom:
+                    finished = RunThrow(issuerUid, plan, plan.Steps[plan.CurrentStep], settings, now);
+                    break;
+                case NpcSquadAction.TakeCover:
+                    finished = RunTakeCover(issuerUid, plan, settings, now);
+                    break;
+                case NpcSquadAction.HoldExits:
+                    finished = RunHoldExits(issuerUid, plan, settings, now);
+                    break;
+                case NpcSquadAction.PatchUp:
+                    finished = RunPatchUp(issuerUid, plan, settings, now);
+                    break;
+                case NpcSquadAction.TopUp:
+                    finished = RunTopUp(issuerUid, plan, settings, now);
+                    break;
+                case NpcSquadAction.BlowDoor:
+                case NpcSquadAction.BlowWall:
+                    finished = RunCharge(issuerUid, plan, plan.Steps[plan.CurrentStep], settings, now);
                     break;
                 default:
                     finished = RunBreakGlass(issuerUid, plan, settings, now);
@@ -358,13 +502,299 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
+            // Out of sight, and it stays there a while: going straight back would only put it where it just got away from.
+            if (plan.Goal == NpcSquadFact.OutOfSight)
+            {
+                EndPlan(issuerUid, plan, settings.PlanCooldown, now, "got out of sight");
+                break;
+            }
+
             // Gone in, or shot out the glass, and still nobody has a shot. Nothing above ever saw one, so it is done.
             EndPlan(issuerUid, plan, settings.PlanSuccessCooldown, now, "done, and nobody has a shot");
             break;
         }
 
+        if (plan.State == NpcSquadPlanState.Running)
+            KeepWatch(issuerUid, plan, now);
+
         _givingPlanOrders = false;
         return true;
+    }
+
+    /// <summary>
+    ///     Whether a shot should wait for what the plan is in the middle of. A charge that is on, or something still to be
+    ///         thrown through a way in that is open. Only those: a shot that turned up some other way is no reason to hold
+    ///         off taking it.
+    /// </summary>
+    private bool IsCommitted(NpcSquadPlan plan)
+    {
+        if (plan.Charge is { Phase: not NpcSquadChargePhase.Planting })
+            return true;
+
+        if (plan.Hunt is not { } hunt || plan.Softened || AnyDoorToForce(hunt))
+            return false;
+
+        for (var i = plan.CurrentStep; i < plan.StepCount; i++)
+        {
+            if (plan.Steps[i] is NpcSquadAction.Flashbang or NpcSquadAction.FragRoom)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Keeps back one member that can see the hostile and has no door to open, for the squad not to lose it while the rest
+    ///         go round. Stacking up takes everyone out of sight of what they are stacking up on.
+    /// </summary>
+    private void LeaveAWatcher(NpcSquadPlan plan)
+    {
+        plan.WatcherUid = null;
+
+        if (plan.Hunt is not { } hunt)
+            return;
+
+        hunt.HeldBackUid = null;
+
+        foreach (var (memberUid, staging) in hunt.StagedMembers)
+        {
+            if (staging.IsLead ||
+                !_npcPerceptionSystem.TryGetContact(memberUid, plan.TargetUid, out var contact) ||
+                contact.State != NpcContactState.Visible)
+                continue;
+
+            plan.WatcherUid = memberUid;
+            hunt.HeldBackUid = memberUid;
+            hunt.StagedMembers.Remove(memberUid);
+            return;
+        }
+    }
+
+    private void KeepWatch(EntityUid issuerUid, NpcSquadPlan plan, TimeSpan now)
+    {
+        if (plan.WatcherUid is not { } watcherUid ||
+            !_members.Contains(watcherUid) ||
+            plan.Steps[plan.CurrentStep] is NpcSquadAction.BreakGlass or NpcSquadAction.TakeCover or NpcSquadAction.PatchUp or NpcSquadAction.TopUp ||
+            plan.Charge is { Phase: not NpcSquadChargePhase.Planting } ||
+            TerminatingOrDeleted(plan.TargetUid))
+            return;
+
+        var standCoordinates = _transformSystem.GetMoverCoordinates(watcherUid);
+        var facing = (_transformSystem.GetMapCoordinates(plan.TargetUid).Position - _transformSystem.GetMapCoordinates(watcherUid).Position).ToWorldAngle();
+
+        SetOrder(watcherUid, issuerUid, NpcOrderKind.Watch, standCoordinates, ToLocalFacing(standCoordinates, facing), OrderRange, null, now);
+    }
+
+    /// <summary>
+    ///     One member puts something in through the way in, and the rest wait where they are until it has gone off: a set time
+    ///         for a flashbang, and for a grenade, until it is gone.
+    /// </summary>
+    private bool RunThrow(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        var hunt = plan.Hunt!;
+
+        if (plan.ThrownAt is { } thrownAt)
+        {
+            var wentOff = action == NpcSquadAction.Flashbang
+                ? now - thrownAt >= settings.PlanFlashWait
+                : TerminatingOrDeleted(plan.ThrownUid) || now - thrownAt >= FragWaitLimit;
+
+            if (!wentOff)
+                return false;
+
+            plan.Softened = true;
+            return true;
+        }
+
+        var chosen = action == NpcSquadAction.Flashbang ? plan.FlashThrow : plan.FragThrow;
+
+        if (chosen is { } thrown && (TerminatingOrDeleted(thrown.GrenadeUid) || _thrownGrenadeQuery.HasComp(thrown.GrenadeUid)))
+        {
+            plan.ThrownAt = now;
+            plan.ThrownUid = thrown.GrenadeUid;
+            return false;
+        }
+
+        if (chosen is not { } toThrow || !_members.Contains(toThrow.ThrowerUid) || now - plan.StepStartedAt >= ThrowTimeout)
+        {
+            FailPlanStep(issuerUid, plan, action, settings, now);
+            return false;
+        }
+
+        foreach (var memberUid in _members)
+        {
+            if (memberUid == toThrow.ThrowerUid)
+            {
+                SetOrder(memberUid, issuerUid, NpcOrderKind.ThrowGrenade, toThrow.Coordinates, Angle.Zero, OrderRange, null, now, toolUid: toThrow.GrenadeUid);
+                continue;
+            }
+
+            HoldStagedMember(memberUid, issuerUid, hunt, now);
+        }
+
+        return false;
+    }
+
+    private void HoldStagedMember(EntityUid memberUid, EntityUid issuerUid, NpcHunt hunt, TimeSpan now)
+    {
+        if (!hunt.StagedMembers.TryGetValue(memberUid, out var staging))
+            return;
+
+        var entrance = hunt.Entrances[staging.EntranceIndex];
+        SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, entrance.StageCoordinates, entrance.LocalFacing, OrderRange, null, now);
+    }
+
+    /// <summary>
+    ///     Everyone stays on their way in, and lets the hostile come to them. It either shows itself, and a shot ends the plan,
+    ///         or it is banned once it has gone on long enough, and they go in after it.
+    /// </summary>
+    private bool RunHoldExits(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        if (now - plan.StepStartedAt >= settings.PlanHoldTime)
+        {
+            FailPlanStep(issuerUid, plan, NpcSquadAction.HoldExits, settings, now);
+            return false;
+        }
+
+        foreach (var memberUid in _members)
+        {
+            HoldStagedMember(memberUid, issuerUid, plan.Hunt!, now);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whoever is hurt uses what it has, where it stands, and the rest wait. One that has used its meds is left out of the
+    ///         members until they have worked, which is what is being waited for.
+    /// </summary>
+    private bool RunPatchUp(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        FindPatients(plan, settings);
+
+        var recovering = plan.MemberCount != _members.Count;
+
+        if (plan.Patients.Count == 0 && !recovering || now - plan.StepStartedAt >= settings.PlanPatchTime)
+        {
+            plan.PatchedUp = true;
+            return true;
+        }
+
+        foreach (var memberUid in _members)
+        {
+            if (plan.Patients.Contains(memberUid))
+                SetOrder(memberUid, issuerUid, NpcOrderKind.PatchUp, Transform(memberUid).Coordinates, Angle.Zero, OrderRange, null, now);
+            else
+                HoldStagedMember(memberUid, issuerUid, plan.Hunt!, now);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whoever is low changes its magazine, where it stands, and the rest wait.
+    /// </summary>
+    private bool RunTopUp(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        FindReloaders(plan, settings);
+
+        if (plan.Reloaders.Count == 0 || now - plan.StepStartedAt >= settings.PlanTopUpTime)
+        {
+            plan.ToppedUp = true;
+            return true;
+        }
+
+        foreach (var memberUid in _members)
+        {
+            if (plan.Reloaders.Contains(memberUid))
+                SetOrder(memberUid, issuerUid, NpcOrderKind.TopUp, Transform(memberUid).Coordinates, Angle.Zero, OrderRange, null, now);
+            else
+                HoldStagedMember(memberUid, issuerUid, plan.Hunt!, now);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Works out who is hurt and has meds that would see to it. See <see cref="NpcSquadTacticsSettings.PlanPatchHealth"/>.
+    /// </summary>
+    private void FindPatients(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
+    {
+        plan.Patients.Clear();
+
+        foreach (var memberUid in _members)
+        {
+            if (_recentlyInjectedQuery.HasComp(memberUid) || _npcSquadSystem.GetHealthFraction(memberUid) >= settings.PlanPatchHealth)
+                continue;
+
+            _carried.Clear();
+            _npcDoorSystem.GetCarried(memberUid, _carried);
+
+            foreach (var itemUid in _carried)
+            {
+                if (!_healingItemQuery.HasComp(itemUid) || !_solutionManagerQuery.HasComp(itemUid) && !_solutionQuery.HasComp(itemUid))
+                    continue;
+
+                plan.Patients.Add(memberUid);
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Works out who is low on ammo and has a magazine that fits. See <see cref="NpcSquadTacticsSettings.PlanReloadFraction"/>.
+    /// </summary>
+    private void FindReloaders(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
+    {
+        plan.Reloaders.Clear();
+
+        foreach (var memberUid in _members)
+        {
+            if (!_gunSystem.TryGetGun(memberUid, out var gunEntity))
+                continue;
+
+            var ammoEvent = new GetAmmoCountEvent();
+            RaiseLocalEvent(gunEntity.Owner, ref ammoEvent);
+
+            if (ammoEvent.Capacity <= 0 ||
+                (float) ammoEvent.Count / ammoEvent.Capacity >= settings.PlanReloadFraction ||
+                !_itemSlotsQuery.TryComp(gunEntity.Owner, out var itemSlotsComponent) ||
+                !_itemSlotsSystem.TryGetSlot(gunEntity.Owner, SharedGunSystem.MagazineSlot, out var magazineSlot, itemSlotsComponent))
+                continue;
+
+            _carried.Clear();
+            _npcDoorSystem.GetCarried(memberUid, _carried);
+
+            foreach (var itemUid in _carried)
+            {
+                if (!_ballisticAmmoQuery.HasComp(itemUid) || _entityWhitelistSystem.IsWhitelistFailOrNull(magazineSlot.Whitelist, itemUid))
+                    continue;
+
+                plan.Reloaders.Add(memberUid);
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Everyone gets out of the hostile's sight. HTN picks each one's spot, and heals and reloads there like anywhere else.
+    /// </summary>
+    private bool RunTakeCover(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        if (now - plan.StepStartedAt >= settings.PlanCoverTime)
+            return true;
+
+        if (TerminatingOrDeleted(plan.TargetUid))
+            return true;
+
+        var threatCoordinates = _transformSystem.GetMoverCoordinates(plan.TargetUid);
+
+        foreach (var memberUid in _members)
+        {
+            SetOrder(memberUid, issuerUid, NpcOrderKind.TakeCover, threatCoordinates, Angle.Zero, CoverOrderRange, null, now);
+        }
+
+        return false;
     }
 
     private bool RunStackUp(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, TimeSpan now)
@@ -462,13 +892,31 @@ public sealed partial class NpcSquadTacticsSystem
         Span<float> costs = stackalloc float[NpcSquadGoap.Actions.Length];
         costs[(int) NpcSquadAction.StackUp] = GetLongestWalk(plan.Hunt) / PlanWalkSpeed;
         costs[(int) NpcSquadAction.ForceDoor] = ForceDoorCost;
-        costs[(int) NpcSquadAction.Enter] = EnterCost;
+        costs[(int) NpcSquadAction.Enter] = EnterCost + GetRushRisk(plan, settings);
+        costs[(int) NpcSquadAction.EnterSoftened] = EnterCost;
+        costs[(int) NpcSquadAction.Flashbang] = FlashbangCost;
+        costs[(int) NpcSquadAction.FragRoom] = FragCost;
+        costs[(int) NpcSquadAction.HoldExits] = settings.PlanHoldCost + ((plan.Facts & NpcSquadFact.WayOpen) != 0x0 ? 0f : settings.PlanHoldShutCost);
+        costs[(int) NpcSquadAction.PatchUp] = PatchUpCost;
+        costs[(int) NpcSquadAction.TopUp] = TopUpCost;
+        costs[(int) NpcSquadAction.BlowDoor] = BlowDoorCost + GetChargeWait(plan.DoorCharge);
+        costs[(int) NpcSquadAction.BlowWall] = BlowWallCost + GetChargeWait(plan.WallCharge) + (plan.WallCharge?.RouteLength ?? 0) / PlanWalkSpeed;
         costs[(int) NpcSquadAction.BreakGlass] = BreakGlassBaseCost + plan.BreakDamage / BreakGlassDamagePerSecond;
+        costs[(int) NpcSquadAction.TakeCover] = TakeCoverCost;
 
         Span<NpcSquadAction> steps = stackalloc NpcSquadAction[NpcSquadGoap.MaxSteps];
 
-        if (!NpcSquadGoap.TryPlan(plan.Facts, NpcSquadFact.HasShot, costs, plan.BannedActions, steps, out var length, out var cost) ||
-            length == 0)
+        plan.Goal = NpcSquadFact.HasShot;
+        var planned = NpcSquadGoap.TryPlan(plan.Facts, NpcSquadFact.HasShot, costs, plan.BannedActions, steps, out var length, out var cost);
+
+        // No way of getting at it, and it can get at them.
+        if (!planned)
+        {
+            plan.Goal = NpcSquadFact.OutOfSight;
+            planned = NpcSquadGoap.TryPlan(plan.Facts, NpcSquadFact.OutOfSight, costs, plan.BannedActions, steps, out length, out cost);
+        }
+
+        if (!planned || length == 0)
         {
             plan.StepCount = 0;
             return false;
@@ -488,10 +936,26 @@ public sealed partial class NpcSquadTacticsSystem
         return true;
     }
 
+    private static float GetChargeWait(NpcChargePick? pick)
+    {
+        return pick is { } chosen ? (float) chosen.Charge.Fuse.TotalSeconds * ChargeFuseCost : 0f;
+    }
+
+    /// <summary>
+    ///     What going straight in costs on top of going in: more if what is in there has a gun in its hand, as anyone can see.
+    /// </summary>
+    private float GetRushRisk(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
+    {
+        return _gunSystem.TryGetGun(plan.TargetUid, out _) ? settings.PlanRushRisk : 0f;
+    }
+
     private NpcSquadFact GetFacts(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
     {
         var hunt = plan.Hunt!;
         var facts = plan.Stacked ? NpcSquadFact.Stacked : NpcSquadFact.None;
+
+        if (plan.Softened)
+            facts |= NpcSquadFact.Softened;
 
         foreach (var staging in hunt.StagedMembers.Values)
         {
@@ -506,14 +970,197 @@ public sealed partial class NpcSquadTacticsSystem
             if (entrance.DoorUid is { } doorUid && HoldsBackDanger(doorUid))
                 continue;
 
-            facts |= GetDoorToForce(staging, entrance) == null ? NpcSquadFact.WayOpen : NpcSquadFact.DoorForceable;
+            var standingDoor = false;
+
+            if (entrance.DoorUid is { } standingDoorUid && _doorQuery.TryComp(standingDoorUid, out var doorComponent))
+                standingDoor = doorComponent.State is not (DoorState.Open or DoorState.Opening);
+
+            // Blowing it is a step of its own, with its own fact.
+            if (staging.Method != NpcBreachMethod.Charge || !standingDoor)
+                facts |= GetDoorToForce(staging, entrance) == null ? NpcSquadFact.WayOpen : NpcSquadFact.DoorForceable;
+
+            // A door opened by hand is shut until somebody does, and nothing goes through a shut door.
+            if (!standingDoor)
+                facts |= NpcSquadFact.ThrowLine;
         }
+
+        if (AreExitsCovered(hunt))
+            facts |= NpcSquadFact.ExitsCovered;
 
         FindBreakers(plan, settings);
         if (plan.Breakers.Count > 0)
             facts |= NpcSquadFact.GlassBreakable;
 
+        FindThrowers(plan, settings);
+        if (plan.FlashThrow != null)
+            facts |= NpcSquadFact.HasFlashbang;
+
+        if (plan.FragThrow != null)
+            facts |= NpcSquadFact.HasFrag;
+
+        if (CanBeHit(plan))
+            facts |= NpcSquadFact.Threatened;
+
+        var armed = !TerminatingOrDeleted(plan.TargetUid) && _gunSystem.TryGetGun(plan.TargetUid, out _);
+
+        FindPatients(plan, settings);
+        if (plan.PatchedUp || !armed || plan.Patients.Count == 0)
+            facts |= NpcSquadFact.Patched;
+
+        FindReloaders(plan, settings);
+        if (plan.ToppedUp || plan.Reloaders.Count == 0)
+            facts |= NpcSquadFact.Loaded;
+
+        if (AnyoneHasACharge())
+            facts |= NpcSquadFact.HasCharge;
+
+        FindCharges(plan, settings);
+        if (plan.DoorCharge != null)
+            facts |= NpcSquadFact.DoorChargeable;
+
+        if (plan.WallCharge != null)
+            facts |= NpcSquadFact.WallChargeable;
+
         return facts;
+    }
+
+    /// <summary>
+    ///     Whether somebody is on every way out of the room. A door holding back vacuum or fire is not a way out of anything.
+    /// </summary>
+    private bool AreExitsCovered(NpcHunt hunt)
+    {
+        var exits = 0;
+
+        for (var e = 0; e < hunt.Entrances.Count; e++)
+        {
+            if (hunt.Entrances[e].DoorUid is { } doorUid && HoldsBackDanger(doorUid))
+                continue;
+
+            if (!IsEntranceUsed(hunt, e))
+                return false;
+
+            exits++;
+        }
+
+        return exits > 0;
+    }
+
+    /// <summary>
+    ///     Finds who, stacked up on a way in, would throw what, and where to: where the hostile is, if a throw would get there,
+    ///         and otherwise just inside. A flashbang is for something a flash would reach. A grenade is for somewhere that
+    ///         leaves all of them out of the blast, which just inside the door hardly ever does.
+    /// </summary>
+    private void FindThrowers(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
+    {
+        var hunt = plan.Hunt!;
+
+        // Only one, and it already has it in the air.
+        if (plan.ThrownAt != null)
+            return;
+
+        plan.FlashThrow = null;
+        plan.FragThrow = null;
+
+        var canFlash = !TerminatingOrDeleted(plan.TargetUid) && _flashSystem.CanFlash(plan.TargetUid);
+
+        foreach (var (memberUid, staging) in hunt.StagedMembers)
+        {
+            _carried.Clear();
+            _npcDoorSystem.GetCarried(memberUid, _carried);
+
+            foreach (var itemUid in _carried)
+            {
+                if (_flashOnTriggerQuery.HasComp(itemUid))
+                {
+                    if (canFlash)
+                        plan.FlashThrow ??= new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, memberUid, staging));
+
+                    continue;
+                }
+
+                if (plan.FragThrow != null || !IsGrenade(itemUid))
+                    continue;
+
+                var coordinates = GetFragLanding(plan, memberUid, staging);
+
+                if (IsClearOfEveryone(hunt, coordinates, settings.PlanFragClearance))
+                    plan.FragThrow = new NpcSquadThrow(memberUid, itemUid, coordinates);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Where a grenade would land. With the door still shut, that is where it will land once it is open, going by the view
+    ///         from the doorway: a plan has to be able to choose this before there is anything to throw it through.
+    /// </summary>
+    private EntityCoordinates GetFragLanding(NpcSquadPlan plan, EntityUid memberUid, NpcHuntStaging staging)
+    {
+        var entrance = plan.Hunt!.Entrances[staging.EntranceIndex];
+
+        if (!TerminatingOrDeleted(plan.TargetUid) &&
+            entrance.DoorUid is { } doorUid &&
+            _doorQuery.TryComp(doorUid, out var doorComponent) &&
+            doorComponent.State is not (DoorState.Open or DoorState.Opening) &&
+            _npcLineOfFireSystem.IsClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.GetMapCoordinates(plan.TargetUid), CollisionGroup.ItemMask))
+            return _transformSystem.GetMoverCoordinates(plan.TargetUid);
+
+        return GetThrowCoordinates(plan, memberUid, staging);
+    }
+
+    private EntityCoordinates GetThrowCoordinates(NpcSquadPlan plan, EntityUid memberUid, NpcHuntStaging staging)
+    {
+        return TerminatingOrDeleted(plan.TargetUid) ||
+            !_npcLineOfFireSystem.IsClear(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.GetMapCoordinates(plan.TargetUid), CollisionGroup.ItemMask)
+                ? plan.Hunt!.Entrances[staging.EntranceIndex].EntryCoordinates
+                : _transformSystem.GetMoverCoordinates(plan.TargetUid);
+    }
+
+    /// <summary>
+    ///     Something to throw that blows up. Something that sticks is a charge.
+    /// </summary>
+    private bool IsGrenade(EntityUid itemUid)
+    {
+        return _explosiveQuery.HasComp(itemUid) && _timerTriggerQuery.HasComp(itemUid) && !_stickyQuery.HasComp(itemUid);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="coordinates"/> is far enough from everyone, going by where each will be standing when it
+    ///         matters: on its way in, if it has one.
+    /// </summary>
+    private bool IsClearOfEveryone(NpcHunt hunt, EntityCoordinates coordinates, float clearance)
+    {
+        foreach (var memberUid in _members)
+        {
+            var standCoordinates = hunt.StagedMembers.TryGetValue(memberUid, out var staging)
+                ? hunt.Entrances[staging.EntranceIndex].StageCoordinates
+                : Transform(memberUid).Coordinates;
+
+            if (!standCoordinates.TryDistance(EntityManager, _transformSystem, coordinates, out var distance) || distance < clearance)
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Whether the hostile has a gun that can reach any member. Lasers go through what stops bullets, so a squad behind glass
+    ///         can be shot by what it cannot shoot.
+    /// </summary>
+    private bool CanBeHit(NpcSquadPlan plan)
+    {
+        if (TerminatingOrDeleted(plan.TargetUid) || !_gunSystem.TryGetGun(plan.TargetUid, out _))
+            return false;
+
+        var shotMask = _npcLineOfFireSystem.GetShotMask(plan.TargetUid);
+        var hostileMapCoordinates = _transformSystem.GetMapCoordinates(plan.TargetUid);
+
+        foreach (var memberUid in _members)
+        {
+            if (_npcLineOfFireSystem.IsClear(hostileMapCoordinates, _transformSystem.GetMapCoordinates(memberUid), shotMask))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -526,17 +1173,16 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     How far the member with furthest to go has to walk to its way in.
+    ///     How far the member with furthest to go has to walk to its way in, along the way it will take: a door just the other
+    ///         side of a wall can be a long way round.
     /// </summary>
-    private float GetLongestWalk(NpcHunt hunt)
+    private static float GetLongestWalk(NpcHunt hunt)
     {
-        var longest = 0f;
+        var longest = 0;
 
-        foreach (var (memberUid, staging) in hunt.StagedMembers)
+        foreach (var staging in hunt.StagedMembers.Values)
         {
-            if (!TerminatingOrDeleted(memberUid) &&
-                Transform(memberUid).Coordinates.TryDistance(EntityManager, _transformSystem, hunt.Entrances[staging.EntranceIndex].StageCoordinates, out var distance))
-                longest = MathF.Max(longest, distance);
+            longest = Math.Max(longest, staging.RouteLength);
         }
 
         return longest;

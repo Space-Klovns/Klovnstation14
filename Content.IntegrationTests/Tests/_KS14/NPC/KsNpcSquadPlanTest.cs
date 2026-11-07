@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Doors;
@@ -40,8 +41,20 @@ public sealed class KsNpcSquadPlanTest : GameTest
     private const string Glass = "KsSquadPlanTestGlass";
     private const string ArmouredGlass = "KsSquadPlanTestArmouredGlass";
     private const string Gun = "KsSquadPlanTestGun";
+    private static readonly Robust.Shared.Prototypes.ProtoId<Content.Shared.Damage.Prototypes.DamageTypePrototype> BluntDamage = "Blunt";
+
     private const string EmptyGun = "KsSquadPlanTestEmptyGun";
+    private const string Flashbang = "KsSquadPlanTestFlashbang";
+    private const string ArmedHostile = "KsSquadPlanTestArmedHostile";
+    private const string LaserHostile = "KsSquadPlanTestLaserHostile";
     private const string SecurityDoor = "AirlockSecurityLocked";
+    private const string SteadyMob = "KsSquadPlanTestMobSteady";
+    private const string Frag = "KsSquadPlanTestFrag";
+    private const string TimedCharge = "KsSquadPlanTestTimedCharge";
+    private const string WiredCharge = "KsSquadPlanTestWiredCharge";
+    private const string FussyCharge = "KsSquadPlanTestFussyCharge";
+    private const string Activator = "KsSquadPlanTestActivator";
+    private const string Meds = "KsSquadPlanTestMeds";
 
     /// <summary>
     ///     Long enough for a search for a path to come back.
@@ -62,6 +75,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
       planGrace: 0s
       stageTimeout: 0s
       maxStageDistance: 40
+      planChargeMinPressure: 0 # a test map has no air in it
 
 - type: entity
   parent: KsSquadPlanTestMob
@@ -86,6 +100,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
   - type: NpcSquadMember
     tactics:
       breachTimeout: 0s
+      planHoldTime: 0s
 
 - type: entity
   id: KsSquadPlanTestGlass
@@ -153,10 +168,56 @@ public sealed class KsNpcSquadPlanTest : GameTest
     capacity: 10
 
 - type: entity
+  id: KsSquadPlanTestFlashbang
+  components:
+  - type: Item
+  - type: FlashOnTrigger
+    range: 7
+  - type: TimerTrigger
+    delay: 1000
+
+- type: entity
+  parent: KsSquadTestMobNanoTrasen
+  id: KsSquadPlanTestArmedHostile
+  components:
+  - type: Gun
+  - type: BallisticAmmoProvider
+    proto: KsSquadPlanTestBullet
+    capacity: 10
+
+- type: entity
+  parent: KsSquadTestMobNanoTrasen
+  id: KsSquadPlanTestLaserHostile
+  components:
+  - type: Gun
+  - type: Battery
+    maxCharge: 1000
+    startingCharge: 1000
+  - type: BatteryAmmoProvider
+    proto: KsLineOfFireTestBeam
+
+- type: entity
+  parent: KsSquadPlanTestMob
+  id: KsSquadPlanTestMobWithdrawing
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planWithdrawHealth: 0.4
+
+- type: entity
   parent: KsSquadPlanTestMob
   id: KsSquadPlanTestMobRecovering
   components:
   - type: NpcRecovery
+
+# Waits for everyone to be on their spot, however long that takes.
+- type: entity
+  parent: KsSquadPlanTestMobRecovering
+  id: KsSquadPlanTestMobRecoveringPatient
+  components:
+  - type: NpcSquadMember
+    tactics:
+      stageTimeout: 1000s
 
 - type: entity
   parent: KsSquadPlanTestMob
@@ -193,6 +254,118 @@ public sealed class KsNpcSquadPlanTest : GameTest
       behaviors:
       - !type:DoActsBehavior
         acts: [ Destruction ]
+
+# Goes by the air there is, of which a test map has none.
+- type: entity
+  parent: KsSquadPlanTestMobSteady
+  id: KsSquadPlanTestMobAirMinded
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planChargeMinPressure: 50
+
+# Hunts for what it loses, the moment it does.
+- type: entity
+  parent: KsSquadPlanTestMob
+  id: KsSquadPlanTestMobHunter
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planning: false
+      watchTime: 0s
+
+- type: entity
+  parent: KsSquadPlanTestMobHunter
+  id: KsSquadPlanTestMobBlaster
+  components:
+  - type: NpcSquadMember
+    tactics:
+      huntCharges: true
+
+# Would rather do anything than wait for a hostile to come out.
+- type: entity
+  parent: KsSquadPlanTestMob
+  id: KsSquadPlanTestMobSteady
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planHoldCost: 100
+
+- type: entity
+  parent: KsSquadPlanTestMob
+  id: KsSquadPlanTestMobNoPatience
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planHoldTime: 0s
+
+- type: entity
+  parent: KsSquadPlanTestArmedHostile
+  id: KsSquadPlanTestFlashProofHostile
+  components:
+  - type: FlashImmunity
+
+- type: entity
+  id: KsSquadPlanTestFrag
+  components:
+  - type: Item
+  - type: Explosive
+    explosionType: Default
+    totalIntensity: 10
+    intensitySlope: 3
+    maxIntensity: 10
+  - type: TimerTrigger
+    delay: 1000
+
+- type: entity
+  parent: EmergencyMedipen
+  id: KsSquadPlanTestMeds
+  components:
+  - type: NpcHealingItem
+
+- type: entity
+  id: KsSquadPlanTestTimedCharge
+  components:
+  - type: Item
+  - type: Sticky
+  - type: Explosive
+    explosionType: Default
+    totalIntensity: 10
+    intensitySlope: 3
+    maxIntensity: 10
+  - type: TimerTrigger
+    delay: 4
+
+- type: entity
+  parent: BaseItem
+  id: KsSquadPlanTestWiredCharge
+  components:
+  - type: Sticky
+  - type: LinkedChainEnd
+  - type: Explosive
+    explosionType: Default
+    totalIntensity: 10
+    intensitySlope: 3
+    maxIntensity: 10
+
+# Goes on walls and on nothing else, as the real one goes on walls and airlocks.
+- type: entity
+  parent: KsSquadPlanTestWiredCharge
+  id: KsSquadPlanTestFussyCharge
+  components:
+  - type: Sticky
+    whitelist:
+      tags:
+      - Wall
+
+- type: entity
+  parent: BaseItem
+  id: KsSquadPlanTestActivator
+  components:
+  - type: LinkedChainStart
+    segmentId: KsWireSegment
+    segmentOffset: 0.125
+    segments: 11
 
 # Shut against vacuum, with no air on a test map for a real firelock to be looking at.
 - type: entity
@@ -275,8 +448,8 @@ public sealed class KsNpcSquadPlanTest : GameTest
     }
 
     /// <summary>
-    ///     With a shut door and a tool, the one with the tool forces it while the other waits, and both come before fighting.
-    ///         Orders below combat would never beat a gun plan.
+    ///     With a shut door and a tool, the one with the tool forces it while the other stays where it can see the hostile, so
+    ///         that the squad does not lose it. Both come before fighting: orders below combat would never beat a gun plan.
     /// </summary>
     [Test]
     public async Task TestToolBearerForcesTheDoor()
@@ -294,7 +467,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
             Assert.That(plan!.Steps[..plan.StepCount], Is.EqualTo(new[] { NpcSquadAction.StackUp, NpcSquadAction.ForceDoor, NpcSquadAction.Enter }));
 
             Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var breach), "it should have its orders");
-            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var stage), "it should have its orders");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var watch), "it should have its orders");
 
             Assert.Multiple(() =>
             {
@@ -302,8 +475,8 @@ public sealed class KsNpcSquadPlanTest : GameTest
                 Assert.That(breach.TargetUid, Is.EqualTo(scene.DoorUid));
                 Assert.That(breach.ToolUid, Is.EqualTo(toolUid));
                 Assert.That(breach.OverCombat, "an order that does not come before fighting is never carried out");
-                Assert.That(stage.Kind, Is.EqualTo(NpcOrderKind.Stage));
-                Assert.That(stage.OverCombat);
+                Assert.That(watch.Kind, Is.EqualTo(NpcOrderKind.Watch));
+                Assert.That(watch.OverCombat);
             });
         });
     }
@@ -367,8 +540,13 @@ public sealed class KsNpcSquadPlanTest : GameTest
         await Pair.Server.WaitAssertion(() =>
         {
             var plan = GetPlan(scene);
-            Assert.That(plan?.State, Is.EqualTo(NpcSquadPlanState.Cooldown));
             Assert.That(plan!.BannedActions & NpcSquadGoap.GetBan(NpcSquadAction.ForceDoor), Is.Not.Zero);
+
+            // Waiting for it to come out is all that is left, and it does not wait long either.
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Cooldown), plan.Reason);
         });
     }
 
@@ -447,6 +625,754 @@ public sealed class KsNpcSquadPlanTest : GameTest
         await Step(scene);
 
         await Pair.Server.WaitAssertion(() => Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Cooldown)));
+    }
+
+    /// <summary>
+    ///     What a squad does depends on what it can see. The same door, the same tool, the same flashbang: it goes on a hostile
+    ///         with a gun in its hand, and is saved from one without.
+    /// </summary>
+    [TestCase(ArmedHostile, true)]
+    [TestCase(NanoTrasenMob, false)]
+    public async Task TestAnArmedHostileGetsAFlashbang(string hostile, bool flashed)
+    {
+        var scene = await SetUp(glass: ArmouredGlass, hostile: hostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, Flashbang);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene);
+            Assert.That(plan?.State, Is.EqualTo(NpcSquadPlanState.Running));
+            Assert.That(plan!.Steps[..plan.StepCount], flashed
+                ? Is.EqualTo(new[] { NpcSquadAction.StackUp, NpcSquadAction.ForceDoor, NpcSquadAction.Flashbang, NpcSquadAction.EnterSoftened })
+                : Is.EqualTo(new[] { NpcSquadAction.StackUp, NpcSquadAction.ForceDoor, NpcSquadAction.Enter }));
+        });
+    }
+
+    /// <summary>
+    ///     The door they meant to flash through coming open gives them a shot, and the flashbang still goes first. Dropping the
+    ///         plan for that shot would have them stand in a doorway trading fire with what they came to blind.
+    /// </summary>
+    [Test]
+    public async Task TestTheDoorOpeningDoesNotCallOffTheFlashbang()
+    {
+        var scene = await SetUp(glass: ArmouredGlass, hostile: ArmedHostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, Flashbang);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Running));
+
+            scene.EntManager.DeleteEntity(scene.DoorUid);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Running), "the shot should wait for the flashbang");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "it should be told to throw");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.ThrowGrenade));
+            Assert.That(order.OverCombat);
+        });
+    }
+
+    /// <summary>
+    ///     A grenade goes in where it leaves them out of the blast. Against a hostile just inside the door, that is nowhere,
+    ///         and the same squad goes in without. They are clear of tile 1 where they stand now: it is where they will be
+    ///         standing to throw it that counts.
+    /// </summary>
+    [TestCase(3, true)]
+    [TestCase(1, false)]
+    public async Task TestAGrenadeGoesWhereItIsSafe(int hostileX, bool thrown)
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, hostile: ArmedHostile, hostileAt: new Vector2i(hostileX, 2));
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, Frag);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running));
+            Assert.That(plan.Steps[..plan.StepCount].Contains(NpcSquadAction.FragRoom), Is.EqualTo(thrown), plan.Facts.ToString());
+        });
+    }
+
+    /// <summary>
+    ///     A flashbang is wasted on what a flash does nothing to, and they can see that. With a grenade as well, that goes in.
+    /// </summary>
+    [Test]
+    public async Task TestAFlashProofHostileGetsAGrenade()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, hostile: "KsSquadPlanTestFlashProofHostile");
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, Flashbang);
+            GiveInHand(scene, scene.MemberUid, Frag);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount], Does.Contain(NpcSquadAction.FragRoom));
+            Assert.That(plan.Steps[..plan.StepCount], Does.Not.Contain(NpcSquadAction.Flashbang));
+        });
+    }
+
+    /// <summary>
+    ///     With nothing to soften up a gun with, they wait for it to come out rather than walk in on it.
+    /// </summary>
+    [Test]
+    public async Task TestAGunIsWaitedOutRatherThanRushed()
+    {
+        var scene = await SetUp(glass: ArmouredGlass, hostile: ArmedHostile);
+
+        await Pair.Server.WaitPost(() => GiveInHand(scene, scene.MemberUid, TestJawsOfLife));
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount], Is.EqualTo(new[] { NpcSquadAction.StackUp, NpcSquadAction.HoldExits }));
+        });
+    }
+
+    /// <summary>
+    ///     And when it does not come out, they go in after it after all.
+    /// </summary>
+    [Test]
+    public async Task TestWaitingGivesWayToGoingIn()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobNoPatience", glass: ArmouredGlass, hostile: ArmedHostile);
+
+        await Pair.Server.WaitPost(() => GiveInHand(scene, scene.MemberUid, TestJawsOfLife));
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running), plan.Reason);
+            Assert.That(plan.BannedActions & NpcSquadGoap.GetBan(NpcSquadAction.HoldExits), Is.Not.Zero, "it should be done waiting");
+            Assert.That(plan.Steps[..plan.StepCount], Does.Contain(NpcSquadAction.ForceDoor));
+        });
+    }
+
+    /// <summary>
+    ///     Somebody hurt uses its meds before going in on a gun, and on orders that come before fighting. Not for anyone unarmed,
+    ///         which is not worth what they would use.
+    /// </summary>
+    [TestCase(ArmedHostile, true)]
+    [TestCase(NanoTrasenMob, false)]
+    public async Task TestPatchesUpBeforeGoingInOnAGun(string hostile, bool patches)
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, hostile: hostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.LeaderUid, Meds);
+            Hurt(scene, scene.LeaderUid, 50);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount].Contains(NpcSquadAction.PatchUp), Is.EqualTo(patches));
+
+            if (!patches)
+                return;
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.Steps[plan.CurrentStep], Is.EqualTo(NpcSquadAction.PatchUp));
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order), "it should be told to");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.PatchUp));
+            Assert.That(order.OverCombat);
+        });
+    }
+
+    /// <summary>
+    ///     Waiting on meds that were used is not losing a member: nobody has to be sent anywhere over it.
+    /// </summary>
+    [Test]
+    public async Task TestWaitingOnMedsDoesNotStackThemUpAgain()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobRecoveringPatient", glass: ArmouredGlass);
+
+        await Pair.Server.WaitPost(() => GiveInHand(scene, scene.LeaderUid, TestJawsOfLife));
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            var hunt = plan.Hunt!;
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+
+            foreach (var (memberUid, staging) in hunt.StagedMembers)
+            {
+                transformSystem.SetCoordinates(memberUid, hunt.Entrances[staging.EntranceIndex].StageCoordinates);
+            }
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(plan.Stacked, "the test needs them stacked up");
+
+            // Off its spot, so that anything sending them back there would have to wait for it.
+            transformSystem.SetCoordinates(scene.LeaderUid, scene.EntManager.GetComponent<TransformComponent>(scene.LeaderUid).Coordinates.Offset(new Vector2(-4f, 0f)));
+
+            scene.EntManager.System<Content.Server._KS14.NPC.Recovery.NpcRecoverySystem>().StartRecovery(scene.MemberUid);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.Stacked, "nobody should be sent back to stack up");
+        });
+    }
+
+    /// <summary>
+    ///     Somebody low changes its magazine before going in, on orders that come before fighting. Nothing to change it for, and
+    ///         nothing gets in the way of going in.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestTopsUpBeforeGoingIn(bool spare)
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+
+            var gunUid = GiveInHand(scene, scene.LeaderUid, "WeaponPistolMk58");
+
+            var containerSystem = scene.EntManager.System<Robust.Shared.Containers.SharedContainerSystem>();
+            Assert.That(containerSystem.TryGetContainer(gunUid, "gun_magazine", out var magazineContainer), "the test needs its magazine");
+
+            var magazineUid = magazineContainer!.ContainedEntities[0];
+            var ballisticComponent = scene.EntManager.GetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(magazineUid);
+            scene.EntManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().SetBallisticUnspawned((magazineUid, ballisticComponent), 1);
+
+            if (spare)
+                GiveInHand(scene, scene.LeaderUid, "MagazinePistol");
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount].Contains(NpcSquadAction.TopUp), Is.EqualTo(spare), plan.Facts.ToString());
+
+            if (!spare)
+                return;
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order), "it should be told to");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.TopUp));
+            Assert.That(order.OverCombat);
+        });
+    }
+
+    /// <summary>
+    ///     A door shut to all of them is no end of it for a squad with a charge, and the member with it goes to put it on.
+    /// </summary>
+    [Test]
+    public async Task TestADoorNothingOpensGetsACharge()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, WiredCharge);
+            GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount], Is.EqualTo(new[] { NpcSquadAction.StackUp, NpcSquadAction.BlowDoor, NpcSquadAction.Enter }), plan.Facts.ToString());
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.Charge?.Pick.Site.TargetUid, Is.EqualTo(scene.DoorUid));
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "it should be told to");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.PlantCharge));
+            Assert.That(order.TargetUid, Is.EqualTo(scene.DoorUid));
+            Assert.That(order.OverCombat);
+        });
+    }
+
+    /// <summary>
+    ///     No activator, no way of setting off a charge with no timer. A wired charge is no use to anyone then.
+    /// </summary>
+    [Test]
+    public async Task TestAWiredChargeNeedsItsActivator()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+
+        await Pair.Server.WaitPost(() => GiveInHand(scene, scene.MemberUid, WiredCharge));
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Cooldown), "there is nothing it can do"));
+    }
+
+    /// <summary>
+    ///     A charge goes where its own rules let it, for them as for anyone: this one goes on walls and not on doors.
+    /// </summary>
+    [Test]
+    public async Task TestAChargeOnlyGoesWhereItSticks()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, FussyCharge);
+            GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.DoorCharge, Is.Null, "the door is not for this charge");
+            Assert.That(plan.WallCharge, Is.Not.Null, "the wall is");
+        });
+    }
+
+    /// <summary>
+    ///     With both, the wired one goes on: it goes off when it suits them, and not when it suits a timer.
+    /// </summary>
+    [TestCase(WiredCharge, Content.Server._KS14.NPC.Charges.NpcChargeMethod.Wired)]
+    [TestCase(TimedCharge, Content.Server._KS14.NPC.Charges.NpcChargeMethod.Timed)]
+    public async Task TestWiredBeforeTimed(string only, Content.Server._KS14.NPC.Charges.NpcChargeMethod expected)
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TimedCharge);
+
+            if (only == WiredCharge)
+            {
+                GiveInHand(scene, scene.MemberUid, WiredCharge);
+                GiveInHand(scene, scene.MemberUid, Activator);
+            }
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() => Assert.That(GetPlan(scene)!.DoorCharge?.Charge.Method, Is.EqualTo(expected)));
+    }
+
+    /// <summary>
+    ///     Anyone can cut a wire. A charge with nothing to set it off is a charge wasted, and they find another way.
+    /// </summary>
+    [Test]
+    public async Task TestACutWireCallsOffTheCharge()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+        EntityUid chargeUid = default, activatorUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            chargeUid = GiveInHand(scene, scene.MemberUid, WiredCharge);
+            activatorUid = GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.MemberUid).Coordinates;
+            scene.EntManager.EventBus.RaiseLocalEvent(chargeUid, new Content.Shared.Interaction.InteractUsingEvent(scene.MemberUid, activatorUid, chargeUid, coordinates));
+
+            var stickyComponent = scene.EntManager.GetComponent<Content.Shared.Sticky.Components.StickyComponent>(chargeUid);
+            scene.EntManager.System<Content.Shared.Sticky.Systems.StickySystem>().StickToEntity((chargeUid, stickyComponent), scene.DoorUid, scene.MemberUid);
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+        });
+
+        await Pair.RunTicksSync(3);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Charge?.Phase, Is.EqualTo(NpcSquadChargePhase.Clearing), "the test needs the charge on, and the wire whole");
+
+            scene.EntManager.System<Content.Shared._KS14.Chain.ChainSystem>().TryBreakChainFrom(activatorUid, removeJoints: true);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.BannedActions & NpcSquadGoap.GetBan(NpcSquadAction.BlowDoor), Is.Not.Zero, "that should be the end of that");
+            Assert.That(plan.Charge, Is.Null);
+        });
+    }
+
+    /// <summary>
+    ///     With a charge on, everyone gets out of sight of the floor in front of it, as nothing can see into a wall. And a shot that
+    ///         turns up meanwhile waits: going back to the fight would have them stand there as it goes off.
+    /// </summary>
+    [Test]
+    public async Task TestAChargeThatIsOnComesFirst()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+        EntityUid chargeUid = default;
+
+        await Pair.Server.WaitPost(() => chargeUid = GiveInHand(scene, scene.MemberUid, TimedCharge));
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Charge, Is.Not.Null, "the test needs a charge going on");
+
+            var site = plan.Charge!.Pick.Site;
+            var stickyComponent = scene.EntManager.GetComponent<Content.Shared.Sticky.Components.StickyComponent>(chargeUid);
+            scene.EntManager.System<Content.Shared.Sticky.Systems.StickySystem>().StickToEntity((chargeUid, stickyComponent), site.TargetUid, scene.MemberUid);
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.Charge?.Phase, Is.EqualTo(NpcSquadChargePhase.Clearing), plan.Reason);
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "it should be told to get clear");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.TakeCover));
+            Assert.That(order.Coordinates.Position, Is.EqualTo(site.StandCoordinates.Position));
+
+            scene.EntManager.DeleteEntity(scene.GlassUid);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running), "the shot should wait for the charge");
+            Assert.That(plan.Charge, Is.Not.Null);
+        });
+    }
+
+    /// <summary>
+    ///     The furthest a planter stands from a wired charge has to be on the wire, or it would pull it off its feet to get there.
+    /// </summary>
+    [Test]
+    public async Task TestTheWireReachesTheStandOff()
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid startUid = default, endUid = default;
+
+        await server.WaitPost(() =>
+        {
+            startUid = entManager.SpawnEntity("KsWireStart", map.GridCoords);
+            endUid = entManager.SpawnEntity("KsWireEnd", map.GridCoords.Offset(new Vector2(1f, 0f)));
+            entManager.EventBus.RaiseLocalEvent(endUid, new Content.Shared.Interaction.InteractUsingEvent(startUid, startUid, endUid, map.GridCoords));
+        });
+
+        await Pair.RunTicksSync(3);
+
+        await server.WaitAssertion(() =>
+        {
+            var linkComponent = entManager.GetComponent<Content.Shared._KS14.Chain.ChainLinkComponent>(startUid);
+            var jointComponent = entManager.GetComponent<Robust.Shared.Physics.JointComponent>(startUid);
+            var joint = (Robust.Shared.Physics.Dynamics.Joints.DistanceJoint) jointComponent.GetJoints[linkComponent.StretchJointId!];
+
+            Assert.That(joint.MaxLength, Is.GreaterThan(NpcSquadTacticsSystem.MaxStandOff));
+        });
+    }
+
+    /// <summary>
+    ///     A squad that has only lost someone does not go blowing doors in, whatever it carries. That takes a plan.
+    /// </summary>
+    [Test]
+    public async Task TestAHuntUsesNoCharges()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobHunter", glass: ArmouredGlass);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, WiredCharge);
+            GiveInHand(scene, scene.MemberUid, Activator);
+
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.TargetUid).Coordinates;
+
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.EntManager.System<NpcPerceptionSystem>().SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, coordinates, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false));
+            }
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt, Is.Not.Null, "the test needs them hunting");
+            Assert.That(hunt!.Entrances, Has.Count.EqualTo(1), "the test needs them to know of the door");
+
+            foreach (var staging in hunt.StagedMembers.Values)
+            {
+                Assert.That(staging.Method, Is.Not.EqualTo(NpcBreachMethod.Charge));
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A hunt that is to blow its way in, and whose charge comes to nothing: it is shut out after all, and holds outside.
+    /// </summary>
+    [Test]
+    public async Task TestABlastThatComesToNothingHoldsOutside()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobBlaster", glass: ArmouredGlass);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var chargeUid = GiveInHand(scene, scene.MemberUid, TimedCharge);
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.TargetUid).Coordinates;
+
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.EntManager.System<NpcPerceptionSystem>().SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, coordinates, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false));
+            }
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Blast), "with a charge, a door nobody can open is no end of it");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order) && order.Kind == NpcOrderKind.PlantCharge, "it should go to put it on");
+            Assert.That(order.OverCombat);
+
+            scene.EntManager.DeleteEntity(chargeUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted));
+            Assert.That(hunt.ShutOut, "that leaves it shut out");
+        });
+    }
+
+    /// <summary>
+    ///     With no way in at all, a wall of the room makes one. A wall: the window is nearer to the member with the charge, and a
+    ///         window, or a machine, or anything else that happens to be in the way is not what this is for.
+    /// </summary>
+    [Test]
+    public async Task TestAWallMakesAWayIn()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: "WallSolid");
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.GlassMemberUid, WiredCharge);
+            GiveInHand(scene, scene.GlassMemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount], Is.EqualTo(new[] { NpcSquadAction.BlowWall, NpcSquadAction.Enter }), plan.Facts.ToString());
+
+            var site = plan.WallCharge!.Value.Site;
+            Assert.That(site.IsDoor, Is.False);
+            Assert.That(scene.EntManager.GetComponent<MetaDataComponent>(site.TargetUid).EntityPrototype!.ID, Is.EqualTo("WallSolid"));
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.GlassMemberUid, out var order), "it should be on its way");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.PlantCharge));
+        });
+    }
+
+    /// <summary>
+    ///     Nobody opens the station to space to get at someone. Here the one way to the room's wall is a strip of floor with space
+    ///         right beside it.
+    /// </summary>
+    [Test]
+    public async Task TestNothingNearTheHullIsBlown()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: "WallSolid");
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var mapSystem = scene.EntManager.System<Robust.Shared.GameObjects.SharedMapSystem>();
+            var gridComponent = scene.EntManager.GetComponent<Robust.Shared.Map.Components.MapGridComponent>(scene.GridUid);
+
+            for (var x = -2; x <= 8; x++)
+            {
+                for (var y = -2; y <= 7; y++)
+                {
+                    var ring = x is -2 or 8 || y is -2 or 7;
+
+                    if (ring && !(x == -2 && y is 2 or 3))
+                        mapSystem.SetTile(scene.GridUid, gridComponent, new Vector2i(x, y), Robust.Shared.Map.Tile.Empty);
+                }
+            }
+
+            GiveInHand(scene, scene.MemberUid, WiredCharge);
+            GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Pair.RunTicksSync(30);
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetPlan(scene)?.WallCharge, Is.Null);
+            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Cooldown));
+        });
+    }
+
+    /// <summary>
+    ///     Nor to get at someone in a room with nothing to breathe, or from one: what is on either side comes through.
+    /// </summary>
+    [Test]
+    public async Task TestNothingIsBlownIntoAVacuum()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobAirMinded", glass: ArmouredGlass);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, WiredCharge);
+            GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetPlan(scene)?.DoorCharge, Is.Null);
+            Assert.That(GetPlan(scene)?.WallCharge, Is.Null);
+        });
+    }
+
+    /// <summary>
+    ///     A door a plan cannot blow, as what it holds back is worse than what it keeps them from.
+    /// </summary>
+    [Test]
+    public async Task TestAFirelockHoldingBackDangerIsNotBlown()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: "KsSquadPlanTestFirelock");
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TimedCharge);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() => Assert.That(GetPlan(scene)?.DoorCharge, Is.Null));
+    }
+
+    /// <summary>
+    ///     A door just through a wall can be a long way round. A plan goes by the walk and not how far off it looks.
+    /// </summary>
+    [Test]
+    public async Task TestAWalkCostsTheWalk()
+    {
+        var scene = await SetUp(glass: ArmouredGlass, doorAt: new Vector2i(7, 3));
+
+        await Pair.Server.WaitPost(() => GiveInHand(scene, scene.MemberUid, TestJawsOfLife));
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene);
+            Assert.That(plan?.State, Is.EqualTo(NpcSquadPlanState.Running));
+
+            // Twelve tiles off in a straight line, and a good deal further round the room.
+            Assert.That(plan!.Cost, Is.GreaterThan(12f / 4.5f + 6f + 2f + 1f));
+        });
+    }
+
+    /// <summary>
+    ///     With no way of getting at it, what happens depends on whether it can get at them. A laser goes through the glass
+    ///         that stops their bullets, so they get out of its sight. Behind glass that stops its gun too, there is no hurry.
+    /// </summary>
+    [TestCase(LaserHostile, true)]
+    [TestCase(ArmedHostile, false)]
+    public async Task TestCoverFromWhatItCannotHit(string hostile, bool takesCover)
+    {
+        var scene = await SetUp(glass: Glass, hostile: hostile);
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene);
+            Assert.That(plan?.State, Is.EqualTo(takesCover ? NpcSquadPlanState.Running : NpcSquadPlanState.Cooldown));
+
+            if (!takesCover)
+                return;
+
+            Assert.That(plan!.Steps[..plan.StepCount], Is.EqualTo(new[] { NpcSquadAction.TakeCover }));
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "it should be told to get out of there");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.TakeCover));
+            Assert.That(order.OverCombat);
+        });
+    }
+
+    /// <summary>
+    ///     A squad too hurt to fight breaks contact, even with a shot, if it is one that does: the plan is not only for when
+    ///         it is stuck. A healthy one fights on, and so does one that never pulls back.
+    /// </summary>
+    [TestCase("KsSquadPlanTestMobWithdrawing", 90, true)]
+    [TestCase("KsSquadPlanTestMobWithdrawing", 10, false)]
+    [TestCase(PlannerMob, 90, false)]
+    public async Task TestHurtSquadBreaksContact(string mob, int damage, bool withdraws)
+    {
+        var scene = await SetUp(mob: mob, glass: null, door: "WallSolid", hostileAt: new Vector2i(-3, 5));
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var protoManager = Pair.Server.ResolveDependency<Robust.Shared.Prototypes.IPrototypeManager>();
+            var blunt = new Content.Shared.Damage.DamageSpecifier(protoManager.Index(BluntDamage), damage);
+            var damageSystem = scene.EntManager.System<Content.Shared.Damage.Systems.DamageableSystem>();
+
+            damageSystem.SetDamage(scene.LeaderUid, blunt);
+            damageSystem.SetDamage(scene.MemberUid, blunt);
+
+            var squadSystem = scene.EntManager.System<NpcSquadSystem>();
+            Assert.That(squadSystem.GetHealthFraction(scene.MemberUid), Is.EqualTo(1f - damage / 100f).Within(0.01f), "the test needs them hurt");
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(GetPlan(scene)?.Goal == NpcSquadFact.OutOfSight, Is.EqualTo(withdraws));
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), Is.EqualTo(withdraws));
+
+            if (withdraws)
+                Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.TakeCover));
+        });
     }
 
     /// <summary>
@@ -625,6 +1551,13 @@ public sealed class KsNpcSquadPlanTest : GameTest
         }
     }
 
+    private static void Hurt(Scene scene, EntityUid mobUid, int damage)
+    {
+        var protoManager = IoCManager.Resolve<Robust.Shared.Prototypes.IPrototypeManager>();
+        var blunt = new Content.Shared.Damage.DamageSpecifier(protoManager.Index(BluntDamage), damage);
+        scene.EntManager.System<Content.Shared.Damage.Systems.DamageableSystem>().SetDamage(mobUid, blunt);
+    }
+
     private static EntityUid GiveInHand(Scene scene, EntityUid mobUid, string prototype)
     {
         var handsSystem = scene.EntManager.System<SharedHandsSystem>();
@@ -643,7 +1576,9 @@ public sealed class KsNpcSquadPlanTest : GameTest
         string? glass = Glass,
         string door = SecurityDoor,
         Vector2i? hostileAt = null,
-        Vector2i? gap = null)
+        Vector2i? gap = null,
+        string hostile = NanoTrasenMob,
+        Vector2i? doorAt = null)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -668,7 +1603,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
                     if (gap == new Vector2i(x, y))
                         continue;
 
-                    if (x == -1 && y == 2)
+                    if (new Vector2i(x, y) == (doorAt ?? new Vector2i(-1, 2)))
                     {
                         doorUid = door == SecurityDoor
                             ? SpawnPoweredDoorAt(entManager, door, gridUid, x, y)
@@ -689,7 +1624,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
             secondUid = SpawnAt(entManager, mob, gridUid, -3, 2);
 
             var hostileTile = hostileAt ?? new Vector2i(3, 3);
-            targetUid = SpawnAt(entManager, NanoTrasenMob, gridUid, hostileTile.X, hostileTile.Y);
+            targetUid = SpawnAt(entManager, hostile, gridUid, hostileTile.X, hostileTile.Y);
         });
 
         await Pair.RunTicksSync(150);

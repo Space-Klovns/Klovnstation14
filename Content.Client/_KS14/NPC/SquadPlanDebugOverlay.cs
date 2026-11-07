@@ -91,6 +91,14 @@ public sealed partial class SquadPlanDebugOverlay : Overlay
                     worldHandle.DrawLine(memberPosition, targetPosition, SquadDebugOverlay.GetOrderColor(order.Kind));
             }
 
+            if (frame.ChargePhase != null &&
+                TryGetPosition(frame.ChargeStand, args.MapId, out var chargeStand) &&
+                TryGetPosition(frame.ChargeStandOff, args.MapId, out var chargeStandOff))
+            {
+                args.WorldHandle.DrawCircle(chargeStand, 0.4f, Color.Red, false);
+                args.WorldHandle.DrawLine(chargeStand, chargeStandOff, Color.Red);
+            }
+
             if (TryGetPosition(frame.Target, args.MapId, out var hostilePosition))
                 worldHandle.DrawCircle(hostilePosition, MarkerSize, TargetColor, filled: false);
         }
@@ -119,6 +127,9 @@ public sealed partial class SquadPlanDebugOverlay : Overlay
                     _text.Append(i == frame.CurrentStep ? $" [{frame.Steps[i]}]" : $" {frame.Steps[i]}");
                 }
             }
+
+            if (frame.ChargePhase is { } chargePhase)
+                _text.Append($"\ncharge: {chargePhase}");
 
             if (frame.Facts != NpcSquadFact.None)
                 _text.Append($"\nknows: {frame.Facts}");

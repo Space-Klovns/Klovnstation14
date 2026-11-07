@@ -214,7 +214,7 @@ public sealed partial class NpcSquadTacticsSettings
     ///     How long a plan may take before it is given up on.
     /// </summary>
     [DataField]
-    public TimeSpan PlanTimeout = TimeSpan.FromSeconds(40);
+    public TimeSpan PlanTimeout = TimeSpan.FromSeconds(60);
 
     /// <summary>
     ///     How long after a plan that could not be made or carried out before trying again.
@@ -240,6 +240,109 @@ public sealed partial class NpcSquadTacticsSettings
     /// </summary>
     [DataField]
     public TimeSpan PlanBreakTimeout = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    ///     What going in on a hostile with a gun in its hand costs a plan, on top of going in at all, in about the seconds
+    ///         other steps cost. Above what a flashbang costs, a squad with one softens up a room with an armed hostile in
+    ///         it first, and does not waste one on anybody else.
+    /// </summary>
+    [DataField]
+    public float PlanRushRisk = 6f;
+
+    /// <summary>
+    ///     How long after a flashbang goes in to go in after it, for it to go off first.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanFlashWait = TimeSpan.FromSeconds(2.5);
+
+    /// <summary>
+    ///     How long members have to get out of sight when they have to, before the plan ends.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanCoverTime = TimeSpan.FromSeconds(8);
+
+    /// <summary>
+    ///     How hurt a squad in a fight has to be, as the health left among its members from 0 to 1, for it to break contact and
+    ///         patch itself up. 0 to fight to the end.
+    /// </summary>
+    [DataField]
+    public float PlanWithdrawHealth;
+
+    /// <summary>
+    ///     The nearest a grenade may land to any member for it to be thrown at all.
+    /// </summary>
+    [DataField]
+    public float PlanFragClearance = 4f;
+
+    /// <summary>
+    ///     What waiting at the exits costs a plan with a way in standing open, in about the seconds other steps cost. Under the
+    ///         risk of walking in on a gun, and over softening the room up first, so that only a squad that cannot soften it
+    ///         up waits. With every way shut it costs <see cref="PlanHoldShutCost"/> on top, which keeps that true of forcing
+    ///         the door as well.
+    /// </summary>
+    [DataField]
+    public float PlanHoldCost = 6f;
+
+    /// <summary>
+    ///     What waiting at the exits costs on top of <see cref="PlanHoldCost"/> with no way in open.
+    /// </summary>
+    [DataField]
+    public float PlanHoldShutCost = 7f;
+
+    /// <summary>
+    ///     How long to wait at the exits for the hostile to come out, before going in after it.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanHoldTime = TimeSpan.FromSeconds(12);
+
+    /// <summary>
+    ///     How hurt a member has to be, as the health it has left from 0 to 1, to use its meds before going in on a gun.
+    /// </summary>
+    [DataField]
+    public float PlanPatchHealth = 0.7f;
+
+    /// <summary>
+    ///     How long members have to use their meds before the squad goes in without them.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanPatchTime = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    ///     How empty a magazine has to be, as the share of it left from 0 to 1, to change it before going in.
+    /// </summary>
+    [DataField]
+    public float PlanReloadFraction = 0.5f;
+
+    /// <summary>
+    ///     How long members have to change magazines before the squad goes in without.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanTopUpTime = TimeSpan.FromSeconds(4);
+
+    /// <summary>
+    ///     How close to a charge going off the hostile has to be to count as softened up by it.
+    /// </summary>
+    [DataField]
+    public float PlanChargeBlastRange = 3f;
+
+    /// <summary>
+    ///     Whether a hunt shut out of a room blows its way in, rather than holding outside it. A plan only has charges for a hostile
+    ///         in sight; this is for going through a wall after a noise, so it should be for those meant to be frightening.
+    /// </summary>
+    [DataField]
+    public bool HuntCharges;
+
+    /// <summary>
+    ///     The least pressure either side of a charge can have, in kPa: nobody blows a hole through to a room with nothing in it.
+    /// </summary>
+    [DataField]
+    public float PlanChargeMinPressure = 50f;
+
+    /// <summary>
+    ///     How long a planter has to reach its site and stick a charge on before it is given up on.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanChargeTimeout = TimeSpan.FromSeconds(20);
 
     #endregion
 

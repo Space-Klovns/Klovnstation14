@@ -19,4 +19,9 @@ public sealed partial class NpcPendingDisturbanceComponent : Component
 
     [ViewVariables]
     public TimeSpan ReportedAt;
+
+    /// <summary>
+    ///     Whether it has been looked at to see if anyone can get there. It costs a walk over the floor, so only the once.
+    /// </summary>
+    public bool CheckedReachable;
 }

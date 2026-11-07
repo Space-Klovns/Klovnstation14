@@ -196,6 +196,41 @@ public sealed class KsOperativeHtnRootTest : GameTest
       planning: true
       planGrace: 1s
       stageTimeout: 3s
+      planChargeMinPressure: 0 # a test map has no air in it
+
+# Somewhere to carry a charge, and in no mood to wait.
+- type: entity
+  parent: KsOperativeRootTestMobPlanner
+  id: KsOperativeRootTestMobCharging
+  components:
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
+  - type: NpcSquadMember
+    tactics:
+      planHoldCost: 100
+
+# An ordinary charge, as a squad might be handed, on a timer short enough to wait for.
+- type: entity
+  parent: C4
+  id: KsOperativeRootTestTimedCharge
+  components:
+  - type: TimerTrigger
+    delay: 3
+
+# Says what it has to say, and can be put on the floor.
+- type: entity
+  parent: KsOperativeRootTestMobWalking
+  id: KsOperativeRootTestMobSpeaking
+  components:
+  - type: Speech
+  - type: StandingState
+  - type: StatusEffectContainer
+  - type: Crawler
+  - type: DoAfter
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
 
 - type: entity
   parent: KsOperativeRootTestMobFaker
@@ -222,6 +257,9 @@ public sealed class KsOperativeHtnRootTest : GameTest
     private const string FireShyMob = "KsOperativeRootTestMobFireShy";
     private const string TestFire = "KsOperativeRootTestFire";
     private const string ForfeitMob = "KsOperativeRootTestMobForfeit";
+    private const string SpeakingMob = "KsOperativeRootTestMobSpeaking";
+
+    private static readonly ProtoId<Content.Shared.Damage.Prototypes.DamageTypePrototype> BluntDamage = "Blunt";
 
     private const string CombatMarker = "OpInCombat";
     private const string CombatTimeKey = "TimeOfLastCombat";
@@ -506,7 +544,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
             Assert.That(pickedAnExit, Is.EqualTo(leaves), $"got: {Describe(plan)}");
 
             if (leaves)
-                Assert.That(plan.BranchTraversalRecord[0], Is.Zero, "getting out of a fire should be the root's first branch");
+                Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(1), "getting out of a fire should come first, with being stunned the only thing before it");
         });
     }
 
@@ -1205,6 +1243,51 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     Live: a stunned operative mid-fight says nothing. Nearly everything it could plan starts with a line and goes on to
+    ///         something it cannot do, so with nothing to stop it, it says the line, fails and plans again, for as long as
+    ///         it lasts. Knocked down is not stunned: it can crawl and use its hands, so it may speak, but never over and over.
+    /// </summary>
+    [TestCase("stunned")]
+    [TestCase("knocked down")]
+    public async Task TestOperativeOnTheFloorDoesNotRepeatItself(string state)
+    {
+        var (entManager, mobUid, _) = await SetUpBehindGlass(_ => null, mob: SpeakingMob);
+        var speechProbeSystem = entManager.System<KsNpcSpeechProbeSystem>();
+        var stunSystem = entManager.System<Content.Shared.Stunnable.SharedStunSystem>();
+
+        await Pair.RunTicksSync(90); // into the fight
+
+        await Pair.Server.WaitPost(() =>
+        {
+            // Something to want to do about it, which starts with saying so.
+            var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var blunt = new Content.Shared.Damage.DamageSpecifier(protoManager.Index(BluntDamage), 40);
+            entManager.System<Content.Shared.Damage.Systems.DamageableSystem>().SetDamage(mobUid, blunt);
+            entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("HealDamageThreshold", 10f);
+            StageCarried(entManager, mobUid, TestMedipen);
+
+            speechProbeSystem.Lines.Clear();
+
+            if (state == "stunned")
+                Assert.That(stunSystem.TryUpdateParalyzeDuration(mobUid, System.TimeSpan.FromSeconds(6), drop: false), "the test needs it stunned");
+            else
+                Assert.That(stunSystem.TryKnockdown(mobUid, System.TimeSpan.FromSeconds(6), drop: false, force: true), "the test needs it down");
+        });
+
+        await Pair.RunTicksSync(150); // 5s, and it lasts 6
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var lines = speechProbeSystem.Lines.Where(line => line.Source == mobUid).Select(line => line.Message).ToList();
+
+            if (state == "stunned")
+                Assert.That(lines, Is.Empty);
+            else
+                Assert.That(lines, Is.Unique);
+        });
+    }
+
+    /// <summary>
     ///     A plan's order comes before fighting, or an operative with a gun in its hand would never get to it. An ordinary
     ///         order does not: a hostile in sight is shot first.
     /// </summary>
@@ -1246,7 +1329,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     {
         var carried = false;
 
-        var (entManager, gunUids, doorUid, _) = await SetUpSquadOutsideGlassRoom("Window", "AirlockSecurityLocked",
+        var (entManager, gunUids, _, doorUid, _, _) = await SetUpSquadOutsideGlassRoom("ReinforcedWindow", "AirlockSecurityLocked",
             (stagedEntManager, mobUid) =>
             {
                 if (carried)
@@ -1287,6 +1370,362 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     Live, the longest plan there is: a squad behind glass, an armed hostile inside, and among them jaws of life and a
+    ///         flashbang or a grenade. It forces the door and puts it through. Without it the first half of this is
+    ///         <see cref="TestSquadForcesItsWayToAHostileBehindGlass"/>.
+    /// </summary>
+    [TestCase("GrenadeFlashBang")]
+    [TestCase("KsGrenadeCompact")]
+    public async Task TestSquadSoftensUpARoomItForcedItsWayInto(string grenade)
+    {
+        var carried = false;
+        EntityUid grenadeUid = default;
+
+        var room = await SetUpSquadOutsideGlassRoom("ReinforcedWindow", "AirlockSecurityLocked",
+            (stagedEntManager, mobUid) =>
+            {
+                if (carried)
+                    return;
+
+                carried = true;
+
+                var handsSystem = stagedEntManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+                var coordinates = stagedEntManager.GetComponent<TransformComponent>(mobUid).Coordinates;
+
+                handsSystem.AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+                Assert.That(handsSystem.TryPickup(mobUid, stagedEntManager.SpawnEntity(TestJawsOfLife, coordinates), "left"), "the test needs it carrying the tool");
+
+                handsSystem.AddHand(mobUid, "belt", Content.Shared.Hands.Components.HandLocation.Middle);
+                grenadeUid = stagedEntManager.SpawnEntity(grenade, coordinates);
+                Assert.That(handsSystem.TryPickup(mobUid, grenadeUid, "belt"), "the test needs it carrying the grenade");
+            },
+            hostile: "KsSquadPlanTestArmedHostile");
+
+        var entManager = room.EntManager;
+        var thrown = false;
+
+        for (var i = 0; i < 2100 && !thrown; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() =>
+                thrown = entManager.Deleted(grenadeUid) || entManager.HasComponent<NpcThrownGrenadeComponent>(grenadeUid));
+        }
+
+        Assert.That(thrown, "it never went in");
+
+        // Nobody on their side should be the worse for it, by the time it has gone off.
+        await Pair.RunTicksSync(150);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            foreach (var mobUid in room.MobUids)
+            {
+                Assert.That(entManager.System<Content.Shared.Mobs.Systems.MobStateSystem>().IsIncapacitated(mobUid), Is.False, "nobody should have been caught in it");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Live: behind glass their bullets cannot pass, with a laser on them through it and no way in, they get out of its
+    ///         sight instead of standing there being shot.
+    /// </summary>
+    [Test]
+    public async Task TestSquadTakesCoverFromALaserThroughGlass()
+    {
+        var room = await SetUpSquadOutsideGlassRoom("ReinforcedWindow", "WallSolid", hostile: "KsSquadPlanTestLaserHostile");
+        var entManager = room.EntManager;
+        var lineOfSightSystem = entManager.System<NpcLineOfSightSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var hidden = false;
+
+        for (var i = 0; i < 600 && !hidden; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() =>
+            {
+                hidden = true;
+
+                foreach (var mobUid in room.MobUids)
+                {
+                    hidden &= !lineOfSightSystem.InLineOfSight(transformSystem.GetMapCoordinates(mobUid), transformSystem.GetMapCoordinates(room.HostileUid), 20f);
+                }
+            });
+        }
+
+        Assert.That(hidden, "they should all have got out of its sight");
+    }
+
+    /// <summary>
+    ///     Live, with real charges through the real root: somebody walks up with a charge and sticks it on, everyone gets clear,
+    ///         it goes off and what it was on is gone, nobody on their side is the worse for it, and they get their shot. By a
+    ///         wire, on a door nothing else opens and on a wall of a room with no way in at all, and by a timer.
+    /// </summary>
+    [TestCase("AirlockSecurityLocked", "KsWireEndBreachingCharge")]
+    [TestCase("WallSolid", "KsWireEndBreachingCharge")]
+    [TestCase("AirlockSecurityLocked", "KsOperativeRootTestTimedCharge")]
+    public async Task TestSquadBlowsItsWayIn(string door, string charge)
+    {
+        var carried = false;
+        EntityUid chargeUid = default;
+
+        var room = await SetUpSquadOutsideGlassRoom("ReinforcedWindow", door,
+            (stagedEntManager, mobUid) =>
+            {
+                if (carried)
+                    return;
+
+                carried = true;
+                stagedEntManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>().AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+                chargeUid = StageCarried(stagedEntManager, mobUid, charge);
+
+                if (charge == "KsWireEndBreachingCharge")
+                    StageCarried(stagedEntManager, mobUid, "KsWireStart", "pocket2");
+            },
+            mob: "KsOperativeRootTestMobCharging");
+
+        var entManager = room.EntManager;
+        var ammoAtFirst = 0;
+        await Pair.Server.WaitPost(() => ammoAtFirst = room.GunUids.Sum(gunUid => GetAmmo(entManager, gunUid)));
+
+        var blown = false;
+
+        for (var i = 0; i < 1800 && !blown; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() => blown = entManager.Deleted(chargeUid));
+        }
+
+        Assert.That(blown, "the charge never went off");
+
+        await Pair.RunTicksSync(60);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var mobStateSystem = entManager.System<Content.Shared.Mobs.Systems.MobStateSystem>();
+
+            foreach (var mobUid in room.MobUids)
+            {
+                Assert.That(mobStateSystem.IsIncapacitated(mobUid), Is.False, "nobody should have been caught in it");
+            }
+
+            if (room.DoorUid.IsValid())
+                Assert.That(entManager.Deleted(room.DoorUid), "the door should be gone");
+        });
+
+        var fired = false;
+
+        for (var i = 0; i < 900 && !fired; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() => fired = room.GunUids.Sum(gunUid => GetAmmo(entManager, gunUid)) < ammoAtFirst);
+        }
+
+        Assert.That(fired, "through the hole, somebody should have opened fire");
+    }
+
+    /// <summary>
+    ///     Live, with real operatives: something happens in a room they cannot reach, shut off by a wall or a bolted door. They go
+    ///         as near as they can get and cover it, however bold they are, rather than sending one a few steps towards it
+    ///         and then standing there.
+    /// </summary>
+    [TestCase("WallSolid", "KsRandomHumanoidSpawnerOperativeRedacted")]
+    [TestCase("bolted", "KsRandomHumanoidSpawnerOperativeRedacted")]
+    [TestCase("WallSolid", "KsRandomHumanoidSpawnerOperativeSynArmedPistol")]
+    public async Task TestCutOffSquadGoesAsNearAsItCan(string door, string spawner)
+    {
+        var (entManager, gridUid, doorUid, mobs) = await SetUpOperativesOutsideRoom(door, spawner, charges: false);
+        var startX = new Dictionary<EntityUid, float>();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            foreach (var mobUid in mobs)
+            {
+                startX[mobUid] = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition.X;
+                StageDisturbance(entManager, mobUid, gridUid);
+            }
+        });
+
+        await Pair.RunTicksSync(300);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            foreach (var mobUid in mobs)
+            {
+                var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
+                Assert.That(position.X, Is.GreaterThan(startX[mobUid] + 2f), "they should have gone up to it");
+                Assert.That(position.X, Is.LessThan(3f), "and it should have held them outside");
+            }
+
+            if (doorUid.IsValid())
+                Assert.That(entManager.GetComponent<Content.Shared.Doors.Components.DoorBoltComponent>(doorUid).BoltsDown, "the test needs the door to have stayed bolted");
+        });
+    }
+
+    /// <summary>
+    ///     Live, with real Redacted and all they carry: a noise behind a bolted door, or in a room with no way in at all. They
+    ///         blow their way in and go through the hole, with the activator coming out of the bag it is carried in.
+    /// </summary>
+    [TestCase("WallSolid")]
+    [TestCase("bolted")]
+    public async Task TestRedactedBlowTheirWayInAfterANoise(string door)
+    {
+        var (entManager, gridUid, doorUid, mobs) = await SetUpOperativesOutsideRoom(door, "KsRandomHumanoidSpawnerOperativeRedacted", charges: true);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            foreach (var mobUid in mobs)
+            {
+                StageDisturbance(entManager, mobUid, gridUid);
+            }
+        });
+
+        var inside = false;
+
+        for (var i = 0; i < 1200 && !inside; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Pair.Server.WaitPost(() =>
+            {
+                foreach (var mobUid in mobs)
+                {
+                    var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
+                    inside |= position.X is > 4f and < 10f && position.Y is > -4f and < 4f;
+                }
+            });
+        }
+
+        Assert.That(inside, "somebody should have got into the room");
+
+        if (doorUid.IsValid())
+            await Pair.Server.WaitAssertion(() => Assert.That(entManager.Deleted(doorUid), "by way of the door"));
+    }
+
+    private static void StageDisturbance(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
+    {
+        var sensorSystem = entManager.System<NpcSensorSystem>();
+        sensorSystem.AddEffect(mobUid, "__Sensor__Disturbance.TargetCoordinates", new EntityCoordinates(gridUid, new Vector2(7.5f, 0.5f)));
+        sensorSystem.RequestReplan(mobUid);
+    }
+
+    /// <summary>
+    ///     Four real operatives from <paramref name="spawner"/> outside a room shut by a wall all the way round, or a bolted door.
+    ///         <paramref name="charges"/> says whether they may blow it, going by air there is none of on a test map.
+    /// </summary>
+    private async Task<(IEntityManager EntManager, EntityUid GridUid, EntityUid DoorUid, List<EntityUid> Mobs)> SetUpOperativesOutsideRoom(string door, string spawner, bool charges)
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, doorUid = default;
+        var mobs = new List<EntityUid>();
+
+        await server.WaitPost(() =>
+        {
+            entManager.System<NpcSquadTacticsSystem>().UpdatesPaused = false;
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-12, -10), new Vector2i(16, 12)).Owner;
+
+            for (var x = 3; x <= 11; x++)
+            {
+                for (var y = -5; y <= 5; y++)
+                {
+                    if (x is > 3 and < 11 && y is > -5 and < 5)
+                        continue;
+
+                    if (x == 3 && y == 0 && door == "bolted")
+                        doorUid = SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, y);
+                    else
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
+
+            for (var y = -1; y <= 2; y++)
+            {
+                SpawnAt(entManager, spawner, gridUid, -5, y);
+            }
+        });
+
+        await Pair.RunTicksSync(90);
+
+        await server.WaitPost(() =>
+        {
+            var enumerator = entManager.EntityQueryEnumerator<Content.Server._KS14.NPC.Squad.NpcSquadMemberComponent, TransformComponent>();
+            while (enumerator.MoveNext(out var uid, out var squadMemberComponent, out var transformComponent))
+            {
+                if (transformComponent.MapID != map.MapId)
+                    continue;
+
+                mobs.Add(uid);
+                entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(uid); // no air on a test map
+#pragma warning disable RA0002 // set for the test, as a prototype of its own cannot build on the private module's
+                squadMemberComponent.Tactics.HuntCharges = charges;
+                squadMemberComponent.Tactics.PlanChargeMinPressure = 0f;
+#pragma warning restore RA0002
+            }
+
+            Assert.That(mobs, Is.Not.Empty, "the test needs them spawned");
+        });
+
+        await Pair.RunTicksSync(120);
+
+        // Not before now: a door coming up to power takes its bolts off again.
+        await server.WaitPost(() =>
+        {
+            if (doorUid.IsValid())
+                entManager.System<Content.Shared.Doors.Systems.SharedDoorSystem>().SetBoltsDown((doorUid, entManager.GetComponent<Content.Shared.Doors.Components.DoorBoltComponent>(doorUid)), true);
+        });
+
+        return (entManager, gridUid, doorUid, mobs);
+    }
+
+    /// <summary>
+    ///     A Redacted really does have what a plan needs: that it plans, and that a charge and activator go in its bag with the
+    ///         rest of what it carries.
+    /// </summary>
+    [Test]
+    public async Task TestTheRedactedCarryACharge()
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitPost(() => entManager.SpawnEntity("KsRandomHumanoidSpawnerOperativeRedacted", map.GridCoords));
+        await Pair.RunTicksSync(30);
+
+        await server.WaitAssertion(() =>
+        {
+            var chargeSystem = entManager.System<Content.Server._KS14.NPC.Charges.NpcChargeSystem>();
+            var enumerator = entManager.EntityQueryEnumerator<Content.Server._KS14.NPC.Squad.NpcSquadMemberComponent, TransformComponent>();
+            var mobUid = EntityUid.Invalid;
+            Content.Server._KS14.NPC.Squad.NpcSquadMemberComponent? squadMemberComponent = null;
+
+            // This server may have run other tests, and they may not have cleaned up after themselves.
+            while (enumerator.MoveNext(out var uid, out var memberComponent, out var transformComponent))
+            {
+                if (transformComponent.MapID != map.MapId)
+                    continue;
+
+                mobUid = uid;
+                squadMemberComponent = memberComponent;
+            }
+
+            Assert.That(mobUid.IsValid(), "it should have spawned");
+            Assert.That(squadMemberComponent!.Tactics.Planning, "it should plan");
+            Assert.That(squadMemberComponent.Tactics.HuntCharges, "and blow its way in after a noise");
+            Assert.That(chargeSystem.TryGetCharge(mobUid, null, out var charge), "it should have a charge it can use");
+            Assert.That(charge.Method, Is.EqualTo(Content.Server._KS14.NPC.Charges.NpcChargeMethod.Wired));
+        });
+    }
+
+    /// <summary>
     ///     Live: with no door to force, an ordinary window is shot out to get at who is behind it. Armoured glass is not worth
     ///         the ammo, so nobody can drain a squad's magazines from behind it.
     /// </summary>
@@ -1294,7 +1733,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
     [TestCase("ReinforcedWindow", false)]
     public async Task TestSquadShootsOutAWindow(string window, bool breaks)
     {
-        var (entManager, mobUids, _, windowUid) = await SetUpSquadOutsideGlassRoom(window, "WallSolid");
+        var (entManager, _, _, _, windowUid, _) = await SetUpSquadOutsideGlassRoom(window, "WallSolid");
 
         var broken = false;
 
@@ -1311,10 +1750,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
     ///     Three armed operatives on the real root, outside a sealed room with <paramref name="window"/> and
     ///         <paramref name="door"/> in its west wall, and a hostile inside that they can see through the window.
     /// </summary>
-    private async Task<(IEntityManager EntManager, List<EntityUid> GunUids, EntityUid DoorUid, EntityUid WindowUid)> SetUpSquadOutsideGlassRoom(
+    private async Task<GlassRoom> SetUpSquadOutsideGlassRoom(
         string window,
         string door,
-        System.Action<IEntityManager, EntityUid>? stage = null)
+        System.Action<IEntityManager, EntityUid>? stage = null,
+        string hostile = NanoTrasenMob,
+        string mob = "KsOperativeRootTestMobPlanner")
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
         if (!protoManager.HasIndex(_operativeRoot))
@@ -1326,7 +1767,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
         var map = await Pair.CreateTestMap();
         var mobUids = new List<EntityUid>();
         var gunUids = new List<EntityUid>();
-        EntityUid doorUid = default, windowUid = default;
+        EntityUid doorUid = default, windowUid = default, hostileUid = default;
 
         await server.WaitPost(() =>
         {
@@ -1349,12 +1790,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 }
             }
 
-            var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 7, 0);
+            hostileUid = SpawnAt(entManager, hostile, gridUid, 7, 0);
             entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid); // a fight that lasts
 
             for (var y = -1; y <= 1; y++)
             {
-                var mobUid = SpawnAt(entManager, "KsOperativeRootTestMobPlanner", gridUid, 0, y);
+                var mobUid = SpawnAt(entManager, mob, gridUid, 0, y);
                 mobUids.Add(mobUid);
 
                 // Before anything else: tactics are not paused, and a squad with nothing to shoot with has nothing to plan.
@@ -1380,8 +1821,10 @@ public sealed class KsOperativeHtnRootTest : GameTest
             }
         });
 
-        return (entManager, gunUids, doorUid, windowUid);
+        return new GlassRoom(entManager, gunUids, mobUids, doorUid, windowUid, hostileUid);
     }
+
+    private sealed record GlassRoom(IEntityManager EntManager, List<EntityUid> GunUids, List<EntityUid> MobUids, EntityUid DoorUid, EntityUid WindowUid, EntityUid HostileUid);
 
     /// <summary>
     ///     An armed operative walking the real root at 0,0, and a hostile it can see at 6,0, past a line of whatever
@@ -1389,7 +1832,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
     /// </summary>
     private async Task<(IEntityManager EntManager, EntityUid MobUid, EntityUid HostileUid)> SetUpBehindGlass(System.Func<int, string?> barrier,
         string gun = "WeaponPistolMk58",
-        System.Action<NPCBlackboard>? stage = null)
+        System.Action<NPCBlackboard>? stage = null,
+        string mob = "KsOperativeRootTestMobWalking")
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
         if (!protoManager.HasIndex(_operativeRoot))
@@ -1411,7 +1855,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
                     SpawnAt(entManager, what, gridUid, 3, y);
             }
 
-            mobUid = SpawnAt(entManager, "KsOperativeRootTestMobWalking", gridUid, 0, 0);
+            mobUid = SpawnAt(entManager, mob, gridUid, 0, 0);
             hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
             entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid); // a fight that lasts
         });
@@ -1563,6 +2007,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
         blackboard.SetValue("CampingRange", 0.75f);
         blackboard.SetValue("RetreatClaimDuration", 10f);
         blackboard.SetValue("HoldTime", 6f);
+        blackboard.SetValue("IdleActTime", 1f);
 
         // Chamber a round, as racking would.
         if (entManager.TryGetComponent<Content.Shared.Weapons.Ranged.Components.ChamberMagazineAmmoProviderComponent>(gunUid, out var chamberComponent))
@@ -1609,11 +2054,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
     /// <summary>
     ///     Puts <paramref name="prototype"/> in the operative's pocket.
     /// </summary>
-    private static void StageCarried(IEntityManager entManager, EntityUid mobUid, string prototype)
+    private static EntityUid StageCarried(IEntityManager entManager, EntityUid mobUid, string prototype, string pocket = "pocket1")
     {
         var itemUid = entManager.SpawnEntity(prototype, entManager.GetComponent<TransformComponent>(mobUid).Coordinates);
-        Assert.That(entManager.System<Content.Shared.Inventory.InventorySystem>().TryEquip(mobUid, itemUid, "pocket1", silent: true, force: true),
+        Assert.That(entManager.System<Content.Shared.Inventory.InventorySystem>().TryEquip(mobUid, itemUid, pocket, silent: true, force: true),
             $"{prototype} should be in the operative's pocket");
+        return itemUid;
     }
 
     /// <summary>

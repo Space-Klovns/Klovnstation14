@@ -34,14 +34,13 @@ public sealed partial class HasStatusEffectPrecondition : HTNPrecondition
     {
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
 
-        // KS14 start
-        if (MinRemaining is { } minRemaining)
-        {
-            return _statusEffects.TryGetTime(owner, StatusEffect, out var time) &&
-                (time.EndEffectTime is not { } endTime || endTime - _gameTiming.CurTime >= minRemaining);
-        }
-        // KS14 end
+        // KS14 start: asked first, as a mob that has never had a status effect has no container for TryGetTime to find, and it logs that
+        if (!_statusEffects.HasStatusEffect(owner, StatusEffect))
+            return false;
 
-        return _statusEffects.HasStatusEffect(owner, StatusEffect);
+        return MinRemaining is not { } minRemaining ||
+            _statusEffects.TryGetTime(owner, StatusEffect, out var time) &&
+            (time.EndEffectTime is not { } endTime || endTime - _gameTiming.CurTime >= minRemaining);
+        // KS14 end
     }
 }

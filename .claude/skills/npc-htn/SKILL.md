@@ -215,28 +215,31 @@ Consequences:
 
 `Resources/Prototypes/_KsModule/NPCs/Operative/root.yml` (private submodule) runs:
 
-1. Play dead
-2. Healing
-3. Grenades (getting away from a live one)
-4. Recovering: fall back (waiting for meds to work and found; see `recovering.yml`)
-5. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
-6. Throw grenade (opt-in; at a hostile in the fight or out of sight; interrupts a fight for a tick; see `grenade_throw.yml`)
-7. Ranged, then Melee
-8. Execution (opt-in; being below combat is what "nothing left to fight" means; see `execution.yml`)
-9. Suppressive fire (opt-in; see `suppression.yml`)
-10. Grenade push (opt-in; going in on a squad grenade that just went off; see `grenade_throw.yml`)
-11. Buddy aid (opt-in; see `buddy_aid.yml`)
-12. Tactical reload (opt-in, through `TacticalReload` on the blackboard)
-13. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
-14. Follow
-15. Recovering: hold (nothing below runs until the meds have worked; see `recovering.yml`)
-16. Search open, then Search cover
-17. Door refused (a one-line callout; see Doors below)
-18. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
-19. Sensors
-20. Join squad
-21. Disengage
-22. Squad hold
+1. Stunned (does nothing until it can act: nearly everything below starts with a line, so anything else repeats itself)
+2. Out of the fire (see `danger.yml`)
+3. Play dead
+4. Healing
+5. Grenades (getting away from a live one)
+6. Recovering: fall back (waiting for meds to work and found; see `recovering.yml`)
+7. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
+8. Throw grenade (opt-in; at a hostile in the fight or out of sight; interrupts a fight for a tick; see `grenade_throw.yml`)
+9. Squad plan orders (one branch above combat, for orders with `OverCombat`; see `squad_plan.yml`)
+10. Ranged, then Melee
+11. Execution (opt-in; being below combat is what "nothing left to fight" means; see `execution.yml`)
+12. Suppressive fire (opt-in; see `suppression.yml`)
+13. Grenade push (opt-in; going in on a squad grenade that just went off; see `grenade_throw.yml`)
+14. Buddy aid (opt-in; see `buddy_aid.yml`)
+15. Tactical reload (opt-in, through `TacticalReload` on the blackboard)
+16. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
+17. Follow
+18. Recovering: hold (nothing below runs until the meds have worked; see `recovering.yml`)
+19. Search open, then Search cover
+20. Door refused (a one-line callout; see Doors below)
+21. Orders: Investigate, Watch, Stage, Breach, Enter, Search locker, Search spot, Hold area, Regroup
+22. Sensors
+23. Join squad
+24. Disengage
+25. Squad hold
 
 The header of that file lists every blackboard key and who writes it. Keep it current when you add one.
 
@@ -325,9 +328,30 @@ alone: each walks up to the door and stops. `tactics.planning` has a squad make 
   above combat picks those up. Orders below combat would never beat a running gun plan. So a plan has to end the moment
   anyone has a shot: `LookForShot` runs first on every update, and combat replans once the order goes.
 - **No plan while a way is free.** It asks for a path first, and a member walks a free one by itself.
+- **Make the choice depend on the situation, or it needs no planner.** A new action earns its place if its cost comes from
+  what the squad can see: `Enter` costs more on an armed hostile (`planRushRisk`), which is the only reason a flashbang
+  ever beats walking in. Costs that never change give one fixed plan, and a list would do that.
+- **A second goal.** With no way to `HasShot`, `TryMakePlan` tries `OutOfSight`, which takes `Threatened`. `ShouldWithdraw`
+  starts a plan for that goal in a fight the squad is losing, which ignores having a shot.
 - **A plan that fails bans its action** and plans again. One that can do nothing cools down for `planCooldown`, so a squad
   does not spend its time finding that out twice a second. Idle squads pay for one `TryComp`, as the component only
-  exists from when nobody has a shot until the cooldown ends.
+  exists from when nobody has a shot until the cooldown ends. Banning is also how a step with a time limit hands over:
+  `HoldExits` is banned when its wait is up, and the plan moves on to going in.
+- **A fact that only blocks when there is something to do about it.** `Patched` and `Loaded` are true unless someone could
+  usefully see to that, so `Enter` can require them and a squad with no meds never dead-ends. There is no negation in
+  the search, so state a precondition this way round.
+- **First found wins a tie**, so the order of `Actions` is the order of steps that could go either way round. `PatchUp` and
+  `TopUp` come before anything that opens a door for that reason.
+- **Charges have one runner and many sites.** `RunCharge` does not care what it is blowing: a site is an `NpcChargeSite`, and
+  a new kind only needs something that finds one, as `FindDoorCharge` and `FindWallCharge` do. How one goes off comes from
+  the item (`NpcChargeSystem.TryGetCharge`), so nothing is configured per NPC. An ordinary hunt stays out of it. With
+  `tactics.huntCharges`, a hunt shut out of a room goes through `NpcHuntPhase.Blast` instead, which drives `RunCharge` with a
+  plan nobody else sees, then goes in and searches.
+
+Never give an order for somewhere nobody can get to: a task that cannot find a path fails to plan, and the NPC just stands
+there with the order. A hunt checks first (`TryPrepareSealedRoom`, a walk over the floor from the hostile, through doors), and
+one that is cut off goes through `ExhaustShutOut`, which holds at the nearest place they can reach. That goes for squads too
+bold to hunt a disturbance: they would otherwise go through Squad hold, which has the same problem.
 
 `ks_squadplandebug` shows all of it, and `ks_lineoffiredebug` shows any NPC's shot.
 

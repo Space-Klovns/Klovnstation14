@@ -46,6 +46,15 @@ public sealed class SquadPlanDebugDataMessage : EntityEventArgs
 
     public readonly List<NpcSquadAction> Banned = new();
 
+    /// <summary>
+    ///     How far the charge in use has got, where its planter sticks it on, and where it sets it off from. No phase, no charge.
+    /// </summary>
+    public NpcSquadChargePhase? ChargePhase;
+
+    public NetCoordinates ChargeStand;
+
+    public NetCoordinates ChargeStandOff;
+
     public NetCoordinates Target;
 
     public readonly List<SquadPlanDebugShot> Shots = new();

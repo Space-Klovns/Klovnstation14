@@ -212,6 +212,7 @@ public sealed partial class SquadDebugOverlay : Overlay
             NpcHuntPhase.Watch => Color.Yellow,
             NpcHuntPhase.Stage => Color.Orange,
             NpcHuntPhase.Breach => Color.Magenta,
+            NpcHuntPhase.Blast => Color.OrangeRed,
             NpcHuntPhase.Entry => Color.Red,
             NpcHuntPhase.Search => Color.Cyan,
             _ => Color.Gray,
@@ -231,6 +232,12 @@ public sealed partial class SquadDebugOverlay : Overlay
             NpcOrderKind.HoldArea => Color.Gray,
             NpcOrderKind.Regroup => Color.LimeGreen,
             NpcOrderKind.BreakBarrier => Color.HotPink,
+            NpcOrderKind.ThrowGrenade => Color.White,
+            NpcOrderKind.TakeCover => Color.SkyBlue,
+            NpcOrderKind.PatchUp => Color.LimeGreen,
+            NpcOrderKind.TopUp => Color.Gold,
+            NpcOrderKind.PlantCharge => Color.OrangeRed,
+            NpcOrderKind.Detonate => Color.Crimson,
             _ => Color.White,
         };
     }

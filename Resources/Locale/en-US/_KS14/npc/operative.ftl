@@ -86,6 +86,10 @@ ks-operative-line-breaching-1 = Breaching!
 ks-operative-line-breaching-2 = Popping the door.
 ks-operative-line-breaching-3 = Forcing it.
 
+ks-operative-line-charging-1 = Setting charge!
+ks-operative-line-charging-2 = Charge going on.
+ks-operative-line-charging-3 = Stand clear, planting!
+
 ks-operative-line-door-locked-1 = Door's locked!
 ks-operative-line-door-locked-2 = It won't open!
 ks-operative-line-door-locked-3 = Access is out, need a breacher.

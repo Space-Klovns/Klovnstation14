@@ -143,6 +143,13 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
             message.Steps.Add(plan.Steps[i]);
         }
 
+        if (plan.Charge is { } charge)
+        {
+            message.ChargePhase = charge.Phase;
+            message.ChargeStand = GetNetCoordinates(charge.Pick.Site.StandCoordinates);
+            message.ChargeStandOff = GetNetCoordinates(charge.Pick.StandOffCoordinates);
+        }
+
         foreach (var definition in NpcSquadGoap.Actions)
         {
             if ((plan.BannedActions & NpcSquadGoap.GetBan(definition.Action)) != 0x0)

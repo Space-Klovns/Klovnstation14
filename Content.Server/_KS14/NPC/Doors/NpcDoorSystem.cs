@@ -477,6 +477,15 @@ public sealed partial class NpcDoorSystem : EntitySystem
     /// <summary>
     ///     Whether <paramref name="path"/> goes through a door <paramref name="npcUid"/> cannot open by hand.
     /// </summary>
+    /// <summary>
+    ///     What <paramref name="npcUid"/> has on it: in its hands, worn, and in anything it wears.
+    /// </summary>
+    public void GetCarried(EntityUid npcUid, List<EntityUid> items)
+    {
+        GetCarriedItems(npcUid);
+        items.AddRange(_carriedItems);
+    }
+
     public bool RunsThroughShutDoor(EntityUid npcUid, List<PathPoly> path)
     {
         // A door's tile is several polys in a row: each tile is looked at once.

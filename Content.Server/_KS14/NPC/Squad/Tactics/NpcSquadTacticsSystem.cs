@@ -275,6 +275,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         // Relative to the grid or map, not to whatever made the noise.
         disturbanceComponent.Coordinates = _transformSystem.GetMoverCoordinates(coordinates);
         disturbanceComponent.ReportedAt = _gameTiming.CurTime;
+        disturbanceComponent.CheckedReachable = false;
     }
 
     /// <summary>

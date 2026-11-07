@@ -20,14 +20,36 @@ public static class NpcSquadGoap
     /// <summary>
     ///     The most steps a plan can have. Anything longer will have gone stale before it is done.
     /// </summary>
-    public const int MaxSteps = 4;
+    public const int MaxSteps = 6;
 
+    /// <summary>
+    ///     What a plan has to have done before anybody goes through a way in.
+    /// </summary>
+    private const NpcSquadFact WayIn = NpcSquadFact.Stacked | NpcSquadFact.WayOpen | NpcSquadFact.Patched | NpcSquadFact.Loaded;
+
+    /// <remarks>
+    ///     First found wins a tie, so the order here is the order of things that could be done either way round: patching up and
+    ///         reloading come before anything that opens a door.
+    /// </remarks>
     public static readonly NpcSquadActionDefinition[] Actions =
     [
         new(NpcSquadAction.StackUp, NpcSquadFact.HasWayIn, NpcSquadFact.Stacked),
-        new(NpcSquadAction.ForceDoor, NpcSquadFact.Stacked | NpcSquadFact.DoorForceable, NpcSquadFact.WayOpen),
-        new(NpcSquadAction.Enter, NpcSquadFact.Stacked | NpcSquadFact.WayOpen, NpcSquadFact.HasShot),
+        new(NpcSquadAction.PatchUp, NpcSquadFact.Stacked, NpcSquadFact.Patched),
+        new(NpcSquadAction.TopUp, NpcSquadFact.Stacked, NpcSquadFact.Loaded),
+        new(NpcSquadAction.ForceDoor, NpcSquadFact.Stacked | NpcSquadFact.DoorForceable, NpcSquadFact.WayOpen | NpcSquadFact.ThrowLine),
+        new(NpcSquadAction.Enter, WayIn, NpcSquadFact.HasShot),
         new(NpcSquadAction.BreakGlass, NpcSquadFact.GlassBreakable, NpcSquadFact.HasShot),
+        new(NpcSquadAction.Flashbang, NpcSquadFact.Stacked | NpcSquadFact.ThrowLine | NpcSquadFact.HasFlashbang, NpcSquadFact.Softened),
+        new(NpcSquadAction.EnterSoftened, WayIn | NpcSquadFact.Softened, NpcSquadFact.HasShot),
+        new(NpcSquadAction.TakeCover, NpcSquadFact.Threatened, NpcSquadFact.OutOfSight),
+        new(NpcSquadAction.FragRoom, NpcSquadFact.Stacked | NpcSquadFact.ThrowLine | NpcSquadFact.HasFrag, NpcSquadFact.Softened),
+        new(NpcSquadAction.HoldExits, NpcSquadFact.Stacked | NpcSquadFact.ExitsCovered, NpcSquadFact.HasShot),
+        new(NpcSquadAction.BlowDoor,
+            NpcSquadFact.Stacked | NpcSquadFact.HasCharge | NpcSquadFact.DoorChargeable,
+            NpcSquadFact.WayOpen | NpcSquadFact.ThrowLine),
+        new(NpcSquadAction.BlowWall,
+            NpcSquadFact.HasCharge | NpcSquadFact.WallChargeable,
+            NpcSquadFact.HasWayIn | NpcSquadFact.WayOpen | NpcSquadFact.ThrowLine | NpcSquadFact.Stacked),
     ];
 
     /// <summary>

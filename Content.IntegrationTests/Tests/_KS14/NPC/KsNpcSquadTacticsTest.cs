@@ -537,8 +537,17 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             StageLost(scene, scene.MemberUid, moving: false);
             scene.TacticsSystem.UpdateNow();
 
-            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid)?.Phase, Is.EqualTo(NpcHuntPhase.Exhausted),
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt?.Phase, Is.EqualTo(NpcHuntPhase.Exhausted),
                 "with no way in, the squad should give up rather than stack up on doors it cannot open");
+
+            // Holding as near as it can get, and given time to walk there, rather than sent at a room it cannot reach.
+            Assert.That(hunt!.ShutOut, "that is being shut out, and not having looked and found nothing");
+            Assert.That(hunt.ShutOutCoordinates, Is.Not.Null);
+            Assert.That(hunt.ShutOutWalk, Is.GreaterThan(TimeSpan.Zero));
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order) && order.Kind == NpcOrderKind.HoldArea, "it should be told to hold");
+            Assert.That(order.Coordinates.Position, Is.EqualTo(hunt.ShutOutCoordinates!.Value.Position));
         });
     }
 
@@ -573,6 +582,35 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                 Assert.That(hunt.StagedMembers[plainUid].IsLead && hunt.StagedMembers[plainUid].Method == NpcBreachMethod.Pry,
                     "the member with the jaws should lead, prying");
             });
+        });
+    }
+
+    /// <summary>
+    ///     A lead found its door will not open for it, and that was the last way in: they find out by trying, and end up the
+    ///         same as a squad that could tell from the start, holding outside it.
+    /// </summary>
+    [Test]
+    public async Task TestFooledWithNoWayLeftHoldsOutside()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (securityUid, _) = SplitBySecurity(scene);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            var westDoorUid = hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].DoorUid!.Value;
+
+            scene.EntManager.System<NpcDoorSystem>().ReportRefused(securityUid, westDoorUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted), "with no way in left, the squad should give up");
+            Assert.That(hunt.ShutOut, "that is being shut out, and not having looked and found nothing");
+            Assert.That(hunt.ShutOutCoordinates, Is.Not.Null);
         });
     }
 

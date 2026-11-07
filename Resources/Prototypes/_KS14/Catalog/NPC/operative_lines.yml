@@ -121,6 +121,12 @@
     count: 3
 
 - type: localizedDataset
+  id: KsOperativeCharging
+  values:
+    prefix: ks-operative-line-charging-
+    count: 3
+
+- type: localizedDataset
   id: KsOperativeDoorLocked
   values:
     prefix: ks-operative-line-door-locked-

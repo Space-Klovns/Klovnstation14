@@ -58,6 +58,15 @@ public sealed partial class NpcSquadTacticsSystem
         var walkerUid = leaderUid ?? _members[0];
         var grid = PrepareRoom(leaderUid, hunt, settings);
 
+        // Nothing leads from there to here, through any door. Searching would send someone towards it to get nowhere, then
+        //      have it stand there unable to plan a way, with nobody else doing anything at all.
+        if (TryPrepareSealedRoom(hunt, walkerUid, hunt.PredictedCoordinates))
+        {
+            hunt.Entrances.Clear();
+            ExhaustShutOut(leaderUid, hunt, settings, now);
+            return;
+        }
+
         BuildSearchPoints(walkerUid, hunt, grid, settings);
 
         var anyoneInside = false;
@@ -72,7 +81,7 @@ public sealed partial class NpcSquadTacticsSystem
         //      searched: they hold outside it and give up.
         if (!anyoneInside && hunt.Entrances.Count > 0 && !CanAnyoneGetIn(hunt))
         {
-            Exhaust(leaderUid, hunt, now);
+            ExhaustShutOut(leaderUid, hunt, settings, now);
             return;
         }
 
@@ -168,7 +177,7 @@ public sealed partial class NpcSquadTacticsSystem
         {
             foreach (var entrance in hunt.Entrances)
             {
-                if (GetEntryMethod(memberUid, entrance).Usable)
+                if (GetEntryMethod(hunt, memberUid, entrance).Usable)
                     return true;
             }
         }

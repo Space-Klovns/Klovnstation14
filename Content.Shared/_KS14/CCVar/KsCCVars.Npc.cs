@@ -77,5 +77,5 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> NpcFireRollMinStacks =
-        CVarDef.Create("klovn.npc.fire_roll_min_stacks", 1f, CVar.SERVERONLY);
+        CVarDef.Create("klovn.npc.fire_roll_min_stacks", 2f, CVar.SERVERONLY);
 }
