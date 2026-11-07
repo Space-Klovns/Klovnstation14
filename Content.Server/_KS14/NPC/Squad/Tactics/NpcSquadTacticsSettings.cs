@@ -256,6 +256,19 @@ public sealed partial class NpcSquadTacticsSettings
     public TimeSpan PlanFlashWait = TimeSpan.FromSeconds(2.5);
 
     /// <summary>
+    ///     How long after smoke goes off to go in after it, for the cloud to fill the room first.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanSmokeSettle = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     How long members keep their internals on for, from when gas is about to go in, whatever the air: long enough to
+    ///         go through the cloud. Breathing it still keeps them on after.
+    /// </summary>
+    [DataField]
+    public TimeSpan PlanSmokeInternalsTime = TimeSpan.FromSeconds(30);
+
+    /// <summary>
     ///     How long members have to get out of sight when they have to, before the plan ends.
     /// </summary>
     [DataField]

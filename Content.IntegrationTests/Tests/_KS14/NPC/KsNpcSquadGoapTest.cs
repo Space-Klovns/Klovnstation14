@@ -16,7 +16,7 @@ public sealed class KsNpcSquadGoapTest
 
     private static float[] Costs(float stackUp = 1f, float forceDoor = 6f, float enter = 2f, float breakGlass = 9f, float hold = 13f)
     {
-        return [stackUp, forceDoor, enter, breakGlass, 2f, 2f, 4f, 3f, hold, 3f, 1.5f, 8f, 10f];
+        return [stackUp, forceDoor, enter, breakGlass, 2f, 2f, 4f, 3f, hold, 3f, 1.5f, 8f, 10f, 3.5f];
     }
 
     private static NpcSquadAction[]? Plan(NpcSquadFact facts, float[] costs, params NpcSquadAction[] banned)
@@ -86,6 +86,9 @@ public sealed class KsNpcSquadGoapTest
     [TestCase(NpcSquadFact.HasFrag | NpcSquadFact.ExitsCovered, NpcSquadAction.FragRoom)]
     [TestCase(NpcSquadFact.HasFlashbang | NpcSquadFact.HasFrag, NpcSquadAction.Flashbang)]
     [TestCase(NpcSquadFact.ExitsCovered, NpcSquadAction.HoldExits)]
+    [TestCase(NpcSquadFact.HasSmoke | NpcSquadFact.ExitsCovered, NpcSquadAction.SmokeRoom)]
+    [TestCase(NpcSquadFact.HasFlashbang | NpcSquadFact.HasSmoke, NpcSquadAction.Flashbang)]
+    [TestCase(NpcSquadFact.HasFrag | NpcSquadFact.HasSmoke, NpcSquadAction.FragRoom)]
     public void TestAGunBehindAShutDoor(NpcSquadFact has, NpcSquadAction expected)
     {
         var plan = Plan(Door | has, Costs(enter: 8f));
@@ -99,6 +102,7 @@ public sealed class KsNpcSquadGoapTest
     /// </summary>
     [TestCase(NpcSquadFact.HasFlashbang | NpcSquadFact.ThrowLine | NpcSquadFact.ExitsCovered, NpcSquadAction.Flashbang)]
     [TestCase(NpcSquadFact.HasFrag | NpcSquadFact.ThrowLine | NpcSquadFact.ExitsCovered, NpcSquadAction.FragRoom)]
+    [TestCase(NpcSquadFact.HasSmoke | NpcSquadFact.ThrowLine | NpcSquadFact.ExitsCovered, NpcSquadAction.SmokeRoom)]
     [TestCase(NpcSquadFact.ExitsCovered, NpcSquadAction.HoldExits)]
     public void TestAGunBehindAnOpenWay(NpcSquadFact has, NpcSquadAction expected)
     {

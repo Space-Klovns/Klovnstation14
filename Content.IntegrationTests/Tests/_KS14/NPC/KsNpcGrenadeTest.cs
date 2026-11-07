@@ -6,6 +6,7 @@ using Content.Server._KS14.NPC.Queries.Considerations;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Curves;
+using Content.Server.NPC.Systems;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory;
@@ -103,6 +104,18 @@ public sealed class KsNpcGrenadeTest : GameTest
     keysIn:
     - timer
     range: 1
+
+- type: entity
+  id: KsGrenadeTestSmoke
+  components:
+  - type: Item
+  - type: NpcRoomSmoke
+  - type: TimerTrigger
+    delay: 1000
+  - type: SmokeOnTrigger
+    keysIn:
+    - timer
+    spreadAmount: 5
 ";
 
     [Test]
@@ -310,6 +323,29 @@ public sealed class KsNpcGrenadeTest : GameTest
     /// <summary>
     ///     An NPC with a weapon wielded in both hands, and a grenade in its pocket.
     /// </summary>
+    /// <summary>
+    ///     Smoke is for rooms, put in by a squad plan. What a fight throws never includes it, even with a grenade beside it.
+    /// </summary>
+    [Test]
+    public async Task TestAFightNeverThrowsSmoke()
+    {
+        var (entManager, npcUid, _, grenadeUid) = await SetUp();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var smokeUid = entManager.SpawnEntity("KsGrenadeTestSmoke", entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
+            Assert.That(entManager.System<InventorySystem>().TryEquip(npcUid, smokeUid, "pocket2", silent: true, force: true),
+                "the smoke should be in a pocket");
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, npcUid);
+            var grenades = entManager.System<NPCUtilitySystem>().GetEntities(blackboard, "KsOperativeInventoryGrenades", bestOnly: false).Entities.Keys;
+
+            Assert.That(grenades, Does.Contain(grenadeUid), "the grenade is there to throw");
+            Assert.That(grenades, Does.Not.Contain(smokeUid));
+        });
+    }
+
     private async Task<(IEntityManager EntManager, EntityUid NpcUid, EntityUid WeaponUid, EntityUid GrenadeUid)> SetUp(string npcPrototype = Npc, string grenade = Grenade)
     {
         var server = Pair.Server;

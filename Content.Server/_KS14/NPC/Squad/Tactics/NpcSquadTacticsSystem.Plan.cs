@@ -471,6 +471,7 @@ public sealed partial class NpcSquadTacticsSystem
                     break;
                 case NpcSquadAction.Flashbang:
                 case NpcSquadAction.FragRoom:
+                case NpcSquadAction.SmokeRoom:
                     finished = RunThrow(issuerUid, plan, plan.Steps[plan.CurrentStep], settings, now);
                     break;
                 case NpcSquadAction.TakeCover:
@@ -537,7 +538,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         for (var i = plan.CurrentStep; i < plan.StepCount; i++)
         {
-            if (plan.Steps[i] is NpcSquadAction.Flashbang or NpcSquadAction.FragRoom)
+            if (plan.Steps[i] is NpcSquadAction.Flashbang or NpcSquadAction.FragRoom or NpcSquadAction.SmokeRoom)
                 return true;
         }
 
@@ -588,7 +589,8 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     One member puts something in through the way in, and the rest wait where they are until it has gone off: a set time
-    ///         for a flashbang, and for a grenade, until it is gone.
+    ///         for a flashbang, until it is gone for a grenade, and for smoke, a while after it is gone for the cloud to fill
+    ///         the room. Before gas goes in, everyone goes on internals.
     /// </summary>
     private bool RunThrow(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
     {
@@ -596,18 +598,19 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (plan.ThrownAt is { } thrownAt)
         {
-            var wentOff = action == NpcSquadAction.Flashbang
-                ? now - thrownAt >= settings.PlanFlashWait
-                : TerminatingOrDeleted(plan.ThrownUid) || now - thrownAt >= FragWaitLimit;
-
-            if (!wentOff)
+            if (!HasGoneOff(plan, action, thrownAt, settings, now))
                 return false;
 
             plan.Softened = true;
             return true;
         }
 
-        var chosen = action == NpcSquadAction.Flashbang ? plan.FlashThrow : plan.FragThrow;
+        var chosen = action switch
+        {
+            NpcSquadAction.Flashbang => plan.FlashThrow,
+            NpcSquadAction.FragRoom => plan.FragThrow,
+            _ => plan.SmokeThrow,
+        };
 
         if (chosen is { } thrown && (TerminatingOrDeleted(thrown.GrenadeUid) || _thrownGrenadeQuery.HasComp(thrown.GrenadeUid)))
         {
@@ -622,9 +625,12 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
         }
 
+        // Nobody takes a breath of it: the throw waits until all of them are on internals.
+        var holdTheThrow = action == NpcSquadAction.SmokeRoom && plan.SmokeGasses && !PutSquadOnInternals(settings, now);
+
         foreach (var memberUid in _members)
         {
-            if (memberUid == toThrow.ThrowerUid)
+            if (memberUid == toThrow.ThrowerUid && !holdTheThrow)
             {
                 SetOrder(memberUid, issuerUid, NpcOrderKind.ThrowGrenade, toThrow.Coordinates, Angle.Zero, OrderRange, null, now, toolUid: toThrow.GrenadeUid);
                 continue;
@@ -634,6 +640,26 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         return false;
+    }
+
+    private bool HasGoneOff(NpcSquadPlan plan, NpcSquadAction action, TimeSpan thrownAt, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        switch (action)
+        {
+            case NpcSquadAction.Flashbang:
+                return now - thrownAt >= settings.PlanFlashWait;
+            case NpcSquadAction.FragRoom:
+                return TerminatingOrDeleted(plan.ThrownUid) || now - thrownAt >= FragWaitLimit;
+        }
+
+        if (now - thrownAt >= FragWaitLimit + settings.PlanSmokeSettle)
+            return true;
+
+        if (!TerminatingOrDeleted(plan.ThrownUid))
+            return false;
+
+        plan.WentOffAt ??= now;
+        return now - plan.WentOffAt.Value >= settings.PlanSmokeSettle;
     }
 
     private void HoldStagedMember(EntityUid memberUid, EntityUid issuerUid, NpcHunt hunt, TimeSpan now)
@@ -897,6 +923,7 @@ public sealed partial class NpcSquadTacticsSystem
         costs[(int) NpcSquadAction.EnterSoftened] = EnterCost;
         costs[(int) NpcSquadAction.Flashbang] = FlashbangCost;
         costs[(int) NpcSquadAction.FragRoom] = FragCost;
+        costs[(int) NpcSquadAction.SmokeRoom] = SmokeCost + (float) settings.PlanSmokeSettle.TotalSeconds;
         costs[(int) NpcSquadAction.HoldExits] = settings.PlanHoldCost + ((plan.Facts & NpcSquadFact.WayOpen) != 0x0 ? 0f : settings.PlanHoldShutCost);
         costs[(int) NpcSquadAction.PatchUp] = PatchUpCost;
         costs[(int) NpcSquadAction.TopUp] = TopUpCost;
@@ -999,6 +1026,9 @@ public sealed partial class NpcSquadTacticsSystem
         if (plan.FragThrow != null)
             facts |= NpcSquadFact.HasFrag;
 
+        if (plan.SmokeThrow != null)
+            facts |= NpcSquadFact.HasSmoke;
+
         if (CanBeHit(plan))
             facts |= NpcSquadFact.Threatened;
 
@@ -1061,8 +1091,12 @@ public sealed partial class NpcSquadTacticsSystem
 
         plan.FlashThrow = null;
         plan.FragThrow = null;
+        plan.SmokeThrow = null;
+        plan.SmokeGasses = false;
 
         var canFlash = !TerminatingOrDeleted(plan.TargetUid) && _flashSystem.CanFlash(plan.TargetUid);
+        bool? squadOnInternals = null;
+        bool? squadSeesThroughSmoke = null;
 
         foreach (var (memberUid, staging) in hunt.StagedMembers)
         {
@@ -1075,6 +1109,23 @@ public sealed partial class NpcSquadTacticsSystem
                 {
                     if (canFlash)
                         plan.FlashThrow ??= new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, memberUid, staging));
+
+                    continue;
+                }
+
+                if (_roomSmokeQuery.HasComp(itemUid))
+                {
+                    // Gas over a screen, and either over nothing.
+                    squadOnInternals ??= CanSquadGoOnInternals();
+                    squadSeesThroughSmoke ??= DoesSquadSeeThroughSmoke();
+
+                    if (!plan.SmokeGasses &&
+                        TryGetSmokeUse(itemUid, plan.TargetUid, squadOnInternals.Value, squadSeesThroughSmoke.Value, out var gasses) &&
+                        (gasses || plan.SmokeThrow == null))
+                    {
+                        plan.SmokeThrow = new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, memberUid, staging));
+                        plan.SmokeGasses = gasses;
+                    }
 
                     continue;
                 }

@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Content.Shared._KS14.Occlusion;
+using Content.Shared.Chemistry.Components;
 using Content.Shared.Examine;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.Map;
@@ -36,6 +37,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     [Dependency] private EntityQuery<NpcIrregularOccluderComponent> _irregularOccluderQuery = default!;
     [Dependency] private EntityQuery<OccluderComponent> _occluderQuery = default!;
     [Dependency] private EntityQuery<OccluderTreeComponent> _occluderTreeQuery = default!;
+    [Dependency] private EntityQuery<SmokeComponent> _smokeQuery = default!;
     [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
 
     /// <summary>
@@ -169,7 +171,16 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     /// </remarks>
     public bool InLineOfSight(MapCoordinates origin, MapCoordinates other, float range)
     {
-        return InLineOfSight(origin, other, range, walkTiles: true);
+        return InLineOfSightCore(origin, other, range, walkTiles: true, throughSmoke: false);
+    }
+
+    /// <summary>
+    ///     <see cref="InLineOfSight(MapCoordinates, MapCoordinates, float)"/>, for an eye that smoke does not stop if
+    ///         <paramref name="throughSmoke"/>: the occluders of smoke (<see cref="SmokeComponent"/>) are not in the way.
+    /// </summary>
+    public bool InLineOfSight(MapCoordinates origin, MapCoordinates other, float range, bool throughSmoke)
+    {
+        return InLineOfSightCore(origin, other, range, walkTiles: true, throughSmoke);
     }
 
     /// <summary>
@@ -178,10 +189,10 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     /// </summary>
     internal bool InLineOfSightByOccluderTree(MapCoordinates origin, MapCoordinates other, float range)
     {
-        return InLineOfSight(origin, other, range, walkTiles: false);
+        return InLineOfSightCore(origin, other, range, walkTiles: false, throughSmoke: false);
     }
 
-    private bool InLineOfSight(MapCoordinates origin, MapCoordinates other, float range, bool walkTiles)
+    private bool InLineOfSightCore(MapCoordinates origin, MapCoordinates other, float range, bool walkTiles, bool throughSmoke)
     {
         if (other.MapId != origin.MapId || other.MapId == MapId.Nullspace)
             return false;
@@ -244,17 +255,17 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
             if (treeRay.Walked)
             {
                 anyWalked = true;
-                if (TileWalkBlocks((treeRay.Uid, mapGridComponent!), treeRay.Ray, length, origin.Position, other.Position))
+                if (TileWalkBlocks((treeRay.Uid, mapGridComponent!), treeRay.Ray, length, origin.Position, other.Position, throughSmoke))
                     return false;
 
                 continue;
             }
 
-            if (TreeQueryBlocks(treeRay, length, origin.Position, other.Position, discardUnreachable: walkTiles))
+            if (TreeQueryBlocks(treeRay, length, origin.Position, other.Position, discardUnreachable: walkTiles, throughSmoke))
                 return false;
         }
 
-        return !anyWalked || !IrregularOccludersBlock(length, origin.Position, other.Position);
+        return !anyWalked || !IrregularOccludersBlock(length, origin.Position, other.Position, throughSmoke);
     }
 
     /// <summary>
@@ -266,16 +277,16 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     ///         <see cref="SegmentTouches"/>. Off only for <see cref="InLineOfSightByOccluderTree"/>, which is the tree as
     ///         it is.
     /// </param>
-    private bool TreeQueryBlocks(TreeRay treeRay, float length, Vector2 origin, Vector2 other, bool discardUnreachable)
+    private bool TreeQueryBlocks(TreeRay treeRay, float length, Vector2 origin, Vector2 other, bool discardUnreachable, bool throughSmoke)
     {
-        var hitState = new RayHitState(this, origin, other, length, treeRay.Ray, discardUnreachable);
+        var hitState = new RayHitState(this, origin, other, length, treeRay.Ray, discardUnreachable, throughSmoke);
         treeRay.Tree.Tree.QueryRay(ref hitState,
             static (ref RayHitState state, in ComponentTreeEntry<OccluderComponent> value, in Vector2 _, float distance) =>
             {
                 if (distance > state.MaxLength ||
                     state.DiscardUnreachable &&
                     !SegmentTouches(state.Ray, state.MaxLength, GetTreeBounds(value.Component, value.Transform.LocalPosition, value.Transform.LocalRotation)) ||
-                    !state.System.Blocks((value.Uid, value.Component), state.Origin, state.Other))
+                    !state.System.Blocks((value.Uid, value.Component), state.Origin, state.Other, state.ThroughSmoke))
                     return true;
 
                 state.Blocked = true;
@@ -291,7 +302,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     ///         blocks it. Sweeps the ray's tiles a column at a time: in each column, the rows between where the ray
     ///         enters it and where it leaves, widened by <see cref="TileWalkSlack"/>.
     /// </summary>
-    private bool TileWalkBlocks(Entity<MapGridComponent> grid, Ray ray, float length, Vector2 origin, Vector2 other)
+    private bool TileWalkBlocks(Entity<MapGridComponent> grid, Ray ray, float length, Vector2 origin, Vector2 other, bool throughSmoke)
     {
         var tileSize = (float) grid.Comp.TileSize;
         var start = ray.Position / tileSize;
@@ -325,7 +336,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
             var lastRow = (int) MathF.Floor(highY + TileWalkSlack);
             for (var row = (int) MathF.Floor(lowY - TileWalkSlack); row <= lastRow; row++)
             {
-                if (TileBlocks(grid, new Vector2i(column, row), ray, length, origin, other))
+                if (TileBlocks(grid, new Vector2i(column, row), ray, length, origin, other, throughSmoke))
                     return true;
             }
         }
@@ -333,7 +344,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         return false;
     }
 
-    private bool TileBlocks(Entity<MapGridComponent> grid, Vector2i tile, Ray ray, float length, Vector2 origin, Vector2 other)
+    private bool TileBlocks(Entity<MapGridComponent> grid, Vector2i tile, Ray ray, float length, Vector2 origin, Vector2 other, bool throughSmoke)
     {
         var anchoredEnumerator = _mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, tile);
         while (anchoredEnumerator.MoveNext(out var anchoredUid))
@@ -346,7 +357,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 
             var bounds = GetTreeBounds(occluderComponent, occluderTransform.LocalPosition, occluderTransform.LocalRotation);
             if (SegmentTouches(ray, length, bounds) &&
-                Blocks((anchoredUid.Value, occluderComponent), origin, other))
+                Blocks((anchoredUid.Value, occluderComponent), origin, other, throughSmoke))
                 return true;
         }
 
@@ -356,7 +367,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     /// <summary>
     ///     Whether one of the occluders the tile walk cannot find blocks the ray, in any of the walked trees.
     /// </summary>
-    private bool IrregularOccludersBlock(float length, Vector2 origin, Vector2 other)
+    private bool IrregularOccludersBlock(float length, Vector2 origin, Vector2 other, bool throughSmoke)
     {
         // All of them, paused or not, as the tree has them all.
         var irregularEnumerator = AllEntityQuery<NpcIrregularOccluderComponent, OccluderComponent, TransformComponent>();
@@ -376,7 +387,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 
                 var bounds = GetTreeBounds(occluderComponent, position, rotation);
                 if (SegmentTouches(treeRay.Ray, length, bounds) &&
-                    Blocks((occluderUid, occluderComponent), origin, other))
+                    Blocks((occluderUid, occluderComponent), origin, other, throughSmoke))
                     return true;
             }
         }
@@ -412,10 +423,13 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 
     /// <summary>
     ///     Whether an occluder a ray crosses blocks it. As the examine check: one does not block a ray that starts or
-    ///         ends inside it.
+    ///         ends inside it. Smoke does not block an eye it does not stop.
     /// </summary>
-    private bool Blocks(Entity<OccluderComponent> occluder, Vector2 origin, Vector2 other)
+    private bool Blocks(Entity<OccluderComponent> occluder, Vector2 origin, Vector2 other, bool throughSmoke = false)
     {
+        if (throughSmoke && _smokeQuery.HasComp(occluder))
+            return false;
+
         if (!_transformQuery.TryComp(occluder, out var occluderTransform))
             return true;
 
@@ -707,7 +721,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         public bool Walked;
     }
 
-    private struct RayHitState(NpcLineOfSightSystem system, Vector2 origin, Vector2 other, float maxLength, Ray ray, bool discardUnreachable)
+    private struct RayHitState(NpcLineOfSightSystem system, Vector2 origin, Vector2 other, float maxLength, Ray ray, bool discardUnreachable, bool throughSmoke)
     {
         public readonly NpcLineOfSightSystem System = system;
         public readonly Vector2 Origin = origin;
@@ -715,6 +729,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         public readonly float MaxLength = maxLength;
         public readonly Ray Ray = ray;
         public readonly bool DiscardUnreachable = discardUnreachable;
+        public readonly bool ThroughSmoke = throughSmoke;
         public bool Blocked;
     }
 

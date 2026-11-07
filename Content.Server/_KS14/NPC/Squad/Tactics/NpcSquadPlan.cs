@@ -106,11 +106,23 @@ public sealed class NpcSquadPlan
     public NpcSquadThrow? FragThrow;
 
     /// <summary>
+    ///     Who would put smoke in, and whether that smoke gasses: if it does, everyone goes on internals first.
+    /// </summary>
+    public NpcSquadThrow? SmokeThrow;
+
+    public bool SmokeGasses;
+
+    /// <summary>
     ///     When what was thrown left its hand, and what it was.
     /// </summary>
     public TimeSpan? ThrownAt;
 
     public EntityUid ThrownUid;
+
+    /// <summary>
+    ///     When what was thrown was first seen to be gone, for smoke that takes a while to fill the room after.
+    /// </summary>
+    public TimeSpan? WentOffAt;
 
     /// <summary>
     ///     Something has gone in or gone off. Stays so for the plan: nobody has more than one go at this.

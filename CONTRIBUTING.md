@@ -1135,6 +1135,21 @@ Items do reach the puddle's step trigger, but `SlipperySystem.CanSlip` rejects a
 they're never counted. Non-hard fixtures also don't block a tile (`TurfSystem.IsTileBlocked`), and neither ray queries
 nor projectile hits count them.
 
+### A tile's air: ask the grid, then the map
+
+`AtmosphereSystem.GetTileMixture(grid, map, tile, excite)` gives the grid's air on a tile it simulates. On every other
+tile it gives the air of the map you pass, and space if you pass `null`. A tile with no floor, or one atmos never
+simulated, therefore reads as vacuum on a planet whenever the caller passed no map. Use the KS14 wrappers, which find the
+grid's map themselves:
+
+- `AtmosphereSystem.GetGridTileMixture(gridUid, tile, excite)` and `IsGridTileSpace(gridUid, tile)` on the server.
+- `SharedAtmosphereSystem.GetMapMixture(mapUid)` and `IsMapSpace(mapUid)` on either side, for what is off every grid.
+  The client simulates no gas, so this is all it knows.
+
+A map's air is immutable. Code that changes air keeps checking `GasMixture.Immutable`, and code that only reads it (a
+boiling point, a fire's temperature) gets the planet's air rather than vacuum. Don't test for `MapAtmosphereComponent` to
+decide whether somewhere is space: a map can have one and still be space. Ask `IsMapSpace`.
+
 ### Verifying an attribute subscription actually generated
 
 Related, and the honest way to answer "is this handler wired up?" rather than guessing from the

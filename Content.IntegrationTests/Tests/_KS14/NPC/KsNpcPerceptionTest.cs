@@ -69,6 +69,13 @@ public sealed class KsNpcPerceptionTest : GameTest
         key: KsRecheckTestWait
 
 - type: entity
+  parent: KsSquadTestMobLoner
+  id: KsPerceptionTestMobSmokeSighted
+  components:
+  - type: NpcPerception
+    seesThroughSmoke: true
+
+- type: entity
   parent: KsSquadTestMobSyndicate
   id: KsPerceptionTestMobMute
   components:
@@ -131,6 +138,38 @@ public sealed class KsNpcPerceptionTest : GameTest
       KsRecheckTestWait: !type:Single
         100
 ";
+
+    /// <summary>
+    ///     Smoke stops an NPC's eyes as it does a player's, unless it sees through smoke. Both look from beside each other
+    ///         through the same cloud.
+    /// </summary>
+    [Test]
+    public async Task TestSmokeStopsTheEyesOfThoseThatDoNotSeeThroughIt()
+    {
+        var scene = await SetUpScene(targetTile: (4, 0));
+        EntityUid smokeSightedUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            smokeSightedUid = SpawnAt(scene.EntManager, "KsPerceptionTestMobSmokeSighted", scene.GridUid, 0, 1);
+            scene.EntManager.System<NPCSystem>().SleepNPC(smokeSightedUid);
+
+            for (var y = -2; y <= 2; y++)
+            {
+                SpawnAt(scene.EntManager, "Smoke", scene.GridUid, 2, y);
+            }
+        });
+
+        await Pair.RunTicksSync(2);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            scene.PerceptionSystem.UpdateNow(scene.ObserverUid);
+            scene.PerceptionSystem.UpdateNow(smokeSightedUid);
+            Assert.That(scene.PerceptionSystem.IsVisible(scene.ObserverUid, scene.TargetUid), Is.False, "smoke should stop its eyes");
+            Assert.That(scene.PerceptionSystem.IsVisible(smokeSightedUid, scene.TargetUid), "and not those of one that sees through it");
+        });
+    }
 
     #region Containers
 

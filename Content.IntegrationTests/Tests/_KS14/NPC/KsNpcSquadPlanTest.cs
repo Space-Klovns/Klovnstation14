@@ -7,6 +7,7 @@ using Content.Server._KS14.NPC.Doors;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Squad.Tactics;
+using Content.Server.Body.Systems;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Doors.Components;
 using Content.Shared.Doors.Systems;
@@ -55,6 +56,12 @@ public sealed class KsNpcSquadPlanTest : GameTest
     private const string FussyCharge = "KsSquadPlanTestFussyCharge";
     private const string Activator = "KsSquadPlanTestActivator";
     private const string Meds = "KsSquadPlanTestMeds";
+    private const string MaskedMob = "KsSquadPlanTestMobMasked";
+    private const string BreathingHostile = "KsSquadPlanTestBreathingHostile";
+    private const string TearGas = "KsSquadPlanTestTearGas";
+    private const string PlainSmoke = "KsSquadPlanTestPlainSmoke";
+    private const string SmokeSightedMob = "KsSquadPlanTestMobSmokeSighted";
+    private const string SmokeSightedHostile = "KsSquadPlanTestSmokeSightedHostile";
 
     /// <summary>
     ///     Long enough for a search for a path to come back.
@@ -374,6 +381,84 @@ public sealed class KsNpcSquadPlanTest : GameTest
   components:
   - type: Firelock
     pressure: true
+
+# Goes on internals when told to, with a mask and a tank given it by the test.
+- type: entity
+  parent: KsSquadPlanTestMobSteady
+  id: KsSquadPlanTestMobMasked
+  components:
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
+  - type: Internals
+  - type: NpcInternalsUser
+
+- type: entity
+  parent: KsSquadPlanTestArmedHostile
+  id: KsSquadPlanTestBreathingHostile
+  components:
+  - type: SolutionContainerManager
+  - type: Bloodstream
+    bloodlossDamage:
+      types:
+        Bloodloss: 1
+    bloodlossHealDamage:
+      types:
+        Bloodloss: -1
+
+- type: entity
+  id: KsSquadPlanTestMask
+  components:
+  - type: Item
+  - type: BreathMask
+
+- type: entity
+  parent: EmergencyOxygenTankFilled
+  id: KsSquadPlanTestTank
+
+- type: entity
+  id: KsSquadPlanTestTearGas
+  components:
+  - type: Item
+  - type: NpcRoomSmoke
+  - type: TimerTrigger
+    delay: 1000
+  - type: SmokeOnTrigger
+    keysIn:
+    - timer
+    spreadAmount: 5
+    smokePrototype: TearGasSmokeWhite
+    solution:
+      reagents:
+      - ReagentId: TearGas
+        Quantity: 20
+
+# Sees through smoke, as the Redacted do.
+- type: entity
+  parent: KsSquadPlanTestMobMasked
+  id: KsSquadPlanTestMobSmokeSighted
+  components:
+  - type: NpcPerception
+    seesThroughSmoke: true
+
+- type: entity
+  parent: KsSquadPlanTestArmedHostile
+  id: KsSquadPlanTestSmokeSightedHostile
+  components:
+  - type: NpcPerception
+    seesThroughSmoke: true
+
+- type: entity
+  id: KsSquadPlanTestPlainSmoke
+  components:
+  - type: Item
+  - type: NpcRoomSmoke
+  - type: TimerTrigger
+    delay: 1000
+  - type: SmokeOnTrigger
+    keysIn:
+    - timer
+    spreadAmount: 5
 ";
 
     /// <summary>
@@ -736,6 +821,144 @@ public sealed class KsNpcSquadPlanTest : GameTest
             var plan = GetPlan(scene)!;
             Assert.That(plan.Steps[..plan.StepCount], Does.Contain(NpcSquadAction.FragRoom));
             Assert.That(plan.Steps[..plan.StepCount], Does.Not.Contain(NpcSquadAction.Flashbang));
+        });
+    }
+
+    /// <summary>
+    ///     Gas goes in on a hostile that would breathe it, and only once every member is on internals: none of them takes a
+    ///         breath of it.
+    /// </summary>
+    [Test]
+    public async Task TestGasGoesInOnInternals()
+    {
+        var scene = await SetUp(MaskedMob, glass: ArmouredGlass, hostile: BreathingHostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Mask(scene, scene.LeaderUid);
+            Mask(scene, scene.MemberUid);
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, TearGas);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount],
+                Is.EqualTo(new[] { NpcSquadAction.StackUp, NpcSquadAction.ForceDoor, NpcSquadAction.SmokeRoom, NpcSquadAction.EnterSoftened }),
+                plan.Facts.ToString());
+            Assert.That(plan.SmokeGasses, "tear gas should be taken for gas");
+
+            var internalsSystem = scene.EntManager.System<InternalsSystem>();
+            Assert.That(internalsSystem.AreInternalsWorking(scene.LeaderUid), Is.False, "nobody needs them yet");
+
+            scene.EntManager.DeleteEntity(scene.DoorUid);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "it should be told to throw");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.ThrowGrenade));
+            Assert.That(internalsSystem.AreInternalsWorking(scene.LeaderUid), "the leader should be on internals before it goes in");
+            Assert.That(internalsSystem.AreInternalsWorking(scene.MemberUid), "and so should the thrower");
+        });
+    }
+
+    /// <summary>
+    ///     Gas is not put in where it would do nothing, or where one of them would breathe it: not on a hostile that breathes
+    ///         nothing, and not by a squad with a member that cannot go on internals.
+    /// </summary>
+    [TestCase(BreathingHostile, false)]
+    [TestCase(ArmedHostile, true)]
+    public async Task TestGasOnlyWhereItWorks(string hostile, bool leaderHasTank)
+    {
+        var scene = await SetUp(MaskedMob, glass: ArmouredGlass, hostile: hostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Mask(scene, scene.LeaderUid, leaderHasTank);
+            Mask(scene, scene.MemberUid);
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, TearGas);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running));
+            Assert.That(plan.Steps[..plan.StepCount], Does.Not.Contain(NpcSquadAction.SmokeRoom), plan.Facts.ToString());
+        });
+    }
+
+    /// <summary>
+    ///     Smoke that only blocks sight goes in on a hostile it would blind, by a squad it would not: it is no use against
+    ///         what sees through it, and a squad that does not would blind itself.
+    /// </summary>
+    [TestCase(SmokeSightedMob, ArmedHostile, true)]
+    [TestCase(MaskedMob, ArmedHostile, false)]
+    [TestCase(SmokeSightedMob, SmokeSightedHostile, false)]
+    public async Task TestASmokeScreen(string mob, string hostile, bool screened)
+    {
+        var scene = await SetUp(mob, glass: ArmouredGlass, hostile: hostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Mask(scene, scene.LeaderUid);
+            Mask(scene, scene.MemberUid);
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, PlainSmoke);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running));
+            Assert.That(plan.Steps[..plan.StepCount].Contains(NpcSquadAction.SmokeRoom), Is.EqualTo(screened), plan.Facts.ToString());
+            Assert.That(plan.SmokeGasses, Is.False, "plain smoke carries nothing");
+        });
+    }
+
+    /// <summary>
+    ///     What screening a room rests on: smoke blocks sight as a wall does, a player's (the occluder tree) and an NPC's,
+    ///         save for an eye that sees through it.
+    /// </summary>
+    [Test]
+    public async Task TestSmokeBlocksSightSaveForThoseThatSeeThroughIt()
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid fromUid = default, toUid = default;
+
+        await server.WaitPost(() =>
+        {
+            var gridUid = MakeGrid(entManager, server.ResolveDependency<ITileDefinitionManager>(), map.MapId, map.Grid, new Vector2i(-3, -3), new Vector2i(3, 3)).Owner;
+            fromUid = SpawnAt(entManager, "KsSquadPlanTestMask", gridUid, -2, 0);
+            toUid = SpawnAt(entManager, "KsSquadPlanTestMask", gridUid, 2, 0);
+
+            for (var y = -2; y <= 2; y++)
+            {
+                SpawnAt(entManager, "Smoke", gridUid, 0, y);
+            }
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var transformSystem = entManager.System<SharedTransformSystem>();
+            var from = transformSystem.GetMapCoordinates(fromUid);
+            var to = transformSystem.GetMapCoordinates(toUid);
+            var lineOfSightSystem = entManager.System<NpcLineOfSightSystem>();
+
+            Assert.That(lineOfSightSystem.InLineOfSightByOccluderTree(from, to, 10f), Is.False, "smoke should block a player's view");
+            Assert.That(lineOfSightSystem.InLineOfSight(from, to, 10f), Is.False, "and an NPC's");
+            Assert.That(lineOfSightSystem.InLineOfSight(from, to, 10f, throughSmoke: true), "but not one that sees through it");
         });
     }
 
@@ -1642,6 +1865,19 @@ public sealed class KsNpcSquadPlanTest : GameTest
         var protoManager = IoCManager.Resolve<Robust.Shared.Prototypes.IPrototypeManager>();
         var blunt = new Content.Shared.Damage.DamageSpecifier(protoManager.Index(BluntDamage), damage);
         scene.EntManager.System<Content.Shared.Damage.Systems.DamageableSystem>().SetDamage(mobUid, blunt);
+    }
+
+    /// <summary>
+    ///     A mask connected for internals, and a tank in hand to go with it unless <paramref name="tank"/> is false.
+    /// </summary>
+    private static void Mask(Scene scene, EntityUid mobUid, bool tank = true)
+    {
+        var maskUid = scene.EntManager.SpawnEntity("KsSquadPlanTestMask", scene.EntManager.GetComponent<TransformComponent>(mobUid).Coordinates);
+        var internalsComponent = scene.EntManager.GetComponent<Content.Shared.Body.Components.InternalsComponent>(mobUid);
+        scene.EntManager.System<InternalsSystem>().ConnectBreathTool((mobUid, internalsComponent), maskUid);
+
+        if (tank)
+            GiveInHand(scene, mobUid, "KsSquadPlanTestTank");
     }
 
     private static EntityUid GiveInHand(Scene scene, EntityUid mobUid, string prototype)

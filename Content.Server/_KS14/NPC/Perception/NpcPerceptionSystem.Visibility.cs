@@ -48,7 +48,7 @@ public sealed partial class NpcPerceptionSystem
 
         var distanceSquared = (targetMapCoordinates.Position - observerMapCoordinates.Position).LengthSquared();
         if (distanceSquared > range * range ||
-            !_npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, targetMapCoordinates, range))
+            !_npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, targetMapCoordinates, range, entity.Comp.SeesThroughSmoke))
             return false;
 
         targetVelocity = _physicsSystem.GetMapLinearVelocity(targetUid);

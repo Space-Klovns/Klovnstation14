@@ -70,6 +70,13 @@ public sealed partial class NpcPerceptionComponent : Component
 
     #endregion
 
+    /// <summary>
+    ///     Whether it sees through smoke, which stops everyone else's eyes as a wall does. Only for what sight goes by:
+    ///         where it would stand to be hidden from a hostile still treats smoke as cover.
+    /// </summary>
+    [DataField]
+    public bool SeesThroughSmoke;
+
     #region Darkness
 
     /// <summary>

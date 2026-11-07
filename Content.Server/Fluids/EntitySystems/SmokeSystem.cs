@@ -1,3 +1,4 @@
+using Content.Server._KS14.Fluids; // KS14
 using Content.Server.Administration.Logs;
 using Content.Server.Body.Systems;
 using Content.Server.Spreader;
@@ -264,6 +265,10 @@ public sealed partial class SmokeSystem : EntitySystem
 
         if (!_solutionContainerSystem.ResolveSolution(entity, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var bloodSolution) || bloodSolution.AvailableVolume <= 0)
             return;
+
+        // KS14: whatever is about to breathe this hears of it first, and can put its internals on
+        var ksExposureEvent = new KsSmokeExposureEvent(smokeUid, solution);
+        RaiseLocalEvent(entity, ref ksExposureEvent);
 
         var blockIngestion = _internals.AreInternalsWorking(entity);
 

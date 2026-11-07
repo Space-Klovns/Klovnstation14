@@ -43,6 +43,7 @@ public static class NpcSquadGoap
         new(NpcSquadAction.EnterSoftened, WayIn | NpcSquadFact.Softened, NpcSquadFact.HasShot),
         new(NpcSquadAction.TakeCover, NpcSquadFact.Threatened, NpcSquadFact.OutOfSight),
         new(NpcSquadAction.FragRoom, NpcSquadFact.Stacked | NpcSquadFact.ThrowLine | NpcSquadFact.HasFrag, NpcSquadFact.Softened),
+        new(NpcSquadAction.SmokeRoom, NpcSquadFact.Stacked | NpcSquadFact.ThrowLine | NpcSquadFact.HasSmoke, NpcSquadFact.Softened),
         new(NpcSquadAction.HoldExits, NpcSquadFact.Stacked | NpcSquadFact.ExitsCovered, NpcSquadFact.HasShot),
         new(NpcSquadAction.BlowDoor,
             NpcSquadFact.Stacked | NpcSquadFact.HasCharge | NpcSquadFact.DoorChargeable,

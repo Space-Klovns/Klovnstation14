@@ -100,6 +100,11 @@ public enum NpcSquadFact : uint
     ///     A wall of the hostile's room is one thick, safe to blow, and can be walked up to from outside.
     /// </summary>
     WallChargeable = 1 << 17,
+
+    /// <summary>
+    ///     Somebody stacked up carries smoke that would do something to the hostile, and could put it in.
+    /// </summary>
+    HasSmoke = 1 << 18,
 }
 
 /// <summary>
@@ -121,6 +126,7 @@ public enum NpcSquadAction : byte
     TopUp,
     BlowDoor,
     BlowWall,
+    SmokeRoom,
 }
 
 /// <summary>
