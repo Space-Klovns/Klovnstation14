@@ -154,8 +154,11 @@ public sealed partial class NpcSquadTacticsSystem
 
     private void EndHunt(EntityUid issuerUid)
     {
-        if (_huntQuery.HasComp(issuerUid))
+        if (_huntQuery.TryComp(issuerUid, out var huntComponent))
         {
+            if (huntComponent.Hunt?.Blast is { } blast)
+                ReleaseCharge(blast);
+
             RemComp<NpcHuntComponent>(issuerUid);
 
             if (_npcHuntDebugSystem.IsTracking(issuerUid, _members))

@@ -405,6 +405,7 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
 
             ClearOrder(_members[i], issuerUid);
+            _recovering.Add(_members[i]);
             _members.RemoveAt(i);
             recovering++;
         }
@@ -1139,6 +1140,12 @@ public sealed partial class NpcSquadTacticsSystem
                 return false;
         }
 
+        foreach (var memberUid in _recovering)
+        {
+            if (!Transform(memberUid).Coordinates.TryDistance(EntityManager, _transformSystem, coordinates, out var distance) || distance < clearance)
+                return false;
+        }
+
         return true;
     }
 
@@ -1289,6 +1296,7 @@ public sealed partial class NpcSquadTacticsSystem
     private void EndPlan(EntityUid issuerUid, NpcSquadPlan plan, TimeSpan cooldown, TimeSpan now, string reason)
     {
         ClearOrders(issuerUid, _members);
+        ReleaseCharge(plan);
 
         plan.State = NpcSquadPlanState.Cooldown;
         plan.CooldownEndsAt = now + cooldown;

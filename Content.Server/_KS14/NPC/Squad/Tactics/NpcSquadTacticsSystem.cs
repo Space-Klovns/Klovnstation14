@@ -84,6 +84,12 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     private readonly List<EntityUid> _members = new();
 
     /// <summary>
+    ///     Members of the group being updated that a plan has left out of <see cref="_members"/> while their meds work. Still
+    ///         standing where they were, so still in the way of a grenade.
+    /// </summary>
+    private readonly List<EntityUid> _recovering = new();
+
+    /// <summary>
     ///     Stops the periodic update, so a test can give orders by hand without them being taken straight back.
     ///         <see cref="UpdateNow()"/> still runs.
     /// </summary>
@@ -124,6 +130,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         while (squadEnumerator.MoveNext(out var squadUid, out var squadComponent))
         {
             _members.Clear();
+            _recovering.Clear();
 
             foreach (var memberUid in squadComponent.Members)
             {
@@ -153,6 +160,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
                 continue;
 
             _members.Clear();
+            _recovering.Clear();
             _members.Add(uid);
             UpdateGroup(uid, leaderUid: null, squadMemberComponent.Tactics, now);
         }

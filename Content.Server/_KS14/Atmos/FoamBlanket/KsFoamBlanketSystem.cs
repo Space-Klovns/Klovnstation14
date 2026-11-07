@@ -63,7 +63,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         // Not IsHotspotActive: chemfires answer that for their tiles too, which would sizzle over one the foam cannot
         //     touch. The chemfires on the tile are the shared system's to deal with.
         if (!_atmosphereSystem.HasGasHotspot(gridUid, tile) ||
-            !HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false)))
+            !HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetGridTileMixture(gridUid, tile, excite: false)))
             return false;
 
         _atmosphereSystem.HotspotExtinguish(gridUid, tile);
@@ -94,7 +94,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         if (blanket.Comp.LocalGridUid is not { } gridUid)
             return true;
 
-        return HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetTileMixture((gridUid, null, null), null, blanket.Comp.LocalTile, excite: false));
+        return HoldsBackGasFire(blanket.Comp, _atmosphereSystem.GetGridTileMixture(gridUid, blanket.Comp.LocalTile, excite: false));
     }
 
     public override void Update(float frameTime)
@@ -161,7 +161,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
         var component = blanket.Comp;
         var tile = component.LocalTile;
 
-        if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false) is not { Immutable: false } mixture)
+        if (_atmosphereSystem.GetGridTileMixture(gridUid, tile, excite: false) is not { Immutable: false } mixture)
             return;
 
         BoilSuperheatedFoam(blanket, gridUid, tile);
@@ -336,7 +336,7 @@ public sealed partial class KsFoamBlanketSystem : SharedKsFoamBlanketSystem
                 if (component.Foam <= 0f)
                     break;
 
-                if (_atmosphereSystem.GetTileMixture((gridUid, null, null), null, burningTile, excite: true) is not { Immutable: false } burningAir)
+                if (_atmosphereSystem.GetGridTileMixture(gridUid, burningTile, excite: true) is not { Immutable: false } burningAir)
                     continue;
 
                 var excess = burningAir.Temperature - component.BoilingPoint;

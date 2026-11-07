@@ -17,7 +17,7 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnAirQuery(ref KsTileEffectAirQueryEvent args)
     {
-        args.Mixture ??= _atmosphereSystem.GetTileMixture((args.GridUid, null, null), null, args.Tile, excite: false);
+        args.Mixture ??= _atmosphereSystem.GetGridTileMixture(args.GridUid, args.Tile, excite: false);
     }
 
     [SubscribeLocalEvent]
@@ -64,7 +64,7 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     {
         if (maxUnits <= 0f ||
             molesPerUnit <= 0f ||
-            _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: false) is not { Immutable: false } mixture)
+            _atmosphereSystem.GetGridTileMixture(gridUid, tile, excite: false) is not { Immutable: false } mixture)
             return 0f;
 
         var units = maxUnits;
@@ -123,7 +123,7 @@ public sealed partial class KsTileEffectAtmosSystem : EntitySystem
     public bool TryAddGas(EntityUid gridUid, Vector2i tile, Gas gas, float moles, float sensibleEnergy, float latentEnergy = 0f, bool displace = false)
     {
         if (moles <= 0f ||
-            _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite: true) is not { Immutable: false } mixture)
+            _atmosphereSystem.GetGridTileMixture(gridUid, tile, excite: true) is not { Immutable: false } mixture)
             return false;
 
         var molesBefore = mixture.TotalMoles;

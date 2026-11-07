@@ -269,7 +269,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         // Its air and its puddle each work with a share of its capacity, split between those it has: both start from the
         //     sheet's temperature and are applied together, so with the whole capacity in each, a thin sheet between a
         //     colder air and puddle would be carried past both.
-        var mixture = _atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is { Immutable: false } tileMixture &&
+        var mixture = _atmosphereSystem.GetGridTileMixture(gridUid, indices, excite: false) is { Immutable: false } tileMixture &&
                       _atmosphereSystem.GetHeatCapacity(tileMixture, applyScaling: true) >= Atmospherics.MinimumHeatCapacity
             ? tileMixture
             : null;
@@ -408,7 +408,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             return 0f;
 
         var indices = _mapSystem.TileIndicesFor(gridUid, gridComponent, coordinates);
-        var air = _atmosphereSystem.GetTileMixture((gridUid, null, null), null, indices, excite: false) is { Immutable: false } tileAir &&
+        var air = _atmosphereSystem.GetGridTileMixture(gridUid, indices, excite: false) is { Immutable: false } tileAir &&
                   tileAir.Volume > 0f && tileAir.Temperature > 0f
             ? tileAir
             : null;

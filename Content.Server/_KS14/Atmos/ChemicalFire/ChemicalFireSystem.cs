@@ -215,5 +215,5 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     }
 
     protected override GasMixture? ResolveTileMixture(EntityUid gridUid, Vector2i tile, bool excite)
-        => _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite);
+        => _atmosphereSystem.GetGridTileMixture(gridUid, tile, excite);
 }

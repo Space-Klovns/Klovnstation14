@@ -1042,6 +1042,55 @@ public sealed class KsNpcSquadPlanTest : GameTest
     }
 
     /// <summary>
+    ///     A plan that ends with a charge on, whatever ends it, leaves the charge where it is and lets go of the wire, or the
+    ///         planter would walk off still tied to it.
+    /// </summary>
+    [Test]
+    public async Task TestAPlanThatEndsLetsGoOfTheWire()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+        EntityUid chargeUid = default, activatorUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            chargeUid = GiveInHand(scene, scene.MemberUid, WiredCharge);
+            activatorUid = GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.MemberUid).Coordinates;
+            scene.EntManager.EventBus.RaiseLocalEvent(chargeUid, new Content.Shared.Interaction.InteractUsingEvent(scene.MemberUid, activatorUid, chargeUid, coordinates));
+
+            var stickyComponent = scene.EntManager.GetComponent<Content.Shared.Sticky.Components.StickyComponent>(chargeUid);
+            scene.EntManager.System<Content.Shared.Sticky.Systems.StickySystem>().StickToEntity((chargeUid, stickyComponent), scene.DoorUid, scene.MemberUid);
+
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+        });
+
+        await Pair.RunTicksSync(3);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var chargeSystem = scene.EntManager.System<Content.Server._KS14.NPC.Charges.NpcChargeSystem>();
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Charge?.Phase, Is.EqualTo(NpcSquadChargePhase.Clearing), "the test needs the charge on");
+            Assert.That(chargeSystem.IsWireIntact(chargeUid, activatorUid), "and the wire whole");
+
+            scene.EntManager.DeleteEntity(scene.TargetUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Cooldown), "the test needs the plan over");
+            Assert.That(plan.Charge, Is.Null);
+            Assert.That(chargeSystem.IsWireIntact(chargeUid, activatorUid), Is.False, "it should have let go");
+            Assert.That(scene.EntManager.EntityExists(chargeUid), "the charge stays where it is");
+        });
+    }
+
+    /// <summary>
     ///     With a charge on, everyone gets out of sight of the floor in front of it, as nothing can see into a wall. And a shot that
     ///         turns up meanwhile waits: going back to the fight would have them stand there as it goes off.
     /// </summary>
@@ -1220,12 +1269,54 @@ public sealed class KsNpcSquadPlanTest : GameTest
     [Test]
     public async Task TestNothingNearTheHullIsBlown()
     {
+        var scene = await SetUpByTheHull();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetPlan(scene)?.WallCharge, Is.Null);
+            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Cooldown));
+        });
+    }
+
+    /// <summary>
+    ///     Outside is what the map's atmosphere is. On a planet with air, a hole by the edge of the base lets in no worse than a
+    ///         door would. On a map whose atmosphere is space, it is the same as no atmosphere at all.
+    /// </summary>
+    [TestCase(false, true)]
+    [TestCase(true, false)]
+    public async Task TestOutsideIsWhatTheMapHas(bool space, bool blown)
+    {
+        var moles = new float[Content.Shared.Atmos.Atmospherics.AdjustedNumberOfGases];
+        moles[(int) Content.Shared.Atmos.Gas.Oxygen] = 21.824779f;
+        moles[(int) Content.Shared.Atmos.Gas.Nitrogen] = 82.10312f;
+
+        var scene = await SetUpByTheHull((space, new Content.Shared.Atmos.GasMixture(moles, Content.Shared.Atmos.Atmospherics.T20C)));
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene);
+            Assert.That(plan?.WallCharge != null, Is.EqualTo(blown), plan?.Reason);
+        });
+    }
+
+    /// <summary>
+    ///     A room whose only way in is a wall, reached by a strip of floor with nothing beside it, from a member carrying a wired
+    ///         charge, with the map's atmosphere outside if given. Steps once.
+    /// </summary>
+    private async Task<Scene> SetUpByTheHull((bool Space, Content.Shared.Atmos.GasMixture Mixture)? mapAtmosphere = null)
+    {
         var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: "WallSolid");
 
         await Pair.Server.WaitPost(() =>
         {
             var mapSystem = scene.EntManager.System<Robust.Shared.GameObjects.SharedMapSystem>();
             var gridComponent = scene.EntManager.GetComponent<Robust.Shared.Map.Components.MapGridComponent>(scene.GridUid);
+
+            if (mapAtmosphere is { } atmosphere)
+            {
+                scene.EntManager.System<Content.Server.Atmos.EntitySystems.AtmosphereSystem>().SetMapAtmosphere(
+                    scene.EntManager.GetComponent<TransformComponent>(scene.GridUid).MapUid!.Value, atmosphere.Space, atmosphere.Mixture);
+            }
 
             for (var x = -2; x <= 8; x++)
             {
@@ -1244,12 +1335,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
 
         await Pair.RunTicksSync(30);
         await Step(scene);
-
-        await Pair.Server.WaitAssertion(() =>
-        {
-            Assert.That(GetPlan(scene)?.WallCharge, Is.Null);
-            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Cooldown));
-        });
+        return scene;
     }
 
     /// <summary>

@@ -471,26 +471,54 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     Whether a blast at <paramref name="tile"/> could open the station to space, or let in what is either side of it.
+    ///     Whether a blast at <paramref name="tile"/> could open the station up to what is outside it, or let in what is either
+    ///         side of it.
     /// </summary>
+    /// <remarks>
+    ///     Outside is whatever the map's atmosphere is, as atmos has it (<see cref="AtmosphereSystem.GetGridTileMixture"/>).
+    ///         Off a station in space that is vacuum, and a hole to it is never made. On a planet with air it can be fit to breathe, and a hole to it is no worse than a
+    ///         door, as long as there is enough of it (<see cref="NpcSquadTacticsSettings.PlanChargeMinPressure"/>).
+    /// </remarks>
     private bool IsUnsafeToBlow(NpcHunt hunt, Entity<MapGridComponent> grid, Vector2i tile, Vector2i oneSide, Vector2i otherSide)
+    {
+        var minPressure = hunt.Settings.PlanChargeMinPressure;
+
+        // The outside is the same all round, so one look at it does for every tile of it nearby.
+        if (FindOutsideNear(grid, tile) is { } outsideTile &&
+            (_atmosphereSystem.IsGridTileSpace(grid.Owner, outsideTile) || IsThin(grid, outsideTile, minPressure)))
+            return true;
+
+        return IsThin(grid, oneSide, minPressure) || IsThin(grid, otherSide, minPressure);
+    }
+
+    /// <summary>
+    ///     A tile within <see cref="HullClearance"/> of <paramref name="tile"/> with no floor, if there is one.
+    /// </summary>
+    private Vector2i? FindOutsideNear(Entity<MapGridComponent> grid, Vector2i tile)
     {
         for (var x = -HullClearance; x <= HullClearance; x++)
         {
             for (var y = -HullClearance; y <= HullClearance; y++)
             {
-                if (!_mapSystem.TryGetTile(grid.Comp, tile + new Vector2i(x, y), out var gridTile) || _turfSystem.IsSpace(gridTile))
-                    return true;
+                var nearTile = tile + new Vector2i(x, y);
+
+                if (!_mapSystem.TryGetTile(grid.Comp, nearTile, out var gridTile) || _turfSystem.IsSpace(gridTile))
+                    return nearTile;
             }
         }
 
-        var minPressure = hunt.Settings.PlanChargeMinPressure;
-        return IsThin(grid, oneSide, minPressure) || IsThin(grid, otherSide, minPressure);
+        return null;
     }
 
+    /// <summary>
+    ///     Whether there is too little air on <paramref name="tile"/>. None at all counts as too little.
+    /// </summary>
     private bool IsThin(Entity<MapGridComponent> grid, Vector2i tile, float minPressure)
     {
-        return _atmosphereSystem.GetTileMixture((grid.Owner, null, null), null, tile) is { } mixture && mixture.Pressure < minPressure;
+        if (minPressure <= 0f)
+            return false;
+
+        return _atmosphereSystem.GetGridTileMixture(grid.Owner, tile) is not { } mixture || mixture.Pressure < minPressure;
     }
 
     /// <summary>
@@ -733,13 +761,28 @@ public sealed partial class NpcSquadTacticsSystem
         SetOrder(memberUid, issuerUid, NpcOrderKind.Watch, standCoordinates, ToLocalFacing(standCoordinates, facing), OrderRange, null, now);
     }
 
+    /// <summary>
+    ///     A charge that did not work. A squad plan tries something else; a hunt's blast is tried once, and its hunt takes it
+    ///         from there (<see cref="UpdateBlast"/>).
+    /// </summary>
     private void FailCharge(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        ReleaseCharge(plan);
+
+        if (plan.Hunt?.Blast != plan)
+            FailPlanStep(issuerUid, plan, action, settings, now);
+    }
+
+    /// <summary>
+    ///     Done with a charge, however that came about: the planter lets go of the wire, and the charge stays where it is.
+    ///         A plan or hunt that ends with one on still has to, or the planter walks off tied to a wall.
+    /// </summary>
+    private void ReleaseCharge(NpcSquadPlan plan)
     {
         if (plan.Charge?.Pick.Charge.ActivatorUid is { } activatorUid)
             _npcChargeSystem.LetGoOfWire(activatorUid);
 
         plan.Charge = null;
-        FailPlanStep(issuerUid, plan, action, settings, now);
     }
 
     /// <summary>

@@ -86,7 +86,7 @@ public sealed partial class PuddleSystem
             if (!gridHasAir)
                 continue;
 
-            var grid = new Entity<GridAtmosphereComponent?, GasTileOverlayComponent?>(gridUid, gridAtmosphere, null);
+            var grid = new Entity<GridAtmosphereComponent?>(gridUid, gridAtmosphere);
 
             foreach (var (indices, puddle) in tilePuddles)
                 ExchangeHeatWithAir(puddle, grid, tilePuddles, indices, deltaTime);
@@ -109,7 +109,7 @@ public sealed partial class PuddleSystem
 
     private void ExchangeHeatWithAir(
         Entity<PuddleComponent> puddle,
-        Entity<GridAtmosphereComponent?, GasTileOverlayComponent?> grid,
+        Entity<GridAtmosphereComponent?> grid,
         Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles,
         Vector2i indices,
         float deltaTime)
@@ -120,7 +120,7 @@ public sealed partial class PuddleSystem
         if (solution.Volume <= FixedPoint2.Zero)
             return;
 
-        if (_atmosphereSystem.GetTileMixture(grid, map: null, indices, excite: false) is not { Immutable: false } mixture)
+        if (_atmosphereSystem.GetGridTileMixture(grid, indices, excite: false) is not { Immutable: false } mixture)
             return;
 
         var solutionTemperature = solution.Temperature;
@@ -157,6 +157,6 @@ public sealed partial class PuddleSystem
 
         // Wake the tile so atmos spreads the change, but only when it is big enough to matter.
         if (MathF.Abs(airTemperatureChange) >= AirHeatExchangeExciteDelta)
-            _atmosphereSystem.GetTileMixture(grid, map: null, indices, excite: true);
+            _atmosphereSystem.GetGridTileMixture(grid, indices, excite: true);
     }
 }
