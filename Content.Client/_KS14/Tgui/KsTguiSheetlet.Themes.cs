@@ -20,8 +20,10 @@ public sealed partial class KsTguiSheetlet
     public const string StylePropertyTabHoverWash = "ks-tgui-tab-hover-wash";
     public const string StylePropertyWindowBase = "ks-tgui-window-base";
     public const string StylePropertyDimmer = "ks-tgui-dimmer";
+    public const string StylePropertyWindowDimmer = "ks-tgui-window-dimmer";
     public const string StylePropertyGaugeRing = "ks-tgui-gauge-ring";
     public const string StylePropertySectionLineColor = "ks-tgui-section-line-color";
+    public const string StylePropertyTooltip = "ks-tgui-tooltip";
 
     /// <summary>
     ///     What differs between window themes and is not already read from the palette the stylesheet was given: the colours
@@ -45,12 +47,31 @@ public sealed partial class KsTguiSheetlet
                 .Prop(StylePropertyTabHoverWash, _palette.TabHoverWash),
 
             E<KsTguiDimmer>().Prop(StylePropertyDimmer, _palette.Dimmer).Prop(StylePropertyWindowBase, _palette.Base),
+            E<KsTguiWindowDimmer>().Prop(StylePropertyWindowDimmer, _palette.WindowDimmer),
             E<KsTguiModal>().Prop(StylePropertyDimmer, _palette.Dimmer).Prop(StylePropertyWindowBase, _palette.Base),
-            E<KsTguiRoundGauge>().Prop(StylePropertyGaugeRing, _palette.InputBorder).Prop(StylePropertyWindowBase, _palette.Base),
+            E<KsTguiRoundGauge>().Prop(StylePropertyGaugeRing, _palette.PrimaryBase).Prop(StylePropertyWindowBase, _palette.Base),
+
+            E<KsTguiKnob>()
+                .Prop(StylePropertyGaugeRing, _palette.InputBorder)
+                .Prop(StylePropertyWindowBase, _palette.Base)
+                .Prop(StylePropertyTooltip, _palette.Tooltip)
+                .Prop(StylePropertyInputBackground, _palette.InputBackground),
+
+            E<KsTguiSlider>()
+                .Prop(StylePropertyProgressColor, _palette.Primary.Element)
+                .Prop(StylePropertyProgressBackdrop, _palette.ProgressBarBackdrop)
+                .Prop(StylePropertyWindowBase, _palette.Base)
+                .Prop(StylePropertyTooltip, _palette.Tooltip)
+                .Prop(StylePropertyInputBackground, _palette.InputBackground),
 
             E<KsTguiBlockQuote>().Prop(StylePropertyLabelColor, _palette.Label),
 
             E<KsTguiNumberInput>()
+                .Prop(StylePropertyInputBackground, _palette.InputBackground)
+                .Prop(StylePropertyInputBorder, _palette.InputBorder)
+                .Prop(StylePropertyInputBorderIdle, _palette.InputBorderIdle),
+
+            E<KsTguiTextArea>()
                 .Prop(StylePropertyInputBackground, _palette.InputBackground)
                 .Prop(StylePropertyInputBorder, _palette.InputBorder)
                 .Prop(StylePropertyInputBorderIdle, _palette.InputBorderIdle),
@@ -65,12 +86,11 @@ public sealed partial class KsTguiSheetlet
     {
         AddButtonColorRules(rules, StyleClassButtonSelected, _palette.SelectedButton, Color.White);
 
-        // tgui's low-contrast black text is for yellow and white alone, so a theme's caution is black on tgui's own yellow
-        //      and white on any other.
+        // tgui's low-contrast black text is for yellow and white alone, so caution is white text whatever its colour.
         AddButtonColorRules(rules, KsTguiColors.ButtonClass(KsTguiColor.Primary), _palette.Primary, Color.White);
         AddButtonColorRules(rules, KsTguiColors.ButtonClass(KsTguiColor.Label), _palette.LabelButton, Color.White);
         AddButtonColorRules(rules, KsTguiColors.ButtonClass(KsTguiColor.Caution), _palette.Caution,
-            _palette.CautionIsYellow ? Color.Black : Color.White);
+            Color.White /* KS14: CautionIsYellow ? Black : White -> White, tgui's caution is not low-contrast */);
         AddButtonColorRules(rules, KsTguiColors.ButtonClass(KsTguiColor.Danger), _palette.Danger, Color.White);
     }
 

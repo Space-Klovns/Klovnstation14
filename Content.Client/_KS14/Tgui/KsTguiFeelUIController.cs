@@ -14,7 +14,8 @@ namespace Content.Client._KS14.Tgui;
 
 /// <summary>
 ///     What tgui's CSS transitions do and a stylesheet can't, since rules switch instantly: buttons easing between states,
-///         the input border lighting up on focus, tooltips fading in.
+///         the input border lighting up on focus, tooltips fading in, and
+///         tooltips in windows placed and animated as tg's (<c>KsTguiFeelUIController.Tooltips.cs</c>).
 /// </summary>
 /// <remarks>
 ///     The engine has no hover or focus event, so <see cref="FrameUpdate"/> compares references each frame. That is the
@@ -26,6 +27,8 @@ public sealed partial class KsTguiFeelUIController : UIController
     ///     tgui's <c>--transition-time-medium</c>, used by its buttons and tooltips.
     /// </summary>
     private const float FadeSeconds = 0.2f;
+
+    private const float DropdownEntrySeconds = 0.1f;
 
     /// <summary>
     ///     tgui-core's <c>--adjust-active</c>, taken off a held button, as lightness points.
@@ -44,6 +47,11 @@ public sealed partial class KsTguiFeelUIController : UIController
         public Color Current = start;
         public Color Target = start;
         public float Elapsed;
+
+        /// <summary>
+        ///     A dropdown's rows leave in <c>--transition-time-fast</c>, not the medium time of every other button.
+        /// </summary>
+        public readonly float Duration = button.HasStyleClass(KsTguiSheetlet.StyleClassDropdownEntry) ? DropdownEntrySeconds : FadeSeconds;
     }
 
     private sealed class TooltipFade(Control control)
@@ -66,6 +74,8 @@ public sealed partial class KsTguiFeelUIController : UIController
 
         UIManager.PopupRoot.OnChildAdded += OnPopupRootChildAdded;
         UIManager.ModalRoot.OnChildAdded += OnModalRootChildAdded;
+        InitializeBlurOnEnter();
+        UIManager.ModalRoot.OnChildRemoved += OnModalRootChildRemoved;
     }
 
     /// <summary>
@@ -82,6 +92,9 @@ public sealed partial class KsTguiFeelUIController : UIController
         _focusedInput?.RemoveStyleClass(KsTguiSheetlet.StyleClassInputFocused);
         _focusedInput = null;
 
+        DropAllTooltipHosts();
+        DropAllDropdownEffects();
+
         UIManager.GetUIController<ChatUIController>().KsRefreshChatWindow();
     }
 
@@ -92,6 +105,9 @@ public sealed partial class KsTguiFeelUIController : UIController
         UpdateButtons(UIManager.CurrentlyHovered, args.DeltaSeconds);
         UpdateInputFocus();
         UpdateTooltips(args.DeltaSeconds);
+        UpdateWindowTooltips(args.DeltaSeconds);
+        UpdateDropdowns(args.DeltaSeconds);
+        UpdateScrollArrows(args.DeltaSeconds);
     }
 
     /// <summary>
@@ -186,7 +202,7 @@ public sealed partial class KsTguiFeelUIController : UIController
             }
 
             fade.Elapsed += deltaSeconds;
-            var progress = MathF.Min(fade.Elapsed / FadeSeconds, 1f);
+            var progress = MathF.Min(fade.Elapsed / fade.Duration, 1f);
             fade.Current = Color.InterpolateBetween(fade.Start, fade.Target, Ease(progress));
             button.ModulateSelfOverride = fade.Current;
 
@@ -203,6 +219,17 @@ public sealed partial class KsTguiFeelUIController : UIController
     ///         run together told apart: a held button and a selected one are both just "pressed".
     /// </summary>
     private static Color TargetColor(BaseButton button, out bool instant)
+    {
+        var color = TargetColorCore(button, out instant);
+
+        // A dropdown row lights at once, hovered or held, and only fades on leaving.
+        if (button.HasStyleClass(KsTguiSheetlet.StyleClassDropdownEntry) && button.DrawMode != BaseButton.DrawModeEnum.Normal)
+            instant = true;
+
+        return color;
+    }
+
+    private static Color TargetColorCore(BaseButton button, out bool instant)
     {
         instant = false;
 
@@ -271,6 +298,9 @@ public sealed partial class KsTguiFeelUIController : UIController
         if (KsTguiWindowThemes.FindThemedSheet(UIManager.CurrentlyHovered) is { } themedSheet)
             control.Stylesheet = themedSheet;
 
+        if (TryTakeTooltip(control))
+            return;
+
         if (control is not Tooltip && !control.HasStyleClass(StyleClass.TooltipPanel))
             return;
 
@@ -308,6 +338,8 @@ public sealed partial class KsTguiFeelUIController : UIController
         //      the mouse when it opens.
         if (KsTguiWindowThemes.FindThemedSheet(UIManager.CurrentlyHovered) is { } themedSheet)
             control.Stylesheet = themedSheet;
+
+        BeginDropdown(control);
     }
 
     private static void TagDropdownEntries(Control control)

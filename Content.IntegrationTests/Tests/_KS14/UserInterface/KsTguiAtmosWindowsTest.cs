@@ -95,6 +95,15 @@ public sealed class KsTguiAtmosWindowsTest : GameTest
         input.Commit();
     }
 
+    private static void EnterKnob(KsTguiKnob knob, float value)
+    {
+        knob.BeginPress(0f);
+        knob.Release();
+        knob.Advance(KsTguiKnob.HoldSeconds);
+        knob.Edit.Text = value.ToString(CultureInfo.CurrentCulture);
+        knob.Commit();
+    }
+
     private static string Text(float value) => value.ToString(CultureInfo.CurrentCulture);
 
     [Test]
@@ -266,13 +275,14 @@ public sealed class KsTguiAtmosWindowsTest : GameTest
             Press(window.ValveButton);
             Press(window.EjectButton);
             Press(window.ShieldButton);
-            Enter(window.ReleaseInput, 200f);
+            // A click on the knob lets go straight away, which tgui reports as a change to the value it already had.
+            EnterKnob(window.ReleaseKnob, 200f);
             Press(window.ReleaseMaxButton);
             Press(window.ReleaseDefaultButton);
 
             Assert.That(fired, Is.EqualTo(new[]
             {
-                "open", "close", "eject", "shield", "release:200", "release:500",
+                "open", "close", "eject", "shield", "release:100", "release:200", "release:500",
                 "release:" + Math.Clamp(Atmospherics.OneAtmosphere, 10f, 500f),
             }));
             window.Dispose();

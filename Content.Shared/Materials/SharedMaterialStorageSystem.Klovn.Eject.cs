@@ -3,14 +3,12 @@ using Content.Shared.ActionBlocker;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
 using Content.Shared.Stacks;
-using Robust.Shared.Network;
 
 namespace Content.Shared.Materials;
 
 public abstract partial class SharedMaterialStorageSystem
 {
     [Dependency] private ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private INetManager _net = default!;
     [Dependency] private SharedHandsSystem _hands = default!;
     [Dependency] private SharedInteractionSystem _interaction = default!;
 
@@ -51,9 +49,18 @@ public abstract partial class SharedMaterialStorageSystem
         if (volume <= 0 || !TryChangeMaterialAmount(uid, msg.Material, -volume))
             return;
 
+        KsReleaseHeldAmounts(uid);
+
         var stackUid = PredictedSpawnAtPosition(stackEntity, Transform(uid).Coordinates);
         _heap.SetCount((stackUid, null), sheets);
         GiveEjectedStack(stackUid, playerUid);
+    }
+
+    /// <summary>
+    ///     A predicted insert holds the shown amounts up on the client, which would hide this taking them down.
+    /// </summary>
+    protected virtual void KsReleaseHeldAmounts(EntityUid uid)
+    {
     }
 
     /// <summary>

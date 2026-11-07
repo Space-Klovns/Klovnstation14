@@ -12,6 +12,29 @@ public partial class FancyWindow
 {
     private string? _ksRawTitle;
     private bool _ksChromed;
+    private BaseButton? _ksChromeHelpButton;
+
+    /// <summary>
+    ///     The tgui chrome's guidebook button, which takes over from <see cref="HelpButton"/> while it's on the window.
+    /// </summary>
+    public BaseButton? KsChromeHelpButton
+    {
+        get => _ksChromeHelpButton;
+        set
+        {
+            _ksChromeHelpButton = value;
+            KsRefreshHelpButton();
+        }
+    }
+
+    private void KsRefreshHelpButton()
+    {
+        var hasGuides = HelpGuidebookIds != null;
+
+        HelpButton.Visible = hasGuides && _ksChromeHelpButton == null;
+        if (_ksChromeHelpButton != null)
+            _ksChromeHelpButton.Visible = hasGuides;
+    }
 
     /// <summary>
     ///     Whether the tgui chrome is on this window. Changes how it shows its title and where it can be dragged.

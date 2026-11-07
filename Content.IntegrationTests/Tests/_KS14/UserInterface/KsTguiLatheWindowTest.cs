@@ -95,6 +95,14 @@ public sealed class KsTguiLatheWindowTest : GameTest
         }
     }
 
+    /// <summary>
+    ///     The design itself: the row's only container button that isn't a tgui button.
+    /// </summary>
+    private static ContainerButton Title(Control row)
+    {
+        return Descendants<ContainerButton>(row).Single(button => button is not Button);
+    }
+
     private static int QueuedItems(LatheComponent lathe)
     {
         return lathe.Queue.Sum(batch => batch.ItemsRequested);
@@ -151,10 +159,10 @@ public sealed class KsTguiLatheWindowTest : GameTest
         List<ContainerButton> titles = null!;
         await Client.WaitPost(() =>
         {
-            titles = Descendants<ContainerButton>(window).Where(button => button is not KsTguiTabItem && button is not Button).ToList();
+            titles = Descendants<KsTguiLatheRecipeRow>(window).Select(row => Title(row)).ToList();
             Assert.That(titles, Is.Not.Empty, "The lathe should list designs.");
 
-            var tabs = Descendants<KsTguiTabItem>(window).ToList();
+            var tabs = Descendants<KsTguiFabricatorTab>(window).ToList();
             Assert.That(tabs, Has.Count.GreaterThan(1), "There should be All Designs and at least one category.");
 
             // A category narrows the list; All widens it again.
@@ -163,8 +171,8 @@ public sealed class KsTguiLatheWindowTest : GameTest
 
         await Client.WaitPost(() =>
         {
-            var tabs = Descendants<KsTguiTabItem>(window).ToList();
-            var narrowed = Descendants<ContainerButton>(window).Count(button => button is not KsTguiTabItem && button is not Button);
+            var tabs = Descendants<KsTguiFabricatorTab>(window).ToList();
+            var narrowed = Descendants<KsTguiLatheRecipeRow>(window).Count();
             Assert.That(narrowed, Is.LessThanOrEqualTo(titles.Count));
             Assert.That(tabs[1].Selected, Is.True);
             Press(tabs[0]);
@@ -173,8 +181,8 @@ public sealed class KsTguiLatheWindowTest : GameTest
         // Queue a design, then x5, through the real BUI.
         await Client.WaitPost(() =>
         {
-            var first = Descendants<ContainerButton>(window).First(button => button is not KsTguiTabItem && button is not Button && !button.Disabled);
-            Press(first);
+            var first = Descendants<KsTguiLatheRecipeRow>(window).First(row => row.CanBuild(1));
+            Press(Title(first));
         });
         await Pair.RunTicksSync(10);
 
@@ -188,8 +196,8 @@ public sealed class KsTguiLatheWindowTest : GameTest
 
         await Client.WaitPost(() =>
         {
-            var times = Descendants<KsTguiButton>(window).First(button => button.Text == "×5" && !button.Disabled);
-            Press(times);
+            var row = Descendants<KsTguiLatheRecipeRow>(window).First(row => row.CanBuild(5));
+            Press(Descendants<KsTguiButton>(row).First(button => button.Text == "×5"));
         });
         await Pair.RunTicksSync(10);
 
@@ -256,6 +264,247 @@ public sealed class KsTguiLatheWindowTest : GameTest
                 steelTaken == steelSheet && glassTaken == 0 || steelTaken == 0 && glassTaken == glassSheet,
                 Is.True,
                 $"One sheet of one material should go; {steelTaken} steel and {glassTaken} glass went.");
+        });
+    }
+
+    /// <summary>
+    ///     tg's fabricator: hovering a design, or its x5 or x10, shows what that many prints take, one material sprite with its
+    ///         sheets under it each, coloured by whether the machine has enough.
+    /// </summary>
+    [Test]
+    public async Task HoveringADesignShowsWhatItCosts()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        await OpenLathe();
+
+        await Client.WaitPost(() =>
+        {
+            var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+            var row = Descendants<KsTguiLatheRecipeRow>(window).First(row => row.CanBuild(10));
+
+            var once = CostNumbers(Title(row));
+            var ten = CostNumbers(Descendants<KsTguiButton>(row).First(button => button.Text == "×10"));
+
+            Assert.That(once, Is.Not.Empty, "A design's tooltip should list its materials.");
+            Assert.That(ten, Has.Count.EqualTo(once.Count));
+            for (var i = 0; i < once.Count; i++)
+                Assert.That(ten[i], Is.EqualTo(once[i] * 10f).Within(once[i] * 10f * 0.01f), "x10's tooltip should cost ten prints.");
+        });
+    }
+
+    private static List<float> CostNumbers(Control button)
+    {
+        var tooltip = button.TooltipSupplier!.Invoke(button);
+        Assert.That(tooltip, Is.Not.Null);
+
+        var sequence = Descendants<KsTguiMaterialCostSequence>(tooltip!).Single();
+        Assert.That(Descendants<TextureRect>(sequence).Count(), Is.EqualTo(Descendants<Label>(sequence).Count()), "Each cost has its sprite.");
+        return Descendants<Label>(sequence).Select(label => float.Parse(label.Text!, System.Globalization.CultureInfo.InvariantCulture)).ToList();
+    }
+
+    [Test]
+    public void CostColoursFollowWhatTheMachineHas()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(KsTguiMaterialCostSequence.AmountColor(100, 200), Is.EqualTo(KsTguiMaterialCostSequence.Plenty));
+            Assert.That(KsTguiMaterialCostSequence.AmountColor(100, 199), Is.EqualTo(KsTguiMaterialCostSequence.OnlyOnce));
+            Assert.That(KsTguiMaterialCostSequence.AmountColor(100, 100), Is.EqualTo(KsTguiMaterialCostSequence.OnlyOnce));
+            Assert.That(KsTguiMaterialCostSequence.AmountColor(100, 99), Is.EqualTo(KsTguiMaterialCostSequence.NotEnough));
+        });
+    }
+
+    /// <summary>
+    ///     tg's onClick is <c>canPrint &amp;&amp; act(...)</c>: a design the lathe can't make stays hoverable, greyed out, and a
+    ///         click on it does nothing.
+    /// </summary>
+    [Test]
+    public async Task ADesignThatCantBeMadeQueuesNothing()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        var lathe = await OpenLathe();
+
+        await Client.WaitPost(() =>
+        {
+            var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+            var row = Descendants<KsTguiLatheRecipeRow>(window).First(row => !row.CanBuild(1));
+            var title = Title(row);
+
+            Assert.That(title.Disabled, Is.False, "It should still hover.");
+            Assert.That(title.Modulate.A, Is.LessThan(1f), "It should be greyed out.");
+            Assert.That(Descendants<KsTguiButton>(row).First(button => button.Text == "×5").Strikethrough, Is.True, "Its amounts should be struck through.");
+
+            // The server would refuse it anyway, so what matters is that nothing is sent.
+            var sent = 0;
+            window.RecipeQueueAction += (_, _) => sent++;
+            Press(title);
+            Press(Descendants<KsTguiButton>(row).First(button => button.Text == "×5"));
+            Assert.That(sent, Is.Zero, "A click on a design that can't be made should send nothing.");
+        });
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            var component = SEntMan.GetComponent<LatheComponent>(lathe);
+            Assert.That(QueuedItems(component) + (component.CurrentRecipe != null ? 1 : 0), Is.Zero);
+        });
+    }
+
+    /// <summary>
+    ///     tg's <c>maxmult</c>, worked out from the recipe and what the machine holds, not from the window's own code.
+    /// </summary>
+    private int ExpectedMax(KsTguiLatheRecipeRow row, EntityUid clientLathe)
+    {
+        var recipe = CProtoMan.Index(row.RecipeId);
+        var component = CEntMan.GetComponent<LatheComponent>(clientLathe);
+        var storage = CEntMan.System<SharedMaterialStorageSystem>();
+
+        var most = 50;
+        foreach (var (material, perPrint) in recipe.Materials)
+        {
+            var needed = SharedLatheSystem.AdjustMaterial(perPrint, recipe.ApplyMaterialDiscount, component.MaterialUseMultiplier);
+            most = Math.Min(most, storage.GetMaterialAmount(clientLathe, material) / needed);
+        }
+
+        return most;
+    }
+
+    private async Task SetSteel(EntityUid lathe, int amount)
+    {
+        await Server.WaitPost(() =>
+        {
+            var materials = SEntMan.System<SharedMaterialStorageSystem>();
+            var current = materials.GetMaterialAmount(lathe, SteelMaterial);
+            Assert.That(materials.TryChangeMaterialAmount(lathe, SteelMaterial, amount - current), Is.True);
+        });
+        await Pair.RunTicksSync(10);
+    }
+
+    /// <summary>
+    ///     tg's <c>[Max: N]</c>: N is how many the materials allow, at most 50, whatever the lathe holds.
+    /// </summary>
+    [Test]
+    public async Task MaxButtonCountsWhatTheMaterialsAllow()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        var lathe = await OpenLathe();
+
+        async Task Check(string situation, Action<List<KsTguiLatheRecipeRow>> extra)
+        {
+            await Client.WaitPost(() =>
+            {
+                var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+                window.PopulateRecipes();
+                var rows = Descendants<KsTguiLatheRecipeRow>(window).ToList();
+                Assert.That(rows, Is.Not.Empty);
+
+                foreach (var row in rows)
+                {
+                    Assert.That(row.MaxAmount, Is.EqualTo(ExpectedMax(row, window.Entity)), $"{situation}: {row.RecipeId}");
+                    var label = Descendants<KsTguiInputButton>(row).Single().Text;
+                    Assert.That(label, Does.Contain(row.MaxAmount.ToString()), "The button should read the number.");
+                }
+
+                extra(rows);
+            });
+        }
+
+        // Plenty: the cap, not the stock, is the limit.
+        await Check("plenty", rows => Assert.That(rows.Any(row => row.MaxAmount == 50), Is.True, "A cheap design should hit the cap of 50."));
+
+        // A little: some designs fall short of the cap, and the number follows the stock.
+        await SetSteel(lathe, 1000);
+        await Check("a little", rows =>
+        {
+            Assert.That(rows.Any(row => row.MaxAmount is > 0 and < 50), Is.True, "1000 steel should limit some design below the cap.");
+        });
+
+        // None: whatever needs steel can't be made.
+        await SetSteel(lathe, 0);
+        await Check("none", rows => Assert.That(rows.Any(row => row.MaxAmount == 0), Is.True, "Designs that need steel should read 0."));
+    }
+
+    /// <summary>
+    ///     A number committed in <c>[Max: N]</c> queues that many; with N at 0 nothing is sent.
+    /// </summary>
+    [Test]
+    public async Task CommittingAMaxAmountQueuesThatMany()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        var lathe = await OpenLathe();
+
+        var sent = new List<(string Recipe, int Amount)>();
+        await Client.WaitPost(() =>
+        {
+            var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+            window.RecipeQueueAction += (recipe, amount) => sent.Add((recipe, amount));
+
+            var row = Descendants<KsTguiLatheRecipeRow>(window).First(row => row.MaxAmount >= 7);
+            var input = Descendants<KsTguiInputButton>(row).Single();
+            input.BeginEdit();
+            input.SetEditText("7");
+            input.Finish(cancel: false);
+
+            Assert.That(sent, Is.EqualTo(new[] { (row.RecipeId.Id, 7) }), "Seven should be queued.");
+
+            // Typing the same number again is another commit.
+            input.BeginEdit();
+            input.SetEditText("7");
+            input.Finish(cancel: false);
+            Assert.That(sent, Has.Count.EqualTo(2));
+            sent.Clear();
+        });
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            var component = SEntMan.GetComponent<LatheComponent>(lathe);
+            Assert.That(QueuedItems(component) + (component.CurrentRecipe != null ? 1 : 0), Is.GreaterThanOrEqualTo(7), "The server should hold the queued prints.");
+        });
+
+        // Nothing left to print with: N is 0 and a commit does nothing.
+        await SetSteel(lathe, 0);
+        await Client.WaitPost(() =>
+        {
+            var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+            window.PopulateRecipes();
+            var row = Descendants<KsTguiLatheRecipeRow>(window).First(row => row.MaxAmount == 0);
+            var input = Descendants<KsTguiInputButton>(row).Single();
+            input.BeginEdit();
+            input.SetEditText("7");
+            input.Finish(cancel: false);
+            Assert.That(sent, Is.Empty, "[Max: 0] should send nothing.");
+        });
+    }
+
+    [Test]
+    public async Task CategoriesShowTheirCountsAndTheSelectedOne()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        await OpenLathe();
+
+        await Client.WaitPost(() =>
+        {
+            var window = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single();
+            var tabs = Descendants<KsTguiFabricatorTab>(window).ToList();
+            var rows = Descendants<KsTguiLatheRecipeRow>(window).Count();
+
+            Assert.That(tabs[0].Selected, Is.True);
+            Assert.That(tabs.Skip(1).All(tab => !tab.Selected));
+            Assert.That(Descendants<Label>(tabs[0]).Last().Text, Is.EqualTo($"({rows})"), "All Designs counts every design, in brackets as tg's.");
+
+            Press(tabs[1]);
+            Assert.That(tabs[1].Selected && !tabs[0].Selected, Is.True);
         });
     }
 }

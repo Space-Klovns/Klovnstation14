@@ -1,0 +1,32 @@
+light_mode unshaded;
+
+// One pass of the separable Gaussian behind tgui's backdrop-filter: blur(12px). 25 taps tapStep pixels apart along direction,
+//      weighted exp(-x^2 / (2 sigmaTaps^2)) and normalised here, so the weights are KsTguiBackdropMath.Weights. The loop
+//      bound must match KsTguiBackdropMath.TapRadius. Edges are mirrored, as Chromium does for a backdrop, so nothing from
+//      outside the popup's box leaks in.
+
+uniform highp vec2 direction;
+uniform highp float tapStep;
+uniform highp float sigmaTaps;
+
+void fragment()
+{
+    highp vec2 stepUv = direction * tapStep * TEXTURE_PIXEL_SIZE;
+    highp vec3 sum = vec3(0.0);
+    highp float total = 0.0;
+
+    for (int i = -12; i <= 12; i++)
+    {
+        highp float x = float(i);
+        highp float weight = exp(-0.5 * x * x / (sigmaTaps * sigmaTaps));
+
+        highp vec2 uv = UV + stepUv * x;
+        highp vec2 wave = uv - 2.0 * floor(uv * 0.5);
+        uv = mix(wave, 2.0 - wave, step(1.0, wave));
+
+        sum += zTexture(uv).rgb * weight;
+        total += weight;
+    }
+
+    COLOR = vec4(sum / total, 1.0);
+}

@@ -7,15 +7,19 @@ namespace Content.Client._KS14.Tgui.Controls;
 
 /// <summary>
 ///     tgui's BlockQuote: wrapping text in the label colour behind a 2px bar of the same colour, 6px of padding after the
-///         bar and 6px below, which a quote that is the last child of its container would not have. XAML children follow
-///         <see cref="Text"/>.
+///         bar. The 6px below it (<c>margin-bottom</c>, outside the bar, which ends with the text) are on by default;
+///         <see cref="Spaced"/> is off for a quote that is the last child of its container, as CSS's <c>:last-child</c>.
+///         XAML children follow <see cref="Text"/>.
 /// </summary>
 public sealed class KsTguiBlockQuote : PanelContainer
 {
     private readonly BoxContainer _content;
     private readonly RichTextLabel _label;
     private readonly StyleBoxFlat _box;
+    private const float SpaceBelow = 6f;
+
     private string? _text;
+    private bool _spaced = true;
     private Color _labelColor = KsTguiPalettes.Label;
 
     public KsTguiBlockQuote()
@@ -27,8 +31,8 @@ public sealed class KsTguiBlockQuote : PanelContainer
             BorderThickness = new Thickness(2f, 0f, 0f, 0f),
         };
         _box.SetContentMarginOverride(StyleBox.Margin.Left, 8f);
-        _box.SetContentMarginOverride(StyleBox.Margin.Bottom, 6f);
         PanelOverride = _box;
+        Margin = new Thickness(0f, 0f, 0f, SpaceBelow);
 
         _label = new RichTextLabel { Visible = false };
         _content = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
@@ -48,6 +52,19 @@ public sealed class KsTguiBlockQuote : PanelContainer
         {
             _text = value;
             RefreshText();
+        }
+    }
+
+    /// <summary>
+    ///     Whether the quote leaves 6px below it. tgui drops them for the last child of a container.
+    /// </summary>
+    public bool Spaced
+    {
+        get => _spaced;
+        set
+        {
+            _spaced = value;
+            Margin = new Thickness(0f, 0f, 0f, value ? SpaceBelow : 0f);
         }
     }
 

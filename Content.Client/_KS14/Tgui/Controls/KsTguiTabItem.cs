@@ -1,6 +1,7 @@
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Timing;
 using XColor = Robust.Shared.Maths.Color;
 
 namespace Content.Client._KS14.Tgui.Controls;
@@ -25,6 +26,24 @@ public sealed class KsTguiTabItem : ContainerButton
     private readonly KsTguiIcon _icon;
     private readonly Label _text;
     private readonly Label _count;
+
+    /// <summary>
+    ///     tgui's <c>--tab-transition</c>, for the indicator, the background and the text alike.
+    /// </summary>
+    public const float TransitionSeconds = 0.2f;
+
+    private XColor _bgFrom = Clear;
+    private XColor _bgTo = Clear;
+    private XColor _bgNow = Clear;
+    private XColor _textFrom = KsTguiPalettes.TextDim;
+    private XColor _textTo = KsTguiPalettes.TextDim;
+    private XColor _textNow = KsTguiPalettes.TextDim;
+    private float _indicatorFrom;
+    private float _indicatorTo;
+    private float _indicatorNow;
+    private float _elapsed = TransitionSeconds;
+    // Changes before the first frame (a theme arriving as the tab enters the tree) are settings, not transitions.
+    private bool _framed;
 
     // ContainerButton's constructor calls DrawModeChanged before any of this exists.
     private bool _built;
@@ -138,6 +157,101 @@ public sealed class KsTguiTabItem : ContainerButton
         RefreshLook();
     }
 
+    /// <summary>
+    ///     How far the indicator line has grown, from 0 (not there) to 1: it grows from its middle outwards, as tgui's
+    ///         <c>scaleX(0)</c> to <c>scaleX(.99999)</c>.
+    /// </summary>
+    public float IndicatorProgress => _indicatorNow;
+
+    /// <summary>
+    ///     The background drawn now, part way through its transition.
+    /// </summary>
+    public XColor CurrentBackground => _bgNow;
+
+    /// <summary>
+    ///     The text colour drawn now, part way through its transition.
+    /// </summary>
+    public XColor CurrentTextColor => _textNow;
+
+    /// <summary>
+    ///     Finishes the transitions at once.
+    /// </summary>
+    public void SettleAnimations()
+    {
+        _elapsed = TransitionSeconds;
+        ApplyAnimation();
+    }
+
+    protected override void FrameUpdate(FrameEventArgs args)
+    {
+        base.FrameUpdate(args);
+        _framed = true;
+
+        if (_elapsed >= TransitionSeconds)
+            return;
+
+        _elapsed += args.DeltaSeconds;
+        ApplyAnimation();
+    }
+
+    private static float Ease(float progress)
+    {
+        var remaining = 1f - progress;
+        return 1f - remaining * remaining * remaining;
+    }
+
+    /// <summary>
+    ///     Between two washes the way CSS does: a fade from or to nothing keeps the other's colour and moves only its alpha.
+    /// </summary>
+    private static XColor Blend(XColor from, XColor to, float amount)
+    {
+        if (from.A <= 0f)
+            return to.WithAlpha(to.A * amount);
+
+        if (to.A <= 0f)
+            return from.WithAlpha(from.A * (1f - amount));
+
+        return XColor.InterpolateBetween(from, to, amount);
+    }
+
+    private void ApplyAnimation()
+    {
+        var amount = Ease(MathF.Min(_elapsed / TransitionSeconds, 1f));
+        _bgNow = Blend(_bgFrom, _bgTo, amount);
+        _textNow = XColor.InterpolateBetween(_textFrom, _textTo, amount);
+        _indicatorNow = _indicatorFrom + (_indicatorTo - _indicatorFrom) * amount;
+
+        _box.BackgroundColor = _bgNow;
+        _text.FontColorOverride = _textNow;
+        _count.FontColorOverride = _textNow;
+        _icon.IconColor = _textNow;
+    }
+
+    protected override void Draw(DrawingHandleScreen handle)
+    {
+        base.Draw(handle);
+
+        if (_indicatorNow <= 0f)
+            return;
+
+        var thickness = MathF.Max(1f, MathF.Round(2f * UIScale));
+        var color = _indicatorColor;
+        if (_vertical)
+        {
+            var length = PixelHeight * _indicatorNow * 0.99999f;
+            var top = (PixelHeight - length) / 2f;
+            handle.DrawRect(new UIBox2(PixelWidth - thickness, top, PixelWidth, top + length), color);
+        }
+        else
+        {
+            var length = PixelWidth * _indicatorNow * 0.99999f;
+            var left = (PixelWidth - length) / 2f;
+            handle.DrawRect(new UIBox2(left, PixelHeight - thickness, left + length, PixelHeight), color);
+        }
+    }
+
+    private XColor _indicatorColor = Clear;
+
     private void RefreshLook()
     {
         if (!_built)
@@ -147,9 +261,9 @@ public sealed class KsTguiTabItem : ContainerButton
         var hovered = DrawMode == DrawModeEnum.Hover;
         var pressed = DrawMode == DrawModeEnum.Pressed;
 
-        _box.BackgroundColor = _selected ? _selectedWash : hovered ? _hoverWash : Clear;
-        _box.BorderColor = _selected ? bright : Clear;
-        _box.BorderThickness = _vertical ? new Thickness(0f, 0f, 2f, 0f) : new Thickness(0f, 0f, 0f, 2f);
+        // The line is drawn by this control, so it can grow from the middle; the box keeps the background and corners.
+        _box.BorderColor = Clear;
+        _box.BorderThickness = default;
         _box.RadiusTopLeft = 3f;
         _box.RadiusTopRight = _vertical ? 0f : 3f;
         _box.RadiusBottomLeft = _vertical ? 3f : 0f;
@@ -159,9 +273,32 @@ public sealed class KsTguiTabItem : ContainerButton
         _box.SetContentMarginOverride(StyleBox.Margin.Vertical, _vertical ? 4.5f : 6f);
         MinSize = new System.Numerics.Vector2(48f, _vertical ? 24f : 27f);
 
+        var wanted = _selected ? _selectedWash : hovered && !_selected ? _hoverWash : Clear;
         var text = _selected || pressed ? bright : KsTguiPalettes.TextDim;
-        _text.FontColorOverride = text;
-        _count.FontColorOverride = text;
-        _icon.IconColor = text;
+        var indicator = _selected ? 1f : 0f;
+
+        // The line is the text's colour (currentColor), and when it shrinks it keeps the colour it had.
+        if (_selected)
+            _indicatorColor = bright;
+
+        if (!_framed)
+        {
+            _bgFrom = _bgTo = wanted;
+            _textFrom = _textTo = text;
+            _indicatorFrom = _indicatorTo = indicator;
+            _elapsed = TransitionSeconds;
+        }
+        else if (wanted != _bgTo || text != _textTo || indicator != _indicatorTo)
+        {
+            _bgFrom = _bgNow;
+            _textFrom = _textNow;
+            _indicatorFrom = _indicatorNow;
+            _bgTo = wanted;
+            _textTo = text;
+            _indicatorTo = indicator;
+            _elapsed = 0f;
+        }
+
+        ApplyAnimation();
     }
 }

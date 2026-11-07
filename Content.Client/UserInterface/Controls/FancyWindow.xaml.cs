@@ -68,6 +68,7 @@ namespace Content.Client.UserInterface.Controls
                 _helpGuidebookIds = value;
                 HelpButton.Disabled = _helpGuidebookIds == null;
                 HelpButton.Visible = !HelpButton.Disabled;
+                KsRefreshHelpButton(); // KS14
             }
         }
 

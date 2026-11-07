@@ -5,3 +5,4 @@ ks-tgui-lathe-results = Results for "{ $query }"
 ks-tgui-lathe-search = Search all designs...
 ks-tgui-lathe-queue-empty = The queue is empty.
 ks-tgui-lathe-recipe-times = ×{ $amount }
+ks-tgui-lathe-recipe-max = [Max: { $amount }]

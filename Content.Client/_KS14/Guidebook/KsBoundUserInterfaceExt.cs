@@ -39,6 +39,9 @@ public static class KsBoundUserInterfaceExt
     /// </summary>
     public static T WithGuide<T>(this BoundUserInterface bui, T window) where T : BaseWindow
     {
+        // Also the one place with both a window and its interface, which tgui's dimmer for a user who can't use it needs.
+        IoCManager.Resolve<IUserInterfaceManager>().GetUIController<KsTguiWindowDimmerUIController>().Track(bui, window);
+
         var entityManager = IoCManager.Resolve<IEntityManager>();
         if (!entityManager.TryGetComponent(bui.Owner, out GuideHelpComponent? guideHelpComponent))
             return window;

@@ -71,7 +71,7 @@ public sealed class KsTguiAnimationTest : GameTest
     {
         await Client.WaitPost(() =>
         {
-            var gauge = new KsTguiRoundGauge { Value = 50f };
+            var gauge = new KsTguiRoundGauge { MinValue = 0f, Value = 50f };
             gauge.MaxValue = 100f;
             gauge.Advance(0.016f);
 

@@ -70,7 +70,10 @@ public sealed class KsTguiApcWindow : FancyWindow, IKsApcWindow
         lockedContent.AddChild(new Label { Text = Loc.GetString("apc-component-insufficient-access"), Align = Label.AlignMode.Center });
         _lockDimmer.Content = lockedContent;
         root.AddChild(dimmed);
-        ContentsContainer.AddChild(root);
+        // Window.Content scrollable is overflow-y: scroll: the bar's column is there whether or not anything overflows.
+        var scroll = new KsTguiScrollContainer { HScrollEnabled = false, ReserveVertical = true, ReturnMeasure = true, VerticalExpand = true };
+        scroll.AddChild(root);
+        ContentsContainer.AddChild(scroll);
 
         RefreshBreaker();
     }

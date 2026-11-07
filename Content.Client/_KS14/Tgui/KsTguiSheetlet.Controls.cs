@@ -27,6 +27,16 @@ public sealed partial class KsTguiSheetlet
     public const string StyleClassButtonSelected = "KsTguiButtonSelected";
 
     /// <summary>
+    ///     On a <see cref="KsTguiButton"/> that is selected and transparent: tgui keeps it clear and turns its text green.
+    /// </summary>
+    public const string StyleClassButtonSelectedTransparent = "KsTguiButtonSelectedTransparent";
+
+    /// <summary>
+    ///     On a <see cref="KsTguiButton"/> with tgui's <c>circular</c>.
+    /// </summary>
+    public const string StyleClassButtonCircular = "KsTguiButtonCircular";
+
+    /// <summary>
     ///     On a control that stripes its rows; the tgui sheet gives it <see cref="StylePropertyCandystripe"/>, so Baron draws none.
     /// </summary>
     public const string StyleClassCandystripe = "KsTguiCandystripe";
@@ -50,6 +60,7 @@ public sealed partial class KsTguiSheetlet
         AddSectionRules(rules);
         AddNoticeBoxRules(rules);
         AddColoredButtonRules(rules);
+        AddButtonVariantRules(rules);
         rules.Add(E().Class(StyleClassCandystripe).Prop(StylePropertyCandystripe, _palette.Candystripe));
     }
 
@@ -65,14 +76,15 @@ public sealed partial class KsTguiSheetlet
         titleBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, 6f);
         titleBox.SetContentMarginOverride(StyleBox.Margin.Bottom, 8f);
 
-        // A nested section's title text starts at the outer body's edge: tgui pulls it out over the outer padding.
+        // A nested section sits 6px out over the outer padding, so its title text still starts at the outer body's edge and its
+        //      line runs edge to edge.
         var nestedTitleBox = new KsTguiStyleBox(Clear)
         {
             BorderColor = _palette.PrimaryBase,
             BorderThickness = new Thickness(0f, 0f, 0f, 2f),
         };
         nestedTitleBox.SetContentMarginOverride(StyleBox.Margin.Top, 6f);
-        nestedTitleBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, 0f);
+        nestedTitleBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, 6f);
         nestedTitleBox.SetContentMarginOverride(StyleBox.Margin.Bottom, 8f);
 
         rules.AddRange(new StyleRule[]
@@ -94,19 +106,21 @@ public sealed partial class KsTguiSheetlet
 
     private void AddNoticeBoxRules(List<StyleRule> rules)
     {
-        var colors = new (KsTguiNoticeColor Name, Color Color)[]
+        foreach (var name in Enum.GetValues<KsTguiNoticeColor>())
         {
-            (KsTguiNoticeColor.Default, _palette.Notice),
-            (KsTguiNoticeColor.Info, KsTguiPalettes.NoticeInfo),
-            (KsTguiNoticeColor.Success, KsTguiPalettes.NoticeGood),
-            (KsTguiNoticeColor.Warning, NoticeWarning),
-            (KsTguiNoticeColor.Danger, KsTguiPalettes.NoticeBad),
-        };
+            // The five the windows have used keep their exact colours; the rest are derived as NoticeBox.scss does.
+            var color = name switch
+            {
+                KsTguiNoticeColor.Default => _palette.Notice,
+                KsTguiNoticeColor.Info => KsTguiPalettes.NoticeInfo,
+                KsTguiNoticeColor.Success => KsTguiPalettes.NoticeGood,
+                KsTguiNoticeColor.Warning => NoticeWarning,
+                KsTguiNoticeColor.Danger => KsTguiPalettes.NoticeBad,
+                _ => KsTguiNoticeBox.BackgroundOf(name, _palette.Notice),
+            };
 
-        foreach (var (name, color) in colors)
-        {
             // tgui's notice box is padded 4 by 6.
-            var box = new KsTguiNoticeStyleBox(color);
+            var box = new KsTguiNoticeStyleBox(color, whiteStripes: name == KsTguiNoticeColor.Black);
             box.SetContentMarginOverride(StyleBox.Margin.Vertical, 4f);
             box.SetContentMarginOverride(StyleBox.Margin.Horizontal, 6f);
 
@@ -158,18 +172,61 @@ public sealed partial class KsTguiSheetlet
     {
         var styleClass = KsTguiColors.ButtonClass(KsTguiColor.Transparent);
 
+        // tgui: hover turns the text solid and washes the background white .1; :active is the same at opacity .75.
+        var pressedWash = KsTguiPalettes.Translucent(Color.White, 0.075f, _palette.Base);
+        var pressedText = KsTguiPalettes.Translucent(Color.White, 0.75f, _palette.Base);
+
+        // Disabled: --color-bad text on a --color-bad wash at .2, never dimmed.
+        var bad = KsTguiColors.Shade(KsTguiColor.Bad, 0f);
+        var disabledWash = KsTguiPalettes.Translucent(bad, 0.2f, _palette.Base);
+
         rules.AddRange(new StyleRule[]
         {
             CButton().Class(styleClass).Prop(StylePropertyNormalColor, Clear),
             CButton().Class(styleClass).PseudoNormal().Modulate(Clear),
             CButton().Class(styleClass).PseudoHovered().Modulate(Border),
-            CButton().Class(styleClass).PseudoPressed().Modulate(Border),
-            CButton().Class(styleClass).PseudoDisabled().Modulate(Clear),
+            CButton().Class(styleClass).PseudoPressed().Modulate(pressedWash),
+            CButton().Class(styleClass).PseudoDisabled().Modulate(disabledWash),
 
             // The text is the colour: white at .5, and solid on hover.
             CButton().Class(styleClass).ParentOf(E<Label>()).FontColor(White50),
             CButton().Class(styleClass).PseudoHovered().ParentOf(E<Label>()).FontColor(Color.White),
-            CButton().Class(styleClass).PseudoPressed().ParentOf(E<Label>()).FontColor(Color.White),
+            CButton().Class(styleClass).PseudoPressed().ParentOf(E<Label>()).FontColor(pressedText),
+            CButton().Class(styleClass).PseudoDisabled().ParentOf(E<Label>()).FontColor(bad),
         });
+
+        AddSelectedTransparentButtonRules(rules, disabledWash, bad);
+    }
+
+    /// <summary>
+    ///     tgui's <c>Button.Checkbox</c> look: a clear button whose text is the selected colour at +5 lightness. Hover washes
+    ///         it with that colour at .1, a step lighter.
+    /// </summary>
+    private void AddSelectedTransparentButtonRules(List<StyleRule> rules, Color disabledWash, Color bad)
+    {
+        var styleClass = StyleClassButtonSelectedTransparent;
+        var text = _palette.SelectedButton.Hovered;
+        var hoverWash = KsTguiPalettes.Translucent(KsTguiFeelUIController.ShiftLightness(text, 0.1f), 0.1f, _palette.Base);
+        var pressedWash = KsTguiPalettes.Translucent(KsTguiFeelUIController.ShiftLightness(text, -0.075f), 0.075f, _palette.Base);
+        var pressedText = KsTguiPalettes.Translucent(text, 0.75f, _palette.Base);
+
+        rules.AddRange(new StyleRule[]
+        {
+            CButton().Class(styleClass).Prop(StylePropertyNormalColor, Clear),
+            CButton().Class(styleClass).PseudoNormal().Modulate(Clear),
+            CButton().Class(styleClass).PseudoHovered().Modulate(hoverWash),
+            CButton().Class(styleClass).PseudoPressed().Modulate(pressedWash),
+            CButton().Class(styleClass).PseudoDisabled().Modulate(disabledWash),
+
+            CButton().Class(styleClass).ParentOf(E<Label>()).FontColor(text),
+            CButton().Class(styleClass).PseudoPressed().ParentOf(E<Label>()).FontColor(pressedText),
+            CButton().Class(styleClass).PseudoDisabled().ParentOf(E<Label>()).FontColor(bad),
+        });
+    }
+
+    private void AddButtonVariantRules(List<StyleRule> rules)
+    {
+        // tgui's circular: a radius of 99999px, which the box clamps to half its height.
+        rules.Add(CButton().Class(StyleClassButtonCircular).Box(ButtonBox(radius: 99999f)));
     }
 }

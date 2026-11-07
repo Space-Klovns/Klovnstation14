@@ -210,8 +210,9 @@ public sealed class KsTguiThemeTest : GameTest
                 Assert.That(DefaultHeader(defaultWindow).Size.Y, Is.EqualTo(KsTguiGeometry.TitleBarHeight).Within(0.5f));
 
                 Assert.That(StockCloseButton(fancyWindow).Visible, Is.False);
-                Assert.That(FindAll<KsTguiCloseButton>(fancyWindow), Has.Count.EqualTo(1));
-                Assert.That(FindAll<KsTguiCloseButton>(defaultWindow), Has.Count.EqualTo(1));
+                // The guidebook's button is there too, hidden on a window with no guide.
+                Assert.That(FindAll<KsTguiTitleBarButton>(fancyWindow).Where(button => button.Visible), Has.Exactly(1).Items);
+                Assert.That(FindAll<KsTguiTitleBarButton>(defaultWindow), Has.Count.EqualTo(1));
 
                 Assert.That(fancyWindow.KsTitleLabel.Text, Is.EqualTo("Air Alarm"));
                 Assert.That(fancyWindow.Title, Is.EqualTo("air alarm"), "Callers should get back the title they set");
@@ -229,7 +230,7 @@ public sealed class KsTguiThemeTest : GameTest
                 Assert.That(KsTguiChromeUIController.HasChrome(defaultWindow), Is.False);
                 Assert.That(StockCloseButton(fancyWindow).Visible, Is.True);
                 Assert.That(StockCloseButton(defaultWindow).Visible, Is.True);
-                Assert.That(FindAll<KsTguiCloseButton>(fancyWindow), Is.Empty);
+                Assert.That(FindAll<KsTguiTitleBarButton>(fancyWindow), Is.Empty);
                 Assert.That(FindAll<KsTguiWindowHandle>(defaultWindow), Is.Empty);
                 Assert.That(DefaultHeader(defaultWindow).MinSize.Y, Is.EqualTo(stockDefaultHeight));
                 Assert.That(fancyWindow.KsTitleLabel.Text, Is.EqualTo("air alarm"));
@@ -287,7 +288,7 @@ public sealed class KsTguiThemeTest : GameTest
 
         await Client.WaitAssertion(() =>
         {
-            Assert.That(FindAll<KsTguiCloseButton>(window), Has.Count.EqualTo(1));
+            Assert.That(FindAll<KsTguiTitleBarButton>(window).Where(button => button.Visible), Has.Exactly(1).Items);
             Assert.That(FindAll<KsTguiWindowHandle>(window), Has.Count.EqualTo(1));
 
             window.Close();
@@ -354,7 +355,7 @@ public sealed class KsTguiThemeTest : GameTest
             Assert.Multiple(() =>
             {
                 Assert.That(KsTguiChromeUIController.HasChrome(window), Is.False);
-                Assert.That(FindAll<KsTguiCloseButton>(window), Is.Empty);
+                Assert.That(FindAll<KsTguiTitleBarButton>(window), Is.Empty);
 
                 foreach (var panel in FindAll<PanelContainer>(window))
                     Assert.That(panel.PanelOverride, Is.Not.Null, "Each Nuke panel carries its own box");

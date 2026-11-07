@@ -31,7 +31,7 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
     private readonly KsTguiButton _closeProgramButton;
     private readonly KsTguiButton _powerButton;
 
-    private readonly ScrollContainer _homeView;
+    private readonly KsTguiScrollContainer _homeView;
     private readonly BoxContainer _programView;
 
     private readonly KsTguiButton _flashlightButton;
@@ -142,9 +142,11 @@ public sealed partial class KsTguiPdaWindow : FancyWindow, IKsPdaMenu
             SeparationOverride = KsTguiSection.Gap,
             HorizontalExpand = true,
         };
-        _homeView = new ScrollContainer
+        // NtosMain's NtosWindow.Content is scrollable: overflow-y: scroll.
+        _homeView = new KsTguiScrollContainer
         {
             HScrollEnabled = false,
+            ReserveVertical = true,
             HorizontalExpand = true,
             VerticalExpand = true,
         };

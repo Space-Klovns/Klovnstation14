@@ -175,6 +175,11 @@ public sealed class KsTguiThemePalette
     ///         <c>--dimmer-background</c>: the base's hue at lightness 5, at CSS opacity .75 over a Section.
     /// </summary>
     public Color Dimmer { get; }
+
+    /// <summary>
+    ///     <c>.Window__dimmer</c>: the base at lightness +15, at CSS opacity .25 over the window.
+    /// </summary>
+    public Color WindowDimmer { get; }
     public Color TextDim { get; }
     public Color TextTitle { get; }
 
@@ -283,6 +288,7 @@ public sealed class KsTguiThemePalette
         Candystripe = KsTguiPalettes.Translucent(Color.Black, 0.25f, Scale(Base, 0.67f));
         Border = KsTguiPalettes.Translucent(Color.White, 0.1f, Base);
         Dimmer = KsTguiPalettes.Translucent(baseHsl.WithLightness(5f).ToColor(), 0.75f, Section);
+        WindowDimmer = KsTguiPalettes.Translucent(baseHsl.ShiftLightness(15f).ToColor(), 0.25f, Base);
         TextDim = Flatten(Color.White, 0.5f, Base);
         TextTitle = Flatten(Color.White, 0.75f, TitleBar);
 

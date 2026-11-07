@@ -492,12 +492,8 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
                 ("item", Identity.Name(toInsert, EntityManager))),
             receiver, user);
 
-        // KS14 start: PredictedQueueDel -> the server's alone. A predicted delete takes the stack out of the user's hand, so the
-        //      click replayed after the next state has nothing to insert and the machine's amount falls back until the
-        //      server's arrives. In the lathe's window that shows as the material dropping out for a round trip.
-        if (shouldDelete && _net.IsServer)
-            QueueDel(toInsert);
-        // KS14 end
+        if (shouldDelete)
+            PredictedQueueDel(toInsert);
 
         return true;
     }

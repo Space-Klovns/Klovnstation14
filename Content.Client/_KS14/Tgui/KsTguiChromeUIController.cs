@@ -45,8 +45,8 @@ public sealed partial class KsTguiChromeUIController : UIController
         public required Label Title;
         public required Thickness TitleMargin;
         public required TextureButton StockCloseButton;
-        public required KsTguiCloseButton CloseButton;
-        public TextureButton? HelpButton;
+        public required KsTguiTitleBarButton CloseButton;
+        public KsTguiTitleBarButton? HelpButton;
         public Control? Contents;
         public Control? Handle;
     }
@@ -92,7 +92,8 @@ public sealed partial class KsTguiChromeUIController : UIController
     }
 
     /// <summary>
-    ///     Whether a <see cref="DefaultWindow"/> has a guidebook button in its title bar.
+    ///     Whether a <see cref="DefaultWindow"/> has a guidebook button in its title bar. A <see cref="FancyWindow"/>'s is
+    ///         <see cref="FancyWindow.KsChromeHelpButton"/>.
     /// </summary>
     public static bool HasHelpButton(DefaultWindow window)
     {
@@ -108,23 +109,29 @@ public sealed partial class KsTguiChromeUIController : UIController
         window.SetValue(GuidesProperty, guides);
 
         if (window.GetValue(ChromeProperty) is { } chrome)
-            AddHelpButton(chrome, guides);
+            AddHelpButton(chrome, () => OpenGuides(guides));
     }
 
-    private void AddHelpButton(Chrome chrome, List<ProtoId<GuideEntryPrototype>> guides)
+    private void OpenGuides(List<ProtoId<GuideEntryPrototype>> guides)
+    {
+        EntityManager.System<GuidebookSystem>().OpenHelp(guides);
+    }
+
+    /// <summary>
+    ///     The same control as the close button, beside it, so the two match and are spaced by their cells. The stock one on a
+    ///         <see cref="FancyWindow"/> is a small texture that has neither.
+    /// </summary>
+    private void AddHelpButton(Chrome chrome, Action pressed)
     {
         if (chrome.HelpButton != null)
             return;
 
-        chrome.HelpButton = new TextureButton
-        {
-            StyleClasses = { FancyWindow.StyleClassWindowHelpButton },
-            VerticalAlignment = Control.VAlignment.Center,
-        };
-        chrome.HelpButton.OnPressed += _ => EntityManager.System<GuidebookSystem>().OpenHelp(guides);
+        chrome.HelpButton = new KsTguiTitleBarButton(
+            _resourceCache.GetTexture(KsTguiSheetlet.TextureRoot / "question.png"),
+            KsTguiTitleBarButton.NeutralHoverColor);
+        chrome.HelpButton.OnPressed += _ => pressed();
 
-        var row = chrome.CloseButton.Parent!;
-        row.AddChild(chrome.HelpButton);
+        chrome.CloseButton.Parent!.AddChild(chrome.HelpButton);
         chrome.HelpButton.SetPositionInParent(chrome.CloseButton.GetPositionInParent());
     }
 
@@ -168,8 +175,15 @@ public sealed partial class KsTguiChromeUIController : UIController
 
         window.SetValue(ChromeProperty, chrome);
 
-        if (window.GetValue(GuidesProperty) is { } guides)
-            AddHelpButton(chrome, guides);
+        if (window is FancyWindow helpFancyWindow)
+        {
+            AddHelpButton(chrome, helpFancyWindow.Help);
+            helpFancyWindow.KsChromeHelpButton = chrome.HelpButton;
+        }
+        else if (window.GetValue(GuidesProperty) is { } guides)
+        {
+            AddHelpButton(chrome, () => OpenGuides(guides));
+        }
     }
 
     private Chrome? AttachDefaultWindow(DefaultWindow window)
@@ -207,7 +221,7 @@ public sealed partial class KsTguiChromeUIController : UIController
             Title = title,
             TitleMargin = title.Margin,
             StockCloseButton = closeButton,
-            CloseButton = new KsTguiCloseButton(icon),
+            CloseButton = new KsTguiTitleBarButton(icon, KsTguiTitleBarButton.CloseHoverColor),
         };
     }
 
@@ -224,7 +238,10 @@ public sealed partial class KsTguiChromeUIController : UIController
             contents.Margin = new Thickness(DefaultContentsMargin);
 
         if (window is FancyWindow fancyWindow)
+        {
             fancyWindow.KsChromed = false;
+            fancyWindow.KsChromeHelpButton = null;
+        }
 
         window.SetValue(ChromeProperty, null);
     }

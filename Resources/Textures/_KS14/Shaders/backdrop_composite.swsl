@@ -1,0 +1,16 @@
+light_mode unshaded;
+
+// Draws a blurred backdrop clipped to a rounded box: the quad is the box, boxSize and radius in pixels. The box is symmetric
+//      top to bottom, so it doesn't matter which way up the quad's coordinates run. Anti-aliased over one pixel.
+
+uniform highp vec2 boxSize;
+uniform highp float radius;
+
+void fragment()
+{
+    highp vec2 position = (UV2 - vec2(0.5)) * boxSize;
+    highp vec2 corner = abs(position) - boxSize * 0.5 + radius;
+    highp float distanceToEdge = length(max(corner, 0.0)) + min(max(corner.x, corner.y), 0.0) - radius;
+
+    COLOR = vec4(zTexture(UV).rgb, clamp(0.5 - distanceToEdge, 0.0, 1.0));
+}

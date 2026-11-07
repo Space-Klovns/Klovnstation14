@@ -130,6 +130,23 @@ Baseline noise (not yours): `Trying to set unregistered variable '...'`, `parall
 `Unknown messageId "hud-chatbox-select-channel-None"` and `"ghost-gui-ghost-respawn-button"`, `MainLoop: Cannot keep up!`.
 Never print the OpenGL extensions debug line (it is enormous).
 
+## 6b. Measuring prediction frame by frame
+
+A screenshot can't show a flicker that lasts a round trip, and a headless test can miss it: in a real client, input is
+handled inside a tick and a frame runs before the next state, an order the integration pair doesn't reproduce. Twice a
+passing test hid a misprediction that this caught at once. To see what a player sees:
+
+- **Add latency** on both sides: `--cvar net.fakelagmin=0.05` on the server and the client. Locally, a state is otherwise
+  back before a frame passes and nothing shows.
+- **Act through the real input path**, not a server command: `InputSystem.HandleInputCommand(session, EngineKeyFunctions.Use,
+  new ClientFullInputCmdMessage(tick, fraction, functionId) { State = Down, Coordinates, Uid })`, then the same with `Up`.
+- **Log from `FrameUpdate` for ~90 frames**, the values the UI reads (`GetMaterialAmount`, not the raw component field; a
+  client-side overlay can sit between them), plus what's in hand and whether the window is open. Print only the lines where
+  something changed: a bounce reads as `3000, 0, 3000`.
+
+Then encode what you found as a test where the headless client can reproduce it, or as a pure decision function where it
+can't (`MaterialStorageSystem.KsCanRelease`).
+
 ## 7. Cleanup (always)
 
 ```sh

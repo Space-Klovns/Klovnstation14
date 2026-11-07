@@ -33,13 +33,17 @@ public sealed class KsTguiSection : KsSectionPanel
     private readonly Control _buttonsSlot;
     private readonly Control _rest;
     private readonly BoxContainer _content;
-    private readonly ScrollContainer _scroll;
+    private readonly KsTguiScrollContainer _scroll;
 
     private Control? _buttons;
     private bool _scrollable;
     private bool _fill;
     private bool _fitted;
+    private bool _noTopPadding;
+    private bool _scrollableHorizontal;
+    private bool _stretchContents;
     private int _depth;
+    private Control? _watchedParent;
 
     public KsTguiSection()
     {
@@ -61,7 +65,7 @@ public sealed class KsTguiSection : KsSectionPanel
             HorizontalExpand = true,
         };
 
-        _scroll = new ScrollContainer
+        _scroll = new KsTguiScrollContainer
         {
             HScrollEnabled = false,
             ReturnMeasure = true,
@@ -132,6 +136,51 @@ public sealed class KsTguiSection : KsSectionPanel
     }
 
     /// <summary>
+    ///     tgui's <c>scrollableHorizontal</c>: the body scrolls sideways when it is given less width than it needs. Together
+    ///         with <see cref="Scrollable"/> it scrolls both ways.
+    /// </summary>
+    public bool ScrollableHorizontal
+    {
+        get => _scrollableHorizontal;
+        set
+        {
+            if (_scrollableHorizontal == value)
+                return;
+
+            _scrollableHorizontal = value;
+            RebuildBody();
+        }
+    }
+
+    /// <summary>
+    ///     tgui's <c>noTopPadding</c>: the body starts at the title's line.
+    /// </summary>
+    public bool NoTopPadding
+    {
+        get => _noTopPadding;
+        set
+        {
+            _noTopPadding = value;
+            RefreshBodyPadding();
+        }
+    }
+
+    /// <summary>
+    ///     tgui's <c>stretchContents</c> (<c>height: calc(100% - 3rem)</c>): the body takes the height the section has,
+    ///         which is what it is given when the section expands.
+    /// </summary>
+    public bool StretchContents
+    {
+        get => _stretchContents;
+        set
+        {
+            _stretchContents = value;
+            VerticalExpand = value || _fill;
+            _rest.VerticalExpand = value || _fill;
+        }
+    }
+
+    /// <summary>
     ///     Expands to take the space its parent has left.
     /// </summary>
     public bool Fill
@@ -140,8 +189,8 @@ public sealed class KsTguiSection : KsSectionPanel
         set
         {
             _fill = value;
-            VerticalExpand = value;
-            _rest.VerticalExpand = value;
+            VerticalExpand = value || _stretchContents;
+            _rest.VerticalExpand = value || _stretchContents;
         }
     }
 
@@ -162,6 +211,13 @@ public sealed class KsTguiSection : KsSectionPanel
     {
         base.EnteredTree();
 
+        _watchedParent = Parent;
+        if (_watchedParent != null)
+        {
+            _watchedParent.OnChildAdded += OnSiblingsChanged;
+            _watchedParent.OnChildRemoved += OnSiblingsChanged;
+        }
+
         var depth = 0;
         for (var parent = Parent; parent != null; parent = parent.Parent)
         {
@@ -169,6 +225,7 @@ public sealed class KsTguiSection : KsSectionPanel
                 depth++;
         }
 
+        RefreshNesting();
         if (depth == _depth)
             return;
 
@@ -182,8 +239,58 @@ public sealed class KsTguiSection : KsSectionPanel
         // Level 2 titles are 13px and level 3 and deeper 12px.
         var fonts = IoCManager.Resolve<KsTguiFonts>();
         _titleLabel.FontOverride = depth == 0 ? null : fonts.GetFont(depth == 1 ? 13 : 12, FontKind.Bold);
+        RefreshNesting();
         RefreshBodyPadding();
     }
+
+    protected override void ExitedTree()
+    {
+        base.ExitedTree();
+
+        if (_watchedParent != null)
+        {
+            _watchedParent.OnChildAdded -= OnSiblingsChanged;
+            _watchedParent.OnChildRemoved -= OnSiblingsChanged;
+            _watchedParent = null;
+        }
+    }
+
+    private void OnSiblingsChanged(Control _)
+    {
+        RefreshNesting();
+    }
+
+    /// <summary>
+    ///     tgui's <c>.Section .Section { margin: 0 -6px }</c>, which pulls a nested section out over the outer body's
+    ///         padding so its title line runs edge to edge, and <c>:first-child { margin-top: -6px }</c>. The margin shorthand
+    ///         also clears the 6px under a section, so nested ones touch.
+    /// </summary>
+    private void RefreshNesting()
+    {
+        var nested = false;
+        for (var parent = Parent; parent != null; parent = parent.Parent)
+        {
+            if (parent is KsTguiSection)
+                nested = true;
+        }
+
+        if (!nested)
+        {
+            if (_nestedMargin)
+            {
+                _nestedMargin = false;
+                Margin = default;
+            }
+
+            return;
+        }
+
+        var isFirst = Parent is { ChildCount: > 0 } siblings && siblings.GetChild(0) == this;
+        _nestedMargin = true;
+        Margin = new Thickness(-Gap, isFirst ? -Gap : 0f, -Gap, 0f);
+    }
+
+    private bool _nestedMargin;
 
     /// <summary>
     ///     Removes everything in the body. <c>RemoveAllChildren</c> would take the section's own parts with it.
@@ -210,8 +317,8 @@ public sealed class KsTguiSection : KsSectionPanel
 
     private void RefreshBodyPadding()
     {
-        // Nested, tgui pulls the body out over the outer padding, which nets to the outer body's own edge.
-        _content.Margin = _fitted ? default : _depth > 0 ? new Thickness(0f, 8f, 0f, 8f) : BodyPadding;
+        // A nested section is pulled out over the outer padding (RefreshNesting), so its own padding is the usual one.
+        _content.Margin = _fitted ? default : new Thickness(BodyPadding.Left, _noTopPadding ? 0f : BodyPadding.Top, BodyPadding.Right, BodyPadding.Bottom);
     }
 
     private void RefreshTitleVisibility()
@@ -224,7 +331,9 @@ public sealed class KsTguiSection : KsSectionPanel
         _content.Orphan();
         _scroll.Orphan();
 
-        if (_scrollable)
+        _scroll.VScrollEnabled = _scrollable;
+        _scroll.HScrollEnabled = _scrollableHorizontal;
+        if (_scrollable || _scrollableHorizontal)
         {
             _scroll.AddChild(_content);
             _rest.AddChild(_scroll);

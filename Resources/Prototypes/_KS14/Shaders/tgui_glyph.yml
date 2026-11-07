@@ -18,3 +18,10 @@
   path: "/Textures/_KS14/Shaders/tgui_glyph.swsl"
   params:
     shape: 2.0
+
+- type: shader
+  id: KsTguiGlyphDropdownCell
+  kind: source
+  path: "/Textures/_KS14/Shaders/tgui_glyph.swsl"
+  params:
+    shape: 3.0

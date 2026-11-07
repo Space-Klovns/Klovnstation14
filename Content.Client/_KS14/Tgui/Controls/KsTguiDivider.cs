@@ -18,6 +18,11 @@ public sealed class KsTguiDivider : Control
     /// </summary>
     public bool Vertical { get; set; }
 
+    /// <summary>
+    ///     tgui's <c>hidden</c>: the space stays and the line does not.
+    /// </summary>
+    public bool Hidden { get; set; }
+
     protected override Vector2 MeasureOverride(Vector2 availableSize)
     {
         return Vertical
@@ -28,6 +33,9 @@ public sealed class KsTguiDivider : Control
     protected override void Draw(DrawingHandleScreen handle)
     {
         base.Draw(handle);
+
+        if (Hidden)
+            return;
 
         var thickness = MathF.Max(1f, MathF.Round(Thickness * UIScale));
         var space = Space * UIScale;

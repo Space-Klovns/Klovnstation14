@@ -2,9 +2,11 @@ light_mode unshaded;
 
 // tgui's checkbox, check mark and dropdown chevron drawn as shapes, so they stay sharp at any UI scale. The
 //      TextureRect carrying this shader holds a transparent 16x16 placeholder for layout and ignores its texture.
-//      shape: 0 empty box, 1 ticked box, 2 chevron.
+//      shape: 0 empty box, 1 ticked box, 2 chevron, 3 a dropdown's 22x22 chevron cell (a 1px divider down its left edge,
+//      then the chevron), turned by angle radians.
 
 uniform highp float shape;
+uniform highp float angle;
 
 highp float segment(highp vec2 p, highp vec2 a, highp vec2 b)
 {
@@ -22,8 +24,20 @@ highp float roundBox(highp vec2 p, highp vec2 half_, highp float radius)
 
 void fragment()
 {
-    // 16 units across, y down.
-    highp vec2 q = vec2(UV2.x, 1.0 - UV2.y) * 16.0;
+    bool cell = shape > 2.5;
+
+    // 16 units across, y down. A dropdown's cell is 22.
+    highp vec2 q = vec2(UV2.x, 1.0 - UV2.y) * (cell ? 22.0 : 16.0);
+
+    // The divider is the cell's first unit. The chevron is drawn in the 16 at its middle, turned about the middle of that.
+    highp float divider = cell ? step(q.x, 1.0) : 0.0;
+    if (cell)
+    {
+        highp vec2 c = q - vec2(11.0);
+        highp float s = sin(angle);
+        highp float k = cos(angle);
+        q = vec2(c.x * k - c.y * s, c.x * s + c.y * k) + vec2(8.0);
+    }
 
 #ifdef HAS_DFDX
     highp float pixel = max(length(vec2(dFdx(q.x), dFdy(q.x))), 0.0001);
@@ -49,5 +63,6 @@ void fragment()
         d = min(segment(q, vec2(2.7, 5.2), vec2(8.0, 10.5)), segment(q, vec2(8.0, 10.5), vec2(13.3, 5.2))) - 1.3;
     }
 
-    COLOR = vec4(1.0, 1.0, 1.0, clamp(0.5 - d / pixel, 0.0, 1.0));
+    highp float coverage = clamp(0.5 - d / pixel, 0.0, 1.0);
+    COLOR = divider > 0.5 ? vec4(0.0, 0.0, 0.0, 0.33) : vec4(1.0, 1.0, 1.0, coverage);
 }

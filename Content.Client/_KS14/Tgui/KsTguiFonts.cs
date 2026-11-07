@@ -14,16 +14,12 @@ public sealed partial class KsTguiFonts
 {
     private const string BundledRoot = "/Fonts/_KS14/Tgui/";
     private const string IconFontFileName = "fa-solid-900.ttf";
+    private const string RegularIconFontFileName = "fa-regular-400.ttf"; // KS14: Font Awesome Regular, for tgui's "-o" icons
 
     /// <summary>
     ///     A font with no glyphs and no height. See <see cref="GetFont"/>.
     /// </summary>
     private const string SizeCarrierFileName = "size_carrier.ttf";
-
-    /// <summary>
-    ///     The smallest size in points, so that upstream's small print stays legible.
-    /// </summary>
-    private const int MinPointSize = 7;
 
     private static readonly string[] FallbackPaths =
     [
@@ -38,6 +34,9 @@ public sealed partial class KsTguiFonts
     [Dependency] private ISystemFontManager _systemFontManager = default!;
 
     private readonly Dictionary<(FontKind Kind, int Size), Font> _fonts = new();
+    private readonly Dictionary<(FontKind Kind, int Size), Font> _monoFonts = new();
+    private readonly Dictionary<int, Font> _iconFonts = new();
+    private Dictionary<FontKind, ISystemFontFace>? _systemMonoFaces;
     private Dictionary<FontKind, ISystemFontFace>? _systemFaces;
 
     /// <summary>
@@ -45,7 +44,8 @@ public sealed partial class KsTguiFonts
     /// </summary>
     /// <remarks>
     ///     The engine's font sizes are points at 96 DPI, so 12 draws at 16px, and tgui's sizes are pixels, so everything
-    ///         here is converted to points. Markup then needs one more thing. <c>FontTag.GetSizeForFontTag</c> reads a
+    ///         here is converted to points, drawn at a fraction of the scale where whole points aren't enough
+    ///         (<see cref="Quantize"/>). Markup then needs one more thing. <c>FontTag.GetSizeForFontTag</c> reads a
     ///         nested tag's size from <c>Stack[0]</c>, so that has to report pixels too, or <c>[bold]</c> would be converted
     ///         a second time and shrink. A <see cref="StackedFont"/> takes its metrics from the font it was built with and
     ///         not from <c>Stack[0]</c>, so <c>Stack[0]</c> is swapped afterwards for an empty font of the pixel size. It has
@@ -53,31 +53,53 @@ public sealed partial class KsTguiFonts
     /// </remarks>
     public Font GetFont(int size, FontKind kind = FontKind.Regular)
     {
-        if (_fonts.TryGetValue((kind, size), out var font))
+        return BuildFont(size, kind, mono: false);
+    }
+
+    /// <summary>
+    ///     tgui's <c>--font-family-mono</c>, <c>Consolas, monospace</c>: the player's own Consolas where they have one and
+    ///         bundled Roboto Mono where they don't. Used by <c>Dialog</c> and by an <c>Input</c> with <c>monospace</c>.
+    ///         Same sizes and fallbacks as <see cref="GetFont"/>.
+    /// </summary>
+    public Font GetMonoFont(int size, FontKind kind = FontKind.Regular)
+    {
+        return BuildFont(size, kind, mono: true);
+    }
+
+    private Font BuildFont(int size, FontKind kind, bool mono)
+    {
+        var cache = mono ? _monoFonts : _fonts;
+        if (cache.TryGetValue((kind, size), out var font))
             return font;
 
-        var pointSize = PointSize(size);
-        var primary = LoadPrimary(kind, pointSize);
+        var (pointSize, factor) = Quantize(size);
+        var primary = new KsTguiScaledFont(LoadPrimary(kind, pointSize, mono), factor, browserLineBox: true);
 
         var stack = new Font[FallbackPaths.Length + 2];
         stack[0] = primary;
         stack[1] = primary;
         for (var i = 0; i < FallbackPaths.Length; i++)
-            stack[i + 2] = _resourceCache.GetFont(FallbackPaths[i], pointSize);
+        {
+            stack[i + 2] = new KsTguiScaledFont(
+                _resourceCache.GetFont(FallbackPaths[i], pointSize), factor, browserLineBox: false);
+        }
 
         font = new StackedFont(stack);
         stack[0] = _resourceCache.GetFont(BundledRoot + SizeCarrierFileName, size);
 
-        _fonts[(kind, size)] = font;
+        cache[(kind, size)] = font;
         return font;
     }
 
     /// <summary>
-    ///     The engine's size for a font this many pixels tall.
+    ///     A size in whole points, and the fraction of the scale to draw it at, that together make a font this many pixels
+    ///         tall. A pixel is three quarters of a point, so a size divisible by four is exact as it is, an even one is
+    ///         exact at half the scale, and any other at a quarter of it.
     /// </summary>
-    public static int PointSize(int pixelSize)
+    public static (int PointSize, float Factor) Quantize(int pixelSize)
     {
-        return Math.Max(MinPointSize, (int)MathF.Round((float)pixelSize * 0.75f, MidpointRounding.AwayFromZero));
+        var divisor = pixelSize % 4 == 0 ? 1 : pixelSize % 2 == 0 ? 2 : 4;
+        return (Math.Max(1, pixelSize * 3 * divisor / 4), 1f / (float)divisor);
     }
 
     /// <summary>
@@ -86,24 +108,44 @@ public sealed partial class KsTguiFonts
     /// </summary>
     public Font GetIconFont(int size)
     {
-        return _resourceCache.GetFont(BundledRoot + IconFontFileName, PointSize(size));
+        return GetIconFont(size, regular: false);
     }
+
+    /// <summary>
+    ///     As above, in Font Awesome Regular when <paramref name="regular"/>: tgui's <c>-o</c> icons. // KS14
+    /// </summary>
+    public Font GetIconFont(int size, bool regular)
+    {
+        var cache = regular ? _regularIconFonts : _iconFonts;
+        if (cache.TryGetValue(size, out var font))
+            return font;
+
+        var (pointSize, factor) = Quantize(size);
+        font = new KsTguiScaledFont(
+            _resourceCache.GetFont(BundledRoot + (regular ? RegularIconFontFileName : IconFontFileName), pointSize), factor, browserLineBox: false);
+        cache[size] = font;
+        return font;
+    }
+
+    private readonly Dictionary<int, Font> _regularIconFonts = new();
 
     /// <summary>
     ///     Whether the player's own Verdana is in use, rather than the bundled fallback.
     /// </summary>
-    public bool UsingSystemVerdana => (_systemFaces ??= FindSystemFaces()).Count > 0;
+    public bool UsingSystemVerdana => (_systemFaces ??= FindSystemFaces(mono: false)).Count > 0;
 
-    private Font LoadPrimary(FontKind kind, int size)
+    private Font LoadPrimary(FontKind kind, int size, bool mono)
     {
-        _systemFaces ??= FindSystemFaces();
+        var faces = mono
+            ? _systemMonoFaces ??= FindSystemFaces(mono: true)
+            : _systemFaces ??= FindSystemFaces(mono: false);
 
-        return _systemFaces.TryGetValue(kind, out var face)
+        return faces.TryGetValue(kind, out var face)
             ? face.Load(size)
-            : _resourceCache.GetFont(BundledRoot + BundledFileName(kind), size);
+            : _resourceCache.GetFont(mono ? MonoBundledPath(kind) : BundledRoot + BundledFileName(kind), size);
     }
 
-    private Dictionary<FontKind, ISystemFontFace> FindSystemFaces()
+    private Dictionary<FontKind, ISystemFontFace> FindSystemFaces(bool mono)
     {
         var faces = new Dictionary<FontKind, ISystemFontFace>();
         if (!_systemFontManager.IsSupported)
@@ -112,7 +154,7 @@ public sealed partial class KsTguiFonts
         var systemFaces = _systemFontManager.SystemFontFaces.ToList();
         foreach (var kind in Kinds)
         {
-            if (SelectFace(systemFaces, face => face.PostscriptName, kind) is { } match)
+            if (SelectFace(systemFaces, face => face.PostscriptName, kind, mono: mono) is { } match)
                 faces[kind] = match;
         }
 
@@ -124,9 +166,9 @@ public sealed partial class KsTguiFonts
     ///         are localised to the player's locale. Generic because only the engine can make an
     ///         <see cref="ISystemFontFace"/>, and this needs testing without one.
     /// </summary>
-    public static T? SelectFace<T>(IEnumerable<T> faces, Func<T, string> postscriptName, FontKind kind) where T : class
+    public static T? SelectFace<T>(IEnumerable<T> faces, Func<T, string> postscriptName, FontKind kind, bool mono = false) where T : class
     {
-        var wanted = PostscriptNameFor(kind);
+        var wanted = mono ? MonoPostscriptNameFor(kind) : PostscriptNameFor(kind);
         return faces.FirstOrDefault(face => postscriptName(face) == wanted);
     }
 
@@ -138,6 +180,33 @@ public sealed partial class KsTguiFonts
             FontKind.Italic => "Verdana-Italic",
             FontKind.BoldItalic => "Verdana-BoldItalic",
             _ => "Verdana",
+        };
+    }
+
+    /// <summary>
+    ///     The PostScript name of Consolas in this kind, tgui's <c>--font-family-mono</c>.
+    /// </summary>
+    public static string MonoPostscriptNameFor(FontKind kind)
+    {
+        return kind switch
+        {
+            FontKind.Bold => "Consolas-Bold",
+            FontKind.Italic => "Consolas-Italic",
+            FontKind.BoldItalic => "Consolas-BoldItalic",
+            _ => "Consolas",
+        };
+    }
+
+    /// <summary>
+    ///     The bundled stand-in for Consolas. Roboto Mono has no bold italic, so that is its bold.
+    /// </summary>
+    public static string MonoBundledPath(FontKind kind)
+    {
+        return "/Fonts/RobotoMono/" + kind switch
+        {
+            FontKind.Bold or FontKind.BoldItalic => "RobotoMono-Bold.ttf",
+            FontKind.Italic => "RobotoMono-Italic.ttf",
+            _ => "RobotoMono-Regular.ttf",
         };
     }
 

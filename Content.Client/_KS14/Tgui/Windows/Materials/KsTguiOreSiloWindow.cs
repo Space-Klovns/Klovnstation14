@@ -37,7 +37,7 @@ public sealed partial class KsTguiOreSiloWindow : FancyWindow, IKsOreSiloWindow
 
         var clientsBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true };
         clientsBody.AddChild(_noClientsNotice);
-        clientsBody.AddChild(new ScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _clientList } });
+        clientsBody.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _clientList } });
         var clientsSection = new KsTguiSection { Title = Loc.GetString("ore-silo-ui-label-clients"), Fill = true };
         clientsSection.AddChild(clientsBody);
 

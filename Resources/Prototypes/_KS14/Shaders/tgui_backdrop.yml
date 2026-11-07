@@ -1,0 +1,10 @@
+# tgui's backdrop-filter: blur(12px). The uniforms are set per instance by KsTguiBackdropBlur, from KsTguiBackdropMath.
+- type: shader
+  id: KsTguiBackdropBlur
+  kind: source
+  path: "/Textures/_KS14/Shaders/backdrop_blur.swsl"
+
+- type: shader
+  id: KsTguiBackdropComposite
+  kind: source
+  path: "/Textures/_KS14/Shaders/backdrop_composite.swsl"

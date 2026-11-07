@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Content.Client.UserInterface.Controls;
 using Content.IntegrationTests.Fixtures;
@@ -6,6 +7,7 @@ using Content.Shared._KS14.CCVar;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Maths;
 
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
@@ -108,6 +110,31 @@ public sealed class KsTguiGlyphTest : GameTest
 
             heading.Pressed = false;
             Assert.That(Box()!.Open, Is.False, "Closing swaps it back");
+
+            collapsible.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     The stock chevron is a grandchild of the heading (heading, box, texture). A rule that never matched it left it drawn
+    ///         beside the style box's own, so under the tgui theme it must be hidden; Baron's copy is not this test's to judge.
+    /// </summary>
+    [Test]
+    public async Task TguiHidesTheStockHeadingChevron()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        await Client.WaitAssertion(() =>
+        {
+            var heading = new CollapsibleHeading("x");
+            var collapsible = new Collapsible(heading, new CollapsibleBody());
+            UiManager.PopupRoot.AddChild(collapsible);
+
+            var chevron = heading.Children.Single().Children.OfType<TextureRect>().Single();
+            chevron.ForceRunStyleUpdate();
+            Assert.That(chevron.TryGetStyleProperty<Color>(Control.StylePropertyModulateSelf, out var modulate), Is.True, "The tgui sheet should style the chevron.");
+            Assert.That(modulate.A, Is.Zero, "The stock chevron should be transparent.");
 
             collapsible.Orphan();
         });

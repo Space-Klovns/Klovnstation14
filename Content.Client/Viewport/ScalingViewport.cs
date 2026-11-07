@@ -151,6 +151,14 @@ namespace Content.Client.Viewport
 
             DebugTools.AssertNotNull(_viewport);
 
+            // KS14 start: a tgui popup's backdrop pass redraws the UI, and must not render the world again
+            if (KsBackdropPassActive)
+            {
+                KsDrawBackdropPass(handle);
+                return;
+            }
+            // KS14 end
+
             // KS14: Moved render call here to later
 
             if (_queuedScreenshots.Count != 0)

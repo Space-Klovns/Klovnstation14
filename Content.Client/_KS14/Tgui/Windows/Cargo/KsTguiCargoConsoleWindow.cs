@@ -72,7 +72,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
     private readonly KsTguiButton _clearButton;
 
     private readonly BoxContainer _catalogPage;
-    private readonly LineEdit _searchBar;
+    private readonly KsTguiSearchBar _searchBar;
     private readonly KsTguiTabs _categoryTabs;
     private readonly BoxContainer _productsBox;
 
@@ -190,12 +190,13 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
             VerticalExpand = true,
             SeparationOverride = 6,
         };
-        _searchBar = new LineEdit { PlaceHolder = Loc.GetString("cargo-console-menu-search-bar-placeholder"), HorizontalExpand = true };
-        _searchBar.OnTextChanged += _ => PopulateProducts();
+        // tg's CargoCatalog puts a SearchBar here: the magnifier, then the input.
+        _searchBar = new KsTguiSearchBar { PlaceHolder = Loc.GetString("cargo-console-menu-search-bar-placeholder") };
+        _searchBar.Input.OnTextChanged += _ => PopulateProducts();
         sidebarBox.AddChild(_searchBar);
         _categoryTabs = new KsTguiTabs { Vertical = true, Candystripe = true };
         _categoryTabs.OnTabSelected += OnCategorySelected;
-        var categoryScroll = new ScrollContainer { VerticalExpand = true, HScrollEnabled = false };
+        var categoryScroll = new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false };
         categoryScroll.AddChild(_categoryTabs);
         sidebarBox.AddChild(categoryScroll);
         sidebar.AddChild(sidebarBox);
@@ -363,7 +364,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
             return;
 
         _category = index == 0 ? null : _categoryStrings[index];
-        _searchBar.Text = "";
+        _searchBar.Input.Text = "";
         PopulateProducts();
     }
 
@@ -425,7 +426,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         products.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase));
 
         // A search looks through every category, as the stock console's does.
-        var search = _searchBar.Text.Trim().ToLowerInvariant();
+        var search = _searchBar.Input.Text.Trim().ToLowerInvariant();
         foreach (var prototype in products)
         {
             if (!(search.Length == 0 && _category == null ||

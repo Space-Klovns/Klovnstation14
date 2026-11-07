@@ -117,6 +117,54 @@ public sealed class KsGuideHelpWindowTest : GameTest
         Assert.That(missing, Is.Empty, "These windows have no guide: " + string.Join("; ", missing));
     }
 
+    /// <summary>
+    ///     The stock button is a small texture with its own margins. Under tgui it's the same control as the X, in a cell of the
+    ///         same size beside it, and it goes back when the theme does.
+    /// </summary>
+    [Test]
+    public async Task AFancyWindowsButtonMatchesTheCloseButton()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        var configuration = Client.ResolveDependency<Robust.Shared.Configuration.IConfigurationManager>();
+        FancyWindow window = null!;
+        await Client.WaitPost(() =>
+        {
+            window = new FancyWindow();
+            window.OpenCentered();
+            window.HelpGuidebookIds = new();
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitPost(() =>
+        {
+            Assert.That(window.HelpButton.Visible, Is.False, "The stock button would show beside the chrome's.");
+            var help = window.KsChromeHelpButton as KsTguiTitleBarButton;
+            Assert.That(help, Is.Not.Null);
+            Assert.That(help!.Visible, Is.True);
+
+            var close = help.Parent!.Children.OfType<KsTguiTitleBarButton>().Single(button => button != help);
+            Assert.That(help.Size, Is.EqualTo(close.Size), "The two should be the same size.");
+            Assert.That(help.GlobalPosition.X + help.Size.X, Is.EqualTo(close.GlobalPosition.X).Within(0.01f), "They should sit side by side, the help first.");
+
+            window.HelpGuidebookIds = null;
+            Assert.That(help.Visible, Is.False, "A window with no guide has no button.");
+            window.HelpGuidebookIds = new();
+
+            configuration.SetCVar(KsCCVars.TguiStyle, false);
+        });
+        await Pair.RunTicksSync(2);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(window.KsChromeHelpButton, Is.Null);
+            Assert.That(window.HelpButton.Visible, Is.True, "Baron has the stock button.");
+            configuration.SetCVar(KsCCVars.TguiStyle, true);
+            window.Close();
+        });
+    }
+
     [Test]
     public async Task TheDefaultWindowsButtonComesAndGoesWithTheTheme()
     {

@@ -5,3 +5,4 @@ ks-tgui-lathe-results = Результаты по запросу «{ $query }»
 ks-tgui-lathe-search = Поиск по всем проектам...
 ks-tgui-lathe-queue-empty = Очередь пуста.
 ks-tgui-lathe-recipe-times = ×{ $amount }
+ks-tgui-lathe-recipe-max = [Макс: { $amount }]

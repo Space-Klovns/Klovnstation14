@@ -1,4 +1,3 @@
-using Content.Client._KS14.UserInterface.Styles;
 using Robust.Client.Graphics;
 
 namespace Content.Client._KS14.Tgui;
@@ -8,17 +7,14 @@ namespace Content.Client._KS14.Tgui;
 /// </summary>
 public sealed class KsTguiTitleBarStyleBox : StyleBox
 {
-    private const float ShadowHeight = 6f;
+    /// <summary>
+    ///     tgui's <c>box-shadow: 0 0 6px -1px</c> measured under the bar on the window colour: it darkens the first five rows
+    ///         by 5, 3, 3, 1 and 1 (of 255) and nothing after. These are the black alphas that darken #2B2B2B by that
+    ///         much in this engine's linear blending, one per row.
+    /// </summary>
+    private static readonly float[] ShadowRows = [0.198f, 0.124f, 0.124f, 0.04f, 0.04f];
 
     private readonly Color _borderColor;
-
-    /// <summary>
-    ///     Black at zero alpha, not <see cref="Color.Transparent"/>, which is white and would pale the shadow as it fades.
-    /// </summary>
-    private readonly KsStyleBoxGradient _shadow = new(
-        Color.Black.WithAlpha(0.2f),
-        Color.Black.WithAlpha(0f),
-        KsGradientDirection.TopToBottom);
 
     public Color BackgroundColor;
 
@@ -33,6 +29,10 @@ public sealed class KsTguiTitleBarStyleBox : StyleBox
         handle.DrawRect(box, BackgroundColor);
         handle.DrawRect(new UIBox2(box.Left, box.Bottom - uiScale, box.Right, box.Bottom), _borderColor);
 
-        _shadow.Draw(handle, new UIBox2(box.Left, box.Bottom, box.Right, box.Bottom + ShadowHeight * uiScale), uiScale);
+        for (var row = 0; row < ShadowRows.Length; row++)
+        {
+            var top = box.Bottom + row * uiScale;
+            handle.DrawRect(new UIBox2(box.Left, top, box.Right, top + uiScale), Color.Black.WithAlpha(ShadowRows[row]));
+        }
     }
 }

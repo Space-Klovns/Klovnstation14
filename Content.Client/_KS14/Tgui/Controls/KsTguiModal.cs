@@ -26,6 +26,12 @@ public class KsTguiModal : KsTguiDimmer
 
     public event Action? Closed;
 
+    /// <summary>
+    ///     tgui's <c>onEnter</c>: Enter was pressed and nothing inside took it, as a text box does. The modal doesn't close
+    ///         itself.
+    /// </summary>
+    public event Action? Entered;
+
     public KsTguiModal()
     {
         Visible = false;
@@ -85,10 +91,16 @@ public class KsTguiModal : KsTguiDimmer
     }
 
     /// <summary>
-    ///     Escape closes. True when the key was one it handles.
+    ///     Escape closes, and Enter raises <see cref="Entered"/>. True when the key was one it handles.
     /// </summary>
     public bool HandleKeyFunction(BoundKeyFunction function)
     {
+        if (Visible && function == EngineKeyFunctions.TextSubmit && Entered != null)
+        {
+            Entered.Invoke();
+            return true;
+        }
+
         if (!Visible || function != EngineKeyFunctions.TextReleaseFocus && function != EngineKeyFunctions.EscapeMenu)
             return false;
 

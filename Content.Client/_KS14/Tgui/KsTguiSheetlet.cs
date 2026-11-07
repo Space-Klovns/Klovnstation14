@@ -55,6 +55,16 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     public const string StyleClassInputFocused = "KsTguiInputFocused";
 
     /// <summary>
+    ///     On the <c>TextEdit</c> inside a <c>KsTguiTextArea</c>, which has no stylebox property of its own to be styled with.
+    /// </summary>
+    public const string StyleClassTextArea = "KsTguiTextArea";
+
+    /// <summary>
+    ///     tgui's <c>Input--monospace</c>: the input's text in <c>--font-family-mono</c>. On a <c>LineEdit</c> or <c>TextEdit</c>.
+    /// </summary>
+    public const string StyleClassMonospace = "KsTguiMonospace";
+
+    /// <summary>
     ///     The body of a window, as distinct from every other use of <see cref="StyleClass.BackgroundPanel"/>.
     /// </summary>
     public const string StyleClassWindowBackground = "KsTguiWindowBackground";
@@ -65,14 +75,6 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     public const string StyleClassHeaderRow = "KsFancyWindowHeaderRow";
 
     public static readonly ResPath TextureRoot = new("/Textures/_KS14/Interface/Tgui");
-
-    /// <summary>
-    ///     The width of a scrollbar: tgui's thin scrollbar. tgui's default is wider, but SS14's scrollbars lie on top of the
-    ///         content, not beside it.
-    /// </summary>
-    private const float ScrollBarWidth = 11f;
-
-    private const float ScrollBarMinLength = 20f;
 
     /// <summary>
     ///     tgui's tab is 27 tall: its 15px line of text, and this above and below it.
@@ -335,19 +337,58 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         var inputBox = InputBox(InputBorderIdle);
         var focusedBox = InputBox(_palette.InputBorder);
 
+        // --input-border-disabled, --color-gray.
+        var disabledBox = InputBox(Color.FromHex("#808080"));
+
+        // --input-color-placeholder is white at .5 over the input's own background, which is darker than the window.
+        var placeholderColor = KsTguiPalettes.Translucent(Color.White, 0.5f, InputColor);
+        var italic = IoCManager.Resolve<KsTguiFonts>().GetFont(12, FontKind.Italic);
+
         rules.AddRange(new StyleRule[]
         {
             E<LineEdit>().Prop(LineEdit.StylePropertyStyleBox, inputBox),
             E<LineEdit>().Class(StyleClassInputFocused).Prop(LineEdit.StylePropertyStyleBox, focusedBox),
             E<LineEdit>().Class(ActionsWindow.StyleClassActionSearchBox).Prop(LineEdit.StylePropertyStyleBox, inputBox),
-            E<LineEdit>().Class(LineEdit.StyleClassLineEditNotEditable).Prop("font-color", Dim),
-            E<LineEdit>().Pseudo(LineEdit.StylePseudoClassPlaceholder).Prop("font-color", Dim),
-            E<TextEdit>().Pseudo(TextEdit.StylePseudoClassPlaceholder).Prop("font-color", Dim),
+
+            // tg's disabled input: a grey border, and its text as dim as a placeholder. An input that can't be edited is that.
+            E<LineEdit>().Class(LineEdit.StyleClassLineEditNotEditable)
+                .Prop(LineEdit.StylePropertyStyleBox, disabledBox)
+                .Prop("font-color", placeholderColor),
+            E<LineEdit>().Pseudo(LineEdit.StylePseudoClassPlaceholder)
+                .Prop("font-color", placeholderColor)
+                .Prop("font", italic),
+            E<TextEdit>().Pseudo(TextEdit.StylePseudoClassPlaceholder)
+                .Prop("font-color", placeholderColor)
+                .Prop("font", italic),
+
+            // A TextEdit has no font rule of its own, so a text area's is given here; tg's Input is the sheet's 12px.
+            E<TextEdit>().Class(StyleClassTextArea).Prop("font", IoCManager.Resolve<KsTguiFonts>().GetFont(12)),
+            E<TextEdit>().Class(StyleClassTextArea).Pseudo(TextEdit.StylePseudoClassPlaceholder).Prop("font", italic),
+            E<TextEdit>().Class(StyleClassTextArea).Pseudo(TextEdit.StylePseudoClassNotEditable).Prop("font-color", placeholderColor),
+
+            // .Input--monospace: the mono family, and its own italic for the placeholder.
+            E<LineEdit>().Class(StyleClassMonospace).Prop("font", IoCManager.Resolve<KsTguiFonts>().GetMonoFont(12)),
+            E<TextEdit>().Class(StyleClassMonospace).Prop("font", IoCManager.Resolve<KsTguiFonts>().GetMonoFont(12)),
+            E<LineEdit>().Class(StyleClassMonospace).Pseudo(LineEdit.StylePseudoClassPlaceholder)
+                .Prop("font", IoCManager.Resolve<KsTguiFonts>().GetMonoFont(12, FontKind.Italic)),
+            E<TextEdit>().Class(StyleClassMonospace).Pseudo(TextEdit.StylePseudoClassPlaceholder)
+                .Prop("font", IoCManager.Resolve<KsTguiFonts>().GetMonoFont(12, FontKind.Italic)),
 
             E<TextureRect>().Class(OptionButton.StyleClassOptionTriangle)
                 .Prop(TextureRect.StylePropertyTexture, Icon("glyph_slot.png"))
                 .Prop(TextureRect.StylePropertyShader, GlyphShader("KsTguiGlyphChevron"))
                 .Modulate(Color.White),
+
+            // tg's dropdown: a 22 tall button, its text in a cell with 3px above and below and 6 either side, then a 22 wide
+            //      cell with a 1px divider down its left edge and the chevron in it. The cell is one texture drawn by a
+            //      shader, as it is what holds the button's height up. The button's own box has no padding for it.
+            E<OptionButton>().Class(ContainerButton.StyleClassButton).Box(DropdownBox()).Margin(ButtonGap),
+            E<OptionButton>().ParentOf(E<BoxContainer>()).ParentOf(E<TextureRect>().Class(OptionButton.StyleClassOptionTriangle))
+                .Prop(TextureRect.StylePropertyTexture, Icon("glyph_dropdown_cell.png"))
+                .Prop(TextureRect.StylePropertyShader, GlyphShader("KsTguiGlyphDropdownCell"))
+                .Modulate(Color.White),
+            E<OptionButton>().ParentOf(E<BoxContainer>()).ParentOf(E<Label>().Class(OptionButton.StyleClassOptionButton))
+                .Margin(new Thickness(DropdownTextPaddingX, DropdownTextPaddingY)),
             E<Label>().Class(OptionButton.StyleClassOptionButton).AlignMode(Label.AlignMode.Left),
 
             // A heading's own chevron can't follow its state, so its style box draws one and the stock is hidden.
@@ -355,22 +396,39 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
                 { Shader = GlyphShader("KsTguiGlyphChevron") }),
             E<CollapsibleHeading>().PseudoPressed().Box(new Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox
                 { Open = true, Shader = GlyphShader("KsTguiGlyphChevron") }),
-            E<CollapsibleHeading>().ParentOf(E<BoxContainer>().ParentOf(E<TextureRect>().Class(OptionButton.StyleClassOptionTriangle)))
+            // The heading holds a box holding the chevron, so the chain is written ParentOf(box).ParentOf(chevron): the nested
+            //      form never matches a grandchild, and the stock chevron stayed drawn beside the style box's.
+            E<CollapsibleHeading>().ParentOf(E<BoxContainer>()).ParentOf(E<TextureRect>().Class(OptionButton.StyleClassOptionTriangle))
                 .Modulate(Color.Transparent),
             E<PanelContainer>().Class(OptionButton.StyleClassOptionsBackground).Panel(MenuBox()).Modulate(Color.White),
         });
 
+        // 2px above and below a 16px line. KS's line is a pixel shorter than the 16 tg sets this one to.
         var entryBox = ButtonBox(radius: 3f);
-        entryBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 2f);
+        entryBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 2.5f);
 
         rules.AddRange(new StyleRule[]
         {
             CButton().Class(StyleClassDropdownEntry).Box(entryBox).Prop(StylePropertyNormalColor, Clear),
+
+            // They are Buttons, so the margin every Button has would otherwise push tg's rows 2px apart.
+            CButton().Class(StyleClassDropdownEntry).Margin(0f),
             CButton().Class(StyleClassDropdownEntry).PseudoNormal().Modulate(Clear),
             CButton().Class(StyleClassDropdownEntry).PseudoHovered().Modulate(Hovered),
             CButton().Class(StyleClassDropdownEntry).PseudoPressed().Modulate(Selected),
             CButton().Class(StyleClassDropdownEntry).PseudoDisabled().Modulate(Clear),
         });
+    }
+
+    /// <summary>
+    ///     The text cell's padding either side of the divider, and above and below, which with 15px of text make 22.
+    /// </summary>
+    private const float DropdownTextPaddingX = 6f;
+    private const float DropdownTextPaddingY = 3.5f;
+
+    private static KsTguiStyleBox DropdownBox()
+    {
+        return new KsTguiStyleBox(Color.White, 2f);
     }
 
     private KsTguiStyleBox MenuBox()
@@ -647,25 +705,35 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
 
     private void AddScrollBarRules(List<StyleRule> rules)
     {
-        var verticalThumb = new StyleBoxFlat(ScrollThumb)
-        {
-            ContentMarginLeftOverride = ScrollBarWidth,
-            ContentMarginTopOverride = ScrollBarMinLength,
-        };
-        var horizontalThumb = new StyleBoxFlat(ScrollThumb)
-        {
-            ContentMarginTopOverride = ScrollBarWidth,
-            ContentMarginLeftOverride = ScrollBarMinLength,
-        };
+        // One colour for every state: Chromium's shades for a hovered or held thumb under a custom scrollbar-color
+        //      aren't written down anywhere tgui's sources reach.
+        var verticalThumb = new KsTguiScrollThumbStyleBox(ScrollThumb, horizontal: false);
+        var horizontalThumb = new KsTguiScrollThumbStyleBox(ScrollThumb, horizontal: true);
+        var verticalTrack = new KsTguiScrollTrackStyleBox(ScrollThumb, horizontal: false);
+        var horizontalTrack = new KsTguiScrollTrackStyleBox(ScrollThumb, horizontal: true);
+
+        // With nothing to scroll a browser draws no thumb, and its arrows pale.
+        var verticalDisabledThumb = new KsTguiScrollThumbStyleBox(Color.Transparent, horizontal: false);
+        var horizontalDisabledThumb = new KsTguiScrollThumbStyleBox(Color.Transparent, horizontal: true);
+        var verticalDisabledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb.WithAlpha(0.5f), horizontal: false);
+        var horizontalDisabledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb.WithAlpha(0.5f), horizontal: true);
+
+        // The arrows live in the room this leaves at each end of the bar, which is also where the thumb stops.
+        var verticalInset = new Thickness(0f, KsTguiScrollBarGeometry.EndInset, 0f, KsTguiScrollBarGeometry.EndInset);
+        var horizontalInset = new Thickness(KsTguiScrollBarGeometry.EndInset, 0f, KsTguiScrollBarGeometry.EndInset, 0f);
 
         rules.AddRange(new StyleRule[]
         {
-            E<VScrollBar>().Prop(ScrollBar.StylePropertyGrabber, verticalThumb),
+            E<VScrollBar>().Prop(ScrollBar.StylePropertyGrabber, verticalThumb).Prop(ScrollBar.StylePropertyTrack, verticalTrack).Margin(verticalInset),
             E<VScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, verticalThumb),
             E<VScrollBar>().Pseudo(ScrollBar.StylePseudoClassGrabbed).Prop(ScrollBar.StylePropertyGrabber, verticalThumb),
-            E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, horizontalThumb),
+            E<HScrollBar>().Prop(ScrollBar.StylePropertyGrabber, horizontalThumb).Prop(ScrollBar.StylePropertyTrack, horizontalTrack).Margin(horizontalInset),
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, horizontalThumb),
             E<HScrollBar>().Pseudo(ScrollBar.StylePseudoClassGrabbed).Prop(ScrollBar.StylePropertyGrabber, horizontalThumb),
+
+            // A bar shown with nothing to scroll (KsTguiScrollContainer.ReserveVertical): no thumb, dimmed arrows.
+            E<VScrollBar>().Class(Controls.KsTguiScrollContainer.StyleClassDisabled).Prop(ScrollBar.StylePropertyGrabber, verticalDisabledThumb).Prop(ScrollBar.StylePropertyTrack, verticalDisabledTrack),
+            E<HScrollBar>().Class(Controls.KsTguiScrollContainer.StyleClassDisabled).Prop(ScrollBar.StylePropertyGrabber, horizontalDisabledThumb).Prop(ScrollBar.StylePropertyTrack, horizontalDisabledTrack),
         });
     }
 }

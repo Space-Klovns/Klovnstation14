@@ -176,7 +176,8 @@ public sealed partial class KsTguiChemMasterWindow : FancyWindow
         root.AddChild(_outputSection);
         root.AddChild(packagingSection);
 
-        var scroll = new ScrollContainer { HScrollEnabled = false, HorizontalExpand = true, VerticalExpand = true };
+        // Window.Content scrollable is overflow-y: scroll, so the bar's column is there whether or not anything overflows.
+        var scroll = new KsTguiScrollContainer { HScrollEnabled = false, ReserveVertical = true, HorizontalExpand = true, VerticalExpand = true };
         scroll.AddChild(root);
         ContentsContainer.AddChild(scroll);
     }

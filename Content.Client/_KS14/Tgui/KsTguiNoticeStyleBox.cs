@@ -22,10 +22,12 @@ public sealed class KsTguiNoticeStyleBox : StyleBox
 
     private readonly Color _stripeColor;
 
-    public KsTguiNoticeStyleBox(Color backgroundColor)
+    /// <param name="backgroundColor">The box's colour.</param>
+    /// <param name="whiteStripes">tgui's <c>black</c> box has white stripes at .1, where the rest have black.</param>
+    public KsTguiNoticeStyleBox(Color backgroundColor, bool whiteStripes = false)
     {
         BackgroundColor = backgroundColor;
-        _stripeColor = KsTguiPalettes.Translucent(Color.Black, 0.1f, backgroundColor);
+        _stripeColor = KsTguiPalettes.Translucent(whiteStripes ? Color.White : Color.Black, 0.1f, backgroundColor);
     }
 
     protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box, float uiScale)

@@ -23,9 +23,22 @@ public sealed class KsTguiRoundGauge : Control
     private const float BaseHeight = 15.6f;
 
     /// <summary>
-    ///     <c>margin-bottom: 0.2em</c>.
+    ///     <c>margin-bottom: 0.2em</c>, an em of the gauge's own font-size (<c>size</c> em), so it grows with <see cref="GaugeSize"/>.
     /// </summary>
     private const float TextGap = 2.4f;
+
+    /// <summary>
+    ///     The ring's dash arithmetic, <c>stroke-dasharray</c> over the circle's circumference: a range of length <c>len</c>
+    ///         is drawn <c>50 * pi * len</c> long on a circle of <c>90 * pi</c>, which is 200 degrees, not 180, per unit of
+    ///         length. What passes the right-hand end is below the view box and clipped away.
+    /// </summary>
+    private const float ArcHalfTurnsPerUnit = 200f / 180f;
+
+    /// <summary>
+    ///     The track is <c>stroke-dasharray: 50 * pi</c> with the same offset, so it is the circle's last 160 degrees: it
+    ///         starts 20 degrees above the left horizontal, not on it.
+    /// </summary>
+    private const float TrackStartHalfTurns = 20f / 180f;
 
     /// <summary>
     ///     How far, in device pixels, the soft edge reaches past the shape.
@@ -52,27 +65,35 @@ public sealed class KsTguiRoundGauge : Control
     /// </summary>
     private const float ShakeRangeDegrees = 2.5f;
 
-    private static readonly XColor Track = new(1f, 1f, 1f, 0.1f);
+    /// <summary>
+    ///     <c>hsla(0, 0%, 100%, 0.1)</c> over a section, which the idle track and the idle alert are. A browser blends in sRGB,
+    ///         so this works out the colour CSS arrives at.
+    /// </summary>
+    private static readonly XColor Idle = KsTguiPalettes.Translucent(XColor.White, 0.1f, KsTguiPalettes.Section);
+
+    /// <summary>
+    ///     What a gauge in a section draws over.
+    /// </summary>
+    private static readonly XColor Backdrop = KsTguiPalettes.Section;
 
     private readonly KsTguiAnimatedNumber _text = new() { Align = Robust.Client.UserInterface.Controls.Label.AlignMode.Center };
     private readonly List<(KsTguiColor Color, float Min, float Max)> _ranges = new();
     private readonly List<DrawVertexUV2DColor> _vertices = new(512);
 
     // The window theme's, from style properties; the default theme's where the sheet doesn't say.
-    private Color _ring = KsTguiPalettes.InputBorder;
-    private Color _windowBase = KsTguiPalettes.Base;
+    private Color _ring = KsTguiColors.Shade(KsTguiColor.Default, 0f);
 
     protected override void StylePropertiesChanged()
     {
         base.StylePropertiesChanged();
 
-        _ring = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyGaugeRing, out var ring) ? ring : KsTguiPalettes.InputBorder;
-        _windowBase = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyWindowBase, out var windowBase) ? windowBase : KsTguiPalettes.Base;
+        // The theme's primary, which is what a gauge without ranges is drawn in: tgui gives it the one range, primary.
+        _ring = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyGaugeRing, out var ring) ? ring : KsTguiColors.Shade(KsTguiColor.Default, 0f);
         InvalidateMeasure();
     }
 
     private float _value;
-    private float _minValue;
+    private float _minValue = 1f; // tgui-core defaults it to 1, odd as that is
     private float _maxValue = 1f;
     private float _size = 1f;
 
@@ -169,6 +190,37 @@ public sealed class KsTguiRoundGauge : Control
     }
 
     /// <summary>
+    ///     What the ring is drawn in when there are no ranges.
+    /// </summary>
+    public Color DefaultRingColor => _ring;
+
+    /// <summary>
+    ///     The idle track and alert colour.
+    /// </summary>
+    public static Color IdleColor => Idle;
+
+    /// <summary>
+    ///     Whether a point of the 100 by 50 view box, before the glyph's scaling, is on the alert glyph, which has the "!" cut
+    ///         out of it.
+    /// </summary>
+    public static bool AlertGlyphCovers(Vector2 point)
+    {
+        foreach (var piece in KsTguiAlertGlyph.Pieces)
+        {
+            if (point.Y < piece.A.Y || point.Y > piece.D.Y)
+                continue;
+
+            var t = (point.Y - piece.A.Y) / (piece.D.Y - piece.A.Y);
+            var left = piece.A.X + (piece.D.X - piece.A.X) * t;
+            var right = piece.B.X + (piece.C.X - piece.B.X) * t;
+            if (point.X >= left && point.X <= right)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     The value as a fraction of the dial, 0 to 1, clamped. A dial with no span reads as empty.
     /// </summary>
     public static float FractionOf(float value, float min, float max)
@@ -195,6 +247,23 @@ public sealed class KsTguiRoundGauge : Control
     public static (float Start, float End) RangeFractions(float rangeMin, float rangeMax, float min, float max)
     {
         return (FractionOf(rangeMin, min, max), FractionOf(rangeMax, min, max));
+    }
+
+    /// <summary>
+    ///     The part of the dial a range's ring is drawn on, as fractions of the half turn. tgui scales the ends without
+    ///         clamping and draws <see cref="ArcHalfTurnsPerUnit"/> of arc per unit of length from the start, and what lies
+    ///         past the dial is clipped.
+    /// </summary>
+    public static (float Start, float End) RangeArc(float rangeMin, float rangeMax, float min, float max)
+    {
+        var span = max - min;
+        if (span == 0f)
+            return (0f, 0f);
+
+        var start = (rangeMin - min) / span;
+        var end = (rangeMax - min) / span;
+        var arcEnd = start + (end - start) * ArcHalfTurnsPerUnit;
+        return (Math.Clamp(start, 0f, 1f), Math.Clamp(arcEnd, 0f, 1f));
     }
 
     /// <summary>
@@ -386,12 +455,12 @@ public sealed class KsTguiRoundGauge : Control
     {
         _text.Measure(new Vector2(float.PositiveInfinity, float.PositiveInfinity));
         var width = MathF.Max(BaseWidth * _size, _text.DesiredSize.X);
-        return new Vector2(width, BaseHeight * _size + TextGap + _text.DesiredSize.Y);
+        return new Vector2(width, BaseHeight * _size + TextGap * _size + _text.DesiredSize.Y);
     }
 
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
     {
-        _text.Arrange(UIBox2.FromDimensions(0f, BaseHeight * _size + TextGap, finalSize.X, _text.DesiredSize.Y));
+        _text.Arrange(UIBox2.FromDimensions(0f, BaseHeight * _size + TextGap * _size, finalSize.X, _text.DesiredSize.Y));
         return finalSize;
     }
 
@@ -412,16 +481,17 @@ public sealed class KsTguiRoundGauge : Control
         if (AlertAfter != null || AlertBefore != null)
             AppendAlert(origin, unit, fringe, active ? MatchingRange() : null);
 
-        AppendRing(origin, unit, fringe, 0f, 1f, Track);
+        AppendRing(origin, unit, fringe, TrackStartHalfTurns, 1f, Idle);
         if (_ranges.Count == 0)
         {
+            // The one range tgui gives it is [0, 1]: 200 degrees of arc, all of it that shows.
             AppendRing(origin, unit, fringe, 0f, 1f, _ring);
         }
         else
         {
             foreach (var (color, min, max) in _ranges)
             {
-                var (start, end) = RangeFractions(min, max, _minValue, _maxValue);
+                var (start, end) = RangeArc(min, max, _minValue, _maxValue);
                 if (end > start)
                     AppendRing(origin, unit, fringe, start, end, KsTguiColors.Shade(color, 0f));
             }
@@ -497,33 +567,51 @@ public sealed class KsTguiRoundGauge : Control
 
     private void AppendAlert(Vector2 origin, float unit, float fringe, KsTguiColor? activeRange)
     {
-        var fill = Track;
-        var cut = _windowBase;
+        // The glyph is one colour with the "!" a hole in it. Active, it is the range's colour at the pulse's opacity, over
+        //      whatever is behind.
+        var fill = Idle;
         if (activeRange is { } range)
+            fill = KsTguiPalettes.Translucent(KsTguiColors.Shade(range, 0f), AlertOpacityNow, Backdrop);
+
+        var squashed = new Vector2[KsTguiAlertGlyph.Outline.Length];
+        for (var i = 0; i < squashed.Length; i++)
+            squashed[i] = Squash(KsTguiAlertGlyph.Outline[i]);
+
+        foreach (var piece in KsTguiAlertGlyph.Pieces)
         {
-            fill = KsTguiColors.Shade(range, 0f).WithAlpha(AlertOpacityNow);
-            cut = cut.WithAlpha(cut.A * AlertOpacityNow);
+            AppendQuad(
+                Point(origin, unit, Squash(piece.A)), fill,
+                Point(origin, unit, Squash(piece.B)), fill,
+                Point(origin, unit, Squash(piece.C)), fill,
+                Point(origin, unit, Squash(piece.D)), fill);
         }
 
-        // tgui scales the glyph to .9 from the top centre.
-        static Vector2 Squash(float x, float y)
+        // A soft edge round the outside only; the "!" is too small to need one.
+        var middle = Vector2.Zero;
+        foreach (var point in squashed)
+            middle += point;
+
+        middle /= squashed.Length;
+        var clear = fill.WithAlpha(0f);
+        for (var i = 0; i < squashed.Length; i++)
         {
-            return new Vector2((x - 50f) * 0.9f + 50f, y * 0.9f);
+            var next = (i + 1) % squashed.Length;
+            var outA = squashed[i] + Vector2.Normalize(squashed[i] - middle) * fringe;
+            var outB = squashed[next] + Vector2.Normalize(squashed[next] - middle) * fringe;
+            AppendQuad(
+                Point(origin, unit, squashed[i]), fill,
+                Point(origin, unit, outA), clear,
+                Point(origin, unit, outB), clear,
+                Point(origin, unit, squashed[next]), fill);
         }
+    }
 
-        AppendConvex(origin, unit, [Squash(50f, 13.5f), Squash(64f, 40.5f), Squash(36f, 40.5f)], fill, fringe);
-
-        // The exclamation mark is cut out of the triangle, here painted in the window's colour, fading with the triangle.
-        AppendConvex(origin, unit, [Squash(47f, 22f), Squash(53f, 22f), Squash(51.5f, 32.5f), Squash(48.5f, 32.5f)], cut, fringe);
-
-        var dot = new Vector2[12];
-        for (var i = 0; i < dot.Length; i++)
-        {
-            var angle = MathF.Tau * i / dot.Length;
-            dot[i] = Squash(50f + MathF.Cos(angle) * 2.6f, 37f + MathF.Sin(angle) * 2.6f);
-        }
-
-        AppendConvex(origin, unit, dot, cut, fringe);
+    /// <summary>
+    ///     tgui scales the glyph to .9 from the top centre.
+    /// </summary>
+    private static Vector2 Squash(Vector2 point)
+    {
+        return new Vector2((point.X - 50f) * 0.9f + 50f, point.Y * 0.9f);
     }
 
     /// <summary>

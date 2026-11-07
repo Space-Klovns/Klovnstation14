@@ -85,11 +85,11 @@ public static class KsTguiColors
     }
 
     /// <summary>
-    ///     The text colour on a button of this colour: black on the low-contrast colours, white otherwise.
+    ///     The text colour on a button of this colour: black on the low-contrast colours (tgui's `yellow` and `white` alone, not `caution`), white otherwise.
     /// </summary>
     public static Color Text(KsTguiColor color)
     {
-        return color is KsTguiColor.Yellow or KsTguiColor.White or KsTguiColor.Caution ? Color.Black : Color.White;
+        return color is KsTguiColor.Yellow or KsTguiColor.White ? Color.Black : Color.White;
     }
 
     /// <summary>

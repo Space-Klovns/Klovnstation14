@@ -46,18 +46,10 @@ public sealed partial class KsTguiChatHeader : PanelContainer
         PanelOverride = new StyleBoxFlat(KsTguiPalettes.Section);
         ModulateSelfOverride = Color.White;
 
-        _tabs = new KsTguiTabs();
+        // ChatTabs: <Tabs scrollable textAlign="center">.
+        _tabs = new KsTguiTabs { Scrollable = true, HorizontalExpand = true };
         _tabs.AutoSelect = false;
         _tabs.OnTabSelected += OnTabSelected;
-
-        var scroll = new ScrollContainer
-        {
-            HScrollEnabled = true,
-            VScrollEnabled = false,
-            HorizontalExpand = true,
-            ReturnMeasure = true,
-        };
-        scroll.AddChild(_tabs);
 
         _addButton = new KsTguiButton { Icon = KsTguiIcons.Plus, Color = KsTguiColor.Transparent, ToolTip = Loc.GetString("ks-tgui-chat-add-page") };
         _addButton.OnPressed += _ => OnAddPressed?.Invoke();
@@ -68,7 +60,10 @@ public sealed partial class KsTguiChatHeader : PanelContainer
         _settingsButton.OnPressed += _ => OnSettingsPressed?.Invoke();
 
         var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, Margin = new Thickness(0f, 0f, 6f, 0f) };
-        row.AddChild(scroll);
+        // The Stack.Item the tabs are alone in, so they are its last child and have no margin under them.
+        var tabsItem = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, HorizontalExpand = true };
+        tabsItem.AddChild(_tabs);
+        row.AddChild(tabsItem);
         row.AddChild(CenterVertically(_addButton));
         row.AddChild(_pingLabel);
         row.AddChild(CenterVertically(_settingsButton));
@@ -126,7 +121,7 @@ public sealed partial class KsTguiChatHeader : PanelContainer
 
         if (!sameTabs)
         {
-            _tabs.RemoveAllChildren();
+            _tabs.ClearTabs();
             _items.Clear();
             foreach (var page in _pages.Pages)
                 _items.Add((_tabs.AddTab(page.Name), page));

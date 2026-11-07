@@ -61,18 +61,23 @@ public sealed class KsLatheMaterialTest : InteractionTest
     }
 
     /// <summary>
-    ///     The amount of steel the client shows on each of the next ticks.
+    ///     What the client's windows show of the steel, and what's in the player's hand, on each of the next ticks.
     /// </summary>
-    private async Task<List<int>> WatchSteel()
+    private async Task<(List<int> Steel, List<int> Held)> WatchSteel()
     {
-        var series = new List<int>();
+        var steel = new List<int>();
+        var held = new List<int>();
         for (var i = 0; i < 24; i++)
         {
-            await Client.WaitPost(() => series.Add(CEntMan.GetComponent<MaterialStorageComponent>(CTarget!.Value).Storage.GetValueOrDefault(SteelMaterial)));
+            await Client.WaitPost(() =>
+            {
+                steel.Add(CEntMan.System<SharedMaterialStorageSystem>().GetMaterialAmount(CTarget!.Value, SteelMaterial));
+                held.Add(CEntMan.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>().EnumerateHeld(CEntMan.GetEntity(Player)).Count());
+            });
             await RunTicks(1);
         }
 
-        return series;
+        return (steel, held);
     }
 
     private Task Eject(int sheets)
@@ -86,8 +91,10 @@ public sealed class KsLatheMaterialTest : InteractionTest
     }
 
     /// <summary>
-    ///     A predicted delete of the inserted stack leaves the click nothing to replay after the next state, so the amount
-    ///         falls back to what it was until the server's arrives: up, down, up. That was the lathe window's flicker.
+    ///     The sheets leave the hand on the click and the amount goes up on the click, and neither comes back. A predicted
+    ///         delete leaves the click nothing to replay after the next state, so left alone the amount falls back until the
+    ///         server's arrives: up, down, up, which was the lathe window's flicker. Deleting the sheets on the server alone
+    ///         stops that, and leaves them in the hand for a round trip, which looks like no prediction at all.
     /// </summary>
     [TestCase(LathePrototype)]
     [TestCase(SiloPrototype)]
@@ -98,10 +105,21 @@ public sealed class KsLatheMaterialTest : InteractionTest
         await RunTicks(30); // or the client has nothing in hand to predict with
         await Click();
 
-        var series = await WatchSteel();
+        // A real client ticks on with nothing from the server yet, and its own prediction is all it has to go on.
+        var earlySteel = new List<int>();
+        for (var i = 0; i < 2; i++)
+        {
+            await Client.WaitRunTicks(1);
+            await Client.WaitPost(() => earlySteel.Add(CEntMan.System<SharedMaterialStorageSystem>().GetMaterialAmount(CTarget!.Value, SteelMaterial)));
+        }
+
+        var (series, held) = await WatchSteel();
+        series.InsertRange(0, earlySteel);
 
         var inserted = Sheets * SheetVolume();
         Assert.That(series, Is.All.EqualTo(inserted), $"The client showed: {string.Join(", ", series)}");
+        // The first sample is on the click's own tick, and a predicted delete lands as that tick ends.
+        Assert.That(held.Skip(1), Is.All.EqualTo(0), $"The hand held: {string.Join(", ", held)}");
         Assert.That(HandSys.GetActiveItem((SPlayer, Hands)), Is.Null, "The server should have taken the sheets.");
     }
 
@@ -113,10 +131,109 @@ public sealed class KsLatheMaterialTest : InteractionTest
         await RunTicks(30); // or the client has nothing in hand to predict with
         await Click();
 
-        var series = await WatchSteel();
+        var (series, _) = await WatchSteel();
 
         Assert.That(series, Is.All.EqualTo(0), $"The client showed: {string.Join(", ", series)}");
         Assert.That(HandSys.GetActiveItem((SPlayer, Hands)), Is.Not.Null, "The sheets should still be in hand.");
+    }
+
+    /// <summary>
+    ///     The sheets are gone by the time the click replays, so it replays as an empty-handed click on the machine, which opens
+    ///         its window, or closes an open one, until the next state undoes that. That's the window blinking.
+    /// </summary>
+    [TestCase(LathePrototype, false)]
+    [TestCase(LathePrototype, true)]
+    [TestCase(SiloPrototype, false)]
+    [TestCase(SiloPrototype, true)]
+    public async Task InsertingLeavesTheWindowAsItWas(string machine, bool windowOpen)
+    {
+        var machineUid = await SpawnLathe(prototype: machine);
+        System.Enum key = machine == SiloPrototype ? Content.Shared.Materials.OreSilo.OreSiloUiKey.Key : LatheUiKey.Key;
+
+        if (windowOpen)
+        {
+            await Server.WaitPost(() => SEntMan.System<SharedUserInterfaceSystem>().OpenUi(machineUid, key, SPlayer));
+            await RunTicks(15);
+        }
+
+        await PlaceInHands(SheetPrototype, Sheets);
+        await RunTicks(30);
+        await Click();
+
+        var clientUi = CEntMan.System<SharedUserInterfaceSystem>();
+        var series = new List<bool>();
+        for (var i = 0; i < 24; i++)
+        {
+            await Client.WaitPost(() => series.Add(clientUi.IsUiOpen(CTarget!.Value, key, CEntMan.GetEntity(Player))));
+            await RunTicks(1);
+        }
+
+        Assert.That(series, Is.All.EqualTo(windowOpen), $"The window was open: {string.Join(", ", series)}");
+    }
+
+    /// <summary>
+    ///     A real click while an insert's amounts are held has to be predicted as ever: the hold only stops the replay. The
+    ///         server opens the window either way, so this looks at the client, on the click.
+    /// </summary>
+    [Test]
+    public async Task ANewClickWhileHeldIsStillPredicted()
+    {
+        await SpawnLathe();
+        await PlaceInHands(SheetPrototype, Sheets);
+        await RunTicks(30);
+        await Click();
+
+        // Only on the client, which predicts ahead, so the server's state for the insert hasn't released the hold.
+        await Client.WaitRunTicks(1);
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CEntMan.HasComponent<Content.Client.Materials.KsHeldMaterialAmountsComponent>(CTarget!.Value), Is.True,
+                "The test needs the hold to be on for the second click.");
+        });
+
+        await Click();
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CEntMan.System<SharedUserInterfaceSystem>().IsUiOpen(CTarget!.Value, LatheUiKey.Key, CEntMan.GetEntity(Player)), Is.True);
+        });
+    }
+
+    /// <summary>
+    ///     Measured in a real client with latency, where a frame runs between the insert and the next state; the headless client
+    ///         here can't reproduce that ordering, so the decision is checked on its own.
+    /// </summary>
+    [Test]
+    public void TheHoldWaitsForTheServerToReachTheInsert()
+    {
+        var inserted = new Robust.Shared.Timing.GameTick(100);
+        var before = new Robust.Shared.Timing.GameTick(99);
+
+        Assert.That(Content.Client.Materials.MaterialStorageSystem.KsCanRelease(before, inserted, stored: 500, held: 500), Is.False,
+            "The client's own prediction already shows the insert, so it can't be what releases the hold.");
+        Assert.That(Content.Client.Materials.MaterialStorageSystem.KsCanRelease(inserted, inserted, stored: 500, held: 500), Is.True);
+        Assert.That(Content.Client.Materials.MaterialStorageSystem.KsCanRelease(inserted, inserted, stored: 0, held: 500), Is.False);
+    }
+
+    /// <summary>
+    ///     An eject has to show through a hold left by an insert a moment before, or the amount looks stuck until it's released.
+    /// </summary>
+    [Test]
+    public async Task EjectRightAfterAnInsertShowsAtOnce()
+    {
+        await SpawnLathe(stored: Stored);
+        await PlaceInHands(SheetPrototype, Sheets);
+        await RunTicks(30);
+        await Click();
+        await Eject(1);
+        await RunTicks(1);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(
+                CEntMan.System<SharedMaterialStorageSystem>().GetMaterialAmount(CTarget!.Value, SteelMaterial),
+                Is.LessThan(Stored + Sheets * SheetVolume()),
+                "The sheet taken out should come off what's shown.");
+        });
     }
 
     /// <summary>

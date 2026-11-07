@@ -85,7 +85,7 @@ public sealed class KsTguiFontTest : GameTest
         {
             var font = (StackedFont)fonts.GetFont(12);
 
-            Assert.That(((VectorFont)font._main).Size, Is.EqualTo(9));
+            Assert.That(((VectorFont)((KsTguiScaledFont)font._main).Inner).Size, Is.EqualTo(9));
             Assert.That(font.GetHeight(1f), Is.GreaterThan(0), "Metrics have to come from the real font, not the empty one");
             Assert.That(font.GetCharMetrics(new System.Text.Rune('A'), 1f), Is.Not.Null, "Glyphs have to fall through the empty font");
             Assert.That(font.Stack[0].GetCharMetrics(new System.Text.Rune('A'), 1f, fallback: false), Is.Null, "The size carrier must have no glyphs");

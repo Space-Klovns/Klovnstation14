@@ -105,6 +105,12 @@ fa-solid-900.ttf
 Font Awesome Free (Solid), https://fontawesome.com, copyright Fonticons, Inc. The font files are licensed under the SIL
 Open Font License 1.1 (https://scripts.sil.org/OFL), taken from the tgstation repository's html/font-awesome/webfonts.
 
+fa-regular-400.ttf
+------------------
+
+Font Awesome Free (Regular), https://fontawesome.com, copyright Fonticons, Inc. The font files are licensed under the SIL
+Open Font License 1.1 (https://scripts.sil.org/OFL), taken from the tgstation repository's html/font-awesome/webfonts.
+
 size_carrier.ttf
 ----------------
 

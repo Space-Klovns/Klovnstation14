@@ -55,7 +55,7 @@ public sealed class KsTguiNumberInput : Control
     private XColor _borderIdle = BorderIdle;
     private XColor _borderFocused = KsTguiPalettes.InputBorder;
 
-    private readonly LineEdit _edit;
+    private readonly KsTguiRightAlignedLineEdit _edit;
     private readonly KsTguiAnimatedNumber _content;
     private readonly KsTguiStyleBox _box = new(Background, 2f) { BorderThickness = new Thickness(1f) };
 
@@ -105,10 +105,10 @@ public sealed class KsTguiNumberInput : Control
         _content.MouseFilter = MouseFilterMode.Ignore;
         _content.FontColorOverride = KsTguiPalettes.InputBorder;
 
+        // .NumberInput__input is text-align: right, with 0 var(--space-m) of padding.
         var editBox = new KsTguiStyleBox(Background);
-        editBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, ContentMarginLeft);
         editBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 0f);
-        _edit = new LineEdit { Visible = false, StyleBoxOverride = editBox, SelectAllOnFocus = true };
+        _edit = new KsTguiRightAlignedLineEdit(editBox, ContentMarginLeft) { Visible = false, SelectAllOnFocus = true };
 
         AddChild(_content);
         AddChild(_edit);
@@ -131,7 +131,7 @@ public sealed class KsTguiNumberInput : Control
         RefreshContent();
     }
 
-    public LineEdit Edit => _edit;
+    public KsTguiRightAlignedLineEdit Edit => _edit;
 
     /// <summary>
     ///     The value shown: the one last set or committed, or the live one while dragging.
@@ -451,6 +451,7 @@ public sealed class KsTguiNumberInput : Control
         _editing = true;
         _edit.Visible = true;
         _edit.Text = _value.ToString(_format, CultureInfo.CurrentCulture);
+        _edit.UpdateAlignment();
         _edit.GrabKeyboardFocus();
         _edit.CursorPosition = _edit.Text.Length;
         _edit.SelectionStart = 0;

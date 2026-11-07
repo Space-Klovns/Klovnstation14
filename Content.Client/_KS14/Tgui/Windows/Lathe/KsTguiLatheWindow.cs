@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Lathe;
 using Content.Client._KS14.Tgui.Windows.Materials;
@@ -30,12 +29,12 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     private readonly LatheSystem _lathe;
     private readonly MaterialStorageSystem _materialStorage;
 
-    private readonly KsTguiTabs _categoryTabs;
-    private readonly KsTguiTabItem _allCategoryTab;
-    private readonly Dictionary<ProtoId<LatheCategoryPrototype>, KsTguiTabItem> _categoryTabItems = new();
+    private readonly BoxContainer _categoryTabs;
+    private readonly KsTguiFabricatorTab _allCategoryTab;
+    private readonly Dictionary<ProtoId<LatheCategoryPrototype>, KsTguiFabricatorTab> _categoryTabItems = new();
     private readonly KsTguiButton _serverListButton;
     private readonly KsTguiSection _designsSection;
-    private readonly LineEdit _searchBar;
+    private readonly KsTguiSearchBar _searchBar;
     private readonly KsTguiNumberInput _amountInput;
     private readonly Label _recipeCount;
     private readonly BoxContainer _recipeList;
@@ -78,9 +77,9 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         SetSize = new Vector2(940f, 600f);
 
         // Categories.
-        _categoryTabs = new KsTguiTabs { Vertical = true };
-        _allCategoryTab = _categoryTabs.AddTab(Loc.GetString("ks-tgui-lathe-all-designs"), selected: true);
-        _categoryTabs.OnTabSelected += OnCategorySelected;
+        _categoryTabs = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
+        _allCategoryTab = AddCategoryTab(Loc.GetString("ks-tgui-lathe-all-designs"));
+        _allCategoryTab.Selected = true;
 
         _serverListButton = new KsTguiButton { Text = Loc.GetString("lathe-menu-server-list"), Icon = KsTguiIcons.Cog, Fluid = true };
         _serverListButton.OnPressed += args => OnServerListButtonPressed?.Invoke(args);
@@ -92,8 +91,8 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         categoriesColumn.AddChild(_serverListButton);
 
         // Designs.
-        _searchBar = new LineEdit { PlaceHolder = Loc.GetString("lathe-menu-search-designs"), HorizontalExpand = true };
-        _searchBar.OnTextChanged += _ => PopulateRecipes();
+        _searchBar = new KsTguiSearchBar { PlaceHolder = Loc.GetString("lathe-menu-search-designs") };
+        _searchBar.Input.OnTextChanged += _ => PopulateRecipes();
 
         _amountInput = new KsTguiNumberInput
         {
@@ -114,7 +113,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _designsSection = new KsTguiSection { Fill = true, HorizontalExpand = true };
         var designsBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true, SeparationOverride = 6 };
         designsBody.AddChild(searchRow);
-        designsBody.AddChild(new ScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _recipeList } });
+        designsBody.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _recipeList } });
         designsBody.AddChild(_recipeCount);
         _designsSection.AddChild(designsBody);
 
@@ -146,7 +145,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         var queueBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true };
         queueBody.AddChild(_fabricatingContainer);
         queueBody.AddChild(_queueEmptyLabel);
-        queueBody.AddChild(new ScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _queueList } });
+        queueBody.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _queueList } });
         queueSection.AddChild(queueBody);
 
         // Materials.
@@ -188,8 +187,26 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         Recipes = recipes;
     }
 
-    private void OnCategorySelected(KsTguiTabItem item)
+    private KsTguiFabricatorTab AddCategoryTab(string name)
     {
+        var tab = new KsTguiFabricatorTab { Text = name };
+        tab.OnPressed += _ => OnCategorySelected(tab);
+        _categoryTabs.AddChild(tab);
+        return tab;
+    }
+
+    private void SelectCategoryTab(KsTguiFabricatorTab selected)
+    {
+        foreach (var child in _categoryTabs.Children)
+        {
+            if (child is KsTguiFabricatorTab tab)
+                tab.Selected = tab == selected;
+        }
+    }
+
+    private void OnCategorySelected(KsTguiFabricatorTab item)
+    {
+        SelectCategoryTab(item);
         CurrentCategory = null;
         foreach (var (category, tabItem) in _categoryTabItems)
         {
@@ -202,7 +219,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
     private void RefreshDesignsTitle()
     {
-        var query = _searchBar.Text.Trim();
+        var query = _searchBar.Input.Text.Trim();
         if (query.Length > 0)
         {
             _designsSection.Title = Loc.GetString("ks-tgui-lathe-results", ("query", query));
@@ -220,7 +237,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         var recipesToShow = new List<LatheRecipePrototype>();
         var categoryCounts = new Dictionary<ProtoId<LatheCategoryPrototype>, int>();
-        var search = _searchBar.Text.Trim().ToLowerInvariant();
+        var search = _searchBar.Input.Text.Trim().ToLowerInvariant();
         foreach (var recipe in Recipes)
         {
             if (!_prototypeManager.Resolve(recipe, out var proto))
@@ -241,9 +258,9 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             recipesToShow.Add(proto);
         }
 
-        _allCategoryTab.Count = $"{Recipes.Count}";
+        _allCategoryTab.Count = Recipes.Count;
         foreach (var (category, tabItem) in _categoryTabItems)
-            tabItem.Count = $"{categoryCounts.GetValueOrDefault(category)}";
+            tabItem.Count = categoryCounts.GetValueOrDefault(category);
 
         var quantity = Math.Max(1, (int)_amountInput.Value);
 
@@ -260,7 +277,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             var canProduce = _lathe.CanProduce(Entity, prototype, quantity, component: lathe);
             var canProduceFive = _lathe.CanProduce(Entity, prototype, 5, component: lathe);
             var canProduceTen = _lathe.CanProduce(Entity, prototype, 10, component: lathe);
-            var tooltipFunction = () => GenerateTooltipText(prototype);
+            var costs = (Func<int, IReadOnlyList<KsTguiMaterialCost>>)(amount => MaterialCosts(prototype, amount));
 
             KsTguiLatheRecipeRow row;
             if (idx >= oldChildCount)
@@ -280,7 +297,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
                 row = (KsTguiLatheRecipeRow)_recipeList.GetChild(idx);
             }
 
-            row.SetRecipe(prototype, tooltipFunction, canProduce, canProduceFive, canProduceTen, () => GetRecipeDisplayControl(prototype));
+            row.SetRecipe(prototype, costs, canProduce, canProduceFive, canProduceTen, MaxPrints(prototype), () => GetRecipeDisplayControl(prototype));
             idx++;
         }
 
@@ -290,50 +307,51 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         }
     }
 
-    private string GenerateTooltipText(LatheRecipePrototype prototype)
+    /// <summary>
+    ///     tg's <c>maxmult</c>: how many prints of a design the machine's materials allow, capped. tg's customMaterials branch has
+    ///         no equivalent, as a design here always names its materials.
+    /// </summary>
+    private int MaxPrints(LatheRecipePrototype prototype)
     {
-        var sb = new StringBuilder();
-        var multiplier = _entityManager.GetComponent<LatheComponent>(Entity).MaterialUseMultiplier;
+        if (!_entityManager.TryGetComponent<LatheComponent>(Entity, out var latheComponent))
+            return 0;
 
-        foreach (var (id, amount) in prototype.Materials)
+        var most = KsTguiLatheRecipeRow.MaxPrintsCap;
+        foreach (var (id, perPrint) in prototype.Materials)
         {
-            if (!_prototypeManager.Resolve(id, out var proto))
+            var needed = SharedLatheSystem.AdjustMaterial(perPrint, prototype.ApplyMaterialDiscount, latheComponent.MaterialUseMultiplier);
+            if (needed <= 0)
                 continue;
 
-            var adjustedAmount = SharedLatheSystem.AdjustMaterial(amount, prototype.ApplyMaterialDiscount, multiplier);
-            var sheetVolume = _materialStorage.GetSheetVolume(proto);
-
-            var unit = Loc.GetString(proto.Unit);
-            var sheets = adjustedAmount / (float)sheetVolume;
-
-            var availableAmount = _materialStorage.GetMaterialAmount(Entity, id);
-            var missingAmount = Math.Max(0, adjustedAmount - availableAmount);
-            var missingSheets = missingAmount / (float)sheetVolume;
-
-            var name = Loc.GetString(proto.Name);
-
-            string tooltipText;
-            if (missingSheets > 0)
-            {
-                tooltipText = Loc.GetString("lathe-menu-material-amount-missing", ("amount", sheets), ("missingAmount", missingSheets), ("unit", unit), ("material", name));
-            }
-            else
-            {
-                var amountText = Loc.GetString("lathe-menu-material-amount", ("amount", sheets), ("unit", unit));
-                tooltipText = Loc.GetString("lathe-menu-tooltip-display", ("material", name), ("amount", amountText));
-            }
-
-            sb.AppendLine(tooltipText);
+            most = Math.Min(most, _materialStorage.GetMaterialAmount(Entity, id) / needed);
         }
 
-        var desc = _lathe.GetRecipeDescription(prototype);
-        if (!string.IsNullOrWhiteSpace(desc))
-            sb.AppendLine(Loc.GetString("lathe-menu-description-display", ("description", desc)));
+        return most;
+    }
 
-        if (sb.Length > 0)
-            sb.Remove(sb.Length - 1, 1);
+    /// <summary>
+    ///     What <paramref name="amount"/> prints of a design take, for its tooltip, as tg's <c>MaterialCostSequence</c>.
+    /// </summary>
+    private IReadOnlyList<KsTguiMaterialCost> MaterialCosts(LatheRecipePrototype prototype, int amount)
+    {
+        var costs = new List<KsTguiMaterialCost>();
+        if (!_entityManager.TryGetComponent<LatheComponent>(Entity, out var latheComponent))
+            return costs;
 
-        return sb.ToString();
+        foreach (var (id, perPrint) in prototype.Materials)
+        {
+            if (!_prototypeManager.Resolve(id, out var material))
+                continue;
+
+            var needed = SharedLatheSystem.AdjustMaterial(perPrint, prototype.ApplyMaterialDiscount, latheComponent.MaterialUseMultiplier) * amount;
+            costs.Add(new KsTguiMaterialCost(
+                _spriteSystem.Frame0(material.Icon),
+                needed,
+                _materialStorage.GetMaterialAmount(Entity, id),
+                _materialStorage.GetSheetVolume(material)));
+        }
+
+        return costs;
     }
 
     public void UpdateCategories()
@@ -369,11 +387,11 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         foreach (var category in sortedCategories)
         {
-            var tabItem = _categoryTabs.AddTab(Loc.GetString(category.Name));
+            var tabItem = AddCategoryTab(Loc.GetString(category.Name));
             _categoryTabItems[category.ID] = tabItem;
         }
 
-        _categoryTabs.Select(CurrentCategory is { } current ? _categoryTabItems[current] : _allCategoryTab);
+        SelectCategoryTab(CurrentCategory is { } current ? _categoryTabItems[current] : _allCategoryTab);
         PopulateRecipes();
     }
 

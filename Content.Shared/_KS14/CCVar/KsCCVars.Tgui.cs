@@ -27,4 +27,11 @@ public sealed partial class KsCCVars
     /// </summary>
     public static readonly CVarDef<string> TguiSayPosition =
         CVarDef.Create("klovn.ui.tgui.say_position", "", CVar.CLIENTONLY | CVar.ARCHIVE);
+
+    /// <summary>
+    ///     Blur what is behind tgui's tooltips, dropdown menus and knob popups, as tgui's <c>backdrop-filter</c> does. Costs a
+    ///         redraw of the UI behind each such popup while it is up. Read by the client UI only.
+    /// </summary>
+    public static readonly CVarDef<bool> TguiBackdropBlur =
+        CVarDef.Create("klovn.ui.tgui.backdrop_blur", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 }

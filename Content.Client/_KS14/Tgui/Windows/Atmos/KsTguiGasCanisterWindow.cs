@@ -43,7 +43,10 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     private bool _hasTank;
     private bool _shieldEnabled;
 
-    public KsTguiNumberInput ReleaseInput { get; } = new() { Unit = Loc.GetString("ks-tgui-atmos-unit-kpa"), Step = 5f, WidthPixels = 75f };
+    /// <summary>
+    ///     tg's regulator knob: size 1.25, 5 kPa to the pixel.
+    /// </summary>
+    public KsTguiKnob ReleaseKnob { get; } = new() { KnobSize = 1.25f, Unit = Loc.GetString("ks-tgui-atmos-unit-kpa"), Step = 5f, StepPixelSize = 1f };
     public KsTguiButton ReleaseMaxButton { get; } = new() { Icon = KsTguiIcons.FastForward, Color = KsTguiColor.Transparent };
     public KsTguiButton ReleaseDefaultButton { get; } = new() { Icon = KsTguiIcons.Undo, Color = KsTguiColor.Transparent };
     public KsTguiButton ValveButton { get; } = new();
@@ -71,11 +74,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         _pressureItem.XamlChildren.Add(_canisterGauge);
 
         var regulatorItem = canisterList.AddItem(Loc.GetString("ks-tgui-atmos-regulator"));
-        regulatorItem.XamlChildren.Add(ReleaseInput);
-        var regulatorButtons = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
-        regulatorButtons.AddChild(ReleaseDefaultButton);
-        regulatorButtons.AddChild(ReleaseMaxButton);
-        regulatorItem.Buttons = regulatorButtons;
+        regulatorItem.XamlChildren.Add(new RegulatorControl(ReleaseKnob, ReleaseMaxButton, ReleaseDefaultButton));
 
         canisterList.AddItem(Loc.GetString("ks-tgui-atmos-valve")).Buttons = ValveButton;
         ValveButton.MinWidth = 72f;
@@ -115,9 +114,9 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         ContentsContainer.AddChild(root);
 
         ShieldButton.Visible = false;
-        ReleaseInput.OnCommitted += value => ReleasePressureSet?.Invoke(value);
-        ReleaseMaxButton.OnPressed += _ => SetPressureAndSend(ReleaseInput.MaxValue);
-        ReleaseDefaultButton.OnPressed += _ => SetPressureAndSend(Math.Clamp(Atmospherics.OneAtmosphere, ReleaseInput.MinValue, ReleaseInput.MaxValue));
+        ReleaseKnob.OnChanged += value => ReleasePressureSet?.Invoke(value);
+        ReleaseMaxButton.OnPressed += _ => SetPressureAndSend(ReleaseKnob.MaxValue);
+        ReleaseDefaultButton.OnPressed += _ => SetPressureAndSend(Math.Clamp(Atmospherics.OneAtmosphere, ReleaseKnob.MinValue, ReleaseKnob.MaxValue));
         ValveButton.OnPressed += _ =>
         {
             if (_valveOpen)
@@ -170,7 +169,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     private void SetPressureAndSend(float pressure)
     {
-        ReleaseInput.SetValue(pressure);
+        ReleaseKnob.SetValue(pressure);
         ReleasePressureSet?.Invoke(pressure);
     }
 
@@ -207,8 +206,8 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     public void SetReleasePressureRange(float min, float max)
     {
-        ReleaseInput.MinValue = min;
-        ReleaseInput.MaxValue = max;
+        ReleaseKnob.MinValue = min;
+        ReleaseKnob.MaxValue = max;
     }
 
     public void SetCanisterLimit(float pressureLimit)
@@ -238,8 +237,8 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     public void SetReleasePressure(float pressure)
     {
-        ReleaseInput.SetValue(pressure);
-        ReleaseMaxButton.Disabled = pressure >= ReleaseInput.MaxValue;
+        ReleaseKnob.SetValue(pressure);
+        ReleaseMaxButton.Disabled = pressure >= ReleaseKnob.MaxValue;
     }
 
     public void SetReleaseValve(bool valve)
@@ -270,6 +269,8 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
 
     private void SetValveVisual()
     {
+        // tg: the knob's ring is yellow while the valve is open.
+        ReleaseKnob.Color = _valveOpen ? KsTguiColor.Yellow : null;
         ValveButton.Text = Loc.GetString(_valveOpen ? "ks-tgui-atmos-valve-open" : "ks-tgui-atmos-valve-closed");
         ValveButton.Color = !_valveOpen
             ? KsTguiColor.Default
@@ -282,5 +283,57 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
         ShieldButton.Selected = _shieldEnabled;
         ShieldButton.Icon = _shieldEnabled ? KsTguiIcons.Power : KsTguiIcons.Times;
         ShieldButton.Text = Loc.GetString(_shieldEnabled ? "ks-tgui-atmos-shielding-on" : "ks-tgui-atmos-shielding-off");
+    }
+
+    /// <summary>
+    ///     tg's regulator cell: the knob, and the fast-forward and undo buttons placed against it as
+    ///         <c>position: absolute; right: -20px</c> at <c>top: -2px</c> and <c>16px</c>, so they sit just right of the knob,
+    ///         the one above the other.
+    /// </summary>
+    private sealed class RegulatorControl : Control
+    {
+        /// <summary>
+        ///     Where the buttons start, from the knob's left: its width and the gap tg's offsets leave.
+        /// </summary>
+        private const float ButtonGap = 7f;
+
+        private const float MaxButtonTop = -2f;
+        private const float DefaultButtonTop = 16f;
+
+        private readonly KsTguiKnob _knob;
+        private readonly KsTguiButton _maxButton;
+        private readonly KsTguiButton _defaultButton;
+
+        public RegulatorControl(KsTguiKnob knob, KsTguiButton maxButton, KsTguiButton defaultButton)
+        {
+            _knob = knob;
+            _maxButton = maxButton;
+            _defaultButton = defaultButton;
+            HorizontalAlignment = HAlignment.Left;
+
+            AddChild(knob);
+            AddChild(maxButton);
+            AddChild(defaultButton);
+        }
+
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
+        {
+            _knob.Measure(Vector2.PositiveInfinity);
+            _maxButton.Measure(Vector2.PositiveInfinity);
+            _defaultButton.Measure(Vector2.PositiveInfinity);
+
+            var buttonWidth = MathF.Max(_maxButton.DesiredSize.X, _defaultButton.DesiredSize.X);
+            return new Vector2(_knob.DesiredSize.X + ButtonGap + buttonWidth, _knob.DesiredSize.Y);
+        }
+
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
+        {
+            _knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, _knob.DesiredSize));
+
+            var left = _knob.DesiredSize.X + ButtonGap;
+            _maxButton.Arrange(UIBox2.FromDimensions(new Vector2(left, MaxButtonTop), _maxButton.DesiredSize));
+            _defaultButton.Arrange(UIBox2.FromDimensions(new Vector2(left, DefaultButtonTop), _defaultButton.DesiredSize));
+            return finalSize;
+        }
     }
 }

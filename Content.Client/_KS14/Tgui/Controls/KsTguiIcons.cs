@@ -81,4 +81,17 @@ public static class KsTguiIcons
     public const string Backward = "";
     public const string Forward = "";
     public const string SyncAlt = "";
+
+    public const string ChevronDown = "";
+    public const string ChevronRight = "";
+
+    /// <summary>
+    ///     tgui's <c>square-o</c>: Font Awesome Regular, so show it with <see cref="KsTguiIcon.Regular"/>.
+    /// </summary>
+    public const string SquareO = "";
+
+    /// <summary>
+    ///     tgui's <c>check-square-o</c>, Regular as <see cref="SquareO"/>.
+    /// </summary>
+    public const string CheckSquareO = "";
 }
