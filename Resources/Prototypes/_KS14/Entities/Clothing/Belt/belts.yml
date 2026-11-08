@@ -1,0 +1,11 @@
+# Sprites from Stalker14. As the military webbing it is.
+- type: entity
+  parent: [ BaseCentcommContraband, ClothingBeltMilitaryWebbing ]
+  id: KsClothingBeltChestRigBlack
+  name: black chest rig
+  description: A black rig of pouches worn over the chest.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/belt/tarzan_deserter.rsi
+  - type: Clothing
+    sprite: _Stalker/Objects/Clothing/belt/tarzan_deserter.rsi

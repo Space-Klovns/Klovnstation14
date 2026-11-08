@@ -1722,6 +1722,27 @@ public sealed class KsOperativeHtnRootTest : GameTest
             Assert.That(squadMemberComponent.Tactics.HuntCharges, "and blow its way in after a noise");
             Assert.That(chargeSystem.TryGetCharge(mobUid, null, out var charge), "it should have a charge it can use");
             Assert.That(charge.Method, Is.EqualTo(Content.Server._KS14.NPC.Charges.NpcChargeMethod.Wired));
+
+            // Smoke and gas: the M40 and the air tank in its suit storage put it on internals, and it sees through smoke.
+            Assert.That(entManager.System<Content.Server._KS14.NPC.Internals.NpcInternalsSystem>().CanGoOnInternals(mobUid),
+                "it should be able to go on internals");
+            Assert.That(entManager.GetComponent<NpcPerceptionComponent>(mobUid).SeesThroughSmoke, "it should see through smoke");
+
+            // All black: every piece of the outfit went on.
+            var inventorySystem = entManager.System<Content.Shared.Inventory.InventorySystem>();
+            foreach (var (slot, prototype) in new[]
+                     {
+                         ("mask", "KsClothingMaskGasM40"), ("head", "KsClothingHeadHelmetBlackPlate"),
+                         ("outerClothing", "KsClothingOuterArmorBlackPlate"), ("jumpsuit", "KsClothingUniformJumpsuitBlackCombat"),
+                         ("gloves", "KsClothingHandsGlovesBlackPadded"), ("shoes", "KsClothingShoesBootsBlackArmy"),
+                         ("belt", "KsClothingBeltChestRigBlack"), ("back", "KsClothingBackpackTacticalBlack"),
+                         ("neck", "KsClothingNeckCapeBlack"),
+                     })
+            {
+                Assert.That(inventorySystem.TryGetSlotEntity(mobUid, slot, out var wornUid) &&
+                    entManager.GetComponent<MetaDataComponent>(wornUid.Value).EntityPrototype?.ID == prototype,
+                    $"it should wear {prototype} in {slot}");
+            }
         });
     }
 

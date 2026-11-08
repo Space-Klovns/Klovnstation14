@@ -1,0 +1,11 @@
+# Sprites from Stalker14.
+- type: entity
+  parent: [ BaseCentcommContraband, ClothingUniformBase ]
+  id: KsClothingUniformJumpsuitBlackCombat
+  name: black combat uniform
+  description: A plain black combat uniform. No insignia, no name tape.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/uniform/deserter_uniform.rsi
+  - type: Clothing
+    sprite: _Stalker/Objects/Clothing/uniform/deserter_uniform.rsi
