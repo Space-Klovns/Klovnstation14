@@ -484,7 +484,7 @@ public sealed class KsTguiListTest : GameTest
             TextureColors.Add(modulate ?? Color.White);
         }
 
-        public override void DrawEntity(Robust.Shared.GameObjects.EntityUid entity, Vector2 position, Vector2 scale, Angle? worldRot, Angle eyeRotation = default, Direction? overrideDirection = null, Robust.Client.GameObjects.SpriteComponent sprite = null, Robust.Shared.GameObjects.TransformComponent xform = null, Robust.Shared.GameObjects.SharedTransformSystem xformSystem = null)
+        public override void DrawEntity(Robust.Shared.GameObjects.EntityUid entity, Vector2 position, Vector2 scale, Angle? worldRot, Angle eyeRotation = default, Direction? overrideDirection = null, Robust.Client.GameObjects.SpriteComponent sprite = null, Robust.Shared.GameObjects.TransformComponent xform = null, Robust.Shared.GameObjects.SharedTransformSystem xformSystem = null, IReadOnlyList<Robust.Client.GameObjects.SpriteComponent.PostShaderEntry> postShaders = null)
         {
         }
     }
