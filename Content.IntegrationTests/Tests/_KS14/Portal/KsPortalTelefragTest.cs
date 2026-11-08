@@ -9,6 +9,7 @@ using Content.Shared.Teleportation.Systems;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
@@ -46,6 +47,10 @@ public sealed class KsPortalTelefragTest : GameTest
         EntityUid mob = default;
         await server.WaitPost(() =>
         {
+            var mapSystem = SEntMan.System<SharedMapSystem>();
+            for (var x = 0; x <= (int)TargetTile.X; x++)
+                mapSystem.SetTile(testMap.Grid, testMap.Grid.Comp, new Vector2i(x, 0), testMap.Tile.Tile);
+
             var portalCoordinates = new EntityCoordinates(testMap.Grid, PortalTile);
             var targetCoordinates = new EntityCoordinates(testMap.Grid, TargetTile);
             var portalUid = SEntMan.SpawnEntity(PortalRed, portalCoordinates);
@@ -67,25 +72,26 @@ public sealed class KsPortalTelefragTest : GameTest
     }
 
     /// <summary>
-    ///     Walks the mob into the portal again, as a victim that is still in play does.
+    ///     Moves the mob into the portal's collision trigger again.
     /// </summary>
     private async Task EnterPortalAsync(EntityUid mob, EntityUid grid, bool expectSurvivor = true)
     {
         await Pair.Server.WaitPost(() =>
         {
             SEntMan.RemoveComponent<PortalTimeoutComponent>(mob);
-            SEntMan.System<TransformSystem>().SetCoordinates(mob, new EntityCoordinates(grid, new Vector2(1.6f, 0.5f)));
+            SEntMan.System<TransformSystem>().SetCoordinates(mob, new EntityCoordinates(grid, PortalTile));
             SEntMan.System<SharedPhysicsSystem>().SetLinearVelocity(mob, new Vector2(-4f, 0f));
         });
 
-        for (var tick = 0; tick < 6; tick++)
+        // Exercise real collision/telefrag handling without depending on humanoid movement or floor friction.
+        var crossed = false;
+        for (var tick = 0; tick < 30 && !crossed; tick++)
         {
+            await Pair.RunTicksSync(1);
             await Pair.Server.WaitPost(() =>
             {
-                if (!SEntMan.Deleted(mob))
-                    SEntMan.System<SharedPhysicsSystem>().SetLinearVelocity(mob, new Vector2(-4f, 0f));
+                crossed = SEntMan.Deleted(mob) || SEntMan.HasComponent<PortalTimeoutComponent>(mob);
             });
-            await Pair.RunTicksSync(1);
         }
 
         if (!expectSurvivor)

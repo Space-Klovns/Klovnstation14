@@ -35,7 +35,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ExaminedEvent>(OnExamine);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ActivateInWorldEvent>(OnActivate);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, AnchorStateChangedEvent>(OnAnchorChanged);
-        SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ReAnchorEvent>(OnReanchorEvent);
+        /* SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ReAnchorEvent>(OnReanchorEvent); */ // KS14: v292 raises normal anchor events during grid splits.
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, UnanchorAttemptEvent>(OnUnanchorAttempt);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ComponentRemove>(OnComponentRemoved);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, EventHorizonAttemptConsumeEntityEvent>(PreventBreach);
@@ -116,12 +116,19 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
     {
         if (!args.Anchored)
             RemoveConnections(generator);
+        // KS14 start: upstream #45353, check the new grid when anchoring after a split.
+        else
+            GridCheck(generator);
+        // KS14 end
     }
 
+    // KS14: removed upstream re-anchor handler; normal anchor events now cover grid splits.
+    /*
     private void OnReanchorEvent(Entity<ContainmentFieldGeneratorComponent> generator, ref ReAnchorEvent args)
     {
         GridCheck(generator);
     }
+    */
 
     private void OnUnanchorAttempt(EntityUid uid, ContainmentFieldGeneratorComponent component,
         UnanchorAttemptEvent args)

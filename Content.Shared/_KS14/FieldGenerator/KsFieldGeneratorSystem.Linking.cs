@@ -25,7 +25,6 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         if (_netManager.IsServer)
         {
             SubscribeLocalEvent<KsFieldGeneratorComponent, AnchorStateChangedEvent>(OnAnchorStateChanged);
-            SubscribeLocalEvent<KsFieldGeneratorComponent, ReAnchorEvent>(OnReAnchor);
         }
     }
 
@@ -176,13 +175,6 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
             TryRemoveFromAnchoredPositions(entity, args.Transform);
 
         UnlinkAndClearFields(entity);
-    }
-
-    private void OnReAnchor(Entity<KsFieldGeneratorComponent> entity, ref ReAnchorEvent args)
-    {
-        // Moved to another grid (a grid split, say): out of the old grid's cache, and into the new one's
-        RemoveFromTileCache(entity, args.OldGrid, args.TilePos);
-        TryUpdateAnchoredPosition(entity, args.Xform);
     }
 
     private void UpdateAnchoredPosition(Entity<KsFieldGeneratorComponent> entity, TransformComponent transformComponent, Entity<MapGridComponent> gridEntity)
