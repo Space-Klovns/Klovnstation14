@@ -24,7 +24,7 @@ namespace Content.Client.Lathe.UI
 
             _menu.OnServerListButtonPressed += _ =>
             {
-                SendMessage(new ConsoleServerSelectionMessage());
+                SendPredictedMessage(new ConsoleServerSelectionMessage()); // KS14: SendMessage -> SendPredictedMessage, opens the server list at once
             };
 
             _menu.RecipeQueueAction += (recipe, amount) =>

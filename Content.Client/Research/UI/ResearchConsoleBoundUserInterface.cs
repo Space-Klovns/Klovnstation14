@@ -33,7 +33,7 @@ public sealed partial class ResearchConsoleBoundUserInterface : BoundUserInterfa
 
         _consoleMenu.OnServerButtonPressed += () =>
         {
-            SendMessage(new ConsoleServerSelectionMessage());
+            SendPredictedMessage(new ConsoleServerSelectionMessage()); // KS14: SendMessage -> SendPredictedMessage, opens the server list at once
         };
     }
 
