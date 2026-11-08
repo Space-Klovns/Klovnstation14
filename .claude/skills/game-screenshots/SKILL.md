@@ -66,6 +66,16 @@ and every later window silently fails to open. Offset by the machine's rotation 
 
 **Trap: queue a lathe after adding its materials**, or `TryAddToQueue` returns false and the queue shot is empty.
 
+**In a git worktree** (an agent's isolated checkout), set `KS_REPO` to its path and use `ks.py build game` (client, then
+server). `ks.py` handles what a fresh worktree lacks: it builds `Robust.Client.Injectors` where the XAML task looks for it,
+and keeps `bin/Content.Client` and `bin/Content.Server` as real folders holding only the content assemblies (`ks.py stage`
+redoes this by hand). Never make those folders junctions to `bin/kstest`: the game then loads the test assemblies too and
+dies registering `MarkingManager` twice. Launch from the worktree's own `bin/kstest` on a port other than 1313 (1414) if
+another run may be going. Content loaded from those folders is **sandbox-checked**, unlike in the main checkout, so the
+harness may not use reflection there: delete `FocusChat`/`SetSettings` from the installed `TempKsController.cs` (the
+client otherwise dies with `Assembly Content.Client failed type checks`), and open private UI through a public path
+(`UIManager.CreateWindow<T>().OpenCentered()`).
+
 ## 3. Launch (separate port, separate data)
 
 From `bin/kstest`, in bash (`S` = your scratch folder):
