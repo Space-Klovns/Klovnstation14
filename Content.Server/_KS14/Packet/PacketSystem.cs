@@ -14,6 +14,7 @@ using Content.Server.Lathe;
 using Content.Server.Materials;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.VendingMachines;
+using Content.Server.Xenoarchaeology.Equipment;
 using Content.Shared._KS14.Packets.BUI;
 using Content.Shared._KS14.Packets.Widgets;
 using Content.Shared.Containers.ItemSlots;
@@ -21,6 +22,7 @@ using Content.Shared.DeviceLinking.Events;
 using Content.Shared.GameTicking;
 using Content.Shared.Lathe;
 using Content.Shared.Materials;
+using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Prototypes;
@@ -43,6 +45,8 @@ public sealed partial class PacketSystem : EntitySystem
     [Dependency] internal ChemMasterSystem ChemMasterSystem = default!;
     [Dependency] internal RadioSystem RadioSystem = default!;
     [Dependency] internal UserInterfaceSystem UserInterfaceSystem = default!;
+    [Dependency] internal ArtifactAnalyzerSystem ArtifactAnalyzerSystem = default!;
+    [Dependency] internal ContainerSystem ContainerSystem = default!;
 
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private IGameTiming _gameTiming = default!;

@@ -21,7 +21,7 @@ public sealed partial class ExecutorMenu : FancyWindow
 
     public bool _closed = false;
 
-    public static string? FormattedDefinitions;
+    public static List<DeviceCallEntry> Entries = [];
     public ExecutorMenu()
     {
         RobustXamlLoader.Load(this);
@@ -29,9 +29,10 @@ public sealed partial class ExecutorMenu : FancyWindow
         ExecuteButton.OnPressed += _ => OnExecutionButton?.Invoke();
         LoadButton.OnPressed += _ => OnLoadButton?.Invoke();
         TerminateButton.OnPressed += _ => OnTerminateButton?.Invoke();
+        FilterText.OnTextChanged += _ => FormatDefinitions();
 
-        if (FormattedDefinitions != null)
-            Definitions.TextRope = Rope.Concat(Rope.Leaf.Empty, FormattedDefinitions);
+        FormatDefinitions();
+        FilterText.Placeholder = Rope.Concat(Rope.Leaf.Empty, "Filter calls");
     }
 
     public void UpdateState(ExecutorBoundUserInterfaceState state, PacketExecutorComponent? component)
@@ -51,20 +52,28 @@ public sealed partial class ExecutorMenu : FancyWindow
 
     public void UpdateDefinitions(List<DeviceCallEntry>? entries)
     {
-
-        if (FormattedDefinitions != null)
+        if (Entries.Count != 0)
         {
-            Definitions.TextRope = Rope.Concat(Rope.Leaf.Empty, FormattedDefinitions);
+            FormatDefinitions();
             return;
         }
 
         if (entries == null)
             return;
 
+        Entries = [..entries];
+        FormatDefinitions();
+    }
+
+    public void FormatDefinitions()
+    {
         var text = new StringBuilder();
 
-        foreach (var entry in entries)
+        foreach (var entry in Entries)
         {
+            if (!entry.DeviceCallName.Contains(Rope.Collapse(FilterText.TextRope), StringComparison.OrdinalIgnoreCase))
+                continue;
+
             text.Append(entry.DeviceCallName).Append(": ").AppendLine().AppendLine();
 
             text.Append("In:").AppendLine();
@@ -82,7 +91,6 @@ public sealed partial class ExecutorMenu : FancyWindow
         }
 
         Definitions.TextRope = Rope.Concat(Rope.Leaf.Empty, text.ToString());
-        FormattedDefinitions = text.ToString();
     }
 
     public void WriteLog(string log)

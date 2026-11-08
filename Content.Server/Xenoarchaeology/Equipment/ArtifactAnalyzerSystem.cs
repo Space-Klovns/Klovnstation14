@@ -24,7 +24,12 @@ public sealed partial class ArtifactAnalyzerSystem : SharedArtifactAnalyzerSyste
         SubscribeLocalEvent<AnalysisConsoleComponent, AnalysisConsoleExtractButtonPressedMessage>(OnExtractButtonPressed);
     }
 
-    private void OnExtractButtonPressed(Entity<AnalysisConsoleComponent> ent, ref AnalysisConsoleExtractButtonPressedMessage args)
+    private void OnExtractButtonPressed(Entity<AnalysisConsoleComponent> ent, ref AnalysisConsoleExtractButtonPressedMessage args) // KS14
+    {
+        Extract(ent);
+    }
+
+    public void Extract(Entity<AnalysisConsoleComponent> ent)
     {
         if (!TryGetArtifactFromConsole(ent, out var artifact))
             return;
