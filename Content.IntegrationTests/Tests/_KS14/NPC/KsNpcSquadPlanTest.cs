@@ -773,6 +773,41 @@ public sealed class KsNpcSquadPlanTest : GameTest
     }
 
     /// <summary>
+    ///     A hostile that moves between the plan being made and the throw: it goes where the hostile is now, not where it was.
+    /// </summary>
+    [Test]
+    public async Task TestTheThrowFollowsTheHostile()
+    {
+        var scene = await SetUp(glass: ArmouredGlass, hostile: ArmedHostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, Flashbang);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Running));
+
+            // Both in line with the doorway, so that nothing in the way sends it just inside instead.
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+            transformSystem.SetCoordinates(scene.TargetUid, new EntityCoordinates(scene.GridUid, 5.5f, 2.5f));
+            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, -2.5f, 2.5f));
+            scene.EntManager.DeleteEntity(scene.DoorUid);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "it should be told to throw");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.ThrowGrenade));
+            var miss = transformSystem.ToMapCoordinates(order.Coordinates).Position - transformSystem.GetMapCoordinates(scene.TargetUid).Position;
+            Assert.That(miss.Length(), Is.LessThan(0.01f), "it should be thrown at where the hostile is now");
+        });
+    }
+
+    /// <summary>
     ///     A grenade goes in where it leaves them out of the blast. Against a hostile just inside the door, that is nowhere,
     ///         and the same squad goes in without. They are clear of tile 1 where they stand now: it is where they will be
     ///         standing to throw it that counts.
@@ -1412,7 +1447,9 @@ public sealed class KsNpcSquadPlanTest : GameTest
             var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
             Assert.That(hunt, Is.Not.Null, "the test needs them hunting");
             Assert.That(hunt!.Entrances, Has.Count.EqualTo(1), "the test needs them to know of the door");
+            Assert.That(hunt.Phase, Is.Not.EqualTo(NpcHuntPhase.Blast), "shut out, it does not blow its way in either");
 
+            // Nobody staged at all is fine: with no way in but the charge, nobody can lead.
             foreach (var staging in hunt.StagedMembers.Values)
             {
                 Assert.That(staging.Method, Is.Not.EqualTo(NpcBreachMethod.Charge));

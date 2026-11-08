@@ -111,7 +111,7 @@ public sealed class KsNpcStopDropRollTest : GameTest
         });
 
         await Pair.RunTicksSync(NoticeTicks);
-        Assert.That(IsRolling(entManager, npcUid), Is.EqualTo(rolls));
+        Assert.That(await IsRolling(entManager, npcUid), Is.EqualTo(rolls));
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ public sealed class KsNpcStopDropRollTest : GameTest
         });
 
         await Pair.RunTicksSync(NoticeTicks);
-        Assert.That(IsRolling(entManager, npcUid), Is.False);
+        Assert.That(await IsRolling(entManager, npcUid), Is.False);
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public sealed class KsNpcStopDropRollTest : GameTest
         });
 
         await Pair.RunTicksSync(NoticeTicks);
-        Assert.That(IsRolling(entManager, npcUid), Is.False);
+        Assert.That(await IsRolling(entManager, npcUid), Is.False);
     }
 
     /// <summary>
@@ -206,11 +206,11 @@ public sealed class KsNpcStopDropRollTest : GameTest
         });
 
         await Pair.RunTicksSync(NoticeTicks);
-        Assert.That(IsRolling(entManager, npcUid), Is.False, "it should not roll on the fire");
+        Assert.That(await IsRolling(entManager, npcUid), Is.False, "it should not roll on the fire");
 
         await Pair.Server.WaitPost(() => entManager.DeleteEntity(fireUid));
         await Pair.RunTicksSync(NoticeTicks);
-        Assert.That(IsRolling(entManager, npcUid), "with the fire gone, it should");
+        Assert.That(await IsRolling(entManager, npcUid), "with the fire gone, it should");
     }
 
     /// <summary>
@@ -268,16 +268,18 @@ public sealed class KsNpcStopDropRollTest : GameTest
         });
 
         await Pair.RunTicksSync(NoticeTicks);
-        Assert.That(IsRolling(entManager, npcUid), Is.False, "it has somewhere to be");
+        Assert.That(await IsRolling(entManager, npcUid), Is.False, "it has somewhere to be");
 
         await Pair.Server.WaitPost(() => entManager.GetComponent<HTNComponent>(npcUid).Blackboard.Remove<bool>(BusyKey));
         await Pair.RunTicksSync(NoticeTicks);
-        Assert.That(IsRolling(entManager, npcUid), "there now, it should");
+        Assert.That(await IsRolling(entManager, npcUid), "there now, it should");
     }
 
-    private static bool IsRolling(IEntityManager entManager, EntityUid npcUid)
+    private async Task<bool> IsRolling(IEntityManager entManager, EntityUid npcUid)
     {
-        return entManager.GetComponent<FlammableComponent>(npcUid).Resisting;
+        var rolling = false;
+        await Pair.Server.WaitPost(() => rolling = entManager.GetComponent<FlammableComponent>(npcUid).Resisting);
+        return rolling;
     }
 
     private void Ignite(IEntityManager entManager, EntityUid npcUid, float fireStacks)

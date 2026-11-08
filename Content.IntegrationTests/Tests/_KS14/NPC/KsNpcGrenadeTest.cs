@@ -283,7 +283,8 @@ public sealed class KsNpcGrenadeTest : GameTest
             });
         });
 
-        var duration = entManager.GetComponent<NpcGrenadePusherComponent>(npcUid).Duration;
+        var duration = TimeSpan.Zero;
+        await Pair.Server.WaitPost(() => duration = entManager.GetComponent<NpcGrenadePusherComponent>(npcUid).Duration);
         await Pair.RunTicksSync((int) (duration.TotalSeconds * timing.TickRate) + 1);
 
         await Pair.Server.WaitAssertion(() =>

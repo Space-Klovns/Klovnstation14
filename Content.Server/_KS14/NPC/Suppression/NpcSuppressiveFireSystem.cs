@@ -34,7 +34,10 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
         var enumerator = EntityQueryEnumerator<NpcSuppressiveFireComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var suppressiveFireComponent, out var transformComponent))
         {
-            if (now >= suppressiveFireComponent.EndTime || !_gunSystem.TryGetGun(uid, out var gunEntity))
+            // Or the spot went with whatever it was on, say a shuttle that left: it would only fire at the middle of the map.
+            if (now >= suppressiveFireComponent.EndTime ||
+                !suppressiveFireComponent.Coordinates.IsValid(EntityManager) ||
+                !_gunSystem.TryGetGun(uid, out var gunEntity))
             {
                 Stop(uid);
                 continue;

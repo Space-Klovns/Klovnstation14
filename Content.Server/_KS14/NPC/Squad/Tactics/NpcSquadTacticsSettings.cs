@@ -25,7 +25,8 @@ public sealed partial class NpcSquadTacticsSettings
     public TimeSpan WatchTime = TimeSpan.FromSeconds(4);
 
     /// <summary>
-    ///     How long the whole hunt may take before the hostile is given up on.
+    ///     How long the whole hunt may take before the hostile is given up on. A blast is not cut short by it, and one that
+    ///         gets them through starts it over.
     /// </summary>
     [DataField]
     public TimeSpan HuntTimeout = TimeSpan.FromSeconds(25);

@@ -562,8 +562,31 @@ public sealed partial class NPCSteeringSystem
     }
 
     /// <summary>
-    /// Whether what <paramref name="uid"/> avoids lies on or right beside the next stretch of its path. So not every tick, as
-    /// a path that has to pass one finds it again every time, and only so far ahead, as the rest may have burnt out by then.
+    /// Notes where a path just found already passes what <paramref name="uid"/> avoids, for <see cref="HasNewDanger"/> to
+    /// leave alone. Once a path, so a walk past a fire that burns all the while asks for one path, not one every check. Only
+    /// if the dangers are what they were when it was asked for (<paramref name="dangerVersion"/>): one that started while
+    /// it was being found is news, and finding it again is what <see cref="HasNewDanger"/> is for. Null for a path found
+    /// without minding dangers at all, as a search that ran out of room going round them settles for: steering looks
+    /// again as it gets nearer, where going round fits.
+    /// </summary>
+    private void NoteDangerOnPath(EntityUid uid, NPCSteeringComponent steering, int? dangerVersion)
+    {
+        steering.DangerOnPath.Clear();
+
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || _pathfindingSystem.TileDangerVersion != dangerVersion)
+            return;
+
+        foreach (var poly in steering.CurrentPath)
+        {
+            if (_pathfindingSystem.IsNearDanger(poly, dangers))
+                steering.DangerOnPath.Add(poly);
+        }
+    }
+
+    /// <summary>
+    /// Whether what <paramref name="uid"/> avoids has started up on or right beside the next stretch of its path since it was
+    /// found. Not every tick, and only so far ahead, as the rest may have burnt out by then.
     /// </summary>
     private bool HasNewDanger(EntityUid uid, NPCSteeringComponent steering)
     {
@@ -580,7 +603,7 @@ public sealed partial class NPCSteeringSystem
         var checkedPolys = 0;
         foreach (var poly in steering.CurrentPath)
         {
-            if (_pathfindingSystem.IsNearDanger(poly, dangers))
+            if (_pathfindingSystem.IsNearDanger(poly, dangers) && !steering.DangerOnPath.Contains(poly))
                 return true;
 
             if (++checkedPolys >= DangerCheckPolys)

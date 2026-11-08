@@ -52,6 +52,17 @@ public sealed partial class PathfindingSystem
     private TimeSpan _nextTileDangerRefresh;
 
     /// <summary>
+    ///     What was burning, and where, at the last refresh: a sum of hashes, so the order things are found in does not count.
+    /// </summary>
+    private int _tileDangerHash;
+
+    /// <summary>
+    ///     Goes up whenever what is dangerous, and where, changes. The same at two moments means a path found between them
+    ///         was found knowing all there is to know about the dangers now.
+    /// </summary>
+    public int TileDangerVersion { get; private set; }
+
+    /// <summary>
     ///     What <paramref name="uid"/> steers clear of, of what there is right now: none, for most NPCs, or if there is no
     ///         danger about at all.
     /// </summary>
@@ -155,6 +166,7 @@ public sealed partial class PathfindingSystem
     private static void RestartIgnoringDangers(AStarPathRequest request, PathPoly startNode)
     {
         request.AvoidedDangers = NpcTileDangerKind.None;
+        request.IgnoredDangers = true;
         request.CostSoFar.Clear();
         request.CameFrom.Clear();
         request.PolyFrontier!.Clear();
@@ -187,11 +199,16 @@ public sealed partial class PathfindingSystem
 
         _tileDangers.Clear();
 
+        var hash = 0;
         var enumerator = EntityQueryEnumerator<NpcTileDangerComponent, TransformComponent>();
         while (enumerator.MoveNext(out var tileDangerComponent, out var transformComponent))
         {
             if (transformComponent.GridUid is { } gridUid && _mapGridQuery.TryComp(gridUid, out var mapGridComponent))
-                AddTileDanger(gridUid, _maps.TileIndicesFor(gridUid, mapGridComponent, transformComponent.Coordinates), tileDangerComponent.Dangers);
+            {
+                var tile = _maps.TileIndicesFor(gridUid, mapGridComponent, transformComponent.Coordinates);
+                AddTileDanger(gridUid, tile, tileDangerComponent.Dangers);
+                hash += HashCode.Combine(gridUid, tile, tileDangerComponent.Dangers);
+            }
         }
 
         // Gas fires are not entities: they are atmospherics' own, by tile.
@@ -201,7 +218,14 @@ public sealed partial class PathfindingSystem
         foreach (var (gridUid, tile) in _gasFires)
         {
             AddTileDanger(gridUid, tile, NpcTileDangerKind.Fire);
+            hash += HashCode.Combine(gridUid, tile, NpcTileDangerKind.Fire);
         }
+
+        if (hash == _tileDangerHash)
+            return;
+
+        _tileDangerHash = hash;
+        TileDangerVersion++;
     }
 
     private void AddTileDanger(EntityUid gridUid, Vector2i tile, NpcTileDangerKind dangers)

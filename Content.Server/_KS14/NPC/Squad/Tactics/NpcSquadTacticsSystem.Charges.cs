@@ -98,7 +98,8 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool TryStartBlast(NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        if (!settings.HuntCharges || hunt.BlastTried || !AnyoneHasACharge())
+        // A plan's hunt never blasts on its own: the plan has its own charge steps, and nothing runs a blast on its hunt.
+        if (!settings.HuntCharges || hunt.AllowCharges || hunt.BlastTried || !AnyoneHasACharge())
             return false;
 
         hunt.BlastTried = true;
@@ -148,6 +149,7 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         hunt.Blast = null;
+        hunt.StartedAt = now; // a whole hunt's time for what is through the hole: see UpdateHunt
 
         if (hunt.GridUid is { } gridUid && _mapGridQuery.TryComp(gridUid, out var mapGridComponent))
             BuildSearchPoints(leaderUid ?? _members[0], hunt, (gridUid, mapGridComponent), settings);
@@ -166,21 +168,19 @@ public sealed partial class NpcSquadTacticsSystem
     {
         plan.DoorCharge = FindDoorCharge(plan);
 
-        if (plan.WallSearched)
-        {
-            if (plan.WallCharge is { } pick && !IsStillGood(pick))
-                plan.WallCharge = null;
-
+        // Searched before, and nothing since has spoilt what it found: the planter is still here, still has the charge, and
+        //      has not been kept back to watch. Otherwise it is searched again, for somebody else to plant one.
+        if (plan.WallSearched && (plan.WallCharge is not { } pick || IsStillGood(plan, pick)))
             return;
-        }
 
         plan.WallSearched = true;
         plan.WallCharge = FindWallCharge(plan, settings);
     }
 
-    private bool IsStillGood(NpcChargePick pick)
+    private bool IsStillGood(NpcSquadPlan plan, NpcChargePick pick)
     {
-        return _members.Contains(pick.PlanterUid) &&
+        return pick.PlanterUid != plan.WatcherUid &&
+            _members.Contains(pick.PlanterUid) &&
             !TerminatingOrDeleted(pick.Site.TargetUid) &&
             _npcChargeSystem.TryGetCharge(pick.PlanterUid, pick.Site.TargetUid, out _);
     }
@@ -743,7 +743,13 @@ public sealed partial class NpcSquadTacticsSystem
         var inPlace = planterCoordinates.TryDistance(EntityManager, _transformSystem, pick.StandOffCoordinates, out var fromSpot) && fromSpot <= StandOffRange;
         var facing = (chargeCoordinates.Position - pick.StandOffCoordinates.Position).ToWorldAngle();
 
-        if (inPlace && (everyoneClear || now - charge.PlantedAt >= ClearingTime) || now - charge.PlantedAt >= ClearingTime + ClearingTime / 2)
+        // Done waiting for it to get to its spot - but never while it is in the blast itself. Left there, the charge is lost.
+        var planterClear = inPlace ||
+            planterCoordinates.TryDistance(EntityManager, _transformSystem, chargeCoordinates, out var fromCharge) &&
+            (fromCharge >= ChargeDangerRange ||
+             !_npcLineOfSightSystem.InLineOfSight(_transformSystem.GetMapCoordinates(pick.PlanterUid), _transformSystem.ToMapCoordinates(site.StandCoordinates), ChargeDangerRange));
+
+        if (inPlace && (everyoneClear || now - charge.PlantedAt >= ClearingTime) || planterClear && now - charge.PlantedAt >= ClearingTime + ClearingTime / 2)
             SetOrder(pick.PlanterUid, issuerUid, NpcOrderKind.Detonate, planterCoordinates, facing, OrderRange, null, now, toolUid: activatorUid);
         else
             SetOrder(pick.PlanterUid, issuerUid, NpcOrderKind.Stage, pick.StandOffCoordinates, facing, StandOffRange, null, now);

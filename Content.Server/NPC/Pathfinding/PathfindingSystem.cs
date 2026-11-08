@@ -537,7 +537,7 @@ namespace Content.Server.NPC.Pathfinding
 
             // Same context as do_after and not synchronously blocking soooo
 #pragma warning disable RA0004
-            var ev = new PathResultEvent(request.Task.Result, request.Polys);
+            var ev = new PathResultEvent(request.Task.Result, request.Polys) { KsIgnoredDangers = request.IgnoredDangers }; // KS14
 #pragma warning restore RA0004
 
             return ev;

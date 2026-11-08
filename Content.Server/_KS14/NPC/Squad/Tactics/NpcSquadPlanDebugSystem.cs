@@ -83,7 +83,7 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     /// <summary>
     ///     Sends where <paramref name="plan"/> stands to everyone watching it.
     /// </summary>
-    public void SendFrame(EntityUid issuerUid, NpcSquadPlan plan, List<EntityUid> memberUids)
+    public void SendFrame(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, List<EntityUid> memberUids)
     {
         SquadPlanDebugDataMessage? message = null;
 
@@ -92,7 +92,7 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
             if (!Matches(target, issuerUid, memberUids))
                 continue;
 
-            message ??= BuildFrame(issuerUid, plan, memberUids);
+            message ??= BuildFrame(issuerUid, plan, settings, memberUids);
 
             if (message != null)
                 RaiseNetworkEvent(message, session.Channel);
@@ -116,14 +116,13 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
         return target is not { } targetUid || targetUid == issuerUid || memberUids.Contains(targetUid);
     }
 
-    private SquadPlanDebugDataMessage? BuildFrame(EntityUid issuerUid, NpcSquadPlan plan, List<EntityUid> memberUids)
+    private SquadPlanDebugDataMessage? BuildFrame(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, List<EntityUid> memberUids)
     {
         if (TerminatingOrDeleted(plan.TargetUid))
             return null;
 
         var now = _gameTiming.CurTime;
         var hunt = plan.Hunt;
-        var settings = hunt?.Settings;
 
         var message = new SquadPlanDebugDataMessage
         {
@@ -131,7 +130,7 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
             State = plan.State,
             Reason = plan.Reason,
             Elapsed = (float) (now - plan.StartedAt).TotalSeconds,
-            Timeout = settings == null ? 0f : (float) settings.PlanTimeout.TotalSeconds,
+            Timeout = (float) settings.PlanTimeout.TotalSeconds,
             Facts = plan.Facts,
             CurrentStep = plan.CurrentStep,
             Cost = plan.Cost,
@@ -161,10 +160,10 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
         foreach (var memberUid in memberUids)
         {
             var memberMapCoordinates = _transformSystem.GetMapCoordinates(memberUid);
-            var memberCoordinates = GetNetCoordinates(Transform(memberUid).Coordinates);
+            var memberCoordinates = GetNetCoordinates(Snapshot(Transform(memberUid).Coordinates));
 
             if (_npcLineOfFireSystem.TryGetFirstHit(memberMapCoordinates, targetMapCoordinates, _npcLineOfFireSystem.GetShotMask(memberUid), out var hit))
-                message.Shots.Add(new SquadPlanDebugShot(memberCoordinates, GetNetCoordinates(Transform(hit.HitEntity).Coordinates), Clear: false));
+                message.Shots.Add(new SquadPlanDebugShot(memberCoordinates, GetNetCoordinates(Snapshot(Transform(hit.HitEntity).Coordinates)), Clear: false));
             else
                 message.Shots.Add(new SquadPlanDebugShot(memberCoordinates, message.Target, Clear: true));
 

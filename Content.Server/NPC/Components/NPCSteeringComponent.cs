@@ -134,7 +134,13 @@ public sealed partial class NPCSteeringComponent : Component
     /// <summary>
     /// When to next look along the path for a danger that has started up on it since it was found.
     /// </summary>
-    [ViewVariables] public TimeSpan NextDangerCheck;
+    [ViewVariables, AutoPausedField] public TimeSpan NextDangerCheck;
+
+    /// <summary>
+    /// The nodes of the current path that were already on or beside a danger when it was found: the way round was dearer,
+    /// or there was none. Finding those again is no reason to look for another path.
+    /// </summary>
+    [ViewVariables] public readonly HashSet<PathPoly> DangerOnPath = new();
     // KS14 end
 
     public const int FailedPathLimit = 3;

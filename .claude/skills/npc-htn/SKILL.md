@@ -289,7 +289,10 @@ cost a little more (`marginCost`), so a path leaves a gap where that is a short 
 - **Cost:** worked out on demand, at most every 0.5s, and only for an NPC that avoids something, so it is nothing with
   none about, and otherwise what is burning rather than the size of the map.
 - **Steering:** a straight-line chase takes a path instead while there are dangers about, and a path looks ahead for a
-  fire that started on or beside it after it was found. `TacticalPositionOperator` is never offered a tile that poses one,
+  fire that started on or beside it after it was found. Only one that started after: the dangers a path already passes
+  when it comes back (`NPCSteeringComponent.DangerOnPath`) are no news, or an NPC walking past a long fire would search
+  for the same path twice a second. That holds only if the dangers did not change while it was searched for
+  (`PathfindingSystem.TileDangerVersion`), and never for a search that gave up on minding them (below). `TacticalPositionOperator` is never offered a tile that poses one,
   nor one touching it unless there is nothing else.
   `GetRandomPath` does not take dangers into account, though steering still stops short of one at the end of it.
 - **Never stopped on one:** crossing is allowed, stopping is not. Steering calls a move done when all that is left of the

@@ -174,7 +174,9 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private void UpdateHunt(EntityUid issuerUid, EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        if (hunt.Phase != NpcHuntPhase.Exhausted && now - hunt.StartedAt >= settings.HuntTimeout)
+        // Not in the middle of a blast, which has timeouts of its own: given up on there, a charge would be left on the wall,
+        //      or the wire, with the squad waiting about beside it. The hunt starts over once it is through.
+        if (hunt.Phase is not (NpcHuntPhase.Exhausted or NpcHuntPhase.Blast) && now - hunt.StartedAt >= settings.HuntTimeout)
             Exhaust(leaderUid, hunt, now);
 
         if (hunt.Phase == NpcHuntPhase.Watch)

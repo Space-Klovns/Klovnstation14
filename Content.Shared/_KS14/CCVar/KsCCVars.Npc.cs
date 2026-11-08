@@ -71,9 +71,9 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.npc.path_hierarchical", true, CVar.SERVERONLY);
 
     /// <summary>
-    ///     How many fire stacks an NPC has to have before it stops, drops and rolls. Anything lit starts on 2 and they fade
-    ///         slowly, so much above 1 and some would burn right down without ever trying. Below that, what is left of the
-    ///         fire is not worth lying down for.
+    ///     How many fire stacks an NPC has to have before it stops, drops and rolls. Anything lit starts on 2, so at 2 it
+    ///         rolls from the moment it catches; much above that and some would burn right down without ever trying. Below
+    ///         it, what is left of the fire is not worth lying down for.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> NpcFireRollMinStacks =

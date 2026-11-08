@@ -189,6 +189,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
         ResetStuck(component, Transform(uid).Coordinates);
         component.Coordinates = coordinates;
+        component.KsNode = EntityCoordinates.Invalid; // KS14: a new move, so no progress towards a node yet - see IsCirclingNode
         RemComp<NpcBackgroundMoveComponent>(uid); // KS14: a new move is the task at hand until its operator says otherwise
         return component;
     }
@@ -460,6 +461,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         steering.PathfindToken = new CancellationTokenSource();
 
         var flags = _pathfindingSystem.GetFlags(uid);
+        var dangerVersion = _pathfindingSystem.TileDangerVersion; // KS14: see NoteDangerOnPath
 
         var result = await _pathfindingSystem.GetPathSafe(
             uid,
@@ -506,6 +508,8 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
         PrunePath(uid, ourPos, targetPos.Position - ourPos.Position, result.Path);
         steering.CurrentPath = new Queue<PathPoly>(result.Path);
+        steering.KsNode = EntityCoordinates.Invalid; // KS14: a new path, so no progress towards a node yet - see IsCirclingNode
+        NoteDangerOnPath(uid, steering, result.KsIgnoredDangers ? null : dangerVersion); // KS14
     }
 
     // TODO: Move these to movercontroller

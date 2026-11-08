@@ -156,7 +156,7 @@ public sealed partial class NpcSquadTacticsSystem
         };
 
         if (_squadPlanQuery.HasComp(issuerUid) && _npcSquadPlanDebugSystem.IsTracking(issuerUid, _members))
-            _npcSquadPlanDebugSystem.SendFrame(issuerUid, plan, _members);
+            _npcSquadPlanDebugSystem.SendFrame(issuerUid, plan, settings, _members);
 
         return inHand;
     }
@@ -228,11 +228,25 @@ public sealed partial class NpcSquadTacticsSystem
             _combatContacts.Clear();
             _npcPerceptionSystem.GetCombatContacts(memberUid, _combatContacts);
 
-            if (_combatContacts.Count > 0)
-                threatUid = _combatContacts[0];
+            foreach (var hostileUid in _combatContacts)
+            {
+                if (IsHostileDown(hostileUid))
+                    continue;
+
+                threatUid = hostileUid;
+                break;
+            }
         }
 
         return threatUid.IsValid() && health / _members.Count <= settings.PlanWithdrawHealth;
+    }
+
+    /// <summary>
+    ///     Whether a plan against <paramref name="hostileUid"/> has nothing left to do: it is gone, down, or known dead.
+    /// </summary>
+    private bool IsHostileDown(EntityUid hostileUid)
+    {
+        return TerminatingOrDeleted(hostileUid) || _mobStateSystem.IsIncapacitated(hostileUid) || AnyoneKnowsDead(hostileUid);
     }
 
     private static NpcSquadPlan StartWithdrawal(EntityUid threatUid, TimeSpan now)
@@ -375,7 +389,7 @@ public sealed partial class NpcSquadTacticsSystem
 
     private bool UpdatePlanSteps(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        if (TerminatingOrDeleted(plan.TargetUid) || _mobStateSystem.IsIncapacitated(plan.TargetUid) || AnyoneKnowsDead(plan.TargetUid))
+        if (IsHostileDown(plan.TargetUid))
         {
             EndPlan(issuerUid, plan, settings.PlanSuccessCooldown, now, "the hostile is down");
             return true;
@@ -623,6 +637,23 @@ public sealed partial class NpcSquadTacticsSystem
         {
             FailPlanStep(issuerUid, plan, action, settings, now);
             return false;
+        }
+
+        // Where the hostile is now, not where it was when the plan was made: it has had a while to move since, more so for
+        //      a squad that had to go on internals first. A grenade that would now come down among them is not thrown.
+        if (hunt.StagedMembers.TryGetValue(toThrow.ThrowerUid, out var throwerStaging))
+        {
+            var coordinates = action == NpcSquadAction.FragRoom
+                ? GetFragLanding(plan, toThrow.ThrowerUid, throwerStaging)
+                : GetThrowCoordinates(plan, toThrow.ThrowerUid, throwerStaging);
+
+            if (action == NpcSquadAction.FragRoom && !IsClearOfEveryone(hunt, coordinates, settings.PlanFragClearance))
+            {
+                FailPlanStep(issuerUid, plan, action, settings, now);
+                return false;
+            }
+
+            toThrow = toThrow with { Coordinates = coordinates };
         }
 
         // Nobody takes a breath of it: the throw waits until all of them are on internals.
@@ -1142,17 +1173,15 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     Where a grenade would land. With the door still shut, that is where it will land once it is open, going by the view
-    ///         from the doorway: a plan has to be able to choose this before there is anything to throw it through.
+    ///     Where a grenade would land, going by the view from the doorway, which is where it goes in through. Shut or open: a
+    ///         plan has to be able to choose this before there is anything to throw it through, and the choice has to hold
+    ///         once there is, from wherever the thrower stands beside it.
     /// </summary>
     private EntityCoordinates GetFragLanding(NpcSquadPlan plan, EntityUid memberUid, NpcHuntStaging staging)
     {
         var entrance = plan.Hunt!.Entrances[staging.EntranceIndex];
 
         if (!TerminatingOrDeleted(plan.TargetUid) &&
-            entrance.DoorUid is { } doorUid &&
-            _doorQuery.TryComp(doorUid, out var doorComponent) &&
-            doorComponent.State is not (DoorState.Open or DoorState.Opening) &&
             _npcLineOfFireSystem.IsClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.GetMapCoordinates(plan.TargetUid), CollisionGroup.ItemMask))
             return _transformSystem.GetMoverCoordinates(plan.TargetUid);
 
@@ -1354,6 +1383,19 @@ public sealed partial class NpcSquadTacticsSystem
         plan.Hunt = null;
         plan.StepCount = 0;
         plan.Reason = reason;
+    }
+
+    /// <summary>
+    ///     Throws away a plan that will not be updated again - a lone NPC's that has joined a squad, or a squad's that has
+    ///         lost its leader - letting go of any charge's wire on the way, so nobody is left tied to a wall.
+    /// </summary>
+    private void DropPlan(EntityUid issuerUid)
+    {
+        if (!_squadPlanQuery.TryComp(issuerUid, out var planComponent))
+            return;
+
+        ReleaseCharge(planComponent.Plan);
+        RemComp<NpcSquadPlanComponent>(issuerUid);
     }
 
     private void RemovePlan(EntityUid issuerUid)

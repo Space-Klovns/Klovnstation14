@@ -138,6 +138,9 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
                 if (_huntQuery.HasComp(memberUid))
                     RemComp<NpcHuntComponent>(memberUid);
 
+                // And a plan, which may have it tied to a charge's wire.
+                DropPlan(memberUid);
+
                 if (_perceptionQuery.HasComp(memberUid) && _mobStateSystem.IsAlive(memberUid))
                     _members.Add(memberUid);
             }
@@ -147,6 +150,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
                 _members.Count == 0)
             {
                 ClearOrders(squadUid, _members);
+                DropPlan(squadUid);
                 continue;
             }
 

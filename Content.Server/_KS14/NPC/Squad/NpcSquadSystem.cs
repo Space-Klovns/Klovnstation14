@@ -303,7 +303,16 @@ public sealed partial class NpcSquadSystem : EntitySystem
             RaiseLocalEvent(ref ev);
 
             if (args.NewMobState == MobState.Critical)
+            {
+                // One gibbed or deleted while down never gets up or dies, so nothing else takes it off.
+                for (var i = downedInComponent.Downed.Count - 1; i >= 0; i--)
+                {
+                    if (TerminatingOrDeleted(downedInComponent.Downed[i]))
+                        downedInComponent.Downed.RemoveAt(i);
+                }
+
                 downedInComponent.Downed.Add(entity.Owner);
+            }
             else
                 downedInComponent.Downed.Remove(entity.Owner);
         }

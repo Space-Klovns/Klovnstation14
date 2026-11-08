@@ -673,6 +673,53 @@ public sealed class KsNpcTileDangerTest : GameTest
     }
 
     /// <summary>
+    ///     Live: a fire the path had to go through when it was found is no news. Looking for another path every time it comes
+    ///         in sight along it would have every NPC near a long fire asking for a path twice a second, for the same one.
+    /// </summary>
+    [Test]
+    public async Task TestFireThePathCrossesIsNotLookedForAgain()
+    {
+        var (entManager, gridUid) = await SetUpGrid(10);
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, Avoider, gridUid, -8, 0);
+
+            for (var y = -10; y <= 9; y++)
+            {
+                SpawnAt(entManager, y == 0 ? Fire : "WallSolid", gridUid, 2, y);
+            }
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.System<NPCSteeringSystem>().Register(npcUid, new EntityCoordinates(gridUid, new Vector2(6.5f, 0.5f)));
+            entManager.System<NPCSystem>().WakeNPC(npcUid, entManager.GetComponent<HTNComponent>(npcUid));
+        });
+
+        await Pair.RunTicksSync(15);
+
+        Queue<PathPoly> path = default!;
+        await Pair.Server.WaitAssertion(() =>
+        {
+            path = entManager.GetComponent<NPCSteeringComponent>(npcUid).CurrentPath;
+            Assert.That(path.Any(poly => IsOnFireLine(poly, 2, 0, 0)), "the test needs the path through the fire");
+        });
+
+        // Two danger checks, well short of the fire.
+        await Pair.RunTicksSync(30);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var steeringComponent = entManager.GetComponent<NPCSteeringComponent>(npcUid);
+            Assert.That(entManager.GetComponent<TransformComponent>(npcUid).LocalPosition.X, Is.LessThan(1f), "the test needs it still on its way");
+            Assert.That(steeringComponent.CurrentPath, Is.SameAs(path), "it should not have found its path again");
+        });
+    }
+
+    /// <summary>
     ///     Nowhere to stand, for one that avoids it: a position is not picked on a burning tile. Every other NPC is offered it.
     /// </summary>
     [TestCase(Avoider, false)]

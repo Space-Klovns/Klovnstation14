@@ -54,6 +54,12 @@ public abstract class PathRequest
 
     public float DangerCost = 1f;
     public float DangerMarginCost = 1f;
+
+    /// <summary>
+    ///     Whether the search ran out of nodes going round dangers and went again without them, so that the path may go
+    ///         through one it could have gone round. See <c>PathfindingSystem.RestartIgnoringDangers</c>.
+    /// </summary>
+    public bool IgnoredDangers;
     // KS14 end
 
     #endregion
@@ -143,6 +149,11 @@ public sealed class PathResultEvent
 {
     public PathResult Result;
     public readonly List<PathPoly> Path;
+
+    /// <summary>
+    /// KS14: see <see cref="PathRequest.IgnoredDangers"/>.
+    /// </summary>
+    public bool KsIgnoredDangers;
 
     public PathResultEvent(PathResult result, List<PathPoly> path)
     {

@@ -52,7 +52,7 @@ public enum NpcSquadFact : uint
     HasFlashbang = 1 << 7,
 
     /// <summary>
-    ///     A flashbang has gone in, so whoever is in there is in no state to fight.
+    ///     A flashbang, frag, smoke or charge has gone off in there, so whoever is in there is in no state to fight.
     /// </summary>
     Softened = 1 << 8,
 
