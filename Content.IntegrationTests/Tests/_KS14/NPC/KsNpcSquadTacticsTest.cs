@@ -1159,6 +1159,45 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     }
 
     /// <summary>
+    ///     A noise out in the open, with no room to stack up on, is searched at once - and by the whole squad. The one with
+    ///         the spot to check goes to it, and the rest come up too. They used to stand and "watch" from where they heard
+    ///         it, out of sight of it, and leave one member to go alone.
+    /// </summary>
+    [Test]
+    public async Task TestNoiseInTheOpenBringsTheWholeSquad()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: CautiousMob);
+        var meterSystem = scene.EntManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            // South of the room, out on open floor, a dozen tiles from both.
+            var noise = new EntityCoordinates(scene.GridUid, new Vector2(-3.5f, -9.5f));
+
+            meterSystem.Set(scene.LeaderUid, Caution, 50f);
+            scene.TacticsSystem.NoteDisturbance(scene.MemberUid, noise);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid)?.Phase, Is.EqualTo(NpcHuntPhase.Search),
+                "the test needs a noise with no room to stack up on, searched at once");
+
+            EntityUid? followerUid = null;
+
+            foreach (var uid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                Assert.That(scene.TacticsSystem.TryGetOrder(uid, out var order) && order.Kind == NpcOrderKind.Search,
+                    $"{scene.EntManager.ToPrettyString(uid)} should be going to the noise, but has {(scene.TacticsSystem.TryGetOrder(uid, out var other) ? other.Kind : "no order")}");
+                Assert.That((order.Coordinates.Position - noise.Position).Length(), Is.LessThan(1f), "to the noise");
+
+                if (order.Range > 1f)
+                    followerUid = uid;
+            }
+
+            Assert.That(followerUid, Is.Not.Null, "one should be checking the spot, and the other coming up to help");
+        });
+    }
+
+    /// <summary>
     ///     The more cautious a member, the less it strays from its leader before going back to it.
     /// </summary>
     [Test]

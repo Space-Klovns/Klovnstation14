@@ -353,6 +353,13 @@ public sealed partial class NPCSteeringSystem
             ResetStuck(steering, ourCoordinates);
         }
 
+        // KS14: or going round and round its next node, which the check above takes for progress
+        if (AntiStuck && steering.CurrentPath.Count > 0 && IsCirclingNode(steering, targetCoordinates, direction.Length(), moveSpeed))
+        {
+            Log.Debug($"NPC {ToPrettyString(uid)} found circling {targetCoordinates}");
+            needsPath = true;
+        }
+
         // If not in LOS and no path then get a new one fam.
         if ((!inLos && steering.ArriveOnLineOfSight && steering.CurrentPath.Count == 0) ||
             (!steering.ArriveOnLineOfSight && steering.CurrentPath.Count == 0))
@@ -437,6 +444,41 @@ public sealed partial class NPCSteeringSystem
     }
 
     // KS14 start
+    /// <summary>
+    /// How much nearer its node an NPC must get to count as getting nearer: less is jitter.
+    /// </summary>
+    private const float NodeProgressEpsilon = 0.05f;
+
+    /// <summary>
+    /// Whether <paramref name="steering"/> has got no nearer its next path node, <paramref name="node"/>, in as long as the
+    /// stuck check allows, although it is moving. A free node is only reached from inside it, so one pushed off its line -
+    /// by squadmates walking beside it, say - can come by it too fast to turn into it, and go round and round it at about
+    /// a tile's distance. The stuck check goes by distance moved, so it never notices. A new path from where it is starts
+    /// with a node it is already in.
+    /// </summary>
+    private bool IsCirclingNode(NPCSteeringComponent steering, EntityCoordinates node, float distance, float moveSpeed)
+    {
+        var now = _timing.CurTime;
+
+        if (!node.Equals(steering.KsNode) || distance < steering.KsNodeClosest - NodeProgressEpsilon)
+        {
+            steering.KsNode = node;
+            steering.KsNodeClosest = distance;
+            steering.KsNodeClosestTime = now;
+            return false;
+        }
+
+        // As long as the stuck check allows.
+        var maxTime = Math.Max(1, NPCSteeringComponent.StuckDistance / moveSpeed * 1.2f);
+        if ((now - steering.KsNodeClosestTime).TotalSeconds <= maxTime)
+            return false;
+
+        // Started over, so the path asked for has time to come before this asks again.
+        steering.KsNodeClosest = distance;
+        steering.KsNodeClosestTime = now;
+        return true;
+    }
+
     private static readonly TimeSpan DangerCheckInterval = TimeSpan.FromSeconds(0.5);
 
     /// <summary>

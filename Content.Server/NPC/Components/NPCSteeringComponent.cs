@@ -60,6 +60,27 @@ public sealed partial class NPCSteeringComponent : Component
 
     public const float StuckDistance = 1f;
 
+    // KS14 start: progress towards the node it is making for, for an NPC going round and round it - see
+    //      NPCSteeringSystem.IsCirclingNode
+    /// <summary>
+    /// The path node <see cref="KsNodeClosest"/> and <see cref="KsNodeClosestTime"/> are about.
+    /// </summary>
+    [ViewVariables]
+    public EntityCoordinates KsNode;
+
+    /// <summary>
+    /// The nearest it has got to <see cref="KsNode"/>.
+    /// </summary>
+    [ViewVariables]
+    public float KsNodeClosest;
+
+    /// <summary>
+    /// When it last got nearer <see cref="KsNode"/> than ever before.
+    /// </summary>
+    [ViewVariables, AutoPausedField]
+    public TimeSpan KsNodeClosestTime;
+    // KS14 end
+
     /// <summary>
     /// Have we currently requested a path.
     /// </summary>

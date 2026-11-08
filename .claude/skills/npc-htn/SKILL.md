@@ -167,6 +167,12 @@ access breaker came out mid-reload and was dropped by the reload. The operator m
 `NpcBackgroundMoveComponent`; check it (`NpcDoorSystem.IsMovingInForeground`) before steering takes anything into its
 hands, and leave hand work to moves that are the task at hand.
 
+A move with `shutdownState: Never` also outlives its plan, and so do its keys: `NpcMoveToCleanupSystem` removes them only
+once steering stops. Every branch gated on such a key (the operatives' "don't interrupt retreats") stays shut until then,
+plan or no plan. If what the move was for ends sooner, end the key with the plan: `SetNullOperator { key, onPlanEnd: true }`
+removes it however the plan ends, even if it fails before getting that far. A reload's retreat does this: it used to
+send an operative up to ten tiles off with nothing planned the whole way, and its squadmate fighting alone.
+
 ## The planner: what wins
 
 ### First branch that plans, top to bottom

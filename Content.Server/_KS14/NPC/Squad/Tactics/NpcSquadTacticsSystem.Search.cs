@@ -437,6 +437,15 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
+            // Nothing left for it, and nowhere it could keep an eye on things from: still back where it heard the noise,
+            //      with the search begun at once - out in the open, with no room to stack up on. It comes up to help look.
+            //      Watching from back there watched nothing, and left one member to search alone with the rest stood about.
+            if (!CanWatchSearch(hunt, memberUid, settings))
+            {
+                SetOrder(memberUid, issuerUid, NpcOrderKind.Search, hunt.PredictedCoordinates, Angle.Zero, HoldAreaRange, null, now);
+                continue;
+            }
+
             // Nothing left for it: keep an eye on the room while the others finish.
             var standCoordinates = _transformSystem.GetMoverCoordinates(memberUid);
             var worldFacing = GetFacing(_transformSystem.GetMapCoordinates(memberUid),
@@ -447,6 +456,24 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/>, with nothing to search, is somewhere to watch the search from: in the room,
+    ///         or near enough the place it is about to see it, as a member that has seen a spot from there has searched it.
+    ///         A member a plan kept back has orders of its own, and watches wherever it is.
+    /// </summary>
+    private bool CanWatchSearch(NpcHunt hunt, EntityUid memberUid, NpcSquadTacticsSettings settings)
+    {
+        if (memberUid == hunt.HeldBackUid || IsInRoom(hunt, memberUid))
+            return true;
+
+        var memberMapCoordinates = _transformSystem.GetMapCoordinates(memberUid);
+        var predictedMapCoordinates = _transformSystem.ToMapCoordinates(hunt.PredictedCoordinates);
+
+        return memberMapCoordinates.MapId == predictedMapCoordinates.MapId &&
+            (predictedMapCoordinates.Position - memberMapCoordinates.Position).LengthSquared() <= settings.ClearRange * settings.ClearRange &&
+            _npcLineOfSightSystem.InLineOfSight(memberMapCoordinates, predictedMapCoordinates, settings.ClearRange);
     }
 
     /// <summary>

@@ -151,6 +151,14 @@ public sealed class KsOperativeHtnRootTest : GameTest
   - type: MobMover
   - type: MovementSpeedModifier
 
+- type: entity
+  parent: KsOperativeRootTestMobCarrying
+  id: KsOperativeRootTestMobWalkingCarrying
+  components:
+  - type: InputMover
+  - type: MobMover
+  - type: MovementSpeedModifier
+
 # Shut, and seen through, like a glass firelock, without one's need for air on the map.
 - type: entity
   id: KsOperativeRootTestGlassDoor
@@ -248,6 +256,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
     private const string RecoveringMob = "KsOperativeRootTestMobRecovering";
     private const string CarryingMob = "KsOperativeRootTestMobCarrying";
+    private const string WalkingCarryingMob = "KsOperativeRootTestMobWalkingCarrying";
     private const string AllOutMob = "KsOperativeRootTestMobAllOut";
     private const string TestGrenade = "KsOperativeRootTestGrenade";
     private const string TestKnife = "KsOperativeRootTestKnife";
@@ -1060,6 +1069,90 @@ public sealed class KsOperativeHtnRootTest : GameTest
             if (tacticalReload)
                 Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator or MoveToOperator), Is.False, $"it should not go anywhere, got: {Describe(plan)}");
         });
+    }
+
+    /// <summary>
+    ///     Live: a reload under fire is done from cover, and the retreat to it ends with the reload. Whatever waits for a
+    ///         retreat to end - backing up a squadmate above all - can go ahead then, though it is still walking there. It
+    ///         used to wait for it to get there: up to ten tiles off, out of the fight, with nothing planned the whole way.
+    /// </summary>
+    [Test]
+    public async Task TestRetreatToReloadEndsWithTheReload()
+    {
+        // The hostile behind a wall right across the grid: nothing in sight to fight, which would take over the steering
+        //      and clear the retreat by itself.
+        var (entManager, mobUid, hostileUid) = await SetUpBehindGlass(_ => "WallSolid", mob: WalkingCarryingMob,
+            stage: blackboard =>
+            {
+                blackboard.SetValue("RetreatRange", 10f);
+                blackboard.SetValue("ReloadActDelay", 0f);
+            });
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+            htnComponent.Blackboard.SetValue(ThreatKey, entManager.GetComponent<TransformComponent>(hostileUid).Coordinates);
+
+            entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>().AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+            StageEmptyGun(entManager, mobUid);
+            StageCarried(entManager, mobUid, "MagazinePistol");
+            entManager.System<HTNSystem>().Replan(htnComponent);
+        });
+
+        var reloaded = false;
+        EntityUid gunUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Assert.That(entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>().TryGetHeldItem(mobUid, "right", out var heldUid));
+            gunUid = heldUid!.Value;
+        });
+
+        for (var i = 0; i < 300 && !reloaded; i++)
+        {
+            await Pair.RunTicksSync(1);
+            await Pair.Server.WaitPost(() => reloaded = GetAmmo(entManager, gunUid) > 0);
+        }
+
+        Assert.That(reloaded, "the test needs it to have reloaded");
+
+        await Pair.RunTicksSync(10);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.TryGetComponent<Content.Server.NPC.Components.NPCSteeringComponent>(mobUid, out var steeringComponent) &&
+                steeringComponent.Status == Content.Server.NPC.Components.SteeringStatus.Moving,
+                "the test needs it still walking to the cover it went for to reload");
+
+            var htnComponent = entManager.GetComponent<HTNComponent>(mobUid);
+            Assert.That(htnComponent.Blackboard.ContainsKey("RetreatTargetPathfind"), Is.False,
+                $"reloaded, it should no longer be retreating, but is doing: {(htnComponent.Plan is { } plan ? Describe(plan) : "nothing")}");
+        });
+    }
+
+    /// <summary>
+    ///     Empties the gun the operative holds, chamber and all.
+    /// </summary>
+    private static void StageEmptyGun(IEntityManager entManager, EntityUid mobUid)
+    {
+        var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+        var containerSystem = entManager.System<Robust.Shared.Containers.SharedContainerSystem>();
+        Assert.That(handsSystem.TryGetHeldItem(mobUid, "right", out var gunUid));
+
+        Assert.That(containerSystem.TryGetContainer(gunUid!.Value, "gun_magazine", out var magazineContainer));
+        var magazineUid = magazineContainer!.ContainedEntities[0];
+        var ballisticComponent = entManager.GetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(magazineUid);
+        entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().SetBallisticUnspawned((magazineUid, ballisticComponent), 0);
+
+        if (containerSystem.TryGetContainer(gunUid.Value, "gun_chamber", out var chamberContainer))
+        {
+            foreach (var roundUid in chamberContainer.ContainedEntities.ToArray())
+            {
+                entManager.DeleteEntity(roundUid);
+            }
+        }
+
+        Assert.That(GetAmmo(entManager, gunUid.Value), Is.Zero, "the test needs the gun empty");
     }
 
     /// <summary>
