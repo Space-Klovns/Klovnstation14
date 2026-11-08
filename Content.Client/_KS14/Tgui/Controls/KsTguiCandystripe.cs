@@ -13,6 +13,7 @@ namespace Content.Client._KS14.Tgui.Controls;
 public class KsTguiCandystripe : BoxContainer
 {
     private Color? _stripeColor;
+    private Color? _evenStripeColor;
 
     public KsTguiCandystripe()
     {
@@ -44,13 +45,14 @@ public class KsTguiCandystripe : BoxContainer
     {
         base.StylePropertiesChanged();
         _stripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripe, out var color) ? color : null;
+        _evenStripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripeEven, out var evenColor) && evenColor.A > 0f ? evenColor : null;
     }
 
     protected override void Draw(DrawingHandleScreen handle)
     {
         base.Draw(handle);
 
-        if (_stripeColor is not { } color)
+        if (_stripeColor is not { } oddColor)
             return;
 
         var index = 0;
@@ -59,7 +61,8 @@ public class KsTguiCandystripe : BoxContainer
             if (!child.Visible)
                 continue;
 
-            if (index++ % 2 != 0)
+            // --candystripe-even is clear unless a theme sets it.
+            if ((index++ % 2 == 0 ? oddColor : _evenStripeColor) is not { } color)
                 continue;
 
             var box = Orientation == LayoutOrientation.Vertical

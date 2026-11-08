@@ -172,6 +172,9 @@ public sealed partial class KsTguiChromeUIController : UIController
 
     private void SyncWindow(Control control)
     {
+        // tgui's theme="admin" goes to the windows only admins see.
+        KsTguiAdminWindows.Apply(control);
+
         // A window opened again may have come back after a rebuild, with the sheet of the old one.
         KsTguiWindowThemes.Reapply(control);
 

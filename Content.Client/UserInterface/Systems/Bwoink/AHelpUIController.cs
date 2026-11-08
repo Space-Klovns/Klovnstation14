@@ -586,6 +586,7 @@ public sealed partial /* KS14: keep translation extensions in a separate file */
             Title = Loc.GetString("bwoink-user-title"),
             MinSize = new Vector2(500, 300),
         };
+        Content.Client._KS14.Tgui.KsTguiWindowThemes.SetKsTheme(_window, Content.Shared._KS14.Tgui.KsTguiWindowTheme.Admin); // KS14: tg's "Create Adminhelp" is theme="admin"
         _window.OnClose += () => { OnClose?.Invoke(); };
         _window.OnOpen += () => { OnOpen?.Invoke(); };
         _window.Contents.AddChild(_chatPanel);

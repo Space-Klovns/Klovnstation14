@@ -25,6 +25,7 @@ public sealed class KsTguiTable : Control
     private bool _collapsing;
     private Font? _referenceFont;
     private Color? _stripeColor;
+    private Color? _evenStripeColor;
 
     public KsTguiTable()
     {
@@ -71,6 +72,7 @@ public sealed class KsTguiTable : Control
     {
         base.StylePropertiesChanged();
         _stripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripe, out var color) ? color : null;
+        _evenStripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripeEven, out var evenColor) && evenColor.A > 0f ? evenColor : null;
     }
 
     private IEnumerable<KsTguiTableRow> Rows()
@@ -343,12 +345,15 @@ public sealed class KsTguiTable : Control
         if (_stripeColor is not { } color)
             return;
 
+        var index = 0;
         foreach (var row in Rows())
         {
-            if (!IsStriped(row))
+            // The first, third and so on row is the odd one, and --candystripe-even is clear unless a theme sets it.
+            var odd = index++ % 2 == 0;
+            if (!row.Candystripe || (odd ? color : _evenStripeColor) is not { } rowColor)
                 continue;
 
-            handle.DrawRect(new UIBox2(0f, row.PixelPosition.Y, PixelWidth, row.PixelPosition.Y + row.PixelHeight), color);
+            handle.DrawRect(new UIBox2(0f, row.PixelPosition.Y, PixelWidth, row.PixelPosition.Y + row.PixelHeight), rowColor);
         }
     }
 }

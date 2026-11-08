@@ -35,7 +35,8 @@ public sealed partial class KsTguiSheetlet
             Text: White50,
             TextHover: Color.White,
             TextSelected: selectedText,
-            TextDisabled: bad);
+            TextDisabled: bad,
+            EvenStripe: _palette.CandystripeEven.A > 0f ? _palette.CandystripeEven : null);
     }
 
     /// <summary>
