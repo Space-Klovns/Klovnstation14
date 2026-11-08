@@ -36,6 +36,12 @@ public sealed class KsTguiWindowHandle : Control
 
     protected override bool HasPoint(Vector2 point)
     {
+        // The zones are thresholds from the edges, so anywhere past the bottom right corner classifies as that corner and
+        //      anywhere left of the west edge as the engine's margin. Hit testing asks a control about points far outside it,
+        //      so without this the handle took the mouse from anywhere diagonally out from the corner or left of the window.
+        if (!base.HasPoint(point))
+            return false;
+
         // The south and east handles stay with the engine. Its 7px are wider than tgui's, but contents start 6px in.
         return KsTguiWindowZones.Classify(point, Size, _window.Resizable) switch
         {

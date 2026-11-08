@@ -94,4 +94,67 @@ public sealed class KsWindowEdgeGripTest : GameTest
             window!.Close();
         });
     }
+
+    /// <summary>
+    ///     Nothing of a window takes the mouse from outside it. The tgui handle on a DefaultWindow classified its zones by
+    ///         distance from the edges alone, so the mouse anywhere diagonally out from the bottom right corner, or anywhere
+    ///         left of a resizable window, was the window's: the actions window, ahelp and the spawn menu showed a resize
+    ///         cursor from across the screen.
+    /// </summary>
+    [TestCase(true, true)]
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    [TestCase(false, false)]
+    public async Task NothingOutsideAWindowIsItsToHit(bool tgui, bool fancy)
+    {
+        await OverrideCVar(Side.Client, Content.Shared._KS14.CCVar.KsCCVars.TguiStyle, tgui);
+        await Pair.RunTicksSync(2);
+
+        var uiManager = Client.ResolveDependency<IUserInterfaceManager>();
+        Robust.Client.UserInterface.CustomControls.BaseWindow? window = null;
+
+        await Client.WaitPost(() =>
+        {
+            window = fancy
+                ? new FancyWindow { Title = "Far", SetSize = new Vector2(WindowSize, WindowSize) }
+                : new Robust.Client.UserInterface.CustomControls.DefaultWindow { Title = "Far", SetSize = new Vector2(WindowSize, WindowSize) };
+            window.Resizable = true;
+            window.OpenCentered();
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            var size = window!.Size;
+            var away = 120f;
+            var points = new (string Name, Vector2 Point)[]
+            {
+                ("past the bottom right corner", size + new Vector2(away, away)),
+                ("past the bottom left corner", new Vector2(-away, size.Y + away)),
+                ("past the top right corner", new Vector2(size.X + away, -away)),
+                ("past the top left corner", new Vector2(-away, -away)),
+                ("left of it", new Vector2(-away, size.Y / 2f)),
+                ("below it", new Vector2(size.X / 2f, size.Y + away)),
+            };
+
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var (name, point) in points)
+                {
+                    var hit = uiManager.MouseGetControl(new ScreenCoordinates(window.GlobalPixelPosition + point * window.UIScale, WindowId.Main));
+                    for (var control = hit; control != null; control = control.Parent)
+                    {
+                        if (control != window)
+                            continue;
+
+                        Assert.Fail($"The mouse {name} lands on {hit} in the window.");
+                        break;
+                    }
+                }
+            }
+
+            window.Close();
+        });
+    }
 }
