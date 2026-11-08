@@ -24,7 +24,8 @@ public sealed record KsTguiListColors(
     Color Text,
     Color TextHover,
     Color TextSelected,
-    Color TextDisabled);
+    Color TextDisabled,
+    Color? EvenStripe = null);
 
 /// <summary>
 ///     What one <see cref="ItemList"/> row looks like, worked out from its state alone.
@@ -277,6 +278,12 @@ public sealed class KsTguiItemListRowStyleBox : StyleBox
         if (look.Striped)
         {
             _stripe.BackgroundColor = _colors.Stripe;
+            _stripe.Draw(handle, rowBox, uiScale);
+        }
+        else if (_colors.EvenStripe is { } evenStripe)
+        {
+            // --candystripe-even, which a theme may set.
+            _stripe.BackgroundColor = evenStripe;
             _stripe.Draw(handle, rowBox, uiScale);
         }
 

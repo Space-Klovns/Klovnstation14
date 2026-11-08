@@ -51,9 +51,12 @@ public sealed class KsTguiThemePalette
         public Hsl Base { get; init; }
         public Hsl Primary { get; init; }
         public Hsl? Secondary { get; init; }
+        public float? SecondarySaturation { get; init; }
         public float SecondaryLightnessAdjustment { get; init; }
         public float BaseGradientSpread { get; init; }
         public Hsl? BorderPrimary { get; init; }
+        public Hsl? CandystripeOdd { get; init; }
+        public Hsl? CandystripeEven { get; init; }
 
         // vars-components.scss
         public Hsl ButtonSelected { get; init; }
@@ -121,9 +124,25 @@ public sealed class KsTguiThemePalette
         Logo = "wizard_logo.png",
     };
 
+    // themes/admin.scss. --primary-hue 200 keeps the default saturation and lightness, --secondary-saturation 0 greys the
+    //      title bar (its hue is the base's, and the adjustment is 1.75), and both rows of a stripe are blue at .25.
+    private static readonly Tokens AdminTokens = NanotrasenTokens with
+    {
+        Base = new Hsl(205f, 17f, 20f),
+        Primary = DefaultPrimary with { Hue = 200f },
+        SecondarySaturation = 0f,
+        SecondaryLightnessAdjustment = 1.75f,
+        BaseGradientSpread = 6f,
+        CandystripeOdd = new Hsl(200f, 70f, 15f),
+        CandystripeEven = new Hsl(210f, 70f, 45f),
+        Logo = "admin_logo.png",
+    };
+
     public static readonly KsTguiThemePalette Nanotrasen = new(KsTguiWindowTheme.Nanotrasen, NanotrasenTokens);
     public static readonly KsTguiThemePalette Syndicate = new(KsTguiWindowTheme.Syndicate, SyndicateTokens);
     public static readonly KsTguiThemePalette Wizard = new(KsTguiWindowTheme.Wizard, WizardTokens);
+
+    public static readonly KsTguiThemePalette Admin = new(KsTguiWindowTheme.Admin, AdminTokens);
 
     public static KsTguiThemePalette For(KsTguiWindowTheme theme)
     {
@@ -131,6 +150,7 @@ public sealed class KsTguiThemePalette
         {
             KsTguiWindowTheme.Syndicate => Syndicate,
             KsTguiWindowTheme.Wizard => Wizard,
+            KsTguiWindowTheme.Admin => Admin,
             _ => Nanotrasen,
         };
     }
@@ -168,7 +188,15 @@ public sealed class KsTguiThemePalette
     /// </summary>
     public Color Section { get; }
 
+    /// <summary>
+    ///     <c>--candystripe-odd</c>, over the first, third and so on row.
+    /// </summary>
     public Color Candystripe { get; }
+
+    /// <summary>
+    ///     <c>--candystripe-even</c>, over the second, fourth and so on row: clear unless a theme sets it.
+    /// </summary>
+    public Color CandystripeEven { get; }
     public Color Border { get; }
 
     /// <summary>
@@ -298,10 +326,15 @@ public sealed class KsTguiThemePalette
         Base = baseHsl.ToColor();
         BaseStart = baseHsl.ShiftLightness(tokens.BaseGradientSpread).ToColor();
         BaseEnd = baseHsl.ShiftLightness(-tokens.BaseGradientSpread).ToColor();
-        TitleBar = (tokens.Secondary ?? baseHsl.ShiftLightness(tokens.SecondaryLightnessAdjustment)).ToColor();
+        TitleBar = (tokens.Secondary ?? (baseHsl with { Saturation = tokens.SecondarySaturation ?? baseHsl.Saturation })
+            .ShiftLightness(tokens.SecondaryLightnessAdjustment)).ToColor();
 
         Section = KsTguiPalettes.Translucent(Color.Black, 0.33f, Base);
-        Candystripe = KsTguiPalettes.Translucent(Color.Black, 0.25f, Scale(Base, 0.67f));
+        var stripeBackdrop = Scale(Base, 0.67f);
+        Candystripe = KsTguiPalettes.Translucent(tokens.CandystripeOdd?.ToColor() ?? Color.Black, 0.25f, stripeBackdrop);
+        CandystripeEven = tokens.CandystripeEven is { } evenStripe
+            ? KsTguiPalettes.Translucent(evenStripe.ToColor(), 0.25f, stripeBackdrop)
+            : Color.Black.WithAlpha(0f);
         Border = KsTguiPalettes.Translucent(Color.White, 0.1f, Base);
         Dimmer = KsTguiPalettes.Translucent(baseHsl.WithLightness(5f).ToColor(), 0.75f, Section);
         WindowDimmerTint = new KsTguiTint(baseHsl.ShiftLightness(15f).ToColor(), 0.25f);

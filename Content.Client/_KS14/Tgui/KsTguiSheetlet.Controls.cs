@@ -48,6 +48,11 @@ public sealed partial class KsTguiSheetlet
     public const string StylePropertyCandystripe = "ks-tgui-candystripe";
 
     /// <summary>
+    ///     The colour of the other rows (<c>--candystripe-even</c>): clear, but for a theme that sets it.
+    /// </summary>
+    public const string StylePropertyCandystripeEven = "ks-tgui-candystripe-even";
+
+    /// <summary>
     ///     The NoticeBox colour <c>warning</c> (<c>--color-orange</c> at oklch lightness x0.825, chroma x0.75); the others are
     ///         already in <see cref="KsTguiPalettes"/>.
     /// </summary>
@@ -62,7 +67,9 @@ public sealed partial class KsTguiSheetlet
         AddNoticeBoxRules(rules);
         AddColoredButtonRules(rules);
         AddButtonVariantRules(rules);
-        rules.Add(E().Class(StyleClassCandystripe).Prop(StylePropertyCandystripe, _palette.Candystripe));
+        rules.Add(E().Class(StyleClassCandystripe)
+            .Prop(StylePropertyCandystripe, _palette.Candystripe)
+            .Prop(StylePropertyCandystripeEven, _palette.CandystripeEven));
 
         // The same stripes in every theme: tg's hazard is literal colours, not palette ones.
         rules.Add(E<KsTguiHazardPanel>()

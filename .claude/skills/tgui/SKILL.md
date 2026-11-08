@@ -449,7 +449,7 @@ _highlight = TryGetStyleProperty<Color>("ks-my-highlight", out var color) ? colo
 _highlight = KsTguiTheme.ReadEnabled() ? KsTguiPalettes.PrimaryElement : DefaultHighlight;
 ```
 
-## Window themes (syndicate, wizard)
+## Window themes (syndicate, wizard, admin)
 
 tg's `<Window theme="syndicate">` swaps the whole palette of one window. Here a theme is a **complete extra stylesheet**
 (`StylesheetManager.KsGetThemedSheet`: the Nanotrasen sheet built from a `KsTguiThemePalette`) that a window sets as its own
@@ -465,6 +465,12 @@ storeMenu.SetKsTheme(KsTguiWindowTheme.Wizard);   // KsTguiWindowThemes, in Cont
 window.Stylesheet = stylesheetManager.KsGetThemedSheet(KsTguiWindowTheme.Syndicate);
 ```
 
+- **Admin theme (tg's `theme="admin"`)** is `KsTguiWindowTheme.Admin`, and which windows wear it is **one list**,
+  `KsTguiAdminWindows.WindowTypes` (by exact type, so upstream's and the engine's windows need no edit; a private nested
+  window goes in `NestedWindowTypeNames`). `KsTguiChromeUIController.SyncWindow` applies it as a window opens. Put a window
+  there only if no regular player is shown it. A plain `DefaultWindow` that has to be admin-themed (the player's ahelp) is
+  given `SetKsTheme` where it is made. admin.scss sets `--candystripe-even` too, which no other theme does, so
+  `KsTguiThemePalette.CandystripeEven` is clear by default and the stripe controls draw it when it is not.
 - **Data-driven for stores**: `StoreComponent.KsUiTheme` (`ksUiTheme:`, default Syndicate), read by `StoreBoundUserInterface`.
   Say it in a `Partials/` prototype (`Prototypes/_KS14/Store/Partials/ui_theme.yml`), not by editing the upstream file.
 - **Under Baron it does nothing**, and the toggle puts windows back on the UI's sheet and onto the rebuilt themed one.

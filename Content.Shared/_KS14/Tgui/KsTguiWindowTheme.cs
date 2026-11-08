@@ -13,4 +13,9 @@ public enum KsTguiWindowTheme : byte
 
     Syndicate,
     Wizard,
+
+    /// <summary>
+    ///     tgui's <c>theme="admin"</c>: the blue-grey of the windows only admins are shown.
+    /// </summary>
+    Admin,
 }

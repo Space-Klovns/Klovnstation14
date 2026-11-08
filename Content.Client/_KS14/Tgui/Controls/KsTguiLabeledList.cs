@@ -44,6 +44,7 @@ public sealed class KsTguiLabeledList : Control
     private float _buttonsColumn;
     private bool _candystripe;
     private Color? _stripeColor;
+    private Color? _evenStripeColor;
 
     public KsTguiLabeledList()
     {
@@ -85,20 +86,25 @@ public sealed class KsTguiLabeledList : Control
     {
         base.StylePropertiesChanged();
         _stripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripe, out var color) ? color : null;
+        _evenStripeColor = TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyCandystripeEven, out var evenColor) && evenColor.A > 0f ? evenColor : null;
     }
 
     protected override void Draw(DrawingHandleScreen handle)
     {
         base.Draw(handle);
 
-        if (!_candystripe || _stripeColor is not { } color)
+        if (!_candystripe || _stripeColor is not { } oddColor)
             return;
 
         var last = LastItem();
 
         foreach (var child in Children)
         {
-            if (child is not KsTguiLabeledListItem { Visible: true } item || !IsStriped(item))
+            if (child is not KsTguiLabeledListItem { Visible: true } item)
+                continue;
+
+            // --candystripe-even is clear unless a theme sets it.
+            if ((IsStriped(item) ? oddColor : _evenStripeColor) is not { } color)
                 continue;
 
             // tgui's last row has no padding below it.
