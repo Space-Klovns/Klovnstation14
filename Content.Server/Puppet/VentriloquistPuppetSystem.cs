@@ -51,6 +51,7 @@ namespace Content.Server.Puppet
             if (!HasComp<GhostTakeoverAvailableComponent>(uid))
             {
                 AddComp<GhostTakeoverAvailableComponent>(uid);
+                EnsureComp<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(uid); // KS14: puppets do not notify ghosts
                 var ghostRole = EnsureComp<GhostRoleComponent>(uid);
                 ghostRole.RoleName = Loc.GetString("ventriloquist-puppet-role-name");
                 ghostRole.RoleDescription = Loc.GetString("ventriloquist-puppet-role-description");

@@ -888,6 +888,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
         if (!Resolve(uid, ref component))
             return;
 
+        EnsureComp<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(uid); // KS14: fields are set after creation, so no notice
         var ghostrolecomp = EnsureComp<GhostRoleComponent>(uid);
 
         component.Prototype = prototype.EntityPrototype;

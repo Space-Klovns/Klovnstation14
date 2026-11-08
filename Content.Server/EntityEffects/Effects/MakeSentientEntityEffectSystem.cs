@@ -1,4 +1,4 @@
-﻿using Content.Server.Ghost.Roles.Components;
+using Content.Server.Ghost.Roles.Components;
 using Content.Server.Speech.Components;
 using Content.Shared.EntityEffects;
 using Content.Shared.EntityEffects.Effects;
@@ -33,6 +33,7 @@ public sealed partial class MakeSentientEntityEffectSystem : EntityEffectSystem<
         if (TryComp(entity, out GhostRoleComponent? ghostRole))
             return;
 
+        EnsureComp<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(entity); // KS14: potion roles do not notify ghosts
         ghostRole = AddComp<GhostRoleComponent>(entity);
         EnsureComp<GhostTakeoverAvailableComponent>(entity);
 

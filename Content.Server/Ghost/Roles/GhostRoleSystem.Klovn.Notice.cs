@@ -18,12 +18,11 @@ public sealed partial class GhostRoleSystem
     private static readonly SoundSpecifier NoticeSound = new SoundPathSpecifier("/Audio/_KS14/GhostRoleNotice/ghost_role_available.ogg");
 
     /// <summary>
-    ///     Whether this role should be announced to ghosts: flagged <see cref="GhostRoleComponent.Notable"/>, or any
-    ///         of its mind roles is an antagonist one.
+    ///     Whether this role should be announced to ghosts: not marked <see cref="KsGhostRoleQuietComponent"/>, or any mind role is an antagonist one (which overrides the mark).
     /// </summary>
     public bool IsNotable(Entity<GhostRoleComponent> role)
     {
-        if (role.Comp.Notable)
+        if (!HasComp<KsGhostRoleQuietComponent>(role))
             return true;
 
         foreach (var mindRoleId in role.Comp.MindRoles)

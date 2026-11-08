@@ -58,6 +58,7 @@ public sealed partial class ToggleableGhostRoleSystem : EntitySystem
         if (!Resolve(ent, ref ent.Comp))
             return;
 
+        EnsureComp<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(ent); // KS14: pAI-like toggles do not notify ghosts
         var ghostRole = EnsureComp<GhostRoleComponent>(ent);
         EnsureComp<GhostTakeoverAvailableComponent>(ent);
 

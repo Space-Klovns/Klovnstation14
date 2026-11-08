@@ -1,0 +1,121 @@
+# Ghost roles that do not notify ghosts when they appear. Children inherit the marker; antagonist mind roles still announce.
+
+- type: !PartialOnly entity
+  id: MobMouse
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobHamster
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobKangaroo
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobMonkey
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobMothroach
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobSnail
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobSlimesPet
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobAdultSlimesBlue
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobAdultSlimesGreen
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobAdultSlimesYellow
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobEmotionalSupportScurret
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobBreadDog
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobCatCake
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobGingerbreadAI
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobKobold
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobTomatoKiller
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobHonkBot
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobMimeBot
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobSupplyBot
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobMineBot
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobBatRemilia
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: MobCorgiCerberus
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostRemilia
+  components:
+  - type: KsGhostRoleQuiet
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostCerberus
+  components:
+  - type: KsGhostRoleQuiet

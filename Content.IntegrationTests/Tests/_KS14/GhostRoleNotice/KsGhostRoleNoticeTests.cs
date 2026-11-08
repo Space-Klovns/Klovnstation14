@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.Server.Ghost.Roles;
+using Content.Server.Ghost.Roles.Components;
 using Content.Shared.Mind;
 using NUnit.Framework;
 using Robust.Shared.Audio.Components;
@@ -22,9 +24,10 @@ public abstract class KsGhostRoleNoticeTestBase : GameTest
     protected const string NoticeSoundPath = "/Audio/_KS14/GhostRoleNotice/ghost_role_available.ogg";
 
     protected readonly EntProtoId AntagRole = "KsGhostRoleNoticeTestAntag";
-    protected readonly EntProtoId FlaggedRole = "KsGhostRoleNoticeTestFlagged";
+    protected readonly EntProtoId QuietRole = "KsGhostRoleNoticeTestQuiet";
     protected readonly EntProtoId PlainRole = "KsGhostRoleNoticeTestPlain";
     protected readonly EntProtoId LivingMob = "KsGhostRoleNoticeTestMob";
+    protected readonly EntProtoId ToggleMob = "KsGhostRoleNoticeTestToggle";
     protected readonly EntProtoId Ghost = "MobObserver";
 
     [TestPrototypes]
@@ -32,6 +35,7 @@ public abstract class KsGhostRoleNoticeTestBase : GameTest
 - type: entity
   id: KsGhostRoleNoticeTestAntag
   components:
+  - type: KsGhostRoleQuiet
   - type: GhostRole
     name: ks-test-role
     description: ks-test-role
@@ -39,12 +43,22 @@ public abstract class KsGhostRoleNoticeTestBase : GameTest
     - MindRoleGhostRoleSoloAntagonist
 
 - type: entity
-  id: KsGhostRoleNoticeTestFlagged
+  id: KsGhostRoleNoticeTestQuiet
   components:
+  - type: KsGhostRoleQuiet
   - type: GhostRole
     name: ks-test-role
     description: ks-test-role
-    notable: true
+
+- type: entity
+  id: KsGhostRoleNoticeTestToggle
+  components:
+  - type: MindContainer
+  - type: ToggleableGhostRole
+    roleName: ks-test-role
+    roleDescription: ks-test-role
+    mindRoles:
+    - MindRoleGhostRoleNeutral
 
 - type: entity
   id: KsGhostRoleNoticeTestPlain
@@ -75,13 +89,13 @@ public abstract class KsGhostRoleNoticeTestBase : GameTest
             mindSystem.TransferTo(mindSystem.CreateMind(ServerSession!.UserId), mob);
         });
 
-        await Pair.RunTicksSync(3);
+        await Pair.RunTicksSync(10);
     }
 
     protected async Task SpawnRoleAsync(EntProtoId proto)
     {
         await Server.WaitPost(() => SEntMan.SpawnEntity(proto, MapCoordinates.Nullspace));
-        await Pair.RunTicksSync(3);
+        await Pair.RunTicksSync(10);
     }
 }
 
@@ -116,16 +130,34 @@ public sealed class KsGhostRoleNoticeInRoundTests : KsGhostRoleNoticeTestBase
     }
 
     [Test]
-    public async Task FlaggedRoleIsAnnouncedButAPlainOneIsNot()
+    public async Task PlainRoleIsAnnouncedButAQuietOneIsNot()
     {
         await PossessAsync(Ghost);
 
         var noticesBefore = ClientNotice.ReceivedCount;
-        await SpawnRoleAsync(PlainRole);
-        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore), "an ordinary role such as a mouse is not announced"));
+        await SpawnRoleAsync(QuietRole);
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore), "a role marked quiet is not announced"));
 
-        await SpawnRoleAsync(FlaggedRole);
-        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 1), "a flagged one is"));
+        await SpawnRoleAsync(PlainRole);
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 1), "an unmarked one is"));
+    }
+
+    [Test]
+    public async Task RuntimeAddedQuietRoleIsNotAnnounced()
+    {
+        await PossessAsync(Ghost);
+        var noticesBefore = ClientNotice.ReceivedCount;
+
+        EntityUid toggleMob = default;
+        await Server.WaitPost(() =>
+        {
+            toggleMob = SEntMan.SpawnEntity(ToggleMob, MapCoordinates.Nullspace);
+            SEntMan.System<ToggleableGhostRoleSystem>().ActivateGhostRole(toggleMob);
+        });
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() => Assert.That(SEntMan.HasComponent<GhostRoleComponent>(toggleMob), "precondition: it became a ghost role"));
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore), "pAI-like toggles stay silent"));
     }
 
     [Test]
@@ -138,8 +170,24 @@ public sealed class KsGhostRoleNoticeInRoundTests : KsGhostRoleNoticeTestBase
         await Server.WaitPost(() => target = SEntMan.SpawnEntity(LivingMob, MapCoordinates.Nullspace));
         var consoleHost = Server.ResolveDependency<IConsoleHost>();
         await Server.WaitPost(() => consoleHost.ExecuteCommand($"makeghostrole {SEntMan.GetNetEntity(target)} Test Description"));
-        await Pair.RunTicksSync(3);
+        await Pair.RunTicksSync(10);
 
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 1)));
+    }
+
+    [Test]
+    public async Task AdminMadeRaffledRoleIsAnnounced()
+    {
+        await PossessAsync(Ghost);
+        var noticesBefore = ClientNotice.ReceivedCount;
+
+        EntityUid target = default;
+        await Server.WaitPost(() => target = SEntMan.SpawnEntity(LivingMob, MapCoordinates.Nullspace));
+        var consoleHost = Server.ResolveDependency<IConsoleHost>();
+        await Server.WaitPost(() => consoleHost.ExecuteCommand($"makeghostroleraffled {SEntMan.GetNetEntity(target)} Test Description short"));
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() => Assert.That(SEntMan.HasComponent<GhostRoleComponent>(target), "precondition: the command worked"));
         await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 1)));
     }
 }
@@ -159,8 +207,26 @@ public sealed class KsGhostRoleNoticePreRoundTests : KsGhostRoleNoticeTestBase
         var noticesBefore = ClientNotice.ReceivedCount;
 
         await SpawnRoleAsync(AntagRole);
-        await SpawnRoleAsync(FlaggedRole);
+        await SpawnRoleAsync(PlainRole);
 
         await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore)));
+    }
+
+    private readonly EntProtoId _realQuiet = "MobMouse";
+    private readonly EntProtoId _realLoud = "MobXeno";
+
+    /// <summary>
+    ///     The partial that marks upstream animals quiet applies, and leaves the rest of their ghost role alone.
+    /// </summary>
+    [Test]
+    public async Task QuietPartialAppliesToMiceAndNotToXenos()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            var mouse = SProtoMan.Index(_realQuiet);
+            Assert.That(mouse.TryGetComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(out _, SEntMan.ComponentFactory), "mice are quiet");
+            Assert.That(mouse.TryGetComponent<GhostRoleComponent>(out _, SEntMan.ComponentFactory), "and are still ghost roles");
+            Assert.That(SProtoMan.Index(_realLoud).TryGetComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(out _, SEntMan.ComponentFactory), Is.False, "xenos are not");
+        });
     }
 }
