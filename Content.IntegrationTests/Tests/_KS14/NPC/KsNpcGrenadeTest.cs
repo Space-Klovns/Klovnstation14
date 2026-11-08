@@ -89,12 +89,22 @@ public sealed class KsNpcGrenadeTest : GameTest
     size: Large
   - type: Wieldable
 
+# A flashbang, of its own: what the real one's range, fuse or effects are is not what these are about.
 - type: entity
-  parent: GrenadeFlashBang
+  parent: BaseItem
   id: KsGrenadeTestGrenade
   components:
+  - type: Item
+    size: Small
   - type: TimerTrigger
     delay: 1000
+  - type: FlashOnTrigger
+    keysIn:
+    - timer
+    range: 7
+  - type: DeleteOnTrigger
+    keysIn:
+    - timer
 
 - type: entity
   parent: KsGrenadeTestGrenade
@@ -154,8 +164,8 @@ public sealed class KsNpcGrenadeTest : GameTest
     ///     What <see cref="ContactThrowClearCon"/> has to get right: glass stops a throw, and a table does not.
     /// </summary>
     [TestCase(null, true)]
-    [TestCase("Window", false)]
-    [TestCase("Table", true)]
+    [TestCase(TestWindow, false)]
+    [TestCase(TestTable, true)]
     public async Task TestWhatStopsAThrow(string? inTheWay, bool getsPast)
     {
         var (entManager, npcUid, _, grenadeUid) = await SetUp();

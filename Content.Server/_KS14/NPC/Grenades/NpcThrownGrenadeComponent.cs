@@ -3,7 +3,7 @@ using Robust.Shared.Map;
 namespace Content.Server._KS14.NPC.Grenades;
 
 /// <summary>
-///     On a grenade an NPC has thrown, until it goes off. See <see cref="NpcGrenadeSystem"/>.
+///     On a grenade an NPC has thrown, until it goes off or anyone picks it up. See <see cref="NpcGrenadeSystem"/>.
 /// </summary>
 [RegisterComponent]
 [Access(typeof(NpcGrenadeSystem))]

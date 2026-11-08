@@ -39,6 +39,50 @@ public sealed class KsNpcLineOfFireTest : GameTest
 
     [TestPrototypes]
     private const string Prototypes = @"
+# The shooting half of the gun combat compound, with only what these tests are about: pick a hostile in sight, close to
+#   range on a line of fire, and shoot.
+- type: utilityQuery
+  id: KsLineOfFireTestTargets
+  query:
+  - !type:NearbyHostilesQuery
+  considerations:
+  - !type:TargetIsAliveCon
+    curve: !type:BoolCurve
+  - !type:TargetAccessibleCon
+    curve: !type:BoolCurve
+  - !type:TargetInLOSOrCurrentCon
+    curve: !type:BoolCurve
+
+- type: htnCompound
+  id: KsLineOfFireTestCombat
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsLineOfFireTestTargets
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        shutdownState: PlanFinished
+        pathfindInPlanning: true
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        stopOnLineOfSight: true
+        requireLosForRangeCheck: true
+        lineOfFire: true
+        rangeKey: RangedRange
+    - !type:HTNPrimitiveTask
+      preconditions:
+      - !type:KeyExistsPrecondition
+        key: Target
+      operator: !type:GunOperator
+        targetKey: Target
+      services:
+      - !type:UtilityService
+        id: RangedService
+        proto: KsLineOfFireTestTargets
+        key: Target
+
 - type: entity
   id: KsLineOfFireTestBullet
   components:
@@ -262,7 +306,7 @@ public sealed class KsNpcLineOfFireTest : GameTest
             htnComponent.Blackboard.SetValue("VisionRadius", 17.5f);
             htnComponent.Blackboard.SetValue("AggroVisionRadius", 25f);
             htnComponent.Blackboard.SetValue("RangedRange", 9f);
-            htnComponent.RootTask = new HTNCompoundTask { Task = "GunCombatCompound" };
+            htnComponent.RootTask = new HTNCompoundTask { Task = "KsLineOfFireTestCombat" };
             entManager.System<HTNSystem>().SetHTNEnabled((npcUid, htnComponent), true);
             entManager.System<NPCSystem>().WakeNPC(npcUid, htnComponent);
         });

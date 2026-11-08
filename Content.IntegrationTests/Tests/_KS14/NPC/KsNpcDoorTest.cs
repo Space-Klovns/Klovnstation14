@@ -56,7 +56,7 @@ public sealed class KsNpcDoorTest : GameTest
     private const string EmptyHandedWalkerMob = "KsDoorTestMobEmptyHandedWalker";
     private const string EngineerWalkerMob = "KsDoorTestMobEngineerWalker";
     private const string PryingWalkerMob = "KsDoorTestMobPryingWalker";
-    private const string SecurityDoor = "AirlockSecurityLocked";
+    private const string SecurityDoor = TestSecurityAirlock;
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -184,7 +184,7 @@ public sealed class KsNpcDoorTest : GameTest
         key: KsDoorTestWait
 
 - type: entity
-  parent: Airlock
+  parent: KsNpcTestAirlock
   id: KsDoorTestSlowAirlock
   components:
   - type: Door
@@ -422,7 +422,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     doorUid = SpawnPoweredDoorAt(entManager, SecurityDoor, gridUid, 2, 0);
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, WalkerMob, gridUid, 0, 0);
@@ -472,7 +472,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     doorUid = SpawnPoweredDoorAt(entManager, SecurityDoor, gridUid, 2, 0);
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, EngineerWalkerMob, gridUid, 0, 0);
@@ -538,7 +538,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 2, 0); // unpowered: pried by anything that pries
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, PryingWalkerMob, gridUid, 0, 0);
@@ -597,9 +597,9 @@ public sealed class KsNpcDoorTest : GameTest
             handsSystem.AddHand(npcUid, "left", HandLocation.Left);
             handsSystem.AddHand(npcUid, "middle", HandLocation.Middle);
 
-            var weaponUid = entManager.SpawnEntity("WeaponPistolMk58", entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
+            var weaponUid = entManager.SpawnEntity(TestPistol, entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
             Assert.That(handsSystem.TryPickup(npcUid, weaponUid, "right"));
-            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
             Assert.That(handsSystem.TryPickup(npcUid, beltUid, "left"));
             crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(npcUid).Coordinates);
             Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false), "the crowbar should go in the belt");
@@ -713,7 +713,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 2, 0); // unpowered: a crowbar pries it
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, breachWhenBlocked ? BlockedWalkerMob : PatientWalkerMob, gridUid, 0, 0);
@@ -721,7 +721,7 @@ public sealed class KsNpcDoorTest : GameTest
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
             handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
-            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
             crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false), "the crowbar should go in the belt");
@@ -854,7 +854,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (System.Array.IndexOf(doorRows, y) >= 0)
                     doorUids.Add(SpawnAt(entManager, SecurityDoor, gridUid, 2, y));
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, walkerMob, gridUid, 0, 0);
@@ -862,7 +862,7 @@ public sealed class KsNpcDoorTest : GameTest
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
             handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
-            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
             crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false), "the crowbar should go in the belt");
@@ -901,7 +901,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     doorUid = SpawnAt(entManager, SecurityDoor, gridUid, 2, 0); // unpowered: a crowbar pries it
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
@@ -909,7 +909,7 @@ public sealed class KsNpcDoorTest : GameTest
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
             handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
-            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
             crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false), "the crowbar should go in the belt");
@@ -968,7 +968,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     doorUid = SpawnPoweredDoorAt(entManager, SecurityDoor, gridUid, 2, 0); // powered: only jaws of life pry it
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
@@ -976,7 +976,7 @@ public sealed class KsNpcDoorTest : GameTest
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
             handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
-            var beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            var beltUid = entManager.SpawnEntity(TestBelt, entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
             var jawsUid = entManager.SpawnEntity("KsTestJawsOfLife", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, jawsUid, out _, playSound: false), "the jaws should go in the belt");
@@ -1043,7 +1043,7 @@ public sealed class KsNpcDoorTest : GameTest
             handsSystem.AddHand(npcUid, "left", HandLocation.Left);
 
             var coordinates = entManager.GetComponent<TransformComponent>(npcUid).Coordinates;
-            beltUid = entManager.SpawnEntity("ClothingBeltUtility", coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, coordinates);
             Assert.That(entManager.System<Content.Shared.Inventory.InventorySystem>().TryEquip(npcUid, beltUid, "belt", silent: true, force: true),
                 "the belt should be worn");
             crowbarUid = entManager.SpawnEntity("KsTestCrowbar", coordinates);
@@ -1111,9 +1111,9 @@ public sealed class KsNpcDoorTest : GameTest
             for (var y = -6; y <= 5; y++)
             {
                 if (y == 0)
-                    doorUid = SpawnAt(entManager, "Airlock", gridUid, 2, 0);
+                    doorUid = SpawnAt(entManager, TestAirlock, gridUid, 2, 0);
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, EmptyHandedWalkerMob, gridUid, 0, 0);
@@ -1181,14 +1181,14 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     SpawnAt(entManager, SecurityDoor, gridUid, 2, 0); // unpowered: a crowbar pries it
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(walkerUid, "right", HandLocation.Right);
             handsSystem.AddHand(walkerUid, "left", HandLocation.Left);
-            beltUid = entManager.SpawnEntity("ClothingBeltUtility", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(handsSystem.TryPickup(walkerUid, beltUid, "left"));
             crowbarUid = entManager.SpawnEntity("KsTestCrowbar", entManager.GetComponent<TransformComponent>(walkerUid).Coordinates);
             Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false));
@@ -1238,9 +1238,9 @@ public sealed class KsNpcDoorTest : GameTest
 
         await Pair.Server.WaitPost(() =>
         {
-            SpawnAt(entManager, "ShuttersNormal", gridUid, 2, 0);
+            SpawnAt(entManager, TestShutters, gridUid, 2, 0);
             if (window)
-                SpawnAt(entManager, "Window", gridUid, 2, 0);
+                SpawnAt(entManager, TestWindow, gridUid, 2, 0);
         });
 
         await Pair.RunTicksSync(90);
@@ -1269,9 +1269,9 @@ public sealed class KsNpcDoorTest : GameTest
             for (var y = -6; y <= 6; y++)
             {
                 if (y == 0)
-                    shuttersUid = SpawnAt(entManager, "ShuttersNormal", gridUid, 2, 0);
+                    shuttersUid = SpawnAt(entManager, TestShutters, gridUid, 2, 0);
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             walkerUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
@@ -1306,15 +1306,15 @@ public sealed class KsNpcDoorTest : GameTest
     ///         prying gets through shutters, with a tool or without, and an NPC with a crowbar that does not use it on doors
     ///         in its way is no better off. Nothing pries a blast door, which leaves smashing it.
     /// </summary>
-    [TestCase("ShuttersNormal", null, null, BlockedWalkerMob, PathResult.NoPath)]
-    [TestCase("ShuttersNormal", "KsTestCrowbar", null, BlockedWalkerMob, PathResult.Path)]
-    [TestCase("ShuttersNormal", "KsTestCrowbar", null, PatientWalkerMob, PathResult.NoPath)]
-    [TestCase("ShuttersNormal", null, NPCBlackboard.NavPry, BlockedWalkerMob, PathResult.Path)]
-    [TestCase("ShuttersNormal", null, NPCBlackboard.NavSmash, BlockedWalkerMob, PathResult.Path)]
-    [TestCase("BlastDoor", null, null, BlockedWalkerMob, PathResult.NoPath)]
-    [TestCase("BlastDoor", "KsTestCrowbar", null, BlockedWalkerMob, PathResult.NoPath)]
-    [TestCase("BlastDoor", null, NPCBlackboard.NavPry, BlockedWalkerMob, PathResult.NoPath)]
-    [TestCase("BlastDoor", null, NPCBlackboard.NavSmash, BlockedWalkerMob, PathResult.Path)]
+    [TestCase(TestShutters, null, null, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase(TestShutters, "KsTestCrowbar", null, BlockedWalkerMob, PathResult.Path)]
+    [TestCase(TestShutters, "KsTestCrowbar", null, PatientWalkerMob, PathResult.NoPath)]
+    [TestCase(TestShutters, null, NPCBlackboard.NavPry, BlockedWalkerMob, PathResult.Path)]
+    [TestCase(TestShutters, null, NPCBlackboard.NavSmash, BlockedWalkerMob, PathResult.Path)]
+    [TestCase(TestBlastDoor, null, null, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase(TestBlastDoor, "KsTestCrowbar", null, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase(TestBlastDoor, null, NPCBlackboard.NavPry, BlockedWalkerMob, PathResult.NoPath)]
+    [TestCase(TestBlastDoor, null, NPCBlackboard.NavSmash, BlockedWalkerMob, PathResult.Path)]
     public async Task TestDoorsNoHandOpensAreWallsToPaths(string door, string? tool, string? navKey, string mob, PathResult expected)
     {
         var (entManager, gridUid) = await SetUpGrid();
@@ -1361,9 +1361,9 @@ public sealed class KsNpcDoorTest : GameTest
             for (var y = -6; y <= 6; y++)
             {
                 if (y == 0)
-                    shuttersUid = SpawnPoweredDoorAt(entManager, "ShuttersNormal", gridUid, 2, 0);
+                    shuttersUid = SpawnPoweredDoorAt(entManager, TestShutters, gridUid, 2, 0);
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             npcUid = SpawnAt(entManager, BlockedWalkerMob, gridUid, 0, 0);
@@ -1402,7 +1402,7 @@ public sealed class KsNpcDoorTest : GameTest
             handsSystem.AddHand(npcUid, "right", HandLocation.Right);
             handsSystem.AddHand(npcUid, "left", HandLocation.Left);
             var coordinates = entManager.GetComponent<TransformComponent>(npcUid).Coordinates;
-            beltUid = entManager.SpawnEntity("ClothingBeltUtility", coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, coordinates);
             Assert.That(handsSystem.TryPickup(npcUid, beltUid, "left"));
             crowbarUid = entManager.SpawnEntity("KsTestCrowbar", coordinates);
             Assert.That(entManager.System<SharedStorageSystem>().Insert(beltUid, crowbarUid, out _, playSound: false));
@@ -1439,12 +1439,12 @@ public sealed class KsNpcDoorTest : GameTest
     ///     Shutters and blast doors never open by hand. Shutters can be pried, power or no power; an access breaker only
     ///         strips their access, which opens nothing, so it is no way through them. Blast doors cannot be pried at all.
     /// </summary>
-    [TestCase("ShuttersNormal", "KsTestCrowbar", true)]
-    [TestCase("ShuttersNormal", "KsTestJawsOfLife", true)]
-    [TestCase("ShuttersNormal", "KsTestAccessBreaker", false)]
-    [TestCase("BlastDoor", "KsTestCrowbar", false)]
-    [TestCase("BlastDoor", "KsTestJawsOfLife", false)]
-    [TestCase("BlastDoor", "KsTestAccessBreaker", false)]
+    [TestCase(TestShutters, "KsTestCrowbar", true)]
+    [TestCase(TestShutters, "KsTestJawsOfLife", true)]
+    [TestCase(TestShutters, "KsTestAccessBreaker", false)]
+    [TestCase(TestBlastDoor, "KsTestCrowbar", false)]
+    [TestCase(TestBlastDoor, "KsTestJawsOfLife", false)]
+    [TestCase(TestBlastDoor, "KsTestAccessBreaker", false)]
     public async Task TestShutterAndBlastDoorTools(string door, string tool, bool expected)
     {
         var (entManager, gridUid) = await SetUpGrid();
@@ -1487,9 +1487,9 @@ public sealed class KsNpcDoorTest : GameTest
             for (var y = -6; y <= 6; y++)
             {
                 if (y == 0)
-                    doorUid = SpawnPoweredDoorAt(entManager, "Airlock", gridUid, 2, 0);
+                    doorUid = SpawnPoweredDoorAt(entManager, TestAirlock, gridUid, 2, 0);
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             npcUid = SpawnAt(entManager, SecurityMob, gridUid, 0, 0);
@@ -1540,7 +1540,7 @@ public sealed class KsNpcDoorTest : GameTest
                 if (y == 0)
                     doorUid = SpawnPoweredDoorAt(entManager, "KsDoorTestSlowAirlock", gridUid, 2, 0);
                 else
-                    SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                    SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             npcUid = SpawnAt(entManager, SecurityMob, gridUid, 0, 0);
@@ -1579,7 +1579,7 @@ public sealed class KsNpcDoorTest : GameTest
             // A wall in the way, with a gap at its top end: no straight line, so the search has to look round.
             for (var y = -6; y <= 4; y++)
             {
-                SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+                SpawnAt(entManager, TestWall, gridUid, 2, y);
             }
 
             npcUid = SpawnAt(entManager, SecurityMob, gridUid, 0, 0);

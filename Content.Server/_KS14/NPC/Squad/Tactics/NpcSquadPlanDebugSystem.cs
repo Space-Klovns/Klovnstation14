@@ -1,5 +1,8 @@
 using Content.Server._KS14.NPC.LineOfFire;
 using Content.Shared._KS14.NPC;
+using Content.Server.Administration;
+using Content.Server.Administration.Managers;
+using Content.Shared.Administration;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -20,6 +23,7 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -35,12 +39,14 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     {
         base.Initialize();
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged += OnAdminPermsChanged;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
         _debuggingSessions.Clear();
     }
 
@@ -129,8 +135,14 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
             Issuer = GetNetEntity(issuerUid),
             State = plan.State,
             Reason = plan.Reason,
-            Elapsed = (float) (now - plan.StartedAt).TotalSeconds,
-            Timeout = (float) settings.PlanTimeout.TotalSeconds,
+            // How long a running plan has been going, against the time it has; how far through its cooldown an ended one is.
+            Elapsed = (float) (now - (plan.State == NpcSquadPlanState.Cooldown ? plan.CooldownStartedAt : plan.StartedAt)).TotalSeconds,
+            Timeout = plan.State switch
+            {
+                NpcSquadPlanState.Running => (float) settings.PlanTimeout.TotalSeconds,
+                NpcSquadPlanState.Cooldown => (float) (plan.CooldownEndsAt - plan.CooldownStartedAt).TotalSeconds,
+                _ => 0f,
+            },
             Facts = plan.Facts,
             CurrentStep = plan.CurrentStep,
             Cost = plan.Cost,
@@ -202,6 +214,17 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     private EntityCoordinates Snapshot(EntityCoordinates coordinates)
     {
         return TerminatingOrDeleted(coordinates.EntityId) ? coordinates : _transformSystem.GetMoverCoordinates(coordinates);
+    }
+
+    /// <summary>
+    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
+    /// </summary>
+    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
+    {
+        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
+            return;
+
+        RaiseNetworkEvent(new SquadPlanDebugStateMessage { Enabled = false }, args.Player.Channel);
     }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)

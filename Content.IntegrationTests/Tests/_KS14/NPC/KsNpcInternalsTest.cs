@@ -76,11 +76,11 @@ public sealed class KsNpcInternalsTest : GameTest
   - type: BreathMask
 
 - type: entity
-  parent: EmergencyOxygenTankFilled
+  parent: KsNpcTestOxygenTank
   id: KsNpcInternalsTestTank
 
 - type: entity
-  parent: BaseFoam
+  parent: KsNpcTestSmoke
   id: KsNpcInternalsTestSmoke
 ";
 

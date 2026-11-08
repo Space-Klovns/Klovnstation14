@@ -152,11 +152,11 @@ public sealed partial class NpcSquadTacticsSystem
             NpcSquadPlanState.Grace => UpdatePlanGrace(issuerUid, plan, settings, now),
             NpcSquadPlanState.Probing => UpdatePlanProbe(issuerUid, leaderUid, plan, settings, now),
             NpcSquadPlanState.Running => UpdatePlanSteps(issuerUid, plan, settings, now),
-            _ => UpdatePlanCooldown(issuerUid, plan, now),
+            _ => UpdatePlanCooldown(issuerUid, planComponent, now),
         };
 
         if (_squadPlanQuery.HasComp(issuerUid) && _npcSquadPlanDebugSystem.IsTracking(issuerUid, _members))
-            _npcSquadPlanDebugSystem.SendFrame(issuerUid, plan, settings, _members);
+            _npcSquadPlanDebugSystem.SendFrame(issuerUid, planComponent.Plan, settings, _members);
 
         return inHand;
     }
@@ -324,8 +324,9 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
         }
 
+        // Looking again for a way, after finding none: still holding meanwhile.
         if (plan.Probe is not { IsCompleted: true } probe)
-            return false;
+            return plan.HoldsOff && HoldOff(issuerUid, plan.TargetUid, now);
 
         var probeMemberUid = plan.ProbeMemberUid;
         var freePath = false;
@@ -377,7 +378,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (!TryMakePlan(plan, now))
         {
-            EndPlan(issuerUid, plan, settings.PlanCooldown, now, "nothing to be done");
+            EndPlan(issuerUid, plan, settings.PlanCooldown, now, "nothing to be done", holdOff: true);
             return false;
         }
 
@@ -406,7 +407,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (now - plan.StartedAt >= settings.PlanTimeout)
         {
-            EndPlan(issuerUid, plan, settings.PlanCooldown, now, "took too long");
+            EndPlan(issuerUid, plan, settings.PlanCooldown, now, "took too long", holdOff: true);
             return true;
         }
 
@@ -452,7 +453,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (replan && !TryMakePlan(plan, now))
         {
-            EndPlan(issuerUid, plan, settings.PlanCooldown, now, "nothing left to try");
+            EndPlan(issuerUid, plan, settings.PlanCooldown, now, "nothing left to try", holdOff: true);
             return true;
         }
 
@@ -935,7 +936,7 @@ public sealed partial class NpcSquadTacticsSystem
         plan.BannedActions |= NpcSquadGoap.GetBan(action);
 
         if (!TryMakePlan(plan, now))
-            EndPlan(issuerUid, plan, settings.PlanCooldown, now, $"{action} failed, and nothing else to try");
+            EndPlan(issuerUid, plan, settings.PlanCooldown, now, $"{action} failed, and nothing else to try", holdOff: true);
     }
 
     /// <summary>
@@ -1361,8 +1362,24 @@ public sealed partial class NpcSquadTacticsSystem
         return false;
     }
 
-    private bool UpdatePlanCooldown(EntityUid issuerUid, NpcSquadPlan plan, TimeSpan now)
+    private bool UpdatePlanCooldown(EntityUid issuerUid, NpcSquadPlanComponent planComponent, TimeSpan now)
     {
+        var plan = planComponent.Plan;
+
+        if (plan.HoldsOff && !TerminatingOrDeleted(plan.TargetUid) && LookForShot(out var targetUid) == NpcSquadSight.Stuck)
+        {
+            // Still nothing to shoot: straight to looking for a way again. Not through the grace first, which is for a
+            //      squad that may yet find itself a shot, as this one has had the chance to.
+            if (now >= plan.CooldownEndsAt)
+            {
+                plan = new NpcSquadPlan { TargetUid = targetUid, StartedAt = now, Reason = "still nobody has a shot", HoldsOff = true };
+                planComponent.Plan = plan;
+                StartProbe(plan);
+            }
+
+            return HoldOff(issuerUid, plan.TargetUid, now);
+        }
+
         if (now >= plan.CooldownEndsAt)
             RemovePlan(issuerUid);
 
@@ -1370,16 +1387,45 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
+    ///     Everyone stays where they are, watching the hostile, for as long as there is nothing to be done about it. Each
+    ///         left to itself would go after a shot there is not: looking for a firing spot, closing in, giving up, again.
+    ///         One seeing to its wounds is left to it. Returns that the squad is in hand.
+    /// </summary>
+    private bool HoldOff(EntityUid issuerUid, EntityUid targetUid, TimeSpan now)
+    {
+        var targetPosition = _transformSystem.GetMapCoordinates(targetUid).Position;
+
+        _givingPlanOrders = true;
+
+        foreach (var memberUid in _members)
+        {
+            if (_npcRecoverySystem.IsRecovering(memberUid))
+                continue;
+
+            var standCoordinates = _transformSystem.GetMoverCoordinates(memberUid);
+            var facing = (targetPosition - _transformSystem.GetMapCoordinates(memberUid).Position).ToWorldAngle();
+
+            SetOrder(memberUid, issuerUid, NpcOrderKind.Watch, standCoordinates, ToLocalFacing(standCoordinates, facing), OrderRange, null, now);
+        }
+
+        _givingPlanOrders = false;
+        return true;
+    }
+
+    /// <summary>
     ///     Stands the plan down, leaving the component for <paramref name="cooldown"/> so that a squad that could do nothing
     ///         does not spend its time working that out again.
     /// </summary>
-    private void EndPlan(EntityUid issuerUid, NpcSquadPlan plan, TimeSpan cooldown, TimeSpan now, string reason)
+    /// <param name="holdOff">Whether it came to nothing: see <see cref="NpcSquadPlan.HoldsOff"/>.</param>
+    private void EndPlan(EntityUid issuerUid, NpcSquadPlan plan, TimeSpan cooldown, TimeSpan now, string reason, bool holdOff = false)
     {
         ClearOrders(issuerUid, _members);
         ReleaseCharge(plan);
 
         plan.State = NpcSquadPlanState.Cooldown;
+        plan.CooldownStartedAt = now;
         plan.CooldownEndsAt = now + cooldown;
+        plan.HoldsOff = holdOff;
         plan.Hunt = null;
         plan.StepCount = 0;
         plan.Reason = reason;

@@ -1339,7 +1339,10 @@ public sealed class KsOperativeHtnRootTest : GameTest
     ///     Live: a stunned operative mid-fight says nothing. Nearly everything it could plan starts with a line and goes on to
     ///         something it cannot do, so with nothing to stop it, it says the line, fails and plans again, for as long as
     ///         it lasts. Knocked down is not stunned: it can crawl and use its hands, so it may speak, but never over and over.
+    ///         The "upright" case is the control: the same mob in the same state, not stunned or knocked down, has to say
+    ///         something in the window, or "says nothing" and "never repeats" would pass for a mob that never speaks at all.
     /// </summary>
+    [TestCase("upright")]
     [TestCase("stunned")]
     [TestCase("knocked down")]
     public async Task TestOperativeOnTheFloorDoesNotRepeatItself(string state)
@@ -1361,6 +1364,9 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
             speechProbeSystem.Lines.Clear();
 
+            if (state == "upright")
+                return;
+
             if (state == "stunned")
                 Assert.That(stunSystem.TryUpdateParalyzeDuration(mobUid, System.TimeSpan.FromSeconds(6), drop: false), "the test needs it stunned");
             else
@@ -1373,10 +1379,12 @@ public sealed class KsOperativeHtnRootTest : GameTest
         {
             var lines = speechProbeSystem.Lines.Where(line => line.Source == mobUid).Select(line => line.Message).ToList();
 
-            if (state == "stunned")
+            if (state == "upright")
+                Assert.That(lines, Is.Not.Empty, "the control: this setup has to be able to produce a line, or the cases below prove nothing");
+            else if (state == "stunned")
                 Assert.That(lines, Is.Empty);
             else
-                Assert.That(lines, Is.Unique);
+                Assert.That(lines, Is.Unique, "no line more than once: " + string.Join(" | ", lines));
         });
     }
 

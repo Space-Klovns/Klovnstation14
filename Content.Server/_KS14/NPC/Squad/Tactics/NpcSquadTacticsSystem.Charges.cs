@@ -658,7 +658,13 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         if (now - charge.BlastedAt < BlastTime)
+        {
+            // Gone off, so nothing left to press: the planter waits with the rest, rather than press a spent activator again.
+            if (_members.Contains(charge.Pick.PlanterUid))
+                HoldStill(charge.Pick.PlanterUid, issuerUid, charge.Pick.Site.Tile, plan.Hunt!, now);
+
             return false;
+        }
 
         if (!TerminatingOrDeleted(targetUid))
         {

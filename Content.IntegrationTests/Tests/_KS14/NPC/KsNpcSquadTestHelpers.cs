@@ -27,6 +27,23 @@ public static class KsNpcSquadTestHelpers
     public const string TestJawsOfLife = "KsTestJawsOfLife";
     public const string TestAccessBreaker = "KsTestAccessBreaker";
 
+    // Stand-ins for the walls, windows, doors and kit the NPC tests used to take from the game's own prototypes, so that
+    //   retuning a wall, a gun or a door cannot break a test of something else. Each has only what the tests rely on.
+    public const string TestWall = "KsNpcTestWall";
+    public const string TestWindow = "KsNpcTestWindow";
+    public const string TestTable = "KsNpcTestTable";
+    public const string TestAirlock = "KsNpcTestAirlock";
+    public const string TestSecurityAirlock = "KsNpcTestSecurityAirlock";
+    public const string TestShutters = "KsNpcTestShutters";
+    public const string TestBlastDoor = "KsNpcTestBlastDoor";
+    public const string TestBelt = "KsNpcTestBelt";
+    public const string TestPistol = "KsNpcTestPistol";
+    public const string TestMagazine = "KsNpcTestMagazine";
+    public const string TestMedipen = "KsNpcTestMedipen";
+    public const string TestSmoke = "KsNpcTestSmoke";
+    public const string TestOxygenTank = "KsNpcTestOxygenTank";
+    public const string TestLocker = "KsNpcTestLocker";
+
     /// <summary>
     ///     A Syndicate mob with perception but no squad, so nothing a squadmate sees makes it alert: for testing its
     ///         own reaction time.
@@ -143,6 +160,316 @@ public static class KsNpcSquadTestHelpers
   - type: NpcSquadMember
     cover:
       wallPreference: -1
+
+# Solid, opaque and airtight, tagged Wall, and it breaks.
+- type: entity
+  parent: BaseStructure
+  id: KsNpcTestWall
+  components:
+  - type: Tag
+    tags:
+    - Wall
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: ""-0.5,-0.5,0.5,0.5""
+        density: 1000
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+  - type: Occluder
+  - type: Airtight
+  - type: Damageable
+  - type: Destructible
+    thresholds:
+    - trigger: !type:DamageTrigger
+        damage: 400
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ Destruction ]
+
+# Stops a bullet and a throw, does not block sight, airtight, and has the Window tag room analysis looks for.
+- type: entity
+  parent: BaseStructure
+  id: KsNpcTestWindow
+  components:
+  - type: Tag
+    tags:
+    - Window
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: ""-0.5,-0.5,0.5,0.5""
+        mask:
+        - FullTileMask
+        layer:
+        - GlassLayer
+  - type: Airtight
+  - type: Damageable
+  - type: Destructible
+    thresholds:
+    - trigger: !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ Destruction ]
+
+# Something thrown goes over it; a walker does not.
+- type: entity
+  parent: BaseStructure
+  id: KsNpcTestTable
+  components:
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: ""-0.40,-0.30,0.40,0.45""
+        density: 80
+        mask:
+        - TableMask
+        layer:
+        - TableLayer
+
+# An airlock that anyone can open, which runs on power: pried by a crowbar only while unpowered, by jaws of life either
+#   way, and it bolts down.
+- type: entity
+  parent: BaseStructure
+  id: KsNpcTestAirlock
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: ""-0.49,-0.49,0.49,0.49""
+        density: 100
+        mask:
+        - FullTileMask
+        layer:
+        - AirlockLayer
+  - type: Door
+  - type: Airlock
+  - type: DoorBolt
+  - type: AccessReader
+  - type: ApcPowerReceiver
+    powerLoad: 20
+  - type: NavMapDoor
+  - type: Appearance
+  - type: Airtight
+    noAirWhenFullyAirBlocked: false
+  - type: Occluder
+  - type: Damageable
+  - type: Destructible
+    thresholds:
+    - trigger: !type:DamageTrigger
+        damage: 500
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ Destruction ]
+
+# The same, but for Security.
+- type: entity
+  parent: KsNpcTestAirlock
+  id: KsNpcTestSecurityAirlock
+  components:
+  - type: AccessReader
+    access: [ [ Security ] ]
+
+# Never opens by hand, and a crowbar pries it.
+- type: entity
+  parent: BaseShutter
+  id: KsNpcTestShutters
+  components:
+  - type: Occluder
+
+# Never opens by hand, and nothing pries it.
+- type: entity
+  parent: BaseShutter
+  id: KsNpcTestBlastDoor
+  components:
+  - type: Occluder
+  - type: Door
+    canPry: false
+
+- type: entity
+  parent: ClothingBeltStorageBase
+  id: KsNpcTestBelt
+
+- type: entity
+  id: KsNpcTestBullet
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 20
+  - type: Physics
+  - type: Fixtures
+    fixtures:
+      projectile:
+        shape: !type:PhysShapeCircle
+          radius: 0.1
+        mask:
+        - Impassable
+        - BulletImpassable
+
+- type: entity
+  id: KsNpcTestCartridge
+  components:
+  - type: CartridgeAmmo
+    proto: KsNpcTestBullet
+
+- type: entity
+  parent: BaseItem
+  id: KsNpcTestMagazine
+  components:
+  - type: Item
+    size: Small
+  - type: BallisticAmmoProvider
+    mayTransfer: true
+    proto: KsNpcTestCartridge
+    capacity: 14
+    whitelist:
+      components:
+      - CartridgeAmmo
+  - type: ContainerContainer
+    containers:
+      ballistic-ammo: !type:Container
+
+# A pistol with a magazine slot, a chamber and a loaded magazine, in the shape the squad's top-up and the reload tasks
+#   look for.
+- type: entity
+  parent: BaseItem
+  id: KsNpcTestPistol
+  components:
+  - type: Item
+    size: Small
+  - type: Gun
+    fireRate: 5
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: GunExecutionWhitelist
+  - type: ChamberMagazineAmmoProvider
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        startingItem: KsNpcTestMagazine
+        whitelist:
+          components:
+          - BallisticAmmoProvider
+      gun_chamber:
+        name: Chamber
+        whitelist:
+          components:
+          - CartridgeAmmo
+  - type: ContainerContainer
+    containers:
+      gun_magazine: !type:ContainerSlot
+      gun_chamber: !type:ContainerSlot
+
+# Heals whoever it is used on, as a medipen does: a single-use injector of a stabilising reagent.
+- type: entity
+  parent: BaseItem
+  id: KsNpcTestMedipen
+  components:
+  - type: Item
+    size: Tiny
+  - type: NpcHealingItem
+  - type: Injector
+    solutionName: hypospray
+    currentTransferAmount: null
+    activeModeProtoId: HyposprayInjectMode
+    allowedModes:
+    - HyposprayInjectMode
+  - type: Solution
+    id: hypospray
+    solution:
+      maxVol: 20
+      reagents:
+      - ReagentId: Epinephrine
+        Quantity: 15
+  - type: UseDelay
+    delay: 0.5
+
+# A cloud of smoke that blocks sight, as the real one does, and carries whatever it is started with.
+- type: entity
+  id: KsNpcTestSmoke
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+  - type: Fixtures
+    fixtures:
+      fix1:
+        hard: false
+        shape: !type:PhysShapeAabb
+          bounds: ""-0.4,-0.4,0.4,0.4""
+        mask:
+        - ItemMask
+        layer:
+        - SlipLayer
+  - type: Smoke
+  - type: Appearance
+  - type: Occluder
+  - type: Solution
+    id: solutionArea
+    solution:
+      maxVol: 600
+      canReact: false
+
+# A tank of breathable oxygen that internals can draw on, with the use delay of a real one.
+- type: entity
+  parent: BaseItem
+  id: KsNpcTestOxygenTank
+  components:
+  - type: Item
+    size: Small
+  - type: UseDelay
+    delays:
+      gasTank:
+        length: 1.0
+  - type: AtmosDevice
+    requireAnchored: false
+    joinSystem: true
+  - type: GasTank
+    releasePressure: 21.3
+    tankLowPressure: 30.0
+    air:
+      volume: 0.66
+      moles:
+        Oxygen: 0.270782035
+      temperature: 293.15
+
+# A closed container something can be put in and shut away inside.
+- type: entity
+  parent: BaseStructureDynamic
+  id: KsNpcTestLocker
+  components:
+  - type: Physics
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: ""-0.25,-0.48,0.25,0.48""
+        density: 75
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: EntityStorage
+  - type: ContainerContainer
+    containers:
+      entity_storage: !type:Container
+  - type: Damageable
 
 # Real tools, with what the door tests' assertions rely on about them spelled out: which doors each one pries, and
 #   that the breaker breaks access.

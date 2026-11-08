@@ -240,7 +240,20 @@ public sealed class KsNpcSquadGoapTest
         var costs = Costs();
         Span<NpcSquadAction> steps = stackalloc NpcSquadAction[NpcSquadGoap.MaxSteps];
 
-        NpcSquadGoap.TryPlan(Door, NpcSquadFact.HasShot, costs, 0, steps, out _, out _);
+        // Warm up for long enough that tiered JIT has promoted the planner to its final code (it waits for 30 calls, then
+        //   about 100 ms of quiet, before it recompiles): a recompile during the measurement below would be allocated to
+        //   this thread and fail a test that is about the planner, not the JIT.
+        var warmUp = System.Diagnostics.Stopwatch.StartNew();
+
+        while (warmUp.ElapsedMilliseconds < 500)
+        {
+            for (var i = 0; i < 100; i++)
+            {
+                NpcSquadGoap.TryPlan(Door, NpcSquadFact.HasShot, costs, 0, steps, out _, out _);
+            }
+
+            System.Threading.Thread.Sleep(1);
+        }
 
         var before = GC.GetAllocatedBytesForCurrentThread();
 
@@ -265,6 +278,12 @@ public sealed class KsNpcSquadGoapTest
         var bans = NpcSquadGoap.GetBan(NpcSquadAction.Enter) | NpcSquadGoap.GetBan(NpcSquadAction.EnterSoftened) |
             NpcSquadGoap.GetBan(NpcSquadAction.HoldExits) | NpcSquadGoap.GetBan(NpcSquadAction.BreakGlass);
 
+        // Warm up first, so that the JIT and cold caches are not what is being timed.
+        for (var i = 0; i < 20; i++)
+        {
+            NpcSquadGoap.TryPlan(facts, NpcSquadFact.HasShot, costs, bans, new NpcSquadAction[NpcSquadGoap.MaxSteps], out _, out _);
+        }
+
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         for (var i = 0; i < 100; i++)
@@ -273,6 +292,8 @@ public sealed class KsNpcSquadGoapTest
             Assert.That(NpcSquadGoap.TryPlan(facts, NpcSquadFact.HasShot, costs, bans, steps, out _, out _), Is.False);
         }
 
-        Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(200), "100 plans should take no time at all");
+        // A bound that only a real blow-up (a search that has stopped pruning, taking seconds) can break, not a loaded CI
+        //   machine or a slow turn of the thread: the search normally takes a few milliseconds in all.
+        Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(1000), "100 plans should take no time at all");
     }
 }

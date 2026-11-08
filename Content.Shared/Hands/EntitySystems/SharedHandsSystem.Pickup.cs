@@ -210,7 +210,13 @@ public abstract partial class SharedHandsSystem
 
             if (_inventory.TryGetSlotEntity(uid, container.ID, out var slotEnt) &&
                 slotEnt == entity &&
-                !_inventory.CanUnequip(uid, /* KS14: entity -> uid, the second argument is whose inventory it is */ uid, container.ID, out _))
+                (!_inventory.CanUnequip(uid, /* KS14: entity -> uid, the second argument is whose inventory it is */ uid, container.ID, out _) ||
+                 // KS14: a pickup takes no time, so what takes time to take off is taken off with InventorySystem.TryUnequip.
+                 //     As there, that is only clothing worn where it is worn: C4 is slow off a head, not out of a pocket
+                 TryComp<Content.Shared.Clothing.Components.ClothingComponent>(entity, out var clothing) &&
+                 clothing.UnequipDelay > TimeSpan.Zero &&
+                 _inventory.TryGetSlot(uid, container.ID, out var slotDefinition) &&
+                 (clothing.Slots & slotDefinition.SlotFlags) != 0))
                 return false;
         }
 

@@ -2,6 +2,9 @@ using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad.Tactics;
 using Content.Shared._KS14.NPC;
+using Content.Server.Administration;
+using Content.Server.Administration.Managers;
+using Content.Shared.Administration;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -18,6 +21,7 @@ namespace Content.Server._KS14.NPC.Squad;
 public sealed partial class NpcSquadDebugSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private NpcMeterSystem _npcMeterSystem = default!;
     [Dependency] private KillZones.NpcKillZoneSystem _npcKillZoneSystem = default!;
@@ -37,12 +41,14 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
     {
         base.Initialize();
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged += OnAdminPermsChanged;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
         _debuggingSessions.Clear();
     }
 
@@ -245,6 +251,17 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
             if (!TerminatingOrDeleted(point.Coordinates.EntityId))
                 squad.SearchPoints.Add(new SquadDebugSearchPoint(GetNetCoordinates(_transformSystem.GetMoverCoordinates(point.Coordinates)), point.Cleared, point.StorageUid != null));
         }
+    }
+
+    /// <summary>
+    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
+    /// </summary>
+    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
+    {
+        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
+            return;
+
+        RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = false }, args.Player.Channel);
     }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)

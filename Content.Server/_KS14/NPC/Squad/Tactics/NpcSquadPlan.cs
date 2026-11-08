@@ -160,7 +160,15 @@ public sealed class NpcSquadPlan
     /// </summary>
     public NpcSquadCharge? Charge;
 
+    public TimeSpan CooldownStartedAt;
+
     public TimeSpan CooldownEndsAt;
+
+    /// <summary>
+    ///     Whether it came to nothing against a hostile they can see and cannot shoot. Until there is a shot or a way, the
+    ///         squad holds where it is, watching it, rather than each member going after a shot it will never get.
+    /// </summary>
+    public bool HoldsOff;
 
     /// <summary>
     ///     Why it is doing what it is doing, in a few words, for the overlay.

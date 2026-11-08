@@ -6,6 +6,7 @@ using Content.Shared._Trauma.Hands;
 using Content.Shared.Throwing;
 using Content.Shared.Trigger;
 using Content.Shared.Trigger.Systems;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
@@ -128,6 +129,16 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
 
         var ev = new NpcGrenadeBlastCalloutEvent(throwerUid, coordinates);
         _npcSquadSystem.CallOut(throwerUid, ref ev);
+    }
+
+    /// <summary>
+    ///     Picked up - caught, or a dud taken off the floor - it is no longer the throw the NPC made: thrown again, it is not
+    ///         coming down where the NPC threw it, and going off, it is not the NPC's blast to push in on.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnThrownGrenadeInserted(Entity<NpcThrownGrenadeComponent> entity, ref EntGotInsertedIntoContainerMessage args)
+    {
+        RemCompDeferred<NpcThrownGrenadeComponent>(entity);
     }
 
     [SubscribeLocalEvent]

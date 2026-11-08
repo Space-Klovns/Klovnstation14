@@ -175,7 +175,7 @@ public sealed class KsNpcTileDangerTest : GameTest
 
             for (var y = -6; y <= 6; y++)
             {
-                SpawnAt(entManager, y == 0 ? Fire : "WallSolid", gridUid, 2, y);
+                SpawnAt(entManager, y == 0 ? Fire : TestWall, gridUid, 2, y);
             }
         });
 
@@ -206,7 +206,7 @@ public sealed class KsNpcTileDangerTest : GameTest
             {
                 for (var y = -6; y <= 6; y++)
                 {
-                    SpawnAt(entManager, y == 0 ? Fire : "WallSolid", gridUid, x, y);
+                    SpawnAt(entManager, y == 0 ? Fire : TestWall, gridUid, x, y);
                 }
             }
         });
@@ -558,7 +558,7 @@ public sealed class KsNpcTileDangerTest : GameTest
                     var tile = new Vector2i(x, y);
                     mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, tile, testMap.Tile.Tile);
                     if (tile != fireTile)
-                        entManager.SpawnEntity("WallSolid", mapSystem.GridTileToLocal(testMap.Grid.Owner, testMap.Grid.Comp, tile));
+                        entManager.SpawnEntity(TestWall, mapSystem.GridTileToLocal(testMap.Grid.Owner, testMap.Grid.Comp, tile));
                 }
             }
 
@@ -688,7 +688,7 @@ public sealed class KsNpcTileDangerTest : GameTest
 
             for (var y = -10; y <= 9; y++)
             {
-                SpawnAt(entManager, y == 0 ? Fire : "WallSolid", gridUid, 2, y);
+                SpawnAt(entManager, y == 0 ? Fire : TestWall, gridUid, 2, y);
             }
         });
 
@@ -785,7 +785,7 @@ public sealed class KsNpcTileDangerTest : GameTest
                 for (var y = -1; y <= 1; y++)
                 {
                     if (y != 0 || x == -1 || x == 2)
-                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                        SpawnAt(entManager, TestWall, gridUid, x, y);
                 }
             }
         });

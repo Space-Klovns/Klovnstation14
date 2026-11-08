@@ -1,5 +1,8 @@
 using Content.Server.NPC.Components;
 using Content.Shared._KS14.NPC;
+using Content.Server.Administration;
+using Content.Server.Administration.Managers;
+using Content.Shared.Administration;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -16,6 +19,7 @@ namespace Content.Server._KS14.NPC.LineOfFire;
 public sealed partial class NpcLineOfFireDebugSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -33,12 +37,14 @@ public sealed partial class NpcLineOfFireDebugSystem : EntitySystem
     {
         base.Initialize();
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged += OnAdminPermsChanged;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
         _debuggingSessions.Clear();
     }
 
@@ -98,6 +104,17 @@ public sealed partial class NpcLineOfFireDebugSystem : EntitySystem
             return new LineOfFireDebugShot(from, GetNetCoordinates(_transformSystem.GetMoverCoordinates(hit.HitEntity)), false, shotMask.ToString(), MetaData(hit.HitEntity).EntityName);
 
         return new LineOfFireDebugShot(from, to, true, shotMask.ToString(), null);
+    }
+
+    /// <summary>
+    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
+    /// </summary>
+    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
+    {
+        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
+            return;
+
+        RaiseNetworkEvent(new LineOfFireDebugStateMessage { Enabled = false }, args.Player.Channel);
     }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)

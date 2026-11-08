@@ -48,7 +48,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
     private const string Flashbang = "KsSquadPlanTestFlashbang";
     private const string ArmedHostile = "KsSquadPlanTestArmedHostile";
     private const string LaserHostile = "KsSquadPlanTestLaserHostile";
-    private const string SecurityDoor = "AirlockSecurityLocked";
+    private const string SecurityDoor = TestSecurityAirlock;
     private const string SteadyMob = "KsSquadPlanTestMobSteady";
     private const string Frag = "KsSquadPlanTestFrag";
     private const string TimedCharge = "KsSquadPlanTestTimedCharge";
@@ -325,10 +325,8 @@ public sealed class KsNpcSquadPlanTest : GameTest
     delay: 1000
 
 - type: entity
-  parent: EmergencyMedipen
+  parent: KsNpcTestMedipen
   id: KsSquadPlanTestMeds
-  components:
-  - type: NpcHealingItem
 
 - type: entity
   id: KsSquadPlanTestTimedCharge
@@ -413,7 +411,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
   - type: BreathMask
 
 - type: entity
-  parent: EmergencyOxygenTankFilled
+  parent: KsNpcTestOxygenTank
   id: KsSquadPlanTestTank
 
 - type: entity
@@ -427,7 +425,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
     keysIn:
     - timer
     spreadAmount: 5
-    smokePrototype: TearGasSmokeWhite
+    smokePrototype: KsNpcTestSmoke
     solution:
       reagents:
       - ReagentId: TearGas
@@ -467,7 +465,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
     [Test]
     public async Task TestNoPlanWithAShot()
     {
-        var scene = await SetUp(glass: null, door: "WallSolid", hostileAt: new Vector2i(-3, 5));
+        var scene = await SetUp(glass: null, door: TestWall, hostileAt: new Vector2i(-3, 5));
 
         await Pair.Server.WaitAssertion(() =>
         {
@@ -521,7 +519,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
     [Test]
     public async Task TestNoPlanForAFreeWay()
     {
-        var scene = await SetUp(door: "WallSolid", gap: new Vector2i(3, 6));
+        var scene = await SetUp(door: TestWall, gap: new Vector2i(3, 6));
 
         await Step(scene);
 
@@ -978,7 +976,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
 
             for (var y = -2; y <= 2; y++)
             {
-                SpawnAt(entManager, "Smoke", gridUid, 0, y);
+                SpawnAt(entManager, TestSmoke, gridUid, 0, y);
             }
         });
 
@@ -1126,7 +1124,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
         {
             GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
 
-            var gunUid = GiveInHand(scene, scene.LeaderUid, "WeaponPistolMk58");
+            var gunUid = GiveInHand(scene, scene.LeaderUid, TestPistol);
 
             var containerSystem = scene.EntManager.System<Robust.Shared.Containers.SharedContainerSystem>();
             Assert.That(containerSystem.TryGetContainer(gunUid, "gun_magazine", out var magazineContainer), "the test needs its magazine");
@@ -1136,7 +1134,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
             scene.EntManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().SetBallisticUnspawned((magazineUid, ballisticComponent), 1);
 
             if (spare)
-                GiveInHand(scene, scene.LeaderUid, "MagazinePistol");
+                GiveInHand(scene, scene.LeaderUid, TestMagazine);
         });
 
         await Step(scene);
@@ -1260,6 +1258,47 @@ public sealed class KsNpcSquadPlanTest : GameTest
     [Test]
     public async Task TestACutWireCallsOffTheCharge()
     {
+        var (scene, _, activatorUid) = await SetUpChargeOn();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            scene.EntManager.System<Content.Shared._KS14.Chain.ChainSystem>().TryBreakChainFrom(activatorUid, removeJoints: true);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.BannedActions & NpcSquadGoap.GetBan(NpcSquadAction.BlowDoor), Is.Not.Zero, "that should be the end of that");
+            Assert.That(plan.Charge, Is.Null);
+        });
+    }
+
+    /// <summary>
+    ///     Gone off, there is nothing left to press: while the dust settles the planter waits with the rest, rather than
+    ///         keep its order to set it off and press a spent activator.
+    /// </summary>
+    [Test]
+    public async Task TestThePlanterStandsDownOnceItHasGoneOff()
+    {
+        var (scene, chargeUid, _) = await SetUpChargeOn();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            scene.EntManager.DeleteEntity(chargeUid);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(plan.Charge?.Phase, Is.EqualTo(NpcSquadChargePhase.Blasted), "the test needs it gone off");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "it should still have an order");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.Watch));
+        });
+    }
+
+    /// <summary>
+    ///     A squad whose wired charge is on the door, its wire whole, and everyone getting clear.
+    /// </summary>
+    private async Task<(Scene Scene, EntityUid ChargeUid, EntityUid ActivatorUid)> SetUpChargeOn()
+    {
         var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
         EntityUid chargeUid = default, activatorUid = default;
 
@@ -1286,17 +1325,50 @@ public sealed class KsNpcSquadPlanTest : GameTest
         await Pair.RunTicksSync(3);
 
         await Pair.Server.WaitAssertion(() =>
+            Assert.That(GetPlan(scene)!.Charge?.Phase, Is.EqualTo(NpcSquadChargePhase.Clearing), "the test needs the charge on, and the wire whole"));
+
+        return (scene, chargeUid, activatorUid);
+    }
+
+    /// <summary>
+    ///     A squad that can do nothing about a hostile it can see and cannot shoot holds where it is, watching it. Left to
+    ///         itself, each member would go after a shot it will never get: a firing spot, closing in, giving up, again.
+    ///         With the cooldown up it looks for a way again at once, still holding, rather than leave them to it for the
+    ///         grace first.
+    /// </summary>
+    [Test]
+    public async Task TestNothingToBeDoneHoldsAndLooksAgain()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass);
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
         {
             var plan = GetPlan(scene)!;
-            Assert.That(plan.Charge?.Phase, Is.EqualTo(NpcSquadChargePhase.Clearing), "the test needs the charge on, and the wire whole");
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Cooldown), plan.Reason);
 
-            scene.EntManager.System<Content.Shared._KS14.Chain.ChainSystem>().TryBreakChainFrom(activatorUid, removeJoints: true);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+            AssertHoldingOff(scene, "while it cools down");
+
+            plan.CooldownEndsAt = System.TimeSpan.Zero;
             StageVisible(scene);
             scene.TacticsSystem.UpdateNow();
 
-            Assert.That(plan.BannedActions & NpcSquadGoap.GetBan(NpcSquadAction.BlowDoor), Is.Not.Zero, "that should be the end of that");
-            Assert.That(plan.Charge, Is.Null);
+            Assert.That(GetPlan(scene)?.State, Is.EqualTo(NpcSquadPlanState.Probing), "it should look again at once");
+            AssertHoldingOff(scene, "while it looks again");
         });
+    }
+
+    private static void AssertHoldingOff(Scene scene, string when)
+    {
+        foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+        {
+            Assert.That(scene.TacticsSystem.TryGetOrder(memberUid, out var order), $"each should be told to hold, {when}");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.Watch), when);
+            Assert.That(order.OverCombat, $"over trying for a shot of its own, {when}");
+        }
     }
 
     /// <summary>
@@ -1499,7 +1571,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
     [Test]
     public async Task TestAWallMakesAWayIn()
     {
-        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: "WallSolid");
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: TestWall);
 
         await Pair.Server.WaitPost(() =>
         {
@@ -1516,7 +1588,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
 
             var site = plan.WallCharge!.Value.Site;
             Assert.That(site.IsDoor, Is.False);
-            Assert.That(scene.EntManager.GetComponent<MetaDataComponent>(site.TargetUid).EntityPrototype!.ID, Is.EqualTo("WallSolid"));
+            Assert.That(scene.EntManager.GetComponent<MetaDataComponent>(site.TargetUid).EntityPrototype!.ID, Is.EqualTo(TestWall));
             Assert.That(scene.TacticsSystem.TryGetOrder(scene.GlassMemberUid, out var order), "it should be on its way");
             Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.PlantCharge));
         });
@@ -1565,7 +1637,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
     /// </summary>
     private async Task<Scene> SetUpByTheHull((bool Space, Content.Shared.Atmos.GasMixture Mixture)? mapAtmosphere = null)
     {
-        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: "WallSolid");
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: TestWall);
 
         await Pair.Server.WaitPost(() =>
         {
@@ -1696,7 +1768,7 @@ public sealed class KsNpcSquadPlanTest : GameTest
     [TestCase(PlannerMob, 90, false)]
     public async Task TestHurtSquadBreaksContact(string mob, int damage, bool withdraws)
     {
-        var scene = await SetUp(mob: mob, glass: null, door: "WallSolid", hostileAt: new Vector2i(-3, 5));
+        var scene = await SetUp(mob: mob, glass: null, door: TestWall, hostileAt: new Vector2i(-3, 5));
 
         await Pair.Server.WaitAssertion(() =>
         {
@@ -1970,11 +2042,11 @@ public sealed class KsNpcSquadPlanTest : GameTest
                     }
                     else if (x == -1 && y == 3)
                     {
-                        glassUid = SpawnAt(entManager, glass ?? "WallSolid", gridUid, x, y);
+                        glassUid = SpawnAt(entManager, glass ?? TestWall, gridUid, x, y);
                     }
                     else
                     {
-                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                        SpawnAt(entManager, TestWall, gridUid, x, y);
                     }
                 }
             }

@@ -30,7 +30,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 {
     [Dependency] private OccluderSystem _occluderSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
-    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
@@ -741,23 +741,19 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     ///         <paramref name="maxDistance"/> if nothing is in the way.
     /// </summary>
     /// <remarks>
-    ///     Allocates: the physics ray query builds its results. Only call it on demand - planning a dive, guessing
-    ///         where a lost hostile went - not every update.
+    ///     Hits what a physics ray with that mask would: hard fixtures on a layer in it. Allocates only for a hit, which it
+    ///         keeps one of.
     /// </remarks>
     public float GetClearDistance(MapCoordinates origin, Vector2 direction, float maxDistance, int collisionMask)
     {
         if (origin.MapId == MapId.Nullspace || direction.LengthSquared() < 0.0001f || maxDistance <= 0f)
             return 0f;
 
-        var ray = new CollisionRay(origin.Position, Vector2.Normalize(direction), collisionMask);
+        var result = _rayCastSystem.CastRayClosest(origin.MapId,
+            origin.Position,
+            Vector2.Normalize(direction) * maxDistance,
+            new QueryFilter { MaskBits = collisionMask });
 
-        // Every hit, not the first: the first is the first the broadphase came across, not the nearest.
-        var nearestHit = maxDistance;
-        foreach (var hit in _physicsSystem.IntersectRay(origin.MapId, ray, maxDistance, returnOnFirstHit: false))
-        {
-            nearestHit = MathF.Min(nearestHit, hit.Distance);
-        }
-
-        return nearestHit;
+        return result.Hit ? result.Results[0].Fraction * maxDistance : maxDistance;
     }
 }

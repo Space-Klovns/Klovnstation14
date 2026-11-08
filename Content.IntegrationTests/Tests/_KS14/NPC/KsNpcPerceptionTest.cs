@@ -41,7 +41,7 @@ public sealed class KsNpcPerceptionTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
-    private const string Locker = "ClosetSteelBase";
+    private const string Locker = TestLocker;
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -156,7 +156,7 @@ public sealed class KsNpcPerceptionTest : GameTest
 
             for (var y = -2; y <= 2; y++)
             {
-                SpawnAt(scene.EntManager, "Smoke", scene.GridUid, 2, y);
+                SpawnAt(scene.EntManager, TestSmoke, scene.GridUid, 2, y);
             }
         });
 
@@ -815,9 +815,17 @@ public sealed class KsNpcPerceptionTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
         {
-            for (var i = 0; i < 10; i++)
+            // Warm up for long enough that tiered JIT has promoted everything a perception update runs through (it waits
+            //   for 30 calls and then about 100 ms of quiet), so a recompile cannot be counted in what follows.
+            var warmUp = System.Diagnostics.Stopwatch.StartNew();
+            while (warmUp.ElapsedMilliseconds < 500)
             {
-                perceptionSystem.UpdateNow(scene.ObserverUid);
+                for (var i = 0; i < 50; i++)
+                {
+                    perceptionSystem.UpdateNow(scene.ObserverUid);
+                }
+
+                System.Threading.Thread.Sleep(1);
             }
 
             const int updates = 200;
@@ -852,12 +860,12 @@ public sealed class KsNpcPerceptionTest : GameTest
             for (var y = -5; y <= 5; y++)
             {
                 if (y != 0)
-                    SpawnAt(entManager, "WallSolid", scene.GridUid, 3, y);
+                    SpawnAt(entManager, TestWall, scene.GridUid, 3, y);
             }
 
-            SpawnAt(entManager, "WallSolid", scene.GridUid, 6, 2);
-            SpawnAt(entManager, "WallSolid", scene.GridUid, 6, -2);
-            SpawnAt(entManager, "WallSolid", scene.GridUid, -2, 3);
+            SpawnAt(entManager, TestWall, scene.GridUid, 6, 2);
+            SpawnAt(entManager, TestWall, scene.GridUid, 6, -2);
+            SpawnAt(entManager, TestWall, scene.GridUid, -2, 3);
         });
 
         await Pair.RunTicksSync(5);
@@ -938,10 +946,10 @@ public sealed class KsNpcPerceptionTest : GameTest
                 lockerUid = SpawnAt(entManager, Locker, gridUid, locker.X, locker.Y);
 
             if (wallTile is { } wall)
-                SpawnAt(entManager, "WallSolid", gridUid, wall.X, wall.Y);
+                SpawnAt(entManager, TestWall, gridUid, wall.X, wall.Y);
 
             if (extraWallTile is { } extraWall)
-                SpawnAt(entManager, "WallSolid", gridUid, extraWall.X, extraWall.Y);
+                SpawnAt(entManager, TestWall, gridUid, extraWall.X, extraWall.Y);
         });
 
         await Pair.RunTicksSync(10);

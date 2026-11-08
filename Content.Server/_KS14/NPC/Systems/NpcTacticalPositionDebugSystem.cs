@@ -1,4 +1,7 @@
 using Content.Shared._KS14.NPC;
+using Content.Server.Administration;
+using Content.Server.Administration.Managers;
+using Content.Shared.Administration;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -20,6 +23,7 @@ namespace Content.Server._KS14.NPC.Systems;
 /// </summary>
 public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
 {
+    [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
 
     /// <summary>
@@ -31,12 +35,14 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     {
         base.Initialize();
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged += OnAdminPermsChanged;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
         _debuggingSessions.Clear();
     }
 
@@ -110,6 +116,17 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
 
             RaiseNetworkEvent(message, session.Channel);
         }
+    }
+
+    /// <summary>
+    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
+    /// </summary>
+    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
+    {
+        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
+            return;
+
+        RaiseNetworkEvent(new TacticalPositionDebugStateMessage { Enabled = false }, args.Player.Channel);
     }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)

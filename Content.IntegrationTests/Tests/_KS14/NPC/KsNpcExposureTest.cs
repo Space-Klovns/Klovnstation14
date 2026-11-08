@@ -477,7 +477,7 @@ public sealed class KsNpcExposureTest : GameTest
     {
         var (entManager, gridUid, walkerUid) = await SetUpWall();
 
-        await Pair.Server.WaitPost(() => SpawnAt(entManager, "WallSolid", gridUid, 0, 1));
+        await Pair.Server.WaitPost(() => SpawnAt(entManager, TestWall, gridUid, 0, 1));
         await Pair.RunTicksSync(90); // for the navmesh to take it in
 
         var searchOperator = WallSearch(maxRange: 6f);
@@ -586,7 +586,7 @@ public sealed class KsNpcExposureTest : GameTest
 
             for (var x = -9; x <= 0; x++)
             {
-                SpawnAt(entManager, "WallSolid", gridUid, x, 0);
+                SpawnAt(entManager, TestWall, gridUid, x, 0);
             }
 
             walkerUid = SpawnAt(entManager, SyndicateMob, gridUid, 1, 1);

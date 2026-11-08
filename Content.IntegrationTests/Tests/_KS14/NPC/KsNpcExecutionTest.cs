@@ -58,17 +58,22 @@ public sealed class KsNpcExecutionTest : GameTest
   - type: Injurable
 
 - type: entity
-  parent: WeaponPistolMk58
+  parent: KsNpcTestPistol
   id: KsExecutionTestGun
   components:
-  - type: GunExecutionWhitelist
   - type: Gun
     gunExecutionTime: 0.1
 
 - type: entity
-  parent: CombatKnife
+  parent: BaseItem
   id: KsExecutionTestKnife
   components:
+  - type: Item
+    size: Small
+  - type: MeleeWeapon
+    damage:
+      types:
+        Slash: 15
   - type: Execution
     doAfterDuration: 0.1
 ";

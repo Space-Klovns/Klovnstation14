@@ -31,7 +31,7 @@ public sealed class KsNpcHandsTest : GameTest
     private const string Wieldable = "KsHandsTestWieldable";
     private const string Npc = "KsHandsTestNpc";
     private const string Gun = "KsHandsTestGun";
-    private const string Magazine = "MagazineShotgun";
+    private const string Magazine = TestMagazine;
     private const string Medipen = "KsHandsTestMedipen";
 
     /// <summary>
@@ -48,16 +48,14 @@ public sealed class KsNpcHandsTest : GameTest
   - type: Wieldable
 
 - type: entity
-  parent: WeaponShotgunBulldog
+  parent: KsNpcTestPistol
   id: KsHandsTestGun
   components:
   - type: Wieldable
 
 - type: entity
-  parent: EmergencyMedipen
+  parent: KsNpcTestMedipen
   id: KsHandsTestMedipen
-  components:
-  - type: NpcHealingItem
 
 - type: entity
   id: KsHandsTestNpc
@@ -302,7 +300,7 @@ public sealed class KsNpcHandsTest : GameTest
             handsSystem.AddHand(npcUid, "right", HandLocation.Right);
             handsSystem.AddHand(npcUid, "left", HandLocation.Left);
 
-            beltUid = entManager.SpawnEntity("ClothingBeltMilitaryWebbing", coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, coordinates);
             Assert.That(entManager.System<Content.Shared.Inventory.InventorySystem>().TryEquip(npcUid, beltUid, "belt", silent: true, force: true),
                 "the belt should be worn");
 

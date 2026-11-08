@@ -264,9 +264,9 @@ public sealed class KsNpcQueryTest : GameTest
     ///         sight. A table is no reason at all: what is thrown goes over it.
     /// </summary>
     [TestCase(null, 1f)]
-    [TestCase("WallSolid", 0f)]
-    [TestCase("Window", 0f)]
-    [TestCase("Table", 1f)]
+    [TestCase(TestWall, 0f)]
+    [TestCase(TestWindow, 0f)]
+    [TestCase(TestTable, 1f)]
     public async Task TestThrowClearOfWhatIsInTheWay(string? inTheWay, float expected)
     {
         var (entManager, gridUid) = await SetUpGrid();
@@ -324,7 +324,7 @@ public sealed class KsNpcQueryTest : GameTest
             // Between the owner and everything east of it.
             for (var y = -3; y <= 3; y++)
             {
-                SpawnAt(entManager, "WallSolid", gridUid, 5, y);
+                SpawnAt(entManager, TestWall, gridUid, 5, y);
             }
         });
 
