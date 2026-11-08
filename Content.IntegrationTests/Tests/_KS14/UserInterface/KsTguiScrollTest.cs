@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -631,6 +632,42 @@ public sealed class KsTguiScrollTest : GameTest
             fits = Strip(2, 300f);
             Assert.That(fits.Masked, Is.False, "Tabs that fit are not masked");
             Assert.That(fits.MaskParameters.LeftFade + fits.MaskParameters.RightFade, Is.EqualTo(0f));
+            fits.Parent!.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     tgui's <c>candystripe</c> is the tab's own background, so on a scrolling strip it fades under the same mask as the tab:
+    ///         the stripes go into the mask's target with the tabs and are not drawn by the strip itself.
+    /// </summary>
+    [Test]
+    public async Task StripesFadeWithTheTabsOfAMaskedStrip()
+    {
+        KsTguiTabs tabs = null!;
+        KsTguiTabs fits = null!;
+        await Client.WaitPost(() =>
+        {
+            tabs = Strip(10, 300f);
+            tabs.Candystripe = true;
+            fits = Strip(2, 300f);
+            fits.Candystripe = true;
+        });
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(tabs.Masked);
+                Assert.That(tabs.StripesInsideMask, Is.True, "The stripes of a masked strip are drawn with the tabs, under the mask.");
+                Assert.That(tabs.StripeBoxes().Count(), Is.EqualTo(5), "Every other tab of ten.");
+                Assert.That(fits.Masked, Is.False);
+                Assert.That(fits.StripesInsideMask, Is.False, "A strip with nothing to fade draws its own stripes.");
+                Assert.That(fits.StripeBoxes().Count(), Is.EqualTo(1));
+            });
+
+            tabs.Candystripe = false;
+            Assert.That(tabs.StripesInsideMask, Is.False, "No stripes, nothing to draw under the mask.");
+            tabs.Parent!.Orphan();
             fits.Parent!.Orphan();
         });
     }

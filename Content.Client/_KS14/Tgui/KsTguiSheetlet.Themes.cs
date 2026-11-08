@@ -24,6 +24,8 @@ public sealed partial class KsTguiSheetlet
     public const string StylePropertyGaugeRing = "ks-tgui-gauge-ring";
     public const string StylePropertySectionLineColor = "ks-tgui-section-line-color";
     public const string StylePropertyTooltip = "ks-tgui-tooltip";
+    public const string StylePropertyTooltipTint = "ks-tgui-tooltip-tint";
+    public const string StylePropertyWindowDimmerTint = "ks-tgui-window-dimmer-tint";
 
     /// <summary>
     ///     What differs between window themes and is not already read from the palette the stylesheet was given: the colours
@@ -47,7 +49,9 @@ public sealed partial class KsTguiSheetlet
                 .Prop(StylePropertyTabHoverWash, _palette.TabHoverWash),
 
             E<KsTguiDimmer>().Prop(StylePropertyDimmer, _palette.Dimmer).Prop(StylePropertyWindowBase, _palette.Base),
-            E<KsTguiWindowDimmer>().Prop(StylePropertyWindowDimmer, _palette.WindowDimmer),
+            E<KsTguiWindowDimmer>()
+                .Prop(StylePropertyWindowDimmer, _palette.WindowDimmer)
+                .Prop(StylePropertyWindowDimmerTint, _palette.WindowDimmerTint),
             E<KsTguiModal>().Prop(StylePropertyDimmer, _palette.Dimmer).Prop(StylePropertyWindowBase, _palette.Base),
             E<KsTguiRoundGauge>().Prop(StylePropertyGaugeRing, _palette.PrimaryBase).Prop(StylePropertyWindowBase, _palette.Base),
 
@@ -55,6 +59,7 @@ public sealed partial class KsTguiSheetlet
                 .Prop(StylePropertyGaugeRing, _palette.InputBorder)
                 .Prop(StylePropertyWindowBase, _palette.Base)
                 .Prop(StylePropertyTooltip, _palette.Tooltip)
+                .Prop(StylePropertyTooltipTint, _palette.TooltipTint)
                 .Prop(StylePropertyInputBackground, _palette.InputBackground),
 
             E<KsTguiSlider>()
@@ -62,6 +67,7 @@ public sealed partial class KsTguiSheetlet
                 .Prop(StylePropertyProgressBackdrop, _palette.ProgressBarBackdrop)
                 .Prop(StylePropertyWindowBase, _palette.Base)
                 .Prop(StylePropertyTooltip, _palette.Tooltip)
+                .Prop(StylePropertyTooltipTint, _palette.TooltipTint)
                 .Prop(StylePropertyInputBackground, _palette.InputBackground),
 
             E<KsTguiBlockQuote>().Prop(StylePropertyLabelColor, _palette.Label),

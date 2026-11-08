@@ -21,11 +21,6 @@ namespace Content.Client._KS14.Tgui;
 /// </remarks>
 public sealed partial class KsTguiFeelUIController
 {
-    /// <summary>
-    ///     The engine's own delay, so a tooltip of a control that set none is known to be one.
-    /// </summary>
-    private const float EngineTooltipDelay = 0.25f;
-
     private static readonly AttachedProperty<bool> DelaySetProperty =
         AttachedProperty<bool>.Create("KsTguiTooltipDelaySet", typeof(KsTguiFeelUIController));
 
@@ -33,17 +28,31 @@ public sealed partial class KsTguiFeelUIController
     private readonly List<(Control Tooltip, Control Target)> _pendingTooltips = new();
 
     private Control? _restHovered;
-    private Vector2 _restMousePosition;
-    private float _restSeconds;
     private BaseWindow? _delayWindow;
 
     /// <summary>
-    ///     Takes a tooltip the engine just showed, if it belongs to a control in a window.
+    ///     The last control put in the popup layer, which is the tooltip if the engine raises
+    ///         <see cref="Control.OnShowTooltip"/> next.
+    /// </summary>
+    private Control? _lastPopupChild;
+
+    /// <summary>
+    ///     The hovered control, whose <see cref="Control.OnShowTooltip"/> this listens to.
+    /// </summary>
+    private Control? _tooltipSource;
+
+    private EventHandler? _showTooltipHandler;
+
+    /// <summary>
+    ///     Takes a tooltip the engine just showed, if it belongs to a control in a window. A plain <see cref="Tooltip"/> is
+    ///         known at once; anything else a control supplies is taken when the engine says it's that control's tooltip.
     /// </summary>
     private bool TryTakeTooltip(Control control)
     {
         if (control is KsTguiTooltipHost or KsTguiDropdownGhost)
             return false;
+
+        _lastPopupChild = control;
 
         var target = UIManager.CurrentlyHovered;
         if (target == null || FindWindow(target) == null || !IsTooltipOf(control, target))
@@ -51,6 +60,48 @@ public sealed partial class KsTguiFeelUIController
 
         TakeTooltip(control, target);
         return true;
+    }
+
+    /// <summary>
+    ///     Listens to the hovered control's <see cref="Control.OnShowTooltip"/>, which the engine raises right after adding
+    ///         that control's tooltip to the popup layer. Telling a supplied tooltip from anything else put there by how long
+    ///         the mouse had rested was a frame out of step with the engine's own timer, so some tooltips were missed.
+    /// </summary>
+    private void WatchShowTooltip(Control? hovered)
+    {
+        if (hovered == _tooltipSource)
+            return;
+
+        _showTooltipHandler ??= OnHoveredShowTooltip;
+
+        if (_tooltipSource != null)
+            _tooltipSource.OnShowTooltip -= _showTooltipHandler;
+
+        _tooltipSource = hovered;
+
+        if (_tooltipSource != null)
+            _tooltipSource.OnShowTooltip += _showTooltipHandler;
+    }
+
+    private void OnHoveredShowTooltip(object? sender, EventArgs args)
+    {
+        if (sender is not Control target || !_configurationManager.GetCVar(KsCCVars.TguiStyle) || FindWindow(target) == null)
+            return;
+
+        var tooltip = _lastPopupChild;
+        _lastPopupChild = null;
+        if (tooltip == null || tooltip.Parent != UIManager.PopupRoot)
+            return;
+
+        foreach (var (pending, _) in _pendingTooltips)
+        {
+            if (pending == tooltip)
+                return;
+        }
+
+        // It may have started the fade given to tooltips outside windows before it was known to be this one.
+        _tooltipFades.RemoveAll(fade => fade.Control == tooltip);
+        TakeTooltip(tooltip, target);
     }
 
     /// <summary>
@@ -65,18 +116,12 @@ public sealed partial class KsTguiFeelUIController
     }
 
     /// <summary>
-    ///     The engine shows a tooltip after the mouse has rested on a control for its delay. A drag ghost, the other thing put
-    ///         in the popup layer over a window, comes while the mouse moves.
+    ///     Only the engine's own <see cref="Tooltip"/> is known for one on sight. Other controls in the popup layer may be a
+    ///         drag ghost or a supplied tooltip, which <see cref="OnHoveredShowTooltip"/> tells apart.
     /// </summary>
-    private bool IsTooltipOf(Control control, Control target)
+    private static bool IsTooltipOf(Control control, Control target)
     {
-        if (control is Tooltip)
-            return true;
-
-        if (target.TooltipSupplier == null && string.IsNullOrWhiteSpace(target.ToolTip))
-            return false;
-
-        return _restSeconds + 0.001f >= (target.TooltipDelay ?? EngineTooltipDelay);
+        return control is Tooltip && (target.TooltipSupplier != null || !string.IsNullOrWhiteSpace(target.ToolTip));
     }
 
     /// <summary>
@@ -100,7 +145,7 @@ public sealed partial class KsTguiFeelUIController
     /// </summary>
     public void UpdateWindowTooltips(float deltaSeconds)
     {
-        UpdateRest(deltaSeconds);
+        TrackHovered();
 
         foreach (var (tooltip, target) in _pendingTooltips)
             HostTooltip(tooltip, target);
@@ -118,23 +163,17 @@ public sealed partial class KsTguiFeelUIController
         }
     }
 
-    private void UpdateRest(float deltaSeconds)
+    private void TrackHovered()
     {
         var hovered = UIManager.CurrentlyHovered;
-        var mousePosition = UIManager.MousePositionScaled.Position;
-        if (hovered != _restHovered || mousePosition != _restMousePosition)
-        {
-            _restSeconds = 0f;
-            _restMousePosition = mousePosition;
-
-            if (hovered != _restHovered && hovered != null)
-                ShortenTooltipDelays(hovered);
-
-            _restHovered = hovered;
+        if (hovered == _restHovered)
             return;
-        }
 
-        _restSeconds += deltaSeconds;
+        if (hovered != null)
+            ShortenTooltipDelays(hovered);
+
+        _restHovered = hovered;
+        WatchShowTooltip(hovered);
     }
 
     /// <summary>
@@ -307,7 +346,10 @@ public sealed partial class KsTguiFeelUIController
             _ => new Vector2(size.X / 2f, 0f),
         };
 
-        LayoutContainer.SetPosition(host, topLeft + pivot * (1f - host.Scale));
+        // Where it ends up, always: the host scales about the pivot by itself (KsTguiScaledRaster), at subpixel precision, and
+        //      moving it as well would step by whole pixels.
+        host.Pivot = new Vector2(pivot.X / MathF.Max(size.X, 1f), pivot.Y / MathF.Max(size.Y, 1f));
+        LayoutContainer.SetPosition(host, topLeft);
     }
 
     /// <summary>

@@ -15,3 +15,10 @@
   kind: source
   path: "/Textures/_KS14/Shaders/tgui_tabs_mask.swsl"
   blend_mode: premultiplied
+
+# A popup's contents, rendered at full size and drawn scaled and faded at subpixel precision during its open and close.
+- type: shader
+  id: KsTguiScaledRaster
+  kind: source
+  path: "/Textures/_KS14/Shaders/scaled_raster.swsl"
+  blend_mode: premultiplied

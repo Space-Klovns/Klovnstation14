@@ -253,4 +253,56 @@ public sealed class KsTguiChemWindowTest : GameTest
             window.Dispose();
         });
     }
+
+    /// <summary>
+    ///     ChemDispenser.tsx is <c>Window.Content scrollable</c>: the whole content scrolls inside a column that is always
+    ///         there, the status and dispense sections are their own height, and only the beaker section fills what is left.
+    /// </summary>
+    [TestCase(2, false)]
+    [TestCase(60, true)]
+    public async Task TheWholeContentScrollsAndOnlyTheBeakerFills(int reagents, bool overflows)
+    {
+        KsTguiReagentDispenserWindow window = null!;
+        await Client.WaitPost(() =>
+        {
+            window = new KsTguiReagentDispenserWindow();
+            window.Open();
+            var inventory = new List<ReagentInventoryItem>();
+            for (var i = 0; i < reagents; i++)
+                inventory.Add(new ReagentInventoryItem(new ItemStorageLocation(Angle.Zero, new Vector2i(i, 0)), $"Reagent {i:000}", FixedPoint2.New(50), Color.Blue));
+
+            window.UpdateState(new ReagentDispenserBoundUserInterfaceState(
+                null, null, inventory, ReagentDispenserDispenseAmount.U10, valveOpen: false));
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            window.InvalidateMeasure();
+            var size = window.SetSize;
+            window.Measure(size);
+            window.Arrange(UIBox2.FromDimensions(Vector2.Zero, size));
+
+            var scroll = Descendants<KsTguiScrollContainer>(window).First();
+            Assert.That(scroll.ReserveVertical, Is.True, "overflow-y: scroll reserves the bar's column.");
+            Assert.That(scroll.VerticalBarShown, Is.True);
+            Assert.That(scroll.VerticalOverflows, Is.EqualTo(overflows));
+
+            var sections = Descendants<KsTguiSection>(window).ToList();
+            var dispense = sections.Single(section => section.Title == Robust.Shared.Localization.Loc.GetString("reagent-dispenser-window-amount-to-dispense-label"));
+            var beaker = sections.Single(section => section.Title == Robust.Shared.Localization.Loc.GetString("ks-tgui-chem-beaker"));
+
+            Assert.Multiple(() =>
+            {
+                // Not squeezed or scrolled inside: the section is as tall as its contents.
+                Assert.That(dispense.Size.Y, Is.GreaterThanOrEqualTo(dispense.DesiredSize.Y - 0.5f), "The dispense section is its own height.");
+                Assert.That(dispense.VerticalExpand, Is.False, "tg's Dispense section does not fill.");
+                Assert.That(beaker.VerticalExpand, Is.True, "tg's Beaker section fills.");
+                if (!overflows)
+                    Assert.That(beaker.GlobalPosition.Y + beaker.Size.Y, Is.EqualTo(scroll.GlobalPosition.Y + scroll.Size.Y - 6f).Within(1f), "The beaker takes what is left.");
+            });
+
+            window.Close();
+        });
+    }
 }

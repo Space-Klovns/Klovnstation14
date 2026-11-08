@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
+using Content.Client._KS14.Tgui.Controls;
 using Content.Client._KS14.Tgui.Windows.Fax;
 using Content.Client.Fax.UI;
 using Content.IntegrationTests.Fixtures;
@@ -15,6 +16,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
 
@@ -105,6 +107,64 @@ public sealed class KsTguiFaxWindowTest : GameTest
             Assert.That(window.OfficePaper, Is.True);
 
             Assert.That(fired, Is.EqualTo(new[] { "copy", "send", "refresh", "file", "peer:b" }));
+        });
+    }
+
+    private static IEnumerable<T> Descendants<T>(Control root) where T : Control
+    {
+        foreach (var child in root.Children)
+        {
+            if (child is T match)
+                yield return match;
+
+            foreach (var inner in Descendants<T>(child))
+                yield return inner;
+        }
+    }
+
+    /// <summary>
+    ///     Fax.tsx is <c>Window.Content scrollable</c> and none of its sections fills: the whole content scrolls in a column
+    ///         that is always there, and no section is squeezed or scrolls inside itself.
+    /// </summary>
+    [TestCase(1, false)]
+    [TestCase(40, true)]
+    public async Task TheWholeContentScrollsInsteadOfASectionFilling(int peers, bool overflows)
+    {
+        KsTguiFaxWindow window = null!;
+        await Client.WaitPost(() =>
+        {
+            window = new KsTguiFaxWindow();
+            window.Open();
+            var available = new Dictionary<string, string>();
+            for (var i = 0; i < peers; i++)
+                available[$"fax{i}"] = $"Fax {i}";
+
+            window.UpdateState(new FaxUiState("Fax", available, canSend: true, canCopy: true, isPaperInserted: true, destAddress: "fax0"));
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            window.InvalidateMeasure();
+            var size = window.SetSize;
+            window.Measure(size);
+            window.Arrange(UIBox2.FromDimensions(Vector2.Zero, size));
+
+            var scroll = Descendants<KsTguiScrollContainer>(window).First();
+            Assert.That(scroll.ReserveVertical, Is.True, "overflow-y: scroll reserves the bar's column.");
+            Assert.That(scroll.VerticalBarShown, Is.True);
+            Assert.That(scroll.VerticalOverflows, Is.EqualTo(overflows));
+
+            Assert.Multiple(() =>
+            {
+                foreach (var section in Descendants<KsTguiSection>(window))
+                {
+                    Assert.That(section.VerticalExpand, Is.False, $"'{section.Title}' fills; tg's sections do not.");
+                    Assert.That(section.Size.Y, Is.GreaterThanOrEqualTo(section.DesiredSize.Y - 0.5f), $"'{section.Title}' is squeezed.");
+                }
+            });
+
+            window.Close();
         });
     }
 }

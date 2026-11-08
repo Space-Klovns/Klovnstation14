@@ -1,0 +1,65 @@
+@use "../functions" as fn;
+
+.NumberInput {
+  cursor: var(--cursor-n-resize);
+  overflow: visible;
+  position: relative;
+  display: inline-block;
+  text-align: right;
+  line-height: fn.em(17px);
+  padding: 0 var(--space-sm);
+  margin-right: var(--space-xs);
+  background-color: var(--number-input-background);
+  color: var(--number-input-border-color-active);
+  border: var(--border-thickness-tiny) solid var(--number-input-border-color);
+  border-radius: var(--number-input-border-radius);
+  transition: border-color var(--number-input-transition);
+
+  &:active {
+    border-color: var(--number-input-border-color-active);
+  }
+}
+
+.NumberInput--fluid {
+  display: block;
+}
+
+.NumberInput__content {
+  margin-left: var(--space-m);
+}
+
+.NumberInput__barContainer {
+  position: absolute;
+  top: var(--space-xs);
+  bottom: var(--space-xs);
+  left: var(--space-xs);
+}
+
+.NumberInput__bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: fn.em(3px);
+  box-sizing: border-box;
+  border-bottom: var(--border-thickness-tiny) solid
+    var(--number-input-border-color-active);
+  background-color: var(--number-input-border-color-active);
+}
+
+.NumberInput__input {
+  display: block;
+  position: absolute;
+  text-align: right;
+  inset: 0;
+  border: 0;
+  outline: 0;
+  width: 100%;
+  font-size: fn.em(12px);
+  line-height: fn.em(17px);
+  height: fn.em(17px);
+  margin: 0;
+  padding: 0 var(--space-m);
+  font-family: var(--font-family);
+  background-color: var(--number-input-background);
+  color: var(--number-input-color);
+}

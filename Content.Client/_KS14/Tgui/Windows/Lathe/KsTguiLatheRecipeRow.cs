@@ -96,7 +96,23 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
             VerticalAlignment = VAlignment.Stretch,
         };
         _maxButton.Committed += OnMaxCommitted;
-        AddChild(_maxButton);
+
+        // Not tg: its row is a plain flex row, so the x5 and x10 shift with the digits of N. The button sits over an invisible
+        //      copy labelled with the widest N, in the same font and padding, so the host is always as wide as the widest label
+        //      and the text stays left aligned. Measured from the real button, so it follows the language and the UI scale.
+        var widest = new KsTguiButton
+        {
+            Color = KsTguiColor.Transparent,
+            Compact = true,
+            VerticalAlignment = VAlignment.Stretch,
+            Text = Loc.GetString("ks-tgui-lathe-recipe-max", ("amount", MaxPrintsCap)),
+            Modulate = XColor.White.WithAlpha(0f),
+            MouseFilter = MouseFilterMode.Ignore,
+        };
+        MaxHost = new Control();
+        MaxHost.AddChild(widest);
+        MaxHost.AddChild(_maxButton);
+        AddChild(MaxHost);
     }
 
     /// <summary>
@@ -110,6 +126,17 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
     public int MaxAmount => _maxAmount;
 
     public ProtoId<LatheRecipePrototype> RecipeId => _recipeId;
+
+    /// <summary>
+    ///     The box the [Max: N] button fills, as wide as the widest label it can have.
+    /// </summary>
+    public Control MaxHost { get; }
+
+    public KsTguiButton FiveButton => _fiveButton;
+
+    public KsTguiButton TenButton => _tenButton;
+
+    public KsTguiButton MaxButton => _maxButton;
 
     /// <summary>
     ///     tg's <c>onCommit</c>, behind <c>canPrint</c> as the other buttons are: queues what was typed.

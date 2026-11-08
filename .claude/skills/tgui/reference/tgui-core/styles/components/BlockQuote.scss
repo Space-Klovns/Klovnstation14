@@ -1,0 +1,10 @@
+.BlockQuote {
+  color: var(--blockquote-color);
+  border-left: var(--blockquote-border);
+  padding-left: var(--space-m);
+  margin-bottom: var(--space-m);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}

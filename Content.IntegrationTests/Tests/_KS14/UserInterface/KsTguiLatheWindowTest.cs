@@ -924,4 +924,74 @@ public sealed class KsTguiLatheWindowTest : GameTest
             });
         });
     }
+
+    /// <summary>
+    ///     tg's DesignBrowser puts the search and the list in two Sections, each the first child of its own Stack.Item: the
+    ///         search's bottom padding (.66em), the Stack's 6px gap and the list's top padding (.66em) less the 6px a first
+    ///         nested Section is pulled up come to 15.84px between the search bar and the first design. Both layouts.
+    /// </summary>
+    [TestCase("Autolathe")]
+    [TestCase("Protolathe")]
+    public async Task TheListStartsWhereTgsDoesUnderTheSearch(string prototype)
+    {
+        await UseTgui();
+        await OpenLathe(prototype);
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = Window();
+            window.InvalidateMeasure();
+            var size = window.SetSize;
+            window.Measure(size);
+            window.Arrange(UIBox2.FromDimensions(Vector2.Zero, size));
+
+            var searchBar = Descendants<KsTguiSearchBar>(window).Single();
+            var row = Descendants<KsTguiLatheRecipeRow>(window).First();
+            var gap = BoxOf(row).Top - BoxOf(searchBar).Bottom;
+            Assert.That(gap, Is.EqualTo(15.84f).Within(1.1f), $"Search bar {BoxOf(searchBar)}, first design {BoxOf(row)}.");
+        });
+    }
+
+    /// <summary>
+    ///     The right-hand buttons line up in columns whatever N the [Max: N] label holds: it is as wide as [Max: 50] always, and
+    ///         its text starts at the same place.
+    /// </summary>
+    [TestCase("Protolathe")]
+    [TestCase("Autolathe")]
+    public async Task TheAmountButtonsLineUpOnEveryRow(string prototype)
+    {
+        await UseTgui();
+        await OpenLathe(prototype);
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = Window();
+            var rows = Descendants<KsTguiLatheRecipeRow>(window).Take(4).ToList();
+            Assert.That(rows, Has.Count.EqualTo(4));
+
+            var amounts = new[] { 0, 6, 15, 50 };
+            for (var i = 0; i < rows.Count; i++)
+            {
+                var recipe = window.Recipes[i];
+                var proto = Client.ProtoMan.Index(recipe);
+                rows[i].SetRecipe(proto, _ => [], true, true, true, amounts[i], () => new Control());
+            }
+
+            window.InvalidateMeasure();
+            var size = window.SetSize;
+            window.Measure(size);
+            window.Arrange(UIBox2.FromDimensions(Vector2.Zero, size));
+
+            Assert.Multiple(() =>
+            {
+                foreach (var row in rows.Skip(1))
+                {
+                    Assert.That(row.FiveButton.GlobalPosition.X, Is.EqualTo(rows[0].FiveButton.GlobalPosition.X).Within(0.01f), "x5");
+                    Assert.That(row.TenButton.GlobalPosition.X, Is.EqualTo(rows[0].TenButton.GlobalPosition.X).Within(0.01f), "x10");
+                    Assert.That(row.MaxButton.GlobalPosition.X, Is.EqualTo(rows[0].MaxButton.GlobalPosition.X).Within(0.01f), "Max");
+                    Assert.That(row.MaxHost.Size.X, Is.EqualTo(rows[0].MaxHost.Size.X).Within(0.01f));
+                }
+            });
+        });
+    }
 }

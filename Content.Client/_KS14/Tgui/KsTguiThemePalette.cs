@@ -180,6 +180,22 @@ public sealed class KsTguiThemePalette
     ///     <c>.Window__dimmer</c>: the base at lightness +15, at CSS opacity .25 over the window.
     /// </summary>
     public Color WindowDimmer { get; }
+
+    /// <summary>
+    ///     <c>Window__dimmer</c> as CSS has it (the base at +15 lightness, .25), for the backdrop pass to blend in sRGB.
+    /// </summary>
+    public KsTguiTint WindowDimmerTint { get; }
+
+    /// <summary>
+    ///     <c>--dropdown-menu-background</c> as CSS has it.
+    /// </summary>
+    public KsTguiTint MenuTint { get; }
+
+    /// <summary>
+    ///     <c>--tooltip-background</c> as CSS has it; the knob's and slider's popups use the same.
+    /// </summary>
+    public KsTguiTint TooltipTint { get; }
+
     public Color TextDim { get; }
     public Color TextTitle { get; }
 
@@ -288,7 +304,8 @@ public sealed class KsTguiThemePalette
         Candystripe = KsTguiPalettes.Translucent(Color.Black, 0.25f, Scale(Base, 0.67f));
         Border = KsTguiPalettes.Translucent(Color.White, 0.1f, Base);
         Dimmer = KsTguiPalettes.Translucent(baseHsl.WithLightness(5f).ToColor(), 0.75f, Section);
-        WindowDimmer = KsTguiPalettes.Translucent(baseHsl.ShiftLightness(15f).ToColor(), 0.25f, Base);
+        WindowDimmerTint = new KsTguiTint(baseHsl.ShiftLightness(15f).ToColor(), 0.25f);
+        WindowDimmer = WindowDimmerTint.Approximate(Base);
         TextDim = Flatten(Color.White, 0.5f, Base);
         TextTitle = Flatten(Color.White, 0.75f, TitleBar);
 
@@ -310,9 +327,12 @@ public sealed class KsTguiThemePalette
             InputBorderIdle = Flatten(InputBorder, 0.75f, InputBackground);
         }
 
-        Menu = KsTguiPalettes.Translucent(baseHsl.ShiftLightness(-5.5f).ToColor(), 0.85f, Base);
-        Tooltip = tokens.TooltipBackground?.ToColor()
-            ?? KsTguiPalettes.Translucent(baseHsl.WithLightness(tokens.TooltipLightness).ToColor(), 0.85f, Base);
+        MenuTint = new KsTguiTint(baseHsl.ShiftLightness(-5.5f).ToColor(), 0.85f);
+        Menu = MenuTint.Approximate(Base);
+        TooltipTint = tokens.TooltipBackground is { } tooltipBackground
+            ? new KsTguiTint(tooltipBackground.ToColor(), 1f)
+            : new KsTguiTint(baseHsl.WithLightness(tokens.TooltipLightness).ToColor(), 0.85f);
+        Tooltip = tokens.TooltipBackground?.ToColor() ?? TooltipTint.Approximate(Base);
         ScrollThumb = baseHsl.ShiftLightness(9.25f).ToColor();
 
         // --color-action is 50% grey; hover, active and selected are it at .25, .3 and .4, and a tab's are at lightness x0.75.

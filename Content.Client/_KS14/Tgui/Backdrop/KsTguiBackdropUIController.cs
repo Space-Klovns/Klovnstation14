@@ -20,6 +20,7 @@ public sealed partial class KsTguiBackdropUIController : UIController
 {
     public const string BlurShader = "KsTguiBackdropBlur";
     public const string CompositeShader = "KsTguiBackdropComposite";
+    public const string RasterShader = "KsTguiScaledRaster";
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
@@ -42,6 +43,12 @@ public sealed partial class KsTguiBackdropUIController : UIController
     ///     False inside a pass, so that a popup drawn while another is being blurred doesn't start a pass of its own.
     /// </summary>
     public bool CanBlur => Enabled && !PassActive;
+
+    /// <summary>
+    ///     Whether something may capture the UI behind it without blurring: under the tgui theme (the blur setting is only
+    ///         about the blur), and not inside a pass.
+    /// </summary>
+    public bool CanCapture => _configurationManager.GetCVar(KsCCVars.TguiStyle) && !PassActive;
 
     /// <summary>
     ///     What an empty pixel of the backdrop is: what the UI is drawn over.

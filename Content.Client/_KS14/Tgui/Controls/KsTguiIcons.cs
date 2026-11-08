@@ -58,6 +58,12 @@ public static class KsTguiIcons
     public const string SignIn = "\uf090";
     public const string SignOut = "\uf08b";
     public const string Exclamation = "\uf12a";
+    public const string Eye = "\uf06e";
+    public const string EyeSlash = "\uf070";
+    /// <summary>
+    ///     tgui's <c>tools</c>, which Font Awesome 6 calls screwdriver-wrench.
+    /// </summary>
+    public const string Tools = "\uf7d9";
     public const string Envelope = "";
     public const string Coins = "";
     public const string Tint = "";

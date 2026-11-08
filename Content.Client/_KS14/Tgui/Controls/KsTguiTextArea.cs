@@ -20,8 +20,18 @@ namespace Content.Client._KS14.Tgui.Controls;
 ///         <see cref="OnEscape"/> and lets go too.
 /// </summary>
 /// <remarks>
-///     Not ported: <c>Tab</c> inserting a tab character (the engine's box has no use for the key), <c>maxLength</c>,
-///         <c>userMarkup</c>, <c>expensive</c>, <c>selfClear</c>.
+///     <para>
+///         Tab inserts a tab character in place of the selection and raises <see cref="OnChanged"/>, as tgui's does, unless
+///             <see cref="DontUseTabForIndent"/> is set. The engine's font draws no glyph for it.
+///     </para>
+///     <para>
+///         <see cref="MaxLength"/> is a <c>textarea</c>'s <c>maxlength</c>: typing and pasting stop at the limit (a paste is cut
+///             to fit, a replaced selection makes room), a <see cref="Text"/> set from code is not cut, and Tab, which tgui inserts
+///             from script, ignores it. Counted in UTF-16 units as a browser does.
+///     </para>
+///     <para>
+///         Not ported: <c>userMarkup</c>, <c>expensive</c>, <c>selfClear</c>.
+///     </para>
 /// </remarks>
 public sealed partial class KsTguiTextArea : Control
 {
@@ -69,6 +79,10 @@ public sealed partial class KsTguiTextArea : Control
     private bool _focused;
     private string _text = string.Empty;
     private bool _setting;
+    private bool _inserting;
+    private bool _limitPending;
+    private int? _maxLength;
+    private bool _dontUseTabForIndent;
 
     /// <summary>
     ///     tgui's <c>onChange</c>: the whole text, on every edit by the player.
@@ -136,6 +150,25 @@ public sealed partial class KsTguiTextArea : Control
     ///     The text inside.
     /// </summary>
     public TextEdit Edit => _edit;
+
+    /// <summary>
+    ///     tgui's <c>maxLength</c>: the most characters the player can type or paste in. Text already in the box, or set from
+    ///         code, is left as it is.
+    /// </summary>
+    public int? MaxLength
+    {
+        get => _maxLength;
+        set => _maxLength = value;
+    }
+
+    /// <summary>
+    ///     tgui's <c>dontUseTabForIndent</c>: Tab does nothing in the box instead of inserting a tab character.
+    /// </summary>
+    public bool DontUseTabForIndent
+    {
+        get => _dontUseTabForIndent;
+        set => _dontUseTabForIndent = value;
+    }
 
     /// <summary>
     ///     The text. Setting it raises nothing, as tgui's <c>value</c> doesn't.
@@ -257,7 +290,60 @@ public sealed partial class KsTguiTextArea : Control
         if (_setting)
             return;
 
-        _text = Rope.Collapse(args.TextRope);
+        var text = Rope.Collapse(args.TextRope);
+
+        // The box puts its caret after what was typed only once this handler returns, so the text can't be cut to the limit
+        //      here: it is done in FrameUpdate, and until then nothing is reported.
+        if (_limitPending || (!_inserting && ExceedsLimit(text)))
+        {
+            _limitPending = true;
+            return;
+        }
+
+        _text = text;
+        OnChanged?.Invoke(_text);
+    }
+
+    /// <summary>
+    ///     A browser blocks an insertion that would pass <c>maxlength</c>, and lets text that is already longer be edited down.
+    /// </summary>
+    private bool ExceedsLimit(string text)
+    {
+        return _maxLength is { } max && text.Length > Math.Max(max, _text.Length);
+    }
+
+    /// <summary>
+    ///     Cuts what the player just typed or pasted back to <see cref="MaxLength"/>: from the end of it, which is where the
+    ///         caret is, as a browser keeps the start of a paste.
+    /// </summary>
+    private void EnforceMaxLength()
+    {
+        _limitPending = false;
+        if (_maxLength is not { } max)
+            return;
+
+        var text = Rope.Collapse(_edit.TextRope);
+        var excess = text.Length - Math.Max(max, _text.Length);
+        if (excess > 0)
+        {
+            var caret = Math.Min(_edit.CursorPosition.Index, text.Length);
+            var cut = Math.Min(excess, caret);
+            text = text.Remove(caret - cut, cut);
+            if (text.Length > Math.Max(max, _text.Length))
+                text = text.Substring(0, Math.Max(max, _text.Length));
+
+            _setting = true;
+            _edit.TextRope = new Rope.Leaf(text);
+            var cursor = new TextEdit.CursorPos(Math.Min(caret - cut, text.Length), TextEdit.LineBreakBias.Top);
+            _edit.CursorPosition = cursor;
+            _edit.SelectionStart = cursor;
+            _setting = false;
+        }
+
+        if (text == _text)
+            return;
+
+        _text = text;
         OnChanged?.Invoke(_text);
     }
 
@@ -268,6 +354,20 @@ public sealed partial class KsTguiTextArea : Control
             OnEscape?.Invoke(_text);
             _edit.ReleaseKeyboardFocus();
             args.Handle();
+            return;
+        }
+
+        // tgui: Tab is a tab character, in place of the selection, and not held to maxLength.
+        if (args.Function == EngineKeyFunctions.TextTabComplete)
+        {
+            if (!_dontUseTabForIndent && _edit.Editable)
+            {
+                _inserting = true;
+                _edit.InsertAtCursor("	");
+                _inserting = false;
+                args.Handle();
+            }
+
             return;
         }
 
@@ -283,6 +383,9 @@ public sealed partial class KsTguiTextArea : Control
     protected override void FrameUpdate(FrameEventArgs args)
     {
         base.FrameUpdate(args);
+
+        if (_limitPending)
+            EnforceMaxLength();
 
         // The engine sets the bar's range as it lays the text out, and raises nothing when it does.
         _scrollBar.Visible = _scrollBar.MaxValue > _scrollBar.Page + 0.5f;

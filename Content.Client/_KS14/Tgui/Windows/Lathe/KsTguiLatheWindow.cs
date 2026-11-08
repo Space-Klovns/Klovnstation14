@@ -116,8 +116,10 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         _designsSection = new KsTguiSection { Fill = true, HorizontalExpand = true };
         var designsBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
-        designsBody.AddChild(_searchSection);
-        designsBody.AddChild(_recipeListSection);
+        // Each is in a Stack.Item of its own in tg, so each is the first child of its parent: both are pulled up 6px
+        //      (.Section .Section:first-child), which is what brings the gap to ~16px (7.92 + 6 + 7.92 - 6) rather than 22.
+        designsBody.AddChild(StackItem(_searchSection, expand: false));
+        designsBody.AddChild(StackItem(_recipeListSection, expand: true));
         _designsSection.AddChild(designsBody);
 
         // Queue.
@@ -159,6 +161,16 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
         ApplyLayout(autolathe: false);
         RefreshDesignsTitle();
+    }
+
+    /// <summary>
+    ///     tg's <c>Stack.Item</c>: a box of its own around one child, so the child is its first child.
+    /// </summary>
+    private static BoxContainer StackItem(Control child, bool expand)
+    {
+        var item = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = expand };
+        item.AddChild(child);
+        return item;
     }
 
     /// <summary>

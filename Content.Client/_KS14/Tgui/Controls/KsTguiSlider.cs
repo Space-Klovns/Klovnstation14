@@ -101,7 +101,7 @@ public sealed class KsTguiSlider : Control
     private readonly KsTguiStyleBox _popupBox = new(KsTguiPalettes.Base, PopupRadius);
     private readonly List<(KsTguiColor Color, float Min, float Max)> _ranges = new();
 
-    private readonly DrawVertexUV2DColor[] _pointer = new DrawVertexUV2DColor[3];
+    private readonly DrawVertexUV2DColor[] _pointer = new DrawVertexUV2DColor[PointerVertexCount];
 
     // The window theme's, from style properties; the default theme's where the sheet doesn't say.
     private XColor _defaultElement = KsTguiColors.Element(KsTguiColor.Default);
@@ -781,6 +781,9 @@ public sealed class KsTguiSlider : Control
         _popupBox.BackgroundColor = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyTooltip, out var tooltip)
             ? tooltip
             : KsTguiPalettes.Base;
+        _popupBox.Tint = TryGetStyleProperty<KsTguiTint>(KsTguiSheetlet.StylePropertyTooltipTint, out var tooltipTint)
+            ? tooltipTint
+            : null;
         _editBox.BackgroundColor = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyInputBackground, out var background)
             ? background
             : EditBackground;
@@ -855,11 +858,67 @@ public sealed class KsTguiSlider : Control
         var baseY = inner.Bottom + PointerBaseDrop * UIScale;
         var apexY = baseY - PointerHalfBase * UIScale;
         var halfBase = PointerHalfBase * UIScale;
-        var color = XColor.White;
-        _pointer[0] = new DrawVertexUV2DColor(new Vector2(cursorX, apexY), Vector2.Zero, color);
-        _pointer[1] = new DrawVertexUV2DColor(new Vector2(cursorX + halfBase, baseY), Vector2.Zero, color);
-        _pointer[2] = new DrawVertexUV2DColor(new Vector2(cursorX - halfBase, baseY), Vector2.Zero, color);
+        WritePointer(_pointer, new Vector2(cursorX, apexY), halfBase, baseY, XColor.White * handle.Modulate);
         handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White, _pointer);
+    }
+
+    /// <summary>
+    ///     How far the pointer's soft edge reaches either side of its true outline, in device pixels: the same one-pixel fringe
+    ///         as <see cref="KsTguiStyleBox"/>'s corners.
+    /// </summary>
+    public const float PointerSoftness = 0.5f;
+
+    /// <summary>
+    ///     The solid triangle, then three quads (two triangles each) between its edge and the soft edge.
+    /// </summary>
+    public const int PointerVertexCount = 3 + 3 * 6;
+
+    /// <summary>
+    ///     The pointer as triangles, anti-aliased as the style box's rounded corners are: the solid triangle is inset by
+    ///         <see cref="PointerSoftness"/> from the true outline, and a strip fades from full alpha there to none
+    ///         <see cref="PointerSoftness"/> outside it, so the edge is a one-pixel ramp centred on the outline. Both loops are
+    ///         the true triangle scaled about its incentre, which moves every edge by the same distance.
+    /// </summary>
+    /// <param name="vertices">At least <see cref="PointerVertexCount"/> long.</param>
+    /// <param name="apex">The top of the upright triangle.</param>
+    /// <param name="halfBase">Half its base.</param>
+    /// <param name="baseY">Where the base is.</param>
+    /// <param name="color">The colour, already carrying the draw's modulate.</param>
+    public static void WritePointer(DrawVertexUV2DColor[] vertices, Vector2 apex, float halfBase, float baseY, XColor color)
+    {
+        var height = baseY - apex.Y;
+        var leg = MathF.Sqrt(halfBase * halfBase + height * height);
+        var inradius = halfBase * height / (halfBase + leg);
+
+        // Too small to inset: a plain triangle, with the rest of the array degenerate.
+        var inset = inradius > PointerSoftness ? (inradius - PointerSoftness) / inradius : 1f;
+        var outset = (inradius + PointerSoftness) / inradius;
+        var incentre = new Vector2(apex.X, baseY - inradius);
+
+        var corners = new[] { apex, new Vector2(apex.X + halfBase, baseY), new Vector2(apex.X - halfBase, baseY) };
+        var solid = new Vector2[3];
+        var soft = new Vector2[3];
+        for (var i = 0; i < 3; i++)
+        {
+            solid[i] = incentre + (corners[i] - incentre) * inset;
+            soft[i] = incentre + (corners[i] - incentre) * outset;
+        }
+
+        var clear = color.WithAlpha(0f);
+        var written = 0;
+        for (var i = 0; i < 3; i++)
+            vertices[written++] = new DrawVertexUV2DColor(solid[i], Vector2.Zero, color);
+
+        for (var i = 0; i < 3; i++)
+        {
+            var next = (i + 1) % 3;
+            vertices[written++] = new DrawVertexUV2DColor(solid[i], Vector2.Zero, color);
+            vertices[written++] = new DrawVertexUV2DColor(soft[i], Vector2.Zero, clear);
+            vertices[written++] = new DrawVertexUV2DColor(soft[next], Vector2.Zero, clear);
+            vertices[written++] = new DrawVertexUV2DColor(solid[i], Vector2.Zero, color);
+            vertices[written++] = new DrawVertexUV2DColor(soft[next], Vector2.Zero, clear);
+            vertices[written++] = new DrawVertexUV2DColor(solid[next], Vector2.Zero, color);
+        }
     }
 
     /// <summary>

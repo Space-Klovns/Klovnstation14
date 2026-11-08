@@ -11,14 +11,18 @@ a given window look right.
 
 ## Where the truth is
 
-Never guess a tgui value. tgstation is at `C:/Space/SS13 Dev/Repo/tgstation`:
+Never guess a tgui value. tgstation is at `C:/Space/SS13 Dev/Repo/tgstation`. **If that repo is missing**, the MIT parts are copied
+into [reference/](reference/README.md) (same folder structure: `tgui-core/styles`, `tgui-core/dist/components/*.d.ts`, `tgui/layouts`,
+`tgui/styles`), and [designing.md](designing.md) describes the AGPL interfaces in words with their tg paths:
 
 | What | Where |
 | --- | --- |
 | A window's layout | `tgui/packages/tgui/interfaces/<Name>.tsx`, or a folder of that name |
 | A component's structure and CSS | `tgui/node_modules/tgui-core/dist/components/`, `.../styles/components/<Name>.scss` |
 | Spacing and colour tokens | `tgui/node_modules/tgui-core/styles/vars-values.scss` |
-| Chat | `tgui/packages/tgui-panel/`, `tgui/packages/tgui-say/` |
+| Component props | `tgui/node_modules/tgui-core/dist/components/*.d.ts`; copy: `reference/tgui-core/dist/components/` |
+| Window frame | `tgui/packages/tgui/layouts/Window.tsx`, `styles/layouts/*.scss`; copy: `reference/tgui/` |
+| Chat | `tgui/packages/tgui-panel/`, `tgui/packages/tgui-say/` (AGPL, not in `reference/`) |
 
 ## Reading a .tsx
 
@@ -61,8 +65,9 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `Tabs` | `KsTguiTabs`, `KsTguiTabItem` | Vertical too. `Count` is the badge. The Section-coloured strip, 6px bottom gap and in-Section -6px margins are as tg; the indicator grows from the middle over 200ms. Use this, not the engine `TabContainer`, in a ported window |
 | `ProgressBar` | `KsTguiProgressBar` | `AddRange` for good/average/bad. Text right-aligned, inset 7px, percentage unclamped, `FractionDigits`. Fill width/colour ease over 1s and the border colour over 1s ease-out, from `FrameUpdate`, nothing once settled (first value is drawn in place). `ShowNumber` puts an easing number in place of the text, as an `AnimatedNumber` inside tg's bar. `BackgroundColor` (tg's `backgroundColor`) and `Mirrored` (tg's `scaleX(-1)`, fill from the right, text still right-aligned) |
 | `NumberInput` | `KsTguiNumberInput` | Value bar at the left, vertical drag, click selects everything. `Animated` is tg's `animated` prop: set it where tg does. Use it, not `FloatSpinBox`, in a ported window |
-| `Knob` | `KsTguiKnob`, `KsTguiKnobMath` | tg's `size` is `KnobSize`; `Color` is a `KsTguiColor?` (null = ranges, then the theme's ring), plus `AddRange`, `FillValue`, `Bipolar`, `Step`, `StepPixelSize` (null = the knob's width over the steps), `Unclamped`, `TickWhileDragging`. Vertical drag relative to the press, up is more; `OnChanged` is on every release (a click too, as tg), after a typed value, and each 0.4 s when ticking. A click opens typing 0.1 s after the press; Esc reverts. The value popup is above it while the value has moved. All the numbers are in `KsTguiKnobMath`; the rings, cap and glow are triangles from `BuildVertices`. The popup and edit colours come from the `KsTguiKnob` rule in `KsTguiSheetlet.Themes.cs`. The value popup is a `KsTguiBackdropPanel`, so it blurs what is behind it |
+| `Knob` | `KsTguiKnob`, `KsTguiKnobMath` | tg's `size` is `KnobSize`; `Color` is a `KsTguiColor?` (null = ranges, then the theme's ring), plus `AddRange`, `FillValue`, `Bipolar`, `Step`, `StepPixelSize` (null = the knob's width over the steps), `Unclamped`, `TickWhileDragging`. Vertical drag relative to the press, up is more; `OnChanged` is on every release (a click too, as tg), after a typed value, and each 0.4 s when ticking. A click opens typing 0.1 s after the press; Esc reverts. The value popup is above it while the value has moved. All the numbers are in `KsTguiKnobMath`; the rings, cap and glow are triangles from `BuildVertices`. The popup and edit colours come from the `KsTguiKnob` rule in `KsTguiSheetlet.Themes.cs`. The value popup is a `KsTguiBackdropPanel` inside a `KsTguiScaleHost` (pivot at the bottom edge, or the top when it opens below): it blurs what is behind it, and opens and closes as tg's `Floating` does, scale .9 to 1 and opacity over 0.2 s of CSS ease (`KsTguiFloatingTransition`, in the popup layer until it has closed; opened again meanwhile it turns round from where it got to) |
 | `candystripe` class, `Stack zebra` | `KsTguiLabeledList.Candystripe`, `KsTguiTabs.Candystripe`, `KsTguiCandystripe` | Odd visible rows darkened edge to edge, so hiding a row re-alternates. `KsTguiCandystripe` is a vertical box for any rows. The dark colour is only given by the tgui sheet |
+| `VirtualList` of `<Button className="candystripe" color="transparent" fluid selected>` (SpawnSearch, any list of choices) | `KsTguiList`, `KsTguiListRow` | **The standard for lists.** Rows are transparent fluid `KsTguiButton`s with no transition (`Instant`), 20 tall with 2px between, striped on the first, third and so on, text at .5 and solid on hover, the selected row clear with green text. `AddRow(text, metadata)`, `Clear()`, `Select(index)` (silent), `SelectedIndex`/`SelectedRow`, `OnSelected` (a click or Up/Down, via `MoveSelection`), `OnActivated` (a second click on the row inside the double-click time, or Enter), `PressRow` for a test. Put it in a `KsTguiSection` with `Scrollable`. **The engine's own lists follow the same look under the tgui theme without changes**: `ItemList` (`KsTguiItemListStyle.cs`: the sheet can't give a list a stripe by index, a hover or per-row text colour, so its row box finds its list and row from the rectangle `ItemList` gives it and paints the row and its text itself; the list's own text is made clear), and `ListContainer` rows that carry `ListContainer.StyleClassListContainerButton` (stripe child, padding, selected and hovered classes in `ListContainer.Klovn.Tgui.cs`; rows 2px apart on every `ListContainer`). Colours are `KsTguiSheetlet.Lists.cs`'s `ListColors`, the transparent button's. Not a `Tree`/`FancyTree` (a navigation tree, not tg's list) |
 | `Table`, `Table.Row`, `Table.Cell` | `KsTguiTable`, `KsTguiTableRow`, `KsTguiTableCell` | Cells are the row's children; columns size to the widest cell; cells hang from a common text baseline. Header rows/cells are bold (plain labels only) with 6px under. `KsTguiTableCell` (a vertical box) adds `ColSpan`, `Header`, `Collapsing`, `VerticalAlign`; `KsTguiTable.Collapsing` keeps the table to its columns. `HorizontalExpand` on a cell marks an expanding column (tgui marks the others `collapsing`) |
 | `ColorBox` | `KsTguiColorBox` | 12px swatch, transparent by default; `BoxColor`/`NamedColor` (tg name, l-5), `Content` text centred on it |
 | `Divider` | `KsTguiDivider` | 2px line, 6px space either side; `Vertical` |
@@ -72,7 +77,8 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `RoundGauge` | `KsTguiRoundGauge` | Smooth geometry from tg's 100x50 view box, sharp at any scale. `MinValue`, `MaxValue`, `AddRange`, `AlertAfter`/`AlertBefore`, `Format`, `GaugeSize`. Pass only real ranges: no data, no range. The needle takes tg's .2 s to a new value, and while in alert (`AlertAfter`, on a range) it shakes and the alert pulses. The first value is drawn in place. Nothing to call: it runs off `FrameUpdate` Ring arcs are 200 degrees per unit and the track the last 160 (tg's dash arithmetic); no ranges draws the theme's primary; idle colours go through `KsTguiPalettes.Translucent`; the alert's "!" is a real hole; `MinValue` defaults to 1 as in tgui-core. |
 | `AnimatedNumber` | `KsTguiAnimatedNumber` | `: Label`. Set `Value`; eases by frame time and does nothing once settled. `Format`, `Initial` (where a number's first value eases from). **Nothing counts up as a window opens**, even where tg's source says `initial={0}`: a value in the window's first state is placed, and `Initial = 0` is only for what arrives after it (`NewVolumeStart` in `KsTguiChemMasterWindow`). For a figure that changes in place; keep one instance. In rows that get rebuilt, get it from a `KsTguiAnimatedNumberPool` keyed by what the row shows, or each state starts it over. `ShowText` for a non-number such as N/A. `Instant` in a stock window, set from `!KsTguiTheme.ReadEnabled()`, so Baron doesn't change |
 | `Dimmer` | `KsTguiDimmer` | `KsTguiDimmer.Over(target, out dimmer)` returns a host that stacks the target and the dimmer; add the host where the target was, toggle `dimmer.Visible`. `Content` is centred. Takes the clicks. The standard way to show a locked section (lock icon + the swipe text), with the notice kept above |
-| `Window__dimmer` (window seen but not usable) | `KsTguiWindowDimmer`, `KsTguiWindowDimmerUIController` | Automatic for any BUI window that goes through `KsBoundUserInterfaceExt` (`CreateWindow`, or `WithGuide` for one made with `new`): washed over, clicks pass through, while the local non-ghost player fails the server's `CanInteract`/`CanComplexInteract` check for the BUI. Polled at 4 Hz |
+| `Window__dimmer` (window seen but not usable) | `KsTguiWindowDimmer`, `KsTguiWindowDimmerUIController` | Automatic for any BUI window that goes through `KsBoundUserInterfaceExt` (`CreateWindow`, or `WithGuide` for one made with `new`): washed over exactly as CSS does it (sRGB: `.25 * colour + .75 * behind`, so 16 becomes 31 and 26 becomes 38; the dimmer captures what is behind it through `KsTguiBackdropBlur` with `blur: false` and blends in `backdrop_composite.swsl`; it must stay the window's last child, which the controller keeps, and the window must draw nothing itself, its background being a child panel; inside another popup's pass it falls back to the flat `Translucent` colour), clicks pass through, while the local non-ghost player fails the server's `CanInteract`/`CanComplexInteract` check for the BUI. Polled at 4 Hz |
+| `TitleBar__statusIcon` (layouts/TitleBar.tsx) | `KsTguiTitleStatusIcon`, `KsTguiWindowStatus`, `KsTguiChromeUIController.SetStatus` | Automatic in every chromed window. `status === undefined` is `tools` at .5 opacity (a window no bound interface made). A bound window's status is `KsTguiWindowDimmerUIController.GetStatus`, the dimmer's own answer, so the eye is red `eye-slash` exactly when the dimmer shows, green `eye` when the local player can interact, and orange `eye` (tg's `UI_UPDATE`) for a ghost that cannot: the server lets a ghost open an interface (`SharedInteractionSystem.OnBoundInterfaceInteractAttempt`) and refuses everything it sends, which is a window that updates for an observer who cannot touch it. Colours are `KsTguiPalettes.Good/Average/Bad` (no window theme changes them), 20px glyph in a 45px cell, the title with no margin after it, colour eased over `--transition-time-slow` (0.5s), the first answer placed with no ease. The cell takes no mouse input, so dragging from it moves the window |
 | `Modal` | `KsTguiModal` | A dimmer with a panel. Put it in a stacking host beside the page, `Body`, `Open()`/`Close()`, `Closed`, `Entered` (tg's `onEnter`; does not close). Takes keyboard focus, Esc closes (a focused text box eats the first Esc) |
 | `LabeledControls`, `.Item` | `KsTguiLabeledControls`, `KsTguiLabeledControlsItem` | `AddItem(label, content)`; `Wrap`. Items spread edge to edge (space-between), 3px in from the sides, every one as tall as the row; the label at the bottom, the content halfway between the top and it |
 | `Dialog`, `Dialog.Button` | `KsTguiDialog`, `KsTguiDialogButton` | Covers its parent (put it in a stacking host like a `KsTguiDimmer`). `Title`, `Body`, `AddButton(text, onPressed)`, `DialogWidth` (370), `DialogHeight`, `OnClose`. Title and buttons are 14px mono (`KsTguiFonts.GetMonoFont(14)`); the body's font is the caller's to set |
@@ -84,16 +90,16 @@ Window contents sit 6px in from the window edge: `Margin = new Thickness(6f)` on
 | `Stack.Divider` | `KsTguiStackDivider` | 2px line, no margin: use in a box with `SeparationOverride = KsTguiSection.Gap` (14px in all, same as `KsTguiDivider`, which brings its own 6px). `Hidden`, `Vertical` |
 | `Chart.Line` | `KsTguiChartLine` | `SetData`, `RangeX`/`RangeY`, `FillColor`, `StrokeColor`, `StrokeWidth`. Needs a size. Has tg's closing points, so a range wider than the data shows a stub right of the last point |
 | `Input` | `LineEdit` | Already themed. tg's `monospace` is the `KsTguiSheetlet.StyleClassMonospace` class (mono 12). In a window with the tgui chrome every `LineEdit` lets go of the keyboard after Enter, once its `OnTextEntered` handlers have run, as tg's `blur()` (`KsTguiFeelUIController.BlurOnEnter.cs`); chat, the lobby and Baron windows are untouched |
-| `TextArea` | `KsTguiTextArea` | A panel with tg's input box around a `TextEdit` (which has no stylebox). `Text` (setting raises nothing), `Placeholder`, `Fluid`, `Rows`, `Monospace`, `Disabled`, `OnChanged`/`OnEnter`/`OnEscape`/`OnBlurred`. Enter (not Shift+Enter) raises `OnEnter` and blurs; Escape too. Not ported: Tab inserting a tab, `maxLength`, `userMarkup`, `selfClear` |
-| `Slider` | `KsTguiSlider` | A `ProgressBar` you drag, on `KsTguiKnobMath`'s DraggableControl numbers with the matrix [1, 0]: `MinValue`/`MaxValue`/`Step`/`StepPixelSize` (null = width over steps), `Unit`, `Format`, `Color`, `AddRange`, `FillValue` (the wide .4 fill), `Animated`, `Content`, `Unclamped`, `TickWhileDragging`, `Disabled`. Fills ease 1s unless dragging, the cursor line and pointer triangle are tg's, the value is inside right-aligned. Press holds 0.1 s before a drag; a click types (Enter/blur commit, Esc reverts); `OnChanged` on every release. The value popup is `PopupControl`, a separate control in the popup layer while the value moves (the place for a backdrop blur) |
+| `TextArea` | `KsTguiTextArea` | A panel with tg's input box around a `TextEdit` (which has no stylebox). `Text` (setting raises nothing), `Placeholder`, `Fluid`, `Rows`, `Monospace`, `Disabled`, `OnChanged`/`OnEnter`/`OnEscape`/`OnBlurred`. Enter (not Shift+Enter) raises `OnEnter` and blurs; Escape too. Tab inserts a tab character in place of the selection (`DontUseTabForIndent` turns it off; the font draws no glyph for it), `MaxLength` stops typing and cuts a paste at the limit (cut in `FrameUpdate`, as the box moves its caret after the change event; code and Tab are not held to it). Not ported: `userMarkup`, `selfClear` |
+| `Slider` | `KsTguiSlider` | A `ProgressBar` you drag, on `KsTguiKnobMath`'s DraggableControl numbers with the matrix [1, 0]: `MinValue`/`MaxValue`/`Step`/`StepPixelSize` (null = width over steps), `Unit`, `Format`, `Color`, `AddRange`, `FillValue` (the wide .4 fill), `Animated`, `Content`, `Unclamped`, `TickWhileDragging`, `Disabled`. Fills ease 1s unless dragging, the cursor line and pointer triangle are tg's, the value is inside right-aligned. Press holds 0.1 s before a drag; a click types (Enter/blur commit, Esc reverts); `OnChanged` on every release. The value popup is `PopupControl`, a separate control in the popup layer while the value moves (blurred, composited like the tooltip). tg's Slider popup is a plain div, not a Floating, so it is not animated. The pointer triangle has a one-pixel alpha fringe (`KsTguiSlider.WritePointer`) |
 | `Input` / `NumberInput` / `RestrictedInput` right-aligned text | `KsTguiRightAlignedLineEdit` | `text-align: right` on a `LineEdit`: the style box's left margin is kept at width - text - padding, recomputed on text, font, size and focus, so the caret, selection and clicks agree. The base of `KsTguiRestrictedInput` and the edit boxes of `KsTguiNumberInput`, `KsTguiKnob` and `KsTguiSlider`. Setting `Text` raises no event: call `UpdateAlignment()` after it |
 | `--font-family-mono` | `KsTguiFonts.GetMonoFont(size, kind)` | System Consolas by PostScript name, else bundled Roboto Mono. Same sizes and Noto fallbacks as `GetFont` |
 | `SearchBar` (tg's `interfaces/common/SearchBar.tsx`) | `KsTguiSearchBar` | Magnifier, 6px gap, `Input` filling the rest. `PlaceHolder`, `ShowIcon` (tg's `noIcon`). Use it wherever tg's window has a `SearchBar` |
 | `Tabs scrollable` | `KsTguiTabs.Scrollable` | One row scrolling sideways, no bar. 3.25em (39px) `mask-image` fade at each edge that has more (alpha 0 to 66% of 39px, ramping to 1): a real alpha mask, the tabs are drawn into an offscreen target (`RenderChildOverride`, in place of the first tab, so the scroll buttons stay unmasked) and drawn back through `tgui_tabs_mask.swsl` (premultiplied blend); the alpha maths is `KsTguiTabsMask.Alpha`, the shader repeats it, a scroll button there for half the width (smooth), the wheel scrolls a 100px notch at once, the selected tab is centred (first time at once). Not for `Vertical`. Its fade and buttons are a child only while scrollable: use `ClearTabs()`, not `RemoveAllChildren()`. Used by the chat header |
 | `overflow-y: auto` box (`Section scrollable`, `overflowY="auto"`) | `KsTguiScrollContainer` | A `ScrollContainer` that measures the content once, at the width it is arranged at. The bar and its 15px column exist only while the content overflows. `KsTguiSection` uses it; use it, not `ScrollContainer`, in every ported window |
-| `overflow-y: scroll` (`Window.Content scrollable`) | `KsTguiScrollContainer` with `ReserveVertical` (`ReserveHorizontal`) | The 15px column is always taken and the track drawn with no thumb and pale arrows (`KsTguiScrollContainer.StyleClassDisabled`); the wheel passes through while nothing overflows. Only where tg's window content is `scrollable`: Apc, ChemMaster, PDA home |
+| `overflow-y: scroll` (`Window.Content scrollable`) | `KsTguiScrollContainer` with `ReserveVertical` (`ReserveHorizontal`) | The 15px column is always taken and the track drawn with no thumb and pale arrows (`KsTguiScrollContainer.StyleClassDisabled`); the wheel passes through while nothing overflows. Only where tg's window content is `scrollable`: Apc, ChemMaster, PDA home, Fax, ReagentDispenser (whose Beaker section is the only `fill`: the root box inside the scroll container is stretched to the viewport) |
 | `Tooltip` | any `ToolTip` / `TooltipSupplier` | Automatic in every window but KS14's diegetic ones (`KsBaseWindow`): `KsTguiFeelUIController.Tooltips.cs` takes the engine's tooltip and places it 6px from its control (below unless `KsTguiTooltip.SetPlacement`), flipped and shifted to stay inside the window, opening after 200ms of rest, scaling .9 to 1 and fading in and out over 0.2s with tg's shadow and its backdrop blur (`KsTguiBackdropBlur`, below). Outside windows, tooltips stay at the mouse. For tg's `content={<Component/>}`, return `KsTguiTooltip.Create(control)` from a supplier, a new one each time (the old one may still be fading) |
-| `backdrop-filter: blur(12px)` | `KsTguiBackdropBlur`, `KsTguiBackdropPanel`, `KsTguiBackdropUIController`, `KsTguiBackdropMath` | Not a control: a popup host owns one `KsTguiBackdropBlur` and calls `Draw` before its contents (`KsTguiTooltipHost`, `KsTguiScaleHost` for a dropdown) or is a `KsTguiBackdropPanel` (a `PanelContainer`, for a popup that draws its own translucent box, as the knob's value). `Draw` renders everything drawn before the anchor, the popup layers' earlier siblings and so on from the root, into an offscreen target the size of the popup, blurs it in two Gaussian passes (sigma 12 px, `backdrop_blur.swsl`) with mirrored edges as Chromium does, and draws it clipped to the rounded box (`backdrop_composite.swsl`) at the popup's fade and scale. The ancestors on the way must draw nothing themselves. While it runs `ScalingViewport` only blits its last picture (`KsBackdropPassActive`, per client, on `KsTguiBackdropUIController`), so the world is not rendered twice; screen-space overlays and a popup's own blur are skipped in the pass. Off with the tgui theme or `klovn.ui.tgui.backdrop_blur`. Scissored (scroll) controls in the pass clip with the engine's own render-target scissor |
+| `backdrop-filter: blur(12px)` + translucent popup background | `KsTguiBackdropBlur`, `KsTguiScaledRaster`, `KsTguiBackdropBackground`, `KsTguiTint`, `KsTguiBackdropPanel`, `KsTguiBackdropUIController`, `KsTguiBackdropMath` | Not a control: a popup host owns one `KsTguiBackdropBlur` and calls `Draw` before its contents (`KsTguiTooltipHost`, `KsTguiScaleHost` for a dropdown) or is a `KsTguiBackdropPanel` (a `PanelContainer`, for a popup that draws its own translucent box, as the knob's value). `Draw` renders everything drawn before the anchor, the popup layers' earlier siblings and so on from the root, into an offscreen target the size of the popup, blurs it in two Gaussian passes (sigma 12 px, `backdrop_blur.swsl`) with mirrored edges as Chromium does, and draws it clipped to the rounded box (`backdrop_composite.swsl`) at the popup's fade and scale. The ancestors on the way must draw nothing themselves (a window's background is a child panel, so a window is fine). While it runs `ScalingViewport` only blits its last picture (`KsBackdropPassActive`, per client, on `KsTguiBackdropUIController`), so the world is not rendered twice; screen-space overlays and a popup's own blur are skipped in the pass. **Exact sRGB**: a browser blurs the encoded pixels and paints the element's translucent background over them in sRGB, so the blur shader averages `zToSrgb` values and `backdrop_composite.swsl` blends the popup's CSS colour at its CSS opacity (`tint`, a `KsTguiTint`: `opacity * colour + (1 - opacity) * behind` on encoded values) inside the rounded mask and outputs it opaque. The raw tint comes from the palette (`KsTguiThemePalette.TooltipTint` / `MenuTint` / `WindowDimmerTint`) via `KsTguiStyleBox.Tint` on the popup's box (not the `Translucent` colour); `KsTguiBackdropBackground` finds the tinted panel and, only while the pass painted this frame, swaps its box for `WithoutBackground()` through `PanelOverride`, so the border still draws. With the blur off (or inside another pass) the panel draws its `Translucent` background as before. **Animating popups** (scale or fade below 1: tooltip, dropdown and knob popup open and close) are rendered once at scale 1 into a target and drawn scaled and faded about the pivot at subpixel precision (`KsTguiScaledRaster`, `scaled_raster.swsl`, premultiplied), because the engine places scaled children at `(Vector2i)Transform(...)`, which jitters by whole pixels; the host stays on its final pixel (`PlaceHost` no longer shifts it), and once settled it draws as any control. Cost: one extra render of the popup's contents per animated frame, 0.2 s per open or close, plus the existing backdrop pass. Off with the tgui theme or `klovn.ui.tgui.backdrop_blur`. Scissored (scroll) controls in the pass clip with the engine's own render-target scissor |
 | `Floating` closing transition | `KsTguiDropdownGhost` | A non-interactive control in the popup layer drawing an orphaned dropdown popup's contents through `RenderControl` for 0.2 s, scale to .9 and opacity to 0 from wherever the opening got to. The popup is never parented again; the ghost goes at once if it opens again, at the end, or on a theme change |
 | `MaterialCostSequence` | `KsTguiMaterialCostSequence` | Material sprites in a row, sheets under each, white / orange `#f08f11` / red `#db2828` for enough twice, once, or not at all. The lathe's design, x5 and x10 tooltips |
 | `Fabricator.tsx` / `Autolathe.tsx` (`DesignBrowser`) | `KsTguiLatheWindow` | Every lathe, in one of two layouts chosen by data: a lathe with `KsTguiAutolatheLayoutComponent` (a networked marker, added to the `Autolathe` prototype by `Prototypes/_KS14/Entities/Structures/Machines/Partials/autolathe_layout.yml`, so `AutolatheHyperConvection` inherits it) gets tg's Autolathe, 670x600: `KsTguiLatheMaterialSummary` (Section "Total Materials": a total bar with good/average/bad at 85%/25% of `MaterialStorageComponent.StorageLimit`, text in sheets, then a Collapsible of one row per stored material: a mirrored `KsTguiProgressBar` with `BackgroundColor` = the material's colour, "Eject:" and x1, x5, x all, sorted by number and each once) over the browser, with the build queue (SS14 only) in a section under the designs that shows only while something is printing or queued. Every other lathe gets the Fabricator: browser, queue column and the `KsTguiMaterialList` bar. Both: the search is in a Section of its own under the designs Section's title (`Results for "text"` while searching, searching spans every category, a new category clears it), no amount box (clicking a design queues 1, `[Max: N]` takes a typed amount), no "Building items..." dimmer (SS14 queues while printing). No `StorageLimit` on the autolathe means no maximum: the total bar is full with no ranges |
@@ -107,6 +113,9 @@ the green values from a per-value `color`, so colour them there, not on the Sect
 Use `KsTguiPalettes` and `KsTguiColors`, never a hex copied from a screenshot. CSS alpha doesn't translate: the engine
 blends in linear light and CSS in sRGB, so `rgba(0,0,0,.33)` over the window is
 `KsTguiPalettes.Translucent(Color.Black, 0.33f, KsTguiPalettes.Base)`, or the existing `KsTguiPalettes.Section`.
+`Translucent` is exact over one assumed backdrop (the window base) and wrong over lighter or darker content, so it is for
+dark overlays on near-base content only. A light colour over varied content, or a popup, must composite in sRGB instead
+(`KsTguiTint` + the backdrop pass, above).
 
 ## Porting a tgui interface 1:1
 
@@ -135,6 +144,120 @@ Rules for a port:
 - **Don't change networking** unless it's essential.
 - **Strings** go in `Resources/Locale/<culture>/_KS14/tgui/<feature>.ftl`, in en-US and ru-RU. Reuse existing keys first.
 - **Test:** the BUI opens your window with the theme on and the stock one with it off, and each action reaches the server.
+
+## Designing an original window
+
+For a window tg never had (a KS14 console, a new machine). It must read as tgui: the same few shapes, tg's own control for each
+datum, none of SS14's habits. The survey behind every rule (446 interfaces, counts, archetype skeletons, the hazard-stripe
+catalogue) is in [designing.md](designing.md). tg paths are under `tgui/packages/tgui/interfaces/`.
+
+**Start from a template, not a blank page.**
+
+1. Say what the window is: a device, a catalogue, a console with pages, a monitor with a list, a question. Pick the archetype in
+   `designing.md` (A device column, B sidebar + content, C top Tabs, D status + table, E modal, F drill-down).
+2. Open the closest tg interface (`Smes.tsx`, `Cargo/CargoCatalog.tsx`, `PowerMonitor.tsx`, `TextInputModal.tsx`) and port its
+   skeleton as in *Porting a tgui interface 1:1*. Then swap in your data. With no tg repo, `designing.md` describes the shape.
+3. Take its `width`/`height` times 12 for `SetSize`. Widen only for strings that need it, Russian especially.
+
+Typical sizes (median of 273 windows is 500x450): device 300-450 x 115-450, catalogue 700-800 x 600-750, console 400-600 x 550-700,
+modal 240-425 wide with a height computed from the text.
+
+### Layout
+
+- **A window is a column of Sections.** Status first, controls next, lists last (Apc, ThermoMachine, Cryo). A single title-less
+  Section when the window title already names it (`AtmosPump.tsx`, 335x115).
+- **Titles:** one or two words (88% of 417), sentence case in new windows, no colon. **Labels** never end in a colon (0 of 669);
+  `KsTguiLabeledList` adds it.
+- **A Section's own actions go in `Buttons`**: power, refresh, eject, back, help, a search box (235 Sections).
+- **Scrolling:** several Sections of unknown height scroll at the window (`KsTguiScrollContainer` with `ReserveVertical`; Apc, Cryo,
+  Fax, Gps). **One growing list** is a `Fill` + `Scrollable` Section and the rest keep their height (`PowerMonitor.tsx`, `Cargo`).
+  Never both.
+- **Sidebar + content:** sidebar 160-200px, search first, then vertical `KsTguiTabs`, in a `Fill` Section; the content in a `Fill` +
+  `Scrollable` Section (`PersonalCrafting/index.tsx`, `Uplink/GenericUplink.tsx`).
+- **Top tabs** sit inside a Section, fluid, with icons; never loose on the window background (`Cargo/index.tsx`).
+- **Drill down, don't nest tabs:** change a Section's title and put Back (`arrow-left`, disabled at home) in its `Buttons`
+  (`AirAlarm/index.tsx`).
+- **Modals:** `Section fill`: message in label colour, input growing, then Cancel (`bad`) and Submit (`good`); Enter submits, Esc
+  cancels (`TextInputModal.tsx`, `common/InputButtons.tsx`).
+
+```csharp
+// A device window (archetype A): status Section, then controls with the power switch in the Buttons slot
+var status = new KsTguiSection { Title = Loc.GetString("ks-tgui-example-status") };
+var charge = new KsTguiProgressBar { MaxValue = 1f };
+charge.AddRange(KsTguiColor.Good, 0.5f, float.PositiveInfinity);
+charge.AddRange(KsTguiColor.Average, 0.15f, 0.5f);
+charge.AddRange(KsTguiColor.Bad, float.NegativeInfinity, 0.15f);
+status.AddChild(charge);
+var controls = new KsTguiSection { Title = Loc.GetString("ks-tgui-example-controls"), Buttons = powerButton };
+```
+
+### Data to control
+
+| Datum | Use | Not |
+| --- | --- | --- |
+| Name: value | `KsTguiLabeledList` in a Section; colour the value | Two `Label`s in a row |
+| A level (charge, health, fill) | `KsTguiProgressBar` + `AddRange`. tg's commonest set: good from .5, average .25-.5, bad below. A fixed colour for a quantity with no good side (supply teal, draw pink) | Thresholds in code |
+| Pressure, or a gauge with an alarm | `KsTguiRoundGauge` with real ranges (Canister) | A ProgressBar |
+| A typed or dragged number | `KsTguiNumberInput` with `Unit`; a `Max` Button (`plus`) beside it (`AtmosPump.tsx`) | `FloatSpinBox` |
+| A wide range with steps | `KsTguiSlider` between fast/step Buttons (`Smes.tsx`) | |
+| One dial | `KsTguiKnob` (Canister) | |
+| 3-6 modes | A row of `KsTguiButton`s, `Selected` on the current (Cryo, SolarControl) | `OptionButton` |
+| Many choices, browsed | Vertical `KsTguiTabs`, or `KsTguiList` (SpawnSearch). `OptionButton` only past about 7 options, for rare settings | A hand-styled `ItemList` |
+| Records | `KsTguiTable`: header row, `Candystripe` rows, `Collapsing` narrow columns, numbers right-aligned | |
+| A flag | `KsTguiCheckboxButton`; in a filter list `Fluid` + transparent | `CheckBox` |
+| Empty, unavailable, needs login | `KsTguiNoticeBox` (Info blue, Danger red, default amber) | An empty Section; a lone red `Label` |
+
+### Buttons
+
+- **Icon + short text** for an action (42% of tg's 1739 buttons), **icon only** only with a `ToolTip` (27%), text only inside lists.
+- **A toggle names its state and is `Selected` when on**: `Icon` `Power`/`Times`, text `On`/`Off` (the pair is in 20+ windows).
+- **Icons by verb** (tg counts): close, clear, cancel `times` 50; eject and Insert `eject` 48; add, max `plus` 44; delete `trash` 31;
+  refresh, reset `sync` 28; power `power-off` 21; back `arrow-left` 20; help `question` 18; remove `minus` 16; undo `undo`; print
+  `print`; home `home`; login `lock-open`, logout `lock`; search `search`; settings `cog`. A missing glyph is a const in `KsTguiIcons`.
+- **Colour means something:** none for ordinary actions; `Good`/`Bad` for the pair that confirms or abandons (Submit/Cancel, log
+  in/out); transparent for a button that is a list row. `Caution`/`Danger` are rare (alarm states).
+- **Destructive is `KsTguiConfirmButton`** (62 in tg), usually `trash` and `Bad`, `ConfirmText` a short question.
+- **Unavailable is `Disabled` plus a `ToolTip` saying why**, not a hidden button (`Cargo/CargoCart.tsx`).
+- `Compact` is rare (10 of 1739). `Fluid` is for list rows, sidebar entries and a small window's one main action.
+
+```csharp
+var powerButton = new KsTguiCheckboxButton { Icon = KsTguiIcons.Power, Text = Loc.GetString("ks-tgui-example-power") };
+var purge = new KsTguiConfirmButton { Icon = KsTguiIcons.Trash, Text = Loc.GetString("ks-tgui-example-purge"), Color = KsTguiColor.Bad };
+sendButton.Disabled = !canSend;
+sendButton.ToolTip = canSend ? null : Loc.GetString("ks-tgui-example-shuttle-away", ("location", location));
+```
+
+### Colour, text, tooltips
+
+- Colour carries **state**: label for captions and prompts, good/average/bad for a state word, never decoration. Raw colours are for
+  data that has a colour (a reagent, damage type, department, wire): 72 of 651 files contain any hex. Functional panels set no
+  background (99 `backgroundColor` in 63 files: swatches, previews, splash pages).
+- Text is left aligned. Centre only modal buttons, a `KsTguiNoticeBox` and an empty-state message.
+- Units follow the value with a space (`101 kPa`). A figure that changes while open is a `KsTguiAnimatedNumber` (38 uses in tg), or
+  `KsTguiButton.ShowNumber` on a button. SI scaling is `formatPower`/`formatSiUnit` (`reference/tgui-core/dist/common/format.js`).
+- Type over 24px is one emphasised readout, not a heading (43 of 651 files, a quarter of them antagonist greetings).
+- Tooltips explain (why disabled, what an icon does, a limit); they never repeat the label. They are automatic here.
+
+### The hazard stripe effect
+
+tg's diagonal stripes are the **NoticeBox** (`reference/tgui-core/styles/components/NoticeBox.scss`): `repeating-linear-gradient(-45deg,
+transparent 0 10px, hsla(0,0%,0%,.1) 10px 20px)` over the colour darkened to .825 lightness and .75 chroma, bold italic; the `black`
+box has white .1 stripes. That is the only stripe in the default look; neither a ProgressBar nor the lathe has one. The one real
+yellow/black hazard is `AnomalousWeatherTower.tsx` (`45deg`, `#ffc107` and black, 15px each, behind a round red button). Catalogue in
+`designing.md`.
+
+| Need | KS14 |
+| --- | --- |
+| A message in tg's notice style | `KsTguiNoticeBox { NoticeColor = KsTguiNoticeColor.Danger }`; every tg colour name; text, wraps, margins |
+| The stripe behind other controls, in XAML | `<StripeBack KsNoticeColor="Danger">`. Under tgui it uses the style box of the `KsTguiNoticeBox` of that colour (null is the default notice); Baron ignores it. `KsTguiStripeBackTest`. SS14's cargo, atmos, crew manifest and options windows already use it |
+| A striped panel from code | A style rule giving `new KsTguiNoticeStyleBox(color, whiteStripes)` with 4/6 content margins, as `AddNoticeBoxRules`; not `PanelOverride` |
+| Yellow/black hazard, another width, hue-matched dark stripes | **Not available.** `KsTguiNoticeStyleBox` is fixed 10px, `-45deg` from the bottom-right, stripes always black or white at .1. It would need a stripe colour, a width and a mirrored start corner. Don't fake it with a texture |
+
+### Anti-patterns
+
+A hand-coloured panel, a border around a group, centred body text, a big heading in the window, a colon after a label, a hidden button
+where a disabled one with a tooltip belongs, tabs inside a tab, raw hex for a state, a `Button` under its Section instead of in its
+`Buttons`. None appears as a pattern in tg's windows; the counts are in `designing.md`.
 
 ## Retrofitting an existing window
 

@@ -1,0 +1,16 @@
+.Divider--horizontal {
+  margin: var(--space-m) 0;
+
+  &:not(.Divider--hidden) {
+    border-top: var(--divider-border);
+  }
+}
+
+.Divider--vertical {
+  height: 100%;
+  margin: 0 var(--space-m);
+
+  &:not(.Divider--hidden) {
+    border-left: var(--divider-border);
+  }
+}

@@ -143,7 +143,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         AddPanelRules(rules);
         AddTextRules(rules, sheet);
         AddRangeRules(rules);
-        AddListRules(rules);
+        AddListRules(rules, sheet);
         AddTooltipRules(rules);
         AddMenuRules(rules);
         AddScrollBarRules(rules);
@@ -444,6 +444,7 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     {
         return new KsTguiStyleBox(MenuColor, 6f)
         {
+            Tint = _palette.MenuTint,
             BorderColor = Border,
             BorderThickness = new Thickness(1f),
         };
@@ -629,27 +630,16 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         });
     }
 
-    private static StyleBoxFlat ItemBox(Color color)
+    private void AddListRules(List<StyleRule> rules, PalettedStylesheet sheet)
     {
-        var box = new StyleBoxFlat(color);
-        box.SetContentMarginOverride(StyleBox.Margin.Vertical, 2f);
-        box.SetContentMarginOverride(StyleBox.Margin.Horizontal, 4f);
-        return box;
-    }
+        AddItemListRules(rules, sheet);
+        AddListContainerRules(rules);
 
-    private void AddListRules(List<StyleRule> rules)
-    {
         var treeHovered = new StyleBoxFlat(Hovered);
         var treeSelected = new StyleBoxFlat(Selected);
 
         rules.AddRange(new StyleRule[]
         {
-            E<ItemList>()
-                .Prop(ItemList.StylePropertyBackground, SectionBox())
-                .Prop(ItemList.StylePropertyItemBackground, ItemBox(Clear))
-                .Prop(ItemList.StylePropertyDisabledItemBackground, ItemBox(Clear))
-                .Prop(ItemList.StylePropertySelectedItemBackground, ItemBox(Selected)),
-
             E<TreeItem>().Panel(new StyleBoxEmpty()),
             E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
                 .Class(TreeItem.StyleClassEvenRow).Box(new StyleBoxEmpty()),
@@ -661,21 +651,12 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
                 .PseudoHovered().Box(treeHovered),
             E<ContainerButton>().Identifier(TreeItem.StyleIdentifierTreeButton)
                 .Class(TreeItem.StyleClassSelected).PseudoHovered().Box(treeSelected),
-
-            // The list's button draws a stylebox override, tinted by the rows below. White leaves the tint as it's written.
-            E<ContainerButton>().Class(ListContainer.StyleClassListContainerButton)
-                .Prop(ListContainerButton.KsStylePropertyBacking, Color.White)
-                .Prop(StylePropertyNormalColor, Clear),
-            E<ContainerButton>().Class(ListContainer.StyleClassListContainerButton).PseudoNormal().Modulate(Clear),
-            E<ContainerButton>().Class(ListContainer.StyleClassListContainerButton).PseudoHovered().Modulate(Hovered),
-            E<ContainerButton>().Class(ListContainer.StyleClassListContainerButton).PseudoPressed().Modulate(Selected),
-            E<ContainerButton>().Class(ListContainer.StyleClassListContainerButton).PseudoDisabled().Modulate(Clear),
         });
     }
 
     private void AddTooltipRules(List<StyleRule> rules)
     {
-        var tooltipBox = new KsTguiStyleBox(TooltipColor, 4f);
+        var tooltipBox = new KsTguiStyleBox(TooltipColor, 4f) { Tint = _palette.TooltipTint };
         tooltipBox.SetContentMarginOverride(StyleBox.Margin.Horizontal, 9f);
         tooltipBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 6f);
 

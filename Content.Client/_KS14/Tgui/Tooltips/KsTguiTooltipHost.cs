@@ -10,8 +10,9 @@ namespace Content.Client._KS14.Tgui.Tooltips;
 ///         a control can't do to itself.
 /// </summary>
 /// <remarks>
-///     The scale is applied to the whole subtree through the render transform and the child coordinate transform, so text,
-///         boxes and sprites all shrink together. It's linear, so the host is moved by the caller to keep the pivot still.
+///     While it opens and closes (scale or fade below 1) the tooltip is rendered at full size into a target and drawn scaled
+///         about <see cref="Pivot"/> at subpixel precision (<see cref="KsTguiScaledRaster"/>), so nothing steps in whole
+///         pixels as the scale changes. The host itself stays at its final, whole-pixel position throughout.
 /// </remarks>
 public sealed class KsTguiTooltipHost : Control
 {
@@ -64,11 +65,30 @@ public sealed class KsTguiTooltipHost : Control
     public float Scale = 1f;
 
     /// <summary>
+    ///     What stays still as it scales, as fractions of its size: the middle of the edge nearest the control it points at.
+    ///         Set by the placement.
+    /// </summary>
+    public Vector2 Pivot = new(0.5f, 0f);
+
+    /// <summary>
     ///     Where the blur behind the tooltip comes from; null for none. <c>backdrop-filter</c> on tgui's tooltip.
     /// </summary>
     public KsTguiBackdropUIController? Backdrop { get; init; }
 
     private KsTguiBackdropBlur? _blur;
+    private readonly KsTguiBackdropBackground _background = new();
+    private KsTguiScaledRaster? _raster;
+    private bool _rasterized;
+
+    /// <summary>
+    ///     Whether the last frame drew the contents through the scaling texture, for tests.
+    /// </summary>
+    public bool Rasterized => _rasterized;
+
+    /// <summary>
+    ///     The tooltip panel's background, which the backdrop pass paints while it runs. For tests.
+    /// </summary>
+    public KsTguiBackdropBackground Background => _background;
 
     /// <summary>
     ///     Lets go of the blur's render targets. Called when the host is done with.
@@ -77,6 +97,10 @@ public sealed class KsTguiTooltipHost : Control
     {
         _blur?.Dispose();
         _blur = null;
+        _background.Release();
+        _raster?.Dispose();
+        _raster = null;
+        _rasterized = false;
     }
 
     protected override void Draw(DrawingHandleScreen handle)
@@ -87,12 +111,14 @@ public sealed class KsTguiTooltipHost : Control
         if (size.X <= 0f || size.Y <= 0f)
             return;
 
-        var tooltipBox = new UIBox2(Vector2.Zero, size);
+        // The host is at its final place, and the scaled tooltip is drawn about the pivot inside it.
+        var pivotShift = KsTguiScaledRaster.PivotShift(PixelSize, Pivot, Scale);
+        var tooltipBox = UIBox2.FromDimensions(pivotShift, size);
         var radius = Radius * UIScale * Scale;
 
         // CSS paints an outer shadow only outside the box, and the tooltip is see-through, so each layer is a ring around it.
         var offset = ShadowOffset * UIScale * Scale;
-        var shadowBox = Inflate(UIBox2.FromDimensions(new Vector2(offset), size), ShadowSpread * UIScale * Scale);
+        var shadowBox = Inflate(UIBox2.FromDimensions(pivotShift + new Vector2(offset), size), ShadowSpread * UIScale * Scale);
 
         for (var i = 0; i < ShadowLayers; i++)
         {
@@ -117,22 +143,34 @@ public sealed class KsTguiTooltipHost : Control
     {
         base.PreRenderChildren(ref args);
 
+        _rasterized = false;
         if (Backdrop != null)
         {
             _blur ??= new KsTguiBackdropBlur(Backdrop);
             // Not args.Position: the engine leaves that unset for PreRenderChildren, so it is always the screen's corner.
             var position = GlobalPixelPosition;
-            var box = UIBox2.FromDimensions(position, (Vector2)PixelSize * Scale);
-            _blur.Draw(args.Handle, this, position, box, PixelSize, Radius * UIScale * Scale, args.Modulate);
+            var box = KsTguiScaledRaster.ScaledBox(position, (Vector2)PixelSize, Pivot, Scale);
+            var tint = _background.FindTint(this);
+            var composited = _blur.Draw(args.Handle, this, position, box, PixelSize, Radius * UIScale * Scale, args.Modulate,
+                tint: tint);
+
+            // The pass paints the background, exactly, so the panel doesn't.
+            _background.Apply(composited && tint != null);
         }
 
-        if (Scale >= 1f)
+        if (Backdrop == null || !KsTguiScaledRaster.ShouldRasterize(Scale, args.Modulate.A))
             return;
 
-        // The handle scales what each control draws, and the coordinate transform where each one sits.
-        var scale = Matrix3x2.CreateScale(Scale);
-        args.CoordinateTransform = scale;
-        args.Handle.DrawingHandleScreen.SetTransform(scale);
+        _raster ??= new KsTguiScaledRaster(Backdrop);
+        _raster.Draw(this, in args, GlobalPixelPosition, Pivot, Scale);
+        _rasterized = true;
+    }
+
+    protected override void RenderChildOverride(ref ControlRenderArguments args, int childIndex, Vector2i position)
+    {
+        // Drawn through the texture already.
+        if (!_rasterized)
+            base.RenderChildOverride(ref args, childIndex, position);
     }
 
     private static UIBox2 Inflate(UIBox2 box, float amount)

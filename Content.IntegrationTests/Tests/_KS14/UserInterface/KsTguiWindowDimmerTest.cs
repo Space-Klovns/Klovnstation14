@@ -3,10 +3,12 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client._KS14.Tgui;
+using Content.Client._KS14.Tgui.Windows.Cargo;
 using Content.Client._KS14.Tgui.Windows.Lathe;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
+using Content.Shared.Cargo;
 using Content.Shared.Ghost;
 using Content.Shared.Lathe;
 using Content.Shared.Mobs;
@@ -109,5 +111,44 @@ public sealed class KsTguiWindowDimmerTest : GameTest
                 .Any(dimmer => dimmer.Visible);
             Assert.That(visible, Is.False);
         });
+    }
+
+    /// <summary>
+    ///     The cargo console makes its tgui window with <c>new</c>, not through <c>CreateWindow</c>, so it has to ask for the
+    ///         dimmer itself.
+    /// </summary>
+    [Test]
+    public async Task TheCargoConsoleWindowIsDimmedToo()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        var testMap = await Pair.CreateTestMap();
+        EntityUid user = default;
+        await Server.WaitPost(() =>
+        {
+            var console = SEntMan.SpawnEntity("ComputerCargoOrders", new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f)));
+            user = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 1.5f)));
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, user);
+            SEntMan.System<SharedUserInterfaceSystem>().OpenUi(console, CargoConsoleUiKey.Orders, user);
+        });
+        await Pair.RunTicksSync(15);
+
+        KsTguiWindowDimmer? CargoDimmer()
+        {
+            return Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children
+                .OfType<KsTguiCargoConsoleWindow>().SingleOrDefault()?.Children.OfType<KsTguiWindowDimmer>().SingleOrDefault();
+        }
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CargoDimmer(), Is.Not.Null, "The cargo window should have a dimmer.");
+            Assert.That(CargoDimmer()!.Visible, Is.False, "A user who can interact sees no dimmer.");
+        });
+
+        await Server.WaitPost(() => SEntMan.System<MobStateSystem>().ChangeMobState(user, MobState.Dead));
+        await Pair.RunTicksSync(30);
+
+        await Client.WaitAssertion(() => Assert.That(CargoDimmer()?.Visible, Is.True, "A user who can't interact sees the cargo window dimmed."));
     }
 }

@@ -1,3 +1,4 @@
+using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Systems.Chat;
@@ -150,13 +151,17 @@ public sealed partial class KsTguiFeelUIController : UIController
         if (button.Disabled)
             return false;
 
+        if (button is KsTguiButton { Instant: true })
+            return false;
+
         if (!button.TryGetStyleProperty<Color>(KsTguiSheetlet.StylePropertyNormalColor, out _))
             return false;
 
         if (button.ModulateSelfOverride != null)
             return false;
 
-        return button is not ContainerButton { StyleBoxOverride: not null } || button is ListContainerButton;
+        // A list's rows (ListContainerButton) light at once: SpawnSearch's rows set transition: none.
+        return button is not ContainerButton { StyleBoxOverride: not null };
     }
 
     private void StartFade(BaseButton button)

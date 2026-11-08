@@ -373,6 +373,43 @@ public sealed class KsTguiTooltipTest : GameTest
     }
 
     /// <summary>
+    ///     A control can supply any control as its tooltip, like the lathe's material costs. It's taken when the engine says
+    ///         it's that control's tooltip, however long the mouse rested by this controller's count, which once ran a frame
+    ///         behind the engine's and left such tooltips at the cursor now and then. Anything else put in the popup layer, like
+    ///         a drag ghost, is left alone.
+    /// </summary>
+    [Test]
+    public async Task ASuppliedTooltipIsTakenWhenTheEngineShowsIt()
+    {
+        var (window, button) = await OpenWindowWithButton();
+
+        await Client.WaitPost(() =>
+        {
+            var supplied = new PanelContainer();
+            button.TooltipSupplier = _ => supplied;
+            UiManager.SetHovered(button);
+            Feel.UpdateWindowTooltips(0f);
+
+            var ghost = new Control();
+            UiManager.PopupRoot.AddChild(ghost);
+            Feel.UpdateWindowTooltips(0f);
+            Assert.That(ghost.Parent, Is.SameAs(UiManager.PopupRoot), "Not a tooltip: the engine never said so.");
+            ghost.Orphan();
+
+            // What the engine does when it shows a supplied tooltip: adds it, then tells the control.
+            UiManager.PopupRoot.AddChild(supplied);
+            typeof(Control).GetMethod("PerformShowTooltip", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(button, null);
+            Feel.UpdateWindowTooltips(0f);
+
+            Assert.That(supplied.Parent, Is.InstanceOf<KsTguiTooltipHost>(), "Taken into a tgui tooltip host.");
+            Assert.That(HostOf(button), Is.Not.Null);
+
+            UiManager.SetHovered(null);
+            window.Close();
+        });
+    }
+
+    /// <summary>
     ///     KS14's diegetic windows, like the nuke's, aren't tgui: their tooltips stay the engine's.
     /// </summary>
     [Test]

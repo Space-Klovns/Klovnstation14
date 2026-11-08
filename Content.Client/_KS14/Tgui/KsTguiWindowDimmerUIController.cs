@@ -49,7 +49,11 @@ public sealed partial class KsTguiWindowDimmerUIController : UIController
 
         var dimmer = new KsTguiWindowDimmer { Visible = false };
         window.AddChild(dimmer);
-        _tracked.Add(new Tracked(bui, window, dimmer));
+        var newlyTracked = new Tracked(bui, window, dimmer);
+        _tracked.Add(newlyTracked);
+
+        // The first state is in the title bar from the start, as tg's status is, and not eased to after the first poll.
+        UpdateTracked(newlyTracked);
     }
 
     public override void FrameUpdate(FrameEventArgs args)
@@ -78,10 +82,30 @@ public sealed partial class KsTguiWindowDimmerUIController : UIController
                 continue;
             }
 
-            tracked.Dimmer.Visible = tracked.Window.IsInsideTree
-                && KsTguiChromeUIController.HasChrome(tracked.Window)
-                && IsDimmed(tracked.Bui);
+            UpdateTracked(tracked);
         }
+    }
+
+    private void UpdateTracked(Tracked tracked)
+    {
+        var status = GetStatus(tracked.Bui);
+
+        // The title bar's icon is the same answer, drawn the same way tg does (layouts/TitleBar.tsx), so no second poll.
+        UIManager.GetUIController<KsTguiChromeUIController>().SetStatus(tracked.Window, status);
+
+        tracked.Dimmer.Visible = tracked.Window.IsInsideTree
+            && KsTguiChromeUIController.HasChrome(tracked.Window)
+            && status == KsTguiWindowStatus.Disabled;
+
+        if (!tracked.Dimmer.Visible)
+        {
+            tracked.Dimmer.ReleaseCapture();
+            return;
+        }
+
+        // What it captures is what is drawn before it, so it goes after everything the window has, whatever was added later.
+        if (tracked.Dimmer.GetPositionInParent() != tracked.Window.ChildCount - 1)
+            tracked.Dimmer.SetPositionLast();
     }
 
     /// <summary>
@@ -89,31 +113,45 @@ public sealed partial class KsTguiWindowDimmerUIController : UIController
     /// </summary>
     public bool IsDimmed(BoundUserInterface bui)
     {
-        if (_playerManager.LocalEntity is not { } user)
-            return false;
+        return GetStatus(bui) == KsTguiWindowStatus.Disabled;
+    }
 
-        // A ghost may look at an interface it can't use; tg dims an observer only when the window is fully disabled, which has no
-        //      counterpart here.
-        if (EntityManager.HasComponent<GhostComponent>(user))
-            return false;
+    /// <summary>
+    ///     What the server would let the local player do with this interface, as tgui's three states.
+    /// </summary>
+    /// <remarks>
+    ///     <see cref="KsTguiWindowStatus.Update"/> is a ghost looking at an interface it may not use. The server lets a ghost open
+    ///         any interface that does not <c>BlockSpectators</c>, even though <c>CanInteract</c> fails for it, and then refuses every
+    ///         other message (<c>SharedInteractionSystem.OnBoundInterfaceInteractAttempt</c>). That is tg's <c>UI_UPDATE</c>: the window
+    ///         stays up to date for an observer who cannot touch it. A ghost that can interact (an admin ghost) is interactive.
+    ///         tg dims an observer only when fully disabled, which has no counterpart here: a ghost is never washed over.
+    ///         An interface with <c>BlockSpectators</c> is never opened for a ghost, so no window reaches here.
+    /// </remarks>
+    public KsTguiWindowStatus GetStatus(BoundUserInterface bui)
+    {
+        if (_playerManager.LocalEntity is not { } user)
+            return KsTguiWindowStatus.Interactive;
 
         var owner = bui.Owner;
         if (!EntityManager.EntityExists(owner))
-            return false;
+            return KsTguiWindowStatus.Interactive;
 
         // An interface with input validation off accepts anything, so nothing to show.
         if (EntityManager.System<SharedUserInterfaceSystem>().TryGetInterfaceData(owner, bui.UiKey, out var data)
             && !data.RequireInputValidation)
         {
-            return false;
+            return KsTguiWindowStatus.Interactive;
         }
 
         var blocker = EntityManager.System<ActionBlockerSystem>();
-        if (!blocker.CanInteract(user, owner))
-            return true;
+        var canUse = blocker.CanInteract(user, owner)
+            && !(EntityManager.TryGetComponent(owner, out ActivatableUIComponent? activatable)
+                && activatable.RequiresComplex
+                && !blocker.CanComplexInteract(user));
 
-        return EntityManager.TryGetComponent(owner, out ActivatableUIComponent? activatable)
-            && activatable.RequiresComplex
-            && !blocker.CanComplexInteract(user);
+        if (canUse)
+            return KsTguiWindowStatus.Interactive;
+
+        return EntityManager.HasComponent<GhostComponent>(user) ? KsTguiWindowStatus.Update : KsTguiWindowStatus.Disabled;
     }
 }

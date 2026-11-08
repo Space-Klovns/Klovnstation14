@@ -712,6 +712,96 @@ public sealed class KsTguiInputsTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     tgui-core's TextArea: Tab inserts a tab character in place of the selection and raises onChange, unless
+    ///         <c>dontUseTabForIndent</c>.
+    /// </summary>
+    [Test]
+    public async Task TextAreaTabInsertsATab()
+    {
+        await SetTheme(true);
+
+        await Client.WaitAssertion(() =>
+        {
+            var area = new KsTguiTextArea();
+            UiManager.PopupRoot.AddChild(area);
+            var changed = new List<string>();
+            area.OnChanged += changed.Add;
+
+            area.SetText("ab");
+            area.Edit.CursorPosition = new TextEdit.CursorPos(1, TextEdit.LineBreakBias.Top);
+            area.Edit.SelectionStart = area.Edit.CursorPosition;
+
+            var tab = Key(EngineKeyFunctions.TextTabComplete);
+            Invoke(area.Edit, tab);
+            Assert.That(area.Text, Is.EqualTo("a	b"));
+            Assert.That(changed, Is.EqualTo(new[] { "a	b" }));
+            Assert.That(tab.Handled, Is.True);
+
+            // In place of a selection.
+            area.Edit.CursorPosition = new TextEdit.CursorPos(3, TextEdit.LineBreakBias.Top);
+            area.Edit.SelectionStart = new TextEdit.CursorPos(0, TextEdit.LineBreakBias.Top);
+            Invoke(area.Edit, Key(EngineKeyFunctions.TextTabComplete));
+            Assert.That(area.Text, Is.EqualTo("	"));
+
+            area.DontUseTabForIndent = true;
+            var ignored = Key(EngineKeyFunctions.TextTabComplete);
+            Invoke(area.Edit, ignored);
+            Assert.That(area.Text, Is.EqualTo("	"));
+            Assert.That(ignored.Handled, Is.False);
+
+            area.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     A textarea's <c>maxlength</c>: typing stops at the limit, a paste is cut to fit, text set from code is left alone.
+    /// </summary>
+    [Test]
+    public async Task TextAreaMaxLengthStopsTypingAndCutsPastes()
+    {
+        await SetTheme(true);
+
+        KsTguiTextArea area = null;
+        var changed = new List<string>();
+        await Client.WaitPost(() =>
+        {
+            area = new KsTguiTextArea { MaxLength = 5 };
+            UiManager.PopupRoot.AddChild(area);
+            area.OnChanged += changed.Add;
+            area.SetText("abc");
+            area.Edit.InsertAtCursor("de"); // fits
+        });
+        await Pair.RunTicksSync(2);
+        await Client.WaitPost(() =>
+        {
+            Assert.That(area.Text, Is.EqualTo("abcde"));
+            area.Edit.InsertAtCursor("f"); // typed at the limit
+        });
+        await Pair.RunTicksSync(2);
+        await Client.WaitPost(() =>
+        {
+            Assert.That(area.Text, Is.EqualTo("abcde"), "Nothing past the limit is typed.");
+            Assert.That(Robust.Shared.Utility.Rope.Collapse(area.Edit.TextRope), Is.EqualTo("abcde"));
+            Assert.That(changed, Is.EqualTo(new[] { "abcde" }), "A blocked key is no change.");
+
+            // Select the last two and paste more than fits back.
+            area.Edit.CursorPosition = new TextEdit.CursorPos(5, TextEdit.LineBreakBias.Top);
+            area.Edit.SelectionStart = new TextEdit.CursorPos(3, TextEdit.LineBreakBias.Top);
+            area.Edit.InsertAtCursor("123456");
+        });
+        await Pair.RunTicksSync(2);
+        await Client.WaitPost(() =>
+        {
+            Assert.That(area.Text, Is.EqualTo("abc12"), "The paste is cut to the room the selection made.");
+            Assert.That(area.Edit.CursorPosition.Index, Is.EqualTo(5));
+
+            area.SetText("a longer text than five");
+            Assert.That(area.Text, Is.EqualTo("a longer text than five"), "Code is not held to it.");
+            area.Orphan();
+        });
+    }
+
     // Blur on Enter
 
     private static void PressEnter(IInputManager inputManager)

@@ -5,14 +5,18 @@ using Robust.Client.UserInterface;
 namespace Content.Client._KS14.Tgui.Backdrop;
 
 /// <summary>
-///     tgui's <c>backdrop-filter: blur(12px)</c> for one popup: draws what is behind it, blurred, clipped to its rounded box.
-///         The engine has no such filter, so the UI drawn before the popup is rendered again into an offscreen target the
-///         size of the popup, blurred in two passes, and drawn over the popup's box before the popup draws itself.
+///     Captures what is behind a control and composites it back through a shader, the way a browser composites a
+///         translucent element over its backdrop. The UI drawn before the control is rendered again into an offscreen target the
+///         size of the control, optionally blurred in two passes (tgui's <c>backdrop-filter: blur(12px)</c>, in sRGB), and
+///         drawn over the control's box, clipped to its rounded corners, with the control's CSS background colour blended in
+///         sRGB on top (<see cref="KsTguiTint"/>) before the control draws itself. The engine has no such filter, and blends
+///         in linear light, which is why this exists.
 /// </summary>
 /// <remarks>
-///     Owns two render targets and three shader instances. Targets are made at the size the popup has and kept until it
-///         changes, and everything is let go by <see cref="Dispose"/>. Nothing is done unless the controller says blurring is
-///         on and no other pass is running.
+///     Owns up to two render targets and three shader instances. Targets are made at the size the control has and kept until
+///         it changes, and everything is let go by <see cref="Dispose"/>. Nothing is done unless the controller allows it: blur
+///         needs the blur setting on, the capture alone (<c>blur: false</c>, the window dimmer) only the tgui theme, and
+///         neither runs inside another pass.
 /// </remarks>
 public sealed class KsTguiBackdropBlur(KsTguiBackdropUIController controller) : IDisposable
 {
@@ -43,16 +47,22 @@ public sealed class KsTguiBackdropBlur(KsTguiBackdropUIController controller) : 
     /// </param>
     /// <param name="radius">The popup's corner radius in pixels, at the scale it is drawn.</param>
     /// <param name="modulate">The popup's colour and fade.</param>
-    public void Draw(IRenderHandle handle, Control anchor, Vector2i anchorPosition, UIBox2 box, Vector2i sourceSize,
-        float radius, Color modulate)
+    /// <param name="tint">
+    ///     The CSS colour and opacity to blend over the backdrop in sRGB, or null to leave the backdrop as it is. The result is
+    ///         opaque, so the popup must not draw this background again.
+    /// </param>
+    /// <param name="blur">False to composite the backdrop unblurred, as the window dimmer does.</param>
+    /// <returns>Whether the backdrop was drawn. False means nothing was, and the caller draws its own background.</returns>
+    public bool Draw(IRenderHandle handle, Control anchor, Vector2i anchorPosition, UIBox2 box, Vector2i sourceSize,
+        float radius, Color modulate, KsTguiTint? tint = null, bool blur = true)
     {
-        if (!controller.CanBlur || modulate.A <= 0f || box.Width <= 0f || box.Height <= 0f)
-            return;
+        if (!(blur ? controller.CanBlur : controller.CanCapture) || modulate.A <= 0f || box.Width <= 0f || box.Height <= 0f)
+            return false;
 
         if (KsTguiBackdropMath.Region(box.TopLeft, sourceSize) is not { } region)
-            return;
+            return false;
 
-        EnsureTargets(region.Size);
+        EnsureTargets(region.Size, blur);
 
         KsTguiBackdropMath.EarlierControls(anchor, anchorPosition, _earlier);
 
@@ -62,18 +72,23 @@ public sealed class KsTguiBackdropBlur(KsTguiBackdropUIController controller) : 
 
         controller.RunPass(() => handle.RenderInRenderTarget(_scene!, () => RenderScene(handle, region), clear));
 
-        handle.RenderInRenderTarget(_scratch!, () => Blit(handle, _scene!, _horizontal!, width, height), Color.Black);
-        handle.RenderInRenderTarget(_scene!, () => Blit(handle, _scratch!, _vertical!, width, height), Color.Black);
+        if (blur)
+        {
+            handle.RenderInRenderTarget(_scratch!, () => Blit(handle, _scene!, _horizontal!, width, height), Color.Black);
+            handle.RenderInRenderTarget(_scene!, () => Blit(handle, _scratch!, _vertical!, width, height), Color.Black);
+        }
 
         var drawing = handle.DrawingHandleScreen;
         var oldTransform = drawing.GetTransform();
         drawing.SetTransform(Matrix3x2.Identity);
         _composite!.SetParameter("boxSize", box.Size);
         _composite.SetParameter("radius", radius);
+        _composite.SetParameter("tint", tint?.ShaderValue ?? Vector4.Zero);
         drawing.UseShader(_composite);
         drawing.DrawTextureRect(_scene!.Texture, box, modulate);
         drawing.UseShader(null);
         drawing.SetTransform(oldTransform);
+        return true;
     }
 
     private void RenderScene(IRenderHandle handle, UIBox2i region)
@@ -122,16 +137,20 @@ public sealed class KsTguiBackdropBlur(KsTguiBackdropUIController controller) : 
         drawing.SetTransform(oldTransform);
     }
 
-    private void EnsureTargets(Vector2i size)
+    private void EnsureTargets(Vector2i size, bool blur)
     {
-        if (_scene != null && TargetSize == size)
-            return;
+        if (_scene == null || TargetSize != size)
+        {
+            _scene?.Dispose();
+            _scratch?.Dispose();
+            _scratch = null;
+            _scene = controller.CreateTarget(size, "ks-tgui-backdrop-scene");
+            TargetSize = size;
+        }
 
-        _scene?.Dispose();
-        _scratch?.Dispose();
-        _scene = controller.CreateTarget(size, "ks-tgui-backdrop-scene");
-        _scratch = controller.CreateTarget(size, "ks-tgui-backdrop-scratch");
-        TargetSize = size;
+        // The second target only a blur needs.
+        if (blur && _scratch == null)
+            _scratch = controller.CreateTarget(size, "ks-tgui-backdrop-scratch");
 
         if (_horizontal != null)
             return;
@@ -150,6 +169,7 @@ public sealed class KsTguiBackdropBlur(KsTguiBackdropUIController controller) : 
 
         _composite.SetParameter("boxSize", Vector2.One);
         _composite.SetParameter("radius", 0f);
+        _composite.SetParameter("tint", Vector4.Zero);
     }
 
     public void Dispose()

@@ -9,7 +9,8 @@ namespace Content.Client._KS14.Tgui.Controls;
 ///         index, the first, third and so on darkened, as <c>Stack zebra</c> and <c>className="candystripe"</c> do. The stripe
 ///         spans the whole container, so a child that does not stretch still gets a full-width row.
 /// </summary>
-public sealed class KsTguiCandystripe : BoxContainer
+[Virtual]
+public class KsTguiCandystripe : BoxContainer
 {
     private Color? _stripeColor;
 

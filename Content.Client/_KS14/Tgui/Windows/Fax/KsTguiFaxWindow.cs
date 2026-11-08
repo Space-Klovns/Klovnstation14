@@ -62,7 +62,7 @@ public sealed class KsTguiFaxWindow : FancyWindow, IKsFaxWindow
             Orientation = BoxContainer.LayoutOrientation.Vertical,
             SeparationOverride = KsTguiSection.Gap,
             Margin = new Thickness(6f),
-            VerticalExpand = true,
+            HorizontalExpand = true,
         };
 
         var about = new KsTguiSection { Title = Loc.GetString("ks-tgui-fax-about") };
@@ -77,7 +77,7 @@ public sealed class KsTguiFaxWindow : FancyWindow, IKsFaxWindow
         about.AddChild(aboutList);
         root.AddChild(about);
 
-        var send = new KsTguiSection { Title = Loc.GetString("fax-machine-ui-to"), Fill = true, Scrollable = true };
+        var send = new KsTguiSection { Title = Loc.GetString("fax-machine-ui-to") };
         _refreshButton = new KsTguiButton
         {
             Icon = KsTguiIcons.Sync,
@@ -115,7 +115,11 @@ public sealed class KsTguiFaxWindow : FancyWindow, IKsFaxWindow
         print.AddChild(printBody);
         root.AddChild(print);
 
-        ContentsContainer.AddChild(root);
+        // Fax.tsx is Window.Content scrollable, overflow-y: scroll: none of its sections fills, the whole content scrolls,
+        //      and the bar's column is there whether or not anything overflows.
+        var scroll = new KsTguiScrollContainer { HScrollEnabled = false, ReserveVertical = true, HorizontalExpand = true, VerticalExpand = true };
+        scroll.AddChild(root);
+        ContentsContainer.AddChild(scroll);
     }
 
     /// <summary>

@@ -98,9 +98,6 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
         {
             Title = Loc.GetString("reagent-dispenser-window-amount-to-dispense-label"),
             Buttons = amountRow,
-            Fill = true,
-            Scrollable = true,
-            SizeFlagsStretchRatio = 2f,
         };
         dispenseSection.AddChild(ReagentGrid);
 
@@ -133,7 +130,6 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
         {
             Title = Loc.GetString("ks-tgui-chem-beaker"),
             Fill = true,
-            Scrollable = true,
         };
         beakerSection.AddChild(beakerBody);
 
@@ -142,12 +138,18 @@ public sealed partial class KsTguiReagentDispenserWindow : FancyWindow
             Orientation = BoxContainer.LayoutOrientation.Vertical,
             SeparationOverride = KsTguiSection.Gap,
             Margin = new Thickness(6f),
-            VerticalExpand = true,
+            HorizontalExpand = true,
         };
         root.AddChild(statusSection);
         root.AddChild(dispenseSection);
         root.AddChild(beakerSection);
-        ContentsContainer.AddChild(root);
+
+        // ChemDispenser.tsx is Window.Content scrollable (overflow-y: scroll), with only the Beaker section filling: the status and
+        //      dispense sections are their own height, the beaker takes what is left, and the whole content scrolls when that is
+        //      not enough. The bar's column is there whether or not anything overflows.
+        var scroll = new KsTguiScrollContainer { HScrollEnabled = false, ReserveVertical = true, HorizontalExpand = true, VerticalExpand = true };
+        scroll.AddChild(root);
+        ContentsContainer.AddChild(scroll);
     }
 
     public KsTguiItemSlotButton EjectButton { get; }

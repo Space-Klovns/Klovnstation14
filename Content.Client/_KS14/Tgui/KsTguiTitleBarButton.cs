@@ -17,7 +17,7 @@ public sealed class KsTguiTitleBarButton : BaseButton
     ///     tgui's <c>opacity: .5</c> on the glyph, as the alpha that blends to what CSS gets over the title bar. A plain .5 blends
     ///         in linear light and comes out 191 where tgui's is 156.
     /// </summary>
-    private static readonly float IdleOpacity = KsTguiPalettes.Translucent(Color.White, 0.5f, KsTguiPalettes.TitleBar).A;
+    internal static readonly float IdleOpacity = KsTguiPalettes.Translucent(Color.White, 0.5f, KsTguiPalettes.TitleBar).A;
 
     private const float FadeOutSeconds = 0.2f;
 

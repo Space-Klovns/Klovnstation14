@@ -21,6 +21,13 @@ public sealed class KsTguiStyleBox : StyleBox
     /// </summary>
     public Thickness BorderThickness;
 
+    /// <summary>
+    ///     The CSS colour and opacity that <see cref="BackgroundColor"/> approximates, when this is a popup's box. A popup that
+    ///         composites its own background over its backdrop (<see cref="Backdrop.KsTguiBackdropBlur"/>) paints this exactly,
+    ///         in sRGB as CSS does, and draws <see cref="WithoutBackground"/> instead.
+    /// </summary>
+    public KsTguiTint? Tint;
+
     public float RadiusTopLeft;
     public float RadiusTopRight;
     public float RadiusBottomRight;
@@ -53,6 +60,29 @@ public sealed class KsTguiStyleBox : StyleBox
             RadiusBottomRight = value;
             RadiusBottomLeft = value;
         }
+    }
+
+    /// <summary>
+    ///     This box with no background: the same corners, border and content margins. For a popup whose background is
+    ///         painted by its backdrop pass.
+    /// </summary>
+    public KsTguiStyleBox WithoutBackground()
+    {
+        var hollow = new KsTguiStyleBox(new Color(0f, 0f, 0f, 0f))
+        {
+            BorderColor = BorderColor,
+            BorderThickness = BorderThickness,
+            RadiusTopLeft = RadiusTopLeft,
+            RadiusTopRight = RadiusTopRight,
+            RadiusBottomRight = RadiusBottomRight,
+            RadiusBottomLeft = RadiusBottomLeft,
+            ContentMarginLeftOverride = ContentMarginLeftOverride,
+            ContentMarginTopOverride = ContentMarginTopOverride,
+            ContentMarginRightOverride = ContentMarginRightOverride,
+            ContentMarginBottomOverride = ContentMarginBottomOverride,
+        };
+
+        return hollow;
     }
 
     private bool IsSquare => RadiusTopLeft <= 0f && RadiusTopRight <= 0f && RadiusBottomRight <= 0f && RadiusBottomLeft <= 0f;

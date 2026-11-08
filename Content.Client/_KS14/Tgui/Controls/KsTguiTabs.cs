@@ -179,19 +179,41 @@ public sealed class KsTguiTabs : BoxContainer
                 StripColor);
         }
 
-        if (!_candystripe || _stripeColor is not { } color)
-            return;
+        // A masked strip draws them with the tabs, under the mask (RenderChildOverride): in tgui the stripe is the tab's own
+        //      background, so it fades with it.
+        if (!StripesInsideMask)
+            DrawStripes(handle);
+    }
 
+    /// <summary>
+    ///     Whether the stripes are drawn into the mask's target together with the tabs, and so fade with them, and not by the strip
+    ///         itself: striping is on and the strip is <see cref="Masked"/>.
+    /// </summary>
+    public bool StripesInsideMask => _candystripe && Masked;
+
+    /// <summary>
+    ///     The boxes of the darkened tabs, in the strip's pixels.
+    /// </summary>
+    public IEnumerable<UIBox2> StripeBoxes()
+    {
         foreach (var child in Children)
         {
             if (child is not KsTguiTabItem { Visible: true } tab || !IsStriped(tab))
                 continue;
 
-            var box = Vertical
+            yield return Vertical
                 ? new UIBox2(0f, tab.PixelPosition.Y, PixelWidth, tab.PixelPosition.Y + tab.PixelHeight)
                 : new UIBox2(tab.PixelPosition.X, 0f, tab.PixelPosition.X + tab.PixelWidth, PixelHeight);
-            handle.DrawRect(box, color);
         }
+    }
+
+    private void DrawStripes(DrawingHandleScreen handle)
+    {
+        if (!_candystripe || _stripeColor is not { } color)
+            return;
+
+        foreach (var box in StripeBoxes())
+            handle.DrawRect(box, color);
     }
 
     /// <summary>
@@ -515,6 +537,8 @@ public sealed class KsTguiTabs : BoxContainer
         {
             drawing.SetTransform(Matrix3x2.Identity);
             drawing.Modulate = Color.White;
+            DrawStripes(drawing);
+
             var total = 0;
             var transform = Matrix3x2.Identity;
             foreach (var child in Children)

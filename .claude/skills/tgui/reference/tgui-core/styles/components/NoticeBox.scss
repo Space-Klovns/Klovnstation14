@@ -1,0 +1,54 @@
+@use "../functions" as fn;
+@use "../colors";
+
+.NoticeBox {
+  --noticebox-background: var(--notice-box-background);
+  font-weight: bold;
+  font-style: italic;
+  padding: var(--space-sm) var(--space-m);
+  margin-bottom: var(--space-m);
+  background-color: oklch(
+    from var(--noticebox-background) calc(l * 0.825) calc(c * 0.75) h
+  );
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 fn.em(10px),
+    var(--notice-box-stripes) fn.em(10px) fn.em(20px)
+  );
+  color: var(--notice-box-color);
+}
+
+@mixin box-color($color) {
+}
+
+@each $color-name, $color-value in colors.$color-map {
+  .NoticeBox--color--#{$color-name} {
+    --noticebox-background: #{$color-value};
+
+    @each $color in colors.$low-contrast-color-map {
+      @if $color-name == $color {
+        --notice-box-color: var(--color-black);
+      }
+    }
+
+    @if $color-name == "black" {
+      --notice-box-stripes: hsla(0, 0%, 100%, 0.1);
+    }
+  }
+}
+
+.NoticeBox--type--info {
+  --noticebox-background: var(--color-blue);
+}
+
+.NoticeBox--type--success {
+  --noticebox-background: var(--color-green);
+}
+
+.NoticeBox--type--warning {
+  --noticebox-background: var(--color-orange);
+}
+
+.NoticeBox--type--danger {
+  --noticebox-background: var(--color-red);
+}

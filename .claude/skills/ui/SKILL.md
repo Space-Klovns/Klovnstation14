@@ -220,7 +220,7 @@ The UI's default look is a port of /tg/station's tgui (`nanotrasen` theme), and 
 | `KsTguiFonts` | Verdana by PostScript name through `ISystemFontManager`, else bundled DejaVu Sans. Behind `BaseFont` and `FontTagHijack` |
 | `KsTguiSheetlet` | Everything the palette can't reach. Sits in Baron's slot, so it has to cover every selector Baron sets |
 | `KsTguiStyleBox` and friends | No engine box has a corner radius, and CSS's stripes and shadows have no equivalent |
-| `KsTguiChromeUIController` | Title bar, close button and drag on each `DefaultWindow`/`FancyWindow`, via `WindowRoot.OnChildAdded` |
+| `KsTguiChromeUIController` | Title bar, close button, status icon and drag on each `DefaultWindow`/`FancyWindow`, via `WindowRoot.OnChildAdded`. The status icon (`KsTguiTitleStatusIcon`, tg's `TitleBar__statusIcon`) is a 45px cell before the title, ignoring the mouse so the bar under it drags: `tools` at half opacity for a window that is no bound interface, else an eye that is green (can interact), orange (a ghost that may look and not use) or a red `eye-slash` (the dimmer shows), eased over 0.5s. `KsTguiWindowDimmerUIController.GetStatus` is the one answer and its existing 4 Hz poll feeds `SetStatus` |
 | `KsTguiFeelUIController` | Button fades, input focus, tooltip fade, tagging `OptionButton` entries |
 | `KsTguiThemeUIController` | The toggle. Restyles on the next frame, since a cvar's callback runs on the setter's thread |
 

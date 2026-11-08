@@ -243,6 +243,11 @@ public class KsTguiButton : Button
     }
 
     /// <summary>
+    ///     tgui's <c>transition: none</c> (SpawnSearch's list rows set it): the button changes colour at once, hover included.
+    /// </summary>
+    public bool Instant { get; set; }
+
+    /// <summary>
     ///     Less padding, as tgui's <c>compact</c>.
     /// </summary>
     public bool Compact
@@ -478,7 +483,8 @@ public class KsTguiButton : Button
     /// </summary>
     private void UpdateTextFade(float deltaSeconds)
     {
-        if (!IsTransparent
+        if (Instant
+            || !IsTransparent
             || !Label.TryGetStyleProperty<Color>(Label.StylePropertyFontColor, out var target))
         {
             if (_textShown != null)

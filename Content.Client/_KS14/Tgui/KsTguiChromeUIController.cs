@@ -25,8 +25,6 @@ namespace Content.Client._KS14.Tgui;
 /// </summary>
 public sealed partial class KsTguiChromeUIController : UIController
 {
-    private const float TitleLeftMargin = 12f;
-
     /// <summary>
     ///     tgui's content padding. Only replaces the engine's default, since a window may have chosen its own.
     /// </summary>
@@ -47,6 +45,8 @@ public sealed partial class KsTguiChromeUIController : UIController
         public required TextureButton StockCloseButton;
         public required KsTguiTitleBarButton CloseButton;
         public KsTguiTitleBarButton? HelpButton;
+        public KsTguiTitleStatusIcon? StatusIcon;
+        public bool StatusPlaced;
         public Control? Contents;
         public Control? Handle;
     }
@@ -56,6 +56,13 @@ public sealed partial class KsTguiChromeUIController : UIController
 
     private static readonly AttachedProperty<List<ProtoId<GuideEntryPrototype>>?> GuidesProperty =
         AttachedProperty<List<ProtoId<GuideEntryPrototype>>?>.CreateNull("KsTguiGuides", typeof(KsTguiChromeUIController));
+
+    /// <summary>
+    ///     What the window's user can do with it, kept on the window (None until known) so that it is there when the chrome comes later (the window
+    ///         is made, and first checked, before it is opened or the theme is switched on).
+    /// </summary>
+    private static readonly AttachedProperty<KsTguiWindowStatus> StatusProperty =
+        AttachedProperty<KsTguiWindowStatus>.Create("KsTguiStatus", typeof(KsTguiChromeUIController), KsTguiWindowStatus.None);
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IInputManager _inputManager = default!;
@@ -89,6 +96,34 @@ public sealed partial class KsTguiChromeUIController : UIController
     public static bool HasChrome(BaseWindow window)
     {
         return window.GetValue(ChromeProperty) != null;
+    }
+
+    /// <summary>
+    ///     Says whether the window's user can use it: tgui's title bar status icon. A window never given one (anything that is not
+    ///         a bound user interface) shows tgui's tools icon.
+    /// </summary>
+    public void SetStatus(BaseWindow window, KsTguiWindowStatus status)
+    {
+        window.SetValue(StatusProperty, status);
+
+        if (window.GetValue(ChromeProperty) is not { StatusIcon: { } icon } chrome)
+            return;
+
+        // The first answer is where the icon starts, as tg's status is there from the first frame. Only a change after it eases.
+        if (!chrome.StatusPlaced && status != KsTguiWindowStatus.None)
+            icon.Place(status);
+        else
+            icon.Status = status;
+
+        chrome.StatusPlaced |= status != KsTguiWindowStatus.None;
+    }
+
+    /// <summary>
+    ///     The icon in a window's title bar, null without the tgui chrome.
+    /// </summary>
+    public static KsTguiTitleStatusIcon? GetStatusIcon(BaseWindow window)
+    {
+        return window.GetValue(ChromeProperty)?.StatusIcon;
     }
 
     /// <summary>
@@ -164,7 +199,18 @@ public sealed partial class KsTguiChromeUIController : UIController
             return;
 
         chrome.Header.MinSize = new Vector2(0f, KsTguiGeometry.TitleBarHeight);
-        chrome.Title.Margin = new Thickness(TitleLeftMargin, 0f, 0f, 0f);
+
+        // tgui's title has no margin: it starts where the 45px status cell ends.
+        chrome.Title.Margin = new Thickness(0f);
+
+        if (chrome.Title.Parent is { } titleRow)
+        {
+            var knownStatus = window.GetValue(StatusProperty);
+            chrome.StatusIcon = new KsTguiTitleStatusIcon(knownStatus);
+            chrome.StatusPlaced = knownStatus != KsTguiWindowStatus.None;
+            titleRow.AddChild(chrome.StatusIcon);
+            chrome.StatusIcon.SetPositionInParent(chrome.Title.GetPositionInParent());
+        }
 
         chrome.StockCloseButton.Visible = false;
         chrome.StockCloseButton.Parent?.AddChild(chrome.CloseButton);
@@ -232,6 +278,7 @@ public sealed partial class KsTguiChromeUIController : UIController
         chrome.StockCloseButton.Visible = true;
         chrome.CloseButton.Orphan();
         chrome.HelpButton?.Orphan();
+        chrome.StatusIcon?.Orphan();
         chrome.Handle?.Orphan();
 
         if (chrome.Contents is { } contents)

@@ -1,6 +1,7 @@
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client.Stylesheets;
 using Content.Client.Stylesheets.Fonts;
+using Content.Client.UserInterface.Controls;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -127,6 +128,11 @@ public sealed partial class KsTguiSheetlet
             rules.Add(E<PanelContainer>().Class(KsTguiNoticeBox.StyleClassNoticeBox).Class(KsTguiNoticeBox.ColorClass(name))
                 .Panel(box)
                 .Modulate(Color.White));
+
+            // The stock StripeBack is tgui's notice too, and takes the same colours (StripeBack.KsNoticeColor).
+            rules.Add(E<StripeBack>().Class(KsTguiNoticeBox.ColorClass(name))
+                .Prop(StripeBack.StylePropertyBackground, box)
+                .Prop(StripeBack.KsStylePropertyFlat, true));
         }
 
         rules.Add(E<RichTextLabel>().Class(KsTguiNoticeBox.StyleClassNoticeText)

@@ -1,10 +1,16 @@
 light_mode unshaded;
 
-// Draws a blurred backdrop clipped to a rounded box: the quad is the box, boxSize and radius in pixels. The box is symmetric
-//      top to bottom, so it doesn't matter which way up the quad's coordinates run. Anti-aliased over one pixel.
+// Draws a (blurred) backdrop clipped to a rounded box, with a CSS colour at a CSS opacity painted over it, opaque: the quad is
+//      the box, boxSize and radius in pixels. The box is symmetric top to bottom, so it doesn't matter which way up the
+//      quad's coordinates run. Anti-aliased over one pixel.
+//
+// tint is sRGB channels and then the CSS opacity. A browser blends in sRGB, result = opacity * colour + (1 - opacity) * behind
+//      on the encoded values, so that is done here on the encoded backdrop and the result decoded for the (linear blending)
+//      framebuffer. An opacity of 0 leaves the backdrop as it is.
 
 uniform highp vec2 boxSize;
 uniform highp float radius;
+uniform highp vec4 tint;
 
 void fragment()
 {
@@ -12,5 +18,8 @@ void fragment()
     highp vec2 corner = abs(position) - boxSize * 0.5 + radius;
     highp float distanceToEdge = length(max(corner, 0.0)) + min(max(corner.x, corner.y), 0.0) - radius;
 
-    COLOR = vec4(zTexture(UV).rgb, clamp(0.5 - distanceToEdge, 0.0, 1.0));
+    highp vec3 behind = zToSrgb(vec4(zTexture(UV).rgb, 1.0)).rgb;
+    highp vec3 painted = mix(behind, tint.rgb, tint.a);
+
+    COLOR = vec4(zFromSrgb(vec4(painted, 1.0)).rgb, clamp(0.5 - distanceToEdge, 0.0, 1.0));
 }

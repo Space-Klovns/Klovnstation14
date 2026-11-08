@@ -80,6 +80,8 @@ public sealed class KsTguiKnob : Control
     private readonly KsTguiRightAlignedLineEdit _edit;
     private readonly KsTguiStyleBox _editBox = new(EditBackground);
     private readonly KsTguiBackdropPanel _popup;
+    private readonly KsTguiScaleHost _popupHost;
+    private readonly KsTguiFloatingTransition _popupTransition = new();
     private readonly Label _popupLabel;
     private readonly KsTguiStyleBox _popupBox = new(KsTguiPalettes.Base, PopupRadius);
     private readonly List<(KsTguiColor Color, float Min, float Max)> _ranges = new();
@@ -154,6 +156,12 @@ public sealed class KsTguiKnob : Control
         _popupLabel = new Label { FontColorOverride = XColor.White };
         _popup = new KsTguiBackdropPanel { PanelOverride = _popupBox, MouseFilter = MouseFilterMode.Ignore, Radius = PopupRadius };
         _popup.AddChild(_popupLabel);
+
+        // tgui's Floating scales and fades its content in and out, about the edge nearest the knob (the bottom, for a popup
+        //      above it). The host does that, and blurs what is behind the panel at the scale and fade it has, so the panel
+        //      has no blur of its own.
+        _popupHost = new KsTguiScaleHost { MouseFilter = MouseFilterMode.Ignore, Radius = PopupRadius, PivotBottom = true };
+        _popupHost.AddChild(_popup);
     }
 
     public KsTguiRightAlignedLineEdit Edit => _edit;
@@ -303,7 +311,17 @@ public sealed class KsTguiKnob : Control
 
     public string PopupText => FormatValue(_liveValue);
 
-    public Control PopupControl => _popup;
+    public Control PopupControl => _popupHost;
+
+    /// <summary>
+    ///     The panel holding the value, inside <see cref="PopupControl"/>.
+    /// </summary>
+    public KsTguiBackdropPanel PopupPanel => _popup;
+
+    /// <summary>
+    ///     Floating's open and close transition, which outlasts <see cref="PopupVisible"/> by 0.2 s on the way out.
+    /// </summary>
+    public KsTguiFloatingTransition PopupTransition => _popupTransition;
 
     /// <summary>
     ///     The pixels of drag for a step that the last press used.
@@ -552,40 +570,74 @@ public sealed class KsTguiKnob : Control
         _popupLabel.Text = FormatValue(_liveValue);
 
         var popupRoot = Root?.PopupRoot ?? UserInterfaceManager.PopupRoot;
-        if (_popup.Parent == null)
+        if (_popupHost.Parent == null)
         {
             // tgui blurs what is behind the value.
-            _popup.Backdrop = UserInterfaceManager.GetUIController<KsTguiBackdropUIController>();
-            popupRoot.AddChild(_popup);
+            _popupHost.Backdrop = UserInterfaceManager.GetUIController<KsTguiBackdropUIController>();
+            popupRoot.AddChild(_popupHost);
         }
 
-        _popup.Measure(Vector2.PositiveInfinity);
-        var popupSize = _popup.DesiredSize;
+        _popupTransition.SetOpen(true);
+
+        _popupHost.Measure(Vector2.PositiveInfinity);
+        var popupSize = _popupHost.DesiredSize;
         var rootSize = popupRoot.Size;
 
         // Above the knob, centred, and below it when there is no room above; kept inside the window.
         var x = GlobalPosition.X + (Size.X - popupSize.X) / 2f;
         var y = GlobalPosition.Y - PopupOffset - popupSize.Y;
+        _popupHost.PivotBottom = y >= 0f;
         if (y < 0f)
             y = GlobalPosition.Y + Size.Y + PopupOffset;
 
         if (rootSize.X > popupSize.X)
             x = Math.Clamp(x, 0f, rootSize.X - popupSize.X);
 
-        LayoutContainer.SetPosition(_popup, new Vector2(x, y));
+        LayoutContainer.SetPosition(_popupHost, new Vector2(x, y));
     }
 
+    /// <summary>
+    ///     Closes the popup the way tgui's Floating does: it fades and shrinks for 0.2 s and is removed when that is over. Opened
+    ///         again meanwhile it turns round from where it got to.
+    /// </summary>
     private void HidePopup()
     {
-        if (_popup.Parent != null)
-            _popup.Orphan();
+        _popupTransition.SetOpen(false);
+    }
+
+    /// <summary>
+    ///     Moves the popup's transition on and puts what it says on the host; takes the host out once it has closed.
+    /// </summary>
+    public void AdvancePopup(float seconds)
+    {
+        if (_popupHost.Parent == null)
+            return;
+
+        _popupTransition.Advance(seconds);
+        _popupHost.Scale = _popupTransition.Scale;
+        _popupHost.Modulate = XColor.White.WithAlpha(_popupTransition.Alpha);
+
+        if (!_popupTransition.Open && _popupTransition.Settled)
+            RemovePopup();
+    }
+
+    private void RemovePopup()
+    {
+        _popupTransition.Reset();
+        _popupHost.Scale = 1f;
+        _popupHost.Modulate = XColor.White;
+
+        if (_popupHost.Parent != null)
+            _popupHost.Orphan();
+
+        _popupHost.ReleaseBackdrop();
+        _popup.ReleaseBackdrop();
     }
 
     protected override void ExitedTree()
     {
         base.ExitedTree();
-        HidePopup();
-        _popup.ReleaseBackdrop();
+        RemovePopup();
     }
 
     protected override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -624,8 +676,18 @@ public sealed class KsTguiKnob : Control
 
         Advance(args.DeltaSeconds);
 
+        UpdatePopup(args.DeltaSeconds);
+    }
+
+    /// <summary>
+    ///     What a frame does for the popup: shows and places it while the value is moving, then moves its transition on.
+    /// </summary>
+    public void UpdatePopup(float seconds)
+    {
         if (PopupVisible)
             ShowPopup();
+
+        AdvancePopup(seconds);
     }
 
     protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -648,6 +710,7 @@ public sealed class KsTguiKnob : Control
         _ring = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyGaugeRing, out var ring) ? ring : KsTguiPalettes.InputBorder;
         _windowBase = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyWindowBase, out var windowBase) ? windowBase : KsTguiPalettes.Base;
         _popupBox.BackgroundColor = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyTooltip, out var tooltip) ? tooltip : KsTguiPalettes.Base;
+        _popupBox.Tint = TryGetStyleProperty<KsTguiTint>(KsTguiSheetlet.StylePropertyTooltipTint, out var tooltipTint) ? tooltipTint : null;
         _editBox.BackgroundColor = TryGetStyleProperty<XColor>(KsTguiSheetlet.StylePropertyInputBackground, out var background) ? background : EditBackground;
     }
 
