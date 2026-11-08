@@ -45,3 +45,18 @@ ent-KsGeyserWittel = undiscovered geyser
 ent-KsGeyserZipium = undiscovered geyser
     .desc = It's a geyser. When scanned, it will conveniently show up on mass scanners.
     .suffix = Zipium
+
+# Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
+ent-KsGeyserCrudeOil = undiscovered geyser
+    .desc = It's a geyser. When scanned, it will conveniently show up on mass scanners.
+    .suffix = Crude Oil
+
+# Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
+ent-KsGeyserSourCrude = undiscovered geyser
+    .desc = It's a geyser. When scanned, it will conveniently show up on mass scanners.
+    .suffix = Sour Crude
+
+# Resources\Prototypes\_KS14\Entities\Objects\Mining\geyser.yml
+ent-KsGeyserGasCondensate = undiscovered geyser
+    .desc = It's a geyser. When scanned, it will conveniently show up on mass scanners.
+    .suffix = Gas Condensate

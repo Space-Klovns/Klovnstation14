@@ -65,6 +65,20 @@ public static class KsPhaseMath
     }
 
     /// <summary>
+    ///     The most latent heat, in joules per unit, that fits the vapor-pressure curve: Clapeyron makes that <c>k R Tb</c> a
+    ///         mole, and atmos storing <c>E = C T</c> adds <c>Tb ΔC</c> to whatever is written as the latent heat.
+    /// </summary>
+    /// <remarks>
+    ///     A loop's compression cost follows the curve, and its cooling follows the latent heat, so going over this beats
+    ///         Carnot however fairly the pump is paid. The game-scale default stays under it up to a molar mass of about 60.
+    /// </remarks>
+    /// <param name="heatCapacityChangePerUnit">What a unit's heat capacity gains as vapor, in J/K.</param>
+    public static float MaximumLatentHeat(float vaporizationEntropy, float boilingPoint, float molesPerUnit, float heatCapacityChangePerUnit)
+    {
+        return boilingPoint * (vaporizationEntropy * Atmospherics.R * molesPerUnit - heatCapacityChangePerUnit);
+    }
+
+    /// <summary>
     ///     Default heat of fusion, in joules per unit, on the game's specific-heat scale.
     /// </summary>
     public static float DefaultFusionHeat(float meltingPoint, float specificHeat)
@@ -144,5 +158,70 @@ public static class KsPhaseMath
             return temperature;
 
         return (heatCapacity * temperature - units * latentHeat) / heatCapacityAfter;
+    }
+
+    /// <summary>
+    ///     Kelvin the Margules parameters are given at.
+    /// </summary>
+    public const float MargulesReferenceTemperature = 298.15f;
+
+    /// <summary>
+    ///     Largest Margules <c>|A|</c> used. Past 2 the two-suffix model predicts a false liquid–liquid split; mixtures
+    ///         that truly split are immiscible families instead.
+    /// </summary>
+    public const float MaxMargules = 2f;
+
+    /// <summary>
+    ///     A Margules parameter given at <see cref="MargulesReferenceTemperature"/>, at <paramref name="temperature"/>:
+    ///         <c>A · 298 / T</c>, as a regular solution's is, clamped to <see cref="MaxMargules"/>.
+    /// </summary>
+    public static float MargulesAt(float margules, float temperature)
+    {
+        if (margules == 0f || temperature <= 0f)
+            return 0f;
+
+        return Math.Clamp(margules * MargulesReferenceTemperature / temperature, -MaxMargules, MaxMargules);
+    }
+
+    /// <summary>
+    ///     The temperature at which <c>Σ c_i Psat_i(T)</c> equals <paramref name="pressure"/>: a liquid mixture's bubble
+    ///         point, with each <c>c_i</c> its activity (mole fraction times activity coefficient), held fixed.
+    /// </summary>
+    /// <param name="startTemperature">Where to start, above the bubble point; the answer never exceeds it.</param>
+    /// <remarks>Newton's method on the log of the sum, a fixed few steps, which is plenty from a nearby start.</remarks>
+    public static float BubbleTemperature(
+        ReadOnlySpan<float> activities,
+        ReadOnlySpan<float> vaporizationEntropies,
+        ReadOnlySpan<float> boilingPoints,
+        float pressure,
+        float startTemperature)
+    {
+        pressure = MathF.Max(pressure, MinimumBoilingPressure);
+        var logPressure = MathF.Log(pressure);
+        var temperature = startTemperature;
+
+        for (var step = 0; step < 4; step++)
+        {
+            var sum = 0f;
+            var slope = 0f;
+            for (var i = 0; i < activities.Length; i++)
+            {
+                if (activities[i] <= 0f)
+                    continue;
+
+                var partial = activities[i] * SaturationPressure(vaporizationEntropies[i], boilingPoints[i], temperature);
+                sum += partial;
+                slope += partial * vaporizationEntropies[i] * boilingPoints[i] / (temperature * temperature);
+            }
+
+            if (sum <= 0f || slope <= 0f)
+                return startTemperature;
+
+            // d ln(sum) / dT = slope / sum.
+            var next = temperature - (MathF.Log(sum) - logPressure) * sum / slope;
+            temperature = Math.Clamp(next, 0.5f * temperature, startTemperature);
+        }
+
+        return temperature;
     }
 }

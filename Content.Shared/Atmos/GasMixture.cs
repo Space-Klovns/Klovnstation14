@@ -168,7 +168,7 @@ namespace Content.Shared.Atmos
         {
             switch (ratio)
             {
-                case <= 0:
+                case <= 0 or float.NaN /* KS14: added NaN, which would otherwise zero every gas here */:
                     return new GasMixture(Volume){Temperature = Temperature, FluidCapable = FluidCapable /* KS14: added */};
                 case > 1:
                     ratio = 1;

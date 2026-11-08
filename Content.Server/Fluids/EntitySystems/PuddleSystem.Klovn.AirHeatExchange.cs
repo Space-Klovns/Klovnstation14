@@ -1,9 +1,5 @@
+using Content.Server._KS14.Atmos;
 using Content.Server._KS14.Atmos.FoamBlanket;
-using Content.Server.Atmos.EntitySystems;
-using Content.Shared._KS14.CCVar;
-using Content.Shared._KS14.Temperature;
-using Content.Shared.Atmos;
-using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
@@ -21,15 +17,10 @@ namespace Content.Server.Fluids.EntitySystems;
 /// </remarks>
 public sealed partial class PuddleSystem
 {
-    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private KsFoamBlanketSystem _foamBlanketSystem = default!;
     [Dependency] private Content.Server._KS14.Fluidmos.Ice.KsIceSheetSystem _iceSheetSystem = default!;
-
-    /// <summary>
-    ///     <see cref="KsCCVars.AtmosPuddleEmissivity"/>.
-    /// </summary>
-    private float _puddleEmissivity;
 
     private static readonly TimeSpan AirHeatExchangeInterval = TimeSpan.FromSeconds(1d);
 
@@ -41,12 +32,6 @@ public sealed partial class PuddleSystem
 
     /// <summary>Temperature differences below this (in kelvin) are ignored.</summary>
     private const float AirHeatExchangeMinimumDelta = 0.5f;
-
-    /// <summary>
-    ///     A pass that changes a tile's air temperature by at least this much (in kelvin) wakes the tile up, so that
-    ///     atmos spreads the change. Smaller nudges are left to settle in with the next time the tile is active anyway.
-    /// </summary>
-    private const float AirHeatExchangeExciteDelta = 1f;
 
     /// <summary>
     ///     Heat to put into puddle solutions, gathered while walking the puddle cache and applied after it. Applying a
@@ -77,19 +62,11 @@ public sealed partial class PuddleSystem
 
         foreach (var (gridUid, tilePuddles) in _gridPuddleCache)
         {
-            // Resolved once per grid; grids without an atmosphere fall back to the map's (immutable) mixture and are skipped.
-            var gridHasAir = TryComp(gridUid, out GridAtmosphereComponent? gridAtmosphere);
+            foreach (var (indices, puddle) in tilePuddles)
+                ConductHeatToNeighbours(puddle, gridUid, tilePuddles, indices, deltaTime);
 
             foreach (var (indices, puddle) in tilePuddles)
-                ConductHeatToNeighbours(puddle, gridUid, tilePuddles, indices, gridHasAir, deltaTime);
-
-            if (!gridHasAir)
-                continue;
-
-            var grid = new Entity<GridAtmosphereComponent?>(gridUid, gridAtmosphere);
-
-            foreach (var (indices, puddle) in tilePuddles)
-                ExchangeHeatWithAir(puddle, grid, tilePuddles, indices, deltaTime);
+                ExchangeHeatWithAir(puddle, gridUid, tilePuddles, indices, deltaTime);
         }
 
         // The cache is no longer being walked, so reactions are free to spawn or delete puddles now.
@@ -104,12 +81,12 @@ public sealed partial class PuddleSystem
         _pendingAirHeatExchanges.Clear();
 
         // Ice sheets in the same pass, with the same conductance and coverage, now that the puddles are done.
-        _iceSheetSystem.UpdateHeatExchange(deltaTime, AirHeatExchangeConductance, AirHeatExchangeReferenceVolume, _puddleEmissivity);
+        _iceSheetSystem.UpdateHeatExchange(deltaTime, AirHeatExchangeConductance, AirHeatExchangeReferenceVolume);
     }
 
     private void ExchangeHeatWithAir(
         Entity<PuddleComponent> puddle,
-        Entity<GridAtmosphereComponent?> grid,
+        EntityUid gridUid,
         Dictionary<Vector2i, Entity<PuddleComponent>> tilePuddles,
         Vector2i indices,
         float deltaTime)
@@ -120,43 +97,23 @@ public sealed partial class PuddleSystem
         if (solution.Volume <= FixedPoint2.Zero)
             return;
 
-        if (_atmosphereSystem.GetGridTileMixture(grid, indices, excite: false) is not { Immutable: false } mixture)
-            return;
-
-        var solutionTemperature = solution.Temperature;
-        var airTemperature = mixture.Temperature;
-        if (MathF.Abs(airTemperature - solutionTemperature) < AirHeatExchangeMinimumDelta)
-            return;
-
-        // Same (scaled) capacity AtmosphereSystem.AddHeat divides by, so capacity * temperature is the air's thermal energy.
-        var airCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
-        var solutionCapacity = solution.GetHeatCapacity(ProtoMan);
-        if (airCapacity < Atmospherics.MinimumHeatCapacity || solutionCapacity <= 0f)
-            return;
-
         // Insulated by a blanket over it, which carries the heat on to the air itself.
-        if (_foamBlanketSystem.TryGetBlanket(grid.Owner, indices, out _))
+        if (_foamBlanketSystem.TryGetBlanket(gridUid, indices, out _))
             return;
 
         // A puddle smaller than the reference volume covers that share of the tile, for radiation as for conduction.
         var coverage = MathF.Min(1f, (float)solution.Volume / AirHeatExchangeReferenceVolume);
-        var conductance = AirHeatExchangeConductance * coverage +
-            KsThermalTransfer.RadiativeConductance(solutionTemperature, airTemperature, coverage, _puddleEmissivity);
 
-        // Stepped exactly, so it never overshoots the shared equilibrium however strong the radiation.
         // Its share of the puddle's capacity, as its neighbours take theirs (CountHeatContacts).
-        var heat = KsThermalTransfer.ExchangeQuery(solutionCapacity / CountHeatContacts(tilePuddles, indices, exchangesWithAir: true),
-            solutionTemperature, airCapacity, airTemperature, conductance, deltaTime);
+        var heat = _airHeatExchangeSystem.ExchangeWithTile(gridUid,
+            indices,
+            solution.GetHeatCapacity(ProtoMan) / CountHeatContacts(tilePuddles, indices, exchangesWithAir: true),
+            solution.Temperature,
+            AirHeatExchangeConductance * coverage,
+            radiatingArea: coverage,
+            deltaTime);
 
-        if (heat == 0f || puddle.Comp.Solution is not { } solutionEntity)
-            return;
-
-        var airTemperatureChange = heat / airCapacity;
-        mixture.Temperature = airTemperature - airTemperatureChange;
-        _pendingAirHeatExchanges.Add((solutionEntity, heat));
-
-        // Wake the tile so atmos spreads the change, but only when it is big enough to matter.
-        if (MathF.Abs(airTemperatureChange) >= AirHeatExchangeExciteDelta)
-            _atmosphereSystem.GetGridTileMixture(grid, indices, excite: true);
+        if (heat != 0f && puddle.Comp.Solution is { } solutionEntity)
+            _pendingAirHeatExchanges.Add((solutionEntity, heat));
     }
 }

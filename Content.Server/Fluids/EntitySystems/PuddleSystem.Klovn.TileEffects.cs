@@ -35,8 +35,6 @@ public sealed partial class PuddleSystem
     {
         InitialisePuddleTileCache();
 
-        Subs.CVar(_configurationManager, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleEmissivity,
-            value => _puddleEmissivity = value, invokeImmediately: true);
         Subs.CVar(_configurationManager, Content.Shared._KS14.CCVar.KsCCVars.AtmosFlameSpreadRate,
             value => _flameSpreadRate = value, invokeImmediately: true);
         Subs.CVar(_configurationManager, Content.Shared._KS14.CCVar.KsCCVars.AtmosPuddleTileEffectInterval,

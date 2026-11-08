@@ -87,7 +87,7 @@ public sealed class KsOreVentTest : GameTest
   id: KsTestOreVentUndiscovered
   components:
   - type: KsScanDiscoverable
-    trueName: discovered test vent
+    trueName: ks-scan-discovered-thing
 
 - type: entity
   id: KsTestOreVentScanner

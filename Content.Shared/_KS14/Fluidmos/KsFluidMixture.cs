@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Fluidmos.Reactions;
 using Content.Shared._KS14.Fluidmos.Serialization;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.FixedPoint;
@@ -65,6 +66,35 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
     [ViewVariables]
     public TimeSpan? LastPhaseTime;
 
+    /// <summary>
+    ///     The pipe reactions any of whose reactants this mixture holds, valid while <see cref="_reactionTable"/> and
+    ///         <see cref="_reactionKeysVersion"/> match <see cref="Reagents"/>. Runtime only, never saved or sent.
+    /// </summary>
+    [NonSerialized]
+    private KsFluidReactionPrototype[] _reactionCandidates = [];
+
+    [NonSerialized]
+    private KsFluidReagentTable? _reactionTable;
+
+    [NonSerialized]
+    private int _reactionKeysVersion = -1;
+    [NonSerialized]
+    private int _reactionIndexVersion;
+    [NonSerialized]
+    private Dictionary<KsFluidReactionPrototype, float>? _deferredExtents;
+
+    /// <summary>
+    ///     Lowest <see cref="KsFluidReactionPrototype.MinTemp"/> among the candidates: colder than this, none can run.
+    /// </summary>
+    [ViewVariables, NonSerialized]
+    public float ReactionFloorTemperature;
+
+    /// <summary>
+    ///     When the last reaction step ran, for its time step; null while no reaction can run.
+    /// </summary>
+    [ViewVariables, NonSerialized]
+    public TimeSpan? LastReactionTime;
+
     public KsFluidMixture()
     {
     }
@@ -104,12 +134,53 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
     public int Count => Reagents.Count;
 
     /// <summary>
+    ///     Whether <see cref="SetReactionCandidates"/> needs calling again: a reagent entered or left since, or the
+    ///         reactions were reloaded.
+    /// </summary>
+    public bool ReactionCandidatesStale(int indexVersion)
+    {
+        return !ReferenceEquals(_reactionTable, Reagents) || _reactionKeysVersion != Reagents.KeysVersion || _reactionIndexVersion != indexVersion;
+    }
+
+    [ViewVariables]
+    public KsFluidReactionPrototype[] ReactionCandidates => _reactionCandidates;
+
+    public void SetReactionCandidates(KsFluidReactionPrototype[] candidates, float floorTemperature, int indexVersion)
+    {
+        _reactionIndexVersion = indexVersion;
+        _reactionCandidates = candidates;
+        _reactionTable = Reagents;
+        _reactionKeysVersion = Reagents.KeysVersion;
+        ReactionFloorTemperature = floorTemperature;
+    }
+
+    /// <summary>
     ///     Records that a phase step has just finished, so <see cref="CompositionChanged"/> reads false until the next
     ///         change.
     /// </summary>
     public void MarkPhaseStepped()
     {
         _phaseVersion = Reagents.Version;
+    }
+
+    /// <summary>
+    ///     Unscaled heat capacity, in J/K, of its unlinked vapor alone: what compresses, along with the gas.
+    /// </summary>
+    public float GetVaporHeatCapacity(KsFluidmosPropertiesSystem propertiesSystem)
+    {
+        var heatCapacity = 0f;
+        foreach (var (key, amount) in Reagents)
+        {
+            if (amount.Vapor > 0f && propertiesSystem.TryGetProperties(key.Prototype, out var properties))
+                heatCapacity += VaporHeatCapacity(amount, properties);
+        }
+
+        return heatCapacity;
+    }
+
+    private static float VaporHeatCapacity(in KsFluidAmount amount, KsFluidReagentProperties properties)
+    {
+        return amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
     }
 
     /// <summary>
@@ -131,7 +202,7 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
 
             heatCapacity += (amount.Solid + amount.Liquid) * properties.SpecificHeat;
             if (amount.Vapor > 0f)
-                heatCapacity += amount.Vapor / properties.MolesPerUnit * properties.VaporHeatCapacityPerUnit;
+                heatCapacity += VaporHeatCapacity(amount, properties);
         }
 
         SetHeatCapacity(heatCapacity);
@@ -358,6 +429,29 @@ public sealed partial class KsFluidMixture : IEquatable<KsFluidMixture>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Reagents.Count, Reagents.LiquidTotal, Reagents.SolidTotal, Reagents.VaporTotal);
+        // Order-independent, as ContentEquals is. The totals can't go in: they're float sums, so they depend on the order.
+        var hash = Reagents.Count;
+        for (var i = 0; i < Reagents.Count; i++)
+        {
+            hash ^= Reagents.GetKey(i).Prototype.GetHashCode();
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    ///     Extent of a reaction too small so far to leave its products, which waits here rather than being lost.
+    /// </summary>
+    public float DeferredExtent(KsFluidReactionPrototype reaction)
+    {
+        return _deferredExtents != null && _deferredExtents.TryGetValue(reaction, out var extent) ? extent : 0f;
+    }
+
+    public void SetDeferredExtent(KsFluidReactionPrototype reaction, float extent)
+    {
+        if (extent > 0f)
+            (_deferredExtents ??= new Dictionary<KsFluidReactionPrototype, float>())[reaction] = extent;
+        else
+            _deferredExtents?.Remove(reaction);
     }
 }

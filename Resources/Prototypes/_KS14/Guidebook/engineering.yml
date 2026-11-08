@@ -43,7 +43,13 @@
   text: "/ServerInfo/_KS14/Guidebook/Engineering/LiquidsInPipes.xml"
   children:
   - KsFluidDevices
+  - KsRefining
   - KsRefrigeration
+
+- type: guideEntry
+  id: KsRefining
+  name: guide-entry-ks-refining
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/Refining.xml"
 
 - type: guideEntry
   id: KsFluidDevices

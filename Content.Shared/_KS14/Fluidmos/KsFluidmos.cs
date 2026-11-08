@@ -73,6 +73,12 @@ public static class KsFluidmos
     public const float DefaultVaporizationEntropy = 10.6f;
 
     /// <summary>
+    ///     Default <c>k_fus = ΔS_fus / R</c>, dimensionless, for a reagent that sets none: water's, 22 J/(mol K). Sets how
+    ///         far solutes depress its freezing point: about 10 K with a tenth of its moles something else.
+    /// </summary>
+    public const float DefaultFusionEntropy = 2.65f;
+
+    /// <summary>
     ///     Hertz–Knudsen evaporation/condensation coefficient inside pipes. A tuning knob, not a physical constant: set so a
     ///         200 L node of water at 300 K comes most of the way to saturation in a few seconds (90% in about three).
     /// </summary>

@@ -6,6 +6,7 @@
   fluidmos:
     gas: WaterVapor
     vaporizationEntropy: 13.1
+    mixingFamily: KsAqueous
 
 - type: !PartialOnly reagent
   id: Oxygen
@@ -30,6 +31,12 @@
   fluidmos:
     molarMass: 46
     vaporizationEntropy: 13.2
+
+- type: !PartialOnly reagent
+  id: Hydrogen
+  fluidmos:
+    gas: Hydrogen
+    vaporizationEntropy: 5.3
 
 # Linked, so ammonia makes a refrigerant a pressure pump can run: Psat(293 K) is about 840 kPa, under the pump's cap.
 - type: !PartialOnly reagent
@@ -59,6 +66,12 @@
 
 - type: !PartialOnly reagent
   id: Ammonia
+  tileEffects:
+  - !type:BoilTileEffect
+    evaporate: true
+
+- type: !PartialOnly reagent
+  id: Hydrogen
   tileEffects:
   - !type:BoilTileEffect
     evaporate: true

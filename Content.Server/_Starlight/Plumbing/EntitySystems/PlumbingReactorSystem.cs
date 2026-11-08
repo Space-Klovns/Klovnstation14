@@ -42,6 +42,7 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private PuddleSystem _puddle = default!;
+    [Dependency] private Content.Shared._KS14.Chemistry.Separation.KsReagentSeparationSystem _ksReagentSeparationSystem = default!; // KS14
 
     /// <summary>
     ///     Temperature tolerance for considering target reached (in Kelvin).
@@ -123,6 +124,9 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
         if (neededTargets.Count > 0)
             _pullSystem.PullSpecificReagents(ent.Owner, inletNode.PlumbingNet, bufferEnt.Value, neededTargets, ent.Comp.TransferAmount);
 
+        if (!allMet) // KS14: a full buffer with a target still short would otherwise wait forever
+            KsFlushGroupsIfTargetsCannotFit(ent, bufferEnt.Value, buffer, outputEnt.Value);
+
         if (allMet)
         {
             // Start heating only once reagents are ready
@@ -156,6 +160,11 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
                 if (ent.Comp.ReagentTargets.ContainsKey(new ProtoId<ReagentPrototype>(reagent.Reagent.Prototype)))
                     continue;
 
+                // KS14 start: an inseparable reagent stays with a target from its group, so the output never splits the group
+                if (_ksReagentSeparationSystem.SharesGroupWithAny(reagent.Reagent.Prototype, ent.Comp.ReagentTargets.Keys))
+                    continue;
+                // KS14 end
+
                 products.Add((reagent.Reagent, reagent.Quantity));
             }
 
@@ -171,6 +180,8 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
 
             if (reactionOccurred)
             {
+                KsFlushGroups(bufferEnt.Value, buffer, outputEnt.Value, ent.Comp.ReagentTargets.Keys); // KS14: what's left of a target's group leaves whole
+
                 // Reset buffer to ambient temperature after any completed reaction pass.
                 _solutionSystem.SetTemperature(bufferEnt.Value, Atmospherics.T20C);
                 _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);

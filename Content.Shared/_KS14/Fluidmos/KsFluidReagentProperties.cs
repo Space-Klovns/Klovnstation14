@@ -67,6 +67,11 @@ public sealed class KsFluidReagentProperties
     public float FusionHeat { get; init; }
 
     /// <summary>
+    ///     <c>k_fus = ΔS_fus / R</c>: how far what is dissolved in it lowers its freezing point.
+    /// </summary>
+    public float FusionEntropy { get; init; }
+
+    /// <summary>
     ///     The linked gas's index, or -1 for none.
     /// </summary>
     public int GasIndex { get; init; }
@@ -82,6 +87,22 @@ public sealed class KsFluidReagentProperties
     public float InverseSqrtTwoPiMR { get; init; }
 
     public Color Color { get; init; }
+
+    /// <summary>
+    ///     Index of its mixing family in <see cref="KsFluidmosPropertiesSystem"/>'s family table, or -1 for none.
+    /// </summary>
+    public int MixingFamily { get; init; } = -1;
+
+    /// <summary>
+    ///     Whether it mixes non-ideally with anything: it is in a family, or named in a pair interaction. Mixtures with
+    ///         no such reagent skip activity coefficients entirely.
+    /// </summary>
+    public bool HasInteractions { get; init; }
+
+    /// <summary>
+    ///     Whether a <see cref="Mixing.KsFluidPairInteractionPrototype"/> names this reagent, so nothing else need look.
+    /// </summary>
+    public bool InNamedPair { get; init; }
 
     public bool Linked => GasIndex >= 0;
 }

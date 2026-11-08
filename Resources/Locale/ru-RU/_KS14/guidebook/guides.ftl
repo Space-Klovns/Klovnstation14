@@ -10,4 +10,5 @@ guide-entry-surgery = Хирургия
 guide-entry-chemical-fires = Химические пожары
 guide-entry-ks-liquids-in-pipes = Жидкости в трубах
 guide-entry-ks-fluid-devices = Жидкостные устройства
+guide-entry-ks-refining = Нефтепереработка
 guide-entry-ks-refrigeration = Холодильная техника

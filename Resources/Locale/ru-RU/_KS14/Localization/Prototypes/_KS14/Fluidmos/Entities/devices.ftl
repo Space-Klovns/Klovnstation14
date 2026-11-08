@@ -7,3 +7,6 @@ ent-KsPhaseSeparator = фазовый сепаратор
 # Resources/Prototypes/_KS14/Fluidmos/Entities/devices.yml
 ent-KsExpansionValve = расширительный клапан
     .desc = Пропускает жидкий хладагент на сторону низкого давления, где он вскипает и охлаждает. Может сам поддерживать заданное давление на выходе.
+# Resources/Prototypes/_KS14/Fluidmos/Entities/devices.yml
+ent-KsCatalyticReactor = каталитический реактор
+    .desc = Сосуд под давлением, заполненный слоем катализатора. Реакции, которые он катализирует, идут в трубной сети, где он стоит, и тем быстрее, чем меньше вокруг него труб.

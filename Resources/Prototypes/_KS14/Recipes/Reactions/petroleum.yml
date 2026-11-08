@@ -1,0 +1,10 @@
+# Napalm-B, as it really is made: gasoline thickened with a dissolved polymer.
+- type: reaction
+  id: KsNapalmB
+  reactants:
+    KsGasoline:
+      amount: 2
+    KsPolyethylene:
+      amount: 1
+  products:
+    Napalm: 3

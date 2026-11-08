@@ -23,6 +23,21 @@
                     </CollapsibleBody>
                 </Collapsible>
             </BoxContainer>
+            <!-- KS14 start: reactions in pipes that use this reagent -->
+            <BoxContainer Name="KsFluidReactionsContainer" HorizontalExpand="True">
+                <Collapsible HorizontalExpand="True">
+                    <CollapsibleHeading Title="{Loc 'ks-guidebook-fluid-reaction-uses-header'}"/>
+                    <CollapsibleBody>
+                        <GridContainer Name="KsFluidReactionsDescriptionContainer"
+                                       Margin="10 0 10 0"
+                                       Columns="1"
+                                       HSeparationOverride="0"
+                                       HorizontalAlignment="Stretch"
+                                       HorizontalExpand="True"/>
+                    </CollapsibleBody>
+                </Collapsible>
+            </BoxContainer>
+            <!-- KS14 end -->
             <BoxContainer Name="SourcesContainer" HorizontalExpand="True">
                 <Collapsible HorizontalExpand="True">
                     <CollapsibleHeading Title="{Loc 'guidebook-reagent-sources-header'}"/>

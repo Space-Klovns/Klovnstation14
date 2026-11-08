@@ -17,6 +17,9 @@
       - id: KsGeyserPlasma
       - id: KsGeyserCarbonDioxide
       - id: KsGeyserNitrogen
+      - id: KsGeyserCrudeOil
+      - id: KsGeyserSourCrude
+      - id: KsGeyserGasCondensate
       - id: KsGeyserFresium
       #- id: KsGeyserKlovnide # this is too op as a geyser i think
       - id: KsGeyserZipium

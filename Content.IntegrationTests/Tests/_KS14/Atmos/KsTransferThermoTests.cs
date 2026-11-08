@@ -29,6 +29,22 @@ namespace Content.IntegrationTests.Tests._KS14.Atmos;
 [TestOf(typeof(KsTransferThermoSystem))]
 public sealed class KsTransferThermoTests : GameTest
 {
+    [TestPrototypes]
+    private const string Prototypes = @"
+# Boils far below anything here, and no gas of its own, so its vapor lives in the fluid.
+- type: reagent
+  id: KsTestUnlinkedVapor
+  name: reagent-name-nothing
+  desc: reagent-desc-nothing
+  physicalDesc: reagent-physical-desc-nothing
+  boilingPoint: 150
+  fluidmos:
+    molarMass: 60
+";
+
+    // Deliberately NOT static: it only exists in the test YAML above, and the YAML linter validates static ids.
+    private readonly ProtoId<ReagentPrototype> _vaporReagent = "KsTestUnlinkedVapor";
+
     private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";
     private static readonly KsFluidReagentKey WaterKey = new(WaterReagent, null);
     private static readonly ProtoId<GasPrototype> TritiumGas = "Tritium";
@@ -47,6 +63,18 @@ public sealed class KsTransferThermoTests : GameTest
             mixture.AdjustMoles(gas, moles * fraction);
         }
 
+        return mixture;
+    }
+
+    /// <summary>
+    ///     A packet with <paramref name="vaporFraction"/> of its moles as unlinked vapor, and the rest nitrogen.
+    /// </summary>
+    private GasMixture MakeVapor(float pressure, float temperature, float vaporFraction)
+    {
+        var mixture = MakeGas(pressure, temperature, (Gas.Nitrogen, 1f - vaporFraction));
+        mixture.Fluid = new KsFluidMixture();
+        mixture.Fluid.SetAmount(new KsFluidReagentKey(_vaporReagent, null),
+            new KsFluidAmount { Vapor = vaporFraction * pressure * NodeVolume / (Atmospherics.R * temperature) });
         return mixture;
     }
 
@@ -179,6 +207,109 @@ public sealed class KsTransferThermoTests : GameTest
                 Assert.That(kept.Temperature, Is.EqualTo(fullTemperature).Within(0.05f),
                     "A pump with nowhere to shed its heat didn't keep it in the gas.");
             }
+        });
+    }
+
+    /// <summary>
+    ///     Vapor with no gas of its own lives in the fluid, not the gas moles, but compressing it is still work. A loop charged
+    ///         with such a reagent compressed for free otherwise: no heat, and nothing for the pump to pay.
+    /// </summary>
+    [Test]
+    public async Task CompressingUnlinkedVaporIsWork()
+    {
+        var server = Pair.Server;
+        await OverrideCVar(Side.Server, KsCCVars.AtmosPumpCompressionHeatFraction, 1f);
+        var configurationManager = server.ResolveDependency<IConfigurationManager>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.System<KsFluidmosPropertiesSystem>().TryGetProperties(_vaporReagent, out var properties));
+            var molarHeatCapacity = properties!.VaporHeatCapacityPerUnit / properties.MolesPerUnit;
+            var heatCapacityRatio = KsGasThermoSystem.HeatCapacityRatio(molarHeatCapacity);
+
+            const float inletPressure = Atmospherics.OneAtmosphere;
+            const float outletPressure = 3f * Atmospherics.OneAtmosphere;
+            var packet = MakeVapor(inletPressure, Atmospherics.T20C, vaporFraction: 1f);
+            Assert.That(packet.TotalMoles, Is.Zero, "The vapor is in the gas moles, so this proves nothing.");
+
+            server.System<KsTransferThermoSystem>().Apply(packet, inletPressure, outletPressure, doesWork: true);
+
+            var expected = ExpectedCompressed(configurationManager, heatCapacityRatio, Atmospherics.T20C, inletPressure, outletPressure);
+            Assert.That(expected, Is.GreaterThan(Atmospherics.T20C + 1f));
+            Assert.That(packet.Temperature, Is.EqualTo(expected).Within(0.1f), "Compressing vapor didn't heat it by the adiabatic rise.");
+        });
+    }
+
+    /// <summary>
+    ///     A packet of gas and vapor compresses as one mixture, between what each would do alone.
+    /// </summary>
+    [Test]
+    public async Task VaporAndGasCompressAsOneMixture()
+    {
+        var server = Pair.Server;
+        await OverrideCVar(Side.Server, KsCCVars.AtmosPumpCompressionHeatFraction, 1f);
+
+        await server.WaitAssertion(() =>
+        {
+            float Rise(float vaporFraction)
+            {
+                var packet = MakeVapor(Atmospherics.OneAtmosphere, Atmospherics.T20C, vaporFraction);
+                server.System<KsTransferThermoSystem>().Apply(packet, Atmospherics.OneAtmosphere, 3f * Atmospherics.OneAtmosphere, doesWork: true);
+                return packet.Temperature - Atmospherics.T20C;
+            }
+
+            var gasRise = Rise(0f);
+            var vaporRise = Rise(1f);
+            Assert.That(vaporRise, Is.GreaterThan(0f), "Compressing vapor did nothing.");
+            Assert.That(gasRise, Is.GreaterThan(vaporRise), "Nitrogen should rise further than a reagent with far more heat capacity a mole.");
+            Assert.That(Rise(0.5f), Is.InRange(vaporRise, gasRise), "A mixture didn't land between its parts.");
+        });
+    }
+
+    /// <summary>
+    ///     Throttling a packet with no gas moles has no van der Waals constants to go on, so it stays as it was.
+    /// </summary>
+    [Test]
+    public async Task ThrottlingUnlinkedVaporLeavesItAlone()
+    {
+        var server = Pair.Server;
+
+        await server.WaitAssertion(() =>
+        {
+            var packet = MakeVapor(3f * Atmospherics.OneAtmosphere, Atmospherics.T20C, vaporFraction: 1f);
+            server.System<KsTransferThermoSystem>().Apply(packet, 3f * Atmospherics.OneAtmosphere, Atmospherics.OneAtmosphere, doesWork: false);
+            Assert.That(packet.Temperature, Is.EqualTo(Atmospherics.T20C).Within(0.001f), "Throttling ideal vapor changed its temperature.");
+        });
+    }
+
+    /// <summary>
+    ///     Vapor has no van der Waals constants, so in a mixture it only dilutes the gas's, as a gas without any does: a trace of
+    ///         real gas mustn't chill a packet that is mostly vapor as though the whole of it were that gas.
+    /// </summary>
+    [Test]
+    public async Task VaporDilutesTheConstantsOfWhatItThrottlesWith()
+    {
+        var server = Pair.Server;
+
+        await server.WaitAssertion(() =>
+        {
+            const float inletPressure = 50f * Atmospherics.OneAtmosphere;
+            const float outletPressure = Atmospherics.OneAtmosphere;
+            const float gasFraction = 0.25f;
+
+            var (pureA, pureB) = server.System<KsGasThermoSystem>().MixtureVanDerWaals(MakeGas(inletPressure, Atmospherics.T20C, (Gas.Nitrogen, 1f)));
+
+            var packet = MakeVapor(inletPressure, Atmospherics.T20C, vaporFraction: 1f - gasFraction);
+            var moles = packet.TotalMoles + packet.Fluid!.VaporMoles;
+            var molarHeatCapacity = server.System<AtmosphereSystem>().KsGetCompressibleHeatCapacity(packet, applyScaling: false) / moles;
+
+            var expected = KsThrottling.ThrottledTemperature(pureA * gasFraction * gasFraction, pureB * gasFraction, molarHeatCapacity,
+                Atmospherics.T20C, inletPressure, outletPressure);
+            var undiluted = KsThrottling.ThrottledTemperature(pureA, pureB, molarHeatCapacity, Atmospherics.T20C, inletPressure, outletPressure);
+            Assert.That(MathF.Abs(expected - undiluted), Is.GreaterThan(0.1f), "Diluting changes nothing here, so this proves nothing.");
+
+            server.System<KsTransferThermoSystem>().Apply(packet, inletPressure, outletPressure, doesWork: false);
+            Assert.That(packet.Temperature, Is.EqualTo(expected).Within(0.01f), "Vapor didn't dilute the gas it throttled with.");
         });
     }
 

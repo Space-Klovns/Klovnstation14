@@ -2,3 +2,4 @@
 
 gas-encalite-abbreviation = Ec
 gas-zipion-abbreviation = Zi
+gas-hydrogen-abbreviation = H₂

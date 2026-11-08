@@ -30,6 +30,7 @@ namespace Content.Client.Atmos.UI
             var atmosSystem = EntMan.System<AtmosphereSystem>();
 
             _window = this.CreateWindow<GasFilterWindow>();
+            _window.HeatFootnote.Device = Owner; // KS14
             _window.PopulateGasList(atmosSystem.Gases);
 
             _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;

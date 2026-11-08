@@ -51,7 +51,7 @@ public sealed class PuddleAirHeatExchangeTest : GameTest
         float solutionTemperatureBefore = 0f;
         float airTemperatureBefore = 0f;
 
-        // A real grid atmosphere: map atmospheres are immutable and deliberately skipped by the exchange.
+        // A real grid atmosphere: a map's atmosphere is immutable, and takes heat without changing.
         await server.WaitPost(() => entityManager.EnsureComponent<GridAtmosphereComponent>(testMap.Grid.Owner));
 
         // Let atmos process once so the tile is given a mutable mixture.

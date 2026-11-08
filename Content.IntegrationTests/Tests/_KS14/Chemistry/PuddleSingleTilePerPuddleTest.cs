@@ -1,4 +1,5 @@
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
@@ -15,7 +16,17 @@ namespace Content.IntegrationTests.Tests._KS14.Chemistry;
 [TestOf(typeof(PuddleSystem))]
 public sealed class PuddleSingleTilePerPuddleTest : GameTest
 {
-    private const string Reagent = "Water";
+    [TestPrototypes]
+    private const string Prototypes = @"
+# No boiling point: the test map is airless, where anything volatile evaporates while the test waits.
+- type: reagent
+  id: KsTestSingleTilePuddleInert
+  name: reagent-name-water
+  desc: reagent-desc-water
+  physicalDesc: reagent-physical-desc-translucent
+";
+
+    private const string Reagent = "KsTestSingleTilePuddleInert";
 
     [Test]
     public async Task TestDuplicatePuddlesMergeIntoOne()

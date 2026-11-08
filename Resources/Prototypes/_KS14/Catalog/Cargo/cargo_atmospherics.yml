@@ -1,0 +1,9 @@
+- type: cargoProduct
+  id: KsAtmosphericsHydrogen
+  icon:
+    sprite: Structures/Storage/canister.rsi
+    state: grey
+  product: KsHydrogenCanister
+  cost: 1800
+  category: cargoproduct-category-name-atmospherics
+  group: market

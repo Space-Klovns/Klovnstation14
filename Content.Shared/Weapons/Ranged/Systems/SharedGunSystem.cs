@@ -306,10 +306,10 @@ public abstract partial class SharedGunSystem : EntitySystem
         return result;
     }
 
-    private bool AttemptShoot(EntityUid user, Entity<GunComponent> gun, EntityCoordinates? fromCoordinatesOverride = null)
+    private bool AttemptShoot(EntityUid user, Entity<GunComponent> gun, EntityCoordinates? fromCoordinatesOverride = null, bool ksInvoluntary = false /* KS14: added param, see KsAttemptInvoluntaryShoot */)
     {
         if (gun.Comp.FireRateModified <= 0f ||
-            !_actionBlockerSystem.CanAttack(user))
+            !ksInvoluntary /* KS14: added */ && !_actionBlockerSystem.CanAttack(user))
         {
             return false;
         }

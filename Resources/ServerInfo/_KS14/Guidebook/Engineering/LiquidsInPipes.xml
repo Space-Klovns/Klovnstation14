@@ -18,7 +18,7 @@
 
   Boiling takes heat and condensing gives it back. A pipe full of boiling liquid stays cold until the liquid is gone, and one that is condensing stays warm.
 
-  Some of these liquids are gases you already know. Liquid water boils into water vapor, liquid oxygen into oxygen, liquid nitrogen into nitrogen, and the same goes for nitrous oxide and ammonia. Other reagents, such as ethanol, boil into a vapor that only exists in the pipe, and leave it as smoke.
+  Some of these liquids are gases you already know. Liquid water boils into water vapor, liquid oxygen into oxygen, liquid nitrogen into nitrogen, and the same goes for nitrous oxide, ammonia and hydrogen. Other reagents, such as ethanol, boil into a vapor that only exists in the pipe, and leave it as smoke.
 
   ## Pressure and full pipes
   Liquid takes up room, so it squeezes the gas sharing the pipe. A pipe that fills right up with liquid has nowhere left to put anything, and its pressure shoots up. Pumps stop pushing into it and the gauge reads absurdly high. Drain it, or give it more pipe.
@@ -35,14 +35,14 @@
   Whatever leaves a pipe for the room keeps its phase. Liquid lands as a puddle, a cold liquid boils off into its gas, and a reagent with no gas of its own rises as smoke.
   - [bold]Vents and leaks[/bold] spill their liquid on the floor. A siphoning vent drains a puddle back into the pipe, and a scrubber takes in smoke.
   - [bold]A broken canister or tank[/bold] spills what it held.
-  - [bold]Water puddles[/bold] slowly dry into humidity, and dry far slower in a room that is already humid. In vacuum they boil away.
+  - [bold]Water puddles[/bold] slowly dry into humidity, and dry far slower in a room that is already humid. In vacuum they boil away, and what is left cools until it freezes.
   - [bold]Humid air on a cold floor[/bold] condenses into a puddle.
   - [bold]A puddle on a freezing floor[/bold] turns into ice, which is slippery once there is enough of it. It melts back into a puddle when the floor warms, and in vacuum it slowly boils away without melting.
 
   A canister's window shows its liquid as a band under the gas.
 
   ## Pumps heat, valves chill
-  Squeezing gas heats it. A pump pushing gas into a higher pressure warms it, and the harder it squeezes, the hotter it gets. The pump keeps only a small share of that heat in the gas and gives the rest to the room it stands in. A pump in vacuum keeps all of it.
+  Squeezing gas heats it. A pump pushing gas into a higher pressure warms it, and the harder it squeezes, the hotter it gets. The pump keeps only a small share of that heat in the gas. A powered pump turns nearly all the rest back into electricity, and only a little reaches the room it stands in. The harder it works, the more power it draws, up to about five times what it draws at idle, unless its APC can't spare it. Its window shows where the heat is going. A pump with no power connection gives all of it to its room, and a pump in vacuum keeps what it can't recover.
 
   Letting gas expand through a valve does the opposite: most gases come out a little colder than they went in. A canister bled out quickly chills, and a ruptured one blows out a cold jet. A few gases, such as tritium, come out warmer instead.
 </Document>

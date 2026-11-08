@@ -66,6 +66,9 @@
       Secondary: KsFluidPortAlt1
       Tertiary: KsFluidPortAlt2
   - type: KsFluidPort
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsFluidPort ]
@@ -142,6 +145,9 @@
       Tertiary: KsPhaseSeparatorAlt2
   - type: KsPhaseSeparator
     targetPressure: 4500
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsPhaseSeparator ]
@@ -209,6 +215,9 @@
   - type: KsExpansionValve
     # Sized to feed a volume pump at its full rate; automatic mode throttles it down.
     conductance: 40
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
 
 - type: entity
   parent: [ GasPipeLayerAlt1, KsExpansionValve ]
@@ -239,3 +248,132 @@
     - state: pumpPassiveGate
       map: [ "enum.SubfloorLayers.FirstLayer" ]
       color: "#6fb8ff"
+
+# An inline vessel: one straight-through node, so it joins whatever pipe net it sits in, and pumps either side set how
+#     long the feed spends in it. The catalyst bed goes in its slot. A machine rather than a pipe fitting: it fills its
+#     tile, blocks the way, and stays in sight above a floor, as a thermomachine does.
+- type: entity
+  parent: BaseMachine
+  id: KsCatalyticReactor
+  name: catalytic reactor
+  description: A pressure vessel packed with a catalyst bed. The reactions the bed catalyses run in the pipe net it sits in, faster the less pipe there is around it.
+  placement:
+    mode: AlignAtmosPipeLayers
+  components:
+  - type: Transform
+    anchored: true
+    noRot: false
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: reactor
+      map: [ "base" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsCatalyticReactorVisuals.Reacting:
+        base:
+          True: { state: reactor_on }
+          False: { state: reactor }
+  - type: PipeColorVisuals
+  - type: AtmosPipeColor
+  - type: AtmosDevice
+  - type: Rotatable
+  - type: PipeRestrictOverlap
+  - type: AtmosUnsafeUnanchor
+  - type: AtmosMonitoringConsoleDevice
+  - type: StaticPrice
+    price: 30
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:EmptyAllContainersBehaviour
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:EmptyAllContainersBehaviour
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:DoActsBehavior # Breakage, as on a pipe, is what leaks the net; it deletes the reactor too.
+        acts: [ "Breakage" ]
+  - type: RCDDeconstructable
+    cost: 1
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpd: true
+  - type: KsRcdPlacementNoHint
+  - type: NodeContainer
+    nodes:
+      pipe:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: Longitudinal
+        volume: 400
+  - type: ItemSlots
+    slots:
+      catalyst:
+        name: ks-catalytic-reactor-slot-catalyst
+        whitelist:
+          components:
+          - KsFluidCatalyst
+  - type: ContainerContainer
+    containers:
+      catalyst: !type:ContainerSlot
+  # One RSI for every layer: only the pipe under the body moves, as on a filter.
+  - type: AtmosPipeLayers
+    spriteRsiPaths:
+      Primary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+      Secondary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+      Tertiary: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+    spriteLayersRsiPaths:
+      enum.PipeVisualLayers.Pipe:
+        Primary: Structures/Piping/Atmospherics/pipe.rsi
+        Secondary: Structures/Piping/Atmospherics/pipe_alt1.rsi
+        Tertiary: Structures/Piping/Atmospherics/pipe_alt2.rsi
+    alternativePrototypes:
+      Primary: KsCatalyticReactor
+      Secondary: KsCatalyticReactorAlt1
+      Tertiary: KsCatalyticReactorAlt2
+  - type: KsCatalyticReactor
+  - type: GuideHelp
+    guides:
+    - KsFluidDevices
+    - KsRefining
+
+- type: entity
+  parent: [ GasPipeLayerAlt1, KsCatalyticReactor ]
+  id: KsCatalyticReactorAlt1
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt1.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: reactor
+      map: [ "base" ]
+
+- type: entity
+  parent: [ GasPipeLayerAlt2, KsCatalyticReactor ]
+  id: KsCatalyticReactorAlt2
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Atmospherics/catalytic_reactor.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe_alt2.rsi
+      state: pipeStraight
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: reactor
+      map: [ "base" ]

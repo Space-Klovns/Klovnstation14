@@ -2454,3 +2454,104 @@ Entries:
         gases.
   id: 238
   time: '2026-11-04T07:54:22.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added oil refining: crude oil, sour crude and gas condensate geysers,
+        and a chain of distillation, cracking, reforming and polymerisation. See
+        the new Oil Refining page in the guidebook.
+    - type: Add
+      message: >-
+        Added the catalytic reactor and five catalyst beds, researched under
+        Petrochemistry.
+    - type: Add
+      message: Hydrogen is now a flammable atmos gas, with its own canister at cargo.
+    - type: Add
+      message: >-
+        Added the temperature gate to the RPD. It opens within a tolerance of a
+        target temperature or between a minimum and a maximum, and a multitool
+        inverts it.
+    - type: Add
+      message: >-
+        The JRPACMAN burns gasoline, diesel, kerosene and naphtha. Spilled
+        polyethylene sets into plastic walls, wax into candles, and bitumen
+        paves floors as asphalt.
+    - type: Add
+      message: Gasoline and polyethylene make napalm-B.
+    - type: Tweak
+      message: >-
+        Fluids in pipes now form azeotropes, and dissolved reagents lower a
+        liquid's freezing point.
+    - type: Fix
+      message: Gates no longer lose vapor passing through them.
+    - type: Fix
+      message: Discovered geysers and ore vents now show their names in your language.
+    - type: Tweak
+      message: >-
+        Refinery hydrocarbons can't be split by the ChemMaster, plumbing filters
+        or injector whitelists. Selecting one moves the whole mixture.
+  id: 239
+  time: '2026-11-04T19:20:49.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Thermomachines no longer lose their body while running, and their lights
+        now show in the dark.
+  id: 240
+  time: '2026-11-04T20:24:47.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        The guidebook's chemical list now shows reactions that happen in pipes,
+        and the Oil Refining page gives every temperature you need.
+    - type: Add
+      message: Pump, filter and mixer windows show where their heat is going.
+    - type: Add
+      message: >-
+        Fluid devices have a guidebook help button, and the temperature gate's
+        window says a multitool swaps it.
+    - type: Fix
+      message: >-
+        Beakers, puddles, ice and foam blankets now exchange heat with a
+        planet's atmosphere, and radiate heat in space.
+    - type: Fix
+      message: >-
+        Puddles boil and dry up, ice sublimes, and sprays flash on planets and
+        in space, rather than nothing happening.
+    - type: Fix
+      message: Chemical fires can burn on planets with breathable air.
+    - type: Tweak
+      message: >-
+        Pumps turn most of their heat back into electricity, and draw more power
+        the harder they work.
+    - type: Fix
+      message: >-
+        Pumps now do real work compressing the vapor of reagents with no gas of
+        their own.
+    - type: Fix
+      message: >-
+        Discovering a geyser or ore vent no longer throws an error on the
+        client, or flashes the wrong name.
+    - type: Fix
+      message: >-
+        Evaporin no longer throws an error on puddles holding blood from
+        different people, which also stopped them evaporating.
+  id: 241
+  time: '2026-11-05T18:02:40.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Engine updated to v295.0.1
+  id: 242
+  time: '2026-11-05T19:10:56.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Going down while firing a full-auto gun can lock your hand on the
+        trigger, spraying wildly until the gun runs dry or you recover.
+  id: 243
+  time: '2026-11-07T07:27:22.0000000+00:00'

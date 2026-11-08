@@ -27,6 +27,7 @@ namespace Content.Client.Atmos.UI
             base.Open();
 
             _window = this.CreateWindow<GasMixerWindow>();
+            _window.HeatFootnote.Device = Owner; // KS14
 
             _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;
             _window.MixerOutputPressureChanged += OnMixerOutputPressurePressed;

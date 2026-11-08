@@ -1,5 +1,4 @@
 using Content.Server._KS14.TileEffects;
-using Content.Server.Atmos.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared._KS14.Fluidmos.Ice;
@@ -29,7 +28,7 @@ namespace Content.Server._KS14.Fluidmos.Ice;
 /// </remarks>
 public sealed partial class KsIceSheetSystem : EntitySystem
 {
-    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private Content.Server._KS14.Atmos.KsAirHeatExchangeSystem _airHeatExchangeSystem = default!;
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
     [Dependency] private KsTileEffectAtmosSystem _tileEffectAtmosSystem = default!;
     [Dependency] private PuddleSystem _puddleSystem = default!;
@@ -211,7 +210,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
     ///     One pass of the ice sheets' heat exchange and phase changes, from <see cref="PuddleSystem"/>'s air heat
     ///         exchange, after it has finished with the puddles.
     /// </summary>
-    public void UpdateHeatExchange(float deltaTime, float conductance, float referenceVolume, float emissivity)
+    public void UpdateHeatExchange(float deltaTime, float conductance, float referenceVolume)
     {
         if (_gridIceCache.Count == 0 || deltaTime <= 0f)
             return;
@@ -224,7 +223,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             foreach (var (indices, sheet) in tiles)
             {
                 _sheets.Add(sheet);
-                ExchangeHeat(sheet, gridUid, indices, deltaTime, conductance, referenceVolume, emissivity);
+                ExchangeHeat(sheet, gridUid, indices, deltaTime, conductance, referenceVolume);
             }
         }
 
@@ -252,8 +251,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         Vector2i indices,
         float deltaTime,
         float conductance,
-        float referenceVolume,
-        float emissivity)
+        float referenceVolume)
     {
         if (!_solutionContainerSystem.TryGetSolution(sheet.Owner, KsIceSheetComponent.SolutionName, out var solutionEntity, out var solution) ||
             solution.Volume <= FixedPoint2.Zero)
@@ -269,26 +267,20 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         // Its air and its puddle each work with a share of its capacity, split between those it has: both start from the
         //     sheet's temperature and are applied together, so with the whole capacity in each, a thin sheet between a
         //     colder air and puddle would be carried past both.
-        var mixture = _atmosphereSystem.GetGridTileMixture(gridUid, indices, excite: false) is { Immutable: false } tileMixture &&
-                      _atmosphereSystem.GetHeatCapacity(tileMixture, applyScaling: true) >= Atmospherics.MinimumHeatCapacity
-            ? tileMixture
-            : null;
         var hasPuddle = _puddleSystem.TryGetCachedPuddle(gridUid, indices, out var puddle) &&
                         puddle.Comp.Solution is { } contactSolution &&
                         contactSolution.Comp.Solution.Volume > FixedPoint2.Zero;
-        var contactCapacity = iceCapacity / Math.Max((mixture != null ? 1 : 0) + (hasPuddle ? 1 : 0), 1);
+        var contacts = (_airHeatExchangeSystem.HasAir(gridUid, indices) ? 1 : 0) + (hasPuddle ? 1 : 0);
+        var contactCapacity = iceCapacity / Math.Max(contacts, 1);
 
-        if (mixture != null)
-        {
-            var airCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
-            var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
-            var airConductance = conductance * coverage +
-                                 KsThermalTransfer.RadiativeConductance(iceTemperature, mixture.Temperature, coverage, emissivity);
-            var heat = KsThermalTransfer.ExchangeQuery(contactCapacity, iceTemperature, airCapacity,
-                mixture.Temperature, airConductance, deltaTime);
-            mixture.Temperature -= heat / airCapacity;
-            iceHeat += heat;
-        }
+        var coverage = MathF.Min(1f, (float)solution.Volume / referenceVolume);
+        iceHeat += _airHeatExchangeSystem.ExchangeWithTile(gridUid,
+            indices,
+            contactCapacity,
+            iceTemperature,
+            conductance * coverage,
+            radiatingArea: coverage,
+            deltaTime);
 
         // In contact with the puddle on the same tile.
         if (hasPuddle && puddle.Comp.Solution is { } puddleSolution)
@@ -388,8 +380,8 @@ public sealed partial class KsIceSheetSystem : EntitySystem
 
     /// <summary>
     ///     Linked ice in thin air sublimes straight into the tile's gas, at the Hertz–Knudsen rate towards saturation, as
-    ///         far as its own heat pays for. On a tile with no air of its own (space, or a grid with no atmosphere) it
-    ///         sublimes into vacuum, and the gas is lost to it, as anything vented there is.
+    ///         far as its own heat pays for. On a tile with no air of its own (space, or an airless grid) it sublimes into
+    ///         vacuum, and the gas is lost to it, as anything vented there is.
     /// </summary>
     /// <param name="heatCapacity">The sheet's heat capacity, which pays the sublimation heat.</param>
     /// <returns>Units removed from the sheet.</returns>
@@ -408,10 +400,11 @@ public sealed partial class KsIceSheetSystem : EntitySystem
             return 0f;
 
         var indices = _mapSystem.TileIndicesFor(gridUid, gridComponent, coordinates);
-        var air = _atmosphereSystem.GetGridTileMixture(gridUid, indices, excite: false) is { Immutable: false } tileAir &&
-                  tileAir.Volume > 0f && tileAir.Temperature > 0f
-            ? tileAir
-            : null;
+        // A sealed tile has nowhere for the gas to go. Anything else takes it, and a map's air or vacuum simply loses it.
+        if (_tileEffectAtmosSystem.GetTileAir(gridUid, indices) is not { } tileMixture)
+            return 0f;
+
+        var air = tileMixture is { Volume: > 0f, Temperature: > 0f } ? tileMixture : null;
 
         var gas = (Gas)properties.GasIndex;
         var temperature = solution.Temperature;
@@ -439,8 +432,7 @@ public sealed partial class KsIceSheetSystem : EntitySystem
         if (units <= 0f)
             return 0f;
 
-        if (air != null &&
-            !_tileEffectAtmosSystem.TryAddGas(gridUid, indices, gas, units * properties.MolesPerUnit,
+        if (!_tileEffectAtmosSystem.TryAddGas(gridUid, indices, gas, units * properties.MolesPerUnit,
                 sensibleEnergy: units * properties.SpecificHeat * temperature))
             return 0f;
 
