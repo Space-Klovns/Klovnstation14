@@ -1,3 +1,4 @@
+using Content.Client.UserInterface.Controls;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Ghost;
 using Content.Shared.UserInterface;
@@ -41,6 +42,11 @@ public sealed partial class KsTguiWindowDimmerUIController : UIController
     /// </summary>
     public void Track(BoundUserInterface bui, BaseWindow window)
     {
+        // Only the windows the tgui chrome dresses (KsTguiChromeUIController.SyncWindow). A bare BaseWindow, such as a
+        //      RadialMenu, may treat every child as its own: the radial menu takes each one for a menu layer.
+        if (window is not (DefaultWindow or FancyWindow))
+            return;
+
         foreach (var tracked in _tracked)
         {
             if (tracked.Window == window)

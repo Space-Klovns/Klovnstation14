@@ -94,6 +94,38 @@ public sealed class KsTguiWindowDimmerTest : GameTest
         await Client.WaitAssertion(() => Assert.That(Dimmer()?.Visible, Is.False, "A ghost is never dimmed."));
     }
 
+    private static readonly EntProtoId RcdProto = "RCD";
+
+    /// <summary>
+    ///     A radial menu is a bare <c>BaseWindow</c> that takes every child it is given for one of its layers, so a dimmer added
+    ///         to it threw from its <c>OnChildAdded</c> as the RCD's menu opened. Only the windows the tgui chrome dresses get one.
+    /// </summary>
+    [Test]
+    public async Task ARadialMenuGetsNoDimmer()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        var testMap = await Pair.CreateTestMap();
+        await Server.WaitPost(() =>
+        {
+            var user = SEntMan.SpawnEntity(Human, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f)));
+            var rcd = SEntMan.SpawnEntity(RcdProto, new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f)));
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, user);
+            SEntMan.System<SharedUserInterfaceSystem>().OpenUi(rcd, Content.Shared.RCD.RcdUiKey.Key, user);
+        });
+        await Pair.RunTicksSync(15);
+
+        await Client.WaitAssertion(() =>
+        {
+            var menu = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children
+                .OfType<Content.Client.UserInterface.Controls.SimpleRadialMenu>().SingleOrDefault();
+            Assert.That(menu, Is.Not.Null, "The RCD's radial menu opened.");
+            Assert.That(menu!.Children.OfType<KsTguiWindowDimmer>(), Is.Empty);
+            menu.Close();
+        });
+    }
+
     [Test]
     public async Task BaronNeverDims()
     {
