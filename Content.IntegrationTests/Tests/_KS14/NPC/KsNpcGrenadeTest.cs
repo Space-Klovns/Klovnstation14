@@ -324,12 +324,17 @@ public sealed class KsNpcGrenadeTest : GameTest
     /// <summary>
     ///     An NPC with a weapon wielded in both hands, and a grenade in its pocket.
     /// </summary>
+    private const string OperativeGrenadesQuery = "KsOperativeInventoryGrenades";
+
     /// <summary>
     ///     Smoke is for rooms, put in by a squad plan. What a fight throws never includes it, even with a grenade beside it.
     /// </summary>
     [Test]
     public async Task TestAFightNeverThrowsSmoke()
     {
+        if (!Server.ProtoMan.HasIndex<Content.Server.NPC.Queries.UtilityQueryPrototype>(OperativeGrenadesQuery))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
         var (entManager, npcUid, _, grenadeUid) = await SetUp();
 
         await Pair.Server.WaitAssertion(() =>
@@ -340,7 +345,7 @@ public sealed class KsNpcGrenadeTest : GameTest
 
             var blackboard = new NPCBlackboard();
             blackboard.SetValue(NPCBlackboard.Owner, npcUid);
-            var grenades = entManager.System<NPCUtilitySystem>().GetEntities(blackboard, "KsOperativeInventoryGrenades", bestOnly: false).Entities.Keys;
+            var grenades = entManager.System<NPCUtilitySystem>().GetEntities(blackboard, OperativeGrenadesQuery, bestOnly: false).Entities.Keys;
 
             Assert.That(grenades, Does.Contain(grenadeUid), "the grenade is there to throw");
             Assert.That(grenades, Does.Not.Contain(smokeUid));
