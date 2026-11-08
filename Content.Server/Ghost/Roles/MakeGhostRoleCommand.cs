@@ -63,6 +63,7 @@ namespace Content.Server.Ghost.Roles
             ghostRole.RoleName = name;
             ghostRole.RoleDescription = description;
             ghostRole.RoleRules = rules;
+            _entManager.System<GhostRoleSystem>().NotifyGhostsOfRole((uid.Value, ghostRole)); // KS14: admin-made roles are notable
 
             shell.WriteLine($"Made entity {metaData.EntityName} a ghost role.");
         }

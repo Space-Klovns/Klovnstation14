@@ -9,6 +9,7 @@
     name: ghost-role-information-lone-ert-name
     description: ghost-role-information-lone-ert-description
     rules: ghost-role-information-lone-ert-rules
+    notable: true
     raffle:
         settings: short
   - type: GhostRoleMobSpawner

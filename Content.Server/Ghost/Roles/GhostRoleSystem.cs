@@ -757,6 +757,10 @@ public sealed partial class GhostRoleSystem : EntitySystem
     {
         if (ent.Comp.Probability < 1f && !_random.Prob(ent.Comp.Probability))
             RemCompDeferred<GhostRoleComponent>(ent);
+        // KS14 start: tell ghosts about notable roles
+        else if (IsNotable(ent))
+            NotifyGhostsOfRole(ent);
+        // KS14 end
     }
 
     private void OnRoleStartup(Entity<GhostRoleComponent> ent, ref ComponentStartup args)
