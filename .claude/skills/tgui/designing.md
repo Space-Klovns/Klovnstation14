@@ -293,7 +293,10 @@ See the table in `SKILL.md` ("The hazard stripe effect") and the catalogue below
 - **No hazard stripe exists on a ProgressBar.** `ProgressBar.scss` has no stripes; neither does the lathe: its "Building items..." is
   a `Dimmer` with a spinner `Icon` (`Fabrication/DesignBrowser.tsx` line 331), not a striped bar.
 - The `candystripe` class is a **flat** colour, `linear-gradient(var(--candystripe-odd))`, not a pattern.
-- **Only #1 is in the default look.** #2 is one window, one button. Do not use hazard colours elsewhere.
+- **Only #1 is in the default look.** #2 is one window, one button. KS14 uses it on the nuclear reactor's SILENCE
+  button, by the user's choice. When a window you are working on has a control that is genuinely alarming in the same
+  way (an emergency stop, a purge, an alarm silence, a self-destruct), suggest the stripes to the user rather than adding
+  them unasked or leaving them unmentioned.
 - No stripe animates. The only animations in tgui-core's SCSS are the RoundGauge alert pulse and shake; in `packages/tgui`, a
   blink in `NtosHeader.scss` and one-offs in CivCargoHoldTerminal, Fabricator (`materialdock-open`), SlotMachine, DetectiveBoard.
 
@@ -320,7 +323,7 @@ See the table in `SKILL.md` ("The hazard stripe effect") and the catalogue below
 | #1 NoticeBox, any colour | `KsTguiNoticeBox { NoticeColor = ... }`. Exact, including the white stripes on Black |
 | #1 behind arbitrary children (a header row with buttons) | `StripeBack` in XAML, `KsNoticeColor="Danger"` etc. for any of tg's notice colours (identical style box to `KsTguiNoticeBox`), or a `PanelContainer` whose style rule gives `KsTguiNoticeStyleBox(color)` (needs the 4/6 margins set as the sheetlet does) |
 | #4 chat alert, hue-matched dark opaque stripes | Needs a **stripe colour parameter**: `KsTguiNoticeStyleBox` always derives it from black or white at .1. Everything else (-45deg, 10px) already matches |
-| #2 yellow / black hazard, 45deg, 15px | Missing: a **stripe colour** (opaque black), a **stripe width** (const 10 -> 15), and the **start corner / angle** (it is `-45deg` from the bottom-right; hazard is `45deg` from the bottom-left, the polygon mirrored in X). With a yellow background, opaque black stripes and equal bands the pattern is the hazard. The `outset` border is a second bevel box, also missing |
+| #2 yellow / black hazard, 45deg, 15px | `KsTguiHazardPanel` (`KsTguiHazardStyleBox`), border included. The `outset` sides are `#333` top and left, `#222` bottom and right (the CSS spec's darken by a third), not checked against a tg screenshot |
 | #3 round hazard button | Missing: a circular bevelled button; not in the library |
 | ProgressBar stripes / animation | Does not exist in tg either. Nothing to port |
 
@@ -334,8 +337,8 @@ See the table in `SKILL.md` ("The hazard stripe effect") and the catalogue below
   code-built window whose striped part is only text, use `KsTguiNoticeBox`.
 - **A `PanelContainer` with a `KsTguiNoticeStyleBox`** (from a style rule, never `PanelOverride`, see *Retrofitting*): a coloured
   striped panel that holds controls and is not amber. Rare.
-- **Anything hazard yellow/black**: nothing does it yet. Do not fake it with a texture. Extend `KsTguiNoticeStyleBox` (stripe
-  colour, width, mirrored corner) and say so in the PR.
+- **Anything hazard yellow/black**: a `KsTguiHazardPanel` around the one control that should look alarming (the reactor's
+  SILENCE button). Never a texture. Suggest it to the user for a control like that; don't add it unasked.
 
 ## Anti-patterns (what tg windows do not do)
 

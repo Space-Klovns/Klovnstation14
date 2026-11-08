@@ -46,6 +46,11 @@ public sealed partial class KsTguiTextArea : Control
     public const float HorizontalMargin = 5f;
 
     /// <summary>
+    ///     The Input's border, which both margins include.
+    /// </summary>
+    public const float BorderWidth = 1f;
+
+    /// <summary>
     ///     <c>--input-width</c>, 9em.
     /// </summary>
     public const float DefaultWidth = 108f;
@@ -114,7 +119,8 @@ public sealed partial class KsTguiTextArea : Control
         {
             HorizontalExpand = true,
             VerticalExpand = true,
-            Margin = new Thickness(HorizontalMargin, VerticalMargin),
+            // The right padding is the text's, inside (see below), so that the TextEdit reaches the border there.
+            Margin = new Thickness(HorizontalMargin, VerticalMargin, BorderWidth, VerticalMargin),
             StyleClasses = { KsTguiSheetlet.StyleClassTextArea },
         };
         _edit.OnTextChanged += OnEditChanged;
@@ -127,10 +133,20 @@ public sealed partial class KsTguiTextArea : Control
         _scrollBar = _edit.Children.OfType<VScrollBar>().First();
         _scrollBar.AddStyleClass(KsTguiSheetlet.StyleClassThinScrollBar);
         _scrollBar.Visible = false;
+
+        // A browser draws a box's bar between its padding and its border. So the TextEdit reaches the border on the right
+        //      and its text stops the bar's column and the padding short of it, and the bar reaches up and down past the
+        //      1px of vertical padding to the border, less its arrows' cells. Keeping the whole column inside the TextEdit
+        //      keeps the arrows' cells under it for the mouse. Only the right padding moves: the TextEdit maps clicks from
+        //      its own top left, so the text's top and left stay where they were.
+        var thin = KsTguiScrollBarMetrics.Thin;
+        var paddingY = VerticalMargin - BorderWidth;
+        _scrollBar.Margin = new Thickness(0f, thin.EndInset - paddingY, 0f, thin.EndInset - paddingY);
+
         foreach (var child in _edit.Children)
         {
             if (child != _scrollBar)
-                child.Margin = new Thickness(0f, 0f, KsTguiScrollBarGeometry.ThinBarWidth, 0f);
+                child.Margin = new Thickness(0f, 0f, thin.BarWidth + HorizontalMargin - BorderWidth, 0f);
         }
     }
 

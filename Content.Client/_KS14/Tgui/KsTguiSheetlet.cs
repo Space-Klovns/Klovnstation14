@@ -60,9 +60,15 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     public const string StyleClassTextArea = "KsTguiTextArea";
 
     /// <summary>
-    ///     A scroll bar drawn as CSS <c>scrollbar-width: thin</c>: narrower, with no arrows.
+    ///     A scroll bar drawn as CSS <c>scrollbar-width: thin</c>: narrower, with smaller arrows.
     /// </summary>
     public const string StyleClassThinScrollBar = "KsTguiScrollBarThin";
+
+    /// <summary>
+    ///     A scroll bar whose column is drawn in the Section colour, as tgui's <c>--color-scrollbar-base</c> is everywhere
+    ///         outside a Section. Given by <see cref="Controls.KsTguiScrollContainer"/> to its own bars.
+    /// </summary>
+    public const string StyleClassFilledScrollBar = "KsTguiScrollBarFilled";
 
     /// <summary>
     ///     tgui's <c>Input--monospace</c>: the input's text in <c>--font-family-mono</c>. On a <c>LineEdit</c> or <c>TextEdit</c>.
@@ -702,16 +708,26 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
         var verticalTrack = new KsTguiScrollTrackStyleBox(ScrollThumb, horizontal: false);
         var horizontalTrack = new KsTguiScrollTrackStyleBox(ScrollThumb, horizontal: true);
 
-        // With nothing to scroll a browser draws no thumb, and its arrows pale.
+        // Outside a Section the column is the Section colour, cells and all.
+        var verticalFilledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb, horizontal: false, trackColor: _palette.Section);
+        var horizontalFilledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb, horizontal: true, trackColor: _palette.Section);
+
+        // With nothing to scroll a browser draws no thumb. The track and arrows stay exactly as they are: tg's ChemMaster,
+        //      sized so that everything fits, shows them unchanged.
         var verticalDisabledThumb = new KsTguiScrollThumbStyleBox(Color.Transparent, horizontal: false);
-        var thinThumb = new KsTguiScrollThumbStyleBox(ScrollThumb, horizontal: false, thin: true);
         var horizontalDisabledThumb = new KsTguiScrollThumbStyleBox(Color.Transparent, horizontal: true);
-        var verticalDisabledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb.WithAlpha(0.5f), horizontal: false);
-        var horizontalDisabledTrack = new KsTguiScrollTrackStyleBox(ScrollThumb.WithAlpha(0.5f), horizontal: true);
+
+        var thinThumb = new KsTguiScrollThumbStyleBox(ScrollThumb, horizontal: false, thin: true);
+        var thinTrack = new KsTguiScrollTrackStyleBox(ScrollThumb, horizontal: false, thin: true);
 
         // The arrows live in the room this leaves at each end of the bar, which is also where the thumb stops.
-        var verticalInset = new Thickness(0f, KsTguiScrollBarGeometry.EndInset, 0f, KsTguiScrollBarGeometry.EndInset);
-        var horizontalInset = new Thickness(KsTguiScrollBarGeometry.EndInset, 0f, KsTguiScrollBarGeometry.EndInset, 0f);
+        var normal = KsTguiScrollBarMetrics.Normal;
+        var verticalInset = new Thickness(0f, normal.EndInset, 0f, normal.EndInset);
+        var horizontalInset = new Thickness(normal.EndInset, 0f, normal.EndInset, 0f);
+        var thinInset = new Thickness(0f, KsTguiScrollBarMetrics.Thin.EndInset, 0f, KsTguiScrollBarMetrics.Thin.EndInset);
+
+        var filled = StyleClassFilledScrollBar;
+        var disabled = Controls.KsTguiScrollContainer.StyleClassDisabled;
 
         rules.AddRange(new StyleRule[]
         {
@@ -722,17 +738,20 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
             E<HScrollBar>().PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, horizontalThumb),
             E<HScrollBar>().Pseudo(ScrollBar.StylePseudoClassGrabbed).Prop(ScrollBar.StylePropertyGrabber, horizontalThumb),
 
-            // tgui's text area is scrollbar-width thin: a narrower bar with no arrows.
+            E<VScrollBar>().Class(filled).Prop(ScrollBar.StylePropertyTrack, verticalFilledTrack),
+            E<HScrollBar>().Class(filled).Prop(ScrollBar.StylePropertyTrack, horizontalFilledTrack),
+
+            // tgui's text area is scrollbar-width thin: a narrower bar, smaller arrows, and a transparent track.
             E<VScrollBar>().Class(StyleClassThinScrollBar)
                 .Prop(ScrollBar.StylePropertyGrabber, thinThumb)
-                .Prop(ScrollBar.StylePropertyTrack, new StyleBoxEmpty())
-                .Margin(new Thickness(0f)),
+                .Prop(ScrollBar.StylePropertyTrack, thinTrack)
+                .Margin(thinInset),
             E<VScrollBar>().Class(StyleClassThinScrollBar).PseudoHovered().Prop(ScrollBar.StylePropertyGrabber, thinThumb),
             E<VScrollBar>().Class(StyleClassThinScrollBar).Pseudo(ScrollBar.StylePseudoClassGrabbed).Prop(ScrollBar.StylePropertyGrabber, thinThumb),
 
-            // A bar shown with nothing to scroll (KsTguiScrollContainer.ReserveVertical): no thumb, dimmed arrows.
-            E<VScrollBar>().Class(Controls.KsTguiScrollContainer.StyleClassDisabled).Prop(ScrollBar.StylePropertyGrabber, verticalDisabledThumb).Prop(ScrollBar.StylePropertyTrack, verticalDisabledTrack),
-            E<HScrollBar>().Class(Controls.KsTguiScrollContainer.StyleClassDisabled).Prop(ScrollBar.StylePropertyGrabber, horizontalDisabledThumb).Prop(ScrollBar.StylePropertyTrack, horizontalDisabledTrack),
+            // A bar shown with nothing to scroll (KsTguiScrollContainer.ReserveVertical): no thumb.
+            E<VScrollBar>().Class(disabled).Prop(ScrollBar.StylePropertyGrabber, verticalDisabledThumb),
+            E<HScrollBar>().Class(disabled).Prop(ScrollBar.StylePropertyGrabber, horizontalDisabledThumb),
         });
     }
 }

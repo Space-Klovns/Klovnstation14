@@ -141,11 +141,111 @@ public sealed class KsTguiScrollTest : GameTest
                 Assert.That(bar.Visible, Is.True, "The track shows although nothing overflows");
                 Assert.That(bar.Position.X, Is.EqualTo(85f));
                 Assert.That(bar.Width, Is.EqualTo(15f));
-                Assert.That(bar.HasStyleClass(KsTguiScrollContainer.StyleClassDisabled), Is.True, "with no thumb and pale arrows");
+                Assert.That(bar.HasStyleClass(KsTguiScrollContainer.StyleClassDisabled), Is.True, "with no thumb");
                 Assert.That(scroll.VerticalOverflows, Is.False);
             });
 
             scroll.Orphan();
+        });
+    }
+
+    private static StyleBox Style(ScrollBar bar, string property)
+    {
+        bar.ForceRunStyleUpdate();
+        Assert.That(bar.TryGetStyleProperty<StyleBox>(property, out var box), property);
+        return box;
+    }
+
+    /// <summary>
+    ///     Layout can put a bar half a pixel over. Its column is drawn on whole pixels anyway, so the arrows' rows are tg's
+    ///         solid 1, 3, 5, 7, 9 pixels, centred on a pixel, and not grey-edged even widths.
+    /// </summary>
+    [Test]
+    public void TheColumnIsDrawnOnWholePixels()
+    {
+        foreach (var metrics in new[] { KsTguiScrollBarMetrics.Normal, KsTguiScrollBarMetrics.Thin })
+        {
+            var bar = new UIBox2(644.5f, 53.5f, 644.5f + metrics.BarWidth, 900.25f);
+            var column = metrics.Column(bar, horizontal: false, scale: 1f);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(column.Left, Is.EqualTo(MathF.Round(column.Left)));
+                Assert.That(column.Top, Is.EqualTo(MathF.Round(column.Top)));
+                Assert.That(column.Width, Is.EqualTo(metrics.BarWidth), "Still the bar's width");
+                Assert.That(column.Height, Is.EqualTo(bar.Height + 2f * metrics.EndInset).Within(1f));
+            });
+        }
+    }
+
+    /// <summary>
+    ///     tg's ChemMaster, sized until everything fits, still draws its track and its arrows exactly as when it overflows;
+    ///         only the thumb is gone.
+    /// </summary>
+    [Test]
+    public async Task NothingToScrollTakesAwayOnlyTheThumb()
+    {
+        await SetTheme(true);
+
+        await Client.WaitAssertion(() =>
+        {
+            var fits = Scroll(new Probe(), reserve: true);
+            var overflows = Scroll(new Probe { ContentHeight = 400f }, reserve: true);
+            var fitsBar = Bar<VScrollBar>(fits);
+            var overflowsBar = Bar<VScrollBar>(overflows);
+
+            var fitsTrack = (KsTguiScrollTrackStyleBox)Style(fitsBar, ScrollBar.StylePropertyTrack);
+            var overflowsTrack = (KsTguiScrollTrackStyleBox)Style(overflowsBar, ScrollBar.StylePropertyTrack);
+            var fitsThumb = (KsTguiScrollThumbStyleBox)Style(fitsBar, ScrollBar.StylePropertyGrabber);
+            var overflowsThumb = (KsTguiScrollThumbStyleBox)Style(overflowsBar, ScrollBar.StylePropertyGrabber);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(fitsTrack.ArrowColor, Is.EqualTo(overflowsTrack.ArrowColor), "The arrows aren't dimmed");
+                Assert.That(fitsTrack.TrackColor, Is.EqualTo(overflowsTrack.TrackColor), "nor is the track");
+                Assert.That(fitsThumb.Color.A, Is.EqualTo(0f), "There is no thumb");
+                Assert.That(overflowsThumb.Color.A, Is.EqualTo(1f));
+            });
+
+            fits.Orphan();
+            overflows.Orphan();
+        });
+    }
+
+    /// <summary>
+    ///     tgui's <c>scrollbar-color</c> is inherited from the page, whose track is <c>--color-section</c>, and a Section sets
+    ///         it transparent for everything inside it. So a window's own scrolled body has a dark column and a list inside a
+    ///         Section doesn't.
+    /// </summary>
+    [Test]
+    public async Task TheTrackIsTheSectionColourOnlyOutsideASection()
+    {
+        await SetTheme(true);
+
+        await Client.WaitAssertion(() =>
+        {
+            var outside = Scroll(new Probe { ContentHeight = 400f }, reserve: true);
+
+            var inside = new KsTguiScrollContainer { HScrollEnabled = false, MinSize = Box, MaxSize = Box, Children = { new Probe { ContentHeight = 400f } } };
+            var section = new KsTguiSection { Title = "S" };
+            section.AddChild(inside);
+            UiManager.PopupRoot.AddChild(section);
+            Layout(inside);
+
+            var outsideTrack = (KsTguiScrollTrackStyleBox)Style(Bar<VScrollBar>(outside), ScrollBar.StylePropertyTrack);
+            var insideTrack = (KsTguiScrollTrackStyleBox)Style(Bar<VScrollBar>(inside), ScrollBar.StylePropertyTrack);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(outside.FilledTrack, Is.True);
+                Assert.That(outsideTrack.TrackColor, Is.EqualTo(KsTguiPalettes.Section), "Outside a Section: --color-section");
+                Assert.That(inside.FilledTrack, Is.False);
+                Assert.That(insideTrack.TrackColor, Is.Null, "Inside one: transparent");
+                Assert.That(insideTrack.ArrowColor, Is.EqualTo(outsideTrack.ArrowColor), "The arrows are the same either way");
+            });
+
+            outside.Orphan();
+            section.Orphan();
         });
     }
 

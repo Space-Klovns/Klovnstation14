@@ -589,7 +589,9 @@ public sealed class KsTguiInputsTest : GameTest
             Assert.That(area.BorderColor, Is.Not.EqualTo(KsTguiTextArea.BorderDisabled));
             Assert.That(area.BackgroundColor.A, Is.EqualTo(1f));
 
-            Assert.That(area.Edit.Margin, Is.EqualTo(new Thickness(5f, 2f)), "Padding 1.02px / 3.96px and the 1px border.");
+            // Padding 1.02px / 3.96px and the 1px border. The right padding is the text's own, inside the TextEdit, so that
+            //      the bar's column sits between it and the border (TextAreaKeepsAThinBarsColumnAndShowsItOnlyToScroll).
+            Assert.That(area.Edit.Margin, Is.EqualTo(new Thickness(5f, 2f, 1f, 2f)), "Padding 1.02px / 3.96px and the 1px border.");
 
             area.Edit.TryGetStyleProperty<Font>("font", out var placeholderFont);
             Assert.That(placeholderFont, Is.SameAs(fonts.GetFont(12, FontKind.Italic)), "An empty box shows its placeholder in italics.");
@@ -627,11 +629,14 @@ public sealed class KsTguiInputsTest : GameTest
 
     /// <summary>
     ///     tg's text area is <c>scrollbar-width: thin</c> with <c>scrollbar-gutter: stable</c>: the text always stops short of
-    ///         the thin bar's column, and the bar, with no arrows, is only there while the text overflows.
+    ///         the thin bar's column, and the bar is only there while the text overflows. Measured in tg's Adminhelp: a 10px
+    ///         column, a 6px thumb, small arrows, and no track colour.
     /// </summary>
     [Test]
     public async Task TextAreaKeepsAThinBarsColumnAndShowsItOnlyToScroll()
     {
+        var thin = KsTguiScrollBarMetrics.Thin;
+
         await SetTheme(true);
         KsTguiTextArea area = null;
 
@@ -649,10 +654,18 @@ public sealed class KsTguiInputsTest : GameTest
             var bar = area.ScrollBar;
             var text = area.Edit.Children.First(child => child != bar);
             Assert.That(area.ScrollBarShown, Is.False, "Nothing to scroll: no bar.");
-            Assert.That(text.Margin.Right, Is.EqualTo(KsTguiScrollBarGeometry.ThinBarWidth), "The column is kept anyway.");
-            Assert.That(bar.Margin, Is.EqualTo(new Thickness(0f)), "A thin bar runs the full height: it has no arrows.");
+            Assert.That(thin.BarWidth, Is.EqualTo(10f));
+            Assert.That(thin.ThumbWidth, Is.EqualTo(6f));
+            // The column is kept anyway, between the text's padding and the border.
+            var textRight = area.GlobalPosition.X + area.Width - KsTguiTextArea.BorderWidth - thin.BarWidth
+                - (KsTguiTextArea.HorizontalMargin - KsTguiTextArea.BorderWidth);
+            Assert.That(text.GlobalPosition.X + text.Width, Is.EqualTo(textRight).Within(0.01f), "The column is kept anyway.");
             Assert.That(bar.TryGetStyleProperty<StyleBox>(ScrollBar.StylePropertyGrabber, out var thumb));
-            Assert.That(thumb!.MinimumSize.X, Is.EqualTo(KsTguiScrollBarGeometry.ThinBarWidth));
+            Assert.That(thumb!.MinimumSize.X, Is.EqualTo(thin.BarWidth));
+            Assert.That(bar.TryGetStyleProperty<StyleBox>(ScrollBar.StylePropertyTrack, out var track));
+            Assert.That(track, Is.TypeOf<KsTguiScrollTrackStyleBox>(), "It has arrows.");
+            Assert.That(((KsTguiScrollTrackStyleBox)track).Metrics, Is.SameAs(thin), "Thin ones.");
+            Assert.That(((KsTguiScrollTrackStyleBox)track).TrackColor, Is.Null, "TextArea.scss: scrollbar-color thumb transparent.");
 
             area.SetText(string.Join("\n", Enumerable.Range(0, 30).Select(i => $"line {i}")));
         });
@@ -662,6 +675,29 @@ public sealed class KsTguiInputsTest : GameTest
         await Client.WaitAssertion(() =>
         {
             Assert.That(area.ScrollBarShown, Is.True, "Thirty lines in two rows scroll.");
+            var bar = area.ScrollBar;
+
+            // Measured in tg's Adminhelp: the column ends at the border, with the text's padding to its left.
+            var borderInside = area.GlobalPosition.X + area.Width - KsTguiTextArea.BorderWidth;
+            Assert.That(bar.GlobalPosition.X + bar.Width, Is.EqualTo(borderInside).Within(0.01f), "The bar reaches the border.");
+            Assert.That(bar.Width, Is.EqualTo(thin.BarWidth));
+            var columnTop = area.GlobalPosition.Y + KsTguiTextArea.BorderWidth;
+            Assert.That(bar.GlobalPosition.Y - columnTop, Is.EqualTo(thin.EndInset).Within(0.01f), "and leaves its arrows' cells free.");
+
+            // The engine's TextEdit counts its bar in pixels, so a line is 40 UI units at any scale.
+            var barBox = UIBox2.FromDimensions(bar.GlobalPosition, bar.Size);
+            var cell = thin.Cell(barBox, horizontal: false, end: true, scale: 1f);
+
+            // Next to the border, where a bar pulled out of a padded TextEdit left the cell over nothing that knew of it.
+            var nearBorder = new Vector2(cell.Right - 1.5f, cell.Center.Y);
+            var window = Client.ResolveDependency<IClyde>().MainWindow.Id;
+            var hovered = UiManager.MouseGetControl(new ScreenCoordinates(nearBorder * UiManager.RootControl.UIScale, window));
+            var before = bar.ValueTarget;
+            var arrows = new KsTguiScrollArrows();
+            arrows.Update(hovered, mouseDown: true, nearBorder, 0f);
+            Assert.That(bar.ValueTarget - before, Is.EqualTo(KsTguiScrollBarGeometry.ArrowStep * bar.UIScale).Within(0.01f),
+                "Its down arrow scrolls a line, right up to the border.");
+
             area.Orphan();
         });
     }

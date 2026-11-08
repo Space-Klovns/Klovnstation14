@@ -156,18 +156,18 @@ public sealed class KsTguiThemeControlsTest : GameTest
     {
         await Client.WaitAssertion(() =>
         {
-            var normal = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, 15f, 40f), 1f, horizontal: false);
+            var normal = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, 15f, 40f), 1f, horizontal: false, KsTguiScrollBarMetrics.Normal);
             Assert.That(normal.Left, Is.EqualTo(3f));
             Assert.That(normal.Width, Is.EqualTo(9f));
             Assert.That(normal.Height, Is.EqualTo(40f));
 
-            var sideways = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, 80f, 30f), 2f, horizontal: true);
+            var sideways = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, 80f, 30f), 2f, horizontal: true, KsTguiScrollBarMetrics.Normal);
             Assert.That(sideways.Top, Is.EqualTo(6f), "Scaled with the UI");
             Assert.That(sideways.Height, Is.EqualTo(18f));
 
             foreach (var across in new[] { 0f, 4f, 9f, 12f })
             {
-                var squeezed = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, across, 40f), 1f, horizontal: false);
+                var squeezed = KsTguiScrollThumbStyleBox.ThumbBox(new UIBox2(0f, 0f, across, 40f), 1f, horizontal: false, KsTguiScrollBarMetrics.Normal);
                 Assert.That(squeezed.Left, Is.LessThanOrEqualTo(squeezed.Right), $"Inverted at {across}px across");
             }
         });
@@ -206,8 +206,8 @@ public sealed class KsTguiThemeControlsTest : GameTest
             scroll.Arrange(UIBox2.FromDimensions(Vector2.Zero, new Vector2(100, 100)));
 
             var barBox = UIBox2.FromDimensions(bar.GlobalPosition, bar.Size);
-            var downCell = KsTguiScrollBarGeometry.Cell(barBox, horizontal: false, end: true, scale: 1f).Center;
-            var upCell = KsTguiScrollBarGeometry.Cell(barBox, horizontal: false, end: false, scale: 1f).Center;
+            var downCell = KsTguiScrollBarMetrics.Normal.Cell(barBox, horizontal: false, end: true, scale: 1f).Center;
+            var upCell = KsTguiScrollBarMetrics.Normal.Cell(barBox, horizontal: false, end: false, scale: 1f).Center;
             var arrows = new KsTguiScrollArrows();
 
             arrows.Update(scroll, mouseDown: true, downCell, 0f);

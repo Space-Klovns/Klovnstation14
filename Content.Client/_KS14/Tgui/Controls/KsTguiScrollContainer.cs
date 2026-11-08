@@ -302,6 +302,40 @@ public sealed class KsTguiScrollContainer : ScrollContainer
             _hasLayout && _layout.OverflowVertical ? _verticalBar.Value : 0f);
     }
 
+    /// <summary>
+    ///     Whether the bars' column is drawn in the Section colour: true unless the container is inside a Section, as tgui's
+    ///         <c>scrollbar-color</c> is inherited from the page and only a Section sets its track transparent.
+    /// </summary>
+    public bool FilledTrack => _verticalBar.HasStyleClass(KsTguiSheetlet.StyleClassFilledScrollBar);
+
+    protected override void EnteredTree()
+    {
+        base.EnteredTree();
+
+        var filled = !InsideSection();
+        SetFilled(_verticalBar, filled);
+        SetFilled(_horizontalBar, filled);
+    }
+
+    private static void SetFilled(ScrollBar bar, bool filled)
+    {
+        if (filled)
+            bar.AddStyleClass(KsTguiSheetlet.StyleClassFilledScrollBar);
+        else
+            bar.RemoveStyleClass(KsTguiSheetlet.StyleClassFilledScrollBar);
+    }
+
+    private bool InsideSection()
+    {
+        for (var parent = Parent; parent != null; parent = parent.Parent)
+        {
+            if (parent is KsSectionPanel || parent.HasStyleClass(KsSectionPanel.StyleClassSectionPanel))
+                return true;
+        }
+
+        return false;
+    }
+
     protected override void MouseWheel(GUIMouseWheelEventArgs args)
     {
         // Not the engine's, which reads layout state this container never sets.

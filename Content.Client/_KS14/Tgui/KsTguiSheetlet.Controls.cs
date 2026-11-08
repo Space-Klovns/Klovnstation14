@@ -63,6 +63,10 @@ public sealed partial class KsTguiSheetlet
         AddColoredButtonRules(rules);
         AddButtonVariantRules(rules);
         rules.Add(E().Class(StyleClassCandystripe).Prop(StylePropertyCandystripe, _palette.Candystripe));
+
+        // The same stripes in every theme: tg's hazard is literal colours, not palette ones.
+        rules.Add(E<KsTguiHazardPanel>()
+            .Prop(KsTguiHazardPanel.StylePropertyHazard, new KsTguiHazardStyleBox(padding: KsTguiHazardPanel.Padding)));
     }
 
     private void AddSectionRules(List<StyleRule> rules)

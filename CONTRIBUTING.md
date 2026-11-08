@@ -863,6 +863,9 @@ The rules come from two places, so nothing about a type's namespace predicts the
 
 - **ILVerify** rejects `stackalloc` (even into a `Span<T>`), `unsafe` code and pointers. Content already notes
   this (`AtmosphereSystem.Gases.cs`). Use `new T[n]` instead.
+- **ILVerify** also rejects a method that *returns* a `Span<T>` or `ReadOnlySpan<T>` (`Return type is ByRef,
+  TypedReference, ArgHandle, or ArgIterator`). Taking or slicing one locally is fine. Return a count and hand out the
+  array (`KsTguiHazardStyleBox.StripeTriangles`).
 - **The whitelist** is per type and often per member. Besides the ones above, these came up vendoring Concentus
   (`Content.Klovn.Concentus/README.md`), and none of them warns at build time:
   - `System.Buffer` (`BlockCopy`): use `Array.Copy`, which counts elements, not bytes.
