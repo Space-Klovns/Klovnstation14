@@ -50,8 +50,10 @@ public sealed partial class CargoSystem
     private void OnDeliveredOrderMoved(Entity<KsCargoDeliveredOrderComponent> entity, ref MoveEvent args)
     {
         var transformComponent = args.Component;
+        // TryComp: the grid may be on its way out, taking the goods with it.
         if (transformComponent.ParentUid == entity.Comp.Grid &&
-            _ksMapSystem.CoordinatesToTile(entity.Comp.Grid, Comp<MapGridComponent>(entity.Comp.Grid), transformComponent.Coordinates) == entity.Comp.Tile)
+            TryComp<MapGridComponent>(entity.Comp.Grid, out var gridComponent) &&
+            _ksMapSystem.CoordinatesToTile(entity.Comp.Grid, gridComponent, transformComponent.Coordinates) == entity.Comp.Tile)
         {
             return;
         }
