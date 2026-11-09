@@ -10,6 +10,7 @@ using Robust.Client.UserInterface.RichText;
 using Robust.Shared.Input;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using System.Numerics;
 
 namespace Content.Client._KS14.GhostRoleNotice;
 
@@ -32,6 +33,7 @@ public sealed partial class KsGhostRoleFollowTag : IMarkupTagHandler
 
     [Dependency] private IEntityNetworkManager _entityNetworkManager = default!;
     [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private FontTagHijackHolder _fontTagHijackHolder = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     public string Name => TagName;
@@ -47,7 +49,7 @@ public sealed partial class KsGhostRoleFollowTag : IMarkupTagHandler
         }
 
         var text = ParameterText(node.Value);
-        var label = new Label
+        var label = new KsUnderlinedLabel
         {
             Text = text,
             MouseFilter = Control.MouseFilterMode.Stop,
@@ -55,8 +57,16 @@ public sealed partial class KsGhostRoleFollowTag : IMarkupTagHandler
             DefaultCursorShape = Control.CursorShape.Hand,
         };
 
-        var fontPrototype = _prototypeManager.Index<FontPrototype>(BoldFontId);
-        label.FontOverride = new VectorFont(_resourceCache.GetResource<FontResource>(fontPrototype.Path), FontSize);
+        // The same font a [bold] tag in this chat line would get: the tgui stack when that theme is on, else Baron's.
+        if (_fontTagHijackHolder.Hijack?.Invoke(BoldFontId, FontSize) is { } themedFont)
+        {
+            label.FontOverride = themedFont;
+        }
+        else
+        {
+            var fontPrototype = _prototypeManager.Index<FontPrototype>(BoldFontId);
+            label.FontOverride = new VectorFont(_resourceCache.GetResource<FontResource>(fontPrototype.Path), FontSize);
+        }
 
         label.OnMouseEntered += _ => label.FontColorOverride = Color.Blue;
         label.OnMouseExited += _ => label.FontColorOverride = Color.LightBlue;
@@ -100,5 +110,23 @@ public sealed partial class KsGhostRoleFollowTag : IMarkupTagHandler
         }
 
         return roles.Count > 0;
+    }
+}
+
+/// <summary>
+///     A label with a line under its text in the text colour, which follows the hover colour.
+/// </summary>
+public sealed class KsUnderlinedLabel : Label
+{
+    protected override void Draw(DrawingHandleScreen handle)
+    {
+        base.Draw(handle);
+
+        if (FontOverride is not { } font)
+            return;
+
+        var y = font.GetAscent(UIScale) + UIScale;
+        var color = FontColorOverride ?? Color.White;
+        handle.DrawLine(new Vector2(0f, y), new Vector2(Size.X * UIScale, y), color);
     }
 }

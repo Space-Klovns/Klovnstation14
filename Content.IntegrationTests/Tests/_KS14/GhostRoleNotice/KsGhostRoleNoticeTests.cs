@@ -182,7 +182,7 @@ public sealed class KsGhostRoleNoticeInRoundTests : KsGhostRoleNoticeTestBase
             Assert.That(linkNode, Is.Not.Null, "with a follow link");
             Assert.That(tagManager.TryGetMarkupTagHandler(KsGhostRoleFollowTag.TagName, tagsAllowed: null, out var handler), Is.True, "whose tag is registered");
             Assert.That(handler!.TryCreateControl(linkNode!, out var control), Is.True, $"{markup} :: {string.Join(";", linkNode!.Attributes.Select(a => a.Key + "=" + a.Value))}");
-            Assert.That(control, Is.TypeOf<Label>());
+            Assert.That(control, Is.InstanceOf<Label>());
             Assert.That(((Label)control!).Text, Is.EqualTo(Client.ResolveDependency<ILocalizationManager>().GetString("ks-ghost-role-notice-follow")));
         });
     }
