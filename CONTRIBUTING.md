@@ -865,7 +865,9 @@ message is the quick way to see that shape; `-v q` prints only the total and hid
 
 The offenders are mostly the low-level performance conveniences: `CollectionsMarshal`, `Unsafe`,
 `MemoryMarshal`, most of `System.Runtime.InteropServices`, reflection that writes, and anything
-touching the filesystem or process directly. Plain `Dictionary`, `Span`, `MathF` and `System.Numerics`'
+touching the filesystem or process directly. A `new()` generic constraint is one too, though nothing in the source
+names it: `new T()` compiles to `Activator.CreateInstance<T>()`. Have the subclass make the instance instead (an
+abstract `CreateOverlay()`, say). Plain `Dictionary`, `Span`, `MathF` and `System.Numerics`'
 `Vector2`/`Vector3`/`Vector4` are all fine. If you are reaching for something to avoid a dictionary lookup or a
 struct copy in rendering code, the copy was almost certainly cheaper than finding this out:
 
