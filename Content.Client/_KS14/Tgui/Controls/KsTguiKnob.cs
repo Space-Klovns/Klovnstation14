@@ -80,6 +80,11 @@ public sealed class KsTguiKnob : Control
     /// </summary>
     private const float ReadoutGap = 2f;
 
+    /// <summary>
+    ///     The typing box's padding at each side, in virtual pixels.
+    /// </summary>
+    private const float EditPadding = 6f;
+
     private static readonly XColor EditBackground = XColor.FromHex("#0D0D0D");
 
     private readonly KsTguiRightAlignedLineEdit _edit;
@@ -146,7 +151,9 @@ public sealed class KsTguiKnob : Control
         AddChild(_readout);
 
         _editBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 0f);
-        _edit = new KsTguiRightAlignedLineEdit(_editBox, 6f) { Visible = false, SelectAllOnFocus = true };
+        _edit = new KsTguiRightAlignedLineEdit(_editBox, EditPadding) { Visible = false, SelectAllOnFocus = true };
+        // The box is as wide as what is typed in it, so a long number is never cut off at the left.
+        _edit.OnTextChanged += _ => InvalidateArrange();
         AddChild(_edit);
 
         _edit.OnTextEntered += _ => Commit();
@@ -842,12 +849,39 @@ public sealed class KsTguiKnob : Control
             // The box opens where the number is read.
             var readoutBox = UIBox2.FromDimensions(0f, KnobSide + ReadoutGap, finalSize.X, ReadoutHeight);
             _readout.Arrange(readoutBox);
-            _edit.Arrange(readoutBox);
+            _edit.Arrange(EditBox(readoutBox));
             return finalSize;
         }
 
-        _edit.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+        _edit.Arrange(EditBox(UIBox2.FromDimensions(Vector2.Zero, finalSize)));
         return finalSize;
+    }
+
+    /// <summary>
+    ///     The typing box: the given box, widened to the left when the number typed in it needs more room. Its text sits at the
+    ///         right, so it grows away from the buttons beside a knob rather than into them.
+    /// </summary>
+    private UIBox2 EditBox(UIBox2 box)
+    {
+        var font = _edit.TryGetStyleProperty<Font>("font", out var styled) ? styled : UserInterfaceManager.ThemeDefaults.DefaultFont;
+        // Both paddings, and a pixel each for the caret after the last character and for rounding.
+        var needed = KsTguiFitText.StringWidth(font, _edit.Text, UIScale) / UIScale + 2f * EditPadding + 2f;
+        if (needed <= box.Width)
+            return box;
+
+        return new UIBox2(box.Right - needed, box.Top, box.Right, box.Bottom);
+    }
+
+    /// <summary>
+    ///     How much room the typing box has for its text, and how much the text in it needs, in virtual pixels. For tests.
+    /// </summary>
+    public (float Room, float Needed) EditTextFit
+    {
+        get
+        {
+            var font = _edit.TryGetStyleProperty<Font>("font", out var styled) ? styled : UserInterfaceManager.ThemeDefaults.DefaultFont;
+            return (_edit.Size.X - 2f * EditPadding, KsTguiFitText.StringWidth(font, _edit.Text, UIScale) / UIScale);
+        }
     }
 
     protected override void StylePropertiesChanged()

@@ -577,6 +577,41 @@ public sealed class KsTguiKnobTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     A long number fits in the typing box, with or without a readout, and the box grows with what is typed.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TheTypingBoxFitsALongNumber(bool showValue)
+    {
+        var changes = new List<float>();
+        await Client.WaitPost(() =>
+        {
+            var knob = Make(changes, value: 1013.25f);
+            knob.MaxValue = 10000f;
+            knob.ShowValue = showValue;
+            knob.Measure(Vector2.PositiveInfinity);
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+
+            Click(knob);
+            Assert.That(knob.IsEditing);
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+            Assert.That(knob.Edit.Text, Is.EqualTo(1013.25f.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+            var (room, needed) = knob.EditTextFit;
+            Assert.That(room, Is.GreaterThanOrEqualTo(needed), $"\"{knob.Edit.Text}\" fits.");
+
+            // Typed, as a player would: a plain Text = ... raises no change, and typing does.
+            knob.Edit.Text = "";
+            knob.Edit.InsertAtCursor("12345.678");
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+            (room, needed) = knob.EditTextFit;
+            Assert.That(room, Is.GreaterThanOrEqualTo(needed), "A longer number typed in still fits.");
+
+            // It grows to the left: its right edge stays where the knob's is.
+            Assert.That(knob.Edit.Position.X + knob.Edit.Size.X, Is.EqualTo(knob.DesiredSize.X).Within(0.01f));
+        });
+    }
+
     private static void Click(KsTguiKnob knob)
     {
         knob.BeginPress(0f);
