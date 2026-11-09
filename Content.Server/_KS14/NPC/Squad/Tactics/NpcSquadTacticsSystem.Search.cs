@@ -67,6 +67,14 @@ public sealed partial class NpcSquadTacticsSystem
             return;
         }
 
+        // Or it is they who are walled in, and every spot to search is somewhere they would only walk into a wall trying to get to.
+        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates))
+        {
+            SealIn(hunt, walkerUid);
+            ExhaustShutOut(leaderUid, hunt, settings, now);
+            return;
+        }
+
         BuildSearchPoints(walkerUid, hunt, grid, settings);
 
         var anyoneInside = false;

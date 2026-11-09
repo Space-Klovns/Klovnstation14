@@ -98,6 +98,12 @@ public sealed class NpcHunt
     public bool ShutOut;
 
     /// <summary>
+    ///     Whether it is the squad that is shut in, walled off from where the hostile is, rather than the hostile shut away
+    ///         from them. A charge then goes on a wall of their own room, towards it, and once out they hunt it from scratch.
+    /// </summary>
+    public bool SealedIn;
+
+    /// <summary>
     ///     While making a way in with a charge: the plan that holds it, which is one nobody else sees. <see cref="RunCharge"/>'s
     ///         business is the same either way, so it gets one to work with.
     /// </summary>
@@ -169,6 +175,12 @@ public sealed class NpcHuntStaging
     ///     How far that way is, in tiles: the walk, and not how far the spot is as the crow flies.
     /// </summary>
     public int RouteLength;
+
+    /// <summary>
+    ///     How much further than straight at the hostile this way takes it, in tiles: the walk round, and on in from the
+    ///         way in, past where it was when it set off. See <see cref="NpcSquadTacticsSettings.MaxDetour"/>.
+    /// </summary>
+    public float Detour;
 
     /// <summary>
     ///     The next turn to make; past the end once only the waiting spot is left.

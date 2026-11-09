@@ -92,6 +92,16 @@ public sealed partial class NpcSquadTacticsSettings
     public float EntranceTargetPreference = 2f;
 
     /// <summary>
+    ///     How far round members will go to get at a hostile instead of breaking in, in tiles walked past the straight line to
+    ///         it. With the nearest way in one to force or blow, a way in more than this further is not used; with it opened by
+    ///         hand, the rest are a flank, and all are used. A path to the hostile this much longer than the straight line is
+    ///         no free way to leave members to walk, and a squad plan weighs a detour this long the same as blowing a wall, so a
+    ///         longer one loses to a charge. Above 0.
+    /// </summary>
+    [DataField]
+    public float MaxDetour = 15f;
+
+    /// <summary>
     ///     How far into the room, past the way in, members go when they go in.
     /// </summary>
     [DataField]

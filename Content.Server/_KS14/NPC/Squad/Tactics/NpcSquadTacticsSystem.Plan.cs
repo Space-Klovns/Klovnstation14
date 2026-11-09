@@ -344,7 +344,9 @@ public sealed partial class NpcSquadTacticsSystem
                     plan.ProbePath.Add(poly.Coordinates);
                 }
 
-                freePath = !TerminatingOrDeleted(probeMemberUid) && !_npcDoorSystem.RunsThroughShutDoor(probeMemberUid, result.Path);
+                freePath = !TerminatingOrDeleted(probeMemberUid) &&
+                    !_npcDoorSystem.RunsThroughShutDoor(probeMemberUid, result.Path) &&
+                    !IsLongWayRound(probeMemberUid, plan.TargetUid, result.Path, settings);
             }
         }
 
@@ -369,8 +371,8 @@ public sealed partial class NpcSquadTacticsSystem
             Phase = NpcHuntPhase.Stage,
         };
 
-        if (PrepareRoom(leaderUid, plan.Hunt, settings) == null)
-            PrepareSealedRoom(plan);
+        var foundRoom = PrepareRoom(leaderUid, plan.Hunt, settings) != null;
+        PrepareSealedRoom(plan, leaderUid ?? _members[0], foundRoom);
 
         AssignEntrances(plan.Hunt, settings);
         LeaveAWatcher(plan);
@@ -386,6 +388,27 @@ public sealed partial class NpcSquadTacticsSystem
         plan.StartedAt = now;
         plan.NextReview = now + PlanReviewInterval;
         return RunPlanSteps(issuerUid, plan, settings, now);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="path"/> goes more than <see cref="NpcSquadTacticsSettings.MaxDetour"/> further than straight at
+    ///         the hostile. A way like that is no free way: it is planned for, against a charge through what is in between.
+    /// </summary>
+    private bool IsLongWayRound(EntityUid memberUid, EntityUid targetUid, List<PathPoly> path, NpcSquadTacticsSettings settings)
+    {
+        var start = _transformSystem.GetMapCoordinates(memberUid);
+        var target = _transformSystem.GetMapCoordinates(targetUid);
+        var previous = start.Position;
+        var length = 0f;
+
+        foreach (var poly in path)
+        {
+            var position = _transformSystem.ToMapCoordinates(poly.Coordinates).Position;
+            length += (position - previous).Length();
+            previous = position;
+        }
+
+        return length - (target.Position - start.Position).Length() > settings.MaxDetour;
     }
 
     private bool UpdatePlanSteps(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, TimeSpan now)
@@ -573,6 +596,11 @@ public sealed partial class NpcSquadTacticsSystem
 
         hunt.HeldBackUid = null;
 
+        // One kept back plants nothing, and a charge may be what it comes to: one without is kept back if there is one, and the
+        //      only one with never is.
+        EntityUid? carrierUid = null;
+        EntityUid? watcherUid = null;
+
         foreach (var (memberUid, staging) in hunt.StagedMembers)
         {
             if (staging.IsLead ||
@@ -580,11 +608,37 @@ public sealed partial class NpcSquadTacticsSystem
                 contact.State != NpcContactState.Visible)
                 continue;
 
-            plan.WatcherUid = memberUid;
-            hunt.HeldBackUid = memberUid;
-            hunt.StagedMembers.Remove(memberUid);
-            return;
+            if (!_npcChargeSystem.TryGetCharge(memberUid, null, out _))
+            {
+                watcherUid = memberUid;
+                break;
+            }
+
+            carrierUid ??= memberUid;
         }
+
+        if (watcherUid == null && carrierUid is { } carrier && CountChargeCarriers() > 1)
+            watcherUid = carrier;
+
+        if (watcherUid is not { } watcher)
+            return;
+
+        plan.WatcherUid = watcher;
+        hunt.HeldBackUid = watcher;
+        hunt.StagedMembers.Remove(watcher);
+    }
+
+    private int CountChargeCarriers()
+    {
+        var count = 0;
+
+        foreach (var memberUid in _members)
+        {
+            if (_npcChargeSystem.TryGetCharge(memberUid, null, out _))
+                count++;
+        }
+
+        return count;
     }
 
     private void KeepWatch(EntityUid issuerUid, NpcSquadPlan plan, TimeSpan now)
@@ -949,7 +1003,7 @@ public sealed partial class NpcSquadTacticsSystem
         plan.Facts = GetFacts(plan, settings);
 
         Span<float> costs = stackalloc float[NpcSquadGoap.Actions.Length];
-        costs[(int) NpcSquadAction.StackUp] = GetLongestWalk(plan.Hunt) / PlanWalkSpeed;
+        costs[(int) NpcSquadAction.StackUp] = GetLongestWalk(plan.Hunt) / PlanWalkSpeed + GetDetourCost(plan.Hunt, settings);
         costs[(int) NpcSquadAction.ForceDoor] = ForceDoorCost;
         costs[(int) NpcSquadAction.Enter] = EnterCost + GetRushRisk(plan, settings);
         costs[(int) NpcSquadAction.EnterSoftened] = EnterCost;
@@ -1264,6 +1318,23 @@ public sealed partial class NpcSquadTacticsSystem
     ///     How far the member with furthest to go has to walk to its way in, along the way it will take: a door just the other
     ///         side of a wall can be a long way round.
     /// </summary>
+    /// <summary>
+    ///     What going the long way round costs on top of the walk: as much as blowing a wall for a detour of
+    ///         <see cref="NpcSquadTacticsSettings.MaxDetour"/>, so a longer one loses to a charge. The walk alone is time,
+    ///         and time is cheap next to a charge's: it takes a long way round for that to tell.
+    /// </summary>
+    private static float GetDetourCost(NpcHunt hunt, NpcSquadTacticsSettings settings)
+    {
+        var longest = 0f;
+
+        foreach (var staging in hunt.StagedMembers.Values)
+        {
+            longest = Math.Max(longest, staging.Detour);
+        }
+
+        return longest * BlowWallCost / Math.Max(settings.MaxDetour, 1f);
+    }
+
     private static float GetLongestWalk(NpcHunt hunt)
     {
         var longest = 0;

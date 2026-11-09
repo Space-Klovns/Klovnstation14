@@ -298,6 +298,16 @@ public sealed class KsNpcSquadPlanTest : GameTest
     tactics:
       planHoldCost: 100
 
+# The way round the far side of the room is some 17 tiles more than the straight line and the near side some 6, which a
+#   limit of 10 keeps well apart, however the two shuffle about while their plan is worked out.
+- type: entity
+  parent: KsSquadPlanTestMobSteady
+  id: KsSquadPlanTestMobShortDetour
+  components:
+  - type: NpcSquadMember
+    tactics:
+      maxDetour: 10
+
 - type: entity
   parent: KsSquadPlanTestMob
   id: KsSquadPlanTestMobNoPatience
@@ -1189,8 +1199,90 @@ public sealed class KsNpcSquadPlanTest : GameTest
     }
 
     /// <summary>
+    ///     A way in round the far side of the room is a long way round next to blowing the door or wall in front of them
+    ///         (more than <c>maxDetour</c> further than the straight line), and loses to it: it is no free way to leave them to
+    ///         walk, nor one to spread out to. One round the near side is not, and is walked.
+    /// </summary>
+    [TestCase(true, true)]
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    [TestCase(false, false)]
+    public async Task TestALongWayRoundLosesToACharge(bool door, bool farSide)
+    {
+        // Far side: round the room and in level with the hostile at (3, 3). Near side: in through the top, by the corner.
+        var scene = await SetUp("KsSquadPlanTestMobShortDetour", glass: ArmouredGlass, door: door ? SecurityDoor : TestWall, gap: farSide ? new Vector2i(7, 3) : new Vector2i(1, 6));
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, WiredCharge);
+            GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            var steps = plan.Steps[..plan.StepCount];
+
+            if (!farSide)
+            {
+                // Walked by themselves, or walked to as a plan: either way, not blown.
+                if (plan.Reason != "a free way: they walk it themselves")
+                    Assert.That(steps, Is.EqualTo(new[] { NpcSquadAction.StackUp, NpcSquadAction.Enter }), $"{plan.Facts} {plan.Reason}");
+
+                return;
+            }
+
+            Assert.That(steps,
+                Is.EqualTo(door
+                    ? new[] { NpcSquadAction.StackUp, NpcSquadAction.BlowDoor, NpcSquadAction.Enter }
+                    : new[] { NpcSquadAction.BlowWall, NpcSquadAction.Enter }),
+                $"{plan.Facts} {plan.Reason}");
+
+            if (!door)
+                return;
+
+            // Nor does anybody set off round the room to spread out, with the door to go through.
+            Assert.That(plan.Hunt!.StagedMembers, Is.Not.Empty);
+            foreach (var staging in plan.Hunt.StagedMembers.Values)
+            {
+                Assert.That(plan.Hunt.Entrances[staging.EntranceIndex].DoorUid, Is.EqualTo(scene.DoorUid));
+            }
+        });
+    }
+
+    /// <summary>
     ///     No activator, no way of setting off a charge with no timer. A wired charge is no use to anyone then.
     /// </summary>
+    /// <summary>
+    ///     One member kept back to watch plants nothing. With the only charge on whichever of the two would be kept back, it is
+    ///         the other that watches, and the wall still comes down. It used to keep the carrier back, and the squad walked round.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestTheOnlyChargeIsNotKeptBackToWatch(bool glassMemberCarries)
+    {
+        var scene = await SetUp("KsSquadPlanTestMobShortDetour", glass: ArmouredGlass, door: TestWall, gap: new Vector2i(7, 3));
+        var carrierUid = glassMemberCarries ? scene.GlassMemberUid : scene.DoorMemberUid;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            GiveInHand(scene, carrierUid, WiredCharge);
+            GiveInHand(scene, carrierUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount], Is.EqualTo(new[] { NpcSquadAction.BlowWall, NpcSquadAction.Enter }), $"{plan.Facts} {plan.Reason}");
+            Assert.That(plan.WatcherUid, Is.Not.EqualTo(carrierUid));
+            Assert.That(plan.WallCharge!.Value.PlanterUid, Is.EqualTo(carrierUid));
+        });
+    }
+
     [Test]
     public async Task TestAWiredChargeNeedsItsActivator()
     {
@@ -1561,6 +1653,160 @@ public sealed class KsNpcSquadPlanTest : GameTest
 
             Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted));
             Assert.That(hunt.ShutOut, "that leaves it shut out");
+        });
+    }
+
+    /// <summary>
+    ///     A squad shut out after a noise blows its way in together. Nobody can stack up on a door nobody can open, so the rest
+    ///         come along behind the planter to the edge of the blast, not wait wherever they heard it from.
+    /// </summary>
+    [Test]
+    public async Task TestTheRestComeAlongToABlast()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobBlaster", glass: ArmouredGlass);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TimedCharge);
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.TargetUid).Coordinates;
+
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.EntManager.System<NpcPerceptionSystem>().SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, coordinates, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false));
+            }
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Blast), "the test needs a blast");
+            Assert.That(hunt.StagedMembers, Is.Empty, "the test needs nobody stacked up");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var planterOrder) && planterOrder.Kind == NpcOrderKind.PlantCharge,
+                "the test needs the member planting");
+
+            var site = hunt.Blast!.Charge!.Pick.Site;
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order), "the leader should be given something to do");
+            Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.Stage), "it should come along, not hold where it is");
+            Assert.That(order.Coordinates, Is.EqualTo(site.StandCoordinates));
+            Assert.That(order.OverCombat, "nor drop it for the hostile it cannot get at");
+        });
+    }
+
+    /// <summary>
+    ///     The other way round: the squad walled in and the noise outside, in the open. The floor out there goes on and on, so
+    ///         nothing is sealed off from them, but they are from it, and their own wall nearest the noise is what gets blown.
+    ///         Then they go after it like any other hunt. They used to search, for spots they could never walk to.
+    /// </summary>
+    [Test]
+    public async Task TestASquadWalledInBlowsItsWayOut()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobBlaster", glass: null, door: TestWall);
+        NpcHunt hunt = default!;
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+            scene.EntManager.DeleteEntity(scene.TargetUid);
+            transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(2.5f, 2.5f)));
+            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(2.5f, 3.5f)));
+            GiveInHand(scene, scene.MemberUid, TimedCharge);
+
+            scene.TacticsSystem.NoteDisturbance(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(-5.5f, 3.5f)));
+            scene.TacticsSystem.UpdateNow();
+
+            hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt, Is.Not.Null, "a noise they cannot get to is no noise to just walk to");
+            Assert.That(hunt.SealedIn, "it is they who are shut in");
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Blast), "and the charge is the way out");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order) && order.Kind == NpcOrderKind.PlantCharge,
+                "the member with it should go to put it on");
+
+            var site = hunt.Blast!.Charge!.Pick.Site;
+            Assert.That(site.Tile.X, Is.EqualTo(-1), "on the wall towards the noise");
+            Assert.That(site.StandTile.X, Is.InRange(0, 6), "from inside");
+            Assert.That(site.StandTile.Y, Is.InRange(0, 5), "from inside");
+
+            // Gone off, and the wall with it.
+            hunt.Blast.Charge.Phase = NpcSquadChargePhase.Blasted;
+            hunt.Blast.Charge.BlastedAt = IoCManager.Resolve<IGameTiming>().CurTime;
+            scene.EntManager.DeleteEntity(site.TargetUid);
+        });
+
+        // For the dust to settle, and the floor where the wall was to be floor to walk on.
+        await Pair.RunTicksSync(40);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.SealedIn, Is.False, "out now");
+            Assert.That(hunt.ShutOut, Is.False);
+            Assert.That(hunt.Phase, Is.AnyOf(NpcHuntPhase.Stage, NpcHuntPhase.Search), "and after it");
+        });
+    }
+
+    /// <summary>
+    ///     The same for a plan: a hostile seen through the window of the room they are walled in. Their own wall comes down.
+    /// </summary>
+    [Test]
+    public async Task TestAPlanWalledInBlowsItsWayOut()
+    {
+        var scene = await SetUp(SteadyMob, glass: ArmouredGlass, door: TestWall);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+            transformSystem.SetCoordinates(scene.TargetUid, new EntityCoordinates(scene.GridUid, new Vector2(-4.5f, 3.5f)));
+            transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(3.5f, 2.5f)));
+            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(3.5f, 3.5f)));
+            GiveInHand(scene, scene.MemberUid, WiredCharge);
+            GiveInHand(scene, scene.MemberUid, Activator);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.Steps[..plan.StepCount], Is.EqualTo(new[] { NpcSquadAction.BlowWall, NpcSquadAction.Enter }), $"{plan.Reason} {plan.Facts}");
+            Assert.That(plan.Hunt!.SealedIn);
+
+            var site = plan.WallCharge!.Value.Site;
+            Assert.That(scene.EntManager.GetComponent<MetaDataComponent>(site.TargetUid).EntityPrototype!.ID, Is.EqualTo(TestWall));
+            Assert.That(site.Tile.X, Is.EqualTo(-1), "their wall towards the hostile");
+            Assert.That(site.StandTile.X, Is.InRange(0, 6), "from inside");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order) && order.Kind == NpcOrderKind.PlantCharge);
+        });
+    }
+
+    /// <summary>
+    ///     A squad walled in with nothing to blow its way out holds as near as it can get, not search for what it cannot reach.
+    /// </summary>
+    [Test]
+    public async Task TestASquadWalledInWithNoChargeHolds()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobBlaster", glass: null, door: TestWall);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+            scene.EntManager.DeleteEntity(scene.TargetUid);
+            transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(4.5f, 2.5f)));
+            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(4.5f, 3.5f)));
+
+            scene.TacticsSystem.NoteDisturbance(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(-5.5f, 3.5f)));
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt, Is.Not.Null);
+            Assert.That(hunt!.Phase, Is.EqualTo(NpcHuntPhase.Exhausted));
+            Assert.That(hunt.ShutOut);
+            Assert.That(hunt.ShutOutCoordinates, Is.Not.Null, "somewhere to wait");
+
+            var spot = hunt.ShutOutCoordinates!.Value.Position;
+            Assert.That(spot.X, Is.LessThan(1f), "inside, by the wall nearest the noise");
+            Assert.That(spot.X, Is.GreaterThan(0f));
         });
     }
 

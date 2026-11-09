@@ -149,7 +149,8 @@ public sealed partial class NpcSquadTacticsSystem
     private bool CheckCutOff(NpcPendingDisturbanceComponent disturbanceComponent, NpcHunt hunt, EntityUid walkerUid)
     {
         disturbanceComponent.CheckedReachable = true;
-        return TryPrepareSealedRoom(hunt, walkerUid, disturbanceComponent.Coordinates);
+        return TryPrepareSealedRoom(hunt, walkerUid, disturbanceComponent.Coordinates) ||
+            IsSealedIn(walkerUid, disturbanceComponent.Coordinates);
     }
 
     private void EndHunt(EntityUid issuerUid)
@@ -300,6 +301,9 @@ public sealed partial class NpcSquadTacticsSystem
     ///             it carries. A door nobody can get through is nobody's to stack up on. Everyone left over - including
     ///             members who can open nothing themselves - stacks up behind whichever lead costs least.
     ///     </para>
+    ///     <para>
+    ///         Nor is a way in that is a long way round next to another (<see cref="NpcSquadTacticsSettings.MaxDetour"/>).
+    ///     </para>
     /// </summary>
     private void AssignEntrances(NpcHunt hunt, NpcSquadTacticsSettings settings)
     {
@@ -318,12 +322,18 @@ public sealed partial class NpcSquadTacticsSystem
         var routes = new (List<Vector2i> Waypoints, int Length)?[_members.Count, hunt.Entrances.Count];
 
         // How far in from each way in the hostile should be, counted as extra walking.
+        var entranceToTarget = new float[hunt.Entrances.Count];
         var entranceCosts = new float[hunt.Entrances.Count];
         for (var e = 0; e < hunt.Entrances.Count; e++)
         {
             if (hunt.Entrances[e].EntryCoordinates.TryDistance(EntityManager, _transformSystem, hunt.PredictedCoordinates, out var toTarget))
+            {
+                entranceToTarget[e] = toTarget;
                 entranceCosts[e] = toTarget * settings.EntranceTargetPreference;
+            }
         }
+
+        var memberToTarget = new float[_members.Count];
 
         for (var m = 0; m < _members.Count; m++)
         {
@@ -332,6 +342,7 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
 
             var memberTile = _mapSystem.TileIndicesFor(grid, memberTransform.Coordinates);
+            memberTransform.Coordinates.TryDistance(EntityManager, _transformSystem, hunt.PredictedCoordinates, out memberToTarget[m]);
 
             for (var e = 0; e < hunt.Entrances.Count; e++)
             {
@@ -358,6 +369,8 @@ public sealed partial class NpcSquadTacticsSystem
             }
         }
 
+        var tooFar = FindDetours(hunt, routes, methods, entranceToTarget, settings);
+
         _freeMembers.Clear();
         for (var m = 0; m < _members.Count; m++)
         {
@@ -366,8 +379,8 @@ public sealed partial class NpcSquadTacticsSystem
 
         while (_freeMembers.Count > 0)
         {
-            var isLead = TryPickEntrance(hunt, routes, entranceCosts, methods, leadsOnly: true, out var memberIndex, out var entranceIndex);
-            if (!isLead && !TryPickEntrance(hunt, routes, entranceCosts, methods, leadsOnly: false, out memberIndex, out entranceIndex))
+            var isLead = TryPickEntrance(hunt, routes, entranceCosts, methods, tooFar, leadsOnly: true, out var memberIndex, out var entranceIndex);
+            if (!isLead && !TryPickEntrance(hunt, routes, entranceCosts, methods, tooFar, leadsOnly: false, out memberIndex, out entranceIndex))
                 break;
 
             var m = _members.IndexOf(_freeMembers[memberIndex]);
@@ -378,12 +391,64 @@ public sealed partial class NpcSquadTacticsSystem
                 Method = isLead ? methods[m, entranceIndex].Method : NpcBreachMethod.None,
                 ToolUid = isLead ? methods[m, entranceIndex].ToolUid : null,
                 RouteLength = routes[m, entranceIndex]!.Value.Length,
+                Detour = Math.Max(routes[m, entranceIndex]!.Value.Length + entranceToTarget[entranceIndex] - memberToTarget[m], 0f),
             };
             staging.Waypoints.AddRange(routes[m, entranceIndex]!.Value.Waypoints);
 
             hunt.StagedMembers[_freeMembers[memberIndex]] = staging;
             _freeMembers.RemoveAt(memberIndex);
         }
+    }
+
+    /// <summary>
+    ///     Which ways in are too far round to use (<see cref="NpcSquadTacticsSettings.MaxDetour"/>): with the nearest one to be
+    ///         forced or blown, those more than that much further are a long way round instead of it, and out. Each is as far
+    ///         as the shortest walk to the hostile through it, by anybody that can get it open: one nobody can is no nearest,
+    ///         and a door only a charge opens counts only when charges are allowed. With the nearest one opened by hand, the
+    ///         rest are a flank, however far, and all stay in.
+    /// </summary>
+    private static bool[] FindDetours(NpcHunt hunt,
+        (List<Vector2i> Waypoints, int Length)?[,] routes,
+        NpcEntryMethod[,] methods,
+        float[] entranceToTarget,
+        NpcSquadTacticsSettings settings)
+    {
+        var entranceCount = hunt.Entrances.Count;
+        var walks = new float[entranceCount];
+        var nearest = float.MaxValue;
+        var nearestBroken = false;
+        var tooFar = new bool[entranceCount];
+
+        for (var e = 0; e < entranceCount; e++)
+        {
+            walks[e] = float.MaxValue;
+            var broken = true;
+
+            for (var m = 0; m < routes.GetLength(0); m++)
+            {
+                if (routes[m, e] is not { } route || !methods[m, e].Usable)
+                    continue;
+
+                walks[e] = Math.Min(walks[e], route.Length + entranceToTarget[e]);
+                broken &= methods[m, e].Method != NpcBreachMethod.None;
+            }
+
+            if (walks[e] >= nearest)
+                continue;
+
+            nearest = walks[e];
+            nearestBroken = broken;
+        }
+
+        if (!nearestBroken)
+            return tooFar;
+
+        for (var e = 0; e < entranceCount; e++)
+        {
+            tooFar[e] = walks[e] < float.MaxValue && walks[e] > nearest + settings.MaxDetour;
+        }
+
+        return tooFar;
     }
 
     /// <summary>
@@ -418,6 +483,7 @@ public sealed partial class NpcSquadTacticsSystem
         (List<Vector2i> Waypoints, int Length)?[,] routes,
         float[] entranceCosts,
         NpcEntryMethod[,] methods,
+        bool[] tooFar,
         bool leadsOnly,
         out int memberIndex,
         out int entranceIndex)
@@ -429,7 +495,7 @@ public sealed partial class NpcSquadTacticsSystem
         for (var e = 0; e < hunt.Entrances.Count; e++)
         {
             // Everyone placed so far leads, so a way in in use is one with a lead.
-            if (IsEntranceUsed(hunt, e) == leadsOnly)
+            if (tooFar[e] || IsEntranceUsed(hunt, e) == leadsOnly)
                 continue;
 
             for (var f = 0; f < _freeMembers.Count; f++)

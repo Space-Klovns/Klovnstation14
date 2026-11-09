@@ -73,6 +73,11 @@ public sealed partial class NpcSquadTacticsSystem
     private const float ChargeDangerRange = 7f;
 
     /// <summary>
+    ///     How near the spot in front of a charge everyone but its planter comes while it goes on: just out of its blast.
+    /// </summary>
+    private const float FollowChargeRange = ChargeDangerRange + 1f;
+
+    /// <summary>
     ///     How long the rest get to clear before a wired charge is set off regardless.
     /// </summary>
     private static readonly TimeSpan ClearingTime = TimeSpan.FromSeconds(3);
@@ -90,6 +95,7 @@ public sealed partial class NpcSquadTacticsSystem
     private static readonly Vector2i[] ChargeSiteOffsets = [new(1, 0), new(-1, 0), new(0, 1), new(0, -1)];
 
     private readonly Dictionary<Vector2i, int> _floodSteps = new();
+    private readonly Dictionary<Vector2i, int> _farFloodSteps = new();
     private readonly List<(int Steps, Vector2i Room, Vector2i Wall, Vector2i Outside)> _wallCandidates = new();
 
     /// <summary>
@@ -151,6 +157,15 @@ public sealed partial class NpcSquadTacticsSystem
         hunt.Blast = null;
         hunt.StartedAt = now; // a whole hunt's time for what is through the hole: see UpdateHunt
 
+        // Out of where they were shut in, and no nearer knowing the room it is in or the ways into that: those are worked out
+        //      now, from where they stand, the same as for any hunt.
+        if (hunt.SealedIn)
+        {
+            ClearRoom(hunt);
+            PrepareSearch(leaderUid, hunt, settings, now);
+            return true;
+        }
+
         if (hunt.GridUid is { } gridUid && _mapGridQuery.TryComp(gridUid, out var mapGridComponent))
             BuildSearchPoints(leaderUid ?? _members[0], hunt, (gridUid, mapGridComponent), settings);
 
@@ -198,11 +213,31 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     A room with no way in at all is no room to anything that goes by its ways in, and it is what a wall charge is for.
+    ///         So is one with no way out, with the squad in it.
     /// </summary>
-    private void PrepareSealedRoom(NpcSquadPlan plan)
+    private void PrepareSealedRoom(NpcSquadPlan plan, EntityUid walkerUid, bool foundRoom)
     {
-        if (AnyoneHasACharge())
-            TryPrepareSealedRoom(plan.Hunt!, plan.TargetUid, Transform(plan.TargetUid).Coordinates);
+        if (!AnyoneHasACharge())
+            return;
+
+        var hunt = plan.Hunt!;
+
+        if (!foundRoom && TryPrepareSealedRoom(hunt, plan.TargetUid, Transform(plan.TargetUid).Coordinates))
+            return;
+
+        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates))
+            SealIn(hunt, walkerUid);
+    }
+
+    /// <summary>
+    ///     Has <paramref name="hunt"/> go by the squad being shut in. The ways into the hostile's room are no use to anyone who
+    ///         cannot walk to them. The grid is theirs, which is the hostile's too, even with no room found round it.
+    /// </summary>
+    private void SealIn(NpcHunt hunt, EntityUid walkerUid)
+    {
+        hunt.SealedIn = true;
+        hunt.GridUid = Transform(walkerUid).GridUid;
+        hunt.Entrances.Clear();
     }
 
     /// <summary>
@@ -229,6 +264,60 @@ public sealed partial class NpcSquadTacticsSystem
         hunt.GridUid = gridUid;
         hunt.RoomTiles.UnionWith(_floodSteps.Keys);
         return true;
+    }
+
+    /// <summary>
+    ///     Whether the squad is cut off from <paramref name="coordinates"/>, the other way round from
+    ///         <see cref="TryPrepareSealedRoom"/>: walking out from <paramref name="walkerUid"/>, through every door, the floor runs
+    ///         out before it gets there, and every member is on that floor. Otherwise one of them could still go.
+    /// </summary>
+    private bool IsSealedIn(EntityUid walkerUid, EntityCoordinates coordinates)
+    {
+        var walkerTransform = Transform(walkerUid);
+
+        if (walkerTransform.GridUid is not { } gridUid ||
+            _transformSystem.GetGrid(coordinates) != gridUid ||
+            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            return false;
+
+        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+
+        _floodSteps.Clear();
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, walkerTransform.Coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
+
+        if (_floodSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, coordinates)))
+            return false;
+
+        foreach (var steps in _floodSteps.Values)
+        {
+            if (steps >= SealedRoomSteps)
+                return false;
+        }
+
+        foreach (var memberUid in _members)
+        {
+            var memberTransform = Transform(memberUid);
+
+            if (memberTransform.GridUid != gridUid || !_floodSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, memberTransform.Coordinates)))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Forgets the room and everything worked out about it, for it to be worked out again.
+    /// </summary>
+    private static void ClearRoom(NpcHunt hunt)
+    {
+        hunt.SealedIn = false;
+        hunt.RoomTiles.Clear();
+        hunt.ThresholdTiles.Clear();
+        hunt.UnseenTiles.Clear();
+        hunt.Entrances.Clear();
+        hunt.SearchPoints.Clear();
+        hunt.StagedMembers.Clear();
+        hunt.Sweeps.Clear();
     }
 
     /// <summary>
@@ -347,6 +436,7 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     A wall of the hostile's room with floor the other side that somebody with a charge can walk to, the nearest there is.
+    ///         Shut in, a wall of their own, with floor the other side leading to it.
     /// </summary>
     private NpcChargePick? FindWallCharge(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
     {
@@ -412,6 +502,10 @@ public sealed partial class NpcSquadTacticsSystem
     ///     Every wall one thick between the room and floor <paramref name="walkerUid"/> can get to, nearest first. Goes by walking
     ///         distance, near enough, through doors and the room as well: the real way round is only worked out for those
     ///         that make the cut.
+    ///     <para>
+    ///         Shut in themselves (<see cref="NpcHunt.SealedIn"/>), it is the other way about: walls of the floor they are on with
+    ///             floor the other side that leads to the hostile, nearest it first.
+    ///     </para>
     /// </summary>
     private void FindWallCandidates(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, Vector2i walkerTile, NpcSquadTacticsSettings settings)
     {
@@ -419,6 +513,13 @@ public sealed partial class NpcSquadTacticsSystem
         _npcSquadCoverSystem.FloodTiles(walkerUid, grid, walkerTile, settings.MaxStageDistance, _floodSteps, stopAtDoors: false);
 
         _wallCandidates.Clear();
+
+        if (hunt.SealedIn)
+        {
+            FindWallsOut(hunt, walkerUid, grid, settings);
+            _wallCandidates.Sort((a, b) => a.Steps.CompareTo(b.Steps));
+            return;
+        }
 
         foreach (var roomTile in hunt.RoomTiles)
         {
@@ -440,6 +541,38 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         _wallCandidates.Sort((a, b) => a.Steps.CompareTo(b.Steps));
+    }
+
+    /// <summary>
+    ///     For <see cref="FindWallCandidates"/> shut in: <see cref="_floodSteps"/> holds the floor they are on. The far side of a wall
+    ///         is where they go through to, and this side is where the charge goes on from.
+    /// </summary>
+    private void FindWallsOut(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, NpcSquadTacticsSettings settings)
+    {
+        _farFloodSteps.Clear();
+        _npcSquadCoverSystem.FloodTiles(walkerUid,
+            grid,
+            _mapSystem.TileIndicesFor(grid, hunt.PredictedCoordinates),
+            settings.MaxStageDistance,
+            _farFloodSteps,
+            stopAtDoors: false);
+
+        foreach (var (insideTile, insideSteps) in _floodSteps)
+        {
+            foreach (var offset in ChargeSiteOffsets)
+            {
+                var wallTile = insideTile + offset;
+                var farTile = wallTile + offset;
+
+                if (_floodSteps.ContainsKey(wallTile) ||
+                    _farFloodSteps.ContainsKey(wallTile) ||
+                    _floodSteps.ContainsKey(farTile) ||
+                    !_farFloodSteps.TryGetValue(farTile, out var farSteps))
+                    continue;
+
+                _wallCandidates.Add((insideSteps + farSteps, farTile, wallTile, insideTile));
+            }
+        }
     }
 
     /// <summary>
@@ -712,7 +845,9 @@ public sealed partial class NpcSquadTacticsSystem
             }
             else if (memberUid != plan.WatcherUid)
             {
-                HoldStill(memberUid, issuerUid, site.Tile, hunt, now);
+                // Comes along, to just out of the blast: everyone goes in through the hole after it, and a squad shut out has
+                //      nobody stacked up anywhere, so holding still would leave the planter to go alone.
+                SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, site.StandCoordinates, site.LocalFacing, FollowChargeRange, null, now);
             }
         }
     }
