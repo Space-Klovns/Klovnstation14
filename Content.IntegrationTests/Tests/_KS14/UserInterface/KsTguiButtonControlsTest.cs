@@ -513,13 +513,17 @@ public sealed class KsTguiButtonControlsTest : GameTest
         KsTguiButton first = null;
         KsTguiButton second = null;
         KsTguiButton third = null;
-        var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
-        first = new KsTguiButton { Text = "Crew Manifest" };
-        second = new KsTguiButton { Text = "Random Job!" };
-        third = new KsTguiButton { Text = "Last", Icon = KsTguiIcons.Plus };
-        row.AddChild(first);
-        row.AddChild(second);
-        row.AddChild(third);
+        BoxContainer row = null;
+        await Client.WaitPost(() =>
+        {
+            row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
+            first = new KsTguiButton { Text = "Crew Manifest" };
+            second = new KsTguiButton { Text = "Random Job!" };
+            third = new KsTguiButton { Text = "Last", Icon = KsTguiIcons.Plus };
+            row.AddChild(first);
+            row.AddChild(second);
+            row.AddChild(third);
+        });
 
         var window = await Show(row);
         await Client.WaitAssertion(() =>
@@ -538,20 +542,28 @@ public sealed class KsTguiButtonControlsTest : GameTest
     [Test]
     public async Task APlainButtonBesideALineEditIsTheSameHeight()
     {
-        var button = new Button { Text = "Go" };
-        var edit = new LineEdit { HorizontalExpand = true };
-        var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
-        row.AddChild(edit);
-        row.AddChild(button);
-        var selector = new OptionButton();
-        selector.AddItem("One");
-        var row2 = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
-        var edit2 = new LineEdit { HorizontalExpand = true };
-        row2.AddChild(selector);
-        row2.AddChild(edit2);
-        var root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
-        root.AddChild(row);
-        root.AddChild(row2);
+        Button button = null;
+        LineEdit edit = null;
+        OptionButton selector = null;
+        LineEdit edit2 = null;
+        BoxContainer root = null;
+        await Client.WaitPost(() =>
+        {
+            button = new Button { Text = "Go" };
+            edit = new LineEdit { HorizontalExpand = true };
+            var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
+            row.AddChild(edit);
+            row.AddChild(button);
+            selector = new OptionButton();
+            selector.AddItem("One");
+            var row2 = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
+            edit2 = new LineEdit { HorizontalExpand = true };
+            row2.AddChild(selector);
+            row2.AddChild(edit2);
+            root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
+            root.AddChild(row);
+            root.AddChild(row2);
+        });
 
         var window = await Show(root);
         await Client.WaitAssertion(() =>
@@ -566,11 +578,17 @@ public sealed class KsTguiButtonControlsTest : GameTest
     [Test]
     public async Task ButtonsInAColumnKeepTheTwoPixelGap()
     {
-        var first = new KsTguiButton { Text = "One" };
-        var second = new KsTguiButton { Text = "Two" };
-        var column = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 0 };
-        column.AddChild(first);
-        column.AddChild(second);
+        KsTguiButton first = null;
+        KsTguiButton second = null;
+        BoxContainer column = null;
+        await Client.WaitPost(() =>
+        {
+            first = new KsTguiButton { Text = "One" };
+            second = new KsTguiButton { Text = "Two" };
+            column = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 0 };
+            column.AddChild(first);
+            column.AddChild(second);
+        });
 
         var window = await Show(column);
         await Client.WaitAssertion(() =>

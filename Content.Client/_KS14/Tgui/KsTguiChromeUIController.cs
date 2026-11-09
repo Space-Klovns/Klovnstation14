@@ -104,7 +104,7 @@ public sealed partial class KsTguiChromeUIController : UIController
     /// </summary>
     public void SetStatus(BaseWindow window, KsTguiWindowStatus status)
     {
-        window.SetValue(StatusProperty, status);
+        window.SetValue(StatusProperty, (KsTguiWindowStatus?)status);
 
         if (window.GetValue(ChromeProperty) is not { StatusIcon: { } icon } chrome)
             return;

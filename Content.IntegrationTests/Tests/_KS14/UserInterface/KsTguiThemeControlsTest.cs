@@ -302,7 +302,7 @@ public sealed class KsTguiThemeControlsTest : GameTest
 
             Assert.That(hBox.DesiredSize.Y, Is.EqualTo(22f), "tg's dropdown is 22 tall");
             Assert.That(hBox.GetChild(1).DesiredSize, Is.EqualTo(new Vector2(22f, 22f)), "and its chevron cell 22 across");
-            Assert.That(option.Margin, Is.EqualTo(new Thickness(0f, 0f, 2f, 2f)), "with a Button's gap");
+            Assert.That(option.Margin, Is.EqualTo(new Thickness(0f, 0f, 2f, 0f)), "with a Button's right gap only");
 
             option.Orphan();
         });
