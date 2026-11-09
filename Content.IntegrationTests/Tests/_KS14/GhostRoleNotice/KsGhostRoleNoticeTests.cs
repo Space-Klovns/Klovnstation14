@@ -173,13 +173,17 @@ public sealed class KsGhostRoleNoticeInRoundTests : KsGhostRoleNoticeTestBase
 
             var tagManager = ResolveTagManager();
             MarkupNode? linkNode = null;
+            var textBeforeLink = false;
             foreach (var node in message!)
             {
                 if (node.Name == KsGhostRoleFollowTag.TagName && !node.Closing)
-                    linkNode = node;
+                    linkNode ??= node;
+                else if (linkNode == null && node.Name == null && !string.IsNullOrWhiteSpace(node.Value.StringValue))
+                    textBeforeLink = true;
             }
 
             Assert.That(linkNode, Is.Not.Null, "with a follow link");
+            Assert.That(textBeforeLink, Is.False, "the link comes first, before any of the message's text");
             Assert.That(tagManager.TryGetMarkupTagHandler(KsGhostRoleFollowTag.TagName, tagsAllowed: null, out var handler), Is.True, "whose tag is registered");
             Assert.That(handler!.TryCreateControl(linkNode!, out var control), Is.True, $"{markup} :: {string.Join(";", linkNode!.Attributes.Select(a => a.Key + "=" + a.Value))}");
             Assert.That(control, Is.InstanceOf<Label>());

@@ -41,7 +41,8 @@ public sealed partial class KsGhostRoleNoticeSystem : EntitySystem
         var message = Loc.GetString("ks-ghost-role-notice-message", ("role", roleName));
         var followText = Loc.GetString("ks-ghost-role-notice-follow");
         var followLink = $"[{KsGhostRoleFollowTag.TagName}=\"{FormattedMessage.EscapeText(followText)}\" roles=\"{KsGhostRoleFollowTag.FormatRoles(args.Roles)}\"/]";
-        var wrappedMessage = $"[font size={KsGhostRoleFollowTag.FontSize}][bold][color=#a4885c]{FormattedMessage.EscapeText(message)}[/color] {followLink}[/bold][/font]";
+        // The link leads the line, where the eye lands first.
+        var wrappedMessage = $"[font size={KsGhostRoleFollowTag.FontSize}][bold]{followLink} [color=#a4885c]{FormattedMessage.EscapeText(message)}[/color][/bold][/font]";
 
         LastWrappedMessage = wrappedMessage;
 
