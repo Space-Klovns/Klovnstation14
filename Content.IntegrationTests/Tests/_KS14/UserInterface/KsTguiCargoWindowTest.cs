@@ -8,6 +8,7 @@ using Content.Client.Cargo.BUI;
 using Content.Client.Cargo.UI;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Shared._KS14.Cargo;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Cargo;
 using Content.Shared.Cargo.BUI;
@@ -17,6 +18,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
@@ -134,6 +136,107 @@ public sealed class KsTguiCargoWindowTest : GameTest
             Assert.That(submitted[0].Item4, Is.EqualTo(1));
             Assert.That(products.Select(id => (string)id), Does.Contain(submitted[0].Item3));
 
+            bui.Dispose();
+        });
+    }
+
+    [Test]
+    public async Task CheckoutListsWhatWaitsForPickupAndTabsDrawAttention()
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
+        await Pair.RunTicksSync(2);
+
+        CargoOrderConsoleBoundUserInterface bui = null;
+        List<ProtoId<CargoProductPrototype>> products = null;
+        ProtoId<CargoAccountPrototype> account = default;
+        EntityUid console = default;
+        NetEntity stationNet = default;
+        await Client.WaitPost(() =>
+        {
+            var entityManager = Client.EntMan;
+            console = entityManager.SpawnEntity(ConsolePrototype, new MapCoordinates(0f, 0f, MapId.Nullspace));
+            var station = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, MapId.Nullspace));
+            entityManager.AddComponent<StationBankAccountComponent>(station);
+            stationNet = entityManager.GetNetEntity(station);
+
+            var allowed = entityManager.GetComponent<CargoOrderConsoleComponent>(console).AllowedGroups;
+            products = Client.ProtoMan.EnumeratePrototypes<CargoProductPrototype>()
+                .Where(product => allowed.Contains(product.Group))
+                .Take(2)
+                .Select(product => new ProtoId<CargoProductPrototype>(product.ID))
+                .ToList();
+            account = entityManager.GetComponent<CargoOrderConsoleComponent>(console).Account;
+
+            bui = new CargoOrderConsoleBoundUserInterface(console, CargoConsoleUiKey.Orders);
+            typeof(BoundUserInterface).GetMethod("Open", Any)!.Invoke(bui, null);
+        });
+
+        var pending = new CargoOrderData(1, products[0], 1, "Requester", "Because", account);
+        var waiting = new List<KsCargoAwaitingOrder>
+        {
+            new(2, products[0], "Orderer", "Approver", account, KsCargoDeliveryPoint.TradeStation, 2, 0),
+            new(3, products[1], "Other", null, account, KsCargoDeliveryPoint.Telepad, 1, 2),
+        };
+
+        await Client.WaitPost(() => typeof(BoundUserInterface).GetMethod("UpdateState", Any)!.Invoke(bui,
+            [new CargoConsoleInterfaceState("Cargo", 0, 6, stationNet, [pending], products) { KsAwaiting = waiting }]));
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = (KsTguiCargoConsoleWindow)typeof(CargoOrderConsoleBoundUserInterface).GetField("_ksTguiMenu", Any)!.GetValue(bui);
+            var requestsTab = (KsTguiTabItem)typeof(KsTguiCargoConsoleWindow).GetField("_requestsTab", Any)!.GetValue(window);
+            var checkoutTab = (KsTguiTabItem)typeof(KsTguiCargoConsoleWindow).GetField("_checkoutTab", Any)!.GetValue(window);
+            var catalogTab = (KsTguiTabItem)requestsTab.Parent.GetChild(0);
+            requestsTab.SettleAnimations();
+            checkoutTab.SettleAnimations();
+            catalogTab.SettleAnimations();
+
+            var yellow = KsTguiColors.Bright(KsTguiColor.Yellow);
+            Assert.That(requestsTab.Attention && checkoutTab.Attention, "Both tabs have something waiting.");
+            Assert.That(requestsTab.CurrentTextColor, Is.EqualTo(yellow), "An unselected tab with attention has yellow text.");
+            Assert.That(checkoutTab.CurrentTextColor, Is.EqualTo(yellow));
+            Assert.That(catalogTab.CurrentTextColor, Is.Not.EqualTo(yellow), "A plain unselected tab is not yellow.");
+            Assert.That(checkoutTab.Count, Is.EqualTo("5"), "Two on a pallet, one on a telepad and two queued.");
+
+            // Select Checkout: the text and the indicator are yellow.
+            requestsTab.Selected = false;
+            checkoutTab.Selected = true;
+            checkoutTab.SettleAnimations();
+            ((Control)window).Visible = true;
+            ((BaseButton)checkoutTab).Pressed = false;
+            Assert.That(checkoutTab.CurrentTextColor, Is.EqualTo(yellow));
+            Assert.That(checkoutTab.IndicatorProgress, Is.GreaterThan(0f));
+
+            var labels = new List<Label>();
+            Collect(window, labels);
+            var texts = labels.Select(label => label.Text).ToList();
+            Assert.That(texts, Does.Contain(Loc.GetString("ks-tgui-cargo-where-trade-station")));
+            Assert.That(texts, Does.Contain(Loc.GetString("ks-tgui-cargo-where-queued",
+                ("where", Loc.GetString("ks-tgui-cargo-where-telepad")), ("count", 2))));
+            Assert.That(texts, Does.Contain("#2").And.Contain("#3"));
+            Assert.That(texts, Does.Not.Contain(Loc.GetString("ks-tgui-cargo-empty-checkout")));
+        });
+
+        // Nothing waiting and nothing pending: no attention, and the notice shows.
+        await Client.WaitPost(() => typeof(BoundUserInterface).GetMethod("UpdateState", Any)!.Invoke(bui,
+            [new CargoConsoleInterfaceState("Cargo", 0, 6, stationNet, [], products)]));
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitAssertion(() =>
+        {
+            var window = (KsTguiCargoConsoleWindow)typeof(CargoOrderConsoleBoundUserInterface).GetField("_ksTguiMenu", Any)!.GetValue(bui);
+            var requestsTab = (KsTguiTabItem)typeof(KsTguiCargoConsoleWindow).GetField("_requestsTab", Any)!.GetValue(window);
+            var checkoutTab = (KsTguiTabItem)typeof(KsTguiCargoConsoleWindow).GetField("_checkoutTab", Any)!.GetValue(window);
+            requestsTab.SettleAnimations();
+            checkoutTab.SettleAnimations();
+
+            Assert.That(requestsTab.Attention || checkoutTab.Attention, Is.False);
+            Assert.That(requestsTab.CurrentTextColor, Is.Not.EqualTo(KsTguiColors.Bright(KsTguiColor.Yellow)));
+
+            var notices = new List<KsTguiNoticeBox>();
+            Collect(window, notices);
+            Assert.That(notices.Select(notice => notice.Text), Does.Contain(Loc.GetString("ks-tgui-cargo-empty-checkout")));
             bui.Dispose();
         });
     }

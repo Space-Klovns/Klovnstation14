@@ -50,6 +50,7 @@ public sealed class KsTguiTabItem : ContainerButton
     private bool _selected;
     private bool _vertical;
     private KsTguiColor _color;
+    private bool _attention;
 
     public KsTguiTabItem()
     {
@@ -127,6 +128,20 @@ public sealed class KsTguiTabItem : ContainerButton
         set
         {
             _color = value;
+            RefreshLook();
+        }
+    }
+
+    /// <summary>
+    ///     Something on this tab wants a look, such as requests waiting: tgui's <c>textColor='yellow'</c>. The text is yellow
+    ///         while the tab is unselected, and the text and the indicator line are yellow while it is selected.
+    /// </summary>
+    public bool Attention
+    {
+        get => _attention;
+        set
+        {
+            _attention = value;
             RefreshLook();
         }
     }
@@ -257,7 +272,8 @@ public sealed class KsTguiTabItem : ContainerButton
         if (!_built)
             return;
 
-        var bright = _color == KsTguiColor.Default && _selectedText is { } themed ? themed : KsTguiColors.Bright(_color);
+        var bright = _attention ? KsTguiColors.Bright(KsTguiColor.Yellow)
+            : _color == KsTguiColor.Default && _selectedText is { } themed ? themed : KsTguiColors.Bright(_color);
         var hovered = DrawMode == DrawModeEnum.Hover;
         var pressed = DrawMode == DrawModeEnum.Pressed;
 
@@ -274,7 +290,7 @@ public sealed class KsTguiTabItem : ContainerButton
         MinSize = new System.Numerics.Vector2(48f, _vertical ? 24f : 27f);
 
         var wanted = _selected ? _selectedWash : hovered && !_selected ? _hoverWash : Clear;
-        var text = _selected || pressed ? bright : KsTguiPalettes.TextDim;
+        var text = _selected || pressed || _attention ? bright : KsTguiPalettes.TextDim;
         var indicator = _selected ? 1f : 0f;
 
         // The line is the text's colour (currentColor), and when it shrinks it keeps the colour it had.
