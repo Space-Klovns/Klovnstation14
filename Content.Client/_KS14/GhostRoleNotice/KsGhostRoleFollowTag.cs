@@ -76,6 +76,7 @@ public sealed partial class KsGhostRoleFollowTag : IMarkupTagHandler
                 return;
 
             _entityNetworkManager.SendSystemNetworkMessage(new KsGhostRoleFollowRequestEvent(roles));
+            args.Handle();
         };
 
         control = label;
