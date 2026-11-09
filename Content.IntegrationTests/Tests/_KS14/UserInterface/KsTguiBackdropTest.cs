@@ -312,7 +312,7 @@ public sealed class KsTguiBackdropTest : GameTest
             Assert.That(ghost.MouseFilter, Is.EqualTo(Control.MouseFilterMode.Ignore), "It takes no clicks.");
             Assert.That(ghost.Popup, Is.SameAs(popup));
             Assert.That(popup.Parent, Is.Null, "The popup is not parented again: the option button reuses it.");
-            Assert.That(host.Parent, Is.SameAs(popup));
+            Assert.That(host.Parent, Is.SameAs(ghost), "The ghost holds the menu while it closes, so it is in the tree with the real UI scale.");
 
             var alpha = host.Modulate.A;
             var scale = host.Scale;

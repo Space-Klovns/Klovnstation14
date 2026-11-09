@@ -506,4 +506,95 @@ public sealed class KsTguiButtonControlsTest : GameTest
             window.Close();
         });
     }
+
+    [Test]
+    public async Task ButtonsInARowAreTheSameHeightAndLineUpAtTopAndBottom()
+    {
+        KsTguiButton first = null;
+        KsTguiButton second = null;
+        KsTguiButton third = null;
+        BoxContainer row = null;
+        await Client.WaitPost(() =>
+        {
+            row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
+            first = new KsTguiButton { Text = "Crew Manifest" };
+            second = new KsTguiButton { Text = "Random Job!" };
+            third = new KsTguiButton { Text = "Last", Icon = KsTguiIcons.Plus };
+            row.AddChild(first);
+            row.AddChild(second);
+            row.AddChild(third);
+        });
+
+        var window = await Show(row);
+        await Client.WaitAssertion(() =>
+        {
+            // tg's buttons in a row are inline blocks on a baseline, so margin-bottom never shortens one.
+            Assert.That(first.Margin.Bottom, Is.EqualTo(0f), "no bottom margin in a horizontal box");
+            Assert.That(first.Margin.Right, Is.EqualTo(2f), "the right margin is kept");
+            Assert.That(second.Size.Y, Is.EqualTo(first.Size.Y), "the first button is as tall as the second");
+            Assert.That(third.Size.Y, Is.EqualTo(first.Size.Y));
+            Assert.That(second.Position.Y, Is.EqualTo(first.Position.Y), "tops line up");
+            Assert.That(second.Position.Y + second.Size.Y, Is.EqualTo(first.Position.Y + first.Size.Y), "bottoms line up");
+            window.Close();
+        });
+    }
+
+    [Test]
+    public async Task APlainButtonBesideALineEditIsTheSameHeight()
+    {
+        Button button = null;
+        LineEdit edit = null;
+        OptionButton selector = null;
+        LineEdit edit2 = null;
+        BoxContainer root = null;
+        await Client.WaitPost(() =>
+        {
+            button = new Button { Text = "Go" };
+            edit = new LineEdit { HorizontalExpand = true };
+            var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
+            row.AddChild(edit);
+            row.AddChild(button);
+            selector = new OptionButton();
+            selector.AddItem("One");
+            var row2 = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
+            edit2 = new LineEdit { HorizontalExpand = true };
+            row2.AddChild(selector);
+            row2.AddChild(edit2);
+            root = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
+            root.AddChild(row);
+            root.AddChild(row2);
+        });
+
+        var window = await Show(root);
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(button.Size.Y, Is.EqualTo(edit.Size.Y), "a plain Button is not shortened by a margin");
+            Assert.That(button.Position.Y + button.Size.Y, Is.EqualTo(edit.Position.Y + edit.Size.Y));
+            Assert.That(selector.Size.Y, Is.EqualTo(edit2.Size.Y), "nor is a dropdown");
+            window.Close();
+        });
+    }
+
+    [Test]
+    public async Task ButtonsInAColumnKeepTheTwoPixelGap()
+    {
+        KsTguiButton first = null;
+        KsTguiButton second = null;
+        BoxContainer column = null;
+        await Client.WaitPost(() =>
+        {
+            first = new KsTguiButton { Text = "One" };
+            second = new KsTguiButton { Text = "Two" };
+            column = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 0 };
+            column.AddChild(first);
+            column.AddChild(second);
+        });
+
+        var window = await Show(column);
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(second.Position.Y - (first.Position.Y + first.Size.Y), Is.EqualTo(2f), "tg's margin-bottom between stacked buttons");
+            window.Close();
+        });
+    }
 }

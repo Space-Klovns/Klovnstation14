@@ -337,7 +337,14 @@ public sealed partial class KsTguiFeelUIController : UIController
         if (!control.HasStyleClass(OptionButton.StyleClassPopup))
             return;
 
+        // A menu still closing is the popup's own again, with its entries inside.
+        if (control is Popup opened)
+            DropDropdownGhostOf(opened);
+
         TagDropdownEntries(control);
+
+        if (control is Popup watched)
+            WatchDropdown(watched);
 
         // A dropdown of a themed window wears its theme: the modal layer is outside the window. The option button is under
         //      the mouse when it opens.

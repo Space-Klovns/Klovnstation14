@@ -163,9 +163,12 @@ public sealed partial class KsTguiSheetlet : Sheetlet<PalettedStylesheet>
     }
 
     /// <summary>
-    ///     tgui's <c>--space-xs</c>, the right and bottom margin of every Button.
+    ///     tgui's <c>--space-xs</c>, the right margin of every plain Button. Not the bottom one: tg's buttons in a row sit on a shared baseline, where
+    ///         margin-bottom never changes a button's box, while here a box stretches each child into its slot minus its margin, so a
+    ///         bottom margin would leave a button 2px shorter than a LineEdit or SpinBox beside it. A vertical stack already has the box's
+    ///         own separation. <see cref="Content.Client._KS14.Tgui.Controls.KsTguiButton"/> sets its margins in code, with the bottom one in a column.
     /// </summary>
-    private static readonly Thickness ButtonGap = new(0f, 0f, 2f, 2f);
+    private static readonly Thickness ButtonGap = new(0f, 0f, 2f, 0f);
 
     /// <summary>
     ///     Set on every button by this sheet alone: <see cref="Content.Client._KS14.Tgui.Controls.KsRestylingButton"/> restyles its children only under tgui.

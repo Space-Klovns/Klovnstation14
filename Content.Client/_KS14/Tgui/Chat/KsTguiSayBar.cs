@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using Content.Client.Stylesheets.Fonts;
 using Robust.Client.Graphics;
@@ -11,8 +12,8 @@ namespace Content.Client._KS14.Tgui.Chat;
 
 /// <summary>
 ///     The shell of tgui-say, port of <c>TguiSay.tsx</c> and its scss: a window coloured for the channel, a black bar inside it,
-///         the channel button at the left and the text at the right. Enter sends, Escape closes, Tab (the cycle keybind) or a
-///         click on the button changes channel, Up and Down walk the last five messages, and it grows by a line at a time up
+///         the channel button at the left and the text at the right. Enter sends, Escape closes, Tab (the cycle keybind) changes channel and a
+///         click on the button opens the menu of channels, Up and Down walk the last five messages, and it grows by a line at a time up
 ///         to three, as the browser's textarea did. It holds no chat logic of its own: <c>ChatBox</c> owns that and just
 ///         listens to the events.
 /// </summary>
@@ -61,6 +62,14 @@ public sealed partial class KsTguiSayBar : PanelContainer
     private bool _hadFocus;
     private bool _setting;
 
+    // The engine's TextEdit sets the cursor after raising OnTextChanged, from where the insertion was. Setting the text from
+    //      inside that event leaves the cursor past the end of the new text: no caret, and every key after it throws.
+    //      So a change made while the event is being handled waits for the next frame.
+    private bool _inEditChange;
+    private bool _openingKeyPending;
+    private string? _deferredText;
+    private readonly VScrollBar _scrollBar;
+
     public KsTguiSayBar()
     {
         IoCManager.InjectDependencies(this);
@@ -90,6 +99,13 @@ public sealed partial class KsTguiSayBar : PanelContainer
         };
         _edit.OnTextChanged += OnEditChanged;
         _edit.OnKeyBindDown += OnEditKeyBindDown;
+
+        // The engine's TextEdit always has a bar, and its minimum size alone is taller than the whole line, so the bar is
+        //      only there while the text overflows the three lines the window grows to.
+        _scrollBar = _edit.Children.OfType<VScrollBar>().First();
+        _scrollBar.AddStyleClass(KsTguiSheetlet.StyleClassThinScrollBar);
+        _scrollBar.ReservesSpace = false; // a hidden bar still takes its minimum size otherwise
+        _scrollBar.Visible = false;
 
         var row = new BoxContainer
         {
@@ -132,7 +148,17 @@ public sealed partial class KsTguiSayBar : PanelContainer
 
     public event Action<bool>? OnFocusChanged;
 
-    public string Text => Rope.Collapse(_edit.TextRope);
+    public string Text => _deferredText ?? Rope.Collapse(_edit.TextRope);
+
+    /// <summary>
+    ///     Whether the scroll bar is shown, which is only while the text has more lines than the bar can grow to.
+    /// </summary>
+    public bool ScrollBarShown => _scrollBar.Visible;
+
+    /// <summary>
+    ///     The text box inside, for tests.
+    /// </summary>
+    public TextEdit Edit => _edit;
 
     public bool HasInputFocus => _edit.HasKeyboardFocus();
 
@@ -153,6 +179,11 @@ public sealed partial class KsTguiSayBar : PanelContainer
     /// </summary>
     public string ChannelLabel => _channelLabel;
 
+    /// <summary>
+    ///     The channel button, which a menu of channels opens from.
+    /// </summary>
+    public Control ChannelButton => _button;
+
     public void SetChannel(string label, Color color)
     {
         _channelLabel = label;
@@ -165,6 +196,17 @@ public sealed partial class KsTguiSayBar : PanelContainer
     /// </summary>
     public void SetText(string text, bool notify = false)
     {
+        if (_inEditChange)
+        {
+            _deferredText = text;
+            _lastText = text;
+            if (notify)
+                OnTextEdited?.Invoke(text);
+
+            return;
+        }
+
+        _deferredText = null;
         _setting = true;
         _edit.TextRope = new Rope.Leaf(text);
         var end = new TextEdit.CursorPos(text.Length, TextEdit.LineBreakBias.Top);
@@ -182,6 +224,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
     /// </summary>
     public void Submit()
     {
+        ApplyDeferredText();
         OnSubmitted?.Invoke(Text);
     }
 
@@ -192,6 +235,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
     {
         _textAtFocus = Text;
         _ignoreUntil = _gameTiming.RealTime + OpeningKeyWindow;
+        _openingKeyPending = true;
         _edit.GrabKeyboardFocus();
     }
 
@@ -231,11 +275,23 @@ public sealed partial class KsTguiSayBar : PanelContainer
         if (_setting)
             return;
 
-        var text = Rope.Collapse(args.TextRope);
-
-        // The key that opened the bar arrives as text a moment after the focus: a stock LineEdit has IgnoreNext for it.
-        if (_gameTiming.RealTime < _ignoreUntil && text.Length == _textAtFocus.Length + 1 && text.StartsWith(_textAtFocus))
+        _inEditChange = true;
+        try
         {
+            ChangeFromEdit(Rope.Collapse(args.TextRope));
+        }
+        finally
+        {
+            _inEditChange = false;
+        }
+    }
+
+    private void ChangeFromEdit(string text)
+    {
+        // The key that opened the bar arrives as text a moment after the focus: a stock LineEdit has IgnoreNext for it.
+        if (_openingKeyPending && _gameTiming.RealTime < _ignoreUntil && text.Length == _textAtFocus.Length + 1 && text.StartsWith(_textAtFocus))
+        {
+            _openingKeyPending = false;
             SetText(_textAtFocus);
             return;
         }
@@ -251,6 +307,18 @@ public sealed partial class KsTguiSayBar : PanelContainer
 
         _lastText = text;
         OnTextEdited?.Invoke(text);
+    }
+
+    /// <summary>
+    ///     Puts in the text a change made during the engine's change event asked for, now that the event is over.
+    /// </summary>
+    private void ApplyDeferredText()
+    {
+        if (_deferredText is not { } text)
+            return;
+
+        _deferredText = null;
+        SetText(text);
     }
 
     private void OnEditKeyBindDown(GUIBoundKeyEventArgs args)
@@ -357,6 +425,8 @@ public sealed partial class KsTguiSayBar : PanelContainer
     {
         base.FrameUpdate(args);
 
+        ApplyDeferredText();
+
         var hasFocus = _edit.HasKeyboardFocus();
         if (hasFocus != _hadFocus)
         {
@@ -366,6 +436,7 @@ public sealed partial class KsTguiSayBar : PanelContainer
 
         // One line is 30, two 50, three and more 70, as WindowSize.
         var lines = _edit.GetLineCount();
+        _scrollBar.Visible = lines > 3;
         var wanted = lines <= 1 ? SmallHeight : lines == 2 ? MediumHeight : LargeHeight;
         if (MathF.Abs(wanted - WantedHeight) > 0.5f)
         {

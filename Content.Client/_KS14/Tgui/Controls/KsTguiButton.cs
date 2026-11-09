@@ -424,7 +424,9 @@ public class KsTguiButton : Button
 
     /// <summary>
     ///     tgui's margins: 2px right and bottom, none on the right of a fluid button (its margin-left and -right are 0) and
-    ///         none at all on the last child.
+    ///         none at all on the last child. In a horizontal box there is no bottom margin: tg's buttons in a row are inline blocks on a
+    ///         shared baseline, so margin-bottom only adds room under the line and never shortens a button, while a box would stretch
+    ///         each child into its slot minus the margin and leave every button but the last 2px short.
     /// </summary>
     private void RefreshMargin()
     {
@@ -440,7 +442,8 @@ public class KsTguiButton : Button
         }
 
         var isLast = Parent is { ChildCount: > 0 } parent && parent.GetChild(parent.ChildCount - 1) == this;
-        var margin = isLast ? default : new Thickness(0f, 0f, Fluid ? 0f : 2f, 2f);
+        var inRow = Parent is BoxContainer { Orientation: BoxContainer.LayoutOrientation.Horizontal };
+        var margin = isLast ? default : new Thickness(0f, 0f, Fluid ? 0f : 2f, inRow ? 0f : 2f);
         if (_marginApplied && Margin == margin)
             return;
 

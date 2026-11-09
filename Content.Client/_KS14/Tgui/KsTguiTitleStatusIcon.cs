@@ -12,11 +12,6 @@ namespace Content.Client._KS14.Tgui;
 public enum KsTguiWindowStatus
 {
     /// <summary>
-    ///     tgui's <c>status === undefined</c>: nothing is known, because the window is not an interface of anything.
-    /// </summary>
-    None,
-
-    /// <summary>
     ///     <c>UI_INTERACTIVE</c>: the user can use the window.
     /// </summary>
     Interactive,
@@ -130,7 +125,6 @@ public sealed class KsTguiTitleStatusIcon : Control
     {
         return status switch
         {
-            KsTguiWindowStatus.None => KsTguiIcons.Tools,
             KsTguiWindowStatus.Disabled => KsTguiIcons.EyeSlash,
             _ => KsTguiIcons.Eye,
         };
@@ -140,7 +134,6 @@ public sealed class KsTguiTitleStatusIcon : Control
     {
         return status switch
         {
-            KsTguiWindowStatus.None => Color.White.WithAlpha(KsTguiTitleBarButton.IdleOpacity),
             KsTguiWindowStatus.Interactive => KsTguiPalettes.Good,
             KsTguiWindowStatus.Update => KsTguiPalettes.Average,
             _ => KsTguiPalettes.Bad,

@@ -44,13 +44,24 @@ public sealed partial class KsTguiFeelUIController
     private readonly List<ChevronTurn> _chevronTurns = new();
     private readonly List<KsTguiDropdownGhost> _dropdownGhosts = new();
 
-    private sealed class DropdownOpening(Popup popup, KsTguiScaleHost host, OptionButton? button)
+    /// <summary>
+    ///     The popups whose showing is already watched, to place the menu in the very call that shows it.
+    /// </summary>
+    private static readonly AttachedProperty<bool> PlacementHookedProperty =
+        AttachedProperty<bool>.Create("KsTguiDropdownPlacementHooked", typeof(KsTguiFeelUIController));
+
+    /// <summary>
+    ///     The boxes of an open popup whose new children are tagged as entries, so an option button that is cleared and filled
+    ///         again while open keeps the dropdown look.
+    /// </summary>
+    private readonly Dictionary<Popup, List<Control>> _entryBoxes = new();
+
+    private sealed class DropdownOpening(Popup popup, KsTguiScaleHost host, Control? anchor)
     {
         public readonly Popup Popup = popup;
         public readonly KsTguiScaleHost Host = host;
-        public readonly OptionButton? Button = button;
+        public readonly Control? Anchor = anchor;
         public float Elapsed;
-        public bool Placed;
     }
 
     private sealed class ChevronTurn(TextureRect triangle, ShaderInstance shader, Popup popup)
@@ -93,6 +104,7 @@ public sealed partial class KsTguiFeelUIController
         DropDropdownGhostOf(popup);
 
         var button = FindOptionButton(UIManager.CurrentlyHovered);
+        Control? anchor = (popup as IKsTguiDropdownAnchored)?.DropdownAnchor ?? button;
 
         // The menu's rows sit 4px in from a 1px border, and scroll with it. The engine measures the menu before it has a
         //      style, so the popup is capped as well as its scroll container, or the engine's stale size would win.
@@ -132,7 +144,8 @@ public sealed partial class KsTguiFeelUIController
         host.Scale = DropdownOpenScale;
         host.Modulate = Color.White.WithAlpha(0f);
         host.Backdrop = UIManager.GetUIController<KsTguiBackdropUIController>();
-        _dropdownOpenings.Add(new DropdownOpening(popup, host, button));
+        _dropdownOpenings.RemoveAll(found => found.Popup == popup);
+        _dropdownOpenings.Add(new DropdownOpening(popup, host, anchor));
 
         if (button != null)
             TurnChevron(button, popup);
@@ -144,6 +157,9 @@ public sealed partial class KsTguiFeelUIController
     /// </summary>
     private void OnModalRootChildRemoved(Control control)
     {
+        if (control is Popup closing)
+            UnwatchDropdownEntries(closing);
+
         if (control is not Popup popup || popup.Parent != null || !_configurationManager.GetCVar(KsCCVars.TguiStyle))
             return;
 
@@ -152,8 +168,11 @@ public sealed partial class KsTguiFeelUIController
 
         DropDropdownGhostOf(popup);
 
-        var position = UIManager.ModalRoot.GlobalPixelPosition + popup.PixelPosition;
+        // Virtual pixels: the popup has left the tree, so it no longer knows the UI scale, but its position is still right.
+        var position = UIManager.ModalRoot.GlobalPosition + popup.Position;
         var ghost = new KsTguiDropdownGhost(popup, host, position);
+        popup.RemoveChild(host);
+        ghost.AddChild(host);
         UIManager.PopupRoot.AddChild(ghost);
         _dropdownGhosts.Add(ghost);
     }
@@ -179,6 +198,9 @@ public sealed partial class KsTguiFeelUIController
     {
         var ghost = _dropdownGhosts[index];
         _dropdownGhosts.RemoveAt(index);
+
+        // The host goes home first: orphaning the ghost would take it along.
+        ghost.ReleaseHost();
         ghost.Orphan();
 
         if (!popupIsClosed)
@@ -270,13 +292,6 @@ public sealed partial class KsTguiFeelUIController
                 continue;
             }
 
-            // The engine places the menu 1px below after this has been told of it, so this waits for the frame after.
-            if (!opening.Placed)
-            {
-                opening.Placed = true;
-                PlaceDropdown(opening);
-            }
-
             opening.Elapsed += deltaSeconds;
             var progress = MathF.Min(opening.Elapsed / FadeSeconds, 1f);
             var eased = CssEase(progress);
@@ -323,16 +338,103 @@ public sealed partial class KsTguiFeelUIController
         }
     }
 
-    private static void PlaceDropdown(DropdownOpening opening)
+    /// <summary>
+    ///     Places the menu beside what it opens from, as Floating does: below, or above when it doesn't fit below, and only
+    ///         pushed against the screen's edge when it fits neither way.
+    /// </summary>
+    private void PlaceDropdown(DropdownOpening opening)
     {
-        var origin = PopupContainer.GetPopupOrigin(opening.Popup);
+        var popup = opening.Popup;
+        var modalRoot = UIManager.ModalRoot;
+        var origin = PopupContainer.GetPopupOrigin(popup);
 
-        if (opening.Button is { } button)
-            origin.Y = button.GlobalPosition.Y + button.Size.Y + DropdownMenuGap;
-        else
+        if (opening.Anchor is not { } anchor)
+        {
             origin.Y += DropdownMenuGap - 1f;
+            opening.Host.PivotBottom = false;
+            PopupContainer.SetPopupOrigin(popup, origin);
+            return;
+        }
 
-        PopupContainer.SetPopupOrigin(opening.Popup, origin);
+        // The size the engine's layout will give it, worked out now so that the menu is right on its first drawn frame.
+        popup.Measure(modalRoot.Size);
+        var height = popup.DesiredSize.Y;
+        var top = anchor.GlobalPosition.Y - modalRoot.GlobalPosition.Y;
+        var below = top + anchor.Size.Y + DropdownMenuGap;
+        var above = top - DropdownMenuGap - height;
+        var flip = below + height > modalRoot.Size.Y && above >= 0f;
+
+        origin.Y = flip ? above : below;
+        opening.Host.PivotBottom = flip;
+        PopupContainer.SetPopupOrigin(popup, origin);
+    }
+
+    /// <summary>
+    ///     A popup showing is the engine's last step in opening it, after it has set where it goes. Placing the menu then means
+    ///         it is final before any layout or drawing.
+    /// </summary>
+    private void OnDropdownVisibilityChanged(Control control)
+    {
+        if (control is not Popup { Visible: true } popup)
+            return;
+
+        foreach (var opening in _dropdownOpenings)
+        {
+            if (opening.Popup == popup)
+            {
+                PlaceDropdown(opening);
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Follows the entries a dropdown gains while it is open, and its showing.
+    /// </summary>
+    private void WatchDropdown(Popup popup)
+    {
+        if (!popup.GetValue(PlacementHookedProperty))
+        {
+            popup.SetValue(PlacementHookedProperty, true);
+            popup.OnVisibilityChanged += OnDropdownVisibilityChanged;
+        }
+
+        UnwatchDropdownEntries(popup);
+
+        var boxes = new List<Control>();
+        CollectBoxes(popup, boxes);
+        foreach (var box in boxes)
+            box.OnChildAdded += OnDropdownEntryAdded;
+
+        _entryBoxes[popup] = boxes;
+    }
+
+    private void UnwatchDropdownEntries(Popup popup)
+    {
+        if (!_entryBoxes.Remove(popup, out var boxes))
+            return;
+
+        foreach (var box in boxes)
+            box.OnChildAdded -= OnDropdownEntryAdded;
+    }
+
+    private static void CollectBoxes(Control control, List<Control> boxes)
+    {
+        foreach (var child in control.Children)
+        {
+            if (child is BoxContainer)
+                boxes.Add(child);
+
+            CollectBoxes(child, boxes);
+        }
+    }
+
+    private static void OnDropdownEntryAdded(Control child)
+    {
+        if (child is Button button)
+            button.AddStyleClass(KsTguiSheetlet.StyleClassDropdownEntry);
+        else
+            TagDropdownEntries(child);
     }
 
     private void UpdateScrollArrows(float deltaSeconds)
@@ -364,4 +466,15 @@ public sealed partial class KsTguiFeelUIController
             DropDropdownGhost(i, popupIsClosed: _dropdownGhosts[i].Popup.Parent == null);
         }
     }
+}
+
+/// <summary>
+///     A popup that opens as a tgui dropdown beside a control that is not an <see cref="OptionButton"/>.
+/// </summary>
+public interface IKsTguiDropdownAnchored
+{
+    /// <summary>
+    ///     The control the menu opens below, or above where there is no room.
+    /// </summary>
+    Control? DropdownAnchor { get; }
 }
