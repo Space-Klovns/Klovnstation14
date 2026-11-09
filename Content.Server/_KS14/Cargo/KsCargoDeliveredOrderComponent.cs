@@ -29,15 +29,6 @@ public sealed partial class KsCargoDeliveredOrderComponent : Component
     [ViewVariables]
     public EntityUid Station;
 
-    /// <summary>
-    ///     The grid the goods were spawned on, and the tile they must stay on to count as waiting.
-    /// </summary>
-    [ViewVariables]
-    public EntityUid Grid;
-
-    [ViewVariables]
-    public Vector2i Tile;
-
     [ViewVariables]
     public bool AtTelepad;
 }

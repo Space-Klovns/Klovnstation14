@@ -39,27 +39,68 @@ public sealed partial class CargoSystem
             marker.Order = order;
             marker.DeliveryPoint = anchoredUid;
             marker.Station = station;
-            marker.Grid = spawn.EntityId;
-            marker.Tile = tile;
             marker.AtTelepad = atTelepad;
             return;
         }
     }
 
+    /// <summary>
+    ///     Marked goods that moved since the last update, to be checked once nothing is moving them any more.
+    /// </summary>
+    private readonly HashSet<EntityUid> _ksMovedGoods = new();
+    private readonly List<EntityUid> _ksDrainedMovedGoods = new();
+
     [SubscribeLocalEvent]
     private void OnDeliveredOrderMoved(Entity<KsCargoDeliveredOrderComponent> entity, ref MoveEvent args)
     {
-        var transformComponent = args.Component;
-        // TryComp: the grid may be on its way out, taking the goods with it.
-        if (transformComponent.ParentUid == entity.Comp.Grid &&
-            TryComp<MapGridComponent>(entity.Comp.Grid, out var gridComponent) &&
-            _ksMapSystem.CoordinatesToTile(entity.Comp.Grid, gridComponent, transformComponent.Coordinates) == entity.Comp.Tile)
-        {
+        // Checked later, not here: a grid split moves the goods and their pallet to the new grid one at a time, so in
+        //      between they would look apart.
+        _ksMovedGoods.Add(entity.Owner);
+    }
+
+    /// <summary>
+    ///     Lets go of goods that have left their pallet or telepad since the last update. The marker's shutdown refreshes the
+    ///         station's consoles.
+    /// </summary>
+    private void KsUpdateCheckout()
+    {
+        if (_ksMovedGoods.Count == 0)
             return;
+
+        _ksDrainedMovedGoods.Clear();
+        _ksDrainedMovedGoods.AddRange(_ksMovedGoods);
+        _ksMovedGoods.Clear();
+
+        foreach (var goodsUid in _ksDrainedMovedGoods)
+        {
+            if (!TryComp<KsCargoDeliveredOrderComponent>(goodsUid, out var marker) || KsIsOnDeliveryPoint((goodsUid, marker)))
+                continue;
+
+            RemComp(goodsUid, marker);
+        }
+    }
+
+    /// <summary>
+    ///     Whether the goods are on the tile their pallet or telepad is on now, wherever that has gone (a grid split takes
+    ///         both to a new grid). Picked up, put in a crate or moved off, they are not.
+    /// </summary>
+    private bool KsIsOnDeliveryPoint(Entity<KsCargoDeliveredOrderComponent> goods)
+    {
+        var deliveryPoint = goods.Comp.DeliveryPoint;
+        if (TerminatingOrDeleted(deliveryPoint) || TerminatingOrDeleted(goods.Owner))
+            return false;
+
+        var goodsTransform = Transform(goods.Owner);
+        var pointTransform = Transform(deliveryPoint);
+        if (!pointTransform.Anchored || goodsTransform.ParentUid != pointTransform.ParentUid
+            || !TryComp<MapGridComponent>(pointTransform.ParentUid, out var gridComponent))
+        {
+            return false;
         }
 
-        // Off its tile, or picked up or crated: no longer waiting. The shutdown refreshes the consoles.
-        RemCompDeferred<KsCargoDeliveredOrderComponent>(entity.Owner);
+        var gridUid = pointTransform.ParentUid;
+        return _ksMapSystem.CoordinatesToTile(gridUid, gridComponent, goodsTransform.Coordinates)
+               == _ksMapSystem.CoordinatesToTile(gridUid, gridComponent, pointTransform.Coordinates);
     }
 
     [SubscribeLocalEvent]
@@ -91,10 +132,14 @@ public sealed partial class CargoSystem
         }
 
         var markers = AllEntityQuery<KsCargoDeliveredOrderComponent>();
-        while (markers.MoveNext(out var marker))
+        while (markers.MoveNext(out var markerUid, out var marker))
         {
             // A marker removed this tick is shut down but still stored.
             if (marker.Station != station || marker.LifeStage > ComponentLifeStage.Running)
+                continue;
+
+            // Moved off since the last update, and not yet let go of.
+            if (!KsIsOnDeliveryPoint((markerUid, marker)))
                 continue;
 
             Add(marker.Order, marker.AtTelepad ? KsCargoDeliveryPoint.Telepad : KsCargoDeliveryPoint.TradeStation, 1, 0);

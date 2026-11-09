@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.Cargo;
 using Content.Server.Cargo.Components;
 using Content.Server.Cargo.Systems;
 using Content.Server.Station.Systems;
@@ -136,6 +137,39 @@ public sealed class KsCargoCheckoutTest : GameTest
             // Carried to the next tile it is picked up.
             transformSystem.SetCoordinates(goodsUid, new EntityCoordinates(_grid, 1.5f, 0.5f));
             Assert.That(Awaiting(), Is.Empty, "Left the pallet's tile.");
+        });
+    }
+
+    /// <summary>
+    ///     A grid split takes the pallet and the goods on it to a new grid, one at a time; they are still waiting on it after.
+    /// </summary>
+    [Test]
+    public async Task GoodsStayListedWhenTheirGridSplits()
+    {
+        await SetUpStation();
+        EntityUid goodsUid = default;
+        await Server.WaitAssertion(() =>
+        {
+            SpawnAnchored(PalletPrototype, tileX: 0);
+            var product = Server.ProtoMan.Index(_product);
+            var database = Server.EntMan.GetComponent<StationCargoOrderDatabaseComponent>(_station);
+            Assert.That(Server.System<CargoSystem>().AddAndApproveOrder(_station, product, 1, "Orderer", "reason", "Approver", database, Account, _stationData));
+            goodsUid = FindGoods();
+            Assert.That(Awaiting(), Has.Count.EqualTo(1));
+
+            // Tiles 0 to 3 in a row: taking out tile 1 leaves the pallet's tile on a piece of its own.
+            var mapSystem = Server.System<SharedMapSystem>();
+            var gridComponent = Server.EntMan.GetComponent<MapGridComponent>(_grid);
+            mapSystem.SetTile(_grid, gridComponent, new Vector2i(1, 0), Tile.Empty);
+        });
+
+        await Server.WaitRunTicks(5);
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(Server.EntMan.GetComponent<TransformComponent>(goodsUid).ParentUid, Is.Not.EqualTo(_grid),
+                "The grid split, taking the goods to a new grid.");
+            Assert.That(Awaiting(), Has.Count.EqualTo(1), "Still waiting on the pallet, on the new grid.");
+            Assert.That(Server.EntMan.HasComponent<KsCargoDeliveredOrderComponent>(goodsUid), "And still marked.");
         });
     }
 
