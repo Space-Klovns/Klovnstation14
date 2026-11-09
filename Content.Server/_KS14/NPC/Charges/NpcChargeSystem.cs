@@ -94,8 +94,7 @@ public sealed partial class NpcChargeSystem : EntitySystem
     {
         charge = default;
 
-        _carried.Clear();
-        _npcDoorSystem.GetCarried(npcUid, _carried);
+        _npcHandsSystem.GetCarried(npcUid, _carried);
 
         EntityUid? activatorUid = null;
 
@@ -109,10 +108,7 @@ public sealed partial class NpcChargeSystem : EntitySystem
 
         foreach (var itemUid in _carried)
         {
-            if (!_stickyQuery.TryComp(itemUid, out var stickyComponent) ||
-                stickyComponent.StuckTo != null ||
-                !_explosiveQuery.HasComp(itemUid) ||
-                targetUid is { } target && !CanStick(itemUid, target))
+            if (!IsStickableExplosive(itemUid, targetUid))
                 continue;
 
             if (_chainEndQuery.HasComp(itemUid))
@@ -132,6 +128,18 @@ public sealed partial class NpcChargeSystem : EntitySystem
         }
 
         return found;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="itemUid"/> is an explosive that can still be stuck on something, on
+    ///         <paramref name="targetUid"/> if given.
+    /// </summary>
+    private bool IsStickableExplosive(EntityUid itemUid, EntityUid? targetUid)
+    {
+        return _stickyQuery.TryComp(itemUid, out var stickyComponent) &&
+            stickyComponent.StuckTo == null &&
+            _explosiveQuery.HasComp(itemUid) &&
+            (targetUid is not { } target || CanStick(itemUid, target));
     }
 
     /// <summary>

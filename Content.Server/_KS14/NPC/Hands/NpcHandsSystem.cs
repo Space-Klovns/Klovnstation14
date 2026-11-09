@@ -94,28 +94,7 @@ public sealed partial class NpcHandsSystem : EntitySystem
         // Only something it took from somewhere: an item that was in hand all along stays there.
         if (takenOut.SourceUid is { } sourceUid && Exists(itemUid) && _handsSystem.IsHolding(npcUid, itemUid))
         {
-            var stowed = takenOut.SourceContainerId is { } containerId &&
-                (sourceUid == npcUid
-                    ? _inventorySystem.TryEquip(npcUid, itemUid, containerId, silent: true, force: true)
-                    : _storageQuery.TryComp(sourceUid, out var sourceStorageComponent) &&
-                      _storageSystem.Insert(sourceUid, itemUid, out _, user: npcUid, storageComp: sourceStorageComponent, playSound: false));
-
-            if (!stowed)
-            {
-                foreach (var wornUid in _inventorySystem.GetHandOrInventoryEntities(npcUid, SlotFlags.All))
-                {
-                    if (wornUid == itemUid || !_storageQuery.TryComp(wornUid, out var wornStorageComponent))
-                        continue;
-
-                    if (_storageSystem.Insert(wornUid, itemUid, out _, user: npcUid, storageComp: wornStorageComponent, playSound: false))
-                    {
-                        stowed = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!stowed)
+            if (!TryReturnToSource(npcUid, takenOut, sourceUid) && !TryStowInWorn(npcUid, itemUid))
                 _handsSystem.TryDrop(npcUid, itemUid, checkActionBlocker: false);
         }
 
@@ -127,6 +106,38 @@ public sealed partial class NpcHandsSystem : EntitySystem
             _wieldableQuery.TryComp(wieldedUid, out var wieldableComponent) &&
             !wieldableComponent.Wielded)
             _wieldableSystem.TryWield((wieldedUid, wieldableComponent), npcUid);
+    }
+
+    /// <summary>
+    ///     Puts the item back in the slot or storage it was taken from.
+    /// </summary>
+    private bool TryReturnToSource(EntityUid npcUid, NpcTakenOut takenOut, EntityUid sourceUid)
+    {
+        if (takenOut.SourceContainerId is not { } containerId)
+            return false;
+
+        if (sourceUid == npcUid)
+            return _inventorySystem.TryEquip(npcUid, takenOut.ItemUid, containerId, silent: true, force: true);
+
+        return _storageQuery.TryComp(sourceUid, out var sourceStorageComponent) &&
+            _storageSystem.Insert(sourceUid, takenOut.ItemUid, out _, user: npcUid, storageComp: sourceStorageComponent, playSound: false);
+    }
+
+    /// <summary>
+    ///     Puts the item into the first thing <paramref name="npcUid"/> wears or holds that has room for it.
+    /// </summary>
+    private bool TryStowInWorn(EntityUid npcUid, EntityUid itemUid)
+    {
+        foreach (var wornUid in _inventorySystem.GetHandOrInventoryEntities(npcUid, SlotFlags.All))
+        {
+            if (wornUid == itemUid || !_storageQuery.TryComp(wornUid, out var wornStorageComponent))
+                continue;
+
+            if (_storageSystem.Insert(wornUid, itemUid, out _, user: npcUid, storageComp: wornStorageComponent, playSound: false))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -172,6 +183,28 @@ public sealed partial class NpcHandsSystem : EntitySystem
         }
 
         return virtualHand;
+    }
+
+    /// <summary>
+    ///     Replaces the contents of <paramref name="items"/> with what <paramref name="npcUid"/> has on it: in its hands,
+    ///         worn, and in anything it wears - a belt's contents, a backpack's.
+    /// </summary>
+    public void GetCarried(EntityUid npcUid, List<EntityUid> items)
+    {
+        items.Clear();
+
+        foreach (var itemUid in _inventorySystem.GetHandOrInventoryEntities(npcUid))
+        {
+            items.Add(itemUid);
+
+            if (!_storageQuery.TryComp(itemUid, out var storageComponent))
+                continue;
+
+            foreach (var storedUid in storageComponent.Container.ContainedEntities)
+            {
+                items.Add(storedUid);
+            }
+        }
     }
 
     private EntityUid? GetWielded(EntityUid npcUid)

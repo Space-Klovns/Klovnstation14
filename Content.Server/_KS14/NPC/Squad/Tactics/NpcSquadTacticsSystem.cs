@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Hands;
 using Content.Server._KS14.NPC.Doors;
 using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
@@ -50,6 +51,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private NpcDoorSystem _npcDoorSystem = default!;
+    [Dependency] private NpcHandsSystem _npcHandsSystem = default!;
     [Dependency] private SharedEntityStorageSystem _entityStorageSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;

@@ -856,8 +856,7 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool CarriesAny<TState>(EntityUid memberUid, TState state, Func<NpcSquadTacticsSystem, EntityUid, TState, bool> matches)
     {
-        _carried.Clear();
-        _npcDoorSystem.GetCarried(memberUid, _carried);
+        _npcHandsSystem.GetCarried(memberUid, _carried);
 
         foreach (var itemUid in _carried)
         {
@@ -1233,8 +1232,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var (memberUid, staging) in hunt.StagedMembers)
         {
-            _carried.Clear();
-            _npcDoorSystem.GetCarried(memberUid, _carried);
+            _npcHandsSystem.GetCarried(memberUid, _carried);
 
             foreach (var itemUid in _carried)
             {
