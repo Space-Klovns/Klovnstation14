@@ -873,9 +873,11 @@ public sealed class KsTguiKnob : Control
         if (vertices.Count == 0)
             return;
 
-        handle.SetTransform(Matrix3x2.CreateTranslation((PixelSize.X - sidePixels) / 2f, 0f));
+        // The control's own placement is already in the handle's transform; the offset goes in front of it, not over it.
+        var oldTransform = handle.GetTransform();
+        handle.SetTransform(Matrix3x2.CreateTranslation((PixelSize.X - sidePixels) / 2f, 0f) * oldTransform);
         handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White, vertices.AsSpan());
-        handle.SetTransform(Matrix3x2.Identity);
+        handle.SetTransform(oldTransform);
     }
 
     /// <summary>
