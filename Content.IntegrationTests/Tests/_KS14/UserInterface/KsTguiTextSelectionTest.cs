@@ -312,6 +312,50 @@ public sealed class KsTguiTextSelectionTest : GameTest
     }
 
     [Test]
+    public async Task TheTextCursorShowsOverSelectableTextOnly()
+    {
+        await SetTheme(true);
+
+        Label? label = null;
+        Button? button = null;
+        DefaultWindow? window = null;
+        await Client.WaitPost(() =>
+        {
+            label = new Label { Text = LabelText };
+            button = new Button { Text = "Press this button" };
+            var box = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical };
+            box.AddChild(label);
+            box.AddChild(button);
+            window = OpenWindow(box);
+        });
+        await Pair.RunTicksSync(5);
+
+        var controller = Client.ResolveDependency<IUserInterfaceManager>().GetUIController<KsTguiTextSelectionUIController>();
+        await Client.WaitPost(() =>
+        {
+            var overLabel = (Vector2)label!.GlobalPixelPosition + new Vector2(3f, label.PixelSize.Y / 2f);
+            var overButton = (Vector2)button!.GlobalPixelPosition + button.PixelSize / 2;
+
+            controller.UpdateCursor(overLabel);
+            Assert.That(controller.ShowingTextCursor, Is.True, "over a label in a tgui window");
+
+            controller.UpdateCursor(overButton);
+            Assert.That(controller.ShowingTextCursor, Is.False, "over button text");
+
+            controller.UpdateCursor(new Vector2(1f, 1f));
+            Assert.That(controller.ShowingTextCursor, Is.False, "over nothing");
+        });
+
+        await SetTheme(false);
+        await Client.WaitPost(() =>
+        {
+            controller.UpdateCursor((Vector2)label!.GlobalPixelPosition + new Vector2(3f, label.PixelSize.Y / 2f));
+            Assert.That(controller.ShowingTextCursor, Is.False, "theme off");
+            window!.Close();
+        });
+    }
+
+    [Test]
     public async Task NothingIsSelectableWithTheThemeOff()
     {
         await SetTheme(false);

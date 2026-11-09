@@ -56,6 +56,12 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
     [Dependency] private IClipboardManager _clipboardManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private MarkupTagManager _markupTagManager = default!;
+    [Dependency] private IClyde _clyde = default!;
+
+    private bool _textCursorShown;
+    private bool _reapplyTextCursor;
+    private Vector2 _lastMousePosition = new(float.NaN, float.NaN);
+    private Control? _lastCursorOwner;
 
     private KsTextSelectionHighlight _highlight = default!;
 
@@ -257,6 +263,14 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
             _dragging = false;
         }
 
+        var mousePosition = _inputManager.MouseScreenPosition.Position;
+        var cursorOwner = UIManager.ControlFocused ?? UIManager.CurrentlyHovered;
+        if (mousePosition != _lastMousePosition || cursorOwner != _lastCursorOwner || _reapplyTextCursor || _textCursorShown && !Enabled)
+        {
+            _lastMousePosition = mousePosition;
+            UpdateCursor(mousePosition);
+        }
+
         if (_target == null)
             return;
 
@@ -277,6 +291,63 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
 
         UpdateCopyKey();
         UpdateHighlight();
+    }
+
+    /// <summary>
+    ///     Whether the text cursor (the I-beam) is shown: the mouse is over text that can be selected, or a selection is
+    ///         being dragged out.
+    /// </summary>
+    public bool ShowingTextCursor => _textCursorShown;
+
+    /// <summary>
+    ///     Shows the I-beam over text that can be selected, as a browser does, and gives the cursor back to the control under
+    ///         the mouse when it leaves. Text ignores the mouse, so the engine never asks it for a cursor: it takes the cursor
+    ///         of the hovered control (or the one holding the mouse), and only when that one changes.
+    /// </summary>
+    public void UpdateCursor(Vector2 screenPosition)
+    {
+        var cursorOwner = UIManager.ControlFocused ?? UIManager.CurrentlyHovered;
+        var ownerChanged = cursorOwner != _lastCursorOwner;
+        _lastCursorOwner = cursorOwner;
+
+        var wanted = Enabled && (_dragging && _target != null
+                                 || FindTextAt(screenPosition) is { } hit && IsSelectable(hit));
+
+        if (wanted)
+        {
+            // When the hovered control changes the engine puts its cursor up after the controllers have run, over this one,
+            //      so the I-beam goes up again on the next frame as well.
+            if (!_textCursorShown || ownerChanged || _reapplyTextCursor)
+                _clyde.SetCursor(_clyde.GetStandardCursor(StandardCursorShape.IBeam));
+
+            _reapplyTextCursor = ownerChanged;
+        }
+        else
+        {
+            _reapplyTextCursor = false;
+            if (_textCursorShown)
+                RestoreCursor(cursorOwner);
+        }
+
+        _textCursorShown = wanted;
+    }
+
+    /// <summary>
+    ///     Has the engine put up the cursor it would have shown: setting a control's cursor to what it already is tells the engine
+    ///         to work it out again.
+    /// </summary>
+    private void RestoreCursor(Control? cursorOwner)
+    {
+        if (cursorOwner == null)
+        {
+            UIManager.WorldCursor = UIManager.WorldCursor;
+            return;
+        }
+
+        if (cursorOwner.CustomCursorShape is { } custom)
+            cursorOwner.CustomCursorShape = custom;
+        else
+            cursorOwner.DefaultCursorShape = cursorOwner.DefaultCursorShape;
     }
 
     private void UpdateCopyKey()
