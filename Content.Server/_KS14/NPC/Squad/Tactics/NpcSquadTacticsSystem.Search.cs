@@ -120,9 +120,9 @@ public sealed partial class NpcSquadTacticsSystem
 
         Entity<MapGridComponent>? grid = null;
 
-        if (foundRoom && _mapGridQuery.TryComp(room.GridUid, out var mapGridComponent))
+        if (foundRoom && _npcGridSystem.TryGetGrid(room.GridUid, out var roomGrid))
         {
-            grid = (room.GridUid, mapGridComponent);
+            grid = roomGrid;
             hunt.GridUid = room.GridUid;
             hunt.RoomTiles.UnionWith(room.RoomTiles);
             hunt.UnseenTiles.UnionWith(room.RoomTiles);
@@ -333,11 +333,10 @@ public sealed partial class NpcSquadTacticsSystem
     private void UpdateCoverage(NpcHunt hunt, NpcSquadTacticsSettings settings)
     {
         if (hunt.UnseenTiles.Count == 0 ||
-            hunt.GridUid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var gridUid = grid.Owner;
         var (_, _, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(gridUid);
         var clearRangeSquared = settings.ClearRange * settings.ClearRange;
 
@@ -597,11 +596,10 @@ public sealed partial class NpcSquadTacticsSystem
     private void AssignSweeps(NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         if (hunt.UnseenTiles.Count == 0 ||
-            hunt.GridUid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var gridUid = grid.Owner;
         var (_, _, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(gridUid);
         var cohesive = settings.SearchCohesion > 0f && _members.Count > 1;
         var cohesionFieldsBuilt = false;

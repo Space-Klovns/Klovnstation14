@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Server._KS14.NPC.Doors;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Doors.Components;
 using Robust.Shared.Map;
@@ -309,10 +310,10 @@ public sealed partial class NpcSquadTacticsSystem
     {
         hunt.StagedMembers.Clear();
 
-        if (hunt.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var gridUid = grid.Owner;
 
         // Rooms and doorways are what a route round the room must keep off.
         var avoidTiles = new HashSet<Vector2i>(hunt.RoomTiles);
@@ -581,8 +582,7 @@ public sealed partial class NpcSquadTacticsSystem
 
             SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, entrance.StageCoordinates, entrance.LocalFacing, OrderRange, null, now);
 
-            everyoneInPlace &= memberCoordinates.TryDistance(EntityManager, _transformSystem, entrance.StageCoordinates, out var distance) &&
-                distance <= settings.StageArriveRange;
+            everyoneInPlace &= NpcCoordinates.IsWithin(memberCoordinates, entrance.StageCoordinates, settings.StageArriveRange, EntityManager, _transformSystem);
         }
 
         if (!everyoneInPlace && now - hunt.PhaseStartedAt < settings.StageTimeout)
@@ -720,8 +720,7 @@ public sealed partial class NpcSquadTacticsSystem
         EntityCoordinates stageCoordinates,
         NpcSquadTacticsSettings settings)
     {
-        if (memberCoordinates.TryDistance(EntityManager, _transformSystem, stageCoordinates, out var toSpot) &&
-            toSpot <= settings.StageArriveRange)
+        if (NpcCoordinates.IsWithin(memberCoordinates, stageCoordinates, settings.StageArriveRange, EntityManager, _transformSystem))
         {
             staging.NextWaypoint = staging.Waypoints.Count;
             return;
@@ -848,11 +847,11 @@ public sealed partial class NpcSquadTacticsSystem
 
     private bool IsInRoom(NpcHunt hunt, EntityUid uid)
     {
-        if (hunt.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return false;
 
         var transformComponent = Transform(uid);
-        return transformComponent.GridUid == gridUid &&
-            hunt.RoomTiles.Contains(_mapSystem.TileIndicesFor((gridUid, mapGridComponent), transformComponent.Coordinates));
+        return transformComponent.GridUid == grid.Owner &&
+            hunt.RoomTiles.Contains(_mapSystem.TileIndicesFor(grid, transformComponent.Coordinates));
     }
 }

@@ -1,5 +1,6 @@
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Mobs.Systems;
 using Robust.Shared.Timing;
 
@@ -30,10 +31,8 @@ public sealed partial class NpcRecoverySystem : EntitySystem
         base.Update(frameTime);
 
         var now = _gameTiming.CurTime;
-        if (now < _nextUpdate)
+        if (!NpcThrottle.TryConsume(ref _nextUpdate, now, UpdateInterval))
             return;
-
-        _nextUpdate = now + UpdateInterval;
 
         UpdateNow(now);
     }

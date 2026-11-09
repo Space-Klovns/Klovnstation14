@@ -1,4 +1,5 @@
 using Content.Server.NPC.Components;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Server.Administration;
 using Content.Server.Administration.Managers;
@@ -73,11 +74,8 @@ public sealed partial class NpcLineOfFireDebugSystem : EntitySystem
         if (_debuggingSessions.Count == 0)
             return;
 
-        var now = _gameTiming.CurTime;
-        if (now < _nextUpdate)
+        if (!NpcThrottle.TryConsume(ref _nextUpdate, _gameTiming.CurTime, UpdateInterval))
             return;
-
-        _nextUpdate = now + UpdateInterval;
 
         foreach (var (session, target) in _debuggingSessions)
         {

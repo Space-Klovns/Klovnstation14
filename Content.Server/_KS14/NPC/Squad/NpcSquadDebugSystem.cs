@@ -1,6 +1,7 @@
 using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad.Tactics;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Server.Administration;
 using Content.Server.Administration.Managers;
@@ -72,11 +73,8 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
         if (_debuggingSessions.Count == 0)
             return;
 
-        var now = _gameTiming.CurTime;
-        if (now < _nextSend)
+        if (!NpcThrottle.TryConsume(ref _nextSend, _gameTiming.CurTime, SendInterval))
             return;
-
-        _nextSend = now + SendInterval;
 
         var message = new SquadDebugDataMessage();
         var squadEnumerator = EntityQueryEnumerator<NpcSquadComponent>();

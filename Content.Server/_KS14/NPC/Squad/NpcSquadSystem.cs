@@ -3,6 +3,7 @@ using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
@@ -38,14 +39,13 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
-    [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<NpcSquadComponent> _squadQuery = default!;
     [Dependency] private EntityQuery<NpcSquadMemberComponent> _squadMemberQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
-    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
     [Dependency] private EntityQuery<NPCRangedCombatComponent> _rangedCombatQuery = default!;
@@ -73,11 +73,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        var now = _gameTiming.CurTime;
-        if (now < _nextUpdate)
+        if (!NpcThrottle.TryConsume(ref _nextUpdate, _gameTiming.CurTime, UpdateInterval))
             return;
-
-        _nextUpdate = now + UpdateInterval;
 
         PruneMembers();
         AssignUnsquadded();
@@ -115,8 +112,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
     /// </summary>
     public Tactics.NpcSquadTacticsSettings? GetTactics(EntityUid uid)
     {
-        if (TryGetSquad(uid, out var squadEntity) && _squadMemberQuery.TryComp(squadEntity.Value.Comp.Leader, out var leaderSquadMemberComponent))
-            return leaderSquadMemberComponent.Tactics;
+        if (TryGetSquad(uid, out var squadEntity) && TryGetLeader(squadEntity.Value, out var leader))
+            return leader.Comp.Tactics;
 
         return _squadMemberQuery.CompOrNull(uid)?.Tactics;
     }
@@ -159,13 +156,62 @@ public sealed partial class NpcSquadSystem : EntitySystem
         if (!TryGetSquad(callerUid, out var squadEntity))
             return false;
 
-        foreach (var memberUid in squadEntity.Value.Comp.Members)
+        foreach (var memberUid in GetOtherMembers(squadEntity.Value, callerUid))
         {
-            if (memberUid != callerUid)
-                RaiseLocalEvent(memberUid, ref ev);
+            RaiseLocalEvent(memberUid, ref ev);
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     <paramref name="squad"/>'s leader, if it has one that is a <see cref="NpcSquadMemberComponent"/>.
+    /// </summary>
+    public bool TryGetLeader(Entity<NpcSquadComponent> squad, out Entity<NpcSquadMemberComponent> leader)
+    {
+        if (squad.Comp.Leader is { } leaderUid && _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent))
+        {
+            leader = (leaderUid, leaderSquadMemberComponent);
+            return true;
+        }
+
+        leader = default;
+        return false;
+    }
+
+    /// <summary>
+    ///     Every member of <paramref name="squad"/> but <paramref name="self"/>, those that are down not included.
+    ///         Does not allocate.
+    /// </summary>
+    public OtherMembersEnumerable GetOtherMembers(Entity<NpcSquadComponent> squad, EntityUid self)
+    {
+        return new OtherMembersEnumerable(squad.Comp.Members, self);
+    }
+
+    public readonly struct OtherMembersEnumerable(List<EntityUid> members, EntityUid self)
+    {
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(members.GetEnumerator(), self);
+        }
+
+        public struct Enumerator(List<EntityUid>.Enumerator inner, EntityUid self)
+        {
+            private List<EntityUid>.Enumerator _inner = inner;
+
+            public EntityUid Current => _inner.Current;
+
+            public bool MoveNext()
+            {
+                while (_inner.MoveNext())
+                {
+                    if (_inner.Current != self)
+                        return true;
+                }
+
+                return false;
+            }
+        }
     }
 
     /// <summary>
@@ -404,9 +450,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
         var squadEnumerator = EntityQueryEnumerator<NpcSquadComponent>();
         while (squadEnumerator.MoveNext(out var squadUid, out var squadComponent))
         {
-            if (squadComponent.Leader is not { } leaderUid ||
-                !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) ||
-                squadComponent.Members.Count >= leaderSquadMemberComponent.AssimilationThreshold)
+            if (!TryGetLeader((squadUid, squadComponent), out var leader) ||
+                squadComponent.Members.Count >= leader.Comp.AssimilationThreshold)
                 continue;
 
             EntityUid? bestSquadUid = null;
@@ -529,22 +574,22 @@ public sealed partial class NpcSquadSystem : EntitySystem
         if (memberTransformComponent.GridUid is not { } gridUid)
             return otherTransformComponent.GridUid == null;
 
-        if (otherTransformComponent.GridUid != gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (otherTransformComponent.GridUid != gridUid || !_npcGridSystem.TryGetGrid(gridUid, out var grid))
             return false;
 
         if (!walked)
         {
             _joinWalkSteps.Clear();
-            _npcSquadCoverSystem.FloodTiles(memberEntity.Owner,
-                (gridUid, mapGridComponent),
-                _mapSystem.TileIndicesFor(gridUid, mapGridComponent, memberTransformComponent.Coordinates),
+            _npcGridSystem.FloodTiles(memberEntity.Owner,
+                grid,
+                _mapSystem.TileIndicesFor(grid, memberTransformComponent.Coordinates),
                 memberEntity.Comp.JoinWalkDistance,
                 _joinWalkSteps,
                 stopAtDoors: false);
             walked = true;
         }
 
-        return _joinWalkSteps.ContainsKey(_mapSystem.TileIndicesFor(gridUid, mapGridComponent, otherTransformComponent.Coordinates));
+        return _joinWalkSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, otherTransformComponent.Coordinates));
     }
 
     private bool IsFriendly(EntityUid uid, EntityUid otherUid)
@@ -648,18 +693,19 @@ public sealed partial class NpcSquadSystem : EntitySystem
     private void ShareLeaderBlackboards()
     {
         var squadEnumerator = EntityQueryEnumerator<NpcSquadComponent>();
-        while (squadEnumerator.MoveNext(out _, out var squadComponent))
+        while (squadEnumerator.MoveNext(out var squadUid, out var squadComponent))
         {
-            if (squadComponent.Leader is not { } leaderUid ||
-                !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) ||
-                leaderSquadMemberComponent.SharedBlackboardKeys.Count == 0 ||
-                !_htnQuery.TryComp(leaderUid, out var leaderHtnComponent))
+            if (!TryGetLeader((squadUid, squadComponent), out var leader) ||
+                leader.Comp.SharedBlackboardKeys.Count == 0 ||
+                !_htnQuery.TryComp(leader.Owner, out var leaderHtnComponent))
                 continue;
 
-            foreach (var memberUid in squadComponent.Members)
+            var leaderUid = leader.Owner;
+            var leaderSquadMemberComponent = leader.Comp;
+
+            foreach (var memberUid in GetOtherMembers((squadUid, squadComponent), leaderUid))
             {
-                if (memberUid == leaderUid ||
-                    !_htnQuery.TryComp(memberUid, out var memberHtnComponent) ||
+                if (!_htnQuery.TryComp(memberUid, out var memberHtnComponent) ||
                     !_squadMemberQuery.TryComp(memberUid, out var memberSquadMemberComponent))
                     continue;
 
@@ -702,23 +748,17 @@ public sealed partial class NpcSquadSystem : EntitySystem
     /// </summary>
     private EntityUid? GetHealthiestLeader(List<EntityUid> memberUids)
     {
-        EntityUid? bestUid = null;
-        var bestHealth = float.MinValue;
+        var best = NpcBestOf<EntityUid>.Highest();
 
         foreach (var memberUid in memberUids)
         {
             if (!_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) || !squadMemberComponent.CanLead)
                 continue;
 
-            var health = GetHealthFraction(memberUid);
-            if (health <= bestHealth)
-                continue;
-
-            bestUid = memberUid;
-            bestHealth = health;
+            best.Offer(memberUid, GetHealthFraction(memberUid));
         }
 
-        return bestUid;
+        return best.Found ? best.Value : null;
     }
 
     /// <summary>

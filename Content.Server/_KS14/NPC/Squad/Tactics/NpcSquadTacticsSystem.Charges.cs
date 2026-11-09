@@ -1,6 +1,7 @@
 using System.Numerics;
 using Content.Server._KS14.NPC.Charges;
 using Content.Server.Atmos.EntitySystems;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Doors.Components;
 using Content.Shared.Maps;
@@ -166,8 +167,8 @@ public sealed partial class NpcSquadTacticsSystem
             return true;
         }
 
-        if (hunt.GridUid is { } gridUid && _mapGridQuery.TryComp(gridUid, out var mapGridComponent))
-            BuildSearchPoints(leaderUid ?? _members[0], hunt, (gridUid, mapGridComponent), settings);
+        if (_npcGridSystem.TryGetGrid(hunt.GridUid, out var huntGrid))
+            BuildSearchPoints(leaderUid ?? _members[0], hunt, huntGrid, settings);
 
         hunt.UnseenTiles.UnionWith(hunt.RoomTiles);
         AssignEntrances(hunt, settings);
@@ -247,13 +248,11 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool TryPrepareSealedRoom(NpcHunt hunt, EntityUid walkerUid, EntityCoordinates coordinates)
     {
-        if (_transformSystem.GetGrid(coordinates) is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGridTile(coordinates, out var grid, out var startTile))
             return false;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-
         _floodSteps.Clear();
-        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
+        _npcGridSystem.FloodTiles(walkerUid, grid, startTile, SealedRoomSteps, _floodSteps, stopAtDoors: false);
 
         foreach (var (tile, steps) in _floodSteps)
         {
@@ -261,7 +260,7 @@ public sealed partial class NpcSquadTacticsSystem
                 return false;
         }
 
-        hunt.GridUid = gridUid;
+        hunt.GridUid = grid.Owner;
         hunt.RoomTiles.UnionWith(_floodSteps.Keys);
         return true;
     }
@@ -277,13 +276,11 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (walkerTransform.GridUid is not { } gridUid ||
             _transformSystem.GetGrid(coordinates) != gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGrid(gridUid, out var grid))
             return false;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-
         _floodSteps.Clear();
-        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, walkerTransform.Coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
+        _npcGridSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, walkerTransform.Coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
 
         if (_floodSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, coordinates)))
             return false;
@@ -328,12 +325,10 @@ public sealed partial class NpcSquadTacticsSystem
         coordinates = default;
         length = 0;
 
-        if (hunt.GridUid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent) ||
-            Transform(walkerUid).GridUid != gridUid)
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid) ||
+            Transform(walkerUid).GridUid != grid.Owner)
             return false;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
         var walkerTile = _mapSystem.TileIndicesFor(grid, Transform(walkerUid).Coordinates);
 
         FindWallCandidates(hunt, walkerUid, grid, walkerTile, settings);
@@ -353,7 +348,7 @@ public sealed partial class NpcSquadTacticsSystem
             if (!_npcSquadCoverSystem.TryFindRouteAround(walkerUid, grid, walkerTile, outsideTile, avoidTiles, settings.MaxStageDistance, waypoints, out length))
                 continue;
 
-            coordinates = GetTileCoordinates(gridUid, outsideTile);
+            coordinates = GetTileCoordinates(grid.Owner, outsideTile);
             return true;
         }
 
@@ -380,10 +375,10 @@ public sealed partial class NpcSquadTacticsSystem
     {
         var hunt = plan.Hunt!;
 
-        if (hunt.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return null;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var gridUid = grid.Owner;
 
         for (var e = 0; e < hunt.Entrances.Count; e++)
         {
@@ -442,7 +437,7 @@ public sealed partial class NpcSquadTacticsSystem
     {
         var hunt = plan.Hunt!;
 
-        if (hunt.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return null;
 
         var carrierUid = EntityUid.Invalid;
@@ -456,10 +451,9 @@ public sealed partial class NpcSquadTacticsSystem
             break;
         }
 
-        if (!carrierUid.IsValid() || Transform(carrierUid).GridUid != gridUid)
+        if (!carrierUid.IsValid() || Transform(carrierUid).GridUid != grid.Owner)
             return null;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
         var carrierTile = _mapSystem.TileIndicesFor(grid, Transform(carrierUid).Coordinates);
 
         FindWallCandidates(hunt, carrierUid, grid, carrierTile, settings);
@@ -485,9 +479,9 @@ public sealed partial class NpcSquadTacticsSystem
             var facing = ((Vector2) (roomTile - outsideTile)).ToWorldAngle();
             var site = new NpcChargeSite(wallUid,
                 wallTile,
-                GetTileCoordinates(gridUid, outsideTile),
+                GetTileCoordinates(grid.Owner, outsideTile),
                 outsideTile,
-                GetTileCoordinates(gridUid, roomTile),
+                GetTileCoordinates(grid.Owner, roomTile),
                 facing,
                 IsDoor: false);
 
@@ -510,7 +504,7 @@ public sealed partial class NpcSquadTacticsSystem
     private void FindWallCandidates(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, Vector2i walkerTile, NpcSquadTacticsSettings settings)
     {
         _floodSteps.Clear();
-        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, walkerTile, settings.MaxStageDistance, _floodSteps, stopAtDoors: false);
+        _npcGridSystem.FloodTiles(walkerUid, grid, walkerTile, settings.MaxStageDistance, _floodSteps, stopAtDoors: false);
 
         _wallCandidates.Clear();
 
@@ -550,7 +544,7 @@ public sealed partial class NpcSquadTacticsSystem
     private void FindWallsOut(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, NpcSquadTacticsSettings settings)
     {
         _farFloodSteps.Clear();
-        _npcSquadCoverSystem.FloodTiles(walkerUid,
+        _npcGridSystem.FloodTiles(walkerUid,
             grid,
             _mapSystem.TileIndicesFor(grid, hunt.PredictedCoordinates),
             settings.MaxStageDistance,
@@ -697,7 +691,7 @@ public sealed partial class NpcSquadTacticsSystem
         coordinates = default;
 
         _floodSteps.Clear();
-        _npcSquadCoverSystem.FloodTiles(memberUid, grid, site.StandTile, StandOffSearchSteps, _floodSteps);
+        _npcGridSystem.FloodTiles(memberUid, grid, site.StandTile, StandOffSearchSteps, _floodSteps);
 
         var standMapCoordinates = _transformSystem.ToMapCoordinates(site.StandCoordinates);
         var bestSteps = int.MaxValue;
@@ -881,7 +875,7 @@ public sealed partial class NpcSquadTacticsSystem
             return;
 
         var planterCoordinates = Transform(pick.PlanterUid).Coordinates;
-        var inPlace = planterCoordinates.TryDistance(EntityManager, _transformSystem, pick.StandOffCoordinates, out var fromSpot) && fromSpot <= StandOffRange;
+        var inPlace = NpcCoordinates.IsWithin(planterCoordinates, pick.StandOffCoordinates, StandOffRange, EntityManager, _transformSystem);
         var facing = (chargeCoordinates.Position - pick.StandOffCoordinates.Position).ToWorldAngle();
 
         // Done waiting for it to get to its spot - but never while it is in the blast itself. Left there, the charge is lost.
@@ -942,8 +936,7 @@ public sealed partial class NpcSquadTacticsSystem
         var site = charge.Pick.Site;
 
         if (!TerminatingOrDeleted(plan.TargetUid) &&
-            _transformSystem.GetMoverCoordinates(plan.TargetUid).TryDistance(EntityManager, _transformSystem, GetTileCoordinates(hunt.GridUid!.Value, site.Tile), out var distance) &&
-            distance <= settings.PlanChargeBlastRange)
+            NpcCoordinates.IsWithin(_transformSystem.GetMoverCoordinates(plan.TargetUid), GetTileCoordinates(hunt.GridUid!.Value, site.Tile), settings.PlanChargeBlastRange, EntityManager, _transformSystem))
             plan.Softened = true;
 
         // Whatever was in the way is gone, and nothing should go asking it whether it opens.

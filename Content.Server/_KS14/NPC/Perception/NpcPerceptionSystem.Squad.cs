@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 
 namespace Content.Server._KS14.NPC.Perception;
@@ -12,10 +13,8 @@ public sealed partial class NpcPerceptionSystem
     /// </summary>
     private void UpdateCallouts(Entity<NpcPerceptionComponent> entity, TimeSpan now, bool force)
     {
-        if (!force && now < entity.Comp.NextCallout)
+        if (!NpcThrottle.TryConsume(ref entity.Comp.NextCallout, now, entity.Comp.CalloutInterval, force))
             return;
-
-        entity.Comp.NextCallout = now + entity.Comp.CalloutInterval;
 
         if (!entity.Comp.CallsOutContacts || !_npcSquadSystem.TryGetSquad(entity.Owner, out _))
             return;
@@ -83,8 +82,7 @@ public sealed partial class NpcPerceptionSystem
         }
 
         var ownerPosition = _transformSystem.GetMapCoordinates(entity.Owner).Position;
-        var bestDistanceSquared = float.MaxValue;
-        var found = false;
+        var best = NpcBestOf<NpcContact>.Lowest();
 
         foreach (var contact in entity.Comp.Contacts.Values)
         {
@@ -92,15 +90,13 @@ public sealed partial class NpcPerceptionSystem
                 continue;
 
             var distanceSquared = (_transformSystem.ToMapCoordinates(contact.LastKnownCoordinates).Position - ownerPosition).LengthSquared();
-            if (distanceSquared >= bestDistanceSquared)
-                continue;
-
-            bestDistanceSquared = distanceSquared;
-            primaryContact = contact;
-            found = true;
+            best.Offer(contact, distanceSquared);
         }
 
-        if (!found && _newlyReactedUnseen.Count > 0)
+        var found = best.Found;
+        if (found)
+            primaryContact = best.Value!;
+        else if (_newlyReactedUnseen.Count > 0)
             found = entity.Comp.Contacts.TryGetValue(_newlyReactedUnseen[0], out primaryContact);
 
         return found;

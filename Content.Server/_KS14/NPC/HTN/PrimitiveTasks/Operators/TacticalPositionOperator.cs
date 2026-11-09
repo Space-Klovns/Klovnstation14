@@ -7,6 +7,7 @@ using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Physics;
 using Content.Server.NPC;
@@ -40,6 +41,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private NPCUtilitySystem _npcUtilitySystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
@@ -673,11 +675,9 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// </summary>
     private bool HasCoverAStepAway(PathPoly candidate)
     {
-        var gridUid = candidate.GraphUid;
-        if (!_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(candidate.GraphUid, out var grid))
             return false;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
         var tile = _mapSystem.TileIndicesFor(grid, candidate.Coordinates);
 
         foreach (var offset in CoverStepOffsets)
@@ -685,7 +685,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
             if (!IsFreeFloor(grid, tile + offset))
                 continue;
 
-            var neighbourCoordinates = new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector(grid, tile + offset));
+            var neighbourCoordinates = new EntityCoordinates(grid.Owner, _mapSystem.TileCenterToVector(grid, tile + offset));
 
             if (!_npcLineOfSightSystem.InLineOfSight(_coverStepSightField, _transformSystem.ToMapCoordinates(neighbourCoordinates)))
                 return true;
@@ -699,10 +699,9 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// </summary>
     private bool IsBesideSomething(PathPoly candidate)
     {
-        if (!_entityManager.TryGetComponent<MapGridComponent>(candidate.GraphUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(candidate.GraphUid, out var grid))
             return false;
 
-        var grid = new Entity<MapGridComponent>(candidate.GraphUid, mapGridComponent);
         var tile = _mapSystem.TileIndicesFor(grid, candidate.Coordinates);
 
         foreach (var offset in CoverStepOffsets)
@@ -730,10 +729,9 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// </summary>
     private float GetWallRaw(PathPoly candidate)
     {
-        if (!_entityManager.TryGetComponent<MapGridComponent>(candidate.GraphUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(candidate.GraphUid, out var grid))
             return 0f;
 
-        var grid = new Entity<MapGridComponent>(candidate.GraphUid, mapGridComponent);
         var tile = _mapSystem.TileIndicesFor(grid, candidate.Coordinates);
 
         var blockedAlongX = !IsFreeFloor(grid, tile + new Vector2i(1, 0)) || !IsFreeFloor(grid, tile + new Vector2i(-1, 0));

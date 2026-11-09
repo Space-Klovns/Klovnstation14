@@ -3,6 +3,7 @@ using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Recovery;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Doors.Components;
 using Content.Shared.GameTicking;
@@ -45,6 +46,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private NpcRecoverySystem _npcRecoverySystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private NpcDoorSystem _npcDoorSystem = default!;
@@ -100,10 +102,9 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         base.Update(frameTime);
 
         var now = _gameTiming.CurTime;
-        if (UpdatesPaused || now < _nextUpdate)
+        if (UpdatesPaused || !NpcThrottle.TryConsume(ref _nextUpdate, now, UpdateInterval))
             return;
 
-        _nextUpdate = now + UpdateInterval;
         UpdateNow(now);
     }
 
@@ -145,8 +146,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
                     _members.Add(memberUid);
             }
 
-            if (squadComponent.Leader is not { } leaderUid ||
-                !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) ||
+            if (!_npcSquadSystem.TryGetLeader((squadUid, squadComponent), out var leader) ||
                 _members.Count == 0)
             {
                 ClearOrders(squadUid, _members);
@@ -154,7 +154,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
                 continue;
             }
 
-            UpdateGroup(squadUid, leaderUid, leaderSquadMemberComponent.Tactics, now);
+            UpdateGroup(squadUid, leader.Owner, leader.Comp.Tactics, now);
         }
 
         var lonerEnumerator = EntityQueryEnumerator<NpcSquadMemberComponent, NpcPerceptionComponent, ActiveNPCComponent>();

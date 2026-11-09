@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.NPC;
 using Content.Shared.Tag;
 using Robust.Shared.Map;
@@ -111,8 +112,7 @@ public sealed partial class NpcSquadCoverSystem
         if (GetTileKind(analysis, seedTile) == TileKind.Walkable)
             return true;
 
-        var found = false;
-        var bestDistance = float.MinValue;
+        var best = NpcBestOf<Vector2i>.Highest();
 
         foreach (var offset in NeighbourOffsets)
         {
@@ -120,16 +120,13 @@ public sealed partial class NpcSquadCoverSystem
             if (GetTileKind(analysis, neighbourTile) != TileKind.Walkable)
                 continue;
 
-            var distance = (neighbourTile - awayFromTile).LengthSquared;
-            if (distance <= bestDistance)
-                continue;
-
-            resolvedTile = neighbourTile;
-            bestDistance = distance;
-            found = true;
+            best.Offer(neighbourTile, (neighbourTile - awayFromTile).LengthSquared);
         }
 
-        return found;
+        if (best.Found)
+            resolvedTile = best.Value;
+
+        return best.Found;
     }
 
     /// <summary>

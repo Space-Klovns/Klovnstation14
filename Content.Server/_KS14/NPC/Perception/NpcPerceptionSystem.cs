@@ -5,6 +5,7 @@ using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC;
@@ -79,10 +80,9 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
         while (enumerator.MoveNext(out var uid, out var perceptionComponent, out _))
         {
-            if (now < perceptionComponent.NextUpdate)
+            if (!NpcThrottle.TryConsume(ref perceptionComponent.NextUpdate, now, perceptionComponent.UpdateInterval))
                 continue;
 
-            perceptionComponent.NextUpdate = now + perceptionComponent.UpdateInterval;
             UpdatePerception((uid, perceptionComponent), now);
         }
     }
@@ -91,7 +91,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     private void OnMapInit(Entity<NpcPerceptionComponent> entity, ref MapInitEvent args)
     {
         // Spread across the interval, so a squad spawned together does not all look around on the same tick.
-        entity.Comp.NextUpdate = _gameTiming.CurTime + entity.Comp.UpdateInterval * _robustRandom.NextDouble();
+        entity.Comp.NextUpdate = NpcThrottle.Spread(_gameTiming.CurTime, entity.Comp.UpdateInterval, _robustRandom);
 
         RefreshDarkVision(entity.Owner);
     }
@@ -432,8 +432,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
                 return true;
 
             var contactMapCoordinates = _transformSystem.ToMapCoordinates(contact.LastKnownCoordinates);
-            if (contactMapCoordinates.MapId == observerMapCoordinates.MapId &&
-                (contactMapCoordinates.Position - observerMapCoordinates.Position).LengthSquared() <= maxDistance * maxDistance)
+            if (NpcCoordinates.IsWithin(contactMapCoordinates, observerMapCoordinates, maxDistance))
                 return true;
         }
 

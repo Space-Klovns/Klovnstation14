@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.CombatMode;
 using Content.Shared.Interaction;
 using Content.Shared.Weapons.Melee;
@@ -123,11 +124,7 @@ public sealed partial class NpcPushSystem : EntitySystem
         var pusherComponent = EnsureComp<NpcPusherComponent>(npcUid);
         var now = _gameTiming.CurTime;
 
-        foreach (var (rememberedUid, expiresAt) in pusherComponent.Unpushable)
-        {
-            if (expiresAt <= now)
-                pusherComponent.Unpushable.Remove(rememberedUid);
-        }
+        NpcExpiringMap.PruneExpired(pusherComponent.Unpushable, now);
 
         pusherComponent.Unpushable[obstacleUid] = now + pusherComponent.ForgetAfter;
         pusherComponent.PushingUid = null;
@@ -153,7 +150,6 @@ public sealed partial class NpcPushSystem : EntitySystem
     private bool IsRemembered(EntityUid npcUid, EntityUid obstacleUid)
     {
         return _pusherQuery.TryComp(npcUid, out var pusherComponent) &&
-            pusherComponent.Unpushable.TryGetValue(obstacleUid, out var expiresAt) &&
-            expiresAt > _gameTiming.CurTime;
+            NpcExpiringMap.IsLive(pusherComponent.Unpushable, obstacleUid, _gameTiming.CurTime);
     }
 }

@@ -6,6 +6,7 @@ using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Server._KS14.NPC.Components;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Access;
 using Content.Shared.Access.Systems;
 using Content.Shared.Charges.Components;
@@ -307,7 +308,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     public bool IsNoGo(EntityUid npcUid, EntityUid doorUid)
     {
         return _doorUserQuery.TryComp(npcUid, out var doorUserComponent) &&
-            IsRemembered(doorUserComponent.NoGoDoors, doorUid, _gameTiming.CurTime);
+            NpcExpiringMap.IsLive(doorUserComponent.NoGoDoors, doorUid, _gameTiming.CurTime);
     }
 
     /// <summary>
@@ -382,7 +383,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     public bool IsBlocked(EntityUid npcUid, EntityUid doorUid)
     {
         return _doorUserQuery.TryComp(npcUid, out var doorUserComponent) &&
-            IsRemembered(doorUserComponent.BlockedDoors, doorUid, _gameTiming.CurTime);
+            NpcExpiringMap.IsLive(doorUserComponent.BlockedDoors, doorUid, _gameTiming.CurTime);
     }
 
     /// <summary>
@@ -437,8 +438,8 @@ public sealed partial class NpcDoorSystem : EntitySystem
         var doorUserComponent = EnsureComp<NpcDoorUserComponent>(npcUid);
         var now = _gameTiming.CurTime;
 
-        if (IsRemembered(doorUserComponent.ForceableDoors, doorUid, now) ||
-            IsRemembered(doorUserComponent.DetourDoors, doorUid, now))
+        if (NpcExpiringMap.IsLive(doorUserComponent.ForceableDoors, doorUid, now) ||
+            NpcExpiringMap.IsLive(doorUserComponent.DetourDoors, doorUid, now))
             return false;
 
         // The way through is what any way round is held to; the first door's, for a way round several.
@@ -551,7 +552,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     public bool IsOnlyWay(EntityUid npcUid, EntityUid doorUid)
     {
         return _doorUserQuery.TryComp(npcUid, out var doorUserComponent) &&
-            IsRemembered(doorUserComponent.ForceableDoors, doorUid, _gameTiming.CurTime);
+            NpcExpiringMap.IsLive(doorUserComponent.ForceableDoors, doorUid, _gameTiming.CurTime);
     }
 
     /// <summary>
@@ -566,7 +567,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
 
         var now = _gameTiming.CurTime;
         var gaveUp = false;
-        Prune(doorUserComponent.ForceableDoors, now);
+        NpcExpiringMap.PruneExpired(doorUserComponent.ForceableDoors, now);
 
         foreach (var (doorUid, expiresAt) in doorUserComponent.DetourDoors)
         {
@@ -581,11 +582,6 @@ public sealed partial class NpcDoorSystem : EntitySystem
         return gaveUp;
     }
 
-    private static bool IsRemembered(Dictionary<EntityUid, TimeSpan> doors, EntityUid doorUid, TimeSpan now)
-    {
-        return doors.TryGetValue(doorUid, out var expiresAt) && expiresAt > now;
-    }
-
     private void Remember(EntityUid npcUid, EntityUid doorUid)
     {
         var doorUserComponent = EnsureComp<NpcDoorUserComponent>(npcUid);
@@ -594,25 +590,13 @@ public sealed partial class NpcDoorSystem : EntitySystem
 
     /// <summary>
     ///     Remembers <paramref name="doorUid"/> in <paramref name="doors"/> for <paramref name="forgetAfter"/>, dropping
-    ///         the ones already forgotten.
+    ///         the ones already forgotten. Pruned here, when another is added, not on a timer: nothing else needs them
+    ///         gone.
     /// </summary>
     private static void Remember(Dictionary<EntityUid, TimeSpan> doors, EntityUid doorUid, TimeSpan now, TimeSpan forgetAfter)
     {
-        Prune(doors, now);
+        NpcExpiringMap.PruneExpired(doors, now);
         doors[doorUid] = now + forgetAfter;
-    }
-
-    /// <summary>
-    ///     Drops the doors no longer remembered. Here, when another is added, not on a timer: nothing else needs them
-    ///         gone. Removing during enumeration is allowed for a Dictionary.
-    /// </summary>
-    private static void Prune(Dictionary<EntityUid, TimeSpan> doors, TimeSpan now)
-    {
-        foreach (var (doorUid, expiresAt) in doors)
-        {
-            if (expiresAt <= now)
-                doors.Remove(doorUid);
-        }
     }
 
     #endregion

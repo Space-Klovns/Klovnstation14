@@ -1,4 +1,5 @@
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Mobs;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
@@ -25,7 +26,7 @@ namespace Content.Server._KS14.NPC.KillZones;
 public sealed partial class NpcKillZoneSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -63,14 +64,11 @@ public sealed partial class NpcKillZoneSystem : EntitySystem
         IReadOnlyCollection<ProtoId<NpcFactionPrototype>> factions)
     {
         if (TerminatingOrDeleted(coordinates.EntityId) ||
-            _transformSystem.GetGrid(coordinates) is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGridTile(coordinates, out var grid, out var center))
             return;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-        var center = _mapSystem.TileIndicesFor(grid, coordinates);
         var now = _gameTiming.CurTime;
-        var zonesComponent = EnsureComp<NpcKillZonesComponent>(gridUid);
+        var zonesComponent = EnsureComp<NpcKillZonesComponent>(grid.Owner);
 
         zonesComponent.Zones.RemoveAll(zone => zone.ExpiresAt <= now);
 
@@ -85,7 +83,7 @@ public sealed partial class NpcKillZoneSystem : EntitySystem
         }
 
         _floodSteps.Clear();
-        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, center, Math.Max(0, reach), _floodSteps);
+        _npcGridSystem.FloodTiles(walkerUid, grid, center, Math.Max(0, reach), _floodSteps);
 
         var tiles = new Dictionary<Vector2i, float>(_floodSteps.Count);
         foreach (var (tile, steps) in _floodSteps)

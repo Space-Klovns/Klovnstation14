@@ -3,6 +3,7 @@ using Content.Server.Atmos.EntitySystems;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Atmos.Components;
 using Content.Shared.NPC;
@@ -43,11 +44,8 @@ public sealed partial class NpcStopDropRollSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        var now = _gameTiming.CurTime;
-        if (now < _nextUpdate)
+        if (!NpcThrottle.TryConsume(ref _nextUpdate, _gameTiming.CurTime, UpdateInterval))
             return;
-
-        _nextUpdate = now + UpdateInterval;
 
         var enumerator = EntityQueryEnumerator<ActiveNPCComponent, FlammableComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out _, out var flammableComponent, out var transformComponent))

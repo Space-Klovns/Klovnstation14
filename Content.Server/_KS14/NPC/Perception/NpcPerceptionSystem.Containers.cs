@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Server.NPC.Components;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Storage.Components;
 using Robust.Shared.Map;
@@ -129,7 +130,7 @@ public sealed partial class NpcPerceptionSystem
             return false;
 
         var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
-        var bestDistanceSquared = float.MaxValue;
+        var best = NpcBestOf<EntityUid>.Lowest();
 
         _nearbyStorages.Clear();
         _entityLookupSystem.GetEntitiesInRange(mapCoordinates, range, _nearbyStorages, LookupFlags.Static | LookupFlags.Dynamic | LookupFlags.Uncontained);
@@ -140,13 +141,10 @@ public sealed partial class NpcPerceptionSystem
                 continue;
 
             var distanceSquared = (_transformSystem.GetMapCoordinates(storage.Owner).Position - mapCoordinates.Position).LengthSquared();
-            if (distanceSquared >= bestDistanceSquared)
-                continue;
-
-            bestDistanceSquared = distanceSquared;
-            storageUid = storage.Owner;
+            best.Offer(storage.Owner, distanceSquared);
         }
 
-        return storageUid != null;
+        storageUid = best.Found ? best.Value : null;
+        return best.Found;
     }
 }

@@ -1,4 +1,5 @@
 using Content.Server._KS14.NPC.Components;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.CCVar;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
@@ -45,8 +46,7 @@ public sealed partial class NpcLightDetectionSystem : EntitySystem
         var observerCoordinates = _transformSystem.GetMapCoordinates(observerUid);
         var targetCoordinates = _transformSystem.GetMapCoordinates(targetUid);
 
-        if (observerCoordinates.MapId == targetCoordinates.MapId &&
-            (observerCoordinates.Position - targetCoordinates.Position).LengthSquared() <= proximityRange * proximityRange)
+        if (NpcCoordinates.IsWithin(observerCoordinates, targetCoordinates, proximityRange))
             return 1f;
 
         return GetLightLevel(targetUid);

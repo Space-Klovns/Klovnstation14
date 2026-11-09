@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Pathfinding;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Physics;
 using Content.Shared.Tag;
 using Robust.Shared.Map;
@@ -21,6 +22,7 @@ namespace Content.Server._KS14.NPC.Squad;
 public sealed partial class NpcSquadCoverSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
@@ -70,10 +72,9 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         assignment = default;
 
         return _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) &&
-            squadEntity.Value.Comp.Leader is { } leaderUid &&
-            _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
+            _npcSquadSystem.TryGetLeader(squadEntity.Value, out var leader) &&
             squadEntity.Value.Comp.CoverPlan is { HasRoom: true } plan &&
-            !IsStale(squadEntity.Value, leaderUid, plan, leaderSquadMemberComponent.Cover) &&
+            !IsStale(squadEntity.Value, leader.Owner, plan, leader.Comp.Cover) &&
             plan.Assignments.TryGetValue(memberUid, out assignment);
     }
 
@@ -100,9 +101,8 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     public bool HasThreatObjective(EntityUid memberUid)
     {
         return _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) &&
-            squadEntity.Value.Comp.Leader is { } leaderUid &&
-            _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
-            TryGetThreatObjective(squadEntity.Value, leaderSquadMemberComponent.Cover, out _);
+            _npcSquadSystem.TryGetLeader(squadEntity.Value, out var leader) &&
+            TryGetThreatObjective(squadEntity.Value, leader.Comp.Cover, out _);
     }
 
     /// <summary>
@@ -122,11 +122,11 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
     private NpcSquadCoverPlan? EnsurePlan(Entity<NpcSquadComponent> squadEntity)
     {
-        if (squadEntity.Comp.Leader is not { } leaderUid ||
-            !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent))
+        if (!_npcSquadSystem.TryGetLeader(squadEntity, out var leader))
             return null;
 
-        var settings = leaderSquadMemberComponent.Cover;
+        var leaderUid = leader.Owner;
+        var settings = leader.Comp.Cover;
 
         if (squadEntity.Comp.CoverPlan is { } existingPlan && !IsStale(squadEntity, leaderUid, existingPlan, settings))
             return existingPlan;
@@ -158,12 +158,12 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
             return !TryGetThreatObjective(squadEntity, settings, out _);
 
         var leaderTransform = Transform(leaderUid);
-        if (leaderTransform.GridUid != plan.GridUid || !_mapGridQuery.TryComp(plan.GridUid, out var mapGridComponent))
+        if (leaderTransform.GridUid != plan.GridUid || !_npcGridSystem.TryGetGrid(plan.GridUid, out var planGrid))
             return true;
 
         // Members walk to their spots inside the room, so the leader only leaves it when something else in its
         //      plan (combat, a retreat) takes it out - which is exactly when the old room stops mattering.
-        var leaderTile = _mapSystem.TileIndicesFor((plan.GridUid, mapGridComponent), leaderTransform.Coordinates);
+        var leaderTile = _mapSystem.TileIndicesFor(planGrid, leaderTransform.Coordinates);
         return !plan.RoomTiles.Contains(leaderTile);
     }
 
@@ -178,10 +178,10 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         };
 
         var leaderTransform = Transform(leaderUid);
-        if (leaderTransform.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(leaderTransform.GridUid, out var gridEntity))
             return plan;
 
-        var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var gridUid = gridEntity.Owner;
 
         var (collisionLayer, collisionMask) = GetRoomCollision(leaderUid);
 
@@ -243,15 +243,12 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         NpcSquadCoverSettings settings,
         NpcSquadCoverPlan room)
     {
-        if (_transformSystem.GetGrid(seedCoordinates) is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGridTile(seedCoordinates, out var gridEntity, out var seedTile))
             return false;
 
-        var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
         var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
 
-        var seedTile = _mapSystem.TileIndicesFor(gridEntity, seedCoordinates);
-        var awayFromTile = _transformSystem.GetGrid(awayFromCoordinates) == gridUid
+        var awayFromTile = _transformSystem.GetGrid(awayFromCoordinates) == gridEntity.Owner
             ? _mapSystem.TileIndicesFor(gridEntity, awayFromCoordinates)
             : seedTile;
 
@@ -390,8 +387,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     private EntityUid TakeNearest(List<EntityUid> memberUids, EntityCoordinates coordinates)
     {
         var target = _transformSystem.ToMapCoordinates(coordinates);
-        var bestIndex = 0;
-        var bestDistance = float.MaxValue;
+        var best = NpcBestOf<int>.Lowest();
 
         for (var i = 0; i < memberUids.Count; i++)
         {
@@ -400,13 +396,10 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
                 ? Vector2.DistanceSquared(memberCoordinates.Position, target.Position)
                 : float.MaxValue;
 
-            if (distance >= bestDistance)
-                continue;
-
-            bestIndex = i;
-            bestDistance = distance;
+            best.Offer(i, distance);
         }
 
+        var bestIndex = best.Found ? best.Value : 0;
         var memberUid = memberUids[bestIndex];
         memberUids.RemoveAt(bestIndex);
         return memberUid;

@@ -2,6 +2,7 @@ using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.NPC;
@@ -38,10 +39,8 @@ public sealed partial class NpcPlayDeadSystem : EntitySystem
         base.Update(frameTime);
 
         var now = _gameTiming.CurTime;
-        if (now < _nextUpdate)
+        if (!NpcThrottle.TryConsume(ref _nextUpdate, now, UpdateInterval))
             return;
-
-        _nextUpdate = now + UpdateInterval;
 
         var enumerator = EntityQueryEnumerator<NpcPlayDeadComponent, ActiveNPCComponent>();
         while (enumerator.MoveNext(out var uid, out var playDeadComponent, out _))

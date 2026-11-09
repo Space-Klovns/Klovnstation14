@@ -1395,11 +1395,10 @@ public sealed partial class NpcSquadTacticsSystem
 
         var transformComponent = Transform(barrierUid);
         if (!transformComponent.Anchored ||
-            transformComponent.GridUid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGrid(transformComponent.GridUid, out var grid))
             return false;
 
-        var anchoredEnumerator = _mapSystem.GetAnchoredEntities(gridUid, mapGridComponent, _mapSystem.TileIndicesFor(gridUid, mapGridComponent, transformComponent.Coordinates));
+        var anchoredEnumerator = _mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, _mapSystem.TileIndicesFor(grid, transformComponent.Coordinates));
         while (anchoredEnumerator.MoveNext(out var anchoredUid))
         {
             if (_doorQuery.HasComp(anchoredUid.Value))

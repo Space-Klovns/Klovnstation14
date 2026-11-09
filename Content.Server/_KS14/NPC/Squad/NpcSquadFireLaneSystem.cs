@@ -70,11 +70,8 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
             ? _transformSystem.ToMapCoordinates(threatCoordinates)
             : (MapCoordinates?)null;
 
-        foreach (var memberUid in squadComponent.Members)
+        foreach (var memberUid in _npcSquadSystem.GetOtherMembers(squadEntity.Value, ownerUid))
         {
-            if (memberUid == ownerUid)
-                continue;
-
             // Where a teammate is headed matters more than where it happens to be right now.
             var memberMap = _npcTacticalPositionClaimSystem.TryGetClaim(memberUid, out var claimCoordinates)
                 ? _transformSystem.ToMapCoordinates(claimCoordinates)
