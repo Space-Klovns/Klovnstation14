@@ -2555,3 +2555,11 @@ Entries:
         trigger, spraying wildly until the gun runs dry or you recover.
   id: 243
   time: '2026-11-07T07:27:22.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Ghosts hear a sound and get a chat message when an important ghost role
+        appears mid-round, such as an ERT, a wizard or a dragon.
+  id: 244
+  time: '2026-11-09T13:32:10.0000000+00:00'
