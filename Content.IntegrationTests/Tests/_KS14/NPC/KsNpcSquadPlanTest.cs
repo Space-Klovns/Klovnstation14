@@ -1696,7 +1696,8 @@ public sealed class KsNpcSquadPlanTest : GameTest
     /// <summary>
     ///     As above, but with the squad near the planter's spot only through a wall: in the next corridor over, which joins this
     ///         one far to the north. Close enough in a straight line to count as just out of the blast already, so the rest used
-    ///         to stand where they heard it while the planter walked round alone. They walk round too, and stop once there.
+    ///         to stand where they heard it while the planter walked round alone. They walk round too, to the edge of the blast,
+    ///         and keep going once the charge is on, rather than stop wherever they are and be left behind.
     /// </summary>
     [Test]
     public async Task TestTheRestWalkRoundToABlastBeyondAWall()
@@ -1738,17 +1739,32 @@ public sealed class KsNpcSquadPlanTest : GameTest
             Assert.That(leaderCoordinates.TryDistance(scene.EntManager, transformSystem, site.StandCoordinates, out var throughWall) && throughWall < 8f,
                 "the test needs the leader near the spot in a straight line");
 
+            var chargeCoordinates = new EntityCoordinates(scene.GridUid, new Vector2(site.Tile.X + 0.5f, site.Tile.Y + 0.5f));
+
             Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order) && order.Kind == NpcOrderKind.Stage,
                 "the leader should be coming along");
-            Assert.That(order.Coordinates, Is.EqualTo(site.StandCoordinates));
-            Assert.That(throughWall, Is.GreaterThan(order.Range),
+            var followCoordinates = order.Coordinates;
+            Assert.That(followCoordinates.Position.X, Is.GreaterThan(-5f), "to the planter's side of the wall");
+            Assert.That(followCoordinates.TryDistance(scene.EntManager, transformSystem, chargeCoordinates, out var fromCharge) && fromCharge >= 7f + order.Range,
+                "to the edge of the blast, not into it");
+            Assert.That(leaderCoordinates.TryDistance(scene.EntManager, transformSystem, followCoordinates, out var toGo) && toGo > order.Range,
                 "near only through a wall is not there yet: an order it is already in range of has it stand still");
 
-            // Round the wall, in the corridor with the planter.
-            transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(-2.5f, 6.5f)));
+            // The charge goes on while it is still on its way.
+            hunt.Blast.Charge.Phase = NpcSquadChargePhase.Clearing;
+            hunt.Blast.Charge.PlantedAt = now;
             scene.TacticsSystem.UpdateNow();
 
-            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out order) && order.Kind == NpcOrderKind.Stage);
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var clearingOrder) && clearingOrder.Kind == NpcOrderKind.Stage,
+                "it should keep coming, not hold where it is");
+            Assert.That(clearingOrder.Id, Is.EqualTo(order.Id), "to the same spot, with no replan for it");
+
+            // Round the wall, at the spot it was sent to.
+            transformSystem.SetCoordinates(scene.LeaderUid, followCoordinates);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out order), "it should still have something to do");
+            Assert.That(order.Kind, Is.Not.EqualTo(NpcOrderKind.TakeCover), "it is out of the blast already");
             Assert.That(scene.EntManager.GetComponent<TransformComponent>(scene.LeaderUid).Coordinates
                     .TryDistance(scene.EntManager, transformSystem, order.Coordinates, out var roundTheWall) && roundTheWall <= order.Range,
                 "once round, it should stop just out of the blast rather than walk up to the charge");

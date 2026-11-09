@@ -857,7 +857,7 @@ public sealed partial class NpcSquadTacticsSystem
         var pick = charge.Pick;
         var site = pick.Site;
         var hunt = plan.Hunt!;
-        var followFlooded = false;
+        FloodAroundChargeSite(pick, hunt);
 
         foreach (var memberUid in _members)
         {
@@ -874,17 +874,81 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
 
             // Comes along, to just out of the blast: everyone goes in through the hole after it, and a squad shut out has
-            //      nobody stacked up anywhere, so holding still would leave the planter to go alone. That range is a straight
-            //      line, so one only near it through a wall is sent all the way, and stopped short once it is round.
-            if (!followFlooded)
+            //      nobody stacked up anywhere, so holding still would leave the planter to go alone.
+            if (HasComeAlong(memberUid, site))
             {
-                FloodAroundChargeSite(pick, hunt);
-                followFlooded = true;
+                SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, site.StandCoordinates, site.LocalFacing, FollowChargeRange, null, now);
+                continue;
             }
 
-            var range = HasComeAlong(memberUid, site) ? FollowChargeRange : OrderRange;
-            SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, site.StandCoordinates, site.LocalFacing, range, null, now);
+            if (TryGetFollowSpot(memberUid, issuerUid, site, hunt, out var followCoordinates))
+                SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, followCoordinates, site.LocalFacing, OrderRange, null, now);
+            else
+                SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, site.StandCoordinates, site.LocalFacing, OrderRange, null, now);
         }
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/> is one of those coming along to a charge: not its planter, nor stacked up on a
+    ///         way in, nor watching the hostile.
+    /// </summary>
+    private static bool IsFollowingCharge(EntityUid memberUid, NpcSquadPlan plan, NpcHunt hunt)
+    {
+        return memberUid != plan.Charge?.Pick.PlanterUid &&
+            memberUid != plan.WatcherUid &&
+            !hunt.StagedMembers.ContainsKey(memberUid);
+    }
+
+    /// <summary>
+    ///     Where <paramref name="memberUid"/>, still on its way to a charge, is to stop: of the floor a short walk from the spot
+    ///         in front of it (see <see cref="FloodAroundChargeSite"/>) and out of its blast, the tile on its way there. A spot it
+    ///         was sent to already is kept while it still is one, or each step it took could bring a new order. False if there
+    ///         is none.
+    /// </summary>
+    private bool TryGetFollowSpot(EntityUid memberUid, EntityUid issuerUid, NpcChargeSite site, NpcHunt hunt, out EntityCoordinates coordinates)
+    {
+        coordinates = default;
+
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid) ||
+            !_npcGridSystem.TryGetGridTile(Transform(memberUid).Coordinates, out var memberGrid, out var memberTile) ||
+            memberGrid.Owner != grid.Owner)
+            return false;
+
+        if (_orderQuery.TryComp(memberUid, out var orderComponent) &&
+            orderComponent.Order is { Kind: NpcOrderKind.Stage } order &&
+            order.IssuerUid == issuerUid &&
+            _transformSystem.GetGrid(order.Coordinates) == grid.Owner &&
+            IsFollowTile(grid, _mapSystem.TileIndicesFor(grid, order.Coordinates), site))
+        {
+            coordinates = order.Coordinates;
+            return true;
+        }
+
+        // Scored by about how long a way to the charge through it is: from the member in a straight line, which is never
+        //      longer than the walk, then the walk on from it. The lowest is on the member's way, and as near the charge as
+        //      is safe. Nearest the member alone could be the far end of its own side of a wall.
+        var onTheWay = NpcBestOf<Vector2i>.Lowest();
+        foreach (var (tile, steps) in _followFloodSteps)
+        {
+            if (IsFollowTile(grid, tile, site))
+                onTheWay.Offer(tile, (tile - memberTile).Length + steps);
+        }
+
+        if (!onTheWay.Found)
+            return false;
+
+        coordinates = GetTileCoordinates(grid.Owner, onTheWay.Value);
+        return true;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="tile"/> is a short walk from the spot in front of a charge and out of its blast, by a tile
+    ///         to spare: one stopping as far short as an order lets it is still out.
+    /// </summary>
+    private bool IsFollowTile(Entity<MapGridComponent> grid, Vector2i tile, NpcChargeSite site)
+    {
+        return _followFloodSteps.ContainsKey(tile) &&
+            (tile - site.Tile).Length * grid.Comp.TileSize >= ChargeDangerRange + OrderRange;
     }
 
     /// <summary>
@@ -924,14 +988,31 @@ public sealed partial class NpcSquadTacticsSystem
         var hunt = plan.Hunt!;
         var chargeCoordinates = GetTileCoordinates(hunt.GridUid!.Value, site.Tile);
         var everyoneClear = true;
+        FloodAroundChargeSite(pick, hunt);
 
         foreach (var memberUid in _members)
         {
             if (memberUid == pick.PlanterUid && pick.Charge.ActivatorUid != null)
                 continue;
 
-            if (!Transform(memberUid).Coordinates.TryDistance(EntityManager, _transformSystem, chargeCoordinates, out var distance) ||
-                distance >= ChargeDangerRange)
+            var nearCharge = Transform(memberUid).Coordinates.TryDistance(EntityManager, _transformSystem, chargeCoordinates, out var distance) &&
+                distance < ChargeDangerRange;
+
+            // Still on its way round: it goes on, to the edge of the blast, and does not stop wherever it was when the charge
+            //      went on, to be left behind when the rest go in.
+            if (IsFollowingCharge(memberUid, plan, hunt) &&
+                !HasComeAlong(memberUid, site) &&
+                TryGetFollowSpot(memberUid, issuerUid, site, hunt, out var followCoordinates))
+            {
+                SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, followCoordinates, site.LocalFacing, OrderRange, null, now);
+
+                if (nearCharge)
+                    everyoneClear &= !InSightOfChargeSite(memberUid, site);
+
+                continue;
+            }
+
+            if (!nearCharge)
             {
                 HoldStill(memberUid, issuerUid, site.Tile, hunt, now);
                 continue;
@@ -939,7 +1020,7 @@ public sealed partial class NpcSquadTacticsSystem
 
             // Out of sight of the floor in front of it. Of the charge itself would do for nobody: nothing can see into a wall.
             SetOrder(memberUid, issuerUid, NpcOrderKind.TakeCover, site.StandCoordinates, Angle.Zero, CoverOrderRange, null, now);
-            everyoneClear &= !_npcLineOfSightSystem.InLineOfSight(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.ToMapCoordinates(site.StandCoordinates), ChargeDangerRange);
+            everyoneClear &= !InSightOfChargeSite(memberUid, site);
         }
 
         if (pick.Charge.ActivatorUid is not { } activatorUid)
@@ -952,8 +1033,7 @@ public sealed partial class NpcSquadTacticsSystem
         // Done waiting for it to get to its spot - but never while it is in the blast itself. Left there, the charge is lost.
         var planterClear = inPlace ||
             (planterCoordinates.TryDistance(EntityManager, _transformSystem, chargeCoordinates, out var fromCharge) &&
-             (fromCharge >= ChargeDangerRange ||
-              !_npcLineOfSightSystem.InLineOfSight(_transformSystem.GetMapCoordinates(pick.PlanterUid), _transformSystem.ToMapCoordinates(site.StandCoordinates), ChargeDangerRange)));
+             (fromCharge >= ChargeDangerRange || !InSightOfChargeSite(pick.PlanterUid, site)));
 
         var sincePlanted = now - charge.PlantedAt;
         var inPlaceAndSafe = inPlace && (everyoneClear || sincePlanted >= ClearingTime);
@@ -963,6 +1043,14 @@ public sealed partial class NpcSquadTacticsSystem
             SetOrder(pick.PlanterUid, issuerUid, NpcOrderKind.Detonate, planterCoordinates, facing, OrderRange, null, now, toolUid: activatorUid);
         else
             SetOrder(pick.PlanterUid, issuerUid, NpcOrderKind.Stage, pick.StandOffCoordinates, facing, StandOffRange, null, now);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/> can see the floor in front of a charge, within its blast: is in the blast itself.
+    /// </summary>
+    private bool InSightOfChargeSite(EntityUid memberUid, NpcChargeSite site)
+    {
+        return _npcLineOfSightSystem.InLineOfSight(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.ToMapCoordinates(site.StandCoordinates), ChargeDangerRange);
     }
 
     /// <summary>
