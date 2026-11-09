@@ -34,6 +34,9 @@ public sealed class KsCargoCheckoutTest : GameTest
 
 - type: cargoProduct
   id: KsTestCheckoutProduct
+  icon:
+    sprite: Objects/Specific/Janitorial/spray_bottle.rsi
+    state: cleaner
   product: KsTestCheckoutGoods
   cost: 10
   category: cargoproduct-category-name-service
