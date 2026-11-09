@@ -302,8 +302,7 @@ public sealed partial class KsTguiFeelUIController
     {
         host.ReleaseBackdrop();
 
-        if (host.Tooltip.Parent == host)
-            host.RemoveChild(host.Tooltip);
+        host.ReleaseTooltip();
 
         host.Orphan();
     }

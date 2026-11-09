@@ -103,6 +103,44 @@ public sealed class KsTguiTooltipHost : Control
         _rasterized = false;
     }
 
+    private bool _releasing;
+
+    /// <summary>
+    ///     Takes the tooltip out for good, so the host does not keep it for its closing transition.
+    /// </summary>
+    public void ReleaseTooltip()
+    {
+        if (Tooltip.Parent != this)
+            return;
+
+        _releasing = true;
+        try
+        {
+            RemoveChild(Tooltip);
+        }
+        finally
+        {
+            _releasing = false;
+        }
+    }
+
+    /// <summary>
+    ///     The engine hides a tooltip by taking it out of its parent, in the middle of input handling or the hover update. An
+    ///         empty host is laid out at nothing before the controller gets to put the tooltip back, which left one frame
+    ///         with no tooltip drawn between its being shown and fading out. So the host takes it back at once and starts
+    ///         closing, with the contents and size it had.
+    /// </summary>
+    protected override void ChildRemoved(Control child)
+    {
+        base.ChildRemoved(child);
+
+        if (child != Tooltip || _releasing || Closing)
+            return;
+
+        Closing = true;
+        AddChild(child);
+    }
+
     protected override void Draw(DrawingHandleScreen handle)
     {
         base.Draw(handle);
