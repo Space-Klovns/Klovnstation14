@@ -2563,3 +2563,28 @@ Entries:
         appears mid-round, such as an ERT, a wizard or a dragon.
   id: 244
   time: '2026-11-09T13:32:10.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        New default interface theme modelled on /tg/station's tgui. You can
+        switch back to the old one in Settings, KS14 tab.
+    - type: Add
+      message: >-
+        Vending machines, lathes, the chem dispenser, ChemMaster, APCs, air
+        alarms, gas machines, faxes, the cargo console, PDAs, wire panels,
+        disposal units, the ore silo and the late join menu have tgui layouts.
+    - type: Add
+      message: A tgui chat panel and say box.
+    - type: Add
+      message: Admin windows use tgui's blue admin theme.
+    - type: Tweak
+      message: >-
+        Taking sheets out of a lathe or ore silo is instant and puts them into
+        your hands.
+    - type: Fix
+      message: Inserting materials into a lathe no longer makes its window flicker.
+    - type: Tweak
+      message: The nuclear reactor's Silence button sits in hazard stripes.
+  id: 245
+  time: '2026-11-09T13:33:08.0000000+00:00'
