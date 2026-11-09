@@ -1,6 +1,7 @@
 using Content.Client.Administration.UI.CustomControls;
 using Content.Client.UserInterface.Controls;
 using Content.Client.Stylesheets;
+using Content.Client.Stylesheets.Fonts;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using static Content.Client.Stylesheets.StylesheetHelpers;
@@ -44,8 +45,15 @@ public sealed partial class KsTguiSheetlet
     public const string StyleClassSectionHeading = "KsTguiSectionHeading";
     public const string StylePropertySectionLine = "ks-tgui-section-line";
 
+    /// <summary>
+    ///     On the labels of the header row of an existing list: <c>Table.Row header</c>'s bold.
+    /// </summary>
+    public const string StyleClassTableHeaderLabel = "KsTguiTableHeaderLabel";
+
     private void AddRetrofitRules(List<StyleRule> rules)
     {
+        rules.Add(E<Label>().Class(StyleClassTableHeaderLabel).Font(IoCManager.Resolve<KsTguiFonts>().GetFont(12, FontKind.Bold)));
+
         rules.Add(E<Label>().Class(StyleClassLabelKey).FontColor(_palette.Label));
 
         // A heading in an existing window, as a Section's title: white.
