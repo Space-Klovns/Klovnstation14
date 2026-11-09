@@ -45,12 +45,31 @@ public sealed class NpcSquadCharge
     public NpcSquadChargePhase Phase = NpcSquadChargePhase.Planting;
 
     /// <summary>
-    ///     Where the planter was when it last got anywhere, on its way to put the charge on, relative to its grid.
+    ///     How many steps each tile is from the spot in front of the charge, walking, as far out as the squad looks: how far
+    ///         each member has to go, and so who is ahead of whom. Tiles of <see cref="RouteGridUid"/>.
+    /// </summary>
+    public readonly Dictionary<Vector2i, int> RouteSteps = new();
+
+    public EntityUid RouteGridUid;
+
+    /// <summary>
+    ///     When <see cref="RouteSteps"/> was last worked out, if it has been.
+    /// </summary>
+    public TimeSpan? RouteBuiltAt;
+
+    /// <summary>
+    ///     The fewest steps the planter has had left to walk, so far.
+    /// </summary>
+    public int BestSteps = int.MaxValue;
+
+    /// <summary>
+    ///     Where the planter was when it last got anywhere, relative to its grid: for while it is further out than
+    ///         <see cref="RouteSteps"/> goes, where any way it walks counts.
     /// </summary>
     public EntityCoordinates ProgressCoordinates;
 
     /// <summary>
-    ///     When it last got anywhere. A planter that stops getting anywhere is given up on; a long way round is no reason to.
+    ///     When the planter last got any nearer the charge, or was busy with its hands on the way (a door) or at it.
     /// </summary>
     public TimeSpan ProgressAt;
 

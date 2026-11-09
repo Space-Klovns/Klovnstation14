@@ -363,8 +363,9 @@ public sealed partial class NpcSquadTacticsSettings
     public float PlanChargeMinPressure = 50f;
 
     /// <summary>
-    ///     How long a planter may go without getting anywhere (a tile), on its way to its site and sticking a charge on, before it
-    ///         is given up on. A long way round is no reason to; three times this is the most it gets in all.
+    ///     How long a planter may go without getting any nearer its site, by the way it has to walk, before it is given up on.
+    ///         Time busy with its hands (a door on the way, sticking the charge on) does not count, and nor does how long the way
+    ///         is: nearer each time is bound to get there.
     /// </summary>
     [DataField]
     public TimeSpan PlanChargeTimeout = TimeSpan.FromSeconds(20);

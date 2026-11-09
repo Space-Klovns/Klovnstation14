@@ -1696,8 +1696,8 @@ public sealed class KsNpcSquadPlanTest : GameTest
     /// <summary>
     ///     As above, but with the squad near the planter's spot only through a wall: in the next corridor over, which joins this
     ///         one far to the north. Close enough in a straight line to count as just out of the blast already, so the rest used
-    ///         to stand where they heard it while the planter walked round alone. They walk round too, to the edge of the blast,
-    ///         and keep going once the charge is on, rather than stop wherever they are and be left behind.
+    ///         to stand where they heard it while the planter walked round alone. They walk round too, behind the planter, then to
+    ///         the edge of the blast, and keep going once the charge is on, rather than stop wherever they are and be left behind.
     /// </summary>
     [Test]
     public async Task TestTheRestWalkRoundToABlastBeyondAWall()
@@ -1713,6 +1713,8 @@ public sealed class KsNpcSquadPlanTest : GameTest
                     SpawnAt(entManager, TestWall, gridUid, -5, y);
                 }
             });
+
+        await WaitForWallNavmesh(scene);
 
         await Pair.Server.WaitAssertion(() =>
         {
@@ -1741,8 +1743,19 @@ public sealed class KsNpcSquadPlanTest : GameTest
 
             var chargeCoordinates = new EntityCoordinates(scene.GridUid, new Vector2(site.Tile.X + 0.5f, site.Tile.Y + 0.5f));
 
+            // The planter leads, the long way round, and the leader with it, behind it: not off ahead to the far side.
             Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order) && order.Kind == NpcOrderKind.Stage,
                 "the leader should be coming along");
+            Assert.That(order.Coordinates.TryDistance(scene.EntManager, transformSystem, scene.EntManager.GetComponent<TransformComponent>(scene.MemberUid).Coordinates, out var fromPlanter) &&
+                fromPlanter < 1f,
+                "after the planter, while it has the way round still to go");
+
+            // The planter round the wall and at the charge: the rest are past being in its way at the edge of the blast.
+            transformSystem.SetCoordinates(scene.MemberUid, site.StandCoordinates);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out order) && order.Kind == NpcOrderKind.Stage,
+                "the leader should still be coming along");
             var followCoordinates = order.Coordinates;
             Assert.That(followCoordinates.Position.X, Is.GreaterThan(-5f), "to the planter's side of the wall");
             Assert.That(followCoordinates.TryDistance(scene.EntManager, transformSystem, chargeCoordinates, out var fromCharge) && fromCharge >= 7f + order.Range,
@@ -1768,6 +1781,82 @@ public sealed class KsNpcSquadPlanTest : GameTest
             Assert.That(scene.EntManager.GetComponent<TransformComponent>(scene.LeaderUid).Coordinates
                     .TryDistance(scene.EntManager, transformSystem, order.Coordinates, out var roundTheWall) && roundTheWall <= order.Range,
                 "once round, it should stop just out of the blast rather than walk up to the charge");
+        });
+    }
+
+    /// <summary>
+    ///     Runs ticks until the floor all round the wall of the tests above is on the navmesh, which the way round to the charge
+    ///         is worked out from. On a busy server it can still be missing once the squad has formed.
+    /// </summary>
+    private async Task WaitForWallNavmesh(Scene scene)
+    {
+        await WaitForNavmesh(Pair, scene.GridUid, new Vector2i(-12, -12), new Vector2i(-6, 12));
+        await WaitForNavmesh(Pair, scene.GridUid, new Vector2i(-12, 11), new Vector2i(12, 12));
+        await WaitForNavmesh(Pair, scene.GridUid, new Vector2i(-4, -12), new Vector2i(-2, 10));
+    }
+
+    /// <summary>
+    ///     A planter is given up on for getting nowhere, not for taking long: getting nearer by the way it has to walk, round a
+    ///         wall and away from the charge in a straight line, keeps it going however long it has been at it, and so does being
+    ///         busy with its hands. Standing about past <see cref="NpcSquadTacticsSettings.PlanChargeTimeout"/> does not.
+    /// </summary>
+    [Test]
+    public async Task TestAPlanterIsOnlyGivenUpOnForGettingNowhere()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobBlaster",
+            glass: ArmouredGlass,
+            squadAt: new Vector2i(-7, 3),
+            extra: (entManager, gridUid) =>
+            {
+                for (var y = -12; y <= 10; y++)
+                {
+                    SpawnAt(entManager, TestWall, gridUid, -5, y);
+                }
+            });
+
+        await WaitForWallNavmesh(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TimedCharge);
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.TargetUid).Coordinates;
+
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.EntManager.System<NpcPerceptionSystem>().SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, coordinates, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false));
+            }
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Blast), "the test needs a blast");
+            var blast = hunt.Blast!;
+            var charge = blast.Charge!;
+            var timeout = hunt.Settings.PlanChargeTimeout;
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+
+            // Long at it, and a step nearer since last time: north, the way round, though further from the charge as the crow flies.
+            blast.StepStartedAt = now - timeout * 5;
+            charge.ProgressAt = now - timeout - TimeSpan.FromSeconds(1);
+            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(-6.5f, 3.5f)));
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Blast, Is.SameAs(blast), "a planter getting nearer is not given up on, however long it has been at it");
+            Assert.That(charge.ProgressAt, Is.EqualTo(now), "and getting nearer is getting somewhere");
+
+            // Standing about, busy with its hands: a door on the way, or the charge itself.
+            charge.ProgressAt = now - timeout - TimeSpan.FromSeconds(1);
+            scene.EntManager.AddComponent<Content.Shared.DoAfter.ActiveDoAfterComponent>(scene.MemberUid);
+            scene.TacticsSystem.UpdateNow();
+            scene.EntManager.RemoveComponent<Content.Shared.DoAfter.ActiveDoAfterComponent>(scene.MemberUid);
+            Assert.That(hunt.Blast, Is.SameAs(blast), "nor is one busy with its hands");
+
+            // Standing about, and nothing more.
+            charge.ProgressAt = now - timeout - TimeSpan.FromSeconds(1);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Blast, Is.Null, "one getting nowhere is");
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted));
         });
     }
 

@@ -1747,9 +1747,9 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
     /// <summary>
     ///     Live: two corridors side by side, joined by a door at the north end only, and a noise behind a bolted door at the south
-    ///         end of the other one. The whole squad walks round together, through that door, and blows its way in. Squeezing
-    ///         through the door and past each other, the planter used to take longer than it was given to put the charge on,
-    ///         and the squad gave up on it and held where it was.
+    ///         end of the other one. The whole squad walks round together, through that door, and blows its way in, the planter
+    ///         leading: those ahead of it get out of its way. Squeezing through the door and past them, it used to take longer
+    ///         than it was given to put the charge on, and the squad gave up on it and held where it was.
     /// </summary>
     [TestCase(1)]
     [TestCase(2)]
@@ -1837,18 +1837,22 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
         var inside = false;
         var log = new System.Text.StringBuilder();
+        EntityUid? planterUid = null;
+        EntityUid? firstNearSpotUid = null;
+        var standSpot = new Vector2(-2.5f, -3.5f);
 
         for (var i = 0; i < 1800 && !inside; i += 15)
         {
             await Pair.RunTicksSync(15);
             await server.WaitPost(() =>
             {
-                var line = new System.Text.StringBuilder($"{i,5}");
+                var line = new System.Text.StringBuilder($"w{width} {i,5}");
 
                 if (entManager.System<Content.Server._KS14.NPC.Squad.NpcSquadSystem>().TryGetSquad(mobs[0], out var squad) &&
                     tacticsSystem.GetHunt(squad.Value.Owner) is { } hunt)
                 {
                     line.Append($" {hunt.Phase}{(hunt.ShutOut ? " shut out" : "")} charge {hunt.Blast?.Charge?.Phase.ToString() ?? "-"}");
+                    planterUid ??= hunt.Blast?.Charge?.Pick.PlanterUid;
                 }
                 else
                 {
@@ -1859,6 +1863,10 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 {
                     var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
                     inside |= position.X is > -5f and < 0f && position.Y is > -10f and < -5.5f;
+
+                    if (firstNearSpotUid == null && (position - standSpot).Length() < 6f)
+                        firstNearSpotUid = mobUid;
+
                     var order = tacticsSystem.TryGetOrder(mobUid, out var mobOrder) ? $"{mobOrder.Kind}@{mobOrder.Coordinates.Position:0.#}/{mobOrder.Range:0.#}" : "-";
                     line.Append($" | {position.X:0.0},{position.Y:0.0} {order}");
                 }
@@ -1867,9 +1875,11 @@ public sealed class KsOperativeHtnRootTest : GameTest
             });
         }
 
-        if (!inside)
+        if (!inside || firstNearSpotUid != planterUid)
             TestContext.Out.WriteLine(log.ToString());
 
+        Assert.That(planterUid, Is.Not.Null, "the test needs a charge put on");
+        Assert.That(firstNearSpotUid, Is.EqualTo(planterUid), "the planter should lead, with nobody in its way at the charge");
         Assert.That(inside, "somebody should have got into the room");
         await server.WaitAssertion(() => Assert.That(entManager.Deleted(roomDoorUid), "by way of the door"));
     }
