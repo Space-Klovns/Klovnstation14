@@ -2606,3 +2606,15 @@ Entries:
         and copied with Ctrl+C.
   id: 247
   time: '2026-11-09T20:17:41.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        The tgui cargo console's Checkout tab now lists the orders waiting on
+        the trade station pallets or cargo telepads.
+    - type: Tweak
+      message: >-
+        Tabs with something waiting (cargo requests and checkout) show yellow
+        text.
+  id: 248
+  time: '2026-11-09T21:02:31.0000000+00:00'
