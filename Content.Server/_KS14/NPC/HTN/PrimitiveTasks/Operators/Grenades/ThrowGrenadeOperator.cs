@@ -23,11 +23,11 @@ public sealed partial class ThrowGrenadeOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(GrenadeKey, out var grenadeUid, _entityManager) ||
-            !blackboard.TryGetValue<EntityCoordinates>(CoordinatesKey, out var coordinates, _entityManager))
+        if (!blackboard.TryGetEntity(GrenadeKey, _entityManager, out var grenadeUid) ||
+            !blackboard.TryGetCoordinates(CoordinatesKey, _entityManager, out var coordinates))
             return HTNOperatorStatus.Failed;
 
-        return _npcGrenadeSystem.TryThrow(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), grenadeUid, coordinates)
+        return _npcGrenadeSystem.TryThrow(blackboard.GetOwner(), grenadeUid, coordinates)
             ? HTNOperatorStatus.Finished
             : HTNOperatorStatus.Failed;
     }

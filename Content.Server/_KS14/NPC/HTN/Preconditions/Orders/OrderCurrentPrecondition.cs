@@ -19,7 +19,6 @@ public sealed partial class OrderCurrentPrecondition : HTNPrecondition
     public override bool IsMet(NPCBlackboard blackboard)
     {
         return blackboard.TryGetValue<int>(IdKey, out var plannedId, _entityManager) &&
-            _npcSquadTacticsSystem.TryGetOrder(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), out var order) &&
-            order.Id == plannedId;
+            _npcSquadTacticsSystem.IsOrderCurrent(blackboard.GetOwner(), plannedId);
     }
 }

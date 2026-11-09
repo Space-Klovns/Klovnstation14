@@ -7,15 +7,12 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions.Recovery;
 /// <summary>
 ///     Met while the owner is waiting for its meds to work (see <see cref="NpcRecoverySystem"/>).
 /// </summary>
-public sealed partial class RecoveringPrecondition : HTNPrecondition
+public sealed partial class RecoveringPrecondition : KsInvertiblePrecondition
 {
     [Dependency] private NpcRecoverySystem _npcRecoverySystem = default!;
 
-    [DataField]
-    public bool Invert;
-
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
-        return _npcRecoverySystem.IsRecovering(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner)) != Invert;
+        return _npcRecoverySystem.IsRecovering(blackboard.GetOwner());
     }
 }

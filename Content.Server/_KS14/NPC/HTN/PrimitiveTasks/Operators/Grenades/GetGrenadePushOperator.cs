@@ -18,7 +18,7 @@ public sealed partial class GetGrenadePushOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        if (!_npcGrenadeSystem.TryGetPush(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), out var coordinates))
+        if (!_npcGrenadeSystem.TryGetPush(blackboard.GetOwner(), out var coordinates))
             return (false, null);
 
         return (true, new Dictionary<string, object> { { CoordinatesKey, coordinates } });

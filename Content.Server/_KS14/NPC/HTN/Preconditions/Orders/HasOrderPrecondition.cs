@@ -27,7 +27,7 @@ public sealed partial class HasOrderPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        if (!_npcSquadTacticsSystem.TryGetOrder(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), out var order) ||
+        if (!_npcSquadTacticsSystem.TryGetOrder(blackboard.GetOwner(), out var order) ||
             Kinds.Count > 0 && !Kinds.Contains(order.Kind) ||
             OverCombat is { } overCombat && order.OverCombat != overCombat)
             return false;

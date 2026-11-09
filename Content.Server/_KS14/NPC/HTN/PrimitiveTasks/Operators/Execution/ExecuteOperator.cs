@@ -27,17 +27,17 @@ public sealed partial class ExecuteOperator : HTNOperator
     {
         base.Startup(blackboard);
 
-        if (blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entityManager) &&
-            blackboard.TryGetValue<EntityUid>(WeaponKey, out var weaponUid, _entityManager))
-            _npcExecutionSystem.TryStartExecution(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), targetUid, weaponUid);
+        if (blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid) &&
+            blackboard.TryGetEntity(WeaponKey, _entityManager, out var weaponUid))
+            _npcExecutionSystem.TryStartExecution(blackboard.GetOwner(), targetUid, weaponUid);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (_npcExecutionSystem.IsExecuting(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner)))
+        if (_npcExecutionSystem.IsExecuting(blackboard.GetOwner()))
             return HTNOperatorStatus.Continuing;
 
-        return blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entityManager) && _mobStateSystem.IsDead(targetUid)
+        return blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid) && _mobStateSystem.IsDead(targetUid)
             ? HTNOperatorStatus.Finished
             : HTNOperatorStatus.Failed;
     }
@@ -45,6 +45,6 @@ public sealed partial class ExecuteOperator : HTNOperator
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
     {
         base.TaskShutdown(blackboard, status);
-        _npcExecutionSystem.FinishExecution(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcExecutionSystem.FinishExecution(blackboard.GetOwner());
     }
 }

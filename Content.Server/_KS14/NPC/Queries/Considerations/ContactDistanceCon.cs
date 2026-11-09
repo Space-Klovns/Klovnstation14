@@ -2,6 +2,7 @@ using Content.Server._KS14.NPC.Perception;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Considerations;
 using Robust.Server.GameObjects;
+using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Queries.Considerations;
 
@@ -10,19 +11,19 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 ///         of. For hostiles out of sight: unlike <c>TargetDistanceCon</c>, this goes by where it thinks they are, not
 ///         where they really are.
 /// </summary>
-public sealed partial class ContactDistanceCon : UtilityConsideration
+public sealed partial class ContactDistanceCon : KsBelievedContactCon
 {
-    [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
 
     [DataField(required: true)]
     public float MaxRange;
 
-    public override float GetScore(NPCBlackboard blackboard, EntityUid ownerUid, EntityUid targetUid)
+    protected override float UnknownScore => 1f;
+
+    protected override float GetBelievedScore(EntityUid ownerUid, EntityCoordinates believedCoordinates)
     {
-        if (!_npcPerceptionSystem.TryGetBelievedCoordinates(ownerUid, targetUid, out var believedCoordinates, out _, out _) ||
-            !EntityManager.TransformQuery.GetComponent(ownerUid).Coordinates.TryDistance(EntityManager, _transformSystem, believedCoordinates, out var distance))
-            return 1f;
+        if (!EntityManager.TransformQuery.GetComponent(ownerUid).Coordinates.TryDistance(EntityManager, _transformSystem, believedCoordinates, out var distance))
+            return UnknownScore;
 
         return Math.Clamp(distance / MaxRange, 0f, 1f);
     }

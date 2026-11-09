@@ -19,7 +19,7 @@ public sealed partial class SpawnInHandOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
         var itemUid = _entityManager.SpawnNextToOrDrop(Proto, owner);
 
         if (_handsSystem.TryPickupAnyHand(owner, itemUid, checkActionBlocker: false, animate: false))

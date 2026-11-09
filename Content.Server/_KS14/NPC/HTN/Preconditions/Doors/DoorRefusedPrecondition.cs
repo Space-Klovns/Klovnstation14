@@ -20,6 +20,6 @@ public sealed partial class DoorRefusedPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return _npcDoorSystem.HasPendingRefusal(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), Within);
+        return _npcDoorSystem.HasPendingRefusal(blackboard.GetOwner(), Within);
     }
 }

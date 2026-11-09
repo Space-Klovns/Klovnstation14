@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
-using Content.Shared.Actions;
 using Content.Shared.Physics;
 using Robust.Shared.Map;
 
@@ -43,7 +42,7 @@ public sealed partial class DiveOperator : KsBaseActionOperator
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
         if (!TryGetValidAction(blackboard, out var ownerUid, out _) ||
-            !blackboard.TryGetValue<EntityCoordinates>(DestinationKey, out var destinationCoordinates, EntityManager) ||
+            !blackboard.TryGetCoordinates(DestinationKey, EntityManager, out var destinationCoordinates) ||
             !TryGetDivePoint(ownerUid, destinationCoordinates, out var diveCoordinates))
             return (false, null);
 
@@ -55,13 +54,9 @@ public sealed partial class DiveOperator : KsBaseActionOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityCoordinates>(Key, out var diveCoordinates, EntityManager) ||
-            !TryGetValidAction(blackboard, out var ownerUid, out var actionEntity) ||
-            ActionsSystem.GetEvent(actionEntity) is not WorldTargetActionEvent worldTargetActionEvent)
+        if (!blackboard.TryGetCoordinates(Key, EntityManager, out var diveCoordinates) ||
+            !TryPerformWorldAction(blackboard, diveCoordinates, throwOnWrongEvent: false))
             return HTNOperatorStatus.Failed;
-
-        worldTargetActionEvent.Target = diveCoordinates;
-        ActionsSystem.PerformAction(ownerUid, actionEntity, actionEvent: worldTargetActionEvent, predicted: false);
 
         return HTNOperatorStatus.Finished;
     }

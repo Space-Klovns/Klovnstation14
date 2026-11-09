@@ -352,8 +352,7 @@ public sealed partial class NpcDoorSystem : EntitySystem
     public bool HasPendingRefusal(EntityUid npcUid, TimeSpan within)
     {
         return _doorUserQuery.TryComp(npcUid, out var doorUserComponent) &&
-            doorUserComponent.RefusedAt is { } refusedAt &&
-            _gameTiming.CurTime - refusedAt <= within;
+            NpcCallouts.IsPending(doorUserComponent.RefusedAt, within, _gameTiming.CurTime);
     }
 
     /// <summary>

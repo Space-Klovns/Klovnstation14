@@ -1,5 +1,4 @@
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
-using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN.Preconditions;
@@ -13,7 +12,6 @@ public sealed partial class CooldownPrecondition : HTNPrecondition
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private NpcGenericCooldownSystem _genericCooldownSystem = default!;
-    [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
 
     /// <summary>
     ///     ID of the cooldown.
@@ -36,10 +34,10 @@ public sealed partial class CooldownPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager))
+        if (!blackboard.TryGetOwner(_entityManager, out var ownerUid))
             return Inverted;
 
-        var holderUid = SquadWide ? _npcSquadSystem.GetSquadOrSelf(ownerUid) : ownerUid;
+        var holderUid = _genericCooldownSystem.GetHolder(ownerUid, SquadWide);
         return _genericCooldownSystem.IsKeyOnCooldown(holderUid, _idHash) ^ Inverted;
     }
 }

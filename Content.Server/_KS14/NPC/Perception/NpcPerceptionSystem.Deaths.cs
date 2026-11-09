@@ -28,8 +28,7 @@ public sealed partial class NpcPerceptionSystem
     public bool HasPendingKillCallout(EntityUid uid, TimeSpan within)
     {
         return _perceptionQuery.TryComp(uid, out var perceptionComponent) &&
-            perceptionComponent.ConfirmedKillAt is { } confirmedAt &&
-            _gameTiming.CurTime - confirmedAt <= within;
+            NpcCallouts.IsPending(perceptionComponent.ConfirmedKillAt, within, _gameTiming.CurTime);
     }
 
     /// <summary>

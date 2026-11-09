@@ -18,10 +18,10 @@ public sealed partial class DetonateChargeOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(ActivatorKey, out var activatorUid, _entityManager))
+        if (!blackboard.TryGetEntity(ActivatorKey, _entityManager, out var activatorUid))
             return HTNOperatorStatus.Failed;
 
-        return _npcChargeSystem.TryDetonate(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), activatorUid)
+        return _npcChargeSystem.TryDetonate(blackboard.GetOwner(), activatorUid)
             ? HTNOperatorStatus.Finished
             : HTNOperatorStatus.Failed;
     }

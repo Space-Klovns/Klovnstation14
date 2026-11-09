@@ -3,6 +3,7 @@ using Content.Server.NPC;
 using Content.Server.NPC.Queries.Considerations;
 using Content.Shared.Physics;
 using Robust.Server.GameObjects;
+using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Queries.Considerations;
 
@@ -11,17 +12,13 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 ///         way, or if it knows nothing of the hostile. Not <see cref="ContactInLOSCon"/>: glass can be seen through, and a
 ///         grenade thrown at it comes down on the thrower's side.
 /// </summary>
-public sealed partial class ContactThrowClearCon : UtilityConsideration
+public sealed partial class ContactThrowClearCon : KsBelievedContactCon
 {
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
-    [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
 
-    public override float GetScore(NPCBlackboard blackboard, EntityUid ownerUid, EntityUid targetUid)
+    protected override float GetBelievedScore(EntityUid ownerUid, EntityCoordinates believedCoordinates)
     {
-        if (!_npcPerceptionSystem.TryGetBelievedCoordinates(ownerUid, targetUid, out var believedCoordinates, out _, out _))
-            return 0f;
-
         var ownerMapCoordinates = _transformSystem.GetMapCoordinates(ownerUid);
         var believedMapCoordinates = _transformSystem.ToMapCoordinates(believedCoordinates);
         if (ownerMapCoordinates.MapId != believedMapCoordinates.MapId)

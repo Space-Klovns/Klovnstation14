@@ -3,6 +3,7 @@ using Content.Server._KS14.NPC.Squad;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Considerations;
 using Robust.Server.GameObjects;
+using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Queries.Considerations;
 
@@ -10,9 +11,8 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 ///     1 if no squadmate of the owner is within <see cref="Radius"/> of where it believes a hostile to be, those that are
 ///         down included: somewhere safe to send a grenade. 0 if one is, or if it knows nothing of the hostile.
 /// </summary>
-public sealed partial class ContactClearOfSquadCon : UtilityConsideration
+public sealed partial class ContactClearOfSquadCon : KsBelievedContactCon
 {
-    [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
 
@@ -21,11 +21,8 @@ public sealed partial class ContactClearOfSquadCon : UtilityConsideration
 
     private readonly HashSet<EntityUid> _squadmates = new();
 
-    public override float GetScore(NPCBlackboard blackboard, EntityUid ownerUid, EntityUid targetUid)
+    protected override float GetBelievedScore(EntityUid ownerUid, EntityCoordinates believedCoordinates)
     {
-        if (!_npcPerceptionSystem.TryGetBelievedCoordinates(ownerUid, targetUid, out var believedCoordinates, out _, out _))
-            return 0f;
-
         var believedMapCoordinates = _transformSystem.ToMapCoordinates(believedCoordinates);
 
         _squadmates.Clear();

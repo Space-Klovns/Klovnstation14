@@ -9,7 +9,7 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions.Perception;
 ///     Met when the owner knows of a hostile in any of <see cref="States"/> (see <see cref="NpcPerceptionSystem"/>),
 ///         last seen or called out no longer than <see cref="MaxAge"/> ago if set.
 /// </summary>
-public sealed partial class HasContactPrecondition : HTNPrecondition
+public sealed partial class HasContactPrecondition : KsInvertiblePrecondition
 {
     [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
 
@@ -19,12 +19,9 @@ public sealed partial class HasContactPrecondition : HTNPrecondition
     [DataField]
     public TimeSpan? MaxAge;
 
-    [DataField]
-    public bool Invert;
-
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
-        return _npcPerceptionSystem.HasContact(ownerUid, States, MaxAge) != Invert;
+        var ownerUid = blackboard.GetOwner();
+        return _npcPerceptionSystem.HasContact(ownerUid, States, MaxAge);
     }
 }

@@ -13,6 +13,6 @@ public sealed partial class StandingInDangerPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return _npcSteeringSystem.IsStandingInDanger(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        return _npcSteeringSystem.IsStandingInDanger(blackboard.GetOwner());
     }
 }

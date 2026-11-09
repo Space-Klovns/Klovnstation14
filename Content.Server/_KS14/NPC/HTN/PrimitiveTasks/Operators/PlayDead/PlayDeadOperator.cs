@@ -19,7 +19,7 @@ public sealed partial class PlayDeadOperator : HTNOperator
         base.Startup(blackboard);
 
         // The weapon stays in hand: the whole point is getting up shooting.
-        _standingStateSystem.Down(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), playSound: true, dropHeldItems: false);
+        _standingStateSystem.Down(blackboard.GetOwner(), playSound: true, dropHeldItems: false);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
@@ -32,6 +32,6 @@ public sealed partial class PlayDeadOperator : HTNOperator
         base.TaskShutdown(blackboard, status);
 
         // One that has died for real meanwhile stays down: standing refuses the dead.
-        _standingStateSystem.Stand(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _standingStateSystem.Stand(blackboard.GetOwner());
     }
 }

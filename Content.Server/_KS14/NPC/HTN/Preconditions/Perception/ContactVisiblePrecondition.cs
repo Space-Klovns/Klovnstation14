@@ -22,6 +22,6 @@ public sealed partial class ContactVisiblePrecondition : HTNPrecondition
         if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entityManager))
             return false;
 
-        return _npcPerceptionSystem.IsVisible(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), targetUid);
+        return _npcPerceptionSystem.IsVisible(blackboard.GetOwner(), targetUid);
     }
 }

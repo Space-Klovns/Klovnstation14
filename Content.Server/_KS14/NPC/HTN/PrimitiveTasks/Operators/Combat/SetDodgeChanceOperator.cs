@@ -20,7 +20,7 @@ public sealed partial class SetDodgeChanceOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
         _gunDodgerSystem.SetDodgeChance(owner, DodgeChance);
         return HTNOperatorStatus.Finished;
     }

@@ -38,14 +38,14 @@ public sealed partial class BreachDoorOperator : HTNOperator
     {
         base.Startup(blackboard);
 
-        if (blackboard.TryGetValue<EntityUid>(DoorKey, out var doorUid, _entityManager) &&
-            blackboard.TryGetValue<EntityUid>(ToolKey, out var toolUid, _entityManager))
-            _npcDoorSystem.TryStartBreach(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), doorUid, toolUid, Timeout, fromSteering: false);
+        if (blackboard.TryGetEntity(DoorKey, _entityManager, out var doorUid) &&
+            blackboard.TryGetEntity(ToolKey, _entityManager, out var toolUid))
+            _npcDoorSystem.TryStartBreach(blackboard.GetOwner(), doorUid, toolUid, Timeout, fromSteering: false);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(DoorKey, out var doorUid, _entityManager) ||
+        if (!blackboard.TryGetEntity(DoorKey, _entityManager, out var doorUid) ||
             !_doorQuery.TryComp(doorUid, out var doorComponent))
             return HTNOperatorStatus.Failed;
 
@@ -53,7 +53,7 @@ public sealed partial class BreachDoorOperator : HTNOperator
             return HTNOperatorStatus.Finished;
 
         // Still at it; or it has ended, with the door still shut.
-        return _npcDoorSystem.IsBreaching(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), doorUid)
+        return _npcDoorSystem.IsBreaching(blackboard.GetOwner(), doorUid)
             ? HTNOperatorStatus.Continuing
             : HTNOperatorStatus.Failed;
     }
@@ -61,6 +61,6 @@ public sealed partial class BreachDoorOperator : HTNOperator
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
     {
         base.TaskShutdown(blackboard, status);
-        _npcDoorSystem.StopBreach(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcDoorSystem.StopBreach(blackboard.GetOwner());
     }
 }

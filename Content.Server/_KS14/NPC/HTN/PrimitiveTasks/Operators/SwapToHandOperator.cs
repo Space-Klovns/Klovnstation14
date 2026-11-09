@@ -24,7 +24,7 @@ public sealed partial class SwapToHandOperator : HTNOperator
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
         if (!blackboard.TryGetValue<string>(Key, out var handId, _entityManager) ||
-            !blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager) ||
+            !blackboard.TryGetOwner(_entityManager, out var ownerUid) ||
             !_entityManager.TryGetComponent<HandsComponent>(ownerUid, out var handsComponent))
         {
             return (false, null);
@@ -43,7 +43,7 @@ public sealed partial class SwapToHandOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
         if (!_handsSystem.TrySetActiveHand(ownerUid, blackboard.GetValue<string>(Key)))
             return HTNOperatorStatus.Failed;
 

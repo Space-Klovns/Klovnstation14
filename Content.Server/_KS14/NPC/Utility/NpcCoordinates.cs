@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Utility;
@@ -28,5 +29,26 @@ public static class NpcCoordinates
         SharedTransformSystem transformSystem)
     {
         return a.TryDistance(entityManager, transformSystem, b, out var distance) && distance <= range;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="targetPosition"/> lies within a cone of <paramref name="angleDegrees"/> (the whole
+    ///         width, not the half) from <paramref name="originPosition"/>, pointed at
+    ///         <paramref name="referencePosition"/>. The edge of the cone is in.
+    /// </summary>
+    public static bool IsInCone(Vector2 originPosition, Vector2 targetPosition, Vector2 referencePosition, float angleDegrees)
+    {
+        var forward = targetPosition - originPosition;
+        Vector2Helpers.Normalize(ref forward);
+
+        var toReference = referencePosition - originPosition;
+        Vector2Helpers.Normalize(ref toReference);
+
+        var dot = Vector2.Dot(forward, toReference);
+
+        var halfFovRad = MathF.PI * (angleDegrees / 2f) / 180f;
+        var threshold = MathF.Cos(halfFovRad);
+
+        return dot >= threshold;
     }
 }

@@ -36,12 +36,10 @@ public sealed partial class ProbabilityPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        var probability = Probability;
-        if (ProbabilityKey is { } probabilityKey && blackboard.TryGetValue<float>(probabilityKey, out var keyedProbability, _entityManager))
-            probability = keyedProbability;
+        var probability = blackboard.GetFloatOr(ProbabilityKey, Probability, _entityManager);
 
         if (Meter is { } meter)
-            probability += _npcMeterSystem.GetValue(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), meter);
+            probability += _npcMeterSystem.GetValue(blackboard.GetOwner(), meter);
 
         return _random.Next(0, 100) < probability;
     }

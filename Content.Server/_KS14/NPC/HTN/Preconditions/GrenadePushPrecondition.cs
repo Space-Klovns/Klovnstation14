@@ -13,6 +13,6 @@ public sealed partial class GrenadePushPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return _npcGrenadeSystem.TryGetPush(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), out _);
+        return _npcGrenadeSystem.TryGetPush(blackboard.GetOwner(), out _);
     }
 }

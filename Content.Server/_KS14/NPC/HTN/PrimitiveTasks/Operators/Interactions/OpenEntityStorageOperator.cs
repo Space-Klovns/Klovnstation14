@@ -27,14 +27,14 @@ public sealed partial class OpenEntityStorageOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var storageUid, _entityManager) ||
+        if (!blackboard.TryGetEntity(TargetKey, _entityManager, out var storageUid) ||
             !_entityManager.TryGetComponent<EntityStorageComponent>(storageUid, out var storageComponent))
             return HTNOperatorStatus.Failed;
 
         if (storageComponent.Open)
             return HTNOperatorStatus.Finished;
 
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
 
         if (!_interactionSystem.InRangeUnobstructed(ownerUid, storageUid))
             return HTNOperatorStatus.Failed;

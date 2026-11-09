@@ -9,7 +9,7 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 ///     Met while the owner could hit what is at <see cref="TargetKey"/> from where it stands, whether or not it can see it.
 ///         See <see cref="NpcLineOfFireSystem"/>.
 /// </summary>
-public sealed partial class LineOfFirePrecondition : HTNPrecondition
+public sealed partial class LineOfFirePrecondition : KsInvertiblePrecondition
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
@@ -19,14 +19,11 @@ public sealed partial class LineOfFirePrecondition : HTNPrecondition
     [DataField(required: true)]
     public string TargetKey = string.Empty;
 
-    [DataField]
-    public bool Invert;
-
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
         if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entityManager))
-            return Invert;
+            return false;
 
-        return _npcLineOfFireSystem.HasLineOfFire(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), targetUid, Range) != Invert;
+        return _npcLineOfFireSystem.HasLineOfFire(blackboard.GetOwner(), targetUid, Range);
     }
 }

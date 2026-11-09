@@ -24,20 +24,20 @@ public sealed partial class PlantChargeOperator : HTNOperator
     {
         base.Startup(blackboard);
 
-        if (blackboard.TryGetValue<EntityUid>(ChargeKey, out var chargeUid, _entityManager))
-            _npcChargeSystem.TryStartPlant(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), chargeUid);
+        if (blackboard.TryGetEntity(ChargeKey, _entityManager, out var chargeUid))
+            _npcChargeSystem.TryStartPlant(blackboard.GetOwner(), chargeUid);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entityManager) ||
-            !blackboard.TryGetValue<EntityUid>(ChargeKey, out var chargeUid, _entityManager))
+        if (!blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid) ||
+            !blackboard.TryGetEntity(ChargeKey, _entityManager, out var chargeUid))
             return HTNOperatorStatus.Failed;
 
         if (_npcChargeSystem.IsPlanted(chargeUid, targetUid))
             return HTNOperatorStatus.Finished;
 
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
 
         if (!_npcChargeSystem.IsPlanting(ownerUid))
             return HTNOperatorStatus.Failed;
@@ -49,6 +49,6 @@ public sealed partial class PlantChargeOperator : HTNOperator
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
     {
         base.TaskShutdown(blackboard, status);
-        _npcChargeSystem.StopPlant(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcChargeSystem.StopPlant(blackboard.GetOwner());
     }
 }

@@ -26,12 +26,12 @@ public sealed partial class SuppressOperator : HTNOperator
         base.Startup(blackboard);
 
         if (blackboard.TryGetValue<EntityCoordinates>(CoordinatesKey, out var coordinates, _entityManager))
-            _npcSuppressiveFireSystem.Start(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), coordinates, Duration);
+            _npcSuppressiveFireSystem.Start(blackboard.GetOwner(), coordinates, Duration);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        return _npcSuppressiveFireSystem.IsFiring(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner))
+        return _npcSuppressiveFireSystem.IsFiring(blackboard.GetOwner())
             ? HTNOperatorStatus.Continuing
             : HTNOperatorStatus.Finished;
     }
@@ -39,6 +39,6 @@ public sealed partial class SuppressOperator : HTNOperator
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
     {
         base.TaskShutdown(blackboard, status);
-        _npcSuppressiveFireSystem.Stop(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcSuppressiveFireSystem.Stop(blackboard.GetOwner());
     }
 }

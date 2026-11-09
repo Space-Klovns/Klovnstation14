@@ -8,16 +8,13 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 ///     Met while the owner is part way through a ranged attack pattern (<see cref="NpcCombatRangedPatternSystem"/>),
 ///         or, inverted, while it isn't.
 /// </summary>
-public sealed partial class RangedAttackActivePrecondition : HTNPrecondition
+public sealed partial class RangedAttackActivePrecondition : KsInvertiblePrecondition
 {
     [Dependency] private NpcCombatRangedPatternSystem _npcCombatRangedPatternSystem = default!;
 
-    [DataField]
-    public bool Invert;
-
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
-        return _npcCombatRangedPatternSystem.IsAttackActive(owner) ^ Invert;
+        var owner = blackboard.GetOwner();
+        return _npcCombatRangedPatternSystem.IsAttackActive(owner);
     }
 }

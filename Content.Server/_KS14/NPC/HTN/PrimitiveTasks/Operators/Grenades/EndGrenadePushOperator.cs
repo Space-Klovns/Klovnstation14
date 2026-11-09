@@ -14,7 +14,7 @@ public sealed partial class EndGrenadePushOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        _npcGrenadeSystem.StopPush(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcGrenadeSystem.StopPush(blackboard.GetOwner());
         return HTNOperatorStatus.Finished;
     }
 }

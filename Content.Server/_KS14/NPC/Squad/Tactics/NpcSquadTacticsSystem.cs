@@ -270,6 +270,22 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     }
 
     /// <summary>
+    ///     The order <paramref name="ownerUid"/> has, if it is the one with <paramref name="orderId"/>.
+    /// </summary>
+    public bool TryGetCurrentOrder(EntityUid ownerUid, int orderId, out NpcOrder order)
+    {
+        return TryGetOrder(ownerUid, out order) && order.Id == orderId;
+    }
+
+    /// <summary>
+    ///     Whether the order <paramref name="ownerUid"/> has is the one with <paramref name="orderId"/>.
+    /// </summary>
+    public bool IsOrderCurrent(EntityUid ownerUid, int orderId)
+    {
+        return TryGetCurrentOrder(ownerUid, orderId, out _);
+    }
+
+    /// <summary>
     ///     Tells the tactics that <paramref name="uid"/> has just learned of a disturbance at
     ///         <paramref name="coordinates"/>: something happened there, with nobody seen. Kept for its squad, or for it
     ///         if it is on its own, until the next update decides what to do about it. A cautious squad hunts it (see

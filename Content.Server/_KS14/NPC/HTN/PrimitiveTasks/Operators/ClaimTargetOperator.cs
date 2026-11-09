@@ -26,8 +26,8 @@ public sealed partial class ClaimTargetOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        return blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entityManager) &&
-            _npcTargetClaimSystem.TryClaim(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), targetUid, Duration)
+        return blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid) &&
+            _npcTargetClaimSystem.TryClaim(blackboard.GetOwner(), targetUid, Duration)
                 ? HTNOperatorStatus.Finished
                 : HTNOperatorStatus.Failed;
     }

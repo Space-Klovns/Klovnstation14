@@ -292,7 +292,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(
         NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
 
         // Phase 1: markers-first. Reuses the existing marker utilityQuery prototype unmodified so mapper
         // intent always wins when a marker scores > 0; no claim is registered for marker picks, since
@@ -451,7 +451,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// </summary>
     private float GetKeyedValue(NPCBlackboard blackboard, string? key, float fallback)
     {
-        return key is not null && blackboard.TryGetValue<float>(key, out var value, _entityManager) ? value : fallback;
+        return blackboard.GetFloatOr(key, fallback, _entityManager);
     }
 
     private TacticalPositionDebugClaim ToDebugClaim((EntityCoordinates Coordinates, float ClearanceRadius) claim)
@@ -754,18 +754,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         var candidatePosition = _transformSystem.ToWorldPosition(candidate);
         var referencePosition = _transformSystem.ToWorldPosition(reference);
 
-        var forward = candidatePosition - ownerPosition;
-        Vector2Helpers.Normalize(ref forward);
-
-        var toReference = referencePosition - ownerPosition;
-        Vector2Helpers.Normalize(ref toReference);
-
-        var dot = Vector2.Dot(forward, toReference);
-
-        var halfFovRad = MathF.PI * (angleDegrees / 2f) / 180f;
-        var threshold = MathF.Cos(halfFovRad);
-
-        return dot >= threshold ? 1f : 0f;
+        return NpcCoordinates.IsInCone(ownerPosition, candidatePosition, referencePosition, angleDegrees) ? 1f : 0f;
     }
 
     private TimeSpan GetClaimTtl(NPCBlackboard blackboard)
@@ -776,12 +765,12 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
     public void ConditionalShutdown(NPCBlackboard blackboard)
     {
-        _npcTacticalPositionClaimSystem.ReleaseClaim(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcTacticalPositionClaimSystem.ReleaseClaim(blackboard.GetOwner());
     }
 
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
     {
         base.TaskShutdown(blackboard, status);
-        _npcTacticalPositionClaimSystem.ReleaseClaim(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        _npcTacticalPositionClaimSystem.ReleaseClaim(blackboard.GetOwner());
     }
 }

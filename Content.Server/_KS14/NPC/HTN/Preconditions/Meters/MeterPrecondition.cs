@@ -31,7 +31,7 @@ public sealed partial class MeterPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        var value = _npcMeterSystem.GetValue(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), Meter);
+        var value = _npcMeterSystem.GetValue(blackboard.GetOwner(), Meter);
         return (Min is not { } min || value >= min) && (Max is not { } max || value <= max);
     }
 }

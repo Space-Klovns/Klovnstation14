@@ -1,4 +1,5 @@
 using Content.Server._KS14.NPC.Components;
+using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Utility;
 using Robust.Shared.Timing;
 
@@ -12,7 +13,17 @@ namespace Content.Server._KS14.NPC.Systems;
 public sealed partial class NpcGenericCooldownSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private EntityQuery<NpcGenericCooldownComponent> _cooldownQuery = default!;
+
+    /// <summary>
+    ///     The entity that holds a cooldown set by <paramref name="ownerUid"/>: its squad if the cooldown is
+    ///         <paramref name="squadWide"/> and it has one, or else itself.
+    /// </summary>
+    public EntityUid GetHolder(EntityUid ownerUid, bool squadWide)
+    {
+        return squadWide ? _npcSquadSystem.GetSquadOrSelf(ownerUid) : ownerUid;
+    }
 
     public void SetCooldown(EntityUid uid, string stringKey, TimeSpan endTime)
     {
