@@ -116,6 +116,9 @@ public sealed partial class TacticalPositionOperator
     private void SetUpPlanState(NPCBlackboard blackboard, EntityUid owner)
     {
         _plan.LosRadius = GetKeyedValue(blackboard, LosRadiusKey, LosRadius);
+
+        if (NoticeTargetKey is not null && blackboard.TryGetEntity(NoticeTargetKey, _entityManager, out var noticeTargetUid))
+            _plan.LosRadius = MathF.Min(_plan.LosRadius, _npcPerceptionSystem.GetNoticeRange(owner, noticeTargetUid) - NoticeMargin);
         _plan.CoverOnly = CoverOnlyKey is not null && blackboard.TryGetValue<bool>(CoverOnlyKey, out var coverOnly, _entityManager) && coverOnly;
 
         _plan.LosReference = LosReferenceCoordinatesKey is not null &&

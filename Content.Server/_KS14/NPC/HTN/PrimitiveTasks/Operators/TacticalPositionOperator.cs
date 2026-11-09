@@ -47,6 +47,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private NpcExposureSystem _npcExposureSystem = default!;
     [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
+    [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -100,6 +101,20 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     ///     A blackboard float that overrides <see cref="LosRadius"/> if the owner has it.
     /// </summary>
     [DataField] public string? LosRadiusKey;
+
+    /// <summary>
+    ///     A blackboard entity, the one <see cref="LosReferenceCoordinatesKey"/> is the spot of: the LOS radius is no more than
+    ///         how near the owner has to be to notice it (<see cref="NpcPerceptionSystem.GetNoticeRange"/>). For a spot to see
+    ///         a hostile from, not just a line to where it is: in the dark that is only close up.
+    /// </summary>
+    [DataField] public string? NoticeTargetKey;
+
+    /// <summary>
+    ///     How far inside the notice range a spot has to be, for <see cref="NoticeTargetKey"/>: a line is taken up to half a
+    ///         tile past <see cref="LosRadius"/>, and the owner stops short of the spot by as much as it does at any
+    ///         (<c>CampingRange</c>, 0.75 for operatives). Nothing at all, by day: the notice range is as far as it can see.
+    /// </summary>
+    [DataField] public float NoticeMargin = 1.25f;
 
     [DataField] public IUtilityCurve LosCurve = new BoolCurve();
 

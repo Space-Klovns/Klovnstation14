@@ -993,27 +993,30 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     A hostile that has only just ducked out of sight may get a burst after it, from those that do that. If the
-    ///         chance does not come up the moment passes: the plan still starts the cooldown, or the next plan would just
-    ///         roll again.
+    ///     A hostile that ducked out of sight a moment ago may get a burst after it, from those that do that. If the chance
+    ///         does not come up the moment passes: the plan still starts the cooldown, or the next plan would just roll again.
+    ///         Not one out of sight only this instant, as anyone in a fight is all the time: that would spend the cooldown on a
+    ///         burst the fight cuts short, and the real duck would find it still running.
     /// </summary>
-    [TestCase(AllOutMob, 100f, true)]
-    [TestCase(AllOutMob, 0f, false)]
-    [TestCase(CarryingMob, 100f, false)]
-    public async Task TestHostileThatJustDuckedIsSuppressed(string mobPrototype, float chance, bool suppresses)
+    [TestCase(AllOutMob, 100f, 1f, true)]
+    [TestCase(AllOutMob, 0f, 1f, false)]
+    [TestCase(CarryingMob, 100f, 1f, false)]
+    [TestCase(AllOutMob, 100f, 0f, false)]
+    public async Task TestHostileThatJustDuckedIsSuppressed(string mobPrototype, float chance, float secondsGone, bool suppresses)
     {
         var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: mobPrototype,
             stage: (entManager, mobUid, gridUid) =>
             {
                 StageArmed(entManager, mobUid);
-                StageContact(entManager, mobUid, gridUid, NpcContactState.Lost);
+                StageContact(entManager, mobUid, gridUid, NpcContactState.Lost, age: System.TimeSpan.FromSeconds(secondsGone));
                 entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("SuppressionChance", chance);
             });
 
         Assert.Multiple(() =>
         {
             Assert.That(plan.Tasks.Any(task => task.Operator is SuppressOperator), Is.EqualTo(suppresses), Describe(plan));
-            Assert.That(plan.Tasks.Any(task => task.Operator is CooldownOperator), Is.EqualTo(mobPrototype == AllOutMob), Describe(plan));
+            Assert.That(plan.Tasks.Any(task => task.Operator is CooldownOperator), Is.EqualTo(mobPrototype == AllOutMob && secondsGone > 0f),
+                Describe(plan));
         });
     }
 
