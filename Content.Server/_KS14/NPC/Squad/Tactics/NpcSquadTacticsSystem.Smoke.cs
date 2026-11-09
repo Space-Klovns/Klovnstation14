@@ -77,13 +77,7 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool DoesSquadSeeThroughSmoke()
     {
-        foreach (var memberUid in _members)
-        {
-            if (!SeesThroughSmoke(memberUid))
-                return false;
-        }
-
-        foreach (var memberUid in _recovering)
+        foreach (var memberUid in GetEveryMember())
         {
             if (!SeesThroughSmoke(memberUid))
                 return false;
@@ -97,13 +91,7 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool CanSquadGoOnInternals()
     {
-        foreach (var memberUid in _members)
-        {
-            if (!_npcInternalsSystem.CanGoOnInternals(memberUid))
-                return false;
-        }
-
-        foreach (var memberUid in _recovering)
+        foreach (var memberUid in GetEveryMember())
         {
             if (!_npcInternalsSystem.CanGoOnInternals(memberUid))
                 return false;
@@ -122,16 +110,60 @@ public sealed partial class NpcSquadTacticsSystem
         var until = now + settings.PlanSmokeInternalsTime;
         var allOn = true;
 
-        foreach (var memberUid in _members)
-        {
-            allOn &= _npcInternalsSystem.KeepOn(memberUid, until);
-        }
-
-        foreach (var memberUid in _recovering)
+        // Not short-circuited: every one of them is kept on, whether or not the one before was.
+        foreach (var memberUid in GetEveryMember())
         {
             allOn &= _npcInternalsSystem.KeepOn(memberUid, until);
         }
 
         return allOn;
+    }
+
+    /// <summary>
+    ///     Every member, those recovering included: <see cref="_members"/> first, then <see cref="_recovering"/>. Allocates
+    ///         nothing.
+    /// </summary>
+    private EveryMemberEnumerator GetEveryMember()
+    {
+        return new EveryMemberEnumerator(_members, _recovering);
+    }
+
+    private struct EveryMemberEnumerator
+    {
+        private readonly List<EntityUid> _members;
+        private readonly List<EntityUid> _recovering;
+        private int _index;
+
+        public EveryMemberEnumerator(List<EntityUid> members, List<EntityUid> recovering)
+        {
+            _members = members;
+            _recovering = recovering;
+            _index = 0;
+            Current = default;
+        }
+
+        public EntityUid Current { get; private set; }
+
+        public EveryMemberEnumerator GetEnumerator()
+        {
+            return this;
+        }
+
+        public bool MoveNext()
+        {
+            if (_index < _members.Count)
+            {
+                Current = _members[_index++];
+                return true;
+            }
+
+            var recoveringIndex = _index - _members.Count;
+            if (recoveringIndex >= _recovering.Count)
+                return false;
+
+            Current = _recovering[recoveringIndex];
+            _index++;
+            return true;
+        }
     }
 }

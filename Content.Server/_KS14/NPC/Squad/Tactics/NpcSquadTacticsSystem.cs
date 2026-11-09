@@ -177,40 +177,22 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     /// <param name="leaderUid">The squad's leader. Null for an NPC on its own.</param>
     private void UpdateGroup(EntityUid issuerUid, EntityUid? leaderUid, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        // Orders from somewhere else - the NPC's own, from before it joined this squad, or an old squad's.
-        foreach (var memberUid in _members)
-        {
-            if (_orderQuery.TryComp(memberUid, out var orderComponent) &&
-                orderComponent.Order is { } order &&
-                order.IssuerUid != issuerUid)
-                ClearOrder((memberUid, orderComponent));
-        }
+        ClearForeignOrders(issuerUid);
 
         // A hostile nobody can get at is the one fight that needs orders, so this comes before the check below.
         if (UpdateSquadPlan(issuerUid, leaderUid, settings, now))
             return;
 
         // A fight on: combat comes first, and a hostile in sight is not lost.
-        foreach (var memberUid in _members)
+        if (AnyoneInCombat())
         {
-            if (!_npcPerceptionSystem.InCombatContact(memberUid))
-                continue;
-
             EndHunt(issuerUid);
             return;
         }
 
         // Waiting for its meds to work: it will not come, so nothing below may count on it or wait for it. Only after
         //      the check above, because one with a hostile in sight is still in the fight.
-        for (var i = _members.Count - 1; i >= 0; i--)
-        {
-            var memberUid = _members[i];
-            if (!_npcRecoverySystem.IsRecovering(memberUid))
-                continue;
-
-            ClearOrder(memberUid, issuerUid);
-            _members.RemoveAt(i);
-        }
+        RemoveRecovering(issuerUid, movedTo: null);
 
         if (_members.Count == 0)
             return;
@@ -219,7 +201,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         var hunt = huntComponent?.Hunt;
 
         // Over once one of them knows it is dead - not the moment it dies, out of sight, where none of them could know.
-        if (hunt?.TargetUid is { } huntedUid && (TerminatingOrDeleted(huntedUid) || AnyoneKnowsDead(huntedUid)))
+        if (hunt?.TargetUid is { } huntedUid && IsHuntedGone(huntedUid))
         {
             EndHunt(issuerUid);
             hunt = null;
@@ -242,6 +224,54 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         UpdateRegroup(issuerUid, leaderUid, settings, now);
     }
 
+    /// <summary>
+    ///     Clears the orders from somewhere else - the NPC's own, from before it joined this squad, or an old squad's.
+    /// </summary>
+    private void ClearForeignOrders(EntityUid issuerUid)
+    {
+        foreach (var memberUid in _members)
+        {
+            if (_orderQuery.TryComp(memberUid, out var orderComponent) &&
+                orderComponent.Order is { } order &&
+                order.IssuerUid != issuerUid)
+                ClearOrder((memberUid, orderComponent));
+        }
+    }
+
+    private bool AnyoneInCombat()
+    {
+        foreach (var memberUid in _members)
+        {
+            if (_npcPerceptionSystem.InCombatContact(memberUid))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Takes the members who are waiting for their meds to work out of <see cref="_members"/>, clearing the orders
+    ///         <paramref name="issuerUid"/> gave them, and adds them to <paramref name="movedTo"/> if given. Returns how many.
+    /// </summary>
+    private int RemoveRecovering(EntityUid issuerUid, List<EntityUid>? movedTo)
+    {
+        var removed = 0;
+
+        for (var i = _members.Count - 1; i >= 0; i--)
+        {
+            var memberUid = _members[i];
+            if (!_npcRecoverySystem.IsRecovering(memberUid))
+                continue;
+
+            ClearOrder(memberUid, issuerUid);
+            movedTo?.Add(memberUid);
+            _members.RemoveAt(i);
+            removed++;
+        }
+
+        return removed;
+    }
+
     private bool AnyoneKnowsDead(EntityUid targetUid)
     {
         foreach (var memberUid in _members)
@@ -251,6 +281,24 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     The hunted hostile is gone, or one of the members knows it is dead - not the moment it dies, out of sight, where none
+    ///         of them could know. Not <see cref="IsHostileDown"/> (an incapacitated hostile is still hunted) nor
+    ///         <see cref="IsHostileOutOfAction"/> (which does not ask what the members know): the three are kept distinct.
+    /// </summary>
+    private bool IsHuntedGone(EntityUid huntedUid)
+    {
+        return TerminatingOrDeleted(huntedUid) || AnyoneKnowsDead(huntedUid);
+    }
+
+    /// <summary>
+    ///     Who walks for the group where it matters: the leader, or the first member for one on its own.
+    /// </summary>
+    private EntityUid GetWalker(EntityUid? leaderUid)
+    {
+        return leaderUid ?? _members[0];
     }
 
     #region Orders
@@ -325,9 +373,8 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
         EntityUid? toolUid = null,
         bool overCombat = false)
     {
-        _givingPlanOrders = overCombat;
+        using var planOrders = GivePlanOrders(overCombat);
         SetOrder(memberUid, memberUid, kind, coordinates, Angle.Zero, OrderRange, targetUid, _gameTiming.CurTime, toolUid: toolUid);
-        _givingPlanOrders = false;
     }
 
     /// <summary>
@@ -385,6 +432,82 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
     {
         if (_orderQuery.TryComp(memberUid, out var orderComponent) && orderComponent.Order?.IssuerUid == issuerUid)
             ClearOrder((memberUid, orderComponent));
+    }
+
+    /// <summary>
+    ///     Marks the orders given until it is disposed as ones for a plan (<see cref="NpcOrder.OverCombat"/>), or as ordinary ones
+    ///         with <paramref name="overCombat"/> false. Used with <c>using</c>, so the mark always comes off again.
+    /// </summary>
+    private PlanOrderScope GivePlanOrders(bool overCombat = true)
+    {
+        return new PlanOrderScope(this, overCombat);
+    }
+
+    private readonly ref struct PlanOrderScope
+    {
+        private readonly NpcSquadTacticsSystem _system;
+
+        public PlanOrderScope(NpcSquadTacticsSystem system, bool overCombat)
+        {
+            _system = system;
+            system._givingPlanOrders = overCombat;
+        }
+
+        public void Dispose()
+        {
+            _system._givingPlanOrders = false;
+        }
+    }
+
+    /// <summary>
+    ///     Tells <paramref name="memberUid"/> to stay where it stands, facing <paramref name="worldFacing"/>.
+    /// </summary>
+    private void OrderWatch(EntityUid memberUid, EntityUid issuerUid, Angle worldFacing, TimeSpan now)
+    {
+        var standCoordinates = _transformSystem.GetMoverCoordinates(memberUid);
+        SetOrder(memberUid, issuerUid, NpcOrderKind.Watch, standCoordinates, ToLocalFacing(standCoordinates, worldFacing), OrderRange, null, now);
+    }
+
+    /// <summary>
+    ///     Tells <paramref name="memberUid"/> to stay where it stands, facing <paramref name="target"/>. The angle is the plain
+    ///         one from the member: see the overload with a fallback for a target that may be on another map or on the spot.
+    /// </summary>
+    private void OrderWatchToward(EntityUid memberUid, EntityUid issuerUid, MapCoordinates target, TimeSpan now)
+    {
+        var facing = (target.Position - _transformSystem.GetMapCoordinates(memberUid).Position).ToWorldAngle();
+        OrderWatch(memberUid, issuerUid, facing, now);
+    }
+
+    /// <summary>
+    ///     The same, but facing <paramref name="fallback"/> if <paramref name="target"/> is on another map or on the spot
+    ///         (see <see cref="GetFacing"/>).
+    /// </summary>
+    private void OrderWatchToward(EntityUid memberUid, EntityUid issuerUid, MapCoordinates target, Angle fallback, TimeSpan now)
+    {
+        OrderWatch(memberUid, issuerUid, GetFacing(_transformSystem.GetMapCoordinates(memberUid), target, fallback), now);
+    }
+
+    /// <summary>
+    ///     Sends <paramref name="memberUid"/> to the spot in front of its way in <paramref name="entrance"/> (or inside it with
+    ///         <paramref name="useEntry"/>), facing into the room, with an order of <paramref name="kind"/>.
+    /// </summary>
+    private void OrderAtEntrance(EntityUid memberUid, EntityUid issuerUid, NpcHuntEntrance entrance, NpcOrderKind kind, bool useEntry, TimeSpan now)
+    {
+        var coordinates = useEntry ? entrance.EntryCoordinates : entrance.StageCoordinates;
+        SetOrder(memberUid, issuerUid, kind, coordinates, entrance.LocalFacing, OrderRange, null, now);
+    }
+
+    /// <summary>
+    ///     <see cref="OrderAtEntrance"/> for a member that has a way in in <paramref name="hunt"/>. Returns false, and orders
+    ///         nothing, for one that has not.
+    /// </summary>
+    private bool TryOrderAtEntrance(EntityUid memberUid, EntityUid issuerUid, NpcHunt hunt, NpcOrderKind kind, bool useEntry, TimeSpan now)
+    {
+        if (!hunt.StagedMembers.TryGetValue(memberUid, out var staging))
+            return false;
+
+        OrderAtEntrance(memberUid, issuerUid, hunt.Entrances[staging.EntranceIndex], kind, useEntry, now);
+        return true;
     }
 
     private bool HasOrder(EntityUid memberUid, NpcOrderKind kind)

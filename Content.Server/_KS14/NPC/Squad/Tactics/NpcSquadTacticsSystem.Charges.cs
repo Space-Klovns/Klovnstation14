@@ -141,9 +141,11 @@ public sealed partial class NpcSquadTacticsSystem
         var plan = hunt.Blast!;
 
         // Hostile or no hostile, this is not to be cut short by anything less than one turning up: see OverCombat.
-        _givingPlanOrders = true;
-        var blown = RunCharge(issuerUid, plan, hunt.BlastAction, settings, now);
-        _givingPlanOrders = false;
+        bool blown;
+        using (GivePlanOrders())
+        {
+            blown = RunCharge(issuerUid, plan, hunt.BlastAction, settings, now);
+        }
 
         if (!blown)
         {
@@ -168,7 +170,7 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         if (_npcGridSystem.TryGetGrid(hunt.GridUid, out var huntGrid))
-            BuildSearchPoints(leaderUid ?? _members[0], hunt, huntGrid, settings);
+            BuildSearchPoints(GetWalker(leaderUid), hunt, huntGrid, settings);
 
         hunt.UnseenTiles.UnionWith(hunt.RoomTiles);
         AssignEntrances(hunt, settings);
@@ -205,11 +207,19 @@ public sealed partial class NpcSquadTacticsSystem
     {
         foreach (var memberUid in _members)
         {
-            if (_npcChargeSystem.TryGetCharge(memberUid, null, out _))
+            if (CarriesCharge(memberUid))
                 return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/> carries a charge, for anything.
+    /// </summary>
+    private bool CarriesCharge(EntityUid memberUid)
+    {
+        return _npcChargeSystem.TryGetCharge(memberUid, null, out _);
     }
 
     /// <summary>
@@ -333,8 +343,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         FindWallCandidates(hunt, walkerUid, grid, walkerTile, settings);
 
-        var avoidTiles = new HashSet<Vector2i>(hunt.RoomTiles);
-        avoidTiles.UnionWith(hunt.ThresholdTiles);
+        var avoidTiles = GetAvoidTiles(hunt);
 
         var waypoints = new List<Vector2i>();
         var tried = 0;
@@ -444,7 +453,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var memberUid in _members)
         {
-            if (memberUid == plan.WatcherUid || !_npcChargeSystem.TryGetCharge(memberUid, null, out _))
+            if (memberUid == plan.WatcherUid || !CarriesCharge(memberUid))
                 continue;
 
             carrierUid = memberUid;
@@ -458,8 +467,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         FindWallCandidates(hunt, carrierUid, grid, carrierTile, settings);
 
-        var avoidTiles = new HashSet<Vector2i>(hunt.RoomTiles);
-        avoidTiles.UnionWith(hunt.ThresholdTiles);
+        var avoidTiles = GetAvoidTiles(hunt);
 
         var waypoints = new List<Vector2i>();
         var tried = 0;
@@ -586,9 +594,7 @@ public sealed partial class NpcSquadTacticsSystem
             if (!_tagSystem.HasTag(anchoredUid.Value, WallTag))
                 continue;
 
-            if (!_destructibleSystem.TryGetDestroyedAt(anchoredUid.Value, out var destroyedAt) ||
-                destroyedAt is not { } threshold ||
-                threshold == Content.Shared.FixedPoint.FixedPoint2.MaxValue)
+            if (!TryGetBreakThreshold(anchoredUid.Value, out _))
                 return null;
 
             wallUid ??= anchoredUid.Value;
@@ -724,6 +730,7 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     One member sticks a charge on, the rest get clear of it, and it goes off. Returns whether it has done its job.
+    ///         A phase that finishes falls through to the next in this same call.
     /// </summary>
     private bool RunCharge(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
     {
@@ -739,51 +746,70 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         var charge = plan.Charge;
+
+        if (charge.Phase == NpcSquadChargePhase.Planting && !RunChargePlanting(issuerUid, plan, charge, action, settings, now))
+            return false;
+
+        if (charge.Phase == NpcSquadChargePhase.Clearing && !RunChargeClearing(issuerUid, plan, charge, action, settings, now))
+            return false;
+
+        return RunChargeBlasted(issuerUid, plan, charge, action, settings, now);
+    }
+
+    /// <summary>
+    ///     The planter goes and sticks the charge on. Returns whether it has, to go on to the next phase.
+    /// </summary>
+    private bool RunChargePlanting(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadCharge charge, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
         var pick = charge.Pick;
-        var chargeUid = pick.Charge.ChargeUid;
-        var targetUid = pick.Site.TargetUid;
 
-        if (charge.Phase == NpcSquadChargePhase.Planting)
+        if (_npcChargeSystem.IsPlanted(pick.Charge.ChargeUid, pick.Site.TargetUid))
         {
-            if (_npcChargeSystem.IsPlanted(chargeUid, targetUid))
-            {
-                charge.Phase = NpcSquadChargePhase.Clearing;
-                charge.PlantedAt = now;
-            }
-            else if (TerminatingOrDeleted(chargeUid) ||
-                TerminatingOrDeleted(targetUid) ||
-                !_members.Contains(pick.PlanterUid) ||
-                now - plan.StepStartedAt >= settings.PlanChargeTimeout)
-            {
-                FailCharge(issuerUid, plan, action, settings, now);
-                return false;
-            }
-            else
-            {
-                GiveOrdersWhilePlanting(issuerUid, plan, charge, now);
-                return false;
-            }
+            charge.Phase = NpcSquadChargePhase.Clearing;
+            charge.PlantedAt = now;
+            return true;
         }
 
-        if (charge.Phase == NpcSquadChargePhase.Clearing)
+        if (TerminatingOrDeleted(pick.Charge.ChargeUid) ||
+            TerminatingOrDeleted(pick.Site.TargetUid) ||
+            !_members.Contains(pick.PlanterUid) ||
+            now - plan.StepStartedAt >= settings.PlanChargeTimeout)
         {
-            if (TerminatingOrDeleted(chargeUid))
-            {
-                charge.Phase = NpcSquadChargePhase.Blasted;
-                charge.BlastedAt = now;
-            }
-            else if (IsChargeLost(charge, now))
-            {
-                FailCharge(issuerUid, plan, action, settings, now);
-                return false;
-            }
-            else
-            {
-                GiveOrdersWhileClearing(issuerUid, plan, charge, now);
-                return false;
-            }
+            FailCharge(issuerUid, plan, action, settings, now);
+            return false;
         }
 
+        GiveOrdersWhilePlanting(issuerUid, plan, charge, now);
+        return false;
+    }
+
+    /// <summary>
+    ///     Everyone gets clear, and the planter sets it off. Returns whether it has gone off, to go on to the next phase.
+    /// </summary>
+    private bool RunChargeClearing(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadCharge charge, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        if (TerminatingOrDeleted(charge.Pick.Charge.ChargeUid))
+        {
+            charge.Phase = NpcSquadChargePhase.Blasted;
+            charge.BlastedAt = now;
+            return true;
+        }
+
+        if (IsChargeLost(charge, now))
+        {
+            FailCharge(issuerUid, plan, action, settings, now);
+            return false;
+        }
+
+        GiveOrdersWhileClearing(issuerUid, plan, charge, now);
+        return false;
+    }
+
+    /// <summary>
+    ///     Looks at what the blast did, once the dust has settled. Returns whether it opened the way.
+    /// </summary>
+    private bool RunChargeBlasted(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadCharge charge, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
         if (now - charge.BlastedAt < BlastTime)
         {
             // Gone off, so nothing left to press: the planter waits with the rest, rather than press a spent activator again.
@@ -793,7 +819,7 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
         }
 
-        if (!TerminatingOrDeleted(targetUid))
+        if (!TerminatingOrDeleted(charge.Pick.Site.TargetUid))
         {
             FailCharge(issuerUid, plan, action, settings, now);
             return false;
@@ -832,12 +858,10 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            if (hunt.StagedMembers.TryGetValue(memberUid, out var staging))
-            {
-                var entrance = hunt.Entrances[staging.EntranceIndex];
-                SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, entrance.StageCoordinates, entrance.LocalFacing, OrderRange, null, now);
-            }
-            else if (memberUid != plan.WatcherUid)
+            if (TryOrderAtEntrance(memberUid, issuerUid, hunt, NpcOrderKind.Stage, useEntry: false, now))
+                continue;
+
+            if (memberUid != plan.WatcherUid)
             {
                 // Comes along, to just out of the blast: everyone goes in through the hole after it, and a squad shut out has
                 //      nobody stacked up anywhere, so holding still would leave the planter to go alone.
@@ -880,11 +904,15 @@ public sealed partial class NpcSquadTacticsSystem
 
         // Done waiting for it to get to its spot - but never while it is in the blast itself. Left there, the charge is lost.
         var planterClear = inPlace ||
-            planterCoordinates.TryDistance(EntityManager, _transformSystem, chargeCoordinates, out var fromCharge) &&
-            (fromCharge >= ChargeDangerRange ||
-             !_npcLineOfSightSystem.InLineOfSight(_transformSystem.GetMapCoordinates(pick.PlanterUid), _transformSystem.ToMapCoordinates(site.StandCoordinates), ChargeDangerRange));
+            (planterCoordinates.TryDistance(EntityManager, _transformSystem, chargeCoordinates, out var fromCharge) &&
+             (fromCharge >= ChargeDangerRange ||
+              !_npcLineOfSightSystem.InLineOfSight(_transformSystem.GetMapCoordinates(pick.PlanterUid), _transformSystem.ToMapCoordinates(site.StandCoordinates), ChargeDangerRange)));
 
-        if (inPlace && (everyoneClear || now - charge.PlantedAt >= ClearingTime) || planterClear && now - charge.PlantedAt >= ClearingTime + ClearingTime / 2)
+        var sincePlanted = now - charge.PlantedAt;
+        var inPlaceAndSafe = inPlace && (everyoneClear || sincePlanted >= ClearingTime);
+        var clearAndPatient = planterClear && sincePlanted >= ClearingTime + ClearingTime / 2;
+
+        if (inPlaceAndSafe || clearAndPatient)
             SetOrder(pick.PlanterUid, issuerUid, NpcOrderKind.Detonate, planterCoordinates, facing, OrderRange, null, now, toolUid: activatorUid);
         else
             SetOrder(pick.PlanterUid, issuerUid, NpcOrderKind.Stage, pick.StandOffCoordinates, facing, StandOffRange, null, now);
@@ -895,11 +923,7 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private void HoldStill(EntityUid memberUid, EntityUid issuerUid, Vector2i tile, NpcHunt hunt, TimeSpan now)
     {
-        var standCoordinates = _transformSystem.GetMoverCoordinates(memberUid);
-        var tileCoordinates = _transformSystem.ToMapCoordinates(GetTileCoordinates(hunt.GridUid!.Value, tile));
-        var facing = (tileCoordinates.Position - _transformSystem.GetMapCoordinates(memberUid).Position).ToWorldAngle();
-
-        SetOrder(memberUid, issuerUid, NpcOrderKind.Watch, standCoordinates, ToLocalFacing(standCoordinates, facing), OrderRange, null, now);
+        OrderWatchToward(memberUid, issuerUid, _transformSystem.ToMapCoordinates(GetTileCoordinates(hunt.GridUid!.Value, tile)), now);
     }
 
     /// <summary>

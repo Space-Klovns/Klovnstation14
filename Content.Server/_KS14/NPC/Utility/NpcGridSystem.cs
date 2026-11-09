@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Content.Server._KS14.NPC.Squad;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -45,6 +46,16 @@ public sealed partial class NpcGridSystem : EntitySystem
 
         tile = default;
         return false;
+    }
+
+    /// <summary>
+    ///     The centre of <paramref name="tile"/> on <paramref name="gridUid"/>, relative to the grid.
+    /// </summary>
+    public EntityCoordinates GetTileCenter(EntityUid gridUid, Vector2i tile)
+    {
+        return _mapGridQuery.TryComp(gridUid, out var mapGridComponent)
+            ? new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector((gridUid, mapGridComponent), tile))
+            : new EntityCoordinates(gridUid, new Vector2(tile.X + 0.5f, tile.Y + 0.5f));
     }
 
     /// <summary>

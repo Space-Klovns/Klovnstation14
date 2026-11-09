@@ -1,6 +1,7 @@
 using Content.Shared._KS14.NPC;
 using Content.Server.Administration;
 using Content.Server.Administration.Managers;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Administration;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
@@ -26,10 +27,9 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
-    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
-    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
     [Dependency] private EntityQuery<NpcOrderComponent> _orderQuery = default!;
 
@@ -175,7 +175,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
                 for (var i = staging.NextWaypoint; i < staging.Waypoints.Count; i++)
                 {
                     var tile = staging.Waypoints[i];
-                    route.Points.Add(GetNetCoordinates(GetTileCenter(routeGridUid, tile)));
+                    route.Points.Add(GetNetCoordinates(_npcGridSystem.GetTileCenter(routeGridUid, tile)));
                 }
 
                 route.Points.Add(GetNetCoordinates(hunt.Entrances[staging.EntranceIndex].StageCoordinates));
@@ -188,7 +188,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
                     continue;
 
                 message.Sweeps.Add(new HuntDebugLine(GetNetCoordinates(Transform(memberUid).Coordinates),
-                    GetNetCoordinates(GetTileCenter(routeGridUid, sweep.Tile))));
+                    GetNetCoordinates(_npcGridSystem.GetTileCenter(routeGridUid, sweep.Tile))));
             }
         }
 
@@ -217,13 +217,6 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
         }
 
         return message;
-    }
-
-    private EntityCoordinates GetTileCenter(EntityUid gridUid, Vector2i tile)
-    {
-        return _mapGridQuery.TryComp(gridUid, out var mapGridComponent)
-            ? new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector((gridUid, mapGridComponent), tile))
-            : new EntityCoordinates(gridUid, new System.Numerics.Vector2(tile.X + 0.5f, tile.Y + 0.5f));
     }
 
     /// <summary>
