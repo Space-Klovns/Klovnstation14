@@ -46,7 +46,7 @@ public sealed class KsTguiGasCanisterWindow : FancyWindow, IKsGasCanisterWindow
     /// <summary>
     ///     tg's regulator knob: size 1.25, 5 kPa to the pixel.
     /// </summary>
-    public KsTguiKnob ReleaseKnob { get; } = new() { KnobSize = 1.25f, Unit = Loc.GetString("ks-tgui-atmos-unit-kpa"), Step = 5f, StepPixelSize = 1f };
+    public KsTguiKnob ReleaseKnob { get; } = new() { KnobSize = 1.25f, Unit = Loc.GetString("ks-tgui-atmos-unit-kpa"), Step = 5f, StepPixelSize = 1f, ShowValue = true };
     public KsTguiButton ReleaseMaxButton { get; } = new() { Icon = KsTguiIcons.FastForward, Color = KsTguiColor.Transparent };
     public KsTguiButton ReleaseDefaultButton { get; } = new() { Icon = KsTguiIcons.Undo, Color = KsTguiColor.Transparent };
     public KsTguiButton ValveButton { get; } = new();

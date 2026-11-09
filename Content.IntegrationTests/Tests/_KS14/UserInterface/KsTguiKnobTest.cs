@@ -10,6 +10,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
+using Robust.Shared.Maths;
 using Robust.Shared.Input;
 using Robust.UnitTesting.Pool;
 using XColor = Robust.Shared.Maths.Color;
@@ -452,6 +453,162 @@ public sealed class KsTguiKnobTest : GameTest
             var knob = new KsTguiKnob { KnobSize = 1.25f };
             knob.Measure(Vector2.PositiveInfinity);
             Assert.That(knob.DesiredSize, Is.EqualTo(new Vector2(39f, 39f)));
+        });
+    }
+
+    /// <summary>
+    ///     The readout under the knob follows the value and the format, counts to a new value, and is live while dragging.
+    /// </summary>
+    [Test]
+    public async Task ReadoutFollowsTheValueAndTheFormat()
+    {
+        var changes = new List<float>();
+        await Client.WaitPost(() =>
+        {
+            var knob = Make(changes);
+            Assert.That(knob.Readout.Visible, Is.False, "Off by default, as tgui's knob has none.");
+
+            knob.ShowValue = true;
+            Assert.That(knob.Readout.Visible);
+            Assert.That(knob.Readout.Text, Is.EqualTo("500 kPa"));
+
+            // It counts to a value it is given...
+            knob.SetValue(700f);
+            Assert.That(knob.Readout.Value, Is.EqualTo(700f));
+            Assert.That(knob.Readout.Animating);
+
+            knob.Format = value => "x" + value;
+            Assert.That(knob.Readout.Text, Does.StartWith("x"));
+            Assert.That(knob.Readout.Text, Does.EndWith(" kPa"));
+
+            // ...but a drag shows the live value at once.
+            knob.Format = null;
+            knob.BeginPress(300f);
+            knob.Advance(KsTguiKnob.HoldSeconds);
+            knob.DragTo(290f);
+            Assert.That(knob.Readout.Text, Is.EqualTo("750 kPa"));
+            knob.DragTo(280f);
+            Assert.That(knob.Readout.Text, Is.EqualTo("800 kPa"));
+            knob.Release();
+            Assert.That(knob.Readout.Text, Is.EqualTo("800 kPa"));
+        });
+    }
+
+    /// <summary>
+    ///     The knob grows by the readout's height, and the typing box opens in the readout's place, not over the knob.
+    /// </summary>
+    [Test]
+    public async Task ClickingTheReadoutOpensTheEditorInItsPlaceAndCommits()
+    {
+        var changes = new List<float>();
+        await Client.WaitPost(() =>
+        {
+            var knob = Make(changes);
+            knob.Measure(Vector2.PositiveInfinity);
+            var plainHeight = knob.DesiredSize.Y;
+
+            knob.ShowValue = true;
+            knob.Measure(Vector2.PositiveInfinity);
+            Assert.That(knob.DesiredSize.Y, Is.GreaterThan(plainHeight + 8f), "The readout adds a row.");
+            Assert.That(knob.DesiredSize.X, Is.GreaterThanOrEqualTo(knob.KnobSide));
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+
+            Assert.That(knob.IsOverReadout(knob.KnobSide - 1f), Is.False);
+            Assert.That(knob.IsOverReadout(knob.KnobSide + 5f));
+
+            knob.ClickReadout();
+            Assert.That(knob.IsEditing);
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+            Assert.That(knob.Edit.Text, Is.EqualTo("500"));
+            Assert.That(knob.Edit.SelectionLength, Is.EqualTo(3));
+            Assert.That(knob.Edit.Position.Y, Is.GreaterThanOrEqualTo(knob.KnobSide), "Below the dial, not over it.");
+            Assert.That(knob.Edit.Position.Y, Is.EqualTo(knob.Readout.Position.Y).Within(0.01f));
+            Assert.That(knob.Edit.Size.X, Is.GreaterThanOrEqualTo(knob.Readout.Size.X - 0.01f));
+            Assert.That(changes, Is.Empty, "Clicking the readout reports nothing until it is committed.");
+
+            knob.Edit.Text = "250";
+            knob.Commit();
+            Assert.That(knob.Value, Is.EqualTo(250f));
+            Assert.That(knob.Readout.Value, Is.EqualTo(250f));
+            Assert.That(changes, Is.EqualTo(new[] { 250f }));
+        });
+    }
+
+    /// <summary>
+    ///     A click on the dial still opens the box, but with a readout it opens in the readout's place.
+    /// </summary>
+    [Test]
+    public async Task ClickOnTheDialOpensTheEditorAtTheReadoutWhenShown()
+    {
+        var changes = new List<float>();
+        await Client.WaitPost(() =>
+        {
+            var knob = Make(changes);
+            knob.ShowValue = true;
+            knob.Measure(Vector2.PositiveInfinity);
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+
+            Click(knob);
+            Assert.That(knob.IsEditing);
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+            Assert.That(knob.Edit.Position.Y, Is.GreaterThanOrEqualTo(knob.KnobSide));
+        });
+    }
+
+    /// <summary>
+    ///     The readout already shows the live value, so the drag popup stays away.
+    /// </summary>
+    [Test]
+    public async Task DragPopupIsHiddenWhileTheReadoutIsShown()
+    {
+        var changes = new List<float>();
+        await Client.WaitPost(() =>
+        {
+            var knob = Make(changes);
+            knob.ShowValue = true;
+
+            knob.BeginPress(300f);
+            knob.Advance(KsTguiKnob.HoldSeconds);
+            knob.DragTo(290f);
+            Assert.That(knob.PopupVisible, Is.False);
+
+            knob.ShowValue = false;
+            Assert.That(knob.PopupVisible);
+        });
+    }
+
+    /// <summary>
+    ///     A long number fits in the typing box, with or without a readout, and the box grows with what is typed.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TheTypingBoxFitsALongNumber(bool showValue)
+    {
+        var changes = new List<float>();
+        await Client.WaitPost(() =>
+        {
+            var knob = Make(changes, value: 1013.25f);
+            knob.MaxValue = 10000f;
+            knob.ShowValue = showValue;
+            knob.Measure(Vector2.PositiveInfinity);
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+
+            Click(knob);
+            Assert.That(knob.IsEditing);
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+            Assert.That(knob.Edit.Text, Is.EqualTo(1013.25f.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+            var (room, needed) = knob.EditTextFit;
+            Assert.That(room, Is.GreaterThanOrEqualTo(needed), $"\"{knob.Edit.Text}\" fits.");
+
+            // Typed, as a player would: a plain Text = ... raises no change, and typing does.
+            knob.Edit.Text = "";
+            knob.Edit.InsertAtCursor("12345.678");
+            knob.Arrange(UIBox2.FromDimensions(Vector2.Zero, knob.DesiredSize));
+            (room, needed) = knob.EditTextFit;
+            Assert.That(room, Is.GreaterThanOrEqualTo(needed), "A longer number typed in still fits.");
+
+            // It grows to the left: its right edge stays where the knob's is.
+            Assert.That(knob.Edit.Position.X + knob.Edit.Size.X, Is.EqualTo(knob.DesiredSize.X).Within(0.01f));
         });
     }
 

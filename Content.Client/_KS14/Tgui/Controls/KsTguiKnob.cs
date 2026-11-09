@@ -75,9 +75,20 @@ public sealed class KsTguiKnob : Control
     /// </summary>
     private const float PopupOffset = 6f;
 
+    /// <summary>
+    ///     The gap between the dial and the readout under it, in virtual pixels.
+    /// </summary>
+    private const float ReadoutGap = 2f;
+
+    /// <summary>
+    ///     The typing box's padding at each side, in virtual pixels.
+    /// </summary>
+    private const float EditPadding = 6f;
+
     private static readonly XColor EditBackground = XColor.FromHex("#0D0D0D");
 
     private readonly KsTguiRightAlignedLineEdit _edit;
+    private readonly KsTguiAnimatedNumber _readout;
     private readonly KsTguiStyleBox _editBox = new(EditBackground);
     private readonly KsTguiBackdropPanel _popup;
     private readonly KsTguiScaleHost _popupHost;
@@ -108,6 +119,7 @@ public sealed class KsTguiKnob : Control
     private bool _disabled;
     private bool _unclamped;
     private bool _tickWhileDragging;
+    private bool _showValue;
 
     private bool _pressed;
     private bool _holdPassed;
@@ -132,8 +144,16 @@ public sealed class KsTguiKnob : Control
         MouseFilter = MouseFilterMode.Stop;
         DefaultCursorShape = CursorShape.VResize;
 
+        // The value under the knob, in the label style of tgui's LabeledControls. It is added first so the edit box, which
+        //      opens in its place, is drawn over it.
+        _readout = new KsTguiAnimatedNumber { FontColorOverride = KsTguiPalettes.Label, Align = Label.AlignMode.Center, Visible = false };
+        _readout.Format = FormatValue;
+        AddChild(_readout);
+
         _editBox.SetContentMarginOverride(StyleBox.Margin.Vertical, 0f);
-        _edit = new KsTguiRightAlignedLineEdit(_editBox, 6f) { Visible = false, SelectAllOnFocus = true };
+        _edit = new KsTguiRightAlignedLineEdit(_editBox, EditPadding) { Visible = false, SelectAllOnFocus = true };
+        // The box is as wide as what is typed in it, so a long number is never cut off at the left.
+        _edit.OnTextChanged += _ => InvalidateArrange();
         AddChild(_edit);
 
         _edit.OnTextEntered += _ => Commit();
@@ -165,6 +185,52 @@ public sealed class KsTguiKnob : Control
     }
 
     public KsTguiRightAlignedLineEdit Edit => _edit;
+
+    /// <summary>
+    ///     The value written under the knob. tgui-core's Knob has no such readout (the number is only in the popup while
+    ///         dragging), so this is off by default. It counts to a new value like tgui's <c>AnimatedNumber</c> and is live
+    ///         while dragging, which is why the drag popup is not shown with it. Clicking it opens the typing box in its place.
+    /// </summary>
+    public bool ShowValue
+    {
+        get => _showValue;
+        set
+        {
+            if (_showValue == value)
+                return;
+
+            _showValue = value;
+            _readout.Visible = value;
+            ToolTip = value ? Loc.GetString("ks-tgui-knob-type-value") : null;
+            SyncReadout();
+            InvalidateMeasure();
+        }
+    }
+
+    /// <summary>
+    ///     The label that writes the value under the knob.
+    /// </summary>
+    public KsTguiAnimatedNumber Readout => _readout;
+
+    /// <summary>
+    ///     The knob's side, in virtual pixels. The readout is under this square.
+    /// </summary>
+    public float KnobSide => KsTguiKnobMath.BaseSize * _knobSize;
+
+    /// <summary>
+    ///     Where the readout sits, and where the typing box opens with <see cref="ShowValue"/>, in this control's own pixels.
+    /// </summary>
+    public UIBox2 ReadoutBox => UIBox2.FromDimensions(0f, KnobSide + ReadoutGap, MathF.Max(Size.X, MeasuredWidth()), ReadoutHeight);
+
+    private float ReadoutHeight
+    {
+        get
+        {
+            _readout.Measure(Vector2.PositiveInfinity);
+            _edit.Measure(Vector2.PositiveInfinity);
+            return MathF.Max(_readout.DesiredSize.Y, _edit.DesiredSize.Y);
+        }
+    }
 
     /// <summary>
     ///     The value shown: the one last set, committed or released at, or the live one while dragging.
@@ -222,7 +288,11 @@ public sealed class KsTguiKnob : Control
     public string? Unit
     {
         get => _unit;
-        set => _unit = value;
+        set
+        {
+            _unit = value;
+            _readout.Format = FormatValue;
+        }
     }
 
     /// <summary>
@@ -231,7 +301,11 @@ public sealed class KsTguiKnob : Control
     public Func<float, string>? Format
     {
         get => _format;
-        set => _format = value;
+        set
+        {
+            _format = value;
+            _readout.Format = FormatValue;
+        }
     }
 
     /// <summary>
@@ -307,7 +381,7 @@ public sealed class KsTguiKnob : Control
     /// <summary>
     ///     tgui shows the popup when the drag next re-renders the knob, which is when the value first changes.
     /// </summary>
-    public bool PopupVisible => _pressed && _moved;
+    public bool PopupVisible => _pressed && _moved && !_showValue;
 
     public string PopupText => FormatValue(_liveValue);
 
@@ -395,6 +469,40 @@ public sealed class KsTguiKnob : Control
         _value = value;
         if (!_pressed)
             _liveValue = value;
+
+        SyncReadout();
+    }
+
+    /// <summary>
+    ///     Puts the value on the readout: eased to while it is the settled one, at once while the player is dragging.
+    /// </summary>
+    private void SyncReadout()
+    {
+        if (!_showValue)
+            return;
+
+        _readout.Instant = _pressed;
+        _readout.Value = _pressed ? _liveValue : _value;
+    }
+
+    /// <summary>
+    ///     Whether a point at this height from the control's top is on the readout rather than the dial.
+    /// </summary>
+    public bool IsOverReadout(float relativeY)
+    {
+        return _showValue && relativeY >= KnobSide + ReadoutGap / 2f;
+    }
+
+    /// <summary>
+    ///     A click on the readout: opens the typing box in its place, with everything selected. Nothing is reported until it
+    ///         is committed.
+    /// </summary>
+    public void ClickReadout()
+    {
+        if (!_showValue || _disabled || _editing || _pressed)
+            return;
+
+        BeginEditing();
     }
 
     /// <summary>
@@ -434,6 +542,7 @@ public sealed class KsTguiKnob : Control
             _moved = true;
 
         _liveValue = value;
+        SyncReadout();
     }
 
     /// <summary>
@@ -453,6 +562,7 @@ public sealed class KsTguiKnob : Control
         _value = released;
         _pendingEdit = !_holdPassed;
         HidePopup();
+        SyncReadout();
 
         OnChanged?.Invoke(released);
     }
@@ -515,6 +625,7 @@ public sealed class KsTguiKnob : Control
 
         _value = typed;
         _liveValue = typed;
+        SyncReadout();
         OnChanged?.Invoke(typed);
     }
 
@@ -534,6 +645,7 @@ public sealed class KsTguiKnob : Control
         _moved = false;
         _liveValue = _value;
         HidePopup();
+        SyncReadout();
     }
 
     private void BeginEditing()
@@ -545,6 +657,7 @@ public sealed class KsTguiKnob : Control
         _edit.GrabKeyboardFocus();
         _edit.CursorPosition = _edit.Text.Length;
         _edit.SelectionStart = 0;
+        _readout.Modulate = XColor.Transparent; // Hidden by Modulate, not Visible, so the layout holds.
         InvalidateArrange();
     }
 
@@ -555,6 +668,7 @@ public sealed class KsTguiKnob : Control
 
         _editing = false;
         _edit.Visible = false;
+        _readout.Modulate = XColor.White;
         if (_edit.HasKeyboardFocus())
             _edit.ReleaseKeyboardFocus();
     }
@@ -647,6 +761,13 @@ public sealed class KsTguiKnob : Control
         if (args.Function != EngineKeyFunctions.UIClick || _disabled || _editing)
             return;
 
+        if (IsOverReadout(args.RelativePosition.Y))
+        {
+            ClickReadout();
+            args.Handle();
+            return;
+        }
+
         BeginPress(args.PointerLocation.Position.Y / UIScale);
         args.Handle();
     }
@@ -665,6 +786,9 @@ public sealed class KsTguiKnob : Control
     protected override void MouseMove(GUIMouseMoveEventArgs args)
     {
         base.MouseMove(args);
+
+        if (_showValue)
+            DefaultCursorShape = !_pressed && IsOverReadout(args.RelativePosition.Y) ? CursorShape.Hand : CursorShape.VResize;
 
         if (_pressed)
             DragTo(args.GlobalPosition.Y);
@@ -694,13 +818,70 @@ public sealed class KsTguiKnob : Control
     {
         _edit.Measure(Vector2.PositiveInfinity);
         var side = KsTguiKnobMath.BaseSize * _knobSize;
-        return new Vector2(side, side);
+        if (!_showValue)
+            return new Vector2(side, side);
+
+        return new Vector2(MeasuredWidth(), side + ReadoutGap + ReadoutHeight);
+    }
+
+    /// <summary>
+    ///     With a readout the control is as wide as the widest number it can show, so the text changing never moves what
+    ///         is beside it.
+    /// </summary>
+    private float MeasuredWidth()
+    {
+        var side = KsTguiKnobMath.BaseSize * _knobSize;
+        if (!_showValue)
+            return side;
+
+        var font = TryGetStyleProperty<Font>("font", out var styled) ? styled : UserInterfaceManager.ThemeDefaults.DefaultFont;
+        var widest = 0f;
+        foreach (var value in new[] { _minValue, _maxValue, _value, _liveValue })
+            widest = MathF.Max(widest, KsTguiFitText.StringWidth(font, FormatValue(value), UIScale) / UIScale);
+
+        return MathF.Max(side, widest + 2f);
     }
 
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
     {
-        _edit.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+        if (_showValue)
+        {
+            // The box opens where the number is read.
+            var readoutBox = UIBox2.FromDimensions(0f, KnobSide + ReadoutGap, finalSize.X, ReadoutHeight);
+            _readout.Arrange(readoutBox);
+            _edit.Arrange(EditBox(readoutBox));
+            return finalSize;
+        }
+
+        _edit.Arrange(EditBox(UIBox2.FromDimensions(Vector2.Zero, finalSize)));
         return finalSize;
+    }
+
+    /// <summary>
+    ///     The typing box: the given box, widened to the left when the number typed in it needs more room. Its text sits at the
+    ///         right, so it grows away from the buttons beside a knob rather than into them.
+    /// </summary>
+    private UIBox2 EditBox(UIBox2 box)
+    {
+        var font = _edit.TryGetStyleProperty<Font>("font", out var styled) ? styled : UserInterfaceManager.ThemeDefaults.DefaultFont;
+        // Both paddings, and a pixel each for the caret after the last character and for rounding.
+        var needed = KsTguiFitText.StringWidth(font, _edit.Text, UIScale) / UIScale + 2f * EditPadding + 2f;
+        if (needed <= box.Width)
+            return box;
+
+        return new UIBox2(box.Right - needed, box.Top, box.Right, box.Bottom);
+    }
+
+    /// <summary>
+    ///     How much room the typing box has for its text, and how much the text in it needs, in virtual pixels. For tests.
+    /// </summary>
+    public (float Room, float Needed) EditTextFit
+    {
+        get
+        {
+            var font = _edit.TryGetStyleProperty<Font>("font", out var styled) ? styled : UserInterfaceManager.ThemeDefaults.DefaultFont;
+            return (_edit.Size.X - 2f * EditPadding, KsTguiFitText.StringWidth(font, _edit.Text, UIScale) / UIScale);
+        }
     }
 
     protected override void StylePropertiesChanged()
@@ -720,9 +901,17 @@ public sealed class KsTguiKnob : Control
     {
         base.Draw(handle);
 
-        var vertices = BuildVertices(UIScale, new Vector2(PixelSize.X, PixelSize.Y), handle.Modulate);
-        if (vertices.Count > 0)
-            handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White, vertices.AsSpan());
+        // The dial is the square at the top; with a readout the control is wider and taller than that.
+        var sidePixels = KnobSide * UIScale;
+        var vertices = BuildVertices(UIScale, new Vector2(sidePixels, sidePixels), handle.Modulate);
+        if (vertices.Count == 0)
+            return;
+
+        // The control's own placement is already in the handle's transform; the offset goes in front of it, not over it.
+        var oldTransform = handle.GetTransform();
+        handle.SetTransform(Matrix3x2.CreateTranslation((PixelSize.X - sidePixels) / 2f, 0f) * oldTransform);
+        handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White, vertices.AsSpan());
+        handle.SetTransform(oldTransform);
     }
 
     /// <summary>
