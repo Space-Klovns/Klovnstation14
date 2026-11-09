@@ -1,0 +1,19 @@
+.Stack {
+  gap: 0.5em;
+
+  &--fill {
+    height: 100%;
+  }
+}
+
+.Stack--zebra > .Stack__item:nth-child(odd) {
+  background-color: var(--candystripe-odd);
+}
+
+.Stack--horizontal > .Stack__divider:not(.Stack__divider--hidden) {
+  border-left: var(--divider-border);
+}
+
+.Stack--vertical > .Stack__divider:not(.Stack__divider--hidden) {
+  border-top: var(--divider-border);
+}

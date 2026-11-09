@@ -97,7 +97,8 @@ public sealed class KsMcqDialogueWindowTests : GameTest
         var clipText = label.ClipText;
         label.ClipText = false;
         label.Measure(Vector2Helpers.Infinity);
-        var neededSize = label.DesiredSize;
+        // DesiredSize includes the label's margin and Size doesn't: the tgui title bar gives the title one.
+        var neededSize = label.DesiredSize - new Vector2(label.Margin.SumHorizontal, label.Margin.SumVertical);
         label.ClipText = clipText;
         label.InvalidateMeasure();
 

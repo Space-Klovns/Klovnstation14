@@ -1,0 +1,16 @@
+.IconStack {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+
+  .Icon {
+    &:before {
+      vertical-align: middle;
+    }
+
+    &:not(:first-child) {
+      position: absolute;
+    }
+  }
+}

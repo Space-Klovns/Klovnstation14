@@ -169,7 +169,8 @@ public sealed partial class PlayerTab : Control
             new StyleBoxFlat(button.Index % 2 == 0 ? _altColor : _defaultColor),
             _playerTabColorSetting,
             _playerTabRoleSetting,
-            _playerTabSymbolSetting);
+            _playerTabSymbolSetting,
+            button.Index % 2 == 0 /* KS14: added arg */);
         button.AddChild(entry);
         button.ToolTip = $"{player.Username}, {player.CharacterName}, {player.IdentityName}, {player.StartingJob}";
         button.StyleClasses.Clear();

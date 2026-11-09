@@ -1,0 +1,158 @@
+using Content.Shared.Administration;
+using System.Linq;
+using System.Numerics;
+using Content.Server.Hands.Systems;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Materials;
+using Content.Shared.Wires;
+using Robust.Server.GameObjects;
+using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Player;
+using Content.Shared.Hands.EntitySystems;
+using Robust.Shared.Timing;
+using Content.Shared.Hands.Components;
+
+namespace Content.Server._KS14.TempKs;
+
+// TEMPORARY
+[AnyCommand]
+public sealed class TempKsOpenCommand : IConsoleCommand
+{
+    [Dependency] private IEntityManager _entityManager = default!;
+    public string Command => "tempks";
+    public string Description => "t";
+    public string Help => "tempks <proto> [hand] [beaker] [lathe] [panel] [keyindex]";
+
+    public static readonly List<EntityUid> Spawned = new();
+
+    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        if (shell.Player?.AttachedEntity is not { } player)
+        {
+            shell.WriteLine("no player");
+            return;
+        }
+
+        var proto = args[0];
+        var flags = args.Skip(1).ToHashSet();
+        var transformSystem = _entityManager.System<TransformSystem>();
+        var uiSystem = _entityManager.System<SharedUserInterfaceSystem>();
+        var coordinates = transformSystem.GetMoverCoordinates(player).Offset(new Vector2(0, 1));
+        var uid = _entityManager.SpawnEntity(proto, coordinates);
+        Spawned.Add(uid);
+
+        if (flags.Contains("beaker"))
+        {
+            var beaker = _entityManager.SpawnEntity("LargeBeaker", coordinates);
+            Spawned.Add(beaker);
+            var slots = _entityManager.System<ItemSlotsSystem>();
+            slots.TryInsert(uid, "beakerSlot", beaker, null);
+            var solutions = _entityManager.System<SharedSolutionContainerSystem>();
+            if (solutions.TryGetSolution(beaker, "beaker", out var soln, out _))
+            {
+                solutions.TryAddReagent(soln.Value, "Water", 40);
+                solutions.TryAddReagent(soln.Value, "Ethanol", 20);
+                solutions.TryAddReagent(soln.Value, "Iron", 15);
+            }
+        }
+
+        if (flags.Contains("lathe"))
+        {
+            var materials = _entityManager.System<SharedMaterialStorageSystem>();
+            materials.TryChangeMaterialAmount(uid, "Steel", 12000);
+            materials.TryChangeMaterialAmount(uid, "Glass", 6000);
+            materials.TryChangeMaterialAmount(uid, "Plastic", 2000);
+        }
+
+        if (flags.Contains("store") && _entityManager.TryGetComponent(uid, out Content.Shared.Store.Components.StoreComponent? store))
+        {
+            store.OwnerOnly = false;
+            store.ExpectedFaction = null;
+            store.Balance["Telecrystal"] = 100;
+            store.Balance["WizCoin"] = 10;
+        }
+
+        if (flags.Contains("panel") && _entityManager.TryGetComponent(uid, out WiresPanelComponent? panel))
+            _entityManager.System<SharedWiresSystem>().TogglePanel(uid, panel, true);
+
+        if (flags.Contains("hand"))
+        {
+            _entityManager.System<SharedHandsSystem>().TryPickupAnyHand(player, uid);
+        }
+
+        Pending = (uid, flags);
+    }
+
+    public static (EntityUid Uid, HashSet<string> Flags)? Pending;
+}
+
+[AnyCommand]
+public sealed class TempKsOpenUiCommand : IConsoleCommand
+{
+    [Dependency] private IEntityManager _entityManager = default!;
+    public string Command => "tempksopen";
+    public string Description => "t";
+    public string Help => "tempksopen";
+
+    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        if (shell.Player?.AttachedEntity is not { } player || TempKsOpenCommand.Pending is not { } pending)
+            return;
+
+        var (uid, flags) = pending;
+        if (flags.Contains("usehand"))
+        {
+            var ok = _entityManager.System<Content.Shared.Interaction.SharedInteractionSystem>().UseInHandInteraction(player, uid, checkCanUse: false, checkCanInteract: false, checkUseDelay: false);
+            shell.WriteLine("usehand " + ok);
+            return;
+        }
+        var uiSystem = _entityManager.System<SharedUserInterfaceSystem>();
+        var key = (Enum?)null;
+        if (flags.Contains("wires"))
+            key = WiresUiKey.Key;
+        else if (_entityManager.TryGetComponent(uid, out UserInterfaceComponent? ui))
+        {
+            var keys = ((System.Collections.IDictionary)typeof(UserInterfaceComponent).GetField("Interfaces", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(ui)!).Keys.Cast<Enum>().ToList();
+            var index = 0;
+            foreach (var f in flags)
+                if (f.StartsWith("k") && int.TryParse(f.AsSpan(1), out var i)) index = i;
+            shell.WriteLine("keys: " + string.Join(",", keys));
+            if (keys.Count > index)
+                key = keys[index];
+        }
+
+        if (key == null)
+        {
+            shell.WriteLine("no ui key");
+            return;
+        }
+
+        uiSystem.OpenUi(uid, key, player);
+        shell.WriteLine($"opened {key} on {uid}");
+    }
+}
+
+[AnyCommand]
+public sealed class TempKsClearCommand : IConsoleCommand
+{
+    [Dependency] private IEntityManager _entityManager = default!;
+    public string Command => "tempksclear";
+    public string Description => "t";
+    public string Help => "tempksclear";
+
+    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        foreach (var uid in TempKsOpenCommand.Spawned)
+        {
+            if (_entityManager.EntityExists(uid))
+                _entityManager.DeleteEntity(uid);
+        }
+
+        TempKsOpenCommand.Spawned.Clear();
+    }
+}

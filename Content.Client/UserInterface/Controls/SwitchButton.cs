@@ -151,12 +151,16 @@ namespace Content.Client.UserInterface.Controls
 
             if (relevantChangeMade)
             {
-                Label.RemoveStyleClass("dummy");
+                // KS14 start: RemoveStyleClass only restyles when the class was there, and "dummy" never is, so this
+                //      workaround restyled nothing and the checkbox texture (selected through this button's pressed
+                //      pseudo-class on a child) stayed stale. Restyle() queues the update unconditionally.
+                Label.Restyle();
                 // Upstream UI retained for mergeability: TrackFill.RemoveStyleClass("dummy"); ThumbFill.RemoveStyleClass("dummy"); ThumbOutline.RemoveStyleClass("dummy"); Symbol.RemoveStyleClass("dummy");
                 // KS14: Only the visible checkbox indicator needs its styles refreshed.
-                TrackOutline.RemoveStyleClass("dummy");
-                OffStateLabel.RemoveStyleClass("dummy");
-                OnStateLabel.RemoveStyleClass("dummy");
+                TrackOutline.Restyle();
+                OffStateLabel.Restyle();
+                OnStateLabel.Restyle();
+                // KS14 end
             }
 
             // no base.DrawModeChanged() call - ContainerButton's pseudoclass handling

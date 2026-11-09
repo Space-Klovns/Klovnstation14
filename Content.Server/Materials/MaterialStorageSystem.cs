@@ -21,7 +21,7 @@ namespace Content.Server.Materials;
 public sealed partial class MaterialStorageSystem : SharedMaterialStorageSystem
 {
     [Dependency] private IAdminLogManager _adminLogger = default!;
-    [Dependency] private ActionBlockerSystem _actionBlocker = default!;
+    /* [Dependency] private ActionBlockerSystem _actionBlocker = default!; */ // KS14: moved to shared
     // KS14: Moved _audio to shared
     // KS14: Moved _popup to shared
     [Dependency] private StackSystem _stackSystem = default!;
@@ -31,7 +31,7 @@ public sealed partial class MaterialStorageSystem : SharedMaterialStorageSystem
         base.Initialize();
         SubscribeLocalEvent<MaterialStorageComponent, MachineDeconstructedEvent>(OnDeconstructed);
 
-        SubscribeAllEvent<EjectMaterialMessage>(OnEjectMessage);
+        /* SubscribeAllEvent<EjectMaterialMessage>(OnEjectMessage); */ // KS14: moved to shared, so that it's predicted
     }
 
     private void OnDeconstructed(EntityUid uid, MaterialStorageComponent component, MachineDeconstructedEvent args)
@@ -45,6 +45,8 @@ public sealed partial class MaterialStorageSystem : SharedMaterialStorageSystem
         }
     }
 
+    // KS14: moved to SharedMaterialStorageSystem.Klovn.Eject.cs, so that it's predicted, and into the user's hands
+    /*
     private void OnEjectMessage(EjectMaterialMessage msg, EntitySessionEventArgs args)
     {
         if (args.SenderSession.AttachedEntity is not { } player)
@@ -86,6 +88,7 @@ public sealed partial class MaterialStorageSystem : SharedMaterialStorageSystem
             _stackSystem.TryMergeToContacts(mat);
         }
     }
+    */
 
     public override bool TryInsertMaterialEntity(EntityUid user,
         EntityUid toInsert,
@@ -96,8 +99,8 @@ public sealed partial class MaterialStorageSystem : SharedMaterialStorageSystem
     {
         if (!Resolve(receiver, ref storage) || !Resolve(toInsert, ref material, ref composition, false))
             return false;
-        if (TryComp<ApcPowerReceiverComponent>(receiver, out var power) && !power.Powered)
-            return false;
+        /* if (TryComp<ApcPowerReceiverComponent>(receiver, out var power) && !power.Powered)
+            return false; */ // KS14: moved to shared, so that the client predicts it
         if (!base.TryInsertMaterialEntity(user, toInsert, receiver, storage, material, composition))
             return false;
 

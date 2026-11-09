@@ -27,8 +27,16 @@ public sealed partial class GuideReagentReaction
 
         var category = protoMan.Index(prototype.Catalyst != null ? KsFluidReactorMixingCategory : KsFluidPipeMixingCategory);
         MixTexture.Texture = sysMan.GetEntitySystem<SpriteSystem>().Frame0(category.Icon);
+        // The label sits between two columns that share the rest of the row, and these lines are long: unlimited, it asks
+        //      for the whole line and pushes the columns, and itself, out of the card.
+        MixLabel.MaxWidth = KsFluidConditionsMaxWidth;
         MixLabel.SetMarkup(string.Join('\n', KsFluidConditions(prototype, category, protoMan)));
     }
+
+    /// <summary>
+    ///     Widest the conditions get before they wrap.
+    /// </summary>
+    public const float KsFluidConditionsMaxWidth = 200f;
 
     private static Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> KsFluidAmounts(Dictionary<ProtoId<ReagentPrototype>, KsFluidReactionReagent> reagents)
     {

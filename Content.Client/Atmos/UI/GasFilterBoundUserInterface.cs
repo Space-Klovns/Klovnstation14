@@ -1,4 +1,5 @@
 ﻿using Content.Client.Atmos.EntitySystems;
+using Content.Client._KS14.Tgui.Windows.Atmos; // KS14
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Piping.Trinary.Components;
 using Content.Shared.Localizations;
@@ -17,7 +18,7 @@ namespace Content.Client.Atmos.UI
         private const float MaxTransferRate = Atmospherics.MaxTransferRate;
 
         [ViewVariables]
-        private GasFilterWindow? _window;
+        private IKsGasFilterWindow? _window; // KS14: GasFilterWindow -> the interface, which the tgui window shares
 
         public GasFilterBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -29,8 +30,8 @@ namespace Content.Client.Atmos.UI
 
             var atmosSystem = EntMan.System<AtmosphereSystem>();
 
-            _window = this.CreateWindow<GasFilterWindow>();
-            _window.HeatFootnote.Device = Owner; // KS14
+            _window = KsTguiAtmosWindows.Create<GasFilterWindow, KsTguiGasFilterWindow, IKsGasFilterWindow>(this); // KS14
+            _window.HeatDevice = Owner; // KS14
             _window.PopulateGasList(atmosSystem.Gases);
 
             _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;
@@ -80,7 +81,8 @@ namespace Content.Client.Atmos.UI
             if (_window == null || state is not GasFilterBoundUserInterfaceState cast)
                 return;
 
-            _window.Title = (cast.FilterLabel);
+            if (!string.IsNullOrEmpty(cast.FilterLabel)) // KS14: keep the window's own title over an unnamed filter
+                _window.Title = (cast.FilterLabel);
             _window.SetFilterStatus(cast.Enabled);
             _window.SetTransferRate(cast.TransferRate);
 

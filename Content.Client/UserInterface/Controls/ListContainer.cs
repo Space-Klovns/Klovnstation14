@@ -384,7 +384,7 @@ public class ListContainer : Control
     }
 }
 
-public sealed class ListContainerButton : ContainerButton, IEntityControl
+public sealed partial /* KS14: made partial, see .Klovn.Tgui.cs */ class ListContainerButton : ContainerButton, IEntityControl
 {
     public readonly ListData Data;
 
@@ -398,7 +398,7 @@ public sealed class ListContainerButton : ContainerButton, IEntityControl
         Index = index;
         // KS14: list entries without a stylesheet class must not flash to the stock white backing when selected.
         // Upstream UI retained for mergeability: StyleBoxOverride = new StyleBoxFlat(Color.White);
-        StyleBoxOverride = new StyleBoxFlat(Color.FromHex("#7A3038"));
+        StyleBoxOverride = _ksBacking; // KS14: new StyleBoxFlat(Color.FromHex("#7A3038")) -> a field, so the theme can recolour it
         // AddChild(Background = new PanelContainer
         // {
         //     HorizontalExpand = true,

@@ -129,7 +129,7 @@ namespace Content.Client.Lobby
                 return;
             }
 
-            new LateJoinGui().OpenCentered();
+            Content.Client._KS14.Tgui.Windows.LateJoin.KsLateJoinWindowFactory.Create()/* KS14: new LateJoinGui() -> the window for the active theme */.OpenCentered();
         }
 
         private void OnReadyToggled(BaseButton.ButtonToggledEventArgs args)

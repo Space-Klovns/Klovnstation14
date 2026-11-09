@@ -296,6 +296,10 @@ public sealed partial class ChatUIController : UIController
         if (panel is null)
             return;
 
+        // KS14: this can run before the panel's first style pass, which would miss the theme's colour
+        if (panel.PanelOverride == null)
+            panel.ForceRunStyleUpdate();
+
         Color color;
         if (panel.PanelOverride is StyleBoxFlat styleBoxFlat)
             color = styleBoxFlat.BackgroundColor;

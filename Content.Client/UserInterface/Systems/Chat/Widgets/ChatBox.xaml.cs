@@ -46,17 +46,22 @@ public partial class ChatBox : UIWidget
         _controller.MessageAdded += OnMessageAdded;
         _controller.HighlightsUpdated += OnHighlightsUpdated;
         _controller.RegisterChat(this);
+
+        KsTguiInitialize(); // KS14: tgui chat panel and tgui-say
     }
 
     private void OnTextEntered(LineEditEventArgs args)
     {
         _controller.SendMessage(this, SelectedChannel);
+
+        if (KsTguiActive) // KS14: sent from outside the tgui bar (a forced say), which still holds the text
+            KsCloseSay();
     }
 
     private void OnMessageAdded(ChatMessage msg)
     {
         _sawmill.Debug($"{msg.Channel}: {msg.Message}");
-        if (!ChatInput.FilterButton.Popup.IsActive(msg.Channel))
+        if (!KsCountsAsRead(msg.Channel) /* KS14: tgui asks its pages */)
         {
             return;
         }
@@ -65,6 +70,9 @@ public partial class ChatBox : UIWidget
             _entManager.System<AudioSystem>().PlayGlobal(msg.AudioPath, Filter.Local(), false, AudioParams.Default.WithVolume(msg.AudioVolume));
 
         msg.Read = true;
+
+        if (!KsShows(msg.Channel)) // KS14: the open page may not show a message another one does
+            return;
 
         var color = msg.MessageColorOverride ?? msg.Channel.TextColor();
 
@@ -79,6 +87,7 @@ public partial class ChatBox : UIWidget
     private void OnChannelSelect(ChatSelectChannel channel)
     {
         _controller.UpdateSelectedChannel(this);
+        KsRefreshSayChannel(); // KS14
     }
 
     public void Repopulate()
@@ -115,7 +124,7 @@ public partial class ChatBox : UIWidget
     {
         var formatted = new FormattedMessage(3);
         formatted.PushColor(color);
-        formatted.AddMarkupOrThrow(message);
+        formatted.AddMarkupOrThrow(KsSized(message) /* KS14: tgui font size */);
         formatted.Pop();
         Contents.AddMessage(formatted, tagsAllowed: null);
     }
@@ -132,7 +141,7 @@ public partial class ChatBox : UIWidget
 
         // This box only renders channels whose filter is active; if this one is filtered out there is no
         // entry here to replace (a later Repopulate on re-enable picks up the mutated History text).
-        if (!ChatInput.FilterButton.Popup.IsActive(msg.Channel))
+        if (!KsShows(msg.Channel)) // KS14: was the filter popup
             return;
 
         // Entries mirror the IsActive-filtered History in order, so History[i] does not map 1:1 to entry i.
@@ -141,7 +150,7 @@ public partial class ChatBox : UIWidget
         var entryIndex = Contents.EntryCount;
         for (var i = history.Count - 1; i > historyIndex; i--)
         {
-            if (ChatInput.FilterButton.Popup.IsActive(history[i].Item2.Channel))
+            if (KsShows(history[i].Item2.Channel)) // KS14: was the filter popup
                 entryIndex--;
         }
         entryIndex--; // step onto this message's own entry
@@ -152,13 +161,21 @@ public partial class ChatBox : UIWidget
         var color = msg.MessageColorOverride ?? msg.Channel.TextColor();
         var formatted = new FormattedMessage(3);
         formatted.PushColor(color);
-        formatted.AddMarkupOrThrow(msg.WrappedMessage);
+        formatted.AddMarkupOrThrow(KsSized(msg.WrappedMessage) /* KS14: tgui font size */);
         formatted.Pop();
         Contents.SetMessage(entryIndex, formatted, tagsAllowed: null);
     }
 
     public void Focus(ChatSelectChannel? channel = null)
     {
+        // KS14 start: tgui-say
+        if (KsTguiActive)
+        {
+            KsTguiFocus(channel);
+            return;
+        }
+        // KS14 end
+
         var input = ChatInput.Input;
         var selectStart = Index.End;
 

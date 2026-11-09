@@ -1,0 +1,85 @@
+@use "../functions" as fn;
+
+.MenuBar {
+  display: flex;
+}
+
+.MenuBar__font {
+  font-family: var(--menu-bar-font-family);
+  font-size: fn.em(12px);
+  line-height: fn.em(17px);
+
+  &.MenuBar__disabled {
+    color: hsl(from currentColor h s l / 0.2);
+  }
+}
+
+.MenuBar__hover {
+  &:hover {
+    background-color: hsl(from var(--menu-bar-background) h s calc(l + 20));
+    transition: background-color 0ms;
+  }
+
+  &.MenuBar__disabled {
+    background-color: var(--menu-bar-background);
+  }
+}
+
+.MenuBar__MenuBarButton {
+  padding: var(--space-s) var(--space-m);
+}
+
+.MenuBar__menu {
+  position: absolute;
+  background-color: var(--menu-bar-background);
+  padding: var(--space-sm);
+  box-shadow: 4px 6px 5px -2px hsla(0, 0%, 0%, 0.5);
+  z-index: 5;
+}
+
+.MenuBar__MenuItem {
+  transition: background-color var(--menu-bar-transition) ease-out;
+  background-color: var(--menu-bar-background);
+  white-space: nowrap;
+  padding: var(--space-sm) var(--space-xl) var(--space-sm)
+    calc(var(--space-xxl) + 1rem);
+}
+
+.MenuBar__MenuItemToggle {
+  padding: var(--space-sm) var(--space-xl) var(--space-sm) 0;
+}
+
+.MenuBar__MenuItemToggle__check {
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  min-width: 2.5rem;
+  padding-left: var(--space-sm);
+}
+
+.MenuBar__MenuItemSubmenu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.MenuBar__MenuItemSubmenu__Open {
+  background-color: hsl(from var(--menu-bar-background) h s calc(l + 20));
+}
+
+.MenuBar__over {
+  top: auto;
+  bottom: 100%;
+}
+
+.MenuBar__MenuBarButton-text {
+  text-overflow: clip;
+  white-space: nowrap;
+  height: fn.em(17px);
+}
+
+.MenuBar__Separator {
+  display: block;
+  margin: var(--space-sm);
+  border-top: var(--border-thickness-tiny) solid var(--color-border);
+}

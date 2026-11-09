@@ -1,6 +1,6 @@
 ---
 name: ui
-description: How client UI is built in this repo - XAML and its code-behind, layout and mouse filtering, the sheetlet stylesheet system (specificity, the fork's Baron sheetlet overriding global defaults, dead StyleNano classes, flat/translucent styles, the reusable gradient stylebox), UI screens and controllers, windows and BUIs, drawing inside a Control, UI localisation, and testing UI headlessly. Also maps the reworked lobby. Use when writing or restyling any XAML, Control, window, BUI, sheetlet or lobby UI, or when a window's bottom is cut off, a style silently doesn't apply, a panel is opaque when it shouldn't be, clicks don't reach a button, or a control vanishes.
+description: How client UI is built in this repo - XAML and its code-behind, layout and mouse filtering, the sheetlet stylesheet system (specificity, the tgui and Baron themes overriding global defaults, dead StyleNano classes, flat/translucent styles, the reusable gradient stylebox), UI screens and controllers, windows and BUIs, drawing inside a Control, UI localisation, and testing UI headlessly. Also maps the reworked lobby. Use when writing or restyling any XAML, Control, window, BUI, sheetlet or lobby UI, or when a window's bottom is cut off, a style silently doesn't apply, a panel is opaque when it shouldn't be, clicks don't reach a button, or a control vanishes.
 ---
 
 # Client UI
@@ -24,7 +24,7 @@ localisation (§7).
 | Active stylesheet and sheetlet order | `Content.Client/Stylesheets/StylesheetManager.cs`, `Stylesheets/NanotrasenStylesheet.cs` |
 | Selector helpers (`E<T>`, `CButton`, `.Class` ...) | `Content.Client/Stylesheets/StylesheetHelpers.cs` |
 | Class name constants | `Content.Client/Stylesheets/StyleClass.cs` |
-| Fork global overrides | `Content.Client/_KS14/BaronUI/KsBaronUiSheetlet.cs` |
+| Fork global overrides | `Content.Client/_KS14/Tgui/KsTguiSheetlet.cs` (default) or `_KS14/BaronUI/KsBaronUiSheetlet.cs` |
 | Gradient stylebox | `Content.Client/_KS14/UserInterface/Styles/KsStyleBoxGradient.cs` |
 | Screens / widgets | `RT/UIScreen.cs`, `RT/IUserInterfaceManager.Screens.cs` |
 | BUI windows | `RT/BoundUserInterfaceExt.cs` (`CreateWindow<T>`) |
@@ -159,16 +159,23 @@ PanelContainer rule, wherever either sits.
   - `StyleClass.cs` notes the replacements: `BackgroundPanel` replaces AngleRect, `BackgroundPanelDark` replaces
     Inset, `LabelWeak` replaces LabelSecondaryColor.
   - Check any `StyleNano.` you copy; `ChatBox.xaml` still has one.
-- **Baron overrides global defaults.** `KsBaronUiSheetlet` restyles every `Label`/`RichTextLabel` font, unclassed
-  `PanelContainer` (opaque `panel_dark_1_clean` texture), `ContainerButton` (`button_3` texture), LineEdit,
-  scrollbars, tabs, sliders and tree rows.
-  - **A bare `PanelContainer` is opaque in this fork.** For a transparent one, give it a class whose rule sets
-    `.Panel(new StyleBoxEmpty())` (or the box you want), or set `PanelOverride`.
+- **Baron overrides global defaults, when it's the active theme.** With `klovn.ui.tgui` off, `KsBaronUiSheetlet`
+  restyles every `Label`/`RichTextLabel` font, unclassed `PanelContainer` (opaque `panel_dark_1_clean` texture),
+  `ContainerButton` (`button_3` texture), LineEdit, scrollbars, tabs, sliders and tree rows. See *The tgui theme* below.
+  - **A bare `PanelContainer` is opaque under Baron, and see-through under tgui.** Don't rely on either: give it a class
+    whose rule sets `.Panel(new StyleBoxEmpty())` (or the box you want), or set `PanelOverride`.
   - Baron's fonts lack some glyphs; its `DefaultFont` class falls back to the base font.
 - **ModulateSelf tints flat buttons.** `ButtonSheetlet.MakeButtonRules` sets `ModulateSelf` to a palette colour on
-  every `CButton()` pseudo-state. That tint also lands on a `StyleBoxEmpty`, gradient or flat box, and on the label.
-  Every state of a flat style must also set
-  `.Prop(Control.StylePropertyModulateSelf, Color.White)` (`KsLobbySheetlet` does).
+  every `CButton()` pseudo-state. That tint lands on anything the button itself draws: a `StyleBoxEmpty`, gradient or
+  flat box. It doesn't reach its label, which is a child (`UserInterfaceManager.cs:419,429`). Every state of a flat
+  style must also set `.Prop(Control.StylePropertyModulateSelf, Color.White)` (`KsLobbySheetlet` does). Panels too:
+  `PanelSheetlet` tints `BackgroundPanel`, so a rule giving it a new box without `.Modulate(Color.White)` comes out dark.
+- **Two layout helpers do nothing.** `.HorizontalAlignment()` and `.VerticalAlignment()` write to the `*Expand` key, so
+  they're dropped (`StylesheetHelpers.cs:81-89`). Use `.Prop(nameof(Control.VerticalAlignment), value)`.
+- **Layout styles need the exact type, and lose to any code.** `.Prop(nameof(Control.Margin), ...)` needs a `Thickness`
+  and `MinWidth` a `float`, or it's silently ignored, and `MinSize` only works through its helper. A value set in XAML or
+  code is permanent: the sheet can never take that control back (`Control.Layout.Styling.cs`). To let a theme decide a
+  margin, leave it out of the XAML and give the control a class.
 - **Overrides beat the sheet.** `PanelOverride`, `ModulateSelfOverride` and `FontColorOverride` win over any rule. Some
   upstream code writes `PanelOverride` itself. `ChatUIController.SetChatWindowOpacity` did, until the lobby was
   exempted, so grep for writers before assuming your style applies.
@@ -190,7 +197,7 @@ E<PanelContainer>().Class("KsLobbyGlass").Panel(new StyleBoxFlat(Color.Black.Wit
 - Keep class names in a static constants class (`KsLobbyStyleClasses`) and reference them from C#, fully qualified if
   only used once in an upstream file.
 - Available fonts are under `Resources/Fonts/`: NotoSans and NotoSansDisplay (no condensed face), Boxfont Round,
-  RobotoMono, `_KS14/BaronUI/FontStack-*`, `_KS14/VT323`, and the lobby's `_KS14/Jura` (in use) and `_KS14/Bender` (kept as
+  RobotoMono, `_KS14/BaronUI/FontStack-*`, `_KS14/Tgui/DejaVuSans*`, `_KS14/VT323`, and the lobby's `_KS14/Jura` (in use) and `_KS14/Bender` (kept as
   an alternative). Both are OFL with Cyrillic. Jura's files are static instances cut from the variable font with fontTools
   `varLib.instancer`, since Robust loads a variable font's default instance only.
 - **Styleboxes:**
@@ -198,6 +205,55 @@ E<PanelContainer>().Class("KsLobbyGlass").Panel(new StyleBoxFlat(Color.Black.Wit
   - `StyleBoxTexture` takes patch margins and Tile/Stretch.
   - `StyleBoxEmpty` draws nothing.
   - Content margins add to the control's minimum size.
+
+### The tgui theme
+
+To make a window look like tgui, or port a tg interface, see the `tgui` skill.
+
+The UI's default look is a port of /tg/station's tgui (`nanotrasen` theme), and Baron is what the option turns it back to:
+`klovn.ui.tgui` (CLIENTONLY, archived, default on, in the KS14 options tab). It switches live. Everything is in
+`Content.Client/_KS14/Tgui/`. The source of truth for a value is `tgstation/tgui/node_modules/tgui-core/styles/`.
+
+| Part | What it does |
+| --- | --- |
+| `KsTguiPalettes` | Swapped in by both stylesheets, so upstream sheetlets come out tgui with no per-class rules |
+| `KsTguiFonts` | Verdana by PostScript name through `ISystemFontManager`, else bundled DejaVu Sans. Behind `BaseFont` and `FontTagHijack` |
+| `KsTguiSheetlet` | Everything the palette can't reach. Sits in Baron's slot, so it has to cover every selector Baron sets |
+| `KsTguiStyleBox` and friends | No engine box has a corner radius, and CSS's stripes and shadows have no equivalent |
+| `KsTguiChromeUIController` | Title bar, close button, status icon and drag on each `DefaultWindow`/`FancyWindow`, via `WindowRoot.OnChildAdded`. The status icon (`KsTguiTitleStatusIcon`, tg's `TitleBar__statusIcon`) is a 45px cell before the title, ignoring the mouse so the bar under it drags: `tools` at half opacity for a window that is no bound interface, else an eye that is green (can interact), orange (a ghost that may look and not use) or a red `eye-slash` (the dimmer shows), eased over 0.5s. `KsTguiWindowDimmerUIController.GetStatus` is the one answer and its existing 4 Hz poll feeds `SetStatus` |
+| `KsTguiFeelUIController` | Button fades, input focus, tooltip fade, tagging `OptionButton` entries |
+| `KsTguiThemeUIController` | The toggle. Restyles on the next frame, since a cvar's callback runs on the setter's thread |
+
+- **New UI gets the theme by using ordinary classes and palette colours.** A hardcoded `#25252A` stays that colour under
+  both themes.
+- **A custom style under both themes:** add rules to both sheetlets, or use a property each theme sets, as
+  `MenuButton.KsStylePropertyChildColor` and `StripeBack.KsStylePropertyFlat` do. A sheetlet can't set a value a control
+  writes in code, so make the control read a style property, with the old value as its fallback.
+- **Windows opt out by not being a `DefaultWindow` or `FancyWindow`.** `KsBaseWindow` gets no chrome. The Nuke UI stays
+  untouched because everything in it overrides the sheet too.
+- **A button only fades if a rule sets `KsTguiSheetlet.StylePropertyNormalColor`** on it, and nothing else writes its
+  `ModulateSelfOverride`. The property doesn't vary by state, which is what gives a hover a colour to start from:
+  controllers run after style updates, so by then the sheet has discarded the normal one.
+- **Code-written chrome values are saved and restored on detach**, since the sheet can't reclaim them. Detach has to run
+  for closed windows too, which is why `SyncWindow` also runs when a window reopens.
+- **`Color.Transparent` is white**, so a fade or a normal state uses `Color.Black.WithAlpha(0f)`, as `KsTguiSheetlet.Clear`.
+- **A CSS alpha is not an engine alpha.** A browser blends in sRGB and this engine in linear light, so a translucent token
+  ported as-is comes out wrong, and worst for white on dark: `white .1` over `#262626` is `#3C3C3C` in CSS and about
+  `#616161` here. Use `KsTguiPalettes.Translucent(color, cssOpacity, backdrop)`, or a flat colour where one will do, as
+  text and disabled states do.
+- **Check against pixels, not by eye.** tgui's tokens are HSL and relative CSS, so a screenshot of a live tg window is the
+  better reference. Colours here were confirmed by sampling a real client's capture against the user's screenshots.
+- **The two stylesheets differ.** `ExecutorStyle` is a global `[CommonSheetlet]` on the Nanotrasen sheet alone, and it clears
+  `BackgroundPanel`'s tint there. So a missing `.Modulate(Color.White)` only shows on the System sheet: vote windows, the
+  connecting screen. Check both, as `KsTguiThemeTest.SheetletReachesWhatItSaysItDoes` does.
+- **A stylebox can get a box of nothing.** A control can draw before it's laid out, and an inverted `UIBox2` is a fatal assert
+  in Debug only, so subtracting a title bar or border from a box goes through `KsTguiGeometry.Deflate`. Nothing headless
+  draws, so no test reaches a `DoDraw`.
+- **Testing hover:** `UserInterfaceManager.FrameUpdate` sets the hover from the real mouse every frame, and a headless
+  client has none, so `SetHovered` doesn't survive one. Stay in one `WaitAssertion` and drive
+  `KsTguiFeelUIController.UpdateButtons` (`KsTguiFeelTest`), or the test passes without anything having happened.
+- **`KsWindowContentsFitTest` runs under both themes**, with a list for each: headers differ, 32 against 71. It measures
+  DejaVu, while most players have Verdana.
 
 ### Gradients: `KsStyleBoxGradient`
 
@@ -262,8 +318,10 @@ ever shrinks.
 ## Drawing inside a Control
 
 - Override `protected internal override void Draw(DrawingHandleScreen handle)`. The handle works in device pixels.
-- **Vertex colours are linear.** The convenience overloads convert sRGB for you. `DrawVertexUV2DColor` doesn't, and
-  `handle.Modulate` isn't applied to raw vertices, so pass `Color.FromSrgb(color * handle.Modulate)`.
+- **Vertex colours are sRGB, whatever the engine says.** `DrawVertexUV2DColor`'s docs call them linear, but the vertex
+  shader converts them (`base-default.vert:55`), so a `Color.FromSrgb` converts twice: `#40668C` came out `#0D2243`, and
+  black hides it completely. `handle.Modulate` isn't applied to raw vertices, so pass `color * handle.Modulate`. Nothing
+  headless draws, so check a colour you care about against a real client's pixels.
 - **No per-frame allocation.** `Draw` runs every frame, so cache arrays and resize them only on length change. No
   LINQ or closures.
 - **Sandbox:** no `stackalloc` (CLAUDE.md §6). `SandboxTest` is the only check.
