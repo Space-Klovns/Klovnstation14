@@ -2,8 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
-using Content.Server.Ghost.Roles;
 using Content.Server.Ghost.Roles.Components;
+using Content.Shared._KS14.GhostRoleNotice;
+using Content.Shared.Humanoid.Prototypes;
 using Content.Shared.Mind;
 using NUnit.Framework;
 using Robust.Shared.Audio.Components;
@@ -23,49 +24,55 @@ public abstract class KsGhostRoleNoticeTestBase : GameTest
 {
     protected const string NoticeSoundPath = "/Audio/_KS14/GhostRoleNotice/ghost_role_available.ogg";
 
-    protected readonly EntProtoId AntagRole = "KsGhostRoleNoticeTestAntag";
-    protected readonly EntProtoId QuietRole = "KsGhostRoleNoticeTestQuiet";
-    protected readonly EntProtoId PlainRole = "KsGhostRoleNoticeTestPlain";
+    protected readonly EntProtoId NotableRole = "KsGhostRoleNoticeTestNotable";
+    protected readonly EntProtoId OtherNotableRole = "KsGhostRoleNoticeTestNotableOther";
+    protected readonly EntProtoId UnmarkedAntagRole = "KsGhostRoleNoticeTestUnmarkedAntag";
+    protected readonly EntProtoId NotableHumanoidSpawner = "KsGhostRoleNoticeTestHumanoidSpawner";
     protected readonly EntProtoId LivingMob = "KsGhostRoleNoticeTestMob";
-    protected readonly EntProtoId ToggleMob = "KsGhostRoleNoticeTestToggle";
     protected readonly EntProtoId Ghost = "MobObserver";
 
     [TestPrototypes]
     protected const string Prototypes = @"
 - type: entity
-  id: KsGhostRoleNoticeTestAntag
+  id: KsGhostRoleNoticeTestNotable
   components:
-  - type: KsGhostRoleQuiet
+  - type: MindContainer
+  - type: GhostTakeoverAvailable
+  - type: KsGhostRoleNotable
+  - type: GhostRole
+    name: ks-test-role
+    description: ks-test-role
+
+- type: entity
+  id: KsGhostRoleNoticeTestNotableOther
+  components:
+  - type: KsGhostRoleNotable
+  - type: GhostRole
+    name: ks-test-other-role
+    description: ks-test-role
+
+- type: entity
+  id: KsGhostRoleNoticeTestUnmarkedAntag
+  components:
   - type: GhostRole
     name: ks-test-role
     description: ks-test-role
     mindRoles:
     - MindRoleGhostRoleSoloAntagonist
 
-- type: entity
-  id: KsGhostRoleNoticeTestQuiet
-  components:
-  - type: KsGhostRoleQuiet
-  - type: GhostRole
-    name: ks-test-role
-    description: ks-test-role
-
-- type: entity
-  id: KsGhostRoleNoticeTestToggle
-  components:
-  - type: MindContainer
-  - type: ToggleableGhostRole
-    roleName: ks-test-role
-    roleDescription: ks-test-role
-    mindRoles:
-    - MindRoleGhostRoleNeutral
-
-- type: entity
-  id: KsGhostRoleNoticeTestPlain
+- type: randomHumanoidSettings
+  id: KsGhostRoleNoticeTestHumanoid
   components:
   - type: GhostRole
     name: ks-test-role
     description: ks-test-role
+  - type: KsGhostRoleNotable
+
+- type: entity
+  id: KsGhostRoleNoticeTestHumanoidSpawner
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsGhostRoleNoticeTestHumanoid
 
 - type: entity
   id: KsGhostRoleNoticeTestMob
@@ -82,20 +89,27 @@ public abstract class KsGhostRoleNoticeTestBase : GameTest
     /// </summary>
     protected async Task PossessAsync(EntProtoId proto)
     {
-        await Server.WaitPost(() =>
-        {
-            var mob = SEntMan.SpawnEntity(proto, MapCoordinates.Nullspace);
-            var mindSystem = SEntMan.System<SharedMindSystem>();
-            mindSystem.TransferTo(mindSystem.CreateMind(ServerSession!.UserId), mob);
-        });
-
+        await Server.WaitPost(() => PutPlayerInto(SEntMan.SpawnEntity(proto, MapCoordinates.Nullspace)));
         await Pair.RunTicksSync(10);
     }
 
-    protected async Task SpawnRoleAsync(EntProtoId proto)
+    /// <summary>
+    ///     Spawns every one of <paramref name="protos"/> in the same tick.
+    /// </summary>
+    protected async Task SpawnRolesAsync(params EntProtoId[] protos)
     {
-        await Server.WaitPost(() => SEntMan.SpawnEntity(proto, MapCoordinates.Nullspace));
+        await Server.WaitPost(() =>
+        {
+            foreach (var proto in protos)
+                SEntMan.SpawnEntity(proto, MapCoordinates.Nullspace);
+        });
         await Pair.RunTicksSync(10);
+    }
+
+    protected void PutPlayerInto(EntityUid mobUid)
+    {
+        var mindSystem = SEntMan.System<SharedMindSystem>();
+        mindSystem.TransferTo(mindSystem.CreateMind(ServerSession!.UserId), mobUid);
     }
 }
 
@@ -108,13 +122,13 @@ public sealed class KsGhostRoleNoticeInRoundTests : KsGhostRoleNoticeTestBase
     public override PoolSettings PoolSettings => new() { Connected = true, DummyTicker = false, Dirty = true };
 
     [Test]
-    public async Task AntagRoleReachesGhostsAndNotTheLiving()
+    public async Task NotableRoleReachesGhostsAndNotTheLiving()
     {
         await PossessAsync(Ghost);
         var soundsBefore = ServerNoticeSounds;
         var noticesBefore = ClientNotice.ReceivedCount;
 
-        await SpawnRoleAsync(AntagRole);
+        await SpawnRolesAsync(NotableRole);
 
         await Server.WaitAssertion(() => Assert.That(ServerNoticeSounds, Is.GreaterThan(soundsBefore), "the sound is played for the ghost"));
         await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 1), "and so is the chat line"));
@@ -123,41 +137,78 @@ public sealed class KsGhostRoleNoticeInRoundTests : KsGhostRoleNoticeTestBase
         soundsBefore = ServerNoticeSounds;
         noticesBefore = ClientNotice.ReceivedCount;
 
-        await SpawnRoleAsync(AntagRole);
+        await SpawnRolesAsync(NotableRole);
 
         await Server.WaitAssertion(() => Assert.That(ServerNoticeSounds, Is.EqualTo(soundsBefore), "a living player hears nothing"));
         await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore), "and sees nothing"));
     }
 
+    /// <summary>
+    ///     Ghost roles are quiet by default, antagonists included: only the marker makes one notable.
+    /// </summary>
     [Test]
-    public async Task PlainRoleIsAnnouncedButAQuietOneIsNot()
+    public async Task UnmarkedRoleIsNotAnnouncedEvenAsAnAntagonist()
     {
         await PossessAsync(Ghost);
-
         var noticesBefore = ClientNotice.ReceivedCount;
-        await SpawnRoleAsync(QuietRole);
-        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore), "a role marked quiet is not announced"));
 
-        await SpawnRoleAsync(PlainRole);
-        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 1), "an unmarked one is"));
+        await SpawnRolesAsync(UnmarkedAntagRole);
+
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore)));
     }
 
+    /// <summary>
+    ///     A shuttle that brings several roles at once makes one sound, with one line per kind of role.
+    /// </summary>
     [Test]
-    public async Task RuntimeAddedQuietRoleIsNotAnnounced()
+    public async Task RolesAppearingTogetherMakeOneSound()
+    {
+        await PossessAsync(Ghost);
+        var soundsBefore = ServerNoticeSounds;
+        var noticesBefore = ClientNotice.ReceivedCount;
+
+        await SpawnRolesAsync(NotableRole, NotableRole, NotableRole, OtherNotableRole);
+
+        await Server.WaitAssertion(() => Assert.That(ServerNoticeSounds, Is.EqualTo(soundsBefore + 1), "one sound for the lot"));
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 2), "one line per role name"));
+    }
+
+    /// <summary>
+    ///     A role taken in the tick it appears, as a ghost role mob spawner hands its mob over, was never up for grabs.
+    /// </summary>
+    [Test]
+    public async Task RoleTakenAsItAppearsIsNotAnnounced()
     {
         await PossessAsync(Ghost);
         var noticesBefore = ClientNotice.ReceivedCount;
 
-        EntityUid toggleMob = default;
+        // Someone else's mind, so the test player stays the ghost who would hear the notice.
         await Server.WaitPost(() =>
         {
-            toggleMob = SEntMan.SpawnEntity(ToggleMob, MapCoordinates.Nullspace);
-            SEntMan.System<ToggleableGhostRoleSystem>().ActivateGhostRole(toggleMob);
+            var mindSystem = SEntMan.System<SharedMindSystem>();
+            mindSystem.TransferTo(mindSystem.CreateMind(null), SEntMan.SpawnEntity(NotableRole, MapCoordinates.Nullspace));
         });
         await Pair.RunTicksSync(10);
 
-        await Server.WaitAssertion(() => Assert.That(SEntMan.HasComponent<GhostRoleComponent>(toggleMob), "precondition: it became a ghost role"));
-        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore), "pAI-like toggles stay silent"));
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore)));
+    }
+
+    /// <summary>
+    ///     A random humanoid spawner (an ERT member, a pirate) adds its settings' components to the mob it makes.
+    /// </summary>
+    [Test]
+    public async Task NotableRandomHumanoidIsAnnounced()
+    {
+        var testMap = await Pair.CreateTestMap();
+        await PossessAsync(Ghost);
+        var noticesBefore = ClientNotice.ReceivedCount;
+
+        // On a map, not in nullspace: the spawner makes the humanoid at its own coordinates.
+        await Server.WaitPost(() => SEntMan.SpawnAtPosition(NotableHumanoidSpawner, testMap.GridCoords));
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() => Assert.That(SEntMan.EntityQuery<KsGhostRoleNotableComponent>().Count(), Is.GreaterThan(0), "precondition: the humanoid was made"));
+        await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore + 1)));
     }
 
     [Test]
@@ -200,33 +251,41 @@ public sealed class KsGhostRoleNoticePreRoundTests : KsGhostRoleNoticeTestBase
 {
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
+    private static readonly EntProtoId NotableSpawner = "SpawnPointGhostDragon";
+    private static readonly EntProtoId HordeMob = "MobAdultSlimesBlueAngry";
+    private static readonly ProtoId<RandomHumanoidSettingsPrototype> ErtMember = "ERTSecurityArmedShotgun";
+
     [Test]
     public async Task RolesBeforeTheRoundStartsAreNotAnnounced()
     {
         await PossessAsync(Ghost);
         var noticesBefore = ClientNotice.ReceivedCount;
 
-        await SpawnRoleAsync(AntagRole);
-        await SpawnRoleAsync(PlainRole);
+        await SpawnRolesAsync(NotableRole, OtherNotableRole);
 
         await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore)));
     }
 
-    private readonly EntProtoId _realQuiet = "MobMouse";
-    private readonly EntProtoId _realLoud = "MobXeno";
-
     /// <summary>
-    ///     The partial that marks upstream animals quiet applies, and leaves the rest of their ghost role alone.
+    ///     The partials that mark upstream roles notable apply, reach the children of a marked parent, and leave the
+    ///         rest of the role alone.
     /// </summary>
     [Test]
-    public async Task QuietPartialAppliesToMiceAndNotToXenos()
+    public async Task NotablePartialsApplyAndLeaveHordesQuiet()
     {
         await Server.WaitAssertion(() =>
         {
-            var mouse = SProtoMan.Index(_realQuiet);
-            Assert.That(mouse.TryGetComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(out _, SEntMan.ComponentFactory), "mice are quiet");
-            Assert.That(mouse.TryGetComponent<GhostRoleComponent>(out _, SEntMan.ComponentFactory), "and are still ghost roles");
-            Assert.That(SProtoMan.Index(_realLoud).TryGetComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(out _, SEntMan.ComponentFactory), Is.False, "xenos are not");
+            var factory = SEntMan.ComponentFactory;
+            var spawner = SProtoMan.Index(NotableSpawner);
+            Assert.That(spawner.TryGetComponent<KsGhostRoleNotableComponent>(out _, factory), "the dragon is notable");
+            Assert.That(spawner.TryGetComponent<GhostRoleComponent>(out _, factory), "and is still a ghost role");
+
+            var ertComponents = SProtoMan.Index(ErtMember).Components;
+            Assert.That(ertComponents, Is.Not.Null);
+            Assert.That(ertComponents!.ContainsKey(factory.GetComponentName<KsGhostRoleNotableComponent>()), "an ERT member inherits the mark from the Central Command settings");
+            Assert.That(ertComponents.ContainsKey(factory.GetComponentName<GhostRoleComponent>()), "and keeps its ghost role");
+
+            Assert.That(SProtoMan.Index(HordeMob).TryGetComponent<KsGhostRoleNotableComponent>(out _, factory), Is.False, "vent horde slimes are quiet");
         });
     }
 }

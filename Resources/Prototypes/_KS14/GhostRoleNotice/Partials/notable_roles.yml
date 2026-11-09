@@ -1,0 +1,172 @@
+# Ghost roles that tell every ghost when they appear mid-round. Ghost roles are quiet unless listed here (or made by an
+# admin's makeghostrole command). Keep this to rare, significant arrivals: anything an event spawns in numbers (vent
+# hordes, slimes, spiders, carp, mice, xenos) stays quiet, or ghosts hear it once per mob.
+
+# Antagonists and threats that arrive mid-round, one at a time.
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostRatKing
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostDragon
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostSpaceNinja
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostParadoxClone
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostWizard
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: MobRevenant
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: MobDragonDungeon
+  components:
+  - type: KsGhostRoleNotable
+
+# Nuclear operatives, including the lone operative event.
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostNukeOperative
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointLoneNukeOperative
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointNukeopsCommander
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointNukeopsMedic
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointNukeopsOperative
+  components:
+  - type: KsGhostRoleNotable
+
+# Xenoborgs.
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostRoleMothershipCore
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostRoleXenoborg
+  components:
+  - type: KsGhostRoleNotable
+
+# Derelict cyborgs, from the event that spawns one.
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostDerelictCyborg
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostDerelictEngineeringCyborg
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostDerelictJanitorCyborg
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostDerelictMedicalCyborg
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostDerelictMiningCyborg
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: SpawnPointGhostDerelictSyndicateAssaultCyborg
+  components:
+  - type: KsGhostRoleNotable
+
+# Syndicate reinforcements, called in by a traitor or the nuclear operatives.
+
+- type: !PartialOnly entity
+  id: ReinforcementRadioSyndicate
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: ReinforcementRadioSyndicateNukeops
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: ReinforcementRadioSyndicateAncestor
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: ReinforcementRadioSyndicateAncestorNukeops
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: ReinforcementRadioSyndicateSyndiCat
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly entity
+  id: ReinforcementRadioSyndicateCyborgAssault
+  components:
+  - type: KsGhostRoleNotable
+
+# Central Command: every ERT member, the death squad, CBURN and the official. Their children inherit it.
+
+- type: !PartialOnly randomHumanoidSettings
+  id: EventHumanoidCentcomm
+  components:
+  - type: KsGhostRoleNotable
+
+# Hostile shuttle crews.
+
+- type: !PartialOnly randomHumanoidSettings
+  id: SyndieSoldierTeamLeader
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly randomHumanoidSettings
+  id: SyndieSoldier
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly randomHumanoidSettings
+  id: PirateCaptainScooner
+  components:
+  - type: KsGhostRoleNotable
+
+- type: !PartialOnly randomHumanoidSettings
+  id: PirateScooner
+  components:
+  - type: KsGhostRoleNotable

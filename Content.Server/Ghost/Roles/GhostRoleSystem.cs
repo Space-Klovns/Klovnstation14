@@ -190,6 +190,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         UpdateGhostRoleCount();
         UpdateRaffles(frameTime);
+        UpdateNotices(); // KS14
     }
 
     /// <summary>
@@ -757,10 +758,8 @@ public sealed partial class GhostRoleSystem : EntitySystem
     {
         if (ent.Comp.Probability < 1f && !_random.Prob(ent.Comp.Probability))
             RemCompDeferred<GhostRoleComponent>(ent);
-        // KS14 start: tell ghosts about notable roles
-        else if (IsNotable(ent))
-            NotifyGhostsOfRole(ent);
-        // KS14 end
+        else
+            QueueNotice(ent); // KS14: tell ghosts about notable roles
     }
 
     private void OnRoleStartup(Entity<GhostRoleComponent> ent, ref ComponentStartup args)
@@ -888,7 +887,6 @@ public sealed partial class GhostRoleSystem : EntitySystem
         if (!Resolve(uid, ref component))
             return;
 
-        EnsureComp<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(uid); // KS14: fields are set after creation, so no notice
         var ghostrolecomp = EnsureComp<GhostRoleComponent>(uid);
 
         component.Prototype = prototype.EntityPrototype;

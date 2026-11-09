@@ -56,7 +56,6 @@ public sealed partial class RandomSentienceRule : StationEventSystem<RandomSenti
             targetList.Remove(target);
 
             RemComp<SentienceTargetComponent>(target);
-            EnsureComp<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(target); // KS14: woken animals do not notify ghosts
             var ghostRole = EnsureComp<GhostRoleComponent>(target);
             EnsureComp<GhostTakeoverAvailableComponent>(target);
             ghostRole.RoleName = MetaData(target).EntityName;

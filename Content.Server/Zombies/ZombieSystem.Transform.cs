@@ -311,7 +311,6 @@ public sealed partial class ZombieSystem
         if (!HasComp<GhostRoleMobSpawnerComponent>(target) && !hasMind) //this specific component gives build test trouble so pop off, ig
         {
             //yet more hardcoding. Visit zombie.ftl for more information.
-            EnsureComp<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(target); // KS14: infection waves must not spam ghosts
             var ghostRole = EnsureComp<GhostRoleComponent>(target);
             EnsureComp<GhostTakeoverAvailableComponent>(target);
             ghostRole.RoleName = Loc.GetString("zombie-generic");

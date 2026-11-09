@@ -1,4 +1,4 @@
-using Content.Server.Administration;
+﻿using Content.Server.Administration;
 using Content.Server.Ghost.Roles.Components;
 using Content.Shared.Administration;
 using Content.Shared.Mind.Components;
@@ -58,14 +58,12 @@ namespace Content.Server.Ghost.Roles
                 return;
             }
 
-            _entManager.EnsureComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(uid.Value); // KS14: announced below, once the name is set
             ghostRole = _entManager.AddComponent<GhostRoleComponent>(uid.Value);
             _entManager.AddComponent<GhostTakeoverAvailableComponent>(uid.Value);
             ghostRole.RoleName = name;
             ghostRole.RoleDescription = description;
             ghostRole.RoleRules = rules;
-            _entManager.RemoveComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleQuietComponent>(uid.Value); // KS14
-            _entManager.System<GhostRoleSystem>().NotifyGhostsOfRole((uid.Value, ghostRole)); // KS14: admin-made roles are notable
+            _entManager.EnsureComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleNotableComponent>(uid.Value); // KS14: admin-made roles are announced to ghosts
 
             shell.WriteLine($"Made entity {metaData.EntityName} a ghost role.");
         }
