@@ -1874,9 +1874,16 @@ public sealed class KsNpcSquadPlanTest : GameTest
             var transformSystem = scene.EntManager.System<SharedTransformSystem>();
 
             // Long at it, and a step nearer since last time: north, the way round, though further from the charge as the crow flies.
+            //      From wherever it is: which of the two is the planter is up to how the squad formed.
+            var planterPosition = scene.EntManager.GetComponent<TransformComponent>(scene.MemberUid).LocalPosition;
+            var planterTile = new Vector2i((int) MathF.Floor(planterPosition.X), (int) MathF.Floor(planterPosition.Y));
+            var nearerTile = planterTile + new Vector2i(0, 1);
+            Assert.That(charge.RouteSteps.TryGetValue(nearerTile, out var nearerSteps) && charge.RouteSteps.TryGetValue(planterTile, out var planterSteps) &&
+                nearerSteps < planterSteps, "the test needs north to be nearer by the way round");
+
             blast.StepStartedAt = now - timeout * 5;
             charge.ProgressAt = now - timeout - TimeSpan.FromSeconds(1);
-            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(-6.5f, 3.5f)));
+            transformSystem.SetCoordinates(scene.MemberUid, new EntityCoordinates(scene.GridUid, new Vector2(nearerTile.X + 0.5f, nearerTile.Y + 0.5f)));
             scene.TacticsSystem.UpdateNow();
             Assert.That(hunt.Blast, Is.SameAs(blast), "a planter getting nearer is not given up on, however long it has been at it");
             Assert.That(charge.ProgressAt, Is.EqualTo(now), "and getting nearer is getting somewhere");

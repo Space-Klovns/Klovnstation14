@@ -46,7 +46,10 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     /// <summary>
     ///     By what is fired. Fixtures are not cheap to read off a prototype, and this is asked for every few ticks per NPC.
     /// </summary>
-    private readonly Dictionary<EntProtoId, CollisionGroup> _shotMasks = new();
+    /// <summary>
+    ///     What each round's shot collides with, and whether it is hitscan, by the round's prototype.
+    /// </summary>
+    private readonly Dictionary<EntProtoId, (CollisionGroup Mask, bool Hitscan)> _shots = new();
 
     private SharedInteractionSystem.Ignored _isMob = default!;
 
@@ -56,7 +59,7 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
 
         _isMob = uid => _mobStateQuery.HasComp(uid);
 
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(_ => _shotMasks.Clear());
+        SubscribeLocalEvent<PrototypesReloadedEventArgs>(_ => _shots.Clear());
     }
 
     /// <summary>
@@ -64,9 +67,25 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     /// </summary>
     public CollisionGroup GetShotMask(EntityUid shooterUid)
     {
+        return TryGetNextShot(shooterUid, out var shot) ? shot.Mask : UnknownShotMask;
+    }
+
+    /// <summary>
+    ///     Whether the next shot from what <paramref name="shooterUid"/> is holding is hitscan: a beam, not a projectile. Only a
+    ///         projectile passes through those its shooter would rather not hit (<c>KsFactionCollisionShooter</c>).
+    /// </summary>
+    public bool FiresHitscan(EntityUid shooterUid)
+    {
+        return TryGetNextShot(shooterUid, out var shot) && shot.Hitscan;
+    }
+
+    private bool TryGetNextShot(EntityUid shooterUid, out (CollisionGroup Mask, bool Hitscan) shot)
+    {
+        shot = default;
+
         if (!_gunSystem.TryGetGun(shooterUid, out var gunEntity) ||
             !TryGetNextAmmo(gunEntity.Owner, out var ammoUid, out var ammoPrototype))
-            return UnknownShotMask;
+            return false;
 
         if (ammoUid is { } uid)
         {
@@ -77,15 +96,15 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
         }
 
         if (ammoPrototype is not { } prototypeId)
-            return UnknownShotMask;
+            return false;
 
-        if (!_shotMasks.TryGetValue(prototypeId, out var shotMask))
+        if (!_shots.TryGetValue(prototypeId, out shot))
         {
-            shotMask = GetShotMask(prototypeId);
-            _shotMasks[prototypeId] = shotMask;
+            shot = GetShot(prototypeId);
+            _shots[prototypeId] = shot;
         }
 
-        return shotMask;
+        return true;
     }
 
     /// <summary>
@@ -104,7 +123,8 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
 
     /// <summary>
     ///     Whether a shot colliding with <paramref name="shotMask"/> would get from one place to the other. Mobs do not count:
-    ///         one may be gone by then, and those it would rather not hit are not hit (<c>KsFactionCollisionShooter</c>).
+    ///         one may be gone by then. Friends in the way are for <c>NpcSquadFireLaneSystem.IsFriendInLineOfFire</c>, when the
+    ///         shot is fired: whether they are hit depends on the shot (<c>KsFactionCollisionShooter</c>, hitscan).
     /// </summary>
     public bool IsClear(MapCoordinates from, MapCoordinates to, CollisionGroup shotMask)
     {
@@ -209,16 +229,16 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     /// <summary>
     ///     Looks through a round to what it actually fires: a beam, or a projectile, maybe by way of a cartridge or a spread.
     /// </summary>
-    private CollisionGroup GetShotMask(EntProtoId prototypeId)
+    private (CollisionGroup Mask, bool Hitscan) GetShot(EntProtoId prototypeId)
     {
         for (var i = 0; i < MaxRoundsToFollow && ProtoMan.TryIndex(prototypeId, out var prototype); i++)
         {
             if (prototype.TryComp<HitscanBasicRaycastComponent>(out var raycastComponent, Factory))
-                return raycastComponent.CollisionMask;
+                return (raycastComponent.CollisionMask, true);
 
             if (prototype.TryComp<FixturesComponent>(out var fixturesComponent, Factory) &&
                 fixturesComponent.Fixtures.TryGetValue(SharedProjectileSystem.ProjectileFixture, out var fixture))
-                return (CollisionGroup) fixture.CollisionMask;
+                return ((CollisionGroup) fixture.CollisionMask, false);
 
             if (prototype.TryComp<CartridgeAmmoComponent>(out var cartridgeComponent, Factory))
                 prototypeId = cartridgeComponent.Prototype;
@@ -228,6 +248,6 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
                 break;
         }
 
-        return UnknownShotMask;
+        return (UnknownShotMask, false);
     }
 }

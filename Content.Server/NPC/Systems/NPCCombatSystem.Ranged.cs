@@ -216,6 +216,7 @@ public sealed partial class NPCCombatSystem
             if (!_lockOnSystem.IsLocked(uid, comp.Target)) // KS14: must finish locking on before firing
                 continue;
 
+
             EntityCoordinates targetCordinates;
 
             if (_map.TryFindGridAt(xform.MapID, targetPos, out var gridUid, out var mapGrid))
@@ -233,6 +234,19 @@ public sealed partial class NPCCombatSystem
             {
                 return;
             }
+
+            // KS14 start: never through a friend, nor from on top of one. Held long enough, the gun gives way for a new spot.
+            //      Here, as the shot goes, so the lookup is once a shot.
+            if (_npcSquadFireLaneSystem.IsFriendInLineOfFire(uid, new MapCoordinates(worldPos, xform.MapID), new MapCoordinates(targetSpot, xform.MapID)))
+            {
+                if (_npcSquadFireLaneSystem.NoteHeldFire(uid))
+                    comp.Status = CombatStatus.KsFriendInTheWay;
+
+                continue;
+            }
+
+            _npcSquadFireLaneSystem.NoteClearShot(uid);
+            // KS14 end
 
             _gun.AttemptShoot(uid, gun, targetCordinates, comp.Target);
             //comp.ShootAccumulator = 0f; // KS14: Repurpose ShootAccumulator to be used for the LOS delay, instead of artificially capping mob firerate
