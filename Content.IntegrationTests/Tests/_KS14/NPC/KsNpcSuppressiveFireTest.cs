@@ -23,6 +23,7 @@ public sealed class KsNpcSuppressiveFireTest : GameTest
     public override PoolSettings PoolSettings => PsDisconnected;
 
     private const string Npc = "KsSuppressionTestNpc";
+    private const string Friend = "KsSuppressionTestFriend";
     private const string Gun = "KsSuppressionTestGun";
 
     private const string GunHand = "right";
@@ -39,6 +40,17 @@ public sealed class KsNpcSuppressiveFireTest : GameTest
   - type: ComplexInteraction
   - type: MobState
   - type: CombatMode
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+
+- type: entity
+  id: KsSuppressionTestFriend
+  components:
+  - type: MobState
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
 
 - type: entity
   id: KsSuppressionTestGun
@@ -107,6 +119,42 @@ public sealed class KsNpcSuppressiveFireTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
             Assert.That(GetAmmo(entManager, gunUid), Is.EqualTo(ammoAtEnd), "nothing more should be fired"));
+    }
+
+    /// <summary>
+    ///     A friend between it and the spot: with room to either side of the spot it fires round the friend, as a squad
+    ///         holding a room keeps its lines off each other, and with none, or the friend on top of it, it holds fire.
+    /// </summary>
+    [TestCase(2f, 0f, 1.5f, true)] // in the way, room to fire round it
+    [TestCase(2f, 0f, 0f, false)] // in the way, and it has to be the very spot
+    [TestCase(0.2f, 0f, 1.5f, false)] // on top of it: a shot from there starts inside the friend, whichever way it goes
+    [TestCase(0f, 3f, 0f, true)] // control: off to the side
+    public async Task TestFiresRoundAFriendOrNotAtAll(float friendX, float friendY, float spread, bool fires)
+    {
+        var (entManager, npcUid, gunUid) = await SetUp();
+        var suppressiveFireSystem = entManager.System<NpcSuppressiveFireSystem>();
+        var ammoAtStart = 0;
+        EntityUid friendUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var npcCoordinates = entManager.GetComponent<TransformComponent>(npcUid).Coordinates;
+            friendUid = entManager.SpawnEntity(Friend, npcCoordinates.Offset(new Vector2(friendX, friendY)));
+            ammoAtStart = GetAmmo(entManager, gunUid);
+            suppressiveFireSystem.Start(npcUid, npcCoordinates.Offset(new Vector2(4f, 0f)), System.TimeSpan.FromSeconds(0.5), spread);
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(suppressiveFireSystem.IsFiring(npcUid), "the test needs it still at it");
+
+            if (fires)
+                Assert.That(GetAmmo(entManager, gunUid), Is.LessThan(ammoAtStart), "it should fire, clear of its friend");
+            else
+                Assert.That(GetAmmo(entManager, gunUid), Is.EqualTo(ammoAtStart), "it should hold fire, with its friend in every way");
+        });
     }
 
     private static int GetAmmo(IEntityManager entManager, EntityUid gunUid)

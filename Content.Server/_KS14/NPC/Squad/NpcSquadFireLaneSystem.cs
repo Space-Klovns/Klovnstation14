@@ -24,11 +24,13 @@ public readonly record struct NpcFireLane(Vector2 From, Vector2 To);
 ///     <list type="bullet">
 ///         <item>Choosing where to stand, both ways: a spot is penalised if its own line to what it covers passes through a
 ///             teammate, and if it sits on a teammate's line. A teammate on top of the spot is in both.</item>
-///         <item>Shooting: an NPC holds fire while a standing friend is in the way of the shot, or overlapping it, which a
-///             shot from there would start inside (<see cref="IsFriendInLineOfFire"/>). Any friend, not only squadmates: an
-///             NPC fights before it gets round to joining a squad. Nothing else stops it: a shot hits a friend like anyone
-///             else, and the line of fire looks past mobs (see <c>NpcLineOfFireSystem</c>). Held for long enough where it
-///             stands (<see cref="NoteHeldFire"/>), it gives up its spot for another.</item>
+///         <item>Shooting: an NPC takes a shot clear of every standing friend, or none (<see cref="TryGetClearShot"/>):
+///             the aim if that is clear, or else an angle beside it as near as there is, as a squad holding a room keeps its
+///             lines off each other. With a friend in every way, or on top of it, which a shot from there would start
+///             inside, it holds fire. Any friend, not only squadmates: an NPC fights before it gets round to joining a squad.
+///             Nothing else stops it: a shot hits a friend like anyone else, and the line of fire looks past mobs (see
+///             <c>NpcLineOfFireSystem</c>). Held for long enough where it stands (<see cref="NoteHeldFire"/>), it gives up
+///             its spot for another.</item>
 ///     </list>
 /// </summary>
 public sealed partial class NpcSquadFireLaneSystem : EntitySystem
@@ -99,6 +101,17 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
 
     private readonly List<NpcFireLane> _scratchLanes = new();
     private readonly HashSet<Entity<MobStateComponent>> _scratchMobs = new();
+    private readonly List<Vector2> _scratchFriends = new();
+
+    /// <summary>
+    ///     How many angles each side of the aim <see cref="TryGetClearShot"/> tries, evenly out to its spread.
+    /// </summary>
+    private const int ShotAnglesEachSide = 3;
+
+    /// <summary>
+    ///     How much nearer than the aim a shot at another angle may hit a wall and still count as getting there.
+    /// </summary>
+    private const float ShotWallSlack = 0.5f;
     private readonly List<Vector2> _scratchPositions = new();
 
     public override void Initialize()
@@ -219,21 +232,75 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
 
     /// <summary>
     ///     Whether a shot by <paramref name="shooterUid"/> from <paramref name="from"/> at <paramref name="to"/> would hit a
-    ///         standing friend of it first: one in the way, right behind what it is shot at, or overlapping the shooter. False
-    ///         when disabled. Friends that are down do not count: a shot goes over them. Nor do those it passes through
-    ///         (<see cref="PassesThrough"/>). One lookup, over the box round the shot: for when it is about to be fired.
+    ///         standing friend of it first. See <see cref="TryGetClearShot"/>, with no other angle to try.
     /// </summary>
     public bool IsFriendInLineOfFire(EntityUid shooterUid, MapCoordinates from, MapCoordinates to)
     {
-        if (!Enabled || from.MapId != to.MapId)
+        return !TryGetClearShot(shooterUid, from, to, spread: 0f, out _);
+    }
+
+    /// <summary>
+    ///     A shot for <paramref name="shooterUid"/> from <paramref name="from"/> that hits no standing friend of it first: not
+    ///         one in the way, right behind what it is shot at, or overlapping the shooter. <paramref name="aim"/> if that is
+    ///         clear; else the angle nearest it, aimed up to <paramref name="spread"/> to either side, that still gets as far
+    ///         before a wall. False if there is none: hold fire.
+    ///     <para>
+    ///         Friends that are down do not count: a shot goes over them. Nor do those it passes through
+    ///             (<see cref="PassesThrough"/>). Always clear when disabled. One lookup, over the box round every angle: for
+    ///             when the shot is about to be fired.
+    ///     </para>
+    /// </summary>
+    public bool TryGetClearShot(EntityUid shooterUid, MapCoordinates from, MapCoordinates aim, float spread, out MapCoordinates shot)
+    {
+        shot = aim;
+
+        if (!Enabled || from.MapId != aim.MapId)
+            return true;
+
+        var direction = aim.Position - from.Position;
+        var length = direction.Length();
+        var forward = length > 0.01f ? direction / length : Vector2.Zero;
+        var side = new Vector2(-forward.Y, forward.X);
+
+        GatherFriendsInTheWay(shooterUid, from, Box2.FromTwoPoints(from.Position, aim.Position + forward * ShotOverrun).Enlarged(spread + ShotStartRadius));
+
+        if (!IsAnyInLine(from.Position, aim.Position, _scratchFriends))
+            return true;
+
+        if (spread <= 0f || length <= 0.01f)
             return false;
 
-        var direction = to.Position - from.Position;
-        var length = direction.Length();
-        var end = length > 0.01f ? to.Position + direction / length * ShotOverrun : to.Position;
-        var bounds = Box2.FromTwoPoints(from.Position, end).Enlarged(MathF.Max(ShotRadius, ShotStartRadius));
+        // Nearest the aim first, either side. Only as far as a shot at the aim would have got: none into a nearer wall.
+        var reach = MathF.Min(length, _npcLineOfFireSystem.GetClearDistance(shooterUid, from, aim)) - ShotWallSlack;
 
+        for (var step = 1; step <= ShotAnglesEachSide; step++)
+        {
+            var offset = side * (spread * step / ShotAnglesEachSide);
+
+            foreach (var candidate in (ReadOnlySpan<Vector2>) [aim.Position + offset, aim.Position - offset])
+            {
+                var candidateCoordinates = new MapCoordinates(candidate, aim.MapId);
+
+                if (IsAnyInLine(from.Position, candidate, _scratchFriends) ||
+                    _npcLineOfFireSystem.GetClearDistance(shooterUid, from, candidateCoordinates) < reach)
+                    continue;
+
+                shot = candidateCoordinates;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Fills <see cref="_scratchFriends"/> with where every standing friend of <paramref name="shooterUid"/> in
+    ///         <paramref name="bounds"/> is that a shot from it would hit.
+    /// </summary>
+    private void GatherFriendsInTheWay(EntityUid shooterUid, MapCoordinates from, Box2 bounds)
+    {
         _scratchMobs.Clear();
+        _scratchFriends.Clear();
         _entityLookupSystem.GetEntitiesIntersecting(from.MapId, bounds, _scratchMobs);
 
         bool? hitscan = null;
@@ -242,13 +309,26 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
         {
             if (mob.Owner == shooterUid ||
                 !_mobStateSystem.IsAlive(mob.Owner, mob.Comp) ||
-                !IsInLine(from.Position, to.Position, _transformSystem.GetWorldPosition(mob.Owner), ShotRadius, ShotOverrun, ShotStartRadius) ||
                 !_npcFactionSystem.IsEntityFriendly(shooterUid, mob.Owner))
                 continue;
 
             hitscan ??= _npcLineOfFireSystem.FiresHitscan(shooterUid);
 
             if (!PassesThrough(shooterUid, mob.Owner, hitscan.Value))
+                _scratchFriends.Add(_transformSystem.GetWorldPosition(mob.Owner));
+        }
+    }
+
+    /// <summary>
+    ///     Whether a shot from <paramref name="from"/> at <paramref name="to"/> would hit anyone at
+    ///         <paramref name="positions"/>: see <see cref="IsInLine"/>, with <see cref="ShotRadius"/>, <see cref="ShotOverrun"/>
+    ///         and <see cref="ShotStartRadius"/>.
+    /// </summary>
+    private static bool IsAnyInLine(Vector2 from, Vector2 to, List<Vector2> positions)
+    {
+        foreach (var position in positions)
+        {
+            if (IsInLine(from, to, position, ShotRadius, ShotOverrun, ShotStartRadius))
                 return true;
         }
 

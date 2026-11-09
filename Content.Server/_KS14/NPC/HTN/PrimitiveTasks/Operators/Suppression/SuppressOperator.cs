@@ -8,7 +8,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Suppression;
 
 /// <summary>
 ///     Fires at the coordinates at <see cref="CoordinatesKey"/> for <see cref="Duration"/>, whether or not anything is
-///         there. See <see cref="NpcSuppressiveFireSystem"/>.
+///         there, keeping its shots off friends. See <see cref="NpcSuppressiveFireSystem"/>.
 /// </summary>
 public sealed partial class SuppressOperator : HTNOperator
 {
@@ -21,12 +21,20 @@ public sealed partial class SuppressOperator : HTNOperator
     [DataField]
     public TimeSpan Duration = TimeSpan.FromSeconds(1.5);
 
+    /// <summary>
+    ///     How far to either side of the coordinates, in tiles, it may fire instead, where a friend is in the way. Not at all
+    ///         when it has to be that very spot, as a window to break is: a shot beside it hits the wall. With nowhere clear,
+    ///         it holds fire.
+    /// </summary>
+    [DataField]
+    public float Spread;
+
     public override void Startup(NPCBlackboard blackboard)
     {
         base.Startup(blackboard);
 
         if (blackboard.TryGetValue<EntityCoordinates>(CoordinatesKey, out var coordinates, _entityManager))
-            _npcSuppressiveFireSystem.Start(blackboard.GetOwner(), coordinates, Duration);
+            _npcSuppressiveFireSystem.Start(blackboard.GetOwner(), coordinates, Duration, spread: Spread);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)

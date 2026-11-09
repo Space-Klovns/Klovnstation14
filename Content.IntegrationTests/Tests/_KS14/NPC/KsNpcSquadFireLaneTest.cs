@@ -108,6 +108,34 @@ public sealed class KsNpcSquadFireLaneTest : GameTest
     }
 
     /// <summary>
+    ///     B in the way of A's aim: with room to aim beside it, A takes the nearest clear angle, one whose line misses B, and
+    ///         no further off than it has to; with none, it has no shot.
+    /// </summary>
+    [Test]
+    public async Task TestAClearAngleIsFoundBesideAFriend()
+    {
+        var (entManager, gridUid, aUid, bUid) = await SetUpSquad(new Vector2i(3, 0));
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var fireLaneSystem = entManager.System<NpcSquadFireLaneSystem>();
+            var transformSystem = entManager.System<SharedTransformSystem>();
+            var from = transformSystem.GetMapCoordinates(aUid);
+            var aim = transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, ThreatPosition));
+            var friend = transformSystem.GetMapCoordinates(bUid).Position;
+
+            Assert.That(fireLaneSystem.TryGetClearShot(aUid, from, aim, spread: 0f, out _), Is.False, "straight at it is through B");
+            Assert.That(fireLaneSystem.TryGetClearShot(aUid, from, aim, spread: 3f, out var shot), Is.True, "beside it is not");
+
+            var offAim = (shot.Position - aim.Position).Length();
+            Assert.That(offAim, Is.GreaterThan(0f).And.LessThanOrEqualTo(3f));
+            Assert.That(NpcSquadFireLaneSystem.IsInLine(from.Position, shot.Position, friend,
+                NpcSquadFireLaneSystem.ShotRadius, NpcSquadFireLaneSystem.ShotOverrun, NpcSquadFireLaneSystem.ShotStartRadius), Is.False,
+                "and that line misses B");
+        });
+    }
+
+    /// <summary>
     ///     B just behind A, overlapping it: a bullet reaches back behind where it is spawned, and a shot from A hits B the
     ///         moment it is fired. Seen live, at 0.6 tiles. The lane rule used to look only in front.
     /// </summary>

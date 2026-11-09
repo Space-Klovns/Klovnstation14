@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Squad;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.CombatMode;
 using Content.Shared.Interaction;
@@ -9,11 +10,16 @@ namespace Content.Server._KS14.NPC.Suppression;
 /// <summary>
 ///     Has an NPC fire at a spot rather than a target: where a hostile just went, to keep its head down. NPC ranged combat
 ///         only shoots at entities, so this is a path of its own. It only ever loops over NPCs that are firing right now.
+///     <para>
+///         Each shot keeps off friends as ranged combat's do (<see cref="NpcSquadFireLaneSystem.TryGetClearShot"/>): at the
+///             spot, or else as near it as is clear, within its spread; with nowhere clear, not at all.
+///     </para>
 /// </summary>
 public sealed partial class NpcSuppressiveFireSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private GunSystem _gunSystem = default!;
+    [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private RotateToFaceSystem _rotateToFaceSystem = default!;
     [Dependency] private SharedCombatModeSystem _sharedCombatModeSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -43,13 +49,17 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
                 continue;
             }
 
-            var worldPosition = _transformSystem.GetWorldPosition(transformComponent);
-            var targetPosition = _transformSystem.ToMapCoordinates(suppressiveFireComponent.Coordinates).Position;
-            var goalRotation = (targetPosition - worldPosition).ToWorldAngle();
+            var worldPosition = _transformSystem.GetMapCoordinates(transformComponent);
+            var targetPosition = _transformSystem.ToMapCoordinates(suppressiveFireComponent.Coordinates);
+            var goalRotation = (targetPosition.Position - worldPosition.Position).ToWorldAngle();
 
-            if (_rotateToFaceSystem.TryRotateTo(uid, goalRotation, frameTime, AimTolerance, double.MaxValue, transformComponent) &&
-                _gunSystem.CanShoot(gunEntity.Comp))
-                _gunSystem.AttemptShoot(uid, gunEntity, suppressiveFireComponent.Coordinates);
+            if (!_rotateToFaceSystem.TryRotateTo(uid, goalRotation, frameTime, AimTolerance, double.MaxValue, transformComponent) ||
+                !_gunSystem.CanShoot(gunEntity.Comp) ||
+                gunEntity.Comp.NextFire > now)
+                continue;
+
+            if (_npcSquadFireLaneSystem.TryGetClearShot(uid, worldPosition, targetPosition, suppressiveFireComponent.Spread, out var shot))
+                _gunSystem.AttemptShoot(uid, gunEntity, _transformSystem.ToCoordinates(shot));
         }
     }
 
@@ -62,13 +72,15 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Has <paramref name="uid"/> fire at <paramref name="coordinates"/> for <paramref name="duration"/>.
+    ///     Has <paramref name="uid"/> fire at <paramref name="coordinates"/> for <paramref name="duration"/>, or up to
+    ///         <paramref name="spread"/> to either side of it where a friend is in the way.
     /// </summary>
-    public void Start(EntityUid uid, EntityCoordinates coordinates, TimeSpan duration)
+    public void Start(EntityUid uid, EntityCoordinates coordinates, TimeSpan duration, float spread = 0f)
     {
         var suppressiveFireComponent = EnsureComp<NpcSuppressiveFireComponent>(uid);
         suppressiveFireComponent.Coordinates = coordinates;
         suppressiveFireComponent.EndTime = _gameTiming.CurTime + duration;
+        suppressiveFireComponent.Spread = spread;
 
         _sharedCombatModeSystem.SetInCombatMode(uid, true);
     }
