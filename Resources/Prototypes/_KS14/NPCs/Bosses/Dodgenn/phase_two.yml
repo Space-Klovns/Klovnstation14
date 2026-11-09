@@ -9,7 +9,7 @@
   - preconditions:
     - !type:CooldownPrecondition
       id: monologue
-      inverted: true
+      invert: true
     - !type:RangedAttackActivePrecondition
       invert: true
     tasks:
@@ -38,7 +38,7 @@
   - preconditions:
     - !type:CooldownPrecondition
       id: dash
-      inverted: true
+      invert: true
     - !type:CoordinatesInRangePrecondition
       targetKey: TargetCoordinates
       rangeKey: LeapMinDistance
@@ -53,7 +53,7 @@
   - preconditions:
     - !type:CooldownPrecondition
       id: grenade
-      inverted: true
+      invert: true
     tasks:
     - !type:HTNPrimitiveTask
       operator: !type:DoWorldActionOperator

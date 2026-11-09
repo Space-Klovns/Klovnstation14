@@ -93,7 +93,7 @@
   - preconditions:
     - !type:CooldownPrecondition
       id: pistol
-      inverted: true
+      invert: true
     - !type:ActiveHandFreePrecondition
     - !type:ProbabilityPrecondition
       probability: 10
@@ -120,7 +120,7 @@
   - preconditions:
     - !type:CooldownPrecondition
       id: dash
-      inverted: true
+      invert: true
     - !type:CoordinatesInRangePrecondition
       targetKey: TargetCoordinates
       rangeKey: LeapMinDistance

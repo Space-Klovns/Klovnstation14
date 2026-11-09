@@ -393,6 +393,50 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     The branch traversal record of each kind of order's plan through the real root, hard-coded: HTNSystem
+    ///         replaces a running plan when a new one is lower at any index, and every decomposed compound adds an
+    ///         entry, so changing how an order's compounds nest changes what may interrupt it. Reshaping the YAML
+    ///         must leave these as they are.
+    /// </summary>
+    [TestCase(NpcOrderKind.Investigate, "23,0,0")]
+    [TestCase(NpcOrderKind.Watch, "24,0,0")]
+    [TestCase(NpcOrderKind.Stage, "25,0,0")]
+    [TestCase(NpcOrderKind.Breach, "26,0,0")]
+    [TestCase(NpcOrderKind.Enter, "27,0,0")]
+    [TestCase(NpcOrderKind.Search, "29,0")]
+    [TestCase(NpcOrderKind.HoldArea, "30,0")]
+    [TestCase(NpcOrderKind.Regroup, "31,0")]
+    public async Task TestOrderBranchTraversalRecord(NpcOrderKind kind, string expected)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
+            stage: (entManager, mobUid, gridUid) => StageOrder(entManager, mobUid, gridUid, kind));
+
+        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo(expected),
+            $"{kind}: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     As <see cref="TestOrderBranchTraversalRecord"/>, for a locker search.
+    /// </summary>
+    [Test]
+    public async Task TestLockerSearchBranchTraversalRecord()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                var lockerUid = SpawnAt(entManager, "ClosetSteelBase", gridUid, 2, 2);
+                var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+                tacticsSystem.UpdatesPaused = true;
+                tacticsSystem.IssueOrder(mobUid,
+                    NpcOrderKind.Search,
+                    entManager.GetComponent<TransformComponent>(lockerUid).Coordinates,
+                    lockerUid);
+            });
+
+        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo("28,0"), Describe(plan));
+    }
+
+    /// <summary>
     ///     A breach order forces the door it names: the plan includes forcing it, and still ends waiting for the next
     ///         order.
     /// </summary>

@@ -525,8 +525,8 @@ or notice a handler's answer changing without the tile being rebuilt.
 
 ## Moving somewhere without going through somewhere
 
-The pathfinder only knows the shortest way, and it cannot be told to avoid a set of tiles: the `HtnPathfindingModifier`
-hook is a stub. When the way matters, as for a member stacking up on the door on the far side of a room, which
+The pathfinder only knows the shortest way, and it cannot be told to avoid a set of tiles: it has no hook for that.
+When the way matters, as for a member stacking up on the door on the far side of a room, which
 the shortest path reaches straight through the room, the tactics system routes it itself.
 `NpcSquadCoverSystem.TryFindRouteAround` floods the same tile classification as room detection, keeping off the
 avoided tiles. It then cuts the corners off the route, leaving only the turns. The member is ordered to each turn in
@@ -540,7 +540,14 @@ straight-line distance).
 - **Operators** subclass `HTNOperator`. `[Dependency]` works on them through the system dependency collection, so
   systems and `EntityQuery<T>` inject. They have no `ProtoMan`; declare `IPrototypeManager` if needed.
 - **Preconditions** subclass `HTNPrecondition` and implement `IsMet(blackboard)`. Read the owner with
-  `blackboard.GetValue<EntityUid>(NPCBlackboard.Owner)`.
+  `blackboard.GetValue<EntityUid>(NPCBlackboard.Owner)`. One with an `invert` flag subclasses `KsInvertiblePrecondition`
+  and implements `IsMetRaw` instead (`CooldownPrecondition`, `InSquadPrecondition`): the flip happens in one place, on
+  every path. `KeyExistsPrecondition` is upstream and keeps its own `inverted`.
+- **Shared pieces** (look here before writing a new one): `Content.Server/_KS14/NPC/Utility/` has `NpcThrottle` (a
+  system's update interval), `NpcExpiringMap` (entries that lapse), `NpcBestOf` (best candidate so far), `NpcCoordinates`
+  and `NpcGridSystem` (grid-relative positions and tiles). `HTN/NpcBlackboardExtensions` has the blackboard helpers.
+  `KsInstantOperator` is the base for an operator that does one thing when its task starts and is done at once. A
+  consideration about believed contacts or a whitelist subclasses `KsBelievedContactCon` or `KsWhitelistCon`.
 - **Picking an entity is a `utilityQuery`.** Anything that gets some entity, whether a target, a squadmate or an item, does
   so through a YAML query and `UtilityOperator`. Don't write an operator or system method that picks one: an operator acts
   on the key `UtilityOperator` wrote. YAML shows what is being chosen and why, and a balance pass can change it without
@@ -578,7 +585,8 @@ straight-line distance).
   - **`InventoryQuery` walks worn slots, not hands.** For "the gun in hand, or else something carried", use two compound
     branches: `GetActiveHeldItemOperator`, then `UtilityOperator`.
 - **Voicelines:** `SpeakOperator` ignores `cooldown` without a `cooldownID`. A line said once per squad uses
-  `InSquadPrecondition { leaderOnly: true }`, or-ed with `InSquadPrecondition { invert: true }` for NPCs on their own.
+  `InSquadPrecondition { leaderOnly: true, orAlone: true }`: the leader, or an NPC in no squad. `invert` flips the whole
+  answer, `orAlone` included.
 - **Actions:** `DoActionOperator` and `DoWorldActionOperator` only check that their target key exists at plan time.
   A world-targeted jump (`KsGravityJumpWorldEvent`) throws the performer all the way to its target, uncapped, so
   clamp the target yourself (see `DiveOperator`). Gate "only some NPCs do this" on the action existing
@@ -591,7 +599,7 @@ straight-line distance).
   `NpcTacticalPositionClaimSystem`). Something that must act on a timer gets a component that exists only while it is
   in progress, and the loop runs over that (`NpcActiveRangedAttackComponent`), not over every NPC that could.
 - **Throttled systems:** spread first updates across the interval at `MapInit`, so NPCs spawned together do not all
-  update on one tick. Keep scratch collections as fields and reuse them; a system running per NPC several times a
+  update on one tick (`NpcThrottle`). Keep scratch collections as fields and reuse them; a system running per NPC several times a
   second should allocate nothing in steady state.
 
 ## Testing
@@ -667,6 +675,8 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
 Like `ks_tacticalposdebug`, it builds nothing on its own. `NpcSquadTacticsSystem` asks `NpcHuntDebugSystem.IsTracking`
 after updating a hunt, and hands over a frame of what it just computed only if someone is watching. A new debug view
 of NPC reasoning should work the same way, intercepting the real computation rather than recomputing it on a timer.
+Sessions (who is watching what) are kept by `NpcDebugSessions` in `Content.Server/_KS14/NPC/Debug/`, and a command
+scoped to a squad or NPC derives from `NpcScopedDebugCommand`.
 
 `ks_setmeter <NPC> <meter> <value>` sets a meter on an NPC and everyone in its squad, to see how they act at a value
 without having to get them there.

@@ -6,9 +6,9 @@ using Content.Server.NPC.HTN.Preconditions;
 namespace Content.Server._KS14.NPC.HTN.Preconditions;
 
 /// <summary>
-///     Returns true (or false if inverted) if the specified cooldown is active.
+///     Met (or not met, with <c>invert</c>) while the specified cooldown is active.
 /// </summary>
-public sealed partial class CooldownPrecondition : HTNPrecondition
+public sealed partial class CooldownPrecondition : KsInvertiblePrecondition
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private NpcGenericCooldownSystem _genericCooldownSystem = default!;
@@ -18,8 +18,6 @@ public sealed partial class CooldownPrecondition : HTNPrecondition
     /// </summary>
     [DataField] public string Id;
     private int _idHash;
-
-    [DataField] public bool Inverted;
 
     /// <summary>
     ///     Whether this is a cooldown shared by the owner's whole squad. See <see cref="CooldownOperator.SquadWide"/>.
@@ -32,12 +30,12 @@ public sealed partial class CooldownPrecondition : HTNPrecondition
         _idHash = Id.GetHashCode();
     }
 
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
         if (!blackboard.TryGetOwner(_entityManager, out var ownerUid))
-            return Inverted;
+            return false;
 
         var holderUid = _genericCooldownSystem.GetHolder(ownerUid, SquadWide);
-        return _genericCooldownSystem.IsKeyOnCooldown(holderUid, _idHash) ^ Inverted;
+        return _genericCooldownSystem.IsKeyOnCooldown(holderUid, _idHash);
     }
 }
