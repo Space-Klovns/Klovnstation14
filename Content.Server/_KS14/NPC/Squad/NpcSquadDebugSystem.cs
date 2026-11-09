@@ -103,9 +103,7 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
                     plan.Assignments.TryGetValue(memberUid, out var assignment))
                     squad.Assignments.Add(new SquadDebugAssignment(memberNetCoordinates, GetNetCoordinates(assignment.Coordinates)));
 
-                AddContacts(squad, memberUid, memberNetCoordinates);
-                AddOrder(squad, memberUid, memberNetCoordinates);
-                AddMeters(squad, memberUid, memberNetCoordinates);
+                AddMemberDetails(squad, memberUid, memberNetCoordinates);
             }
 
             AddHunt(squad, squadUid);
@@ -137,9 +135,7 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
                 Leader = netCoordinates,
             };
 
-            AddContacts(loner, uid, netCoordinates);
-            AddOrder(loner, uid, netCoordinates);
-            AddMeters(loner, uid, netCoordinates);
+            AddMemberDetails(loner, uid, netCoordinates);
             AddHunt(loner, uid);
             message.Squads.Add(loner);
         }
@@ -182,6 +178,33 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
         }
     }
 
+    /// <summary>
+    ///     What one NPC believes, has been ordered to do, and has meters for, whether it is in a squad or on its own.
+    /// </summary>
+    private void AddMemberDetails(SquadDebugSquad squad, EntityUid memberUid, NetCoordinates memberNetCoordinates)
+    {
+        AddContacts(squad, memberUid, memberNetCoordinates);
+        AddOrder(squad, memberUid, memberNetCoordinates);
+        AddMeters(squad, memberUid, memberNetCoordinates);
+    }
+
+    /// <summary>
+    ///     <paramref name="coordinates"/> relative to the grid or map, for sending to the client. False if what they
+    ///         are relative to is gone. Relative to the grid or map rather than to a hostile or a locker, which the
+    ///         client may not have.
+    /// </summary>
+    private bool TryGetNetSnapshot(EntityCoordinates coordinates, out NetCoordinates netCoordinates)
+    {
+        if (TerminatingOrDeleted(coordinates.EntityId))
+        {
+            netCoordinates = default;
+            return false;
+        }
+
+        netCoordinates = GetNetCoordinates(_transformSystem.GetMoverCoordinates(coordinates));
+        return true;
+    }
+
     private void AddContacts(SquadDebugSquad squad, EntityUid memberUid, NetCoordinates memberNetCoordinates)
     {
         if (!_perceptionQuery.TryComp(memberUid, out var perceptionComponent))
@@ -190,7 +213,7 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
         foreach (var targetUid in perceptionComponent.Contacts.Keys)
         {
             if (!_npcPerceptionSystem.TryGetBelievedCoordinates((memberUid, perceptionComponent), targetUid, out var believedCoordinates, out var state, out _) ||
-                TerminatingOrDeleted(believedCoordinates.EntityId))
+                !TryGetNetSnapshot(believedCoordinates, out var believedNetCoordinates))
                 continue;
 
             NetCoordinates? predicted = state == NpcContactState.Lost &&
@@ -200,19 +223,16 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 
             // Relative to the grid or map: coordinates relative to the hostile would name an entity the client may
             //      not have, such as one in a locker.
-            squad.Contacts.Add(new SquadDebugContact(memberNetCoordinates,
-                GetNetCoordinates(_transformSystem.GetMoverCoordinates(believedCoordinates)),
-                state.Value,
-                predicted));
+            squad.Contacts.Add(new SquadDebugContact(memberNetCoordinates, believedNetCoordinates, state.Value, predicted));
         }
     }
 
     private void AddOrder(SquadDebugSquad squad, EntityUid memberUid, NetCoordinates memberNetCoordinates)
     {
-        if (!_npcSquadTacticsSystem.TryGetOrder(memberUid, out var order) || TerminatingOrDeleted(order.Coordinates.EntityId))
+        if (!_npcSquadTacticsSystem.TryGetOrder(memberUid, out var order) || !TryGetNetSnapshot(order.Coordinates, out var orderNetCoordinates))
             return;
 
-        squad.Orders.Add(new SquadDebugOrder(memberNetCoordinates, GetNetCoordinates(_transformSystem.GetMoverCoordinates(order.Coordinates)), order.Kind));
+        squad.Orders.Add(new SquadDebugOrder(memberNetCoordinates, orderNetCoordinates, order.Kind));
     }
 
     private readonly List<(Robust.Shared.Prototypes.ProtoId<NpcMeterPrototype> MeterId, float Value, float Max)> _meterReadings = new();
@@ -246,8 +266,8 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 
         foreach (var point in hunt.SearchPoints)
         {
-            if (!TerminatingOrDeleted(point.Coordinates.EntityId))
-                squad.SearchPoints.Add(new SquadDebugSearchPoint(GetNetCoordinates(_transformSystem.GetMoverCoordinates(point.Coordinates)), point.Cleared, point.StorageUid != null));
+            if (TryGetNetSnapshot(point.Coordinates, out var pointNetCoordinates))
+                squad.SearchPoints.Add(new SquadDebugSearchPoint(pointNetCoordinates, point.Cleared, point.StorageUid != null));
         }
     }
 

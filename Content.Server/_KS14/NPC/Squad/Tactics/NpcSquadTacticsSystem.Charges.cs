@@ -262,7 +262,7 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
 
         _floodSteps.Clear();
-        _npcGridSystem.FloodTiles(walkerUid, grid, startTile, SealedRoomSteps, _floodSteps, stopAtDoors: false);
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, startTile, SealedRoomSteps, _floodSteps, stopAtDoors: false);
 
         foreach (var (tile, steps) in _floodSteps)
         {
@@ -290,7 +290,7 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
 
         _floodSteps.Clear();
-        _npcGridSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, walkerTransform.Coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, _mapSystem.TileIndicesFor(grid, walkerTransform.Coordinates), SealedRoomSteps, _floodSteps, stopAtDoors: false);
 
         if (_floodSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, coordinates)))
             return false;
@@ -512,7 +512,7 @@ public sealed partial class NpcSquadTacticsSystem
     private void FindWallCandidates(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, Vector2i walkerTile, NpcSquadTacticsSettings settings)
     {
         _floodSteps.Clear();
-        _npcGridSystem.FloodTiles(walkerUid, grid, walkerTile, settings.MaxStageDistance, _floodSteps, stopAtDoors: false);
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, walkerTile, settings.MaxStageDistance, _floodSteps, stopAtDoors: false);
 
         _wallCandidates.Clear();
 
@@ -552,7 +552,7 @@ public sealed partial class NpcSquadTacticsSystem
     private void FindWallsOut(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, NpcSquadTacticsSettings settings)
     {
         _farFloodSteps.Clear();
-        _npcGridSystem.FloodTiles(walkerUid,
+        _npcSquadCoverSystem.FloodTiles(walkerUid,
             grid,
             _mapSystem.TileIndicesFor(grid, hunt.PredictedCoordinates),
             settings.MaxStageDistance,
@@ -697,7 +697,7 @@ public sealed partial class NpcSquadTacticsSystem
         coordinates = default;
 
         _floodSteps.Clear();
-        _npcGridSystem.FloodTiles(memberUid, grid, site.StandTile, StandOffSearchSteps, _floodSteps);
+        _npcSquadCoverSystem.FloodTiles(memberUid, grid, site.StandTile, StandOffSearchSteps, _floodSteps);
 
         var standMapCoordinates = _transformSystem.ToMapCoordinates(site.StandCoordinates);
         var bestSteps = int.MaxValue;

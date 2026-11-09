@@ -41,6 +41,14 @@ public sealed partial class NpcPerceptionSystem
             TryGetClosedStorageNear(contact.LastKnownCoordinates, entity.Comp.SuspicionRange, out storageUid))
             return contact with { State = NpcContactState.Suspected, ContainerUid = storageUid };
 
+        return ToLost(contact);
+    }
+
+    /// <summary>
+    ///     The contact as one lost: remembered where it was seen, in no hiding place.
+    /// </summary>
+    private static NpcContact ToLost(NpcContact contact)
+    {
         return contact with { State = NpcContactState.Lost, ContainerUid = null };
     }
 
@@ -68,18 +76,28 @@ public sealed partial class NpcPerceptionSystem
     {
         var storageGone = contact.ContainerUid is not { } storageUid || TerminatingOrDeleted(storageUid);
 
-        if (!storageGone &&
-            !(_entityStorageQuery.TryComp(contact.ContainerUid!.Value, out var storageComponent) &&
-                storageComponent.Open &&
-                _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, _transformSystem.GetMapCoordinates(contact.ContainerUid.Value), range, entity.Comp.SeesThroughSmoke)))
+        if (!storageGone && !IsStorageSeenOpen(entity, contact.ContainerUid!.Value, observerMapCoordinates, range))
             return false;
 
         if (contact.State == NpcContactState.Suspected)
             entity.Comp.Contacts.Remove(targetUid);
         else
-            entity.Comp.Contacts[targetUid] = contact with { State = NpcContactState.Lost, ContainerUid = null };
+            entity.Comp.Contacts[targetUid] = ToLost(contact);
 
         return true;
+    }
+
+    /// <summary>
+    ///     Whether the NPC can see the storage and it is open: it can look inside.
+    /// </summary>
+    private bool IsStorageSeenOpen(Entity<NpcPerceptionComponent> entity,
+        EntityUid storageUid,
+        MapCoordinates observerMapCoordinates,
+        float range)
+    {
+        return _entityStorageQuery.TryComp(storageUid, out var storageComponent) &&
+            storageComponent.Open &&
+            _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, _transformSystem.GetMapCoordinates(storageUid), range, entity.Comp.SeesThroughSmoke);
     }
 
     /// <summary>

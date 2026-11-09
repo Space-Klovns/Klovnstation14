@@ -27,6 +27,7 @@ public sealed partial class NpcKillZoneSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private NpcGridSystem _npcGridSystem = default!;
+    [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -83,7 +84,7 @@ public sealed partial class NpcKillZoneSystem : EntitySystem
         }
 
         _floodSteps.Clear();
-        _npcGridSystem.FloodTiles(walkerUid, grid, center, Math.Max(0, reach), _floodSteps);
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, center, Math.Max(0, reach), _floodSteps);
 
         var tiles = new Dictionary<Vector2i, float>(_floodSteps.Count);
         foreach (var (tile, steps) in _floodSteps)

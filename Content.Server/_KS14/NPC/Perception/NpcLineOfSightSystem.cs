@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Content.Shared._KS14.Occlusion;
@@ -197,19 +198,10 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         if (other.MapId != origin.MapId || other.MapId == MapId.Nullspace)
             return false;
 
-        var direction = other.Position - origin.Position;
-        var length = direction.Length();
+        var setup = PrepareRay(origin.Position, other.Position, range, range > 0f, out var ray, out var length);
+        if (setup != RaySetup.Cast)
+            return setup == RaySetup.Trivial;
 
-        // The same rounding allowance the examine check gives.
-        if (range > 0f && length > range + 0.01f)
-            return false;
-
-        if (MathHelper.CloseTo(length, 0f))
-            return true;
-
-        // The direction before the length is capped, or it is no longer a unit vector.
-        var ray = new Ray(origin.Position, direction / length);
-        length = MathF.Min(length, ExamineSystemShared.MaxRaycastRange);
         var end = origin.Position + ray.Direction * length;
         var bounds = new Box2(Vector2.Min(origin.Position, end), Vector2.Max(origin.Position, end));
 
@@ -244,18 +236,20 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         {
             var treeRay = _lineOfSightTrees[i];
             var (_, treeRotation, invMatrix) = _transformSystem.GetWorldPositionRotationInvMatrix(treeRay.Uid);
-            treeRay.Ray = new Ray(Vector2.Transform(ray.Position, invMatrix), new Angle(-treeRotation.Theta).RotateVec(ray.Direction));
+            treeRay.Ray = ToTreeFrame(ray, invMatrix, treeRotation);
 
+            // A tree on a grid is walked, if the tile walk is wanted and every occluder has been marked.
             MapGridComponent? mapGridComponent = null;
-            treeRay.Walked = walkTiles &&
-                mapInitialized &&
+            if (walkTiles && mapInitialized)
                 _mapGridQuery.TryComp(treeRay.Uid, out mapGridComponent);
+
+            treeRay.Walked = mapGridComponent != null;
             _lineOfSightTrees[i] = treeRay;
 
-            if (treeRay.Walked)
+            if (mapGridComponent != null)
             {
                 anyWalked = true;
-                if (TileWalkBlocks((treeRay.Uid, mapGridComponent!), treeRay.Ray, length, origin.Position, other.Position, throughSmoke))
+                if (TileWalkBlocks((treeRay.Uid, mapGridComponent), treeRay.Ray, length, origin.Position, other.Position, throughSmoke))
                     return false;
 
                 continue;
@@ -266,6 +260,63 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         }
 
         return !anyWalked || !IrregularOccludersBlock(length, origin.Position, other.Position, throughSmoke);
+    }
+
+    /// <summary>
+    ///     How a ray between two points starts out.
+    /// </summary>
+    private enum RaySetup : byte
+    {
+        /// <summary>
+        ///     Further apart than the range: not in sight.
+        /// </summary>
+        OutOfReach,
+
+        /// <summary>
+        ///     On top of each other: in sight, with no ray to cast.
+        /// </summary>
+        Trivial,
+
+        /// <summary>
+        ///     A ray to check for occluders.
+        /// </summary>
+        Cast,
+    }
+
+    /// <summary>
+    ///     Works out the ray from <paramref name="origin"/> to <paramref name="other"/>, and its length capped to the
+    ///         furthest a ray is cast, or says there is nothing to cast.
+    /// </summary>
+    /// <param name="checkRange">
+    ///     Whether to hold the points to <paramref name="range"/> (with the rounding allowance the examine check gives).
+    ///         The ordinary check does not for a range of 0 or less, which means no limit.
+    /// </param>
+    private static RaySetup PrepareRay(Vector2 origin, Vector2 other, float range, bool checkRange, out Ray ray, out float length)
+    {
+        var direction = other - origin;
+        length = direction.Length();
+        ray = default;
+
+        // The same rounding allowance the examine check gives.
+        if (checkRange && length > range + 0.01f)
+            return RaySetup.OutOfReach;
+
+        if (MathHelper.CloseTo(length, 0f))
+            return RaySetup.Trivial;
+
+        // The direction before the length is capped, or it is no longer a unit vector.
+        ray = new Ray(origin, direction / length);
+        length = MathF.Min(length, ExamineSystemShared.MaxRaycastRange);
+        return RaySetup.Cast;
+    }
+
+    /// <summary>
+    ///     <paramref name="ray"/>, a world-space ray, in the frame of a tree whose inverse world matrix is
+    ///         <paramref name="invMatrix"/> and whose world rotation is <paramref name="treeRotation"/>.
+    /// </summary>
+    private static Ray ToTreeFrame(Ray ray, Matrix3x2 invMatrix, Angle treeRotation)
+    {
+        return new Ray(Vector2.Transform(ray.Position, invMatrix), new Angle(-treeRotation.Theta).RotateVec(ray.Direction));
     }
 
     /// <summary>
@@ -349,19 +400,46 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         var anchoredEnumerator = _mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, tile);
         while (anchoredEnumerator.MoveNext(out var anchoredUid))
         {
-            // In the grid's tree is what the tree query would have found: enabled, and with its last move applied.
-            if (!_occluderQuery.TryComp(anchoredUid, out var occluderComponent) ||
-                occluderComponent.TreeUid != grid.Owner ||
-                !_transformQuery.TryComp(anchoredUid.Value, out var occluderTransform))
+            if (!TryGetAnchoredOccluder(grid.Owner, anchoredUid.Value, out var occluderComponent, out var bounds))
                 continue;
 
-            var bounds = GetTreeBounds(occluderComponent, occluderTransform.LocalPosition, occluderTransform.LocalRotation);
             if (SegmentTouches(ray, length, bounds) &&
                 Blocks((anchoredUid.Value, occluderComponent), origin, other, throughSmoke))
                 return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     The occluder on <paramref name="anchoredUid"/>, with its bounds in the frame of <paramref name="gridUid"/>'s
+    ///         tree, if it is one the tile walk counts: in the grid's tree, which is what the tree query would have
+    ///         found - enabled, and with its last move applied.
+    /// </summary>
+    private bool TryGetAnchoredOccluder(EntityUid gridUid,
+        EntityUid anchoredUid,
+        [NotNullWhen(true)] out OccluderComponent? occluderComponent,
+        out Box2 bounds)
+    {
+        bounds = default;
+
+        if (!_occluderQuery.TryComp(anchoredUid, out occluderComponent) ||
+            occluderComponent.TreeUid != gridUid ||
+            !_transformQuery.TryComp(anchoredUid, out var occluderTransform))
+            return false;
+
+        bounds = GetTreeBounds(occluderComponent, occluderTransform.LocalPosition, occluderTransform.LocalRotation);
+        return true;
+    }
+
+    /// <summary>
+    ///     Where <paramref name="occluderTransform"/> is in the frame of the tree <paramref name="treeUid"/>.
+    /// </summary>
+    private (Vector2 Position, Angle Rotation) GetPoseInTree(TransformComponent occluderTransform, EntityUid treeUid)
+    {
+        return occluderTransform.ParentUid == treeUid
+            ? (occluderTransform.LocalPosition, occluderTransform.LocalRotation)
+            : _transformSystem.GetRelativePositionRotation(occluderTransform, treeUid);
     }
 
     /// <summary>
@@ -381,9 +459,7 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
                 if (treeRay.Uid != occluderTreeUid || !treeRay.Walked)
                     continue;
 
-                var (position, rotation) = occluderTransform.ParentUid == occluderTreeUid
-                    ? (occluderTransform.LocalPosition, occluderTransform.LocalRotation)
-                    : _transformSystem.GetRelativePositionRotation(occluderTransform, occluderTreeUid);
+                var (position, rotation) = GetPoseInTree(occluderTransform, occluderTreeUid);
 
                 var bounds = GetTreeBounds(occluderComponent, position, rotation);
                 if (SegmentTouches(treeRay.Ray, length, bounds) &&
@@ -473,6 +549,29 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
 
         // How far any ray in range can reach, with the range check's rounding allowance and some to spare.
         var reach = range + 0.02f;
+
+        if (HasOccludersBeyondGrid(origin, reach, gridUid))
+            return;
+
+        field.Fallback = false;
+        field.GridUid = gridUid;
+        (_, field.GridRotation, field.InvWorldMatrix) = _transformSystem.GetWorldPositionRotationInvMatrix(gridUid);
+
+        // In the grid's frame from here, as each ray is tested.
+        var viewpoint = Vector2.Transform(origin.Position, field.InvWorldMatrix);
+
+        GatherAnchoredOccluders(field, (gridUid, mapGridComponent), viewpoint, reach);
+        GatherIrregularOccluders(field, gridUid, viewpoint, reach);
+        IndexSightField(field, viewpoint);
+    }
+
+    /// <summary>
+    ///     Whether anything that occludes is within <paramref name="reach"/> of <paramref name="origin"/> that is not
+    ///         on the grid <paramref name="gridUid"/>: another grid with occluders, or occluders on the map itself. The
+    ///         tile walk alone does not answer for those.
+    /// </summary>
+    private bool HasOccludersBeyondGrid(MapCoordinates origin, float reach, EntityUid gridUid)
+    {
         var worldBounds = new Box2(origin.Position - new Vector2(reach), origin.Position + new Vector2(reach));
 
         var otherState = (GridUid: gridUid, TreeQuery: _occluderTreeQuery, Other: false);
@@ -491,19 +590,19 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
             },
             includeMap: false);
 
-        if (otherState.Other ||
-            _mapSystem.TryGetMap(origin.MapId, out var mapUid) &&
-            _occluderTreeQuery.TryComp(mapUid, out var mapTreeComponent) &&
-            mapTreeComponent.Tree.Count != 0)
-            return;
+        return otherState.Other ||
+            (_mapSystem.TryGetMap(origin.MapId, out var mapUid) &&
+                _occluderTreeQuery.TryComp(mapUid, out var mapTreeComponent) &&
+                mapTreeComponent.Tree.Count != 0);
+    }
 
-        field.Fallback = false;
-        field.GridUid = gridUid;
-        (_, field.GridRotation, field.InvWorldMatrix) = _transformSystem.GetWorldPositionRotationInvMatrix(gridUid);
-
-        // In the grid's frame from here, as each ray is tested.
-        var viewpoint = Vector2.Transform(origin.Position, field.InvWorldMatrix);
-        var tileSize = (float) mapGridComponent.TileSize;
+    /// <summary>
+    ///     Adds to <paramref name="field"/> the occluders anchored on every tile within <paramref name="reach"/> of
+    ///         <paramref name="viewpoint"/>, which is in the grid's frame.
+    /// </summary>
+    private void GatherAnchoredOccluders(NpcSightField field, Entity<MapGridComponent> grid, Vector2 viewpoint, float reach)
+    {
+        var tileSize = (float) grid.Comp.TileSize;
         var firstTile = new Vector2i((int) MathF.Floor((viewpoint.X - reach) / tileSize), (int) MathF.Floor((viewpoint.Y - reach) / tileSize));
         var lastTile = new Vector2i((int) MathF.Floor((viewpoint.X + reach) / tileSize), (int) MathF.Floor((viewpoint.Y + reach) / tileSize));
 
@@ -511,35 +610,33 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         {
             for (var y = firstTile.Y; y <= lastTile.Y; y++)
             {
-                var anchoredEnumerator = _mapSystem.GetAnchoredEntities(gridUid, mapGridComponent, new Vector2i(x, y));
+                var anchoredEnumerator = _mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, new Vector2i(x, y));
                 while (anchoredEnumerator.MoveNext(out var anchoredUid))
                 {
                     // The same occluders, by the same test, as the tile walk.
-                    if (!_occluderQuery.TryComp(anchoredUid, out var occluderComponent) ||
-                        occluderComponent.TreeUid != gridUid ||
-                        !_transformQuery.TryComp(anchoredUid.Value, out var occluderTransform))
-                        continue;
-
-                    AddToSightField(field, viewpoint, reach, anchoredUid.Value, occluderComponent,
-                        GetTreeBounds(occluderComponent, occluderTransform.LocalPosition, occluderTransform.LocalRotation));
+                    if (TryGetAnchoredOccluder(grid.Owner, anchoredUid.Value, out var occluderComponent, out var bounds))
+                        AddToSightField(field, viewpoint, reach, anchoredUid.Value, occluderComponent, bounds);
                 }
             }
         }
+    }
 
+    /// <summary>
+    ///     Adds to <paramref name="field"/> the irregular occluders in <paramref name="gridUid"/>'s tree, which the
+    ///         tile walk cannot find.
+    /// </summary>
+    private void GatherIrregularOccluders(NpcSightField field, EntityUid gridUid, Vector2 viewpoint, float reach)
+    {
         var irregularEnumerator = AllEntityQuery<NpcIrregularOccluderComponent, OccluderComponent, TransformComponent>();
         while (irregularEnumerator.MoveNext(out var occluderUid, out _, out var occluderComponent, out var occluderTransform))
         {
             if (occluderComponent.TreeUid != gridUid)
                 continue;
 
-            var (position, rotation) = occluderTransform.ParentUid == gridUid
-                ? (occluderTransform.LocalPosition, occluderTransform.LocalRotation)
-                : _transformSystem.GetRelativePositionRotation(occluderTransform, gridUid);
+            var (position, rotation) = GetPoseInTree(occluderTransform, gridUid);
 
             AddToSightField(field, viewpoint, reach, occluderUid, occluderComponent, GetTreeBounds(occluderComponent, position, rotation));
         }
-
-        IndexSightField(field, viewpoint);
     }
 
     private static void AddToSightField(NpcSightField field, Vector2 viewpoint, float reach, EntityUid uid, OccluderComponent occluderComponent, Box2 bounds)
@@ -557,10 +654,22 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     /// </summary>
     private void IndexSightField(NpcSightField field, Vector2 viewpoint)
     {
+        _sightFieldSpans.Clear();
+
+        SpanSightFieldOccluders(field, viewpoint);
+        FillSightFieldBuckets(field);
+    }
+
+    /// <summary>
+    ///     Works out the slices of direction each of the field's occluders covers, into the scratch spans, and counts
+    ///         how many occluders each slice has into <see cref="NpcSightField.BucketStarts"/>. One that covers every
+    ///         direction goes in <see cref="NpcSightField.Surrounding"/> instead, with an empty span.
+    /// </summary>
+    private void SpanSightFieldOccluders(NpcSightField field, Vector2 viewpoint)
+    {
         const int buckets = NpcSightField.Buckets;
         const float bucketsPerRadian = buckets / MathF.Tau;
 
-        _sightFieldSpans.Clear();
         var counts = field.BucketStarts;
 
         for (var i = 0; i < field.Occluders.Count; i++)
@@ -582,10 +691,10 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
             var lowest = float.MaxValue;
             var highest = float.MinValue;
 
-            Widen(bounds.BottomLeft);
-            Widen(bounds.BottomRight);
-            Widen(bounds.TopLeft);
-            Widen(bounds.TopRight);
+            WidenSpan(bounds.BottomLeft, viewpoint, centreAngle, ref lowest, ref highest);
+            WidenSpan(bounds.BottomRight, viewpoint, centreAngle, ref lowest, ref highest);
+            WidenSpan(bounds.TopLeft, viewpoint, centreAngle, ref lowest, ref highest);
+            WidenSpan(bounds.TopRight, viewpoint, centreAngle, ref lowest, ref highest);
 
             var first = (int) MathF.Floor((centreAngle + lowest - SightFieldAngleSlack + MathF.PI) * bucketsPerRadian);
             var last = (int) MathF.Floor((centreAngle + highest + SightFieldAngleSlack + MathF.PI) * bucketsPerRadian);
@@ -602,22 +711,36 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
             {
                 counts[WrapBucket(bucket)]++;
             }
-
-            continue;
-
-            void Widen(Vector2 corner)
-            {
-                var offset = corner - viewpoint;
-                var angle = MathF.Atan2(offset.Y, offset.X) - centreAngle;
-                if (angle > MathF.PI)
-                    angle -= MathF.Tau;
-                else if (angle < -MathF.PI)
-                    angle += MathF.Tau;
-
-                lowest = MathF.Min(lowest, angle);
-                highest = MathF.Max(highest, angle);
-            }
         }
+    }
+
+    /// <summary>
+    ///     Widens the span of directions <paramref name="lowest"/> to <paramref name="highest"/>, as angles from
+    ///         <paramref name="centreAngle"/>, to take in the direction of <paramref name="corner"/> from
+    ///         <paramref name="viewpoint"/>.
+    /// </summary>
+    private static void WidenSpan(Vector2 corner, Vector2 viewpoint, float centreAngle, ref float lowest, ref float highest)
+    {
+        var offset = corner - viewpoint;
+        var angle = MathF.Atan2(offset.Y, offset.X) - centreAngle;
+        if (angle > MathF.PI)
+            angle -= MathF.Tau;
+        else if (angle < -MathF.PI)
+            angle += MathF.Tau;
+
+        lowest = MathF.Min(lowest, angle);
+        highest = MathF.Max(highest, angle);
+    }
+
+    /// <summary>
+    ///     Turns the per-slice counts in <see cref="NpcSightField.BucketStarts"/> into starts, and files each occluder
+    ///         under the slices its span covers in <see cref="NpcSightField.BucketItems"/>.
+    /// </summary>
+    private void FillSightFieldBuckets(NpcSightField field)
+    {
+        const int buckets = NpcSightField.Buckets;
+
+        var counts = field.BucketStarts;
 
         // Counts into starts, shifted one along so filling can bump each start up to the next slice's.
         var running = 0;
@@ -670,20 +793,12 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         if (other.MapId != origin.MapId)
             return false;
 
-        // From here on, exactly as InLineOfSight works the ray out.
-        var direction = other.Position - origin.Position;
-        var length = direction.Length();
+        // From here on, exactly as InLineOfSight works the ray out. A field always has a range, so it is always held to it.
+        var setup = PrepareRay(origin.Position, other.Position, field.Range, checkRange: true, out var ray, out var length);
+        if (setup != RaySetup.Cast)
+            return setup == RaySetup.Trivial;
 
-        if (length > field.Range + 0.01f)
-            return false;
-
-        if (MathHelper.CloseTo(length, 0f))
-            return true;
-
-        // The direction before the length is capped, or it is no longer a unit vector.
-        var ray = new Ray(origin.Position, direction / length);
-        length = MathF.Min(length, ExamineSystemShared.MaxRaycastRange);
-        var gridRay = new Ray(Vector2.Transform(ray.Position, field.InvWorldMatrix), new Angle(-field.GridRotation.Theta).RotateVec(ray.Direction));
+        var gridRay = ToTreeFrame(ray, field.InvWorldMatrix, field.GridRotation);
 
         foreach (var index in field.Surrounding)
         {

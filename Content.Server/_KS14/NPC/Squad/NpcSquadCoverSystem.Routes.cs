@@ -42,17 +42,32 @@ public sealed partial class NpcSquadCoverSystem
         waypoints.Clear();
         length = 0;
 
-        var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
-        var analysis = new RoomAnalysis
-        {
-            Grid = grid,
-            CollisionLayer = collisionLayer,
-            CollisionMask = collisionMask,
-        };
+        var analysis = CreateAnalysis(walkerUid, grid);
 
         if (!IsRoutable(analysis, toTile, avoidTiles) && !TryResolveRouteGoal(analysis, avoidTiles, ref toTile))
             return false;
 
+        if (!TryFloodRoute(analysis, fromTile, toTile, avoidTiles, maxLength))
+            return false;
+
+        RebuildRoutePath(fromTile, toTile);
+
+        length = _routeTiles.Count - 1;
+        if (length > maxLength)
+            return false;
+
+        CutRouteCorners(analysis, avoidTiles, waypoints);
+        return true;
+    }
+
+    /// <summary>
+    ///     Floods out from <paramref name="fromTile"/> over routable tiles until <paramref name="toTile"/> is
+    ///         reached, noting in <see cref="_routeParents"/> which tile each was reached from. Stops queueing new
+    ///         tiles once it has seen <paramref name="maxLength"/> squared of them.
+    ///         False if the goal is not reached.
+    /// </summary>
+    private bool TryFloodRoute(RoomAnalysis analysis, Vector2i fromTile, Vector2i toTile, HashSet<Vector2i> avoidTiles, int maxLength)
+    {
         _routeFrontier.Clear();
         _routeParents.Clear();
         _routeParents[fromTile] = fromTile;
@@ -82,9 +97,15 @@ public sealed partial class NpcSquadCoverSystem
             }
         }
 
-        if (!found)
-            return false;
+        return found;
+    }
 
+    /// <summary>
+    ///     Fills <see cref="_routeTiles"/> with the tiles of the route found by <see cref="TryFloodRoute"/>, start to
+    ///         goal, both included.
+    /// </summary>
+    private void RebuildRoutePath(Vector2i fromTile, Vector2i toTile)
+    {
         // Back from the goal to the start.
         _routeTiles.Clear();
         for (var tile = toTile; tile != fromTile; tile = _routeParents[tile])
@@ -94,11 +115,14 @@ public sealed partial class NpcSquadCoverSystem
 
         _routeTiles.Add(fromTile);
         _routeTiles.Reverse();
+    }
 
-        length = _routeTiles.Count - 1;
-        if (length > maxLength)
-            return false;
-
+    /// <summary>
+    ///     Adds to <paramref name="waypoints"/> the turns of <see cref="_routeTiles"/> that are left once every corner
+    ///         that can be cut has been.
+    /// </summary>
+    private void CutRouteCorners(RoomAnalysis analysis, HashSet<Vector2i> avoidTiles, List<Vector2i> waypoints)
+    {
         // Cut every corner that can be cut: from each turn, on to the furthest tile still in a straight, clear line.
         var current = 0;
         while (current < _routeTiles.Count - 1)
@@ -118,8 +142,6 @@ public sealed partial class NpcSquadCoverSystem
 
             current = next;
         }
-
-        return true;
     }
 
     /// <summary>
@@ -136,13 +158,7 @@ public sealed partial class NpcSquadCoverSystem
         Dictionary<Vector2i, int> steps,
         bool stopAtDoors = true)
     {
-        var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
-        var analysis = new RoomAnalysis
-        {
-            Grid = grid,
-            CollisionLayer = collisionLayer,
-            CollisionMask = collisionMask,
-        };
+        var analysis = CreateAnalysis(walkerUid, grid);
 
         _routeFrontier.Clear();
         steps[startTile] = 0;

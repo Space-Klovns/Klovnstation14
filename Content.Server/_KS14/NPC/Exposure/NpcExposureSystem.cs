@@ -31,6 +31,7 @@ public sealed partial class NpcExposureSystem : EntitySystem
 {
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcGridSystem _npcGridSystem = default!;
+    [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
@@ -97,7 +98,7 @@ public sealed partial class NpcExposureSystem : EntitySystem
             return;
 
         _floodSteps.Clear();
-        _npcGridSystem.FloodTiles(walkerUid, grid, threatTile, reach, _floodSteps, stopAtDoors: false);
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, threatTile, reach, _floodSteps, stopAtDoors: false);
         _floodSteps.Remove(threatTile); // already in, at the threat's exact position
 
         _floodTiles.Clear();

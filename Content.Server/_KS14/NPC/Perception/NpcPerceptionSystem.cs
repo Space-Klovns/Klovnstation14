@@ -147,84 +147,109 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         // Contacts is written to from here on, but never enumerated again until the next update.
         foreach (var targetUid in _targets)
         {
-            if (TerminatingOrDeleted(targetUid))
-            {
-                replan |= Forget(entity, targetUid);
-                continue;
-            }
-
-            // Dead: known only once seen, or told. See NpcPerceptionSystem.Deaths.cs.
-            if (_mobStateSystem.IsDead(targetUid))
-            {
-                replan |= UpdateDead(entity, targetUid, observerMapCoordinates, range, now);
-                continue;
-            }
-
-            // Alive after all: brought back since.
-            entity.Comp.KnownDead.Remove(targetUid);
-
-            var hasContact = entity.Comp.Contacts.TryGetValue(targetUid, out var contact);
-            var wasVisible = hasContact && contact.State == NpcContactState.Visible;
-
-            // Remembered somewhere that no longer exists - its grid deleted - so there is nowhere left to look.
-            if (hasContact && !wasVisible && TerminatingOrDeleted(contact.LastKnownCoordinates.EntityId))
-            {
-                Forget(entity, targetUid);
-                continue;
-            }
-
-            var isCandidate = _candidates.Contains(targetUid);
-            var conspicuous = false;
-            var targetVelocity = System.Numerics.Vector2.Zero;
-            var seen = (isCandidate || wasVisible) &&
-                CanSee(entity, observerMapCoordinates, targetUid, range, wasVisible ? contact : null, now, out conspicuous, out targetVelocity);
-
-            // In plain sight, but no longer a hostile: retaliation wore off, or it was told to be ignored. Not a
-            //      hostile that vanished, so neither lost nor hiding - just not worth remembering.
-            if (wasVisible && seen && !isCandidate)
-            {
-                replan |= Forget(entity, targetUid);
-                continue;
-            }
-
-            if (isCandidate && seen)
-            {
-                var reactedBefore = wasVisible && contact.Reacted;
-                contact = Sight(entity, targetUid, hasContact ? contact : null, conspicuous, targetVelocity, alert, now);
-                entity.Comp.Contacts[targetUid] = contact;
-
-                if (contact.Reacted && !reactedBefore)
-                {
-                    replan = true;
-                    newlyReacted = true;
-                }
-
-                continue;
-            }
-
-            if (!hasContact)
-                continue;
-
-            // Noticed, then out of sight before the reaction came: the NPC still reacts, just to where it was.
-            if (!contact.Reacted &&
-                contact.State != NpcContactState.Reported &&
-                contact.ReactAt != default &&
-                now >= contact.ReactAt)
-            {
-                contact = contact with { Reacted = true };
-                entity.Comp.Contacts[targetUid] = contact;
-                _newlyReactedUnseen.Add(targetUid);
-                replan = true;
-                newlyReacted = true;
-            }
-
-            replan |= UpdateUnseen(entity, targetUid, contact, observerMapCoordinates, range, now);
+            var outcome = UpdateContact(entity, targetUid, observerMapCoordinates, range, alert, now);
+            replan |= (outcome & ContactOutcome.Replan) != 0x0;
+            newlyReacted |= (outcome & ContactOutcome.NewlyReacted) != 0x0;
         }
 
         UpdateCallouts(entity, now, force: newlyReacted);
 
         if (replan)
             _npcSensorSystem.RequestReplan(entity.Owner);
+    }
+
+    /// <summary>
+    ///     What updating one target changed that the NPC as a whole needs to know about.
+    /// </summary>
+    [Flags]
+    private enum ContactOutcome : byte
+    {
+        None = 0x0,
+
+        /// <summary>
+        ///     Worth replanning for.
+        /// </summary>
+        Replan = 0x1,
+
+        /// <summary>
+        ///     The NPC has just reacted to the target, so the squad should be told.
+        /// </summary>
+        NewlyReacted = 0x2,
+    }
+
+    /// <summary>
+    ///     Brings the NPC's belief about one target up to date: seen, lost, hiding, dead or forgotten.
+    /// </summary>
+    private ContactOutcome UpdateContact(Entity<NpcPerceptionComponent> entity,
+        EntityUid targetUid,
+        MapCoordinates observerMapCoordinates,
+        float range,
+        bool alert,
+        TimeSpan now)
+    {
+        if (TerminatingOrDeleted(targetUid))
+            return Forget(entity, targetUid) ? ContactOutcome.Replan : ContactOutcome.None;
+
+        // Dead: known only once seen, or told. See NpcPerceptionSystem.Deaths.cs.
+        if (_mobStateSystem.IsDead(targetUid))
+            return UpdateDead(entity, targetUid, observerMapCoordinates, range, now) ? ContactOutcome.Replan : ContactOutcome.None;
+
+        // Alive after all: brought back since.
+        entity.Comp.KnownDead.Remove(targetUid);
+
+        var hasContact = entity.Comp.Contacts.TryGetValue(targetUid, out var contact);
+        var wasVisible = hasContact && contact.State == NpcContactState.Visible;
+
+        // Remembered somewhere that no longer exists - its grid deleted - so there is nowhere left to look.
+        if (hasContact && !wasVisible && TerminatingOrDeleted(contact.LastKnownCoordinates.EntityId))
+        {
+            Forget(entity, targetUid);
+            return ContactOutcome.None;
+        }
+
+        var isCandidate = _candidates.Contains(targetUid);
+        var conspicuous = false;
+        var targetVelocity = System.Numerics.Vector2.Zero;
+        var seen = (isCandidate || wasVisible) &&
+            CanSee(entity, observerMapCoordinates, targetUid, range, wasVisible ? contact : null, now, out conspicuous, out targetVelocity);
+
+        // In plain sight, but no longer a hostile: retaliation wore off, or it was told to be ignored. Not a
+        //      hostile that vanished, so neither lost nor hiding - just not worth remembering.
+        if (wasVisible && seen && !isCandidate)
+            return Forget(entity, targetUid) ? ContactOutcome.Replan : ContactOutcome.None;
+
+        if (isCandidate && seen)
+        {
+            var reactedBefore = wasVisible && contact.Reacted;
+            contact = Sight(entity, targetUid, hasContact ? contact : null, conspicuous, targetVelocity, alert, now);
+            entity.Comp.Contacts[targetUid] = contact;
+
+            return contact.Reacted && !reactedBefore
+                ? ContactOutcome.Replan | ContactOutcome.NewlyReacted
+                : ContactOutcome.None;
+        }
+
+        if (!hasContact)
+            return ContactOutcome.None;
+
+        var outcome = ContactOutcome.None;
+
+        // Noticed, then out of sight before the reaction came: the NPC still reacts, just to where it was.
+        if (!contact.Reacted &&
+            contact.State != NpcContactState.Reported &&
+            contact.ReactAt != default &&
+            now >= contact.ReactAt)
+        {
+            contact = contact with { Reacted = true };
+            entity.Comp.Contacts[targetUid] = contact;
+            _newlyReactedUnseen.Add(targetUid);
+            outcome = ContactOutcome.Replan | ContactOutcome.NewlyReacted;
+        }
+
+        if (UpdateUnseen(entity, targetUid, contact, observerMapCoordinates, range, now))
+            outcome |= ContactOutcome.Replan;
+
+        return outcome;
     }
 
     /// <summary>
@@ -244,17 +269,14 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         bool alert,
         TimeSpan now)
     {
-        TimeSpan firstSeen;
-        TimeSpan lastConspicuous;
-        TimeSpan reactAt;
-        bool reacted;
+        SightClock clock;
 
         if (previous is { State: NpcContactState.Visible } visible)
         {
-            firstSeen = visible.FirstSeen;
-            lastConspicuous = conspicuous ? now : visible.LastConspicuous;
-            reactAt = visible.ReactAt;
-            reacted = visible.Reacted;
+            clock = new SightClock(visible.FirstSeen,
+                conspicuous ? now : visible.LastConspicuous,
+                visible.ReactAt,
+                visible.Reacted);
         }
         else if (previous is { State: not NpcContactState.Reported } seenBefore &&
             (seenBefore.Reacted || seenBefore.ReactAt != default) &&
@@ -262,32 +284,32 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         {
             // Only out of view for a moment: still the same target, so its reaction - done or under way - carries
             //      on. A callout is not a sighting, so a Reported contact never gets here.
-            firstSeen = seenBefore.FirstSeen;
-            lastConspicuous = now;
-            reactAt = seenBefore.ReactAt;
-            reacted = seenBefore.Reacted;
+            clock = new SightClock(seenBefore.FirstSeen, now, seenBefore.ReactAt, seenBefore.Reacted);
         }
         else
         {
-            firstSeen = now;
-            lastConspicuous = now;
-            reactAt = alert ? now : now + GetReactionTime(entity, targetUid);
-            reacted = false;
+            clock = new SightClock(now, now, alert ? now : now + GetReactionTime(entity, targetUid), false);
         }
 
+        var reacted = clock.Reacted;
         if (!reacted)
-            reacted = alert || now >= reactAt;
+            reacted = alert || now >= clock.ReactAt;
 
         return new NpcContact(NpcContactState.Visible,
-            firstSeen,
+            clock.FirstSeen,
             LastSeen: now,
-            lastConspicuous,
+            clock.LastConspicuous,
             _transformSystem.GetMoverCoordinates(targetUid),
             targetVelocity,
             ContainerUid: null,
             reacted,
-            reactAt);
+            clock.ReactAt);
     }
+
+    /// <summary>
+    ///     The timing half of a sighting: carried over from an earlier one or started fresh.
+    /// </summary>
+    private readonly record struct SightClock(TimeSpan FirstSeen, TimeSpan LastConspicuous, TimeSpan ReactAt, bool Reacted);
 
     /// <summary>
     ///     Moves a remembered target that is not in sight along: from seen to lost or hidden, from hidden to lost
@@ -450,7 +472,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
         foreach (var (targetUid, contact) in observer.Comp.Contacts)
         {
-            if (contact is { State: NpcContactState.Visible, Reacted: true })
+            if (IsCombatContact(contact))
                 results.Add(targetUid);
         }
     }
@@ -465,11 +487,19 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
         foreach (var contact in observer.Comp.Contacts.Values)
         {
-            if (contact is { State: NpcContactState.Visible, Reacted: true })
+            if (IsCombatContact(contact))
                 return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Whether a contact is one in a fight: in sight, and reacted to.
+    /// </summary>
+    private static bool IsCombatContact(NpcContact contact)
+    {
+        return contact is { State: NpcContactState.Visible, Reacted: true };
     }
 
     /// <summary>
