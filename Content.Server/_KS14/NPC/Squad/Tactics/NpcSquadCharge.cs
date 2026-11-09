@@ -45,6 +45,16 @@ public sealed class NpcSquadCharge
     public NpcSquadChargePhase Phase = NpcSquadChargePhase.Planting;
 
     /// <summary>
+    ///     Where the planter was when it last got anywhere, on its way to put the charge on, relative to its grid.
+    /// </summary>
+    public EntityCoordinates ProgressCoordinates;
+
+    /// <summary>
+    ///     When it last got anywhere. A planter that stops getting anywhere is given up on; a long way round is no reason to.
+    /// </summary>
+    public TimeSpan ProgressAt;
+
+    /// <summary>
     ///     When it went on.
     /// </summary>
     public TimeSpan PlantedAt;

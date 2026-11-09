@@ -1745,6 +1745,142 @@ public sealed class KsOperativeHtnRootTest : GameTest
             await Pair.Server.WaitAssertion(() => Assert.That(entManager.Deleted(doorUid), "by way of the door"));
     }
 
+    /// <summary>
+    ///     Live: two corridors side by side, joined by a door at the north end only, and a noise behind a bolted door at the south
+    ///         end of the other one. The whole squad walks round together, through that door, and blows its way in. Squeezing
+    ///         through the door and past each other, the planter used to take longer than it was given to put the charge on,
+    ///         and the squad gave up on it and held where it was.
+    /// </summary>
+    [TestCase(1)]
+    [TestCase(2)]
+    public async Task TestRedactedBlowTheirWayInFromTheNextCorridor(int width)
+    {
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, roomDoorUid = default;
+        var mobs = new List<EntityUid>();
+
+        // West corridor x -3.., east corridor x 3.., both y -4 to 8, joined along y 9 through a door at x 0. The room is
+        //      x -5 to -1, y -10 to -6, with its door at the south end of the west corridor.
+        bool IsOpen(int x, int y)
+        {
+            var westCorridor = x >= -3 && x < -3 + width && y is >= -4 and <= 8;
+            var eastCorridor = x >= 3 && x < 3 + width && y is >= -4 and <= 8;
+            var join = y == 9 && x >= -3 && x < 3 + width;
+            var room = x is >= -5 and <= -1 && y is >= -10 and <= -6;
+            return westCorridor || eastCorridor || join || room;
+        }
+
+        await server.WaitPost(() =>
+        {
+            tacticsSystem.UpdatesPaused = false;
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-12, -12), new Vector2i(12, 12)).Owner;
+
+            for (var x = -12; x <= 12; x++)
+            {
+                for (var y = -12; y <= 12; y++)
+                {
+                    if (x == 0 && y == 9)
+                        SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, y);
+                    else if (x == -3 && y == -5)
+                        roomDoorUid = SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, y);
+                    else if (!IsOpen(x, y))
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
+
+            for (var y = -3; y <= 0; y++)
+            {
+                SpawnAt(entManager, "KsRandomHumanoidSpawnerOperativeRedacted", gridUid, 3, y);
+            }
+        });
+
+        await Pair.RunTicksSync(90);
+
+        await server.WaitPost(() =>
+        {
+            var enumerator = entManager.EntityQueryEnumerator<Content.Server._KS14.NPC.Squad.NpcSquadMemberComponent, TransformComponent>();
+            while (enumerator.MoveNext(out var uid, out var squadMemberComponent, out var transformComponent))
+            {
+                if (transformComponent.MapID != map.MapId)
+                    continue;
+
+                mobs.Add(uid);
+                entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(uid); // no air on a test map
+#pragma warning disable RA0002 // set for the test, as a prototype of its own cannot build on the private module's
+                squadMemberComponent.Tactics.PlanChargeMinPressure = 0f;
+#pragma warning restore RA0002
+            }
+
+            Assert.That(mobs, Is.Not.Empty, "the test needs them spawned");
+        });
+
+        await Pair.RunTicksSync(120);
+
+        // Not before now: a door coming up to power takes its bolts off again.
+        await server.WaitPost(() =>
+        {
+            entManager.System<Content.Shared.Doors.Systems.SharedDoorSystem>().SetBoltsDown((roomDoorUid, entManager.GetComponent<Content.Shared.Doors.Components.DoorBoltComponent>(roomDoorUid)), true);
+
+            foreach (var mobUid in mobs)
+            {
+                StageDisturbance(entManager, mobUid, gridUid, new Vector2(-2.5f, -7.5f));
+            }
+        });
+
+        var inside = false;
+        var log = new System.Text.StringBuilder();
+
+        for (var i = 0; i < 1800 && !inside; i += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await server.WaitPost(() =>
+            {
+                var line = new System.Text.StringBuilder($"{i,5}");
+
+                if (entManager.System<Content.Server._KS14.NPC.Squad.NpcSquadSystem>().TryGetSquad(mobs[0], out var squad) &&
+                    tacticsSystem.GetHunt(squad.Value.Owner) is { } hunt)
+                {
+                    line.Append($" {hunt.Phase}{(hunt.ShutOut ? " shut out" : "")} charge {hunt.Blast?.Charge?.Phase.ToString() ?? "-"}");
+                }
+                else
+                {
+                    line.Append(" no hunt");
+                }
+
+                foreach (var mobUid in mobs)
+                {
+                    var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
+                    inside |= position.X is > -5f and < 0f && position.Y is > -10f and < -5.5f;
+                    var order = tacticsSystem.TryGetOrder(mobUid, out var mobOrder) ? $"{mobOrder.Kind}@{mobOrder.Coordinates.Position:0.#}/{mobOrder.Range:0.#}" : "-";
+                    line.Append($" | {position.X:0.0},{position.Y:0.0} {order}");
+                }
+
+                log.AppendLine(line.ToString());
+            });
+        }
+
+        if (!inside)
+            TestContext.Out.WriteLine(log.ToString());
+
+        Assert.That(inside, "somebody should have got into the room");
+        await server.WaitAssertion(() => Assert.That(entManager.Deleted(roomDoorUid), "by way of the door"));
+    }
+
+    private static void StageDisturbance(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, Vector2 position)
+    {
+        var sensorSystem = entManager.System<NpcSensorSystem>();
+        sensorSystem.AddEffect(mobUid, "__Sensor__Disturbance.TargetCoordinates", new EntityCoordinates(gridUid, position));
+        sensorSystem.RequestReplan(mobUid);
+    }
+
     private static void StageDisturbance(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
     {
         var sensorSystem = entManager.System<NpcSensorSystem>();

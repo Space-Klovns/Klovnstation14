@@ -114,7 +114,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
             {
                 NpcHuntPhase.Watch => settings.WatchTime,
                 NpcHuntPhase.Stage => settings.StageTimeout,
-                NpcHuntPhase.Blast => settings.PlanChargeTimeout,
+                NpcHuntPhase.Blast => settings.PlanChargeTimeout * NpcSquadTacticsSystem.MaxChargeTimeouts,
                 NpcHuntPhase.Breach => settings.BreachTimeout,
                 NpcHuntPhase.Entry => settings.EntryTimeout,
                 NpcHuntPhase.Exhausted => settings.HoldAreaTime,

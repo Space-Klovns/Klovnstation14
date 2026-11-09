@@ -69,6 +69,16 @@ public sealed partial class NpcSquadTacticsSystem
     private const float StandOffRange = 0.8f;
 
     /// <summary>
+    ///     How far a planter has to have moved to count as getting anywhere: see <see cref="IsPlanterGettingThere"/>.
+    /// </summary>
+    private const float ChargeProgressDistance = 1f;
+
+    /// <summary>
+    ///     How many of <see cref="NpcSquadTacticsSettings.PlanChargeTimeout"/> a planter gets in all, however it is getting on.
+    /// </summary>
+    internal const int MaxChargeTimeouts = 3;
+
+    /// <summary>
     ///     Anyone nearer a charge than this gets out of sight of it.
     /// </summary>
     private const float ChargeDangerRange = 7f;
@@ -750,7 +760,12 @@ public sealed partial class NpcSquadTacticsSystem
                 return false;
             }
 
-            plan.Charge = new NpcSquadCharge { Pick = chosen };
+            plan.Charge = new NpcSquadCharge
+            {
+                Pick = chosen,
+                ProgressCoordinates = _transformSystem.GetMoverCoordinates(chosen.PlanterUid),
+                ProgressAt = now,
+            };
         }
 
         var charge = plan.Charge;
@@ -781,7 +796,7 @@ public sealed partial class NpcSquadTacticsSystem
         if (TerminatingOrDeleted(pick.Charge.ChargeUid) ||
             TerminatingOrDeleted(pick.Site.TargetUid) ||
             !_members.Contains(pick.PlanterUid) ||
-            now - plan.StepStartedAt >= settings.PlanChargeTimeout)
+            !IsPlanterGettingThere(plan, charge, settings, now))
         {
             FailCharge(issuerUid, plan, action, settings, now);
             return false;
@@ -789,6 +804,26 @@ public sealed partial class NpcSquadTacticsSystem
 
         GiveOrdersWhilePlanting(issuerUid, plan, charge, now);
         return false;
+    }
+
+    /// <summary>
+    ///     Whether the planter of <paramref name="charge"/> is still getting anywhere: it has moved a tile within
+    ///         <see cref="NpcSquadTacticsSettings.PlanChargeTimeout"/>, and has not had <see cref="MaxChargeTimeouts"/> of them in
+    ///         all. Not how long it has been at it: the way round to the site can be long, and slow through a door with the rest
+    ///         of the squad.
+    /// </summary>
+    private bool IsPlanterGettingThere(NpcSquadPlan plan, NpcSquadCharge charge, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        var planterCoordinates = _transformSystem.GetMoverCoordinates(charge.Pick.PlanterUid);
+
+        if (!NpcCoordinates.IsWithin(planterCoordinates, charge.ProgressCoordinates, ChargeProgressDistance, EntityManager, _transformSystem))
+        {
+            charge.ProgressCoordinates = planterCoordinates;
+            charge.ProgressAt = now;
+        }
+
+        return now - charge.ProgressAt < settings.PlanChargeTimeout &&
+            now - plan.StepStartedAt < settings.PlanChargeTimeout * MaxChargeTimeouts;
     }
 
     /// <summary>
