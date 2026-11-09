@@ -70,13 +70,15 @@ public sealed partial class ChainSystem : EntitySystem
     /// <returns>True if the chain was segmented.</returns>
     public bool TryBreakChainFrom(Entity<ChainLinkComponent?> linkEntity, bool removeJoints = true)
     {
-        if (!_linkQuery.Resolve(linkEntity, ref linkEntity.Comp, logMissing: false))
+        // A link being shut down is being broken from already (OnLinkShutdown). Breaking from it again, from an event
+        //      that break raises, would take its edge off and remove the link a second time.
+        if (!_linkQuery.Resolve(linkEntity, ref linkEntity.Comp, logMissing: false) ||
+            linkEntity.Comp.LifeStage >= ComponentLifeStage.Stopping)
             return false;
 
         BreakChainFrom(linkEntity!, removeJoints: removeJoints);
 
-        if (linkEntity.Comp.LifeStage < ComponentLifeStage.Stopping)
-            RemComp(linkEntity, linkEntity.Comp);
+        RemoveChainComponent(linkEntity, linkEntity.Comp);
 
         return true;
     }
@@ -106,8 +108,10 @@ public sealed partial class ChainSystem : EntitySystem
                 linkComponent.EdgeUids.Remove(entity.Owner);
         }
 
-        if (!Terminating(entity.Owner))
-            RemComp<ChainLinkComponent>(entity.Owner);
+        // Not if the link is what is being removed: an edge is taken off as its link shuts down
+        if (!Terminating(entity.Owner) &&
+            _linkQuery.TryGetComponent(entity.Owner, out var ownLinkComponent))
+            RemoveChainComponent(entity.Owner, ownLinkComponent);
 
         // Now handle edges
 
@@ -218,9 +222,8 @@ public sealed partial class ChainSystem : EntitySystem
             BreakChainBackwards(directlyNextUid, ref segmentedEv, removeJoints: removeJoints);
 
         // Update chain edges
-        if (_edgeQuery.TryGetComponent(entity.Owner, out var edgeComponent) &&
-            edgeComponent.LifeStage < ComponentLifeStage.Stopping)
-            RemComp(entity.Owner, edgeComponent);
+        if (_edgeQuery.TryGetComponent(entity.Owner, out var edgeComponent))
+            RemoveChainComponent(entity.Owner, edgeComponent);
 
         BreakEdges(entity);
 
@@ -256,9 +259,8 @@ public sealed partial class ChainSystem : EntitySystem
         DirtyField(uid, previousLinkComponent, nameof(previousLinkComponent.NextLinkUid));
 
         // Incase this is an edge
-        if (_edgeQuery.TryGetComponent(uid, out var edgeComponent) &&
-            edgeComponent.LifeStage < ComponentLifeStage.Stopping)
-            RemComp(uid, edgeComponent);
+        if (_edgeQuery.TryGetComponent(uid, out var edgeComponent))
+            RemoveChainComponent(uid, edgeComponent);
     }
 
     /// <summary>
@@ -281,9 +283,8 @@ public sealed partial class ChainSystem : EntitySystem
         DirtyField(uid, nextLinkComponent, nameof(nextLinkComponent.PreviousLinkUid));
 
         // Incase this is an edge #2
-        if (_edgeQuery.TryGetComponent(uid, out var edgeComponent) &&
-            edgeComponent.LifeStage < ComponentLifeStage.Stopping)
-            RemComp(uid, edgeComponent);
+        if (_edgeQuery.TryGetComponent(uid, out var edgeComponent))
+            RemoveChainComponent(uid, edgeComponent);
     }
 
     private void BreakEdges(Entity<ChainLinkComponent> entity)
@@ -407,6 +408,18 @@ public sealed partial class ChainSystem : EntitySystem
         // The other end's id is cleared by OnJointRemoved
         entity.Comp.StretchJointId = null;
         _jointSystem.RemoveJoint(entity.Owner, stretchJointId);
+    }
+
+    /// <summary>
+    ///     Takes a link or edge off, unless it is going already. Not while the client applies a game state: the server
+    ///         broke the chain the same way and took off the same components, and that state takes them off here.
+    /// </summary>
+    private void RemoveChainComponent(EntityUid uid, IComponent component)
+    {
+        if (component.LifeStage >= ComponentLifeStage.Stopping || _gameTiming.ApplyingState)
+            return;
+
+        RemComp(uid, component);
     }
 
     private bool TryGetLiveLink(EntityUid uid, [NotNullWhen(true)] out ChainLinkComponent? linkComponent)
