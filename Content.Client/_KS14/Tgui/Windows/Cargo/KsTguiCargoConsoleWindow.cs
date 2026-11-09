@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using Content.Client._KS14.Tgui.Controls;
+using Content.Shared._KS14.Cargo;
 using Content.Client.Cargo.Systems;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Cargo.BUI;
@@ -78,6 +79,8 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
 
     private readonly BoxContainer _requestsPage;
     private readonly BoxContainer _requestsBox;
+
+    private List<KsCargoAwaitingOrder> _awaiting = new();
 
     private readonly BoxContainer _checkoutPage;
     private readonly BoxContainer _checkoutBox;
@@ -375,6 +378,7 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
     {
         _station = station;
         _orders = state.Orders;
+        _awaiting = state.KsAwaiting;
         _orderCount = state.Count;
         _orderWindow.Capacity = state.Capacity;
         ProductCatalogue = state.Products;
@@ -451,16 +455,100 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
     private void PopulateOrders()
     {
         var pending = _orders.Where(order => !order.Approved && _protoManager.HasIndex(order.Product)).ToList();
-        var approved = _orders.Where(order => order.Approved && _protoManager.HasIndex(order.Product)).ToList();
+        var awaiting = _awaiting.Where(order => _protoManager.HasIndex(order.Product)).ToList();
 
         _requestsTab.Count = pending.Count > 0 ? pending.Count.ToString() : null;
-        _requestsTab.SelectedColor = pending.Count > 0 ? KsTguiColor.Yellow : KsTguiColor.Default;
-        var itemCount = approved.Sum(order => order.OrderQuantity - order.NumDispatched);
+        _requestsTab.Attention = pending.Count > 0;
+        var itemCount = awaiting.Sum(order => order.Total);
         _checkoutTab.Count = itemCount > 0 ? itemCount.ToString() : null;
+        _checkoutTab.Attention = itemCount > 0;
         _clearButton.Visible = _page == Page.Requests && pending.Count > 0;
 
         BuildOrderTable(_requestsBox, pending, requests: true);
-        BuildOrderTable(_checkoutBox, approved, requests: false);
+        BuildCheckoutTable(awaiting);
+    }
+
+    /// <summary>
+    ///     The goods waiting on a trade-station pallet or a telepad, and what a telepad has yet to send.
+    /// </summary>
+    private void BuildCheckoutTable(List<KsCargoAwaitingOrder> awaiting)
+    {
+        _checkoutBox.RemoveAllChildren();
+
+        if (awaiting.Count == 0)
+        {
+            _checkoutBox.AddChild(new KsTguiNoticeBox { Text = Loc.GetString("ks-tgui-cargo-empty-checkout") });
+            return;
+        }
+
+        var table = new KsTguiTable { HorizontalExpand = true };
+        var headerRow = new KsTguiTableRow { Header = true };
+        table.AddChild(headerRow);
+        AddHeader(headerRow, "ks-tgui-cargo-column-id", expand: false);
+        AddHeader(headerRow, "ks-tgui-cargo-column-object", expand: true);
+        AddHeader(headerRow, "ks-tgui-cargo-column-orderer", expand: false);
+        AddHeader(headerRow, "ks-tgui-cargo-column-approver", expand: true);
+        AddHeader(headerRow, "ks-tgui-cargo-column-account", expand: false);
+        AddHeader(headerRow, "ks-tgui-cargo-column-cost", expand: false);
+        AddHeader(headerRow, "ks-tgui-cargo-column-where", expand: false);
+
+        foreach (var order in awaiting)
+        {
+            var orderRow = new KsTguiTableRow { Candystripe = true };
+            table.AddChild(orderRow);
+
+            var productProto = _protoManager.Index(order.Product);
+            var product = _protoManager.Index<EntityPrototype>(productProto.Product);
+            var account = _protoManager.Index(order.Account);
+            var requester = !string.IsNullOrEmpty(order.Requester)
+                ? order.Requester
+                : Loc.GetString("cargo-console-menu-order-row-alerts-requester-unknown");
+
+            orderRow.AddChild(new Label { Text = $"#{order.OrderId}", FontColorOverride = KsTguiPalettes.Label });
+
+            var objectCell = new BoxContainer
+            {
+                Orientation = BoxContainer.LayoutOrientation.Horizontal,
+                HorizontalExpand = true,
+                SeparationOverride = 4,
+            };
+            objectCell.AddChild(new TextureRect
+            {
+                Texture = _spriteSystem.Frame0(product),
+                Stretch = TextureRect.StretchMode.KeepAspectCentered,
+                MinSize = new Vector2(24f, 24f),
+                MaxSize = new Vector2(24f, 24f),
+            });
+            objectCell.AddChild(new Label
+            {
+                Text = $"{productProto.Name} x{order.Total}",
+                VerticalAlignment = Control.VAlignment.Center,
+            });
+            orderRow.AddChild(objectCell);
+
+            orderRow.AddChild(new Label { Text = requester, FontColorOverride = XColor.White });
+            orderRow.AddChild(new Label
+            {
+                Text = string.IsNullOrEmpty(order.Approver) ? "-" : order.Approver,
+                HorizontalExpand = true,
+                FontColorOverride = XColor.LightGray,
+            });
+            orderRow.AddChild(new Label { Text = Loc.GetString(account.Code), FontColorOverride = account.Color });
+            orderRow.AddChild(new Label
+            {
+                Text = Loc.GetString("cargo-console-menu-points-amount", ("amount", productProto.Cost * order.Total)),
+                FontColorOverride = Gold,
+            });
+
+            var where = Loc.GetString(order.Where == KsCargoDeliveryPoint.Telepad
+                ? "ks-tgui-cargo-where-telepad"
+                : "ks-tgui-cargo-where-trade-station");
+            if (order.Queued > 0)
+                where = Loc.GetString("ks-tgui-cargo-where-queued", ("where", where), ("count", order.Queued));
+            orderRow.AddChild(new Label { Text = where });
+        }
+
+        _checkoutBox.AddChild(table);
     }
 
     private void BuildOrderTable(BoxContainer into, List<CargoOrderData> orders, bool requests)
@@ -471,8 +559,8 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         {
             into.AddChild(new KsTguiNoticeBox
             {
-                Text = Loc.GetString(requests ? "ks-tgui-cargo-no-requests" : "ks-tgui-cargo-empty-checkout"),
-                NoticeColor = requests ? KsTguiNoticeColor.Success : KsTguiNoticeColor.Default,
+                Text = Loc.GetString("ks-tgui-cargo-no-requests"),
+                NoticeColor = KsTguiNoticeColor.Success,
             });
             return;
         }
@@ -487,10 +575,10 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
         AddHeader(headerRow, "ks-tgui-cargo-column-id", expand: false);
         AddHeader(headerRow, "ks-tgui-cargo-column-object", expand: true);
         AddHeader(headerRow, "ks-tgui-cargo-column-orderer", expand: false);
-        AddHeader(headerRow, requests ? "ks-tgui-cargo-column-reason" : "ks-tgui-cargo-column-approver", expand: true);
+        AddHeader(headerRow, "ks-tgui-cargo-column-reason", expand: true);
         AddHeader(headerRow, "ks-tgui-cargo-column-account", expand: false);
         AddHeader(headerRow, "ks-tgui-cargo-column-cost", expand: false);
-        AddHeader(headerRow, requests ? "ks-tgui-cargo-column-actions" : "ks-tgui-cargo-column-dispatched", expand: false);
+        AddHeader(headerRow, "ks-tgui-cargo-column-actions", expand: false);
 
         foreach (var order in orders)
         {
@@ -529,11 +617,11 @@ public sealed partial class KsTguiCargoConsoleWindow : FancyWindow
 
             orderRow.AddChild(new Label { Text = requester, FontColorOverride = XColor.White });
 
-            var detail = requests ? order.Reason : order.Approver;
+            var detail = order.Reason;
             var detailMessage = new FormattedMessage();
             detailMessage.AddText(!string.IsNullOrEmpty(detail)
                 ? detail
-                : requests ? Loc.GetString("cargo-console-menu-order-row-alerts-reason-absent") : "-");
+                : Loc.GetString("cargo-console-menu-order-row-alerts-reason-absent"));
             var detailLabel = new RichTextLabel { HorizontalExpand = true, Modulate = XColor.LightGray };
             detailLabel.SetMessage(detailMessage);
             orderRow.AddChild(detailLabel);
