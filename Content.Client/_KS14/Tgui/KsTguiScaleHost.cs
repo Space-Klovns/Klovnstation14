@@ -10,9 +10,8 @@ namespace Content.Client._KS14.Tgui;
 /// </summary>
 /// <remarks>
 ///     With <see cref="Backdrop"/> set it also blurs what is behind the menu, as tgui's <c>backdrop-filter</c> does, drawn
-///         under the contents at the scale and fade the host has. A menu that is closing is drawn by
-///         <see cref="KsTguiDropdownGhost"/> without being in the tree, which then says in <see cref="BackdropAnchor"/> where
-///         in the tree to take the backdrop from.
+///         under the contents at the scale and fade the host has. A menu that is closing is held by
+///         <see cref="KsTguiDropdownGhost"/>, in the popup layer, so it is in the tree throughout.
 /// </remarks>
 public sealed class KsTguiScaleHost : Control
 {
@@ -39,24 +38,10 @@ public sealed class KsTguiScaleHost : Control
     /// </summary>
     public KsTguiBackdropUIController? Backdrop { get; set; }
 
-    /// <summary>
-    ///     A control in the tree standing in for this host's place there, while this one is drawn from outside it. Its position
-    ///         is <see cref="BackdropAnchorPosition"/>.
-    /// </summary>
-    public Control? BackdropAnchor { get; set; }
-
-    public Vector2i BackdropAnchorPosition { get; set; }
-
-    /// <summary>
-    ///     Where on screen this host is drawn while <see cref="BackdropAnchor"/> is set, as a ghost draws it out of the tree.
-    /// </summary>
-    public Vector2i BackdropHostPosition { get; set; }
-
     private KsTguiBackdropBlur? _blur;
     private readonly KsTguiBackdropBackground _background = new();
     private KsTguiScaledRaster? _raster;
     private bool _rasterized;
-    private float _lastUiScale = 1f;
 
     /// <summary>
     ///     The menu panel's background, which the backdrop pass paints while it runs. For tests.
@@ -90,10 +75,6 @@ public sealed class KsTguiScaleHost : Control
     {
         base.PreRenderChildren(ref args);
 
-        // A host in a popup that has been taken out of the tree has no scale of its own to ask.
-        if (IsInsideTree)
-            _lastUiScale = UIScale;
-
         _rasterized = false;
 
         if (Backdrop != null)
@@ -101,13 +82,10 @@ public sealed class KsTguiScaleHost : Control
             _blur ??= new KsTguiBackdropBlur(Backdrop);
 
             // Not args.Position: the engine leaves that unset for PreRenderChildren, so it is always the screen's corner.
-            //      Out of the tree, drawn by a ghost, the ghost says where.
-            var position = BackdropAnchor != null ? BackdropHostPosition : GlobalPixelPosition;
+            var position = GlobalPixelPosition;
             var box = KsTguiScaledRaster.ScaledBox(position, (Vector2)PixelSize, Pivot, Scale);
-            var anchor = BackdropAnchor ?? this;
-            var anchorPosition = BackdropAnchor != null ? BackdropAnchorPosition : GlobalPixelPosition;
             var tint = _background.FindTint(this);
-            var composited = _blur.Draw(args.Handle, anchor, anchorPosition, box, PixelSize, Radius * _lastUiScale * Scale,
+            var composited = _blur.Draw(args.Handle, this, position, box, PixelSize, Radius * UIScale * Scale,
                 args.Modulate, tint: tint);
 
             // The pass paints the background, exactly, so the menu's panel doesn't.
@@ -124,7 +102,7 @@ public sealed class KsTguiScaleHost : Control
         // While it opens or closes the contents are drawn scaled from a texture, about the pivot, at subpixel precision. The
         //      host stays where it will end up: scaling through the coordinate transform steps in whole pixels.
         _raster ??= new KsTguiScaledRaster(Backdrop);
-        _raster.Draw(this, in args, BackdropAnchor != null ? BackdropHostPosition : GlobalPixelPosition, Pivot, Scale);
+        _raster.Draw(this, in args, GlobalPixelPosition, Pivot, Scale);
         _rasterized = true;
     }
 

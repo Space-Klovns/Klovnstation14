@@ -13,8 +13,10 @@ namespace Content.Client._KS14.Tgui.Backdrop;
 /// </summary>
 /// <remarks>
 ///     The popup is not given a parent again: an option button reuses its popup on the next open, and one that is already in
-///         the tree would be taken for an open one. The contents are drawn straight through the UI manager each frame. The
-///         contents' host carries the blur, which then fades and shrinks with them.
+///         the tree would be taken for an open one. What it held, the host, stands in this control for the transition, so
+///         it is in the tree and has the real UI scale (out of the tree a control's scale falls back to 1, which drew the
+///         closing menu at the wrong place and size on any scaled UI). The host carries the blur, which then fades and
+///         shrinks with the contents. <see cref="ReleaseHost"/> gives it back to the popup.
 /// </remarks>
 public sealed class KsTguiDropdownGhost : Control
 {
@@ -30,12 +32,14 @@ public sealed class KsTguiDropdownGhost : Control
 
     private readonly float _startScale;
     private readonly float _startAlpha;
+    private readonly Vector2 _hostSize;
 
-    public KsTguiDropdownGhost(Popup popup, KsTguiScaleHost host, Vector2i popupPosition)
+    public KsTguiDropdownGhost(Popup popup, KsTguiScaleHost host, Vector2 popupPosition)
     {
         Popup = popup;
         Host = host;
         PopupPosition = popupPosition;
+        _hostSize = host.Size;
         _startScale = host.Scale;
         _startAlpha = host.Modulate.A;
         MouseFilter = MouseFilterMode.Ignore;
@@ -53,9 +57,21 @@ public sealed class KsTguiDropdownGhost : Control
     public KsTguiScaleHost Host { get; }
 
     /// <summary>
-    ///     Where the popup was, in pixels.
+    ///     Where the popup was, in virtual pixels from the corner of the UI root.
     /// </summary>
-    public Vector2i PopupPosition { get; }
+    public Vector2 PopupPosition { get; }
+
+    /// <summary>
+    ///     Takes the host out of the ghost and back into the popup it came from.
+    /// </summary>
+    public void ReleaseHost()
+    {
+        if (Host.Parent == this)
+            RemoveChild(Host);
+
+        if (Host.Parent == null)
+            Popup.AddChild(Host);
+    }
 
     public float Elapsed { get; private set; }
 
@@ -73,36 +89,15 @@ public sealed class KsTguiDropdownGhost : Control
         Host.Modulate = Color.White.WithAlpha(_startAlpha * (1f - eased));
     }
 
-    protected override void Draw(IRenderHandle handle)
+    protected override Vector2 MeasureOverride(Vector2 availableSize)
     {
-        base.Draw(handle);
+        Host.Measure(_hostSize);
+        return Vector2.Zero;
+    }
 
-        if (Popup.Parent != null || Host.Modulate.A <= 0f)
-            return;
-
-        var total = 0;
-        var transform = Matrix3x2.Identity;
-        var args = new ControlRenderArguments
-        {
-            Handle = handle,
-            Total = ref total,
-
-            // The handle's frame is this control's, which is at the popup layer's corner, usually the screen's.
-            Position = PopupPosition + Host.PixelPosition - GlobalPixelPosition,
-            Modulate = Color.White,
-            CoordinateTransform = ref transform,
-        };
-
-        Host.BackdropAnchor = this;
-        Host.BackdropAnchorPosition = GlobalPixelPosition;
-        Host.BackdropHostPosition = PopupPosition + Host.PixelPosition;
-        try
-        {
-            UserInterfaceManager.RenderControl(in args, Host);
-        }
-        finally
-        {
-            Host.BackdropAnchor = null;
-        }
+    protected override Vector2 ArrangeOverride(Vector2 finalSize)
+    {
+        Host.Arrange(UIBox2.FromDimensions(PopupPosition - GlobalPosition, _hostSize));
+        return finalSize;
     }
 }
