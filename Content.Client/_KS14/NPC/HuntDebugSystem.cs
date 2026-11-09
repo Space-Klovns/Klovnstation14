@@ -9,6 +9,11 @@ namespace Content.Client._KS14.NPC;
 /// </summary>
 public sealed partial class HuntDebugSystem : NpcDebugFrameSystem<HuntDebugDataMessage, HuntDebugOverlay>
 {
+    protected override HuntDebugOverlay CreateOverlay()
+    {
+        return new HuntDebugOverlay();
+    }
+
     [SubscribeNetworkEvent]
     private void OnState(HuntDebugStateMessage message)
     {

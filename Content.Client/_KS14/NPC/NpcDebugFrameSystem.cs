@@ -11,7 +11,7 @@ namespace Content.Client._KS14.NPC;
 ///         <see cref="HandleData"/> and <see cref="HandleEnded"/>.
 /// </summary>
 public abstract partial class NpcDebugFrameSystem<TFrame, TOverlay> : EntitySystem
-    where TOverlay : Overlay, new()
+    where TOverlay : Overlay
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;
@@ -37,9 +37,15 @@ public abstract partial class NpcDebugFrameSystem<TFrame, TOverlay> : EntitySyst
         _systemCollectionHookManager.HookAction(OnDependenciesReady);
     }
 
+    /// <summary>
+    ///     Makes the overlay. Not a <c>new()</c> constraint: that compiles to <c>Activator.CreateInstance</c>, which the
+    ///         client sandbox rejects.
+    /// </summary>
+    protected abstract TOverlay CreateOverlay();
+
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
-        _overlay = new TOverlay();
+        _overlay = CreateOverlay();
         dependencyCollection.InjectDependencies(_overlay, oneOff: true);
 
         if (_enabled)

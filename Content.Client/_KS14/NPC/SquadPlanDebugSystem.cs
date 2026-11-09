@@ -9,6 +9,11 @@ namespace Content.Client._KS14.NPC;
 /// </summary>
 public sealed partial class SquadPlanDebugSystem : NpcDebugFrameSystem<SquadPlanDebugDataMessage, SquadPlanDebugOverlay>
 {
+    protected override SquadPlanDebugOverlay CreateOverlay()
+    {
+        return new SquadPlanDebugOverlay();
+    }
+
     [SubscribeNetworkEvent]
     private void OnState(SquadPlanDebugStateMessage message)
     {
