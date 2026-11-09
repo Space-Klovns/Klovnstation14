@@ -1,4 +1,5 @@
 using Content.Shared.Research.Components;
+using Content.Shared.Research.Systems;
 using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
 
@@ -11,7 +12,7 @@ namespace Content.Client.Research.UI
 
         public ResearchClientBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
-            SendMessage(new ResearchClientSyncMessage());
+            // KS14: removed the ResearchClientSyncMessage, the server list is networked component state
         }
 
         protected override void Open()
@@ -20,6 +21,8 @@ namespace Content.Client.Research.UI
             _menu = this.CreateWindow<ResearchClientServerSelectionMenu>();
             _menu.OnServerSelected += SelectServer;
             _menu.OnServerDeselected += DeselectServer;
+
+            Update(); // KS14: there is no state to open with, the list is read from components
         }
 
         public void SelectServer(int serverId)
@@ -32,11 +35,29 @@ namespace Content.Client.Research.UI
             SendMessage(new ResearchClientServerDeselectedMessage());
         }
 
-        protected override void UpdateState(BoundUserInterfaceState state)
+        // KS14 start: the list and the selection come from networked components, not a BUI state
+        public override void Update()
         {
-            base.UpdateState(state);
-            if (state is not ResearchClientBoundInterfaceState rState) return;
-            _menu?.Populate(rState.ServerCount, rState.ServerNames, rState.ServerIds, rState.SelectedServerId);
+            base.Update();
+
+            if (_menu == null)
+                return;
+
+            var servers = EntMan.System<SharedResearchSystem>().GetServerList(Owner);
+            var names = new string[servers.Count];
+            var ids = new int[servers.Count];
+            for (var i = 0; i < servers.Count; i++)
+            {
+                names[i] = servers[i].Name;
+                ids[i] = servers[i].Id;
+            }
+
+            var selectedId = EntMan.TryGetComponent<ResearchClientComponent>(Owner, out var clientComponent)
+                ? clientComponent.ConnectedServerId
+                : -1;
+
+            _menu.Populate(servers.Count, names, ids, selectedId);
         }
+        // KS14 end
     }
 }
