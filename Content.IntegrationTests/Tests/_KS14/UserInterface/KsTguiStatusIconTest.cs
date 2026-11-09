@@ -28,8 +28,8 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.UserInterface;
 
 /// <summary>
-///     tg's title bar status icon (layouts/TitleBar.tsx): tools at half opacity for a window that is not an interface of
-///         anything, and for a bound user interface an eye that is green while the user can use it, orange for a ghost that can
+///     tg's title bar status icon (layouts/TitleBar.tsx): a green eye for a window that is not an interface of
+///         anything (every tgui window has a status), and for a bound user interface an eye that is green while the user can use it, orange for a ghost that can
 ///         only look, and a red slashed eye while the server would refuse everything.
 /// </summary>
 [TestOf(typeof(KsTguiTitleStatusIcon))]
@@ -84,7 +84,7 @@ public sealed class KsTguiStatusIconTest : GameTest
     }
 
     [Test]
-    public async Task AWindowThatIsNoInterfaceShowsTheTools()
+    public async Task AWindowThatIsNoInterfaceShowsTheInteractiveEye()
     {
         await OverrideCVar(Side.Client, KsCCVars.TguiStyle, true);
         await Pair.RunTicksSync(2);
@@ -94,7 +94,7 @@ public sealed class KsTguiStatusIconTest : GameTest
             var window = new DefaultWindow { Title = "Plain" };
             window.OpenCentered();
 
-            AssertShows(window, KsTguiIcons.Tools, Color.White.WithAlpha(KsTguiTitleBarButton.IdleOpacity), "Not a bound interface: tools at half opacity.");
+            AssertShows(window, KsTguiIcons.Eye, KsTguiPalettes.Good, "Not a bound interface: the interactive eye, placed with no transition.");
             window.Close();
         });
     }

@@ -58,11 +58,11 @@ public sealed partial class KsTguiChromeUIController : UIController
         AttachedProperty<List<ProtoId<GuideEntryPrototype>>?>.CreateNull("KsTguiGuides", typeof(KsTguiChromeUIController));
 
     /// <summary>
-    ///     What the window's user can do with it, kept on the window (None until known) so that it is there when the chrome comes later (the window
+    ///     What the window's user can do with it, kept on the window (null until known) so that it is there when the chrome comes later (the window
     ///         is made, and first checked, before it is opened or the theme is switched on).
     /// </summary>
-    private static readonly AttachedProperty<KsTguiWindowStatus> StatusProperty =
-        AttachedProperty<KsTguiWindowStatus>.Create("KsTguiStatus", typeof(KsTguiChromeUIController), KsTguiWindowStatus.None);
+    private static readonly AttachedProperty<KsTguiWindowStatus?> StatusProperty =
+        AttachedProperty<KsTguiWindowStatus?>.Create("KsTguiStatus", typeof(KsTguiChromeUIController), null);
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IInputManager _inputManager = default!;
@@ -100,7 +100,7 @@ public sealed partial class KsTguiChromeUIController : UIController
 
     /// <summary>
     ///     Says whether the window's user can use it: tgui's title bar status icon. A window never given one (anything that is not
-    ///         a bound user interface) shows tgui's tools icon.
+    ///         a bound user interface) shows the interactive eye from its first frame, as every tgui window has a status.
     /// </summary>
     public void SetStatus(BaseWindow window, KsTguiWindowStatus status)
     {
@@ -110,12 +110,12 @@ public sealed partial class KsTguiChromeUIController : UIController
             return;
 
         // The first answer is where the icon starts, as tg's status is there from the first frame. Only a change after it eases.
-        if (!chrome.StatusPlaced && status != KsTguiWindowStatus.None)
+        if (!chrome.StatusPlaced)
             icon.Place(status);
         else
             icon.Status = status;
 
-        chrome.StatusPlaced |= status != KsTguiWindowStatus.None;
+        chrome.StatusPlaced = true;
     }
 
     /// <summary>
@@ -209,8 +209,8 @@ public sealed partial class KsTguiChromeUIController : UIController
         if (chrome.Title.Parent is { } titleRow)
         {
             var knownStatus = window.GetValue(StatusProperty);
-            chrome.StatusIcon = new KsTguiTitleStatusIcon(knownStatus);
-            chrome.StatusPlaced = knownStatus != KsTguiWindowStatus.None;
+            chrome.StatusIcon = new KsTguiTitleStatusIcon(knownStatus ?? KsTguiWindowStatus.Interactive);
+            chrome.StatusPlaced = knownStatus != null;
             titleRow.AddChild(chrome.StatusIcon);
             chrome.StatusIcon.SetPositionInParent(chrome.Title.GetPositionInParent());
         }

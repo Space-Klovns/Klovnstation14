@@ -115,7 +115,6 @@ public sealed partial class KsTguiLateJoinWindow : FancyWindow
         {
             Text = Loc.GetString("crew-manifest-button-label"),
             Visible = _configManager.GetCVar(CCVars.CrewManifestWithoutEntity),
-            Margin = new Thickness(0f, 0f, 4f, 0f),
         };
         _crewManifestButton.OnPressed += _ =>
         {
