@@ -155,16 +155,6 @@ public sealed partial class SquadPlanDebugOverlay : Overlay
 
     private bool TryGetPosition(NetCoordinates netCoordinates, MapId mapId, out Vector2 position)
     {
-        position = default;
-
-        if (!_entityManager.TryGetEntity(netCoordinates.NetEntity, out _))
-            return false;
-
-        var mapCoordinates = _transformSystem.ToMapCoordinates(_entityManager.GetCoordinates(netCoordinates));
-        if (mapCoordinates.MapId != mapId)
-            return false;
-
-        position = mapCoordinates.Position;
-        return true;
+        return NpcDebugDraw.TryGetPosition(_entityManager, _transformSystem, netCoordinates, mapId, out position);
     }
 }

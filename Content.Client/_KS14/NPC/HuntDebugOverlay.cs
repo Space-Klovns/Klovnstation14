@@ -82,8 +82,8 @@ public sealed partial class HuntDebugOverlay : Overlay
                 _shape[1] = new Vector2(MarkerSize, 0);
                 _shape[2] = new Vector2(0, -MarkerSize);
                 _shape[3] = new Vector2(-MarkerSize, 0);
-                worldHandle.SetTransform(GetMarkerTransform(predictedPosition, predictedRotation));
-                DrawLoop(worldHandle, 4, SquadDebugOverlay.GetPhaseColor(frame.Phase));
+                worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(predictedPosition, predictedRotation));
+                NpcDebugDraw.DrawLoop(worldHandle, _shape, 4, SquadDebugOverlay.GetPhaseColor(frame.Phase));
                 worldHandle.SetTransform(Matrix3x2.Identity);
             }
         }
@@ -139,8 +139,8 @@ public sealed partial class HuntDebugOverlay : Overlay
             _shape[0] = new Vector2(0, MarkerSize);
             _shape[1] = new Vector2(MarkerSize, -MarkerSize);
             _shape[2] = new Vector2(-MarkerSize, -MarkerSize);
-            worldHandle.SetTransform(GetMarkerTransform(stagePosition, stageRotation));
-            DrawLoop(worldHandle, 3, EntranceColor);
+            worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(stagePosition, stageRotation));
+            NpcDebugDraw.DrawLoop(worldHandle, _shape, 3, EntranceColor);
             worldHandle.SetTransform(Matrix3x2.Identity);
 
             worldHandle.DrawLine(stagePosition, entryPosition, EntranceColor.WithAlpha(0.5f));
@@ -181,8 +181,8 @@ public sealed partial class HuntDebugOverlay : Overlay
 
             if (point.Locker)
             {
-                worldHandle.SetTransform(GetMarkerTransform(position, pointRotation));
-                worldHandle.DrawRect(Square(MarkerSize * 0.7f), color, filled: !point.Cleared);
+                worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(position, pointRotation));
+                worldHandle.DrawRect(NpcDebugDraw.Square(MarkerSize * 0.7f), color, filled: !point.Cleared);
                 worldHandle.SetTransform(Matrix3x2.Identity);
             }
             else
@@ -227,60 +227,14 @@ public sealed partial class HuntDebugOverlay : Overlay
         }
     }
 
-    private void DrawLoop(DrawingHandleWorld worldHandle, int count, Color color)
-    {
-        for (var i = 0; i < count; i++)
-        {
-            worldHandle.DrawLine(_shape[i], _shape[(i + 1) % count], color);
-        }
-    }
-
     private bool TryGetPosition(NetCoordinates netCoordinates, MapId mapId, out Vector2 position)
     {
-        return TryGetPosition(netCoordinates, mapId, out position, out _);
+        return NpcDebugDraw.TryGetPosition(_entityManager, _transformSystem, netCoordinates, mapId, out position);
     }
 
-    /// <summary>
-    ///     Where <paramref name="netCoordinates"/> are on the map, and the world rotation of the grid they are on (none
-    ///         off a grid). Markers with corners are drawn in a frame turned by that rotation (see
-    ///         <see cref="GetMarkerTransform"/>), so they sit square to the grid they mark rather than to the map.
-    /// </summary>
     private bool TryGetPosition(NetCoordinates netCoordinates, MapId mapId, out Vector2 position, out Angle gridRotation)
     {
-        position = default;
-        gridRotation = Angle.Zero;
-
-        if (!_entityManager.TryGetEntity(netCoordinates.NetEntity, out _))
-            return false;
-
-        var coordinates = _entityManager.GetCoordinates(netCoordinates);
-        var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
-        if (mapCoordinates.MapId != mapId)
-            return false;
-
-        position = mapCoordinates.Position;
-        if (_transformSystem.GetGrid(coordinates) is { } gridUid)
-            gridRotation = _transformSystem.GetWorldRotation(gridUid);
-
-        return true;
+        return NpcDebugDraw.TryGetPosition(_entityManager, _transformSystem, netCoordinates, mapId, out position, out gridRotation);
     }
 
-    /// <summary>
-    ///     A marker's own frame: its origin at <paramref name="position"/>, its axes along its grid's. Set it on the
-    ///         handle with <c>SetTransform</c>, draw the marker around <see cref="Vector2.Zero"/>, and set
-    ///         <see cref="Matrix3x2.Identity"/> back after. Clyde applies the model transform to vertices as they are
-    ///         queued, so changing it per marker is cheap.
-    /// </summary>
-    private static Matrix3x2 GetMarkerTransform(Vector2 position, Angle gridRotation)
-    {
-        return Matrix3Helpers.CreateTransform(position, gridRotation);
-    }
-
-    /// <summary>
-    ///     A square of <paramref name="halfSize"/> around a marker's origin.
-    /// </summary>
-    private static Box2 Square(float halfSize)
-    {
-        return Box2.CenteredAround(Vector2.Zero, new Vector2(halfSize * 2f, halfSize * 2f));
-    }
 }

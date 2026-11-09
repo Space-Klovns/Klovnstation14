@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Debug;
 using Content.Server._KS14.NPC.LineOfFire;
 using Content.Shared._KS14.NPC;
 using Content.Server.Administration;
@@ -30,24 +31,23 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
 
     [Dependency] private EntityQuery<NpcOrderComponent> _orderQuery = default!;
 
-    /// <summary>
+/// <summary>
     ///     Null value = every squad; otherwise a squad, or an NPC (meaning its squad, or itself).
     /// </summary>
-    private readonly Dictionary<ICommonSession, EntityUid?> _debuggingSessions = new();
+    private NpcDebugSessions _sessions = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged += OnAdminPermsChanged;
+        _sessions = new NpcDebugSessions(_adminManager, _playerManager, (session, enabled, target) =>
+            RaiseNetworkEvent(new SquadPlanDebugStateMessage { Enabled = enabled, Target = target is { } uid ? GetNetEntity(uid) : null }, session.Channel));
+        _sessions.Initialize();
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
-        _debuggingSessions.Clear();
+        _sessions.Shutdown();
     }
 
     /// <summary>
@@ -56,20 +56,7 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     /// </summary>
     public (bool Enabled, EntityUid? Target) Toggle(ICommonSession session, EntityUid? target)
     {
-        if (_debuggingSessions.TryGetValue(session, out var currentTarget) && currentTarget == target)
-        {
-            _debuggingSessions.Remove(session);
-            RaiseNetworkEvent(new SquadPlanDebugStateMessage { Enabled = false }, session.Channel);
-            return (false, target);
-        }
-
-        _debuggingSessions[session] = target;
-        RaiseNetworkEvent(new SquadPlanDebugStateMessage
-        {
-            Enabled = true,
-            Target = target is { } uid ? GetNetEntity(uid) : null,
-        }, session.Channel);
-        return (true, target);
+        return _sessions.Toggle(session, target);
     }
 
     /// <summary>
@@ -77,13 +64,7 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     /// </summary>
     public bool IsTracking(EntityUid issuerUid, List<EntityUid> memberUids)
     {
-        foreach (var target in _debuggingSessions.Values)
-        {
-            if (Matches(target, issuerUid, memberUids))
-                return true;
-        }
-
-        return false;
+        return _sessions.IsWatching(issuerUid, memberUids);
     }
 
     /// <summary>
@@ -93,9 +74,9 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     {
         SquadPlanDebugDataMessage? message = null;
 
-        foreach (var (session, target) in _debuggingSessions)
+        foreach (var (session, target) in _sessions.Watching)
         {
-            if (!Matches(target, issuerUid, memberUids))
+            if (!NpcDebugSessions.Matches(target, issuerUid, memberUids))
                 continue;
 
             message ??= BuildFrame(issuerUid, plan, settings, memberUids);
@@ -110,16 +91,11 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     /// </summary>
     public void SendEnded(EntityUid issuerUid, List<EntityUid> memberUids)
     {
-        foreach (var (session, target) in _debuggingSessions)
+        foreach (var (session, target) in _sessions.Watching)
         {
-            if (Matches(target, issuerUid, memberUids))
+            if (NpcDebugSessions.Matches(target, issuerUid, memberUids))
                 RaiseNetworkEvent(new SquadPlanDebugEndedMessage { Issuer = GetNetEntity(issuerUid) }, session.Channel);
         }
-    }
-
-    private static bool Matches(EntityUid? target, EntityUid issuerUid, List<EntityUid> memberUids)
-    {
-        return target is not { } targetUid || targetUid == issuerUid || memberUids.Contains(targetUid);
     }
 
     private SquadPlanDebugDataMessage? BuildFrame(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadTacticsSettings settings, List<EntityUid> memberUids)
@@ -217,34 +193,12 @@ public sealed partial class NpcSquadPlanDebugSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
-    /// </summary>
-    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
-    {
-        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
-            return;
-
-        RaiseNetworkEvent(new SquadPlanDebugStateMessage { Enabled = false }, args.Player.Channel);
-    }
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus == SessionStatus.Disconnected)
-            _debuggingSessions.Remove(e.Session);
-    }
-
-    /// <summary>
     ///     Sessions survive a round restart, so tell each client to drop its overlay rather than leave it showing the last
     ///         round's plans.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
     {
-        foreach (var session in _debuggingSessions.Keys)
-        {
-            RaiseNetworkEvent(new SquadPlanDebugStateMessage { Enabled = false }, session.Channel);
-        }
-
-        _debuggingSessions.Clear();
+        _sessions.ClearAndNotify();
     }
 }

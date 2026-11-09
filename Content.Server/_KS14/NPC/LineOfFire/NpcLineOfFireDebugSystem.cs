@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Debug;
 using Content.Server.NPC.Components;
 using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
@@ -27,26 +28,25 @@ public sealed partial class NpcLineOfFireDebugSystem : EntitySystem
 
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(0.25);
 
-    /// <summary>
+/// <summary>
     ///     Null value = every NPC; otherwise only this one.
     /// </summary>
-    private readonly Dictionary<ICommonSession, EntityUid?> _debuggingSessions = new();
+    private NpcDebugSessions _sessions = default!;
 
     private TimeSpan _nextUpdate;
 
     public override void Initialize()
     {
         base.Initialize();
-        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged += OnAdminPermsChanged;
+        _sessions = new NpcDebugSessions(_adminManager, _playerManager, (session, enabled, target) =>
+            RaiseNetworkEvent(new LineOfFireDebugStateMessage { Enabled = enabled }, session.Channel));
+        _sessions.Initialize();
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
-        _debuggingSessions.Clear();
+        _sessions.Shutdown();
     }
 
     /// <summary>
@@ -55,29 +55,20 @@ public sealed partial class NpcLineOfFireDebugSystem : EntitySystem
     /// </summary>
     public (bool Enabled, EntityUid? Target) Toggle(ICommonSession session, EntityUid? target)
     {
-        if (_debuggingSessions.TryGetValue(session, out var currentTarget) && currentTarget == target)
-        {
-            _debuggingSessions.Remove(session);
-            RaiseNetworkEvent(new LineOfFireDebugStateMessage { Enabled = false }, session.Channel);
-            return (false, target);
-        }
-
-        _debuggingSessions[session] = target;
-        RaiseNetworkEvent(new LineOfFireDebugStateMessage { Enabled = true }, session.Channel);
-        return (true, target);
+        return _sessions.Toggle(session, target);
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        if (_debuggingSessions.Count == 0)
+        if (_sessions.Count == 0)
             return;
 
         if (!NpcThrottle.TryConsume(ref _nextUpdate, _gameTiming.CurTime, UpdateInterval))
             return;
 
-        foreach (var (session, target) in _debuggingSessions)
+        foreach (var (session, target) in _sessions.Watching)
         {
             var message = new LineOfFireDebugDataMessage();
 
@@ -105,33 +96,11 @@ public sealed partial class NpcLineOfFireDebugSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
-    /// </summary>
-    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
-    {
-        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
-            return;
-
-        RaiseNetworkEvent(new LineOfFireDebugStateMessage { Enabled = false }, args.Player.Channel);
-    }
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus == SessionStatus.Disconnected)
-            _debuggingSessions.Remove(e.Session);
-    }
-
-    /// <summary>
     ///     Sessions survive a round restart, so tell each client to drop its overlay.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
     {
-        foreach (var session in _debuggingSessions.Keys)
-        {
-            RaiseNetworkEvent(new LineOfFireDebugStateMessage { Enabled = false }, session.Channel);
-        }
-
-        _debuggingSessions.Clear();
+        _sessions.ClearAndNotify();
     }
 }

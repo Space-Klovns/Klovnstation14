@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Debug;
 using Content.Shared._KS14.NPC;
 using Content.Server.Administration;
 using Content.Server.Administration.Managers;
@@ -26,24 +27,23 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
 
-    /// <summary>
+/// <summary>
     /// Null value = tracking every entity; a concrete value = scoped to that one entity only.
     /// </summary>
-    private readonly Dictionary<ICommonSession, EntityUid?> _debuggingSessions = new();
+    private NpcDebugSessions _sessions = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged += OnAdminPermsChanged;
+        _sessions = new NpcDebugSessions(_adminManager, _playerManager, (session, enabled, target) =>
+            RaiseNetworkEvent(new TacticalPositionDebugStateMessage { Enabled = enabled, Target = target is { } uid ? GetNetEntity(uid) : null }, session.Channel));
+        _sessions.Initialize();
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
-        _debuggingSessions.Clear();
+        _sessions.Shutdown();
     }
 
     /// <summary>
@@ -53,13 +53,7 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     /// </summary>
     public bool IsTracking(EntityUid owner)
     {
-        foreach (var target in _debuggingSessions.Values)
-        {
-            if (target is null || target == owner)
-                return true;
-        }
-
-        return false;
+        return _sessions.IsWatching(owner);
     }
 
     /// <summary>
@@ -69,20 +63,7 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     /// </summary>
     public (bool Enabled, EntityUid? Target) Toggle(ICommonSession session, EntityUid? target)
     {
-        if (_debuggingSessions.TryGetValue(session, out var currentTarget) && currentTarget == target)
-        {
-            _debuggingSessions.Remove(session);
-            RaiseNetworkEvent(new TacticalPositionDebugStateMessage { Enabled = false }, session.Channel);
-            return (false, target);
-        }
-
-        _debuggingSessions[session] = target;
-        RaiseNetworkEvent(new TacticalPositionDebugStateMessage
-        {
-            Enabled = true,
-            Target = target is { } uid ? GetNetEntity(uid) : null,
-        }, session.Channel);
-        return (true, target);
+        return _sessions.Toggle(session, target);
     }
 
     /// <summary>
@@ -96,12 +77,12 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
         EntityCoordinates? chosen,
         IReadOnlyList<TacticalPositionDebugClaim> claims)
     {
-        if (_debuggingSessions.Count == 0)
+        if (_sessions.Count == 0)
             return;
 
         TacticalPositionDebugDataMessage? message = null;
 
-        foreach (var (session, target) in _debuggingSessions)
+        foreach (var (session, target) in _sessions.Watching)
         {
             if (target is { } specificTarget && specificTarget != owner)
                 continue;
@@ -119,25 +100,6 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
-    /// </summary>
-    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
-    {
-        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
-            return;
-
-        RaiseNetworkEvent(new TacticalPositionDebugStateMessage { Enabled = false }, args.Player.Channel);
-    }
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus != SessionStatus.Disconnected)
-            return;
-
-        _debuggingSessions.Remove(e.Session);
-    }
-
-    /// <summary>
     /// Unlike <see cref="OnPlayerStatusChanged"/>, sessions stay connected across a round restart, so a silent
     /// clear here would leave their client-side overlay stuck showing stale data from the previous round -
     /// tell each of them explicitly before dropping the server-side state.
@@ -145,11 +107,6 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
     {
-        foreach (var session in _debuggingSessions.Keys)
-        {
-            RaiseNetworkEvent(new TacticalPositionDebugStateMessage { Enabled = false }, session.Channel);
-        }
-
-        _debuggingSessions.Clear();
+        _sessions.ClearAndNotify();
     }
 }

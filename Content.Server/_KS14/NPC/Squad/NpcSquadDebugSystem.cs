@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Debug;
 using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad.Tactics;
@@ -35,22 +36,21 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 
     private static readonly TimeSpan SendInterval = TimeSpan.FromSeconds(0.5);
 
-    private readonly HashSet<ICommonSession> _debuggingSessions = new();
+    private NpcDebugSessions _sessions = default!;
     private TimeSpan _nextSend;
 
     public override void Initialize()
     {
         base.Initialize();
-        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged += OnAdminPermsChanged;
+        _sessions = new NpcDebugSessions(_adminManager, _playerManager, (session, enabled, target) =>
+            RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = enabled }, session.Channel));
+        _sessions.Initialize();
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
-        _adminManager.OnPermsChanged -= OnAdminPermsChanged;
-        _debuggingSessions.Clear();
+        _sessions.Shutdown();
     }
 
     /// <summary>
@@ -58,19 +58,14 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
     /// </summary>
     public bool Toggle(ICommonSession session)
     {
-        var enabled = _debuggingSessions.Add(session);
-        if (!enabled)
-            _debuggingSessions.Remove(session);
-
-        RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = enabled }, session.Channel);
-        return enabled;
+        return _sessions.Toggle(session, null).Enabled;
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        if (_debuggingSessions.Count == 0)
+        if (_sessions.Count == 0)
             return;
 
         if (!NpcThrottle.TryConsume(ref _nextSend, _gameTiming.CurTime, SendInterval))
@@ -142,7 +137,7 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 
         AddKillZones(message);
 
-        foreach (var session in _debuggingSessions)
+        foreach (var session in _sessions.Watching.Keys)
         {
             RaiseNetworkEvent(message, session.Channel);
         }
@@ -272,34 +267,12 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Deadminned, or no longer allowed the command that turned this on: it stops, rather than streaming on to them.
-    /// </summary>
-    private void OnAdminPermsChanged(AdminPermsChangedEventArgs args)
-    {
-        if (_adminManager.HasAdminFlag(args.Player, AdminFlags.Debug) || !_debuggingSessions.Remove(args.Player))
-            return;
-
-        RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = false }, args.Player.Channel);
-    }
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus == SessionStatus.Disconnected)
-            _debuggingSessions.Remove(e.Session);
-    }
-
-    /// <summary>
     ///     Sessions survive a round restart, so tell each client to drop its overlay rather than leave it
     ///         showing the last round's squads.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
     {
-        foreach (var session in _debuggingSessions)
-        {
-            RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = false }, session.Channel);
-        }
-
-        _debuggingSessions.Clear();
+        _sessions.ClearAndNotify();
     }
 }

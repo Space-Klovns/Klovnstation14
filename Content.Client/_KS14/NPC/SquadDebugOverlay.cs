@@ -51,7 +51,7 @@ public sealed partial class SquadDebugOverlay : Overlay
     private const float EntranceSize = 0.3f;
 
     /// <summary>
-    ///     Scratch corners for the shapes drawn by <see cref="DrawLoop"/>.
+    ///     Scratch corners for the shapes drawn by <see cref="NpcDebugDraw.DrawLoop"/>.
     /// </summary>
     private readonly Vector2[] _shape = new Vector2[4];
 
@@ -99,8 +99,8 @@ public sealed partial class SquadDebugOverlay : Overlay
                 if (!TryGetPosition(threshold, args.MapId, out var thresholdPosition, out var thresholdRotation))
                     continue;
 
-                worldHandle.SetTransform(GetMarkerTransform(thresholdPosition, thresholdRotation));
-                worldHandle.DrawRect(Square(ThresholdHalfSize), color, filled: false);
+                worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(thresholdPosition, thresholdRotation));
+                worldHandle.DrawRect(NpcDebugDraw.Square(ThresholdHalfSize), color, filled: false);
                 worldHandle.SetTransform(Matrix3x2.Identity);
             }
 
@@ -108,7 +108,7 @@ public sealed partial class SquadDebugOverlay : Overlay
             {
                 var diagonal = new Vector2(ThreatHalfSize, ThreatHalfSize);
                 var antiDiagonal = new Vector2(ThreatHalfSize, -ThreatHalfSize);
-                worldHandle.SetTransform(GetMarkerTransform(threatPosition, threatRotation));
+                worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(threatPosition, threatRotation));
                 worldHandle.DrawLine(-diagonal, diagonal, color);
                 worldHandle.DrawLine(-antiDiagonal, antiDiagonal, color);
                 worldHandle.SetTransform(Matrix3x2.Identity);
@@ -149,8 +149,8 @@ public sealed partial class SquadDebugOverlay : Overlay
             _shape[1] = new Vector2(size, 0);
             _shape[2] = new Vector2(0, -size);
             _shape[3] = new Vector2(-size, 0);
-            worldHandle.SetTransform(GetMarkerTransform(predictedPosition, predictedRotation));
-            DrawLoop(worldHandle, 4, GetPhaseColor(phase));
+            worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(predictedPosition, predictedRotation));
+            NpcDebugDraw.DrawLoop(worldHandle, _shape, 4, GetPhaseColor(phase));
             worldHandle.SetTransform(Matrix3x2.Identity);
         }
 
@@ -162,8 +162,8 @@ public sealed partial class SquadDebugOverlay : Overlay
             _shape[0] = new Vector2(0, EntranceSize);
             _shape[1] = new Vector2(EntranceSize, -EntranceSize);
             _shape[2] = new Vector2(-EntranceSize, -EntranceSize);
-            worldHandle.SetTransform(GetMarkerTransform(entrancePosition, entranceRotation));
-            DrawLoop(worldHandle, 3, squadColor);
+            worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(entrancePosition, entranceRotation));
+            NpcDebugDraw.DrawLoop(worldHandle, _shape, 3, squadColor);
             worldHandle.SetTransform(Matrix3x2.Identity);
         }
 
@@ -176,8 +176,8 @@ public sealed partial class SquadDebugOverlay : Overlay
 
             if (point.Locker)
             {
-                worldHandle.SetTransform(GetMarkerTransform(pointPosition, pointRotation));
-                worldHandle.DrawRect(Square(SearchPointRadius), pointColor, filled: !point.Cleared);
+                worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(pointPosition, pointRotation));
+                worldHandle.DrawRect(NpcDebugDraw.Square(SearchPointRadius), pointColor, filled: !point.Cleared);
                 worldHandle.SetTransform(Matrix3x2.Identity);
             }
             else
@@ -191,17 +191,6 @@ public sealed partial class SquadDebugOverlay : Overlay
                 continue;
 
             worldHandle.DrawLine(memberPosition, targetPosition, GetOrderColor(order.Kind));
-        }
-    }
-
-    /// <summary>
-    ///     Outlines the first <paramref name="count"/> points of <see cref="_shape"/>.
-    /// </summary>
-    private void DrawLoop(DrawingHandleWorld worldHandle, int count, Color color)
-    {
-        for (var i = 0; i < count; i++)
-        {
-            worldHandle.DrawLine(_shape[i], _shape[(i + 1) % count], color);
         }
     }
 
@@ -265,7 +254,7 @@ public sealed partial class SquadDebugOverlay : Overlay
                 var fraction = meter.Max > 0f ? Math.Clamp(meter.Value / meter.Max, 0f, 1f) : 0f;
                 var color = GetMeterColor(meter.Meter);
 
-                worldHandle.SetTransform(GetMarkerTransform(memberPosition, gridRotation));
+                worldHandle.SetTransform(NpcDebugDraw.GetMarkerTransform(memberPosition, gridRotation));
                 worldHandle.DrawRect(new Box2(topLeft - new Vector2(0f, MeterHeight), topLeft + new Vector2(MeterWidth, 0f)), color.WithAlpha(0.25f));
                 worldHandle.DrawRect(new Box2(topLeft - new Vector2(0f, MeterHeight), topLeft + new Vector2(MeterWidth * fraction, 0f)), color);
                 worldHandle.SetTransform(Matrix3x2.Identity);
@@ -339,7 +328,7 @@ public sealed partial class SquadDebugOverlay : Overlay
 
                 // The label is screen-space text, which no transform turns: only where it starts follows the bar.
                 var barRight = Vector2.Transform(new Vector2(MeterWidth / 2f + 0.1f, -MeterOffset - row * MeterSpacing),
-                    GetMarkerTransform(memberPosition, gridRotation));
+                    NpcDebugDraw.GetMarkerTransform(memberPosition, gridRotation));
                 var screenPosition = _eyeManager.WorldToScreen(barRight) - new Vector2(0f, 7f);
                 args.ScreenHandle.DrawString(_font, screenPosition, $"{meter.Meter} {meter.Value:F0}/{meter.Max:F0}", GetMeterColor(meter.Meter));
             }
@@ -401,51 +390,12 @@ public sealed partial class SquadDebugOverlay : Overlay
 
     private bool TryGetPosition(NetCoordinates netCoordinates, MapId mapId, out Vector2 position)
     {
-        return TryGetPosition(netCoordinates, mapId, out position, out _);
+        return NpcDebugDraw.TryGetPosition(_entityManager, _transformSystem, netCoordinates, mapId, out position);
     }
 
-    /// <summary>
-    ///     Where <paramref name="netCoordinates"/> are on the map, and the world rotation of the grid they are on (none
-    ///         off a grid). Markers with corners are drawn in a frame turned by that rotation (see
-    ///         <see cref="GetMarkerTransform"/>), so they sit square to the grid they mark rather than to the map.
-    /// </summary>
     private bool TryGetPosition(NetCoordinates netCoordinates, MapId mapId, out Vector2 position, out Angle gridRotation)
     {
-        position = default;
-        gridRotation = Angle.Zero;
-
-        if (!_entityManager.TryGetEntity(netCoordinates.NetEntity, out _))
-            return false;
-
-        var coordinates = _entityManager.GetCoordinates(netCoordinates);
-        var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
-        if (mapCoordinates.MapId != mapId)
-            return false;
-
-        position = mapCoordinates.Position;
-        if (_transformSystem.GetGrid(coordinates) is { } gridUid)
-            gridRotation = _transformSystem.GetWorldRotation(gridUid);
-
-        return true;
-    }
-
-    /// <summary>
-    ///     A marker's own frame: its origin at <paramref name="position"/>, its axes along its grid's. Set it on the
-    ///         handle with <c>SetTransform</c>, draw the marker around <see cref="Vector2.Zero"/>, and set
-    ///         <see cref="Matrix3x2.Identity"/> back after. Clyde applies the model transform to vertices as they are
-    ///         queued, so changing it per marker is cheap.
-    /// </summary>
-    private static Matrix3x2 GetMarkerTransform(Vector2 position, Angle gridRotation)
-    {
-        return Matrix3Helpers.CreateTransform(position, gridRotation);
-    }
-
-    /// <summary>
-    ///     A square of <paramref name="halfSize"/> around a marker's origin.
-    /// </summary>
-    private static Box2 Square(float halfSize)
-    {
-        return Box2.CenteredAround(Vector2.Zero, new Vector2(halfSize * 2f, halfSize * 2f));
+        return NpcDebugDraw.TryGetPosition(_entityManager, _transformSystem, netCoordinates, mapId, out position, out gridRotation);
     }
 
     /// <summary>

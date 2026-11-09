@@ -1,4 +1,5 @@
 using System.Globalization;
+using Content.Server._KS14.NPC.Debug;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.Administration;
 using Content.Server.NPC.HTN;
@@ -30,11 +31,8 @@ public sealed partial class SetMeterCommand : LocalizedEntityCommands
             return;
         }
 
-        if (!NetEntity.TryParse(args[0], out var netTarget) || !EntityManager.TryGetEntity(netTarget, out var targetUid))
-        {
-            shell.WriteError(Loc.GetString("cmd-ks_setmeter-invalid-entity", ("entity", args[0])));
+        if (!NpcScopedDebugCommand.TryParseEntityArg(shell, EntityManager, Loc, args[0], "cmd-ks_setmeter-invalid-entity", out var targetUid))
             return;
-        }
 
         if (!_prototypeManager.TryIndex<NpcMeterPrototype>(args[1], out var meter))
         {
@@ -50,7 +48,7 @@ public sealed partial class SetMeterCommand : LocalizedEntityCommands
 
         value = Math.Clamp(value, 0f, meter.Max);
 
-        if (_npcSquadSystem.TryGetSquad(targetUid.Value, out var squadEntity))
+        if (_npcSquadSystem.TryGetSquad(targetUid, out var squadEntity))
         {
             foreach (var memberUid in squadEntity.Value.Comp.Members)
             {
@@ -61,15 +59,15 @@ public sealed partial class SetMeterCommand : LocalizedEntityCommands
                 ("meter", meter.ID),
                 ("value", value),
                 ("count", squadEntity.Value.Comp.Members.Count),
-                ("entity", EntityManager.ToPrettyString(targetUid.Value))));
+                ("entity", EntityManager.ToPrettyString(targetUid))));
             return;
         }
 
-        _npcMeterSystem.Set(targetUid.Value, meter.ID, value);
+        _npcMeterSystem.Set(targetUid, meter.ID, value);
         shell.WriteLine(Loc.GetString("cmd-ks_setmeter-set-single",
             ("meter", meter.ID),
             ("value", value),
-            ("entity", EntityManager.ToPrettyString(targetUid.Value))));
+            ("entity", EntityManager.ToPrettyString(targetUid))));
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
