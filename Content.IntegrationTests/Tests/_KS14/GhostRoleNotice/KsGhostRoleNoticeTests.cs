@@ -3,12 +3,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Ghost.Roles.Components;
+using Content.Client._KS14.GhostRoleNotice;
+using Content.Server.Ghost.Roles;
 using Content.Shared._KS14.GhostRoleNotice;
+using Content.Shared.Follower.Components;
+using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.RichText;
+using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Utility;
 using Content.Shared.Humanoid.Prototypes;
 using Content.Shared.Mind;
 using NUnit.Framework;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Console;
+using Robust.Shared.Localization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -87,9 +95,9 @@ public abstract class KsGhostRoleNoticeTestBase : GameTest
     /// <summary>
     ///     Puts the test player into a fresh mob of <paramref name="proto"/>.
     /// </summary>
-    protected async Task PossessAsync(EntProtoId proto)
+    protected async Task PossessAsync(EntProtoId proto, MapCoordinates? coordinates = null)
     {
-        await Server.WaitPost(() => PutPlayerInto(SEntMan.SpawnEntity(proto, MapCoordinates.Nullspace)));
+        await Server.WaitPost(() => PutPlayerInto(SEntMan.SpawnEntity(proto, coordinates ?? MapCoordinates.Nullspace)));
         await Pair.RunTicksSync(10);
     }
 
@@ -141,6 +149,124 @@ public sealed class KsGhostRoleNoticeInRoundTests : KsGhostRoleNoticeTestBase
 
         await Server.WaitAssertion(() => Assert.That(ServerNoticeSounds, Is.EqualTo(soundsBefore), "a living player hears nothing"));
         await Client.WaitAssertion(() => Assert.That(ClientNotice.ReceivedCount, Is.EqualTo(noticesBefore), "and sees nothing"));
+    }
+
+    /// <summary>
+    ///     The notice names the roles it is about, and its chat line is a bold, large line ending in a follow link.
+    /// </summary>
+    [Test]
+    public async Task NoticeCarriesRolesAndBuildsFollowLink()
+    {
+        await PossessAsync(Ghost);
+        EntityUid roleUid = default;
+        await Server.WaitPost(() => roleUid = SEntMan.SpawnEntity(NotableRole, MapCoordinates.Nullspace));
+        await Pair.RunTicksSync(10);
+        var roleNetEntity = SEntMan.GetNetEntity(roleUid);
+
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(ClientNotice.LastRoles, Is.EqualTo(new[] { roleNetEntity }), "the event carries the role");
+
+            var markup = ClientNotice.LastWrappedMessage;
+            Assert.That(markup, Does.Contain("[font size=15][bold]"), "large and bold");
+            Assert.That(FormattedMessage.TryFromMarkup(markup, out var message), Is.True, "and valid markup");
+
+            var tagManager = ResolveTagManager();
+            MarkupNode? linkNode = null;
+            var textBeforeLink = false;
+            foreach (var node in message!)
+            {
+                if (node.Name == KsGhostRoleFollowTag.TagName && !node.Closing)
+                    linkNode ??= node;
+                else if (linkNode == null && node.Name == null && !string.IsNullOrWhiteSpace(node.Value.StringValue))
+                    textBeforeLink = true;
+            }
+
+            Assert.That(linkNode, Is.Not.Null, "with a follow link");
+            Assert.That(textBeforeLink, Is.False, "the link comes first, before any of the message's text");
+            Assert.That(tagManager.TryGetMarkupTagHandler(KsGhostRoleFollowTag.TagName, tagsAllowed: null, out var handler), Is.True, "whose tag is registered");
+            Assert.That(handler!.TryCreateControl(linkNode!, out var control), Is.True, $"{markup} :: {string.Join(";", linkNode!.Attributes.Select(a => a.Key + "=" + a.Value))}");
+            Assert.That(control, Is.InstanceOf<Label>());
+            Assert.That(((Label)control!).Text, Is.EqualTo(Client.ResolveDependency<ILocalizationManager>().GetString("ks-ghost-role-notice-follow")));
+        });
+    }
+
+    private MarkupTagManager ResolveTagManager() => Client.ResolveDependency<MarkupTagManager>();
+
+    private async Task SendFollowRequest(params EntityUid[] roles)
+    {
+        var netRoles = roles.Select(role => SEntMan.GetNetEntity(role)).ToList();
+        await Client.WaitPost(() => CEntMan.EntityNetManager.SendSystemNetworkMessage(new KsGhostRoleFollowRequestEvent(netRoles)));
+        await Pair.RunTicksSync(10);
+    }
+
+    /// <summary>
+    ///     Gives the role to someone else's mind, which marks it taken.
+    /// </summary>
+    private void TakeRole(EntityUid roleUid)
+    {
+        var mindSystem = SEntMan.System<SharedMindSystem>();
+        mindSystem.TransferTo(mindSystem.CreateMind(null), roleUid);
+    }
+
+    private EntityUid? FollowedBy(EntityUid followerUid)
+    {
+        return SEntMan.TryGetComponent<FollowerComponent>(followerUid, out var followerComponent) ? followerComponent.Following : null;
+    }
+
+    [Test]
+    public async Task FollowRequestMakesGhostFollowFirstFreeRole()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var coordinates = testMap.MapCoords;
+        await PossessAsync(Ghost, coordinates);
+        var ghostUid = ServerSession!.AttachedEntity!.Value;
+        EntityUid takenUid = default;
+        EntityUid freeUid = default;
+        await Server.WaitPost(() =>
+        {
+            takenUid = SEntMan.SpawnEntity(NotableRole, coordinates);
+            freeUid = SEntMan.SpawnEntity(NotableRole, coordinates);
+            TakeRole(takenUid);
+        });
+
+        await SendFollowRequest(takenUid, freeUid);
+
+        await Server.WaitAssertion(() => Assert.That(FollowedBy(ghostUid), Is.EqualTo(freeUid), "skips the taken role, follows the free one"));
+    }
+
+    [Test]
+    public async Task LivingPlayersFollowRequestDoesNothing()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var coordinates = testMap.MapCoords;
+        await PossessAsync(LivingMob);
+        var mobUid = ServerSession!.AttachedEntity!.Value;
+        EntityUid roleUid = default;
+        await Server.WaitPost(() => roleUid = SEntMan.SpawnEntity(NotableRole, coordinates));
+
+        await SendFollowRequest(roleUid);
+
+        await Server.WaitAssertion(() => Assert.That(SEntMan.HasComponent<FollowerComponent>(mobUid), Is.False));
+    }
+
+    [Test]
+    public async Task FollowRequestForTakenRoleDoesNothing()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var coordinates = testMap.MapCoords;
+        await PossessAsync(Ghost, coordinates);
+        var ghostUid = ServerSession!.AttachedEntity!.Value;
+        EntityUid roleUid = default;
+        await Server.WaitPost(() =>
+        {
+            roleUid = SEntMan.SpawnEntity(NotableRole, coordinates);
+            TakeRole(roleUid);
+        });
+
+        await SendFollowRequest(roleUid);
+
+        await Server.WaitAssertion(() => Assert.That(SEntMan.HasComponent<FollowerComponent>(ghostUid), Is.False));
     }
 
     /// <summary>
