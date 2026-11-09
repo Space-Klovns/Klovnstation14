@@ -79,6 +79,13 @@ public sealed partial class NpcSquadTacticsSystem
     private const float FollowChargeRange = ChargeDangerRange + 1f;
 
     /// <summary>
+    ///     How many steps' walk from the spot in front of a charge someone may be and still count as having come along to it.
+    ///         Anyone within <see cref="FollowChargeRange"/> of it across open floor is: this only rules out anyone near it only
+    ///         through a wall, with the long way round still to walk.
+    /// </summary>
+    private const int FollowChargeWalk = 16;
+
+    /// <summary>
     ///     How long the rest get to clear before a wired charge is set off regardless.
     /// </summary>
     private static readonly TimeSpan ClearingTime = TimeSpan.FromSeconds(3);
@@ -97,6 +104,7 @@ public sealed partial class NpcSquadTacticsSystem
 
     private readonly Dictionary<Vector2i, int> _floodSteps = new();
     private readonly Dictionary<Vector2i, int> _farFloodSteps = new();
+    private readonly Dictionary<Vector2i, int> _followFloodSteps = new();
     private readonly List<(int Steps, Vector2i Room, Vector2i Wall, Vector2i Outside)> _wallCandidates = new();
 
     /// <summary>
@@ -849,6 +857,7 @@ public sealed partial class NpcSquadTacticsSystem
         var pick = charge.Pick;
         var site = pick.Site;
         var hunt = plan.Hunt!;
+        var followFlooded = false;
 
         foreach (var memberUid in _members)
         {
@@ -861,13 +870,51 @@ public sealed partial class NpcSquadTacticsSystem
             if (TryOrderAtEntrance(memberUid, issuerUid, hunt, NpcOrderKind.Stage, useEntry: false, now))
                 continue;
 
-            if (memberUid != plan.WatcherUid)
+            if (memberUid == plan.WatcherUid)
+                continue;
+
+            // Comes along, to just out of the blast: everyone goes in through the hole after it, and a squad shut out has
+            //      nobody stacked up anywhere, so holding still would leave the planter to go alone. That range is a straight
+            //      line, so one only near it through a wall is sent all the way, and stopped short once it is round.
+            if (!followFlooded)
             {
-                // Comes along, to just out of the blast: everyone goes in through the hole after it, and a squad shut out has
-                //      nobody stacked up anywhere, so holding still would leave the planter to go alone.
-                SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, site.StandCoordinates, site.LocalFacing, FollowChargeRange, null, now);
+                FloodAroundChargeSite(pick, hunt);
+                followFlooded = true;
             }
+
+            var range = HasComeAlong(memberUid, site) ? FollowChargeRange : OrderRange;
+            SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, site.StandCoordinates, site.LocalFacing, range, null, now);
         }
+    }
+
+    /// <summary>
+    ///     Fills <see cref="_followFloodSteps"/> with the floor within <see cref="FollowChargeWalk"/> steps' walk of the spot in
+    ///         front of <paramref name="pick"/>'s charge.
+    /// </summary>
+    private void FloodAroundChargeSite(NpcChargePick pick, NpcHunt hunt)
+    {
+        _followFloodSteps.Clear();
+
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid) ||
+            _transformSystem.GetGrid(pick.Site.StandCoordinates) != grid.Owner)
+            return;
+
+        var standTile = _mapSystem.TileIndicesFor(grid, pick.Site.StandCoordinates);
+        _npcSquadCoverSystem.FloodTiles(pick.PlanterUid, grid, standTile, FollowChargeWalk, _followFloodSteps, stopAtDoors: false);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/> is just out of the blast at <paramref name="site"/> already: near it in a straight
+    ///         line, and a short walk from it (see <see cref="FloodAroundChargeSite"/>), not only through a wall.
+    /// </summary>
+    private bool HasComeAlong(EntityUid memberUid, NpcChargeSite site)
+    {
+        var memberCoordinates = Transform(memberUid).Coordinates;
+
+        return NpcCoordinates.IsWithin(memberCoordinates, site.StandCoordinates, FollowChargeRange, EntityManager, _transformSystem) &&
+            _npcGridSystem.TryGetGridTile(memberCoordinates, out var grid, out var memberTile) &&
+            _transformSystem.GetGrid(site.StandCoordinates) == grid.Owner &&
+            _followFloodSteps.ContainsKey(memberTile);
     }
 
     private void GiveOrdersWhileClearing(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadCharge charge, TimeSpan now)

@@ -401,6 +401,7 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
             existing.TargetUid == targetUid &&
             existing.ToolUid == toolUid &&
             existing.OverCombat == _givingPlanOrders &&
+            existing.Range == range && // how near is enough is part of the order: one told to come closer has to replan for it
             Math.Abs(Angle.ShortestDistance(existing.Facing, facing).Degrees) < OrderTurnTolerance &&
             existing.Coordinates.TryDistance(EntityManager, _transformSystem, coordinates, out var moved) &&
             moved < OrderMoveTolerance)

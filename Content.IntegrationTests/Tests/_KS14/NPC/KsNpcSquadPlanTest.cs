@@ -1694,6 +1694,68 @@ public sealed class KsNpcSquadPlanTest : GameTest
     }
 
     /// <summary>
+    ///     As above, but with the squad near the planter's spot only through a wall: in the next corridor over, which joins this
+    ///         one far to the north. Close enough in a straight line to count as just out of the blast already, so the rest used
+    ///         to stand where they heard it while the planter walked round alone. They walk round too, and stop once there.
+    /// </summary>
+    [Test]
+    public async Task TestTheRestWalkRoundToABlastBeyondAWall()
+    {
+        // A wall west of the corridor in front of the door, open only at the far north end.
+        var scene = await SetUp("KsSquadPlanTestMobBlaster",
+            glass: ArmouredGlass,
+            squadAt: new Vector2i(-7, 3),
+            extra: (entManager, gridUid) =>
+            {
+                for (var y = -12; y <= 10; y++)
+                {
+                    SpawnAt(entManager, TestWall, gridUid, -5, y);
+                }
+            });
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            GiveInHand(scene, scene.MemberUid, TimedCharge);
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.TargetUid).Coordinates;
+
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.EntManager.System<NpcPerceptionSystem>().SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, coordinates, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false));
+            }
+
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Blast), "the test needs a blast");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var planterOrder) && planterOrder.Kind == NpcOrderKind.PlantCharge,
+                "the test needs the member planting");
+
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+            var site = hunt.Blast!.Charge!.Pick.Site;
+            var leaderCoordinates = scene.EntManager.GetComponent<TransformComponent>(scene.LeaderUid).Coordinates;
+            Assert.That(leaderCoordinates.TryDistance(scene.EntManager, transformSystem, site.StandCoordinates, out var throughWall) && throughWall < 8f,
+                "the test needs the leader near the spot in a straight line");
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order) && order.Kind == NpcOrderKind.Stage,
+                "the leader should be coming along");
+            Assert.That(order.Coordinates, Is.EqualTo(site.StandCoordinates));
+            Assert.That(throughWall, Is.GreaterThan(order.Range),
+                "near only through a wall is not there yet: an order it is already in range of has it stand still");
+
+            // Round the wall, in the corridor with the planter.
+            transformSystem.SetCoordinates(scene.LeaderUid, new EntityCoordinates(scene.GridUid, new Vector2(-2.5f, 6.5f)));
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out order) && order.Kind == NpcOrderKind.Stage);
+            Assert.That(scene.EntManager.GetComponent<TransformComponent>(scene.LeaderUid).Coordinates
+                    .TryDistance(scene.EntManager, transformSystem, order.Coordinates, out var roundTheWall) && roundTheWall <= order.Range,
+                "once round, it should stop just out of the blast rather than walk up to the charge");
+        });
+    }
+
+    /// <summary>
     ///     The other way round: the squad walled in and the noise outside, in the open. The floor out there goes on and on, so
     ///         nothing is sealed off from them, but they are from it, and their own wall nearest the noise is what gets blown.
     ///         Then they go after it like any other hunt. They used to search, for spots they could never walk to.
@@ -2255,7 +2317,9 @@ public sealed class KsNpcSquadPlanTest : GameTest
         Vector2i? hostileAt = null,
         Vector2i? gap = null,
         string hostile = NanoTrasenMob,
-        Vector2i? doorAt = null)
+        Vector2i? doorAt = null,
+        Vector2i? squadAt = null,
+        Action<IEntityManager, EntityUid>? extra = null)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -2297,8 +2361,11 @@ public sealed class KsNpcSquadPlanTest : GameTest
                 }
             }
 
-            firstUid = SpawnAt(entManager, mob, gridUid, -3, 3);
-            secondUid = SpawnAt(entManager, mob, gridUid, -3, 2);
+            extra?.Invoke(entManager, gridUid);
+
+            var squadTile = squadAt ?? new Vector2i(-3, 3);
+            firstUid = SpawnAt(entManager, mob, gridUid, squadTile.X, squadTile.Y);
+            secondUid = SpawnAt(entManager, mob, gridUid, squadTile.X, squadTile.Y - 1);
 
             var hostileTile = hostileAt ?? new Vector2i(3, 3);
             targetUid = SpawnAt(entManager, hostile, gridUid, hostileTile.X, hostileTile.Y);
