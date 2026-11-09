@@ -190,6 +190,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         UpdateGhostRoleCount();
         UpdateRaffles(frameTime);
+        UpdateNotices(); // KS14
     }
 
     /// <summary>
@@ -757,6 +758,8 @@ public sealed partial class GhostRoleSystem : EntitySystem
     {
         if (ent.Comp.Probability < 1f && !_random.Prob(ent.Comp.Probability))
             RemCompDeferred<GhostRoleComponent>(ent);
+        else
+            QueueNotice(ent); // KS14: tell ghosts about notable roles
     }
 
     private void OnRoleStartup(Entity<GhostRoleComponent> ent, ref ComponentStartup args)

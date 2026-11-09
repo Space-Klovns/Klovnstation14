@@ -120,6 +120,7 @@ namespace Content.Server.Ghost.Roles
             ghostRole.RoleDescription = description;
             ghostRole.RoleRules = rules;
             ghostRole.RaffleConfig = new GhostRoleRaffleConfig(settings);
+            _entManager.EnsureComponent<Content.Shared._KS14.GhostRoleNotice.KsGhostRoleNotableComponent>(uid.Value); // KS14: admin-made roles are announced to ghosts
 
             shell.WriteLine($"Made entity {metaData.EntityName} a raffled ghost role.");
         }
