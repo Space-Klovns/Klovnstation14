@@ -19,14 +19,31 @@ public sealed partial class KsGhostRoleNoticeSystem : EntitySystem
     [ViewVariables]
     public int ReceivedCount { get; private set; }
 
+    /// <summary>
+    ///     The roles of the latest notice, which its follow link is for.
+    /// </summary>
+    [ViewVariables]
+    public IReadOnlyList<NetEntity> LastRoles { get; private set; } = [];
+
+    /// <summary>
+    ///     The markup of the latest notice's chat line.
+    /// </summary>
+    [ViewVariables]
+    public string LastWrappedMessage { get; private set; } = string.Empty;
+
     [SubscribeNetworkEvent]
     private void OnNotice(KsGhostRoleNoticeEvent args)
     {
         ReceivedCount++;
+        LastRoles = args.Roles;
 
         var roleName = Loc.TryGetString(args.RoleName, out var translatedName) ? translatedName : args.RoleName;
         var message = Loc.GetString("ks-ghost-role-notice-message", ("role", roleName));
-        var wrappedMessage = $"[font size=11][color=#a4885c]{FormattedMessage.EscapeText(message)}[/color][/font]";
+        var followText = Loc.GetString("ks-ghost-role-notice-follow");
+        var followLink = $"[{KsGhostRoleFollowTag.TagName}=\"{FormattedMessage.EscapeText(followText)}\" roles=\"{KsGhostRoleFollowTag.FormatRoles(args.Roles)}\"/]";
+        var wrappedMessage = $"[font size={KsGhostRoleFollowTag.FontSize}][bold][color=#a4885c]{FormattedMessage.EscapeText(message)}[/color] {followLink}[/bold][/font]";
+
+        LastWrappedMessage = wrappedMessage;
 
         _userInterfaceManager.GetUIController<ChatUIController>().ProcessChatMessage(
             new ChatMessage(ChatChannel.Server, message, wrappedMessage, NetEntity.Invalid, senderKey: null));

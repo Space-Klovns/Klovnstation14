@@ -1,6 +1,7 @@
 using Content.Server.Ghost.Roles.Components;
 using Content.Server.GameTicking;
 using Content.Shared._KS14.GhostRoleNotice;
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.Ghost;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -26,7 +27,9 @@ public sealed partial class GhostRoleSystem
     private readonly HashSet<EntityUid> _pendingNotices = new();
 
     private readonly List<EntityUid> _drainedNotices = new();
-    private readonly HashSet<string> _noticedRoleNames = new();
+    private readonly Dictionary<string, List<EntityUid>> _noticedRoleNames = new();
+
+    private const int MaxFollowRequestRoles = 64;
 
     /// <summary>
     ///     Whether this role should be announced to ghosts: marked <see cref="KsGhostRoleNotableComponent"/>, and still
@@ -62,7 +65,15 @@ public sealed partial class GhostRoleSystem
                 continue;
 
             if (IsNotable((roleUid, ghostRoleComponent)))
-                _noticedRoleNames.Add(ghostRoleComponent.RoleNameKey);
+            {
+                if (!_noticedRoleNames.TryGetValue(ghostRoleComponent.RoleNameKey, out var roles))
+                {
+                    roles = new List<EntityUid>();
+                    _noticedRoleNames[ghostRoleComponent.RoleNameKey] = roles;
+                }
+
+                roles.Add(roleUid);
+            }
         }
 
         NotifyGhosts(_noticedRoleNames);
@@ -71,7 +82,7 @@ public sealed partial class GhostRoleSystem
     /// <summary>
     ///     Plays the notice sound once and sends one chat line per role name to every ghost.
     /// </summary>
-    private void NotifyGhosts(IReadOnlyCollection<string> roleNames)
+    private void NotifyGhosts(IReadOnlyDictionary<string, List<EntityUid>> roleNames)
     {
         if (roleNames.Count == 0)
             return;
@@ -91,7 +102,41 @@ public sealed partial class GhostRoleSystem
             return;
 
         _audioSystem.PlayGlobal(NoticeSound, ghostFilter, recordReplay: false);
-        foreach (var roleName in roleNames)
-            RaiseNetworkEvent(new KsGhostRoleNoticeEvent(roleName), ghostFilter);
+        foreach (var (roleName, roleUids) in roleNames)
+        {
+            var roles = new List<NetEntity>(roleUids.Count);
+            foreach (var roleUid in roleUids)
+                roles.Add(GetNetEntity(roleUid));
+
+            RaiseNetworkEvent(new KsGhostRoleNoticeEvent(roleName, roles), ghostFilter);
+        }
+    }
+
+    /// <summary>
+    ///     A ghost clicked the follow link of a notice: follow the first of its roles that is still free.
+    /// </summary>
+    [SubscribeNetworkEvent]
+    private void OnFollowRequest(KsGhostRoleFollowRequestEvent args, EntitySessionEventArgs session)
+    {
+        if (session.SenderSession.AttachedEntity is not { } ghostUid || !_ghostQuery.HasComp(ghostUid))
+            return;
+
+        var checkedRoles = 0;
+        foreach (var netRole in args.Roles)
+        {
+            if (++checkedRoles > MaxFollowRequestRoles)
+                break;
+
+            if (!TryGetEntity(netRole, out var roleUid)
+                || TerminatingOrDeleted(roleUid.Value)
+                || !TryComp<GhostRoleComponent>(roleUid, out var ghostRoleComponent)
+                || ghostRoleComponent.Taken)
+                continue;
+
+            _followerSystem.StartFollowingEntity(ghostUid, roleUid.Value);
+            return;
+        }
+
+        _popupSystem.PopupCursor(KsPopupMessage.Create("ks-ghost-role-notice-unavailable"), session.SenderSession);
     }
 }
