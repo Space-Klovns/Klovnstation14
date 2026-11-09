@@ -109,8 +109,11 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
         {
             Issuer = GetNetEntity(issuerUid),
             Phase = hunt.Phase,
-            // A charge going on is up against how long its planter has got nowhere, not how long it has been at it.
-            PhaseElapsed = (float) (now - (hunt.Blast?.Charge is { Phase: NpcSquadChargePhase.Planting } charge ? charge.ProgressAt : hunt.PhaseStartedAt)).TotalSeconds,
+            // A charge going on, or wired and on, is up against how long its planter has got nowhere, not how long it has been at it.
+            PhaseElapsed = (float) (now - (hunt.Blast?.Charge is { } charge &&
+                (charge.Phase == NpcSquadChargePhase.Planting || charge.Phase == NpcSquadChargePhase.Clearing && charge.Pick.Charge.ActivatorUid != null)
+                    ? charge.ProgressAt
+                    : hunt.PhaseStartedAt)).TotalSeconds,
             PhaseLimit = (float) (hunt.Phase switch
             {
                 NpcHuntPhase.Watch => settings.WatchTime,

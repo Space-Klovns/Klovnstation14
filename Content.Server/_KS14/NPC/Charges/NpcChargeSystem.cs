@@ -234,6 +234,19 @@ public sealed partial class NpcChargeSystem : EntitySystem
     }
 
     /// <summary>
+    ///     How far from its charge the wire <paramref name="activatorUid"/> lays reaches, pulled straight: every link at its
+    ///         longest, as the chain's own stretch joint has it (<c>ChainSystem.RefreshStretch</c>). Zero for no wire.
+    /// </summary>
+    public float GetWireReach(EntityUid? activatorUid)
+    {
+        if (!_chainStartQuery.TryComp(activatorUid, out var startComponent))
+            return 0f;
+
+        // Its segments and the two ends: a joint as long as the offset between each pair, and twice the offset across each segment.
+        return (3 * startComponent.Segments + 1) * startComponent.SegmentOffset;
+    }
+
+    /// <summary>
     ///     Whether <paramref name="chargeUid"/> can still be set off from <paramref name="activatorUid"/>. Anyone can cut a wire.
     /// </summary>
     public bool IsWireIntact(EntityUid chargeUid, EntityUid activatorUid)

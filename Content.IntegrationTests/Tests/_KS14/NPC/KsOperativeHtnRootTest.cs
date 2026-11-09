@@ -1725,12 +1725,15 @@ public sealed class KsOperativeHtnRootTest : GameTest
         });
 
         var inside = false;
+        var log = new System.Text.StringBuilder();
 
         for (var i = 0; i < 1200 && !inside; i += 15)
         {
             await Pair.RunTicksSync(15);
             await Pair.Server.WaitPost(() =>
             {
+                LogHunt(log, entManager, mobs, $"{door} {i,5}");
+
                 foreach (var mobUid in mobs)
                 {
                     var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
@@ -1738,6 +1741,9 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 }
             });
         }
+
+        if (!inside)
+            TestContext.Out.WriteLine(log.ToString());
 
         Assert.That(inside, "somebody should have got into the room");
 
@@ -1749,11 +1755,16 @@ public sealed class KsOperativeHtnRootTest : GameTest
     ///     Live: two corridors side by side, joined by a door at the north end only, and a noise behind a bolted door at the south
     ///         end of the other one. The whole squad walks round together, through that door, and blows its way in, the planter
     ///         leading: those ahead of it get out of its way. Squeezing through the door and past them, it used to take longer
-    ///         than it was given to put the charge on, and the squad gave up on it and held where it was.
+    ///         than it was given to put the charge on, and the squad gave up on it and held where it was. Sealed, with no door,
+    ///         the wall is blown, and with a nook by it, out of sight of the charge, nobody but the planter takes cover in there:
+    ///         one did, through the blast and onto the planter's spot.
     /// </summary>
-    [TestCase(1)]
-    [TestCase(2)]
-    public async Task TestRedactedBlowTheirWayInFromTheNextCorridor(int width)
+    [TestCase(1, false, false)]
+    [TestCase(2, false, false)]
+    [TestCase(1, true, false)]
+    [TestCase(2, true, false)]
+    [TestCase(1, true, true)]
+    public async Task TestRedactedBlowTheirWayInFromTheNextCorridor(int width, bool sealedRoom, bool alcove)
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
         if (!protoManager.HasIndex(_operativeRoot))
@@ -1775,7 +1786,11 @@ public sealed class KsOperativeHtnRootTest : GameTest
             var eastCorridor = x >= 3 && x < 3 + width && y is >= -4 and <= 8;
             var join = y == 9 && x >= -3 && x < 3 + width;
             var room = x is >= -5 and <= -1 && y is >= -10 and <= -6;
-            return westCorridor || eastCorridor || join || room;
+
+            // A nook off the corridor by the room's wall, doubling back on itself: its end is near the charge and out of sight
+            //      of it, but the walk there is longer than the wire, round the bend.
+            var nook = alcove && (y == -2 && x is >= -2 and <= -1 || x == -1 && y == -3);
+            return westCorridor || eastCorridor || join || room || nook;
         }
 
         await server.WaitPost(() =>
@@ -1789,7 +1804,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 {
                     if (x == 0 && y == 9)
                         SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, y);
-                    else if (x == -3 && y == -5)
+                    else if (x == -3 && y == -5 && !sealedRoom)
                         roomDoorUid = SpawnPoweredDoorAt(entManager, "Airlock", gridUid, x, y);
                     else if (!IsOpen(x, y))
                         SpawnAt(entManager, "WallSolid", gridUid, x, y);
@@ -1827,7 +1842,8 @@ public sealed class KsOperativeHtnRootTest : GameTest
         // Not before now: a door coming up to power takes its bolts off again.
         await server.WaitPost(() =>
         {
-            entManager.System<Content.Shared.Doors.Systems.SharedDoorSystem>().SetBoltsDown((roomDoorUid, entManager.GetComponent<Content.Shared.Doors.Components.DoorBoltComponent>(roomDoorUid)), true);
+            if (!sealedRoom)
+                entManager.System<Content.Shared.Doors.Systems.SharedDoorSystem>().SetBoltsDown((roomDoorUid, entManager.GetComponent<Content.Shared.Doors.Components.DoorBoltComponent>(roomDoorUid)), true);
 
             foreach (var mobUid in mobs)
             {
@@ -1839,49 +1855,86 @@ public sealed class KsOperativeHtnRootTest : GameTest
         var log = new System.Text.StringBuilder();
         EntityUid? planterUid = null;
         EntityUid? firstNearSpotUid = null;
+        EntityUid? intoBlastUid = null;
         var standSpot = new Vector2(-2.5f, -3.5f);
+        var chargeSpot = new Vector2(-2.5f, -4.5f);
 
         for (var i = 0; i < 1800 && !inside; i += 15)
         {
             await Pair.RunTicksSync(15);
             await server.WaitPost(() =>
             {
-                var line = new System.Text.StringBuilder($"w{width} {i,5}");
-
-                if (entManager.System<Content.Server._KS14.NPC.Squad.NpcSquadSystem>().TryGetSquad(mobs[0], out var squad) &&
-                    tacticsSystem.GetHunt(squad.Value.Owner) is { } hunt)
-                {
-                    line.Append($" {hunt.Phase}{(hunt.ShutOut ? " shut out" : "")} charge {hunt.Blast?.Charge?.Phase.ToString() ?? "-"}");
-                    planterUid ??= hunt.Blast?.Charge?.Pick.PlanterUid;
-                }
-                else
-                {
-                    line.Append(" no hunt");
-                }
+                var (loggedPlanterUid, chargeOn) = LogHunt(log, entManager, mobs, $"w{width} {i,5}");
+                planterUid ??= loggedPlanterUid;
 
                 foreach (var mobUid in mobs)
                 {
                     var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
                     inside |= position.X is > -5f and < 0f && position.Y is > -10f and < -5.5f;
 
+                    if (chargeOn && mobUid != planterUid && (position - chargeSpot).Length() < 4f)
+                        intoBlastUid ??= mobUid;
+
                     if (firstNearSpotUid == null && (position - standSpot).Length() < 6f)
                         firstNearSpotUid = mobUid;
-
-                    var order = tacticsSystem.TryGetOrder(mobUid, out var mobOrder) ? $"{mobOrder.Kind}@{mobOrder.Coordinates.Position:0.#}/{mobOrder.Range:0.#}" : "-";
-                    line.Append($" | {position.X:0.0},{position.Y:0.0} {order}");
                 }
-
-                log.AppendLine(line.ToString());
             });
         }
 
-        if (!inside || firstNearSpotUid != planterUid)
+        if (!inside || firstNearSpotUid != planterUid || intoBlastUid != null)
             TestContext.Out.WriteLine(log.ToString());
 
         Assert.That(planterUid, Is.Not.Null, "the test needs a charge put on");
         Assert.That(firstNearSpotUid, Is.EqualTo(planterUid), "the planter should lead, with nobody in its way at the charge");
+        Assert.That(intoBlastUid, Is.Null, "nobody but the planter should be near the charge while it is on: in its blast, or in its way");
         Assert.That(inside, "somebody should have got into the room");
-        await server.WaitAssertion(() => Assert.That(entManager.Deleted(roomDoorUid), "by way of the door"));
+
+        if (!sealedRoom)
+            await server.WaitAssertion(() => Assert.That(entManager.Deleted(roomDoorUid), "by way of the door"));
+    }
+
+    /// <summary>
+    ///     Adds a line to <paramref name="log"/> with how the hunt of <paramref name="mobs"/>' squad is getting on, and where
+    ///         each of them is and what it has been told to do: to print when a live test fails. Returns the planter of the
+    ///         charge going on, if any, and whether it is on.
+    /// </summary>
+    private static (EntityUid? PlanterUid, bool ChargeOn) LogHunt(System.Text.StringBuilder log, IEntityManager entManager, List<EntityUid> mobs, string prefix)
+    {
+        var chargeOn = false;
+        var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        var line = new System.Text.StringBuilder(prefix);
+        EntityUid? planterUid = null;
+
+        if (entManager.System<Content.Server._KS14.NPC.Squad.NpcSquadSystem>().TryGetSquad(mobs[0], out var squad) &&
+            tacticsSystem.GetHunt(squad.Value.Owner) is { } hunt)
+        {
+            line.Append($" {hunt.Phase}{(hunt.ShutOut ? " shut out" : "")}");
+
+            if (hunt.Blast?.Charge is { } charge)
+            {
+                planterUid = charge.Pick.PlanterUid;
+                chargeOn = charge.Phase == Content.Shared._KS14.NPC.NpcSquadChargePhase.Clearing;
+                line.Append($" charge {charge.Phase}");
+
+                if (charge.Phase != Content.Shared._KS14.NPC.NpcSquadChargePhase.Planting)
+                    line.Append($" +{(now - charge.PlantedAt).TotalSeconds:0.0}s");
+            }
+        }
+        else
+        {
+            line.Append(" no hunt");
+        }
+
+        foreach (var mobUid in mobs)
+        {
+            var position = entManager.GetComponent<TransformComponent>(mobUid).LocalPosition;
+            var order = tacticsSystem.TryGetOrder(mobUid, out var mobOrder) ? $"{mobOrder.Kind}@{mobOrder.Coordinates.Position:0.#}/{mobOrder.Range:0.#}" : "-";
+            line.Append($" | {(mobUid == planterUid ? "*" : "")}{position.X:0.0},{position.Y:0.0} {order}");
+        }
+
+        log.AppendLine(line.ToString());
+        return (planterUid, chargeOn);
     }
 
     private static void StageDisturbance(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, Vector2 position)

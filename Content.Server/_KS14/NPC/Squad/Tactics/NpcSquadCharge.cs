@@ -69,7 +69,13 @@ public sealed class NpcSquadCharge
     public EntityCoordinates ProgressCoordinates;
 
     /// <summary>
-    ///     When the planter last got any nearer the charge, or was busy with its hands on the way (a door) or at it.
+    ///     The nearest a wired charge's planter has been to where it presses the activator from, so far, once the charge is on.
+    /// </summary>
+    public float BestStandOffDistance = float.MaxValue;
+
+    /// <summary>
+    ///     When the planter last got any nearer the charge, or, once it is on, where it sets it off from; or was busy with its
+    ///         hands (a door on the way, the charge, the activator).
     /// </summary>
     public TimeSpan ProgressAt;
 

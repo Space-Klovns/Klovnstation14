@@ -1581,6 +1581,42 @@ public sealed class KsNpcSquadPlanTest : GameTest
             var joint = (Robust.Shared.Physics.Dynamics.Joints.DistanceJoint) jointComponent.GetJoints[linkComponent.StretchJointId!];
 
             Assert.That(joint.MaxLength, Is.GreaterThan(NpcSquadTacticsSystem.MaxStandOff));
+
+            // What a planter's spot is held to, round corners as well, is how far it really reaches.
+            Assert.That(entManager.System<Content.Server._KS14.NPC.Charges.NpcChargeSystem>().GetWireReach(startUid),
+                Is.EqualTo(joint.MaxLength).Within(0.001f));
+        });
+    }
+
+    /// <summary>
+    ///     A wired charge that is on is given up on for its planter getting nowhere, not for how long it has been on: getting to
+    ///         where it sets it off from can be slow, past the rest of the squad, and pressing it can wait on them being clear.
+    ///         It used to be six seconds from going on, after which the squad let go of the wire and held where it was.
+    /// </summary>
+    [Test]
+    public async Task TestAWiredChargeIsOnlyGivenUpOnForGettingNowhere()
+    {
+        var (scene, _, _) = await SetUpChargeOn();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            var charge = plan.Charge!;
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var timeout = plan.Hunt!.Settings.PlanChargeTimeout;
+
+            // Long on, but getting nearer where it sets it off from.
+            charge.PlantedAt = now - TimeSpan.FromSeconds(10);
+            charge.ProgressAt = now - TimeSpan.FromSeconds(1);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(plan.Charge, Is.SameAs(charge), "on for a while is no reason to give it up");
+
+            // Getting nowhere.
+            charge.ProgressAt = now - timeout - TimeSpan.FromSeconds(1);
+            StageVisible(scene);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(plan.Charge, Is.Null, "a planter getting nowhere is");
         });
     }
 

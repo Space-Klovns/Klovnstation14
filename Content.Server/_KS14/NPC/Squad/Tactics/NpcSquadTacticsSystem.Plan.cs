@@ -1096,7 +1096,7 @@ public sealed partial class NpcSquadTacticsSystem
         FindThrowers(plan, settings);
         FindPatients(plan, settings);
         FindReloaders(plan, settings);
-        FindCharges(plan, settings);
+        FindCharges(plan, settings, settings.MaxStageDistance);
     }
 
     /// <summary>

@@ -142,6 +142,30 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
+    ///     Whether the planter of a wired charge that is on is still getting on with setting it off: it has got nearer where it
+    ///         presses the activator from within <see cref="NpcSquadTacticsSettings.PlanChargeTimeout"/>, or been busy with its
+    ///         hands. Once it is there, that is how long it has to press it. Not a set time from when the charge went on: getting
+    ///         there can be slow, past the rest of the squad, and an order to press it can wait on them being clear.
+    /// </summary>
+    private bool IsPlanterGettingClear(NpcSquadCharge charge, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        var planterUid = charge.Pick.PlanterUid;
+        var progressed = _activeDoAfterQuery.HasComp(planterUid);
+
+        if (_transformSystem.GetMoverCoordinates(planterUid).TryDistance(EntityManager, _transformSystem, charge.Pick.StandOffCoordinates, out var distance) &&
+            distance < charge.BestStandOffDistance - ChargeProgressDistance / 2)
+        {
+            charge.BestStandOffDistance = distance;
+            progressed = true;
+        }
+
+        if (progressed)
+            charge.ProgressAt = now;
+
+        return now - charge.ProgressAt < settings.PlanChargeTimeout;
+    }
+
+    /// <summary>
     ///     Fills <see cref="_planterRoute"/> with the tiles the planter is walking: the path it is following, and, as that may
     ///         run out short of the charge, the shortest walk on from where it is. Returns how many steps it has to go, if known.
     /// </summary>

@@ -116,7 +116,9 @@ public sealed partial class NpcSquadTacticsSystem
             MemberCount = _members.Count,
         };
 
-        FindCharges(plan, settings);
+        // Shut out, a charge is all there is left: a wall the long way round is worth walking to, as far as the way to a charge
+        //      is worked out at all (see ChargeRoute).
+        FindCharges(plan, settings, maxWalk: ChargeRouteSteps);
 
         if (plan.DoorCharge == null && plan.WallCharge == null)
             return false;
@@ -177,7 +179,8 @@ public sealed partial class NpcSquadTacticsSystem
     ///     Works out what a charge could do from here. A door is looked at every time, as cheap and liable to change. A wall
     ///         only once a plan: that is a search, and walls stay where they are.
     /// </summary>
-    private void FindCharges(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
+    /// <param name="maxWalk">The furthest a wall may be, in steps' walk from whoever carries a charge.</param>
+    private void FindCharges(NpcSquadPlan plan, NpcSquadTacticsSettings settings, int maxWalk)
     {
         plan.DoorCharge = FindDoorCharge(plan);
 
@@ -187,7 +190,7 @@ public sealed partial class NpcSquadTacticsSystem
             return;
 
         plan.WallSearched = true;
-        plan.WallCharge = FindWallCharge(plan, settings);
+        plan.WallCharge = FindWallCharge(plan, settings, maxWalk);
     }
 
     private bool IsStillGood(NpcSquadPlan plan, NpcChargePick pick)
@@ -336,7 +339,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         var walkerTile = _mapSystem.TileIndicesFor(grid, Transform(walkerUid).Coordinates);
 
-        FindWallCandidates(hunt, walkerUid, grid, walkerTile, settings);
+        FindWallCandidates(hunt, walkerUid, grid, walkerTile, settings.MaxStageDistance);
 
         var avoidTiles = GetAvoidTiles(hunt);
 
@@ -437,7 +440,7 @@ public sealed partial class NpcSquadTacticsSystem
     ///     A wall of the hostile's room with floor the other side that somebody with a charge can walk to, the nearest there is.
     ///         Shut in, a wall of their own, with floor the other side leading to it.
     /// </summary>
-    private NpcChargePick? FindWallCharge(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
+    private NpcChargePick? FindWallCharge(NpcSquadPlan plan, NpcSquadTacticsSettings settings, int maxWalk)
     {
         var hunt = plan.Hunt!;
 
@@ -460,7 +463,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         var carrierTile = _mapSystem.TileIndicesFor(grid, Transform(carrierUid).Coordinates);
 
-        FindWallCandidates(hunt, carrierUid, grid, carrierTile, settings);
+        FindWallCandidates(hunt, carrierUid, grid, carrierTile, maxWalk);
 
         var avoidTiles = GetAvoidTiles(hunt);
 
@@ -476,7 +479,7 @@ public sealed partial class NpcSquadTacticsSystem
                 break;
 
             waypoints.Clear();
-            if (!_npcSquadCoverSystem.TryFindRouteAround(carrierUid, grid, carrierTile, outsideTile, avoidTiles, settings.MaxStageDistance, waypoints, out var length))
+            if (!_npcSquadCoverSystem.TryFindRouteAround(carrierUid, grid, carrierTile, outsideTile, avoidTiles, maxWalk, waypoints, out var length))
                 continue;
 
             var facing = ((Vector2) (roomTile - outsideTile)).ToWorldAngle();
@@ -504,16 +507,16 @@ public sealed partial class NpcSquadTacticsSystem
     ///             floor the other side that leads to the hostile, nearest it first.
     ///     </para>
     /// </summary>
-    private void FindWallCandidates(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, Vector2i walkerTile, NpcSquadTacticsSettings settings)
+    private void FindWallCandidates(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, Vector2i walkerTile, int maxWalk)
     {
         _floodSteps.Clear();
-        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, walkerTile, settings.MaxStageDistance, _floodSteps, stopAtDoors: false);
+        _npcSquadCoverSystem.FloodTiles(walkerUid, grid, walkerTile, maxWalk, _floodSteps, stopAtDoors: false);
 
         _wallCandidates.Clear();
 
         if (hunt.SealedIn)
         {
-            FindWallsOut(hunt, walkerUid, grid, settings);
+            FindWallsOut(hunt, walkerUid, grid, maxWalk);
             _wallCandidates.Sort((a, b) => a.Steps.CompareTo(b.Steps));
             return;
         }
@@ -544,13 +547,13 @@ public sealed partial class NpcSquadTacticsSystem
     ///     For <see cref="FindWallCandidates"/> shut in: <see cref="_floodSteps"/> holds the floor they are on. The far side of a wall
     ///         is where they go through to, and this side is where the charge goes on from.
     /// </summary>
-    private void FindWallsOut(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, NpcSquadTacticsSettings settings)
+    private void FindWallsOut(NpcHunt hunt, EntityUid walkerUid, Entity<MapGridComponent> grid, int maxWalk)
     {
         _farFloodSteps.Clear();
         _npcSquadCoverSystem.FloodTiles(walkerUid,
             grid,
             _mapSystem.TileIndicesFor(grid, hunt.PredictedCoordinates),
-            settings.MaxStageDistance,
+            maxWalk,
             _farFloodSteps,
             stopAtDoors: false);
 
@@ -673,7 +676,7 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            if (!TryFindStandOff(memberUid, grid, site, plan.Hunt!, out var standOffCoordinates))
+            if (!TryFindStandOff(memberUid, grid, site, plan.Hunt!, _npcChargeSystem.GetWireReach(charge.ActivatorUid), out var standOffCoordinates))
                 continue;
 
             pick = new NpcChargePick(site, memberUid, charge, standOffCoordinates, routeLength);
@@ -687,7 +690,10 @@ public sealed partial class NpcSquadTacticsSystem
     ///     Floor outside the room, far enough from <paramref name="site"/> to be out of the blast and near enough to be on the
     ///         wire. Round a corner from it if there is such a place, and otherwise the shortest walk.
     /// </summary>
-    private bool TryFindStandOff(EntityUid memberUid, Entity<MapGridComponent> grid, NpcChargeSite site, NpcHunt hunt, out EntityCoordinates coordinates)
+    /// <param name="wireReach">How far the wire reaches. The walk there has to fit on it, not just the straight line: a wire
+    ///     round a corner runs round it, and a planter sent further is held back by its own wire, short of the spot and in the
+    ///     blast, and never sets it off.</param>
+    private bool TryFindStandOff(EntityUid memberUid, Entity<MapGridComponent> grid, NpcChargeSite site, NpcHunt hunt, float wireReach, out EntityCoordinates coordinates)
     {
         coordinates = default;
 
@@ -706,6 +712,10 @@ public sealed partial class NpcSquadTacticsSystem
 
             var distance = ((Vector2) (tile - site.Tile)).Length();
             if (distance < MinStandOff || distance > MaxStandOff)
+                continue;
+
+            // A step from the charge to the spot in front of it, then the walk on from there, which is never shorter than the wire's way.
+            if ((1 + steps) * grid.Comp.TileSize > wireReach)
                 continue;
 
             var tileCoordinates = GetTileCoordinates(grid, tile);
@@ -767,6 +777,7 @@ public sealed partial class NpcSquadTacticsSystem
         {
             charge.Phase = NpcSquadChargePhase.Clearing;
             charge.PlantedAt = now;
+            charge.ProgressAt = now;
             return true;
         }
 
@@ -788,14 +799,16 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool RunChargeClearing(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadCharge charge, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        if (TerminatingOrDeleted(charge.Pick.Charge.ChargeUid))
+        // Queued for deletion is gone off too: that is how it goes, at the end of the tick it was set off in. Pressing it let go of
+        //      the wire, and in between it would look like a cut wire on a charge still there.
+        if (TerminatingOrDeleted(charge.Pick.Charge.ChargeUid) || EntityManager.IsQueuedForDeletion(charge.Pick.Charge.ChargeUid))
         {
             charge.Phase = NpcSquadChargePhase.Blasted;
             charge.BlastedAt = now;
             return true;
         }
 
-        if (IsChargeLost(charge, now))
+        if (IsChargeLost(charge, settings, now))
         {
             FailCharge(issuerUid, plan, action, settings, now);
             return false;
@@ -830,9 +843,10 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     Whether a charge that is on will not now go off: its wire has gone, nobody is left to press it, or it is overdue.
+    ///     Whether a charge that is on will not now go off: its wire has gone, nobody is left to press it, its planter has got
+    ///         nowhere for too long (<see cref="IsPlanterGettingClear"/>), or, timed, it is overdue.
     /// </summary>
-    private bool IsChargeLost(NpcSquadCharge charge, TimeSpan now)
+    private bool IsChargeLost(NpcSquadCharge charge, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         var pick = charge.Pick;
 
@@ -841,7 +855,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         return !_members.Contains(pick.PlanterUid) ||
             !_npcChargeSystem.IsWireIntact(pick.Charge.ChargeUid, activatorUid) ||
-            now - charge.PlantedAt >= ClearingTime + ChargeOverdue;
+            !IsPlanterGettingClear(charge, settings, now);
     }
 
     private void GiveOrdersWhilePlanting(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadCharge charge, TimeSpan now)
@@ -886,10 +900,12 @@ public sealed partial class NpcSquadTacticsSystem
             var nearCharge = Transform(memberUid).Coordinates.TryDistance(EntityManager, _transformSystem, chargeCoordinates, out var distance) &&
                 distance < ChargeDangerRange;
 
-            // Still on its way round: it goes on, to the edge of the blast, and does not stop wherever it was when the charge
-            //      went on, to be left behind when the rest go in.
+            // Coming along: to the edge of the blast, on its side. Still on its way round, it goes on, and does not stop wherever it
+            //      was when the charge went on, to be left behind when the rest go in. In the blast, it goes back the way it came:
+            //      cover of its own could be anywhere out of sight of the charge, through the blast and onto the very spot the
+            //      planter sets it off from, which then never gets there.
             if (IsFollowingCharge(memberUid, plan, hunt) &&
-                !HasComeAlong(charge, memberUid) &&
+                (nearCharge || !HasComeAlong(charge, memberUid)) &&
                 TryGetFollowSpot(memberUid, issuerUid, charge, out var followCoordinates, out _))
             {
                 SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, followCoordinates, site.LocalFacing, OrderRange, null, now);
