@@ -66,12 +66,7 @@ public partial class ChatBox
         _ksSay.OnSubmitted += KsOnSaySubmitted;
         _ksSay.OnEscaped += KsOnSayEscaped;
         _ksSay.OnCycled += forward => { CycleChatChannel(forward); KsRefreshSayChannel(); };
-        _ksSay.OnChannelClicked += () =>
-        {
-            CycleChatChannel(true);
-            KsRefreshSayChannel();
-            _ksSay.FocusInput();
-        };
+        _ksSay.OnChannelClicked += KsOpenChannelMenu;
         _ksSay.OnFocusChanged += _controller.NotifyChatFocus;
 
         _ksSayWindow = new KsTguiSayWindow();
@@ -233,6 +228,23 @@ public partial class ChatBox
             : ChannelSelectorButton.ChannelSelectorName(channel);
 
         _ksSay.SetChannel(label, KsTguiSayPalette.ForChannel(channel, radioChannel?.Color));
+    }
+
+    /// <summary>
+    ///     The channel button was clicked: the menu of channels opens, as tg's does not but the stock selector did, with each
+    ///         channel's key. Tab still cycles.
+    /// </summary>
+    private void KsOpenChannelMenu()
+    {
+        var menu = new KsTguiChannelMenu();
+        menu.Selected += channel =>
+        {
+            SafelySelectChannel(channel);
+            KsRefreshSayChannel();
+            _ksSay.FocusInput();
+        };
+
+        menu.OpenBeside(_ksSay.ChannelButton, SelectedChannel);
     }
 
     private void KsOnSayTextEdited(string text)

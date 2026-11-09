@@ -85,6 +85,7 @@ namespace Content.Client.Lobby
         {
             var chatController = _userInterfaceManager.GetUIController<ChatUIController>();
             chatController.SetMainChat(false);
+            Lobby!.Chat.Main = false; // KS14: the screen is already unloaded here, so SetMainChat found no chat box and the lobby's stayed Main
             _gameTicker.InfoBlobUpdated -= UpdateLobbyUi;
             _gameTicker.LobbyStatusUpdated -= LobbyStatusUpdated;
             _gameTicker.LobbyLateJoinStatusUpdated -= LobbyLateJoinStatusUpdated;
