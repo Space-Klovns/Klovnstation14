@@ -2598,3 +2598,11 @@ Entries:
       message: Buttons in a row are the same height.
   id: 246
   time: '2026-11-09T19:37:02.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Text in tgui windows and in the chat can now be selected with the mouse
+        and copied with Ctrl+C.
+  id: 247
+  time: '2026-11-09T20:17:41.0000000+00:00'
