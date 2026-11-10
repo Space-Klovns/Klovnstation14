@@ -1,0 +1,14 @@
+# Sprites from Stalker14. As roomy as an ERT leader's.
+- type: entity
+  parent: [ ClothingBackpack, BaseCentcommContraband ]
+  id: KsClothingBackpackTacticalBlack
+  name: black tactical backpack
+  description: A big black backpack with webbing on every side.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/backpacks/Tactical/black.rsi
+  - type: Storage
+    grid:
+    - 0,0,8,3
+  - type: ExplosionResistance
+    damageCoefficient: 0.1

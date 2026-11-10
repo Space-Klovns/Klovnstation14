@@ -17,6 +17,8 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 /// <param name="TargetUid">What the order is about: the locker to open, for a <see cref="NpcOrderKind.Search"/> of
 ///     one; the door to force, for a <see cref="NpcOrderKind.Breach"/>.</param>
 /// <param name="ToolUid">What to force the door with, for a <see cref="NpcOrderKind.Breach"/>.</param>
+/// <param name="OverCombat">Whether this comes before fighting. Combat otherwise always wins, and a member that can see a
+///     hostile would never get round to it: that is the whole trouble with a hostile it can see and cannot get at.</param>
 public readonly record struct NpcOrder(
     int Id,
     NpcOrderKind Kind,
@@ -26,4 +28,5 @@ public readonly record struct NpcOrder(
     float Range,
     EntityUid? TargetUid,
     TimeSpan IssuedAt,
-    EntityUid? ToolUid = null);
+    EntityUid? ToolUid = null,
+    bool OverCombat = false);

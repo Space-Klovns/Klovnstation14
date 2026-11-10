@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using Content.Server._KS14.NPC.Dangers; // KS14
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.Power.EntitySystems; // KS14
@@ -117,7 +118,10 @@ public sealed partial class NPCSteeringSystem
         if (!steering.ForceMove && steering.ArriveOnLineOfSight)
         {
             // TODO: use vision range
-            inLos = _interaction.InRangeUnobstructed(uid, steering.Coordinates, 10f);
+            // KS14: or a clear shot
+            inLos = steering.KsArriveOnLineOfFire
+                ? _npcLineOfFireSystem.HasLineOfFire(uid, steering.Coordinates, 10f)
+                : _interaction.InRangeUnobstructed(uid, steering.Coordinates, 10f);
 
             if (inLos)
             {
@@ -150,6 +154,16 @@ public sealed partial class NPCSteeringSystem
             ResetStuck(steering, ourCoordinates);
             return true;
         }
+
+        // KS14 start: this is as close as it goes. It stops dead, unlike arriving, where it goes on steering for the spot: with
+        //      nothing to steer for, what is left of its last direction would carry it on through
+        if (EndsInDanger(uid, steering, targetDistance))
+        {
+            steering.Status = SteeringStatus.InRange;
+            ResetStuck(steering, ourCoordinates);
+            return false;
+        }
+        // KS14 end
 
         // Grab the target position, either the next path node or our end goal..
         var targetCoordinates = GetTargetCoordinates(steering);
@@ -339,6 +353,13 @@ public sealed partial class NPCSteeringSystem
             ResetStuck(steering, ourCoordinates);
         }
 
+        // KS14: or going round and round its next node, which the check above takes for progress
+        if (AntiStuck && steering.CurrentPath.Count > 0 && IsCirclingNode(steering, targetCoordinates, direction.Length(), moveSpeed))
+        {
+            Log.Debug($"NPC {ToPrettyString(uid)} found circling {targetCoordinates}");
+            needsPath = true;
+        }
+
         // If not in LOS and no path then get a new one fam.
         if ((!inLos && steering.ArriveOnLineOfSight && steering.CurrentPath.Count == 0) ||
             (!steering.ArriveOnLineOfSight && steering.CurrentPath.Count == 0))
@@ -410,6 +431,9 @@ public sealed partial class NPCSteeringSystem
             {
                 needsPath = true;
             }
+
+            // KS14: a fire has started on the way since this path was found
+            needsPath |= HasNewDanger(uid, steering);
         }
 
         // Request the new path.
@@ -418,6 +442,177 @@ public sealed partial class NPCSteeringSystem
             RequestPath(uid, steering, xform, targetDistance);
         }
     }
+
+    // KS14 start
+    /// <summary>
+    /// How much nearer its node an NPC must get to count as getting nearer: less is jitter.
+    /// </summary>
+    private const float NodeProgressEpsilon = 0.05f;
+
+    /// <summary>
+    /// Whether <paramref name="steering"/> has got no nearer its next path node, <paramref name="node"/>, in as long as the
+    /// stuck check allows, although it is moving. A free node is only reached from inside it, so one pushed off its line -
+    /// by squadmates walking beside it, say - can come by it too fast to turn into it, and go round and round it at about
+    /// a tile's distance. The stuck check goes by distance moved, so it never notices. A new path from where it is starts
+    /// with a node it is already in.
+    /// </summary>
+    private bool IsCirclingNode(NPCSteeringComponent steering, EntityCoordinates node, float distance, float moveSpeed)
+    {
+        var now = _timing.CurTime;
+
+        if (!node.Equals(steering.KsNode) || distance < steering.KsNodeClosest - NodeProgressEpsilon)
+        {
+            steering.KsNode = node;
+            steering.KsNodeClosest = distance;
+            steering.KsNodeClosestTime = now;
+            return false;
+        }
+
+        // As long as the stuck check allows.
+        var maxTime = Math.Max(1, NPCSteeringComponent.StuckDistance / moveSpeed * 1.2f);
+        if ((now - steering.KsNodeClosestTime).TotalSeconds <= maxTime)
+            return false;
+
+        // Started over, so the path asked for has time to come before this asks again.
+        steering.KsNodeClosest = distance;
+        steering.KsNodeClosestTime = now;
+        return true;
+    }
+
+    private static readonly TimeSpan DangerCheckInterval = TimeSpan.FromSeconds(0.5);
+
+    /// <summary>
+    /// How far along its path to look for a danger: a few tiles' worth.
+    /// </summary>
+    private const int DangerCheckPolys = 12;
+
+    /// <summary>
+    /// How far ahead of a juke to look for a danger, in tiles. A tile: steering turns over a few ticks, not at once.
+    /// </summary>
+    private const float DangerStepReach = 1f;
+
+    /// <summary>
+    /// Whether <paramref name="uid"/> is stopped on a tile posing what it avoids. A path that has to cross a danger is
+    /// not stopped on it: turned back from the far side of a fire every time, it would never get across.
+    /// </summary>
+    public bool IsStandingInDanger(EntityUid uid)
+    {
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || !_pathfindingSystem.IsDangerous(Transform(uid).Coordinates, dangers))
+            return false;
+
+        return !IsFollowingPath(uid);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="uid"/> is on its way somewhere, along a path or waiting on one. Not so while juking, path
+    /// or no path.
+    /// </summary>
+    public bool IsFollowingPath(EntityUid uid)
+    {
+        return TryComp<NPCSteeringComponent>(uid, out var steering) &&
+            steering.Status == SteeringStatus.Moving &&
+            steering.CanSeek &&
+            (steering.CurrentPath.Count > 0 || steering.Pathfind);
+    }
+
+    /// <summary>
+    /// Whether all that is left of the way is on tiles posing what <paramref name="uid"/> avoids, so that it should go no
+    /// further. Crossing a danger gets it somewhere; ending on one, say a hostile standing in a fire, only leaves it there.
+    /// </summary>
+    private bool EndsInDanger(EntityUid uid, NPCSteeringComponent steering, float targetDistance)
+    {
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || !_pathfindingSystem.IsDangerous(steering.Coordinates, dangers))
+            return false;
+
+        // Close enough that no path is asked for, and it goes straight there.
+        if (steering.CurrentPath.Count == 0)
+            return targetDistance < steering.RepathRange;
+
+        foreach (var poly in steering.CurrentPath)
+        {
+            if (!_pathfindingSystem.IsDangerous(poly, dangers))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Rules out the directions that would step onto a tile posing what <paramref name="uid"/> avoids. For a juke, which
+    /// picks its own way, so that no path keeps it off one.
+    /// </summary>
+    private void AvoidDangerousSteps(EntityUid uid, NPCSteeringComponent steering, TransformComponent xform, Span<float> danger)
+    {
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || xform.GridUid is not { } gridUid || xform.ParentUid != gridUid)
+            return;
+
+        // Steering's directions are relative to the grid, so on one they are in the same terms as its local position.
+        for (var i = 0; i < InterestDirections; i++)
+        {
+            var step = xform.LocalPosition + Directions[i] * DangerStepReach;
+
+            // At full strength now, not blended in over a few ticks: a juke writes its interest straight in, and would lead
+            //      the danger by long enough to get there.
+            if (_pathfindingSystem.IsDangerous(gridUid, step.Floored(), dangers))
+                danger[i] = steering.Danger[i] = 1f;
+        }
+    }
+
+    /// <summary>
+    /// Notes where a path just found already passes what <paramref name="uid"/> avoids, for <see cref="HasNewDanger"/> to
+    /// leave alone. Once a path, so a walk past a fire that burns all the while asks for one path, not one every check. Only
+    /// if the dangers are what they were when it was asked for (<paramref name="dangerVersion"/>): one that started while
+    /// it was being found is news, and finding it again is what <see cref="HasNewDanger"/> is for. Null for a path found
+    /// without minding dangers at all, as a search that ran out of room going round them settles for: steering looks
+    /// again as it gets nearer, where going round fits.
+    /// </summary>
+    private void NoteDangerOnPath(EntityUid uid, NPCSteeringComponent steering, int? dangerVersion)
+    {
+        steering.DangerOnPath.Clear();
+
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None || _pathfindingSystem.TileDangerVersion != dangerVersion)
+            return;
+
+        foreach (var poly in steering.CurrentPath)
+        {
+            if (_pathfindingSystem.IsNearDanger(poly, dangers))
+                steering.DangerOnPath.Add(poly);
+        }
+    }
+
+    /// <summary>
+    /// Whether what <paramref name="uid"/> avoids has started up on or right beside the next stretch of its path since it was
+    /// found. Not every tick, and only so far ahead, as the rest may have burnt out by then.
+    /// </summary>
+    private bool HasNewDanger(EntityUid uid, NPCSteeringComponent steering)
+    {
+        var now = _timing.CurTime;
+        if (now < steering.NextDangerCheck)
+            return false;
+
+        steering.NextDangerCheck = now + DangerCheckInterval;
+
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        if (dangers == NpcTileDangerKind.None)
+            return false;
+
+        var checkedPolys = 0;
+        foreach (var poly in steering.CurrentPath)
+        {
+            if (_pathfindingSystem.IsNearDanger(poly, dangers) && !steering.DangerOnPath.Contains(poly))
+                return true;
+
+            if (++checkedPolys >= DangerCheckPolys)
+                break;
+        }
+
+        return false;
+    }
+    // KS14 end
 
     /// <summary>
     /// We may be pathfinding and moving at the same time in which case early nodes may be out of date.

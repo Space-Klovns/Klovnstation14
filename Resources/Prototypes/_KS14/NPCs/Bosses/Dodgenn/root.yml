@@ -62,7 +62,7 @@
   - preconditions:
     - !type:CooldownPrecondition
       id: runningLine
-      inverted: true
+      invert: true
     tasks:
     - !type:HTNPrimitiveTask
       operator: !type:DoWorldActionOperator

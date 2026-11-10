@@ -58,7 +58,7 @@ public sealed partial class WeightedRangedOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
         var notFiredStatus = FailIfNotFired ? HTNOperatorStatus.Failed : HTNOperatorStatus.Finished;
 
         if (Probability < 100f && !_random.Prob(Probability / 100f))

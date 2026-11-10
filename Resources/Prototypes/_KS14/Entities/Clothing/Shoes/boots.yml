@@ -1,0 +1,13 @@
+# Sprites from Stalker14. As combat boots.
+- type: entity
+  parent: ClothingShoesMilitaryBase
+  id: KsClothingShoesBootsBlackArmy
+  name: black army boots
+  description: Heavy black combat boots, with room in one for a knife.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/shoes/boots_army.rsi
+  - type: Clothing
+    sprite: _Stalker/Objects/Clothing/shoes/boots_army.rsi
+  - type: ClothingSlowOnDamageModifier
+    modifier: 0.5

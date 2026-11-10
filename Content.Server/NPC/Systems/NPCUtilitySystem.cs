@@ -190,7 +190,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         }
     }
 
-    private float GetScore(NPCBlackboard blackboard, EntityUid targetUid, UtilityConsideration consideration)
+    internal /* KS14: private -> internal, reused by KsLogicCon */ float GetScore(NPCBlackboard blackboard, EntityUid targetUid, UtilityConsideration consideration)
     {
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
         switch (consideration)

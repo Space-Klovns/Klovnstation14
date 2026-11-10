@@ -1,4 +1,9 @@
+using Content.Server._KS14.NPC.Debug;
 using Content.Shared._KS14.NPC;
+using Content.Server.Administration;
+using Content.Server.Administration.Managers;
+using Content.Server._KS14.NPC.Utility;
+using Content.Shared.Administration;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -21,30 +26,31 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 public sealed partial class NpcHuntDebugSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
-    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
-    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
     [Dependency] private EntityQuery<NpcOrderComponent> _orderQuery = default!;
 
-    /// <summary>
+/// <summary>
     ///     Null value = every hunt; otherwise a squad, or an NPC (meaning its squad's hunt, or its own).
     /// </summary>
-    private readonly Dictionary<ICommonSession, EntityUid?> _debuggingSessions = new();
+    private NpcDebugSessions _sessions = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        _sessions = new NpcDebugSessions(_adminManager, _playerManager, (session, enabled, target) =>
+            RaiseNetworkEvent(new HuntDebugStateMessage { Enabled = enabled, Target = target is { } uid ? GetNetEntity(uid) : null }, session.Channel));
+        _sessions.Initialize();
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
-        _debuggingSessions.Clear();
+        _sessions.Shutdown();
     }
 
     /// <summary>
@@ -53,20 +59,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
     /// </summary>
     public (bool Enabled, EntityUid? Target) Toggle(ICommonSession session, EntityUid? target)
     {
-        if (_debuggingSessions.TryGetValue(session, out var currentTarget) && currentTarget == target)
-        {
-            _debuggingSessions.Remove(session);
-            RaiseNetworkEvent(new HuntDebugStateMessage { Enabled = false }, session.Channel);
-            return (false, target);
-        }
-
-        _debuggingSessions[session] = target;
-        RaiseNetworkEvent(new HuntDebugStateMessage
-        {
-            Enabled = true,
-            Target = target is { } uid ? GetNetEntity(uid) : null,
-        }, session.Channel);
-        return (true, target);
+        return _sessions.Toggle(session, target);
     }
 
     /// <summary>
@@ -75,13 +68,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
     /// </summary>
     public bool IsTracking(EntityUid issuerUid, List<EntityUid> memberUids)
     {
-        foreach (var target in _debuggingSessions.Values)
-        {
-            if (Matches(target, issuerUid, memberUids))
-                return true;
-        }
-
-        return false;
+        return _sessions.IsWatching(issuerUid, memberUids);
     }
 
     /// <summary>
@@ -91,9 +78,9 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
     {
         HuntDebugDataMessage? message = null;
 
-        foreach (var (session, target) in _debuggingSessions)
+        foreach (var (session, target) in _sessions.Watching)
         {
-            if (!Matches(target, issuerUid, memberUids))
+            if (!NpcDebugSessions.Matches(target, issuerUid, memberUids))
                 continue;
 
             message ??= BuildFrame(issuerUid, hunt, memberUids);
@@ -106,16 +93,11 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
     /// </summary>
     public void SendEnded(EntityUid issuerUid, List<EntityUid> memberUids)
     {
-        foreach (var (session, target) in _debuggingSessions)
+        foreach (var (session, target) in _sessions.Watching)
         {
-            if (Matches(target, issuerUid, memberUids))
+            if (NpcDebugSessions.Matches(target, issuerUid, memberUids))
                 RaiseNetworkEvent(new HuntDebugEndedMessage { Issuer = GetNetEntity(issuerUid) }, session.Channel);
         }
-    }
-
-    private static bool Matches(EntityUid? target, EntityUid issuerUid, List<EntityUid> memberUids)
-    {
-        return target is not { } targetUid || targetUid == issuerUid || memberUids.Contains(targetUid);
     }
 
     private HuntDebugDataMessage BuildFrame(EntityUid issuerUid, NpcHunt hunt, List<EntityUid> memberUids)
@@ -127,11 +109,16 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
         {
             Issuer = GetNetEntity(issuerUid),
             Phase = hunt.Phase,
-            PhaseElapsed = (float) (now - hunt.PhaseStartedAt).TotalSeconds,
+            // A charge going on, or wired and on, is up against how long its planter has got nowhere, not how long it has been at it.
+            PhaseElapsed = (float) (now - (hunt.Blast?.Charge is { } charge &&
+                (charge.Phase == NpcSquadChargePhase.Planting || charge.Phase == NpcSquadChargePhase.Clearing && charge.Pick.Charge.ActivatorUid != null)
+                    ? charge.ProgressAt
+                    : hunt.PhaseStartedAt)).TotalSeconds,
             PhaseLimit = (float) (hunt.Phase switch
             {
                 NpcHuntPhase.Watch => settings.WatchTime,
                 NpcHuntPhase.Stage => settings.StageTimeout,
+                NpcHuntPhase.Blast => settings.PlanChargeTimeout,
                 NpcHuntPhase.Breach => settings.BreachTimeout,
                 NpcHuntPhase.Entry => settings.EntryTimeout,
                 NpcHuntPhase.Exhausted => settings.HoldAreaTime,
@@ -168,7 +155,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
                 for (var i = staging.NextWaypoint; i < staging.Waypoints.Count; i++)
                 {
                     var tile = staging.Waypoints[i];
-                    route.Points.Add(GetNetCoordinates(GetTileCenter(routeGridUid, tile)));
+                    route.Points.Add(GetNetCoordinates(_npcGridSystem.GetTileCenter(routeGridUid, tile)));
                 }
 
                 route.Points.Add(GetNetCoordinates(hunt.Entrances[staging.EntranceIndex].StageCoordinates));
@@ -181,7 +168,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
                     continue;
 
                 message.Sweeps.Add(new HuntDebugLine(GetNetCoordinates(Transform(memberUid).Coordinates),
-                    GetNetCoordinates(GetTileCenter(routeGridUid, sweep.Tile))));
+                    GetNetCoordinates(_npcGridSystem.GetTileCenter(routeGridUid, sweep.Tile))));
             }
         }
 
@@ -212,25 +199,12 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
         return message;
     }
 
-    private EntityCoordinates GetTileCenter(EntityUid gridUid, Vector2i tile)
-    {
-        return _mapGridQuery.TryComp(gridUid, out var mapGridComponent)
-            ? new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector((gridUid, mapGridComponent), tile))
-            : new EntityCoordinates(gridUid, new System.Numerics.Vector2(tile.X + 0.5f, tile.Y + 0.5f));
-    }
-
     /// <summary>
     ///     Coordinates relative to the grid or map rather than to an entity - a locker, say - the client may not have.
     /// </summary>
     private EntityCoordinates Snapshot(EntityCoordinates coordinates)
     {
         return TerminatingOrDeleted(coordinates.EntityId) ? coordinates : _transformSystem.GetMoverCoordinates(coordinates);
-    }
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus == SessionStatus.Disconnected)
-            _debuggingSessions.Remove(e.Session);
     }
 
     /// <summary>
@@ -240,11 +214,6 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
     {
-        foreach (var session in _debuggingSessions.Keys)
-        {
-            RaiseNetworkEvent(new HuntDebugStateMessage { Enabled = false }, session.Channel);
-        }
-
-        _debuggingSessions.Clear();
+        _sessions.ClearAndNotify();
     }
 }

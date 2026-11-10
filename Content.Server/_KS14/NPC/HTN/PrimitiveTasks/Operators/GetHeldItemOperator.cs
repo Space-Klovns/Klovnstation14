@@ -19,7 +19,7 @@ public sealed partial class GetActiveHeldItemOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager))
+        if (!blackboard.TryGetOwner(_entityManager, out var ownerUid))
             return (false, null);
 
         return (true, new Dictionary<string, object>()
@@ -30,7 +30,7 @@ public sealed partial class GetActiveHeldItemOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
         if (!_handsSystem.TryGetActiveItem(ownerUid, out var itemUid))
             return HTNOperatorStatus.Failed;
 

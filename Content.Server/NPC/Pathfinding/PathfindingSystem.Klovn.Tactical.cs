@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Dangers;
 using Content.Server._KS14.NPC.Pathfinding;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Map;
@@ -42,7 +43,7 @@ public sealed partial class PathfindingSystem
             (layer, mask) = _physics.GetHardCollision(entity, fixtures);
         }
 
-        var request = new TacticalPathRequest(reference, maxRange, maxCandidates, flags, layer, mask, cancelToken);
+        var request = WithAvoidedDangers(new TacticalPathRequest(reference, maxRange, maxCandidates, flags, layer, mask, cancelToken), entity);
         RentTacticalSearchState(request);
         _pathRequests.Add(request);
 
@@ -193,13 +194,27 @@ public sealed partial class PathfindingSystem
         //      CostSoFar only ever has entries added or updated, never removed, so it enumerates in the order the
         //      flood reached each poly - nearest first.
         var tilePolys = _tacticalTilePolyPool.Get();
+        var nearDangerPolys = _tacticalTilePolyPool.Get();
         var seenTiles = _tacticalSeenTilePool.Get();
+        var avoids = request.AvoidedDangers != NpcTileDangerKind.None;
 
         foreach (var (poly, _) in request.CostSoFar)
         {
-            if (poly.IsValid() && seenTiles.Add((poly.GraphUid, poly.ChunkOrigin, poly.TileIndex)))
+            // Nowhere to stand, for one that avoids it, however much it may have to cross one getting somewhere.
+            if (!poly.IsValid() ||
+                (avoids && IsDangerous(poly, request.AvoidedDangers)) ||
+                !seenTiles.Add((poly.GraphUid, poly.ChunkOrigin, poly.TileIndex)))
+                continue;
+
+            if (avoids && IsNearDanger(poly, request.AvoidedDangers))
+                nearDangerPolys.Add(poly);
+            else
                 tilePolys.Add(poly);
         }
+
+        // Right beside one only if there is nothing else: fires spread, and it may have to lie down to put itself out.
+        if (tilePolys.Count == 0)
+            (tilePolys, nearDangerPolys) = (nearDangerPolys, tilePolys);
 
         // Half the cap goes to the nearest tiles, every one of them, and the other half is spread evenly over the
         //      rest of the flood. Taking only the nearest would never offer anything past a few tiles, so no retreat
@@ -226,6 +241,7 @@ public sealed partial class PathfindingSystem
         }
 
         _tacticalTilePolyPool.Return(tilePolys);
+        _tacticalTilePolyPool.Return(nearDangerPolys);
         _tacticalSeenTilePool.Return(seenTiles);
 
         return PathResult.Path;

@@ -1,0 +1,10 @@
+- type: entity
+  parent: ClothingMaskGasERT # protects as well as the ERT's, flashes included
+  id: KsClothingMaskGasM40
+  name: M40 gas mask
+  description: A heavy military respirator with a filter canister on one cheek. Whoever wears it is not meant to have a face.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Mask/m40.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Mask/m40.rsi

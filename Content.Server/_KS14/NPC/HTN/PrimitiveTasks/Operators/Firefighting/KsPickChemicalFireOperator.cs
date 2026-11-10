@@ -29,7 +29,7 @@ public sealed partial class KsPickChemicalFireOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
         if (!_firefightingSystem.TryPickTarget(owner, out var targetCoordinates, out var approachRange))
             return (false, null);
 

@@ -50,6 +50,13 @@ public sealed partial class NpcPerceptionComponent : Component
     public float DarknessReactionScale = 1f;
 
     /// <summary>
+    ///     How much of the dark the NPC sees through, from 0 to 1, going by <see cref="NpcGetDarkVisionEvent"/>: 1 is as
+    ///         if everything were fully lit. See <see cref="NpcPerceptionSystem.RefreshDarkVision"/>.
+    /// </summary>
+    [ViewVariables]
+    public float DarkVision;
+
+    /// <summary>
     ///     A virtual marker meaning the NPC is already in combat, and so reacts at once. Null to ignore markers.
     /// </summary>
     [DataField]
@@ -62,6 +69,13 @@ public sealed partial class NpcPerceptionComponent : Component
     public TimeSpan SquadAlertWindow = TimeSpan.FromSeconds(20);
 
     #endregion
+
+    /// <summary>
+    ///     Whether it sees through smoke, which stops everyone else's eyes as a wall does. Only for what sight goes by:
+    ///         where it would stand to be hidden from a hostile still treats smoke as cover.
+    /// </summary>
+    [DataField]
+    public bool SeesThroughSmoke;
 
     #region Darkness
 

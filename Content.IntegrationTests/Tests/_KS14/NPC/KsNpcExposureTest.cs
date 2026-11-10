@@ -375,6 +375,202 @@ public sealed class KsNpcExposureTest : GameTest
     /// <summary>
     ///     Open floor with a wall along y = 0 from x = -9 to 0, and a mob to walk and plan as, parked out of the way.
     /// </summary>
+    /// <summary>
+    ///     The shadow of the wall runs on across the floor, north-east of its end. <see cref="TacticalPositionOperator.CoverStepCurve"/>
+    ///         likes the edge of that as much as the wall's end, being a step from out of sight, with nothing there to stand
+    ///         behind. <see cref="TacticalPositionOperator.CoverOnlyKey"/> does not, and with no better spot in reach finds
+    ///         nothing rather than settle for open floor.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestCoverOnlyTurnsDownTheEdgeOfAShadow(bool coverOnly)
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var searchOperator = CornerSearch(maxRange: 3f);
+
+        var effects = await Search(entManager, gridUid, walkerUid, searchOperator, new Vector2(6.5f, 5.5f), blackboard =>
+        {
+            if (coverOnly)
+                blackboard.SetValue("KsTestCoverOnly", true);
+        });
+
+        Assert.That(effects is not null, Is.Not.EqualTo(coverOnly), "only a search that will take open floor should find anything");
+    }
+
+    /// <summary>
+    ///     With a real corner in reach, that is what <see cref="TacticalPositionOperator.CoverOnlyKey"/> finds: a spot beside
+    ///         the wall's end.
+    /// </summary>
+    [Test]
+    public async Task TestCoverOnlyTakesACorner()
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var searchOperator = CornerSearch(maxRange: 6f);
+
+        var effects = await Search(entManager, gridUid, walkerUid, searchOperator, new Vector2(4.5f, -3.5f),
+            blackboard => blackboard.SetValue("KsTestCoverOnly", true));
+
+        Assert.That(effects, Is.Not.Null, "the wall's end is in reach");
+        var chosen = ((EntityCoordinates) effects![searchOperator.KeyCoordinates]).Position;
+        Assert.That(MathF.Max(MathF.Abs(chosen.X - 0.5f), MathF.Abs(chosen.Y - 0.5f)), Is.LessThanOrEqualTo(1.5f), $"{chosen} is not beside the wall's end");
+    }
+
+    /// <summary>
+    ///     <see cref="TacticalPositionOperator.LosRadiusKey"/> reaches further than the task's own radius, for an owner that
+    ///         has it.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestLosRadiusGoesByTheMob(bool keyed)
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var searchOperator = CornerSearch(maxRange: 3f);
+        searchOperator.LosRadius = 2f;
+        searchOperator.LosRadiusKey = "KsTestLosRadius";
+
+        var effects = await Search(entManager, gridUid, walkerUid, searchOperator, new Vector2(6.5f, -3.5f), blackboard =>
+        {
+            if (keyed)
+                blackboard.SetValue("KsTestLosRadius", 15f);
+        });
+
+        Assert.That(effects is not null, Is.EqualTo(keyed), "the threat is further off than the task's own radius");
+    }
+
+    /// <summary>
+    ///     <see cref="TacticalPositionOperator.MaxCandidatesKey"/> sets how many spots are weighed, for an owner that has it.
+    ///         Limited to the nearest, the furthest spot in reach is not among them.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestCandidatesGoByTheMob(bool keyed)
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+        var standing = new Vector2(4.5f, -3.5f);
+        var searchOperator = new TacticalPositionOperator
+        {
+            ReferenceCoordinatesKey = "KsTestReference",
+            MaxRange = 4f,
+            MaxCandidates = 64,
+            MaxCandidatesKey = "KsTestCandidates",
+            AvoidFireLanes = false,
+            DistanceCurve = new QuadraticCurve { Slope = 1f, Exponent = 1f },
+        };
+
+        var effects = await Search(entManager, gridUid, walkerUid, searchOperator, standing, blackboard =>
+        {
+            if (keyed)
+                blackboard.SetValue("KsTestCandidates", 2f);
+        });
+
+        Assert.That(effects, Is.Not.Null);
+        var travelled = (((EntityCoordinates) effects![searchOperator.KeyCoordinates]).Position - standing).Length();
+        Assert.That(travelled < 2f, Is.EqualTo(keyed), $"it picked a spot {travelled} away");
+    }
+
+    /// <summary>
+    ///     <see cref="TacticalPositionOperator.WallCurve"/> needs no threat: open floor scores nothing, beside a wall does, and
+    ///         a corner of two walls does better. Here the corner is beside the wall's end, and the distance is left out of it.
+    /// </summary>
+    [Test]
+    public async Task TestWallCurveTakesTheCorner()
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+
+        await Pair.Server.WaitPost(() => SpawnAt(entManager, TestWall, gridUid, 0, 1));
+        await Pair.RunTicksSync(90); // for the navmesh to take it in
+
+        var searchOperator = WallSearch(maxRange: 6f);
+        var effects = await Search(entManager, gridUid, walkerUid, searchOperator, new Vector2(-2.5f, 3.5f));
+
+        Assert.That(effects, Is.Not.Null);
+        var chosen = ((EntityCoordinates) effects![searchOperator.KeyCoordinates]).Position;
+        Assert.That(chosen, Is.EqualTo(new Vector2(-0.5f, 1.5f)), "the corner of the two walls");
+    }
+
+    /// <summary>
+    ///     With only open floor in reach there is nothing to pick.
+    /// </summary>
+    [Test]
+    public async Task TestWallCurveTurnsDownOpenFloor()
+    {
+        var (entManager, gridUid, walkerUid) = await SetUpWall();
+
+        var effects = await Search(entManager, gridUid, walkerUid, WallSearch(maxRange: 2f), new Vector2(5.5f, 5.5f));
+
+        Assert.That(effects, Is.Null);
+    }
+
+    /// <summary>
+    ///     A firing-spot search as in the operative's HTN, with its switches for the mob to set.
+    /// </summary>
+    private static TacticalPositionOperator CornerSearch(float maxRange)
+    {
+        return new TacticalPositionOperator
+        {
+            ReferenceCoordinatesKey = "KsTestReference",
+            MaxRange = maxRange,
+            MaxCandidates = 128,
+            AvoidFireLanes = false,
+            DistanceCurve = new QuadraticCurve { Slope = -1f, Exponent = 1f, YOffset = 1f },
+            LosReferenceCoordinatesKey = "KsTestThreat",
+            LosRadius = 15f,
+            LosCurve = new BoolCurve(),
+            CoverOnlyKey = "KsTestCoverOnly",
+            CoverStepCurve = new QuadraticCurve { Slope = 0.7f, YOffset = 0.3f },
+            ClaimClearanceRadius = 1.5f,
+        };
+    }
+
+    private static TacticalPositionOperator WallSearch(float maxRange)
+    {
+        return new TacticalPositionOperator
+        {
+            ReferenceCoordinatesKey = "KsTestReference",
+            MaxRange = maxRange,
+            MaxCandidates = 256,
+            AvoidFireLanes = false,
+            DistanceCurve = new QuadraticCurve { Slope = 0f, YOffset = 1f },
+            WallCurve = new QuadraticCurve { Slope = 1f },
+        };
+    }
+
+    /// <summary>
+    ///     Runs <paramref name="searchOperator"/> from <paramref name="standing"/>, with the threat where the scene has it.
+    ///         Returns its effects, or null if it found nothing.
+    /// </summary>
+    private async Task<Dictionary<string, object>?> Search(IEntityManager entManager,
+        EntityUid gridUid,
+        EntityUid walkerUid,
+        TacticalPositionOperator searchOperator,
+        Vector2 standing,
+        System.Action<NPCBlackboard>? stage = null)
+    {
+        System.Threading.Tasks.Task<(bool Valid, Dictionary<string, object>? Effects)> planTask = default!;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(searchOperator, oneOff: true);
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, walkerUid);
+            blackboard.SetValue("VisionRadius", 17.5f);
+            blackboard.SetValue("KsTestReference", new EntityCoordinates(gridUid, standing));
+            blackboard.SetValue("KsTestThreat", new EntityCoordinates(gridUid, ThreatPosition));
+            stage?.Invoke(blackboard);
+            planTask = searchOperator.Plan(blackboard, default);
+        });
+
+        for (var i = 0; i < 120 && !planTask.IsCompleted; i++)
+        {
+            await Pair.RunTicksSync(1);
+        }
+
+        Assert.That(planTask.IsCompletedSuccessfully, "the position search never finished");
+        var (valid, effects) = await planTask;
+        return valid ? effects : null;
+    }
+
     private async Task<(IEntityManager EntManager, EntityUid GridUid, EntityUid WalkerUid)> SetUpWall()
     {
         var server = Pair.Server;
@@ -390,7 +586,7 @@ public sealed class KsNpcExposureTest : GameTest
 
             for (var x = -9; x <= 0; x++)
             {
-                SpawnAt(entManager, "WallSolid", gridUid, x, 0);
+                SpawnAt(entManager, TestWall, gridUid, x, 0);
             }
 
             walkerUid = SpawnAt(entManager, SyndicateMob, gridUid, 1, 1);

@@ -142,9 +142,11 @@ public sealed partial class NPCCombatSystem
             {
                 comp.LOSAccumulator += UnoccludedCooldown;
 
-                // For consistency with NPC steering.
-                var collisionGroup = comp.UseOpaqueForLOSChecks ? CollisionGroup.Opaque : (CollisionGroup.Impassable | CollisionGroup.InteractImpassable);
-                comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, collisionGroup);
+                // KS14 start: not a fixed mask: what this gun's shot would hit. See NpcLineOfFireSystem
+                comp.TargetInLOS = comp.UseOpaqueForLOSChecks
+                    ? _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f, CollisionGroup.Opaque)
+                    : _npcLineOfFireSystem.HasLineOfFire(uid, comp.Target, distance + 0.1f);
+                // KS14 end
             }
 
             KsUpdateSight(uid, comp.Target, comp.TargetInLOS); // KS14: lock-on and laser sight
@@ -214,6 +216,28 @@ public sealed partial class NPCCombatSystem
             if (!_lockOnSystem.IsLocked(uid, comp.Target)) // KS14: must finish locking on before firing
                 continue;
 
+            // KS14 start: never where a round could hit a friend, nor from on top of one: at whatever side of the target's body
+            //      is clear, if any, or not at all. Held long enough, the gun gives way for a new spot. Only once the gun can
+            //      fire, so the lookup is once a shot.
+            if (gun.Comp.NextFire <= _timing.CurTime)
+            {
+                if (!_npcSquadFireLaneSystem.TryGetClearShot(uid,
+                        new MapCoordinates(worldPos, xform.MapID),
+                        new MapCoordinates(targetSpot, xform.MapID),
+                        _npcSquadFireLaneSystem.GetBodyRadius(comp.Target),
+                        out var clearShot))
+                {
+                    if (_npcSquadFireLaneSystem.NoteHeldFire(uid))
+                        comp.Status = CombatStatus.KsFriendInTheWay;
+
+                    continue;
+                }
+
+                _npcSquadFireLaneSystem.NoteClearShot(uid);
+                targetSpot = clearShot.Position;
+            }
+            // KS14 end
+
             EntityCoordinates targetCordinates;
 
             if (_map.TryFindGridAt(xform.MapID, targetPos, out var gridUid, out var mapGrid))
@@ -229,7 +253,7 @@ public sealed partial class NPCCombatSystem
 
             if (gun.Comp.NextFire > _timing.CurTime)
             {
-                return;
+                continue; // KS14: was return, which skipped every NPC after this one for the tick
             }
 
             _gun.AttemptShoot(uid, gun, targetCordinates, comp.Target);

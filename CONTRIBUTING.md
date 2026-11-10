@@ -663,6 +663,45 @@ in that area. To port an SS13 sprite, run the `/dmi-to-rsi` command: it converts
 
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v295.0.1. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
+### Events
+
+Events decouple systems: the system that owns some state raises, and any system that cares subscribes. A new behaviour adds a subscription and changes nothing in the raiser.
+
+**Event or call.** Call a system when the callee is known. Raise an event when subscribers the raiser doesn't know about must be able to observe or change the outcome. Dependencies point one way: a lower-level system raises and features subscribe. `NpcSquadSystem` raises `NpcSquadMemberDownedEvent` and `NpcMeterOnSquadLossSystem` subscribes, so squads have no dependency on meters. When callers need an event's result, wrap the raise in a public method, as `SharedFlashSystem.CanFlash` wraps `KsCanFlashEvent`.
+
+**Raising.** New events are `[ByRefEvent] record struct`s raised with `ref`, which don't allocate; `class` events are older and by-value. A directed raise, `RaiseLocalEvent(uid, ref ev)`, reaches only subscriptions on that entity's components. A broadcast, `RaiseLocalEvent(ref ev)`, is for events with no owning entity, such as `ChemicalFireTileChangedEvent`; `broadcast: true` on a directed raise does both. The bus allows one subscription per component and event pair, so if unrelated systems need the same moment, the component's owner re-broadcasts it as a new event ([details](#only-one-system-may-subscribe-to-a-given-component-and-event-pair)).
+
+**Combining results.** The event carries the result, and several handlers write to it in an unspecified order, so writes must be commutative: `args.CanMove |= IsUserFlying(...)`, `args.Duration *= 2`, `ModifySpeed`. `Cancelled` is monotonic: handlers set it to `true` and never back. Where order is inherent, declare it with `before:` or `after:` on the subscription, as `DisposalSignallerSystem` does for `GetDisposalsNextDirectionEvent`.
+
+**Relays.** A directed event stops at the entity's own components. Reaching anything else needs a relay, and a missing relay fails silently because the handler never runs, so test it.
+
+| To reach | The event needs | Handlers subscribe to |
+| --- | --- | --- |
+| Worn items | `IInventoryRelayEvent` with `TargetSlots`, and a line in `InventorySystem.Relay.cs` | `InventoryRelayedEvent<T>` |
+| Held items | A line in `SharedHandsSystem.Relay.cs` | `HeldRelayedEvent<T>` |
+| Status effects | A line in `StatusEffectSystem.KlovnRelay.cs` | `StatusEffectRelayedEvent<T>` |
+| Organs | A subscription on `BodyComponent` to `BodySystem.RelayEvent` | `BodyRelayedEvent<T>` |
+
+Handlers read and write the original event through `args.Args`. `Subs.SubscribeWithRelay` subscribes one handler to the plain, worn and held forms at once.
+
+**Event name patterns.** The name is a contract about when the event is raised and what its handlers may mutate. **Pure** means a handler mutates only the event: no component writes, `Dirty`, popups, audio, damage or RNG rolls.
+
+| Pattern | Asks | Raised | Handlers |
+| --- | --- | --- | --- |
+| `Can...Event` | May this happen? | Any number of times: per tick, by a UI, while an NPC plans | Pure |
+| `Get...Event` | What is this value? | Any number of times, on demand. The raiser returns the result | Pure |
+| `Modify...Event` | What does this value become? | Mid-calculation, on a value the raiser is about to apply. The raiser reads it back | Pure |
+| `Refresh...Event` | What should the cached value be? | By a `Refresh...()` method, when an input changes. That method stores the result on a component | Pure |
+| `...AttemptEvent` | This is happening: stop it or respond | Once per real try, right before the act | May have side effects |
+
+- **To ask, raise a Can, never an Attempt.** Attempt handlers would run side effects for a try that never happened: `ClumsySystem.OnCatchAttempt` rolls RNG and deals damage on `CatchAttemptEvent`. A `Silent` or `ShowPopup` flag (`StorageOpenAttemptEvent`, `BasePickupAttemptEvent`) doesn't make an Attempt pure: it only quiets the handlers that read it.
+- **An action that needs both raises both.** `SharedFlashSystem.Flash` raises `KsCanFlashEvent` first, then `FlashAttemptEvent` for side effects of a real flash. `CanDropTargetEvent` and `DragDropTargetEvent` split the query and the action the same way.
+- **Modify is not a notification.** It doesn't mean the value was applied. `DamageableSystem.ChangeDamage` shows the sequence: `BeforeDamageChangedEvent` can cancel, `DamageModifyEvent` transforms the amount, and `DamageDealtEvent` carries the final amount. `DamageModifyEvent` is skipped for `ignoreResistances` and fires at full strength even if armour absorbs everything, so react to `DamageDealtEvent` instead, as `IvDripSpillageSystem` does.
+- **Get or Modify.** A Get builds a value from a default, and anything can ask for it, as `GetPryTimeModifierEvent` does. A Modify passes through a value the raiser already computed and is about to use, as `ModifyUncuffDurationEvent` does. A handler of one may raise the other: `SlowOnDamageSystem` raises `ModifySlowOnDamageSpeedEvent` while handling `RefreshMovementSpeedModifiersEvent`.
+- **Refresh results are cached, so they can go stale.** `RefreshMovementSpeedModifiers()` raises `RefreshMovementSpeedModifiersEvent` and stores the result on `MovementSpeedModifierComponent`, and everything reads the component rather than the event. A system that contributes must call the method whenever its contribution changes, or the cached value silently stays wrong. `SlowOnDamageSystem` calls it on equip, unequip, the component's startup and shutdown, and `DamageChangedEvent`.
+- **Name a new event for how it is raised.** A pure question is a Can or a Get.
+- **Existing code isn't proof.** `CanSeeAttemptEvent` and `NpcPushableAttemptEvent` are pure queries named as Attempts. `BlockingSystem.OnUserDamageModified` damages the shield and plays audio on `DamageModifyEvent`, and `SharedFirelockSystem.OnDoorGetPryTimeModifier` shows a popup on `GetPryTimeModifierEvent`. Both are impure handlers on events that must be pure. Before raising an event more often than it is raised today, read every subscriber, relays included, and move any side effect out.
+
 ## 5. Build configurations, and what each one catches
 
 `Release` and `Debug` fail on **disjoint** sets of problems. Neither is a superset of the other, so a change is only green when both are.
@@ -826,7 +865,9 @@ message is the quick way to see that shape; `-v q` prints only the total and hid
 
 The offenders are mostly the low-level performance conveniences: `CollectionsMarshal`, `Unsafe`,
 `MemoryMarshal`, most of `System.Runtime.InteropServices`, reflection that writes, and anything
-touching the filesystem or process directly. Plain `Dictionary`, `Span`, `MathF` and `System.Numerics`'
+touching the filesystem or process directly. A `new()` generic constraint is one too, though nothing in the source
+names it: `new T()` compiles to `Activator.CreateInstance<T>()`. Have the subclass make the instance instead (an
+abstract `CreateOverlay()`, say). Plain `Dictionary`, `Span`, `MathF` and `System.Numerics`'
 `Vector2`/`Vector3`/`Vector4` are all fine. If you are reaching for something to avoid a dictionary lookup or a
 struct copy in rendering code, the copy was almost certainly cheaper than finding this out:
 
@@ -1102,6 +1143,21 @@ hot-thing check needs.
 Items do reach the puddle's step trigger, but `SlipperySystem.CanSlip` rejects anything that can't be stunned, so
 they're never counted. Non-hard fixtures also don't block a tile (`TurfSystem.IsTileBlocked`), and neither ray queries
 nor projectile hits count them.
+
+### A tile's air: ask the grid, then the map
+
+`AtmosphereSystem.GetTileMixture(grid, map, tile, excite)` gives the grid's air on a tile it simulates. On every other
+tile it gives the air of the map you pass, and space if you pass `null`. A tile with no floor, or one atmos never
+simulated, therefore reads as vacuum on a planet whenever the caller passed no map. Use the KS14 wrappers, which find the
+grid's map themselves:
+
+- `AtmosphereSystem.GetGridTileMixture(gridUid, tile, excite)` and `IsGridTileSpace(gridUid, tile)` on the server.
+- `SharedAtmosphereSystem.GetMapMixture(mapUid)` and `IsMapSpace(mapUid)` on either side, for what is off every grid.
+  The client simulates no gas, so this is all it knows.
+
+A map's air is immutable. Code that changes air keeps checking `GasMixture.Immutable`, and code that only reads it (a
+boiling point, a fire's temperature) gets the planet's air rather than vacuum. Don't test for `MapAtmosphereComponent` to
+decide whether somewhere is space: a map can have one and still be space. Ask `IsMapSpace`.
 
 ### Verifying an attribute subscription actually generated
 

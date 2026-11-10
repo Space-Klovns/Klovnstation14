@@ -1,7 +1,5 @@
 using Content.Server._KS14.NPC.Meters;
 using Content.Server.NPC;
-using Content.Server.NPC.HTN;
-using Content.Server.NPC.HTN.PrimitiveTasks;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Meters;
@@ -18,7 +16,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Meters;
 ///         amount: 20
 ///     </code>
 /// </example>
-public sealed partial class AddMeterOperator : HTNOperator
+public sealed partial class AddMeterOperator : KsInstantOperator
 {
     [Dependency] private NpcMeterSystem _npcMeterSystem = default!;
 
@@ -28,14 +26,8 @@ public sealed partial class AddMeterOperator : HTNOperator
     [DataField(required: true)]
     public float Amount;
 
-    public override void Startup(NPCBlackboard blackboard)
+    protected override void OnStartup(EntityUid ownerUid, NPCBlackboard blackboard)
     {
-        base.Startup(blackboard);
-        _npcMeterSystem.Add(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), Meter, Amount);
-    }
-
-    public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
-    {
-        return HTNOperatorStatus.Finished;
+        _npcMeterSystem.Add(ownerUid, Meter, Amount);
     }
 }

@@ -37,7 +37,7 @@ public sealed partial class ReportSquadThreatOperator : HTNOperator
         if (!blackboard.TryGetValue<EntityCoordinates>(CoordinatesKey, out var coordinates, _entityManager))
             return;
 
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
 
         if (Contact)
         {

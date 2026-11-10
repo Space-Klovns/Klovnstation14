@@ -1,4 +1,4 @@
-using System.Numerics;
+using Content.Server._KS14.NPC.Utility;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Considerations;
 using Robust.Server.GameObjects;
@@ -37,17 +37,6 @@ public sealed partial class CoordinatesInFOVCon : UtilityConsideration
         var targetPosition = _transformSystem.GetWorldPosition(targetUid);
         var referencePosition = _transformSystem.ToWorldPosition(referenceCoordinates);
 
-        var forward = targetPosition - ownerPosition;
-        Vector2Helpers.Normalize(ref forward);
-
-        var toTarget = referencePosition - ownerPosition;
-        Vector2Helpers.Normalize(ref toTarget);
-
-        var dot = Vector2.Dot(forward, toTarget);
-
-        var halfFovRad = MathF.PI * (Angle / 2f) / 180f;
-        var threshold = MathF.Cos(halfFovRad);
-
-        return dot >= threshold ? 1f : 0f;
+        return NpcCoordinates.IsInCone(ownerPosition, targetPosition, referencePosition, Angle) ? 1f : 0f;
     }
 }

@@ -443,11 +443,11 @@ namespace Content.Server.NPC.Pathfinding
                 (layer, mask) = _physics.GetHardCollision(entity, fixtures);
             }
 
-            // KS14 start: round the doors this NPC has found it cannot get through
-            return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken)
+            // KS14 start: round the doors this NPC has found it cannot get through, and away from what it avoids
+            return WithAvoidedDangers(new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken)
             {
                 AvoidedTiles = GetAvoidedTiles(entity),
-            };
+            }, entity);
             // KS14 end
             /* return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken); */ // KS14: replaced above
         }
@@ -489,6 +489,12 @@ namespace Content.Server.NPC.Pathfinding
             // KS14 start
             if (blackboard.TryGetValue<bool>(NPCBlackboard.NavPush, out var push, EntityManager) && push)
                 flags |= PathFlags.Pushing;
+
+            // Steering forces doors for an NPC that interacts: see NPCSteeringSystem.Obstacles.cs
+            if ((flags & PathFlags.Interact) != 0x0 &&
+                blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var owner, EntityManager) &&
+                _npcDoorSystem.PriesDoorsInItsWay(owner))
+                flags |= PathFlags.PryingTool;
             // KS14 end
 
             return flags;
@@ -531,7 +537,7 @@ namespace Content.Server.NPC.Pathfinding
 
             // Same context as do_after and not synchronously blocking soooo
 #pragma warning disable RA0004
-            var ev = new PathResultEvent(request.Task.Result, request.Polys);
+            var ev = new PathResultEvent(request.Task.Result, request.Polys) { KsIgnoredDangers = request.IgnoredDangers }; // KS14
 #pragma warning restore RA0004
 
             return ev;

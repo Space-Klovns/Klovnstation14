@@ -21,6 +21,6 @@ public sealed partial class TargetDownPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return _npcPerceptionSystem.HasPendingKillCallout(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), Within);
+        return _npcPerceptionSystem.HasPendingKillCallout(blackboard.GetOwner(), Within);
     }
 }

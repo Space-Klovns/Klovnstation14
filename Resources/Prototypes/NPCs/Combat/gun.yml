@@ -16,6 +16,8 @@
             targetKey: TargetCoordinates
             pathfindKey: TargetPathfind
             stopOnLineOfSight: true
+            requireLosForRangeCheck: true # KS14: in range is no use behind glass that stops its gun
+            lineOfFire: true # KS14
             rangeKey: RangedRange # KS14: MeleeRange -> RangedRange
 
         - !type:HTNPrimitiveTask

@@ -31,7 +31,7 @@ public sealed partial class InteractUsingOperator : HTNOperator
     /// </remarks>
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entManager) ||
+        if (!blackboard.TryGetEntity(TargetKey, _entManager, out var targetUid) ||
             !_entManager.EntityExists(targetUid))
         {
             return (false, null);
@@ -42,11 +42,11 @@ public sealed partial class InteractUsingOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
         if (!_handsSystem.TryGetActiveItem(ownerUid, out var itemUid))
             return HTNOperatorStatus.Failed;
 
-        if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, _entManager) ||
+        if (!blackboard.TryGetEntity(TargetKey, _entManager, out var targetUid) ||
             !_entManager.TryGetComponent(targetUid, out TransformComponent? targetTransformComponent))
         {
             return HTNOperatorStatus.Failed;

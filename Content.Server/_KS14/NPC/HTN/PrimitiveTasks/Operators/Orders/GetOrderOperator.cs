@@ -32,7 +32,7 @@ public sealed partial class GetOrderOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        if (!_npcSquadTacticsSystem.TryGetOrder(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner), out var order))
+        if (!_npcSquadTacticsSystem.TryGetOrder(blackboard.GetOwner(), out var order))
             return (false, null);
 
         var effects = new Dictionary<string, object>

@@ -1,13 +1,15 @@
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 using Content.Server._KS14.NPC.Exposure;
 using Content.Server._KS14.NPC.KillZones;
+using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Physics;
 using Content.Server.NPC;
+using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators;
@@ -37,11 +39,15 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private NPCUtilitySystem _npcUtilitySystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
+    [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private NpcKillZoneSystem _npcKillZoneSystem = default!;
     [Dependency] private NpcExposureSystem _npcExposureSystem = default!;
+    [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
+    [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
     [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -66,7 +72,20 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
     [DataField] public float MaxRange = 15f;
 
+    /// <summary>
+    ///     A blackboard float that overrides <see cref="MaxRange"/> if the owner has it, for reach that goes by the mob
+    ///         rather than the task.
+    /// </summary>
+    [DataField] public string? MaxRangeKey;
+
     [DataField] public int MaxCandidates = 64;
+
+    /// <summary>
+    ///     A blackboard float that overrides <see cref="MaxCandidates"/> if the owner has it. The candidates are half the
+    ///         nearest tiles and half spread over the rest of the flood, so in a big room any one corner is rarely among
+    ///         them: more of them cost more, and miss fewer.
+    /// </summary>
+    [DataField] public string? MaxCandidatesKey;
 
     [DataField] public IUtilityCurve DistanceCurve = new PresetCurve { Preset = "KsTargetDistanceLessClose" };
 
@@ -78,7 +97,33 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
     [DataField] public float LosRadius = 10f;
 
+    /// <summary>
+    ///     A blackboard float that overrides <see cref="LosRadius"/> if the owner has it.
+    /// </summary>
+    [DataField] public string? LosRadiusKey;
+
+    /// <summary>
+    ///     A blackboard entity, the one <see cref="LosReferenceCoordinatesKey"/> is the spot of: the LOS radius is no more than
+    ///         how near the owner has to be to notice it (<see cref="NpcPerceptionSystem.GetNoticeRange"/>). For a spot to see
+    ///         a hostile from, not just a line to where it is: in the dark that is only close up.
+    /// </summary>
+    [DataField] public string? NoticeTargetKey;
+
+    /// <summary>
+    ///     How far inside the notice range a spot has to be, for <see cref="NoticeTargetKey"/>: a line is taken up to half a
+    ///         tile past <see cref="LosRadius"/>, and the owner stops short of the spot by as much as it does at any
+    ///         (<c>CampingRange</c>, 0.75 for operatives). Nothing at all, by day: the notice range is as far as it can see.
+    /// </summary>
+    [DataField] public float NoticeMargin = 1.25f;
+
     [DataField] public IUtilityCurve LosCurve = new BoolCurve();
+
+    /// <summary>
+    ///     Whether line of sight here is for shooting: a candidate only counts as seeing <see cref="LosReferenceCoordinatesKey"/>
+    ///         if what the owner is holding could hit it from there. A spot that sees it through a window is no use to a
+    ///         gun that the window stops. See <see cref="NpcLineOfFireSystem"/>.
+    /// </summary>
+    [DataField] public bool LineOfFire;
 
     /// <summary>
     ///     If set, scores whether a candidate is a step from cover from <see cref="LosReferenceCoordinatesKey"/>: whether
@@ -89,23 +134,20 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// </summary>
     [DataField] public IUtilityCurve? CoverStepCurve;
 
-    private static readonly Vector2i[] CoverStepOffsets =
-    [
-        new(1, 0), new(-1, 0), new(0, 1), new(0, -1),
-        new(1, 1), new(1, -1), new(-1, 1), new(-1, -1),
-    ];
+    /// <summary>
+    ///     A blackboard bool that, true on the owner, rules out every candidate without cover a step away (see
+    ///         <see cref="CoverStepCurve"/>) rather than only scoring it down, for an NPC that would sooner have no spot
+    ///         than one in the open. The candidate must also be right beside something: the shadow of a pillar runs on
+    ///         across a big room, and the edge of it is a step from being out of sight with nothing to stand behind.
+    ///         Works with or without the curve. Needs <see cref="LosReferenceCoordinatesKey"/>.
+    /// </summary>
+    [DataField] public string? CoverOnlyKey;
 
     /// <summary>
-    ///     What <see cref="LosReferenceCoordinatesKey"/> can see, built once per plan for <see cref="CoverStepCurve"/>.
-    ///         Scoring runs without awaiting anything, so plans sharing this operator cannot interleave over it.
+    ///     If set, scores how tucked in a candidate is, with no threat needed: 0 on open floor, 0.5 beside something it
+    ///         cannot stand on, 1 in the corner of two such sides. For somewhere to wait with nothing to take cover from.
     /// </summary>
-    private readonly NpcSightField _coverStepSightField = new();
-
-    /// <summary>
-    ///     Whether this plan's candidates are scored on <see cref="CoverStepCurve"/>: set up in <see cref="Plan"/>, with
-    ///         <see cref="_coverStepSightField"/>.
-    /// </summary>
-    private bool _scoreCoverStep;
+    [DataField] public IUtilityCurve? WallCurve;
 
     /// <summary>
     /// If set, adds a directional-cone consideration (owner facing this coordinates key, is the candidate
@@ -147,6 +189,14 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public float KillZoneAvoidance;
 
     /// <summary>
+    ///     A blackboard key holding the hostile being shot. Set, and with the squad's
+    ///         <see cref="Squad.Tactics.NpcSquadTacticsSettings.Crossfire"/> on, a spot is worth more the wider the angle at
+    ///         the hostile between it and every squadmate already shooting it, so a squad closes in from several sides
+    ///         rather than bunching up on one.
+    /// </summary>
+    [DataField] public string? CrossfireTargetKey;
+
+    /// <summary>
     ///     If set, scores how well hidden a candidate is from the threat at this key - not only from where it stands
     ///         (which <see cref="LosReferenceCoordinatesKey"/> covers), but from floor it could step to within
     ///         <see cref="ExposureReach"/> steps. A spot just round a corner is hidden from where the threat is, and
@@ -185,17 +235,6 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public bool DeferWhenOverBudget;
 
     /// <summary>
-    ///     The threat's approach, worked out once per plan and scored against for every candidate. Scoring runs
-    ///         without awaiting anything, so plans sharing this operator cannot interleave over it.
-    /// </summary>
-    private readonly List<MapCoordinates> _exposureProbes = new();
-
-    /// <summary>
-    ///     Candidates still in the running, with their score before exposure. Reused, as above.
-    /// </summary>
-    private readonly List<(PathPoly Candidate, float Score)> _scoredCandidates = new();
-
-    /// <summary>
     /// Blackboard float key read at claim time to size the claim's TTL (e.g. CampingTime/AdvanceTime).
     /// </summary>
     [DataField] public string ClaimDurationKey = "CampingTime";
@@ -209,356 +248,77 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// </summary>
     [DataField] public bool InvalidatePlanOnNoHighest = true;
 
-    /// <inheritdoc/>
-    public HTNPlanState ShutdownState => HTNPlanState.TaskFinished;
-
-    public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(
-        NPCBlackboard blackboard, CancellationToken cancelToken)
+    /// <summary>
+    ///     This operator's state for the plan in progress. One operator instance is shared by every NPC on the same HTN
+    ///         prototype, and <see cref="Plan"/> awaits only once, so all of this is written after that await and read
+    ///         before the next plan can start: plans sharing the operator cannot interleave over it. The one instance
+    ///         is reused, so nothing here is allocated per plan.
+    /// </summary>
+    private sealed class PlanState
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        /// <summary>
+        ///     What this plan's shots collide with, if it goes by <see cref="LineOfFire"/>.
+        /// </summary>
+        public CollisionGroup ShotMask;
 
-        // Phase 1: markers-first. Reuses the existing marker utilityQuery prototype unmodified so mapper
-        // intent always wins when a marker scores > 0; no claim is registered for marker picks, since
-        // anti-stacking for the marker pool is out of scope (mappers already space markers out).
-        if (MarkerPrototype is not null)
-        {
-            var markerResult = _npcUtilitySystem.GetEntities(blackboard, MarkerPrototype);
-            var markerTarget = markerResult.GetHighest();
+        /// <summary>
+        ///     What <see cref="LosReferenceCoordinatesKey"/> can see, built once per plan for
+        ///         <see cref="CoverStepCurve"/>.
+        /// </summary>
+        public readonly NpcSightField CoverStepSightField = new();
 
-            if (markerTarget.IsValid())
-            {
-                return (true, new Dictionary<string, object>
-                {
-                    { Key, markerTarget },
-                    { KeyCoordinates, new EntityCoordinates(markerTarget, Vector2.Zero) },
-                });
-            }
-        }
+        /// <summary>
+        ///     Whether this plan's candidates are scored on <see cref="CoverStepCurve"/>, with
+        ///         <see cref="CoverStepSightField"/>.
+        /// </summary>
+        public bool ScoreCoverStep;
 
-        // Phase 2: dynamic fallback via the pathfinding poly graph.
-        if (!blackboard.TryGetValue<EntityCoordinates>(ReferenceCoordinatesKey, out var reference, _entityManager))
-            return (!InvalidatePlanOnNoHighest, new Dictionary<string, object>());
+        /// <summary>
+        ///     This plan's reach for line of sight, and whether <see cref="CoverOnlyKey"/> is on.
+        /// </summary>
+        public float LosRadius;
+        public bool CoverOnly;
 
-        var candidates = await _pathfindingSystem.GetTacticalCandidates(
-            owner, reference, MaxRange, MaxCandidates, cancelToken, _pathfindingSystem.GetFlags(blackboard));
+        /// <summary>
+        ///     Where <see cref="LosReferenceCoordinatesKey"/> is, if the owner has it. Nothing moves it while the
+        ///         candidates are scored.
+        /// </summary>
+        public MapCoordinates? LosReference;
 
-        if (candidates.Count == 0)
-            return (!InvalidatePlanOnNoHighest, new Dictionary<string, object>());
+        /// <summary>
+        ///     The owner's vision radius, which distance is scored against.
+        /// </summary>
+        public float VisionRadius;
 
-        PathPoly? best = null;
-        var bestScore = 0f;
+        /// <summary>
+        ///     Whether <see cref="AvoidFireLanes"/> is on and the squad's fire lanes are enabled.
+        /// </summary>
+        public bool AvoidFireLanes;
 
-        // Lazy: the debug candidate list is only allocated/populated while a debug overlay is actually
-        // subscribed - see NpcTacticalPositionDebugSystem. Every NPC replanning this task every tick would
-        // otherwise pay for a debug payload nobody is looking at.
-        var debugCandidates = _npcTacticalPositionDebugSystem.IsTracking(owner)
-            ? new List<TacticalPositionDebugCandidate>(candidates.Count)
-            : null;
+        /// <summary>
+        ///     The threat's approach, scored against for every candidate.
+        /// </summary>
+        public readonly List<MapCoordinates> ExposureProbes = new();
 
-        _exposureProbes.Clear();
-        if (ExposureReferenceCoordinatesKey is not null &&
-            blackboard.TryGetValue<EntityCoordinates>(ExposureReferenceCoordinatesKey, out var exposureReference, _entityManager))
-            _npcExposureSystem.GetApproachProbes(owner, exposureReference, ExposureReach, ExposureProbes, _exposureProbes);
+        /// <summary>
+        ///     Candidates still in the running, with their score before exposure.
+        /// </summary>
+        public readonly List<(PathPoly Candidate, float Score)> ScoredCandidates = new();
 
-        // Not even one candidate's worth of this tick's budget left: the search waits, or does without.
-        if (_exposureProbes.Count > 0 && !_npcExposureSystem.CanAfford(_exposureProbes.Count))
-        {
-            if (DeferWhenOverBudget)
-                return (false, null);
-
-            _exposureProbes.Clear();
-        }
-
-        // Built after the search's await, as the exposure probes are: see _coverStepSightField.
-        _scoreCoverStep = false;
-        if (CoverStepCurve is not null &&
-            LosReferenceCoordinatesKey is not null &&
-            blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var coverStepReference, _entityManager))
-        {
-            _scoreCoverStep = true;
-            // Past the candidates' own reach by a step, so every tile next to one is in range.
-            _npcLineOfSightSystem.BuildSightField(_transformSystem.ToMapCoordinates(coverStepReference),
-                LosRadius + 2f,
-                _coverStepSightField);
-        }
-
-        var considerationCount = GetConsiderationCount();
-
-        // Exposure is by far the dearest consideration, and can only lower a score. So every candidate is scored on the
-        //      rest first, and exposure is then weighed best first, until no candidate left could beat the best so far
-        //      even unexposed - or this tick's budget runs out, when the best so far stands. Usually only the top few
-        //      candidates are weighed at all.
-        _scoredCandidates.Clear();
-        foreach (var candidate in candidates)
-        {
-            var score = ScoreCandidate(blackboard, owner, candidate, reference, considerationCount);
-            if (score > 0f)
-                _scoredCandidates.Add((candidate, score));
-            else
-                debugCandidates?.Add(new TacticalPositionDebugCandidate(_entityManager.GetNetCoordinates(candidate.Coordinates), 0f));
-        }
-
-        if (_exposureProbes.Count > 0)
-            _scoredCandidates.Sort((a, b) => b.Score.CompareTo(a.Score));
-
-        var weighing = _exposureProbes.Count > 0;
-        foreach (var (candidate, scoreWithoutExposure) in _scoredCandidates)
-        {
-            var score = scoreWithoutExposure;
-            var weighed = false;
-
-            if (weighing)
-            {
-                if (scoreWithoutExposure <= bestScore || !_npcExposureSystem.CanAfford(_exposureProbes.Count))
-                {
-                    weighing = false; // nothing further down can win, or there is no budget left to tell
-                }
-                else
-                {
-                    score *= GetExposureFactor(candidate, considerationCount);
-                    weighed = true;
-                }
-            }
-
-            // Candidates never weighed show their score without exposure: the most they could have scored.
-            debugCandidates?.Add(new TacticalPositionDebugCandidate(_entityManager.GetNetCoordinates(candidate.Coordinates), score));
-
-            // An unweighed score cannot be compared with weighed ones.
-            if (_exposureProbes.Count > 0 && !weighed)
-                continue;
-
-            if (score > bestScore)
-            {
-                bestScore = score;
-                best = candidate;
-            }
-        }
-
-        if (best is null)
-        {
-            if (debugCandidates is not null)
-            {
-                _npcTacticalPositionDebugSystem.SendDebugFrame(owner, debugCandidates, null,
-                    _npcTacticalPositionClaimSystem.GetAllClaimsForDebug().ConvertAll(ToDebugClaim));
-            }
-
-            return (!InvalidatePlanOnNoHighest, new Dictionary<string, object>());
-        }
-
-        _npcTacticalPositionClaimSystem.Claim(owner, best.Coordinates, GetClaimTtl(blackboard), ClaimClearanceRadius);
-
-        if (debugCandidates is not null)
-        {
-            _npcTacticalPositionDebugSystem.SendDebugFrame(owner, debugCandidates, best.Coordinates,
-                _npcTacticalPositionClaimSystem.GetAllClaimsForDebug().ConvertAll(ToDebugClaim));
-        }
-
-        return (true, new Dictionary<string, object>
-        {
-            { KeyCoordinates, best.Coordinates },
-        });
+        /// <summary>
+        ///     How much crossfire counts in this search, and the directions, from the hostile, of the squadmates
+        ///         shooting it.
+        /// </summary>
+        public float Crossfire;
+        public Vector2 CrossfireTargetPosition;
+        public readonly List<Vector2> CrossfireDirections = new();
+        public readonly HashSet<EntityUid> CrossfireSquadmates = new();
     }
 
-    private TacticalPositionDebugClaim ToDebugClaim((EntityCoordinates Coordinates, float ClearanceRadius) claim)
-    {
-        return new TacticalPositionDebugClaim(_entityManager.GetNetCoordinates(claim.Coordinates), claim.ClearanceRadius);
-    }
+    private readonly PlanState _plan = new();
 
     /// <summary>
-    ///     How many considerations a candidate is scored on, which <see cref="NPCUtilitySystem.GetAdjustedScore"/>
-    ///         needs to make scores with different numbers of them comparable.
+    ///     Shared by every plan: the curve for the random jitter consideration, which has no data field.
     /// </summary>
-    private int GetConsiderationCount()
-    {
-        return 1 // distance, always applied
-            + (AvoidFireLanes && _npcSquadFireLaneSystem.Enabled ? 1 : 0)
-            + (LosReferenceCoordinatesKey is not null ? 1 : 0)
-            + (CoverStepCurve is not null && LosReferenceCoordinatesKey is not null ? 1 : 0)
-            + (FovReferenceCoordinatesKey is not null ? 1 : 0)
-            + (RandomProbability > 0f ? 1 : 0)
-            + (KillZoneAvoidance > 0f ? 1 : 0)
-            + (_exposureProbes.Count > 0 ? 1 : 0)
-            + 1; // claim penalty, always applied
-    }
-
-    /// <summary>
-    ///     What exposure multiplies <paramref name="candidate"/>'s score by, at most 1. Spends a check per probe from this
-    ///         tick's budget.
-    /// </summary>
-    private float GetExposureFactor(PathPoly candidate, int considerationCount)
-    {
-        var hiddenRaw = 1f - _npcExposureSystem.GetExposure(_transformSystem.ToMapCoordinates(candidate.Coordinates), _exposureProbes, ExposureRadius);
-        return _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(ExposureCurve, hiddenRaw), considerationCount);
-    }
-
-    /// <summary>
-    ///     <paramref name="candidate"/>'s score on everything but exposure, which <see cref="Plan"/> weighs separately.
-    /// </summary>
-    private float ScoreCandidate(NPCBlackboard blackboard, EntityUid owner, PathPoly candidate, EntityCoordinates reference, int considerationCount)
-    {
-        var avoidFireLanes = AvoidFireLanes && _npcSquadFireLaneSystem.Enabled;
-
-        var score = 1f;
-
-        if (!candidate.Coordinates.TryDistance(_entityManager, _transformSystem, reference, out var distance))
-            return 0f;
-
-        var visionRadius = blackboard.GetValueOrDefault<float>(blackboard.GetVisionRadiusKey(_entityManager), _entityManager);
-        var distanceRaw = Math.Clamp(distance / MathF.Max(visionRadius, 0.01f), 0f, 1f);
-        score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(DistanceCurve, distanceRaw), considerationCount);
-
-        if (score <= 0f)
-            return 0f;
-
-        if (LosReferenceCoordinatesKey is not null &&
-            blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var losReference, _entityManager))
-        {
-            var losRaw = _npcLineOfSightSystem.InLineOfSight(
-                _transformSystem.ToMapCoordinates(candidate.Coordinates),
-                _transformSystem.ToMapCoordinates(losReference),
-                LosRadius + 0.5f) ? 1f : 0f;
-
-            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(LosCurve, losRaw), considerationCount);
-
-            if (score <= 0f)
-                return 0f;
-        }
-
-        if (_scoreCoverStep)
-        {
-            var coverStepRaw = HasCoverAStepAway(candidate) ? 1f : 0f;
-            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(CoverStepCurve!, coverStepRaw), considerationCount);
-
-            if (score <= 0f)
-                return 0f;
-        }
-
-        if (FovReferenceCoordinatesKey is not null &&
-            blackboard.TryGetValue<EntityCoordinates>(FovReferenceCoordinatesKey, out var fovReference, _entityManager))
-        {
-            var fovRaw = EvaluateFov(owner, candidate.Coordinates, fovReference, FovAngle);
-            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(FovCurve, fovRaw), considerationCount);
-
-            if (score <= 0f)
-                return 0f;
-        }
-
-        if (RandomProbability > 0f)
-        {
-            var jitterRaw = _robustRandom.Prob(RandomProbability) ? 1f : 0f;
-            score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(new BoolCurve(), jitterRaw), considerationCount);
-
-            if (score <= 0f)
-                return 0f;
-        }
-
-        if (avoidFireLanes)
-        {
-            MapCoordinates? aim = LosReferenceCoordinatesKey is not null &&
-                blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var aimCoordinates, _entityManager)
-                    ? _transformSystem.ToMapCoordinates(aimCoordinates)
-                    : null;
-
-            var fireLanePenalty = _npcSquadFireLaneSystem.GetFireLanePenalty(owner, _transformSystem.ToMapCoordinates(candidate.Coordinates), aim);
-            score *= _npcUtilitySystem.GetAdjustedScore(fireLanePenalty, considerationCount);
-
-            if (score <= 0f)
-                return 0f;
-        }
-
-        if (KillZoneAvoidance > 0f)
-        {
-            var danger = _npcKillZoneSystem.GetDanger(owner, candidate.Coordinates);
-            score *= _npcUtilitySystem.GetAdjustedScore(Math.Clamp(1f - KillZoneAvoidance * danger, 0f, 1f), considerationCount);
-
-            if (score <= 0f)
-                return 0f;
-        }
-
-        if (ExclusiveClaims)
-        {
-            if (_npcTacticalPositionClaimSystem.GetClaimPenalty(candidate.Coordinates, ClaimClearanceRadius, ignoreClaimantUid: owner) < 1f)
-                return 0f;
-        }
-        else
-        {
-            var claimPenalty = _npcTacticalPositionClaimSystem.GetClaimPenalty(candidate.Coordinates, ClaimClearanceRadius);
-            score *= _npcUtilitySystem.GetAdjustedScore(claimPenalty, considerationCount);
-        }
-
-        return score;
-    }
-
-    /// <summary>
-    ///     Whether a free floor tile next to <paramref name="candidate"/>'s, diagonals included, is out of sight of
-    ///         <see cref="LosReferenceCoordinatesKey"/>. See <see cref="CoverStepCurve"/>.
-    /// </summary>
-    private bool HasCoverAStepAway(PathPoly candidate)
-    {
-        var gridUid = candidate.GraphUid;
-        if (!_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var mapGridComponent))
-            return false;
-
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-        var tile = _mapSystem.TileIndicesFor(grid, candidate.Coordinates);
-
-        foreach (var offset in CoverStepOffsets)
-        {
-            var neighbourCoordinates = new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector(grid, tile + offset));
-
-            // Somewhere it can stand: no wall, door, table or anything else the navmesh has there.
-            if (_pathfindingSystem.GetPoly(neighbourCoordinates) is not { } neighbourPoly ||
-                !neighbourPoly.Data.IsFreeSpace ||
-                neighbourPoly.Data.CollisionLayer != 0 ||
-                neighbourPoly.Data.CollisionMask != 0)
-                continue;
-
-            if (!_npcLineOfSightSystem.InLineOfSight(_coverStepSightField, _transformSystem.ToMapCoordinates(neighbourCoordinates)))
-                return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Mirrors CoordinatesInFOVCon's dot-product cone check: is the direction from
-    /// <paramref name="owner"/> to <paramref name="candidate"/> within <paramref name="angleDegrees"/>
-    /// of the direction from <paramref name="owner"/> to <paramref name="reference"/>?
-    /// </summary>
-    private float EvaluateFov(EntityUid owner, EntityCoordinates candidate, EntityCoordinates reference, float angleDegrees)
-    {
-        var ownerPosition = _transformSystem.GetWorldPosition(owner);
-        var candidatePosition = _transformSystem.ToWorldPosition(candidate);
-        var referencePosition = _transformSystem.ToWorldPosition(reference);
-
-        var forward = candidatePosition - ownerPosition;
-        Vector2Helpers.Normalize(ref forward);
-
-        var toReference = referencePosition - ownerPosition;
-        Vector2Helpers.Normalize(ref toReference);
-
-        var dot = Vector2.Dot(forward, toReference);
-
-        var halfFovRad = MathF.PI * (angleDegrees / 2f) / 180f;
-        var threshold = MathF.Cos(halfFovRad);
-
-        return dot >= threshold ? 1f : 0f;
-    }
-
-    private TimeSpan GetClaimTtl(NPCBlackboard blackboard)
-    {
-        var duration = blackboard.GetValueOrDefault<float>(ClaimDurationKey, _entityManager);
-        return TimeSpan.FromSeconds(duration + ClaimTtlBuffer);
-    }
-
-    public void ConditionalShutdown(NPCBlackboard blackboard)
-    {
-        _npcTacticalPositionClaimSystem.ReleaseClaim(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
-    }
-
-    public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
-    {
-        base.TaskShutdown(blackboard, status);
-        _npcTacticalPositionClaimSystem.ReleaseClaim(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
-    }
+    private static readonly BoolCurve JitterCurve = new();
 }

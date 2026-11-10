@@ -33,6 +33,12 @@ public enum NpcBreachMethod : byte
     None,
 
     /// <summary>
+    ///     A charge. Only a squad's plan has it (<see cref="Squad.Tactics.NpcHunt.AllowCharges"/>), and nothing forces a door
+    ///         with it: see <c>NpcSquadTacticsSystem.RunCharge</c>.
+    /// </summary>
+    Charge,
+
+    /// <summary>
     ///     A prying tool: a crowbar on an unpowered door, jaws of life on any.
     /// </summary>
     Pry,

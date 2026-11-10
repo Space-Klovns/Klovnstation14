@@ -38,6 +38,7 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     ///     Squad mobs and a mob that never leads, all of which skip the watch: straight on to going in after it.
     /// </summary>
     private const string NoWatchMob = "KsTacticsTestMobNoWatch";
+    private const string RecoveringMob = "KsTacticsTestMobRecovering";
     private const string NoWatchLonerMob = "KsTacticsTestMobNoWatchLoner";
     private const string HastyLonerMob = "KsTacticsTestMobHastyLoner";
     private const string CautiousMob = "KsTacticsTestMobCautious";
@@ -58,10 +59,17 @@ public sealed class KsNpcSquadTacticsTest : GameTest
   id: KsTacticsTestMobNoWatch
   components:
   - type: Hands # to open lockers with: a locker nobody could open is not searched
+  - type: DoAfter # to force doors with
   - type: NpcSquadMember
     tactics:
       watchTime: 0
       maxStageDistance: 40 # the walk round the test room to its far door is about 21 tiles
+
+- type: entity
+  parent: KsTacticsTestMobNoWatch
+  id: KsTacticsTestMobRecovering
+  components:
+  - type: NpcRecovery
 
 - type: entity
   parent: KsTacticsTestMobNoWatch
@@ -224,6 +232,39 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                 Assert.That(eliteNt.CanLead && eliteSyndicate.CanLead, "elites lead");
                 Assert.That(regularNt.CanLead || regularSyndicate.CanLead, Is.False, "regulars do not");
             });
+        });
+    }
+
+    /// <summary>
+    ///     A member waiting for its meds to work is not coming, so it is not counted on: it gets no order, and the hunt goes
+    ///         on without it. It is still in the fight, though: a hostile it can see ends the hunt as anyone's would.
+    /// </summary>
+    [Test]
+    public async Task TestRecoveringMemberIsNotCountedOn()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: RecoveringMob);
+        var recoverySystem = scene.EntManager.System<Content.Server._KS14.NPC.Recovery.NpcRecoverySystem>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            recoverySystem.StartRecovery(scene.MemberUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid), Is.Not.Null, "the squad should hunt without it");
+                Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out _), "the leader should have an order");
+                Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out _), Is.False, "one waiting for its meds should not");
+            });
+
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            scene.PerceptionSystem.SetContact(scene.MemberUid, scene.TargetUid, new NpcContact(NpcContactState.Visible,
+                now, now, now, scene.LastKnownCoordinates, default, null, Reacted: true));
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid), Is.Null, "a hostile it can see means a fight, not a hunt");
         });
     }
 
@@ -430,6 +471,56 @@ public sealed class KsNpcSquadTacticsTest : GameTest
     }
 
     /// <summary>
+    ///     Neither the wait for a forced door nor the wait to get inside runs out on someone part way through forcing one:
+    ///         the new order would call it away, and it would start again from nothing. Once it has stopped they run out
+    ///         as usual.
+    /// </summary>
+    [Test]
+    public async Task TestForcingADoorHoldsOffTheHuntTimers()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var doorSystem = scene.EntManager.System<NpcDoorSystem>();
+            var longAgo = System.TimeSpan.FromHours(1);
+            var (securityUid, plainUid) = SplitBySecurity(scene);
+            var jawsUid = GiveInHand(scene.EntManager, plainUid, TestJawsOfLife);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            var eastEntrance = hunt.Entrances[hunt.StagedMembers[plainUid].EntranceIndex];
+            var doorUid = eastEntrance.DoorUid!.Value;
+
+            scene.TransformSystem.SetCoordinates(securityUid, hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].StageCoordinates);
+            scene.TransformSystem.SetCoordinates(plainUid, eastEntrance.StageCoordinates);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Breach));
+
+            Assert.That(doorSystem.TryStartBreach(plainUid, doorUid, jawsUid, NpcDoorSystem.DefaultBreachTimeout, fromSteering: false));
+            hunt.PhaseStartedAt -= longAgo;
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Breach), "the door is part way forced");
+
+            doorSystem.StopBreach(plainUid);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Entry), "with nobody at it, they should go in through whichever are open");
+
+            Assert.That(doorSystem.TryStartBreach(plainUid, doorUid, jawsUid, NpcDoorSystem.DefaultBreachTimeout, fromSteering: true));
+            hunt.PhaseStartedAt -= longAgo;
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Entry), "a member forcing its way in is getting there");
+
+            doorSystem.StopBreach(plainUid);
+            scene.TacticsSystem.UpdateNow();
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Search), "and with nobody at it, they should search from where they got to");
+        });
+    }
+
+    /// <summary>
     ///     A room nobody can get into - every door asks for access none of them have, and none of them carries anything
     ///         to force one - is not stacked up on at all: the squad gives up on it. That holds with an open firelock
     ///         under each door too: the airlock is what stands in the way, not the firelock.
@@ -446,8 +537,17 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             StageLost(scene, scene.MemberUid, moving: false);
             scene.TacticsSystem.UpdateNow();
 
-            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid)?.Phase, Is.EqualTo(NpcHuntPhase.Exhausted),
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt?.Phase, Is.EqualTo(NpcHuntPhase.Exhausted),
                 "with no way in, the squad should give up rather than stack up on doors it cannot open");
+
+            // Holding as near as it can get, and given time to walk there, rather than sent at a room it cannot reach.
+            Assert.That(hunt!.ShutOut, "that is being shut out, and not having looked and found nothing");
+            Assert.That(hunt.ShutOutCoordinates, Is.Not.Null);
+            Assert.That(hunt.ShutOutWalk, Is.GreaterThan(TimeSpan.Zero));
+
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.LeaderUid, out var order) && order.Kind == NpcOrderKind.HoldArea, "it should be told to hold");
+            Assert.That(order.Coordinates.Position, Is.EqualTo(hunt.ShutOutCoordinates!.Value.Position));
         });
     }
 
@@ -482,6 +582,35 @@ public sealed class KsNpcSquadTacticsTest : GameTest
                 Assert.That(hunt.StagedMembers[plainUid].IsLead && hunt.StagedMembers[plainUid].Method == NpcBreachMethod.Pry,
                     "the member with the jaws should lead, prying");
             });
+        });
+    }
+
+    /// <summary>
+    ///     A lead found its door will not open for it, and that was the last way in: they find out by trying, and end up the
+    ///         same as a squad that could tell from the start, holding outside it.
+    /// </summary>
+    [Test]
+    public async Task TestFooledWithNoWayLeftHoldsOutside()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: SecurityMob, secondMob: NoWatchMob, westDoor: SecurityDoor, eastDoor: CommandDoor);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var (securityUid, _) = SplitBySecurity(scene);
+
+            StageLost(scene, scene.LeaderUid, moving: false);
+            StageLost(scene, scene.MemberUid, moving: false);
+            scene.TacticsSystem.UpdateNow();
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid)!;
+            var westDoorUid = hunt.Entrances[hunt.StagedMembers[securityUid].EntranceIndex].DoorUid!.Value;
+
+            scene.EntManager.System<NpcDoorSystem>().ReportRefused(securityUid, westDoorUid);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Exhausted), "with no way in left, the squad should give up");
+            Assert.That(hunt.ShutOut, "that is being shut out, and not having looked and found nothing");
+            Assert.That(hunt.ShutOutCoordinates, Is.Not.Null);
         });
     }
 
@@ -1026,6 +1155,45 @@ public sealed class KsNpcSquadTacticsTest : GameTest
             Assert.That(hunt, Is.Not.Null, "a squad whose leader is cautious should hunt it");
             Assert.That(hunt!.TargetUid, Is.Null, "there is nobody to hunt, only somewhere");
             Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Stage), "with nobody to watch for, it should go straight to stacking up");
+        });
+    }
+
+    /// <summary>
+    ///     A noise out in the open, with no room to stack up on, is searched at once - and by the whole squad. The one with
+    ///         the spot to check goes to it, and the rest come up too. They used to stand and "watch" from where they heard
+    ///         it, out of sight of it, and leave one member to go alone.
+    /// </summary>
+    [Test]
+    public async Task TestNoiseInTheOpenBringsTheWholeSquad()
+    {
+        var scene = await SetUpSquadOutsideRoom(squadMob: CautiousMob);
+        var meterSystem = scene.EntManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            // South of the room, out on open floor, a dozen tiles from both.
+            var noise = new EntityCoordinates(scene.GridUid, new Vector2(-3.5f, -9.5f));
+
+            meterSystem.Set(scene.LeaderUid, Caution, 50f);
+            scene.TacticsSystem.NoteDisturbance(scene.MemberUid, noise);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(scene.TacticsSystem.GetHunt(scene.SquadUid)?.Phase, Is.EqualTo(NpcHuntPhase.Search),
+                "the test needs a noise with no room to stack up on, searched at once");
+
+            EntityUid? followerUid = null;
+
+            foreach (var uid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                Assert.That(scene.TacticsSystem.TryGetOrder(uid, out var order) && order.Kind == NpcOrderKind.Search,
+                    $"{scene.EntManager.ToPrettyString(uid)} should be going to the noise, but has {(scene.TacticsSystem.TryGetOrder(uid, out var other) ? other.Kind : "no order")}");
+                Assert.That((order.Coordinates.Position - noise.Position).Length(), Is.LessThan(1f), "to the noise");
+
+                if (order.Range > 1f)
+                    followerUid = uid;
+            }
+
+            Assert.That(followerUid, Is.Not.Null, "one should be checking the spot, and the other coming up to help");
         });
     }
 

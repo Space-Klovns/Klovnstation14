@@ -22,6 +22,19 @@ public sealed partial class CooldownOperator : HTNOperator
     /// </summary>
     [DataField(required: true)] public TimeSpan Duration;
 
+    /// <summary>
+    ///     Whether this is shared by the owner's whole squad rather than its own, so that one member setting it holds them
+    ///         all back. On its own, an NPC keeps it to itself.
+    /// </summary>
+    [DataField] public bool SquadWide;
+
+    /// <summary>
+    ///     Fails if the cooldown is already running, rather than starting it again. For a cooldown that holds something
+    ///         back, placed before the thing itself: <c>CooldownPrecondition</c> alone cannot, as NPCs planning side by
+    ///         side all pass it before any of them gets here. Only the first to get here carries on.
+    /// </summary>
+    [DataField] public bool FailIfRunning;
+
     private int _idHash;
 
     public override void Initialize(IEntitySystemManager sysManager)
@@ -32,10 +45,15 @@ public sealed partial class CooldownOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager))
+        if (!blackboard.TryGetOwner(_entityManager, out var ownerUid))
             return HTNOperatorStatus.Failed;
 
-        _genericCooldownSystem.SetCooldown(ownerUid, _idHash, _gameTiming.CurTime + Duration);
+        var holderUid = _genericCooldownSystem.GetHolder(ownerUid, SquadWide);
+
+        if (FailIfRunning && _genericCooldownSystem.IsKeyOnCooldown(holderUid, _idHash))
+            return HTNOperatorStatus.Failed;
+
+        _genericCooldownSystem.SetCooldown(holderUid, _idHash, _gameTiming.CurTime + Duration);
         return HTNOperatorStatus.Finished;
     }
 }

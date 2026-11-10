@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Pathfinding;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Physics;
 using Content.Shared.Tag;
 using Robust.Shared.Map;
@@ -21,6 +23,7 @@ namespace Content.Server._KS14.NPC.Squad;
 public sealed partial class NpcSquadCoverSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
@@ -69,12 +72,32 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     {
         assignment = default;
 
-        return _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) &&
-            squadEntity.Value.Comp.Leader is { } leaderUid &&
-            _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
-            squadEntity.Value.Comp.CoverPlan is { HasRoom: true } plan &&
-            !IsStale(squadEntity.Value, leaderUid, plan, leaderSquadMemberComponent.Cover) &&
+        return TryGetSquadCover(memberUid, out var squadEntity, out var leader, out var settings) &&
+            squadEntity.Comp.CoverPlan is { HasRoom: true } plan &&
+            !IsStale(squadEntity, leader.Owner, plan, settings) &&
             plan.Assignments.TryGetValue(memberUid, out assignment);
+    }
+
+    /// <summary>
+    ///     <paramref name="memberUid"/>'s squad, that squad's leader, and the cover settings the leader carries. False
+    ///         if the member has no squad, or the squad has no leader that is a squad member.
+    /// </summary>
+    private bool TryGetSquadCover(EntityUid memberUid,
+        out Entity<NpcSquadComponent> squadEntity,
+        out Entity<NpcSquadMemberComponent> leader,
+        [NotNullWhen(true)] out NpcSquadCoverSettings? settings)
+    {
+        squadEntity = default;
+        leader = default;
+        settings = null;
+
+        if (!_npcSquadSystem.TryGetSquad(memberUid, out var squad) ||
+            !_npcSquadSystem.TryGetLeader(squad.Value, out leader))
+            return false;
+
+        squadEntity = squad.Value;
+        settings = leader.Comp.Cover;
+        return true;
     }
 
     /// <summary>
@@ -99,10 +122,8 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     /// </summary>
     public bool HasThreatObjective(EntityUid memberUid)
     {
-        return _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) &&
-            squadEntity.Value.Comp.Leader is { } leaderUid &&
-            _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
-            TryGetThreatObjective(squadEntity.Value, leaderSquadMemberComponent.Cover, out _);
+        return TryGetSquadCover(memberUid, out var squadEntity, out _, out var settings) &&
+            TryGetThreatObjective(squadEntity, settings, out _);
     }
 
     /// <summary>
@@ -122,11 +143,11 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
     private NpcSquadCoverPlan? EnsurePlan(Entity<NpcSquadComponent> squadEntity)
     {
-        if (squadEntity.Comp.Leader is not { } leaderUid ||
-            !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent))
+        if (!_npcSquadSystem.TryGetLeader(squadEntity, out var leader))
             return null;
 
-        var settings = leaderSquadMemberComponent.Cover;
+        var leaderUid = leader.Owner;
+        var settings = leader.Comp.Cover;
 
         if (squadEntity.Comp.CoverPlan is { } existingPlan && !IsStale(squadEntity, leaderUid, existingPlan, settings))
             return existingPlan;
@@ -141,13 +162,8 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         if (_gameTiming.CurTime >= plan.ExpiresAt || plan.SquadRevision != squadEntity.Comp.Revision)
             return true;
 
-        if (squadEntity.Comp.ThreatCoordinates is { } threatCoordinates)
-        {
-            if (plan.ThreatCoordinates is not { } plannedThreatCoordinates ||
-                !threatCoordinates.TryDistance(EntityManager, _transformSystem, plannedThreatCoordinates, out var threatMoved) ||
-                threatMoved > settings.ThreatMoveTolerance)
-                return true;
-        }
+        if (HasThreatMovedSincePlan(squadEntity, plan, settings))
+            return true;
 
         if (!plan.HasRoom)
             return false;
@@ -157,13 +173,35 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         if (plan.SeededFromThreat)
             return !TryGetThreatObjective(squadEntity, settings, out _);
 
+        return HasLeaderLeftPlannedRoom(leaderUid, plan);
+    }
+
+    /// <summary>
+    ///     Whether the squad knows of a threat that the plan did not plan for, or that has moved further than the
+    ///         tolerance since it did.
+    /// </summary>
+    private bool HasThreatMovedSincePlan(Entity<NpcSquadComponent> squadEntity, NpcSquadCoverPlan plan, NpcSquadCoverSettings settings)
+    {
+        if (squadEntity.Comp.ThreatCoordinates is not { } threatCoordinates)
+            return false;
+
+        return plan.ThreatCoordinates is not { } plannedThreatCoordinates ||
+            !threatCoordinates.TryDistance(EntityManager, _transformSystem, plannedThreatCoordinates, out var threatMoved) ||
+            threatMoved > settings.ThreatMoveTolerance;
+    }
+
+    /// <summary>
+    ///         Whether the leader is no longer in the room the plan was made for.
+    /// </summary>
+    private bool HasLeaderLeftPlannedRoom(EntityUid leaderUid, NpcSquadCoverPlan plan)
+    {
         var leaderTransform = Transform(leaderUid);
-        if (leaderTransform.GridUid != plan.GridUid || !_mapGridQuery.TryComp(plan.GridUid, out var mapGridComponent))
+        if (leaderTransform.GridUid != plan.GridUid || !_npcGridSystem.TryGetGrid(plan.GridUid, out var planGrid))
             return true;
 
         // Members walk to their spots inside the room, so the leader only leaves it when something else in its
         //      plan (combat, a retreat) takes it out - which is exactly when the old room stops mattering.
-        var leaderTile = _mapSystem.TileIndicesFor((plan.GridUid, mapGridComponent), leaderTransform.Coordinates);
+        var leaderTile = _mapSystem.TileIndicesFor(planGrid, leaderTransform.Coordinates);
         return !plan.RoomTiles.Contains(leaderTile);
     }
 
@@ -178,12 +216,10 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         };
 
         var leaderTransform = Transform(leaderUid);
-        if (leaderTransform.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(leaderTransform.GridUid, out var gridEntity))
             return plan;
 
-        var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-
-        var (collisionLayer, collisionMask) = GetRoomCollision(leaderUid);
+        var gridUid = gridEntity.Owner;
 
         // Go to the threat, if the squad knows of one on this grid; otherwise hold where the leader is.
         var leaderTile = _mapSystem.TileIndicesFor(gridEntity, leaderTransform.Coordinates);
@@ -198,12 +234,8 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
         var exposureTiles = new List<Vector2i>();
 
-        if (!TryAnalyseRoom(gridEntity, seedTile, leaderTile, collisionLayer, collisionMask, settings, plan, exposureTiles))
-        {
-            plan.RoomTiles.Clear();
-            plan.Thresholds.Clear();
+        if (!TryAnalyseRoomAt(leaderUid, gridEntity, seedTile, leaderTile, settings, plan, exposureTiles))
             return plan;
-        }
 
         AssignCover(squadEntity, gridEntity, plan, settings, exposureTiles);
 
@@ -213,6 +245,43 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         plan.HasRoom = true;
         plan.ExpiresAt = now + TimeSpan.FromSeconds(settings.PlanLifetime);
         return plan;
+    }
+
+    /// <summary>
+    ///     A fresh analysis of <paramref name="grid"/> for <paramref name="walkerUid"/>, to classify tiles by what it
+    ///         could walk through.
+    /// </summary>
+    private RoomAnalysis CreateAnalysis(EntityUid walkerUid, Entity<MapGridComponent> grid)
+    {
+        var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
+
+        return new RoomAnalysis
+        {
+            Grid = grid,
+            CollisionLayer = collisionLayer,
+            CollisionMask = collisionMask,
+        };
+    }
+
+    /// <summary>
+    ///     Analyses the room around <paramref name="seedTile"/> as <paramref name="walkerUid"/> would walk it: see
+    ///         <see cref="TryAnalyseRoom"/>. If there is no room, <paramref name="plan"/> is left without room tiles or
+    ///         thresholds.
+    /// </summary>
+    private bool TryAnalyseRoomAt(EntityUid walkerUid,
+        Entity<MapGridComponent> grid,
+        Vector2i seedTile,
+        Vector2i awayFromTile,
+        NpcSquadCoverSettings settings,
+        NpcSquadCoverPlan plan,
+        List<Vector2i> exposureTiles)
+    {
+        if (TryAnalyseRoom(CreateAnalysis(walkerUid, grid), seedTile, awayFromTile, settings, plan, exposureTiles))
+            return true;
+
+        plan.RoomTiles.Clear();
+        plan.Thresholds.Clear();
+        return false;
     }
 
     /// <summary>
@@ -243,25 +312,15 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         NpcSquadCoverSettings settings,
         NpcSquadCoverPlan room)
     {
-        if (_transformSystem.GetGrid(seedCoordinates) is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGridTile(seedCoordinates, out var gridEntity, out var seedTile))
             return false;
 
-        var gridEntity = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-        var (collisionLayer, collisionMask) = GetRoomCollision(walkerUid);
-
-        var seedTile = _mapSystem.TileIndicesFor(gridEntity, seedCoordinates);
-        var awayFromTile = _transformSystem.GetGrid(awayFromCoordinates) == gridUid
+        var awayFromTile = _transformSystem.GetGrid(awayFromCoordinates) == gridEntity.Owner
             ? _mapSystem.TileIndicesFor(gridEntity, awayFromCoordinates)
             : seedTile;
 
         _roomExposureTiles.Clear();
-        if (TryAnalyseRoom(gridEntity, seedTile, awayFromTile, collisionLayer, collisionMask, settings, room, _roomExposureTiles))
-            return true;
-
-        room.RoomTiles.Clear();
-        room.Thresholds.Clear();
-        return false;
+        return TryAnalyseRoomAt(walkerUid, gridEntity, seedTile, awayFromTile, settings, room, _roomExposureTiles);
     }
 
     #region Assignment
@@ -390,8 +449,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     private EntityUid TakeNearest(List<EntityUid> memberUids, EntityCoordinates coordinates)
     {
         var target = _transformSystem.ToMapCoordinates(coordinates);
-        var bestIndex = 0;
-        var bestDistance = float.MaxValue;
+        var best = NpcBestOf<int>.Lowest();
 
         for (var i = 0; i < memberUids.Count; i++)
         {
@@ -400,13 +458,10 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
                 ? Vector2.DistanceSquared(memberCoordinates.Position, target.Position)
                 : float.MaxValue;
 
-            if (distance >= bestDistance)
-                continue;
-
-            bestIndex = i;
-            bestDistance = distance;
+            best.Offer(i, distance);
         }
 
+        var bestIndex = best.Found ? best.Value : 0;
         var memberUid = memberUids[bestIndex];
         memberUids.RemoveAt(bestIndex);
         return memberUid;

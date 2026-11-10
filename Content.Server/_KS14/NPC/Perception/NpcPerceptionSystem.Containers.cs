@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Server.NPC.Components;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Storage.Components;
 using Robust.Shared.Map;
@@ -36,10 +37,18 @@ public sealed partial class NpcPerceptionSystem
         // In something that is not a locker - carried in a bag, in a mech, down a disposal chute: not somewhere
         //      anyone could go and look, so just lost.
         if (!_containerSystem.IsEntityOrParentInContainer(targetUid) &&
-            VanishedInPlainSight(contact, observerMapCoordinates, range) &&
+            VanishedInPlainSight(contact, observerMapCoordinates, range, entity.Comp.SeesThroughSmoke) &&
             TryGetClosedStorageNear(contact.LastKnownCoordinates, entity.Comp.SuspicionRange, out storageUid))
             return contact with { State = NpcContactState.Suspected, ContainerUid = storageUid };
 
+        return ToLost(contact);
+    }
+
+    /// <summary>
+    ///     The contact as one lost: remembered where it was seen, in no hiding place.
+    /// </summary>
+    private static NpcContact ToLost(NpcContact contact)
+    {
         return contact with { State = NpcContactState.Lost, ContainerUid = null };
     }
 
@@ -67,18 +76,28 @@ public sealed partial class NpcPerceptionSystem
     {
         var storageGone = contact.ContainerUid is not { } storageUid || TerminatingOrDeleted(storageUid);
 
-        if (!storageGone &&
-            !(_entityStorageQuery.TryComp(contact.ContainerUid!.Value, out var storageComponent) &&
-                storageComponent.Open &&
-                _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, _transformSystem.GetMapCoordinates(contact.ContainerUid.Value), range)))
+        if (!storageGone && !IsStorageSeenOpen(entity, contact.ContainerUid!.Value, observerMapCoordinates, range))
             return false;
 
         if (contact.State == NpcContactState.Suspected)
             entity.Comp.Contacts.Remove(targetUid);
         else
-            entity.Comp.Contacts[targetUid] = contact with { State = NpcContactState.Lost, ContainerUid = null };
+            entity.Comp.Contacts[targetUid] = ToLost(contact);
 
         return true;
+    }
+
+    /// <summary>
+    ///     Whether the NPC can see the storage and it is open: it can look inside.
+    /// </summary>
+    private bool IsStorageSeenOpen(Entity<NpcPerceptionComponent> entity,
+        EntityUid storageUid,
+        MapCoordinates observerMapCoordinates,
+        float range)
+    {
+        return _entityStorageQuery.TryComp(storageUid, out var storageComponent) &&
+            storageComponent.Open &&
+            _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, _transformSystem.GetMapCoordinates(storageUid), range, entity.Comp.SeesThroughSmoke);
     }
 
     /// <summary>
@@ -110,7 +129,7 @@ public sealed partial class NpcPerceptionSystem
     ///         Someone who ran round a corner should be behind it, out of sight; someone who stopped dead and
     ///         vanished is somewhere they can see, and is not there.
     /// </summary>
-    private bool VanishedInPlainSight(NpcContact contact, MapCoordinates observerMapCoordinates, float range)
+    private bool VanishedInPlainSight(NpcContact contact, MapCoordinates observerMapCoordinates, float range, bool throughSmoke)
     {
         if (TerminatingOrDeleted(contact.LastKnownCoordinates.EntityId))
             return false;
@@ -118,7 +137,7 @@ public sealed partial class NpcPerceptionSystem
         var lastKnownMapCoordinates = _transformSystem.ToMapCoordinates(contact.LastKnownCoordinates);
         var expectedMapCoordinates = lastKnownMapCoordinates.Offset(contact.LastKnownVelocity * VanishLookahead);
 
-        return _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, expectedMapCoordinates, range);
+        return _npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, expectedMapCoordinates, range, throughSmoke);
     }
 
     private bool TryGetClosedStorageNear(EntityCoordinates coordinates, float range, [NotNullWhen(true)] out EntityUid? storageUid)
@@ -129,7 +148,7 @@ public sealed partial class NpcPerceptionSystem
             return false;
 
         var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
-        var bestDistanceSquared = float.MaxValue;
+        var best = NpcBestOf<EntityUid>.Lowest();
 
         _nearbyStorages.Clear();
         _entityLookupSystem.GetEntitiesInRange(mapCoordinates, range, _nearbyStorages, LookupFlags.Static | LookupFlags.Dynamic | LookupFlags.Uncontained);
@@ -140,13 +159,10 @@ public sealed partial class NpcPerceptionSystem
                 continue;
 
             var distanceSquared = (_transformSystem.GetMapCoordinates(storage.Owner).Position - mapCoordinates.Position).LengthSquared();
-            if (distanceSquared >= bestDistanceSquared)
-                continue;
-
-            bestDistanceSquared = distanceSquared;
-            storageUid = storage.Owner;
+            best.Offer(storage.Owner, distanceSquared);
         }
 
-        return storageUid != null;
+        storageUid = best.Found ? best.Value : null;
+        return best.Found;
     }
 }

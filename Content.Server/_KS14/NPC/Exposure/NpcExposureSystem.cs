@@ -1,6 +1,7 @@
 using System.Numerics;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.CCVar;
 using Robust.Shared.Configuration;
 using Robust.Shared.Map;
@@ -29,6 +30,7 @@ namespace Content.Server._KS14.NPC.Exposure;
 public sealed partial class NpcExposureSystem : EntitySystem
 {
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -92,12 +94,8 @@ public sealed partial class NpcExposureSystem : EntitySystem
 
         if (maxProbes <= 1 ||
             reach <= 0 ||
-            _transformSystem.GetGrid(threatCoordinates) is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGridTile(threatCoordinates, out var grid, out var threatTile))
             return;
-
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
-        var threatTile = _mapSystem.TileIndicesFor(grid, threatCoordinates);
 
         _floodSteps.Clear();
         _npcSquadCoverSystem.FloodTiles(walkerUid, grid, threatTile, reach, _floodSteps, stopAtDoors: false);
@@ -115,14 +113,14 @@ public sealed partial class NpcExposureSystem : EntitySystem
             : a.Tile.X != b.Tile.X ? a.Tile.X.CompareTo(b.Tile.X) : a.Tile.Y.CompareTo(b.Tile.Y));
 
         var wanted = Math.Min(maxProbes - 1, _floodTiles.Count);
-        var tileSize = (float) mapGridComponent.TileSize;
+        var tileSize = (float) grid.Comp.TileSize;
 
         for (var i = 0; i < wanted; i++)
         {
             // Evenly through the list, ending on the furthest.
             var index = (int) ((i + 1) * (long) _floodTiles.Count / wanted) - 1;
             var tile = _floodTiles[index].Tile;
-            var center = new EntityCoordinates(gridUid, new Vector2(tile.X + 0.5f, tile.Y + 0.5f) * tileSize);
+            var center = new EntityCoordinates(grid.Owner, new Vector2(tile.X + 0.5f, tile.Y + 0.5f) * tileSize);
             probes.Add(_transformSystem.ToMapCoordinates(center));
         }
     }

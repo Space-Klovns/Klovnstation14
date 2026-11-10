@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
+using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 using Content.Server.NPC.Systems;
 using Content.Shared.Hands.Components;
@@ -30,7 +31,7 @@ public sealed class KsNpcHandsTest : GameTest
     private const string Wieldable = "KsHandsTestWieldable";
     private const string Npc = "KsHandsTestNpc";
     private const string Gun = "KsHandsTestGun";
-    private const string Magazine = "MagazineShotgun";
+    private const string Magazine = TestMagazine;
     private const string Medipen = "KsHandsTestMedipen";
 
     /// <summary>
@@ -47,16 +48,14 @@ public sealed class KsNpcHandsTest : GameTest
   - type: Wieldable
 
 - type: entity
-  parent: WeaponShotgunBulldog
+  parent: KsNpcTestPistol
   id: KsHandsTestGun
   components:
   - type: Wieldable
 
 - type: entity
-  parent: EmergencyMedipen
+  parent: KsNpcTestMedipen
   id: KsHandsTestMedipen
-  components:
-  - type: NpcHealingItem
 
 - type: entity
   id: KsHandsTestNpc
@@ -111,6 +110,16 @@ public sealed class KsNpcHandsTest : GameTest
         key: WeaponActiveHand
     - !type:HTNPrimitiveTask
       operator: !type:WieldOperator
+
+- type: htnCompound
+  id: KsHandsTestSwapAndHoldCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:SwapToFreeHandOperator
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: KsHandsTestHold
 
 - type: utilityQuery
   id: KsHandsTestInventoryAmmo
@@ -203,6 +212,39 @@ public sealed class KsNpcHandsTest : GameTest
     }
 
     /// <summary>
+    ///     The hands a plan expected to end up with are for planning. Once it has started, the blackboard says what the NPC
+    ///         holds now: an NPC that went on believing it had its gun in hand wielded it mid-pry, over and over.
+    /// </summary>
+    [Test]
+    public async Task TestPlannedHandsDoNotOutliveThePlan()
+    {
+        var (entManager, npcUid, _, _) = await SetUpArmedNpc();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.GetComponent<HTNComponent>(npcUid).Blackboard.SetValue("KsHandsTestHold", 600f);
+            Start(entManager, npcUid, "KsHandsTestSwapAndHoldCompound");
+        });
+
+        await RunUntil(entManager, () => entManager.GetComponent<HTNComponent>(npcUid).Plan?.CurrentOperator is StaticWaitOperator);
+
+        await Pair.Server.WaitPost(() => entManager.System<SharedHandsSystem>().SetActiveHand(npcUid, "right"));
+        await Pair.RunTicksSync(5);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var blackboard = entManager.GetComponent<HTNComponent>(npcUid).Blackboard;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.GetComponent<HTNComponent>(npcUid).Plan?.CurrentOperator, Is.InstanceOf<StaticWaitOperator>(), "the plan should still be on");
+                Assert.That(blackboard.GetValueOrDefault<string>(NPCBlackboard.ActiveHand, entManager), Is.EqualTo("right"), "the hand it is really using, not the free one it planned on");
+                Assert.That(blackboard.GetValueOrDefault<bool>(NPCBlackboard.ActiveHandFree, entManager), Is.False, "which has the gun in it");
+            });
+        });
+    }
+
+    /// <summary>
     ///     Live: an NPC with a gun wielded in both hands takes the medipen from its belt, uses it on itself, drops it, and
     ///         ends with the gun back in its active hand, wielded.
     /// </summary>
@@ -258,7 +300,7 @@ public sealed class KsNpcHandsTest : GameTest
             handsSystem.AddHand(npcUid, "right", HandLocation.Right);
             handsSystem.AddHand(npcUid, "left", HandLocation.Left);
 
-            beltUid = entManager.SpawnEntity("ClothingBeltMilitaryWebbing", coordinates);
+            beltUid = entManager.SpawnEntity(TestBelt, coordinates);
             Assert.That(entManager.System<Content.Shared.Inventory.InventorySystem>().TryEquip(npcUid, beltUid, "belt", silent: true, force: true),
                 "the belt should be worn");
 

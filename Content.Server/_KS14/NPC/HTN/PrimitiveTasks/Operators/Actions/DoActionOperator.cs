@@ -29,7 +29,7 @@ public sealed partial class DoActionOperator : KsBaseActionOperator
 
         if (TargetKey != null)
         {
-            if (!blackboard.TryGetValue<EntityUid>(TargetKey, out var targetUid, EntityManager))
+            if (!blackboard.TryGetEntity(TargetKey, EntityManager, out var targetUid))
                 return HTNOperatorStatus.Failed;
 
             ActionsSystem.SetEventTarget(actionEntity, targetUid);

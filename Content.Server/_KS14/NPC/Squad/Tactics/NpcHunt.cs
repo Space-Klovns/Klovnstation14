@@ -78,6 +78,53 @@ public sealed class NpcHunt
     ///         leading it. Only once a hunt, so a squad that keeps being refused does not go round in circles.
     /// </summary>
     public bool ReassignedForDoors;
+
+    /// <summary>
+    ///     A member kept out of the staging, with orders of its own. Only a plan sets this: see
+    ///         <see cref="NpcSquadPlan.WatcherUid"/>.
+    /// </summary>
+    public EntityUid? HeldBackUid;
+
+    /// <summary>
+    ///     Whether a member with a charge can lead a way in shut to it. Only a plan sets this: a squad that has merely lost
+    ///         someone does not go blowing doors in.
+    /// </summary>
+    public bool AllowCharges;
+
+    /// <summary>
+    ///     Whether the hunt was given up on because there is no getting there, rather than because it found nothing. Anything
+    ///         sent to where the hostile is from then on would only walk into a wall, or fail to plan and stand there.
+    /// </summary>
+    public bool ShutOut;
+
+    /// <summary>
+    ///     Whether it is the squad that is shut in, walled off from where the hostile is, rather than the hostile shut away
+    ///         from them. A charge then goes on a wall of their own room, towards it, and once out they hunt it from scratch.
+    /// </summary>
+    public bool SealedIn;
+
+    /// <summary>
+    ///     While making a way in with a charge: the plan that holds it, which is one nobody else sees. <see cref="RunCharge"/>'s
+    ///         business is the same either way, so it gets one to work with.
+    /// </summary>
+    public NpcSquadPlan? Blast;
+
+    public NpcSquadAction BlastAction;
+
+    /// <summary>
+    ///     Whether a charge has already been tried, for this not to go round in circles when it does not work.
+    /// </summary>
+    public bool BlastTried;
+
+    /// <summary>
+    ///     With <see cref="ShutOut"/>, the nearest they can get to it, to wait at. Null for nowhere better than where they are.
+    /// </summary>
+    public EntityCoordinates? ShutOutCoordinates;
+
+    /// <summary>
+    ///     With <see cref="ShutOut"/>, how long it takes to walk there, on top of how long the area gets held.
+    /// </summary>
+    public TimeSpan ShutOutWalk;
 }
 
 /// <summary>
@@ -123,6 +170,17 @@ public sealed class NpcHuntStaging
     ///     The turns along the way, in order, not counting the waiting spot itself.
     /// </summary>
     public readonly List<Vector2i> Waypoints = new();
+
+    /// <summary>
+    ///     How far that way is, in tiles: the walk, and not how far the spot is as the crow flies.
+    /// </summary>
+    public int RouteLength;
+
+    /// <summary>
+    ///     How much further than straight at the hostile this way takes it, in tiles: the walk round, and on in from the
+    ///         way in, past where it was when it set off. See <see cref="NpcSquadTacticsSettings.MaxDetour"/>.
+    /// </summary>
+    public float Detour;
 
     /// <summary>
     ///     The next turn to make; past the end once only the waiting spot is left.

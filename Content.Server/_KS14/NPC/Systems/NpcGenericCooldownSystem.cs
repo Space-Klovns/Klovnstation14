@@ -1,4 +1,6 @@
 using Content.Server._KS14.NPC.Components;
+using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Utility;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.Systems;
@@ -11,7 +13,17 @@ namespace Content.Server._KS14.NPC.Systems;
 public sealed partial class NpcGenericCooldownSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private EntityQuery<NpcGenericCooldownComponent> _cooldownQuery = default!;
+
+    /// <summary>
+    ///     The entity that holds a cooldown set by <paramref name="ownerUid"/>: its squad if the cooldown is
+    ///         <paramref name="squadWide"/> and it has one, or else itself.
+    /// </summary>
+    public EntityUid GetHolder(EntityUid ownerUid, bool squadWide)
+    {
+        return squadWide ? _npcSquadSystem.GetSquadOrSelf(ownerUid) : ownerUid;
+    }
 
     public void SetCooldown(EntityUid uid, string stringKey, TimeSpan endTime)
     {
@@ -23,12 +35,7 @@ public sealed partial class NpcGenericCooldownSystem : EntitySystem
         var cooldownComponent = EnsureComp<NpcGenericCooldownComponent>(uid);
         var now = _gameTiming.CurTime;
 
-        // Removing while enumerating is allowed for a Dictionary.
-        foreach (var (keyHash, keyEndTime) in cooldownComponent.CooldownEndTimes)
-        {
-            if (keyEndTime <= now)
-                cooldownComponent.CooldownEndTimes.Remove(keyHash);
-        }
+        NpcExpiringMap.PruneExpired(cooldownComponent.CooldownEndTimes, now);
 
         cooldownComponent.CooldownEndTimes[stringKeyHash] = endTime;
     }
@@ -41,7 +48,6 @@ public sealed partial class NpcGenericCooldownSystem : EntitySystem
     public bool IsKeyOnCooldown(Entity<NpcGenericCooldownComponent?> entity, int stringKeyHash)
     {
         return _cooldownQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false) &&
-            entity.Comp.CooldownEndTimes.TryGetValue(stringKeyHash, out var cooldownEndTime) &&
-            _gameTiming.CurTime < cooldownEndTime;
+            NpcExpiringMap.IsLive(entity.Comp.CooldownEndTimes, stringKeyHash, _gameTiming.CurTime);
     }
 }

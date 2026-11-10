@@ -65,18 +65,7 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
         RequestReplan(entity.Owner);
     }
 
-    public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<(string, object)> effects)
-    {
-        if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
-            return;
-
-        foreach (var (key, value) in effects)
-            entity.Comp.AggregatedEffects[key] = value;
-
-        RequestReplan(entity.Owner);
-    }
-
-    public void AddEffects(Entity<NpcSensorsComponent?> entity, Dictionary<string, object> effects)
+    public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<KeyValuePair<string, object>> effects)
     {
         if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;

@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Considerations;
@@ -11,6 +12,7 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 public sealed partial class TargetVisibleInLightCon : UtilityConsideration
 {
     [Dependency] private NpcLightDetectionSystem _npcLightDetectionSystem = default!;
+    [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
 
     /// <summary>
     ///     The least light, from 0 to 1, that a target further away than <see cref="ProximityRange"/> needs to be
@@ -25,8 +27,7 @@ public sealed partial class TargetVisibleInLightCon : UtilityConsideration
 
     public override float GetScore(NPCBlackboard blackboard, EntityUid ownerUid, EntityUid targetUid)
     {
-        return _npcLightDetectionSystem.GetPerceivedLightLevel(ownerUid, targetUid, ProximityRange) >= MinimumLightLevel
-            ? 1f
-            : 0f;
+        var lightLevel = _npcLightDetectionSystem.GetPerceivedLightLevel(ownerUid, targetUid, ProximityRange);
+        return _npcPerceptionSystem.GetSeenLightLevel(ownerUid, lightLevel) >= MinimumLightLevel ? 1f : 0f;
     }
 }

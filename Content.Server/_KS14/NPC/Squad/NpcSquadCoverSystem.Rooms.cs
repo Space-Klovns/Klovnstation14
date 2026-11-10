@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.NPC;
 using Content.Shared.Tag;
 using Robust.Shared.Map;
@@ -61,22 +62,13 @@ public sealed partial class NpcSquadCoverSystem
     ///         farthest from this is used instead, which is the far side of that doorway from the squad.
     /// </param>
     private bool TryAnalyseRoom(
-        Entity<MapGridComponent> grid,
+        RoomAnalysis analysis,
         Vector2i seedTile,
         Vector2i awayFromTile,
-        int collisionLayer,
-        int collisionMask,
         NpcSquadCoverSettings settings,
         NpcSquadCoverPlan plan,
         List<Vector2i> exposureTiles)
     {
-        var analysis = new RoomAnalysis
-        {
-            Grid = grid,
-            CollisionLayer = collisionLayer,
-            CollisionMask = collisionMask,
-        };
-
         if (!TryResolveSeed(analysis, seedTile, awayFromTile, out seedTile))
             return false;
 
@@ -89,7 +81,7 @@ public sealed partial class NpcSquadCoverSystem
         if (analysis.ThresholdTiles.Count == 0)
             return false;
 
-        plan.GridUid = grid.Owner;
+        plan.GridUid = analysis.Grid.Owner;
         plan.RoomTiles.UnionWith(analysis.RoomTiles);
         plan.IsHallway = GetShortSide(analysis.RoomTiles) <= settings.HallwayWidth;
 
@@ -111,8 +103,7 @@ public sealed partial class NpcSquadCoverSystem
         if (GetTileKind(analysis, seedTile) == TileKind.Walkable)
             return true;
 
-        var found = false;
-        var bestDistance = float.MinValue;
+        var best = NpcBestOf<Vector2i>.Highest();
 
         foreach (var offset in NeighbourOffsets)
         {
@@ -120,16 +111,13 @@ public sealed partial class NpcSquadCoverSystem
             if (GetTileKind(analysis, neighbourTile) != TileKind.Walkable)
                 continue;
 
-            var distance = (neighbourTile - awayFromTile).LengthSquared;
-            if (distance <= bestDistance)
-                continue;
-
-            resolvedTile = neighbourTile;
-            bestDistance = distance;
-            found = true;
+            best.Offer(neighbourTile, (neighbourTile - awayFromTile).LengthSquared);
         }
 
-        return found;
+        if (best.Found)
+            resolvedTile = best.Value;
+
+        return best.Found;
     }
 
     /// <summary>
@@ -248,25 +236,7 @@ public sealed partial class NpcSquadCoverSystem
         while (unvisited.Count > 0)
         {
             var clusterTiles = new List<Vector2i>();
-
-            using (var enumerator = unvisited.GetEnumerator())
-            {
-                enumerator.MoveNext();
-                clusterFrontier.Enqueue(enumerator.Current);
-            }
-
-            unvisited.Remove(clusterFrontier.Peek());
-
-            while (clusterFrontier.TryDequeue(out var tile))
-            {
-                clusterTiles.Add(tile);
-
-                foreach (var offset in CardinalOffsets)
-                {
-                    if (unvisited.Remove(tile + offset))
-                        clusterFrontier.Enqueue(tile + offset);
-                }
-            }
+            CollectCluster(unvisited, clusterFrontier, clusterTiles);
 
             var center = Vector2.Zero;
             var inward = Vector2.Zero;
@@ -289,6 +259,34 @@ public sealed partial class NpcSquadCoverSystem
                 continue;
 
             plan.Thresholds.Add(new NpcSquadThreshold(clusterTiles, center, Vector2.Normalize(inward)));
+        }
+    }
+
+    /// <summary>
+    ///     Takes one tile out of <paramref name="unvisited"/>, whichever the set gives first, and every tile touching
+    ///         it that is also in the set, into <paramref name="clusterTiles"/>.
+    /// </summary>
+    private static void CollectCluster(HashSet<Vector2i> unvisited, Queue<Vector2i> clusterFrontier, List<Vector2i> clusterTiles)
+    {
+        Vector2i seed;
+        using (var enumerator = unvisited.GetEnumerator())
+        {
+            enumerator.MoveNext();
+            seed = enumerator.Current;
+        }
+
+        unvisited.Remove(seed);
+        clusterFrontier.Enqueue(seed);
+
+        while (clusterFrontier.TryDequeue(out var tile))
+        {
+            clusterTiles.Add(tile);
+
+            foreach (var offset in CardinalOffsets)
+            {
+                if (unvisited.Remove(tile + offset))
+                    clusterFrontier.Enqueue(tile + offset);
+            }
         }
     }
 

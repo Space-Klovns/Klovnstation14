@@ -137,5 +137,16 @@ public enum PathfindingBreadcrumbFlag : ushort
     ///         <c>NpcPushSystem</c>.
     /// </summary>
     Pushable = 1 << 7,
+
+    /// <summary>
+    ///     A door that opens for no hand, only from its button, but can be pried: shutters. A wall to anything that
+    ///         cannot pry or smash it. See <c>PathFlags.PryingTool</c>.
+    /// </summary>
+    PryOnly = 1 << 8,
+
+    /// <summary>
+    ///     A door that opens for no hand, only from its button, and that nothing pries: a blast door.
+    /// </summary>
+    Sealed = 1 << 9,
     // KS14 end
 }

@@ -14,6 +14,6 @@ public sealed partial class PlayingDeadPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return _npcPlayDeadSystem.IsPlayingDead(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        return _npcPlayDeadSystem.IsPlayingDead(blackboard.GetOwner());
     }
 }

@@ -17,7 +17,7 @@ public sealed partial class DamageThresholdPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
 
         if (!_entMan.TryGetComponent<DamageableComponent>(owner, out var damageableComp))
             return false;

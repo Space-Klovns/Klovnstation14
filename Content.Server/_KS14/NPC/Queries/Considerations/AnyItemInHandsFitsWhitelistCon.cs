@@ -2,17 +2,12 @@ using Content.Server.Hands.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.Queries.Considerations;
 using Content.Shared.Hands.Components;
-using Content.Shared.Whitelist;
 
 namespace Content.Server._KS14.NPC.Queries.Considerations;
 
-public sealed partial class AnyItemInHandsFitsWhitelistCon : UtilityConsideration
+public sealed partial class AnyItemInHandsFitsWhitelistCon : KsWhitelistCon
 {
     [Dependency] private HandsSystem _handsSystem = default!;
-    [Dependency] private EntityWhitelistSystem _entityWhitelistSystem = default!;
-
-    [DataField] public EntityWhitelist? Whitelist = null;
-    [DataField] public EntityWhitelist? Blacklist = null;
 
     public override float GetScore(NPCBlackboard blackboard, EntityUid ownerUid, EntityUid targetUid)
     {
@@ -30,7 +25,4 @@ public sealed partial class AnyItemInHandsFitsWhitelistCon : UtilityConsideratio
 
         return 0f;
     }
-
-    private bool Passes(EntityUid uid)
-        => _entityWhitelistSystem.IsWhitelistPassOrNull(Whitelist, uid) && _entityWhitelistSystem.IsWhitelistFailOrNull(Blacklist, uid);
 }

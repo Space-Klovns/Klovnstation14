@@ -47,7 +47,7 @@ public sealed partial class NpcRangedTargetingOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
         var ownerMapCoordinates = _transformSystem.GetMapCoordinates(owner);
 
         var aggroed = _npcAggroSystem.IsAggroed(owner);
@@ -88,6 +88,6 @@ public sealed partial class NpcRangedTargetingOperator : HTNOperator
 
     private float GetRadius(NPCBlackboard blackboard, string key, float fallback)
     {
-        return blackboard.TryGetValue<float>(key, out var radius, _entityManager) ? radius : fallback;
+        return blackboard.GetFloatOr(key, fallback, _entityManager);
     }
 }

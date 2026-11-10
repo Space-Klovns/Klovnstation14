@@ -11,7 +11,7 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 ///         <see cref="Window"/>, the squad still has a recent threat to go to, or the owner's own
 ///         <see cref="CombatTimeKey"/> is within <see cref="Window"/>. Invert it to ask whether things are quiet.
 /// </summary>
-public sealed partial class SquadEngagedPrecondition : HTNPrecondition
+public sealed partial class SquadEngagedPrecondition : KsInvertiblePrecondition
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -32,18 +32,14 @@ public sealed partial class SquadEngagedPrecondition : HTNPrecondition
     /// </summary>
     [DataField] public string ThreatKey = "LastKnownThreatCoordinates";
 
-    [DataField] public bool Invert;
-
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
 
-        var engaged = blackboard.ContainsKey(ThreatKey) ||
+        return blackboard.ContainsKey(ThreatKey) ||
             _npcSquadSystem.IsEngaged(ownerUid, Window) ||
             _npcSquadCoverSystem.HasThreatObjective(ownerUid) ||
             blackboard.TryGetValue<TimeSpan>(CombatTimeKey, out var combatTime, _entityManager) &&
             _gameTiming.CurTime - combatTime <= Window;
-
-        return engaged != Invert;
     }
 }

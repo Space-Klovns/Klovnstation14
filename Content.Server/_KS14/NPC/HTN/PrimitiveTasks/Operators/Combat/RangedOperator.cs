@@ -39,7 +39,7 @@ public sealed partial class RangedOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
 
         if (ExecutedFlagKey != null && blackboard.GetValueOrDefault<bool>(ExecutedFlagKey, _entityManager))
             return HTNOperatorStatus.Failed;

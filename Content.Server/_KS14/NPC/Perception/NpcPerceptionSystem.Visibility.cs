@@ -48,7 +48,7 @@ public sealed partial class NpcPerceptionSystem
 
         var distanceSquared = (targetMapCoordinates.Position - observerMapCoordinates.Position).LengthSquared();
         if (distanceSquared > range * range ||
-            !_npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, targetMapCoordinates, range))
+            !_npcLineOfSightSystem.InLineOfSight(observerMapCoordinates, targetMapCoordinates, range, entity.Comp.SeesThroughSmoke))
             return false;
 
         targetVelocity = _physicsSystem.GetMapLinearVelocity(targetUid);
@@ -56,13 +56,42 @@ public sealed partial class NpcPerceptionSystem
 
         // Cheapest first: the light level is the only part that is not a field read.
         conspicuous = distanceSquared <= entity.Comp.ProximityRange * entity.Comp.ProximityRange ||
-            speed >= entity.Comp.RevealSpeed ||
-            _npcLightDetectionSystem.GetLightLevel(targetUid) >= entity.Comp.MinimumLightLevel;
+            StandsOutAtRange(entity, targetUid, speed);
 
         if (conspicuous)
             return true;
 
         return watched is { } watchedContact &&
             (now - watchedContact.LastConspicuous <= entity.Comp.DarkTrackTime || speed >= entity.Comp.TrackSpeed);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="targetUid"/> stands out to the observer from further off than
+    ///         <see cref="NpcPerceptionComponent.ProximityRange"/>: moving fast, or lit enough for its eyes.
+    /// </summary>
+    private bool StandsOutAtRange(Entity<NpcPerceptionComponent> entity, EntityUid targetUid, float speed)
+    {
+        return speed >= entity.Comp.RevealSpeed ||
+            GetSeenLightLevel(entity.AsNullable(), _npcLightDetectionSystem.GetLightLevel(targetUid)) >= entity.Comp.MinimumLightLevel;
+    }
+
+    /// <summary>
+    ///     How near <paramref name="observer"/> has to get to notice <paramref name="targetUid"/> as things stand, given a
+    ///         clear line to it: as far as it can see if the target stands out (lit, or moving fast), otherwise only within
+    ///         <see cref="NpcPerceptionComponent.ProximityRange"/>. A line to a hostile in the dark is not sight of it, and
+    ///         one going to back up a squadmate has to get this close to join in. Its whole sight range for an NPC without
+    ///         perception, or with light detection off.
+    /// </summary>
+    public float GetNoticeRange(Entity<NpcPerceptionComponent?> observer, EntityUid targetUid)
+    {
+        var range = GetVisionRange(observer.Owner);
+
+        if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false))
+            return range;
+
+        var speed = _physicsSystem.GetMapLinearVelocity(targetUid).Length();
+        return StandsOutAtRange((observer.Owner, observer.Comp), targetUid, speed)
+            ? range
+            : MathF.Min(range, observer.Comp.ProximityRange);
     }
 }

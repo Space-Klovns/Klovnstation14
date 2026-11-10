@@ -39,7 +39,7 @@ public sealed partial class SquadCoverOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
 
         if (ThreatKey is not null &&
             blackboard.TryGetValue<EntityCoordinates>(ThreatKey, out var threatCoordinates, _entityManager))

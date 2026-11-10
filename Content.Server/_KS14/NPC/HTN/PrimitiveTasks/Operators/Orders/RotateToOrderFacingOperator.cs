@@ -27,11 +27,10 @@ public sealed partial class RotateToOrderFacingOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
 
         if (!blackboard.TryGetValue<int>(IdKey, out var plannedId, _entityManager) ||
-            !_npcSquadTacticsSystem.TryGetOrder(ownerUid, out var order) ||
-            order.Id != plannedId ||
+            !_npcSquadTacticsSystem.TryGetCurrentOrder(ownerUid, plannedId, out var order) ||
             !blackboard.TryGetValue<float>(RotateSpeedKey, out var rotateSpeed, _entityManager))
             return HTNOperatorStatus.Failed;
 

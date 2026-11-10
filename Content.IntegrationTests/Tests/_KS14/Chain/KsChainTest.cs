@@ -300,6 +300,44 @@ public sealed class KsChainTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     The client applies a wire start losing its link, from the server's own break, while its neighbour and their
+    ///         joint are still there. Taking that joint off raised <see cref="ChainSegmentedEvent"/> on the start, whose
+    ///         <c>LinkedChainStart</c> broke the chain from it again, inside its own shutdown, and removed its link a
+    ///         second time: a debug assert, seen when a wired breaching charge went off.
+    /// </summary>
+    [Test]
+    public async Task RemovingAWireStartsLinkBreaksTheChainOnce()
+    {
+        var testMap = await Pair.CreateTestMap();
+
+        EntityUid start = default;
+        EntityUid end = default;
+        List<EntityUid>? links = null;
+        await Server.WaitPost(() =>
+        {
+            Probe.Clear();
+            var coordinates = new EntityCoordinates(testMap.Grid, new Vector2(0.5f, 0.5f));
+            start = SEntMan.SpawnEntity("KsWireStart", coordinates);
+            end = SEntMan.SpawnEntity("KsWireEnd", coordinates);
+            Assert.That(Chains.TrySpawnChainInbetween(WireSegment, coordinates, 3, SegmentOffset, start, end, out links), Is.True);
+        });
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitPost(() => SEntMan.RemoveComponent<ChainLinkComponent>(start));
+        await Pair.RunTicksSync(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.HasComponent<ChainLinkComponent>(start), Is.False);
+            Assert.That(SEntMan.HasComponent<ChainEdgeComponent>(start), Is.False);
+
+            var next = SEntMan.GetComponent<ChainLinkComponent>(links![2]);
+            Assert.That(next.PreviousLinkUid, Is.Null, "the first segment lets go of the start");
+            Assert.That(SEntMan.GetComponent<ChainEdgeComponent>(end).Broken, Is.True, "the far end knows");
+        });
+    }
+
     [Test]
     public async Task RemovingAJointBetweenTwoLinksBreaksTheChain()
     {

@@ -16,7 +16,7 @@ public sealed partial class DeleteActiveHandItemOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var owner = blackboard.GetOwner();
         if (_handsSystem.TryGetActiveItem(owner, out var itemUid))
             _entityManager.QueueDeleteEntity(itemUid.Value);
 

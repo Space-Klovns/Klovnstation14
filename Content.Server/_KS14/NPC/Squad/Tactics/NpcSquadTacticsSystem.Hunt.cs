@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Server._KS14.NPC.Doors;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Doors.Components;
 using Robust.Shared.Map;
@@ -34,6 +35,26 @@ public sealed partial class NpcSquadTacticsSystem
     ///     How close to a door a member forcing it is sent: within reach of it, from outside.
     /// </summary>
     private const float BreachOrderRange = 1f;
+
+    /// <summary>
+    ///     How far from the spot a member holding an area may pick somewhere to stand.
+    /// </summary>
+    private const float HoldAreaRange = 6f;
+
+    /// <summary>
+    ///     The same, shut out of it. The spot is as close as they can get, and a member should end up there and not just near it.
+    /// </summary>
+    private const float ShutOutHoldRange = 3f;
+
+    /// <summary>
+    ///     How fast members get to a spot outside a room, in tiles a second: at a walk, and not as a plan reckons a sprint.
+    /// </summary>
+    private const float ShutOutWalkSpeed = 2.5f;
+
+    /// <summary>
+    ///     How much further the way there is than it looks.
+    /// </summary>
+    private const float ShutOutWalkDetour = 1.5f;
 
     private static readonly Vector2i[] CardinalOffsets =
     [
@@ -70,15 +91,7 @@ public sealed partial class NpcSquadTacticsSystem
         if (!_npcPerceptionSystem.TryGetPredictedCoordinates(spotter, targetUid, out var predictedCoordinates))
             predictedCoordinates = latest.LastKnownCoordinates;
 
-        hunt = new NpcHunt
-        {
-            TargetUid = targetUid,
-            Settings = settings,
-            LastKnownCoordinates = latest.LastKnownCoordinates,
-            PredictedCoordinates = predictedCoordinates,
-            StartedAt = now,
-            PhaseStartedAt = now,
-        };
+        hunt = CreateHunt(targetUid, settings, latest.LastKnownCoordinates, predictedCoordinates, now);
 
         EnsureComp<NpcHuntComponent>(issuerUid).Hunt = hunt;
         return true;
@@ -96,32 +109,42 @@ public sealed partial class NpcSquadTacticsSystem
     {
         hunt = null;
 
-        if (settings.CautionMeter is not { } cautionMeter ||
-            !_pendingDisturbanceQuery.TryComp(issuerUid, out var disturbanceComponent) ||
+        if (!_pendingDisturbanceQuery.TryComp(issuerUid, out var disturbanceComponent) ||
             now - disturbanceComponent.ReportedAt > settings.HuntStartAge ||
-            TerminatingOrDeleted(disturbanceComponent.Coordinates.EntityId) ||
-            _npcMeterSystem.GetValue(leaderUid ?? issuerUid, cautionMeter) < settings.CautiousHuntThreshold)
+            TerminatingOrDeleted(disturbanceComponent.Coordinates.EntityId))
             return false;
 
-        hunt = new NpcHunt
-        {
-            TargetUid = null,
-            Settings = settings,
-            LastKnownCoordinates = disturbanceComponent.Coordinates,
-            PredictedCoordinates = disturbanceComponent.Coordinates,
-            StartedAt = now,
-            PhaseStartedAt = now,
-        };
+        var newHunt = CreateHunt(targetUid: null, settings, disturbanceComponent.Coordinates, disturbanceComponent.Coordinates, now);
+
+        var cautious = settings.CautionMeter is { } cautionMeter &&
+            _npcMeterSystem.GetValue(leaderUid ?? issuerUid, cautionMeter) >= settings.CautiousHuntThreshold;
+
+        // Going to it as it always has is no good if there is no way there: that fails to plan, and it stands there. So however
+        //      bold the squad is, that needs seeing to. Only looked at once per thing it hears: it waits here until it is stale.
+        if (!cautious && (disturbanceComponent.CheckedReachable || !CheckCutOff(disturbanceComponent, newHunt, GetWalker(leaderUid))))
+            return false;
+
+        hunt = newHunt;
 
         RemComp<NpcPendingDisturbanceComponent>(issuerUid);
         EnsureComp<NpcHuntComponent>(issuerUid).Hunt = hunt;
         return true;
     }
 
+    private bool CheckCutOff(NpcPendingDisturbanceComponent disturbanceComponent, NpcHunt hunt, EntityUid walkerUid)
+    {
+        disturbanceComponent.CheckedReachable = true;
+        return TryPrepareSealedRoom(hunt, walkerUid, disturbanceComponent.Coordinates) ||
+            IsSealedIn(walkerUid, disturbanceComponent.Coordinates);
+    }
+
     private void EndHunt(EntityUid issuerUid)
     {
-        if (_huntQuery.HasComp(issuerUid))
+        if (_huntQuery.TryComp(issuerUid, out var huntComponent))
         {
+            if (huntComponent.Hunt?.Blast is { } blast)
+                ReleaseCharge(blast);
+
             RemComp<NpcHuntComponent>(issuerUid);
 
             if (_npcHuntDebugSystem.IsTracking(issuerUid, _members))
@@ -137,7 +160,9 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private void UpdateHunt(EntityUid issuerUid, EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        if (hunt.Phase != NpcHuntPhase.Exhausted && now - hunt.StartedAt >= settings.HuntTimeout)
+        // Not in the middle of a blast, which has timeouts of its own: given up on there, a charge would be left on the wall,
+        //      or the wire, with the squad waiting about beside it. The hunt starts over once it is through.
+        if (hunt.Phase is not (NpcHuntPhase.Exhausted or NpcHuntPhase.Blast) && now - hunt.StartedAt >= settings.HuntTimeout)
             Exhaust(leaderUid, hunt, now);
 
         if (hunt.Phase == NpcHuntPhase.Watch)
@@ -156,6 +181,9 @@ public sealed partial class NpcSquadTacticsSystem
         if (hunt.Phase != NpcHuntPhase.Exhausted)
             UpdateCoverage(hunt, settings);
 
+        if (hunt.Phase == NpcHuntPhase.Blast && !UpdateBlast(issuerUid, leaderUid, hunt, settings, now))
+            return;
+
         if (hunt.Phase == NpcHuntPhase.Stage && !UpdateStage(issuerUid, leaderUid, hunt, settings, now))
             return;
 
@@ -168,7 +196,7 @@ public sealed partial class NpcSquadTacticsSystem
         if (hunt.Phase == NpcHuntPhase.Search && !UpdateSearch(issuerUid, leaderUid, hunt, settings, now))
             return;
 
-        if (now - hunt.PhaseStartedAt >= settings.HoldAreaTime)
+        if (now - hunt.PhaseStartedAt >= settings.HoldAreaTime + hunt.ShutOutWalk)
         {
             EndHunt(issuerUid);
             return;
@@ -176,14 +204,77 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var memberUid in _members)
         {
-            SetOrder(memberUid, issuerUid, NpcOrderKind.HoldArea, hunt.PredictedCoordinates, Angle.Zero, OrderRange, null, now);
+            var coordinates = !hunt.ShutOut
+                ? hunt.PredictedCoordinates
+                : hunt.ShutOutCoordinates ?? _transformSystem.GetMoverCoordinates(memberUid);
+
+            SetOrder(memberUid, issuerUid, NpcOrderKind.HoldArea, coordinates, Angle.Zero, hunt.ShutOut ? ShutOutHoldRange : HoldAreaRange, null, now);
         }
+    }
+
+    /// <summary>
+    ///     A hunt just begun, in <paramref name="phase"/> (the watch, unless a plan is running it) and with
+    ///         <paramref name="allowCharges"/> for a plan's, which may use a charge to get in. A null
+    ///         <paramref name="targetUid"/> is a disturbance.
+    /// </summary>
+    private static NpcHunt CreateHunt(EntityUid? targetUid,
+        NpcSquadTacticsSettings settings,
+        EntityCoordinates lastKnownCoordinates,
+        EntityCoordinates predictedCoordinates,
+        TimeSpan now,
+        bool allowCharges = false,
+        NpcHuntPhase phase = NpcHuntPhase.Watch)
+    {
+        return new NpcHunt
+        {
+            TargetUid = targetUid,
+            Settings = settings,
+            AllowCharges = allowCharges,
+            LastKnownCoordinates = lastKnownCoordinates,
+            PredictedCoordinates = predictedCoordinates,
+            StartedAt = now,
+            PhaseStartedAt = now,
+            Phase = phase,
+        };
     }
 
     private void SetPhase(NpcHunt hunt, NpcHuntPhase phase, TimeSpan now)
     {
         hunt.Phase = phase;
         hunt.PhaseStartedAt = now;
+    }
+
+    /// <summary>
+    ///     Moves <paramref name="hunt"/> into <paramref name="phase"/> unless it is in it already, which would start its clock again.
+    /// </summary>
+    private void EnsurePhase(NpcHunt hunt, NpcHuntPhase phase, TimeSpan now)
+    {
+        if (hunt.Phase != phase)
+            SetPhase(hunt, phase, now);
+    }
+
+    /// <summary>
+    ///     Moves <paramref name="hunt"/> on to <paramref name="next"/> once the phase it is in is <paramref name="done"/>, or has
+    ///         had <paramref name="timeout"/> - but not while <paramref name="busy"/>, with something that must not be cut
+    ///         short, if it is not done. Returns whether it moved on.
+    /// </summary>
+    private bool TryAdvancePhase(NpcHunt hunt, bool done, bool busy, TimeSpan timeout, NpcHuntPhase next, TimeSpan now)
+    {
+        if (!done && (busy || now - hunt.PhaseStartedAt < timeout))
+            return false;
+
+        SetPhase(hunt, next, now);
+        return true;
+    }
+
+    /// <summary>
+    ///     The tiles a route round the room must keep off: its floor and its doorways. A new set, for the caller to keep.
+    /// </summary>
+    private static HashSet<Vector2i> GetAvoidTiles(NpcHunt hunt)
+    {
+        var avoidTiles = new HashSet<Vector2i>(hunt.RoomTiles);
+        avoidTiles.UnionWith(hunt.ThresholdTiles);
+        return avoidTiles;
     }
 
     #region Watch
@@ -225,15 +316,7 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            var standCoordinates = _transformSystem.GetMoverCoordinates(memberUid);
-            SetOrder(memberUid,
-                issuerUid,
-                NpcOrderKind.Watch,
-                standCoordinates,
-                ToLocalFacing(standCoordinates, towardsPredicted),
-                OrderRange,
-                null,
-                now);
+            OrderWatch(memberUid, issuerUid, towardsPredicted, now);
         }
     }
 
@@ -254,30 +337,72 @@ public sealed partial class NpcSquadTacticsSystem
     ///             it carries. A door nobody can get through is nobody's to stack up on. Everyone left over - including
     ///             members who can open nothing themselves - stacks up behind whichever lead costs least.
     ///     </para>
+    ///     <para>
+    ///         Nor is a way in that is a long way round next to another (<see cref="NpcSquadTacticsSettings.MaxDetour"/>).
+    ///     </para>
     /// </summary>
     private void AssignEntrances(NpcHunt hunt, NpcSquadTacticsSettings settings)
     {
         hunt.StagedMembers.Clear();
 
-        if (hunt.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var costs = BuildEntranceCosts(hunt, grid, settings);
+        var tooFar = FindDetours(hunt, costs.Routes, costs.Methods, costs.EntranceToTarget, settings);
+
+        PickEntrances(hunt, costs, tooFar);
+    }
+
+    /// <summary>
+    ///     What every member's way round to every way in costs, and how each would get through: worked out once, for
+    ///         <see cref="PickEntrances"/> to choose from.
+    /// </summary>
+    private sealed class EntranceCosts
+    {
+        /// <summary>
+        ///     By member, then way in: the turns of the walk round the room and how long it is. Null if there is no walk.
+        /// </summary>
+        public required (List<Vector2i> Waypoints, int Length)?[,] Routes;
+
+        public required NpcEntryMethod[,] Methods;
+
+        /// <summary>
+        ///     How far in from each way in the hostile should be.
+        /// </summary>
+        public required float[] EntranceToTarget;
+
+        /// <summary>
+        ///     <see cref="EntranceToTarget"/>, counted as extra walking.
+        /// </summary>
+        public required float[] Costs;
+
+        public required float[] MemberToTarget;
+    }
+
+    private EntranceCosts BuildEntranceCosts(NpcHunt hunt, Entity<MapGridComponent> grid, NpcSquadTacticsSettings settings)
+    {
+        var gridUid = grid.Owner;
 
         // Rooms and doorways are what a route round the room must keep off.
-        var avoidTiles = new HashSet<Vector2i>(hunt.RoomTiles);
-        avoidTiles.UnionWith(hunt.ThresholdTiles);
+        var avoidTiles = GetAvoidTiles(hunt);
 
         // Every member's way round to every entrance, once: a handful of each, and only when a hunt sets up.
         var routes = new (List<Vector2i> Waypoints, int Length)?[_members.Count, hunt.Entrances.Count];
 
         // How far in from each way in the hostile should be, counted as extra walking.
+        var entranceToTarget = new float[hunt.Entrances.Count];
         var entranceCosts = new float[hunt.Entrances.Count];
         for (var e = 0; e < hunt.Entrances.Count; e++)
         {
             if (hunt.Entrances[e].EntryCoordinates.TryDistance(EntityManager, _transformSystem, hunt.PredictedCoordinates, out var toTarget))
+            {
+                entranceToTarget[e] = toTarget;
                 entranceCosts[e] = toTarget * settings.EntranceTargetPreference;
+            }
         }
+
+        var memberToTarget = new float[_members.Count];
 
         for (var m = 0; m < _members.Count; m++)
         {
@@ -286,6 +411,7 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
 
             var memberTile = _mapSystem.TileIndicesFor(grid, memberTransform.Coordinates);
+            memberTransform.Coordinates.TryDistance(EntityManager, _transformSystem, hunt.PredictedCoordinates, out memberToTarget[m]);
 
             for (var e = 0; e < hunt.Entrances.Count; e++)
             {
@@ -308,10 +434,26 @@ public sealed partial class NpcSquadTacticsSystem
         {
             for (var e = 0; e < hunt.Entrances.Count; e++)
             {
-                methods[m, e] = GetEntryMethod(_members[m], hunt.Entrances[e]);
+                methods[m, e] = GetEntryMethod(hunt, _members[m], hunt.Entrances[e]);
             }
         }
 
+        return new EntranceCosts
+        {
+            Routes = routes,
+            Methods = methods,
+            EntranceToTarget = entranceToTarget,
+            Costs = entranceCosts,
+            MemberToTarget = memberToTarget,
+        };
+    }
+
+    /// <summary>
+    ///     Places the members one at a time, the cheapest pairing first: a lead for each way in that has anyone who can get
+    ///         through it, then everyone left stacks up behind the cheapest lead.
+    /// </summary>
+    private void PickEntrances(NpcHunt hunt, EntranceCosts costs, bool[] tooFar)
+    {
         _freeMembers.Clear();
         for (var m = 0; m < _members.Count; m++)
         {
@@ -320,8 +462,8 @@ public sealed partial class NpcSquadTacticsSystem
 
         while (_freeMembers.Count > 0)
         {
-            var isLead = TryPickEntrance(hunt, routes, entranceCosts, methods, leadsOnly: true, out var memberIndex, out var entranceIndex);
-            if (!isLead && !TryPickEntrance(hunt, routes, entranceCosts, methods, leadsOnly: false, out memberIndex, out entranceIndex))
+            var isLead = TryPickEntrance(hunt, costs.Routes, costs.Costs, costs.Methods, tooFar, leadsOnly: true, out var memberIndex, out var entranceIndex);
+            if (!isLead && !TryPickEntrance(hunt, costs.Routes, costs.Costs, costs.Methods, tooFar, leadsOnly: false, out memberIndex, out entranceIndex))
                 break;
 
             var m = _members.IndexOf(_freeMembers[memberIndex]);
@@ -329,10 +471,12 @@ public sealed partial class NpcSquadTacticsSystem
             {
                 EntranceIndex = entranceIndex,
                 IsLead = isLead,
-                Method = isLead ? methods[m, entranceIndex].Method : NpcBreachMethod.None,
-                ToolUid = isLead ? methods[m, entranceIndex].ToolUid : null,
+                Method = isLead ? costs.Methods[m, entranceIndex].Method : NpcBreachMethod.None,
+                ToolUid = isLead ? costs.Methods[m, entranceIndex].ToolUid : null,
+                RouteLength = costs.Routes[m, entranceIndex]!.Value.Length,
+                Detour = Math.Max(costs.Routes[m, entranceIndex]!.Value.Length + costs.EntranceToTarget[entranceIndex] - costs.MemberToTarget[m], 0f),
             };
-            staging.Waypoints.AddRange(routes[m, entranceIndex]!.Value.Waypoints);
+            staging.Waypoints.AddRange(costs.Routes[m, entranceIndex]!.Value.Waypoints);
 
             hunt.StagedMembers[_freeMembers[memberIndex]] = staging;
             _freeMembers.RemoveAt(memberIndex);
@@ -340,16 +484,70 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
+    ///     Which ways in are too far round to use (<see cref="NpcSquadTacticsSettings.MaxDetour"/>): with the nearest one to be
+    ///         forced or blown, those more than that much further are a long way round instead of it, and out. Each is as far
+    ///         as the shortest walk to the hostile through it, by anybody that can get it open: one nobody can is no nearest,
+    ///         and a door only a charge opens counts only when charges are allowed. With the nearest one opened by hand, the
+    ///         rest are a flank, however far, and all stay in.
+    /// </summary>
+    private static bool[] FindDetours(NpcHunt hunt,
+        (List<Vector2i> Waypoints, int Length)?[,] routes,
+        NpcEntryMethod[,] methods,
+        float[] entranceToTarget,
+        NpcSquadTacticsSettings settings)
+    {
+        var entranceCount = hunt.Entrances.Count;
+        var walks = new float[entranceCount];
+        var nearest = float.MaxValue;
+        var nearestBroken = false;
+        var tooFar = new bool[entranceCount];
+
+        for (var e = 0; e < entranceCount; e++)
+        {
+            walks[e] = float.MaxValue;
+            var broken = true;
+
+            for (var m = 0; m < routes.GetLength(0); m++)
+            {
+                if (routes[m, e] is not { } route || !methods[m, e].Usable)
+                    continue;
+
+                walks[e] = Math.Min(walks[e], route.Length + entranceToTarget[e]);
+                broken &= methods[m, e].Method != NpcBreachMethod.None;
+            }
+
+            if (walks[e] >= nearest)
+                continue;
+
+            nearest = walks[e];
+            nearestBroken = broken;
+        }
+
+        if (!nearestBroken)
+            return tooFar;
+
+        for (var e = 0; e < entranceCount; e++)
+        {
+            tooFar[e] = walks[e] < float.MaxValue && walks[e] > nearest + settings.MaxDetour;
+        }
+
+        return tooFar;
+    }
+
+    /// <summary>
     ///     How <paramref name="memberUid"/> would get through <paramref name="entrance"/>: walk through (no door, or one
     ///         open), open it by hand, or force it with something it carries - or not at all.
     /// </summary>
-    private NpcEntryMethod GetEntryMethod(EntityUid memberUid, NpcHuntEntrance entrance)
+    private NpcEntryMethod GetEntryMethod(NpcHunt hunt, EntityUid memberUid, NpcHuntEntrance entrance)
     {
         if (entrance.DoorUid is not { } doorUid || _npcDoorSystem.GetDoorAccess(memberUid, doorUid) != NpcDoorAccess.Locked)
             return new NpcEntryMethod(Usable: true, NpcBreachMethod.None, ToolUid: null);
 
-        return _npcDoorSystem.TryGetBreachTool(memberUid, doorUid, out var toolUid, out var method)
-            ? new NpcEntryMethod(Usable: true, method, toolUid)
+        if (_npcDoorSystem.TryGetBreachTool(memberUid, doorUid, out var toolUid, out var method))
+            return new NpcEntryMethod(Usable: true, method, toolUid);
+
+        return hunt.AllowCharges && _npcChargeSystem.TryGetCharge(memberUid, doorUid, out var charge)
+            ? new NpcEntryMethod(Usable: true, NpcBreachMethod.Charge, charge.ChargeUid)
             : default;
     }
 
@@ -368,6 +566,7 @@ public sealed partial class NpcSquadTacticsSystem
         (List<Vector2i> Waypoints, int Length)?[,] routes,
         float[] entranceCosts,
         NpcEntryMethod[,] methods,
+        bool[] tooFar,
         bool leadsOnly,
         out int memberIndex,
         out int entranceIndex)
@@ -379,7 +578,7 @@ public sealed partial class NpcSquadTacticsSystem
         for (var e = 0; e < hunt.Entrances.Count; e++)
         {
             // Everyone placed so far leads, so a way in in use is one with a lead.
-            if (IsEntranceUsed(hunt, e) == leadsOnly)
+            if (tooFar[e] || IsEntranceUsed(hunt, e) == leadsOnly)
                 continue;
 
             for (var f = 0; f < _freeMembers.Count; f++)
@@ -426,6 +625,9 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var memberUid in _members)
         {
+            if (memberUid == hunt.HeldBackUid)
+                continue;
+
             if (!hunt.StagedMembers.TryGetValue(memberUid, out var staging) || hunt.GridUid is not { } gridUid)
             {
                 // Joined since, or no way round to any way in: it searches once the rest go in.
@@ -460,17 +662,17 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, entrance.StageCoordinates, entrance.LocalFacing, OrderRange, null, now);
+            OrderAtEntrance(memberUid, issuerUid, entrance, NpcOrderKind.Stage, useEntry: false, now);
 
-            everyoneInPlace &= memberCoordinates.TryDistance(EntityManager, _transformSystem, entrance.StageCoordinates, out var distance) &&
-                distance <= settings.StageArriveRange;
+            everyoneInPlace &= NpcCoordinates.IsWithin(memberCoordinates, entrance.StageCoordinates, settings.StageArriveRange, EntityManager, _transformSystem);
         }
 
-        if (!everyoneInPlace && now - hunt.PhaseStartedAt < settings.StageTimeout)
-            return false;
-
-        SetPhase(hunt, AnyDoorToForce(hunt) ? NpcHuntPhase.Breach : NpcHuntPhase.Entry, now);
-        return true;
+        return TryAdvancePhase(hunt,
+            done: everyoneInPlace,
+            busy: false,
+            settings.StageTimeout,
+            AnyDoorToForce(hunt) ? NpcHuntPhase.Breach : NpcHuntPhase.Entry,
+            now);
     }
 
     /// <summary>
@@ -512,19 +714,20 @@ public sealed partial class NpcSquadTacticsSystem
         else if (CanAnyoneGetIn(hunt))
             SetPhase(hunt, NpcHuntPhase.Search, now);
         else
-            Exhaust(leaderUid, hunt, now);
+            ExhaustShutOut(leaderUid, hunt, settings, now);
 
         return true;
     }
 
     /// <summary>
     ///     Leads force their doors - each with what it was given, put away again after - while everyone else waits where
-    ///         they stand. Once every forced door is open, or they have tried long enough, they all go in. Returns whether
-    ///         they do.
+    ///         they stand. Once every forced door is open, or they have tried long enough, they all go in. A door part way
+    ///         through being forced holds that off: going in would call its lead away from it. Returns whether they do.
     /// </summary>
     private bool UpdateBreach(EntityUid issuerUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         var allForced = true;
+        var breaching = false;
 
         foreach (var memberUid in _members)
         {
@@ -535,6 +738,8 @@ public sealed partial class NpcSquadTacticsSystem
 
             if (GetDoorToForce(staging, entrance) is { } doorUid)
             {
+                breaching |= _npcDoorSystem.IsBreaching(memberUid, doorUid);
+
                 SetOrder(memberUid,
                     issuerUid,
                     NpcOrderKind.Breach,
@@ -549,14 +754,10 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
             }
 
-            SetOrder(memberUid, issuerUid, NpcOrderKind.Stage, entrance.StageCoordinates, entrance.LocalFacing, OrderRange, null, now);
+            OrderAtEntrance(memberUid, issuerUid, entrance, NpcOrderKind.Stage, useEntry: false, now);
         }
 
-        if (!allForced && now - hunt.PhaseStartedAt < settings.BreachTimeout)
-            return false;
-
-        SetPhase(hunt, NpcHuntPhase.Entry, now);
-        return true;
+        return TryAdvancePhase(hunt, done: allForced, busy: breaching, settings.BreachTimeout, NpcHuntPhase.Entry, now);
     }
 
     private bool AnyDoorToForce(NpcHunt hunt)
@@ -577,7 +778,7 @@ public sealed partial class NpcSquadTacticsSystem
     private EntityUid? GetDoorToForce(NpcHuntStaging staging, NpcHuntEntrance entrance)
     {
         if (!staging.IsLead ||
-            staging.Method == NpcBreachMethod.None ||
+            staging.Method is NpcBreachMethod.None or NpcBreachMethod.Charge ||
             entrance.DoorUid is not { } doorUid ||
             !_doorQuery.TryComp(doorUid, out var doorComponent) ||
             doorComponent.State is DoorState.Open or DoorState.Opening)
@@ -598,8 +799,7 @@ public sealed partial class NpcSquadTacticsSystem
         EntityCoordinates stageCoordinates,
         NpcSquadTacticsSettings settings)
     {
-        if (memberCoordinates.TryDistance(EntityManager, _transformSystem, stageCoordinates, out var toSpot) &&
-            toSpot <= settings.StageArriveRange)
+        if (NpcCoordinates.IsWithin(memberCoordinates, stageCoordinates, settings.StageArriveRange, EntityManager, _transformSystem))
         {
             staging.NextWaypoint = staging.Waypoints.Count;
             return;
@@ -626,6 +826,7 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
 
         var everyoneInside = true;
+        var breaching = false;
 
         foreach (var memberUid in _members)
         {
@@ -633,19 +834,61 @@ public sealed partial class NpcSquadTacticsSystem
                 continue;
 
             var entrance = hunt.Entrances[staging.EntranceIndex];
-            SetOrder(memberUid, issuerUid, NpcOrderKind.Enter, entrance.EntryCoordinates, entrance.LocalFacing, OrderRange, null, now);
+            OrderAtEntrance(memberUid, issuerUid, entrance, NpcOrderKind.Enter, useEntry: true, now);
 
             everyoneInside &= IsInRoom(hunt, memberUid);
+
+            // Forcing its way in, as steering does on a door nobody was sent to force. A new order would stop it part way.
+            breaching |= _npcDoorSystem.IsBreaching(memberUid);
         }
 
-        if (!everyoneInside && now - hunt.PhaseStartedAt < settings.EntryTimeout)
-            return false;
-
-        SetPhase(hunt, NpcHuntPhase.Search, now);
-        return true;
+        return TryAdvancePhase(hunt, done: everyoneInside, busy: breaching, settings.EntryTimeout, NpcHuntPhase.Search, now);
     }
 
     #endregion
+
+    /// <summary>
+    ///     Gives up on a hostile there is no getting at, and says where to wait for it instead: as near as they can get, which
+    ///         is the nearest way in, or the outside of a wall if none of those is any use.
+    /// </summary>
+    private void ExhaustShutOut(EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        if (TryStartBlast(hunt, settings, now))
+            return;
+
+        Exhaust(leaderUid, hunt, now);
+        hunt.ShutOut = true;
+
+        var walkerUid = GetWalker(leaderUid);
+        var walkerCoordinates = Transform(walkerUid).Coordinates;
+        var nearest = float.MaxValue;
+
+        foreach (var entrance in hunt.Entrances)
+        {
+            if (!walkerCoordinates.TryDistance(EntityManager, _transformSystem, entrance.StageCoordinates, out var distance) || distance >= nearest)
+                continue;
+
+            nearest = distance;
+            hunt.ShutOutCoordinates = entrance.StageCoordinates;
+        }
+
+        if (hunt.ShutOutCoordinates == null && TryFindNearestOutside(hunt, walkerUid, settings, out var coordinates, out _))
+            hunt.ShutOutCoordinates = coordinates;
+
+        if (hunt.ShutOutCoordinates is not { } spot)
+            return;
+
+        // Everyone gets there before the hold starts to count, so it goes by whoever has furthest to go.
+        var furthest = 0f;
+
+        foreach (var memberUid in _members)
+        {
+            if (Transform(memberUid).Coordinates.TryDistance(EntityManager, _transformSystem, spot, out var distance))
+                furthest = Math.Max(furthest, distance);
+        }
+
+        hunt.ShutOutWalk = TimeSpan.FromSeconds(furthest * ShutOutWalkDetour / ShutOutWalkSpeed);
+    }
 
     /// <summary>
     ///     Gives up on the hostile: everyone forgets it, and the squad's threat is cleared so it stands down once the
@@ -672,18 +915,16 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private EntityCoordinates GetTileCoordinates(EntityUid gridUid, Vector2i tile)
     {
-        return _mapGridQuery.TryComp(gridUid, out var mapGridComponent)
-            ? new EntityCoordinates(gridUid, _mapSystem.TileCenterToVector((gridUid, mapGridComponent), tile))
-            : new EntityCoordinates(gridUid, new Vector2(tile.X + 0.5f, tile.Y + 0.5f));
+        return _npcGridSystem.GetTileCenter(gridUid, tile);
     }
 
     private bool IsInRoom(NpcHunt hunt, EntityUid uid)
     {
-        if (hunt.GridUid is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (!_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return false;
 
         var transformComponent = Transform(uid);
-        return transformComponent.GridUid == gridUid &&
-            hunt.RoomTiles.Contains(_mapSystem.TileIndicesFor((gridUid, mapGridComponent), transformComponent.Coordinates));
+        return transformComponent.GridUid == grid.Owner &&
+            hunt.RoomTiles.Contains(_mapSystem.TileIndicesFor(grid, transformComponent.Coordinates));
     }
 }

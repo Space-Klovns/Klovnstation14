@@ -1,7 +1,12 @@
+using Content.Server._KS14.NPC.Debug;
 using Content.Server._KS14.NPC.Meters;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad.Tactics;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
+using Content.Server.Administration;
+using Content.Server.Administration.Managers;
+using Content.Shared.Administration;
 using Content.Shared.GameTicking;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -18,6 +23,7 @@ namespace Content.Server._KS14.NPC.Squad;
 public sealed partial class NpcSquadDebugSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private NpcMeterSystem _npcMeterSystem = default!;
     [Dependency] private KillZones.NpcKillZoneSystem _npcKillZoneSystem = default!;
@@ -30,20 +36,21 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 
     private static readonly TimeSpan SendInterval = TimeSpan.FromSeconds(0.5);
 
-    private readonly HashSet<ICommonSession> _debuggingSessions = new();
+    private NpcDebugSessions _sessions = default!;
     private TimeSpan _nextSend;
 
     public override void Initialize()
     {
         base.Initialize();
-        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        _sessions = new NpcDebugSessions(_adminManager, _playerManager, (session, enabled, target) =>
+            RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = enabled }, session.Channel));
+        _sessions.Initialize();
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
-        _debuggingSessions.Clear();
+        _sessions.Shutdown();
     }
 
     /// <summary>
@@ -51,26 +58,18 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
     /// </summary>
     public bool Toggle(ICommonSession session)
     {
-        var enabled = _debuggingSessions.Add(session);
-        if (!enabled)
-            _debuggingSessions.Remove(session);
-
-        RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = enabled }, session.Channel);
-        return enabled;
+        return _sessions.Toggle(session, null).Enabled;
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        if (_debuggingSessions.Count == 0)
+        if (_sessions.Count == 0)
             return;
 
-        var now = _gameTiming.CurTime;
-        if (now < _nextSend)
+        if (!NpcThrottle.TryConsume(ref _nextSend, _gameTiming.CurTime, SendInterval))
             return;
-
-        _nextSend = now + SendInterval;
 
         var message = new SquadDebugDataMessage();
         var squadEnumerator = EntityQueryEnumerator<NpcSquadComponent>();
@@ -99,9 +98,7 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
                     plan.Assignments.TryGetValue(memberUid, out var assignment))
                     squad.Assignments.Add(new SquadDebugAssignment(memberNetCoordinates, GetNetCoordinates(assignment.Coordinates)));
 
-                AddContacts(squad, memberUid, memberNetCoordinates);
-                AddOrder(squad, memberUid, memberNetCoordinates);
-                AddMeters(squad, memberUid, memberNetCoordinates);
+                AddMemberDetails(squad, memberUid, memberNetCoordinates);
             }
 
             AddHunt(squad, squadUid);
@@ -133,16 +130,14 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
                 Leader = netCoordinates,
             };
 
-            AddContacts(loner, uid, netCoordinates);
-            AddOrder(loner, uid, netCoordinates);
-            AddMeters(loner, uid, netCoordinates);
+            AddMemberDetails(loner, uid, netCoordinates);
             AddHunt(loner, uid);
             message.Squads.Add(loner);
         }
 
         AddKillZones(message);
 
-        foreach (var session in _debuggingSessions)
+        foreach (var session in _sessions.Watching.Keys)
         {
             RaiseNetworkEvent(message, session.Channel);
         }
@@ -178,6 +173,33 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
         }
     }
 
+    /// <summary>
+    ///     What one NPC believes, has been ordered to do, and has meters for, whether it is in a squad or on its own.
+    /// </summary>
+    private void AddMemberDetails(SquadDebugSquad squad, EntityUid memberUid, NetCoordinates memberNetCoordinates)
+    {
+        AddContacts(squad, memberUid, memberNetCoordinates);
+        AddOrder(squad, memberUid, memberNetCoordinates);
+        AddMeters(squad, memberUid, memberNetCoordinates);
+    }
+
+    /// <summary>
+    ///     <paramref name="coordinates"/> relative to the grid or map, for sending to the client. False if what they
+    ///         are relative to is gone. Relative to the grid or map rather than to a hostile or a locker, which the
+    ///         client may not have.
+    /// </summary>
+    private bool TryGetNetSnapshot(EntityCoordinates coordinates, out NetCoordinates netCoordinates)
+    {
+        if (TerminatingOrDeleted(coordinates.EntityId))
+        {
+            netCoordinates = default;
+            return false;
+        }
+
+        netCoordinates = GetNetCoordinates(_transformSystem.GetMoverCoordinates(coordinates));
+        return true;
+    }
+
     private void AddContacts(SquadDebugSquad squad, EntityUid memberUid, NetCoordinates memberNetCoordinates)
     {
         if (!_perceptionQuery.TryComp(memberUid, out var perceptionComponent))
@@ -186,7 +208,7 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
         foreach (var targetUid in perceptionComponent.Contacts.Keys)
         {
             if (!_npcPerceptionSystem.TryGetBelievedCoordinates((memberUid, perceptionComponent), targetUid, out var believedCoordinates, out var state, out _) ||
-                TerminatingOrDeleted(believedCoordinates.EntityId))
+                !TryGetNetSnapshot(believedCoordinates, out var believedNetCoordinates))
                 continue;
 
             NetCoordinates? predicted = state == NpcContactState.Lost &&
@@ -196,19 +218,16 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 
             // Relative to the grid or map: coordinates relative to the hostile would name an entity the client may
             //      not have, such as one in a locker.
-            squad.Contacts.Add(new SquadDebugContact(memberNetCoordinates,
-                GetNetCoordinates(_transformSystem.GetMoverCoordinates(believedCoordinates)),
-                state.Value,
-                predicted));
+            squad.Contacts.Add(new SquadDebugContact(memberNetCoordinates, believedNetCoordinates, state.Value, predicted));
         }
     }
 
     private void AddOrder(SquadDebugSquad squad, EntityUid memberUid, NetCoordinates memberNetCoordinates)
     {
-        if (!_npcSquadTacticsSystem.TryGetOrder(memberUid, out var order) || TerminatingOrDeleted(order.Coordinates.EntityId))
+        if (!_npcSquadTacticsSystem.TryGetOrder(memberUid, out var order) || !TryGetNetSnapshot(order.Coordinates, out var orderNetCoordinates))
             return;
 
-        squad.Orders.Add(new SquadDebugOrder(memberNetCoordinates, GetNetCoordinates(_transformSystem.GetMoverCoordinates(order.Coordinates)), order.Kind));
+        squad.Orders.Add(new SquadDebugOrder(memberNetCoordinates, orderNetCoordinates, order.Kind));
     }
 
     private readonly List<(Robust.Shared.Prototypes.ProtoId<NpcMeterPrototype> MeterId, float Value, float Max)> _meterReadings = new();
@@ -242,15 +261,9 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
 
         foreach (var point in hunt.SearchPoints)
         {
-            if (!TerminatingOrDeleted(point.Coordinates.EntityId))
-                squad.SearchPoints.Add(new SquadDebugSearchPoint(GetNetCoordinates(_transformSystem.GetMoverCoordinates(point.Coordinates)), point.Cleared, point.StorageUid != null));
+            if (TryGetNetSnapshot(point.Coordinates, out var pointNetCoordinates))
+                squad.SearchPoints.Add(new SquadDebugSearchPoint(pointNetCoordinates, point.Cleared, point.StorageUid != null));
         }
-    }
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus == SessionStatus.Disconnected)
-            _debuggingSessions.Remove(e.Session);
     }
 
     /// <summary>
@@ -260,11 +273,6 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
     {
-        foreach (var session in _debuggingSessions)
-        {
-            RaiseNetworkEvent(new SquadDebugStateMessage { Enabled = false }, session.Channel);
-        }
-
-        _debuggingSessions.Clear();
+        _sessions.ClearAndNotify();
     }
 }

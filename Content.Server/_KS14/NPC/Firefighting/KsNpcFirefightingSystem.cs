@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
@@ -53,6 +54,44 @@ public sealed partial class KsNpcFirefightingSystem : EntitySystem
     private readonly record struct SprayTarget(Vector2i Tile, Vector2 Center, float Distance, float Weight);
 
     /// <summary>
+    ///     <paramref name="uid"/> as a firefighter that has something to spray with.
+    /// </summary>
+    private bool TryGetFirefighter(EntityUid uid, out Entity<KsNpcFirefighterComponent> entity, [NotNullWhen(true)] out SprayComponent? sprayComponent)
+    {
+        entity = default;
+
+        if (!_firefighterQuery.TryComp(uid, out var firefighterComponent) ||
+            !_sprayQuery.TryComp(uid, out sprayComponent))
+        {
+            sprayComponent = null;
+            return false;
+        }
+
+        entity = new Entity<KsNpcFirefighterComponent>(uid, firefighterComponent);
+        return true;
+    }
+
+    /// <summary>
+    ///     Fills <see cref="_targetTiles"/> with the tiles of the grid the firefighter watches that need spraying, and
+    ///         gives that grid and where the firefighter is on it. False if it watches none.
+    /// </summary>
+    private bool TryGetTargetTiles(Entity<KsNpcFirefighterComponent> entity, out Entity<MapGridComponent> grid, out Vector2 ownPosition)
+    {
+        grid = default;
+        ownPosition = default;
+
+        if (entity.Comp.WatchedGrid is not { } gridUid ||
+            !_mapGridQuery.TryComp(gridUid, out var gridComponent))
+            return false;
+
+        grid = (gridUid, gridComponent);
+        ownPosition = GetLocalPosition(entity.Owner, gridUid);
+
+        GetTargetTiles(entity, grid, _targetTiles);
+        return true;
+    }
+
+    /// <summary>
     ///     Picks the tile the NPC should go to: the nearest that needs it. Also gives how close it should get.
     /// </summary>
     public bool TryPickTarget(EntityUid uid, out EntityCoordinates targetCoordinates, out float approachRange)
@@ -60,20 +99,16 @@ public sealed partial class KsNpcFirefightingSystem : EntitySystem
         targetCoordinates = default;
         approachRange = 0f;
 
-        if (!_firefighterQuery.TryComp(uid, out var firefighterComponent) ||
-            !_sprayQuery.TryComp(uid, out var sprayComponent))
+        if (!TryGetFirefighter(uid, out var entity, out var sprayComponent))
             return false;
 
-        var entity = new Entity<KsNpcFirefighterComponent>(uid, firefighterComponent);
         Scan(entity);
 
-        if (entity.Comp.WatchedGrid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var gridComponent))
+        if (!TryGetTargetTiles(entity, out var grid, out var ownPosition))
             return false;
 
-        var ownPosition = GetLocalPosition(uid, gridUid);
-
-        GetTargetTiles(entity, (gridUid, gridComponent), _targetTiles);
+        var gridUid = grid.Owner;
+        var gridComponent = grid.Comp;
 
         var bestDistance = float.MaxValue;
         Vector2i? bestTile = null;
@@ -100,25 +135,20 @@ public sealed partial class KsNpcFirefightingSystem : EntitySystem
     /// </summary>
     public bool UpdateSpraying(EntityUid uid)
     {
-        if (!_firefighterQuery.TryComp(uid, out var firefighterComponent) ||
-            !_sprayQuery.TryComp(uid, out var sprayComponent))
+        if (!TryGetFirefighter(uid, out var entity, out var sprayComponent))
             return false;
 
-        var entity = new Entity<KsNpcFirefighterComponent>(uid, firefighterComponent);
         if (_gameTiming.CurTime >= entity.Comp.NextScanTime)
         {
             entity.Comp.NextScanTime = _gameTiming.CurTime + entity.Comp.ScanInterval;
             Scan(entity);
         }
 
-        if (entity.Comp.WatchedGrid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var gridComponent))
+        if (!TryGetTargetTiles(entity, out var grid, out var ownPosition))
             return false;
 
-        var ownPosition = GetLocalPosition(uid, gridUid);
-
-        Entity<MapGridComponent> grid = (gridUid, gridComponent);
-        GetTargetTiles(entity, grid, _targetTiles);
+        var gridUid = grid.Owner;
+        var gridComponent = grid.Comp;
 
         var reach = sprayComponent.SprayDistance;
         var lineHalfWidth = SprayLineHalfWidth * gridComponent.TileSize;

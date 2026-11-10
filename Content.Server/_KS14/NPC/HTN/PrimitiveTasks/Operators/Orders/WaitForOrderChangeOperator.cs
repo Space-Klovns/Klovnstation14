@@ -7,6 +7,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Orders;
 /// <summary>
 ///     Does nothing, for ever: an order carried out, waiting on the next. Ends through its task's
 ///         <c>recheckPreconditions</c> - give it an <c>OrderCurrentPrecondition</c> - or when a better plan comes along.
+///         Good for any other wait that only a recheck should end: being stunned, say.
 /// </summary>
 public sealed partial class WaitForOrderChangeOperator : HTNOperator
 {

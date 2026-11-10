@@ -6,3 +6,7 @@ ent-ClothingOuterArmorHazardous = броня для опасных услови�
 # Resources\Prototypes\_KS14\Entities\Clothing\OuterClothing\armor.yml
 ent-ClothingOuterExplorerSuit = скафандр исследователя
     .desc = Сверхпрочный скафандр, предназначенный для горных работ, обеспечивающий защиту от физических и экологических опасностей.
+
+# Resources\Prototypes\_KS14\Entities\Clothing\OuterClothing\armor.yml
+ent-KsClothingOuterArmorBlackPlate = чёрная латная броня
+    .desc = Тяжёлые чёрные пластины поверх стёганого костюма, и ничего, что сказало бы, чей он.

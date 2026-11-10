@@ -3,6 +3,7 @@ using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
@@ -38,6 +39,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
     [Dependency] private NpcSquadCoverSystem _npcSquadCoverSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -45,7 +47,6 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [Dependency] private EntityQuery<NpcSquadComponent> _squadQuery = default!;
     [Dependency] private EntityQuery<NpcSquadMemberComponent> _squadMemberQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
-    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
     [Dependency] private EntityQuery<NPCRangedCombatComponent> _rangedCombatQuery = default!;
@@ -73,11 +74,8 @@ public sealed partial class NpcSquadSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        var now = _gameTiming.CurTime;
-        if (now < _nextUpdate)
+        if (!NpcThrottle.TryConsume(ref _nextUpdate, _gameTiming.CurTime, UpdateInterval))
             return;
-
-        _nextUpdate = now + UpdateInterval;
 
         PruneMembers();
         AssignUnsquadded();
@@ -86,6 +84,49 @@ public sealed partial class NpcSquadSystem : EntitySystem
     }
 
     #region Public API
+
+    /// <summary>
+    ///     Adds everyone else in <paramref name="uid"/>'s squad to <paramref name="squadmates"/>, those that are down
+    ///         included.
+    /// </summary>
+    public void GetSquadmates(EntityUid uid, HashSet<EntityUid> squadmates)
+    {
+        if (!TryGetSquad(uid, out var squadEntity))
+            return;
+
+        foreach (var memberUid in squadEntity.Value.Comp.Members)
+        {
+            if (memberUid != uid)
+                squadmates.Add(memberUid);
+        }
+
+        foreach (var downedUid in squadEntity.Value.Comp.Downed)
+        {
+            if (!TerminatingOrDeleted(downedUid))
+                squadmates.Add(downedUid);
+        }
+    }
+
+    /// <summary>
+    ///     What <paramref name="uid"/> works to: its squad's leader's tactics, or its own with no squad. Null for
+    ///         something that is no <see cref="NpcSquadMemberComponent"/>.
+    /// </summary>
+    public Tactics.NpcSquadTacticsSettings? GetTactics(EntityUid uid)
+    {
+        if (TryGetSquad(uid, out var squadEntity) && TryGetLeader(squadEntity.Value, out var leader))
+            return leader.Comp.Tactics;
+
+        return _squadMemberQuery.CompOrNull(uid)?.Tactics;
+    }
+
+    /// <summary>
+    ///     <paramref name="uid"/>'s squad, or <paramref name="uid"/> itself with no squad: what holds anything shared by a
+    ///         whole squad, for an NPC that may be on its own.
+    /// </summary>
+    public EntityUid GetSquadOrSelf(EntityUid uid)
+    {
+        return TryGetSquad(uid, out var squadEntity) ? squadEntity.Value.Owner : uid;
+    }
 
     public bool TryGetSquad(EntityUid memberUid, [NotNullWhen(true)] out Entity<NpcSquadComponent>? squadEntity)
     {
@@ -116,13 +157,62 @@ public sealed partial class NpcSquadSystem : EntitySystem
         if (!TryGetSquad(callerUid, out var squadEntity))
             return false;
 
-        foreach (var memberUid in squadEntity.Value.Comp.Members)
+        foreach (var memberUid in GetOtherMembers(squadEntity.Value, callerUid))
         {
-            if (memberUid != callerUid)
-                RaiseLocalEvent(memberUid, ref ev);
+            RaiseLocalEvent(memberUid, ref ev);
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     <paramref name="squad"/>'s leader, if it has one that is a <see cref="NpcSquadMemberComponent"/>.
+    /// </summary>
+    public bool TryGetLeader(Entity<NpcSquadComponent> squad, out Entity<NpcSquadMemberComponent> leader)
+    {
+        if (squad.Comp.Leader is { } leaderUid && _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent))
+        {
+            leader = (leaderUid, leaderSquadMemberComponent);
+            return true;
+        }
+
+        leader = default;
+        return false;
+    }
+
+    /// <summary>
+    ///     Every member of <paramref name="squad"/> but <paramref name="self"/>, those that are down not included.
+    ///         Does not allocate.
+    /// </summary>
+    public OtherMembersEnumerable GetOtherMembers(Entity<NpcSquadComponent> squad, EntityUid self)
+    {
+        return new OtherMembersEnumerable(squad.Comp.Members, self);
+    }
+
+    public readonly struct OtherMembersEnumerable(List<EntityUid> members, EntityUid self)
+    {
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(members.GetEnumerator(), self);
+        }
+
+        public struct Enumerator(List<EntityUid>.Enumerator inner, EntityUid self)
+        {
+            private List<EntityUid>.Enumerator _inner = inner;
+
+            public EntityUid Current => _inner.Current;
+
+            public bool MoveNext()
+            {
+                while (_inner.MoveNext())
+                {
+                    if (_inner.Current != self)
+                        return true;
+                }
+
+                return false;
+            }
+        }
     }
 
     /// <summary>
@@ -242,6 +332,9 @@ public sealed partial class NpcSquadSystem : EntitySystem
     {
         if (args.NewMobState == MobState.Alive)
         {
+            if (_squadQuery.TryComp(entity.Comp.LastSquad, out var lastSquadComponent))
+                lastSquadComponent.Downed.Remove(entity.Owner);
+
             // Back on its feet: whatever happens to it now is news for the squad it ends up in, not the old one.
             entity.Comp.LastSquad = null;
             return;
@@ -251,10 +344,24 @@ public sealed partial class NpcSquadSystem : EntitySystem
         //      after going critical has left already: it is reported against the squad it was in, if that is still
         //      about.
         var squadUid = entity.Comp.Squad ?? entity.Comp.LastSquad;
-        if (squadUid is { } downedInUid && _squadQuery.HasComp(downedInUid))
+        if (squadUid is { } downedInUid && _squadQuery.TryComp(downedInUid, out var downedInComponent))
         {
             var ev = new NpcSquadMemberDownedEvent(downedInUid, entity.Owner, args.NewMobState);
             RaiseLocalEvent(ref ev);
+
+            if (args.NewMobState == MobState.Critical)
+            {
+                // One gibbed or deleted while down never gets up or dies, so nothing else takes it off.
+                for (var i = downedInComponent.Downed.Count - 1; i >= 0; i--)
+                {
+                    if (TerminatingOrDeleted(downedInComponent.Downed[i]))
+                        downedInComponent.Downed.RemoveAt(i);
+                }
+
+                downedInComponent.Downed.Add(entity.Owner);
+            }
+            else
+                downedInComponent.Downed.Remove(entity.Owner);
         }
 
         // Succession has to be immediate: a leaderless squad would otherwise hold for up to a whole update.
@@ -271,14 +378,23 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnSquadShutdown(Entity<NpcSquadComponent> entity, ref ComponentShutdown args)
     {
-        foreach (var memberUid in entity.Comp.Members)
+        UnlinkAllMembers(entity);
+    }
+
+    /// <summary>
+    ///     Lets go of every member of the squad: each that still points at it goes back to being on its own, and the
+    ///         squad is left with no members and no leader.
+    /// </summary>
+    private void UnlinkAllMembers(Entity<NpcSquadComponent> squadEntity)
+    {
+        foreach (var memberUid in squadEntity.Comp.Members)
         {
-            if (_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) && squadMemberComponent.Squad == entity.Owner)
+            if (_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) && squadMemberComponent.Squad == squadEntity.Owner)
                 squadMemberComponent.Squad = null;
         }
 
-        entity.Comp.Members.Clear();
-        entity.Comp.Leader = null;
+        squadEntity.Comp.Members.Clear();
+        squadEntity.Comp.Leader = null;
     }
 
     #endregion
@@ -344,36 +460,12 @@ public sealed partial class NpcSquadSystem : EntitySystem
         var squadEnumerator = EntityQueryEnumerator<NpcSquadComponent>();
         while (squadEnumerator.MoveNext(out var squadUid, out var squadComponent))
         {
-            if (squadComponent.Leader is not { } leaderUid ||
-                !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) ||
-                squadComponent.Members.Count >= leaderSquadMemberComponent.AssimilationThreshold)
+            if (!TryGetLeader((squadUid, squadComponent), out var leader) ||
+                squadComponent.Members.Count >= leader.Comp.AssimilationThreshold)
                 continue;
 
-            EntityUid? bestSquadUid = null;
-            var bestDistance = float.MaxValue;
-
-            foreach (var memberUid in squadComponent.Members)
-            {
-                if (!_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent))
-                    continue;
-
-                if (!TryFindJoinableSquad((memberUid, squadMemberComponent), squadComponent.Members.Count, squadUid, out var candidateSquadUid, out var distance) ||
-                    distance >= bestDistance)
-                    continue;
-
-                // Only ever merge the smaller squad into the larger one, and break ties by uid, so two small
-                //      squads next to each other do not both try to merge into the other.
-                var candidateCount = _squadQuery.Comp(candidateSquadUid.Value).Members.Count;
-                if (candidateCount < squadComponent.Members.Count ||
-                    candidateCount == squadComponent.Members.Count && candidateSquadUid.Value.Id > squadUid.Id)
-                    continue;
-
-                bestSquadUid = candidateSquadUid;
-                bestDistance = distance;
-            }
-
-            if (bestSquadUid is { } intoUid)
-                _pendingMerges.Add((squadUid, intoUid));
+            if (TryFindMergeTarget((squadUid, squadComponent), out var intoUid))
+                _pendingMerges.Add((squadUid, intoUid.Value));
         }
 
         foreach (var (fromUid, intoUid) in _pendingMerges)
@@ -397,6 +489,46 @@ public sealed partial class NpcSquadSystem : EntitySystem
                 AddToSquad((memberUid, squadMemberComponent), intoUid);
             }
         }
+    }
+
+    /// <summary>
+    ///     The nearest squad any member of <paramref name="squadEntity"/> could join as a whole that it should be
+    ///         merged into: one at least as big as it.
+    /// </summary>
+    private bool TryFindMergeTarget(Entity<NpcSquadComponent> squadEntity, [NotNullWhen(true)] out EntityUid? intoUid)
+    {
+        intoUid = null;
+        var bestDistance = float.MaxValue;
+
+        foreach (var memberUid in squadEntity.Comp.Members)
+        {
+            if (!_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent))
+                continue;
+
+            if (!TryFindJoinableSquad((memberUid, squadMemberComponent), squadEntity.Comp.Members.Count, squadEntity.Owner, out var candidateSquadUid, out var distance) ||
+                distance >= bestDistance)
+                continue;
+
+            if (!ShouldMergeInto(squadEntity, candidateSquadUid.Value))
+                continue;
+
+            intoUid = candidateSquadUid;
+            bestDistance = distance;
+        }
+
+        return intoUid is not null;
+    }
+
+    /// <summary>
+    ///     Only ever merge the smaller squad into the larger one, and break ties by uid, so two small squads next to
+    ///         each other do not both try to merge into the other.
+    /// </summary>
+    private bool ShouldMergeInto(Entity<NpcSquadComponent> squadEntity, EntityUid candidateSquadUid)
+    {
+        var candidateCount = _squadQuery.Comp(candidateSquadUid).Members.Count;
+        var count = squadEntity.Comp.Members.Count;
+
+        return !(candidateCount < count || (candidateCount == count && candidateSquadUid.Id > squadEntity.Owner.Id));
     }
 
     private bool TryFindJoinableSquad(
@@ -431,12 +563,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
         foreach (var otherEntity in _nearbyMembers)
         {
-            if (otherEntity.Owner == memberEntity.Owner ||
-                otherEntity.Comp.Squad is not { } otherSquadUid ||
-                otherSquadUid == excludedSquadUid ||
-                !_squadQuery.TryComp(otherSquadUid, out var otherSquadComponent) ||
-                otherSquadComponent.Members.Count + extraMembers > GetMaxSize(otherSquadComponent) ||
-                !IsFriendly(memberEntity.Owner, otherEntity.Owner))
+            if (!TryGetJoinableSquadOf(memberEntity, otherEntity, extraMembers, excludedSquadUid, out var otherSquadUid))
                 continue;
 
             var otherCoordinates = _transformSystem.GetMapCoordinates(otherEntity.Owner);
@@ -455,6 +582,32 @@ public sealed partial class NpcSquadSystem : EntitySystem
     }
 
     /// <summary>
+    ///     The squad <paramref name="otherEntity"/> is in, if <paramref name="memberEntity"/> could join it: it is
+    ///         someone else's, not <paramref name="excludedSquadUid"/>, has room for <paramref name="extraMembers"/>
+    ///         more, and is friendly. Says nothing of whether they can see or reach each other.
+    /// </summary>
+    private bool TryGetJoinableSquadOf(
+        Entity<NpcSquadMemberComponent> memberEntity,
+        Entity<NpcSquadMemberComponent> otherEntity,
+        int extraMembers,
+        EntityUid? excludedSquadUid,
+        out EntityUid otherSquadUid)
+    {
+        otherSquadUid = default;
+
+        if (otherEntity.Owner == memberEntity.Owner ||
+            otherEntity.Comp.Squad is not { } squadUid ||
+            squadUid == excludedSquadUid ||
+            !_squadQuery.TryComp(squadUid, out var otherSquadComponent) ||
+            otherSquadComponent.Members.Count + extraMembers > GetMaxSize(otherSquadComponent) ||
+            !IsFriendly(memberEntity.Owner, otherEntity.Owner))
+            return false;
+
+        otherSquadUid = squadUid;
+        return true;
+    }
+
+    /// <summary>
     ///     Whether <paramref name="memberEntity"/> can walk to <paramref name="otherUid"/> within its
     ///         <see cref="NpcSquadMemberComponent.JoinWalkDistance"/>. Line of sight is not enough: a window lets it see
     ///         a squad it cannot get to. Floods out from it once a call, the first time this is asked
@@ -469,22 +622,22 @@ public sealed partial class NpcSquadSystem : EntitySystem
         if (memberTransformComponent.GridUid is not { } gridUid)
             return otherTransformComponent.GridUid == null;
 
-        if (otherTransformComponent.GridUid != gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+        if (otherTransformComponent.GridUid != gridUid || !_npcGridSystem.TryGetGrid(gridUid, out var grid))
             return false;
 
         if (!walked)
         {
             _joinWalkSteps.Clear();
             _npcSquadCoverSystem.FloodTiles(memberEntity.Owner,
-                (gridUid, mapGridComponent),
-                _mapSystem.TileIndicesFor(gridUid, mapGridComponent, memberTransformComponent.Coordinates),
+                grid,
+                _mapSystem.TileIndicesFor(grid, memberTransformComponent.Coordinates),
                 memberEntity.Comp.JoinWalkDistance,
                 _joinWalkSteps,
                 stopAtDoors: false);
             walked = true;
         }
 
-        return _joinWalkSteps.ContainsKey(_mapSystem.TileIndicesFor(gridUid, mapGridComponent, otherTransformComponent.Coordinates));
+        return _joinWalkSteps.ContainsKey(_mapSystem.TileIndicesFor(grid, otherTransformComponent.Coordinates));
     }
 
     private bool IsFriendly(EntityUid uid, EntityUid otherUid)
@@ -566,14 +719,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
     /// </summary>
     private void Disband(Entity<NpcSquadComponent> squadEntity)
     {
-        foreach (var memberUid in squadEntity.Comp.Members)
-        {
-            if (_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) && squadMemberComponent.Squad == squadEntity.Owner)
-                squadMemberComponent.Squad = null;
-        }
-
-        squadEntity.Comp.Members.Clear();
-        squadEntity.Comp.Leader = null;
+        UnlinkAllMembers(squadEntity);
         squadEntity.Comp.Revision++;
         QueueDel(squadEntity);
     }
@@ -588,52 +734,59 @@ public sealed partial class NpcSquadSystem : EntitySystem
     private void ShareLeaderBlackboards()
     {
         var squadEnumerator = EntityQueryEnumerator<NpcSquadComponent>();
-        while (squadEnumerator.MoveNext(out _, out var squadComponent))
+        while (squadEnumerator.MoveNext(out var squadUid, out var squadComponent))
         {
-            if (squadComponent.Leader is not { } leaderUid ||
-                !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) ||
-                leaderSquadMemberComponent.SharedBlackboardKeys.Count == 0 ||
-                !_htnQuery.TryComp(leaderUid, out var leaderHtnComponent))
+            if (!TryGetLeader((squadUid, squadComponent), out var leader) ||
+                leader.Comp.SharedBlackboardKeys.Count == 0 ||
+                !_htnQuery.TryComp(leader.Owner, out var leaderHtnComponent))
                 continue;
 
-            foreach (var memberUid in squadComponent.Members)
+            foreach (var memberUid in GetOtherMembers((squadUid, squadComponent), leader.Owner))
             {
-                if (memberUid == leaderUid ||
-                    !_htnQuery.TryComp(memberUid, out var memberHtnComponent) ||
-                    !_squadMemberQuery.TryComp(memberUid, out var memberSquadMemberComponent))
-                    continue;
-
-                if (memberSquadMemberComponent.ReceivedSharedFrom != leaderUid)
-                {
-                    memberSquadMemberComponent.ReceivedSharedValues.Clear();
-                    memberSquadMemberComponent.ReceivedSharedFrom = leaderUid;
-                }
-
-                var shared = false;
-
-                foreach (var key in leaderSquadMemberComponent.SharedBlackboardKeys)
-                {
-                    // The leader dropping a key ends it; the same value coming back later is news again.
-                    if (!leaderHtnComponent.Blackboard.TryGetValue<object>(key, out var value, EntityManager))
-                    {
-                        memberSquadMemberComponent.ReceivedSharedValues.Remove(key);
-                        continue;
-                    }
-
-                    if (memberHtnComponent.Blackboard.ContainsKey(key) ||
-                        memberSquadMemberComponent.ReceivedSharedValues.TryGetValue(key, out var receivedValue) &&
-                        Equals(receivedValue, value))
-                        continue;
-
-                    memberHtnComponent.Blackboard.SetValue(key, value);
-                    memberSquadMemberComponent.ReceivedSharedValues[key] = value;
-                    shared = true;
-                }
-
-                if (shared)
-                    _npcSensorSystem.RequestReplan(memberUid);
+                ShareToMember(leader, leaderHtnComponent, memberUid);
             }
         }
+    }
+
+    /// <summary>
+    ///     Gives <paramref name="memberUid"/> the leader's shared values it has nothing at the key for and has not been
+    ///         given already, and has it replan if there were any.
+    /// </summary>
+    private void ShareToMember(Entity<NpcSquadMemberComponent> leader, HTNComponent leaderHtnComponent, EntityUid memberUid)
+    {
+        if (!_htnQuery.TryComp(memberUid, out var memberHtnComponent) ||
+            !_squadMemberQuery.TryComp(memberUid, out var memberSquadMemberComponent))
+            return;
+
+        if (memberSquadMemberComponent.ReceivedSharedFrom != leader.Owner)
+        {
+            memberSquadMemberComponent.ReceivedSharedValues.Clear();
+            memberSquadMemberComponent.ReceivedSharedFrom = leader.Owner;
+        }
+
+        var shared = false;
+
+        foreach (var key in leader.Comp.SharedBlackboardKeys)
+        {
+            // The leader dropping a key ends it; the same value coming back later is news again.
+            if (!leaderHtnComponent.Blackboard.TryGetValue<object>(key, out var value, EntityManager))
+            {
+                memberSquadMemberComponent.ReceivedSharedValues.Remove(key);
+                continue;
+            }
+
+            if (memberHtnComponent.Blackboard.ContainsKey(key) ||
+                (memberSquadMemberComponent.ReceivedSharedValues.TryGetValue(key, out var receivedValue) &&
+                    Equals(receivedValue, value)))
+                continue;
+
+            memberHtnComponent.Blackboard.SetValue(key, value);
+            memberSquadMemberComponent.ReceivedSharedValues[key] = value;
+            shared = true;
+        }
+
+        if (shared)
+            _npcSensorSystem.RequestReplan(memberUid);
     }
 
     /// <summary>
@@ -642,26 +795,23 @@ public sealed partial class NpcSquadSystem : EntitySystem
     /// </summary>
     private EntityUid? GetHealthiestLeader(List<EntityUid> memberUids)
     {
-        EntityUid? bestUid = null;
-        var bestHealth = float.MinValue;
+        var best = NpcBestOf<EntityUid>.Highest();
 
         foreach (var memberUid in memberUids)
         {
             if (!_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) || !squadMemberComponent.CanLead)
                 continue;
 
-            var health = GetHealthFraction(memberUid);
-            if (health <= bestHealth)
-                continue;
-
-            bestUid = memberUid;
-            bestHealth = health;
+            best.Offer(memberUid, GetHealthFraction(memberUid));
         }
 
-        return bestUid;
+        return best.Found ? best.Value : null;
     }
 
-    private float GetHealthFraction(EntityUid uid)
+    /// <summary>
+    ///     How much health <paramref name="uid"/> has left, as a fraction of its critical threshold.
+    /// </summary>
+    public float GetHealthFraction(EntityUid uid)
     {
         if (!_damageableQuery.TryComp(uid, out var damageableComponent))
             return 1f;

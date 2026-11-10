@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Utility;
 using Content.Shared._KS14.NPC;
 using Content.Shared.Mobs;
 using Robust.Shared.Map;
@@ -17,8 +18,7 @@ public sealed partial class NpcPerceptionSystem
     public bool IsKnownDead(Entity<NpcPerceptionComponent?> observer, EntityUid targetUid)
     {
         return _perceptionQuery.Resolve(observer.Owner, ref observer.Comp, logMissing: false) &&
-            observer.Comp.KnownDead.TryGetValue(targetUid, out var forgetAt) &&
-            forgetAt > _gameTiming.CurTime;
+            NpcExpiringMap.IsLive(observer.Comp.KnownDead, targetUid, _gameTiming.CurTime);
     }
 
     /// <summary>
@@ -28,8 +28,7 @@ public sealed partial class NpcPerceptionSystem
     public bool HasPendingKillCallout(EntityUid uid, TimeSpan within)
     {
         return _perceptionQuery.TryComp(uid, out var perceptionComponent) &&
-            perceptionComponent.ConfirmedKillAt is { } confirmedAt &&
-            _gameTiming.CurTime - confirmedAt <= within;
+            NpcCallouts.IsPending(perceptionComponent.ConfirmedKillAt, within, _gameTiming.CurTime);
     }
 
     /// <summary>
@@ -126,13 +125,8 @@ public sealed partial class NpcPerceptionSystem
     /// </summary>
     private bool LearnDead(Entity<NpcPerceptionComponent> entity, EntityUid targetUid, TimeSpan now)
     {
-        // Pruned here, not on a timer: nothing else needs them gone. Removing during enumeration is allowed for a
-        //      Dictionary.
-        foreach (var (deadUid, forgetAt) in entity.Comp.KnownDead)
-        {
-            if (forgetAt <= now)
-                entity.Comp.KnownDead.Remove(deadUid);
-        }
+        // Pruned here, not on a timer: nothing else needs them gone.
+        NpcExpiringMap.PruneExpired(entity.Comp.KnownDead, now);
 
         entity.Comp.KnownDead[targetUid] = now + entity.Comp.MemoryTime;
 

@@ -51,6 +51,41 @@ public enum NpcOrderKind : byte
     ///     Nothing is going on: get back to the leader.
     /// </summary>
     Regroup,
+
+    /// <summary>
+    ///     Shoot out what stands between it and a hostile it can see.
+    /// </summary>
+    BreakBarrier,
+
+    /// <summary>
+    ///     Throw the grenade the order names at the spot it names.
+    /// </summary>
+    ThrowGrenade,
+
+    /// <summary>
+    ///     Get out of sight of the spot the order names.
+    /// </summary>
+    TakeCover,
+
+    /// <summary>
+    ///     Use its meds now, however little it is hurt: it is about to go through a door.
+    /// </summary>
+    PatchUp,
+
+    /// <summary>
+    ///     Change its magazine now, however much is left in it: it is about to go through a door.
+    /// </summary>
+    TopUp,
+
+    /// <summary>
+    ///     Go to the spot named, and stick the charge the order names on what it names.
+    /// </summary>
+    PlantCharge,
+
+    /// <summary>
+    ///     Press the activator the order names, and set off the charge wired to it.
+    /// </summary>
+    Detonate,
 }
 
 /// <summary>
@@ -73,6 +108,12 @@ public enum NpcHuntPhase : byte
     ///     Members with tools forcing the doors that will not open for anyone by hand, the rest waiting.
     /// </summary>
     Breach,
+
+    /// <summary>
+    ///     Shut out of the room, and making a way in with a charge. Only for those with
+    ///         <c>NpcSquadTacticsSettings.HuntCharges</c>.
+    /// </summary>
+    Blast,
 
     /// <summary>
     ///     Members going in together.

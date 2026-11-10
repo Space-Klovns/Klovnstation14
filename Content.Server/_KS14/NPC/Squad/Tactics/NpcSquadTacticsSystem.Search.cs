@@ -55,7 +55,69 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private void PrepareSearch(EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        var walkerUid = leaderUid ?? _members[0];
+        var walkerUid = GetWalker(leaderUid);
+        var grid = PrepareRoom(leaderUid, hunt, settings);
+
+        // Nothing leads from there to here, through any door. Searching would send someone towards it to get nowhere, then
+        //      have it stand there unable to plan a way, with nobody else doing anything at all.
+        if (TryPrepareSealedRoom(hunt, walkerUid, hunt.PredictedCoordinates))
+        {
+            hunt.Entrances.Clear();
+            ExhaustShutOut(leaderUid, hunt, settings, now);
+            return;
+        }
+
+        // Or it is they who are walled in, and every spot to search is somewhere they would only walk into a wall trying to get to.
+        if (IsSealedIn(walkerUid, hunt.PredictedCoordinates))
+        {
+            SealIn(hunt, walkerUid);
+            ExhaustShutOut(leaderUid, hunt, settings, now);
+            return;
+        }
+
+        BuildSearchPoints(walkerUid, hunt, grid, settings);
+
+        var anyoneInside = AnyoneInRoom(hunt);
+
+        // Stacking up is for a team going into a room they are not in yet. Anyone already inside, or anyone on their
+        //      own, just starts looking.
+        // A room every way into is shut to all of them - no access, nothing to force it with - is not getting
+        //      searched: they hold outside it and give up.
+        if (!anyoneInside && hunt.Entrances.Count > 0 && !CanAnyoneGetIn(hunt))
+        {
+            ExhaustShutOut(leaderUid, hunt, settings, now);
+            return;
+        }
+
+        if (settings.CanStackUp && _members.Count >= 2 && hunt.Entrances.Count > 0 && !anyoneInside)
+        {
+            SetPhase(hunt, NpcHuntPhase.Stage, now);
+            AssignEntrances(hunt, settings);
+
+            if (hunt.StagedMembers.Count > 0)
+                return;
+        }
+
+        SetPhase(hunt, NpcHuntPhase.Search, now);
+    }
+
+    private bool AnyoneInRoom(NpcHunt hunt)
+    {
+        foreach (var memberUid in _members)
+        {
+            if (IsInRoom(hunt, memberUid))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Works out which room the hostile is in and the ways into it. Returns the grid it is on, if there is a room.
+    /// </summary>
+    private Entity<MapGridComponent>? PrepareRoom(EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings)
+    {
+        var walkerUid = GetWalker(leaderUid);
         var walkerCoordinates = Transform(walkerUid).Coordinates;
         var coverSettings = _squadMemberQuery.TryComp(walkerUid, out var squadMemberComponent) ? squadMemberComponent.Cover : new NpcSquadCoverSettings();
 
@@ -65,9 +127,9 @@ public sealed partial class NpcSquadTacticsSystem
 
         Entity<MapGridComponent>? grid = null;
 
-        if (foundRoom && _mapGridQuery.TryComp(room.GridUid, out var mapGridComponent))
+        if (foundRoom && _npcGridSystem.TryGetGrid(room.GridUid, out var roomGrid))
         {
-            grid = (room.GridUid, mapGridComponent);
+            grid = roomGrid;
             hunt.GridUid = room.GridUid;
             hunt.RoomTiles.UnionWith(room.RoomTiles);
             hunt.UnseenTiles.UnionWith(room.RoomTiles);
@@ -86,34 +148,7 @@ public sealed partial class NpcSquadTacticsSystem
             }
         }
 
-        BuildSearchPoints(walkerUid, hunt, grid, settings);
-
-        var anyoneInside = false;
-        foreach (var memberUid in _members)
-        {
-            anyoneInside |= IsInRoom(hunt, memberUid);
-        }
-
-        // Stacking up is for a team going into a room they are not in yet. Anyone already inside, or anyone on their
-        //      own, just starts looking.
-        // A room every way into is shut to all of them - no access, nothing to force it with - is not getting
-        //      searched: they hold outside it and give up.
-        if (!anyoneInside && hunt.Entrances.Count > 0 && !CanAnyoneGetIn(hunt))
-        {
-            Exhaust(leaderUid, hunt, now);
-            return;
-        }
-
-        if (settings.CanStackUp && _members.Count >= 2 && hunt.Entrances.Count > 0 && !anyoneInside)
-        {
-            SetPhase(hunt, NpcHuntPhase.Stage, now);
-            AssignEntrances(hunt, settings);
-
-            if (hunt.StagedMembers.Count > 0)
-                return;
-        }
-
-        SetPhase(hunt, NpcHuntPhase.Search, now);
+        return grid;
     }
 
     /// <summary>
@@ -157,7 +192,7 @@ public sealed partial class NpcSquadTacticsSystem
         {
             foreach (var entrance in hunt.Entrances)
             {
-                if (GetEntryMethod(memberUid, entrance).Usable)
+                if (GetEntryMethod(hunt, memberUid, entrance).Usable)
                     return true;
             }
         }
@@ -305,11 +340,10 @@ public sealed partial class NpcSquadTacticsSystem
     private void UpdateCoverage(NpcHunt hunt, NpcSquadTacticsSettings settings)
     {
         if (hunt.UnseenTiles.Count == 0 ||
-            hunt.GridUid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var gridUid = grid.Owner;
         var (_, _, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(gridUid);
         var clearRangeSquared = settings.ClearRange * settings.ClearRange;
 
@@ -358,6 +392,33 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool UpdateSearch(EntityUid issuerUid, EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
+        var pointsLeft = RefreshSearchPoints(hunt, settings, now);
+
+        UpdateSweeps(hunt, settings, now);
+
+        if (!pointsLeft && GetCoverage(hunt) >= settings.SearchCoverage)
+        {
+            Exhaust(leaderUid, hunt, now);
+            return true;
+        }
+
+        AssignSearchPoints(hunt, now);
+        AssignSweeps(hunt, settings, now);
+
+        foreach (var memberUid in _members)
+        {
+            OrderSearcher(memberUid, issuerUid, hunt, settings, now);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Marks the search points that are done - checked, or given up on - and lets go of the ones whose member is gone or
+    ///         has run out of time on them. Returns whether any point is left to check.
+    /// </summary>
+    private bool RefreshSearchPoints(NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
         var pointsLeft = false;
 
         foreach (var point in hunt.SearchPoints)
@@ -385,48 +446,76 @@ public sealed partial class NpcSquadTacticsSystem
             pointsLeft = true;
         }
 
-        UpdateSweeps(hunt, settings, now);
+        return pointsLeft;
+    }
 
-        if (!pointsLeft && GetCoverage(hunt) >= settings.SearchCoverage)
+    /// <summary>
+    ///     Tells one member what to search: the spot it was given, else the tile it is sweeping towards, else - with nothing
+    ///         left for it - to help look or to keep an eye on the room.
+    /// </summary>
+    private void OrderSearcher(EntityUid memberUid, EntityUid issuerUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        if (TryGetAssignedPoint(hunt, memberUid, out var point))
         {
-            Exhaust(leaderUid, hunt, now);
+            SetOrder(memberUid,
+                issuerUid,
+                NpcOrderKind.Search,
+                point.Coordinates,
+                Angle.Zero,
+                point.StorageUid == null ? OrderRange : LockerOrderRange,
+                point.StorageUid,
+                now);
+            return;
+        }
+
+        if (hunt.Sweeps.TryGetValue(memberUid, out var sweep) && hunt.GridUid is { } gridUid)
+        {
+            SetOrder(memberUid, issuerUid, NpcOrderKind.Search, GetTileCoordinates(gridUid, sweep.Tile), Angle.Zero, OrderRange, null, now);
+            return;
+        }
+
+        // Nothing left for it, and nowhere it could keep an eye on things from: still back where it heard the noise,
+        //      with the search begun at once - out in the open, with no room to stack up on. It comes up to help look.
+        //      Watching from back there watched nothing, and left one member to search alone with the rest stood about.
+        if (!CanWatchSearch(hunt, memberUid, settings))
+        {
+            SetOrder(memberUid, issuerUid, NpcOrderKind.Search, hunt.PredictedCoordinates, Angle.Zero, HoldAreaRange, null, now);
+            return;
+        }
+
+        // Nothing left for it: keep an eye on the room while the others finish.
+        OrderWatchToward(memberUid,
+            issuerUid,
+            _transformSystem.ToMapCoordinates(hunt.PredictedCoordinates),
+            _transformSystem.GetWorldRotation(memberUid),
+            now);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/>, with nothing to search, is somewhere to watch the search from: in the room,
+    ///         or near enough the place it is about to see it, as a member that has seen a spot from there has searched it.
+    ///         A member a plan kept back has orders of its own, and watches wherever it is.
+    /// </summary>
+    private bool CanWatchSearch(NpcHunt hunt, EntityUid memberUid, NpcSquadTacticsSettings settings)
+    {
+        if (memberUid == hunt.HeldBackUid || IsInRoom(hunt, memberUid))
             return true;
-        }
 
-        AssignSearchPoints(hunt, now);
-        AssignSweeps(hunt, settings, now);
+        var memberMapCoordinates = _transformSystem.GetMapCoordinates(memberUid);
+        var predictedMapCoordinates = _transformSystem.ToMapCoordinates(hunt.PredictedCoordinates);
 
-        foreach (var memberUid in _members)
-        {
-            if (TryGetAssignedPoint(hunt, memberUid, out var point))
-            {
-                SetOrder(memberUid,
-                    issuerUid,
-                    NpcOrderKind.Search,
-                    point.Coordinates,
-                    Angle.Zero,
-                    point.StorageUid == null ? OrderRange : LockerOrderRange,
-                    point.StorageUid,
-                    now);
-                continue;
-            }
+        return SeesClearly(memberMapCoordinates, predictedMapCoordinates, settings);
+    }
 
-            if (hunt.Sweeps.TryGetValue(memberUid, out var sweep) && hunt.GridUid is { } gridUid)
-            {
-                SetOrder(memberUid, issuerUid, NpcOrderKind.Search, GetTileCoordinates(gridUid, sweep.Tile), Angle.Zero, OrderRange, null, now);
-                continue;
-            }
-
-            // Nothing left for it: keep an eye on the room while the others finish.
-            var standCoordinates = _transformSystem.GetMoverCoordinates(memberUid);
-            var worldFacing = GetFacing(_transformSystem.GetMapCoordinates(memberUid),
-                _transformSystem.ToMapCoordinates(hunt.PredictedCoordinates),
-                _transformSystem.GetWorldRotation(memberUid));
-
-            SetOrder(memberUid, issuerUid, NpcOrderKind.Watch, standCoordinates, ToLocalFacing(standCoordinates, worldFacing), OrderRange, null, now);
-        }
-
-        return false;
+    /// <summary>
+    ///     Whether something at <paramref name="from"/> has a good look at <paramref name="to"/>: within
+    ///         <see cref="NpcSquadTacticsSettings.ClearRange"/>, and in sight.
+    /// </summary>
+    private bool SeesClearly(MapCoordinates from, MapCoordinates to, NpcSquadTacticsSettings settings)
+    {
+        return from.MapId == to.MapId &&
+            (to.Position - from.Position).LengthSquared() <= settings.ClearRange * settings.ClearRange &&
+            _npcLineOfSightSystem.InLineOfSight(from, to, settings.ClearRange);
     }
 
     /// <summary>
@@ -452,11 +541,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var memberUid in _members)
         {
-            var memberMapCoordinates = _transformSystem.GetMapCoordinates(memberUid);
-
-            if (memberMapCoordinates.MapId == pointMapCoordinates.MapId &&
-                (pointMapCoordinates.Position - memberMapCoordinates.Position).LengthSquared() <= settings.ClearRange * settings.ClearRange &&
-                _npcLineOfSightSystem.InLineOfSight(memberMapCoordinates, pointMapCoordinates, settings.ClearRange))
+            if (SeesClearly(_transformSystem.GetMapCoordinates(memberUid), pointMapCoordinates, settings))
                 return true;
         }
 
@@ -542,11 +627,10 @@ public sealed partial class NpcSquadTacticsSystem
     private void AssignSweeps(NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         if (hunt.UnseenTiles.Count == 0 ||
-            hunt.GridUid is not { } gridUid ||
-            !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+            !_npcGridSystem.TryGetGrid(hunt.GridUid, out var grid))
             return;
 
-        var grid = new Entity<MapGridComponent>(gridUid, mapGridComponent);
+        var gridUid = grid.Owner;
         var (_, _, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(gridUid);
         var cohesive = settings.SearchCohesion > 0f && _members.Count > 1;
         var cohesionFieldsBuilt = false;

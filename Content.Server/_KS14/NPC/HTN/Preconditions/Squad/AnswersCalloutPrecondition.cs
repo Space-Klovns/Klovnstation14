@@ -27,7 +27,7 @@ public sealed partial class AnswersCalloutPrecondition : HTNPrecondition
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        var ownerUid = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ownerUid = blackboard.GetOwner();
 
         var responds = true;
         var range = 0f;

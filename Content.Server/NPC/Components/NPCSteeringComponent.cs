@@ -60,6 +60,27 @@ public sealed partial class NPCSteeringComponent : Component
 
     public const float StuckDistance = 1f;
 
+    // KS14 start: progress towards the node it is making for, for an NPC going round and round it - see
+    //      NPCSteeringSystem.IsCirclingNode
+    /// <summary>
+    /// The path node <see cref="KsNodeClosest"/> and <see cref="KsNodeClosestTime"/> are about.
+    /// </summary>
+    [ViewVariables]
+    public EntityCoordinates KsNode;
+
+    /// <summary>
+    /// The nearest it has got to <see cref="KsNode"/>.
+    /// </summary>
+    [ViewVariables]
+    public float KsNodeClosest;
+
+    /// <summary>
+    /// When it last got nearer <see cref="KsNode"/> than ever before.
+    /// </summary>
+    [ViewVariables, AutoPausedField]
+    public TimeSpan KsNodeClosestTime;
+    // KS14 end
+
     /// <summary>
     /// Have we currently requested a path.
     /// </summary>
@@ -71,6 +92,12 @@ public sealed partial class NPCSteeringComponent : Component
     /// </summary>
     [DataField("arriveOnLineOfSight")]
     public bool ArriveOnLineOfSight = false;
+
+    /// <summary>
+    /// KS14: for <see cref="ArriveOnLineOfSight"/>, whether what counts is having a clear shot rather than a clear way.
+    /// </summary>
+    [ViewVariables]
+    public bool KsArriveOnLineOfFire;
 
     /// <summary>
     /// How long the target has been in line of sight if applicable.
@@ -102,6 +129,19 @@ public sealed partial class NPCSteeringComponent : Component
     /// How far does the last node in the path need to be before considering re-pathfinding.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite)] public float RepathRange = 1.5f;
+
+    // KS14 start
+    /// <summary>
+    /// When to next look along the path for a danger that has started up on it since it was found.
+    /// </summary>
+    [ViewVariables, AutoPausedField] public TimeSpan NextDangerCheck;
+
+    /// <summary>
+    /// The nodes of the current path that were already on or beside a danger when it was found: the way round was dearer,
+    /// or there was none. Finding those again is no reason to look for another path.
+    /// </summary>
+    [ViewVariables] public readonly HashSet<PathPoly> DangerOnPath = new();
+    // KS14 end
 
     public const int FailedPathLimit = 3;
 

@@ -9,11 +9,13 @@ using Content.Server.NPC.Systems;
 using Content.Server.NPC;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Inventory;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
 using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 
@@ -47,9 +49,157 @@ public sealed class KsNpcLightDetectionTest : GameTest
   - type: NpcPerception
     revealSpeed: 1000
     trackSpeed: 1000
+
+# As above, with somewhere to wear goggles.
+- type: entity
+  parent: KsLightTestObserverBlindToSpeed
+  id: KsLightTestObserverWithEyes
+  components:
+  - type: Inventory
+    templateId: human
+  - type: ContainerContainer
+
+- type: entity
+  parent: ClothingEyesBase
+  id: KsLightTestGoggles
+  components:
+  - type: NpcDarkVision
+
+- type: entity
+  parent: ClothingEyesBase
+  id: KsLightTestWeakGoggles
+  components:
+  - type: NpcDarkVision
+    strength: 0.01
 ";
 
     private const string SpeedBlindObserver = "KsLightTestObserverBlindToSpeed";
+    private const string ObserverWithEyes = "KsLightTestObserverWithEyes";
+    private const string Goggles = "KsLightTestGoggles";
+    private const string WeakGoggles = "KsLightTestWeakGoggles";
+    private const string EyesSlot = "eyes";
+
+    /// <summary>
+    ///     Goggles let an NPC see a target in the dark from afar, as if it were lit, and taking them off puts it back in
+    ///         the dark.
+    /// </summary>
+    [Test]
+    public async Task TestGogglesSeeInTheDark()
+    {
+        await OverrideCVar(Side.Server, KsCCVars.NpcLightDetection, true);
+        var (entManager, _, farNpcUid, _, darkTargetUid) = await SetUp(ObserverWithEyes);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+        var inventorySystem = entManager.System<InventorySystem>();
+
+        bool Sees()
+        {
+            perceptionSystem.UpdateNow(farNpcUid);
+            return perceptionSystem.TryGetContact(farNpcUid, darkTargetUid, out var contact) && contact.State == NpcContactState.Visible;
+        }
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(Sees(), Is.False, "without goggles, the target in the dark should go unseen");
+
+            var gogglesUid = entManager.SpawnEntity(Goggles, entManager.GetComponent<TransformComponent>(farNpcUid).Coordinates);
+            Assert.That(inventorySystem.TryEquip(farNpcUid, gogglesUid, EyesSlot, silent: true, force: true));
+            Assert.That(Sees(), "with goggles on, it should be seen");
+
+            Assert.That(inventorySystem.TryUnequip(farNpcUid, EyesSlot, silent: true, force: true));
+            perceptionSystem.ForgetContact(farNpcUid, darkTargetUid);
+            Assert.That(Sees(), Is.False, "with them off again, it should go unseen");
+        });
+    }
+
+    /// <summary>
+    ///     With goggles on, a target in the dark takes no longer to react to than a lit one.
+    /// </summary>
+    [Test]
+    public async Task TestGogglesReactAsIfLit()
+    {
+        await OverrideCVar(Side.Server, KsCCVars.NpcLightDetection, true);
+        var (entManager, _, farNpcUid, _, darkTargetUid) = await SetUp(ObserverWithEyes);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var gogglesUid = entManager.SpawnEntity(Goggles, entManager.GetComponent<TransformComponent>(farNpcUid).Coordinates);
+            Assert.That(entManager.System<InventorySystem>().TryEquip(farNpcUid, gogglesUid, EyesSlot, silent: true, force: true));
+        });
+
+        // The same wait as TestDarkTargetsTakeLongerToReactTo, which is too short for a target in the dark.
+        await SeeFor(perceptionSystem, farNpcUid);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            perceptionSystem.TryGetContact(farNpcUid, darkTargetUid, out var contact);
+            Assert.That(contact.Reacted, "a target seen through goggles should be reacted to in the normal time");
+        });
+    }
+
+    /// <summary>
+    ///     How far goggles see into the dark is theirs to say: too weak to bring a pitch dark target up to what the NPC
+    ///         needs to spot it, it stays unseen.
+    /// </summary>
+    [Test]
+    public async Task TestWeakGogglesDoNotSeeEverything()
+    {
+        await OverrideCVar(Side.Server, KsCCVars.NpcLightDetection, true);
+        var (entManager, _, farNpcUid, _, darkTargetUid) = await SetUp(ObserverWithEyes);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var gogglesUid = entManager.SpawnEntity(WeakGoggles, entManager.GetComponent<TransformComponent>(farNpcUid).Coordinates);
+            Assert.That(entManager.System<InventorySystem>().TryEquip(farNpcUid, gogglesUid, EyesSlot, silent: true, force: true));
+
+            perceptionSystem.UpdateNow(farNpcUid);
+
+            Assert.That(perceptionSystem.TryGetContact(farNpcUid, darkTargetUid, out var contact) && contact.State == NpcContactState.Visible, Is.False);
+        });
+    }
+
+    /// <summary>
+    ///     Content: every wearable night vision in the game works for an NPC, however it is made. Goes by what makes a thing
+    ///         wearable night vision, so goggles added later are covered without touching this.
+    /// </summary>
+    [Test]
+    public async Task TestEveryWearableNightVisionWorksForNpcs()
+    {
+        await OverrideCVar(Side.Server, KsCCVars.NpcLightDetection, true);
+        var (entManager, _, farNpcUid, _, darkTargetUid) = await SetUp(ObserverWithEyes);
+        var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+        var inventorySystem = entManager.System<InventorySystem>();
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        var factory = Pair.Server.ResolveDependency<IComponentFactory>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var found = 0;
+
+            foreach (var proto in protoManager.EnumeratePrototypes<EntityPrototype>())
+            {
+                if (proto.Abstract || !proto.TryGetComponent<Content.Shared._KS14.PhosphorNightVision.WearablePhosphorNightVisionComponent>(out _, factory))
+                    continue;
+
+                found++;
+
+                var gogglesUid = entManager.SpawnEntity(proto.ID, entManager.GetComponent<TransformComponent>(farNpcUid).Coordinates);
+                Assert.That(inventorySystem.TryEquip(farNpcUid, gogglesUid, EyesSlot, silent: true, force: true), proto.ID);
+
+                perceptionSystem.ForgetContact(farNpcUid, darkTargetUid);
+                perceptionSystem.UpdateNow(farNpcUid);
+
+                Assert.That(perceptionSystem.TryGetContact(farNpcUid, darkTargetUid, out var contact) && contact.State == NpcContactState.Visible,
+                    $"an NPC wearing {proto.ID} should see in the dark");
+
+                Assert.That(inventorySystem.TryUnequip(farNpcUid, EyesSlot, silent: true, force: true), proto.ID);
+                entManager.DeleteEntity(gogglesUid);
+            }
+
+            Assert.That(found, Is.GreaterThan(0), "there should be wearable night vision to check");
+        });
+    }
 
     /// <summary>
     ///     A lit target can be seen from afar, a dark one cannot - unless the NPC is right next to it.
