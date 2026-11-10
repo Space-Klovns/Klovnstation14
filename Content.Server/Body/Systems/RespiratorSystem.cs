@@ -337,7 +337,8 @@ public sealed partial class RespiratorSystem : EntitySystem
         if (ent.Comp.SuffocationCycles == 2)
             _adminLogger.Add(LogType.Asphyxiation, $"{ToPrettyString(ent):entity} started suffocating");
 
-        _damageableSys.ChangeDamage(ent.Owner, ent.Comp.Damage, interruptsDoAfters: false, ignoreResistances: true);
+        var ksDamage = ent.Comp.CritDamage is { } ksCritDamage && _mobState.IsCritical(ent.Owner) ? ksCritDamage : ent.Comp.Damage; // KS14: crit asphyxiation separate from suffocation
+        _damageableSys.ChangeDamage(ent.Owner, ksDamage /* KS14: ent.Comp.Damage -> ksDamage */, interruptsDoAfters: false, ignoreResistances: true);
 
         if (ent.Comp.SuffocationCycles < ent.Comp.SuffocationCycleThreshold)
             return;
