@@ -39,8 +39,9 @@ public sealed partial class KsSoftCritComponent : Component
     public float MaxLetterDropChance = 0.35f;
 
     /// <summary>
-    ///     Whether the mob is currently in soft crit.
+    ///     Whether the mob is currently in soft crit. Derived from its damage and thresholds, and kept in step
+    ///         with the knockdown and movement it implies, so it's read-only in VV.
     /// </summary>
-    [ViewVariables, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
     public bool Active;
 }

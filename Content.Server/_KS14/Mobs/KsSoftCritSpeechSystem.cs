@@ -15,30 +15,24 @@ namespace Content.Server._KS14.Mobs;
 public sealed partial class KsSoftCritSpeechSystem : EntitySystem
 {
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private KsSoftCritSystem _softCrit = default!;
-    [Dependency] private StutteringSystem _stuttering = default!;
+    [Dependency] private KsSoftCritSystem _softCritSystem = default!;
+    [Dependency] private StutteringSystem _stutteringSystem = default!;
 
     /// <summary>
     ///     Stutter settings, the same defaults bloodloss uses. Never added to an entity.
     /// </summary>
-    private readonly StutteringAccentComponent _stutter = new();
+    private readonly StutteringAccentComponent _stutteringAccentComponent = new();
 
-    public override void Initialize()
+    [SubscribeLocalEvent]
+    private void OnAccent(Entity<KsSoftCritComponent> entity, ref AccentGetEvent args)
     {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsSoftCritComponent, AccentGetEvent>(OnAccent);
-    }
-
-    private void OnAccent(Entity<KsSoftCritComponent> ent, ref AccentGetEvent args)
-    {
-        if (!ent.Comp.Active)
+        if (!entity.Comp.Active)
             return;
 
-        var severity = _softCrit.GetSoftCritSeverity(ent);
-        var dropChance = MathHelper.Lerp(ent.Comp.MinLetterDropChance, ent.Comp.MaxLetterDropChance, severity);
+        var severity = _softCritSystem.GetSoftCritSeverity(entity.AsNullable());
+        var dropChance = MathHelper.Lerp(entity.Comp.MinLetterDropChance, entity.Comp.MaxLetterDropChance, severity);
 
-        args.Message = _stuttering.Accentuate(DropLetters(args.Message, dropChance), _stutter);
+        args.Message = _stutteringSystem.Accentuate(DropLetters(args.Message, dropChance), _stutteringAccentComponent);
     }
 
     /// <summary>
@@ -46,7 +40,7 @@ public sealed partial class KsSoftCritSpeechSystem : EntitySystem
     /// </summary>
     private string DropLetters(string message, float chance)
     {
-        var sb = new StringBuilder(message.Length);
+        var builder = new StringBuilder(message.Length);
         var wordStart = true;
 
         foreach (var character in message)
@@ -54,16 +48,16 @@ public sealed partial class KsSoftCritSpeechSystem : EntitySystem
             if (!char.IsLetter(character))
             {
                 wordStart = true;
-                sb.Append(character);
+                builder.Append(character);
                 continue;
             }
 
             if (wordStart || !_random.Prob(chance))
-                sb.Append(character);
+                builder.Append(character);
 
             wordStart = false;
         }
 
-        return sb.ToString();
+        return builder.ToString();
     }
 }

@@ -1,7 +1,7 @@
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Mobs.Components;
+using Content.Shared._KS14.PopupLocalization;
 using Content.Shared.ActionBlocker;
-using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
@@ -28,14 +28,17 @@ namespace Content.Shared._KS14.Mobs.Systems;
 /// </remarks>
 public sealed partial class KsSoftCritSystem : EntitySystem
 {
-    [Dependency] private ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private DamageableSystem _damageable = default!;
-    [Dependency] private MovementSpeedModifierSystem _movementSpeed = default!;
-    [Dependency] private SharedStunSystem _stun = default!;
-    [Dependency] private IConfigurationManager _cfg = default!;
-    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private MovementSpeedModifierSystem _movementSpeedModifierSystem = default!;
+    [Dependency] private SharedStunSystem _stunSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     [Dependency] private EntityQuery<KsSoftCritComponent> _softCritQuery = default!;
+    [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+    [Dependency] private EntityQuery<MobThresholdsComponent> _mobThresholdsQuery = default!;
+    [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
 
     private bool _enabled;
 
@@ -43,17 +46,7 @@ public sealed partial class KsSoftCritSystem : EntitySystem
     {
         base.Initialize();
 
-        Subs.CVar(_cfg, KsCCVars.SoftCritEnabled, OnEnabledChanged, true);
-
-        SubscribeLocalEvent<KsSoftCritComponent, MobStateChangedEvent>(OnMobStateChanged);
-        // Mob thresholds still run on total damage and DamageChangedEvent. Soft crit has to measure damage
-        // the same way to line up with them, and DamageDealtEvent doesn't cover healing out of hard crit.
-#pragma warning disable CS0618
-        SubscribeLocalEvent<KsSoftCritComponent, DamageChangedEvent>(OnDamageChanged);
-#pragma warning restore CS0618
-        SubscribeLocalEvent<KsSoftCritComponent, RefreshMovementSpeedModifiersEvent>(OnRefreshSpeed);
-        SubscribeLocalEvent<KsSoftCritComponent, AfterAutoHandleStateEvent>(OnAfterHandleState);
-        SubscribeLocalEvent<KsSoftCritComponent, StandUpAttemptEvent>(OnStandUpAttempt);
+        Subs.CVar(_configurationManager, KsCCVars.SoftCritEnabled, OnEnabledChanged, invokeImmediately: true);
     }
 
     /// <summary>
@@ -61,7 +54,7 @@ public sealed partial class KsSoftCritSystem : EntitySystem
     /// </summary>
     public bool IsSoftCrit(EntityUid uid)
     {
-        return _softCritQuery.TryComp(uid, out KsSoftCritComponent? softCrit) && softCrit.Active;
+        return _softCritQuery.TryComp(uid, out var softCritComponent) && softCritComponent.Active;
     }
 
     /// <summary>
@@ -72,6 +65,22 @@ public sealed partial class KsSoftCritSystem : EntitySystem
         return args is UpdateCanMoveEvent or ChangeDirectionAttemptEvent or SpeakAttemptEvent && IsSoftCrit(uid);
     }
 
+    /// <summary>
+    ///     How deep into soft crit the mob is: 0 right at the crit threshold, 1 at hard crit.
+    ///     Returns 0 when not in soft crit.
+    /// </summary>
+    public float GetSoftCritSeverity(Entity<KsSoftCritComponent?> entity)
+    {
+        if (!_softCritQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false) ||
+            !entity.Comp.Active ||
+            !TryGetSoftCritProgress((entity.Owner, entity.Comp), out var progress))
+        {
+            return 0f;
+        }
+
+        return Math.Clamp(progress, 0f, 1f);
+    }
+
     private void OnEnabledChanged(bool enabled)
     {
         if (_enabled == enabled)
@@ -79,133 +88,128 @@ public sealed partial class KsSoftCritSystem : EntitySystem
 
         _enabled = enabled;
 
-        // Put anyone already critical into or out of soft crit right away.
-        var query = EntityQueryEnumerator<KsSoftCritComponent>();
-        while (query.MoveNext(out var uid, out var softCrit))
+        // Put anyone already critical into or out of soft crit right away, paused maps included, so nobody
+        //      is left half in soft crit once their map unpauses.
+        var softCritEnumerator = AllEntityQuery<KsSoftCritComponent>();
+        while (softCritEnumerator.MoveNext(out var uid, out var softCritComponent))
         {
-            Refresh((uid, softCrit));
+            Refresh((uid, softCritComponent));
         }
     }
 
-    private void OnMobStateChanged(Entity<KsSoftCritComponent> ent, ref MobStateChangedEvent args)
+    /// <summary>
+    ///     Raised after every damage change, every mob state change and every threshold change
+    ///         (adjustments included), each time after the mob state has been brought up to date.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnThresholdChecked(Entity<KsSoftCritComponent> entity, ref MobThresholdChecked args)
     {
-        Refresh(ent);
+        Refresh(entity);
     }
 
-#pragma warning disable CS0618
-    private void OnDamageChanged(Entity<KsSoftCritComponent> ent, ref DamageChangedEvent args)
-#pragma warning restore CS0618
+    [SubscribeLocalEvent]
+    private void OnRefreshSpeed(Entity<KsSoftCritComponent> entity, ref RefreshMovementSpeedModifiersEvent args)
     {
-        Refresh(ent);
+        if (entity.Comp.Active)
+            args.ModifySpeed(entity.Comp.CrawlSpeedModifier);
     }
 
-    private void OnRefreshSpeed(Entity<KsSoftCritComponent> ent, ref RefreshMovementSpeedModifiersEvent args)
-    {
-        if (ent.Comp.Active)
-            args.ModifySpeed(ent.Comp.CrawlSpeedModifier);
-    }
-
-    private void OnAfterHandleState(Entity<KsSoftCritComponent> ent, ref AfterAutoHandleStateEvent args)
+    [SubscribeLocalEvent]
+    private void OnAfterHandleState(Entity<KsSoftCritComponent> entity, ref AfterAutoHandleStateEvent args)
     {
         // Keep client prediction in line with the server.
-        UpdateEffects(ent);
+        UpdateEffects(entity);
     }
 
-    private void OnStandUpAttempt(Entity<KsSoftCritComponent> ent, ref StandUpAttemptEvent args)
+    [SubscribeLocalEvent]
+    private void OnStandUpAttempt(Entity<KsSoftCritComponent> entity, ref StandUpAttemptEvent args)
     {
-        if (!ent.Comp.Active || args.Cancelled)
+        if (!entity.Comp.Active || args.Cancelled)
             return;
 
         // Crit normally keeps you down by not letting you move at all, but soft crit lets you crawl,
-        // which would otherwise let you get back up from the knockdown.
+        //      which would otherwise let you get back up from the knockdown. Going weightless still ends
+        //      the knockdown; StandingStateSystem.KsOnWeightlessnessChanged puts the mob back down when
+        //      gravity returns, because this cancels its stand-up.
         args.Cancelled = true;
         args.Autostand = false;
-        args.Message = (Loc.GetString("ks-soft-crit-stand-attempt"), PopupType.SmallCaution);
+        args.Message = (KsPopupMessage.Create("ks-soft-crit-stand-attempt"), PopupType.SmallCaution);
     }
 
-    private void Refresh(Entity<KsSoftCritComponent> ent)
+    private void Refresh(Entity<KsSoftCritComponent> entity)
     {
         // The server's result comes in with the state.
-        if (_timing.ApplyingState)
+        if (_gameTiming.ApplyingState)
             return;
 
-        var active = ShouldBeSoftCrit(ent);
-        if (active == ent.Comp.Active)
+        var active = ShouldBeSoftCrit(entity);
+        if (active == entity.Comp.Active)
             return;
 
-        ent.Comp.Active = active;
-        Dirty(ent);
+        entity.Comp.Active = active;
+        Dirty(entity);
 
         if (active)
         {
             // Crawl like any other knocked down mob, for as long as soft crit lasts.
-            _stun.TryCrawling(ent.Owner, time: null, autoStand: false);
-            _stun.SetAutoStand(ent.Owner, false);
+            _stunSystem.TryCrawling(entity.Owner, time: null, autoStand: false);
+            _stunSystem.SetAutoStand(entity.Owner, autoStand: false);
         }
         else
         {
-            // Get up as normal once able: right away if healed, or never while hard crit or dead
-            // keeps you from moving. Any knockdown time left from something else still applies.
-            _stun.SetAutoStand(ent.Owner, true);
+            // Get up as normal once able: right away if healed, or never while hard crit or death
+            //      keeps you from moving. Any knockdown time left from something else still applies.
+            _stunSystem.SetAutoStand(entity.Owner, autoStand: true);
         }
 
-        UpdateEffects(ent);
+        UpdateEffects(entity);
     }
 
     private void UpdateEffects(EntityUid uid)
     {
-        _actionBlocker.UpdateCanMove(uid);
-        _movementSpeed.RefreshMovementSpeedModifiers(uid);
+        _actionBlockerSystem.UpdateCanMove(uid);
+        _movementSpeedModifierSystem.RefreshMovementSpeedModifiers(uid);
     }
 
-    /// <summary>
-    ///     How deep into soft crit the mob is: 0 right at the crit threshold, 1 at hard crit.
-    ///     Returns 0 when not in soft crit.
-    /// </summary>
-    public float GetSoftCritSeverity(EntityUid uid)
+    private bool ShouldBeSoftCrit(Entity<KsSoftCritComponent> entity)
     {
-        if (!IsSoftCrit(uid) || !TryGetSoftCritProgress(uid, out var progress))
-            return 0f;
-
-        return Math.Clamp(progress, 0f, 1f);
-    }
-
-    private bool ShouldBeSoftCrit(EntityUid uid)
-    {
-        if (!_enabled || !TryComp<MobStateComponent>(uid, out var mobState) || mobState.CurrentState != MobState.Critical)
+        if (!_enabled ||
+            !_mobStateQuery.TryComp(entity, out var mobStateComponent) ||
+            mobStateComponent.CurrentState != MobState.Critical)
+        {
             return false;
+        }
 
-        return TryGetSoftCritProgress(uid, out var progress) && progress < 1f;
+        return TryGetSoftCritProgress(entity, out var progress) && progress < 1f;
     }
 
     /// <summary>
     ///     Where the mob's damage sits between the crit threshold (0) and hard crit (1).
     /// </summary>
-    private bool TryGetSoftCritProgress(EntityUid uid, out float progress)
+    private bool TryGetSoftCritProgress(Entity<KsSoftCritComponent> entity, out float progress)
     {
         progress = 0f;
-        if (!_softCritQuery.TryComp(uid, out var softCrit) ||
-            !TryComp<MobThresholdsComponent>(uid, out var thresholds) ||
-            !TryComp<DamageableComponent>(uid, out var damageable))
+        if (!_mobThresholdsQuery.TryComp(entity, out var thresholdsComponent) ||
+            !_damageableQuery.TryComp(entity, out var damageableComponent))
         {
             return false;
         }
 
-        if (!TryGetThreshold(thresholds, MobState.Critical, out var crit) ||
-            !TryGetThreshold(thresholds, MobState.Dead, out var dead))
+        if (!TryGetThreshold(thresholdsComponent, MobState.Critical, out var critThreshold) ||
+            !TryGetThreshold(thresholdsComponent, MobState.Dead, out var deadThreshold))
         {
             return false;
         }
 
-        var softCritLength = (dead - crit).Float() * softCrit.HardCritFraction;
+        var softCritLength = (float)(deadThreshold - critThreshold) * entity.Comp.HardCritFraction;
         if (softCritLength <= 0f)
             return false;
 
-        // Same measure MobThresholdSystem uses for its thresholds.
+        // Mob thresholds still run on total damage, and soft crit has to measure it the same way to line up with them.
 #pragma warning disable CS0618
-        var damage = _damageable.GetTotalDamage((uid, damageable));
+        var damage = _damageableSystem.GetTotalDamage((entity.Owner, damageableComponent));
 #pragma warning restore CS0618
-        progress = (damage - crit).Float() / softCritLength;
+        progress = (float)(damage - critThreshold) / softCritLength;
         return true;
     }
 
@@ -213,14 +217,14 @@ public sealed partial class KsSoftCritSystem : EntitySystem
     ///     Gets a threshold the same way <see cref="MobThresholdSystem"/> checks it, adjustments included,
     ///         so chems that shift crit (like klovnide's safe-crit) shift the soft crit window along with it.
     /// </summary>
-    private static bool TryGetThreshold(MobThresholdsComponent thresholds, MobState state, out FixedPoint2 threshold)
+    private static bool TryGetThreshold(MobThresholdsComponent thresholdsComponent, MobState state, out FixedPoint2 threshold)
     {
-        foreach (var (damage, thresholdState) in thresholds.Thresholds)
+        foreach (var (damage, thresholdState) in thresholdsComponent.Thresholds)
         {
             if (thresholdState != state)
                 continue;
 
-            threshold = damage + thresholds.ThresholdAdjustments.GetValueOrDefault(state);
+            threshold = damage + thresholdsComponent.ThresholdAdjustments.GetValueOrDefault(state);
             return true;
         }
 

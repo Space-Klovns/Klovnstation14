@@ -1,4 +1,3 @@
-using Content.Shared._KS14.Mobs.Systems; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage.Systems;
@@ -18,7 +17,7 @@ public partial class MobStateSystem : EntitySystem
     [Dependency] private ILogManager _logManager = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private DamageableSystem _damageable = default!;
-    [Dependency] private KsSoftCritSystem _ksSoftCrit = default!; // KS14
+    [Dependency] private Content.Shared._KS14.Mobs.Systems.KsSoftCritSystem _ksSoftCritSystem = default!; // KS14
     private ISawmill _sawmill = default!;
 
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
