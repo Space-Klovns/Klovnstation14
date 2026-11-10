@@ -2634,3 +2634,11 @@ Entries:
         Click the number to type a value.
   id: 250
   time: '2026-11-09T21:06:55.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: >-
+        Between 100 and 130 damage, you are now in softcrit: you can slowly
+        crawl and whisper, but can't stand up or use your hands.
+  id: 251
+  time: '2026-11-10T17:33:18.0000000+00:00'
