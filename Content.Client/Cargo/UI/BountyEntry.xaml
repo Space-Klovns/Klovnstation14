@@ -3,7 +3,8 @@
               Margin="10 10 10 0"
               HorizontalExpand="True"
               Visible="True">
-    <PanelContainer StyleClasses="BackgroundPanel" HorizontalExpand="True">
+    <!-- KS14: translucent like a Section body under the tgui theme -->
+    <PanelContainer StyleClasses="BackgroundPanel KsTguiSectionBackground" HorizontalExpand="True">
         <BoxContainer Orientation="Vertical"
                       HorizontalExpand="True">
             <BoxContainer Orientation="Horizontal">

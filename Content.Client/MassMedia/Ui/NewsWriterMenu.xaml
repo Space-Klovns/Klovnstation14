@@ -1,5 +1,5 @@
 <controls:FancyWindow
-    xmlns="https://spacestation14.io"
+    xmlns="https://spacestation14.io" xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
     xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
     xmlns:ui="clr-namespace:Content.Client.MassMedia.Ui"
     xmlns:graphics="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
@@ -12,11 +12,9 @@
 
     <BoxContainer Orientation="Vertical" VerticalExpand="True">
         <Control VerticalExpand="True" HorizontalExpand="True" Margin="10 10 10 0">
-            <PanelContainer Name="MainPanel" HorizontalExpand="False" VerticalExpand="True">
-                <PanelContainer.PanelOverride>
-                    <graphics:StyleBoxFlat BackgroundColor="#202023" />
-                </PanelContainer.PanelOverride>
-            </PanelContainer>
+            <!-- KS14: tgui Section body under the tgui theme, flat colour under Baron -->
+            <ksTgui:KsSectionPanel Name="MainPanel" HorizontalExpand="False" VerticalExpand="True" BaronColor="#202023">
+            </ksTgui:KsSectionPanel>
             <ScrollContainer Name="ArticleListScrollbar" HorizontalExpand="True" VerticalExpand="True" HScrollEnabled="True">
                 <BoxContainer Name="ArticlesContainer" Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" Margin="6 6 6 6">
                 </BoxContainer>

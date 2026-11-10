@@ -1,0 +1,27 @@
+- type: shader
+  id: KsTguiGlyphBox
+  kind: source
+  path: "/Textures/_KS14/Shaders/tgui_glyph.swsl"
+  params:
+    shape: 0.0
+
+- type: shader
+  id: KsTguiGlyphTick
+  kind: source
+  path: "/Textures/_KS14/Shaders/tgui_glyph.swsl"
+  params:
+    shape: 1.0
+
+- type: shader
+  id: KsTguiGlyphChevron
+  kind: source
+  path: "/Textures/_KS14/Shaders/tgui_glyph.swsl"
+  params:
+    shape: 2.0
+
+- type: shader
+  id: KsTguiGlyphDropdownCell
+  kind: source
+  path: "/Textures/_KS14/Shaders/tgui_glyph.swsl"
+  params:
+    shape: 3.0

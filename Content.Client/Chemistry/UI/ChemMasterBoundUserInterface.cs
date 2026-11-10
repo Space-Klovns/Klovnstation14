@@ -27,6 +27,9 @@ namespace Content.Client.Chemistry.UI
         {
             base.Open();
 
+            if (TryOpenKsTgui()) // KS14
+                return;
+
             // Setup window layout/elements
             _window = this.CreateWindow<ChemMasterWindow>();
             _window.Title = EntMan.GetComponent<MetaDataComponent>(Owner).EntityName;
@@ -77,6 +80,7 @@ namespace Content.Client.Chemistry.UI
             var castState = (ChemMasterBoundUserInterfaceState)state;
 
             _window?.UpdateState(castState); // Update window state
+            _ksTguiWindow?.UpdateState(castState); // KS14
         }
     }
 }

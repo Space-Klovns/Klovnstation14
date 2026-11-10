@@ -24,14 +24,15 @@
 
         <PanelContainer StyleClasses="LowDivider" />
 
+        <!-- KS14: label column in the tgui LabeledList colour under the tgui theme (class is theme-gated) -->
         <GridContainer Margin="0 5 0 0" Columns="2">
-            <Label Text="{Loc 'health-analyzer-window-entity-status-text'}" />
+            <Label Text="{Loc 'health-analyzer-window-entity-status-text'}" StyleClasses="KsTguiLabelKey"/>
             <Label Name="StatusLabel" />
-            <Label Text="{Loc 'health-analyzer-window-entity-temperature-text'}" />
+            <Label Text="{Loc 'health-analyzer-window-entity-temperature-text'}" StyleClasses="KsTguiLabelKey"/>
             <Label Name="TemperatureLabel" />
-            <Label Text="{Loc 'health-analyzer-window-entity-blood-level-text'}" />
+            <Label Text="{Loc 'health-analyzer-window-entity-blood-level-text'}" StyleClasses="KsTguiLabelKey"/>
             <Label Name="BloodLabel" />
-            <Label Text="{Loc 'health-analyzer-window-entity-damage-total-text'}" />
+            <Label Text="{Loc 'health-analyzer-window-entity-damage-total-text'}" StyleClasses="KsTguiLabelKey"/>
             <Label Name="DamageLabel" />
         </GridContainer>
     </BoxContainer>

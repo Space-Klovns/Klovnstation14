@@ -90,7 +90,8 @@ public sealed class KsStyleBoxGradient : StyleBox
         {
             var (offset, color) = Stops[i];
             var t = reversed ? 1f - offset : offset;
-            var realColor = Color.FromSrgb(color * handle.Modulate);
+            // sRGB: despite DrawVertexUV2DColor's docs, the vertex shader converts it (base-default.vert).
+            var realColor = color * handle.Modulate;
 
             Vector2 a;
             Vector2 b;

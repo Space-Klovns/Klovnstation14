@@ -1,0 +1,13 @@
+@use "../functions" as fn;
+
+.Tooltip {
+  backdrop-filter: var(--tooltip-blur);
+  background-color: var(--tooltip-background);
+  border-radius: var(--tooltip-border-radius);
+  box-shadow: 0.1em 0.1em 1.25em -0.1em hsla(0, 0%, 0%, 0.5);
+  color: var(--tooltip-color);
+  max-width: fn.em(250px);
+  padding: var(--space-m) var(--space-l);
+  pointer-events: none;
+  text-align: left;
+}

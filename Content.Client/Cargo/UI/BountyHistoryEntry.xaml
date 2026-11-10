@@ -2,7 +2,8 @@
                 xmlns:customControls="clr-namespace:Content.Client.Administration.UI.CustomControls"
                 Margin="10 10 10 0"
                 HorizontalExpand="True">
-    <PanelContainer StyleClasses="AngleRect" HorizontalExpand="True">
+    <!-- KS14: translucent like a Section body under the tgui theme -->
+    <PanelContainer StyleClasses="AngleRect KsTguiSectionBackground" HorizontalExpand="True">
         <BoxContainer Orientation="Vertical"
                       HorizontalExpand="True">
             <BoxContainer Orientation="Horizontal">

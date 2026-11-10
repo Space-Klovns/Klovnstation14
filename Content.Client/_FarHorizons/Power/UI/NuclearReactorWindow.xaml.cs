@@ -65,6 +65,7 @@ public sealed partial class NuclearReactorWindow : FancyWindow
         ExtractButton.OnPressed += _ => ItemActionButtonPressed?.Invoke(new(_targetX, _targetY));
         EjectItem.OnPressed += _ => EjectButtonPressed?.Invoke();
         SilenceAlarms.OnPressed += _ => SilenceButtonPressed?.Invoke();
+        KsInitializeSilenceHazard(); // KS14
 
         ControlRodsInsertLarge.OnPressed += _ => AdjustControlRods(0.1f);
         ControlRodsInsert.OnPressed += _ => AdjustControlRods(0.01f);

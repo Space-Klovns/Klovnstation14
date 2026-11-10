@@ -85,6 +85,7 @@ namespace Content.Client.Lobby
         {
             var chatController = _userInterfaceManager.GetUIController<ChatUIController>();
             chatController.SetMainChat(false);
+            Lobby!.Chat.Main = false; // KS14: the screen is already unloaded here, so SetMainChat found no chat box and the lobby's stayed Main
             _gameTicker.InfoBlobUpdated -= UpdateLobbyUi;
             _gameTicker.LobbyStatusUpdated -= LobbyStatusUpdated;
             _gameTicker.LobbyLateJoinStatusUpdated -= LobbyLateJoinStatusUpdated;
@@ -129,7 +130,7 @@ namespace Content.Client.Lobby
                 return;
             }
 
-            new LateJoinGui().OpenCentered();
+            Content.Client._KS14.Tgui.Windows.LateJoin.KsLateJoinWindowFactory.Create()/* KS14: new LateJoinGui() -> the window for the active theme */.OpenCentered();
         }
 
         private void OnReadyToggled(BaseButton.ButtonToggledEventArgs args)

@@ -19,6 +19,7 @@ public sealed partial class AnomalyScannerBoundUserInterface : BoundUserInterfac
         base.Open();
 
         _menu = new AnomalyScannerMenu();
+        this.WithGuide(_menu); // KS14: made with new, so the guidebook button has to be asked for
         _menu.OpenCentered();
         _menu.OnClose += Close;
     }

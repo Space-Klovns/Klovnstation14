@@ -19,10 +19,13 @@ public sealed partial class ResearchSystem
             .Max(s => s.Id) + 1;
         component.Id = unusedId;
         Dirty(uid, component);
+        AddServerToList((uid, component)); // KS14
     }
 
     private void OnServerShutdown(EntityUid uid, ResearchServerComponent component, ComponentShutdown args)
     {
+        RemoveServerFromList(uid, Transform(uid).MapUid); // KS14
+
         foreach (var client in new List<EntityUid>(component.Clients))
         {
             UnregisterClient(client, uid, serverComponent: component, dirtyServer: false);
@@ -98,7 +101,10 @@ public sealed partial class ResearchSystem
         }
         // --- END DATABASE SYNC FIX ---
 
-        UpdateClientInterface(client, component: clientComponent); // This now sends the populated database state.
+        // KS14 start: the selected server is networked component state
+        clientComponent.ConnectedServerId = serverComponent.Id;
+        Dirty(client, clientComponent);
+        // KS14 end
 
         if (dirtyServer && !TerminatingOrDeleted(server))
             Dirty(server, serverComponent);
@@ -140,7 +146,11 @@ public sealed partial class ResearchSystem
 
         serverComponent.Clients.Remove(client);
         clientComponent.Server = null;
-        UpdateClientInterface(client, component: clientComponent);
+        // KS14 start: the selected server is networked component state
+        clientComponent.ConnectedServerId = -1;
+        if (!TerminatingOrDeleted(client))
+            Dirty(client, clientComponent);
+        // KS14 end
 
         if (dirtyServer && !TerminatingOrDeleted(server))
         {

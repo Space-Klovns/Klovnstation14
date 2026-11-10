@@ -24,6 +24,8 @@ public sealed partial class GasThermomachineWindow : FancyWindow
         SpinboxHBox.AddChild(
             TemperatureSpinbox = new FloatSpinBox(.1f, 2) { MinWidth = 150, HorizontalExpand = true }
             );
+
+        KsHookRequests(); // KS14
     }
 
     public void SetActive(bool active)

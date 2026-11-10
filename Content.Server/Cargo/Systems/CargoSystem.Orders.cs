@@ -426,7 +426,13 @@ namespace Content.Server.Cargo.Systems
                     GetNetEntity(station.Value),
                     RelevantOrders((station!.Value, orderDatabase), (consoleUid, console)),
                     GetAvailableProducts((consoleUid, console))
-                ));
+                )
+                {
+                    // KS14 start: the goods waiting on a pallet or telepad, for the tgui checkout
+                    KsAwaiting = GetAwaitingOrders(station.Value,
+                        TryComp<StationBankAccountComponent>(station, out var ksBank) && console.Account == ksBank.PrimaryAccount ? (ProtoId<CargoAccountPrototype>?)null : console.Account),
+                    // KS14 end
+                });
             }
         }
 
@@ -669,6 +675,8 @@ namespace Content.Server.Cargo.Systems
                     _slots.TryInsert(item, label.LabelSlot, printed, null);
                 }
             }
+
+            KsMarkDeliveredOrder(item, order, spawn); // KS14: remember what waits on the pallet or telepad, for the checkout
 
             return true;
 

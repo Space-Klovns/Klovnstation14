@@ -155,7 +155,7 @@ public sealed partial class ObjectsTab : Control
         if (data is not ObjectsListData { Info: var info, BackgroundColor: var backgroundColor })
             return;
 
-        var entry = new ObjectsTabEntry(_admin, info.Name, info.Entity, new StyleBoxFlat { BackgroundColor = backgroundColor });
+        var entry = new ObjectsTabEntry(_admin, info.Name, info.Entity, new StyleBoxFlat { BackgroundColor = backgroundColor }, backgroundColor == _altColor /* KS14: added arg */);
         entry.OnTeleport += TeleportTo;
         entry.OnDelete += Delete;
         button.ToolTip = $"{info.Name}, {info.Entity}";

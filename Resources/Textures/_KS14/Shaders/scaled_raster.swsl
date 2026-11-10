@@ -1,0 +1,12 @@
+light_mode unshaded;
+
+// A popup's contents, rendered once at full size into a transparent offscreen target (so premultiplied colour), drawn back
+//      scaled and faded at subpixel precision, as a browser transforms a rasterised element. The target holds premultiplied
+//      colour, so the fade must scale the colour too: the engine's own multiplication by MODULATE only scales the alpha of a
+//      premultiplied colour. The prototype blends this as premultiplied.
+
+void fragment()
+{
+    highp vec4 texel = zTexture(UV);
+    COLOR = vec4(texel.rgb * MODULATE.a, texel.a);
+}

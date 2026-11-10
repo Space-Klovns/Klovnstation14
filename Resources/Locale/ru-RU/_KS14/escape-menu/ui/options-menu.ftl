@@ -7,6 +7,7 @@ ks-ui-options-ambient-occlusion-entities = Фоновое затенение у 
 ks-ui-options-ambient-occlusion-entities-tooltip = Мягкие тени под предметами, мебелью и машинами, а не только у стен. Отключите, если это сильно снижает производительность.
 ks-ui-options-emissive-bloom = Ореол свечения
 ks-ui-options-emissive-bloom-tooltip = Светящиеся экраны, лампы и вывески излучают мягкий ореол. Отключите, если это сильно снижает производительность.
+ks-ui-options-tgui-style = Использовать стиль интерфейса tgui
 ks-ui-options-lobby-adaptive-contrast = Затемнять яркий фон лобби под текстом
 ks-ui-options-slurfilter = Включить фильтр «Slur»
 ks-ui-options-tab-ks = Klovnstation 14

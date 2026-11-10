@@ -1,11 +1,9 @@
+using Content.Client._KS14.Tgui;
 using Content.Client.Resources;
 using Content.Client.Stylesheets;
-using Content.Client.Stylesheets.Fonts;
 using Content.Client.Chat.UI;
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Controls.FancyTree;
-using Content.Client.UserInterface.Screens;
-using Content.Client.UserInterface.Systems.Chat.Controls;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -90,10 +88,21 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             ContentMarginTopOverride = 10,
         };
 
+        // A heading's chevron follows its state through the heading's own style box; the stock one can't.
+        var chevron = sheet.GetTextureOr(
+            ((Content.Client.Stylesheets.SheetletConfigs.IIconConfig)sheet).InvertedTriangleIconPath,
+            Content.Client.Stylesheets.Stylesheets.NanotrasenStylesheet.TextureRoot);
+
         return
         [
+            E<CollapsibleHeading>().Box(new Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox { Texture = chevron }),
+            E<CollapsibleHeading>().PseudoPressed().Box(
+                new Content.Client._KS14.Expander.KsCollapsibleChevronStyleBox { Open = true, Texture = chevron }),
+            E<CollapsibleHeading>().ParentOf(E<BoxContainer>().ParentOf(E<TextureRect>().Class(OptionButton.StyleClassOptionTriangle)))
+                .Modulate(Color.Transparent),
             E<Label>().Font(regularFont),
             E<Label>().Class("FancyWindowTitle").Font(boldFont),
+            E<BoxContainer>().Class(KsTguiSheetlet.StyleClassHeaderRow).Margin(new Thickness(15, 15, 15, 28)),
             E<Label>().Class(DefaultWindow.StyleClassWindowTitle).Font(boldFont),
             // Apply Baron typography to formatted UI text such as examine entries.
             E<RichTextLabel>().Font(regularFont),

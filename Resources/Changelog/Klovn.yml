@@ -2555,3 +2555,82 @@ Entries:
         trigger, spraying wildly until the gun runs dry or you recover.
   id: 243
   time: '2026-11-07T07:27:22.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Ghosts hear a sound and get a chat message when an important ghost role
+        appears mid-round, such as an ERT, a wizard or a dragon.
+  id: 244
+  time: '2026-11-09T13:32:10.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        New default interface theme modelled on /tg/station's tgui. You can
+        switch back to the old one in Settings, KS14 tab.
+    - type: Add
+      message: >-
+        Vending machines, lathes, the chem dispenser, ChemMaster, APCs, air
+        alarms, gas machines, faxes, the cargo console, PDAs, wire panels,
+        disposal units, the ore silo and the late join menu have tgui layouts.
+    - type: Add
+      message: A tgui chat panel and say box.
+    - type: Add
+      message: Admin windows use tgui's blue admin theme.
+    - type: Tweak
+      message: >-
+        Taking sheets out of a lathe or ore silo is instant and puts them into
+        your hands.
+    - type: Fix
+      message: Inserting materials into a lathe no longer makes its window flicker.
+    - type: Tweak
+      message: The nuclear reactor's Silence button sits in hazard stripes.
+  id: 245
+  time: '2026-11-09T13:33:08.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        Windows that are not interfaces show the green eye in the title bar, as
+        on /tg/station.
+    - type: Fix
+      message: Buttons in a row are the same height.
+  id: 246
+  time: '2026-11-09T19:37:02.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Text in tgui windows and in the chat can now be selected with the mouse
+        and copied with Ctrl+C.
+  id: 247
+  time: '2026-11-09T20:17:41.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        The tgui cargo console's Checkout tab now lists the orders waiting on
+        the trade station pallets or cargo telepads.
+    - type: Tweak
+      message: >-
+        Tabs with something waiting (cargo requests and checkout) show yellow
+        text.
+  id: 248
+  time: '2026-11-09T21:02:31.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        The ghost role notice is now bold and larger, with an (Orbit) link that
+        makes you follow the role.
+  id: 249
+  time: '2026-11-09T21:03:10.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        The canister's pressure regulator knob now shows its value under it.
+        Click the number to type a value.
+  id: 250
+  time: '2026-11-09T21:06:55.0000000+00:00'

@@ -1,0 +1,24 @@
+# tgui's backdrop-filter: blur(12px). The uniforms are set per instance by KsTguiBackdropBlur, from KsTguiBackdropMath.
+- type: shader
+  id: KsTguiBackdropBlur
+  kind: source
+  path: "/Textures/_KS14/Shaders/backdrop_blur.swsl"
+
+- type: shader
+  id: KsTguiBackdropComposite
+  kind: source
+  path: "/Textures/_KS14/Shaders/backdrop_composite.swsl"
+
+# tgui's scrollable Tabs mask-image. The tabs are drawn into a transparent target, which is premultiplied.
+- type: shader
+  id: KsTguiTabsMask
+  kind: source
+  path: "/Textures/_KS14/Shaders/tgui_tabs_mask.swsl"
+  blend_mode: premultiplied
+
+# A popup's contents, rendered at full size and drawn scaled and faded at subpixel precision during its open and close.
+- type: shader
+  id: KsTguiScaledRaster
+  kind: source
+  path: "/Textures/_KS14/Shaders/scaled_raster.swsl"
+  blend_mode: premultiplied

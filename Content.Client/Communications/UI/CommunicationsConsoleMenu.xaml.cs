@@ -80,12 +80,26 @@ namespace Content.Client.Communications.UI
             UpdateCountdown();
         }
 
+        private string? _alertLevelsSignature; // KS14: what the dropdown was last filled with
+
         // The current alert could make levels unselectable, so we need to ensure that the UI reacts properly.
         // If the current alert is unselectable, the only item in the alerts list will be
         // the current alert. Otherwise, it will be the list of alerts, with the current alert
         // selected.
         public void UpdateAlertLevels(List<string>? alerts, string currentAlert)
         {
+            // KS14 start: the console refreshes every few seconds; rebuilding the entries of an open dropdown under it made them flash plain
+            var signature = (alerts == null ? "-" : string.Join(',', alerts)) + "|" + currentAlert;
+            if (signature == _alertLevelsSignature
+                && AlertLevelButton.ItemCount > 0
+                && Equals(AlertLevelButton.SelectedMetadata, currentAlert))
+            {
+                return;
+            }
+
+            _alertLevelsSignature = signature;
+            // KS14 end
+
             AlertLevelButton.Clear();
 
             if (alerts == null)

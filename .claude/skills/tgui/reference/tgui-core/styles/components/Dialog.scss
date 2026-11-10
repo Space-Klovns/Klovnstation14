@@ -1,0 +1,98 @@
+@use "../functions" as fn;
+
+.Dialog {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--dialog-background);
+}
+
+.Dialog__content {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family-mono);
+  font-size: fn.em(14px);
+  background-color: var(--color-base);
+}
+
+.Dialog__header {
+  user-select: none;
+  display: flex;
+  height: 2em;
+  line-height: 1.928em;
+  background-color: var(--dialog-background);
+}
+
+.Dialog__title {
+  flex-grow: 1;
+  display: inline;
+  font-style: italic;
+  margin-left: var(--space-xl);
+  margin-right: var(--space-xxl);
+  opacity: 0.33;
+}
+
+.Dialog__body {
+  margin: var(--space-xxl) var(--space-xl);
+  flex-grow: 1;
+}
+
+.Dialog__footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding: var(--space-xl);
+  background-color: hsl(from var(--dialog-background) h s l / 0.25);
+}
+
+.Dialog__button {
+  margin: 0 var(--space-xl);
+  height: 2rem;
+  min-width: 6rem;
+  text-align: center;
+}
+
+.SaveAsDialog__inputs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  padding-left: var(--space-xxl);
+  margin-right: var(--space-xl);
+}
+
+.SaveAsDialog__input {
+  margin-left: var(--space-xl);
+  width: 80%;
+}
+
+.SaveAsDialog__label {
+  vertical-align: center;
+}
+
+.Dialog__FileList {
+  overflow: auto scroll;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  align-content: flex-start;
+  max-height: 20rem;
+}
+
+.Dialog__FileEntry {
+  text-align: center;
+  margin: var(--space-xl);
+}
+
+.Dialog__FileIcon {
+  cursor: default;
+  position: relative;
+  display: inline-block;
+  text-align: center;
+  width: 6vh;
+  height: auto;
+  margin: 0 0 var(--space-xl) 0;
+}

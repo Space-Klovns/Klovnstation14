@@ -1,0 +1,15 @@
+ks-tgui-pda-title = NtOS Main Menu
+ks-tgui-pda-details = Details
+ks-tgui-pda-owner = Owner
+ks-tgui-pda-id-name = ID Name
+ks-tgui-pda-assignment = Assignment
+ks-tgui-pda-station = Station
+ks-tgui-pda-alert-level = Alert level
+ks-tgui-pda-shift-time = Shift duration
+ks-tgui-pda-pai = pAI
+ks-tgui-pda-eject-pai = Eject pAI
+ks-tgui-pda-running = Running
+ks-tgui-pda-minimize = Minimize
+ks-tgui-pda-close-program = Close program
+ks-tgui-pda-power-off = Close
+ks-tgui-pda-copy = Copy

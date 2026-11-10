@@ -415,7 +415,7 @@ public interface IRadialMenuItemWithSector
 }
 
 [Virtual]
-public class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithSector
+public partial /* KS14: made partial, see .Klovn.Tgui.cs */ class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithSector
 {
     private Vector2[]? _sectorPointsForDrawing;
 
@@ -453,7 +453,7 @@ public class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithS
     public Color BackgroundColor
     {
         get => Color.FromSrgb(_backgroundColorSrgb);
-        set => _backgroundColorSrgb = Color.ToSrgb(value);
+        set { _backgroundColorSrgb = Color.ToSrgb(value); _ksBackgroundSet = true; /* KS14: explicit colour beats the style */ }
     }
 
     /// <summary>
@@ -462,7 +462,7 @@ public class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithS
     public Color HoverBackgroundColor
     {
         get => Color.FromSrgb(_hoverBackgroundColorSrgb);
-        set => _hoverBackgroundColorSrgb = Color.ToSrgb(value);
+        set { _hoverBackgroundColorSrgb = Color.ToSrgb(value); _ksHoverBackgroundSet = true; /* KS14: explicit colour beats the style */ }
     }
 
     /// <summary>
@@ -471,7 +471,7 @@ public class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithS
     public Color BorderColor
     {
         get => Color.FromSrgb(_borderColorSrgb);
-        set => _borderColorSrgb = Color.ToSrgb(value);
+        set { _borderColorSrgb = Color.ToSrgb(value); _ksBorderSet = true; /* KS14: explicit colour beats the style */ }
     }
 
     /// <summary>
@@ -480,7 +480,7 @@ public class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithS
     public Color HoverBorderColor
     {
         get => Color.FromSrgb(_hoverBorderColorSrgb);
-        set => _hoverBorderColorSrgb = Color.ToSrgb(value);
+        set { _hoverBorderColorSrgb = Color.ToSrgb(value); _ksHoverBorderSet = true; /* KS14: explicit colour beats the style */ }
     }
 
     /// <summary>
@@ -546,8 +546,8 @@ public class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithS
         if (DrawBackground)
         {
             var segmentColor = DrawMode == DrawModeEnum.Hover
-                ? _hoverBackgroundColorSrgb
-                : _backgroundColorSrgb;
+                ? KsHoverBackgroundSrgb /* KS14: _hoverBackgroundColorSrgb -> style aware */
+                : KsBackgroundSrgb /* KS14: _backgroundColorSrgb -> style aware */;
 
             DrawAnnulusSector(handle, containerCenter, _innerRadius * UIScale, _outerRadius * UIScale, angleFrom, angleTo, segmentColor);
         }
@@ -555,14 +555,14 @@ public class RadialMenuButtonWithSector : RadialMenuButton, IRadialMenuItemWithS
         if (DrawBorder)
         {
             var borderColor = DrawMode == DrawModeEnum.Hover
-                ? _hoverBorderColorSrgb
-                : _borderColorSrgb;
+                ? KsHoverBorderSrgb /* KS14: _hoverBorderColorSrgb -> style aware */
+                : KsBorderSrgb /* KS14: _borderColorSrgb -> style aware */;
             DrawAnnulusSector(handle, containerCenter, _innerRadius * UIScale, _outerRadius * UIScale, angleFrom, angleTo, borderColor, false);
         }
 
         if (!_isWholeCircle && DrawBorder)
         {
-            DrawSeparatorLines(handle, containerCenter, _innerRadius * UIScale, _outerRadius * UIScale, angleFrom, angleTo, SeparatorColor);
+            DrawSeparatorLines(handle, containerCenter, _innerRadius * UIScale, _outerRadius * UIScale, angleFrom, angleTo, KsSeparatorColor /* KS14: SeparatorColor -> style aware */);
         }
     }
 

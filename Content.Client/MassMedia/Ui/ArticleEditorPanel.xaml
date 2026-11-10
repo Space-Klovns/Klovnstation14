@@ -1,4 +1,4 @@
-<Control xmlns="https://spacestation14.io"
+<Control xmlns="https://spacestation14.io" xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
          xmlns:graphics="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
          MouseFilter="Stop">
     <PanelContainer StyleClasses="BackgroundPanelOpenLeft"/>
@@ -65,9 +65,7 @@
             <graphics:StyleBoxFlat BorderColor="#2a2a2d" BorderThickness="0 0 0 2"/>
         </PanelContainer.PanelOverride>
     </PanelContainer>
-    <PanelContainer HorizontalAlignment="Left" VerticalAlignment="Top" SetHeight="25" SetWidth="2">
-        <PanelContainer.PanelOverride>
-            <graphics:StyleBoxFlat BackgroundColor="#1b1b1f"/>
-        </PanelContainer.PanelOverride>
-    </PanelContainer>
+    <!-- KS14: tgui Section body under the tgui theme, flat colour under Baron -->
+    <ksTgui:KsSectionPanel HorizontalAlignment="Left" VerticalAlignment="Top" SetHeight="25" SetWidth="2" BaronColor="#1b1b1f">
+    </ksTgui:KsSectionPanel>
 </Control>

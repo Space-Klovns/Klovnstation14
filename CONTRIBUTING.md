@@ -897,10 +897,16 @@ A failure names each problem directly: `Sandbox violation: Access to type not al
 `ILVerify: Instruction cannot be verified., method: ..., Offset IL_...` for IL. The whitelist is
 `RobustToolbox/Robust.Shared/ContentPack/Sandbox.yml`, and it's worth a search before you rely on a BCL type.
 
+When the sandbox forces a worse implementation, leave a `// TODO SANDBOX: <what you'd use, and why>` at that spot, so it
+can be revisited if the API could realistically be added to the whitelist.
+
 The rules come from two places, so nothing about a type's namespace predicts them:
 
 - **ILVerify** rejects `stackalloc` (even into a `Span<T>`), `unsafe` code and pointers. Content already notes
   this (`AtmosphereSystem.Gases.cs`). Use `new T[n]` instead.
+- **ILVerify** also rejects a method that *returns* a `Span<T>` or `ReadOnlySpan<T>` (`Return type is ByRef,
+  TypedReference, ArgHandle, or ArgIterator`). Taking or slicing one locally is fine. Return a count and hand out the
+  array (`KsTguiHazardStyleBox.StripeTriangles`).
 - **The whitelist** is per type and often per member. Besides the ones above, these came up vendoring Concentus
   (`Content.Klovn.Concentus/README.md`), and none of them warns at build time:
   - `System.Buffer` (`BlockCopy`): use `Array.Copy`, which counts elements, not bytes.
@@ -908,6 +914,7 @@ The rules come from two places, so nothing about a type's namespace predicts the
   - `System.Numerics.Vector<T>`.
   - `System.Tuple`: value tuples are fine.
   - `ArgumentNullException`: `ArgumentException` is fine.
+  - `string.Create(IFormatProvider, $"...")`: use `value.ToString(format, provider)` on each value.
   - A *field* of type `MethodImplOptions`. `[MethodImpl(MethodImplOptions.AggressiveInlining)]` itself is fine,
     since it compiles to method flags rather than a type reference.
 
