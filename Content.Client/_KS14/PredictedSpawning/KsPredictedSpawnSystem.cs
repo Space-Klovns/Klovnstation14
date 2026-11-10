@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.PredictedSpawning;
 
@@ -47,20 +48,35 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     /// </summary>
     private readonly HashSet<EntityUid> _unpairedServerCopies = new();
 
-    private readonly List<(float Distance, EntityUid ServerUid, EntityUid KeptUid)> _pairCandidates = new();
+    /// <summary>
+    ///     A pairing of a newly arrived server copy with one of this client's shots: a live kept copy, or one already
+    ///         gone (<see cref="_goneShots"/>). Lower ranks pair first, then shorter distances.
+    /// </summary>
+    private readonly List<(int Rank, float Distance, EntityUid ServerUid, EntityUid? KeptUid, GoneShot? Gone)> _pairCandidates = new();
 
     /// <summary>
-    ///     How long an impact played by one copy of a shot stops the other copy playing one on the same target: long
-    ///         enough for a round trip, short enough that a second shot at the same target still plays.
+    ///     How far apart, in metres, a server hit and a hit the kept copy already played may be and still be shown
+    ///         once: the same wall, or the grille and window on one tile, rather than a wall only this client has.
     /// </summary>
-    private static readonly TimeSpan RecentImpactWindow = TimeSpan.FromSeconds(1);
+    private const float SameImpactDistance = 1f;
 
     /// <summary>
-    ///     Impacts on this player's own shots' targets played lately, by the kept copy or by the server's copy, each
-    ///         waiting to be matched with the other copy's hit on the same target. A shotgun's pellets each leave one.
-    ///         Pruned in <see cref="Update"/>.
+    ///     Kept copies already gone, by a hit or otherwise, kept for as long as their server copy can still be on its
+    ///         way: that server copy is matched to them and not to the next shot's live copy, and its impact to theirs.
+    ///         Not per-entity state, since the entity they describe no longer exists. Pruned in <see cref="Update"/>.
     /// </summary>
-    private readonly List<(EntityUid Target, TimeSpan Time, bool FromServer)> _recentImpacts = new();
+    private readonly List<GoneShot> _goneShots = new();
+
+    private sealed class GoneShot
+    {
+        public string? Prototype;
+        public GameTick SpawnTick;
+        public MapCoordinates Coordinates;
+        public TimeSpan GoneTime;
+        public EntityUid? ServerCopy;
+        public NetEntity? ServerCopyNetEntity;
+        public List<(EntityUid Target, MapCoordinates Coordinates)> PlayedImpacts = new();
+    }
 
     public override void Initialize()
     {
@@ -80,7 +96,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             PairServerCopies();
 
         if (firstTimePredicted)
-            _recentImpacts.RemoveAll(impact => GameTiming.CurTime > impact.Time + RecentImpactWindow);
+            _goneShots.RemoveAll(gone => GameTiming.CurTime > gone.GoneTime + UnpairedLifetime);
 
         var keptEnumerator = EntityQueryEnumerator<KsKeptPredictedSpawnComponent, TransformComponent>();
         while (keptEnumerator.MoveNext(out var keptUid, out var keptComponent, out var transformComponent))
@@ -118,17 +134,22 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     }
 
     /// <summary>
-    ///     Matches each newly arrived server copy to the kept copy of the same spawn: the nearest one of the same
-    ///         prototype to where the server copy is now, closest pairs first. Nothing networked names a kept copy,
-    ///         which exists only here, so position is all there is to go on; the two start at the same place and
-    ///         speed, a lag-compensated shot aside.
+    ///     Matches each newly arrived server copy to this client's copy of the same shot. The two were spawned on the
+    ///         same tick, the input's, so a copy of the same prototype and spawn tick is the one; when several share
+    ///         it (a shotgun's pellets), the nearest to where the server copy is now. A copy already gone (it hit
+    ///         before its server copy arrived) still takes its own server copy. Otherwise that server copy would be
+    ///         matched to the next shot's live copy, and delete it when it hit.
+    ///
+    ///     If no copy shares its tick (the server took the input late), the nearest unmatched live copy of the same
+    ///         prototype spawned before it is taken instead.
     /// </summary>
     private void PairServerCopies()
     {
         _pairCandidates.Clear();
         foreach (var serverUid in _unpairedServerCopies)
         {
-            if (!TryGetServerCopyMotion(serverUid, out var serverCoordinates, out _))
+            if (!TryGetServerCopyMotion(serverUid, out var serverCoordinates, out _) ||
+                !TryComp(serverUid, out KsPredictedSpawnComponent? serverComponent))
                 continue;
 
             var serverPrototype = MetaData(serverUid).EntityPrototype;
@@ -145,20 +166,57 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
                     continue;
 
                 var distance = Vector2.Distance(keptCoordinates.Position, serverCoordinates.Position);
-                if (distance <= MaxPairDistance)
-                    _pairCandidates.Add((distance, serverUid, keptUid));
+                if (keptComponent.SpawnTick == serverComponent.SpawnTick)
+                    _pairCandidates.Add((0, distance, serverUid, keptUid, null));
+                else if (keptComponent.SpawnTick < serverComponent.SpawnTick && distance <= MaxPairDistance)
+                    _pairCandidates.Add((1, distance, serverUid, keptUid, null));
+            }
+
+            foreach (var gone in _goneShots)
+            {
+                if (gone.ServerCopyNetEntity != null ||
+                    gone.SpawnTick != serverComponent.SpawnTick ||
+                    gone.Prototype != serverPrototype?.ID)
+                    continue;
+
+                _pairCandidates.Add((0, DistanceOrMax(gone.Coordinates, serverCoordinates), serverUid, null, gone));
             }
         }
 
-        _pairCandidates.Sort((first, second) => first.Distance.CompareTo(second.Distance));
-        foreach (var (_, serverUid, keptUid) in _pairCandidates)
+        _pairCandidates.Sort((first, second) => first.Rank != second.Rank
+            ? first.Rank.CompareTo(second.Rank)
+            : first.Distance.CompareTo(second.Distance));
+        foreach (var (_, _, serverUid, keptUid, gone) in _pairCandidates)
         {
-            var keptComponent = _keptQuery.GetComponent(keptUid);
-            if (keptComponent.ServerCopy != null || !_unpairedServerCopies.Remove(serverUid))
+            if (!_unpairedServerCopies.Contains(serverUid))
                 continue;
 
-            keptComponent.ServerCopy = serverUid;
+            if (keptUid is { } liveUid)
+            {
+                var keptComponent = _keptQuery.GetComponent(liveUid);
+                if (keptComponent.ServerCopy != null)
+                    continue;
+
+                keptComponent.ServerCopy = serverUid;
+                keptComponent.ServerCopyNetEntity = GetNetEntity(serverUid);
+            }
+            else if (gone is { ServerCopyNetEntity: null })
+            {
+                gone.ServerCopy = serverUid;
+                gone.ServerCopyNetEntity = GetNetEntity(serverUid);
+            }
+            else
+            {
+                continue;
+            }
+
+            _unpairedServerCopies.Remove(serverUid);
         }
+    }
+
+    private static float DistanceOrMax(MapCoordinates first, MapCoordinates second)
+    {
+        return first.MapId == second.MapId ? Vector2.Distance(first.Position, second.Position) : float.MaxValue;
     }
 
     /// <summary>
@@ -310,7 +368,9 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
 
         // The first prediction: this one is kept. Without its PredictedSpawnComponent the state reset leaves it alone.
         RemComp<PredictedSpawnComponent>(uid);
-        EnsureComp<KsKeptPredictedSpawnComponent>(uid).SpawnTime = GameTiming.CurTime;
+        var keptComponent = EnsureComp<KsKeptPredictedSpawnComponent>(uid);
+        keptComponent.SpawnTime = GameTiming.CurTime;
+        keptComponent.SpawnTick = GameTiming.CurTick;
         EnsureComp<KsPredictedSpawnComponent>(uid);
         PhysicsSystem.UpdateIsPredicted(uid);
     }
@@ -375,61 +435,173 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         }
     }
 
+    /// <summary>
+    ///     A kept copy that goes records what shot it was, for <see cref="PairServerCopies"/> and
+    ///         <see cref="OnImpact"/>.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnKeptShutdown(Entity<KsKeptPredictedSpawnComponent> entity, ref ComponentShutdown args)
+    {
+        _goneShots.Add(new GoneShot
+        {
+            Prototype = MetaData(entity.Owner).EntityPrototype?.ID,
+            SpawnTick = entity.Comp.SpawnTick,
+            Coordinates = _transformSystem.GetMapCoordinates(entity.Owner),
+            GoneTime = GameTiming.CurTime,
+            ServerCopy = entity.Comp.ServerCopy,
+            ServerCopyNetEntity = entity.Comp.ServerCopyNetEntity,
+            PlayedImpacts = entity.Comp.PlayedImpacts,
+        });
+    }
+
+    /// <summary>
+    ///     A kept copy plays each of its hits at once, unless the server's copy of the same shot played the shot's
+    ///         impact before this one hit anything.
+    /// </summary>
     public override bool ClaimImpact(EntityUid projectile, EntityUid target)
     {
-        if (!IsKeptLocally(projectile))
+        if (!_keptQuery.TryComp(projectile, out var keptComponent))
             return true;
 
-        // The server's copy got there first and already played this hit.
-        if (TryTakeRecentImpact(target, fromServer: true))
+        if (keptComponent.ServerImpactPlayed)
             return false;
 
-        _recentImpacts.Add((target, GameTiming.CurTime, FromServer: false));
+        keptComponent.PlayedImpacts.Add((target, _transformSystem.GetMapCoordinates(projectile)));
         return true;
     }
 
     /// <summary>
-    ///     Removes an impact on <paramref name="target"/> played within <see cref="RecentImpactWindow"/> by the given
-    ///         side, if there is one.
-    /// </summary>
-    private bool TryTakeRecentImpact(EntityUid target, bool fromServer)
-    {
-        for (var i = 0; i < _recentImpacts.Count; i++)
-        {
-            var (impactTarget, time, impactFromServer) = _recentImpacts[i];
-            if (impactTarget != target || impactFromServer != fromServer || GameTiming.CurTime > time + RecentImpactWindow)
-                continue;
-
-            _recentImpacts.RemoveAt(i);
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
     ///     The server's copy of a projectile hit something. Unless it is this player's own, nothing here predicted that
-    ///         hit, and this is its impact. For this player's own, the kept copy usually played that hit already, on
-    ///         the same target, and then this plays nothing; when the kept copy missed it, or hit something else, the
-    ///         real hit's impact plays here as well.
+    ///         hit, and this is its impact.
+    ///
+    ///     For this player's own, the shot is found by its server copy, or by its spawn tick when that copy never
+    ///         arrived. If its kept copy already played this hit (the same target, or close by), nothing plays. If the
+    ///         kept copy has not hit anything yet, this plays and the kept copy plays none. A hit the kept copy never
+    ///         made (the wall behind one only this client has) plays as well.
     /// </summary>
     [SubscribeNetworkEvent]
     private void OnImpact(KsPredictedSpawnImpactEvent args)
     {
         TryGetEntity(args.Target, out var targetUid);
-        if (args.ToPredictingUser && targetUid != null)
-        {
-            if (TryTakeRecentImpact(targetUid.Value, fromServer: false))
-                return;
-
-            _recentImpacts.Add((targetUid.Value, GameTiming.CurTime, FromServer: true));
-        }
+        if (args.ToPredictingUser && !ClaimServerImpact(args, targetUid))
+            return;
 
         if (args.ImpactEffect is { } impactEffect)
             RaiseLocalEvent(new ImpactEffectEvent(impactEffect, args.Coordinates));
 
         if (targetUid != null && !TerminatingOrDeleted(targetUid.Value))
             _gunSystem.PlayImpactSound(targetUid.Value, args.Damage, args.SoundHit, args.ForceSound);
+    }
+
+    /// <summary>
+    ///     Whether the server's hit on this player's own shot still has to be shown here. If it is shown before the
+    ///         shot's kept copy hit anything, the kept copy is muted.
+    /// </summary>
+    private bool ClaimServerImpact(KsPredictedSpawnImpactEvent args, EntityUid? targetUid)
+    {
+        // A server copy that arrived since the last tick is matched first.
+        if (_unpairedServerCopies.Count > 0)
+            PairServerCopies();
+
+        var impactCoordinates = _transformSystem.ToMapCoordinates(GetCoordinates(args.Coordinates));
+
+        KsKeptPredictedSpawnComponent? keptComponent = null;
+        GoneShot? gone = null;
+        FindShot(args.Projectile, out keptComponent, out gone);
+
+        // Never reached this client (spawned and spent within a tick): the unmatched shot of the same tick, if any.
+        if (keptComponent == null && gone == null)
+            FindShotBySpawnTick(args, impactCoordinates, out keptComponent, out gone);
+
+        var playedImpacts = keptComponent?.PlayedImpacts ?? gone?.PlayedImpacts;
+        if (playedImpacts == null)
+            return true;
+
+        foreach (var (playedTarget, playedCoordinates) in playedImpacts)
+        {
+            if (playedTarget == targetUid || DistanceOrMax(playedCoordinates, impactCoordinates) <= SameImpactDistance)
+                return false;
+        }
+
+        if (keptComponent != null && playedImpacts.Count == 0)
+            keptComponent.ServerImpactPlayed = true;
+
+        return true;
+    }
+
+    private void FindShot(NetEntity serverNetEntity, out KsKeptPredictedSpawnComponent? keptComponent, out GoneShot? gone)
+    {
+        keptComponent = null;
+        gone = null;
+
+        var keptEnumerator = EntityQueryEnumerator<KsKeptPredictedSpawnComponent>();
+        while (keptEnumerator.MoveNext(out var candidateComponent))
+        {
+            if (candidateComponent.ServerCopyNetEntity != serverNetEntity)
+                continue;
+
+            keptComponent = candidateComponent;
+            return;
+        }
+
+        foreach (var candidate in _goneShots)
+        {
+            if (candidate.ServerCopyNetEntity != serverNetEntity)
+                continue;
+
+            gone = candidate;
+            return;
+        }
+    }
+
+    /// <summary>
+    ///     The nearest unmatched shot, live or gone, of the prototype and spawn tick in <paramref name="args"/>. It is
+    ///         marked as matched, since its server copy is never coming.
+    /// </summary>
+    private void FindShotBySpawnTick(
+        KsPredictedSpawnImpactEvent args,
+        MapCoordinates impactCoordinates,
+        out KsKeptPredictedSpawnComponent? keptComponent,
+        out GoneShot? gone)
+    {
+        keptComponent = null;
+        gone = null;
+        var bestDistance = float.PositiveInfinity;
+
+        var keptEnumerator = EntityQueryEnumerator<KsKeptPredictedSpawnComponent, MetaDataComponent>();
+        while (keptEnumerator.MoveNext(out var keptUid, out var candidateComponent, out var metaDataComponent))
+        {
+            if (candidateComponent.ServerCopy != null ||
+                candidateComponent.SpawnTick != args.SpawnTick ||
+                metaDataComponent.EntityPrototype?.ID != args.Prototype)
+                continue;
+
+            var distance = DistanceOrMax(_transformSystem.GetMapCoordinates(keptUid), impactCoordinates);
+            if (distance >= bestDistance)
+                continue;
+
+            bestDistance = distance;
+            keptComponent = candidateComponent;
+        }
+
+        foreach (var candidate in _goneShots)
+        {
+            if (candidate.ServerCopyNetEntity != null ||
+                candidate.SpawnTick != args.SpawnTick ||
+                candidate.Prototype != args.Prototype)
+                continue;
+
+            var distance = DistanceOrMax(candidate.Coordinates, impactCoordinates);
+            if (distance >= bestDistance)
+                continue;
+
+            bestDistance = distance;
+            keptComponent = null;
+            gone = candidate;
+        }
+
+        if (gone != null)
+            gone.ServerCopyNetEntity = args.Projectile;
     }
 
     [SubscribeLocalEvent]

@@ -44,7 +44,10 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             predictingUser = keptByUser;
 
             // Not recorded for replays: a replay shows the server's copy hitting, as everyone else sees it.
-            RaiseNetworkEvent(MakeEvent(toPredictingUser: true), keptByUser);
+            var userEvent = MakeEvent(toPredictingUser: true);
+            userEvent.Prototype = MetaData(projectile.Owner).EntityPrototype?.ID;
+            userEvent.SpawnTick = predictedSpawnComponent.SpawnTick;
+            RaiseNetworkEvent(userEvent, keptByUser);
         }
         else if (_userPredictedQuery.TryComp(projectile.Owner, out var userPredictedComponent) &&
                  userPredictedComponent.User == projectile.Comp.Shooter)

@@ -227,6 +227,7 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
     protected void SetPredictingUser(Entity<KsPredictedSpawnComponent> entity, EntityUid user)
     {
         entity.Comp.PredictingUser = user;
+        entity.Comp.SpawnTick = GameTiming.CurTick;
         Dirty(entity);
     }
 

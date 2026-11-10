@@ -3,6 +3,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.PredictedSpawning;
 
@@ -29,6 +30,16 @@ public sealed class KsPredictedSpawnImpactEvent : EntityEventArgs
     ///         that only saw the server's.
     /// </summary>
     public bool ToPredictingUser;
+
+    /// <summary>
+    ///     The projectile's prototype and <see cref="KsPredictedSpawnComponent.SpawnTick"/>, sent to the predicting
+    ///         user so their client can tell which of its kept copies this shot is even when the server's copy never
+    ///         reached it (one spawned and spent within a tick, point blank).
+    /// </summary>
+    public EntProtoId? Prototype;
+
+    /// <inheritdoc cref="Prototype"/>
+    public GameTick SpawnTick;
 
     /// <summary>
     ///     Where the server's copy was when it hit.
