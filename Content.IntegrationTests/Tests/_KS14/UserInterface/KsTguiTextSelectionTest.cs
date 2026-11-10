@@ -356,6 +356,46 @@ public sealed class KsTguiTextSelectionTest : GameTest
     }
 
     [Test]
+    public async Task TheTextCursorComesBackAfterClickingInTheChatOutput()
+    {
+        await SetTheme(true);
+
+        OutputPanel? panel = null;
+        DefaultWindow? window = null;
+        await Client.WaitPost(() =>
+        {
+            panel = new OutputPanel { MinSize = new Vector2(300f, 200f) };
+            window = OpenWindow(panel);
+            panel.AddMessage(FormattedMessage.FromMarkupPermissive("a chat message to select"), tagsAllowed: null);
+        });
+        await Pair.RunTicksSync(5);
+
+        var controller = Client.ResolveDependency<IUserInterfaceManager>().GetUIController<KsTguiTextSelectionUIController>();
+        var applicationsAfterClick = 0;
+        await Client.WaitPost(() =>
+        {
+            var overText = (Vector2)panel!.GlobalPixelPosition + new Vector2(3f, 5f);
+            controller.UpdateCursor(overText);
+            Assert.That(controller.ShowingTextCursor, Is.True, "over the chat output");
+
+            // A press and release, after which the engine puts the panel's own arrow back. The mouse stays where it is and
+            //      the hovered control does not change.
+            controller.BeginSelection(new ScreenCoordinates(overText, WindowId.Main));
+            controller.EndDrag();
+            applicationsAfterClick = controller.TextCursorApplications;
+        });
+        await Pair.RunTicksSync(3);
+
+        await Client.WaitPost(() =>
+        {
+            Assert.That(controller.ShowingTextCursor, Is.True);
+            Assert.That(controller.TextCursorApplications, Is.GreaterThanOrEqualTo(applicationsAfterClick + 2),
+                "the I-beam was not put up again on the frames after the click");
+            window!.Close();
+        });
+    }
+
+    [Test]
     public async Task NothingIsSelectableWithTheThemeOff()
     {
         await SetTheme(false);

@@ -59,7 +59,6 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
     [Dependency] private IClyde _clyde = default!;
 
     private bool _textCursorShown;
-    private bool _reapplyTextCursor;
     private Vector2 _lastMousePosition = new(float.NaN, float.NaN);
     private Control? _lastCursorOwner;
 
@@ -85,6 +84,11 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
     ///     What the last copy put on the clipboard; for tests, which have no clipboard to read.
     /// </summary>
     public string? LastCopiedText { get; private set; }
+
+    /// <summary>
+    ///     How many times the I-beam has been put up; for tests, whose headless window has no cursor to read.
+    /// </summary>
+    public int TextCursorApplications { get; private set; }
 
     private bool Enabled => _configurationManager.GetCVar(KsCCVars.TguiStyle);
 
@@ -265,10 +269,17 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
 
         var mousePosition = _inputManager.MouseScreenPosition.Position;
         var cursorOwner = UIManager.ControlFocused ?? UIManager.CurrentlyHovered;
-        if (mousePosition != _lastMousePosition || cursorOwner != _lastCursorOwner || _reapplyTextCursor || _textCursorShown && !Enabled)
+        if (mousePosition != _lastMousePosition || cursorOwner != _lastCursorOwner || _textCursorShown && !Enabled)
         {
             _lastMousePosition = mousePosition;
             UpdateCursor(mousePosition);
+        }
+        else if (_textCursorShown)
+        {
+            // The engine puts the hovered control's own cursor back without the hovered control changing: on every mouse
+            //      press and release, and from a window's MouseMove. The chat output is one control, so nothing else would
+            //      bring the I-beam back until the mouse left it. Setting the cursor the window already has does nothing.
+            ApplyTextCursor();
         }
 
         if (_target == null)
@@ -302,34 +313,30 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
     /// <summary>
     ///     Shows the I-beam over text that can be selected, as a browser does, and gives the cursor back to the control under
     ///         the mouse when it leaves. Text ignores the mouse, so the engine never asks it for a cursor: it takes the cursor
-    ///         of the hovered control (or the one holding the mouse), and only when that one changes.
+    ///         of the hovered control (or the one holding the mouse) when that one changes, and again on every mouse press and release.
     /// </summary>
     public void UpdateCursor(Vector2 screenPosition)
     {
         var cursorOwner = UIManager.ControlFocused ?? UIManager.CurrentlyHovered;
-        var ownerChanged = cursorOwner != _lastCursorOwner;
         _lastCursorOwner = cursorOwner;
 
         var wanted = Enabled && (_dragging && _target != null
                                  || FindTextAt(screenPosition) is { } hit && IsSelectable(hit));
 
+        // When the hovered control changes the engine puts its cursor up after the controllers have run, over this one;
+        //      FrameUpdate puts the I-beam up again on every later frame it is still shown.
         if (wanted)
-        {
-            // When the hovered control changes the engine puts its cursor up after the controllers have run, over this one,
-            //      so the I-beam goes up again on the next frame as well.
-            if (!_textCursorShown || ownerChanged || _reapplyTextCursor)
-                _clyde.SetCursor(_clyde.GetStandardCursor(StandardCursorShape.IBeam));
-
-            _reapplyTextCursor = ownerChanged;
-        }
-        else
-        {
-            _reapplyTextCursor = false;
-            if (_textCursorShown)
-                RestoreCursor(cursorOwner);
-        }
+            ApplyTextCursor();
+        else if (_textCursorShown)
+            RestoreCursor(cursorOwner);
 
         _textCursorShown = wanted;
+    }
+
+    private void ApplyTextCursor()
+    {
+        _clyde.SetCursor(_clyde.GetStandardCursor(StandardCursorShape.IBeam));
+        TextCursorApplications++;
     }
 
     /// <summary>
