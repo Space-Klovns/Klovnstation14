@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Damage.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -44,7 +45,7 @@ public sealed partial class DamagePopupSystem : EntitySystem
             var next = (DamagePopupType)(((int)ent.Comp.Type + 1) % Enum.GetValues<DamagePopupType>().Length);
             ent.Comp.Type = next;
             Dirty(ent);
-            _popupSystem.PopupPredicted(Loc.GetString("damage-popup-component-switched", ("setting", ent.Comp.Type)), ent.Owner, args.User);
+            _popupSystem.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("damage-popup-component-switched", ("setting", ent.Comp.Type)), ent.Owner, args.User);
         }
     }
 }

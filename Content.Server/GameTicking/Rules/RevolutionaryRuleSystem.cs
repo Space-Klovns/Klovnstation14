@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.Antag;
@@ -239,7 +240,7 @@ public sealed partial class RevolutionaryRuleSystem : GameRuleSystem<Revolutiona
                 _npcFaction.RemoveFaction(uid, RevolutionaryNpcFaction);
                 _stun.TryUpdateParalyzeDuration(uid, stunTime);
                 RemCompDeferred<RevolutionaryComponent>(uid);
-                _popup.PopupEntity(Loc.GetString("rev-break-control", ("name", Identity.Entity(uid, EntityManager))), uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rev-break-control", ("name", Identity.Entity(uid, EntityManager))), uid);
                 _adminLogManager.Add(LogType.Mind, LogImpact.Medium, $"{ToPrettyString(uid)} was deconverted due to all Head Revolutionaries dying.");
 
                 if (!_mind.TryGetMind(uid, out var mindId, out var mind, mc))

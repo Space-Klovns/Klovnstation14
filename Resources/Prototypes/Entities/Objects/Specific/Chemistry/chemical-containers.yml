@@ -25,6 +25,10 @@
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/beaker_place.ogg
+  - type: KsExplosiveContainer # KS14: explodes when shot or burned, if it holds anything explosive
+    solution: drink
+  - type: KsCookOff # KS14: explodes once its explosive contents get hot
+    solution: drink
 
 - type: entity
   parent: Jug

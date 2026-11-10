@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Shared._Starlight.Plumbing;
@@ -27,7 +28,6 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
     [Dependency] private SharedSolutionContainerSystem _solutionSystem = default!;
     [Dependency] private UserInterfaceSystem _uiSystem = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     /// <summary>
     /// Cached mapping of label prefix (lowercase) → reagent prototype ID.
@@ -49,13 +49,13 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
         SubscribeLocalEvent<PlumbingSmartFridgeComponent, InteractUsingEvent>(OnInteractUsing);
         SubscribeLocalEvent<PlumbingSmartFridgeComponent, AfterActivatableUIOpenEvent>(OnUIOpened);
 
-        _prototypeManager.PrototypesReloaded += OnPrototypesReloaded;
+        ProtoMan.PrototypesReloaded += OnPrototypesReloaded;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _prototypeManager.PrototypesReloaded -= OnPrototypesReloaded;
+        ProtoMan.PrototypesReloaded -= OnPrototypesReloaded;
     }
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
@@ -78,7 +78,7 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.SolutionName, out _, out var solution))
             return;
 
-        var current = solution.GetReagentQuantity(new ReagentId(args.ReagentPrototype, null));
+        var current = solution.GetTotalPrototypeQuantity(args.ReagentPrototype); // KS14: GetReagentQuantity(new ReagentId(args.ReagentPrototype, null)) -> GetTotalPrototypeQuantity, as plumbing keeps reagent data
         var room = ent.Comp.MaxPerReagent - current;
 
         if (room <= FixedPoint2.Zero)
@@ -98,13 +98,13 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
 
         if (!TryComp<LabelComponent>(args.Used, out var label) || string.IsNullOrEmpty(label.CurrentLabel))
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-no-label"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-no-label"), ent.Owner, args.User);
             return;
         }
 
         if (!TryMatchLabelToReagent(label.CurrentLabel, out var reagentId))
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-no-match"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-no-match"), ent.Owner, args.User);
             return;
         }
 
@@ -116,8 +116,8 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
 
         if (available <= FixedPoint2.Zero)
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-not-in-stock",
-                ("reagent", _prototypeManager.Index<ReagentPrototype>(reagentId).LocalizedName)),
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-not-in-stock",
+                ("reagent", ProtoMan.Index<ReagentPrototype>(reagentId).LocalizedName)),
                 ent.Owner, args.User);
             return;
         }
@@ -128,19 +128,30 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
         var jugAvailable = jugSolution.AvailableVolume;
         if (jugAvailable <= FixedPoint2.Zero)
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-jug-full"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-jug-full"), ent.Owner, args.User);
             return;
         }
 
+        // KS14 start: an inseparable reagent is dispensed with its whole group, in proportion
+        if (_ksReagentSeparationSystem.TryGetGroup(reagentId, out var ksGroup))
+        {
+            KsDispenseGroup(fridgeSolnEnt.Value, fridgeSolution, jugSolnEnt.Value, ksGroup.Value, jugAvailable, ent.Owner, args.User);
+            args.Handled = true;
+            UpdateUiState(ent);
+            return;
+        }
+        // KS14 end
+
         var transferAmount = FixedPoint2.Min(available, jugAvailable);
+
         var removed = _solutionSystem.RemoveReagent(fridgeSolnEnt.Value, sourceReagent.Reagent, transferAmount);
 
         if (removed > FixedPoint2.Zero)
         {
             _solutionSystem.TryAddReagent(jugSolnEnt.Value, sourceReagent.Reagent, removed, out _);
 
-            var reagentName = _prototypeManager.Index<ReagentPrototype>(reagentId).LocalizedName;
-            _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-filled",
+            var reagentName = ProtoMan.Index<ReagentPrototype>(reagentId).LocalizedName;
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-smart-fridge-filled",
                 ("reagent", reagentName),
                 ("amount", removed)),
                 ent.Owner, args.User);
@@ -322,7 +333,7 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
     {
         var list = new List<(string, string)>();
 
-        foreach (var proto in _prototypeManager.EnumeratePrototypes<ReagentPrototype>())
+        foreach (var proto in ProtoMan.EnumeratePrototypes<ReagentPrototype>())
         {
             list.Add((proto.LocalizedName, proto.ID));
         }
@@ -348,7 +359,7 @@ public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
                 if (reagent.Quantity <= FixedPoint2.Zero)
                     continue;
 
-                if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Reagent.Prototype, out var proto))
+                if (!ProtoMan.TryIndex<ReagentPrototype>(reagent.Reagent.Prototype, out var proto))
                     continue;
 
                 entries.Add(new PlumbingSmartFridgeReagentEntry(

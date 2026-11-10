@@ -13,7 +13,6 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.Sparks;
 
-// TODO: default soundcollection
 public abstract partial class SharedSparksSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;

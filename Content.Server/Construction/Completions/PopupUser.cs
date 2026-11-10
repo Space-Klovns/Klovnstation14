@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Popups;
 using Content.Shared.Construction;
 using JetBrains.Annotations;
@@ -20,9 +21,9 @@ namespace Content.Server.Construction.Completions
             var popupSystem = entityManager.EntitySysManager.GetEntitySystem<PopupSystem>();
 
             if(Cursor)
-                popupSystem.PopupCursor(Loc.GetString(Text), userUid.Value);
+                popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */(Text), userUid.Value);
             else
-                popupSystem.PopupEntity(Loc.GetString(Text), uid, userUid.Value);
+                popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(Text), uid, userUid.Value);
         }
     }
 }

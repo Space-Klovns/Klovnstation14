@@ -1,0 +1,11 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      xmlns:tg="clr-namespace:Content.Client._KS14.Tgui.Controls"
+                      MinSize="300 200" SetSize="431 635">
+    <BoxContainer Orientation="Vertical" SeparationOverride="6" Margin="6">
+        <tg:KsTguiNoticeBox Name="UserNotice" NoticeColor="Info" />
+        <tg:KsTguiNoticeBox Name="AdNotice" NoticeColor="Warning" />
+        <tg:KsTguiSection Name="ProductsSection" Fill="True" Scrollable="True" />
+        <tg:KsTguiSection Name="CategorySection" Visible="False" />
+    </BoxContainer>
+</controls:FancyWindow>

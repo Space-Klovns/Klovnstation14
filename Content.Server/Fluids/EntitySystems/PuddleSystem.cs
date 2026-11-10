@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Fluids.Components;
 using Content.Server.Spreader;
 using Content.Shared.Atmos;
@@ -30,7 +31,6 @@ namespace Content.Server.Fluids.EntitySystems;
 public sealed partial class PuddleSystem : SharedPuddleSystem
 {
     [Dependency] private SharedMapSystem _map = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
@@ -51,7 +51,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PuddleComponent, SpreadNeighborsEvent>(OnPuddleSpread);
+        SubscribeLocalEvent<PuddleComponent, SpreadNeighborsEvent>(KsOnPuddleSpread /* KS14: was OnPuddleSpread, see KsOnPuddleSpread */);
         SubscribeLocalEvent<PuddleComponent, SlipEvent>(OnPuddleSlip);
 
         InitialiseKlovn(); // KS14
@@ -122,21 +122,23 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
             // Overflow to neighbors with remaining space.
             foreach (var (neighborSolution, puddle, neighbor) in resolvedNeighbourSolutions)
             {
+                var ksOverflowVolume = KsGetOverflowVolume(puddle, neighborSolution); // KS14: per-reagent spread volume
+
                 // Water doesn't flow uphill
-                if (neighborSolution.Volume >= (overflow.Volume + puddle.OverflowVolume))
+                if (neighborSolution.Volume >= (overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */))
                 {
                     continue;
                 }
 
                 // Work out how much we could send into this neighbour without overflowing it, and send up to that much
-                var remaining = puddle.OverflowVolume - neighborSolution.Volume;
+                var remaining = ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */ - neighborSolution.Volume;
 
                 // If we can't send anything, then skip this neighbour
                 if (remaining <= FixedPoint2.Zero)
                     continue;
 
                 // We don't want to spill over to make high points either.
-                if (neighborSolution.Volume + remaining >= (overflow.Volume + puddle.OverflowVolume))
+                if (neighborSolution.Volume + remaining >= (overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */))
                 {
                     continue;
                 }
@@ -194,8 +196,10 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
             // Overflow to neighbors with remaining total allowed space (1000u) above the overflow volume (20u).
             foreach (var (neighborSolution, puddle, neighbor) in resolvedNeighbourSolutions)
             {
+                var ksOverflowVolume = KsGetOverflowVolume(puddle, neighborSolution); // KS14: per-reagent spread volume
+
                 // What the source tiles current volume is.
-                var sourceCurrentVolume = overflow.Volume + puddle.OverflowVolume;
+                var sourceCurrentVolume = overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
 
                 // Water doesn't flow uphill
                 if (neighborSolution.Volume >= sourceCurrentVolume)
@@ -205,7 +209,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
                 // We're in the low point in this area, let the neighbour tiles have a chance to spread to us first.
                 var idealAverageVolume =
-                    (totalVolume + overflow.Volume + puddle.OverflowVolume) / (args.Neighbors.Count + 1);
+                    (totalVolume + overflow.Volume + ksOverflowVolume /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */) / (args.Neighbors.Count + 1);
 
                 if (idealAverageVolume > sourceCurrentVolume)
                 {
@@ -261,7 +265,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
                 out var solution))
             return;
 
-        Popups.PopupEntity(Loc.GetString("puddle-component-slipped-touch-reaction", ("puddle", entity.Owner)),
+        Popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("puddle-component-slipped-touch-reaction", ("puddle", entity.Owner)),
             args.Slipped, args.Slipped, PopupType.SmallCaution);
 
         // Take 15% of the puddle solution
@@ -328,7 +332,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         if (!Resolve(uid, ref puddle))
             return false;
 
-        return CurrentVolume(uid, puddle) + solution.Volume > puddle.OverflowVolume;
+        return CurrentVolume(uid, puddle) + solution.Volume > KsGetMixedOverflowVolume((uid, puddle), solution) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
     }
 
     /// <summary>
@@ -339,7 +343,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         if (!Resolve(uid, ref puddle))
             return false;
 
-        return CurrentVolume(uid, puddle) > puddle.OverflowVolume;
+        return CurrentVolume(uid, puddle) > KsGetOverflowVolume((uid, puddle)) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
     }
 
     /// <summary>
@@ -354,7 +358,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         }
 
         // TODO: This is going to fail with struct solutions.
-        var remaining = puddle.OverflowVolume;
+        var remaining = KsGetOverflowVolume(puddle, puddle.Solution.Value.Comp.Solution) /* KS14: was puddle.OverflowVolume, see KsGetOverflowVolume */;
         var split = _solutionContainerSystem.SplitSolution(puddle.Solution.Value,
             CurrentVolume(uid, puddle) - remaining);
         return split;
@@ -432,14 +436,14 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
             targets.Add(owner);
             Reactive.DoEntityReaction(owner, splitSolution, ReactionMethod.Touch);
-            Popups.PopupEntity(Loc.GetString("spill-land-spilled-on-other",
+            Popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spill-land-spilled-on-other",
                     ("spillable", entity),
                     ("target", Identity.Entity(owner, EntityManager))),
                 owner,
                 PopupType.SmallCaution);
         }
 
-        _color.RaiseEffect(spilled.GetColor(_prototypeManager), targets,
+        _color.RaiseEffect(spilled.GetColor(ProtoMan), targets,
             Filter.Pvs(entity, entityManager: EntityManager));
 
         return TrySpillAt(coordinates, spilled, out puddleUid, sound);

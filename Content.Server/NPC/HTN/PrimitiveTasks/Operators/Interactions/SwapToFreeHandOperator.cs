@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Hands.Systems;
+using Content.Server._KS14.NPC.Hands; // KS14
 using Content.Shared.Hands.Components;
 using Content.Shared.Inventory.VirtualItem;
 
@@ -42,22 +43,14 @@ public sealed partial class SwapToFreeHandOperator : HTNOperator
     {
         // TODO: Need interaction cooldown
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
-        var handSystem = _entManager.System<HandsSystem>();
 
-        // KS14: ANK: Changed logic for this to ACTUALLY WORK
-        if (!_entManager.TryGetComponent<HandsComponent>(owner, out var handsComponent))
-            return HTNOperatorStatus.Failed;
-
-        foreach (var hand in handsComponent.Hands.Keys)
-        {
-            if (handSystem.TryGetHeldItem((owner, handsComponent), hand, out var heldUid) &&
-                !_entManager.HasComponent<VirtualItemComponent>(heldUid)) // KS14: ANK: dont continue if theres only a virtual item
-                continue;
-
-            handSystem.SetActiveHand((owner, handsComponent), hand);
-            return HTNOperatorStatus.Finished;
-        }
-
-        return HTNOperatorStatus.Failed;
+        // KS14 start: the one way NPCs free a hand - an empty one, or one holding a wield's virtual item, which is dropped
+        //      so the hand is empty this tick rather than once the wield's queued deletion of it goes through. See
+        //      NpcHandsSystem.
+        var npcHandsSystem = _entManager.System<NpcHandsSystem>();
+        return npcHandsSystem.TryFreeHand(owner, out var hand) && npcHandsSystem.MakeActive(owner, hand)
+            ? HTNOperatorStatus.Finished
+            : HTNOperatorStatus.Failed;
+        // KS14 end
     }
 }

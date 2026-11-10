@@ -59,7 +59,7 @@ public sealed partial class BlockingSystem
         _damageable.TryChangeDamage((item, dmgComp), blockFraction * args.OriginalDamage);
 
         var modify = new DamageModifierSet();
-        foreach (var key in modifier.Coefficients.Keys.Concat(modifier.FlatReduction.Keys))
+        foreach (var key in modifier.Coefficients.Keys.Concat(modifier.FlatReductions.Keys))
         {
             modify.Coefficients.TryAdd(key, 1 - blockFraction);
         }

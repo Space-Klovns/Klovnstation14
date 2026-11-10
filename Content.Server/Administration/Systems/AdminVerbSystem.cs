@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Server.Administration.UI;
@@ -50,7 +51,6 @@ namespace Content.Server.Administration.Systems
         [Dependency] private IAdminManager _adminManager = default!;
         [Dependency] private IGameTiming _gameTiming = default!;
         [Dependency] private SharedMapSystem _map = default!;
-        [Dependency] private IPrototypeManager _prototypeManager = default!;
         [Dependency] private AdminSystem _adminSystem = default!;
         [Dependency] private DisposalTubeSystem _disposalTubes = default!;
         [Dependency] private EuiManager _euiManager = default!;
@@ -142,7 +142,7 @@ namespace Content.Server.Administration.Systems
                         {
                             if (!_transformSystem.TryGetMapOrGridCoordinates(args.Target, out var coords))
                             {
-                                _popup.PopupEntity(Loc.GetString("admin-player-spawn-failed"), args.User, args.User);
+                                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-player-spawn-failed"), args.User, args.User);
                                 return;
                             }
 
@@ -168,7 +168,7 @@ namespace Content.Server.Administration.Systems
                         {
                             if (!_transformSystem.TryGetMapOrGridCoordinates(args.User, out var coords))
                             {
-                                _popup.PopupEntity(Loc.GetString("admin-player-spawn-failed"), args.User, args.User);
+                                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("admin-player-spawn-failed"), args.User, args.User);
                                 return;
                             }
 

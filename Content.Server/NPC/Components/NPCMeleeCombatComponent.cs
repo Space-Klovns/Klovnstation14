@@ -50,4 +50,11 @@ public enum CombatStatus : byte
     /// No dramas.
     /// </summary>
     Normal,
+
+    // KS14 start
+    /// <summary>
+    /// Holding fire for a friend in the way, for long enough to want somewhere else to shoot from. See NpcSquadFireLaneSystem.
+    /// </summary>
+    KsFriendInTheWay,
+    // KS14 end
 }

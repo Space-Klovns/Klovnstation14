@@ -14,40 +14,27 @@ public sealed partial class LinkedChainSystem : EntitySystem
     [Dependency] private TriggerSystem _triggerSystem = default!;
     [Dependency] private ChainSystem _chainSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<LinkedChainStartComponent, ChainSegmentedEvent>(OnStartAdjacentLinkBroken);
-        SubscribeLocalEvent<LinkedChainStartComponent, GetVerbsEvent<AlternativeVerb>>(OnGetAltVerbs);
-
-        SubscribeLocalEvent<LinkedChainStartComponent, ChainInitiallyBrokenEvent>(OnStartChainBroken);
-        SubscribeLocalEvent<LinkedChainEndComponent, ChainInitiallyBrokenEvent>(OnEndChainBroken);
-
-        SubscribeLocalEvent<LinkedChainStartComponent, TriggerEvent>(OnStartTriggered);
-        SubscribeLocalEvent<LinkedChainEndComponent, InteractUsingEvent>(OnEndInteracted);
-
-        SubscribeLocalEvent<LinkedChainStartComponent, ComponentShutdown>(OnStartShutdown);
-        SubscribeLocalEvent<LinkedChainEndComponent, ComponentShutdown>(OnEndShutdown);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartAdjacentLinkBroken(Entity<LinkedChainStartComponent> entity, ref ChainSegmentedEvent args)
     {
         _chainSystem.TryBreakChainFrom(entity.Owner, removeJoints: true);
     }
 
+    [SubscribeLocalEvent]
     private void OnStartChainBroken(Entity<LinkedChainStartComponent> entity, ref ChainInitiallyBrokenEvent args)
     {
         entity.Comp.EndUid = null;
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnEndChainBroken(Entity<LinkedChainEndComponent> entity, ref ChainInitiallyBrokenEvent args)
     {
         entity.Comp.StartUid = null;
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnGetAltVerbs(Entity<LinkedChainStartComponent> entity, ref GetVerbsEvent<AlternativeVerb> args)
     {
         if (!args.CanInteract || !args.CanAccess || !args.CanComplexInteract ||
@@ -64,6 +51,7 @@ public sealed partial class LinkedChainSystem : EntitySystem
         args.Verbs.Add(verb);
     }
 
+    [SubscribeLocalEvent]
     private void OnStartTriggered(Entity<LinkedChainStartComponent> entity, ref TriggerEvent args)
     {
         if (entity.Comp.EndUid is not { } endUid)
@@ -80,6 +68,7 @@ public sealed partial class LinkedChainSystem : EntitySystem
         _triggerSystem.Trigger(endUid, args.User, args.Key, predicted: false);
     }
 
+    [SubscribeLocalEvent]
     private void OnEndInteracted(Entity<LinkedChainEndComponent> entity, ref InteractUsingEvent args)
     {
         if (entity.Comp.StartUid is { } ||
@@ -104,6 +93,7 @@ public sealed partial class LinkedChainSystem : EntitySystem
         Dirty(args.Used, startComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnStartShutdown(Entity<LinkedChainStartComponent> entity, ref ComponentShutdown args)
     {
         if (!TryComp<LinkedChainEndComponent>(entity.Comp.EndUid, out var endComponent))
@@ -113,6 +103,7 @@ public sealed partial class LinkedChainSystem : EntitySystem
         Dirty(entity.Comp.EndUid.Value, endComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnEndShutdown(Entity<LinkedChainEndComponent> entity, ref ComponentShutdown args)
     {
         if (!TryComp<LinkedChainStartComponent>(entity.Comp.StartUid, out var startComponent))

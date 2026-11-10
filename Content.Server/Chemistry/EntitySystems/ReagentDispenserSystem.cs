@@ -42,7 +42,6 @@ namespace Content.Server.Chemistry.EntitySystems
         [Dependency] private SolutionTransferSystem _solutionTransferSystem = default!;
         [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
         [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
-        [Dependency] private IPrototypeManager _prototypeManager = default!;
         [Dependency] private OpenableSystem _openable = default!;
         [Dependency] private HandsSystem _handsSystem = default!;
 
@@ -123,7 +122,7 @@ namespace Content.Server.Chemistry.EntitySystems
                 if (_solutionContainerSystem.TryGetDrainableSolution(storedContainer, out _, out var sol))
                 {
                     quantity = sol.Volume;
-                    reagentColor = sol.GetColor(_prototypeManager);
+                    reagentColor = sol.GetColor(ProtoMan);
                 }
 
                 inventory.Add(new ReagentInventoryItem(storageLocation, reagentLabel, quantity, reagentColor));

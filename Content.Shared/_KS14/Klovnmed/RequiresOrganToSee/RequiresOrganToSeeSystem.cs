@@ -8,16 +8,7 @@ public sealed partial class RequiresOrganToSeeSystem : EntitySystem
     [Dependency] private BlindableSystem _blindableSystem = default!;
     [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<RequiresOrganToSeeComponent, OrganInsertedIntoEvent>(OnOrganInsertedInto);
-        SubscribeLocalEvent<RequiresOrganToSeeComponent, OrganRemovedFromEvent>(OnOrganRemovedFrom);
-
-        SubscribeLocalEvent<RequiresOrganToSeeComponent, CanSeeAttemptEvent>(OnSeeAttempt);
-    }
-
+    [SubscribeLocalEvent]
     private void OnOrganInsertedInto(Entity<RequiresOrganToSeeComponent> entity, ref OrganInsertedIntoEvent args)
     {
         if (args.OrganComponent.Category != entity.Comp.Category)
@@ -26,6 +17,7 @@ public sealed partial class RequiresOrganToSeeSystem : EntitySystem
         _blindableSystem.UpdateIsBlind(entity.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnOrganRemovedFrom(Entity<RequiresOrganToSeeComponent> entity, ref OrganRemovedFromEvent args)
     {
         if (args.OrganComponent.Category != entity.Comp.Category)
@@ -34,6 +26,7 @@ public sealed partial class RequiresOrganToSeeSystem : EntitySystem
         _blindableSystem.UpdateIsBlind(entity.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnSeeAttempt(Entity<RequiresOrganToSeeComponent> entity, ref CanSeeAttemptEvent args)
     {
         if (args.Cancelled ||

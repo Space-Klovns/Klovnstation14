@@ -1,8 +1,9 @@
 using Content.Shared.Storage.Components;
 using Content.Shared.Storage.EntitySystems;
 using Content.Shared.Trigger;
+using Content.Shared._KS14.Trigger.Components;
 
-namespace Content.Shared._KS14.Trigger.Components.Effects;
+namespace Content.Shared._KS14.Trigger.Systems;
 
 public sealed partial class EntityStorageOnTriggerSystem : XOnTriggerSystem<EntityStorageOnTriggerComponent>
 {

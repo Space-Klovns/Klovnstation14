@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Ghost;
 using Content.Server.Mind;
@@ -44,7 +45,7 @@ public sealed partial class CursedMaskSystem : SharedCursedMaskSystem
 
             ent.Comp.StolenMind = mind;
 
-            _popup.PopupEntity(Loc.GetString("cursed-mask-takeover-popup"), wearer, session, PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cursed-mask-takeover-popup"), wearer, session, PopupType.LargeCaution);
             _adminLog.Add(LogType.Action,
                 LogImpact.Extreme,
                 $"{ToPrettyString(wearer):player} had their body taken over and turned into an enemy through the cursed mask {ToPrettyString(ent):entity}");

@@ -483,4 +483,11 @@ public enum LogType
     /// Events related to players connecting/disconnecting.
     /// </summary>
     Connection = 104,
+
+    // KS14 start: fork log types, numbered well clear of upstream's sequence so upstream additions never collide
+    /// <summary>
+    /// In-game voice chat: microphone pages connecting, talking, link resets, mutes and automatic mutes.
+    /// </summary>
+    KsVoice = 1000,
+    // KS14 end
 }

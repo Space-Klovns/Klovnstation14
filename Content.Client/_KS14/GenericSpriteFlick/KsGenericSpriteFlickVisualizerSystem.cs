@@ -1,0 +1,80 @@
+using Content.Shared._KS14;
+using Content.Shared._KS14.GenericSpriteFlick;
+using Robust.Client.Animations;
+using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
+using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
+
+namespace Content.Client._KS14.GenericSpriteFlick;
+
+public sealed partial class KsGenericSpriteFlickVisualizerSystem : EntitySystem
+{
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private AnimationPlayerSystem _animationPlayerSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
+
+    // Try to reset to next state
+    [SubscribeLocalEvent]
+    private void OnAnimationComplete(Entity<KsGenericSpriteFlickComponent> entity, ref AnimationCompletedEvent args)
+    {
+        if (!entity.Comp.AnimKeyLayerKeyMap.TryGetValue(args.Key, out var layerObjectKey) ||
+            !entity.Comp.NextStateMap.TryGetValue(layerObjectKey, out var state))
+            return;
+
+        if (!TryComp<SpriteComponent>(entity.Owner, out var spriteComponent))
+            return;
+
+        if (layerObjectKey is Enum layerEnumKey)
+            _spriteSystem.LayerSetRsiState((entity, spriteComponent)!, layerEnumKey, state);
+        else if (layerObjectKey is string layerStringKey)
+            _spriteSystem.LayerSetRsiState((entity, spriteComponent)!, layerStringKey, state);
+        else
+            throw new ArgumentException($"Param was assignable to neither {typeof(Enum)} nor {typeof(string)}.", nameof(layerObjectKey));
+
+        // The state saved when the flick started can be stale by now, if appearance changed the layer mid-flick.
+        //      Re-applying appearance puts any layer it drives back in the state it currently says.
+        if (TryComp<AppearanceComponent>(entity.Owner, out var appearanceComponent))
+            _appearanceSystem.QueueUpdate(entity.Owner, appearanceComponent);
+    }
+
+    [EventSubscription]
+    private void OnEvent(KsSpriteFlickEvent args)
+    {
+        if (!TryGetEntity(args.Entity, out var uid) ||
+            !TryComp<SpriteComponent>(uid.Value, out var spriteComponent))
+            return;
+
+        var parsedLayerKey = (object?)KsEnumHelpers.ParseKey(args.LayerKey, out _, _reflectionManager) ?? args.LayerKey;
+        var animationKey = KsGenericSpriteFlickSystem.GetAnimationId(args.FlickState, args.LayerKey);
+
+        if (!TryComp<AnimationPlayerComponent>(uid.Value, out var animationPlayerComponent) ||
+            _animationPlayerSystem.HasRunningAnimation(animationPlayerComponent, animationKey))
+            return;
+
+        var flickComponent = EnsureComp<KsGenericSpriteFlickComponent>(uid.Value);
+        var animation = flickComponent.CachedAnimations.GetOrNew((args.FlickState, parsedLayerKey), out var exists);
+        flickComponent.AnimKeyLayerKeyMap[animationKey] = parsedLayerKey;
+
+        if (!exists)
+        {
+            var state = _spriteSystem.GetState(new SpriteSpecifier.Rsi(spriteComponent.BaseRSI!.Path, args.FlickState));
+
+            animation.Length = TimeSpan.FromSeconds(state.AnimationLength);
+            animation.AnimationTracks.Add(
+                new AnimationTrackSpriteFlick
+                {
+                    LayerKey = parsedLayerKey,
+                    KeyFrames =
+                    {
+                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(args.FlickState), default)
+                    }
+                }
+            );
+        }
+
+        flickComponent.NextStateMap[parsedLayerKey] = spriteComponent[parsedLayerKey].RsiState;
+        _animationPlayerSystem.Play((uid.Value, animationPlayerComponent), animation, animationKey);
+    }
+}

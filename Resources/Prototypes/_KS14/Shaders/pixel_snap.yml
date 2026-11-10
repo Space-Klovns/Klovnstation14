@@ -1,0 +1,7 @@
+- type: shader
+  id: KsPixelSnap
+  kind: source
+  path: "/Textures/_KS14/Shaders/pixel_snap.swsl"
+  params:
+    quadPixels: 32.0
+    filtered: 1.0

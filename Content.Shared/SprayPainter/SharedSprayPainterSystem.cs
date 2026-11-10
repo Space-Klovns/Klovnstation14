@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Administration.Logs;
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
@@ -24,7 +25,6 @@ namespace Content.Shared.SprayPainter;
 public abstract partial class SharedSprayPainterSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] protected IPrototypeManager Proto = default!;
     [Dependency] protected ISharedAdminLogManager AdminLogger = default!;
     [Dependency] protected SharedAppearanceSystem Appearance = default!;
     [Dependency] protected SharedAudioSystem Audio = default!;
@@ -60,7 +60,7 @@ public abstract partial class SharedSprayPainterSystem : EntitySystem
     private void OnMapInit(Entity<SprayPainterComponent> ent, ref MapInitEvent args)
     {
         bool stylesByGroupPopulated = false;
-        foreach (var groupProto in Proto.EnumeratePrototypes<PaintableGroupPrototype>())
+        foreach (var groupProto in ProtoMan.EnumeratePrototypes<PaintableGroupPrototype>())
         {
             ent.Comp.StylesByGroup[groupProto.ID] = groupProto.DefaultStyle;
             stylesByGroupPopulated = true;
@@ -182,7 +182,7 @@ public abstract partial class SharedSprayPainterSystem : EntitySystem
 
         if (ent.Comp.Group is not { } group
             || !painter.StylesByGroup.TryGetValue(group, out var selectedStyle)
-            || !Proto.Resolve(group, out PaintableGroupPrototype? targetGroup))
+            || !ProtoMan.Resolve(group, out PaintableGroupPrototype? targetGroup))
             return;
 
         // Valid paint target.
@@ -191,14 +191,14 @@ public abstract partial class SharedSprayPainterSystem : EntitySystem
         if (TryComp<LimitedChargesComponent>(args.Used, out var charges)
             && Charges.GetCurrentCharges((args.Used, charges)) < targetGroup.Cost)
         {
-            var msg = Loc.GetString("spray-painter-interact-no-charges");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("spray-painter-interact-no-charges");
             _popup.PopupClient(msg, args.User, args.User);
             return;
         }
 
         if (!targetGroup.Styles.TryGetValue(selectedStyle, out var proto))
         {
-            var msg = Loc.GetString("spray-painter-style-not-available");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("spray-painter-style-not-available");
             _popup.PopupClient(msg, args.User, args.User);
             return;
         }

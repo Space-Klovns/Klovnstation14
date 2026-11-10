@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Actions;
 using Content.Shared.Clothing;
 using Content.Shared.Clothing.Components;
@@ -118,7 +119,7 @@ public abstract partial class SharedNinjaSuitSystem : EntitySystem
 
         // previously cloaked, disable abilities for a short time
         _audio.PlayPredicted(comp.RevealSound, uid, user);
-        Popup.PopupClient(Loc.GetString("ninja-revealed"), user, user, PopupType.MediumCaution);
+        Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ninja-revealed"), user, user, PopupType.MediumCaution);
         _useDelay.TryResetDelay(uid, id: comp.DisableDelayId);
     }
 
@@ -152,7 +153,7 @@ public abstract partial class SharedNinjaSuitSystem : EntitySystem
     {
         if (IsDisabled((ent, ent.Comp, null)))
         {
-            Popup.PopupEntity(Loc.GetString("ninja-suit-cooldown"), user, user, PopupType.Medium);
+            Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("ninja-suit-cooldown"), user, user, PopupType.Medium);
             return true;
         }
 

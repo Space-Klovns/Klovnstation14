@@ -1,6 +1,7 @@
 using Content.Client.Guidebook;
 using Content.Client.Lobby.UI;
 using Content.Client.Players.PlayTimeTracking;
+using Content.Shared._KS14.TTS; // KS14
 using Content.Shared.CCVar;
 using Content.Shared.Humanoid.Markings;
 using Content.Shared.Humanoid.Prototypes;
@@ -116,6 +117,11 @@ public sealed partial class LobbyUIController : UIController, IOnStateEntered<Lo
             {
                 _profileEditor.RefreshTraits();
             }
+
+            // KS14 start: TTS voices
+            if (obj.WasModified<TtsVoicePrototype>())
+                _profileEditor.RefreshTtsVoices();
+            // KS14 end
         }
     }
 
@@ -173,11 +179,13 @@ public sealed partial class LobbyUIController : UIController, IOnStateEntered<Lo
         {
             PreviewPanel.ProfilePreviewSpriteView.ClearPreview();
             PreviewPanel.SetSummaryText(string.Empty);
+            PreviewPanel.SetCharacterInfo(string.Empty, string.Empty); // KS14
             return;
         }
 
         PreviewPanel.ProfilePreviewSpriteView.LoadPreview(humanoid);
         PreviewPanel.SetSummaryText(humanoid.Summary);
+        PreviewPanel.SetCharacterInfo(humanoid.Name, LobbyCharacterPreviewPanel.GetPreferredJobName(humanoid, _prototypeManager)); // KS14
     }
 
     private void RefreshProfileEditor()

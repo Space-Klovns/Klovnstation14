@@ -1,0 +1,4 @@
+- files: ["ghost_role_available.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "prompt1.ogg by Flleeppyy (https://github.com/Flleeppyy), originally for Monkestation2.0 PR 2621, taken from tgstation (the default 'Calm' ghost poll prompt sound), converted to mono for Klovnstation 14"
+  source: "https://github.com/tgstation/tgstation/blob/master/sound/misc/prompt1.ogg"

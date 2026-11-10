@@ -157,7 +157,7 @@ namespace Content.Shared.Damage
                 float newValueFlat = value.Float();
                 float newValuePercentile = value.Float();
 
-                if (modifierSet.FlatReduction.TryGetValue(key, out var reduction))
+                if (modifierSet.FlatReductions.TryGetValue(key, out var reduction))
                 {
                     if (!damageSpec.DisableCrossInteraction && percentilePenDict.TryGetValue(key, out var percentileDecreaseOfFlatRes)) // If you have 40% pierce pen it makes every flat resist only 60% of its former status - this is done to be more intuitive as per _uranium's request - KS14
                     {

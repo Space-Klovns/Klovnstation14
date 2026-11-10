@@ -1,0 +1,14 @@
+- type: shader
+  id: KsLobbyContrast
+  kind: source
+  path: "/Textures/_KS14/Shaders/lobby_contrast.swsl"
+  params:
+    region0: 0,0,0,0
+    region1: 0,0,0,0
+    region2: 0,0,0,0
+    region3: 0,0,0,0
+    quadPixelSize: 1920,1080
+    feather: 64.0
+    maxLuminance: 0.07
+    strength: 1.0
+    blurRadius: 0.0

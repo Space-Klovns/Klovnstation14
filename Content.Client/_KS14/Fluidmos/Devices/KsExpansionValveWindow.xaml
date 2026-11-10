@@ -1,0 +1,21 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               MinSize="320 230"
+               Title="{Loc ks-expansion-valve-ui-title}">
+    <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="8">
+        <BoxContainer Orientation="Horizontal" SeparationOverride="8">
+            <Label Text="{Loc ks-expansion-valve-ui-opening}" MinWidth="120"/>
+            <Slider Name="OpeningSlider" MinValue="0" MaxValue="100" HorizontalExpand="True"/>
+            <Label Name="OpeningLabel" MinWidth="50" Align="Right"/>
+        </BoxContainer>
+        <CheckBox Name="AutomaticCheckBox" Text="{Loc ks-expansion-valve-ui-automatic}"/>
+        <BoxContainer Orientation="Horizontal" SeparationOverride="8">
+            <Label Text="{Loc ks-expansion-valve-ui-pressure-setpoint}" MinWidth="120"/>
+            <FloatSpinBox Name="PressureSetpoint" HorizontalExpand="True" Align="Center"/>
+        </BoxContainer>
+        <PanelContainer StyleClasses="LowDivider"/>
+        <Label Name="VaporFractionLabel"/>
+        <Label Name="OutletLabel"/>
+        <Label Name="FlowRateLabel"/>
+    </BoxContainer>
+</DefaultWindow>

@@ -1,0 +1,74 @@
+# Linked gases condense out of tile air into puddles of their reagent past saturation (KsCondensationReaction).
+#     maximumTemperature is each gas's van der Waals critical temperature, 8a / (27 R b), above which nothing condenses;
+#     KsCondensationTests checks it against the gas's constants.
+
+- type: gasReaction
+  id: KsCondensationWaterVapor
+  priority: 600
+  maximumTemperature: 647.29
+  minimumRequirements:
+    WaterVapor: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: WaterVapor
+
+- type: gasReaction
+  id: KsCondensationOxygen
+  priority: 600
+  maximumTemperature: 154.16
+  minimumRequirements:
+    Oxygen: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: Oxygen
+
+- type: gasReaction
+  id: KsCondensationNitrogen
+  priority: 600
+  maximumTemperature: 126.15
+  minimumRequirements:
+    Nitrogen: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: Nitrogen
+
+- type: gasReaction
+  id: KsCondensationHydrogen
+  priority: 600
+  maximumTemperature: 33.2
+  minimumRequirements:
+    Hydrogen: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: Hydrogen
+
+- type: gasReaction
+  id: KsCondensationNitrousOxide
+  priority: 600
+  maximumTemperature: 308.79
+  minimumRequirements:
+    NitrousOxide: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: NitrousOxide
+
+- type: gasReaction
+  id: KsCondensationAmmonia
+  priority: 600
+  maximumTemperature: 408.25
+  minimumRequirements:
+    Ammonia: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: Ammonia
+
+# Carbon dioxide frosts out of air past saturation, as after a CO2 extinguisher has chilled a tile full of it.
+- type: gasReaction
+  id: KsCondensationCarbonDioxide
+  priority: 600
+  maximumTemperature: 303.79
+  minimumRequirements:
+    CarbonDioxide: 0.05
+  effects:
+  - !type:KsCondensationReaction
+    gas: CarbonDioxide

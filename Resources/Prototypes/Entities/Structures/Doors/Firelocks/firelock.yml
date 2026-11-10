@@ -79,7 +79,6 @@
     - type: EmissiveLayers
       glowRadius: 0.4
       intensity: 1.2
-      useSpriteTransform: false
       layers:
       - enum.DoorVisualLayers.BaseUnlit
       - enum.FirelockVisualLayersPressure.Base

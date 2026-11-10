@@ -56,7 +56,7 @@ public sealed class CheckIgnoreSpeechBlockerEvent : EntityEventArgs
 /// <summary>
 /// Raised on an entity when it speaks, either through 'say' or 'whisper'.
 /// </summary>
-public sealed class EntitySpokeEvent : EntityEventArgs
+public sealed partial /* KS14: fork translation data lives in a companion file */ class EntitySpokeEvent : EntityEventArgs
 {
     public readonly EntityUid Source;
     public readonly string Message;

@@ -22,13 +22,7 @@ public sealed partial class KsRwrSystem : KsEmissionListenerSystem
 {
     [Dependency] private KsSensorSystem _sensors = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsRwrComponent, KsSensorSweepEvent>(OnSweep);
-    }
-
+    [SubscribeLocalEvent]
     private void OnSweep(Entity<KsRwrComponent> ent, ref KsSensorSweepEvent args)
     {
         var xform = Transform(args.Sensor);

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Directions;
 using Content.Shared.Maps;
 using Content.Shared.Physics;
@@ -33,7 +34,7 @@ public sealed partial class GoliathTentacleSystem : EntitySystem
 
         // TODO: animation
 
-        _popup.PopupPredicted(Loc.GetString("tentacle-ability-use-popup", ("entity", args.Performer)), args.Performer, args.Performer, type: PopupType.SmallCaution);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("tentacle-ability-use-popup", ("entity", args.Performer)), args.Performer, args.Performer, type: PopupType.SmallCaution);
         _stun.TryAddStunDuration(args.Performer, TimeSpan.FromSeconds(0.8f));
 
         var coords = args.Target;

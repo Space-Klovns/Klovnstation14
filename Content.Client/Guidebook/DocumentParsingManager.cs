@@ -56,13 +56,13 @@ public sealed partial class DocumentParsingManager
         if (!_prototype.Resolve(entryId, out var entry))
             return false;
 
-        using var file = _resourceManager.ContentFileReadText(entry.Text);
+        using var file = _resourceManager.ContentFileReadText(GetLocalizedDocumentPath(entry.Text) /* KS14: localized guide content */);
         return TryAddMarkup(control, file.ReadToEnd());
     }
 
     public bool TryAddMarkup(Control control, GuideEntry entry)
     {
-        using var file = _resourceManager.ContentFileReadText(entry.Text);
+        using var file = _resourceManager.ContentFileReadText(GetLocalizedDocumentPath(entry.Text) /* KS14: localized guide content */);
         return TryAddMarkup(control, file.ReadToEnd());
     }
 

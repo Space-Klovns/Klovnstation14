@@ -216,6 +216,8 @@ namespace Content.Client.Lobby.UI
 
             #endregion
 
+            InitializeTtsVoice(); // KS14
+
             #region SpawnPriority
 
             foreach (var value in Enum.GetValues<SpawnPriorityPreference>())
@@ -372,6 +374,7 @@ namespace Content.Client.Lobby.UI
             UpdateGenderControls();
             UpdateSkinColor();
             UpdateSpawnPriorityControls();
+            UpdateTtsVoiceControls(); // KS14
             UpdateAgeEdit();
             UpdateEyePickers();
             UpdateSaveButton();
@@ -418,6 +421,7 @@ namespace Content.Client.Lobby.UI
         protected override void EnteredTree()
         {
             base.EnteredTree();
+            TtsVoiceEnteredTree(); // KS14
             ReloadPreview();
         }
 

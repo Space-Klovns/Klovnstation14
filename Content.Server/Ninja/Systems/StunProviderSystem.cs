@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ninja.Events;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Interaction;
@@ -54,7 +55,7 @@ public sealed partial class StunProviderSystem : SharedStunProviderSystem
         // take charge from battery
         if (!_battery.TryUseCharge(comp.BatteryUid.Value, comp.StunCharge))
         {
-            _popup.PopupEntity(Loc.GetString(comp.NoPowerPopup), uid, uid);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.NoPowerPopup), uid, uid);
             return;
         }
 

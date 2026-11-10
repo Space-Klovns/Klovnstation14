@@ -80,6 +80,15 @@
                                     <Control HorizontalExpand="True"/>
                                     <OptionButton Name="PronounsButton" HorizontalAlignment="Right" />
                                 </BoxContainer>
+                                <!-- KS14 start: TTS voice, see HumanoidProfileEditor.Klovn.Tts.cs -->
+                                <BoxContainer HorizontalExpand="True">
+                                    <Label Text="{Loc 'humanoid-profile-editor-tts-voice-label'}" />
+                                    <Control HorizontalExpand="True"/>
+                                    <OptionButton Name="TtsVoiceButton" HorizontalAlignment="Right" />
+                                    <Button Name="TtsVoicePreviewButton" Margin="4 0 0 0"
+                                            Text="{Loc 'humanoid-profile-editor-tts-voice-preview-button'}" />
+                                </BoxContainer>
+                                <!-- KS14 end -->
                                 <!-- Show clothing -->
                                 <BoxContainer HorizontalExpand="True">
                                     <Label Text="{Loc 'humanoid-profile-editor-clothing'}" />

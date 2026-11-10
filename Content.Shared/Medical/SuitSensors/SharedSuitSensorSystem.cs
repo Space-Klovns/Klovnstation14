@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Numerics;
 using Content.Shared.Access.Systems;
 using Content.Shared.ActionBlocker;
@@ -36,7 +37,6 @@ public abstract partial class SharedSuitSensorSystem : EntitySystem
     [Dependency] private SharedInteractionSystem _interactionSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private InventorySystem _inventory = default!;
     [Dependency] private SharedIdCardSystem _idCardSystem = default!;
     [Dependency] private IRobustRandom _random = default!;
@@ -241,26 +241,9 @@ public abstract partial class SharedSuitSensorSystem : EntitySystem
 
     public string GetModeName(SuitSensorMode mode)
     {
-        string name;
-        switch (mode)
-        {
-            case SuitSensorMode.SensorOff:
-                name = "suit-sensor-mode-off";
-                break;
-            case SuitSensorMode.SensorBinary:
-                name = "suit-sensor-mode-binary";
-                break;
-            case SuitSensorMode.SensorVitals:
-                name = "suit-sensor-mode-vitals";
-                break;
-            case SuitSensorMode.SensorCords:
-                name = "suit-sensor-mode-cords";
-                break;
-            default:
-                return "";
-        }
-
-        return Loc.GetString(name);
+        // KS14: share keys with deferred popup formatting.
+        var localizationId = GetModeLocalizationId(mode);
+        return localizationId == null ? "" : Loc.GetString(localizationId);
     }
 
     /// <summary>
@@ -316,7 +299,7 @@ public abstract partial class SharedSuitSensorSystem : EntitySystem
 
         if (userUid != null)
         {
-            var msg = Loc.GetString("suit-sensor-mode-state", ("mode", GetModeName(mode)));
+            var msg = KsPopupMessage.Create /* KS14: defer sensor mode label */("suit-sensor-mode-state", ("mode", KsPopupMessage.Create(GetModeLocalizationId(mode)!)));
             _popupSystem.PopupClient(msg, sensors, userUid.Value);
         }
     }
@@ -367,7 +350,7 @@ public abstract partial class SharedSuitSensorSystem : EntitySystem
             userJobIcon = card.Comp.JobIcon;
 
             foreach (var department in card.Comp.JobDepartments)
-                userJobDepartments.Add(Loc.GetString(_proto.Index(department).Name));
+                userJobDepartments.Add(Loc.GetString(ProtoMan.Index(department).Name));
         }
 
         // get health mob state

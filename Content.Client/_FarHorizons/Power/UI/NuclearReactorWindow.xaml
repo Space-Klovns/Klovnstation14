@@ -1,6 +1,7 @@
 <controls:FancyWindow xmlns="https://spacestation14.io"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+            xmlns:tgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
             MinSize="200 120" Title="Nuclear Reactor">
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
         <!--Main Content-->
@@ -84,7 +85,12 @@
 
 					<PanelContainer SetHeight="2" VerticalAlignment="Top" SetWidth="200" Margin="2 5" />
 
-                    <Button Name="SilenceAlarms" Modulate="#C21339" Text="{Loc comp-nuclear-reactor-ui-silence-button}"/>
+                    <!-- KS14 start: tgui's hazard stripes behind the silence button; under Baron the panel draws nothing. The button's
+                         Modulate is Baron's colour; under tgui it is a red button instead (NuclearReactorWindow.Klovn.Tgui.cs) -->
+                    <tgui:KsTguiHazardPanel Name="SilenceHazard">
+                        <Button Name="SilenceAlarms" Modulate="#C21339" Text="{Loc comp-nuclear-reactor-ui-silence-button}"/>
+                    </tgui:KsTguiHazardPanel>
+                    <!-- KS14 end -->
 
 					<BoxContainer Name="ControlRodsText" Orientation="Horizontal">
 						<Label Name="ControlRodsLabel" Text="{Loc comp-nuclear-reactor-ui-reactor-control}" StyleClasses="StatusFieldTitle"  HorizontalExpand="True"/>

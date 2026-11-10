@@ -13,6 +13,11 @@ public sealed class DispenserTest : InteractionTest
     [Test]
     public async Task InsertEjectBuiTest()
     {
+        // KS14 start: this clicks the stock window, which only the Baron theme opens. The pair reverts the cvar afterwards.
+        await Client.WaitPost(() => Client.CfgMan.SetCVar(Content.Shared._KS14.CCVar.KsCCVars.TguiStyle, false));
+        await RunTicks(1);
+        // KS14 end
+
         await SpawnTarget("ChemDispenser");
         ToggleNeedPower();
 

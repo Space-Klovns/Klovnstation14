@@ -15,6 +15,7 @@ namespace Content.Server.Atmos.Piping.Binary.EntitySystems;
 public sealed partial class GasPressurePumpSystem : SharedGasPressurePumpSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
     [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
     [Dependency] private PowerReceiverSystem _power = default!;
@@ -44,15 +45,17 @@ public sealed partial class GasPressurePumpSystem : SharedGasPressurePumpSystem
             return; // No need to pump gas if target has been reached.
         }
 
-        if (inlet.Air.TotalMoles > 0 && inlet.Air.Temperature > 0)
+        if (inlet.Air.TransferMoles /* KS14: TotalMoles -> TransferMoles, so pure-liquid pipes still flow */ > 0 && inlet.Air.Temperature > 0)
         {
             // We calculate the necessary moles to transfer using our good ol' friend PV=nRT.
             var pressureDelta = ent.Comp.TargetPressure - outputStartingPressure;
             var transferMoles = (pressureDelta * outlet.Air.Volume) / (inlet.Air.Temperature * Atmospherics.R);
 
+            var ksInletPressure = inlet.Air.Pressure; // KS14
             var removed = inlet.Air.Remove(transferMoles);
+            _ksTransferThermoSystem.Apply(removed, ksInletPressure, outputStartingPressure, doesWork: true, deviceUid: ent.Owner); // KS14
             _atmosphereSystem.Merge(outlet.Air, removed);
-            _ambientSoundSystem.SetAmbience(ent, removed.TotalMoles > 0f);
+            _ambientSoundSystem.SetAmbience(ent, removed.TransferMoles /* KS14: TotalMoles -> TransferMoles */ > 0f);
         }
     }
 }

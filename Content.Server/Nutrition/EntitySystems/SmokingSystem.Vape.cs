@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.DoAfter;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Nutrition.Components;
@@ -51,7 +52,7 @@ namespace Content.Server.Nutrition.EntitySystems
             if (solution.Contents.Count == 0)
             {
                 _popupSystem.PopupEntity(
-                    Loc.GetString("vape-component-vape-empty"), args.Target.Value,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("vape-component-vape-empty"), args.Target.Value,
                     args.User);
                 return;
             }
@@ -93,17 +94,17 @@ namespace Content.Server.Nutrition.EntitySystems
                 var userName = Identity.Entity(args.User, EntityManager);
 
                 _popupSystem.PopupEntity(
-                    Loc.GetString("vape-component-try-use-vape-forced", ("user", userName)), args.Target.Value,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("vape-component-try-use-vape-forced", ("user", userName)), args.Target.Value,
                     args.Target.Value);
 
                 _popupSystem.PopupEntity(
-                    Loc.GetString("vape-component-try-use-vape-forced-user", ("target", targetName)), args.User,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("vape-component-try-use-vape-forced-user", ("target", targetName)), args.User,
                     args.User);
             }
             else
             {
                 _popupSystem.PopupEntity(
-                    Loc.GetString("vape-component-try-use-vape"), args.User,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("vape-component-try-use-vape"), args.User,
                     args.User);
             }
 
@@ -146,17 +147,17 @@ namespace Content.Server.Nutrition.EntitySystems
                 var userName = Identity.Entity(args.Args.User, EntityManager);
 
                 _popupSystem.PopupEntity(
-                    Loc.GetString("vape-component-vape-success-forced", ("user", userName)), args.Args.Target.Value,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("vape-component-vape-success-forced", ("user", userName)), args.Args.Target.Value,
                     args.Args.Target.Value);
 
                 _popupSystem.PopupEntity(
-                    Loc.GetString("vape-component-vape-success-user-forced", ("target", targetName)), args.Args.User,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("vape-component-vape-success-user-forced", ("target", targetName)), args.Args.User,
                     args.Args.Target.Value);
             }
             else
             {
                 _popupSystem.PopupEntity(
-                    Loc.GetString("vape-component-vape-success"), args.Args.Target.Value,
+                    KsPopupMessage.Create /* KS14: localize popups on the recipient */("vape-component-vape-success"), args.Args.Target.Value,
                     args.Args.Target.Value);
             }
         }

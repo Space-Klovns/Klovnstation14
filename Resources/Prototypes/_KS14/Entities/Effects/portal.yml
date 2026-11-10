@@ -1,0 +1,33 @@
+- type: entity
+  id: KsViewPortal
+  name: bluespace window
+  description: A shimmering gateway that shows what lies on the other side.
+  components:
+  - type: InteractionOutline
+  - type: Clickable
+  - type: Physics
+    bodyType: Static
+  - type: Sprite
+    sprite: /Textures/Effects/portal.rsi
+    layers:
+    - state: portal-blue
+  # Sensor only: it nominates the entities that may cross, which KsPortalTravelSystem then tracks.
+  # Sized for the default Width of 1: KsPortalTravelSystem resizes it to any other Width.
+  - type: Fixtures
+    fixtures:
+      ksPortalSensor:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-2,-1.5,2,1.5"
+        mask:
+        - Impassable
+        - HighImpassable
+        - MidImpassable
+        - LowImpassable
+        - BulletImpassable
+        layer:
+        - Impassable
+        - HighImpassable
+        - MidImpassable
+        hard: false
+  - type: KsPortalView

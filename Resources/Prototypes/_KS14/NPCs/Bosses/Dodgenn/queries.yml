@@ -1,0 +1,31 @@
+# Who the Dodgenn fights: the nearest living hostile it can see, or the one it is already fighting.
+- type: utilityQuery
+  id: DodgennTargets
+  query:
+  - !type:NearbyHostilesQuery
+  considerations:
+  - !type:TargetIsAliveCon
+    curve: !type:BoolCurve
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: TargetDistance
+  - !type:TargetInLOSOrCurrentCon
+    curve: !type:BoolCurve
+
+# Guns lying around worth picking up. Only rocket launchers (GunBackblast): any other gun it holds, it brought itself.
+- type: utilityQuery
+  id: DodgennNearbyGuns
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: Gun
+    - type: Item
+    - type: GunBackblast
+      radius: 0
+  considerations:
+  - !type:TargetAmmoCon
+    curve: !type:BoolCurve
+  - !type:TargetAccessibleCon
+    curve: !type:BoolCurve
+  - !type:TargetInLOSCon
+    curve: !type:BoolCurve

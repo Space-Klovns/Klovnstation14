@@ -2,6 +2,8 @@
 - type: entity
   parent: BaseChemicalFire
   id: ChemicalFireSuspendedKlovnideTrioxide
+  name: suspended klovnide-trioxide fire
+  description: The light from it singes your eyes!
   components:
   - type: ChemicalFire
     color: "#ff418d"
@@ -9,9 +11,52 @@
     temperature: 3200
     exposedVolume: 50
     heatPower: 3000 # insanely weak
+    extinguishable: false # no water, foam or blanket puts it out: it only burns out, as its puddle burns away
+    foamSmotherable: false
+    # Burns off foam laid over it rather than lying under it, though weakly (about 0.04u a second at the ~67600 J a
+    #     unit of foam takes, a full blanket in about 80 s).
+    foamHeatFraction: 1
   - type: TileEntityEffect
     effects:
     - !type:Flammable
       multiplier: 4
       multiplierOnExisting: 0.75
     - !type:Ignite
+
+# Started by an arc flash, on whatever threw it and every machine its bolts hit. Burns until put out, and only carbon
+#     dioxide does that: it cools the air below what the fire needs, or pushes out its oxygen. Water cannot cool the air
+#     that far (it stops at its boiling point), and foam does nothing to it but boil away.
+- type: entity
+  parent: ChemicalFire
+  id: ChemicalFireElectrical
+  name: electrical fire
+  description: Sparks and burning insulation. Water won't touch it.
+  components:
+  - type: ChemicalFire
+    color: "#9fd8ff"
+    temperature: 1000
+    heatPower: 9000
+    burnsOut: false
+    minimumAirTemperature: 280
+    extinguishable: false
+    foamSmotherable: false
+    # Burns off foam laid over it rather than lying under it (about 0.13u a second at the ~67600 J a unit of foam takes,
+    #     a full blanket in about 26 s). Less than a sprayer lays (0.8u a second), so steady spraying keeps a blanket
+    #     over it, though it never smothers it.
+    foamHeatFraction: 1
+  - type: ChemicalFireGasConsumer
+    gases:
+      Oxygen: 0.1
+    minimumMoleFraction: 0.15
+    producedGasRatios:
+      CarbonDioxide: 1
+  - type: AmbientSound
+    volume: -2
+    range: 4.5
+    sound:
+      path: /Audio/Effects/tesla.ogg
+      params:
+        variation: 0.25
+  - type: SparkOnTrigger
+    prototype: EffectSparkMovingArc
+  - type: TriggerOnSpawn

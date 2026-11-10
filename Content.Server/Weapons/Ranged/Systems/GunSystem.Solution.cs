@@ -13,7 +13,7 @@ namespace Content.Server.Weapons.Ranged.Systems;
 public sealed partial class GunSystem
 {
     [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
-    [Dependency] private VaporSystem _vapor = default!;
+    /* [Dependency] private VaporSystem _vapor = default!; */ // KS14: removed, the shot is filled in SharedGunSystem.GetSolutionShot
 
     protected override void InitializeSolution()
     {
@@ -59,6 +59,8 @@ public sealed partial class GunSystem
         UpdateSolutionAppearance(ent);
     }
 
+    // KS14: moved to SharedGunSystem.GetSolutionShot, so the shooter's predicted shot is filled too
+    /*
     protected override (EntityUid Entity, IShootable) GetSolutionShot(Entity<SolutionAmmoProviderComponent> ent, EntityCoordinates position)
     {
         var (shot, shootable) = base.GetSolutionShot(ent, position);
@@ -69,4 +71,5 @@ public sealed partial class GunSystem
         _vapor.TryAddSolution(shot, solution.Value, ent.Comp.FireCost);
         return (shot, shootable);
     }
+    */
 }

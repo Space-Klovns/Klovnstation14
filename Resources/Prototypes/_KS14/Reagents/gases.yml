@@ -22,7 +22,7 @@
         amount: 2.5
 
 - type: reagent
-  id: Argon
-  name: reagents-argon
-  desc: reagent-desc-argon
-  physicalDesc: reagent-physical-desc-argon
+  id: Encalite
+  name: reagents-encalite
+  desc: reagent-desc-encalite
+  physicalDesc: reagent-physical-desc-encalite

@@ -29,8 +29,6 @@ public sealed partial class TacticalPositionDebugSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeNetworkEvent<TacticalPositionDebugStateMessage>(OnState);
-        SubscribeNetworkEvent<TacticalPositionDebugDataMessage>(OnData);
 
         _systemCollectionHookManager.HookAction(OnDependenciesReady);
     }
@@ -76,6 +74,7 @@ public sealed partial class TacticalPositionDebugSystem : EntitySystem
         }
     }
 
+    [SubscribeNetworkEvent]
     private void OnState(TacticalPositionDebugStateMessage message)
     {
         _enabled = message.Enabled;
@@ -92,6 +91,7 @@ public sealed partial class TacticalPositionDebugSystem : EntitySystem
         }
     }
 
+    [SubscribeNetworkEvent]
     private void OnData(TacticalPositionDebugDataMessage message)
     {
         _frames[message.Owner] = (_gameTiming.RealTime + FrameLifetime, message);

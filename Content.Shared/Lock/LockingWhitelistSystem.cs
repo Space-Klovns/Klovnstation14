@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Popups;
 using Content.Shared.Whitelist;
 
@@ -21,7 +22,7 @@ public sealed partial class LockingWhitelistSystem : EntitySystem
             return;
 
         if (!args.Silent)
-            _popupSystem.PopupClient(Loc.GetString("locking-whitelist-component-lock-toggle-deny"), ent.Owner);
+            _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("locking-whitelist-component-lock-toggle-deny"), ent.Owner);
 
         args.Cancelled = true;
     }

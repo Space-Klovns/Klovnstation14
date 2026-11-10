@@ -17,17 +17,8 @@ public sealed partial class KsGridSpawnerSystem : EntitySystem
     // Gridspawner shouldn't rely on MapInitEvent because rn its used to load saltern
     //      via a gridspawner on its planetmap
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsGridSpawnerComponent, MapInitEvent>(OnMapInit);
-
-        SubscribeLocalEvent<KsGridSpawnerComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsGridSpawnerComponent, EntityUnpausedEvent>(OnEntityUnpaused);
-    }
-
     // Smishing is done on map-init and not startup because
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<KsGridSpawnerComponent> entity, ref MapInitEvent args)
     {
         if (entity.Comp.SpawnedGridUid is not { } gridUid ||
@@ -37,6 +28,7 @@ public sealed partial class KsGridSpawnerSystem : EntitySystem
         _shuttleSystem.Smimsh(gridUid, grid: gridComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsGridSpawnerComponent> entity, ref ComponentStartup args)
     {
         if (Paused(entity))
@@ -45,6 +37,7 @@ public sealed partial class KsGridSpawnerSystem : EntitySystem
         Doit(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnEntityUnpaused(Entity<KsGridSpawnerComponent> entity, ref EntityUnpausedEvent args)
     {
         Doit(entity);

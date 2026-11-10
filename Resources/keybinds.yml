@@ -197,6 +197,9 @@ binds:
 - function: KsOpenLanguageMenu # KS14
   type: State # KS14
   key: L # KS14
+- function: KsVoicePushToTalk # KS14
+  type: State # KS14
+  key: N # KS14
 - function: TextCursorSelect
   # TextCursorSelect HAS to be above ExamineEntity
   # So that LineEdit receives it correctly.

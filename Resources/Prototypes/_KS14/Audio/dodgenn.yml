@@ -1,0 +1,69 @@
+- type: soundCollection
+  id: KsDodgennTalkEntrance
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack1
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack2
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack3
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack4
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkAttack5
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkSummonLauncher
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkUseLauncher
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkGrenade
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkRunning
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkPhaseOneTaunt
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkPistol
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkPhaseTransition
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg
+
+- type: soundCollection
+  id: KsDodgennTalkGod
+  files:
+  - /Audio/Voice/Talk/speak_1.ogg

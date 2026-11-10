@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Access.Components;
 using Content.Shared.Access.Systems;
@@ -24,7 +25,6 @@ namespace Content.Shared.VendingMachines;
 public abstract partial class SharedVendingMachineSystem : EntitySystem
 {
     [Dependency] protected IGameTiming Timing = default!;
-    [Dependency] protected IPrototypeManager PrototypeManager = default!;
     [Dependency] private AccessReaderSystem _accessReader = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] protected SharedAudioSystem Audio = default!;
@@ -180,7 +180,7 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
         if (_accessReader.IsAllowed(sender, uid, accessReader) || HasComp<EmaggedComponent>(uid))
             return true;
 
-        Popup.PopupClient(Loc.GetString("vending-machine-component-try-eject-access-denied"), uid, sender);
+        Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-component-try-eject-access-denied"), uid, sender);
         Deny((uid, vendComponent), sender);
         return false;
     }
@@ -222,14 +222,14 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
 
         if (string.IsNullOrEmpty(entry?.ID))
         {
-            Popup.PopupClient(Loc.GetString("vending-machine-component-try-eject-invalid-item"), uid);
+            Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-component-try-eject-invalid-item"), uid);
             Deny((uid, vendComponent));
             return;
         }
 
         if (entry.Amount <= 0)
         {
-            Popup.PopupClient(Loc.GetString("vending-machine-component-try-eject-out-of-stock"), uid);
+            Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-component-try-eject-out-of-stock"), uid);
             Deny((uid, vendComponent));
             return;
         }
@@ -325,7 +325,7 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
             return;
         }
 
-        if (!PrototypeManager.TryIndex(component.PackPrototypeId, out VendingMachineInventoryPrototype? packPrototype))
+        if (!ProtoMan.TryIndex(component.PackPrototypeId, out VendingMachineInventoryPrototype? packPrototype))
             return;
 
         AddInventoryFromPrototype(uid, packPrototype.StartingInventory, InventoryType.Regular, component, restockQuality);
@@ -378,7 +378,7 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
         return GetAllInventory(uid, component).Where(_ => _.Amount > 0).ToList();
     }
 
-    private void AddInventoryFromPrototype(EntityUid uid, Dictionary<string, uint>? entries,
+    private void AddInventoryFromPrototype(EntityUid uid, Dictionary<EntProtoId, uint>? entries,
         InventoryType type,
         VendingMachineComponent? component = null, float restockQuality = 1.0f)
     {
@@ -405,7 +405,7 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
 
         foreach (var (id, amount) in entries)
         {
-            if (PrototypeManager.HasIndex<EntityPrototype>(id))
+            if (ProtoMan.HasIndex<EntityPrototype>(id))
             {
                 var restock = amount;
                 var chanceOfMissingStock = 1 - restockQuality;

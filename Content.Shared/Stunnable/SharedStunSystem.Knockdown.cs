@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Alert;
 using Content.Shared.Buckle.Components;
 using Content.Shared.CCVar;
@@ -374,7 +375,7 @@ public abstract partial class SharedStunSystem
         if (!IntersectingStandingColliders(entity.Owner))
             return false;
 
-        _popup.PopupClient(Loc.GetString("knockdown-component-stand-no-room"), entity, entity, PopupType.SmallCaution);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("knockdown-component-stand-no-room"), entity, entity, PopupType.SmallCaution);
         SetAutoStand(entity.Owner);
         return true;
 
@@ -436,11 +437,11 @@ public abstract partial class SharedStunSystem
 
         if (!Stamina.TryTakeStamina(entity, ev.Stamina, entity.Comp, visual: true))
         {
-            _popup.PopupClient(Loc.GetString("knockdown-component-pushup-failure"), entity, entity, PopupType.MediumCaution);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("knockdown-component-pushup-failure"), entity, entity, PopupType.MediumCaution);
             return false;
         }
 
-        _popup.PopupClient(Loc.GetString("knockdown-component-pushup-success"), entity, entity);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("knockdown-component-pushup-success"), entity, entity);
         _audio.PlayPredicted(entity.Comp.ForceStandSuccessSound, entity.Owner, entity.Owner, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
 
         return true;

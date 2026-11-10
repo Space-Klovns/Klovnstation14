@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Shared.Cargo.Components;
 using Content.Shared.CCVar;
@@ -39,7 +40,7 @@ public sealed partial class CargoSystem
 
         if (!_accessReaderSystem.IsAllowed(args.Actor, ent))
         {
-            ConsolePopup(args.Actor, Loc.GetString("cargo-console-order-not-allowed"));
+            ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-order-not-allowed"));
             PlayDenySound(ent, ent.Comp);
             return;
         }
@@ -48,12 +49,12 @@ public sealed partial class CargoSystem
         UpdateBankAccount((station, bank), -args.Amount, ent.Comp.Account, dirty: false);
         _audio.PlayPvs(ApproveSound, ent);
 
-        var ourAccount = _protoMan.Index(ent.Comp.Account);
+        var ourAccount = ProtoMan.Index(ent.Comp.Account);
         var name = _identity.GetIdentityShortInfo(args.Actor, ent)
                    ?? Loc.GetString("cargo-console-fund-transfer-user-unknown");
         if (args.Account == null)
         {
-            var stackPrototype = _protoMan.Index(ent.Comp.CashType);
+            var stackPrototype = ProtoMan.Index(ent.Comp.CashType);
             _stack.SpawnAtPosition(args.Amount, stackPrototype, Transform(ent).Coordinates);
 
             if (!_emag.CheckFlag(ent, EmagType.Interaction))
@@ -68,7 +69,7 @@ public sealed partial class CargoSystem
         }
         else
         {
-            var otherAccount = _protoMan.Index(args.Account.Value);
+            var otherAccount = ProtoMan.Index(args.Account.Value);
             UpdateBankAccount((station, bank), args.Amount, args.Account.Value);
 
             if (!_emag.CheckFlag(ent, EmagType.Interaction))
@@ -90,7 +91,7 @@ public sealed partial class CargoSystem
     {
         if (!_accessReaderSystem.FindAccessTags(args.Actor).Intersect(ent.Comp.RemoveLimitAccess).Any())
         {
-            ConsolePopup(args.Actor, Loc.GetString("cargo-console-order-not-allowed"));
+            ConsolePopup(args.Actor, KsPopupMessage.Create /* KS14: defer cargo popup */("cargo-console-order-not-allowed"));
             PlayDenySound(ent, ent.Comp);
             return;
         }

@@ -37,6 +37,8 @@ public abstract partial class SharedDestructibleSystem
     [Dependency] public SharedPuddleSystem PuddleSystem = default!;
     [Dependency] public SharedContainerSystem ContainerSystem = default!;
     [Dependency] public GibbingSystem GibbingSystem = default!;
+    // Deliberately public and kept as its own instance: threshold behaviours are plain data classes
+    // that reach it as system.PrototypeManager, and EntitySystem.ProtoMan is protected.
     [Dependency] public IPrototypeManager PrototypeManager = default!;
     [Dependency] public ISharedAdminLogManager AdminLogger = default!;
 

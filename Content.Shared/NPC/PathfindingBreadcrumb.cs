@@ -73,14 +73,14 @@ public struct PathfindingData : IEquatable<PathfindingData>
     {
         return CollisionLayer.Equals(other.CollisionLayer) &&
                CollisionMask.Equals(other.CollisionMask) &&
-               Flags.Equals(other.Flags);
+               Flags == other.Flags /* KS14: Equals -> ==, Equals boxed the enum */;
     }
 
     public bool Equals(PathfindingData other)
     {
         return CollisionLayer.Equals(other.CollisionLayer) &&
                CollisionMask.Equals(other.CollisionMask) &&
-               Flags.Equals(other.Flags) &&
+               Flags == other.Flags /* KS14: Equals -> ==, Equals boxed the enum */ &&
                Damage.Equals(other.Damage);
     }
 
@@ -120,4 +120,33 @@ public enum PathfindingBreadcrumbFlag : ushort
     /// Is there climbing involved
     /// </summary>
     Climb = 1 << 4,
+
+    // KS14 start
+    /// <summary>
+    ///     A door with its bolts down: nobody opens it, and nothing pries it.
+    /// </summary>
+    Bolted = 1 << 5,
+
+    /// <summary>
+    ///     A door welded shut: nobody opens it, and nothing pries it.
+    /// </summary>
+    Welded = 1 << 6,
+
+    /// <summary>
+    ///     Blocked only by loose things that can be pushed out of the way - a closet, a crate - and nothing fixed. See
+    ///         <c>NpcPushSystem</c>.
+    /// </summary>
+    Pushable = 1 << 7,
+
+    /// <summary>
+    ///     A door that opens for no hand, only from its button, but can be pried: shutters. A wall to anything that
+    ///         cannot pry or smash it. See <c>PathFlags.PryingTool</c>.
+    /// </summary>
+    PryOnly = 1 << 8,
+
+    /// <summary>
+    ///     A door that opens for no hand, only from its button, and that nothing pries: a blast door.
+    /// </summary>
+    Sealed = 1 << 9,
+    // KS14 end
 }

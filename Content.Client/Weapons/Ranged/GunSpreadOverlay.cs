@@ -31,6 +31,13 @@ public sealed partial class GunSpreadOverlay : Overlay
         _transform = transform;
     }
 
+    // KS14 start: not drawn into portal views (viewer state or screen-texture effect)
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        return !Content.Client._KS14.Portal.KsPortalRenderSystem.PassActive;
+    }
+    // KS14 end
+
     protected override void Draw(in OverlayDrawArgs args)
     {
         var worldHandle = args.WorldHandle;

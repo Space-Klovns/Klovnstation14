@@ -8,7 +8,6 @@ namespace Content.Server.Chemistry.EntitySystems;
 
 public sealed partial class TransformableContainerSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionsSystem = default!;
     [Dependency] private MetaDataSystem _metadataSystem = default!;
     [Dependency] private NameModifierSystem _nameMod = default!;
@@ -53,7 +52,7 @@ public sealed partial class TransformableContainerSystem : EntitySystem
 
         //Only reagents with spritePath property can change appearance of transformable containers!
         if (!string.IsNullOrWhiteSpace(reagentId?.Prototype)
-            && _prototypeManager.TryIndex(reagentId.Value.Prototype, out ReagentPrototype? proto))
+            && ProtoMan.TryIndex(reagentId.Value.Prototype, out ReagentPrototype? proto))
         {
             var metadata = MetaData(entity.Owner);
             _metadataSystem.SetEntityDescription(entity.Owner, proto.LocalizedDescription, metadata);
@@ -66,7 +65,7 @@ public sealed partial class TransformableContainerSystem : EntitySystem
 
     private void OnRefreshNameModifiers(Entity<TransformableContainerComponent> entity, ref RefreshNameModifiersEvent args)
     {
-        if (_prototypeManager.Resolve(entity.Comp.CurrentReagent, out var currentReagent))
+        if (ProtoMan.Resolve(entity.Comp.CurrentReagent, out var currentReagent))
         {
             args.AddModifier("transformable-container-component-glass", priority: -1, ("reagent", currentReagent.LocalizedName));
         }

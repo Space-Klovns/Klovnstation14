@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Reflection;
 
@@ -5,7 +6,9 @@ namespace Content.Shared._KS14;
 
 public static class KsEnumHelpers
 {
-    private static readonly Dictionary<string, Enum?> EnumKeyCache = [];
+    // Concurrent: test pairs run several clients and servers in one process, each on its own thread. What it caches
+    //     is the same for all of them, since it only depends on the loaded types.
+    private static readonly ConcurrentDictionary<string, Enum?> EnumKeyCache = new();
 
     public static Enum? ParseKey(string keyString, [NotNullWhen(true)] out bool isEnum, IReflectionManager reflectionManager)
     {

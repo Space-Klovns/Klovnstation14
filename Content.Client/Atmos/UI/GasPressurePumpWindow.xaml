@@ -1,7 +1,8 @@
 <controls:FancyWindow xmlns="https://spacestation14.io"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
-            SetSize="340 160" MinSize="340 160" Title="Pressure Pump">
+            xmlns:atmos="clr-namespace:Content.Client._KS14.Atmos.UI"
+            SetSize="340 225" MinSize="340 225" Title="Pressure Pump"> <!-- KS14: 160 -> 225, for the heat footnote -->
     <!-- KS14: increase the window height so the pump controls remain above the Baron frame. -->
     <!-- KS14 upstream dimensions retained for mergeability: SetSize="340 110" MinSize="340 110". -->
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
@@ -18,5 +19,6 @@
             <Label Text="{Loc comp-gas-pump-ui-pump-output-pressure}"/>
             <FloatSpinBox HorizontalExpand="True" Name="PumpPressureOutputInput" MinSize="70 0" />
         </BoxContainer>
+        <atmos:KsPumpHeatFootnote Name="HeatFootnote" Access="Public" /> <!-- KS14: heat footnote, which also needs xmlns:atmos above -->
     </BoxContainer>
 </controls:FancyWindow>

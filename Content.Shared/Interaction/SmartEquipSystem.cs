@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.ActionBlocker;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Hands.Components;
@@ -93,14 +94,14 @@ public sealed partial class SmartEquipSystem : EntitySystem
 
         if (!TryComp<InventoryComponent>(uid, out var inventory) || !_inventory.HasSlot(uid, equipmentSlot, inventory))
         {
-            _popup.PopupClient(Loc.GetString("smart-equip-missing-equipment-slot", ("slotName", equipmentSlot)), uid, uid);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("smart-equip-missing-equipment-slot", ("slotName", equipmentSlot)), uid, uid);
             return;
         }
 
         // early out if we have an item and cant drop it at all
         if (handItem != null && !_hands.CanDropHeld(uid, hands.ActiveHandId))
         {
-            _popup.PopupClient(Loc.GetString("smart-equip-cant-drop"), uid, uid);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("smart-equip-cant-drop"), uid, uid);
             return;
         }
 
@@ -122,7 +123,7 @@ public sealed partial class SmartEquipSystem : EntitySystem
         //    - without hand item: try to put the item into your hand
 
         _inventory.TryGetSlotEntity(uid, equipmentSlot, out var slotEntity);
-        var emptyEquipmentSlotString = Loc.GetString("smart-equip-empty-equipment-slot", ("slotName", equipmentSlot));
+        var emptyEquipmentSlotString = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("smart-equip-empty-equipment-slot", ("slotName", equipmentSlot));
 
         // case 1 (no slot item):
         if (slotEntity is not { } slotItem)
@@ -135,7 +136,7 @@ public sealed partial class SmartEquipSystem : EntitySystem
 
             if (!_inventory.CanEquip(uid, handItem.Value, equipmentSlot, out var reason))
             {
-                _popup.PopupClient(Loc.GetString(reason), uid, uid);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(reason), uid, uid);
                 return;
             }
 
@@ -162,7 +163,7 @@ public sealed partial class SmartEquipSystem : EntitySystem
             if (!_storage.CanInsert(slotItem, handItem.Value, out var reason))
             {
                 if (reason != null)
-                    _popup.PopupClient(Loc.GetString(reason), uid, uid);
+                    _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(reason), uid, uid);
 
                 return;
             }
@@ -218,7 +219,7 @@ public sealed partial class SmartEquipSystem : EntitySystem
 
             if (toInsertTo == null)
             {
-                _popup.PopupClient(Loc.GetString("smart-equip-no-valid-item-slot-insert", ("item", handItem.Value)), uid, uid);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("smart-equip-no-valid-item-slot-insert", ("item", handItem.Value)), uid, uid);
                 return;
             }
 
@@ -232,7 +233,7 @@ public sealed partial class SmartEquipSystem : EntitySystem
 
         if (!_inventory.CanUnequip(uid, equipmentSlot, out var inventoryReason))
         {
-            _popup.PopupClient(Loc.GetString(inventoryReason), uid, uid);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(inventoryReason), uid, uid);
             return;
         }
 

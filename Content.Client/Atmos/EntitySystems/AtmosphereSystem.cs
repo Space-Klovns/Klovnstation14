@@ -20,5 +20,6 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
 
         // Struct so should just copy by value.
         component.OverlayData = state.Overlay;
+        KsReadMapAir(component, state); // KS14
     }
 }

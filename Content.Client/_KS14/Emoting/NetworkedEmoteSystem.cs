@@ -17,19 +17,12 @@ namespace Content.Client._KS14.Emoting;
 /// </summary>
 public sealed partial class NetworkedEmoteSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeNetworkEvent<NetworkedEmoteMessage>(OnNetworkedEmoteMessage);
-    }
-
+    [SubscribeNetworkEvent]
     private void OnNetworkedEmoteMessage(NetworkedEmoteMessage args)
     {
-        if (!_prototypeManager.TryIndex(args.EmoteId, out var emotePrototype))
+        if (!ProtoMan.TryIndex(args.EmoteId, out var emotePrototype))
         {
             DebugTools.Assert(
                 $"When handling NetworkedEmoteMessage, could not index any EmotePrototype of ID '{(args.EmoteId.ToString().IsWhiteSpace() ? "[WHITESPACE ID]" : args.EmoteId.ToString())}'");

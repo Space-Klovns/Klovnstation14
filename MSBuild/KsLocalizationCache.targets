@@ -1,0 +1,15 @@
+<Project>
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../Content.Packaging/Content.Packaging.csproj"
+                      ReferenceOutputAssembly="false"
+                      Condition="'$(MSBuildProjectName)' == 'Content.Client'" />
+  </ItemGroup>
+  <Target Name="KsGeneratePrototypeNameCache" AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipKsLocalizationCache)' != 'true'">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)../Content.Packaging/Content.Packaging.csproj"
+             Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_KsLocalizationCompiler" />
+    </MSBuild>
+    <Exec Command="dotnet &quot;@(_KsLocalizationCompiler)&quot; --prototype-name-cache &quot;$(MSBuildThisFileDirectory)../Resources&quot;" />
+  </Target>
+</Project>

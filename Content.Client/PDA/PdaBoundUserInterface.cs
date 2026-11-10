@@ -13,7 +13,7 @@ namespace Content.Client.PDA
         private readonly PdaSystem _pdaSystem;
 
         [ViewVariables]
-        private PdaMenu? _menu;
+        private Content.Client._KS14.Tgui.Windows.Pda.IKsPdaMenu? _menu; /* KS14: PdaMenu -> an interface, the tgui window stands in for it */
 
         public PdaBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -30,7 +30,11 @@ namespace Content.Client.PDA
 
         private void CreateMenu()
         {
-            _menu = this.CreateWindowCenteredLeft<PdaMenu>();
+            // KS14 start: tgui theme gets its own window
+            _menu = Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled()
+                ? this.CreateWindowCenteredLeft<Content.Client._KS14.Tgui.Windows.Pda.KsTguiPdaWindow>()
+                : this.CreateWindowCenteredLeft<PdaMenu>();
+            // KS14 end
 
             _menu.FlashLightToggleButton.OnToggled += _ =>
             {
@@ -75,7 +79,7 @@ namespace Content.Client.PDA
             _menu.OnProgramItemPressed += ActivateCartridge;
             _menu.OnInstallButtonPressed += InstallCartridge;
             _menu.OnUninstallButtonPressed += UninstallCartridge;
-            _menu.ProgramCloseButton.OnPressed += _ => DeactivateActiveCartridge();
+            _menu.AddProgramCloseHandler(DeactivateActiveCartridge); // KS14: ProgramCloseButton.OnPressed -> a handler, the tgui window has two close buttons
 
             var borderColorComponent = GetBorderColorComponent();
             if (borderColorComponent == null)

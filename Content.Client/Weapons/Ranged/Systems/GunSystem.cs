@@ -41,6 +41,12 @@ public sealed partial class GunSystem : SharedGunSystem
     [Dependency] private SharedCameraRecoilSystem _recoil = default!;
     [Dependency] private SharedMapSystem _maps = default!;
     [Dependency] private SharedTransformSystem _xform = default!;
+    [Dependency] private Robust.Client.Timing.IClientGameTiming _ksClientTiming = default!; // KS14
+
+    /// <summary>
+    ///     KS14: the latest a flash may turn up after its shot and still be shown. See <see cref="CreateEffect"/>.
+    /// </summary>
+    private static readonly TimeSpan KsMaxFlashLateness = TimeSpan.FromSeconds(0.25);
     [Dependency] private SpriteSystem _sprite = default!;
 
     public static readonly EntProtoId HitscanProto = "HitscanEffect";
@@ -160,7 +166,7 @@ public sealed partial class GunSystem : SharedGunSystem
 
         var entityNull = _player.LocalEntity;
 
-        if (entityNull == null || !TryComp<CombatModeComponent>(entityNull, out var combat) || !combat.IsInCombatMode)
+        if (entityNull == null || !TryComp<CombatModeComponent>(entityNull, out var combat) /* KS14: combat mode checked once the gun is known */)
         {
             return;
         }
@@ -176,6 +182,15 @@ public sealed partial class GunSystem : SharedGunSystem
         }
 
         var useKey = gun.Comp.UseKey ? EngineKeyFunctions.Use : EngineKeyFunctions.UseSecondary;
+
+        // KS14 start: some guns fire out of combat mode instead
+        if (KsCombatModeBlocksFire(gun, entityNull.Value, combat.IsInCombatMode, _inputSystem.CmdStates.GetState(useKey) == BoundKeyState.Down))
+        {
+            if (gun.Comp.ShotCounter != 0)
+                RaisePredictiveEvent(new RequestStopShootEvent { Gun = GetNetEntity(gun) });
+            return;
+        }
+        // KS14 end
 
         if (_inputSystem.CmdStates.GetState(useKey) != BoundKeyState.Down && !gun.Comp.BurstActivated)
         {
@@ -237,6 +252,39 @@ public sealed partial class GunSystem : SharedGunSystem
 
     protected override void CreateEffect(EntityUid gunUid, MuzzleFlashEvent message, EntityUid? tracked = null)
     {
+        // KS14 start: "ghost shots". A flash that turns up long after its shot is a flash of nothing, so it is not shown.
+        //
+        //      What was seen: after a big NPC gunfight, guns kept flashing for seconds - from NPCs that had stopped, from
+        //      bodies, from guns lying on the floor - with no sound and no bullet, each at the angle that gun had last fired
+        //      at. These were the fight's own shots, arriving late. The server sent each one once, at the time; nothing
+        //      replayed them.
+        //
+        //      Why they are late: a muzzle flash is a network event (MsgEntity), sent ReliableOrdered, so it waits behind
+        //      everything else sent that way. The shot's sound and bullet are entities, and come with the game state, which
+        //      does not wait. So when the reliable stream backs up, the sound plays and the bullet flies on time, and the
+        //      flash plays whenever it gets here - on the gun, wherever the gun is by then.
+        //
+        //      What backs it up, as far as anyone has found: in a DEBUG build of the engine, the server sends every physics
+        //      raycast to every client, for the debug ray overlay (Robust.Server/Debugging/DebugRayDrawingSystem, fed from
+        //      SharedPhysicsSystem.Queries' IntersectRay; both #if DEBUG), whether or not anyone has the overlay on. NPCs
+        //      raycast constantly to aim. One short test fight between eight NPCs sent 3,093 of those against 89 muzzle
+        //      flashes. Release builds send none. It was also reported on remote servers, so something may do the same there.
+        //      The engine is upstream's, so it is left alone; this check copes with any cause.
+        //
+        //      How "late" is told: the server stamps each flash with the tick it was fired on (MuzzleFlashEvent.FiredAt).
+        //      The client applies the game state for a tick at LastRealTick, and plays a message for that tick at the same
+        //      time; one that comes in after (ClientEntityManager.HandleEntityNetworkMessage, which plays a message for a past
+        //      tick at once) is late by how far LastRealTick has got past it. KsGhostShotTest covers it.
+        //
+        //      Laser tracers (HitscanEvent), hit flashes (ColorFlashEffectEvent) and impact effects are sent the same way, and
+        //      could turn up late in the same way.
+        var tooLate = message.FiredAt != GameTick.Zero &&
+            (int) _ksClientTiming.LastRealTick.Value - (int) message.FiredAt.Value > KsMaxFlashLateness.TotalSeconds * Timing.TickRate;
+
+        if (tooLate)
+            return;
+        // KS14 end
+
         if (!Timing.IsFirstTimePredicted)
             return;
 

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Emag.Systems;
 using Content.Shared.Mind;
 using Content.Shared.Overlays;
@@ -37,7 +38,7 @@ public abstract partial class SharedSiliconLawSystem : EntitySystem
         // prevent self-emagging
         if (uid == args.UserUid)
         {
-            _popup.PopupClient(Loc.GetString("law-emag-cannot-emag-self"), uid, args.UserUid);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("law-emag-cannot-emag-self"), uid, args.UserUid);
             return;
         }
 
@@ -45,7 +46,7 @@ public abstract partial class SharedSiliconLawSystem : EntitySystem
             TryComp<WiresPanelComponent>(uid, out var panel) &&
             !panel.Open)
         {
-            _popup.PopupClient(Loc.GetString("law-emag-require-panel"), uid, args.UserUid);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("law-emag-require-panel"), uid, args.UserUid);
             return;
         }
 

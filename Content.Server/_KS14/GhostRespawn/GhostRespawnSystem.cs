@@ -58,18 +58,19 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
     {
         base.Initialize();
 
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, x => _enabled = x, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnAlwaysStartTimer, x => _alwaysStartTimer = x, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnPenaltySeconds, x => _penaltyTime = TimeSpan.FromSeconds(x), invokeImmediately: true);
-
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
-
-        SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
-        SubscribeLocalEvent<MobStateChangedEvent>(OnMobStateChanged);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnEnabled, x => _enabled = x, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnAlwaysStartTimer, x => _alwaysStartTimer = x, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.GhostRespawnPenaltySeconds, x => _penaltyTime = TimeSpan.FromSeconds(x), invokeImmediately: true);
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeNetworkEvent<GhostRespawnActMessage>(OnActMessage);
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
     }
 
     [Pure]
@@ -90,12 +91,25 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
             ref var respawnTime = ref CollectionsMarshal.GetValueRefOrNullRef(_respawnTimes, session);
             respawnTime += delta;
 
-            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
+            SendRespawnTime(session, respawnTime);
         }
 
         _respawnCooldown = newTime;
     }
 
+    /// <summary>
+    ///     Sends the session its respawn time, unless it is disconnected: there is no channel to send on, and the
+    ///         stored time is resent when the session reaches <see cref="SessionStatus.InGame"/> again.
+    /// </summary>
+    private void SendRespawnTime(ICommonSession session, TimeSpan? time)
+    {
+        if (session.Status == SessionStatus.Disconnected)
+            return;
+
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(time), session);
+    }
+
+    [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
         // Reset ghostrespawn time for everyphono
@@ -106,6 +120,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         _trackedDeathEntities.Clear();
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerDetached(PlayerDetachedEvent args)
     {
         if (_respawnTimes.ContainsKey(args.Player) ||
@@ -123,9 +138,10 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         var respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(args.Player);
         _respawnTimes[args.Player] = respawnTime;
 
-        RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), args.Player);
+        SendRespawnTime(args.Player, respawnTime);
     }
 
+    [SubscribeLocalEvent]
     private void OnMobStateChanged(MobStateChangedEvent args)
     {
         // If the player has died in their original body, start the respawn tracker for it.
@@ -139,7 +155,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
                 return;
 
             respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(attachedSession);
-            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), attachedSession);
+            SendRespawnTime(attachedSession, respawnTime);
 
             if (!TerminatingOrDeleted(args.Target))
                 _trackedDeathEntities[args.Target] = attachedSession;
@@ -152,7 +168,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
             return;
 
         _respawnTimes.Remove(session);
-        RaiseNetworkEvent(new GhostRespawnTimeMessage(null), session);
+        SendRespawnTime(session, null);
 
         if (!TerminatingOrDeleted(args.Target))
             _trackedDeathEntities.Remove(args.Target);
@@ -172,9 +188,10 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
             !_respawnTimes.TryGetValue(args.Session, out var time))
             return;
 
-        RaiseNetworkEvent(new GhostRespawnTimeMessage(time), args.Session);
+        SendRespawnTime(args.Session, time);
     }
 
+    [SubscribeNetworkEvent]
     private void OnActMessage(GhostRespawnActMessage message, EntitySessionEventArgs args)
     {
         if (!_enabled)

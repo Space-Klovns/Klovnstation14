@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Shared.Clothing.Components;
 using Content.Shared.CombatMode;
 using Content.Shared.Examine;
@@ -92,7 +93,7 @@ public abstract partial class SharedNinjaGlovesSystem : EntitySystem
         if ((args.User ?? ent.Comp.User) is not { } user)
             return;
 
-        var message = Loc.GetString(args.Activated ? "ninja-gloves-on" : "ninja-gloves-off");
+        var message = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(args.Activated ? "ninja-gloves-on" : "ninja-gloves-off");
         _popup.PopupClient(message, user, user);
 
         if (args.Activated && _ninja.NinjaQuery.TryComp(user, out var ninja))

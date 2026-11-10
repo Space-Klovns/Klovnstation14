@@ -96,4 +96,6 @@
   - type: PacifismDangerousAttack
   - type: Explosive
     explosionType: Default
-    totalIntensity: 50
+    totalIntensity: 50 # KS14: unused, the contents set it (KsSolutionExplosionSystem)
+  - type: KsCookOff # KS14: explodes once its explosive contents get hot
+    solution: tank

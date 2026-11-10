@@ -145,13 +145,17 @@ public abstract partial class SharedStunSystem : EntitySystem
         return true;
     }
 
-    private void OnStunnedSuccessfully(EntityUid uid, TimeSpan? duration)
+    private void OnStunnedSuccessfully(EntityUid uid, TimeSpan? duration, bool drop = true /* KS14 */)
     {
         var ev = new StunnedEvent(); // todo: rename event or change how it is raised - this event is raised each time duration of stun was externally changed
         RaiseLocalEvent(uid, ref ev);
 
-        var evDropHands = new DropHandItemsEvent();
-        RaiseLocalEvent(uid, ref evDropHands);
+        // KS14: if
+        if (drop)
+        {
+            var evDropHands = new DropHandItemsEvent();
+            RaiseLocalEvent(uid, ref evDropHands);
+        }
 
         var timeForLogs = duration.HasValue
             ? duration.Value.Seconds.ToString()
@@ -306,14 +310,14 @@ public abstract partial class SharedStunSystem : EntitySystem
         return true;
     }
 
-    public bool TryUpdateParalyzeDuration(EntityUid uid, TimeSpan? duration)
+    public bool TryUpdateParalyzeDuration(EntityUid uid, TimeSpan? duration, bool drop = true /* KS14 */)
     {
         if (!_status.TryUpdateStatusEffectDuration(uid, StunId, duration))
             return false;
 
         // We can't exit knockdown when we're stunned, so this prevents knockdown lasting longer than the stun.
-        Knockdown(uid, null, false, true, true);
-        OnStunnedSuccessfully(uid, duration);
+        Knockdown(uid, null, false, true, drop /* KS14: true -> drop */);
+        OnStunnedSuccessfully(uid, duration, drop /* KS14 */);
 
         return true;
     }

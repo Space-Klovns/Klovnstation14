@@ -62,7 +62,8 @@ public abstract partial class SharedSpraySystem : EntitySystem
     /// <param name="user">The user that is using the spraying device.</param>
     public virtual void Spray(Entity<SprayComponent> entity, MapCoordinates mapcoord, EntityUid? user = null)
     {
-        // do nothing!
+        /* // do nothing! */ // KS14: spraying moved here from the server's SpraySystem, see SharedSpraySystem.Klovn.Predicted.cs
+        KsSpray(entity, mapcoord, user, predictingUser: null); // KS14
     }
 
     /// <summary>
@@ -72,7 +73,8 @@ public abstract partial class SharedSpraySystem : EntitySystem
     /// <param name="user">User that is using the spraying device.</param>
     public virtual void Spray(Entity<SprayComponent> entity, EntityUid? user = null)
     {
-        // do nothing!
+        /* // do nothing! */ // KS14: as above
+        KsSpray(entity, user); // KS14
     }
 }
 

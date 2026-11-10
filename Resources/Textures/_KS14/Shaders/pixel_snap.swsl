@@ -1,0 +1,89 @@
+// Draws a sprite layer as if it had been resized and turned in whole world pixels, which is how BYOND draws a
+//   transformed icon. The layer is cut into blocks one world pixel across, aligned to the world's axes, and every
+//   block takes one sample of the sprite. So a texel is never drawn smaller than a world pixel, however far the
+//   layer is shrunk, and a turning layer steps in world pixels instead of shimmering.
+//
+// quadPixels is how many world pixels the layer's quad is across right now (32 * scale for a 32px sprite), and
+//   must be a whole number, so scale the layer to a whole number of pixels from code.
+// The block grid is centred on the quad, so the quad's centre must sit on a world pixel boundary: an entity at a
+//   tile's centre, with no layer offset, does.
+// filtered picks the sample: 1.0 blends the four nearest texels, 0.0 takes the one under the block's centre.
+
+uniform highp float quadPixels;
+uniform highp float filtered;
+
+// One texel, premultiplied, and nothing at all outside the sprite's own frame: the atlas around it belongs to
+//   other sprites.
+highp vec4 frameTexel(highp vec2 uv, highp vec2 frameMin, highp vec2 frameMax)
+{
+    highp float inside = step(frameMin.x, uv.x) * step(uv.x, frameMax.x) * step(frameMin.y, uv.y) * step(uv.y, frameMax.y);
+    highp vec4 texel = zTexture(clamp(uv, frameMin, frameMax));
+    return vec4(texel.rgb * texel.a, texel.a) * inside;
+}
+
+void fragment() {
+    highp vec4 plain = zTexture(UV);
+    COLOR = plain;
+
+#ifdef HAS_DFDX
+    // How UV (atlas) and UV2 (quad) change per screen pixel. Between them, they say where any quad point is on
+    //     screen and in the atlas, whatever the layer's scale, turn or flip.
+    highp mat2 uvDerivative = mat2(dFdx(UV), dFdy(UV));
+    highp mat2 quadDerivative = mat2(dFdx(UV2), dFdy(UV2));
+    highp float determinant = quadDerivative[0][0] * quadDerivative[1][1] - quadDerivative[0][1] * quadDerivative[1][0];
+    highp float valid = step(0.0000000001, abs(determinant));
+    determinant = mix(1.0, determinant, valid);
+
+    // GLSL ES 1.0 has no inverse().
+    highp mat2 quadDerivativeInverse = mat2(
+        quadDerivative[1][1], -quadDerivative[0][1],
+        -quadDerivative[1][0], quadDerivative[0][0]
+    ) / determinant;
+
+    // Screen pixels per world pixel, from how big the quad is on screen. This follows zoom for free.
+    highp float quadScreenWidth = 1.0 / max(length(vec2(quadDerivative[0][0], quadDerivative[1][0])), 0.000001);
+    highp float screenPerWorldPixel = quadScreenWidth / max(quadPixels, 1.0);
+
+    // Where this pixel is, in world pixels from the quad's centre.
+    highp vec2 fromCentre = quadDerivativeInverse * (UV2 - vec2(0.5));
+    highp vec2 worldOffset = fromCentre / screenPerWorldPixel;
+
+    // Blocks start at the quad's edge, so a quad of an odd number of pixels still has whole blocks.
+    highp float gridShift = mod(quadPixels, 2.0) * 0.5;
+    highp vec2 blockCentre = floor(worldOffset - vec2(gridShift)) + vec2(0.5 + gridShift);
+
+    highp vec2 uvSample = UV + uvDerivative * (blockCentre * screenPerWorldPixel - fromCentre);
+
+    // The sprite's own frame in the atlas, found the same way from the quad's two corners.
+    highp mat2 uvPerQuad = uvDerivative * quadDerivativeInverse;
+    highp vec2 cornerA = UV + uvPerQuad * (vec2(0.0) - UV2);
+    highp vec2 cornerB = UV + uvPerQuad * (vec2(1.0) - UV2);
+    highp vec2 frameMin = min(cornerA, cornerB);
+    highp vec2 frameMax = max(cornerA, cornerB);
+
+    // Nearest: nudged a little so a block centre that lands exactly on a texel edge picks the same side everywhere.
+    highp vec4 nearest = frameTexel(uvSample + TEXTURE_PIXEL_SIZE * 0.0001, frameMin, frameMax);
+
+    highp vec2 texelCoordinate = uvSample / TEXTURE_PIXEL_SIZE - vec2(0.5);
+    highp vec2 texelBase = floor(texelCoordinate);
+    highp vec2 blend = texelCoordinate - texelBase;
+    highp vec2 texelUv = (texelBase + vec2(0.5)) * TEXTURE_PIXEL_SIZE;
+
+    highp vec4 bottom = mix(
+        frameTexel(texelUv, frameMin, frameMax),
+        frameTexel(texelUv + vec2(TEXTURE_PIXEL_SIZE.x, 0.0), frameMin, frameMax),
+        blend.x
+    );
+    highp vec4 top = mix(
+        frameTexel(texelUv + vec2(0.0, TEXTURE_PIXEL_SIZE.y), frameMin, frameMax),
+        frameTexel(texelUv + TEXTURE_PIXEL_SIZE, frameMin, frameMax),
+        blend.x
+    );
+    highp vec4 bilinear = mix(bottom, top, blend.y);
+
+    highp vec4 snapped = mix(nearest, bilinear, step(0.5, filtered));
+    highp vec4 straight = vec4(snapped.rgb / max(snapped.a, 0.000001), snapped.a);
+
+    COLOR = mix(plain, straight, valid);
+#endif
+}

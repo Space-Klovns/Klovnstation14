@@ -151,12 +151,16 @@ namespace Content.Client.UserInterface.Controls
 
             if (relevantChangeMade)
             {
-                Label.RemoveStyleClass("dummy");
+                // KS14 start: RemoveStyleClass only restyles when the class was there, and "dummy" never is, so this
+                //      workaround restyled nothing and the checkbox texture (selected through this button's pressed
+                //      pseudo-class on a child) stayed stale. Restyle() queues the update unconditionally.
+                Label.Restyle();
                 // Upstream UI retained for mergeability: TrackFill.RemoveStyleClass("dummy"); ThumbFill.RemoveStyleClass("dummy"); ThumbOutline.RemoveStyleClass("dummy"); Symbol.RemoveStyleClass("dummy");
                 // KS14: Only the visible checkbox indicator needs its styles refreshed.
-                TrackOutline.RemoveStyleClass("dummy");
-                OffStateLabel.RemoveStyleClass("dummy");
-                OnStateLabel.RemoveStyleClass("dummy");
+                TrackOutline.Restyle();
+                OffStateLabel.Restyle();
+                OnStateLabel.Restyle();
+                // KS14 end
             }
 
             // no base.DrawModeChanged() call - ContainerButton's pseudoclass handling
@@ -274,7 +278,7 @@ namespace Content.Client.UserInterface.Controls
         {
             var separation = ActualSeparation;
 
-            var actualMainLabelWidth = finalSize.X - separation - TrackOutline.DesiredSize.X;
+            var actualMainLabelWidth = Math.Max(0f, finalSize.X - separation - TrackOutline.DesiredSize.X);
             float iconPosition = 0;
             float stateLabelPosition = 0;
 
@@ -302,7 +306,7 @@ namespace Content.Client.UserInterface.Controls
             // Upstream UI retained for mergeability: TrackFill.Arrange(iconTargetBox); Symbol.Arrange(iconTargetBox); ThumbOutline.Measure(TrackOutline.DesiredSize); var thumbLeft = iconTargetBox.Left; if (Pressed) thumbLeft = iconTargetBox.Right - ThumbOutline.DesiredSize.X; var thumbTargetBox = new UIBox2(thumbLeft, 0, thumbLeft + ThumbOutline.DesiredSize.X, finalSize.Y); ThumbFill.Arrange(thumbTargetBox); ThumbOutline.Arrange(thumbTargetBox);
             TrackOutline.Arrange(iconTargetBox);
 
-            var stateLabelsTargetBox = new UIBox2(stateLabelPosition, 0, finalSize.X, finalSize.Y);
+            var stateLabelsTargetBox = new UIBox2(Math.Min(finalSize.X, stateLabelPosition), 0, finalSize.X, finalSize.Y);
             OffStateLabel?.Arrange(stateLabelsTargetBox);
             OnStateLabel?.Arrange(stateLabelsTargetBox);
 

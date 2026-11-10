@@ -9,8 +9,8 @@
 #     spread: 30
 
 - type: entity
-  id: ColossusDeathBolt
   parent: BulletKinetic
+  id: ColossusDeathBolt
   categories: [ HideSpawnMenu ]
   components:
   - type: TimedDespawn
@@ -22,3 +22,4 @@
         Blunt: 30
         Piercing: 20
         Structural: 100
+  - type: IgnoreRequireProjectileTarget

@@ -6,13 +6,6 @@ public sealed partial class BatteryShieldingSystem : SharedBatteryShieldingSyste
 {
     [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<BatteryShieldingComponent, AfterAutoHandleStateEvent>(OnAfterAutoHandleState);
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -22,6 +15,7 @@ public sealed partial class BatteryShieldingSystem : SharedBatteryShieldingSyste
             UpdateUi((uid, batteryShieldingComponent));
     }
 
+    [SubscribeLocalEvent]
     private void OnAfterAutoHandleState(Entity<BatteryShieldingComponent> ent, ref AfterAutoHandleStateEvent args)
     {
         UpdateUi(ent);

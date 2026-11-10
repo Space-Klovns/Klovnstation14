@@ -3,6 +3,7 @@
   name: roles-antag-anchorless-name
   antagonist: true
   setPreference: true
+  guides: [ Anchorless ]
   objective: roles-antag-anchorless-objective
   requirements:
   - !type:OverallPlaytimeRequirement

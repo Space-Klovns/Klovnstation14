@@ -18,6 +18,7 @@ namespace Content.Server.Atmos.Piping.Binary.EntitySystems
     {
         [Dependency] private AppearanceSystem _appearance = default!;
         [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
         [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
         [Dependency] private NodeContainerSystem _nodeContainer = default!;
 
@@ -76,7 +77,9 @@ namespace Content.Server.Atmos.Piping.Binary.EntitySystems
 
             // The gas recycler is a passive device, so it permits gas flow even if nothing is being reacted.
             comp.Reacting = inlet.Air.Temperature >= comp.MinTemp && inlet.Air.Pressure >= comp.MinPressure;
+            var ksInletPressure = inlet.Air.Pressure; // KS14
             var removed = inlet.Air.RemoveVolume(PassiveTransferVol(inlet.Air, outlet.Air));
+            _ksTransferThermoSystem.Apply(removed, ksInletPressure, outlet.Air.Pressure, doesWork: false); // KS14
             if (comp.Reacting)
             {
                 var nCO2 = removed.GetMoles(Gas.CarbonDioxide);

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server.Popups;
 using Content.Shared._Starlight.Plumbing.Components;
@@ -46,14 +47,14 @@ public sealed partial class PlumbingOutputSystem : EntitySystem
 
         if (toTransfer <= 0)
         {
-            _popup.PopupEntity(Loc.GetString("plumbing-output-empty"), ent.Owner, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-output-empty"), ent.Owner, args.User);
             return;
         }
 
         var split = _solutionSystem.SplitSolution(outputSolutionEnt.Value, toTransfer);
         _solutionSystem.TryAddSolution(refillableSolutionEnt.Value, split);
 
-        _popup.PopupEntity(Loc.GetString("plumbing-output-filled", ("amount", toTransfer)), ent.Owner, args.User);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("plumbing-output-filled", ("amount", toTransfer)), ent.Owner, args.User);
 
         args.Handled = true;
     }

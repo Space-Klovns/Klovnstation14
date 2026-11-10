@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Shared.DoAfter;
 using Content.Shared.IdentityManagement;
@@ -15,7 +16,6 @@ namespace Content.Shared.ParcelWrap.Systems;
 // This part handles Parcel Wrap.
 public sealed partial class ParcelWrappingSystem
 {
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private INetManager _net = default!;
 
     private static ProtoId<ItemSizePrototype> _fallbackParcelSize = "Ginormous";
@@ -39,7 +39,7 @@ public sealed partial class ParcelWrappingSystem
 
     private void SetFallbackParcelSize()
     {
-        if (_proto.EnumeratePrototypes<ItemSizePrototype>().Max() is { } size)
+        if (ProtoMan.EnumeratePrototypes<ItemSizePrototype>().Max() is { } size)
         {
             _fallbackParcelSize = size;
         }
@@ -96,12 +96,12 @@ public sealed partial class ParcelWrappingSystem
         // In case the target is a player inform them with a popup.
         if (target == user)
         {
-            var selfMsg = Loc.GetString("parcel-wrap-popup-being-wrapped-self");
+            var selfMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("parcel-wrap-popup-being-wrapped-self");
             _popup.PopupClient(selfMsg, user, user);
         }
         else
         {
-            var othersMsg = Loc.GetString(
+            var othersMsg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(
                 "parcel-wrap-popup-being-wrapped",
                 ("user", Identity.Entity(user, EntityManager))
             );

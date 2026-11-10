@@ -50,6 +50,7 @@ public sealed partial class MaterialStorageSystem : SharedMaterialStorageSystem
         if (!base.TryInsertMaterialEntity(user, toInsert, receiver, storage, material, composition))
             return false;
         //_transform.DetachEntity(toInsert, Transform(toInsert)); // KS14: Commented out
+        KsHoldAmounts(receiver, toInsert); // KS14
         return true;
     }
 }

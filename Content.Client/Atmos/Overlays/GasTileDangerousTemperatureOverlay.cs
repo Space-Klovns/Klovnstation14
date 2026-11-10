@@ -146,6 +146,11 @@ public sealed partial class GasTileDangerousTemperatureOverlay : Overlay
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
     {
+        // KS14 start: not drawn into portal views (viewer state or screen-texture effect)
+        if (Content.Client._KS14.Portal.KsPortalRenderSystem.PassActive)
+            return false;
+        // KS14 end
+
         if (args.MapId == MapId.Nullspace)
             return false;
 

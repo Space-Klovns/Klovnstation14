@@ -1,0 +1,145 @@
+# Catalyst beds, which go in a catalytic reactor's slot. Sprites are borrowed and tinted until there is art.
+
+- type: entity
+  abstract: true
+  parent: BaseItem
+  id: KsCatalystBedBase
+  components:
+  - type: Item
+    size: Small
+  - type: StaticPrice
+    price: 30 # Under what a lathe spends on one, so printing them for sale loses money.
+  - type: GuideHelp
+    guides:
+    - KsRefining
+
+- type: entity
+  parent: KsCatalystBedBase
+  id: KsCatalystBedPlatinum
+  name: platinum catalyst bed
+  description: Platinum on alumina pellets, for reforming naphtha. Sulfur ruins it.
+  components:
+  - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
+    color: "#d8d8e0"
+  - type: KsFluidCatalyst
+    catalyst: KsPlatinum
+
+- type: entity
+  parent: KsCatalystBedBase
+  id: KsCatalystBedCobaltMolybdenum
+  name: cobalt-molybdenum catalyst bed
+  description: Cobalt and molybdenum sulfides on alumina, for hydrotreating sulfur out of oil.
+  components:
+  - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
+    color: "#5a78c8"
+  - type: KsFluidCatalyst
+    catalyst: KsCobaltMolybdenum
+
+- type: entity
+  parent: KsCatalystBedBase
+  id: KsCatalystBedZeolite
+  name: zeolite catalyst bed
+  description: Porous aluminosilicate, for cracking gas oil into gasoline. Coke fouls it.
+  components:
+  - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
+    color: "#e8e0c8"
+  - type: KsFluidCatalyst
+    catalyst: KsZeolite
+
+- type: entity
+  parent: KsCatalystBedBase
+  id: KsCatalystBedAlumina
+  name: alumina catalyst bed
+  description: Activated alumina, for the Claus process that turns hydrogen sulfide into sulfur.
+  components:
+  - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
+    color: "#f0f0f0"
+  - type: KsFluidCatalyst
+    catalyst: KsAlumina
+
+- type: entity
+  parent: KsCatalystBedBase
+  id: KsCatalystBedZieglerNatta
+  name: Ziegler-Natta catalyst bed
+  description: Titanium chloride on magnesia, for polymerising ethylene. Water and sulfur kill it.
+  components:
+  - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
+    color: "#c85a78"
+  - type: KsFluidCatalyst
+    catalyst: KsZieglerNatta
+
+- type: latheRecipe
+  abstract: true
+  parent: BaseToolRecipe
+  id: BaseKsCatalystBedRecipe
+  completetime: 5
+
+# There is no platinum material: silver stands in.
+- type: latheRecipe
+  parent: BaseKsCatalystBedRecipe
+  id: KsCatalystBedPlatinum
+  result: KsCatalystBedPlatinum
+  materials:
+    Silver: 300
+    Glass: 200
+
+- type: latheRecipe
+  parent: BaseKsCatalystBedRecipe
+  id: KsCatalystBedCobaltMolybdenum
+  result: KsCatalystBedCobaltMolybdenum
+  materials:
+    Steel: 300
+    Plastic: 100
+
+- type: latheRecipe
+  parent: BaseKsCatalystBedRecipe
+  id: KsCatalystBedZeolite
+  result: KsCatalystBedZeolite
+  materials:
+    Glass: 300
+
+- type: latheRecipe
+  parent: BaseKsCatalystBedRecipe
+  id: KsCatalystBedAlumina
+  result: KsCatalystBedAlumina
+  materials:
+    Steel: 100
+    Glass: 200
+
+- type: latheRecipe
+  parent: BaseKsCatalystBedRecipe
+  id: KsCatalystBedZieglerNatta
+  result: KsCatalystBedZieglerNatta
+  materials:
+    Steel: 200
+    Plasma: 100
+
+- type: technology
+  id: KsPetrochemistry
+  name: research-technology-ks-petrochemistry
+  icon:
+    sprite: Structures/Piping/Atmospherics/pump.rsi
+    state: pumpVolume
+  discipline: Industrial
+  tier: 2
+  cost: 10000
+  recipeUnlocks:
+  - KsCatalystBedPlatinum
+  - KsCatalystBedCobaltMolybdenum
+  - KsCatalystBedZeolite
+  - KsCatalystBedAlumina
+  - KsCatalystBedZieglerNatta
+  position: 1,-2
+  technologyPrerequisites:
+  - SalvageEquipment
+  - AdvancedAtmospherics

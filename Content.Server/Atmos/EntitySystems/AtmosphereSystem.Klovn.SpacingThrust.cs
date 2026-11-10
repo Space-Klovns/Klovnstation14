@@ -1,4 +1,3 @@
-// KS14: added in this fork
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Content.Shared._KS14.CCVar;

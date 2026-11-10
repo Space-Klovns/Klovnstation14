@@ -1,0 +1,26 @@
+ent-BulletCannonBall = пушечное ядро
+    .desc = { ent-BaseBulletTrigger.desc }
+
+ent-BulletGrenadeBaton = шоковая граната
+    .desc = { ent-BaseBullet.desc }
+
+ent-BulletGrenadeBlast = фугасная граната
+    .desc = { ent-BaseBulletTrigger.desc }
+
+ent-BulletGrenadeCleanade = снаряд чистящей гранаты
+    .desc = { ent-BaseBulletTrigger.desc }
+
+ent-BulletGrenadeEMP = ЭМИ ракета
+    .desc = { ent-BaseBulletTrigger.desc }
+
+ent-BulletGrenadeFlash = светошумовая граната
+    .desc = { ent-BaseBulletTrigger.desc }
+
+ent-BulletGrenadeFrag = осколочная граната
+    .desc = { ent-BaseBulletTrigger.desc }
+
+ent-BulletRocket = ракета
+    .desc = { ent-BaseBulletTrigger.desc }
+
+ent-BulletWeakRocket = слабая ракета
+    .desc = { ent-BaseBulletTrigger.desc }

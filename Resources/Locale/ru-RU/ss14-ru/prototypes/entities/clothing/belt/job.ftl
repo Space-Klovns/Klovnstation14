@@ -1,0 +1,26 @@
+ent-BaseClothingBeltEngineering = { ent-ClothingBeltStorageBase }
+    .desc = { ent-ClothingBeltStorageBase.desc }
+
+ent-ClothingBeltChef = пояс повара
+    .desc = Пояс для хранения кухонных ножей и быстрого доступа к приправам.
+
+ent-ClothingBeltChiefEngineer = пояс старшего инженера
+    .desc = Держит инструменты, выглядит стильно.
+
+ent-ClothingBeltJanitor = пояс уборщика
+    .desc = Пояс, используемый для хранения основных уборочных принадлежностей.
+
+ent-ClothingBeltMedical = пояс медика
+    .desc = Может вмещать различное медицинское снаряжение.
+
+ent-ClothingBeltMedicalEMT = пояс парамедика
+    .desc = Идеален для хранения различного снаряжения для экстренной медицинской помощи.
+
+ent-ClothingBeltPlant = пояс ботаника
+    .desc = Пояс, используемый для хранения основных принадлежностей для гидропоники. На удивление, не зелёный.
+
+ent-ClothingBeltSecurity = пояс охраны
+    .desc = Может вмещать различное снаряжение службы безопасности, такое как наручники и вспышки.
+
+ent-ClothingBeltUtility = пояс для инструментов
+    .desc = Может хранить различные предметы.

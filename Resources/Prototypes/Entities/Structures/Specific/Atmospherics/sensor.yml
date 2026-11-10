@@ -26,8 +26,9 @@
       NitrousOxide: stationNO
       Frezon: danger
       Zipion: stationZipion # KS14
-      Argon: GasArgon # KS14
+      Encalite: GasEncalite # KS14
       Evaporin: stationEvaporin # KS14
+      Hydrogen: stationHydrogen # KS14
   - type: Tag
     tags:
       - AirSensor
@@ -40,7 +41,6 @@
   - type: EmissiveLayers
     glowRadius: 0.3
     intensity: 1
-    useSpriteTransform: false
     layers:
     - enum.PowerDeviceVisualLayers.Powered
   # KS14: emissive end

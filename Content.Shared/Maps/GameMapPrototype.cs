@@ -64,6 +64,7 @@ public sealed partial class GameMapPrototype : IPrototype
             ID = ID,
             MapName = MapName,
             MapPath = mapPath,
+            ForcedLobbyBackground = ForcedLobbyBackground, // KS14
             _stations = _stations
         };
 #pragma warning restore RA0039

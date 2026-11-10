@@ -6,7 +6,6 @@ using Content.Shared.Whitelist;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using System.Numerics;
 
 namespace Content.Server.Chemistry.TileReactions;
@@ -14,8 +13,8 @@ namespace Content.Server.Chemistry.TileReactions;
 [DataDefinition]
 public sealed partial class CreateEntityTileReaction : ITileReaction
 {
-    [DataField(required: true, customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
-    public string Entity = default!;
+    [DataField(required: true)]
+    public EntProtoId Entity;
 
     [DataField]
     public FixedPoint2 Usage = FixedPoint2.New(1);
@@ -35,6 +34,14 @@ public sealed partial class CreateEntityTileReaction : ITileReaction
     [DataField]
     public float RandomOffsetMax = 0.0f;
 
+    // KS14 start: the whitelist only counted anchored things, so an item could pile up without limit
+    /// <summary>
+    ///     Whether the whitelist counts loose entities on the tile too, such as items.
+    /// </summary>
+    [DataField]
+    public bool KsCountLoose;
+    // KS14 end
+
     public FixedPoint2 TileReact(TileRef tile,
         ReagentPrototype reagent,
         FixedPoint2 reactVolume,
@@ -49,7 +56,7 @@ public sealed partial class CreateEntityTileReaction : ITileReaction
             var lookup = entityManager.System<EntityLookupSystem>();
 
             int acc = 0;
-            foreach (var ent in lookup.GetEntitiesInTile(tile, LookupFlags.Static))
+            foreach (var ent in lookup.GetEntitiesInTile(tile, KsCountLoose ? LookupFlags.Uncontained : LookupFlags.Static /* KS14: added KsCountLoose */))
             {
                 var whitelistSystem = entityManager.System<EntityWhitelistSystem>();
                 if (whitelistSystem.IsWhitelistPass(Whitelist, ent))

@@ -34,3 +34,9 @@
   id: KsCameraStatic
   kind: source
   path: "/Textures/_KS14/Shaders/camera_static.swsl"
+
+# Draws a texture masked by the alpha of a second texture of the same size, sampled at the same UV
+- type: shader
+  id: KsMaskedTexture
+  kind: source
+  path: "/Textures/_KS14/Shaders/masked_texture.swsl"

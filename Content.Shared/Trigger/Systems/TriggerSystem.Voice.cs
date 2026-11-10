@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Trigger.Components.Triggers;
 using Content.Shared.Speech;
@@ -64,9 +65,9 @@ public sealed partial class TriggerSystem
             if (message.Length >= component.MinLength && message.Length <= component.MaxLength)
                 FinishRecording(ent, args.Source, args.Message, args.KsLanguage /* KS14 */);
             else if (message.Length > component.MaxLength)
-                _popup.PopupEntity(Loc.GetString("trigger-on-voice-record-failed-too-long"), ent);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("trigger-on-voice-record-failed-too-long"), ent);
             else if (message.Length < component.MinLength)
-                _popup.PopupEntity(Loc.GetString("trigger-on-voice-record-failed-too-short"), ent);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("trigger-on-voice-record-failed-too-short"), ent);
 
             return;
         }
@@ -162,7 +163,7 @@ public sealed partial class TriggerSystem
         else
             _adminLogger.Add(LogType.Trigger, LogImpact.Low, $"A voice-trigger on {ToPrettyString(ent):entity} has started recording. User: {ToPrettyString(user.Value):user}");
 
-        _popup.PopupPredicted(Loc.GetString("trigger-on-voice-start-recording"), ent, user);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("trigger-on-voice-start-recording"), ent, user);
     }
 
     /// <summary>
@@ -175,7 +176,7 @@ public sealed partial class TriggerSystem
         if (string.IsNullOrWhiteSpace(ent.Comp.KeyPhrase))
             RemComp<ActiveListenerComponent>(ent);
 
-        _popup.PopupPredicted(Loc.GetString("trigger-on-voice-stop-recording"), ent, user);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("trigger-on-voice-stop-recording"), ent, user);
     }
 
 
@@ -200,7 +201,7 @@ public sealed partial class TriggerSystem
             _adminLogger.Add(LogType.Trigger, LogImpact.Low,
                 $"The keyphrase on {ToPrettyString(ent):entity} was spoken in {ksLanguage.LanguageId}; clear text: '{message}'");
 
-        _popup.PopupEntity(Loc.GetString("trigger-on-voice-recorded", ("keyphrase", ent.Comp.KeyPhrase)), ent);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("trigger-on-voice-recorded", ("keyphrase", ent.Comp.KeyPhrase)), ent);
     }
 
     /// <summary>
@@ -234,6 +235,6 @@ public sealed partial class TriggerSystem
         _adminLogger.Add(LogType.Trigger, LogImpact.Low,
             $"A voice-trigger on {ToPrettyString(ent):entity} has been reset to default keyphrase: '{ent.Comp.KeyPhrase}'. User: {ToPrettyString(user):speaker}");
 
-        _popup.PopupPredicted(Loc.GetString("trigger-on-voice-set-default", ("keyphrase", ent.Comp.KeyPhrase)), ent, user);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("trigger-on-voice-set-default", ("keyphrase", ent.Comp.KeyPhrase)), ent, user);
     }
 }

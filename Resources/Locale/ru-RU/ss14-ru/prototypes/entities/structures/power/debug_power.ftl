@@ -1,0 +1,35 @@
+ent-DebugAPCRecharging = { ent-BaseAPC }
+    .desc = { ent-BaseAPC.desc }
+    .suffix = DEBUG, AutoRecharge
+
+ent-DebugBatteryDischarger = battery discharger
+    .desc = { "" }
+    .suffix = DEBUG
+
+ent-DebugBatteryStorage = battery storage
+    .desc = { "" }
+    .suffix = DEBUG
+
+ent-DebugConsumer = consumer
+    .desc = { "" }
+    .suffix = DEBUG
+
+ent-DebugGenerator = { ent-BaseGenerator }
+    .desc = { ent-BaseGenerator.desc }
+    .suffix = DEBUG
+
+ent-DebugPowerReceiver = power receiver
+    .desc = { "" }
+    .suffix = DEBUG
+
+ent-DebugSMESRecharging = { ent-BaseSMES }
+    .desc = { ent-BaseSMES.desc }
+    .suffix = DEBUG, AutoRecharge
+
+ent-DebugSubstationRecharging = { ent-BaseSubstation }
+    .desc = { ent-BaseSubstation.desc }
+    .suffix = DEBUG, AutoRecharge
+
+ent-DebugSubstationWallRecharging = { ent-BaseSubstationWall }
+    .desc = { ent-BaseSubstationWall.desc }
+    .suffix = DEBUG, AutoRecharge

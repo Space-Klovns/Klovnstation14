@@ -33,7 +33,6 @@ public sealed partial class RespiratorSystem : EntitySystem
 {
     [Dependency] private IAdminLogManager _adminLogger = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _protoMan = default!;
     [Dependency] private AlertsSystem _alertsSystem = default!;
     [Dependency] private AtmosphereSystem _atmosSys = default!;
     [Dependency] private BodySystem _body = default!;
@@ -297,7 +296,7 @@ public sealed partial class RespiratorSystem : EntitySystem
         float saturation = 0;
         foreach (var (id, quantity) in solution.Contents)
         {
-            var reagent = _protoMan.Index<ReagentPrototype>(id.Prototype);
+            var reagent = ProtoMan.Index<ReagentPrototype>(id.Prototype);
             if (reagent.Metabolisms == null)
                 continue;
 
@@ -338,7 +337,8 @@ public sealed partial class RespiratorSystem : EntitySystem
         if (ent.Comp.SuffocationCycles == 2)
             _adminLogger.Add(LogType.Asphyxiation, $"{ToPrettyString(ent):entity} started suffocating");
 
-        _damageableSys.ChangeDamage(ent.Owner, ent.Comp.Damage, interruptsDoAfters: false, ignoreResistances: true);
+        var ksDamage = ent.Comp.CritDamage is { } ksCritDamage && _mobState.IsCritical(ent.Owner) ? ksCritDamage : ent.Comp.Damage; // KS14: crit asphyxiation separate from suffocation
+        _damageableSys.ChangeDamage(ent.Owner, ksDamage /* KS14: ent.Comp.Damage -> ksDamage */, interruptsDoAfters: false, ignoreResistances: true);
 
         if (ent.Comp.SuffocationCycles < ent.Comp.SuffocationCycleThreshold)
             return;

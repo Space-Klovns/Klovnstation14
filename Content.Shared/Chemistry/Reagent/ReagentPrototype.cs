@@ -106,9 +106,19 @@ namespace Content.Shared.Chemistry.Reagent
         [DataField]
         public float SpecificHeat { get; private set; } = 1.0f;
 
+        // KS14 start: units documented
+        /// <summary>
+        ///     Kelvin, at 101.325 kPa.
+        /// </summary>
+        // KS14 end
         [DataField]
         public float? BoilingPoint { get; private set; }
 
+        // KS14 start: units documented
+        /// <summary>
+        ///     Kelvin, at 101.325 kPa.
+        /// </summary>
+        // KS14 end
         [DataField]
         public float? MeltingPoint { get; private set; }
 
@@ -175,7 +185,7 @@ namespace Content.Shared.Chemistry.Reagent
         [DataField]
         public Dictionary<ProtoId<ReactiveGroupPrototype>, ReactiveReagentEffectEntry>? ReactiveEffects;
 
-        [DataField(serverOnly: true)]
+        [DataField(customTypeSerializer: typeof(Content.Shared._KS14.Chemistry.PredictedTileReactions.KsTileReactionListSerializer)) /* KS14: was serverOnly: true, the client reads the reactions it predicts */]
         public List<ITileReaction> TileReactions = new(0);
 
         [DataField("plantMetabolism")]

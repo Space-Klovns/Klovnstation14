@@ -1,0 +1,20 @@
+# Fights a chemical fire tile by tile, and keeps watch until its puddle cools. See KsNpcFirefightingSystem.
+- type: htnCompound
+  id: KsFightChemicalFireCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:KsPickChemicalFireOperator
+    - !type:HTNPrimitiveTask
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: firebot-fire-detected
+        hidden: true
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        pathfindInPlanning: true
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: MovementRange
+    - !type:HTNPrimitiveTask
+      operator: !type:KsSprayChemicalFireOperator

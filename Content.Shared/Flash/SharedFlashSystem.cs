@@ -1,3 +1,5 @@
+using Content.Shared._KS14.Flash; // KS14
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
@@ -60,8 +62,8 @@ public abstract partial class SharedFlashSystem : EntitySystem
         SubscribeLocalEvent<FlashComponent, UseInHandEvent>(OnFlashUseInHand);
         SubscribeLocalEvent<FlashComponent, BeforeRangedInteractEvent>(OnRangedInteract);
         SubscribeLocalEvent<FlashComponent, LightToggleEvent>(OnLightToggle);
-        SubscribeLocalEvent<PermanentBlindnessComponent, FlashAttemptEvent>(OnPermanentBlindnessFlashAttempt);
-        Subs.SubscribeWithRelay<FlashImmunityComponent, FlashAttemptEvent>(OnFlashImmunityFlashAttempt, held: false);
+        SubscribeLocalEvent<PermanentBlindnessComponent, KsCanFlashEvent>(OnPermanentBlindnessCanFlash); // KS14: was FlashAttemptEvent
+        Subs.SubscribeWithRelay<FlashImmunityComponent, KsCanFlashEvent>(OnFlashImmunityCanFlash, held: false); // KS14: was FlashAttemptEvent
         SubscribeLocalEvent<FlashImmunityComponent, ExaminedEvent>(OnExamine);
     }
 
@@ -151,11 +153,25 @@ public abstract partial class SharedFlashSystem : EntitySystem
         {
             _appearance.SetData(ent.Owner, FlashVisuals.Burnt, true); // TODO: Reset if charges are refilled.
             _tag.AddTag(ent.Owner, TrashTag);
-            _popup.PopupClient(Loc.GetString("flash-component-becomes-empty"), user);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flash-component-becomes-empty"), user);
         }
 
         return true;
     }
+
+    // KS14 start
+    /// <summary>
+    ///     Whether a flash could reach <paramref name="target"/>, going by what it wears and whether it can see. Changes
+    ///         nothing, so anything can ask.
+    /// </summary>
+    /// <param name="flashOverride">Whether the flash pierces flash protection.</param>
+    public bool CanFlash(EntityUid target, bool flashOverride = false)
+    {
+        var ev = new KsCanFlashEvent(flashOverride);
+        RaiseLocalEvent(target, ref ev);
+        return !ev.Cancelled;
+    }
+    // KS14 end
 
     /// <summary>
     /// Cause an entity to be flashed, obstructing their vision, slowing them down and stunning them.
@@ -181,6 +197,9 @@ public abstract partial class SharedFlashSystem : EntitySystem
         TimeSpan? stunDuration = null,
         bool flashOverride = false) //KS14 addition to allow forcing flashesb
     {
+        if (!CanFlash(target, flashOverride)) // KS14: asked first, so only what a flash reaches sees the attempt
+            return;
+
         var attempt = new FlashAttemptEvent(target, user, used, FlashOverride: flashOverride); //KS14 - flash override
         RaiseLocalEvent(target, ref attempt, true);
 
@@ -198,7 +217,7 @@ public abstract partial class SharedFlashSystem : EntitySystem
 
         if (displayPopup && user != null && target != user && Exists(user.Value))
         {
-            _popup.PopupEntity(Loc.GetString("flash-component-user-blinds-you",
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("flash-component-user-blinds-you",
                 ("user", Identity.Entity(user.Value, EntityManager))), target, target);
         }
 
@@ -269,14 +288,14 @@ public abstract partial class SharedFlashSystem : EntitySystem
         }
     }
 
-    private void OnPermanentBlindnessFlashAttempt(Entity<PermanentBlindnessComponent> ent, ref FlashAttemptEvent args)
+    private void OnPermanentBlindnessCanFlash(Entity<PermanentBlindnessComponent> ent, ref KsCanFlashEvent args) // KS14: was FlashAttemptEvent
     {
         // check for total blindness
         if (ent.Comp.Blindness == 0 && !args.FlashOverride) //KS14 - flash override
             args.Cancelled = true;
     }
 
-    private void OnFlashImmunityFlashAttempt(Entity<FlashImmunityComponent> ent, ref FlashAttemptEvent args)
+    private void OnFlashImmunityCanFlash(Entity<FlashImmunityComponent> ent, ref KsCanFlashEvent args) // KS14: was FlashAttemptEvent
     {
         if (TryComp<MaskComponent>(ent, out var mask) && mask.IsToggled || args.FlashOverride) //KS14 - flash override
             return;

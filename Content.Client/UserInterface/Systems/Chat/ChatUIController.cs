@@ -200,6 +200,7 @@ public sealed partial class ChatUIController : UIController
         _net.RegisterNetMessage<MsgChatMessage>(OnChatMessage);
         _net.RegisterNetMessage<MsgDeleteChatMessagesBy>(OnDeleteChatMessagesBy);
         _net.RegisterNetMessage<MsgReplaceChatMessage>(OnReplaceChatMessage); // KS14
+        KsInitializeTranslationSession(); // BS: UPSTREAM-BS-TRANSLATION-001, isolate live translation IDs across connections.
         SubscribeNetworkEvent<DamageForceSayEvent>(OnDamageForceSay);
         _config.OnValueChanged(CCVars.ChatEnableColorName, (value) => { _chatNameColorsEnabled = value; });
         _chatNameColorsEnabled = _config.GetCVar(CCVars.ChatEnableColorName);
@@ -286,11 +287,18 @@ public sealed partial class ChatUIController : UIController
 
     private void SetChatWindowOpacity(float opacity)
     {
+        if (UIManager.ActiveScreen is Content.Client.Lobby.UI.LobbyGui) // KS14: lobby chat has its own fixed translucency
+            return;
+
         var chatBox = UIManager.ActiveScreen?.GetWidget<ChatBox>() ?? UIManager.ActiveScreen?.GetWidget<ResizableChatBox>();
 
         var panel = chatBox?.ChatWindowPanel;
         if (panel is null)
             return;
+
+        // KS14: this can run before the panel's first style pass, which would miss the theme's colour
+        if (panel.PanelOverride == null)
+            panel.ForceRunStyleUpdate();
 
         Color color;
         if (panel.PanelOverride is StyleBoxFlat styleBoxFlat)
@@ -729,6 +737,8 @@ public sealed partial class ChatUIController : UIController
         if (text.Length == 0)
             return (ChatSelectChannel.None, text, null);
 
+        text = NormalizeLocalizedRadioPrefix(text); // KS14: resolve locale-specific radio aliases before preview and transmission
+
         // We only cut off prefix only if it is not a radio or local channel, which both map to the same /say command
         // because ????????
 
@@ -858,24 +868,9 @@ public sealed partial class ChatUIController : UIController
                 msg.WrappedMessage = SharedChatSystem.InjectTagInsideTag(msg, "Name", "color", GetNameColor(SharedChatSystem.GetStringInsideTag(msg, "Name")));
         }
 
-        // Color any words chosen by the client.
-        foreach (var highlight in _highlights)
-        {
-            msg.WrappedMessage = SharedChatSystem.InjectTagAroundString(msg, highlight, "color", _highlightsColor);
-        }
-
-        // Color any codewords for minds that have roles that use them
-        if (_player.LocalUser != null && _mindSystem != null && _roleCodewordSystem != null)
-        {
-            if (_mindSystem.TryGetMind(_player.LocalUser.Value, out var mindId) && _ent.TryGetComponent(mindId, out RoleCodewordComponent? codewordComp))
-            {
-                foreach (var (_, codewordData) in codewordComp.RoleCodewords)
-                {
-                    foreach (string codeword in codewordData.Codewords)
-                        msg.WrappedMessage = SharedChatSystem.InjectTagAroundString(msg, codeword, "color", codewordData.Color.ToHex());
-                }
-            }
-        }
+        // BS: UPSTREAM-BS-TRANSLATION-001, highlights must not split the hidden translation's source template.
+        var ksWrappedTemplate = msg.WrappedMessage;
+        KsApplyChatHighlights(msg);
 
         // Log all incoming chat to repopulate when filter is un-toggled
         if (!msg.HideChat)
@@ -900,6 +895,10 @@ public sealed partial class ChatUIController : UIController
         }
 
         // Local messages that have an entity attached get a speech bubble.
+        // BS: Hidden holopad broadcasts still need async replacement, including a result arriving first.
+        if (msg.HideChat)
+            KsRememberHiddenTranslation(msg, ksWrappedTemplate);
+
         if (!speechBubble || msg.SenderEntity == default)
             return;
 
@@ -952,6 +951,7 @@ public sealed partial class ChatUIController : UIController
             return true;
         });
         // KS14 End
+        KsRemoveHiddenTranslations(msg); // BS: Erased broadcast messages must not retain a translation target.
         Repopulate();
     }
 
@@ -1007,13 +1007,14 @@ public sealed partial class ChatUIController : UIController
 
             stored.Message = translated;
             stored.WrappedMessage = rebuilt;
+            UpdateTranslatedSpeechBubbles(stored); // KS14: refresh already visible bubbles; queued bubbles share this message.
             // KS14: re-render only this one line, not the whole history. A full Repopulate() here is
             // O(History) markup-parse + relayout per swap, and History is uncapped over a round.
             ReplaceMessage(i);
             return true;
         }
 
-        return false; // not in History yet
+        return KsTryApplyHiddenTranslation(messageId, translated); // BS: Broadcasts intentionally have no History row.
     }
 
     // KS14: reveal the original (pre-translation) text for a translated line, used by the hover marker tag.

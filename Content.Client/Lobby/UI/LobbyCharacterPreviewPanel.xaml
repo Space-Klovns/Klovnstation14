@@ -1,28 +1,33 @@
+<!-- KS14: reworked into the tactical lobby layout; upstream original kept in LobbyCharacterPreviewPanel.xaml.old -->
 <Control
     xmlns="https://spacestation14.io"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
     xmlns:profile="clr-namespace:Content.Client.Lobby.UI.ProfileEditorControls">
-    <BoxContainer Name="VBox" Orientation="Vertical">
-        <controls:NanoHeading Name="Header" Text="{Loc 'lobby-character-preview-panel-header'}">
-
-        </controls:NanoHeading>
+    <BoxContainer Name="VBox" Orientation="Vertical" HorizontalAlignment="Center">
+        <Label Name="Header"
+               Text="{Loc 'ks-lobby-subtitle-character'}"
+               StyleClasses="KsLobbySubtitle"
+               HorizontalAlignment="Center"/>
         <BoxContainer Name="Loaded" Orientation="Vertical"
+                      HorizontalAlignment="Center"
                       Visible="False">
-            <Label Name="Summary" HorizontalAlignment="Center" Margin="3 3"/>
-            <BoxContainer Name="ViewBox" Orientation="Horizontal" HorizontalAlignment="Center">
+            <BoxContainer Name="ViewBox" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 8" SeparationOverride="0">
                 <profile:ProfilePreviewSpriteView Name="ProfilePreviewSpriteView"
                                                   OverrideDirection="South"
-                                                  Scale="4 4"
-                                                  MaxSize="112 112"
+                                                  Scale="6 6"
+                                                  MaxSize="192 192"
                                                   Stretch="Fill"
                                                   Access="Public" />
             </BoxContainer>
-            <controls:VSpacer/>
-            <Button Name="CharacterSetup" Text="{Loc 'lobby-character-preview-panel-character-setup-button'}"
-                    HorizontalAlignment="Center"
-                    Margin="0 5 0 0"/>
+            <Label Name="CharacterName" Access="Public" Visible="False" MaxWidth="420" StyleClasses="KsLobbyCharName" HorizontalAlignment="Center"/>
+            <Label Name="CharacterJob" Access="Public" Visible="False" MaxWidth="420" StyleClasses="KsLobbyCharJob" HorizontalAlignment="Center"/>
+            <RichTextLabel Name="Summary" Access="Public" StyleClasses="KsLobbyRichText" MaxWidth="420" HorizontalAlignment="Center" Margin="0 3"/>
+            <PanelContainer StyleClasses="KsLobbyHairline" MinHeight="1" Margin="0 8"/>
+            <Button Name="CharacterSetup" Text="{Loc 'ks-lobby-menu-character'}"
+                    StyleClasses="KsLobbyMenuButton"
+                    HorizontalAlignment="Center"/>
         </BoxContainer>
-        <Label Name="Unloaded" Text="{Loc 'lobby-character-preview-panel-unloaded-preferences-label'}"/>
+        <Label Name="Unloaded" Text="{Loc 'lobby-character-preview-panel-unloaded-preferences-label'}"
+               StyleClasses="KsLobbySubtitle" HorizontalAlignment="Center"/>
     </BoxContainer>
 </Control>

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Popups;
 using Content.Shared.Database;
@@ -201,7 +202,7 @@ public sealed partial class AnimalHusbandrySystem : EntitySystem
             _adminLog.Add(LogType.Action, $"{ToPrettyString(uid)} gave birth to {ToPrettyString(offspring)}.");
         }
 
-        _popup.PopupEntity(Loc.GetString(component.BirthPopup, ("parent", Identity.Entity(uid, EntityManager))), uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.BirthPopup, ("parent", Identity.Entity(uid, EntityManager))), uid);
 
         component.Gestating = false;
         component.GestationEndTime = null;

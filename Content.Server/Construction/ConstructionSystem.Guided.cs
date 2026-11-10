@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Construction.Components;
 using Content.Shared.Construction;
 using Content.Shared.Construction.Prototypes;
@@ -25,7 +26,7 @@ namespace Content.Server.Construction
 
         private void OnGuideRequested(RequestConstructionGuide msg, EntitySessionEventArgs args)
         {
-            if (!PrototypeManager.TryIndex(msg.ConstructionId, out ConstructionPrototype? prototype))
+            if (!ProtoMan.TryIndex(msg.ConstructionId, out ConstructionPrototype? prototype))
                 return;
 
             if (GetGuide(prototype) is { } guide)
@@ -41,7 +42,7 @@ namespace Content.Server.Construction
                 component.Node == component.DeconstructionNode)
                 return;
 
-            if (!PrototypeManager.TryIndex(component.Graph, out ConstructionGraphPrototype? graph))
+            if (!ProtoMan.TryIndex(component.Graph, out ConstructionGraphPrototype? graph))
                 return;
 
             if (component.DeconstructionNode == null)
@@ -66,11 +67,11 @@ namespace Content.Server.Construction
                 if (component.TargetNode == null)
                 {
                     // Maybe check, but on the flip-side a better solution might be to not make it undeconstructible in the first place, no?
-                    _popup.PopupEntity(Loc.GetString("deconstructible-verb-activate-no-target-text"), uid, uid);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("deconstructible-verb-activate-no-target-text"), uid, uid);
                 }
                 else
                 {
-                    _popup.PopupEntity(Loc.GetString("deconstructible-verb-activate-text"), args.User, args.User);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("deconstructible-verb-activate-text"), args.User, args.User);
                 }
             };
 
@@ -145,7 +146,7 @@ namespace Content.Server.Construction
                 return guide;
 
             // If the graph doesn't actually exist, do nothing.
-            if (!PrototypeManager.Resolve(construction.Graph, out ConstructionGraphPrototype? graph))
+            if (!ProtoMan.Resolve(construction.Graph, out ConstructionGraphPrototype? graph))
                 return null;
 
             // If either the start node or the target node are missing, do nothing.

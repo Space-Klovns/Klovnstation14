@@ -1,0 +1,23 @@
+cmd-chunkentities-arg-range = <range>
+cmd-chunkentities-arg-root = <корневой объект>
+cmd-chunkentities-arg-x = <x>
+cmd-chunkentities-arg-y = <y>
+cmd-chunkentities-desc = Выводит список объектов-чанок в окне просмотра клиента ИЛИ в указанном диапазоне.
+cmd-chunkentities-entry = { $netEntity } uid={ $uid } root={ $root } chunk={ $chunk } comps={ $componentCount } { $name }
+cmd-chunkentities-error-invalid-root = Недопустимый корневой объект: { $root }
+cmd-chunkentities-error-no-map = Отсутствует объект карты для текущей точки обзора { $map }{ "." }
+cmd-chunkentities-error-nullspace = В настоящее время камера находится в нулевом пространстве.
+cmd-chunkentities-error-parse = x, y и range должны быть числами.
+cmd-chunkentities-help = Использование: { $command } { "[" }<root entity> <x> <y> <range>{ "]" }
+cmd-chunkentities-range-header = Объекты-блоки для { $root } около ({ $x }, { $y }) диапазон { $range }:
+cmd-chunkentities-root-count = Root { $root }: { $count }
+cmd-chunkentities-total = Всего: { $count }
+cmd-chunkentities-viewport-header = Объекты-блоки в окне просмотра клиента на карте { $map } ({ $viewport }):
+cmd-parse-failure-session-guid = Сеанса с GUID: нет { $guid }
+cmd-pausemap-desc = Приостанавливает работу карты, останавливая всю симуляцию на ней.
+cmd-pausemap-help = Использование: pausemap <ID карты>
+cmd-querymappaused-desc = Проверка, приостановлена ли карта или нет.
+cmd-querymappaused-help = Использование: querymappaused <ID карты>
+cmd-shutdown-hint-1 = Причина
+cmd-unpausemap-desc = Снимает паузу с карты, возобновляя всю симуляцию на ней.
+cmd-unpausemap-help = Использование: unpausemap <ID карты>

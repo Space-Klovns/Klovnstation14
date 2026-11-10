@@ -1,4 +1,4 @@
-# Lament - 8 bursts, 4 projectiles per burst (cardinal directions)
+# Lament - 23 bursts, 4 projectiles per burst, cardinal then diagonal directions
 - type: entity
   id: ColossusDirectionalAttack
   parent: RangedCardinalDirections
@@ -10,7 +10,7 @@
       flickState: attack
     sound:
       path: /Audio/_KS14/Effects/Magic/ratvar_attack.ogg
-    burstCount: 45
+    burstCount: 23 # was 45 while every burst counted twice, so 23 fired
     shots: 4
     shotDelay: 0.3
     cooldown: 3.0

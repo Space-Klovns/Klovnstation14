@@ -233,6 +233,15 @@ namespace Content.Client.Atmos.UI
                 dataContainer.AddChild(tempBox);
             }
 
+            // KS14 start: the reagents it carries, which a pipe of pure liquid has even with no gas
+            if (gasMix.KsFluid != null)
+            {
+                var ksFluidList = new Content.Client._KS14.Fluidmos.KsFluidListControl { Margin = new Thickness(0, 10, 0, 0) };
+                ksFluidList.SetEntries(gasMix.KsFluid);
+                dataContainer.AddChild(ksFluidList);
+            }
+            // KS14 end
+
             if (gasMix.Gases == null || gasMix.Gases?.Length == 0)
             {
                 // Separator

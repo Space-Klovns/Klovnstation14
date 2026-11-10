@@ -8,22 +8,22 @@
   effects:
   - !type:ZipionFormationReaction {}
 - type: gasReaction
-  id: ArgonFormation
+  id: EncaliteFormation
   priority: 2
   maximumTemperature: 589
   minimumRequirements:
     Frezon: 1
     Plasma: 2
   effects:
-  - !type:ArgonFormationReaction {}
+  - !type:EncaliteFormationReaction {}
 
 - type: gasReaction
-  id: ArgonAbsorption
+  id: EncaliteAbsorption
   priority: 3  # Higher priority to check first
   minimumRequirements:
-    Argon: 80
+    Encalite: 80
   effects:
-  - !type:ArgonAbsorptionReaction {}
+  - !type:EncaliteAbsorptionReaction {}
 
 - type: gasReaction
   id: GeneralEvaporation
@@ -35,3 +35,13 @@
     joulesPerBonusUnitPerMole: 100000
     scalingMinimumTemperature: 600
     maximumUnitsPerMole: 10
+
+- type: gasReaction
+  id: KsHydrogenFire
+  priority: -1
+  minimumTemperature: 373.149 # Same as Atmospherics.FireMinimumTemperatureToExist
+  minimumRequirements:
+    Oxygen: 0.01
+    Hydrogen: 0.01
+  effects:
+  - !type:KsHydrogenFireReaction {}

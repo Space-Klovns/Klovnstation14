@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -103,7 +104,7 @@ public sealed partial class FloorTileSystem : EntitySystem
             if (!state.inRange)
             {
                 if (_netManager.IsClient && _timing.IsFirstTimePredicted)
-                    _popup.PopupEntity(Loc.GetString("invalid-floor-placement"), args.User);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("invalid-floor-placement"), args.User);
 
                 return;
             }

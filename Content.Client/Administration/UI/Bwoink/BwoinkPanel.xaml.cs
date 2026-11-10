@@ -61,6 +61,7 @@ namespace Content.Client.Administration.UI.Bwoink
             var formatted = new FormattedMessage(1);
             formatted.AddMarkupOrThrow($"[color=gray]{message.SentAt.ToShortTimeString()}[/color] {message.Text}");
             TextOutput.AddMessage(formatted);
+            KsRememberTranslation(message); // BS: UPSTREAM-BS-TRANSLATION-001, retain this row for an async replacement.
             LastMessage = message.SentAt;
         }
 

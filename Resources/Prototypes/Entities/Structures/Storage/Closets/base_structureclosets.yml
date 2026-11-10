@@ -11,7 +11,8 @@
     noRot: true
   - type: Sprite
     noRot: true
-    sprite: Structures/Storage/closet.rsi
+    sprite: _KS14/Structures/Storage/closet.rsi # KS14: Structures/Storage/closet.rsi -> _KS14/Structures/Storage/closet.rsi, tgstation's closets
+    offset: 0,0.25 # KS14: tgstation's closets are 48px tall and stand on the bottom of their tile
     layers:
     - state: generic
       map: ["enum.StorageVisualLayers.Base"]
@@ -45,6 +46,18 @@
         layer:
         - MachineLayer
   - type: EntityStorage
+  # KS14 start
+    openSound:
+      path: /Audio/_KS14/Containers/closet_open.ogg
+      params:
+        variation: 0.08
+        volume: -1
+    closeSound:
+      path: /Audio/_KS14/Containers/closet_close.ogg
+      params:
+        variation: 0.08
+        volume: -1
+  # KS14 end
   - type: ContainerContainer
     containers:
       entity_storage: !type:Container
@@ -99,8 +112,14 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: generic
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: generic_door
+  # KS14 start: tgstation's swinging door, with the paper label on its front
+  - type: KsClosetDoorVisuals
+    duration: 0.22s
+    layers:
+      enum.PaperLabelVisuals.Layer: Front
+  # KS14 end
   - type: Anchorable
   - type: StaticPrice
     price: 75

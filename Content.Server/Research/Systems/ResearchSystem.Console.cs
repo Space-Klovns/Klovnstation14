@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Power.EntitySystems;
 using Content.Server.Research.Components;
 using Content.Shared.UserInterface;
@@ -36,12 +37,12 @@ public sealed partial class ResearchSystem
         if (!this.IsPowered(uid, EntityManager))
             return;
 
-        if (!PrototypeManager.TryIndex<TechnologyPrototype>(args.Id, out var technologyPrototype))
+        if (!ProtoMan.TryIndex<TechnologyPrototype>(args.Id, out var technologyPrototype))
             return;
 
         if (TryComp<AccessReaderComponent>(uid, out var access) && !_accessReader.IsAllowed(act, uid, access))
         {
-            _popup.PopupEntity(Loc.GetString("research-console-no-access-popup"), act);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("research-console-no-access-popup"), act);
             return;
         }
 
@@ -114,7 +115,7 @@ public sealed partial class ResearchSystem
             return;
 
         // Goobstation: R&D Console Rework Start
-        var allTechs = PrototypeManager.EnumeratePrototypes<TechnologyPrototype>();
+        var allTechs = ProtoMan.EnumeratePrototypes<TechnologyPrototype>();
         Dictionary<string, ResearchAvailability> techList;
         var points = 0;
 

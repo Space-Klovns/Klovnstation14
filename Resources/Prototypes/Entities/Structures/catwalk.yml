@@ -29,6 +29,8 @@
   - type: Tag
     tags:
       - Catwalk
+  - type: PlacementReplacement # KS14: replace an existing catwalk instead of stacking one
+    key: catwalk
   # KS14: Moved construction
   - type: Damageable
     damageModifierSet: Metallic

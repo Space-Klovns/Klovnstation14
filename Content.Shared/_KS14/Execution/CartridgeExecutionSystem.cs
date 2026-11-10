@@ -11,18 +11,10 @@ namespace Content.Shared._KS14.Execution;
 /// </summary>
 public sealed partial class CartridgeExecutionSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<CartridgeAmmoComponent, GunExecutedEvent>(OnCartridgeExecuted);
-        SubscribeLocalEvent<CartridgeAmmoComponent, GunFinishedExecutionEvent>(OnCartridgeFinishedExecution);
-    }
-
+    [SubscribeLocalEvent]
     private void OnCartridgeExecuted(EntityUid uid, CartridgeAmmoComponent component, ref GunExecutedEvent args)
     {
         if (component.Spent)
@@ -31,13 +23,14 @@ public sealed partial class CartridgeExecutionSystem : EntitySystem
             return;
         }
 
-        if (_prototypeManager.TryIndex(component.Prototype, out EntityPrototype? proto) &&
+        if (ProtoMan.TryIndex(component.Prototype, out EntityPrototype? proto) &&
             proto.TryGetComponent<ProjectileComponent>(out var projectile, _componentFactory))
         {
             args.Damage = projectile.Damage;
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnCartridgeFinishedExecution(Entity<CartridgeAmmoComponent> entity, ref GunFinishedExecutionEvent args)
     {
         entity.Comp.Spent = true;

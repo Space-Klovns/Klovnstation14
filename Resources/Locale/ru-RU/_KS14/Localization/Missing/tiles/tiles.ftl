@@ -1,0 +1,14 @@
+tiles-cave-drought = засуха в пещере
+tiles-dark-squiggly = темно-стальная извилистая плитка
+tiles-ironsand-concrete-slab = железобетонная плита
+tiles-ironsand-concrete-smooth = гладкий песчано-бетонный пол
+tiles-ironsand-concrete-tile = плитка из железопесчаного бетона
+tiles-ironsand-packed = уплотнённый железный песок
+tiles-ironsand-paved = уплотнённый песчано-железный грунт
+tiles-ironsand-plating = покрытие из железного песка
+tiles-ironsand-tile = плитка «ironsand»
+tiles-xeno-floor = уровень «Ксено»
+tiles-xeno-maint = xeno techmaint
+tiles-xeno-steel = плитка из ксено-стали
+tiles-xeno-steel-corner = Угловая плитка из ксено-стали
+tiles-xenoborg-floor = плитка «ксеноборг»

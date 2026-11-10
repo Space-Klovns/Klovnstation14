@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Power.Components;
 using Content.Server.Power.Events;
 using Content.Server.Power.EntitySystems;
@@ -63,7 +64,7 @@ namespace Content.Server.Stunnable.Systems
                 args.Cancelled = true;
                 if (args.User != null)
                 {
-                    _popup.PopupEntity(Loc.GetString("stunbaton-component-low-charge"), (EntityUid)args.User, (EntityUid)args.User);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("stunbaton-component-low-charge"), (EntityUid)args.User, (EntityUid)args.User);
                 }
                 return;
             }

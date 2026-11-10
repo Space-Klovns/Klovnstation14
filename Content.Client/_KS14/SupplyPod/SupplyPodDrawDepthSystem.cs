@@ -18,21 +18,7 @@ public sealed partial class SupplyPodDrawDepthSystem : EntitySystem
     [Dependency] private EntityQuery<SupplyPodComponent> _supplyPodQuery = default!;
     [Dependency] private EntityQuery<SupplyPodDrawDepthComponent> _drawDepthQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<SupplyPodDrawDepthComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<SupplyPodDrawDepthComponent, ComponentShutdown>(OnShutdown);
-
-        SubscribeLocalEvent<SupplyPodDrawDepthComponent, SupplyPodLaunchedEvent>(OnLaunched);
-        SubscribeLocalEvent<SupplyPodDrawDepthComponent, SupplyPodLandedEvent>(OnLanded);
-
-        // A pod that lands, or is launched, outside of PVS never raises those events on this
-        // client, so the networked flag has to be able to correct the depth on its own.
-        SubscribeLocalEvent<SupplyPodComponent, AfterAutoHandleStateEvent>(OnSupplyPodState);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<SupplyPodDrawDepthComponent> entity, ref ComponentStartup args)
     {
         if (!_spriteQuery.TryComp(entity.Owner, out var spriteComponent))
@@ -46,6 +32,7 @@ public sealed partial class SupplyPodDrawDepthSystem : EntitySystem
         ApplyDrawDepth((entity.Owner, entity.Comp, spriteComponent), supplyPodComponent.Landed);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<SupplyPodDrawDepthComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.OriginalDrawDepth is not { } originalDrawDepth
@@ -55,16 +42,21 @@ public sealed partial class SupplyPodDrawDepthSystem : EntitySystem
         _spriteSystem.SetDrawDepth((entity.Owner, spriteComponent), originalDrawDepth);
     }
 
+    [SubscribeLocalEvent]
     private void OnLaunched(Entity<SupplyPodDrawDepthComponent> entity, ref SupplyPodLaunchedEvent args)
     {
         SetDrawDepth(entity, landed: false);
     }
 
+    [SubscribeLocalEvent]
     private void OnLanded(Entity<SupplyPodDrawDepthComponent> entity, ref SupplyPodLandedEvent args)
     {
         SetDrawDepth(entity, landed: true);
     }
 
+    // A pod that lands, or is launched, outside of PVS never raises those events on this
+    // client, so the networked flag has to be able to correct the depth on its own.
+    [SubscribeLocalEvent]
     private void OnSupplyPodState(Entity<SupplyPodComponent> entity, ref AfterAutoHandleStateEvent args)
     {
         if (!_drawDepthQuery.TryComp(entity.Owner, out var drawDepthComponent))

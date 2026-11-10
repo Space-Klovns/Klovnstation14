@@ -1,0 +1,9 @@
+- type: reaction
+  id: FirefightingFoam
+  reactants:
+    Water:
+      amount: 2
+    SoapReagent:
+      amount: 1
+  products:
+    FirefightingFoam: 3

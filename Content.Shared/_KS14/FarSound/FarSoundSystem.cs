@@ -1,5 +1,5 @@
 using System.Numerics;
-using Content.Shared.Atmos.Components;
+using Content.Shared.Atmos.EntitySystems;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Collections;
@@ -7,7 +7,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 
-namespace Content.Shared._KS14.Farsound;
+namespace Content.Shared._KS14.FarSound;
 
 // did you know pvs entities in range of you are pvs overriden and so is their parents or whatever
 
@@ -17,6 +17,7 @@ public sealed partial class FarSoundSystem : EntitySystem
     [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedAtmosphereSystem _atmosphereSystem = default!;
 
     public Filter GetFilter(EntityUid sourceUid, float minimumRange, float maximumRange)
     {
@@ -94,12 +95,9 @@ public sealed partial class FarSoundSystem : EntitySystem
         if (_netManager.IsClient)
             return;
 
-        // shitcode start
-        var sourceTransformComponent = Transform(sourceUid);
-        if (sourceTransformComponent.MapUid is not { } mapUid ||
-            !HasComp<MapAtmosphereComponent>(mapUid))
+        // Nothing carries far in space.
+        if (_atmosphereSystem.IsMapSpace(Transform(sourceUid).MapUid))
             return;
-        // shitcode end
 
         var (filter, audioParams) = GetData(sourceUid, data.Range.X, data.Range.Y, data.Sound.Params);
         // if (userUid is { })

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Ninja.Components;
 using Content.Shared.Weapons.Melee.Events;
 using Content.Shared.Weapons.Ranged.Events;
@@ -104,7 +105,7 @@ public abstract partial class SharedSpaceNinjaSystem : EntitySystem
     /// </summary>
     private void OnShotAttempted(Entity<SpaceNinjaComponent> ent, ref ShotAttemptedEvent args)
     {
-        Popup.PopupClient(Loc.GetString("gun-disabled"), ent, ent);
+        Popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("gun-disabled"), ent, ent);
         args.Cancel();
     }
 }

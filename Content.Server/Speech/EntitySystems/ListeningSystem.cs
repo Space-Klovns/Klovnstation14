@@ -21,10 +21,10 @@ public sealed partial class ListeningSystem : EntitySystem
 
     private void OnSpeak(EntitySpokeEvent ev)
     {
-        PingListeners(ev.Source, ev.Message, ev.ObfuscatedMessage, ev.KsLanguage /* KS14 */);
+        PingListeners(ev.Source, ev.Message, ev.ObfuscatedMessage, ksLanguage: ev.KsLanguage, ksTranslationText: ev.KsTranslationText /* KS14 */);
     }
 
-    public void PingListeners(EntityUid source, string message, string? obfuscatedMessage, KsUtteranceContext? ksLanguage = null /* KS14 */)
+    public void PingListeners(EntityUid source, string message, string? obfuscatedMessage, KsUtteranceContext? ksLanguage = null /* KS14 */, string? ksTranslationText = null /* KS14: text before accents */)
     {
         // TODO whispering / audio volume? Microphone sensitivity?
         // for now, whispering just arbitrarily reduces the listener's max range.
@@ -33,7 +33,7 @@ public sealed partial class ListeningSystem : EntitySystem
         var sourcePos = _xforms.GetWorldPosition(sourceXform);
 
         var attemptEv = new ListenAttemptEvent(source);
-        var ev = new ListenEvent(message, source, ksLanguage /* KS14 */);
+        var ev = new ListenEvent(message, source, ksLanguage: ksLanguage /* KS14 */) { KsTranslationText = ksTranslationText }; // KS14: only clear deliveries retain original text
         var obfuscatedEv = obfuscatedMessage == null ? null : new ListenEvent(obfuscatedMessage, source, ksLanguage /* KS14 */);
         var query = EntityQueryEnumerator<ActiveListenerComponent, TransformComponent>();
 

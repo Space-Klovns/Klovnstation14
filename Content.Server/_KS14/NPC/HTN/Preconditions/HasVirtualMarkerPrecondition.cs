@@ -8,19 +8,20 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 ///     Returns true (or false if inverted) only when the blackboard purportedly
 ///         has the given virtual marker.
 /// </summary>
-public sealed partial class HasVirtualMarkerPrecondition : HTNPrecondition
+public sealed partial class HasVirtualMarkerPrecondition : KsInvertiblePrecondition
 {
     [Dependency] private IEntityManager _entityManager = default!;
 
-    [DataField] public bool Invert;
     [DataField(required: true)] public string Id = "Marker";
 
-    public override bool IsMet(NPCBlackboard blackboard)
+    protected override bool IsMetRaw(NPCBlackboard blackboard)
     {
-        if (!blackboard.TryGetValue<HashSet<string>>(EnsureVirtualMarkerOperator.MarkerSet, out var tagSet, _entityManager) ||
-            !tagSet.Contains(Id))
-            return Invert;
+        return HasMarker(blackboard, Id, _entityManager);
+    }
 
-        return !Invert;
+    public static bool HasMarker(NPCBlackboard blackboard, string id, IEntityManager entityManager)
+    {
+        return blackboard.TryGetValue<HashSet<string>>(EnsureVirtualMarkerOperator.MarkerSet, out var markerSet, entityManager) &&
+            markerSet.Contains(id);
     }
 }

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body;
@@ -281,7 +282,7 @@ public abstract partial class SharedCryoPodSystem : EntitySystem
 
         if (cryoPodComponent.Locked)
         {
-            _popup.PopupClient(Loc.GetString("cryo-pod-locked"), uid, userId);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("cryo-pod-locked"), uid, userId);
             return;
         }
 

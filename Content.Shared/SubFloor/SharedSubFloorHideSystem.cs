@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Audio;
 using Content.Shared.Construction.Components;
 using Content.Shared.Explosion;
@@ -52,7 +53,7 @@ namespace Content.Shared.SubFloor
             if (TryComp<MapGridComponent>(xform.GridUid, out var grid)
                 && HasFloorCover(xform.GridUid.Value, grid, Map.TileIndicesFor(xform.GridUid.Value, grid, xform.Coordinates)))
             {
-                _popup.PopupClient(Loc.GetString("subfloor-anchor-failure", ("entity", uid)), args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("subfloor-anchor-failure", ("entity", uid)), args.User);
                 args.Cancel();
             }
         }
@@ -63,7 +64,7 @@ namespace Content.Shared.SubFloor
             // despite being partially under the floor.
             if (component.IsUnderCover)
             {
-                _popup.PopupClient(Loc.GetString("subfloor-unanchor-failure", ("entity", uid)), args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("subfloor-unanchor-failure", ("entity", uid)), args.User);
                 args.Cancel();
             }
         }

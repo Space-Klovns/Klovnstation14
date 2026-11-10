@@ -14,7 +14,6 @@ namespace Content.Client.Chemistry.Visualizers;
 
 public sealed partial class SolutionContainerVisualsSystem : VisualizerSystem<SolutionContainerVisualsComponent>
 {
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private ItemSystem _itemSystem = default!;
 
     public override void Initialize()
@@ -75,7 +74,7 @@ public sealed partial class SolutionContainerVisualsSystem : VisualizerSystem<So
                         out var baseOverride,
                         args.Component))
                 {
-                    _prototype.TryIndex<ReagentPrototype>(baseOverride, out var reagentProto);
+                    ProtoMan.TryIndex<ReagentPrototype>(baseOverride, out var reagentProto);
 
                     if (reagentProto?.MetamorphicSprite is { } sprite)
                     {

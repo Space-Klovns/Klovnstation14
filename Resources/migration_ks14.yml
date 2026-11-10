@@ -98,3 +98,7 @@ ClothingUniformJumpsuitWorkaday: ClothingUniformJumpsuitColorGrey
 WeaponAntiqueLaser: WeaponAntiqueLaserProjectile
 WeaponLaserCarbine: WeaponLaserCarbineProjectile
 WeaponLaserCarbinePractice: WeaponLaserCarbineProjectilePractice
+
+#2026-09-26 Argon gas renamed to Encalite
+ArgonCanister: EncaliteCanister
+ArgonCanisterBroken: EncaliteCanisterBroken

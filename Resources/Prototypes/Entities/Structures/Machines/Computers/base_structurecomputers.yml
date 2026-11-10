@@ -43,6 +43,8 @@
     layers:
     - computerLayerScreen
     - computerLayerKeys
+  - type: KsEmissiveAppearanceToggle # the keys stay visible when unpowered, but shouldn't glow
+    key: enum.ComputerVisuals.Powered
   # KS14: emissive end
   - type: Appearance
   - type: GenericVisualizer
@@ -63,7 +65,7 @@
     radius: 1.5
     energy: 3.0
     enabled: false
-    mask: /Textures/Effects/LightMasks/cone.png
+    lightMask: ConeSingle
     autoRot: true
     offset: "0, 0.4" # shine from the top, not bottom of the computer
     castShadows: false

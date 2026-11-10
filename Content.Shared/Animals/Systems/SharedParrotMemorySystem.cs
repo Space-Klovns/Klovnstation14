@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Managers;
 using Content.Shared.Animals.Components;
 using Content.Shared.Popups;
@@ -36,7 +37,7 @@ public abstract partial class SharedParrotMemorySystem : EntitySystem
             Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/AdminActions/clear-parrot.png")),
             Act = () =>
             {
-                _popup.PopupClient(Loc.GetString("parrot-popup-memory-cleared"), entity.Owner, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("parrot-popup-memory-cleared"), entity.Owner, user);
 
                 if (_net.IsServer)
                     entity.Comp.SpeechMemories.Clear();

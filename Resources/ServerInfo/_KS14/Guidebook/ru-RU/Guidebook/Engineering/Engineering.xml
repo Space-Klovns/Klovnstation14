@@ -1,0 +1,31 @@
+<Document>
+  # Инженерное дело
+  [color=#f39f27]Инженерное дело[/color] это сочетание [textlink="строительных" link="Construction"] и [textlink="ремонтных" link="ExpandingRepairingStation"] работ, обслуживания машины смерти, которая, по стечению обстоятельств, производит [textlink="электроэнергию" link="Power"], и обеспечения наличия на станции [textlink="пригодного для дыхания воздуха" link="Atmospherics"].
+
+  ## Персонал
+  [color=#f39f27]Инженерный отдел[/color] состоит из Технических ассистентов, Инженеров и Атмосферных техников.
+  Инженерным отделом управляет Старший инженер
+
+  <Box>
+    <GuideEntityEmbed Entity="ToyFigurineEngineer" Caption="Инженер"/>
+    <GuideEntityEmbed Entity="ToyFigurineAtmosTech" Caption="АТМОС"/>
+    <GuideEntityEmbed Entity="ToyFigurineChiefEngineer" Caption="СИ"/>
+  </Box>
+
+  ## Инструменты
+  <Box>
+    <GuideEntityEmbed Entity="Wrench"/>
+    <GuideEntityEmbed Entity="Crowbar"/>
+    <GuideEntityEmbed Entity="Screwdriver"/>
+    <GuideEntityEmbed Entity="Wirecutter"/>
+  </Box>
+  <Box>
+    <GuideEntityEmbed Entity="Welder"/>
+    <GuideEntityEmbed Entity="Multitool"/>
+    <GuideEntityEmbed Entity="NetworkConfigurator"/>
+  </Box>
+  Ваш основной набор инструментов, это небольшое количество разнообразных инструментов.
+  Если вы инженер, то у вас на поясе должен быть пояс с одним экземпляром каждого вида. Если нет, вы, скорее всего, найдете их в технических туннелях, в ящиках для инструментов и торговых автоматах.
+
+  К большинству задач прилагается инструкция по их выполнению, например, если вы [textlink="строите" link="Construction"] стену, то при ближайшем рассмотрении вам будет показан следующий шаг.
+</Document>

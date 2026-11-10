@@ -1,0 +1,112 @@
+<Document>
+  # Предатели
+
+  <Box>
+    [color=#999999][italic]«ВИСКИ. ЭХО. ВИСКИ. ЛИМА. АЛЬФА. ДЕЛЬТА. АГЕНТ, ВЫ АКТИВИРОВАНЫ».[/italic][/color]
+  </Box>
+  <Box>
+    <GuideEntityEmbed Entity="PosterContrabandSyndicateRecruitment" Caption=""/>
+  </Box>
+  Предатели — это антагонисты, нанятые [color=#ff0000]«Синдикат».[/color] Вы — тайный агент, имеющий доступ к различным инструментам и оружию благодаря своему [bold]uplink[/bold].
+  Вы также получаете [bold]кодовые слова[/bold] для выявления других агентов, а слаженная команда предателей может [italic]жестокие результаты.[/italic]
+
+  Кто-нибудь, кроме [textlink="руководители отделов" link="Command"] или участники [textlink="Безопасность" link="Security"] может оказаться предателем.
+
+  ## Установка связи и активация
+  Игра [color=cyan]uplink[/color] — ваш самый важный инструмент в роли предателя. Вы можете обменять 20 [color=red]телекристаллы[/color] (TC) — с этого вы начнете, чтобы получить предметы, которые помогут вам в достижении целей.
+
+  Нажав [color=yellow][bold][keybind="OpenCharacterMenu"][/bold][/color], вы увидите свой личный код доступа. [bold]Установите этот код в качестве мелодии звонка на вашем КПК — это откроет канал связи с орбитальной станцией.[/bold]
+  Нажатие [color=yellow][bold][keybind="OpenCharacterMenu"][/bold][/color] Также позволяет просматривать свои задачи и кодовые слова.
+
+  Если у вас нет КПК на момент активации, то [color=cyan]имплантат «Uplink»[/color] предоставляется [bold]Полная версия [color=red]TC[/color] Стоимость имплантата.[/bold]
+  Доступ к ней можно получить через панель быстрого доступа.
+  <Box>
+    <GuideEntityEmbed Entity="PassengerPDA" Caption="КПК"/>
+    <GuideEntityEmbed Entity="Telecrystal" Caption="Телекристаллы"/>
+    <GuideEntityEmbed Entity="BaseUplinkRadio" Caption="Имплантат «Uplink»"/>
+  </Box>
+
+  [bold]Обязательно закройте канал связи с вашим КПК, чтобы никто другой не смог его увидеть.[/bold] Вы же не хотите [color=#cb0000]Безопасность[/color] чтобы заметить, что оно у вас есть, и конфисковать его!
+
+  Имплантированные каналы связи обычно недоступны для других людей, поэтому они не имеют никаких мер безопасности. Однако их можно извлечь из вас с помощью пустого имплантатора.
+
+  <Box>
+    <GuideEntityEmbed Entity="WeaponPistolCobra" Caption="Оружие"/>
+    <GuideEntityEmbed Entity="MagazineBoxLightRifle" State="icon" Caption="Боеприпасы"/>
+    <GuideEntityEmbed Entity="C4" Caption="Взрывчатые вещества"/>
+    <GuideEntityEmbed Entity="ClothingOuterHardsuitSyndie" Caption="Предметы экипировки"/>
+    <GuideEntityEmbed Entity="Stimpack" Caption="Химические вещества"/>
+  </Box>
+  <Box>
+    <GuideEntityEmbed Entity="ChameleonProjector" Caption="Обман"/>
+    <GuideEntityEmbed Entity="Emag" Caption="Сбой"/>
+    <GuideEntityEmbed Entity="StorageImplanter" Caption="Имплантаты"/>
+    <GuideEntityEmbed Entity="MobMonkeySyndicateAgentNukeops" Caption="Союзники"/>
+    <GuideEntityEmbed Entity="ClothingEyesGlassesOutlawGlasses" Caption="Бессмысленно"/>
+  </Box>
+
+  Покупки, которые вы совершаете, должны помогать вам в достижении ваших целей. Некоторое снаряжение может оказаться вам бесполезным, и вам придется выбирать между скрытным и открытым подходом.
+
+  ## Координация
+  Кодовые слова — это слова или фразы, известные каждому предателю. Они позволяют незаметно опознать другого предателя или установить с ним контакт, что может пригодиться, если ваши цели включают [italic][color=cyan]помогая им в достижении их целей.[/color][/italic]
+
+  Когда найдёте друзей, [bold]Вы можете вывести средства [color=red]телекристаллы[/color] из вашего канала связи, чтобы передать им.[/bold] Игроки могут добавить их в свой личный канал связи, чтобы потратить по своему усмотрению.
+
+  Некоторые предложения, доступные в вашем канале связи, требуют более 20 TC для покупки, поэтому, если вы хотите их приобрести, вам придётся поделиться средствами.
+
+  ## Убийство
+  Одной из ваших целей может быть [italic][color=cyan]Убейте или высадите члена экипажа на планету.[/color][/italic]
+
+  Вы можете [color=cyan]бордовый[/color] Ваша цель — [bold]не давая им добраться до CentComm[/bold] на эвакуационном шаттле или в спасательной капсуле.
+
+  Если вы не можете оставить цель на планете или она слишком важна, чтобы оставить её в живых, вам придётся запачкать руки и [color=cyan]убийство[/color] их. Убедитесь, что ваша цель мертва, когда [bold]Эвакуационный челнок прибывает в CentComm,[/bold] И не дайте им воскреснуть.
+
+  Помните: Синдикат хочет, чтобы ваши цели были мертвы. [color=red]Старайтесь не допускать массовых убийств или значительных повреждений станции,[/color] поскольку чем больше невинных жизней вы забираете, тем большей обузой вы становитесь.
+
+  ## Уклонение и самоуничтожение
+  Ваши задачи могут потребовать от вас [italic][color=cyan]Доберитесь до CentComm, не погибнув и не попав в плен.[/color][/italic] Не позволяйте [color=#cb0000]Безопасность[/color] не позволят вам это сделать, выполните остальные задачи и [bold]Вернись живым.[/bold]
+
+  В качестве альтернативы, для выполнения ваших задач может потребоваться [italic][color=cyan]Умри славной смертью.[/color][/italic] [bold]Убедитесь, что вы не вернётесь из мёртвых,[/bold] Или же вы можете проснуться в наручниках.
+
+  ## Присвоение
+  Чаще всего вам придётся [italic][color=cyan]украсть вещь, принадлежащую начальнику отдела.[/color][/italic]
+
+  Цель может находиться в их офисе или при них. Если вам не удастся украсть предмет из кармана, возможно, придется убить того, кто его носит.
+
+  Среди заданий, которые вам могут поручить, могут быть следующие:
+  - Украсть [color=yellow]Капитан[/color]'s [bold]Идентификационная карта[/bold], [bold]старинный лазерный пистолет[/bold], [bold]реактивный ранец[/bold], или [bold]диск с ядерной аутентификацией[/bold].
+  <Box>
+    <GuideEntityEmbed Entity="CaptainIDCard" Caption=""/>
+    <GuideEntityEmbed Entity="WeaponAntiqueLaser" Caption=""/>
+    <GuideEntityEmbed Entity="JetpackCaptainFilled" Caption=""/>
+    <GuideEntityEmbed Entity="NukeDisk" Caption=""/>
+  </Box>
+  - Кража [color=#5b97bc]Главный медицинский офицер[/color]'s [bold]гипоспрей[/bold] или [bold]портативный монитор экипажа[/bold].
+  <Box>
+    <GuideEntityEmbed Entity="Hypospray" Caption=""/>
+    <GuideEntityEmbed Entity="HandheldCrewMonitorEmpty" Caption=""/>
+  </Box>
+  - Кража [color=#c96dbf]Директор по научным исследованиям[/color]'s [bold]экспериментальный скафандр[/bold] или [bold]ручной телепортатор[/bold].
+  <Box>
+    <GuideEntityEmbed Entity="ClothingOuterHardsuitRd" Caption=""/>
+    <GuideEntityEmbed Entity="HandTeleporter" Caption=""/>
+  </Box>
+  - Кража [color=#cb0000]Начальник службы безопасности[/color]'s [bold]энергетический магнум[/bold].
+  <Box>
+    <GuideEntityEmbed Entity="WeaponEnergyMagnum" Caption=""/>
+  </Box>
+  - Кража [color=#f39f27]Главный инженер[/color]'s [bold]усовершенствованные магнитные ботинки[/bold].
+  <Box>
+    <GuideEntityEmbed Entity="ClothingShoesBootsMagAdv" Caption=""/>
+  </Box>
+  - Кража [color=#b18644]Интендант[/color]'s [bold]цифровая доска заявок[/bold].
+  <Box>
+    <GuideEntityEmbed Entity="BoxFolderQmClipboard" Caption=""/>
+  </Box>
+  - Убийство Иэна, [color=#9fed58]Начальник отдела кадров[/color]собака, и получение [bold]мясо корги[/bold].
+  <Box>
+    <GuideEntityEmbed Entity="MobCorgiIan" Caption=""/>
+    <GuideEntityEmbed Entity="FoodMeatCorgi" Caption=""/>
+  </Box>
+
+</Document>

@@ -1,0 +1,87 @@
+// Lobby backdrop: dims only the bright pixels under the UI text regions so white text stays readable, and
+// optionally blurs (character setup). Samples TEXTURE (UI has no SCREEN_TEXTURE).
+//
+// Regions are in the *quad's* normalised space (UV2), with the origin at the TOP-LEFT of what is shown:
+//   region = (minX, minY, maxX, maxY). A zero-area rect (the default 0,0,0,0) is unused and masks nothing.
+// UV2 rather than UV: UV addresses the texture, which may be an atlas sub-rectangle; the quad is the control
+// (or the viewport's draw box), which is what the C# side measures. Screen-space UV2 has v = 0 at the bottom,
+// hence the flip below.
+//
+// zTexture() returns LINEAR colour (the engine converts sRGB textures on sampling and back on output), so the
+// luminance below is the linear-light relative luminance Y, and maxLuminance is a linear value:
+//   contrast(text, bg) = (Ytext + 0.05) / (Ybg + 0.05).  #E6E6E6 text has Y = 0.79, so the 0.07 charcoal cap gives
+//   about 7:1. 0.07 linear is about sRGB 0.29, so only mid-tone and brighter art is pulled down.
+light_mode unshaded;
+
+uniform highp vec4 region0;
+uniform highp vec4 region1;
+uniform highp vec4 region2;
+uniform highp vec4 region3;
+uniform highp vec2 quadPixelSize; // Size of the drawn quad in screen pixels, so the feather is round, not stretched.
+uniform highp float feather;       // Soft edge width in screen pixels, measured OUTWARD from the region's edge.
+uniform highp float maxLuminance; // Linear luminance that bright pixels are pulled down to.
+uniform highp float strength;     // 0..1, how much of the pull is applied.
+uniform highp float blurRadius;   // In texels of TEXTURE; 0 = no blur.
+
+highp float regionMask(highp vec4 r, highp vec2 p)
+{
+    // Unused regions are zero-area.
+    if (r.z <= r.x || r.w <= r.y)
+        return 0.0;
+
+    // Fully dimmed inside the rect, fading to nothing `feather` pixels outside it. The distance is the rounded
+    //      outside distance of a box, so corners fade radially instead of forming diagonal seams.
+    highp vec2 outside = max(max(r.xy - p, p - r.zw), vec2(0.0)) * quadPixelSize;
+    return 1.0 - smoothstep(0.0, max(feather, 0.00001), length(outside));
+}
+
+// Dimmed areas read as dark frosted glass: the art is lightly blurred, bright pixels are pulled down to a
+// charcoal cap through a soft knee, and the dimmed pixels lose some colour. A pixel already darker than the knee
+// keeps its luminance exactly, and outside the mask nothing is touched.
+const highp float DIM_BLUR_RADIUS = 6.0;   // texels, only sampled where the mask is above zero
+const highp float DIM_DESATURATION = 0.3;
+const highp float KNEE_START = 0.6;        // fraction of maxLuminance where the soft knee begins
+
+highp vec4 blurSample(highp vec2 uv, highp float radius)
+{
+    highp vec4 sum = vec4(0.0);
+    for (int i = 0; i < 24; i++)
+    {
+        highp float fi = float(i);
+        highp float r = sqrt((fi + 0.5) / 24.0) * radius;
+        highp float theta = fi * 2.399963; // golden angle
+        highp vec2 offset = vec2(cos(theta), sin(theta)) * r * TEXTURE_PIXEL_SIZE;
+        sum += zTexture(uv + offset);
+    }
+    return sum / 24.0;
+}
+
+void fragment() {
+    highp vec2 p = vec2(UV2.x, 1.0 - UV2.y);
+    highp float mask = max(max(regionMask(region0, p), regionMask(region1, p)),
+                           max(regionMask(region2, p), regionMask(region3, p)));
+    highp float k = clamp(mask * strength, 0.0, 1.0);
+
+    // Character-setup blur everywhere, plus a light blur under the dimming. The branch keeps the 24 taps out of
+    //      pixels that need neither.
+    highp float radius = max(blurRadius, DIM_BLUR_RADIUS * k);
+    highp vec4 col = radius > 0.0 ? blurSample(UV, radius) : zTexture(UV);
+
+    if (k > 0.0)
+    {
+        highp float lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
+        highp float knee = maxLuminance * KNEE_START;
+        highp float span = max(maxLuminance - knee, 0.00001);
+        // Identity up to the knee, then eases towards maxLuminance and never passes it. Never above lum.
+        highp float mapped = lum <= knee ? lum : knee + span * (1.0 - exp(-(lum - knee) / span));
+        highp float lumOut = mix(lum, min(mapped, lum), k);
+
+        highp vec3 rgb = col.rgb * (lumOut / max(lum, 0.00001));
+        // Desaturate towards the pixel's own grey, which keeps its luminance. Skipped for the darkest pixels.
+        highp float w = k * DIM_DESATURATION * smoothstep(knee * 0.5, max(knee, 0.00002), lum);
+        rgb = mix(rgb, vec3(lumOut), w);
+        col = vec4(rgb, col.a);
+    }
+
+    COLOR = col;
+}

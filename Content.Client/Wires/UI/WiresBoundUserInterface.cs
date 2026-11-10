@@ -9,6 +9,10 @@ namespace Content.Client.Wires.UI
         [ViewVariables]
         private WiresMenu? _menu;
 
+        // KS14 start: the tgui layout, picked when the window opens
+        private Content.Client._KS14.Tgui.Windows.Wires.KsTguiWiresWindow? _ksTguiMenu;
+        // KS14 end
+
         public WiresBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
         }
@@ -16,6 +20,14 @@ namespace Content.Client.Wires.UI
         protected override void Open()
         {
             base.Open();
+            // KS14 start: tgui theme gets its own window
+            if (Content.Client._KS14.Tgui.KsTguiTheme.ReadEnabled())
+            {
+                _ksTguiMenu = this.CreateWindow<Content.Client._KS14.Tgui.Windows.Wires.KsTguiWiresWindow>();
+                _ksTguiMenu.OnAction += PerformAction;
+                return;
+            }
+            // KS14 end
             _menu = this.CreateWindow<WiresMenu>();
             _menu.OnAction += PerformAction;
         }
@@ -24,6 +36,7 @@ namespace Content.Client.Wires.UI
         {
             base.UpdateState(state);
             _menu?.Populate((WiresBoundUserInterfaceState)state);
+            _ksTguiMenu?.Populate((WiresBoundUserInterfaceState)state); // KS14: tgui window
         }
 
         public void PerformAction(int id, WiresAction action)
@@ -38,6 +51,7 @@ namespace Content.Client.Wires.UI
                 return;
 
             _menu?.Dispose();
+            _ksTguiMenu?.Dispose(); // KS14: tgui window
         }
     }
 }

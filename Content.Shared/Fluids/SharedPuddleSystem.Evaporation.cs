@@ -74,9 +74,10 @@ public abstract partial class SharedPuddleSystem
             if (evaporinForced)
             {
                 // Evaporin is present: force evaporation of the ENTIRE puddle, regardless of contents.
-                reagentProportions = puddleSolution.Contents.ToDictionary(
-                    r => new ProtoId<ReagentPrototype>(r.Reagent.Prototype),
-                    r => r.Quantity / puddleSolution.Volume);
+                // By prototype, not from Contents: that holds a reagent once per data, like blood from two people.
+                reagentProportions = puddleSolution.GetReagentPrototypes(ProtoMan).ToDictionary(
+                    kv => new ProtoId<ReagentPrototype>(kv.Key.ID),
+                    kv => kv.Value / puddleSolution.Volume);
             }
             else
             {
@@ -112,7 +113,7 @@ public abstract partial class SharedPuddleSystem
     public ProtoId<ReagentPrototype>[] GetEvaporatingReagents(Solution solution)
     {
         List<ProtoId<ReagentPrototype>> evaporatingReagents = [];
-        foreach (var solProto in solution.GetReagentPrototypes(_prototypeManager).Keys)
+        foreach (var solProto in solution.GetReagentPrototypes(ProtoMan).Keys)
         {
             if (solProto.EvaporationSpeed > FixedPoint2.Zero)
                 evaporatingReagents.Add(solProto.ID);
@@ -123,7 +124,7 @@ public abstract partial class SharedPuddleSystem
     public ProtoId<ReagentPrototype>[] GetAbsorbentReagents(Solution solution)
     {
         var absorbentReagents = new List<ProtoId<ReagentPrototype>>();
-        foreach (ReagentPrototype solProto in solution.GetReagentPrototypes(_prototypeManager).Keys)
+        foreach (ReagentPrototype solProto in solution.GetReagentPrototypes(ProtoMan).Keys)
         {
             if (solProto.Absorbent)
                 absorbentReagents.Add(solProto.ID);
@@ -143,9 +144,9 @@ public abstract partial class SharedPuddleSystem
     public Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> GetEvaporationSpeeds(Solution solution)
     {
         Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> evaporatingSpeeds = [];
-        foreach (var solProto in solution.GetReagentPrototypes(_prototypeManager).Keys)
+        foreach (var solProto in solution.GetReagentPrototypes(ProtoMan).Keys)
         {
-            if (solProto.EvaporationSpeed > FixedPoint2.Zero)
+            if (solProto.EvaporationSpeed > FixedPoint2.Zero && !KsEvaporatesThroughFluidmos(solProto) /* KS14: added */)
             {
                 evaporatingSpeeds.Add(solProto.ID, solProto.EvaporationSpeed);
             }

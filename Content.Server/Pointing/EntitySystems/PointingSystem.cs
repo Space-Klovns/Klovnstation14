@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.Pointing.Components;
@@ -103,10 +104,10 @@ namespace Content.Server.Pointing.EntitySystems
                 // Someone pointing at YOU is slightly more important
                 var popupType = viewerEntity == pointed ? PopupType.Medium : PopupType.Small;
 
-                RaiseNetworkEvent(new PopupEntityEvent(message, popupType, netSource), viewerEntity);
+                RaiseNetworkEvent(new PopupEntityEvent(message, popupType, _gameTiming.CurTick, netSource), viewerEntity); // TODO: Make this use the popup system API
             }
 
-            _replay.RecordServerMessage(new PopupEntityEvent(viewerMessage, PopupType.Small, netSource));
+            _replay.RecordServerMessage(new PopupEntityEvent(viewerMessage, PopupType.Small, _gameTiming.CurTick, netSource));
         }
 
         public bool InRange(EntityUid pointer, EntityCoordinates coordinates)
@@ -154,7 +155,7 @@ namespace Content.Server.Pointing.EntitySystems
 
             if (!InRange(player, coordsPointed))
             {
-                _popup.PopupEntity(Loc.GetString("pointing-system-try-point-cannot-reach"), player, player);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pointing-system-try-point-cannot-reach"), player, player);
                 return false;
             }
             var mapCoordsPointed = _transform.ToMapCoordinates(coordsPointed);

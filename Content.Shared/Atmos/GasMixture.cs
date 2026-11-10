@@ -19,7 +19,7 @@ namespace Content.Shared.Atmos
         public static GasMixture SpaceGas => new() {Volume = Atmospherics.CellVolume, Temperature = Atmospherics.TCMB, Immutable = true};
 
         // No access, to ensure immutable mixtures are never accidentally mutated.
-        [Access(typeof(SharedAtmosphereSystem), typeof(SharedAtmosDebugOverlaySystem), typeof(GasEnumerator), Other = AccessPermissions.None)]
+        [Access(typeof(SharedAtmosphereSystem), typeof(SharedAtmosDebugOverlaySystem), typeof(GasEnumerator), typeof(Content.Shared._KS14.Atmos.KsGasThermoSystem) /* KS14: added, reads moles for transfer thermodynamics */, Other = AccessPermissions.None)]
         [DataField(customTypeSerializer: typeof(GasArraySerializer))]
         public float[] Moles = new float[Atmospherics.AdjustedNumberOfGases];
 
@@ -51,6 +51,7 @@ namespace Content.Shared.Atmos
             get
             {
                 if (Volume <= 0) return 0f;
+                if (Fluid is { } fluid) return KsFluidPressure(fluid); // KS14: liquid displaces volume, vapor adds pressure
                 return TotalMoles * Atmospherics.R * Temperature / Volume;
             }
         }
@@ -159,16 +160,16 @@ namespace Content.Shared.Atmos
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GasMixture Remove(float amount)
         {
-            return RemoveRatio(amount / TotalMoles);
+            return RemoveRatio(amount / TransferMoles /* KS14: TotalMoles -> TransferMoles, counts fluid */);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public GasMixture RemoveRatio(float ratio)
+        public GasMixture RemoveRatio(float ratio, bool includeLiquid = true /* KS14: added, false leaves liquid behind */)
         {
             switch (ratio)
             {
-                case <= 0:
-                    return new GasMixture(Volume){Temperature = Temperature};
+                case <= 0 or float.NaN /* KS14: added NaN, which would otherwise zero every gas here */:
+                    return new GasMixture(Volume){Temperature = Temperature, FluidCapable = FluidCapable /* KS14: added */};
                 case > 1:
                     ratio = 1;
                     break;
@@ -193,12 +194,14 @@ namespace Content.Shared.Atmos
                     removed.Moles[i] = 0;
             }
 
+            KsSplitFluid(removed, ratio, includeLiquid); // KS14
+
             return removed;
         }
 
-        public GasMixture RemoveVolume(float vol)
+        public GasMixture RemoveVolume(float vol, bool includeLiquid = true /* KS14: added */)
         {
-            return RemoveRatio(vol / Volume);
+            return RemoveRatio(vol / Volume, includeLiquid /* KS14: added */);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -210,6 +213,8 @@ namespace Content.Shared.Atmos
             Volume = sample.Volume;
             sample.Moles.CopyTo(Moles, 0);
             Temperature = sample.Temperature;
+            Fluid = sample.Fluid?.Clone(); // KS14
+            FluidCapable = sample.FluidCapable; // KS14: a copy holds what it copied, or its fluid is dropped at the next merge
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -217,6 +222,7 @@ namespace Content.Shared.Atmos
         {
             if (Immutable) return;
             Array.Clear(Moles, 0, Atmospherics.TotalNumberOfGases);
+            Fluid = null; // KS14
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -224,6 +230,7 @@ namespace Content.Shared.Atmos
         {
             if (Immutable) return;
             NumericsHelpers.Multiply(Moles, multiplier);
+            Fluid?.Multiply(multiplier); // KS14
         }
 
         void ISerializationHooks.AfterDeserialization()
@@ -278,7 +285,8 @@ namespace Content.Shared.Atmos
                    && _temperature.Equals(other._temperature)
                    && ReactionResults.SequenceEqual(other.ReactionResults)
                    && Immutable == other.Immutable
-                   && Volume.Equals(other.Volume);
+                   && Volume.Equals(other.Volume)
+                   && Equals(Fluid, other.Fluid); // KS14
         }
 
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
@@ -295,6 +303,7 @@ namespace Content.Shared.Atmos
             hashCode.Add(_temperature);
             hashCode.Add(Immutable);
             hashCode.Add(Volume);
+            hashCode.Add(Fluid); // KS14
 
             return hashCode.ToHashCode();
         }
@@ -314,6 +323,8 @@ namespace Content.Shared.Atmos
                 Moles = (float[])Moles.Clone(),
                 _temperature = _temperature,
                 Volume = Volume,
+                Fluid = Fluid?.Clone(), // KS14
+                FluidCapable = FluidCapable, // KS14
             };
             return newMixture;
         }

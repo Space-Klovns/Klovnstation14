@@ -19,11 +19,7 @@
     # Find target and fight
     - tasks:
         - !type:HTNPrimitiveTask
-          operator: !type:RangedTargetingOperator
-            key: Target
-            aggroKey: Aggroed
-            radiusKey: VisionRadius
-            aggroRadiusKey: AggroVisionRadius
+          operator: !type:NpcRangedTargetingOperator
         - !type:HTNCompoundTask
           task: ColossusFightCompound
     # No target - idle
@@ -71,7 +67,7 @@
       tasks:
         - !type:HTNPrimitiveTask
           operator: !type:RangedOperator
-            attackId: "enragedSpiral"
+            attack: ColossusEnragedSpiralAttack
             speech: "DIE."
             executedFlagKey: ColossusFinalUsed
 
@@ -80,17 +76,19 @@
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:WeightedRangedOperator
-            weights:
-              spiral: 20
-              randomAoe: 20
-              shotgun: 40
-              directional: 20
-            speeches:
-              spiral: "Judgement."
-              randomAoe: "Wrath."
-              shotgun: "Retribution."
-              directional: "Lament."
-            angerWeights:
-              shotgun: 2
-            useAngerModifier: true
+            weightMeter: KsAnger
+            attacks:
+            - attack: ColossusSpiralAttack
+              weight: 20
+              speech: Judgement.
+            - attack: ColossusRandomAoeAttack
+              weight: 20
+              speech: Wrath.
+            - attack: ColossusShotgunAttack
+              weight: 40
+              meterWeight: 2
+              speech: Retribution.
+            - attack: ColossusDirectionalAttack
+              weight: 20
+              speech: Lament.
 

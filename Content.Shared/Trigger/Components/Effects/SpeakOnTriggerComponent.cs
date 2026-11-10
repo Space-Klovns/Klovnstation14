@@ -12,13 +12,6 @@ namespace Content.Shared.Trigger.Components.Effects;
 public sealed partial class SpeakOnTriggerComponent : BaseXOnTriggerComponent
 {
     /// <summary>
-    /// KS14
-    /// The text to speak, but not locale. This has priority over Text.
-    /// </summary>
-    [DataField]
-    public string? NonLocText;
-
-    /// <summary>
     /// The text to speak. This has priority over Pack.
     /// </summary>
     [DataField]

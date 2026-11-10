@@ -183,6 +183,7 @@ namespace Content.Shared.Preferences
                 new HashSet<ProtoId<TraitPrototype>>(other.TraitPreferences),
                 new Dictionary<string, RoleLoadout>(other.Loadouts))
         {
+            TtsVoice = other.TtsVoice; // KS14
         }
 
         /// <summary>
@@ -474,6 +475,7 @@ namespace Content.Shared.Preferences
             if (!_traitPreferences.SequenceEqual(other._traitPreferences)) return false;
             if (!Loadouts.SequenceEqual(other.Loadouts)) return false;
             if (FlavorText != other.FlavorText) return false;
+            if (TtsVoice != other.TtsVoice) return false; // KS14
             return Appearance.Equals(other.Appearance);
         }
 
@@ -624,6 +626,8 @@ namespace Content.Shared.Preferences
             _traitPreferences.Clear();
             _traitPreferences.UnionWith(GetValidTraits(traits, prototypeManager));
 
+            EnsureValidTtsVoice(prototypeManager); // KS14
+
             // Checks prototypes exist for all loadouts and dump / set to default if not.
             var toRemove = new ValueList<string>();
 
@@ -729,6 +733,7 @@ namespace Content.Shared.Preferences
             hashCode.Add(Appearance);
             hashCode.Add((int)SpawnPriority);
             hashCode.Add((int)PreferenceUnavailable);
+            hashCode.Add(TtsVoice); // KS14
             return hashCode.ToHashCode();
         }
 

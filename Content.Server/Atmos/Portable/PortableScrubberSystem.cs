@@ -23,6 +23,7 @@ namespace Content.Server.Atmos.Portable
         [Dependency] private GasCanisterSystem _canisterSystem = default!;
         [Dependency] private GasPortableSystem _gasPortableSystem = default!;
         [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
         [Dependency] private TransformSystem _transformSystem = default!;
         [Dependency] private IAdminLogManager _adminLogger = default!;
         [Dependency] private AmbientSoundSystem _ambientSound = default!;
@@ -73,7 +74,15 @@ namespace Content.Server.Atmos.Portable
             var position = _transformSystem.GetGridTilePositionOrDefault(uid);
             var environment = _atmosphereSystem.GetTileMixture(grid, args.Map, position, true);
 
-            var running = Scrub(timeDelta, component, environment);
+            var running = Scrub(timeDelta, component, environment, uid /* KS14: added */);
+
+            // KS14 start: smoke is drawn in with the air
+            if (running && component.KsScrubAerosols && environment != null)
+            {
+                var smokeFraction = MathF.Min(1f, timeDelta * component.TransferRate * _atmosphereSystem.PumpSpeedup() / environment.Volume);
+                _ksFluidmosTileSystem.AbsorbFromTile(uid, component.Air, smokeFraction, smoke: true, puddleUnits: 0f);
+            }
+            // KS14 end
 
             UpdateAppearance(uid, false, running);
             // We scrub once to see if we can and set the animation
@@ -84,7 +93,7 @@ namespace Content.Server.Atmos.Portable
             var enumerator = _atmosphereSystem.GetAdjacentTileMixtures(grid, position, false, true);
             while (enumerator.MoveNext(out var adjacent))
             {
-                Scrub(timeDelta, component, adjacent);
+                Scrub(timeDelta, component, adjacent, uid /* KS14: added */);
             }
         }
 
@@ -125,17 +134,20 @@ namespace Content.Server.Atmos.Portable
         private void OnDestroyed(EntityUid uid, PortableScrubberComponent component, DestructionEventArgs args)
         {
             var environment = _atmosphereSystem.GetContainingMixture(uid, false, true);
+            _ksFluidmosTileSystem.ReleaseToTile(uid, component.Air); // KS14: puddles need no tile air, and the Clear below would destroy the fluid
 
             if (environment != null)
+            {
                 _atmosphereSystem.Merge(environment, component.Air);
+            }
 
             _adminLogger.Add(LogType.CanisterPurged, LogImpact.Medium, $"Portable scrubber {ToPrettyString(uid):canister} purged its contents of {component.Air} into the environment.");
             component.Air.Clear();
         }
 
-        private bool Scrub(float timeDelta, PortableScrubberComponent scrubber, GasMixture? tile)
+        private bool Scrub(float timeDelta, PortableScrubberComponent scrubber, GasMixture? tile, EntityUid ksDeviceUid /* KS14: added */)
         {
-            return _scrubberSystem.Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), ScrubberPumpDirection.Scrubbing, scrubber.FilterGases, tile, scrubber.Air);
+            return _scrubberSystem.Scrub(timeDelta, scrubber.TransferRate * _atmosphereSystem.PumpSpeedup(), ScrubberPumpDirection.Scrubbing, scrubber.FilterGases, tile, scrubber.Air, ksDeviceUid: ksDeviceUid /* KS14: added */);
         }
 
         private void UpdateAppearance(EntityUid uid, bool isFull, bool isRunning)

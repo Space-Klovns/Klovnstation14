@@ -75,9 +75,14 @@ public sealed class HTNPlanJob : Job<HTNPlan>
                 case HTNCompoundTask compound:
                     await SuspendIfOutOfTime();
 
+                    // KS14 start: what comes after this compound, for a rollback to it to put back
+                    var remainingTasks = tasksToProcess.Count == 0 ? Array.Empty<HTNTask>() : tasksToProcess.ToArray();
+                    // KS14 end
+
                     if (TryFindSatisfiedMethod(compound, tasksToProcess, _blackboard, ref btrIndex))
                     {
                         // Need to copy worldstate to roll it back
+                        // KS14: removed, a nested compound has tasks after it, and clearing lost them: the plan came out cut short, and valid
                         // Don't need to copy taskstoprocess as we can just clear it and set it to the compound task we roll back to.
                         // Don't need to copy finalplan as we can just count how many primitives we've added since last record
 
@@ -87,6 +92,7 @@ public sealed class HTNPlanJob : Job<HTNPlan>
                             CompoundTask = compound,
                             BranchTraversal = btrIndex,
                             PrimitiveCount = primitiveCount,
+                            RemainingTasks = remainingTasks, // KS14: see above
                         });
 
                         // TODO: Early out if existing plan is better and save lots of time.
@@ -96,6 +102,12 @@ public sealed class HTNPlanJob : Job<HTNPlan>
                         // Reset method traversal
                         btrIndex = 0;
                     }
+                    // KS14 start: optional compounds are skipped instead of failing their branch
+                    else if (compound.Optional)
+                    {
+                        btrIndex = 0;
+                    }
+                    // KS14 end
                     else
                     {
                         RestoreTolastDecomposedTask(decompHistory, tasksToProcess, appliedStates, finalPlan, ref primitiveCount, ref _blackboard, ref btrIndex);
@@ -107,6 +119,14 @@ public sealed class HTNPlanJob : Job<HTNPlan>
                         primitiveCount++;
                         finalPlan.Add(primitive);
                     }
+                    // KS14 start: optional primitives are skipped instead of failing their branch
+                    else if (primitive.Optional)
+                    {
+                        // PrimitiveConditionMet leaves the blackboard read-only when it fails; a rollback would
+                        //      have replaced it with a writable clone, but a skip keeps using this one.
+                        _blackboard.ReadOnly = false;
+                    }
+                    // KS14 end
                     else
                     {
                         RestoreTolastDecomposedTask(decompHistory, tasksToProcess, appliedStates, finalPlan, ref primitiveCount, ref _blackboard, ref btrIndex);
@@ -223,6 +243,14 @@ public sealed class HTNPlanJob : Job<HTNPlan>
 
         primitiveCount = lastDecomp.PrimitiveCount;
         blackboard = lastDecomp.Blackboard;
+
+        // KS14 start: everything that came after the compound still has to run. ToArray lists a stack top first.
+        for (var i = lastDecomp.RemainingTasks.Length - 1; i >= 0; i--)
+        {
+            tasksToProcess.Push(lastDecomp.RemainingTasks[i]);
+        }
+        // KS14 end
+
         tasksToProcess.Push(lastDecomp.CompoundTask);
     }
 
@@ -245,6 +273,13 @@ public sealed class HTNPlanJob : Job<HTNPlan>
         /// The task that owns this decomposition.
         /// </summary>
         public HTNCompoundTask CompoundTask = default!;
+
+        // KS14 start
+        /// <summary>
+        /// What was left to process after the compound task, next first.
+        /// </summary>
+        public HTNTask[] RemainingTasks = default!;
+        // KS14 end
 
         // This may not be necessary for planning but may be useful for debugging so I didn't remove it.
         /// <summary>

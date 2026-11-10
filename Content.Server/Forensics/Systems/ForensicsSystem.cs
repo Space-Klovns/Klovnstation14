@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Body.Systems;
 using Content.Server.DoAfter;
 using Content.Server.Fluids.EntitySystems;
@@ -215,7 +216,7 @@ namespace Content.Server.Forensics
         {
             if (!TryComp<ForensicsComponent>(target, out var forensicsComp))
             {
-                _popupSystem.PopupEntity(Loc.GetString("forensics-cleaning-cannot-clean", ("target", Identity.Entity(target, EntityManager))), user, user, PopupType.MediumCaution);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("forensics-cleaning-cannot-clean", ("target", Identity.Entity(target, EntityManager))), user, user, PopupType.MediumCaution);
                 return false;
             }
 
@@ -236,13 +237,13 @@ namespace Content.Server.Forensics
 
                 _doAfterSystem.TryStartDoAfter(doAfterArgs);
 
-                _popupSystem.PopupEntity(Loc.GetString("forensics-cleaning", ("target", Identity.Entity(target, EntityManager))), user, user);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("forensics-cleaning", ("target", Identity.Entity(target, EntityManager))), user, user);
 
                 return true;
             }
             else
             {
-                _popupSystem.PopupEntity(Loc.GetString("forensics-cleaning-cannot-clean", ("target", Identity.Entity(target, EntityManager))), user, user, PopupType.MediumCaution);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("forensics-cleaning-cannot-clean", ("target", Identity.Entity(target, EntityManager))), user, user, PopupType.MediumCaution);
                 return false;
             }
 

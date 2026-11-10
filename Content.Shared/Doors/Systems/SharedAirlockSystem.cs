@@ -202,6 +202,11 @@ public abstract partial class SharedAirlockSystem : EntitySystem
         Dirty(ent, ent.Comp); // This only runs on the server apparently so we need this.
         UpdateEmergencyLightStatus(ent);
 
+        // KS14 start: let NPC pathfinding know the door no longer (or once again) restricts access
+        var emergencyAccessChangedEvent = new Content.Shared._KS14.Doors.KsAirlockEmergencyAccessChangedEvent(value);
+        RaiseLocalEvent(ent, ref emergencyAccessChangedEvent);
+        // KS14 end
+
         var sound = ent.Comp.EmergencyAccess ? ent.Comp.EmergencyOnSound : ent.Comp.EmergencyOffSound;
         if (predicted)
             Audio.PlayPredicted(sound, ent, user: user);

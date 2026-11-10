@@ -18,6 +18,10 @@ public sealed partial class TriggerSystem
 
     private void OnCollide(Entity<TriggerOnCollideComponent> ent, ref StartCollideEvent args)
     {
+        TryCollideTrigger((ent.Owner, ent.Comp), args.OtherEntity, args.OurFixtureId, args.OtherFixture); // KS14: shared with lag-compensated projectile hits, see TriggerSystem.Klovn.Collide.cs
+
+        // KS14: moved into TryCollideTrigger
+        /*
         if (
             args.OurFixtureId == ent.Comp.FixtureID
             && (!ent.Comp.IgnoreOtherNonHard || args.OtherFixture.Hard)
@@ -33,6 +37,7 @@ public sealed partial class TriggerSystem
             }
             Trigger(ent.Owner, args.OtherEntity, ent.Comp.KeyOut);
         }
+        */
     }
 
     private void OnStepTriggered(Entity<TriggerOnStepTriggerComponent> ent, ref StepTriggeredOffEvent args)

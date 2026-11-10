@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Alert;
@@ -95,7 +96,7 @@ public sealed partial class PryingSystem : EntitySystem
         if (!CanPry(target, user, out var message, comp))
         {
             if (!string.IsNullOrWhiteSpace(message))
-                _popup.PopupClient(Loc.GetString(message), target, user);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(message), target, user);
             // If we have reached this point we want the event that caused this
             // to be marked as handled.
             return true;
@@ -185,7 +186,7 @@ public sealed partial class PryingSystem : EntitySystem
         if (!CanPry(uid, args.User, out var message, comp))
         {
             if (!string.IsNullOrWhiteSpace(message))
-                _popup.PopupClient(Loc.GetString(message), uid, args.User);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(message), uid, args.User);
             return;
         }
 

@@ -1,3 +1,4 @@
+using Content.Client._KS14.Tgui.Windows.Atmos; // KS14
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Piping.Trinary.Components;
 using Content.Shared.Localizations;
@@ -16,7 +17,7 @@ namespace Content.Client.Atmos.UI
         private const float MaxPressure = Atmospherics.MaxOutputPressure;
 
         [ViewVariables]
-        private GasMixerWindow? _window;
+        private IKsGasMixerWindow? _window; // KS14: GasMixerWindow -> the interface, which the tgui window shares
 
         public GasMixerBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
@@ -26,7 +27,8 @@ namespace Content.Client.Atmos.UI
         {
             base.Open();
 
-            _window = this.CreateWindow<GasMixerWindow>();
+            _window = KsTguiAtmosWindows.Create<GasMixerWindow, KsTguiGasMixerWindow, IKsGasMixerWindow>(this); // KS14
+            _window.HeatDevice = Owner; // KS14
 
             _window.ToggleStatusButtonPressed += OnToggleStatusButtonPressed;
             _window.MixerOutputPressureChanged += OnMixerOutputPressurePressed;

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Components;
 using Content.Server.NodeContainer;
@@ -17,6 +18,8 @@ namespace Content.Server.Atmos.Piping.EntitySystems
     public sealed partial class AtmosUnsafeUnanchorSystem : EntitySystem
     {
         [Dependency] private AtmosphereSystem _atmosphere = default!;
+        [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
+        [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
         [Dependency] private NodeGroupSystem _group = default!;
         [Dependency] private PopupSystem _popup = default!;
 
@@ -43,7 +46,7 @@ namespace Content.Server.Atmos.Piping.EntitySystems
                 if (pipe.Air.Pressure - environment.Pressure > 2 * Atmospherics.OneAtmosphere)
                 {
                     args.Delay += 2f;
-                    _popup.PopupEntity(Loc.GetString("comp-atmos-unsafe-unanchor-warning"), pipe.Owner,
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-atmos-unsafe-unanchor-warning"), pipe.Owner,
                         args.User, PopupType.MediumCaution);
                     return; // Show the warning only once.
                 }
@@ -84,12 +87,15 @@ namespace Content.Server.Atmos.Piping.EntitySystems
             if (_atmosphere.GetContainingMixture(uid, true, true) is not { } environment)
                 environment = GasMixture.SpaceGas;
 
-            var buffer = new GasMixture();
+            var buffer = new GasMixture { FluidCapable = true /* KS14: added */ };
+            var ksPipePressure = 0f; // KS14
 
             foreach (var node in nodes.Nodes.Values)
             {
                 if (node is not PipeNode pipe)
                     continue;
+
+                ksPipePressure = MathF.Max(ksPipePressure, pipe.Air.Pressure); // KS14
 
                 if (removeFromPipe)
                     _atmosphere.Merge(buffer, pipe.Air.RemoveVolume(pipe.Volume));
@@ -100,6 +106,8 @@ namespace Content.Server.Atmos.Piping.EntitySystems
                 }
             }
 
+            _ksTransferThermoSystem.Apply(buffer, ksPipePressure, environment.Pressure, doesWork: false); // KS14
+            _ksFluidmosTileSystem.ReleaseToTile(uid, buffer); // KS14
             _atmosphere.Merge(environment, buffer);
         }
     }

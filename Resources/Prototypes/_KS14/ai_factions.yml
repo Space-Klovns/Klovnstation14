@@ -11,3 +11,21 @@
   - AllHostile
   - Wizard
   - Xenoborg
+  - KsRedacted
+
+# Hostile to everyone that can fight back. Not to Passive, Mouse, SimpleNeutral or PetsNT: they are no threat, and would
+#   only have a squad wasting ammo and grenades on mice and stacking up on monkeys.
+- type: npcFaction
+  id: KsRedacted
+  hostile:
+  - NanoTrasen
+  - KsNanoTrasenOperative
+  - Syndicate
+  - SimpleHostile
+  - Xeno
+  - Zombie
+  - Revolutionary
+  - Dragon
+  - AllHostile
+  - Wizard
+  - Xenoborg

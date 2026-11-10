@@ -3,6 +3,10 @@
   id: BaseBeaker
   abstract: true
   components:
+  - type: KsExplosiveContainer # KS14: explodes when shot or burned, if it holds anything explosive
+    solution: beaker
+  - type: KsCookOff # KS14: explodes once its explosive contents get hot
+    solution: beaker
   - type: Tag
     tags:
     - GlassBeaker
@@ -106,6 +110,10 @@
   id: BaseBeakerMetallic
   abstract: true
   components:
+  - type: KsExplosiveContainer # KS14: explodes when shot or burned, if it holds anything explosive
+    solution: beaker
+  - type: KsCookOff # KS14: explodes once its explosive contents get hot
+    solution: beaker
   - type: Tag
     tags:
     - GlassBeaker

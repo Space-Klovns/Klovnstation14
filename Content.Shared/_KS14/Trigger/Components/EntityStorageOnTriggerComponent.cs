@@ -2,7 +2,7 @@ using Content.Shared.Trigger.Components.Effects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
-namespace Content.Shared._KS14.Trigger.Components.Effects;
+namespace Content.Shared._KS14.Trigger.Components;
 
 /// <summary>
 ///     Sets an entity storage to some state upon trigger.

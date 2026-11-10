@@ -1,3 +1,4 @@
+using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.EntityEffects;
 using Robust.Shared.Prototypes;
@@ -12,7 +13,7 @@ public sealed partial class RegenerateOrgansEntityEffectSystem : EntityEffectSys
 
     protected override void Effect(Entity<BloodstreamComponent> entity, ref EntityEffectEvent<RegenerateOrgans> args)
     {
-        _organRegenerationSystem.RegenerateForBody(entity.Owner, maxCount: args.Effect.MaxRegenCount);
+        _organRegenerationSystem.RegenerateForBody(entity.Owner, maxCount: args.Effect.MaxRegenCount, categoryWhitelist: args.Effect.Categories);
     }
 }
 
@@ -25,6 +26,12 @@ public sealed partial class RegenerateOrgans : EntityEffectBase<RegenerateOrgans
     /// </summary>
     [DataField]
     public int? MaxRegenCount = null;
+
+    /// <summary>
+    ///     If not null, only organs of these categories are regenerated.
+    /// </summary>
+    [DataField]
+    public HashSet<ProtoId<OrganCategoryPrototype>>? Categories = null;
 
     public override string? EntityEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
     {

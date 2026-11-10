@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
 using Content.Shared.Destructible;
@@ -65,7 +66,7 @@ public sealed partial class SharpSystem : EntitySystem
 
         if (butcher.Type != ButcheringType.Knife && target != user)
         {
-            _popupSystem.PopupEntity(Loc.GetString("butcherable-different-tool", ("target", target)), knife, user);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("butcherable-different-tool", ("target", target)), knife, user);
             return false;
         }
 
@@ -128,7 +129,7 @@ public sealed partial class SharpSystem : EntitySystem
             ? PopupType.LargeCaution
             : PopupType.Small;
 
-        _popupSystem.PopupEntity(Loc.GetString("butcherable-knife-butchered-success", ("target", args.Args.Target.Value), ("knife", Identity.Entity(uid, EntityManager))),
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("butcherable-knife-butchered-success", ("target", args.Args.Target.Value), ("knife", Identity.Entity(uid, EntityManager))),
             popupEnt,
             args.Args.User,
             popupType);

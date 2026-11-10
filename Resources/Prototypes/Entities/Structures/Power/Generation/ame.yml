@@ -116,6 +116,9 @@
     highVoltageNode: input
     mediumVoltageNode: ame
   - type: StationAiWhitelist #KS14: New items whitelisted for AI
+  - type: PacketNetwork # KS14
+    frequency: PowerFrequency
+
 
 - type: entity
   categories: [ HideSpawnMenu ]

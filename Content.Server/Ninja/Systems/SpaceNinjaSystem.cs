@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Communications;
 using Content.Server.CriminalRecords.Systems;
 using Content.Server.Objectives.Components;
@@ -119,8 +120,8 @@ public sealed partial class SpaceNinjaSystem : SharedSpaceNinjaSystem
     {
         var gained = Download(uid, args.Techs);
         var str = gained == 0
-            ? Loc.GetString("ninja-research-steal-fail")
-            : Loc.GetString("ninja-research-steal-success", ("count", gained), ("server", args.Target));
+            ? KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ninja-research-steal-fail")
+            : KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ninja-research-steal-success", ("count", gained), ("server", args.Target));
 
         Popup.PopupEntity(str, uid, uid, PopupType.Medium);
     }

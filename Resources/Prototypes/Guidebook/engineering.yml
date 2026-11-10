@@ -52,6 +52,7 @@
   - AtmosphericUpsets
   - AtmosTools
   - Gasses
+  - KsLiquidsInPipes # KS14
 
 - type: guideEntry
   id: GasManipulation
@@ -244,6 +245,8 @@
   id: Fires
   name: guide-entry-fires
   text: "/ServerInfo/Guidebook/Engineering/Fires.xml"
+  children: # KS14
+  - ChemicalFires # KS14
 
 - type: guideEntry
   id: Spacing
@@ -276,6 +279,7 @@
   text: "/ServerInfo/Guidebook/Engineering/Networking.xml"
   children:
   - AccessConfigurator
+  - Packets # KS14
 
 - type: guideEntry
   id: AccessConfigurator

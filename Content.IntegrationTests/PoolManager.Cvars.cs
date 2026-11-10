@@ -35,5 +35,6 @@ public static partial class PoolManager
         (CCVars.InteractionRateLimitPeriod.Name, "0.1"),
         (CCVars.MovementMobPushing.Name, "false"),
         (CCVars.StorageLimit.Name, "1") /* KS14 */,
+        (Content.Shared._KS14.CCVar.KsCCVars.NpcLightDetection.Name, "false") /* KS14: tests that want it turn it on, whatever the presets say */,
     };
 }

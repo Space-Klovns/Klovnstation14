@@ -1,4 +1,5 @@
-﻿using Content.Shared.Engineering.Components;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Shared.Engineering.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Melee.Balloon;
@@ -29,7 +30,7 @@ public sealed partial class InflatableSafeDisassemblySystem : EntitySystem
             return;
 
         _popupSystem.PopupPredicted(
-            Loc.GetString("inflatable-safe-disassembly", ("item", args.Used), ("target", ent.Owner)),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("inflatable-safe-disassembly", ("item", args.Used), ("target", ent.Owner)),
             ent,
             args.User);
 

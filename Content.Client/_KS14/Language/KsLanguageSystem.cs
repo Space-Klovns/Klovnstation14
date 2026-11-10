@@ -9,26 +9,21 @@ public sealed partial class KsLanguageSystem : EntitySystem
 {
     public event Action? LanguagesUpdated;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<KsLanguageSpeakerComponent, AfterAutoHandleStateEvent>(OnSpeakerState);
-        // Broadcast: the new body may lack a speaker component and the UI must still drop the
-        // old roster.
-        SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnPlayerAttachedChanged);
-        SubscribeLocalEvent<LocalPlayerDetachedEvent>(OnPlayerDetachedChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnSpeakerState(EntityUid uid, KsLanguageSpeakerComponent component, ref AfterAutoHandleStateEvent args)
     {
         LanguagesUpdated?.Invoke();
     }
 
+    // Broadcast: the new body may lack a speaker component and the UI must still drop the
+    // old roster.
+    [SubscribeLocalEvent]
     private void OnPlayerAttachedChanged(LocalPlayerAttachedEvent ev)
     {
         LanguagesUpdated?.Invoke();
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerDetachedChanged(LocalPlayerDetachedEvent ev)
     {
         LanguagesUpdated?.Invoke();

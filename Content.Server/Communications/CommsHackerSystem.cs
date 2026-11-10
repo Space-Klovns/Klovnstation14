@@ -16,7 +16,6 @@ public sealed partial class CommsHackerSystem : SharedCommsHackerSystem
 {
     [Dependency] private ChatSystem _chat = default!;
     [Dependency] private GameTicker _gameTicker = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IRobustRandom _random = default!;
     // TODO: remove when generic check event is used
     [Dependency] private NinjaGlovesSystem _gloves = default!;
@@ -62,9 +61,9 @@ public sealed partial class CommsHackerSystem : SharedCommsHackerSystem
         if (args.Cancelled || args.Handled || args.Target == null)
             return;
 
-        var threats = _proto.Index<WeightedRandomPrototype>(comp.Threats);
+        var threats = ProtoMan.Index<WeightedRandomPrototype>(comp.Threats);
         var threat = threats.Pick(_random);
-        CallInThreat(_proto.Index<NinjaHackingThreatPrototype>(threat));
+        CallInThreat(ProtoMan.Index<NinjaHackingThreatPrototype>(threat));
 
         // prevent calling in multiple threats
         RemComp<CommsHackerComponent>(uid);

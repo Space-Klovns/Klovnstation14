@@ -21,7 +21,7 @@
     softness: 5
     enabled: false
     # color: "#ffe342"
-    mask: /Textures/Effects/LightMasks/double_cone.png
+    lightMask: ConeDouble
   - type: PoweredLight
     on: false
   - type: RotatingLight

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.GameTicking;
 using Content.Server.Popups;
 using Content.Shared.Administration;
@@ -47,7 +48,7 @@ namespace Content.Server.Chat.Commands
                 var deniedMessage = Loc.GetString("suicide-command-denied");
                 shell.WriteLine(deniedMessage);
                 _e.System<PopupSystem>()
-                    .PopupEntity(deniedMessage, victim, victim);
+                    .PopupEntity(KsPopupMessage.Create /* KS14: defer popup separately from console output */("suicide-command-denied"), victim, victim);
                 return;
             }
 

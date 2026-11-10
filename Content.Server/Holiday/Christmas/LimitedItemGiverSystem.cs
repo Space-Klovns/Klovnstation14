@@ -1,4 +1,5 @@
-﻿using Content.Server.Hands.Systems;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Server.Hands.Systems;
 using Content.Server.Popups;
 using Content.Shared.Interaction;
 using Content.Shared.Storage;
@@ -27,7 +28,7 @@ public sealed partial class LimitedItemGiverSystem : EntitySystem
 
         if (component.GrantedPlayers.Contains(actor.PlayerSession.UserId) || (component.RequiredHoliday is not null && !_holiday.IsCurrentlyHoliday(component.RequiredHoliday)))
         {
-            _popup.PopupEntity(Loc.GetString(component.DeniedPopup), uid, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.DeniedPopup), uid, args.User);
             return;
         }
 
@@ -44,6 +45,6 @@ public sealed partial class LimitedItemGiverSystem : EntitySystem
         }
 
         component.GrantedPlayers.Add(actor.PlayerSession.UserId);
-        _popup.PopupEntity(Loc.GetString(component.ReceivedPopup), uid, args.User);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.ReceivedPopup), uid, args.User);
     }
 }

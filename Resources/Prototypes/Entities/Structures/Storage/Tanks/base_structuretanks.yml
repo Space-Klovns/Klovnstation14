@@ -71,6 +71,9 @@
   # KS14 End
   - type: DrainableSolution
     solution: tank
+  - type: KsCookOff # KS14: explodes once its explosive contents get hot
+    solution: tank
+    radiatingArea: 1 # KS14: a tank, where the default is a beaker's 0.01
   - type: ReagentTank
   - type: Transform
     noRot: true

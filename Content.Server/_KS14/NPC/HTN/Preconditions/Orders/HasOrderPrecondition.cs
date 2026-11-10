@@ -1,0 +1,37 @@
+using Content.Server._KS14.NPC.Squad.Tactics;
+using Content.Server.NPC;
+using Content.Server.NPC.HTN.Preconditions;
+using Content.Shared._KS14.NPC;
+
+namespace Content.Server._KS14.NPC.HTN.Preconditions.Orders;
+
+/// <summary>
+///     Met when the owner has an order of one of <see cref="Kinds"/> (see <see cref="NpcSquadTacticsSystem"/>), or any
+///         order if none are given.
+/// </summary>
+public sealed partial class HasOrderPrecondition : HTNPrecondition
+{
+    [Dependency] private NpcSquadTacticsSystem _npcSquadTacticsSystem = default!;
+
+    [DataField] public List<NpcOrderKind> Kinds = new();
+
+    /// <summary>
+    ///     If set, also whether the order is about something - a locker to open, a door to force - or is not.
+    /// </summary>
+    [DataField] public bool? WithTarget;
+
+    /// <summary>
+    ///     If set, also whether the order comes before fighting. See <see cref="NpcOrder.OverCombat"/>.
+    /// </summary>
+    [DataField] public bool? OverCombat;
+
+    public override bool IsMet(NPCBlackboard blackboard)
+    {
+        if (!_npcSquadTacticsSystem.TryGetOrder(blackboard.GetOwner(), out var order) ||
+            Kinds.Count > 0 && !Kinds.Contains(order.Kind) ||
+            OverCombat is { } overCombat && order.OverCombat != overCombat)
+            return false;
+
+        return WithTarget is not { } withTarget || (order.TargetUid != null) == withTarget;
+    }
+}

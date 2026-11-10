@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Destructible;
 using Content.Shared.Destructible.Thresholds.Behaviors;
 using Content.Shared.Popups;
@@ -35,8 +36,8 @@ public sealed partial class PopupBehavior : IThresholdBehavior
         var coords = system.EntityManager.GetComponent<TransformComponent>(uid).Coordinates;
 
         if (TargetOnly)
-            popup.PopupCoordinates(Loc.GetString(Popup), coords, uid, PopupType);
+            popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */(Popup), coords, uid, PopupType);
         else
-            popup.PopupCoordinates(Loc.GetString(Popup), coords, PopupType);
+            popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */(Popup), coords, PopupType);
     }
 }

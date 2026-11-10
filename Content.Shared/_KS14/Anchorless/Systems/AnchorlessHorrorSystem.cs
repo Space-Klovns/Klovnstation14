@@ -16,17 +16,14 @@ public sealed partial class AnchorlessHorrorSystem : EntitySystem
     [Dependency] private SharedActionsSystem _actions = default!;
     [Dependency] private SharedAnchorlessIdentitySystem _identities = default!;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessHorrorActionEvent>(OnHorror);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, DamageModifyEvent>(OnDamageModify);
-    }
-
+    [SubscribeLocalEvent]
     private void OnDamageModify(Entity<KsAnchorlessAntagComponent> ent, ref DamageModifyEvent args)
     {
         if (args.Damage.DamageDict.TryGetValue("Heat", out var heat))
             args.Damage.DamageDict["Heat"] = heat * ent.Comp.HeatMultiplier;
     }
+
+    [SubscribeLocalEvent]
     private void OnHorror(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessHorrorActionEvent args)
     {
         if (args.Handled)

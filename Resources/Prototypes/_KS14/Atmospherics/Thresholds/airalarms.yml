@@ -1,5 +1,5 @@
 - type: alarmThreshold
-  id: GasArgon
+  id: GasEncalite
   upperBound: !type:AlarmThresholdSetting
     threshold: 0.05
   upperWarnAround: !type:AlarmThresholdSetting
@@ -11,6 +11,14 @@
     threshold: 0.01
   upperWarnAround: !type:AlarmThresholdSetting
     threshold: 0.1 # 0.001 / 0.01
+
+# Warns well short of hydrogen's lower flammable limit of 4%.
+- type: alarmThreshold
+  id: stationHydrogen
+  upperBound: !type:AlarmThresholdSetting
+    threshold: 0.04
+  upperWarnAround: !type:AlarmThresholdSetting
+    threshold: 0.25 # 0.01 / 0.04
 
 - type: alarmThreshold # KS14
   id: stationEvaporin

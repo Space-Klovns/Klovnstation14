@@ -5,15 +5,46 @@
   description: A small wall mounted cabinet designed to hold a fire extinguisher.
   components:
     - type: Sprite
-      sprite: Structures/Wallmounts/extinguisher_cabinet.rsi
-      snapCardinals: true
+      sprite: _KS14/Structures/Wallmounts/extinguisher_cabinet.rsi # KS14: use KS sprites
+      offset: 0,-0.1
       layers:
-      - state: frame
+      # KS14: removed frame layer
       - state: extinguisher
-        map: ["enum.ItemCabinetVisuals.Layer"]
+        # KS14: removed mapping
         visible: true
+    # KS14 start: specific sprites
+      - map: [ exdefault ]
+        state: extinguisher_default
+        visible: false
+      - map: [ exadvanced ]
+        state: extinguisher_advanced
+        visible: false
+      - map: [ exmini ]
+        state: extinguisher_mini
+        visible: false
+    # KS14 end
       - state: closed
         map: ["enum.OpenableVisuals.Layer"]
+    # KS14 start: itemmapper for specific sprites
+    - type: ItemMapper
+      spriteLayers:
+      - exdefault
+      - exadvanced
+      - exmini
+      mapLayers:
+        exdefault:
+          whitelist:
+            tags:
+            - KsExtinguisherStandard
+        exadvanced:
+          whitelist:
+            tags:
+            - KsExtinguisherAdvanced
+        exmini:
+          whitelist:
+            tags:
+            - KsExtinguisherMini
+    # KS14 end
     - type: ItemSlots
       slots:
         ItemCabinet:

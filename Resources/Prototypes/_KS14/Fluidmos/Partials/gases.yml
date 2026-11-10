@@ -1,0 +1,61 @@
+# Van der Waals constants, used only as a thermal correction at throttles (Joule–Thomson) and for linked gases'
+#     critical temperature, 8a / (27 R b). a in kPa L²/mol², b in L/mol. A gas without them is ideal.
+
+- type: !PartialOnly gas
+  id: Nitrogen
+  ksVanDerWaalsA: 137
+  ksVanDerWaalsB: 0.0387
+
+- type: !PartialOnly gas
+  id: Oxygen
+  ksVanDerWaalsA: 138
+  ksVanDerWaalsB: 0.0319
+
+- type: !PartialOnly gas
+  id: CarbonDioxide
+  ksVanDerWaalsA: 364
+  ksVanDerWaalsB: 0.0427
+
+- type: !PartialOnly gas
+  id: WaterVapor
+  ksVanDerWaalsA: 554
+  ksVanDerWaalsB: 0.0305
+
+- type: !PartialOnly gas
+  id: NitrousOxide
+  ksVanDerWaalsA: 383
+  ksVanDerWaalsB: 0.0442
+
+# Upstream's molar mass of 44 is a copy-paste (real: 17). Linked ammonia takes its gas's molar mass for its moles per
+#     unit, and the only other reader is KS spacing thrust.
+- type: !PartialOnly gas
+  id: Ammonia
+  molarMass: 17
+  ksVanDerWaalsA: 425
+  ksVanDerWaalsB: 0.0371
+
+# Inverts at about 200 K, so it warms on throttling at room temperature.
+- type: !PartialOnly gas
+  id: Hydrogen
+  ksVanDerWaalsA: 24.8
+  ksVanDerWaalsB: 0.0266
+
+# Hydrogen's values: inverts at about 200 K, so it warms on throttling at room temperature. Its atmos heat capacity
+#     (10) is below the physical floor of 1.5 R, so its heat capacity ratio is set to real T2's instead of derived.
+- type: !PartialOnly gas
+  id: Tritium
+  ksVanDerWaalsA: 24.8
+  ksVanDerWaalsB: 0.0266
+  ksHeatCapacityRatio: 1.40
+
+# Ethanol's real values (lore: tritiated ethanol): cools strongly on throttling.
+- type: !PartialOnly gas
+  id: Plasma
+  ksVanDerWaalsA: 1256
+  ksVanDerWaalsB: 0.0871
+
+# Fictional coolant: the strongest Joule–Thomson cooling of any gas.
+- type: !PartialOnly gas
+  id: Frezon
+  ksVanDerWaalsA: 600
+  ksVanDerWaalsB: 0.050

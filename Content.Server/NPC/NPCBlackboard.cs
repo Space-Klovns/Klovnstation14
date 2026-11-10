@@ -150,6 +150,18 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
         DebugTools.Assert(false, $"Tried to write to an NPC blackboard that is readonly!");
     }
 
+    // KS14 start
+    /// <summary>
+    ///     Whether <paramref name="key"/> is worked out from the entity each time it is read, in <see cref="TryGetEntityDefault"/>.
+    ///         A value stored under one of these hides that for good: right for the planner, which is working out what
+    ///         will be true, and wrong for the blackboard the NPC runs on, which has to say what is true.
+    /// </summary>
+    public static bool IsComputedKey(string key)
+    {
+        return key is Access or ActiveHand or ActiveHandFree or CanMove or FreeHands or Inventory or OwnerCoordinates;
+    }
+    // KS14 end
+
     private bool TryGetEntityDefault(string key, [NotNullWhen(true)] out object? value, IEntityManager entManager)
     {
         value = default;
@@ -326,6 +338,13 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     /// Can the NPC climb obstacles for steering.
     /// </summary>
     public const string NavClimb = "NavClimb";
+
+    // KS14 start
+    /// <summary>
+    ///     Can the NPC push loose obstacles out of its way for steering.
+    /// </summary>
+    public const string NavPush = "NavPush";
+    // KS14 end
 
     /// <summary>
     /// Default key storage for a movement pathfind.

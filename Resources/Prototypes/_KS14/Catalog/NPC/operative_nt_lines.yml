@@ -3,3 +3,177 @@
   values:
     prefix: ks-operative-nt-line-sacrifice-
     count: 9
+
+# NT Paramilitary's voice: the same moments as the standard operative lines, said colder - designations, status,
+#   procedure. Applied by giving the mob NpcVoiceSet with this set; anything not listed is spoken as normal.
+- type: npcVoiceSet
+  id: KsOperativeNt
+  replacements:
+    KsOperativeAdvancing: KsOperativeNtAdvancing
+    KsOperativeContact: KsOperativeNtContact
+    KsOperativeOutOfAmmo: KsOperativeNtOutOfAmmo
+    KsOperativeReloading: KsOperativeNtReloading
+    KsOperativeHealing: KsOperativeNtHealing
+    KsOperativeRetreating: KsOperativeNtRetreating
+    KsOperativeHoldingPosition: KsOperativeNtHoldingPosition
+    KsOperativeDisturbanceCombat: KsOperativeNtDisturbanceCombat
+    KsOperativeDisturbance: KsOperativeNtDisturbance
+    KsOperativeGetAway: KsOperativeNtGetAway
+    KsOperativeAlertGrenade: KsOperativeNtAlertGrenade
+    KsOperativeStandDown: KsOperativeNtStandDown
+    KsOperativeStandDownAcknowledge: KsOperativeNtStandDownAcknowledge
+    KsOperativeSearching: KsOperativeNtSearching
+    KsOperativeCalloutReceived: KsOperativeNtCalloutReceived
+    KsOperativeLostContact: KsOperativeNtLostContact
+    KsOperativeInvestigating: KsOperativeNtInvestigating
+    KsOperativeStaging: KsOperativeNtStaging
+    KsOperativeEntering: KsOperativeNtEntering
+    KsOperativeBreaching: KsOperativeNtBreaching
+    KsOperativeDoorLocked: KsOperativeNtDoorLocked
+    KsOperativeTargetDown: KsOperativeNtTargetDown
+    KsOperativeSearchingArea: KsOperativeNtSearchingArea
+    KsOperativeRegrouping: KsOperativeNtRegrouping
+
+- type: localizedDataset
+  id: KsOperativeNtAdvancing
+  values:
+    prefix: ks-operative-nt-line-advancing-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtContact
+  values:
+    prefix: ks-operative-nt-line-contact-
+    count: 5
+
+- type: localizedDataset
+  id: KsOperativeNtOutOfAmmo
+  values:
+    prefix: ks-operative-nt-line-outofammo-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtReloading
+  values:
+    prefix: ks-operative-nt-line-reloading-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtHealing
+  values:
+    prefix: ks-operative-nt-line-healing-
+    count: 1
+
+- type: localizedDataset
+  id: KsOperativeNtRetreating
+  values:
+    prefix: ks-operative-nt-line-retreating-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtHoldingPosition
+  values:
+    prefix: ks-operative-nt-line-holdingposition-
+    count: 2
+
+- type: localizedDataset
+  id: KsOperativeNtDisturbanceCombat
+  values:
+    prefix: ks-operative-nt-line-disturbancecombat-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtDisturbance
+  values:
+    prefix: ks-operative-nt-line-disturbance-
+    count: 2
+
+- type: localizedDataset
+  id: KsOperativeNtGetAway
+  values:
+    prefix: ks-operative-nt-line-getaway-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtAlertGrenade
+  values:
+    prefix: ks-operative-nt-line-alert-grenade-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtStandDown
+  values:
+    prefix: ks-operative-nt-line-standdown-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtStandDownAcknowledge
+  values:
+    prefix: ks-operative-nt-line-standdownack-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtSearching
+  values:
+    prefix: ks-operative-nt-line-searching-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtCalloutReceived
+  values:
+    prefix: ks-operative-nt-line-calloutreceived-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtLostContact
+  values:
+    prefix: ks-operative-nt-line-lostcontact-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtInvestigating
+  values:
+    prefix: ks-operative-nt-line-investigating-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtStaging
+  values:
+    prefix: ks-operative-nt-line-staging-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtBreaching
+  values:
+    prefix: ks-operative-nt-line-breaching-
+    count: 2
+
+- type: localizedDataset
+  id: KsOperativeNtDoorLocked
+  values:
+    prefix: ks-operative-nt-line-door-locked-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtEntering
+  values:
+    prefix: ks-operative-nt-line-entering-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeNtSearchingArea
+  values:
+    prefix: ks-operative-nt-line-searchingarea-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeNtRegrouping
+  values:
+    prefix: ks-operative-nt-line-regrouping-
+    count: 2
+
+- type: localizedDataset
+  id: KsOperativeNtTargetDown
+  values:
+    prefix: ks-operative-nt-line-target-down-
+    count: 3

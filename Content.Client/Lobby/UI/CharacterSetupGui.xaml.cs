@@ -37,6 +37,8 @@ namespace Content.Client.Lobby.UI
             RobustXamlLoader.Load(this);
             IoCManager.InjectDependencies(this);
 
+            // KS14: opaque textured box -> translucent flat box
+            /*
             var panelTex = _resourceCache.GetTexture("/Textures/Interface/Nano/button.svg.96dpi.png");
             var back = new StyleBoxTexture
             {
@@ -46,6 +48,8 @@ namespace Content.Client.Lobby.UI
             back.SetPatchMargin(StyleBox.Margin.All, 10);
 
             BackgroundPanel.PanelOverride = back;
+            */
+            BackgroundPanel.PanelOverride = new StyleBoxFlat(Color.Black.WithAlpha(0.55f)); // KS14
 
             _createNewCharacterButton = new Button
             {

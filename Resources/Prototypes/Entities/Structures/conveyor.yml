@@ -15,6 +15,7 @@
     sprite: Structures/conveyor.rsi
     state: conveyor_stopped
     drawdepth: HighFloorObjects
+  - type: KsForceAmbientOcclusion # KS14
   - type: SyncSprite
   - type: ApcPowerReceiver
   - type: ExtensionCableReceiver
@@ -67,6 +68,8 @@
       # if ConveyorBeltAssembly becomes craftable, maybe spawn some of the ingredients?
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+  - type: PacketNetwork # KS14
+    frequency: ConveyorFrequency
 
 - type: entity
   id: ConveyorBeltAssembly

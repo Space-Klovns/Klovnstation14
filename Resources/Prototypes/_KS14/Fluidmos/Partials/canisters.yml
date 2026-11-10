@@ -1,0 +1,72 @@
+# Canisters of a Fluidmos-linked gas filled at saturation: vapor at the reagent's saturation pressure at the fill
+#     temperature (KsPhaseMath.SaturationPressure, in the volume the liquid leaves), the rest as liquid. Filled as upstream
+#     fills them, all as vapor, they condense on the first update and their latent heat cooks them. KsCanisterFillTests
+#     checks every linked-gas canister holds its fill temperature, and that the water canister's split is still at
+#     saturation and keeps upstream's amount.
+
+# Upstream's 2769.36 mol, kept: 2.84 kPa of vapor over the rest as liquid water. Effectively a water canister.
+- type: !PartialOnly entity
+  id: WaterVaporCanister
+  components:
+  - type: GasCanister
+    air:
+      moles:
+        WaterVapor: 1.4569
+      fluid:
+        reagents:
+        - reagent: Water
+          liquid: 49822.26
+
+# Upstream's 2769.36 mol, kept: 840.2 kPa over liquid ammonia, as real ammonia is stored.
+- type: !PartialOnly entity
+  id: AmmoniaCanister
+  components:
+  - type: GasCanister
+    air:
+      moles:
+        Ammonia: 449.0816
+      fluid:
+        reagents:
+        - reagent: Ammonia
+          liquid: 39444.73
+
+# Upstream's 18710 mol would be about 3000 L of liquid at 5 mL/u, twice the canister. Maintainer decision: liquid fills 90%
+#     of it, under saturated vapor (10.22 kPa at 72 K), as a cryogenic dewar is filled.
+- type: !PartialOnly entity
+  id: LiquidOxygenCanister
+  components:
+  - type: GasCanister
+    air:
+      moles:
+        Oxygen: 2.5609
+      fluid:
+        reagents:
+        - reagent: Oxygen
+          liquid: 270000
+
+# As liquid oxygen: 90% liquid, under saturated vapor (53.08 kPa at 72 K).
+- type: !PartialOnly entity
+  id: LiquidNitrogenCanister
+  components:
+  - type: GasCanister
+    air:
+      moles:
+        Nitrogen: 13.3011
+      fluid:
+        reagents:
+        - reagent: Nitrogen
+          liquid: 270000
+
+# Upstream's 18710.71 mol, kept, as dry ice: at 72 K carbon dioxide's vapor pressure is effectively nothing, and below its
+#     triple point it has no liquid. A unit is 4 mol (its reagent), so that is 4677.68 u of solid.
+- type: !PartialOnly entity
+  id: LiquidCarbonDioxideCanister
+  components:
+  - type: GasCanister
+    air:
+      moles:
+        CarbonDioxide: 0
+      fluid:
+        reagents:
+        - reagent: CarbonDioxide
+          solid: 4677.68

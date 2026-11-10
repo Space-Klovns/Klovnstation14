@@ -1,0 +1,219 @@
+using Content.Server._KS14.NPC.Debug;
+using Content.Shared._KS14.NPC;
+using Content.Server.Administration;
+using Content.Server.Administration.Managers;
+using Content.Server._KS14.NPC.Utility;
+using Content.Shared.Administration;
+using Content.Shared.GameTicking;
+using Robust.Server.Player;
+using Robust.Shared.Enums;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Player;
+using Robust.Shared.Timing;
+
+namespace Content.Server._KS14.NPC.Squad.Tactics;
+
+/// <summary>
+///     Tracks which players have <see cref="HuntDebugCommand"/> on - for every hunt, or one squad's - and passes them
+///         what <see cref="NpcSquadTacticsSystem"/> works out for a hunt, as it works it out.
+/// </summary>
+/// <remarks>
+///     Lazy, like the tactical position debug: nothing here runs on its own. The tactics system asks
+///         <see cref="IsTracking"/> after updating a hunt, and builds a frame only if someone is watching that hunt, so
+///         a hunt nobody is watching costs nothing extra.
+/// </remarks>
+public sealed partial class NpcHuntDebugSystem : EntitySystem
+{
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private NpcGridSystem _npcGridSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+
+
+    [Dependency] private EntityQuery<NpcOrderComponent> _orderQuery = default!;
+
+/// <summary>
+    ///     Null value = every hunt; otherwise a squad, or an NPC (meaning its squad's hunt, or its own).
+    /// </summary>
+    private NpcDebugSessions _sessions = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        _sessions = new NpcDebugSessions(_adminManager, _playerManager, (session, enabled, target) =>
+            RaiseNetworkEvent(new HuntDebugStateMessage { Enabled = enabled, Target = target is { } uid ? GetNetEntity(uid) : null }, session.Channel));
+        _sessions.Initialize();
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        _sessions.Shutdown();
+    }
+
+    /// <summary>
+    ///     Toggles hunt debugging for <paramref name="session"/>. The same scope again turns it off; anything else
+    ///         switches to that scope. Returns the resulting state.
+    /// </summary>
+    public (bool Enabled, EntityUid? Target) Toggle(ICommonSession session, EntityUid? target)
+    {
+        return _sessions.Toggle(session, target);
+    }
+
+    /// <summary>
+    ///     Whether anyone would receive a frame for the hunt <paramref name="issuerUid"/> is on, with
+    ///         <paramref name="memberUids"/> taking part. Check before building one.
+    /// </summary>
+    public bool IsTracking(EntityUid issuerUid, List<EntityUid> memberUids)
+    {
+        return _sessions.IsWatching(issuerUid, memberUids);
+    }
+
+    /// <summary>
+    ///     Sends what <paramref name="hunt"/> stands at to everyone watching it.
+    /// </summary>
+    public void SendFrame(EntityUid issuerUid, NpcHunt hunt, List<EntityUid> memberUids)
+    {
+        HuntDebugDataMessage? message = null;
+
+        foreach (var (session, target) in _sessions.Watching)
+        {
+            if (!NpcDebugSessions.Matches(target, issuerUid, memberUids))
+                continue;
+
+            message ??= BuildFrame(issuerUid, hunt, memberUids);
+            RaiseNetworkEvent(message, session.Channel);
+        }
+    }
+
+    /// <summary>
+    ///     Tells everyone watching that the hunt <paramref name="issuerUid"/> was on is over.
+    /// </summary>
+    public void SendEnded(EntityUid issuerUid, List<EntityUid> memberUids)
+    {
+        foreach (var (session, target) in _sessions.Watching)
+        {
+            if (NpcDebugSessions.Matches(target, issuerUid, memberUids))
+                RaiseNetworkEvent(new HuntDebugEndedMessage { Issuer = GetNetEntity(issuerUid) }, session.Channel);
+        }
+    }
+
+    private HuntDebugDataMessage BuildFrame(EntityUid issuerUid, NpcHunt hunt, List<EntityUid> memberUids)
+    {
+        var now = _gameTiming.CurTime;
+        var settings = hunt.Settings;
+
+        var message = new HuntDebugDataMessage
+        {
+            Issuer = GetNetEntity(issuerUid),
+            Phase = hunt.Phase,
+            // A charge going on, or wired and on, is up against how long its planter has got nowhere, not how long it has been at it.
+            PhaseElapsed = (float) (now - (hunt.Blast?.Charge is { } charge &&
+                (charge.Phase == NpcSquadChargePhase.Planting || charge.Phase == NpcSquadChargePhase.Clearing && charge.Pick.Charge.ActivatorUid != null)
+                    ? charge.ProgressAt
+                    : hunt.PhaseStartedAt)).TotalSeconds,
+            PhaseLimit = (float) (hunt.Phase switch
+            {
+                NpcHuntPhase.Watch => settings.WatchTime,
+                NpcHuntPhase.Stage => settings.StageTimeout,
+                NpcHuntPhase.Blast => settings.PlanChargeTimeout,
+                NpcHuntPhase.Breach => settings.BreachTimeout,
+                NpcHuntPhase.Entry => settings.EntryTimeout,
+                NpcHuntPhase.Exhausted => settings.HoldAreaTime,
+                _ => TimeSpan.Zero,
+            }).TotalSeconds,
+            HuntElapsed = (float) (now - hunt.StartedAt).TotalSeconds,
+            HuntTimeout = (float) settings.HuntTimeout.TotalSeconds,
+            Coverage = NpcSquadTacticsSystem.GetCoverage(hunt),
+            RequiredCoverage = settings.SearchCoverage,
+            LastKnown = GetNetCoordinates(Snapshot(hunt.LastKnownCoordinates)),
+            Predicted = GetNetCoordinates(Snapshot(hunt.PredictedCoordinates)),
+            Grid = hunt.GridUid is { } gridUid ? GetNetEntity(gridUid) : null,
+        };
+
+        message.RoomTiles.AddRange(hunt.RoomTiles);
+        message.UnseenTiles.AddRange(hunt.UnseenTiles);
+        message.ThresholdTiles.AddRange(hunt.ThresholdTiles);
+
+        foreach (var entrance in hunt.Entrances)
+        {
+            message.Entrances.Add(new HuntDebugEntrance(GetNetCoordinates(entrance.StageCoordinates), GetNetCoordinates(entrance.EntryCoordinates)));
+        }
+
+        if (hunt.GridUid is { } routeGridUid)
+        {
+            foreach (var (memberUid, staging) in hunt.StagedMembers)
+            {
+                if (TerminatingOrDeleted(memberUid))
+                    continue;
+
+                var route = new HuntDebugRoute();
+                route.Points.Add(GetNetCoordinates(Transform(memberUid).Coordinates));
+
+                for (var i = staging.NextWaypoint; i < staging.Waypoints.Count; i++)
+                {
+                    var tile = staging.Waypoints[i];
+                    route.Points.Add(GetNetCoordinates(_npcGridSystem.GetTileCenter(routeGridUid, tile)));
+                }
+
+                route.Points.Add(GetNetCoordinates(hunt.Entrances[staging.EntranceIndex].StageCoordinates));
+                message.Routes.Add(route);
+            }
+
+            foreach (var (memberUid, sweep) in hunt.Sweeps)
+            {
+                if (TerminatingOrDeleted(memberUid))
+                    continue;
+
+                message.Sweeps.Add(new HuntDebugLine(GetNetCoordinates(Transform(memberUid).Coordinates),
+                    GetNetCoordinates(_npcGridSystem.GetTileCenter(routeGridUid, sweep.Tile))));
+            }
+        }
+
+        foreach (var point in hunt.SearchPoints)
+        {
+            if (TerminatingOrDeleted(point.Coordinates.EntityId))
+                continue;
+
+            NetCoordinates? assignee = point.AssigneeUid is { } assigneeUid && !TerminatingOrDeleted(assigneeUid)
+                ? GetNetCoordinates(Transform(assigneeUid).Coordinates)
+                : null;
+
+            message.SearchPoints.Add(new HuntDebugSearchPoint(GetNetCoordinates(Snapshot(point.Coordinates)), point.StorageUid != null, point.Cleared, assignee));
+        }
+
+        foreach (var memberUid in memberUids)
+        {
+            if (!_orderQuery.TryComp(memberUid, out var orderComponent) ||
+                orderComponent.Order is not { } order ||
+                TerminatingOrDeleted(order.Coordinates.EntityId))
+                continue;
+
+            message.Orders.Add(new SquadDebugOrder(GetNetCoordinates(Transform(memberUid).Coordinates),
+                GetNetCoordinates(Snapshot(order.Coordinates)),
+                order.Kind));
+        }
+
+        return message;
+    }
+
+    /// <summary>
+    ///     Coordinates relative to the grid or map rather than to an entity - a locker, say - the client may not have.
+    /// </summary>
+    private EntityCoordinates Snapshot(EntityCoordinates coordinates)
+    {
+        return TerminatingOrDeleted(coordinates.EntityId) ? coordinates : _transformSystem.GetMoverCoordinates(coordinates);
+    }
+
+    /// <summary>
+    ///     Sessions survive a round restart, so tell each client to drop its overlay rather than leave it showing the
+    ///         last round's hunts.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
+    {
+        _sessions.ClearAndNotify();
+    }
+}

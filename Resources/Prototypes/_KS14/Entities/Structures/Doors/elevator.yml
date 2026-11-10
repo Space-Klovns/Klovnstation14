@@ -1,0 +1,25 @@
+﻿- type: entity
+  parent: BlastDoor
+  id: KsElevatorDoor
+  name: elevator door
+  description: Will kill you.
+  components:
+  - type: Door
+    canCrush: true
+    performCollisionCheck: false
+
+- type: entity
+  parent: KsElevatorDoor
+  id: KsElevatorDoorOpen
+  suffix: Open
+  components:
+  - type: Door
+    state: Open
+  - type: Occluder
+    enabled: false
+  - type: Physics
+    canCollide: false
+  - type: Airtight
+    airBlocked: false
+  - type: RadiationBlocker
+    enabled: false

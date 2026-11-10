@@ -26,7 +26,7 @@ public sealed partial class GunSystem : SharedGunSystem
         if (string.IsNullOrEmpty(ent.Comp.Proto) || ent.Comp.UnspawnedCount == 0)
             return;
 
-        if (!ProtoManager.TryIndex<EntityPrototype>(ent.Comp.Proto, out var proto))
+        if (!ProtoMan.TryIndex<EntityPrototype>(ent.Comp.Proto, out var proto))
         {
             Log.Error($"Unable to find fill prototype for price on {ent.Comp.Proto} on {ToPrettyString(ent)}");
             return;
@@ -43,6 +43,8 @@ public sealed partial class GunSystem : SharedGunSystem
 
     protected override void CreateEffect(EntityUid gunUid, MuzzleFlashEvent message, EntityUid? user = null)
     {
+        message.FiredAt = Timing.CurTick; // KS14: for the client to tell a late flash, which it does not show
+
         var filter = Filter.Pvs(gunUid, entityManager: EntityManager);
 
         if (TryComp<ActorComponent>(user, out var actor))

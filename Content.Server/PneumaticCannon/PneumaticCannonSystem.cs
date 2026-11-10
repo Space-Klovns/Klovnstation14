@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Storage.EntitySystems;
 using Content.Server.Stunnable;
@@ -17,6 +18,7 @@ namespace Content.Server.PneumaticCannon;
 public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
 {
     [Dependency] private AtmosphereSystem _atmos = default!;
+    [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _ksFluidmosTileSystem = default!; // KS14
     [Dependency] private GasTankSystem _gasTank = default!;
     [Dependency] private GunSystem _gun = default!;
     [Dependency] private StunSystem _stun = default!;
@@ -45,7 +47,7 @@ public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
         val = (val + 1) % (int)PneumaticCannonPower.Len;
         component.Power = (PneumaticCannonPower)val;
 
-        Popup.PopupEntity(Loc.GetString("pneumatic-cannon-component-change-power",
+        Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pneumatic-cannon-component-change-power",
             ("power", component.Power.ToString())), uid, args.User);
 
         component.ProjectileSpeed = GetProjectileSpeedFromPower(component);
@@ -81,7 +83,7 @@ public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
         if (component.Power == PneumaticCannonPower.High
             && _stun.TryUpdateParalyzeDuration(args.User, TimeSpan.FromSeconds(component.HighPowerStunTime)))
         {
-            Popup.PopupEntity(Loc.GetString("pneumatic-cannon-component-power-stun",
+            Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pneumatic-cannon-component-power-stun",
                 ("cannon", uid)), cannon, args.User);
         }
 
@@ -94,6 +96,7 @@ public sealed partial class PneumaticCannonSystem : SharedPneumaticCannonSystem
         var removed = _gasTank.RemoveAir(gas.Value, component.GasUsage);
         if (environment != null && removed != null)
         {
+            _ksFluidmosTileSystem.ReleaseToTile(uid, removed); // KS14
             _atmos.Merge(environment, removed);
         }
 

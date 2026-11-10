@@ -1,4 +1,5 @@
-﻿using Content.Server.Popups;
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
+using Content.Server.Popups;
 using Content.Server.Power.EntitySystems;
 using Content.Server.Shuttles.Components;
 using Content.Shared.Construction.Components;
@@ -50,7 +51,7 @@ public sealed partial class StationAnchorSystem : EntitySystem
             return;
 
         _popupSystem.PopupEntity(
-            Loc.GetString("station-anchor-unanchoring-failed"),
+            KsPopupMessage.Create /* KS14: localize popups on the recipient */("station-anchor-unanchoring-failed"),
             ent,
             args.User,
             PopupType.Medium);

@@ -1,0 +1,19 @@
+- type: entity
+  parent: ExtinguisherCabinet
+  id: KsExtinguisherCabinetFilledAdvanced
+  suffix: Filled, CO2
+  components:
+  - type: ContainerFill
+    containers:
+      ItemCabinet:
+      - KsFireExtinguisherCarbonDioxide
+
+- type: entity
+  parent: ExtinguisherCabinet
+  id: KsExtinguisherCabinetFilledMini
+  suffix: Filled, Mini
+  components:
+  - type: ContainerFill
+    containers:
+      ItemCabinet:
+      - FireExtinguisherMini

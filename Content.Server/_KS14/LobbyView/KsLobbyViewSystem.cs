@@ -28,11 +28,6 @@ public sealed partial class KsLobbyViewSystem : KsSharedLobbyViewSystem
 
         SubscribeLocalEvent<PlayerJoinedLobbyEvent>((args) => OnPlayerEnteredLobby(args.PlayerSession));
         SubscribeLocalEvent<KsPlayerLeftLobbyEvent>((args) => OnPlayerExitedLobby(args.PlayerSession));
-
-        SubscribeLocalEvent<KsLobbyViewComponent, ComponentStartup>(OnLobbyViewStartup);
-        SubscribeLocalEvent<KsLobbyViewComponent, ComponentShutdown>(OnLobbyViewShutdown);
-
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
     }
 
     private void OnPlayerEnteredLobby(ICommonSession session)
@@ -53,6 +48,7 @@ public sealed partial class KsLobbyViewSystem : KsSharedLobbyViewSystem
             _viewSubscriberSystem.RemoveViewSubscriber(_bestUid, session);
     }
 
+    [SubscribeLocalEvent]
     private void OnLobbyViewStartup(Entity<KsLobbyViewComponent> entity, ref ComponentStartup args)
     {
         _lobbyViewCount++;
@@ -63,12 +59,14 @@ public sealed partial class KsLobbyViewSystem : KsSharedLobbyViewSystem
         UpdateLobbyView();
     }
 
+    [SubscribeLocalEvent]
     private void OnLobbyViewShutdown(Entity<KsLobbyViewComponent> entity, ref ComponentShutdown args)
     {
         _lobbyViewCount--;
         UpdateLobbyView();
     }
 
+    [SubscribeLocalEvent]
     private void OnCleanup(RoundRestartCleanupEvent args)
     {
         _lobbyViewCount = 0;

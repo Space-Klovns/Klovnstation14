@@ -1,2 +1,3 @@
 gases-zipion = Zipion
-gases-argon = Argon
+gases-encalite = Encalite
+gases-hydrogen = Hydrogen

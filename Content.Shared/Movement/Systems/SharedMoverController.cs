@@ -481,6 +481,7 @@ public abstract partial class SharedMoverController : VirtualController
 
         _aroundColliderSet.Clear();
         lookupSystem.GetEntitiesIntersecting(transform.MapID, enlargedAABB, _aroundColliderSet);
+        GetHardCollisionBits(uid, out var ksMoverLayer, out var ksMoverMask); // KS14: the mover's hard fixtures, once for every candidate
         foreach (var otherEntity in _aroundColliderSet)
         {
             if (otherEntity == uid)
@@ -492,8 +493,13 @@ public abstract partial class SharedMoverController : VirtualController
             // Only allow pushing off of anchored things that have collision.
             if (otherCollider.BodyType != BodyType.Static ||
                 !otherCollider.CanCollide ||
+                // KS14 start: only hard fixtures count, so nothing is pushed off a sensor such as a puddle
+                /*
                 (collider.CollisionMask & otherCollider.CollisionLayer) == 0 &&
                 (otherCollider.CollisionMask & collider.CollisionLayer) == 0 ||
+                */
+                !KsCanPushOff(ksMoverLayer, ksMoverMask, otherEntity) ||
+                // KS14 end
                 PullableQuery.TryComp(otherEntity, out var pullable) && pullable.BeingPulled)
             {
                 continue;
@@ -553,20 +559,12 @@ public abstract partial class SharedMoverController : VirtualController
 
         mobMover.StepSoundDistance -= distanceNeeded;
 
-        if (FootstepModifierQuery.TryComp(uid, out var moverModifier))
-        {
-            sound = moverModifier.FootstepSoundCollection;
-            return sound != null;
-        }
-
-        if (_inventory.TryGetSlotEntity(uid, "shoes", out var shoes) &&
-            FootstepModifierQuery.TryComp(shoes, out var modifier))
-        {
-            sound = modifier.FootstepSoundCollection;
-            return sound != null;
-        }
-
-        return TryGetFootstepSound(uid, xform, shoes != null, out sound, tileDef: tileDef);
+        // KS14 start: the modifier/shoes/tile chain that stood here moved verbatim into
+        //      TryGetCurrentFootstepSound (SharedMoverController.Klovn.Footsteps.cs), so that a one-off step -
+        //      a z-level landing - resolves through exactly the same cases as a walked one. Nothing about the
+        //      chain itself changed; only the step-distance bookkeeping above stayed behind.
+        return TryGetCurrentFootstepSound((uid, xform), out sound, tileDef);
+        // KS14 end
     }
 
     private bool TryGetFootstepSound(

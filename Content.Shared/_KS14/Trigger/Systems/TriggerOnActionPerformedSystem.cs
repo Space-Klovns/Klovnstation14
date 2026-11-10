@@ -16,9 +16,6 @@ public sealed partial class TriggerOnActionPerformedSystem : TriggerOnXSystem
         SubscribeLocalEvent<TriggerOnActionPerformedComponent, KsTriggerOnActionPerformedEntityTargetActionEvent>(OnAction);
         SubscribeLocalEvent<TriggerOnActionPerformedComponent, KsTriggerOnActionPerformedInstantActionEvent>(OnAction);
         SubscribeLocalEvent<TriggerOnActionPerformedComponent, KsTriggerOnActionPerformedWorldTargetActionEvent>(OnAction);
-
-        SubscribeLocalEvent<TriggerOnActionPerformedComponent, ActionGetEventEvent>(OnActionGetEvent);
-        SubscribeLocalEvent<TriggerOnActionPerformedComponent, ActionPerformedEvent>(OnActionPerformed);
     }
 
     private void OnAction<TEvent>(Entity<TriggerOnActionPerformedComponent> entity, ref TEvent args) where TEvent : BaseActionEvent, IKsTriggerOnActionPerformedAction
@@ -26,11 +23,13 @@ public sealed partial class TriggerOnActionPerformedSystem : TriggerOnXSystem
         args.Handled = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnActionGetEvent(Entity<TriggerOnActionPerformedComponent> entity, ref ActionGetEventEvent args)
     {
         args.Event = ConstantEvent;
     }
 
+    [SubscribeLocalEvent]
     private void OnActionPerformed(Entity<TriggerOnActionPerformedComponent> entity, ref ActionPerformedEvent args)
     {
         EntityUid? passedUserUid = null;

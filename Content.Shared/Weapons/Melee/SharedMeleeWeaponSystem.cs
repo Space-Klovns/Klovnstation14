@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -51,7 +52,6 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 {
     [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private INetManager _netMan = default!;
-    [Dependency] private IPrototypeManager _protoManager = default!;
     // [Dependency] private IRobustRandom _random = default!; // KS14: removed, as unused now
     [Dependency] protected ISharedAdminLogManager AdminLogger = default!;
     [Dependency] protected ActionBlockerSystem Blocker = default!;
@@ -577,7 +577,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 
         }
 
-        _meleeSound.PlayHitSound(target.Value, user, GetHighestDamageSound(modifiedDamage, _protoManager), hitEvent.HitSoundOverride, component);
+        _meleeSound.PlayHitSound(target.Value, user, GetHighestDamageSound(modifiedDamage, ProtoMan), hitEvent.HitSoundOverride, component);
 
         if (damageResult.GetTotal() > FixedPoint2.Zero && !TerminatingOrDeleted(target.Value))
         {
@@ -745,7 +745,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         if (entities.Count != 0)
         {
             var target = entities.First();
-            _meleeSound.PlayHitSound(target, user, GetHighestDamageSound(appliedDamage, _protoManager), hitEvent.HitSoundOverride, component);
+            _meleeSound.PlayHitSound(target, user, GetHighestDamageSound(appliedDamage, ProtoMan), hitEvent.HitSoundOverride, component);
         }
 
         if (appliedDamage.GetTotal() > FixedPoint2.Zero && targets.Count > 0)
@@ -880,7 +880,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         //     {
         //         // Notify disarmable
         //         if (HasComp<MobStateComponent>(target.Value))
-        //             PopupSystem.PopupClient(Loc.GetString("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
+        //             PopupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
 
         //         return false;
         //     }
@@ -984,12 +984,12 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var targetEnt = Identity.Entity(target.Value, EntityManager);
         var userEnt = Identity.Entity(user, EntityManager);
 
-        var msgOther = Loc.GetString(
+        var msgOther = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(
             eventArgs.PopupPrefix + "popup-message-other-clients",
             ("performerName", userEnt),
             ("targetName", targetEnt));
 
-        var msgUser = Loc.GetString(eventArgs.PopupPrefix + "popup-message-cursor", ("targetName", targetEnt));
+        var msgUser = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */(eventArgs.PopupPrefix + "popup-message-cursor", ("targetName", targetEnt));
 
         var filterOther = Filter.PvsExcept(user, entityManager: EntityManager);
 
@@ -999,7 +999,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         if (eventArgs.IsStunned)
         {
 
-            PopupSystem.PopupEntity(Loc.GetString("stunned-component-disarm-success-others", ("source", userEnt), ("target", targetEnt)), targetEnt, Filter.PvsExcept(user), true, PopupType.LargeCaution);
+            PopupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("stunned-component-disarm-success-others", ("source", userEnt), ("target", targetEnt)), targetEnt, Filter.PvsExcept(user), true, PopupType.LargeCaution);
             PopupSystem.PopupPredictedCursor/* KS14: use predicted variant */(Loc.GetString("stunned-component-disarm-success", ("target", targetEnt)), user, PopupType.Large);
 
             AdminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium, $"{ToPrettyString(user):user} knocked down {ToPrettyString(target):target}");

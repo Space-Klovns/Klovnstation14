@@ -1,0 +1,30 @@
+import { type CSSProperties, type ReactNode } from 'react';
+import { type BoxProps } from './Box';
+type Props = Partial<{
+    /** Buttons or other content to render inline with the button */
+    buttons: ReactNode;
+    /** Top margin of the child nodes, defaulted to 1 */
+    child_mt: number;
+    /** Icon to display with the collapsible */
+    icon: string;
+    /** Icon to display to the left of the collapsible icon */
+    sideIcon: string;
+    /** Whether the collapsible is open */
+    open: boolean;
+    /** Text to display on the button for collapsing */
+    title: ReactNode;
+    /** Custom styles for the child nodes */
+    childStyles: CSSProperties;
+}> & BoxProps;
+/**
+ * ## Collapsible
+ *
+ * Displays contents when open, acts as a fluid button when closed.
+ *
+ * Click to toggle, closed by default.
+ *
+ * - [View documentation on tgui core](https://tgstation.github.io/tgui-core/?path=/docs/components-collapsible--docs)
+ * - [View inherited Box props](https://tgstation.github.io/tgui-core/?path=/docs/components-box--docs)
+ */
+export declare function Collapsible(props: Props): import("react/jsx-runtime").JSX.Element;
+export {};

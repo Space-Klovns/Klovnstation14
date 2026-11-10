@@ -9,25 +9,11 @@ namespace Content.Shared._KS14.EntityProcessor.StackProcessor;
 public sealed partial class KsStackProcessorSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedStackSystem _stackSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsStackProcessorComponent, ComponentGetState>(OnGetState);
-        SubscribeLocalEvent<KsStackProcessorComponent, ComponentHandleState>(OnHandleState);
-
-        SubscribeLocalEvent<KsStackProcessorComponent, KsAttemptProcessEntityEvent>(OnAttemptProcess);
-        SubscribeLocalEvent<KsStackProcessorComponent, KsStartedProcessingEntityEvent>(OnStartedProcessing);
-        SubscribeLocalEvent<KsStackProcessorComponent, KsFinishedProcessingEntityEvent>(OnFinishedProcessing);
-        SubscribeLocalEvent<KsStackProcessorComponent, KsEntityRemovedFromActiveProcessorEvent>(OnEntityRemovedFromProcessor);
-        SubscribeLocalEvent<KsStackProcessorComponent, KsFinishedProcessingEverythingEvent>(OnFinishedProcessingEverything);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGetState(Entity<KsStackProcessorComponent> entity, ref ComponentGetState args)
     {
         var newOutputOffsets = new Dictionary<NetEntity, Vector2>();
@@ -43,6 +29,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         args.State = new KsStackProcessorComponentState { OutputOffsets = newOutputOffsets };
     }
 
+    [SubscribeLocalEvent]
     private void OnHandleState(Entity<KsStackProcessorComponent> entity, ref ComponentHandleState args)
     {
         if (args.Current is not KsStackProcessorComponentState state)
@@ -62,7 +49,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         }
     }
 
-
+    [SubscribeLocalEvent]
     private void OnAttemptProcess(Entity<KsStackProcessorComponent> entity, ref KsAttemptProcessEntityEvent args)
     {
         if (args.Cancelled)
@@ -78,6 +65,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         args.Cancelled = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnStartedProcessing(Entity<KsStackProcessorComponent> entity, ref KsStartedProcessingEntityEvent args)
     {
         _appearanceSystem.SetData(entity.Owner, KsStackProcessorVisuals.Active, true);
@@ -87,6 +75,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnFinishedProcessing(Entity<KsStackProcessorComponent> entity, ref KsFinishedProcessingEntityEvent args)
     {
         if (_netManager.IsClient)
@@ -101,7 +90,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         if (spawnedCount < 0)
             return;
 
-        var maxCount = _prototypeManager.Index(stackComponent.StackTypeId).MaxCount ?? int.MaxValue;
+        var maxCount = ProtoMan.Index(stackComponent.StackTypeId).MaxCount ?? int.MaxValue;
 
         var spawnCoordinates = _transformSystem.GetMoverCoordinates(entity.Owner);
         spawnCoordinates = spawnCoordinates.WithPosition(spawnCoordinates.Position + entity.Comp.OutputOffsets[args.ProcessedUid]);
@@ -122,6 +111,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnEntityRemovedFromProcessor(Entity<KsStackProcessorComponent> entity, ref KsEntityRemovedFromActiveProcessorEvent args)
     {
         if (!entity.Comp.OutputOffsets.Remove(args.ProcessedUid))
@@ -130,6 +120,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnFinishedProcessingEverything(Entity<KsStackProcessorComponent> entity, ref KsFinishedProcessingEverythingEvent args)
     {
         _appearanceSystem.SetData(entity.Owner, KsStackProcessorVisuals.Active, false);

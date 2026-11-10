@@ -1,0 +1,74 @@
+# Dodgenn's phase two patterns, picked by DodgennAttackTargetCompound (NPCs/Bosses/Dodgenn/phase_two.yml).
+
+# Cardinal then diagonal bursts of four, 16 times.
+- type: entity
+  parent: RangedCardinalDirections
+  id: DodgennDirectionalAttack
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack1
+    burstCount: 16
+    shots: 4
+    shotDelay: 0.3
+    cooldown: 6.0
+
+# One fan of eight across 30 degrees, at the target. Also fired on landing a dash.
+- type: entity
+  parent: RangedShotgun
+  id: DodgennShotgunAttack
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack2
+    burstCount: 1
+    shots: 8
+    shotDelay: 0
+    cooldown: 4.0
+    spread: 30
+
+# A single-stream spiral, about seven seconds, turning 12 degrees a shot.
+- type: entity
+  parent: RangedSpiral
+  id: DodgennSpiralAttack
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack3
+    burstCount: 180
+    shots: 1
+    shotDelay: 0.04
+    cooldown: 8.0
+    degreesPerShot: 12
+
+# A stream of shots in random directions, about six seconds.
+- type: entity
+  parent: RangedRandomAoe
+  id: DodgennRandomAoeAttack
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack4
+    burstCount: 120
+    shots: 1
+    shotDelay: 0.05
+    cooldown: 8.0
+
+# Two opposite spirals for a very long time. Not used by the HTN at the moment.
+- type: entity
+  parent: RangedDoubleSpiral
+  id: DodgennEnragedSpiralAttack
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: DodgennDeathBolt
+    sound:
+      collection: KsDodgennTalkAttack5
+    burstCount: 2056
+    shots: 1
+    shotDelay: 0.04
+    cooldown: 3.0
+    degreesPerShot: 10

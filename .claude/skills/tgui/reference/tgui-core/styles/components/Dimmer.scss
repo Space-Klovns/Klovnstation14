@@ -1,0 +1,12 @@
+.Dimmer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // Fill positioned parent
+  position: absolute;
+  inset: 0;
+  // Dim everything around it
+  background-color: var(--dimmer-background);
+  // Should be enough to cover everything except tooltips
+  z-index: 100;
+}

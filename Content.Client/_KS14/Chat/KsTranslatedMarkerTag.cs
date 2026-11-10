@@ -21,25 +21,29 @@ public sealed partial class KsTranslatedMarkerTag : IMarkupTagHandler
 
     public const string TagName = "kstranslated";
     public const string IdParam = "id";
+    public const string OriginalParam = "original"; // BS: UPSTREAM-BS-TRANSLATION-001, historical rows outlive server-local IDs.
 
     public string Name => TagName;
 
     public bool TryCreateControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
     {
         control = null;
-        if (!node.Attributes.TryGetValue(IdParam, out var idParam) || !idParam.TryGetLong(out var id))
-            return false;
+        // BS: Retained history stores the original in the tag so reconnects cannot change its tooltip.
+        if (!node.Attributes.TryGetValue(OriginalParam, out var frozen) || !frozen.TryGetString(out var original))
+        {
+            if (!node.Attributes.TryGetValue(IdParam, out var idParam) || !idParam.TryGetLong(out var id))
+                return false;
+
+            _ui.GetUIController<ChatUIController>().TryGetTranslationOriginal((int) id.Value, out original);
+        }
 
         var label = new Label
         {
             Text = "» ",
             FontColorOverride = Color.FromHex("#6f9fd8"),
             MouseFilter = Control.MouseFilterMode.Stop, // required so the tooltip fires on hover
+            ToolTip = original, // BS: Both current and retained messages use their own original.
         };
-
-        var chat = _ui.GetUIController<ChatUIController>();
-        if (chat.TryGetTranslationOriginal((int) id.Value, out var original))
-            label.ToolTip = original;
 
         control = label;
         return true;

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Chemistry;
 using Content.Shared.Damage;
@@ -71,7 +72,7 @@ public abstract partial class SharedXenoArtifactSystem
             Log.Debug($"{ToPrettyString(ent)} entered unlocking state");
 
             if (_net.IsServer)
-                _popup.PopupEntity(Loc.GetString("artifact-unlock-state-begin"), ent);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("artifact-unlock-state-begin"), ent);
             Dirty(ent);
         }
         else if (node != null)

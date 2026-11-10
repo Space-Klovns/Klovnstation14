@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Destructible;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction.Events;
@@ -105,7 +106,7 @@ public sealed partial class ParcelWrappingSystem
         // Unwrap the package and if something was in it, show a popup describing "wow something came out!"
         if (UnwrapInternal(user: null, parcel) is { } contents)
         {
-            _popup.PopupPredicted(Loc.GetString("parcel-wrap-popup-parcel-destroyed", ("contents", contents)),
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("parcel-wrap-popup-parcel-destroyed", ("contents", contents)),
                 contents,
                 null,
                 PopupType.MediumCaution);

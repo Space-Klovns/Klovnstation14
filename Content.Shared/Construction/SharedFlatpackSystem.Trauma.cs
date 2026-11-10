@@ -19,7 +19,7 @@ public abstract partial class SharedFlatpackSystem
         // unreachable
         => ent.Comp.Entity is { } id &&
             // if the machine has no fixtures it by definition can't occupy a tile, so it will return false
-            PrototypeManager.Index(id).TryGetComponent<FixturesComponent>(out var fixtures, Factory) &&
+            ProtoMan.Index(id).TryGetComponent<FixturesComponent>(out var fixtures, Factory) &&
             // unreachable
             _turf.GetTileRef(coords) is { } tile &&
             // checks that the machine isnt blocked by anything

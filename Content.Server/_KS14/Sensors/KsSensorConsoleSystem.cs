@@ -23,8 +23,6 @@ public sealed partial class KsSensorConsoleSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<KsNavStateBuiltEvent>(OnNavStateBuilt);
-
         // Scoped to the key the toggles are actually drawn on. A raw directed
         // subscription would also fire for a message sent on the console's OTHER
         // interface (WiresUiKey): the engine only checks that the sender is a
@@ -79,6 +77,7 @@ public sealed partial class KsSensorConsoleSystem : EntitySystem
             _elint.SetGridFocus(gridUid, null);
     }
 
+    [SubscribeLocalEvent]
     private void OnNavStateBuilt(ref KsNavStateBuiltEvent ev)
     {
         // Only fork sensor consoles get the contact picture. A vanilla shuttle

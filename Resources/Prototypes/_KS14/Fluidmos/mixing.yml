@@ -1,0 +1,18 @@
+# Non-ideal mixing in pipes. Families give one Margules A (at 298 K) per pair of families; a pair interaction overrides
+#     that for two named reagents. Reagents in no family mix ideally with everything (Raoult's law).
+
+- type: ksFluidMixingFamily
+  id: KsAqueous
+
+# Oil and water do not mix, so each keeps its full vapor pressure and their mixture boils below either: steam stripping.
+- type: ksFluidMixingFamily
+  id: KsHydrocarbon
+  immiscibleWith: [ KsAqueous ]
+
+# Fit to the real minimum-boiling azeotrope: about 89 mol% (95.6 wt%) ethanol, at 351 K and one atmosphere. Ethanol
+#     past that cannot be distilled out of water.
+- type: ksFluidPairInteraction
+  id: KsEthanolWater
+  first: Ethanol
+  second: Water
+  margules: 1.22

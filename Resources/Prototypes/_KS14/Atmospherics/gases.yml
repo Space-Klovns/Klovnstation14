@@ -10,12 +10,25 @@
   pricePerMole: 1
 
 - type: gas
-  id: Argon
-  name: gases-argon
-  abbreviation: gas-argon-abbreviation
+  id: Encalite
+  name: gases-encalite
+  abbreviation: gas-encalite-abbreviation
   molarHeatCapacity: 25
   heatCapacityRatio: 1.67
   molarMass: 40
   color: '#8a2be2'
-  reagent: Argon
+  reagent: Encalite
   pricePerMole: 0.5
+
+# Colourless, so it has no tile overlay: a hydrogen leak can't be seen.
+- type: gas
+  id: Hydrogen
+  name: gases-hydrogen
+  abbreviation: gas-hydrogen-abbreviation
+  molarHeatCapacity: 29
+  heatCapacityRatio: 1.41
+  molarMass: 2
+  color: '#d9e8ff'
+  reagent: Hydrogen
+  pricePerMole: 0.5
+  isFuel: true

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Construction.Components;
 using Content.Shared.Popups;
 using Content.Shared.Whitelist;
@@ -36,7 +37,7 @@ public sealed partial class BlockAnchorOnSystem : EntitySystem
         if (!HasOverlap((ent, ent.Comp, Transform(ent))))
             return;
 
-        _popup.PopupPredicted(Loc.GetString("anchored-already-present"), ent, null);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anchored-already-present"), ent, null);
         _xform.Unanchor(ent, Transform(ent));
     }
 
@@ -51,7 +52,7 @@ public sealed partial class BlockAnchorOnSystem : EntitySystem
         if (!HasOverlap((ent, ent.Comp, Transform(ent))))
             return;
 
-        _popup.PopupPredicted(Loc.GetString("anchored-already-present"), ent, args.User);
+        _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anchored-already-present"), ent, args.User);
         args.Cancel();
     }
 

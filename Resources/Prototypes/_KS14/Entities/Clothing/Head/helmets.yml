@@ -1,0 +1,23 @@
+# Black plate helmet, with sprites from Stalker14, to go with the plate armor. As armored as the raid helmet.
+- type: entity
+  parent: [ BaseCentcommContraband, ClothingHeadHelmetArmoredBase ]
+  id: KsClothingHeadHelmetBlackPlate
+  name: black plate helmet
+  description: A black helmet over the whole head but the face, which is left to the gas mask.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/hats/helm_legat_deserter.rsi
+  - type: Clothing
+    sprite: _Stalker/Objects/Clothing/hats/helm_legat_deserter.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.85
+        Slash: 0.85
+        Piercing: 0.85
+        Heat: 0.85
+      flatReductions:
+        Blunt: 1.5
+        Slash: 1.5
+        Piercing: 1.5
+        Heat: 1.5

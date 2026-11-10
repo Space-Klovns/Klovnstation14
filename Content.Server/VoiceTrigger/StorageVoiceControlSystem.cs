@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Hands.Systems;
 using Content.Server.Storage.EntitySystems;
 using Content.Shared.Administration.Logs;
@@ -45,7 +46,7 @@ public sealed partial class StorageVoiceControlSystem : EntitySystem
             // Disallow insertion and provide a reason why if the person decides to insert the item into itself
             if (ent.Owner.Equals(activeItem.Value))
             {
-                _popup.PopupEntity(Loc.GetString("comp-storagevoicecontrol-self-insert", ("entity", activeItem.Value)), ent, args.Source);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-storagevoicecontrol-self-insert", ("entity", activeItem.Value)), ent, args.Source);
                 return;
             }
             if (_storage.CanInsert(ent, activeItem.Value, out var failedReason))
@@ -59,7 +60,7 @@ public sealed partial class StorageVoiceControlSystem : EntitySystem
                 // Tell the player the reason why the item couldn't be inserted
                 if (failedReason == null)
                     return;
-                _popup.PopupEntity(Loc.GetString(failedReason), ent, args.Source);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(failedReason), ent, args.Source);
                 _adminLogger.Add(LogType.Action,
                     LogImpact.Low,
                     $"{ToPrettyString(args.Source)} failed to insert {ToPrettyString(activeItem.Value)} into {ToPrettyString(ent)} via voice control");

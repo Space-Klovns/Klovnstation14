@@ -7,26 +7,19 @@ public sealed partial class WeightlessnessStatusEffectSystem : EntitySystem
 {
     [Dependency] private SharedGravitySystem _gravitySystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<WeightlessnessStatusEffectComponent, StatusEffectAppliedEvent>(OnStatusEffectApplied);
-        SubscribeLocalEvent<WeightlessnessStatusEffectComponent, StatusEffectRemovedEvent>(OnStatusEffectRemoved);
-
-        SubscribeLocalEvent<WeightlessnessStatusEffectComponent, StatusEffectRelayedEvent<IsWeightlessEvent>>(OnStatusEffectIsWeightless);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStatusEffectApplied(Entity<WeightlessnessStatusEffectComponent> entity, ref StatusEffectAppliedEvent args)
     {
         _gravitySystem.RefreshWeightless(args.Target);
     }
 
+    [SubscribeLocalEvent]
     private void OnStatusEffectRemoved(Entity<WeightlessnessStatusEffectComponent> entity, ref StatusEffectRemovedEvent args)
     {
         _gravitySystem.RefreshWeightless(args.Target);
     }
 
+    [SubscribeLocalEvent]
     private void OnStatusEffectIsWeightless(Entity<WeightlessnessStatusEffectComponent> entity, ref StatusEffectRelayedEvent<IsWeightlessEvent> args)
     {
         var innerArgs = args.Args;

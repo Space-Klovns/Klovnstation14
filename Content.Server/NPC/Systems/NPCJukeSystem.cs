@@ -215,7 +215,16 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     Vector2.Dot(targetPhysics.LinearVelocity, targetOffset) > 0f)
                     return;
 
-                var idealDistance = GetDesiredFiringDistance(rangedCombatComponent.Target, gunEntity.Comp.MaxAngle, 1.8f) * 4.5f;
+                // The 4.5x stand-off margin is for single projectiles, where it keeps precise guns back. For pellets,
+                //      the coverage factor already reads as the share of pellets that hit, so it is used as-is -
+                //      with the margin, a shotgunner never came within shotgun range.
+                var (shotSpread, shotProjectiles) = GetShotSpread(gunEntity);
+                var idealDistance = GetDesiredFiringDistance(rangedCombatComponent.Target, shotSpread, 1.8f) *
+                    (shotProjectiles > 1 ? 1f : 4.5f);
+
+                // An NPC meant to fight up close does not back off to its gun's ideal range, however accurate it is.
+                if (component.KsMaxFiringDistance is { } maxFiringDistance)
+                    idealDistance = MathF.Min(idealDistance, maxFiringDistance);
                 if (idealDistance == 0f)
                     return;
 
@@ -229,6 +238,7 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     : (idealDistance - targetDistance) / idealDistance;
 
                 var anythingDone = false;
+                var shotMask = _npcLineOfFireSystem.GetShotMask(uid); // KS14
                 for (var i = 0; i < SharedNPCSteeringSystem.InterestDirections; i++)
                 {
                     var result = -Vector2.Dot(targetUnitDirection, NPCSteeringSystem.Directions[i]) * weight;
@@ -239,10 +249,10 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     // Assumes tile size is 1f
                     var interestDirection = new Angle(i * SharedNPCSteeringSystem.InterestRadians).ToVec();
                     var interestWorldPosition = interestDirection + args.WorldPosition;
-                    if (!_interactionSystem.InRangeUnobstructed(
+                    if (!_npcLineOfFireSystem.IsClear(
                         new Robust.Shared.Map.MapCoordinates(interestWorldPosition, targetTransformComponent.MapID),
                         new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID),
-                        range: -1f))
+                        shotMask)) // KS14: what its gun can shoot through, not what stops a hand
                     {
                         continue;
                     }
@@ -255,7 +265,8 @@ public sealed partial class NPCJukeSystem : EntitySystem
                 }
 
                 // If no or barely any juking was done, don't cancel seeking
-                if (!anythingDone)
+                if (!anythingDone &&
+                    !KsTryStrafe(component, ref args, targetUnitDirection, new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID), shotMask)) // KS14: sidestep instead of standing still
                     return;
             }
             // KS14: ANK end

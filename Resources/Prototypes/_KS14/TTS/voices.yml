@@ -1,131 +1,165 @@
 - type: ttsVoice
   id: en_GB-alan-low
   voice: en_GB-alan-low
+  name: tts-voice-en-gb-alan-low
 
 - type: ttsVoice
   id: en_GB-alan-medium
   voice: en_GB-alan-medium
+  name: tts-voice-en-gb-alan-medium
 
 - type: ttsVoice
   id: en_GB-aru-medium
   voice: en_GB-aru-medium
+  name: tts-voice-en-gb-aru-medium
 
 - type: ttsVoice
   id: en_GB-alba-medium
   voice: en_GB-alba-medium
+  name: tts-voice-en-gb-alba-medium
 
 - type: ttsVoice
   id: en_GB-cori-medium
   voice: en_GB-cori-medium
+  name: tts-voice-en-gb-cori-medium
 
 - type: ttsVoice
   id: en_GB-jenny_dioco-medium
   voice: en_GB-jenny_dioco-medium
+  name: tts-voice-en-gb-jenny-dioco-medium
 
 - type: ttsVoice
   id: en_GB-northern_english_male-medium
   voice: en_GB-northern_english_male-medium
+  name: tts-voice-en-gb-northern-english-male-medium
 
 - type: ttsVoice
   id: en_GB-semaine-medium
   voice: en_GB-semaine-medium
+  name: tts-voice-en-gb-semaine-medium
 
 - type: ttsVoice
   id: en_GB-southern_english_female-low
   voice: en_GB-southern_english_female-low
+  name: tts-voice-en-gb-southern-english-female-low
 
 - type: ttsVoice
   id: en_GB-vctk-medium
   voice: en_GB-vctk-medium
+  name: tts-voice-en-gb-vctk-medium
 
 - type: ttsVoice
   id: en_US-amy-low
   voice: en_US-amy-low
+  name: tts-voice-en-us-amy-low
 
 - type: ttsVoice
   id: en_US-amy-medium
   voice: en_US-amy-medium
+  name: tts-voice-en-us-amy-medium
 
 - type: ttsVoice
   id: en_US-arctic-medium
   voice: en_US-arctic-medium
+  name: tts-voice-en-us-arctic-medium
 
 - type: ttsVoice
   id: en_US-bryce-medium
   voice: en_US-bryce-medium
+  name: tts-voice-en-us-bryce-medium
 
 - type: ttsVoice
   id: en_US-danny-low
   voice: en_US-danny-low
+  name: tts-voice-en-us-danny-low
 
 - type: ttsVoice
   id: en_US-hfc_female-medium
   voice: en_US-hfc_female-medium
+  name: tts-voice-en-us-hfc-female-medium
 
 - type: ttsVoice
   id: en_US-hfc_male-medium
   voice: en_US-hfc_male-medium
+  name: tts-voice-en-us-hfc-male-medium
 
 - type: ttsVoice
   id: en_US-joe-medium
   voice: en_US-joe-medium
+  name: tts-voice-en-us-joe-medium
 
 - type: ttsVoice
   id: en_US-john-medium
   voice: en_US-john-medium
+  name: tts-voice-en-us-john-medium
 
 - type: ttsVoice
   id: en_US-kathleen-low
   voice: en_US-kathleen-low
+  name: tts-voice-en-us-kathleen-low
 
 - type: ttsVoice
   id: en_US-kristin-medium
   voice: en_US-kristin-medium
+  name: tts-voice-en-us-kristin-medium
 
 - type: ttsVoice
   id: en_US-kusal-medium
   voice: en_US-kusal-medium
+  name: tts-voice-en-us-kusal-medium
 
 - type: ttsVoice
   id: en_US-l2arctic-medium
   voice: en_US-l2arctic-medium
+  name: tts-voice-en-us-l2arctic-medium
 
 - type: ttsVoice
   id: en_US-lessac-low
   voice: en_US-lessac-low
+  name: tts-voice-en-us-lessac-low
 
 - type: ttsVoice
   id: en_US-lessac-medium
   voice: en_US-lessac-medium
+  name: tts-voice-en-us-lessac-medium
 
 - type: ttsVoice
   id: en_US-libritts_r-medium
   voice: en_US-libritts_r-medium
+  name: tts-voice-en-us-libritts-r-medium
 
 - type: ttsVoice
   id: en_US-ljspeech-medium
   voice: en_US-ljspeech-medium
+  name: tts-voice-en-us-ljspeech-medium
 
 - type: ttsVoice
   id: en_US-norman-medium
   voice: en_US-norman-medium
+  name: tts-voice-en-us-norman-medium
 
 - type: ttsVoice
   id: en_US-reza_ibrahim-medium
   voice: en_US-reza_ibrahim-medium
+  name: tts-voice-en-us-reza-ibrahim-medium
 
 - type: ttsVoice
   id: en_US-ryan-low
   voice: en_US-ryan-low
+  name: tts-voice-en-us-ryan-low
 
 - type: ttsVoice
   id: en_US-ryan-medium
   voice: en_US-ryan-medium
+  name: tts-voice-en-us-ryan-medium
 
 - type: ttsVoice
   id: en_US-sam-medium
   voice: en_US-sam-medium
+  name: tts-voice-en-us-sam-medium
 
 - type: ttsVoice
   id: en_US-combatant-elite-medium
   voice: en_US-combatant-elite-medium
+  name: tts-voice-en-us-combatant-elite-medium
+  selectable: false # Reserved for the elite combatants

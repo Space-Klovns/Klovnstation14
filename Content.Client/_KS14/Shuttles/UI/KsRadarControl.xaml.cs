@@ -88,6 +88,11 @@ public sealed partial class KsRadarControl : BaseShuttleControl
 
     private List<Entity<MapGridComponent>> _grids = new();
 
+    /// <summary>
+    ///     For a console with no sensor picture, which draws every grid as upstream's does, rather than fog of war.
+    /// </summary>
+    public bool KsOpenPicture { get; set; }
+
     private List<KsSensorContactState>? _ksContacts;
     private List<KsSensorRegionState>? _ksSensorRegions;
     private List<KsLifeSignState>? _ksLifeSigns;
@@ -334,6 +339,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         // Full fog of war: a foreign grid renders as a real hull only when the console's
         // grid has a live sensor track on it; everything else is the contact layer's job.
         // Replaces the vanilla CanDraw/IFF loop, so IFF hiding no longer gates rendering.
+        // A console with an open picture has no contacts to go by, and draws as upstream's does.
         foreach (var grid in _grids)
         {
             var gUid = grid.Owner;
@@ -341,15 +347,20 @@ public sealed partial class KsRadarControl : BaseShuttleControl
                 continue;
 
             var ksGridNet = EntManager.GetNetEntity(gUid);
-            if (!_ksLiveContacts.Contains(ksGridNet))
+            EntManager.TryGetComponent<IFFComponent>(gUid, out var iff);
+            var gridBody = EntManager.GetComponent<PhysicsComponent>(gUid);
+
+            if (!KsIsForeignGridShown(KsOpenPicture, _shuttles.CanDraw(gUid, gridBody, iff), _ksLiveContacts.Contains(ksGridNet)))
                 continue;
 
             _ksRealDrawn.Add(ksGridNet);
 
-            EntManager.TryGetComponent<IFFComponent>(gUid, out var iff);
             var curGridToWorld = _transform.GetWorldMatrix(gUid);
             var curGridToView = curGridToWorld * worldToShuttle * shuttleToView;
             var labelColor = _shuttles.GetIFFColor(grid, self: false, iff);
+
+            if (KsOpenPicture)
+                KsDrawIffLabel(handle, grid, gridBody, iff, curGridToView, xform, labelColor);
 
             var gridAABB = curGridToWorld.TransformBox(grid.Comp.LocalAABB);
 
@@ -377,6 +388,62 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         KsDrawContacts(handle, worldToShuttle * shuttleToView, mapPos.Position);
         KsDrawLifeSigns(handle, worldToShuttle * shuttleToView);
         KsDrawContactTooltip(handle, mapPos.Position);
+    }
+
+    /// <summary>
+    ///     Whether a grid that isn't the console's own is drawn. A sensor console draws what it has a live track on, and nothing
+    ///         else, whatever the grid's IFF says. An open picture draws what upstream's console would.
+    /// </summary>
+    public static bool KsIsForeignGridShown(bool openPicture, bool upstreamWouldDraw, bool liveContact)
+    {
+        return openPicture ? upstreamWouldDraw : liveContact;
+    }
+
+    /// <summary>
+    ///     Upstream's IFF label, kept to the edge of the scope for a grid off it: name and distance, and the coordinates when
+    ///         it's on the scope. A sensor console has its contact layer for this.
+    /// </summary>
+    private void KsDrawIffLabel(
+        DrawingHandleScreen handle,
+        Entity<MapGridComponent> grid,
+        PhysicsComponent gridBody,
+        IFFComponent? iff,
+        Matrix3x2 gridToView,
+        TransformComponent shuttleTransform,
+        Color labelColor)
+    {
+        if (_shuttles.GetIFFLabel(grid, self: false, iff) is not { } labelName)
+            return;
+
+        var gridCentre = Vector2.Transform(gridBody.LocalCenter, gridToView);
+        var gridDistance = (gridBody.LocalCenter - shuttleTransform.LocalPosition).Length();
+        var labelText = Loc.GetString("shuttle-console-iff-label", ("name", labelName), ("distance", $"{gridDistance:0.0}"));
+
+        var mapPosition = _transform.GetWorldPosition(grid.Owner);
+        var coordinatesText = $"({mapPosition.X:0.0}, {mapPosition.Y:0.0})";
+
+        var labelSize = handle.GetDimensions(_ksFont, labelText, 1f);
+        var coordinatesSize = handle.GetDimensions(_ksFont, coordinatesText, 0.7f);
+
+        // Below the grid, whichever way it's turned.
+        var gridBounds = grid.Comp.LocalAABB;
+        var offsetY = Math.Max(gridBounds.Height, gridBounds.Width) * MinimapScale / 1.8f;
+        var scaledPosition = gridCentre + new Vector2(0f, offsetY);
+
+        // Normalised rather than clamped, which keeps the direction and doesn't pile labels into the corners.
+        var offset = scaledPosition / PixelSize - new Vector2(0.5f, 0.5f);
+        var offsetMax = Math.Max(Math.Abs(offset.X), Math.Abs(offset.Y)) * 2f;
+        if (offsetMax > 1f)
+            scaledPosition = (offset / offsetMax + new Vector2(0.5f, 0.5f)) * PixelSize;
+
+        var labelPosition = Vector2.Clamp(scaledPosition - new Vector2(labelSize.X / 2f, 0f), Vector2.Zero, PixelSize - labelSize);
+        handle.DrawString(_ksFont, labelPosition, labelText, labelColor);
+
+        if (offsetMax < 1f)
+        {
+            var coordinatesColor = new Color(labelColor.R * 0.8f, labelColor.G * 0.8f, labelColor.B * 0.8f, 0.5f);
+            handle.DrawString(_ksFont, scaledPosition - new Vector2(coordinatesSize.X / 2f, -labelSize.Y), coordinatesText, 0.7f, coordinatesColor);
+        }
     }
 
     // Track the mouse for contact hover tooltips.
@@ -1280,19 +1347,20 @@ public sealed partial class KsRadarControl : BaseShuttleControl
 
     private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Entity<MapGridComponent> gridEntity)
     {
-        foreach (var (_, interest) in _radarInterestSystem.StaticInterests)
+        var gridNetEntity = EntManager.GetNetEntity(gridEntity.Owner);
+        foreach (var interest in _radarInterestSystem.StaticInterests.Values)
         {
-            if (gridEntity.Owner != interest.Item2)
+            if (interest.Owner != gridNetEntity)
                 continue;
 
             // Control pixels, so the cull box is the control: the old test compared
             // pixels to a world-metres box.
-            var interestPosition = Vector2.Transform(interest.Item3, curGridToViewMatrix);
+            var interestPosition = Vector2.Transform(interest.Position, curGridToViewMatrix);
             if (!new UIBox2(Vector2.Zero, PixelSize).Contains(interestPosition))
                 continue;
 
             handle.DrawCircle(interestPosition, 5, Color.ToSrgb(KsHud.Interest), true);
-            handle.DrawString(_ksFont, interestPosition, interest.Item1.Text, KsHud.Interest);
+            handle.DrawString(_ksFont, interestPosition, interest.Data.Text ?? string.Empty, KsHud.Interest);
         }
     }
 

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Doors.Systems;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.Shuttles.Components;
@@ -43,7 +44,7 @@ namespace Content.Server.Shuttles.Systems
             SubscribeLocalEvent<DockingComponent, ComponentStartup>(OnStartup);
             SubscribeLocalEvent<DockingComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<DockingComponent, AnchorStateChangedEvent>(OnAnchorChange);
-            SubscribeLocalEvent<DockingComponent, ReAnchorEvent>(OnDockingReAnchor);
+            SubscribeLocalEvent<DockingComponent, MoveEvent /* KS14: ReAnchorEvent -> MoveEvent, upstream #45353 */>(OnDockingReAnchor);
 
             SubscribeLocalEvent<DockingComponent, BeforeDoorAutoCloseEvent>(OnAutoClose);
 
@@ -177,12 +178,12 @@ namespace Content.Server.Shuttles.Systems
             }
         }
 
-        private void OnDockingReAnchor(Entity<DockingComponent> entity, ref ReAnchorEvent args)
+        private void OnDockingReAnchor(Entity<DockingComponent> entity, ref MoveEvent /* KS14: ReAnchorEvent -> MoveEvent, upstream #45353 */ args)
         {
             var uid = entity.Owner;
             var component = entity.Comp;
 
-            if (!component.Docked)
+            if (!component.Docked || args.OnlyRotation /* KS14: upstream #45353, only refresh joints on translation */)
                 return;
 
             var otherDock = component.DockedWith;
@@ -353,7 +354,7 @@ namespace Content.Server.Shuttles.Systems
             if (!TryGetEntity(args.DockEntity, out var dockEnt) ||
                 !_dockingQuery.TryComp(dockEnt, out var dockComp))
             {
-                _popup.PopupCursor(Loc.GetString("shuttle-console-undock-fail"));
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-console-undock-fail"), args.Actor);
                 return;
             }
 
@@ -361,7 +362,7 @@ namespace Content.Server.Shuttles.Systems
 
             if (!CanUndock(dock))
             {
-                _popup.PopupCursor(Loc.GetString("shuttle-console-undock-fail"));
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-console-undock-fail"), args.Actor);
                 return;
             }
 
@@ -374,7 +375,7 @@ namespace Content.Server.Shuttles.Systems
 
             if (console == null)
             {
-                _popup.PopupCursor(Loc.GetString("shuttle-console-dock-fail"));
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-console-dock-fail"), args.Actor);
                 return;
             }
 
@@ -382,7 +383,7 @@ namespace Content.Server.Shuttles.Systems
 
             if (!CanShuttleDock(shuttleUid))
             {
-                _popup.PopupCursor(Loc.GetString("shuttle-console-dock-fail"));
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-console-dock-fail"), args.Actor);
                 return;
             }
 
@@ -391,7 +392,7 @@ namespace Content.Server.Shuttles.Systems
                 !_dockingQuery.TryComp(ourDock, out var ourDockComp) ||
                 !_dockingQuery.TryComp(targetDock, out var targetDockComp))
             {
-                _popup.PopupCursor(Loc.GetString("shuttle-console-dock-fail"));
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-console-dock-fail"), args.Actor);
                 return;
             }
 
@@ -399,7 +400,7 @@ namespace Content.Server.Shuttles.Systems
             if (!TryComp(ourDock, out TransformComponent? xformA) ||
                 xformA.GridUid != shuttleUid)
             {
-                _popup.PopupCursor(Loc.GetString("shuttle-console-dock-fail"));
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-console-dock-fail"), args.Actor);
                 return;
             }
 
@@ -407,7 +408,7 @@ namespace Content.Server.Shuttles.Systems
             // Also need to check preventpilot + enabled / dockedwith
             if (!CanDock((ourDock.Value, ourDockComp), (targetDock.Value, targetDockComp)))
             {
-                _popup.PopupCursor(Loc.GetString("shuttle-console-dock-fail"));
+                _popup.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("shuttle-console-dock-fail"), args.Actor);
                 return;
             }
 

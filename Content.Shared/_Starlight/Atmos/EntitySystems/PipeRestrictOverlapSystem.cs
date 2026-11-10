@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -50,7 +51,7 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
 
         if (HasComp<AnchorableComponent>(ent) && CheckOverlap(ent))
         {
-            _popup.PopupEntity(Loc.GetString("pipe-restrict-overlap-popup-blocked", ("pipe", ent.Owner)), ent);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pipe-restrict-overlap-popup-blocked", ("pipe", ent.Owner)), ent);
             _xform.Unanchor(ent, Transform(ent));
         }
     }
@@ -66,7 +67,7 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
         var xform = Transform(ent);
         if (CheckOverlap((ent, node, xform)))
         {
-            _popup.PopupEntity(Loc.GetString("pipe-restrict-overlap-popup-blocked", ("pipe", ent.Owner)), ent, args.User);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("pipe-restrict-overlap-popup-blocked", ("pipe", ent.Owner)), ent, args.User);
             args.Cancel();
         }
     }

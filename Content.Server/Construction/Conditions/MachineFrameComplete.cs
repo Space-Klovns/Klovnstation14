@@ -1,6 +1,7 @@
 using Content.Server.Construction.Components;
 using Content.Shared.Construction;
 using Content.Shared.Examine;
+using Content.Shared.Localizations; // KS14
 using JetBrains.Annotations;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -62,7 +63,7 @@ namespace Content.Server.Construction.Conditions
 
                 args.PushMarkup(Loc.GetString("construction-condition-machine-frame-required-element-entry",
                                            ("amount", amount),
-                                           ("elementName", stackEnt.Name)));
+                                           ("elementName", IoCManager.Resolve<ContentLocalizationManager>().GetLocalizedPrototypeName(stackEnt) /* KS14: active response culture */)));
             }
 
             foreach (var (compName, info) in machineFrame.ComponentRequirements)

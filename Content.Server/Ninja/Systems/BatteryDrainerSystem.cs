@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ninja.Events;
 using Content.Server.Power.Components;
 using Content.Shared.DoAfter;
@@ -45,7 +46,7 @@ public sealed partial class BatteryDrainerSystem : SharedBatteryDrainerSystem
 
         if (_battery.IsFull(battery))
         {
-            _popup.PopupEntity(Loc.GetString("battery-drainer-full"), uid, uid, PopupType.Medium);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("battery-drainer-full"), uid, uid, PopupType.Medium);
             return;
         }
 
@@ -87,7 +88,7 @@ public sealed partial class BatteryDrainerSystem : SharedBatteryDrainerSystem
         var available = _battery.GetCharge((target, targetBattery));
         if (MathHelper.CloseToPercent(available, 0))
         {
-            _popup.PopupEntity(Loc.GetString("battery-drainer-empty", ("battery", target)), uid, uid, PopupType.Medium);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("battery-drainer-empty", ("battery", target)), uid, uid, PopupType.Medium);
             return false;
         }
 
@@ -103,7 +104,7 @@ public sealed partial class BatteryDrainerSystem : SharedBatteryDrainerSystem
         // TODO: create effect message or something
         Spawn("EffectSparks", Transform(target).Coordinates);
         _audio.PlayPvs(comp.SparkSound, target);
-        _popup.PopupEntity(Loc.GetString("battery-drainer-success", ("battery", target)), uid, uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("battery-drainer-success", ("battery", target)), uid, uid);
 
         // repeat the doafter until battery is full
         return !_battery.IsFull((comp.BatteryUid.Value, battery));

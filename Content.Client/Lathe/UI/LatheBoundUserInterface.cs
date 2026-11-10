@@ -1,3 +1,5 @@
+using Content.Client._KS14.Tgui; // KS14
+using Content.Client._KS14.Tgui.Windows.Lathe; // KS14
 using Content.Shared.Lathe;
 using Content.Shared.Research.Components;
 using Content.Shared._KS14.Research.Components;
@@ -10,7 +12,7 @@ namespace Content.Client.Lathe.UI
     public sealed partial class LatheBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
-        private LatheMenu? _menu;
+        private IKsLatheWindow? _menu; // KS14: LatheMenu -> IKsLatheWindow, the tgui theme has a window of its own
         public LatheBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
         {
         }
@@ -19,12 +21,16 @@ namespace Content.Client.Lathe.UI
         {
             base.Open();
 
-            _menu = this.CreateWindowCenteredRight<LatheMenu>();
+            // KS14 start: the tgui theme opens its own window
+            _menu = KsTguiTheme.ReadEnabled()
+                ? this.CreateWindowCenteredRight<KsTguiLatheWindow>()
+                : this.CreateWindowCenteredRight<LatheMenu>();
+            // KS14 end
             _menu.SetEntity(Owner);
 
             _menu.OnServerListButtonPressed += _ =>
             {
-                SendMessage(new ConsoleServerSelectionMessage());
+                SendPredictedMessage(new ConsoleServerSelectionMessage()); // KS14: SendMessage -> SendPredictedMessage, opens the server list at once
             };
 
             _menu.RecipeQueueAction += (recipe, amount) =>
@@ -45,7 +51,7 @@ namespace Content.Client.Lathe.UI
             {
                 case LatheUpdateState msg:
                     if (_menu != null)
-                        _menu.Recipes = msg.Recipes;
+                        _menu.SetRecipes(msg.Recipes); // KS14: field -> method, the interface has no fields
                     _menu?.PopulateRecipes();
                     _menu?.UpdateCategories();
                     _menu?.PopulateQueueList(msg.Queue);

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Client.Storage.Systems; // KS14
 using Content.Client.UserInterface.Systems.Storage;
 using Content.Client.UserInterface.Systems.Storage.Controls;
 using Content.Shared.Storage;
@@ -25,7 +26,7 @@ public sealed partial class StorageBoundUserInterface : BoundUserInterface
 
         _window = IoCManager.Resolve<IUserInterfaceManager>()
             .GetUIController<StorageUIController>()
-            .CreateStorageWindow(this);
+            .CreateStorageWindow(this, EntMan.System<StorageSystem>().TakeReplacementPosition(Owner) /* KS14: retain replaced non-static window position */);
 
         if (EntMan.TryGetComponent(Owner, out StorageComponent? storage))
         {

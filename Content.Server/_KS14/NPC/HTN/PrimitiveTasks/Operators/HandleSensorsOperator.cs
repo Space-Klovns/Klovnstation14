@@ -17,18 +17,26 @@ public sealed partial class HandleSensorsOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken _)
     {
-        if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager) ||
+        if (!blackboard.TryGetOwner(_entityManager, out var ownerUid) ||
             !_sensorsQuery.TryGetComponent(ownerUid, out var sensorsComponent))
             return (true, null);
 
-        return (true, sensorsComponent.AggregatedEffects)!;
+        // A snapshot: the live dictionary keeps changing, and the plan keeps hold of its effects.
+        return (true, new Dictionary<string, object>(sensorsComponent.AggregatedEffects));
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager) ||
+        if (!blackboard.TryGetOwner(_entityManager, out var ownerUid) ||
             !_sensorsQuery.TryGetComponent(ownerUid, out var sensorsComponent))
             return HTNOperatorStatus.Finished;
+
+        // Apply whatever is pending now, not just what was pending at planning time - anything that arrived in
+        //      between would otherwise be cleared below without ever reaching the blackboard.
+        foreach (var (key, value) in sensorsComponent.AggregatedEffects)
+        {
+            blackboard.SetValue(key, value);
+        }
 
         sensorsComponent.AggregatedEffects.Clear();
         return HTNOperatorStatus.Finished;

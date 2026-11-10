@@ -8,7 +8,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: eng
-    stateDoorOpen: eng_open
+    # stateDoorOpen: eng_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: eng_tool_door
 
 # Radiation suit closet
@@ -21,7 +21,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: eng
-    stateDoorOpen: eng_open
+    # stateDoorOpen: eng_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: eng_rad_door
 
 # Emergency closet
@@ -34,7 +34,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: emergency
-    stateDoorOpen: emergency_open
+    # stateDoorOpen: emergency_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: emergency_door
 
 # Emergency N2 closet
@@ -47,7 +47,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: n2
-    stateDoorOpen: n2_open
+    # stateDoorOpen: n2_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: n2_door
 
 # Fire safety closet
@@ -60,7 +60,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: fire
-    stateDoorOpen: fire_open
+    # stateDoorOpen: fire_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: fire_door
 
 # EOD closet
@@ -73,7 +73,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: bomb
-    stateDoorOpen: bomb_open
+    # stateDoorOpen: bomb_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: bomb_door
 
 # Janitorial bomb suit closet
@@ -87,7 +87,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: janitor_bomb
-    stateDoorOpen: janitor_bomb_open
+    # stateDoorOpen: janitor_bomb_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: janitor_bomb_door
 
 # Biohazard
@@ -102,7 +102,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: bio
-    stateDoorOpen: bio_open
+    # stateDoorOpen: bio_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: bio_door
 
 # Science Variant
@@ -112,8 +112,8 @@
   components:
   - type: Appearance
   - type: EntityStorageVisuals
-    stateBaseClosed: bio_sci
-    stateDoorOpen: bio_sci_open
+    stateBaseClosed: bio # KS14: bio_sci -> bio, tgstation's level 3 closets share one body
+    # stateDoorOpen: bio_sci_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: bio_sci_door
 
 # Virology variant
@@ -123,8 +123,8 @@
   components:
   - type: Appearance
   - type: EntityStorageVisuals
-    stateBaseClosed: bio_viro
-    stateDoorOpen: bio_viro_open
+    stateBaseClosed: bio # KS14: bio_viro -> bio, tgstation's level 3 closets share one body
+    # stateDoorOpen: bio_viro_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: bio_viro_door
 
 # Security variant
@@ -134,8 +134,8 @@
   components:
   - type: Appearance
   - type: EntityStorageVisuals
-    stateBaseClosed: bio_sec
-    stateDoorOpen: bio_sec_open
+    stateBaseClosed: bio # KS14: bio_sec -> bio, tgstation's level 3 closets share one body
+    # stateDoorOpen: bio_sec_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: bio_sec_door
 
 # Janitor variant
@@ -145,8 +145,8 @@
   components:
   - type: Appearance
   - type: EntityStorageVisuals
-    stateBaseClosed: bio_jan
-    stateDoorOpen: bio_jan_open
+    stateBaseClosed: bio # KS14: bio_jan -> bio, tgstation's level 3 closets share one body
+    # stateDoorOpen: bio_jan_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: bio_jan_door
 
 # Maintenance closet
@@ -158,7 +158,7 @@
   components:
   - type: Appearance
   - type: EntityStorageVisuals
-    stateDoorOpen: generic_open
+    # stateDoorOpen: generic_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: generic_door
 
 # Syndicate
@@ -171,7 +171,7 @@
   - type: Appearance
   - type: EntityStorageVisuals
     stateBaseClosed: syndicate
-    stateDoorOpen: syndicate_open
+    # stateDoorOpen: syndicate_open # KS14: removed, the door swings open, see KsClosetDoorVisuals
     stateDoorClosed: syndicate_door
 
 # Bluespace closet

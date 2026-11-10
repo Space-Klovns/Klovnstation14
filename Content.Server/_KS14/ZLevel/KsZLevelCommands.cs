@@ -9,7 +9,6 @@ namespace Content.Server._KS14.ZLevel;
 [AdminCommand(AdminFlags.Debug)]
 public sealed partial class KsZLevelAddCommand : LocalizedEntityCommands
 {
-    [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
 
     public override string Command => "zlevel_add";
@@ -25,7 +24,7 @@ public sealed partial class KsZLevelAddCommand : LocalizedEntityCommands
         if (!EntityUid.TryParse(args[0], out var targetUid) ||
             !targetUid.IsValid() ||
             !EntityManager.EntityExists(targetUid) ||
-            !_entityManager.HasComponent<MapComponent>(targetUid))
+            !EntityManager.HasComponent<MapComponent>(targetUid))
         {
             goto badUid;
         }
@@ -33,14 +32,14 @@ public sealed partial class KsZLevelAddCommand : LocalizedEntityCommands
         if (!EntityUid.TryParse(args[1], out var addedUid) ||
             !addedUid.IsValid() ||
             !EntityManager.EntityExists(addedUid) ||
-            !_entityManager.HasComponent<MapComponent>(targetUid))
+            !EntityManager.HasComponent<MapComponent>(targetUid))
         {
             goto badUid;
         }
 
         _zLevelSystem.AddZLevelDirectlyAbove(
-            (targetUid, _entityManager.EnsureComponent<KsZLevelComponent>(targetUid)),
-            (addedUid, _entityManager.EnsureComponent<KsZLevelComponent>(addedUid))
+            (targetUid, EntityManager.EnsureComponent<KsZLevelComponent>(targetUid)),
+            (addedUid, EntityManager.EnsureComponent<KsZLevelComponent>(addedUid))
         );
         return;
     badUid:
@@ -54,7 +53,7 @@ public sealed partial class KsZLevelAddCommand : LocalizedEntityCommands
             return CompletionResult.Empty;
 
         return CompletionResult.FromHintOptions(
-            CompletionHelper.MapUids(_entityManager),
+            CompletionHelper.MapUids(EntityManager),
             Loc.GetString("cmd-zlevel_add-completion"));
     }
 }

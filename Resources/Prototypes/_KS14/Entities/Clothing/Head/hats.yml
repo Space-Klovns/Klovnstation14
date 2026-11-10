@@ -1,0 +1,21 @@
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatCapotain
+  name: pilgrim hat
+  description: a capotain hat, fit for pilgrims.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Head/Hats/capotain.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Head/Hats/capotain.rsi
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatDunce
+  name: dunce Cap
+  description: for the finest of personnel
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Head/Hats/dunce.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Head/Hats/dunce.rsi

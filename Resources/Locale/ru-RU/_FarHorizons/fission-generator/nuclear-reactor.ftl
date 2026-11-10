@@ -1,0 +1,33 @@
+# KS14: automatically translated; see _KS14/Localization/translation-review.tsv.
+
+comp-nuclear-reactor-ui-eject-button = Извлечь
+comp-nuclear-reactor-ui-empty = Пусто
+comp-nuclear-reactor-ui-extract-button = Извлечение
+comp-nuclear-reactor-ui-footer-left = Опасность: высокие температуры.
+comp-nuclear-reactor-ui-footer-right = 0,5 РЕД. 4
+comp-nuclear-reactor-ui-insert-button = Вставка
+comp-nuclear-reactor-ui-reactor-control = Управляющие стержни
+comp-nuclear-reactor-ui-reactor-rads = Излучение
+comp-nuclear-reactor-ui-reactor-temp = Температура
+comp-nuclear-reactor-ui-reactor-therm = Тепловая мощность
+comp-nuclear-reactor-ui-silence-button = Тишина
+comp-nuclear-reactor-ui-status-panel = Статус реактора
+comp-nuclear-reactor-ui-therm-format = { POWERWATTS($power) }
+comp-nuclear-reactor-ui-view-change = Изменить вид
+comp-nuclear-reactor-ui-view-neutron = Нейтронный вид
+comp-nuclear-reactor-ui-view-rads = Обзор радиации
+comp-nuclear-reactor-ui-view-spent = Просмотр истощения
+comp-nuclear-reactor-ui-view-temp = Просмотр температуры
+reactor-alarms-silence-failed = Ничего не происходит.
+reactor-alarms-silenced-message-others = { $user } вручную отключает сигнализацию реактора.
+reactor-alarms-silenced-message-self = Вы вручную отключаете сигнализацию реактора. Это действительно хорошая идея?
+reactor-fire-start = Игра { $owner } Начинает гореть!
+reactor-fire-start-message = ВНИМАНИЕ: { $owner } достигла КРИТИЧЕСКОЙ температуры: { $temperature }K. УГРОЗА ПЛАВЛЕНИЯ.
+reactor-fire-stop = Игра { $owner } перестает гореть.
+reactor-fire-stop-message = Игра { $owner } Температура опустилась ниже критической. Авария реактора предотвращена.
+reactor-meltdown-announcement = Ядерный реактор на борту станции подвергся катастрофической перегрузке. Вероятны радиоактивные обломки, ядерные осадки и пожары, вызванные возгоранием охлаждающей жидкости. Настоятельно рекомендуется немедленная эвакуация из прилегающей территории.
+reactor-meltdown-announcement-sender = Ядерная авария
+reactor-smoke-start = Игра { $owner } Начинает дымиться!
+reactor-smoke-start-message = ВНИМАНИЕ: { $owner } достигла опасной температуры: { $temperature }K. Немедленно примите меры, чтобы предотвратить расплавление.
+reactor-smoke-stop = Игра { $owner } бросает курить.
+reactor-smoke-stop-message = Игра { $owner } Температура опустилась ниже опасного уровня. Хорошего дня.

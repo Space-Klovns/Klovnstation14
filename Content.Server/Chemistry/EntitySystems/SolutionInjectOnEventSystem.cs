@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Body.Systems;
 using Content.Server.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
@@ -100,7 +101,7 @@ public sealed partial class SolutionInjectOnCollideSystem : EntitySystem
             {
                 // Only show popup to attacker
                 if (source != null)
-                    _popup.PopupEntity(Loc.GetString(injector.Comp.BlockedByHardsuitPopupMessage, ("weapon", injector.Owner), ("target", target)), target, source.Value, PopupType.SmallCaution);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(injector.Comp.BlockedByHardsuitPopupMessage, ("weapon", injector.Owner), ("target", target)), target, source.Value, PopupType.SmallCaution);
 
                 continue;
             }

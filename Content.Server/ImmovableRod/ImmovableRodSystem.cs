@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Destructible;
 using Content.Server.Polymorph.Components;
 using Content.Server.Popups;
@@ -98,7 +99,7 @@ public sealed partial class ImmovableRodSystem : EntitySystem
             // oh god.
             var coords = Transform(uid).Coordinates;
 
-            _popup.PopupCoordinates(Loc.GetString("immovable-rod-collided-rod-not-good"), coords, PopupType.LargeCaution);
+            _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("immovable-rod-collided-rod-not-good"), coords, PopupType.LargeCaution);
             _adminLogger.Add(LogType.Gib, LogImpact.Low, $"{ToPrettyString(uid)} and {ToPrettyString(ent)} created singularity at X:{coords.X} Y:{coords.Y}");
 
             Del(uid);
@@ -119,7 +120,7 @@ public sealed partial class ImmovableRodSystem : EntitySystem
         if (HasComp<BodyComponent>(ent))
         {
             component.MobCount++;
-            _popup.PopupEntity(Loc.GetString("immovable-rod-penetrated-mob", ("rod", uid), ("mob", ent)), uid, PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("immovable-rod-penetrated-mob", ("rod", uid), ("mob", ent)), uid, PopupType.LargeCaution);
 
             if (!component.ShouldGib)
             {

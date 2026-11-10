@@ -14,18 +14,6 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
 
     private const string ContainerId = "object-processor-container";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsActiveEntityProcessorComponent, EntRemovedFromContainerMessage>(OnEntRemovedFromActiveContainer);
-
-        SubscribeLocalEvent<KsEntityProcessorComponent, PowerChangedEvent>(OnPowerChanged);
-
-        SubscribeLocalEvent<KsEntityProcessorComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsEntityProcessorComponent, StartCollideEvent>(OnStartCollide);
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -33,46 +21,61 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
         var eqe = EntityQueryEnumerator<KsActiveEntityProcessorComponent, KsEntityProcessorComponent>();
         while (eqe.MoveNext(out var uid, out var activeComponent, out var processorComponent))
         {
+            // Everything was taken out (OnEntRemovedFromActiveContainer leaves the component for us to tidy,
+            //      so a new item inserted before this point reuses it instead of a dying component)
+            if (activeComponent.Processing.Count == 0)
+            {
+                FinishEverything((uid, activeComponent));
+                continue;
+            }
+
             if (!processorComponent.Powered)
                 continue;
 
-            var processedUids = new ValueList<EntityUid>();
+            // Collected first: a finish handler may take things out of the processor, changing Processing
+            var dueUids = new ValueList<EntityUid>();
             foreach (var (processingUid, processingTime) in activeComponent.Processing)
             {
-                if (_gameTiming.CurTime < processingTime)
-                    continue;
-
-                FinishProcessing((uid, processorComponent, activeComponent), processingUid);
-                processedUids.Add(processingUid);
+                if (_gameTiming.CurTime >= processingTime)
+                    dueUids.Add(processingUid);
             }
 
-            if (processedUids.Count == 0)
+            if (dueUids.Count == 0)
                 continue;
 
-            // If we finished processing everything, then just remove the component
-            if (processedUids.Count ==
-                activeComponent.Processing.Count)
+            foreach (var dueUid in dueUids)
             {
-                RemComp(uid, activeComponent);
+                if (!activeComponent.Processing.ContainsKey(dueUid))
+                    continue; // taken out by an earlier finish handler
 
-                var finishedAllEv = new KsFinishedProcessingEverythingEvent();
-                RaiseLocalEvent(uid, ref finishedAllEv);
-
-                continue;
+                FinishProcessing((uid, processorComponent, activeComponent), dueUid);
+                activeComponent.Processing.Remove(dueUid);
             }
 
-            // If not everything's done yet just remove the ones that were finished
-            foreach (var processedUid in processedUids)
-                activeComponent.Processing.Remove(processedUid);
+            // Nothing left, so remove the component. Not by the container handler: this is the one place that does
+            if (activeComponent.Processing.Count == 0)
+            {
+                FinishEverything((uid, activeComponent));
+                continue;
+            }
 
             Dirty(uid, activeComponent);
         }
     }
 
+    private void FinishEverything(Entity<KsActiveEntityProcessorComponent> entity)
+    {
+        RemComp(entity.Owner, entity.Comp);
+
+        var finishedAllEv = new KsFinishedProcessingEverythingEvent();
+        RaiseLocalEvent(entity.Owner, ref finishedAllEv);
+    }
+
     private void FinishProcessing(in Entity<KsEntityProcessorComponent, KsActiveEntityProcessorComponent?> processorEntity, EntityUid processedUid)
     {
-        // TODO LCDC: debug this and check if its raised on client, i think it isnt
-
+        // Raised on the client as well: KsActiveEntityProcessorComponent.Processing is networked, so the client runs
+        //      the same timers in Update. Handlers that spawn or delete must therefore guard themselves, as
+        //      KsStackProcessorSystem.OnFinishedProcessing does.
         var ev = new KsFinishedProcessingEntityEvent(processorEntity, processedUid);
         RaiseLocalEvent(processorEntity, ref ev);
     }
@@ -126,6 +129,7 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnEntRemovedFromActiveContainer(Entity<KsActiveEntityProcessorComponent> entity, ref EntRemovedFromContainerMessage args)
     {
         if (_gameTiming.ApplyingState)
@@ -134,13 +138,15 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
         if (args.Container.ID != ContainerId)
             return;
 
-        entity.Comp.Processing.Remove(entity);
+        // The thing that left, not the processor: else it would still be "processing" and get consumed when its time is up
+        entity.Comp.Processing.Remove(args.Entity);
         Dirty(entity);
 
         var ev = new KsEntityRemovedFromActiveProcessorEvent(entity, args.Entity);
         RaiseLocalEvent(entity.Owner, ref ev);
     }
 
+    [SubscribeLocalEvent]
     private void OnPowerChanged(Entity<KsEntityProcessorComponent> entity, ref PowerChangedEvent args)
     {
         if (entity.Comp.Powered == args.Powered)
@@ -150,9 +156,11 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsEntityProcessorComponent> entity, ref ComponentStartup args)
         => entity.Comp.Container = _containerSystem.EnsureContainer<Container>(entity.Owner, ContainerId);
 
+    [SubscribeLocalEvent]
     private void OnStartCollide(Entity<KsEntityProcessorComponent> entity, ref StartCollideEvent args)
     {
         if (args.OurFixtureId != entity.Comp.FixtureId)

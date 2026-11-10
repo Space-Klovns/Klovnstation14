@@ -1,0 +1,16 @@
+ks-scan-discovered-thing = discovered thing
+ks-scan-discovered-discovered-geyser = discovered geyser
+ks-scan-discovered-plasma-geyser = plasma geyser
+ks-scan-discovered-liquid-carbon-dioxide-geyser = liquid carbon dioxide geyser
+ks-scan-discovered-liquid-nitrogen-geyser = liquid nitrogen geyser
+ks-scan-discovered-fresium-geyser = fresium geyser
+ks-scan-discovered-klovnide-geyser = klovnide geyser
+ks-scan-discovered-zipium-geyser = zipium geyser
+ks-scan-discovered-artifexium-geyser = artifexium geyser
+ks-scan-discovered-wittel-geyser = wittel geyser
+ks-scan-discovered-crude-oil-geyser = crude oil geyser
+ks-scan-discovered-sour-crude-geyser = sour crude geyser
+ks-scan-discovered-gas-condensate-geyser = gas condensate geyser
+ks-scan-discovered-discovered-ore-vent = discovered ore vent
+ks-scan-discovered-common-ore-vent = common ore vent
+ks-scan-discovered-rare-ore-vent = rare ore vent

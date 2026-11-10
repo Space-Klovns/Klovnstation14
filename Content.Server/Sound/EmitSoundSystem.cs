@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Sound;
 using Content.Shared.Sound.Components;
 using Robust.Shared.Timing;
@@ -21,7 +22,7 @@ public sealed partial class EmitSoundSystem : SharedEmitSoundSystem
             if (_timing.CurTime >= soundSpammer.NextSound)
             {
                 if (soundSpammer.PopUp != null)
-                    Popup.PopupEntity(Loc.GetString(soundSpammer.PopUp), uid);
+                    Popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(soundSpammer.PopUp), uid);
                 TryEmitSound(uid, soundSpammer, predict: false);
 
                 SpamEmitSoundReset((uid, soundSpammer));

@@ -267,6 +267,9 @@ public partial class AtmosphereSystem
         if (GetContainingMixture(entity, ignoreExposed, excite) is not { } containingMixture)
             return;
 
+        if (!containingMixture.FluidCapable)
+            _ksFluidmosTileSystem.ReleaseToTile(entity, mixture); // KS14
+
         Merge(containingMixture, mixture);
     }
 
@@ -276,6 +279,7 @@ public partial class AtmosphereSystem
         if (GetTileMixture(entity, excite) is not { } tileMixture)
             return;
 
+        _ksFluidmosTileSystem.ReleaseToTile(entity, mixture); // KS14
         Merge(tileMixture, mixture);
     }
 

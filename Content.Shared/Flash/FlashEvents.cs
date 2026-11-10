@@ -5,6 +5,7 @@ namespace Content.Shared.Flash;
 /// <summary>
 /// Called before a flash is used to check if the attempt is cancelled by blindness, items or FlashImmunityComponent.
 /// Raised on the target hit by the flash and their inventory items.
+/// KS14: Raised once for a real flash, which KsCanFlashEvent has found can reach the target, so handlers may respond to it. To only ask, use that.
 /// </summary>
 [ByRefEvent]
 public record struct FlashAttemptEvent(EntityUid Target, EntityUid? User, EntityUid? Used, bool Cancelled = false, bool FlashOverride = false) : IInventoryRelayEvent //KS14 - flash override

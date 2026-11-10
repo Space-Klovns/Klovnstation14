@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Shared._KS14.Random.Helpers; // KS14 Addition
 using Content.Shared._KS14.Sparks; // KS14 Addition
@@ -45,6 +46,7 @@ public abstract partial class SharedPortalSystem : EntitySystem
     [Dependency] private IGameTiming _curTiming = default!; // KS14 Addition
     [Dependency] private GibbingSystem _gibbingSystem = default!; // KS14 Addition
     [Dependency] private ISharedPlayerManager _playerManager = default!; // KS14 Addition
+    [Dependency] private Content.Shared._KS14.Portal.KsPortalTravelSystem _ksPortalTravelSystem = default!; // KS14 Addition
     [Dependency] private SharedJointSystem _joints = default!;
 
     private const string PortalFixture = "portalFixture";
@@ -101,6 +103,12 @@ public abstract partial class SharedPortalSystem : EntitySystem
     {
         if (!ShouldCollide(args.OurFixtureId, args.OtherFixtureId, args.OurFixture, args.OtherFixture))
             return;
+
+        // KS14 start: a view portal carries entities through its doorway itself, and teleporting on touch would
+        //      get there first
+        if (_ksPortalTravelSystem.CarriesTravellers(ent))
+            return;
+        // KS14 end
 
         var subject = args.OtherEntity;
 
@@ -218,7 +226,13 @@ public abstract partial class SharedPortalSystem : EntitySystem
     {
         if (HasComp<BodyComponent>(hitUid))
         {
-            _popup.PopupEntity(Loc.GetString("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), hitUid, type: PopupType.LargeCaution);
+            // KS14 start: server only. Gibbing is server-only, so a predicting client keeps the victim alive and can
+            //      frag it again before learning it is gone, which stacked the popup as "x2, x3, ...".
+            if (_netMan.IsServer)
+            {
+                _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), Transform(hitUid).Coordinates /* KS14: PopupEntity -> PopupCoordinates, the victim is gone before clients handle an entity popup */, type: PopupType.LargeCaution);
+            }
+            // KS14 end
             _gibbingSystem.Gib(hitUid, dropGiblets: true);
             return false;
         }
@@ -248,10 +262,10 @@ public abstract partial class SharedPortalSystem : EntitySystem
             if (_netMan.IsClient)
                 return;
 
-            _popup.PopupCoordinates(Loc.GetString("portal-component-invalid-configuration-fizzle"),
+            _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-invalid-configuration-fizzle"),
                 ourCoords, Filter.Pvs(ourCoords, entityMan: EntityManager), true);
 
-            _popup.PopupCoordinates(Loc.GetString("portal-component-invalid-configuration-fizzle"),
+            _popup.PopupCoordinates(KsPopupMessage.Create /* KS14: localize popups on the recipient */("portal-component-invalid-configuration-fizzle"),
                 target, Filter.Pvs(target, entityMan: EntityManager), true);
 
             QueueDel(ent);
@@ -299,8 +313,9 @@ public abstract partial class SharedPortalSystem : EntitySystem
                 OnTelefrag(subject, ent);
         }
 
-        // KS14: Do sparks
-        _sparksSystem.DoSparks(target, minimumSparks: (int)(2f * sparkMultiplier), maximumSparks: (int)(5f * sparkMultiplier), user: subject);
+        // KS14: Do sparks. No user: the teleport is server-only whenever the client can't predict it (an unseen
+        //      or random destination), and the subject is often not a player at all.
+        _sparksSystem.DoSparks(target, minimumSparks: (int)(2f * sparkMultiplier), maximumSparks: (int)(5f * sparkMultiplier));
 
         if (!playSound)
             return;

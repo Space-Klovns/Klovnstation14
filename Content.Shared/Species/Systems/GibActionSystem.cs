@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Species.Components;
 using Content.Shared.Actions;
 using Content.Shared.Body.Systems;
@@ -14,7 +15,6 @@ public sealed partial class GibActionSystem : EntitySystem
 {
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private GibbingSystem _gibbing = default!;
-    [Dependency] private IPrototypeManager _protoManager = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
     public override void Initialize()
@@ -31,7 +31,7 @@ public sealed partial class GibActionSystem : EntitySystem
         if (!TryComp<MobStateComponent>(uid, out var mobState))
             return;
 
-        if (!_protoManager.TryIndex<EntityPrototype>(comp.ActionPrototype, out var actionProto))
+        if (!ProtoMan.TryIndex<EntityPrototype>(comp.ActionPrototype, out var actionProto))
             return;
 
 
@@ -52,7 +52,7 @@ public sealed partial class GibActionSystem : EntitySystem
     private void OnGibAction(EntityUid uid, GibActionComponent comp, GibActionEvent args)
     {
         // When they use the action, gib them.
-        _popupSystem.PopupClient(Loc.GetString(comp.PopupText, ("name", uid)), uid, uid);
+        _popupSystem.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.PopupText, ("name", uid)), uid, uid);
         _gibbing.Gib(uid, user: args.Performer);
     }
 

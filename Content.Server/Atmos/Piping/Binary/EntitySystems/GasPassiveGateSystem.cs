@@ -12,6 +12,8 @@ namespace Content.Server.Atmos.Piping.Binary.EntitySystems;
 public sealed partial class GasPassiveGateSystem : EntitySystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private Content.Server._KS14.Atmos.KsTransferThermoSystem _ksTransferThermoSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.Fluidmos.KsLiquidFlowSystem _ksLiquidFlowSystem = default!; // KS14
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
 
     public override void Initialize()
@@ -41,8 +43,14 @@ public sealed partial class GasPassiveGateSystem : EntitySystem
             dV = transferFrac * V1;
 
             // Actually transfer the gas.
-            _atmosphereSystem.Merge(outlet.Air, inlet.Air.RemoveRatio(transferFrac));
+            // KS14 start: the gas throttles, and liquid crosses by the orifice law instead of riding with it
+            var ksRemoved = inlet.Air.RemoveRatio(transferFrac, includeLiquid: false);
+            _ksTransferThermoSystem.Apply(ksRemoved, P1, P2, doesWork: false);
+            _atmosphereSystem.Merge(outlet.Air, ksRemoved);
+            // KS14 end
         }
+
+        _ksLiquidFlowSystem.Transfer(inlet.Air, outlet.Air, gate.KsLiquidConductance, dt); // KS14
 
         gate.FlowRate = AtmosphereSystem.ExponentialMovingAverage(dV, gate.FlowRate, dt);
     }

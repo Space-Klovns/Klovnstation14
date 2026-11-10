@@ -1,0 +1,19 @@
+# An example of a canister prefilled with liquid, for mappers: GasMixture's fluid is saved, so any canister's air can
+#     carry reagents as liquid, solid or vapor.
+- type: entity
+  parent: GasCanister
+  id: KsFluidmosCanisterWater
+  name: water canister
+  description: A canister that can contain any type of gas. This one holds liquid water under a blanket of nitrogen. It can be attached to connector ports using a wrench.
+  components:
+  - type: GasCanister
+    air:
+      volume: 1500
+      moles:
+        Nitrogen: 62.37 # One atmosphere at 20 C
+        WaterVapor: 1.7412 # Saturated over the water, so it doesn't evaporate and chill the canister
+      temperature: 293.15
+      fluid:
+        reagents:
+        - reagent: Water
+          liquid: 1000

@@ -6,7 +6,6 @@ namespace Content.Server.Speech;
 
 public sealed partial class EmotesMenuSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ChatSystem _chat = default!;
 
     public override void Initialize()
@@ -22,7 +21,7 @@ public sealed partial class EmotesMenuSystem : EntitySystem
         if (!player.HasValue)
             return;
 
-        if (!_prototypeManager.Resolve(msg.ProtoId, out var proto) || proto.ChatTriggers.Count == 0)
+        if (!ProtoMan.Resolve(msg.ProtoId, out var proto) || proto.ChatTriggers.Count == 0)
             return;
 
         _chat.TryEmoteWithChat(player.Value, msg.ProtoId, networkedFilter: Robust.Shared.Player.Filter.Pvs(player.Value, entityManager: EntityManager) /* KS14: Fully networked */);

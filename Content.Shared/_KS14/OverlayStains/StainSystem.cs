@@ -4,6 +4,7 @@ using Content.Shared._KS14.Deferral;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reaction;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.OverlayStains;
@@ -25,10 +26,10 @@ public sealed partial class StainSystem : EntitySystem
         new SpriteSpecifier.Rsi(new ResPath("/Textures/Effects/crayondecals.rsi"), "splatter");
 
     /// <summary>
-    ///     Wrapper for a reaction triggered by water, space-cleaner
-    ///         and bleach, that effects <see cref="StainCleanReaction"/>.
+    ///     Reactive group a stained entity joins, so that reagents in it wash the stains off by touch.
+    ///         Which reagents clean is up to the reagents: see their reactiveEffects.
     /// </summary>
-    public ReactiveReagentEffectEntry StainCleanEffectEntry = default!;
+    public static readonly ProtoId<ReactiveGroupPrototype> CleaningGroup = "KsStainCleaning";
 
     /// <summary>
     ///     Maximum number of stains on one entity. When trying to create
@@ -36,18 +37,6 @@ public sealed partial class StainSystem : EntitySystem
     ///         the oldest stain will be truncated first.
     /// </summary>
     public const int MaxStains = 25;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        StainCleanEffectEntry = new()
-        {
-            Methods = new() { ReactionMethod.Touch },
-            Reagents = new() { "Water", "SpaceCleaner", "Bleach" }, // TODO: Un-hardcode
-            Effects = new[] { new StainClean() }
-        };
-    }
 
     /// <summary>
     ///     Removes <see cref="StainedComponent"/> from the specified uid.
@@ -59,7 +48,9 @@ public sealed partial class StainSystem : EntitySystem
 
         if (TryComp<ReactiveComponent>(entity, out var reactiveComponent))
         {
-            SynchronousDeferralSystem.Defer(() => reactiveComponent.Reactions?.Remove(StainCleanEffectEntry));
+            // Deferred: this runs from inside the reaction that is enumerating the groups
+            if (entity.Comp.AddedCleaningGroup)
+                SynchronousDeferralSystem.Defer(() => reactiveComponent.ReactiveGroups?.Remove(CleaningGroup));
 
             // clean up
             if (entity.Comp.OwnsBoundReactiveComponent)
@@ -110,14 +101,15 @@ public sealed partial class StainSystem : EntitySystem
             Color = color,
         });
 
-        var ownsBoundReactiveComponent = !EnsureComp<ReactiveComponent>(entity, out var reactiveComponent);
-        if (ownsBoundReactiveComponent || (!reactiveComponent.Reactions?.Contains(StainCleanEffectEntry) ?? false))
-        {
-            // only set to true if we made a reactivecomponent on the entity, otherwise don't
-            entity.Comp.OwnsBoundReactiveComponent |= ownsBoundReactiveComponent;
+        // only set to true if we made a reactivecomponent on the entity, otherwise don't
+        entity.Comp.OwnsBoundReactiveComponent |= !EnsureComp<ReactiveComponent>(entity, out var reactiveComponent);
 
-            reactiveComponent.Reactions ??= new();
-            reactiveComponent.Reactions.Add(StainCleanEffectEntry);
+        reactiveComponent.ReactiveGroups ??= new();
+        // An entity already in the group (from its prototype) keeps it as it is, and keeps it once clean
+        if (!reactiveComponent.ReactiveGroups.ContainsKey(CleaningGroup))
+        {
+            reactiveComponent.ReactiveGroups[CleaningGroup] = new() { ReactionMethod.Touch };
+            entity.Comp.AddedCleaningGroup = true;
         }
 
         Dirty(entity);

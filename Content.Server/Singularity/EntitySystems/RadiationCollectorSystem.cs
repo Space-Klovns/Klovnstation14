@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server.Atmos.EntitySystems;
@@ -187,7 +188,7 @@ public sealed partial class RadiationCollectorSystem : EntitySystem
         if (user != null)
         {
             var msg = component.Enabled ? "radiation-collector-component-use-on" : "radiation-collector-component-use-off";
-            _popupSystem.PopupEntity(Loc.GetString(msg), uid);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(msg), uid);
         }
 
         // Update appearance

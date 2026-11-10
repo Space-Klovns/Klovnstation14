@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Numerics;
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
@@ -116,7 +117,7 @@ public abstract partial class SharedMagicSystem : EntitySystem
             return;
 
         args.Cancelled = true;
-        _popup.PopupClient(Loc.GetString("spell-requirements-failed"), args.Performer, args.Performer);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("spell-requirements-failed"), args.Performer, args.Performer);
 
         // TODO: Pre-cast do after, either here or in SharedActionsSystem
     }

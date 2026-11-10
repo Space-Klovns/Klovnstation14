@@ -1,0 +1,11 @@
+# Sprites from Stalker14.
+- type: entity
+  parent: ClothingNeckBase
+  id: KsClothingNeckCapeBlack
+  name: black cape
+  description: A black cape worn over armor.
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Clothing/cloak/desertercape.rsi
+  - type: Clothing
+    sprite: _Stalker/Objects/Clothing/cloak/desertercape.rsi

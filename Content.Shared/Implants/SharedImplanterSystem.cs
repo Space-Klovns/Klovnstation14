@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.Containers.ItemSlots;
@@ -27,7 +28,6 @@ public abstract partial class SharedImplanterSystem : EntitySystem
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private SharedUserInterfaceSystem _uiSystem = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     [Dependency] private EntityQuery<SubdermalImplantComponent> _implantCompQuery = default!;
 
@@ -128,7 +128,7 @@ public abstract partial class SharedImplanterSystem : EntitySystem
         if (!component.AllowMultipleImplants && CheckSameImplant(target, implant.Value))
         {
             var name = Identity.Name(target, EntityManager, user);
-            var msg = Loc.GetString("implanter-component-implant-already", ("implant", implant), ("target", name));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("implanter-component-implant-already", ("implant", implant), ("target", name));
             _popup.PopupEntity(msg, target, user);
             return;
         }
@@ -271,7 +271,7 @@ public abstract partial class SharedImplanterSystem : EntitySystem
     {
         var implantName = Identity.Entity(implant, EntityManager);
         var targetName = Identity.Entity(target, EntityManager);
-        var failedPermanentMessage = Loc.GetString("implanter-draw-failed-permanent",
+        var failedPermanentMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("implanter-draw-failed-permanent",
             ("implant", implantName), ("target", targetName));
         _popup.PopupEntity(failedPermanentMessage, target, user);
     }
@@ -289,7 +289,7 @@ public abstract partial class SharedImplanterSystem : EntitySystem
     {
         _damageableSystem.TryChangeDamage(user, component.DeimplantFailureDamage, ignoreResistances: true, origin: implanter);
         var userName = Identity.Entity(user, EntityManager);
-        var failedCatastrophicallyMessage = Loc.GetString("implanter-draw-failed-catastrophically", ("user", userName));
+        var failedCatastrophicallyMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("implanter-draw-failed-catastrophically", ("user", userName));
         _popup.PopupEntity(failedCatastrophicallyMessage, user, PopupType.MediumCaution);
     }
 
@@ -337,7 +337,7 @@ public abstract partial class SharedImplanterSystem : EntitySystem
         if (!Resolve(uid, ref component, false))
             return;
 
-        if (implant != null && _proto.TryIndex(implant, out EntityPrototype? proto))
+        if (implant != null && ProtoMan.TryIndex(implant, out EntityPrototype? proto))
             component.DeimplantChosen = proto;
 
         Dirty(uid, component);

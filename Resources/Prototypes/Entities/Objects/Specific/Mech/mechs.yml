@@ -17,8 +17,9 @@
     - NitrousOxide
     - Frezon
     - Zipion # KS14
-    - Argon # KS14
+    - Encalite # KS14
     - Evaporin # KS14
+    - Hydrogen # KS14
     #- Helium3 TODO: fusion
     # remove everything except oxygen to maintain oxygen ratio
     overflowGases:
@@ -31,8 +32,9 @@
     - NitrousOxide
     - Frezon
     - Zipion # KS14
-    - Argon # KS14
+    - Encalite # KS14
     - Evaporin # KS14
+    - Hydrogen # KS14
     #- Helium3 TODO: fusion
 
   - type: AirIntake

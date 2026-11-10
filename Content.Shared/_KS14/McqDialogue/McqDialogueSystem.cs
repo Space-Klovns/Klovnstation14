@@ -1,22 +1,21 @@
 using System.Numerics;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.McqDialogue;
 
 public sealed partial class McqDialogueSystem : EntitySystem
 {
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
+    private static readonly EntProtoId<ActiveMcqDialogueComponent> DialogueProto = "McqDialogue";
 
-        SubscribeLocalEvent<McqDialogueSourceComponent, ComponentShutdown>(OnDialogueSourceShutdown);
-
-        SubscribeLocalEvent<ActiveMcqDialogueComponent, BoundUIClosedEvent>(OnDialogueClosed);
-        SubscribeLocalEvent<ActiveMcqDialogueComponent, McqDialogueDataSelectedMessage>(OnDataSelected);
-    }
-
-
+    [SubscribeLocalEvent]
     private void OnDialogueSourceShutdown(Entity<McqDialogueSourceComponent> entity, ref ComponentShutdown args)
     {
         foreach (var dialogueEntity in entity.Comp.Dialogues)
@@ -25,63 +24,137 @@ public sealed partial class McqDialogueSystem : EntitySystem
         entity.Comp.Dialogues.Clear();
     }
 
+    /// <summary>
+    ///     Deletes the dialogue. Server only: the dialogue is the server's entity, which the client could only detach
+    ///         until the next state put it back. The client closes its window with the UI's own predicted close.
+    /// </summary>
     public void CloseDialogue(Entity<ActiveMcqDialogueComponent?> dialogueEntity)
     {
-        if (!Resolve(dialogueEntity, ref dialogueEntity.Comp) ||
+        if (_netManager.IsClient ||
+            !Resolve(dialogueEntity, ref dialogueEntity.Comp) ||
             TerminatingOrDeleted(dialogueEntity.Comp.Source) ||
             TerminatingOrDeleted(dialogueEntity.Owner) ||
             dialogueEntity.Comp.Deleted)
             return;
 
-        var sourceEntity = dialogueEntity.Comp.Source!;
-        var sourceComponent = sourceEntity.Comp;
-
-        sourceComponent.Dialogues.Remove(dialogueEntity!);
-        if (sourceComponent.Dialogues.Count == 0)
-            RemComp(sourceEntity, sourceComponent);
+        var sourceUid = dialogueEntity.Comp.Source;
+        if (TryComp<McqDialogueSourceComponent>(sourceUid, out var sourceComponent))
+        {
+            sourceComponent.Dialogues.Remove(dialogueEntity!);
+            if (sourceComponent.Dialogues.Count == 0)
+                RemComp(sourceUid, sourceComponent);
+        }
 
         // immediately remove it
         PredictedQueueDel(dialogueEntity.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnDialogueClosed(Entity<ActiveMcqDialogueComponent> entity, ref BoundUIClosedEvent args)
     {
         CloseDialogue(entity!);
 
-        var ev = new McqDialogueClosedEvent(args.Actor);
+        var ev = new McqDialogueClosedEvent(args.Actor, entity.Owner);
         RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
+    [SubscribeLocalEvent]
     private void OnDataSelected(Entity<ActiveMcqDialogueComponent> entity, ref McqDialogueDataSelectedMessage args)
     {
-        if (!Exists(entity.Comp.Source))
+        // The id comes from the client, so it's only trusted if it's one the dialogue offered. Also run on the
+        //      answering client, predicted: the dialogue's data is networked so that the source can act on it there.
+        if (!Exists(entity.Comp.Source) || !entity.Comp.OptionIds.Contains(args.Id))
             return;
 
         CloseDialogue(entity!);
 
-        var ev = new McqDialogueSelectedEvent(args.Actor, args.Id);
+        var ev = new McqDialogueSelectedEvent(args.Actor, args.Id, entity.Owner);
         RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
-    public void StartDialogue(EntityUid sourceUid, EntityUid userUid, IEnumerable<McqDialogueData> options)
+    /// <summary>
+    ///     Opens a dialogue about <paramref name="sourceUid"/> for <paramref name="userUid"/>, as a new entity on the
+    ///         source. It stays open while the engine's UI checks pass for it - in range of the source and able to
+    ///         interact - and while what <paramref name="settings"/> asks for holds. Requirement components on it get a
+    ///         <see cref="McqDialogueStartedEvent"/> just before it opens.
+    ///
+    ///     Can be called from predicted code. Only the server makes the dialogue; the user's client opens its window
+    ///         straight away (<see cref="McqDialoguePredictedEvent"/>), for the dialogue's UI to take over.
+    /// </summary>
+    /// <remarks>
+    ///     A user gets one dialogue about a source at a time: while one is open, asking again does nothing, so asking
+    ///         repeatedly doesn't stack windows.
+    /// </remarks>
+    /// <param name="settings">Title, prompt and requirements, usually a data field of the source's component.</param>
+    /// <returns>The dialogue, or null on the client or if the user already has one open about the source.</returns>
+    public Entity<ActiveMcqDialogueComponent>? StartDialogue(
+        EntityUid sourceUid,
+        EntityUid userUid,
+        IEnumerable<McqDialogueData> options,
+        McqDialogueSettings? settings = null)
     {
-        var dialogueUid = Spawn("McqDialogue", new(sourceUid, Vector2.Zero));
+        // Checked on the client too, where the dialogue is networked, so it doesn't open a window the server won't
+        if (HasOpenDialogue(sourceUid, userUid))
+            return null;
+
+        if (_netManager.IsClient)
+        {
+            if (_gameTiming.IsFirstTimePredicted && _playerManager.LocalEntity == userUid)
+            {
+                var predictedEvent = new McqDialoguePredictedEvent(sourceUid, [.. options], settings);
+                RaiseLocalEvent(ref predictedEvent);
+            }
+
+            return null;
+        }
+
+        var dialogueUid = Spawn(DialogueProto, new(sourceUid, Vector2.Zero));
         var dialogueComponent = Comp<ActiveMcqDialogueComponent>(dialogueUid);
         dialogueComponent.User = userUid;
         foreach (var optionDatum in options)
             dialogueComponent.OptionIds.Add(optionDatum.Id);
 
-        var dialogueSourceComponent = EnsureComp<McqDialogueSourceComponent>(sourceUid);
-        dialogueComponent.Source = (sourceUid, dialogueSourceComponent);
-        dialogueSourceComponent.Dialogues.Add((dialogueUid, dialogueComponent));
+        dialogueComponent.Source = sourceUid;
+        Dirty(dialogueUid, dialogueComponent);
+        EnsureComp<McqDialogueSourceComponent>(sourceUid).Dialogues.Add((dialogueUid, dialogueComponent));
+
+        if (settings?.HeldItemWhitelist is { } heldItemWhitelist)
+            EnsureComp<McqDialogueHeldItemComponent>(dialogueUid).Whitelist = heldItemWhitelist;
 
         var uiComponent = Comp<UserInterfaceComponent>(dialogueUid);
+        if (settings?.Range is { } range &&
+            _userInterfaceSystem.TryGetInterfaceData((dialogueUid, uiComponent), McqDialogueUiKey.Key, out var interfaceData))
+            _userInterfaceSystem.SetUi((dialogueUid, uiComponent), McqDialogueUiKey.Key, new InterfaceData(interfaceData) { InteractionRange = range });
+
+        var startedEvent = new McqDialogueStartedEvent(sourceUid, userUid);
+        RaiseLocalEvent(dialogueUid, ref startedEvent);
 
         _userInterfaceSystem.OpenUi((dialogueUid, uiComponent), McqDialogueUiKey.Key, userUid);
         _userInterfaceSystem.SetUiState(
             (dialogueUid, uiComponent),
             McqDialogueUiKey.Key,
-            new McqDialogueBoundUserInterfaceState([.. options])
+            new McqDialogueBoundUserInterfaceState(GetNetEntity(sourceUid), [.. options], settings?.Title, settings?.Prompt)
         );
+
+        return (dialogueUid, dialogueComponent);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="userUid"/> has a dialogue about <paramref name="sourceUid"/> open, and not yet closed.
+    /// </summary>
+    public bool HasOpenDialogue(EntityUid sourceUid, EntityUid userUid)
+    {
+        // There are only ever a few dialogues open at once
+        var dialogueEnumerator = EntityQueryEnumerator<ActiveMcqDialogueComponent>();
+        while (dialogueEnumerator.MoveNext(out var dialogueUid, out var dialogueComponent))
+        {
+            if (dialogueComponent.Source == sourceUid &&
+                dialogueComponent.User == userUid &&
+                dialogueComponent.LifeStage <= ComponentLifeStage.Running &&
+                !EntityManager.IsQueuedForDeletion(dialogueUid))
+                return true;
+        }
+
+        return false;
     }
 }

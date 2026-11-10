@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Diagnostics.CodeAnalysis;
 using Content.Server.Access.Components;
 using Content.Server.Clothing.Systems;
@@ -25,7 +26,6 @@ namespace Content.Server.Access.Systems
         [Dependency] private PopupSystem _popupSystem = default!;
         [Dependency] private IdCardSystem _cardSystem = default!;
         [Dependency] private UserInterfaceSystem _uiSystem = default!;
-        [Dependency] private IPrototypeManager _prototypeManager = default!;
         [Dependency] private ChameleonClothingSystem _chameleon = default!;
         [Dependency] private ChameleonControllerSystem _chamController = default!;
         [Dependency] private LockSystem _lock = default!;
@@ -49,13 +49,13 @@ namespace Content.Server.Access.Systems
             if (!TryComp<IdCardComponent>(ent, out var idCardComp))
                 return;
 
-            _prototypeManager.Resolve(args.Args.ChameleonOutfit.Job, out var jobProto);
+            ProtoMan.Resolve(args.Args.ChameleonOutfit.Job, out var jobProto);
 
             var jobIcon = args.Args.ChameleonOutfit.Icon ?? jobProto?.Icon;
             var jobName = args.Args.ChameleonOutfit.Name ?? jobProto?.Name ?? "";
 
             if (jobIcon != null)
-                _cardSystem.TryChangeJobIcon(ent, _prototypeManager.Index(jobIcon.Value), idCardComp);
+                _cardSystem.TryChangeJobIcon(ent, ProtoMan.Index(jobIcon.Value), idCardComp);
 
             if (jobName != "")
                 _cardSystem.TryChangeJobTitle(ent, Loc.GetString(jobName), idCardComp);
@@ -76,7 +76,7 @@ namespace Content.Server.Access.Systems
             if (idSlotGear == null)
                 return;
 
-            var proto = _prototypeManager.Index(idSlotGear);
+            var proto = ProtoMan.Index(idSlotGear);
             if (!proto.TryGetComponent<PdaComponent>(out var comp, EntityManager.ComponentFactory))
                 return;
 
@@ -108,7 +108,7 @@ namespace Content.Server.Access.Systems
             access.Tags.UnionWith(targetAccess.Tags);
             var addedLength = access.Tags.Count - beforeLength;
 
-            _popupSystem.PopupEntity(Loc.GetString("agent-id-new", ("number", addedLength), ("card", args.Target)), args.Target.Value, args.User);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("agent-id-new", ("number", addedLength), ("card", args.Target)), args.Target.Value, args.User);
             if (addedLength > 0)
                 Dirty(uid, access);
         }
@@ -146,7 +146,7 @@ namespace Content.Server.Access.Systems
             if (!TryComp<IdCardComponent>(uid, out var idCard))
                 return;
 
-            if (!_prototypeManager.Resolve(args.JobIconId, out var jobIcon))
+            if (!ProtoMan.Resolve(args.JobIconId, out var jobIcon))
                 return;
 
             _cardSystem.TryChangeJobIcon(uid, jobIcon, idCard);
@@ -159,7 +159,7 @@ namespace Content.Server.Access.Systems
 
         private bool TryFindJobProtoFromIcon(JobIconPrototype jobIcon, [NotNullWhen(true)] out JobPrototype? job)
         {
-            foreach (var jobPrototype in _prototypeManager.EnumeratePrototypes<JobPrototype>())
+            foreach (var jobPrototype in ProtoMan.EnumeratePrototypes<JobPrototype>())
             {
                 if (jobPrototype.Icon == jobIcon.ID)
                 {

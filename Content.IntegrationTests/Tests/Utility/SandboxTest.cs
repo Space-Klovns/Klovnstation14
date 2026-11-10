@@ -50,5 +50,6 @@ public sealed class SandboxTest
         await client.WaitIdleAsync();
         await client.CheckSandboxed(typeof(Client.Entry.EntryPoint).Assembly);
         await client.CheckSandboxed(typeof(Shared.IoC.SharedContentIoC).Assembly);
+        await client.CheckSandboxed(typeof(Content.Klovn.Concentus.Structs.OpusDecoder).Assembly); // KS14: vendored Opus codec
     }
 }

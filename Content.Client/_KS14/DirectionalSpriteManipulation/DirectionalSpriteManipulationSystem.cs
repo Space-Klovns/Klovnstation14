@@ -18,10 +18,9 @@ public sealed partial class DirectionalSpriteManipulationSystem : EntitySystem
     {
         base.Initialize();
         UpdatesOutsidePrediction = true;
-
-        SubscribeLocalEvent<DirectionalSpriteManipulationComponent, ComponentInit>(OnInit);
     }
 
+    [SubscribeLocalEvent]
     private void OnInit(Entity<DirectionalSpriteManipulationComponent> entity, ref ComponentInit args)
     {
         foreach (var (key, value) in entity.Comp.LayerDataMappings!)

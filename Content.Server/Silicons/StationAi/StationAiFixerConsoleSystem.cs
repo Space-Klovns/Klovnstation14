@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Silicons.StationAi;
 using Content.Server.EUI;
 using Content.Server.Ghost;
@@ -30,11 +31,11 @@ public sealed partial class StationAiFixerConsoleSystem : SharedStationAiFixerCo
                         _player.TryGetSessionById(mind.UserId, out var session))
                     {
                         _eui.OpenEui(new ReturnToBodyEui(mind, _mind, _player), session);
-                        _popup.PopupEntity(Loc.GetString("station-ai-fixer-console-repair-finished"), ent);
+                        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("station-ai-fixer-console-repair-finished"), ent);
                     }
                     else
                     {
-                        _popup.PopupEntity(Loc.GetString("station-ai-fixer-console-repair-successful"), ent);
+                        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("station-ai-fixer-console-repair-successful"), ent);
                     }
 
                     // TODO: make predicted once a user is not required
@@ -47,7 +48,7 @@ public sealed partial class StationAiFixerConsoleSystem : SharedStationAiFixerCo
 
                 case StationAiFixerConsoleAction.Purge:
 
-                    _popup.PopupEntity(Loc.GetString("station-ai-fixer-console-purge-successful"), ent);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("station-ai-fixer-console-purge-successful"), ent);
 
                     // TODO: make predicted once a user is not required
                     if (ent.Comp.PurgeFinishedSound != null)

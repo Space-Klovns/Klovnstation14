@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Ghost.Roles;
 using Content.Server.Ghost.Roles.Components;
 using Content.Server.Instruments;
@@ -73,7 +74,7 @@ public sealed partial class PAISystem : EntitySystem
         // randomly brick it
         if (_random.Prob(comp.BrickChance))
         {
-            _popup.PopupEntity(Loc.GetString(comp.BrickPopup), uid, PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.BrickPopup), uid, PopupType.LargeCaution);
             _toggleableGhostRole.Wipe(uid);
             RemComp<PAIComponent>(uid);
             RemComp<ToggleableGhostRoleComponent>(uid);
@@ -81,7 +82,7 @@ public sealed partial class PAISystem : EntitySystem
         else
         {
             // you are lucky...
-            _popup.PopupEntity(Loc.GetString(comp.ScramblePopup), uid, PopupType.Large);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(comp.ScramblePopup), uid, PopupType.Large);
         }
     }
 

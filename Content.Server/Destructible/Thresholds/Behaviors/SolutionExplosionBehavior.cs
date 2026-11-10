@@ -17,6 +17,14 @@ namespace Content.Server.Destructible.Thresholds.Behaviors
 
         public void Execute(EntityUid owner, SharedDestructibleSystem system, EntityUid? cause = null)
         {
+            // KS14 start: as strong as what the solution holds, not a fixed strength per container. A tank of water doesn't
+            //     explode, and one of napalm hits harder than one of fuel.
+            system.EntityManager.System<Content.Server._KS14.Chemistry.Explosion.KsSolutionExplosionSystem>()
+                .TryExplodeSolution(owner, Solution, cause);
+            // KS14 end
+
+            // KS14: replaced by KsSolutionExplosionSystem.TryExplodeSolution above
+            /*
             if (system.SolutionContainerSystem.TryGetSolution(owner, Solution, out _, out var explodingSolution)
                 && system.EntityManager.TryGetComponent(owner, out ExplosiveComponent? explosiveComponent))
             {
@@ -40,6 +48,7 @@ namespace Content.Server.Destructible.Thresholds.Behaviors
                 var explosiveTotalIntensity = explosiveComponent.TotalIntensity * explosionScaleFactor;
                 system.ExplosionSystem.TriggerExplosive(owner, explosiveComponent, false, explosiveTotalIntensity, user:cause);
             }
+            */
         }
     }
 }

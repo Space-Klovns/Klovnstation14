@@ -15,6 +15,14 @@ public sealed partial class KsAutoZLevelComponent : Component
     [DataField(required: true)]
     public string Id = "";
 
+    /// <inheritdoc cref="Shared._KS14.ZLevel.KsZLevelComponent.Depth"/>
+    /// <remarks>
+    ///     Uses default depth if null.
+    /// </remarks>
+    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField]
+    public float? Depth = null;
+
     /// <summary>
     ///     Whether to spawn the z-level above or under the other z-level.
     /// </summary>

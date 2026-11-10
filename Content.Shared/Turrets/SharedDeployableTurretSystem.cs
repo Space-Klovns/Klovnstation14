@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Access.Systems;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -66,7 +67,7 @@ public abstract partial class SharedDeployableTurretSystem : EntitySystem
 
         if (!_accessReader.IsAllowed(args.User, ent))
         {
-            _popup.PopupClient(Loc.GetString("deployable-turret-component-access-denied"), ent, args.User);
+            _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("deployable-turret-component-access-denied"), ent, args.User);
             _audio.PlayPredicted(ent.Comp.AccessDeniedSound, ent, args.User);
 
             return;
@@ -80,7 +81,7 @@ public abstract partial class SharedDeployableTurretSystem : EntitySystem
         if (!ent.Comp.Enabled || args.Cancelled)
             return;
 
-        _popup.PopupClient(Loc.GetString("deployable-turret-component-cannot-access-wires"), ent, args.User);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("deployable-turret-component-cannot-access-wires"), ent, args.User);
 
         args.Cancelled = true;
     }
@@ -95,7 +96,7 @@ public abstract partial class SharedDeployableTurretSystem : EntitySystem
         if (enabled && ent.Comp.CurrentState == DeployableTurretState.Broken)
         {
             if (user != null)
-                _popup.PopupClient(Loc.GetString("deployable-turret-component-is-broken"), ent, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("deployable-turret-component-is-broken"), ent, user.Value);
 
             return false;
         }
@@ -103,7 +104,7 @@ public abstract partial class SharedDeployableTurretSystem : EntitySystem
         if (enabled && !HasAmmo(ent))
         {
             if (user != null)
-                _popup.PopupClient(Loc.GetString("deployable-turret-component-no-ammo"), ent, user.Value);
+                _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("deployable-turret-component-no-ammo"), ent, user.Value);
 
             return false;
         }
@@ -150,7 +151,7 @@ public abstract partial class SharedDeployableTurretSystem : EntitySystem
 
         // Play pop up message
         var msg = enabled ? "deployable-turret-component-activating" : "deployable-turret-component-deactivating";
-        _popup.PopupClient(Loc.GetString(msg), ent, user);
+        _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */(msg), ent, user);
 
         // Update enabled state
         ent.Comp.Enabled = enabled;

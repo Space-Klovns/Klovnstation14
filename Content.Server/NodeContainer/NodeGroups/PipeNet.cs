@@ -10,7 +10,19 @@ namespace Content.Server.NodeContainer.NodeGroups;
 [NodeGroup(NodeGroupID.Pipe)]
 public sealed class PipeNet : BaseNodeGroup, IPipeNet
 {
-    [ViewVariables] public GasMixture Air { get; set; } = new() {Temperature = Atmospherics.T20C};
+    // KS14 start: pipe nets hold fluid, including any mixture they are handed
+    [ViewVariables] public GasMixture Air
+    {
+        get => _air;
+        set
+        {
+            _air = value;
+            _air.FluidCapable = true;
+        }
+    }
+
+    private GasMixture _air = new() {Temperature = Atmospherics.T20C, FluidCapable = true};
+    // KS14 end
 
     [ViewVariables] private AtmosphereSystem? _atmosphereSystem;
 

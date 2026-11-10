@@ -18,7 +18,7 @@ public sealed partial class GameTicker
 
     private void InitializeLobbyBackground()
     {
-        var allprotos = _prototypeManager.EnumeratePrototypes<LobbyBackgroundPrototype>().ToList();
+        var allprotos = ProtoMan.EnumeratePrototypes<LobbyBackgroundPrototype>().ToList();
         _lobbyBackgrounds ??= new List<ProtoId<LobbyBackgroundPrototype>>();
 
         //create protoids from them
@@ -26,6 +26,9 @@ public sealed partial class GameTicker
         {
             var ext = proto.Background.Extension;
             if (!WhitelistedBackgroundExtensions.Contains(ext))
+                continue;
+
+            if (!proto.RandomlySelectable) // KS14: shown only by a map that forces it
                 continue;
 
             //create a protoid and add it to the list
@@ -37,6 +40,9 @@ public sealed partial class GameTicker
 
     private void RandomizeLobbyBackground()
     {
+        if (KsTryApplyForcedLobbyBackground()) // KS14: the selected map can force its background on everyone
+            return;
+
         if (_lobbyBackgrounds != null && _lobbyBackgrounds.Count != 0)
             LobbyBackground = _robustRandom.Pick(_lobbyBackgrounds);
         else

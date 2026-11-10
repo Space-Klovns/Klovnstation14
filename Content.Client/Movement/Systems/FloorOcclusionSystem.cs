@@ -1,3 +1,4 @@
+﻿using Content.Client.Graphics;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
 using Robust.Client.GameObjects;
@@ -10,9 +11,8 @@ public sealed partial class FloorOcclusionSystem : SharedFloorOcclusionSystem
 {
     private static readonly ProtoId<ShaderPrototype> HorizontalCut = "HorizontalCut";
 
-    [Dependency] private IPrototypeManager _proto = default!;
-
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
 
     public override void Initialize()
     {
@@ -48,18 +48,26 @@ public sealed partial class FloorOcclusionSystem : SharedFloorOcclusionSystem
         if (!_spriteQuery.Resolve(sprite.Owner, ref sprite.Comp, false))
             return;
 
-        var shader = _proto.Index(HorizontalCut).Instance();
-
-        if (sprite.Comp.PostShader is not null && sprite.Comp.PostShader != shader)
+        // KS14 start: component states are applied before the entity is initialized, so an entity entering PVS
+        //      with occlusion already enabled would add the post-shader before SpriteComponent's ComponentInit -
+        //      which warns about the entry already holding a shader instance. ComponentStartup runs after sprite
+        //      init and applies the same state, so there is nothing to do here yet.
+        if (!sprite.Comp.Initialized)
             return;
+        // KS14 end
+
+        var shader = ProtoMan.Index(HorizontalCut).Instance();
 
         if (enabled)
         {
-            sprite.Comp.PostShader = shader;
+            _sprite.SetPostShader(sprite, new SpriteComponent.PostShaderArgs(ContentPostShaderIds.FloorOcclusion, shader)
+            {
+                Before = ContentPostShaderIds.BeforeOutlines,
+            });
         }
         else
         {
-            sprite.Comp.PostShader = null;
+            _sprite.RemovePostShader(sprite, ContentPostShaderIds.FloorOcclusion);
         }
     }
 }

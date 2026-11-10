@@ -13,7 +13,7 @@ namespace Content.Client.Stylesheets.Fonts;
 /// <param name="resCache"></param>
 /// <param name="variant"></param>
 [PublicAPI]
-public sealed class NotoFontFamilyStack(IResourceCache resCache, string variant = "")
+public sealed partial /* KS14: made partial, see .Klovn.Tgui.cs */ class NotoFontFamilyStack(IResourceCache resCache, string variant = "")
 {
     /// <summary>
     ///     The primary font path, with string substitution markers.
@@ -83,6 +83,11 @@ public sealed class NotoFontFamilyStack(IResourceCache resCache, string variant 
     public Font GetFont(int size, FontKind kind = FontKind.Regular)
     {
         //ALDebugTools.AssertContains(AvailableKinds, kind);
+        // KS14 start: the tgui theme stands behind every caller
+        if (KsFontOverride != null)
+            return KsFontOverride(size, kind);
+        // KS14 end
+
         var paths = GetFontPaths(kind);
 
         return resCache.GetFont(paths, size);

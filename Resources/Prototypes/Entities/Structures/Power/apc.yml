@@ -106,8 +106,7 @@
   - type: EmissiveLayers
     glowRadius: 0
     intensity: 0.8
-    offset: 0, -0.7
-    useSpriteTransform: false
+    offset: 0, 0
     layers:
     - enum.ApcVisualLayers.ChargeState
   # KS14: emissive end

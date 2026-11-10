@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos.Components;
@@ -29,12 +30,14 @@ namespace Content.Server._KS14.Atmos.EntitySystems;
 public sealed partial class GasPistonSystem : SharedGasPistonSystem
 {
     [Dependency] private IAdminLogManager _adminLogManager = default!;
+    [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosTileSystem _fluidmosTileSystem = default!;
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
     [Dependency] private AppearanceSystem _appearanceSystem = default!;
     [Dependency] private KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private KsTransferThermoSystem _transferThermoSystem = default!;
     [Dependency] private PhysicsSystem _physicsSystem = default!;
     [Dependency] private ThrowingSystem _throwingSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
@@ -44,15 +47,8 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
 
     private const LookupFlags InitLookupFlags = LookupFlags.Approximate | LookupFlags.Static | LookupFlags.Dynamic | LookupFlags.Uncontained;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GasPistonComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<GasPistonComponent, AtmosDeviceUpdateEvent>(OnUpdate);
-    }
-
     // this horrible approach is taken because startcollideevent and endcollideevent dont like anchored objects
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<GasPistonComponent> entity, ref MapInitEvent args)
     {
         PopulateColliding(entity);
@@ -117,6 +113,7 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
         entity.Comp.CollidingUids.Remove(args.OtherEntity);
     }
 
+    [SubscribeLocalEvent]
     private void OnUpdate(Entity<GasPistonComponent> entity, ref AtmosDeviceUpdateEvent args)
     {
         if (!_nodeContainerSystem.TryGetNode(entity.Owner, entity.Comp.InletName, out PipeNode? inlet))
@@ -177,7 +174,7 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
         if (AnyAnchoredEntities((entity, transformComponent), blockedTileOffsetInteger))
         {
             _audioSystem.PlayPvs(entity.Comp.BlockedSound, entity.Owner);
-            PopupSystem.PopupEntity(Loc.GetString("gas-piston-popup-obstructed"), entity.Owner, type: PopupType.MediumCaution);
+            PopupSystem.PopupEntity(KsPopupMessage.Create("gas-piston-popup-obstructed"), entity.Owner, type: PopupType.MediumCaution);
         }
         else
         {
@@ -190,7 +187,10 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
             _atmosphereSystem.GetContainingMixture(entity.Owner, excite: true) is not { } environmentAir)
             return;
 
+        var chamberPressure = air.Pressure;
         var removedAir = air.RemoveRatio(entity.Comp.RemovedGasRatio);
+        _transferThermoSystem.Apply(removedAir, chamberPressure, environmentAir.Pressure, doesWork: true, heatSink: environmentAir);
+        _fluidmosTileSystem.ReleaseToTile(entity, removedAir);
         _atmosphereSystem.Merge(environmentAir, removedAir);
     }
 
@@ -207,9 +207,6 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
         SetCollider(entity, value);
 
         _appearanceSystem.SetData(entity.Owner, GasPistonVisuals.Extended, value);
-
-        if (entity.Comp.FlickData is { } flickData)
-            _spriteFlickSystem.ResetFlickFinishState(entity.Owner, flickData);
     }
 
     private void SetCollider(Entity<GasPistonComponent> entity, bool value)
@@ -228,7 +225,7 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
             return false;
 
         var tileIndices = _mapSystem.CoordinatesToTile(gridUid, grid: gridComponent, coords: entity.Comp.Coordinates) + tileOffset;
-        var enumerator = _mapSystem.GetAnchoredEntitiesEnumerator(gridUid, gridComponent, tileIndices);
+        var enumerator = _mapSystem.GetAnchoredEntities(gridUid, gridComponent, tileIndices);
 
         while (enumerator.MoveNext(out var otherUid))
         {

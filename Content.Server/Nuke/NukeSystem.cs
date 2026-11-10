@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.AlertLevel;
 using Content.Server.Audio;
 using Content.Server.Chat.Systems;
@@ -141,7 +142,7 @@ public sealed partial class NukeSystem : EntitySystem
 
         var seconds = _random.NextGaussian(ent.Comp.MicrowaveMean.TotalSeconds, ent.Comp.MicrowaveStd.TotalSeconds);
         ent.Comp.TimeModifier = TimeSpan.FromSeconds(seconds);
-        _popups.PopupEntity(Loc.GetString("nuke-disk-component-microwave"), ent.Owner, PopupType.Medium);
+        _popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("nuke-disk-component-microwave"), ent.Owner, PopupType.Medium);
     }
 
     private void OnRemove(EntityUid uid, NukeComponent component, ComponentRemove args)
@@ -190,7 +191,7 @@ public sealed partial class NukeSystem : EntitySystem
         // Nuke has to have the disk in it to be moved
         if (!component.DiskSlot.HasItem)
         {
-            var msg = Loc.GetString("nuke-component-cant-anchor-toggle");
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("nuke-component-cant-anchor-toggle");
             _popups.PopupEntity(msg, uid, args.Actor, PopupType.MediumCaution);
             return;
         }
@@ -215,7 +216,7 @@ public sealed partial class NukeSystem : EntitySystem
                 if (!_turf.IsSpace(tile))
                     continue;
 
-                var msg = Loc.GetString("nuke-component-cant-anchor-floor");
+                var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("nuke-component-cant-anchor-floor");
                 _popups.PopupEntity(msg, uid, args.Actor, PopupType.MediumCaution);
 
                 return;
@@ -271,6 +272,11 @@ public sealed partial class NukeSystem : EntitySystem
 
     private void OnArmButtonPressed(EntityUid uid, NukeComponent component, NukeArmedMessage args)
     {
+        // KS14 start: prevent arming or disarming the nuke after detonation begins
+        if (component.Exploded)
+            return;
+        // KS14 end
+
         if (!component.DiskSlot.HasItem && !component.DiskBypassEnabled)
             return;
 
@@ -289,8 +295,10 @@ public sealed partial class NukeSystem : EntitySystem
 
     private void OnDoAfter(EntityUid uid, NukeComponent component, DoAfterEvent args)
     {
-        if (args.Handled || args.Cancelled)
+        // KS14 start: don't complete a disarm do-after after detonation begins
+        if (args.Handled || args.Cancelled || component.Exploded)
             return;
+        // KS14 end
 
         var bypass = component.DiskBypassEnabled; // wizden-april-fools-2025 nuke-calibration -> ks14 port:
         DisarmBomb(uid, component);
@@ -337,7 +345,11 @@ public sealed partial class NukeSystem : EntitySystem
         // play alert sound if time is running out
         if (nuke.RemainingTime <= nuke.AlertSoundTime && !nuke.PlayedAlertSound)
         {
-            _sound.PlayGlobalOnStation(uid, _audio.ResolveSound(nuke.AlertSound), new AudioParams { Volume = -5f });
+            // KS14 start: remember the alarm so the detonation cinematic can continue it in sync
+            var alertSound = _audio.ResolveSound(nuke.AlertSound);
+            nuke.PlayedAlertSoundInfo = (alertSound, _timing.CurTime);
+            _sound.PlayGlobalOnStation(uid, alertSound);
+            // KS14 end
             _sound.StopStationEventMusic(uid, StationEventMusicType.Nuke);
             nuke.PlayedAlertSound = true;
             UpdateAppearance(uid, nuke);
@@ -538,8 +550,10 @@ public sealed partial class NukeSystem : EntitySystem
         if (!Resolve(uid, ref component))
             return;
 
-        if (component.Status != NukeStatus.ARMED)
+        // KS14 start: block disarming after detonation begins
+        if (component.Status != NukeStatus.ARMED || component.Exploded)
             return;
+        // KS14 end
 
         var stationUid = _station.GetOwningStation(uid);
         if (stationUid != null)
@@ -559,6 +573,7 @@ public sealed partial class NukeSystem : EntitySystem
 
         // disable sound and reset it
         component.PlayedAlertSound = false;
+        component.PlayedAlertSoundInfo = null; // KS14
         component.AlertAudioStream = _audio.Stop(component.AlertAudioStream);
 
         // turn off the spinny light
@@ -611,37 +626,9 @@ public sealed partial class NukeSystem : EntitySystem
         if (component.Exploded)
             return;
 
-        component.Exploded = true;
-
-        _explosions.QueueExplosion(uid,
-            component.ExplosionType,
-            component.TotalIntensity,
-            component.IntensitySlope,
-            component.MaxIntensity);
-
-        RaiseLocalEvent(new NukeExplodedEvent()
-        {
-            OwningStation = transform.GridUid,
-            EndRound = component.EndRound,
-        });
-
-        // KS14 START - Manually end the round for this specific nuke type
-        // We delay by 10 seconds to allow the explosion to kill the player for the "Die a Glorious Death" greentext.
-        if (component.EndRound)
-        {
-            Timer.Spawn(10000, () =>
-            {
-                // SAFETY CHECK: Only end the round if it is actually running!
-                if (_roundEndSystem.ExpectedCountdownEnd == null) // Or check GameTicker status
-                {
-                    _roundEndSystem.EndRound();
-                }
-            });
-        }
-        // KS14 END
-
-        _sound.StopStationEventMusic(uid, StationEventMusicType.Nuke);
-        Del(uid);
+        // KS14 start: begin the synchronized station explosion cinematic before resolving the blast
+        BeginCinematicDetonation((uid, component, transform));
+        // KS14 end
     }
 
     /// <summary>
@@ -685,7 +672,7 @@ public sealed partial class NukeSystem : EntitySystem
         if (!_doAfter.TryStartDoAfter(doAfter))
             return;
 
-        _popups.PopupEntity(Loc.GetString("nuke-component-doafter-warning"),
+        _popups.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("nuke-component-doafter-warning"),
             user,
             user,
             PopupType.LargeCaution);

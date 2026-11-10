@@ -3,4 +3,6 @@ entity-category-desc-ks-trail = Visual trails left behind by something moving th
 
 entity-category-name-chemical-fire = Chemical Fires
 
-entity-category-name-npc-attack-pattern = NPC attack pattern
+entity-category-name-npc-attack-pattern = NPC Attack Patterns
+
+entity-category-name-ks-foam-blanket = Foam Blankets

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Anomaly.Components;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
@@ -76,7 +77,7 @@ public abstract partial class SharedAnomalyScannerSystem : EntitySystem
             return;
 
         Audio.PlayPredicted(component.CompleteSound, uid, args.User);
-        Popup.PopupPredicted(Loc.GetString("anomaly-scanner-component-scan-complete"), uid, args.User);
+        Popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("anomaly-scanner-component-scan-complete"), uid, args.User);
 
         UI.OpenUi(uid, AnomalyScannerUiKey.Key, args.User);
 

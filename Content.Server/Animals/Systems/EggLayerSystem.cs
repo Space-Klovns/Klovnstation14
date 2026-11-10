@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Actions;
 using Content.Server.Animals.Components;
 using Content.Server.Popups;
@@ -86,7 +87,7 @@ public sealed partial class EggLayerSystem : EntitySystem
         {
             if (_hunger.GetHunger(hunger) < egglayer.HungerUsage)
             {
-                _popup.PopupEntity(Loc.GetString("action-popup-lay-egg-too-hungry"), uid, uid);
+                _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("action-popup-lay-egg-too-hungry"), uid, uid);
                 return false;
             }
 
@@ -100,8 +101,8 @@ public sealed partial class EggLayerSystem : EntitySystem
 
         // Sound + popups
         _audio.PlayPvs(egglayer.EggLaySound, uid);
-        _popup.PopupEntity(Loc.GetString("action-popup-lay-egg-user"), uid, uid);
-        _popup.PopupEntity(Loc.GetString("action-popup-lay-egg-others", ("entity", uid)), uid, Filter.PvsExcept(uid), true);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("action-popup-lay-egg-user"), uid, uid);
+        _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("action-popup-lay-egg-others", ("entity", uid)), uid, Filter.PvsExcept(uid), true);
 
         return true;
     }

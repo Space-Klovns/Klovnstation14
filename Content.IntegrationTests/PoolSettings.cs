@@ -46,6 +46,21 @@ public sealed class PoolSettings : PairSettings
     /// </summary>
     public string Map { get; init; } = PoolManager.TestMap;
 
+    // KS14 start: server light tree, for tests that need the server to compute light levels
+    /// <summary>
+    /// Set to true to start the server with <c>lookup.enable_server_light_tree</c> on. The server only reads that
+    /// at startup, so such a pair is always created fresh and never handed to another test.
+    /// </summary>
+    public bool ServerLightTree { get; init; }
+
+    public override bool MustBeNew => base.MustBeNew || ServerLightTree;
+
+    // A fresh pair is never handed on either. The pool keeps every pair given back to it for good, and with tests run one
+    //      at a time it only ever lends out one, so each fresh pair kept is a whole server and client idle until the run ends.
+    //      Six of them from one fixture took CI's integration tests past the runner's memory, and the runner was shut down.
+    public override bool MustNotBeReused => base.MustNotBeReused || ServerLightTree || Fresh;
+    // KS14 end
+
     public override bool CanFastRecycle(PairSettings nextSettings)
     {
         if (!base.CanFastRecycle(nextSettings))

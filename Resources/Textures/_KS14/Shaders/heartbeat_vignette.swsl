@@ -1,0 +1,52 @@
+uniform sampler2D SCREEN_TEXTURE;
+// Overall strength at full duration. Between 0 and 1.
+uniform highp float intensity;
+// Ratio of the effect's duration still left - 1 when it starts, 0 when it ends. Fades everything out.
+uniform highp float timeLeft;
+// Heart rate driving the pulse, in beats per minute.
+uniform highp float bpm;
+// Largest red/blue split at the screen corners on a beat, in pixels.
+uniform highp float aberration;
+// Colour the edges of the screen close in with. Alpha scales how opaque it gets.
+uniform highp vec4 vignetteColor;
+// Size of one grain of noise, in pixels.
+uniform highp float grainSize;
+// Colour of the noise. Alpha scales how strong it is.
+uniform highp vec4 grainColor;
+
+// A "lub-dub": a sharp beat at the start of each period and a weaker one shortly after, both decaying.
+highp float heartbeat(highp float time) {
+    highp float phase = fract(time * bpm / 60.0);
+    highp float lub = exp(-phase * 14.0);
+    highp float dub = step(0.18, phase) * exp(-(phase - 0.18) * 14.0) * 0.6;
+    return clamp(lub + dub, 0.0, 1.0);
+}
+
+void fragment() {
+    highp vec2 uv = FRAGCOORD.xy * SCREEN_PIXEL_SIZE;
+    highp vec2 centred = uv - vec2(0.5);
+
+    highp float strength = clamp(intensity * timeLeft, 0.0, 1.0);
+    highp float beat = heartbeat(TIME) * strength;
+
+    // Colour channels tear apart outward from the centre, worst at the edges and on every beat.
+    highp vec2 split = centred * 2.0 * aberration * (0.25 + beat) * strength * SCREEN_PIXEL_SIZE;
+    highp vec3 screen = vec3(
+        zTextureSpec(SCREEN_TEXTURE, uv + split).r,
+        zTextureSpec(SCREEN_TEXTURE, uv).g,
+        zTextureSpec(SCREEN_TEXTURE, uv - split).b);
+
+    // Tunnel vision: the edges close in as the effect strengthens, and lunge further in on each beat.
+    highp float edgeDistance = length(centred) * 1.414;
+    highp float inner = mix(0.95, 0.3, strength) - beat * 0.15;
+    highp float vignette = smoothstep(inner, inner + 0.45, edgeDistance) * vignetteColor.a;
+    screen = mix(screen, vignetteColor.rgb, vignette);
+
+    // Crawling grain, reseeded every frame.
+    highp vec2 grain = floor(FRAGCOORD.xy / max(grainSize, 1.0));
+    highp vec2 seed = fract(TIME) * vec2(113.0, 71.0);
+    highp float grainNoise = zRandom(grain + seed).x * 0.5 + 0.5;
+    screen = mix(screen, grainColor.rgb, grainNoise * grainColor.a * strength);
+
+    COLOR = vec4(screen, 1.0);
+}

@@ -8,13 +8,7 @@ public sealed partial class DoorPrySoundSystem : EntitySystem
 {
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<DoorPrySoundComponent, PriedEvent>(OnPried);
-    }
-
+    [SubscribeLocalEvent]
     private void OnPried(Entity<DoorPrySoundComponent> entity, ref PriedEvent args)
     {
         if (!TryComp<DoorComponent>(entity, out var doorComponent))

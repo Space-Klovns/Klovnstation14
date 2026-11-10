@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using Content.Server.Medical.Components;
 using Content.Shared.Body.Components;
 using Content.Shared.Chemistry.EntitySystems;
@@ -98,7 +99,7 @@ public sealed partial class HealthAnalyzerSystem : EntitySystem
         if (args.Target == args.User || doAfterCancelled || uid.Comp.Silent)
             return;
 
-        var msg = Loc.GetString("health-analyzer-popup-scan-target", ("user", Identity.Entity(args.User, EntityManager)));
+        var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("health-analyzer-popup-scan-target", ("user", Identity.Entity(args.User, EntityManager)));
         _popupSystem.PopupEntity(msg, args.Target.Value, args.Target.Value, PopupType.Medium);
     }
 

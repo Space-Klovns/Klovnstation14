@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.DoAfter;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
@@ -16,7 +17,7 @@ public abstract partial class SharedVendingMachineSystem
     {
         if (!TryComp<WiresPanelComponent>(target, out var panel) || !panel.Open)
         {
-            Popup.PopupPredictedCursor(Loc.GetString("vending-machine-restock-needs-panel-open",
+            Popup.PopupPredictedCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-restock-needs-panel-open",
                     ("this", uid),
                     ("user", user),
                     ("target", target)),
@@ -36,7 +37,7 @@ public abstract partial class SharedVendingMachineSystem
     {
         if (!component.CanRestock.Contains(machineComponent.PackPrototypeId))
         {
-            Popup.PopupPredictedCursor(Loc.GetString("vending-machine-restock-invalid-inventory", ("this", uid), ("user", user),
+            Popup.PopupPredictedCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("vending-machine-restock-invalid-inventory", ("this", uid), ("user", user),
                 ("target", target)), user);
 
             return false;
@@ -88,8 +89,8 @@ public abstract partial class SharedVendingMachineSystem
         if (!_doAfter.TryStartDoAfter(doAfterArgs))
             return;
 
-        var selfMessage = Loc.GetString("vending-machine-restock-start-self", ("target", target));
-        var othersMessage = Loc.GetString("vending-machine-restock-start-others",
+        var selfMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("vending-machine-restock-start-self", ("target", target));
+        var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */("vending-machine-restock-start-others",
             ("user", Identity.Entity(args.User, EntityManager)),
             ("target", target));
         Popup.PopupPredicted(selfMessage, othersMessage, target, args.User, PopupType.Medium);
@@ -123,8 +124,8 @@ public abstract partial class SharedVendingMachineSystem
 
         TryRestockInventory(ent, ent.Comp);
 
-        var userMessage = Loc.GetString("vending-machine-restock-done-self", ("target", ent));
-        var othersMessage = Loc.GetString("vending-machine-restock-done-others",
+        var userMessage = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("vending-machine-restock-done-self", ("target", ent));
+        var othersMessage = KsPopupMessage.Create /* KS14: defer popup argument translation */("vending-machine-restock-done-others",
             ("user", Identity.Entity(args.User, EntityManager)),
             ("target", ent));
         Popup.PopupPredicted(userMessage, othersMessage, ent, args.User, PopupType.Medium);

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using System.Linq;
 using Content.Server.Atmos.Components;
 using Content.Server.NodeContainer.Nodes;
@@ -16,6 +17,7 @@ public sealed partial class GasAnalyzerSystem : EntitySystem
 {
     [Dependency] private PopupSystem _popup = default!;
     [Dependency] private AtmosphereSystem _atmo = default!;
+    [Dependency] private Content.Shared._KS14.Fluidmos.KsFluidmosPropertiesSystem _ksFluidmosPropertiesSystem = default!; // KS14
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private UserInterfaceSystem _userInterface = default!;
     [Dependency] private SharedInteractionSystem _interactionSystem = default!;
@@ -97,7 +99,7 @@ public sealed partial class GasAnalyzerSystem : EntitySystem
         _userInterface.CloseUi(entity.Owner, GasAnalyzerUiKey.Key, user);
 
         if (user.HasValue && entity.Comp.Enabled)
-            _popup.PopupEntity(Loc.GetString("gas-analyzer-shutoff"), user.Value, user.Value);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("gas-analyzer-shutoff"), user.Value, user.Value);
 
         entity.Comp.Enabled = false;
         entity.Comp.User = null;
@@ -147,7 +149,7 @@ public sealed partial class GasAnalyzerSystem : EntitySystem
             if (!_interactionSystem.InRangeUnobstructed((component.User.Value, null), (component.Target.Value, null)))
             {
                 if (component.Enabled)
-                    _popup.PopupEntity(Loc.GetString("gas-analyzer-object-out-of-range"), component.User.Value, component.User.Value);
+                    _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("gas-analyzer-object-out-of-range"), component.User.Value, component.User.Value);
 
                 component.Target = null;
             }
@@ -245,7 +247,8 @@ public sealed partial class GasAnalyzerSystem : EntitySystem
             mixture.Volume,
             mixture.Pressure,
             mixture.Temperature,
-            GenerateGasEntryArray(mixture)
+            GenerateGasEntryArray(mixture),
+            Content.Shared._KS14.Fluidmos.KsFluidEntry.FromMixture(mixture.Fluid, _ksFluidmosPropertiesSystem) // KS14
         );
     }
 

@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Administration.Logs;
 using Content.Server.Popups;
 using Content.Server.Singularity.Events;
@@ -34,7 +35,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ExaminedEvent>(OnExamine);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ActivateInWorldEvent>(OnActivate);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, AnchorStateChangedEvent>(OnAnchorChanged);
-        SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ReAnchorEvent>(OnReanchorEvent);
+        /* SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ReAnchorEvent>(OnReanchorEvent); */ // KS14: v292 raises normal anchor events during grid splits.
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, UnanchorAttemptEvent>(OnUnanchorAttempt);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, ComponentRemove>(OnComponentRemoved);
         SubscribeLocalEvent<ContainmentFieldGeneratorComponent, EventHorizonAttemptConsumeEntityEvent>(PreventBreach);
@@ -102,7 +103,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
                 TurnOn(generator);
             else if (generator.Comp.Enabled && generator.Comp.IsConnected)
             {
-                _popupSystem.PopupEntity(Loc.GetString("comp-containment-toggle-warning"), args.User, args.User, PopupType.LargeCaution);
+                _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-toggle-warning"), args.User, args.User, PopupType.LargeCaution);
                 return;
             }
             else
@@ -115,19 +116,26 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
     {
         if (!args.Anchored)
             RemoveConnections(generator);
+        // KS14 start: upstream #45353, check the new grid when anchoring after a split.
+        else
+            GridCheck(generator);
+        // KS14 end
     }
 
+    // KS14: removed upstream re-anchor handler; normal anchor events now cover grid splits.
+    /*
     private void OnReanchorEvent(Entity<ContainmentFieldGeneratorComponent> generator, ref ReAnchorEvent args)
     {
         GridCheck(generator);
     }
+    */
 
     private void OnUnanchorAttempt(EntityUid uid, ContainmentFieldGeneratorComponent component,
         UnanchorAttemptEvent args)
     {
         if (component.Enabled || component.IsConnected)
         {
-            _popupSystem.PopupEntity(Loc.GetString("comp-containment-anchor-warning"), args.User, args.User, PopupType.LargeCaution);
+            _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-anchor-warning"), args.User, args.User, PopupType.LargeCaution);
             args.Cancel();
         }
     }
@@ -136,14 +144,14 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
     {
         generator.Comp.Enabled = true;
         ChangeFieldVisualizer(generator);
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-turned-on"), generator);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-turned-on"), generator);
     }
 
     private void TurnOff(Entity<ContainmentFieldGeneratorComponent> generator)
     {
         generator.Comp.Enabled = false;
         ChangeFieldVisualizer(generator);
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-turned-off"), generator);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-turned-off"), generator);
     }
 
     private void OnComponentRemoved(Entity<ContainmentFieldGeneratorComponent> generator, ref ComponentRemove args)
@@ -200,7 +208,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
             return;
         }
 
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-disconnected"), uid, PopupType.LargeCaution);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-disconnected"), uid, PopupType.LargeCaution);
 
         if (component.Connections.Count == 0)
         {
@@ -326,7 +334,7 @@ public sealed partial class ContainmentFieldGeneratorSystem : EntitySystem
 
         ChangeFieldVisualizer(generator);
         UpdateConnectionLights(generator);
-        _popupSystem.PopupEntity(Loc.GetString("comp-containment-connected"), generator);
+        _popupSystem.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("comp-containment-connected"), generator);
         return true;
     }
 

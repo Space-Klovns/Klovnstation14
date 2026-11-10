@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.CartridgeLoader;
 using Content.Shared.CartridgeLoader.Cartridges;
 using Content.Shared.DeviceNetwork;
@@ -51,7 +52,7 @@ public sealed partial class NetProbeCartridgeSystem : EntitySystem
         //Why is there no NextFloat(float min, float max)???
         var audioParams = AudioParams.Default.WithVolume(-2f).WithPitchScale((float)_random.Next(12, 21) / 10);
         _audioSystem.PlayEntity(component.SoundScan, args.InteractEvent.User, target, audioParams);
-        _popupSystem.PopupCursor(Loc.GetString("net-probe-scan", ("device", target)), args.InteractEvent.User);
+        _popupSystem.PopupCursor(KsPopupMessage.Create /* KS14: localize popups on the recipient */("net-probe-scan", ("device", target)), args.InteractEvent.User);
 
 
         //Limit the amount of saved probe results to 9

@@ -1,0 +1,19 @@
+# Add another ksRadioLocale for a new language; channel definitions and network keys stay unchanged.
+- type: ksRadioLocale
+  id: KsRadioRussian
+  culture: ru-RU
+  keys:
+    c: к # Командование
+    e: и # Инженерный
+    m: м # Медицинский
+    n: н # Научный
+    s: б # Безопасность
+    v: о # Обслуживание (avoids Синдикат/Снабжение)
+    u: л # Логистика (avoids Синдикат)
+    t: с # Синдикат
+    y: ц # Центральное командование
+    b: д # Двоичный
+    f: ф # Фриланс
+    x: х # Ксеноборги (К is already Командование)
+    a: я # Безъякорные (Б is already Безопасность)
+    h: р # Рация: default/department channel

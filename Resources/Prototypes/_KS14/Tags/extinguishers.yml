@@ -1,0 +1,12 @@
+
+# normal, red extinguishers
+- type: Tag
+  id: KsExtinguisherStandard
+
+# the yellow co2 extinguishers
+- type: Tag
+  id: KsExtinguisherAdvanced
+
+# small white extinguishers
+- type: Tag
+  id: KsExtinguisherMini

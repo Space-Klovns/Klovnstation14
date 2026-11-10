@@ -243,6 +243,7 @@ public sealed partial class ExplosionSystem
         if (temperature != null)
         {
             _atmosphere.HotspotExpose(grid.Owner, tile, temperature.Value, currentIntensity, cause, true);
+            SparkPuddle(grid, tile, temperature.Value); // KS14: sparks the puddle there, too
         }
 
         // Walls and reinforced walls will break into girders. These girders will also be considered turf-blocking for

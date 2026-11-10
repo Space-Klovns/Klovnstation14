@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Clothing.Components;
 using Content.Shared.Destructible;
 using Content.Shared.Examine;
@@ -83,7 +84,7 @@ public sealed partial class FleetingClothingSystem : EntitySystem
         {
             // Show the same popup message for everyone.
             if (ent.Comp.RemovedPopup != null)
-                _popup.PopupPredicted(Loc.GetString(ent.Comp.RemovedPopup, ("item", ent.Owner)), args.EquipTarget, args.User, PopupType.LargeCaution);
+                _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.RemovedPopup, ("item", ent.Owner)), args.EquipTarget, args.User, PopupType.LargeCaution);
         }
     }
 
@@ -112,6 +113,6 @@ public sealed partial class FleetingClothingSystem : EntitySystem
         // Use the wearer for the popup location because the item item itself will get deleted.
         _audio.PlayPvs(ent.Comp.RemovedSound, args.EquipTarget);
         if (ent.Comp.RemovedPopup != null)
-            _popup.PopupEntity(Loc.GetString(ent.Comp.RemovedPopup, ("item", ent.Owner)), args.EquipTarget, PopupType.LargeCaution);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */(ent.Comp.RemovedPopup, ("item", ent.Owner)), args.EquipTarget, PopupType.LargeCaution);
     }
 }

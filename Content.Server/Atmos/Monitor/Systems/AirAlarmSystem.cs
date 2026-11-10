@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Server.Atmos.Monitor.Components;
 using Content.Server.DeviceLinking.Systems;
 using Content.Server.DeviceNetwork.Systems;
@@ -395,7 +396,7 @@ public sealed partial class AirAlarmSystem : EntitySystem
 
         if (!_access.IsAllowed(user.Value, uid, reader))
         {
-            _popup.PopupEntity(Loc.GetString("air-alarm-ui-access-denied"), user.Value, user.Value);
+            _popup.PopupEntity(KsPopupMessage.Create /* KS14: localize popups on the recipient */("air-alarm-ui-access-denied"), user.Value, user.Value);
             _adminLogger.Add(LogType.AtmosDeviceSetting, LogImpact.Low, $"{ToPrettyString(user)} attempted to access {ToPrettyString(uid)} without access");
             return false;
         }

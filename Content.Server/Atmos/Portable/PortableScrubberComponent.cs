@@ -31,11 +31,20 @@ namespace Content.Server.Atmos.Portable
             Gas.NitrousOxide,
             Gas.Frezon,
             Gas.Zipion, // KS14
-            Gas.Argon, // KS14
-            Gas.Evaporin // KS14
+            Gas.Encalite, // KS14
+            Gas.Evaporin, // KS14
+            Gas.Hydrogen // KS14
             };
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Enabled = true;
+
+        // KS14 start: Fluidmos
+        /// <summary>
+        ///     Whether scrubbing also draws in the smoke on the scrubber's tile, as droplets.
+        /// </summary>
+        [DataField]
+        public bool KsScrubAerosols = true;
+        // KS14 end
 
         /// <summary>
         /// Maximum internal pressure before it refuses to take more.

@@ -1,0 +1,106 @@
+@use "../colors";
+
+$pi: 3.1416;
+
+.Knob {
+  user-select: none;
+  cursor: var(--cursor-n-resize);
+  position: relative;
+  font-size: 1rem;
+  width: 2.6em;
+  height: 2.6em;
+  margin: 0 auto -0.2em;
+
+  // Adjusts a baseline in a way, that makes knob middle-aligned
+  // when it flows with the text.
+  &:after {
+    content: ".";
+    color: transparent;
+    line-height: 2.5em;
+  }
+}
+
+.Knob__circle {
+  position: absolute;
+  inset: var(--knob-inner-padding);
+  margin: 0.3em;
+  background-color: var(--knob-color);
+  background-image: linear-gradient(
+    to bottom,
+    hsl(from var(--knob-color) h s calc(l + 15)) 0%,
+    var(--knob-color) 100%
+  );
+  border-radius: var(--border-radius-circular);
+  box-shadow: var(--shadow-glow-medium) hsl(from var(--knob-color) h s l / 0.25);
+}
+
+.Knob__cursorBox {
+  position: absolute;
+  inset: 0;
+}
+
+.Knob__cursor {
+  position: relative;
+  top: 0.05em;
+  margin: 0 auto;
+  width: 0.2em;
+  height: 0.8em;
+  background-color: hsl(from var(--knob-color) h s 85);
+}
+
+.Knob__popupValue {
+  white-space: nowrap;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  font-size: 1rem;
+  text-align: center;
+  padding: var(--space-s) var(--space-m);
+  background-color: var(--knob-popup-background);
+  color: var(--knob-popup-color);
+  border-radius: var(--knob-popup-border-radius);
+  transform: translateY(-100%) translateX(-50%);
+  backdrop-filter: var(--knob-popup-blur);
+}
+
+.Knob__ring {
+  overflow: visible;
+  position: absolute;
+  inset: 0;
+  padding: var(--knob-inner-padding);
+}
+
+.Knob__ringTrackPivot {
+  transform: rotateZ(135deg);
+}
+
+.Knob__ringTrack {
+  fill: transparent;
+  stroke: hsl(from var(--ring-color, var(--knob-ring-color)) h s l / 0.15);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 75 * $pi;
+}
+
+.Knob__ringFillPivot {
+  transform: rotateZ(135deg);
+}
+
+.Knob--bipolar .Knob__ringFillPivot {
+  transform: rotateZ(270deg);
+}
+
+.Knob__ringFill {
+  fill: transparent;
+  stroke: var(--ring-color, var(--knob-ring-color));
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 100 * $pi;
+  transition: stroke var(--transition-time-medium) ease-out;
+}
+
+@each $color-name, $color-value in colors.$color-map {
+  .Knob--color--#{$color-name} {
+    --ring-color: #{$color-value};
+  }
+}

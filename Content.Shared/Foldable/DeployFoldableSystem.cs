@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Construction.EntitySystems;
 using Content.Shared.DragDrop;
 using Content.Shared.Hands.Components;
@@ -69,7 +70,7 @@ public sealed partial class DeployFoldableSystem : EntitySystem
         if (!TryComp(ent.Owner, out PhysicsComponent? anchorBody)
             || !_anchorable.TileFree(args.ClickLocation, anchorBody))
         {
-            _popup.PopupPredicted(Loc.GetString("foldable-deploy-fail", ("object", ent)), ent, args.User);
+            _popup.PopupPredicted(KsPopupMessage.Create /* KS14: localize popups on the recipient */("foldable-deploy-fail", ("object", ent)), ent, args.User);
             return;
         }
 

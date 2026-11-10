@@ -11,7 +11,6 @@ namespace Content.Server.Advertise.EntitySystems;
 public sealed partial class SpeakOnUIClosedSystem : SharedSpeakOnUIClosedSystem
 {
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ChatSystem _chat = default!;
 
     public override void Initialize()
@@ -39,7 +38,7 @@ public sealed partial class SpeakOnUIClosedSystem : SharedSpeakOnUIClosedSystem
         if (!entity.Comp.Enabled)
             return false;
 
-        if (!_prototypeManager.Resolve(entity.Comp.Pack, out var messagePack))
+        if (!ProtoMan.Resolve(entity.Comp.Pack, out var messagePack))
             return false;
 
         var message = Loc.GetString(_random.Pick(messagePack.Values), ("name", Name(entity)));

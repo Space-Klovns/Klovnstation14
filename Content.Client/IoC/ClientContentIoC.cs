@@ -28,6 +28,7 @@ using Content.Shared.FeedbackSystem;
 using Content.Shared.IoC;
 using Content.Shared.Players.PlayTimeTracking;
 using Content.Shared.Players.RateLimiting;
+using Content.Client._KS14.Localization; // KS14
 
 namespace Content.Client.IoC
 {
@@ -65,6 +66,7 @@ namespace Content.Client.IoC
             collection.Register<TitleWindowManager>();
             collection.Register<ClientsidePlaytimeTrackingManager>();
             collection.Register<ClientFeedbackManager>();
+            collection.Register<KsClientLocalizationManager>(); // KS14: client language selection
             collection.Register<ISharedFeedbackManager, ClientFeedbackManager>();
         }
     }

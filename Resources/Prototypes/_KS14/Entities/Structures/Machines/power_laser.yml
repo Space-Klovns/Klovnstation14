@@ -16,10 +16,10 @@
     shootOffset: 0, -1.5
   - type: UserInterface
     interfaces:
-      enum.Content.Shared._KS14.Power.PTL.PTLUiKey.Key:
+      enum.PTLUiKey.Key:
         type: PtlBoundUserInterface
   - type: ActivatableUI
-    key: enum.Content.Shared._KS14.Power.PTL.PTLUiKey.Key
+    key: enum.PTLUiKey.Key
   - type: PtlVisuals
   - type: Sprite
     sprite: _KS14/Structures/Machines/PTL/pt_laser.rsi

@@ -30,7 +30,7 @@ public sealed partial class MatchstickSystem : EntitySystem
             return;
 
         var isHotEvent = new IsHotEvent();
-        RaiseLocalEvent(args.Used, isHotEvent);
+        RaiseLocalEvent(args.Used, ref /* KS14: by ref */ isHotEvent);
 
         if (!isHotEvent.IsHot)
             return;

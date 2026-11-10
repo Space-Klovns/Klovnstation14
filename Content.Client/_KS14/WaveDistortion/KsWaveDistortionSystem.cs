@@ -1,3 +1,4 @@
+using Content.Client._KS14.Graphics;
 using Content.Shared._KS14.WaveDistortion;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -13,8 +14,8 @@ namespace Content.Client._KS14.WaveDistortion;
 
 public sealed partial class KsWaveDistortionSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     [Dependency] private EntityQuery<KsMapWaveDistortionModifierComponent> _modifierQuery = default!;
 
@@ -25,19 +26,17 @@ public sealed partial class KsWaveDistortionSystem : EntitySystem
     {
         base.Initialize();
 
-        _shader = _prototypeManager.Index(ShaderId).InstanceUnique();
-
-        SubscribeLocalEvent<KsWaveDistortionComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsWaveDistortionComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<KsWaveDistortionComponent, BeforePostShaderRenderEvent>(OnBeforeShaderPost);
+        _shader = ProtoMan.Index(ShaderId).InstanceUnique();
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsWaveDistortionComponent> entity, ref ComponentStartup args)
     {
         entity.Comp.Offset = _random.NextFloat(0, 1000);
         SetShader(entity.Owner, true);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsWaveDistortionComponent> entity, ref ComponentShutdown args)
     {
         SetShader(entity.Owner, false);
@@ -48,21 +47,36 @@ public sealed partial class KsWaveDistortionSystem : EntitySystem
         if (!Resolve(entity, ref entity.Comp, false))
             return;
 
-        entity.Comp.PostShader = enabled ? _shader : null;
-        entity.Comp.GetScreenTexture = enabled;
-        entity.Comp.RaiseShaderEvent = enabled;
+        if (!enabled)
+        {
+            _spriteSystem.RemovePostShader((entity.Owner, entity.Comp), KsPostShaderIds.WaveDistortion);
+            return;
+        }
+
+        _spriteSystem.SetPostShader((entity.Owner, entity.Comp),
+            new SpriteComponent.PostShaderArgs(KsPostShaderIds.WaveDistortion, _shader)
+            {
+                GetScreenTexture = true,
+                RaiseShaderEvent = true,
+                Before = KsPostShaderIds.BeforeOutlines,
+            });
     }
 
+    [SubscribeLocalEvent]
     private void OnBeforeShaderPost(Entity<KsWaveDistortionComponent> entity, ref BeforePostShaderRenderEvent args)
     {
+        // The event now fires once per post-shader entry on the sprite, so only answer for ours.
+        if (args.Id != KsPostShaderIds.WaveDistortion)
+            return;
+
         var speedModifier = 1f;
 
         if (Transform(entity.Owner).MapUid is { } mapUid &&
             _modifierQuery.TryGetComponent(mapUid, out var modifierComponent))
             speedModifier = modifierComponent.Multiplier;
 
-        _shader.SetParameter("speed", entity.Comp.Speed * speedModifier);
-        _shader.SetParameter("dis", entity.Comp.Distortion);
-        _shader.SetParameter("offset", entity.Comp.Offset);
+        args.Shader.SetParameter("speed", entity.Comp.Speed * speedModifier);
+        args.Shader.SetParameter("dis", entity.Comp.Distortion);
+        args.Shader.SetParameter("offset", entity.Comp.Offset);
     }
 }

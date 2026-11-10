@@ -38,10 +38,6 @@ public sealed partial class KsLavaSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<KsLavaComponent, StepTriggerAttemptEvent>(OnStepTriggerAttempt);
-        SubscribeLocalEvent<KsLavaComponent, StepTriggeredOffEvent>(OnStepTriggered);
-
-        SubscribeLocalEvent<KsLavaComponent, EntParentChangedMessage>(OnEntParentChanged);
         SubscribeLocalEvent<RoundRestartCleanupEvent>((_) => _lavaMap.Clear());
     }
 
@@ -59,11 +55,13 @@ public sealed partial class KsLavaSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnStepTriggerAttempt(Entity<KsLavaComponent> entity, ref StepTriggerAttemptEvent args)
     {
         args.Continue = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnStepTriggered(Entity<KsLavaComponent> entity, ref StepTriggeredOffEvent args)
     {
         if (!_damageableSystem.TryChangeDamage(args.Tripper, entity.Comp.Damage, origin: entity.Owner))
@@ -93,6 +91,7 @@ public sealed partial class KsLavaSystem : EntitySystem
             _chatSystem.TryEmoteWithChat(args.Tripper, "Scream"); // yes i know
     }
 
+    [SubscribeLocalEvent]
     private void OnEntParentChanged(Entity<KsLavaComponent> entity, ref EntParentChangedMessage args)
     {
         var transformComponent = args.Transform;

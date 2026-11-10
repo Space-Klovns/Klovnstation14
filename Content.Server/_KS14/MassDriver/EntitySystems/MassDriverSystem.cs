@@ -14,24 +14,6 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     [Dependency] private SharedUserInterfaceSystem _ui = default!;
     [Dependency] private PowerReceiverSystem _powerReceiver = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        // UI for console -_-
-        SubscribeLocalEvent<MassDriverComponent, ComponentGetState>(OnGetState);
-        SubscribeLocalEvent<MassDriverConsoleComponent, MassDriverModeMessage>(OnModeChanged);
-        SubscribeLocalEvent<MassDriverConsoleComponent, MassDriverLaunchMessage>(OnLaunch);
-        SubscribeLocalEvent<MassDriverConsoleComponent, MassDriverThrowSpeedMessage>(OnThrowSpeedChanged);
-        SubscribeLocalEvent<MassDriverConsoleComponent, MassDriverThrowDistanceMessage>(OnThrowDistanceChanged);
-        SubscribeLocalEvent<MassDriverConsoleComponent, BoundUIOpenedEvent>(OnUIOpen);
-
-        // Device Linking
-        SubscribeLocalEvent<MassDriverConsoleComponent, NewLinkEvent>(OnNewLink);
-        SubscribeLocalEvent<MassDriverConsoleComponent, PortDisconnectedEvent>(OnPortDisconnected);
-        SubscribeLocalEvent<MassDriverComponent, SignalReceivedEvent>(OnSignalReceived);
-    }
-
     #region DeviceLinking
 
     /// <summary>
@@ -40,6 +22,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <param name="uid">Mass Driver Console</param>
     /// <param name="component">Mass Driver Console Component</param>
     /// <param name="args">Event arguments</param>
+    [SubscribeLocalEvent]
     private void OnNewLink(EntityUid uid, MassDriverConsoleComponent component, NewLinkEvent args)
     {
         if (!TryComp<MassDriverComponent>(args.Sink, out var driver))
@@ -58,6 +41,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <param name="uid">Mass Driver Console</param>
     /// <param name="component">Mass Driver Console Component</param>
     /// <param name="args">Event arguments</param>
+    [SubscribeLocalEvent]
     private void OnPortDisconnected(EntityUid uid, MassDriverConsoleComponent component, PortDisconnectedEvent args)
     {
         if (args.Port != component.LinkingPort || !component.MassDrivers.Contains(args.Sink))
@@ -79,6 +63,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <param name="uid">Mass Driver</param>
     /// <param name="component">Mass Driver Component</param>
     /// <param name="args">Event arguments</param>
+    [SubscribeLocalEvent]
     private void OnSignalReceived(EntityUid uid, MassDriverComponent component, ref SignalReceivedEvent args)
     {
         if (args.Port == component.LaunchPort && component.Mode == MassDriverMode.Manual)
@@ -105,6 +90,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <summary>
     /// Handles the component state being requested from the server.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnGetState(EntityUid uid, MassDriverComponent component, ref ComponentGetState args)
     {
         args.State = new MassDriverComponentState()
@@ -124,6 +110,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <summary>
     /// Handle mode changing
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnModeChanged(EntityUid uid, MassDriverConsoleComponent component, MassDriverModeMessage args)
     {
         foreach (var massDriverNetEntity in component.MassDrivers)
@@ -145,6 +132,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <summary>
     /// Handle launch button, so we can launch entity
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnLaunch(EntityUid uid, MassDriverConsoleComponent component, MassDriverLaunchMessage args)
     {
         foreach (var massDriverUid in component.MassDrivers)
@@ -154,6 +142,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <summary>
     /// Handle throw speed slider
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnThrowSpeedChanged(EntityUid uid, MassDriverConsoleComponent component, MassDriverThrowSpeedMessage args)
     {
         foreach (var massDriverUid in component.MassDrivers)
@@ -167,6 +156,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <summary>
     /// Handle throw distance slider
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnThrowDistanceChanged(EntityUid uid, MassDriverConsoleComponent component, MassDriverThrowDistanceMessage args)
     {
         foreach (var massDriverUid in component.MassDrivers)
@@ -180,6 +170,7 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
     /// <summary>
     /// Handles the UI being opened to send the current state to the UI.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnUIOpen(EntityUid uid, MassDriverConsoleComponent component, BoundUIOpenedEvent args)
     {
         if (!_ui.HasUi(uid, MassDriverConsoleUiKey.Key))

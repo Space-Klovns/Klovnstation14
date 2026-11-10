@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
@@ -54,7 +55,6 @@ public sealed partial class GhostRoleSystem : EntitySystem
     [Dependency] private SharedRoleSystem _roleSystem = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private PopupSystem _popupSystem = default!;
-    [Dependency] private IPrototypeManager _prototype = default!;
 
     private uint _nextRoleIdentifier;
     private bool _needsUpdateGhostRoleCount = true;
@@ -190,6 +190,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         UpdateGhostRoleCount();
         UpdateRaffles(frameTime);
+        UpdateNotices(); // KS14
     }
 
     /// <summary>
@@ -246,7 +247,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
             }
 
             var foundWinner = false;
-            var deciderPrototype = _prototype.Index(ghostRole.RaffleConfig.Decider);
+            var deciderPrototype = ProtoMan.Index(ghostRole.RaffleConfig.Decider);
 
             // use the ghost role's chosen winner picker to find a winner
             deciderPrototype.Decider.PickWinner(
@@ -355,7 +356,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
             return; // should, realistically, never be reached but you never know
 
         var settings = config.SettingsOverride
-                       ?? _prototype.Index<GhostRoleRaffleSettingsPrototype>(config.Settings).Settings;
+                       ?? ProtoMan.Index<GhostRoleRaffleSettingsPrototype>(config.Settings).Settings;
 
         if (settings.MaxDuration < settings.InitialDuration)
         {
@@ -532,7 +533,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
         // If there is no mind, check the mindRole prototypes
         foreach (var proto in roleEnt.Comp.MindRoles)
         {
-            if (!_prototype.TryIndex(proto, out var indexed)
+            if (!ProtoMan.TryIndex(proto, out var indexed)
                 || !indexed.TryGetComponent<MindRoleComponent>(out var comp, _ent.ComponentFactory))
                 continue;
             var roleComp = (MindRoleComponent)comp;
@@ -757,6 +758,8 @@ public sealed partial class GhostRoleSystem : EntitySystem
     {
         if (ent.Comp.Probability < 1f && !_random.Prob(ent.Comp.Probability))
             RemCompDeferred<GhostRoleComponent>(ent);
+        else
+            QueueNotice(ent); // KS14: tell ghosts about notable roles
     }
 
     private void OnRoleStartup(Entity<GhostRoleComponent> ent, ref ComponentStartup args)
@@ -856,7 +859,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         foreach (var prototypeID in prototypes)
         {
-            if (_prototype.TryIndex<GhostRolePrototype>(prototypeID, out var prototype))
+            if (ProtoMan.TryIndex<GhostRolePrototype>(prototypeID, out var prototype))
             {
                 var verb = CreateVerb(uid, component, args.User, prototype);
                 verbs.Add(verb);
@@ -895,14 +898,14 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
         if (userUid != null)
         {
-            var msg = Loc.GetString("ghostrole-spawner-select", ("mode", verbText));
+            var msg = KsPopupMessage.Create /* KS14: defer popup translation to the recipient */("ghostrole-spawner-select", ("mode", KsPopupMessage.Create(prototype.Name) /* KS14: defer role label */));
             _popupSystem.PopupEntity(msg, uid, userUid.Value);
         }
     }
 
     public void OnGhostRoleRadioMessage(Entity<GhostRoleMobSpawnerComponent> entity, ref GhostRoleRadioMessage args)
     {
-        if (!_prototype.Resolve(args.ProtoId, out var ghostRoleProto))
+        if (!ProtoMan.Resolve(args.ProtoId, out var ghostRoleProto))
             return;
 
         // if the prototype chosen isn't actually part of the selectable options, ignore it

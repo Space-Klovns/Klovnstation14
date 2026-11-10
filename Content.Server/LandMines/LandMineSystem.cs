@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization; // KS14: deferred popup localization
 using Content.Shared.Armable;
 using Content.Shared.Item.ItemToggle.Components;
 using Content.Shared.LandMines;
@@ -31,7 +32,7 @@ public sealed partial class LandMineSystem : EntitySystem
         if (!string.IsNullOrEmpty(component.TriggerText))
         {
             _popupSystem.PopupCoordinates(
-                Loc.GetString(component.TriggerText, ("mine", uid)),
+                KsPopupMessage.Create /* KS14: localize popups on the recipient */(component.TriggerText, ("mine", uid)),
                 Transform(uid).Coordinates,
                 args.Tripper,
                 PopupType.LargeCaution);

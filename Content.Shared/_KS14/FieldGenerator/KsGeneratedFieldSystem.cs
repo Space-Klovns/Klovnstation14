@@ -6,12 +6,7 @@
 /// </summary>
 public sealed partial class KsGeneratedFieldSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<KsGeneratedFieldComponent, ComponentShutdown>(OnShutdown);
-    }
-
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsGeneratedFieldComponent> entity, ref ComponentShutdown args)
     {
         foreach (var generatorUid in entity.Comp.GeneratorUids)
