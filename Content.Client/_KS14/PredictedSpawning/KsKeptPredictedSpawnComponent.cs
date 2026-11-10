@@ -1,5 +1,7 @@
 using System.Numerics;
 using Content.Shared._KS14.PredictedSpawning;
+using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.PredictedSpawning;
 
@@ -55,9 +57,35 @@ public sealed partial class KsKeptPredictedSpawnComponent : Component
     public EntityUid? ServerCopy;
 
     /// <summary>
+    ///     <see cref="ServerCopy"/>'s network id, which still names it once it is deleted: its hit's impact arrives
+    ///         after the state that deleted it.
+    /// </summary>
+    [ViewVariables]
+    public NetEntity? ServerCopyNetEntity;
+
+    /// <summary>
     ///     When this copy was spawned. One that is still unmatched long after has no server copy coming (the server
     ///         refused the shot), and is deleted.
     /// </summary>
     [ViewVariables]
     public TimeSpan SpawnTime;
+
+    /// <summary>
+    ///     The tick this copy was spawned on, which its server copy carries too
+    ///         (<see cref="KsPredictedSpawnComponent.SpawnTick"/>): what matches the two.
+    /// </summary>
+    [ViewVariables]
+    public GameTick SpawnTick;
+
+    /// <summary>
+    ///     The impacts this copy has played: what it hit, and where.
+    /// </summary>
+    [ViewVariables]
+    public List<(EntityUid Target, MapCoordinates Coordinates)> PlayedImpacts = new();
+
+    /// <summary>
+    ///     Whether the server's copy played this shot's impact before this one hit anything; this one then plays none.
+    /// </summary>
+    [ViewVariables]
+    public bool ServerImpactPlayed;
 }

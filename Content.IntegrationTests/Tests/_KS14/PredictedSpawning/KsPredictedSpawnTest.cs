@@ -6,6 +6,8 @@ using Content.Client._KS14.PredictedSpawning;
 using Content.IntegrationTests.Tests.Interaction;
 using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Systems;
 using Content.Shared.Weapons.Ranged.Events;
 using Robust.Client.GameObjects;
 using Robust.Shared;
@@ -38,6 +40,7 @@ public sealed class KsPredictedSpawnTest : InteractionTest
 
     private const string TestEffect = "KsPredictedSpawnTestEffect";
     private const string TestGun = "KsPredictedSpawnTestGun";
+    private const string TestAutoGun = "KsPredictedSpawnTestAutoGun";
     private const string MobHuman = "MobHuman";
     private const string RealPistol = "WeaponPistolMk58"; // a magazine, a chambered round and an ejected casing
     private const string TestWall = "KsPredictedSpawnTestWall";
@@ -90,6 +93,22 @@ public sealed class KsPredictedSpawnTest : InteractionTest
     count: 10
 
 - type: entity
+  id: {TestAutoGun}
+  components:
+  - type: Item
+  - type: Gun
+    fireRate: 10
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+  - type: BasicEntityAmmoProvider
+    proto: CartridgePistol
+    capacity: 30
+    count: 30
+
+- type: entity
   id: {TestWall}
   components:
   - type: Physics
@@ -137,8 +156,9 @@ public sealed class KsPredictedSpawnTest : InteractionTest
 
     /// <summary>
     ///     The server's copy of a spawn made for this client's player is hidden, its light switched off, its physics
-    ///         not predicted, and it refuses every collision here. A spawn made for anyone else, or for no one, is a
-    ///         normal one: shown, predicted, colliding.
+    ///         not predicted, and it refuses every collision here. A spawn made for anyone else, or for no one, is
+    ///         shown and colliding. Only one made for no one is predicted: another user's is interpolated, or it would
+    ///         run this client's whole lead ahead of the server, and appear that far from where it was fired (#410).
     /// </summary>
     [Test]
     public async Task ServerCopyIsHiddenOnlyForItsUser()
@@ -160,14 +180,14 @@ public sealed class KsPredictedSpawnTest : InteractionTest
         {
             Assert.Multiple(() =>
             {
-                AssertShown(ToClient(ownUid), shown: false, "the server's copy of this player's own spawn");
-                AssertShown(ToClient(otherUid), shown: true, "a spawn made for another user");
-                AssertShown(ToClient(noUserUid), shown: true, "a spawn made for no user");
+                AssertShown(ToClient(ownUid), shown: false, predicted: false, "the server's copy of this player's own spawn");
+                AssertShown(ToClient(otherUid), shown: true, predicted: false, "a spawn made for another user");
+                AssertShown(ToClient(noUserUid), shown: true, predicted: true, "a spawn made for no user");
             });
         });
     }
 
-    private void AssertShown(EntityUid clientUid, bool shown, string what)
+    private void AssertShown(EntityUid clientUid, bool shown, bool predicted, string what)
     {
         Assert.That(CEntMan.EntityExists(clientUid), $"{what} never reached the client");
 
@@ -175,8 +195,8 @@ public sealed class KsPredictedSpawnTest : InteractionTest
             $"{what}: sprite visible should be {shown}");
         Assert.That(CEntMan.GetComponent<PointLightComponent>(clientUid).Enabled, Is.EqualTo(shown),
             $"{what}: light enabled should be {shown}");
-        Assert.That(CEntMan.GetComponent<PhysicsComponent>(clientUid).Predict, Is.EqualTo(shown),
-            $"{what}: physics predicted should be {shown}");
+        Assert.That(CEntMan.GetComponent<PhysicsComponent>(clientUid).Predict, Is.EqualTo(predicted),
+            $"{what}: physics predicted should be {predicted}");
 
         var physicsComponent = CEntMan.GetComponent<PhysicsComponent>(clientUid);
         var fixture = CEntMan.GetComponent<FixturesComponent>(clientUid).Fixtures.Values.First();
@@ -648,6 +668,213 @@ public sealed class KsPredictedSpawnTest : InteractionTest
             {
                 Assert.That(impactXs.Values, Has.Count.EqualTo(1).And.Exactly(1).GreaterThan(4.5f), $"the one hit did not play exactly one impact; impacts at {impacts}");
             }
+        });
+    }
+
+    /// <summary>
+    ///     Another player's shot, or one nobody's client predicted (an NPC's), as this client sees it: the server's
+    ///         bullet is interpolated rather than run ahead (#410), and its hit, which nothing here predicted, plays
+    ///         exactly one impact, from the server.
+    /// </summary>
+    [Test]
+    public async Task ObserverSeesTheServersShotAndOneImpact([Values] bool anotherUsersShot)
+    {
+        var otherUserUid = await SpawnServerOnly(MobHuman, SpaceCoordinates(-10f));
+
+        EntityUid gunUid = default;
+        NetEntity gunNetEntity = default;
+        await Server.WaitPost(() =>
+        {
+            SEntMan.SpawnEntity(_testWall, SpaceCoordinates(6f));
+            gunUid = SEntMan.SpawnEntity(TestGun, SpaceCoordinates(0f));
+            gunNetEntity = SEntMan.GetNetEntity(gunUid);
+        });
+        await RunTicks(5); // the wall and the gun reach the client
+
+        await Server.WaitPost(() =>
+        {
+            var gunSystem = SEntMan.System<SharedGunSystem>();
+            var gun = new Entity<GunComponent>(gunUid, SEntMan.GetComponent<GunComponent>(gunUid));
+            var target = SEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(40f));
+
+            using (SEntMan.System<KsSharedPredictedSpawnSystem>().BeginUserPrediction(anotherUsersShot ? otherUserUid : null))
+                Assert.That(gunSystem.AttemptShoot(gunUid, gun, target), "the server's gun did not fire");
+        });
+
+        var impacts = new HashSet<EntityUid>();
+        var sawBullet = false;
+        for (var tick = 0; tick < 60; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitAssertion(() =>
+            {
+                foreach (var bulletUid in FindBullets(CEntMan, ToClient(gunNetEntity)))
+                {
+                    sawBullet = true;
+                    Assert.That(CEntMan.GetComponent<PhysicsComponent>(bulletUid).Predict, Is.False,
+                        "the server's bullet is predicted on a client that did not fire it");
+                }
+
+                var enumerator = CEntMan.AllEntityQueryEnumerator<MetaDataComponent>();
+                while (enumerator.MoveNext(out var uid, out var metaDataComponent))
+                {
+                    if (metaDataComponent.EntityPrototype?.ID == BulletImpactEffect)
+                        impacts.Add(uid);
+                }
+            });
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sawBullet, "the server's bullet never reached the client, so this proves nothing");
+            Assert.That(impacts, Has.Count.EqualTo(1), "the server's one hit did not play exactly one impact here");
+        });
+    }
+
+    /// <summary>
+    ///     The shooter's own bullet starts out facing the way it flies, rather than turning to it from 0 over its first
+    ///         tick (#410).
+    /// </summary>
+    [Test]
+    public async Task KeptBulletStartsFacingItsDirection()
+    {
+        var gunNetEntity = await PrepareGun();
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() => shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer));
+        var targetCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.MapUid, shooterPosition + new Vector2(40f, 0f)));
+
+        await Client.WaitAssertion(() =>
+        {
+            CEntMan.RaisePredictiveEvent(new RequestShootEvent
+            {
+                Gun = gunNetEntity,
+                Coordinates = targetCoordinates,
+            });
+
+            var keptUid = FindBullets(CEntMan, CPlayer).Single(uid => CEntMan.HasComponent<KsKeptPredictedSpawnComponent>(uid));
+            var transformComponent = CEntMan.GetComponent<TransformComponent>(keptUid);
+            Assert.That(transformComponent.LocalRotation.Theta, Is.Not.EqualTo(0d).Within(0.01d),
+                "the shot's direction faces rotation 0, so this proves nothing");
+            if (transformComponent.ActivelyLerping)
+            {
+                Assert.That(transformComponent.PrevRotation.Theta, Is.EqualTo(transformComponent.LocalRotation.Theta).Within(0.001d),
+                    "the kept bullet turns from its spawn rotation to its direction");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A rapid string of the shooter's own shots at a close wall, one of which the shooter's client gets wrong: its
+    ///         kept copy goes wide and misses, while the server's hits. That shot's impact plays once, from the server,
+    ///         and every other shot's plays once, on the tick its own kept copy hits.
+    ///
+    ///     Impacts used to be matched between the two copies by target alone. The off-course shot's server impact
+    ///         was taken for the next shot's kept hit, that shot's server impact for the one after, and so on: the
+    ///         off-course hit never played, and the last shot played twice, the second time a round trip late.
+    /// </summary>
+    [Test]
+    public async Task RapidShotsEachPlayOneImpactWhenTheirKeptCopyHits()
+    {
+        var clientConfigurationManager = Client.ResolveDependency<IConfigurationManager>();
+        await Client.WaitPost(() => clientConfigurationManager.SetCVar(CVars.NetPredictTickBias, 4));
+
+        const float wallX = 3f;
+        const int shots = 6;
+        const int offCourseShot = 1;
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            SEntMan.SpawnEntity(_testWall, new MapCoordinates(shooterPosition + new Vector2(wallX + 0.5f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+
+        var gunNetEntity = await PlaceInHands(TestAutoGun);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+
+        var serverBullets = new HashSet<EntityUid>();
+        var impactTicks = new List<int>();
+        var seenImpacts = new HashSet<EntityUid>();
+        var keptLastX = new Dictionary<EntityUid, float>();
+        var keptGoneTicks = new Dictionary<EntityUid, int>();
+        var offCourseUid = EntityUid.Invalid;
+        var ticksPerShot = (int)MathF.Ceiling((float)Client.ResolveDependency<IGameTiming>().TickRate / 10f) + 1;
+
+        for (var tick = 0; tick < shots * ticksPerShot + 60; tick++)
+        {
+            var shot = tick / ticksPerShot;
+            if (tick % ticksPerShot == 0 && shot < shots)
+            {
+                await Shoot(gunNetEntity, shooterPosition + new Vector2(40f, 0f));
+
+                // Wide of the wall, so this one kept copy misses what its server copy hits.
+                if (shot == offCourseShot)
+                {
+                    await Client.WaitPost(() =>
+                    {
+                        offCourseUid = FindBullets(CEntMan, CPlayer)
+                            .Single(uid => CEntMan.HasComponent<KsKeptPredictedSpawnComponent>(uid) && !keptLastX.ContainsKey(uid));
+                        var transformSystem = CEntMan.System<SharedTransformSystem>();
+                        transformSystem.SetWorldPosition(offCourseUid, transformSystem.GetWorldPosition(offCourseUid) + new Vector2(0f, 3f));
+                    });
+                }
+            }
+
+            await RunTicks(1);
+
+            var currentTick = tick;
+            await Server.WaitPost(() =>
+            {
+                foreach (var uid in FindBullets(SEntMan, SPlayer))
+                    serverBullets.Add(uid);
+            });
+            await Client.WaitPost(() =>
+            {
+                var transformSystem = CEntMan.System<SharedTransformSystem>();
+                foreach (var keptUid in keptLastX.Keys)
+                {
+                    if (!CEntMan.EntityExists(keptUid))
+                        keptGoneTicks.TryAdd(keptUid, currentTick);
+                }
+
+                foreach (var uid in FindBullets(CEntMan, CPlayer))
+                {
+                    if (CEntMan.HasComponent<KsKeptPredictedSpawnComponent>(uid))
+                        keptLastX[uid] = transformSystem.GetWorldPosition(uid).X - shooterPosition.X;
+                }
+
+                var enumerator = CEntMan.AllEntityQueryEnumerator<MetaDataComponent>();
+                while (enumerator.MoveNext(out var uid, out var metaDataComponent))
+                {
+                    if (metaDataComponent.EntityPrototype?.ID == BulletImpactEffect && seenImpacts.Add(uid))
+                        impactTicks.Add(currentTick);
+                }
+            });
+        }
+
+        // Each kept copy that reached the wall played its impact on the tick it went.
+        var keptHitTicks = keptGoneTicks
+            .Where(pair => pair.Key != offCourseUid && keptLastX[pair.Key] > wallX - 1.5f)
+            .Select(pair => pair.Value)
+            .ToList();
+        var unmatched = new List<int>(impactTicks);
+        var latePlayed = keptHitTicks.Count(hitTick => !unmatched.Remove(hitTick));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(offCourseUid, Is.Not.EqualTo(EntityUid.Invalid), "no kept copy was sent off course, so this proves nothing");
+            Assert.That(serverBullets, Has.Count.EqualTo(shots), "the server did not fire every shot");
+            Assert.That(keptHitTicks, Has.Count.EqualTo(shots - 1), "not every on-course kept copy reached the wall");
+            Assert.That(latePlayed, Is.Zero,
+                $"{latePlayed} kept copies hit the wall without an impact on that tick; kept hits on {string.Join(", ", keptHitTicks)}, impacts on {string.Join(", ", impactTicks)}");
+            Assert.That(impactTicks, Has.Count.EqualTo(shots),
+                $"{shots} shots hit the wall and played {impactTicks.Count} impacts, on {string.Join(", ", impactTicks)}");
+
+            // The off-course shot's server impact arrives a round trip after it hit, well before the last kept copy
+            //      hits; anything after that is a shot played twice, once by its kept copy and again by the server.
+            Assert.That(impactTicks.DefaultIfEmpty().Max(), Is.LessThanOrEqualTo(keptHitTicks.DefaultIfEmpty().Max()),
+                $"an impact played after the last shot's own, from the server; kept hits on {string.Join(", ", keptHitTicks)}, impacts on {string.Join(", ", impactTicks)}");
         });
     }
 

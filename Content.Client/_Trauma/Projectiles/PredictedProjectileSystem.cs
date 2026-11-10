@@ -12,6 +12,7 @@ namespace Content.Client._Trauma.Projectiles;
 public sealed partial class PredictedProjectileSystem : EntitySystem
 {
     /* [Dependency] private SpriteSystem _sprite = default!; */ // KS14: removed, see the summary
+    [Dependency] private Robust.Client.Player.IPlayerManager _playerManager = default!; // KS14
 
     public override void Initialize()
     {
@@ -23,7 +24,11 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
 
     private void OnUpdateIsPredicted(Entity<ProjectileComponent> ent, ref UpdateIsPredictedEvent args)
     {
-        args.IsPredicted = true;
+        // KS14 start: only this client's own shots run ahead of the server. Anyone else's, predicted, ran the client's
+        //      whole lead ahead of its last state, so it appeared that far from where it was fired (#410).
+        if (IsClientSide(ent) || ent.Comp.Shooter is { } shooterUid && shooterUid == _playerManager.LocalEntity)
+            args.IsPredicted = true;
+        // KS14 end
     }
 
     // KS14: removed, see the summary

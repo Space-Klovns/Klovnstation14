@@ -101,6 +101,11 @@
     damage:
       types:
         Asphyxiation: 0.5
+    # KS14 start: this species' own rate in crit too, rather than inheriting the base's
+    critDamage:
+      types:
+        Asphyxiation: 0.5
+    # KS14 end
     damageRecovery:
       types:
         Asphyxiation: -1.0

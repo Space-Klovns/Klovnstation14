@@ -397,6 +397,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             gun.Comp.BurstActivated = false;
             gun.Comp.BurstShotsCount = 0;
             gun.Comp.NextFire = TimeSpan.FromSeconds(Math.Max(lastFire.TotalSeconds + SafetyNextFire, gun.Comp.NextFire.TotalSeconds));
+            DirtyFields(gun!, null, nameof(GunComponent.BurstActivated), nameof(GunComponent.BurstShotsCount), nameof(GunComponent.NextFire)); // KS14: field deltas only send dirtied fields
             return false;
         }
 
@@ -435,6 +436,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
             gun.Comp.BurstActivated = false;
             gun.Comp.BurstShotsCount = 0;
+            DirtyFields(gun!, null, nameof(GunComponent.BurstActivated), nameof(GunComponent.BurstShotsCount)); // KS14: field deltas only send dirtied fields
             //gun.NextFire += TimeSpan.FromSeconds(gun.BurstCooldown); // MNET
 
             // Play empty gun sounds if relevant
@@ -500,6 +502,11 @@ public abstract partial class SharedGunSystem : EntitySystem
                 gun.Comp.BurstActivated = false;
                 gun.Comp.BurstShotsCount = 0;
             }
+
+            // KS14 start: field deltas only send dirtied fields. Without this the client's state resets put the burst
+            //      back to its start, re-predicting the rest counted it short, and the client fired a second one (#415).
+            DirtyFields(gun!, null, nameof(GunComponent.BurstActivated), nameof(GunComponent.BurstShotsCount), nameof(GunComponent.NextFire));
+            // KS14 end
         }
 
         // Shoot confirmed - sounds also played here in case it's invalid (e.g. cartridge already spent).
@@ -730,7 +737,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         Physics.UpdateIsPredicted(uid, physics); // Trauma - predict this shit
 
-        TransformSystem.SetWorldRotation(uid, direction.ToWorldAngle() + projectile.Angle);
+        TransformSystem.SetWorldRotationNoLerp/* KS14: SetWorldRotation -> NoLerp, a fresh projectile visibly turned from 0 */(uid, direction.ToWorldAngle() + projectile.Angle);
 
         if (user is { } userUid)
         {
