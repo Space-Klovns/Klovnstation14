@@ -62,6 +62,8 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
     private Vector2 _lastMousePosition = new(float.NaN, float.NaN);
     private Control? _lastCursorOwner;
 
+    private Action? _applyQueuedTextCursor;
+
     private KsTextSelectionHighlight _highlight = default!;
 
     private Control? _target;
@@ -279,7 +281,7 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
             // The engine puts the hovered control's own cursor back without the hovered control changing: on every mouse
             //      press and release, and from a window's MouseMove. The chat output is one control, so nothing else would
             //      bring the I-beam back until the mouse left it. Setting the cursor the window already has does nothing.
-            ApplyTextCursor();
+            QueueTextCursor();
         }
 
         if (_target == null)
@@ -323,14 +325,30 @@ public sealed partial class KsTguiTextSelectionUIController : UIController
         var wanted = Enabled && (_dragging && _target != null
                                  || FindTextAt(screenPosition) is { } hit && IsSelectable(hit));
 
-        // When the hovered control changes the engine puts its cursor up after the controllers have run, over this one;
-        //      FrameUpdate puts the I-beam up again on every later frame it is still shown.
         if (wanted)
-            ApplyTextCursor();
+            QueueTextCursor();
         else if (_textCursorShown)
             RestoreCursor(cursorOwner);
 
         _textCursorShown = wanted;
+    }
+
+    /// <summary>
+    ///     Puts the I-beam up at the end of this frame. The engine works out its own cursor after the controllers have run,
+    ///         whenever the hovered or focused control's cursor needs updating (every mouse press and release, a window's
+    ///         MouseMove), and would cover an I-beam set here with an arrow for a frame: a visible flicker. Deferred actions
+    ///         run after that, in the same frame, so the I-beam is the last cursor set.
+    /// </summary>
+    private void QueueTextCursor()
+    {
+        // Held, so queueing it every frame the I-beam is shown allocates nothing.
+        UIManager.DeferAction(_applyQueuedTextCursor ??= ApplyQueuedTextCursor);
+    }
+
+    private void ApplyQueuedTextCursor()
+    {
+        if (_textCursorShown)
+            ApplyTextCursor();
     }
 
     private void ApplyTextCursor()
