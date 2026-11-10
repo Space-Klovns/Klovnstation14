@@ -54,16 +54,6 @@ public sealed class KsOperativeEncounterTest : GameTest
     }
 
     /// <summary>
-    ///     A station has gravity. Without it every operative drifts past each turn of its path and swings back, and walks
-    ///         a corridor at half the pace it would.
-    /// </summary>
-    private static void GiveGravity(IEntityManager entManager, EntityUid gridUid)
-    {
-        var gravityComponent = entManager.EnsureComponent<Content.Shared.Gravity.GravityComponent>(gridUid);
-        entManager.System<Content.Server.Gravity.GravitySystem>().EnableGravity(gridUid, gravityComponent);
-    }
-
-    /// <summary>
     ///     Each time a hostile ducks out of sight, the squad should keep its head down for it: a burst or two of suppressive
     ///         fire at where it went, from whoever saw it go. Not every member, not every moment.
     /// </summary>
@@ -105,7 +95,16 @@ public sealed class KsOperativeEncounterTest : GameTest
 
         await Pair.RunTicksSync(240); // for a squad to form
 
-        await Server.WaitPost(() => mobs.AddRange(GetOperatives(entManager, map.MapId, hostileUid)));
+        // Every duck taken: the chance of letting the moment pass (SuppressionChance, 75 by default) is a dial of its own,
+        //      and at 75 one run in four would see two ducks go by.
+        await Server.WaitPost(() =>
+        {
+            mobs.AddRange(GetOperatives(entManager, map.MapId, hostileUid));
+            foreach (var mobUid in mobs)
+            {
+                entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("SuppressionChance", 100f);
+            }
+        });
 
         Assert.That(mobs, Has.Count.EqualTo(4), "the test needs the four of them");
 
@@ -155,8 +154,8 @@ public sealed class KsOperativeEncounterTest : GameTest
 
         TestContext.Out.WriteLine(log.ToString());
 
-        Assert.That(suppressionsPerEncounter.Count(bursts => bursts >= 1), Is.GreaterThanOrEqualTo(Encounters - 1),
-            $"nearly every encounter should be suppressed: {string.Join(", ", suppressionsPerEncounter)}");
+        Assert.That(suppressionsPerEncounter.Count(bursts => bursts >= 1), Is.EqualTo(Encounters),
+            $"every encounter should be suppressed: {string.Join(", ", suppressionsPerEncounter)}");
         Assert.That(suppressionsPerEncounter.Max(), Is.LessThanOrEqualTo(3),
             $"but only a burst or two each: {string.Join(", ", suppressionsPerEncounter)}");
     }
@@ -290,5 +289,137 @@ public sealed class KsOperativeEncounterTest : GameTest
             TestContext.Out.WriteLine(log.ToString());
 
         Assert.That(joined, Has.Count.EqualTo(rear.Count), "those behind the wall should come round to the fight, within 30s: a grenade or a burst round the corner first is fine, staying put is not");
+    }
+
+    /// <summary>
+    ///     A lit L-shaped room, walled all round: two of a squad of four fighting a hostile at the far end of one leg, the
+    ///         other two at the far end of the other leg, out of sight round the bend. Told of the hostile, those two come
+    ///         round the bend and join in: in a narrow L, a long one, and one lit by station lights, with light detection on,
+    ///         where the hostile keeps ducking into an alcove and out again.
+    /// </summary>
+    [TestCase(2, 10, false, false)]
+    [TestCase(3, 18, false, false)]
+    [TestCase(3, 14, true, true)]
+    public async Task TestTheRestOfTheSquadComeRoundAnL(int width, int length, bool lights, bool ducks)
+    {
+        if (!Server.ProtoMan.HasIndex(_operativeRoot))
+            Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
+
+        const string redacted = "KsRandomHumanoidSpawnerOperativeRedacted";
+        var entManager = Server.EntMan;
+        var tileDefinitionManager = Server.ResolveDependency<ITileDefinitionManager>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var perceptionSystem = entManager.System<Content.Server._KS14.NPC.Perception.NpcPerceptionSystem>();
+        // Lit by station lights, with light detection on, as on a station: how lit the hostile is gets worked out, not
+        //      taken as given.
+        if (lights)
+            await OverrideCVar(Content.IntegrationTests.Fixtures.Attributes.Side.Server, Content.Shared._KS14.CCVar.KsCCVars.NpcLightDetection, true);
+
+        var map = await Pair.CreateTestMap();
+        var rear = new List<EntityUid>();
+        EntityUid gridUid = default, hostileUid = default;
+
+        // The bend at the origin: one leg runs north from it, the other east.
+        //      An alcove off the end of the east leg, for a hostile that ducks.
+        bool IsFloor(int x, int y) => x >= 0 && y >= 0 && (x < width && y < length || y < width && x < length) ||
+            ducks && x == length - 1 && (y == width || y == width + 1);
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-1, -1), new Vector2i(length, length)).Owner;
+            GiveGravity(entManager, gridUid);
+
+            for (var x = -1; x <= length; x++)
+            {
+                for (var y = -1; y <= length; y++)
+                {
+                    if (!IsFloor(x, y))
+                        SpawnAt(entManager, "WallSolid", gridUid, x, y);
+                }
+            }
+
+            if (lights)
+            {
+                for (var i = 1; i < length; i += 4)
+                {
+                    SpawnAt(entManager, "AlwaysPoweredWallLight", gridUid, width / 2, i);
+                    SpawnAt(entManager, "AlwaysPoweredWallLight", gridUid, i, width / 2);
+                }
+
+                SpawnAt(entManager, "AlwaysPoweredWallLight", gridUid, length - 1, width / 2);
+            }
+
+            // Together at the end of the north leg, for a squad to form.
+            for (var i = 0; i < 4; i++)
+            {
+                SpawnAt(entManager, redacted, gridUid, i % width, length - 1 - i / width);
+            }
+
+            // Walled in at the end of the east leg, out of everyone's sight until the fight starts.
+            hostileUid = SpawnAt(entManager, "KsSquadTestMobSyndicate", gridUid, length - 1, 0);
+            entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid);
+            transformSystem.SetCoordinates(hostileUid, new EntityCoordinates(gridUid, new Vector2(length + 5.5f, length + 5.5f)));
+        });
+
+        await Pair.RunTicksSync(240); // for a squad to form
+
+        await Server.WaitPost(() =>
+        {
+            var mobs = GetOperatives(entManager, map.MapId, hostileUid);
+
+            Assert.That(entManager.System<NpcSquadSystem>().TryGetSquad(mobs[0], out var squad) && squad.Value.Comp.Members.Count == 4,
+                "the test needs a squad of four");
+
+            // Two near the end of the east leg, in sight of the hostile; the other two left at the end of the north leg.
+            var members = squad!.Value.Comp.Members.ToList();
+            for (var i = 0; i < members.Count; i++)
+            {
+                if (i < 2)
+                    transformSystem.SetCoordinates(members[i], new EntityCoordinates(gridUid, new Vector2(length - 6.5f, 0.5f + i % width)));
+                else
+                    rear.Add(members[i]);
+            }
+
+            transformSystem.SetCoordinates(hostileUid, new EntityCoordinates(gridUid, new Vector2(length - 0.5f, 0.5f)));
+        });
+
+        var joined = new HashSet<EntityUid>();
+        var log = new System.Text.StringBuilder();
+
+        for (var tick = 0; tick < 900 && joined.Count < rear.Count; tick += 15)
+        {
+            await Pair.RunTicksSync(15);
+            await Server.WaitPost(() =>
+            {
+                // Out for three seconds, in the alcove for one and a half, as one trading shots from round a corner.
+                var hidden = ducks && tick % 135 >= 90;
+                transformSystem.SetCoordinates(hostileUid, new EntityCoordinates(gridUid, hidden
+                    ? new Vector2(length - 0.5f, width + 1.5f)
+                    : new Vector2(length - 0.5f, 0.5f)));
+
+                var line = new System.Text.StringBuilder($"+{tick,4}{(hidden ? " hid" : "")}:");
+                foreach (var mobUid in rear)
+                {
+                    if (perceptionSystem.TryGetContact(mobUid, hostileUid, out var contact) && contact.State == Content.Shared._KS14.NPC.NpcContactState.Visible)
+                        joined.Add(mobUid);
+
+                    var htn = entManager.GetComponent<HTNComponent>(mobUid);
+                    var plan = htn.Plan;
+                    var state = perceptionSystem.TryGetContact(mobUid, hostileUid, out var c) ? c.State.ToString() : "none";
+                    var order = entManager.TryGetComponent<Content.Server._KS14.NPC.Squad.Tactics.NpcOrderComponent>(mobUid, out var orderComponent) && orderComponent.Order is { } o ? o.Kind.ToString() : "-";
+                    var steering = entManager.TryGetComponent<Content.Server.NPC.Components.NPCSteeringComponent>(mobUid, out var steeringComponent)
+                        ? $"{steeringComponent.Status} path={steeringComponent.CurrentPath.Count} to={steeringComponent.Coordinates.Position:0.0}"
+                        : "no steering";
+                    line.Append($" | {transformSystem.GetWorldPosition(mobUid):0.0} [{(plan == null ? "" : string.Join(",", plan.BranchTraversalRecord))}] {plan?.CurrentOperator.GetType().Name} {state} order={order} {steering}");
+                }
+
+                log.AppendLine(line.ToString());
+            });
+        }
+
+        if (joined.Count < rear.Count)
+            TestContext.Out.WriteLine(log.ToString());
+
+        Assert.That(joined, Has.Count.EqualTo(rear.Count), "those round the bend should come round to the fight, within 30s");
     }
 }

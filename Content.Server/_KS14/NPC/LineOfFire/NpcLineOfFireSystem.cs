@@ -6,14 +6,39 @@ using Content.Shared.Physics;
 using Content.Shared.Projectiles;
 using Content.Shared.Weapons.Hitscan.Components;
 using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Events;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.LineOfFire;
+
+/// <summary>
+///     Where the rounds from a gun's next trigger pull can go: see <see cref="NpcLineOfFireSystem.GetShotCone"/>.
+/// </summary>
+/// <param name="Spread">The whole cone they land in: the gun's own spread, plus a pellet spread.</param>
+/// <param name="Projectiles">How many projectiles each round throws into it: more than one for buckshot.</param>
+/// <param name="Speed">How fast they fly, in tiles a second. Infinite for a beam.</param>
+/// <param name="HalfWidth">How far either side of its line a round hits things, in tiles.</param>
+/// <param name="Rounds">How many rounds the trigger pull fires: the rest of a burst, or one.</param>
+/// <param name="RoundInterval">The time between those rounds, in seconds.</param>
+public readonly record struct NpcShotCone(Angle Spread, int Projectiles, float Speed, float HalfWidth, int Rounds, float RoundInterval)
+{
+    /// <summary>
+    ///     How far to either side of the aim a round may go, in radians.
+    /// </summary>
+    public float HalfAngle => (float) Math.Abs(Spread.Theta) / 2f;
+
+    /// <summary>
+    ///     How long from the first of <see cref="Rounds"/> to the last, in seconds.
+    /// </summary>
+    public float BurstTime => (Rounds - 1) * RoundInterval;
+}
 
 /// <summary>
 ///     Whether an NPC could hit something from somewhere, which is not the same as being able to see it. Sight goes by what
@@ -24,6 +49,7 @@ namespace Content.Server._KS14.NPC.LineOfFire;
 /// </summary>
 public sealed partial class NpcLineOfFireSystem : EntitySystem
 {
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private GunSystem _gunSystem = default!;
     [Dependency] private InteractionSystem _interactionSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
@@ -44,12 +70,23 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     private const int MaxRoundsToFollow = 4;
 
     /// <summary>
-    ///     By what is fired. Fixtures are not cheap to read off a prototype, and this is asked for every few ticks per NPC.
+    ///     How far either side of its line a round hits things, for one whose fixture tells nothing: a bullet's.
     /// </summary>
+    private const float DefaultHalfWidth = 0.1f;
+
     /// <summary>
-    ///     What each round's shot collides with, and whether it is hitscan, by the round's prototype.
+    ///     What a round fires, as far as a shot goes: what it collides with, whether it is a beam, how wide it is, and the
+    ///         pellet spread, if it splits into several.
     /// </summary>
-    private readonly Dictionary<EntProtoId, (CollisionGroup Mask, bool Hitscan)> _shots = new();
+    private readonly record struct NpcShotInfo(CollisionGroup Mask, bool Hitscan, float HalfWidth, Angle? PelletSpread, int PelletCount);
+
+    private static readonly NpcShotInfo UnknownShot = new(UnknownShotMask, false, DefaultHalfWidth, null, 1);
+
+    /// <summary>
+    ///     What each round fires, by the round's prototype. Fixtures are not cheap to read off a prototype, and this is asked
+    ///         for every few ticks per NPC, and on every shot.
+    /// </summary>
+    private readonly Dictionary<EntProtoId, NpcShotInfo> _shots = new();
 
     private SharedInteractionSystem.Ignored _isMob = default!;
 
@@ -79,12 +116,17 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
         return TryGetNextShot(shooterUid, out var shot) && shot.Hitscan;
     }
 
-    private bool TryGetNextShot(EntityUid shooterUid, out (CollisionGroup Mask, bool Hitscan) shot)
+    private bool TryGetNextShot(EntityUid shooterUid, out NpcShotInfo shot)
+    {
+        shot = default;
+        return _gunSystem.TryGetGun(shooterUid, out var gunEntity) && TryGetGunShot(gunEntity.Owner, out shot);
+    }
+
+    private bool TryGetGunShot(EntityUid gunUid, out NpcShotInfo shot)
     {
         shot = default;
 
-        if (!_gunSystem.TryGetGun(shooterUid, out var gunEntity) ||
-            !TryGetNextAmmo(gunEntity.Owner, out var ammoUid, out var ammoPrototype))
+        if (!TryGetNextAmmo(gunUid, out var ammoUid, out var ammoPrototype))
             return false;
 
         if (ammoUid is { } uid)
@@ -105,6 +147,68 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
         }
 
         return true;
+    }
+
+    /// <summary>
+    ///     Where the rounds of <paramref name="gun"/>'s next trigger pull can go. The gun's spread is what
+    ///         <c>SharedGunSystem.GetRecoilAngle</c> will make of it, round by round, at the widest it gets over the rest of a
+    ///         burst; or, with <paramref name="worstCase"/>, the widest it ever gets. A pellet spread, if the round splits,
+    ///         goes on top, narrowed as it is when fired (a choke). With no ammo to look at: the gun's spread, one bullet.
+    /// </summary>
+    public NpcShotCone GetShotCone(Entity<GunComponent> gun, bool worstCase = false)
+    {
+        if (!TryGetGunShot(gun.Owner, out var shot))
+            shot = UnknownShot;
+
+        var burst = gun.Comp.SelectedMode == SelectiveFire.Burst;
+        var rounds = burst
+            ? Math.Max(1, gun.Comp.ShotsPerBurstModified - (gun.Comp.BurstActivated ? gun.Comp.BurstShotsCount : 0))
+            : 1;
+        var roundInterval = burst && gun.Comp.BurstFireRate > 0f ? 1f / gun.Comp.BurstFireRate : 0f;
+
+        var gunSpread = worstCase ? gun.Comp.MaxAngleModified : GetPredictedSpread(gun.Comp, rounds, roundInterval);
+
+        var pelletSpread = Angle.Zero;
+        var projectiles = 1;
+
+        if (shot.PelletSpread is { } spread)
+        {
+            var spreadEvent = new GunGetAmmoSpreadEvent(spread);
+            RaiseLocalEvent(gun.Owner, ref spreadEvent);
+            pelletSpread = spreadEvent.Spread;
+            projectiles = Math.Max(shot.PelletCount, 1);
+        }
+
+        return new NpcShotCone(gunSpread + pelletSpread,
+            projectiles,
+            shot.Hitscan ? float.PositiveInfinity : gun.Comp.ProjectileSpeedModified,
+            shot.Hitscan ? 0f : shot.HalfWidth,
+            rounds,
+            roundInterval);
+    }
+
+    /// <summary>
+    ///     The widest the gun's spread gets over its next <paramref name="rounds"/> rounds: <c>GetRecoilAngle</c>'s working,
+    ///         which widens it by each round and lets it settle back between them, without its side effects.
+    /// </summary>
+    private Angle GetPredictedSpread(GunComponent gunComponent, int rounds, float roundInterval)
+    {
+        var now = _gameTiming.CurTime;
+        var nextFire = gunComponent.NextFire > now ? gunComponent.NextFire : now;
+        var settle = Math.Max(0.0, (nextFire - gunComponent.LastFire).TotalSeconds);
+        var theta = gunComponent.CurrentAngle.Theta;
+        var widest = 0.0;
+
+        for (var round = 0; round < rounds; round++)
+        {
+            theta = Math.Clamp(theta + gunComponent.AngleIncreaseModified.Theta - gunComponent.AngleDecayModified.Theta * settle,
+                gunComponent.MinAngleModified.Theta,
+                gunComponent.MaxAngleModified.Theta);
+            widest = Math.Max(widest, theta);
+            settle = roundInterval;
+        }
+
+        return new Angle(widest);
     }
 
     /// <summary>
@@ -228,26 +332,51 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
 
     /// <summary>
     ///     Looks through a round to what it actually fires: a beam, or a projectile, maybe by way of a cartridge or a spread.
+    ///         A projectile that spreads (buckshot) is itself the first of the pellets.
     /// </summary>
-    private (CollisionGroup Mask, bool Hitscan) GetShot(EntProtoId prototypeId)
+    private NpcShotInfo GetShot(EntProtoId prototypeId)
     {
+        Angle? pelletSpread = null;
+        var pelletCount = 1;
+
         for (var i = 0; i < MaxRoundsToFollow && ProtoMan.TryIndex(prototypeId, out var prototype); i++)
         {
             if (prototype.TryComp<HitscanBasicRaycastComponent>(out var raycastComponent, Factory))
-                return (raycastComponent.CollisionMask, true);
+                return new NpcShotInfo(raycastComponent.CollisionMask, true, 0f, pelletSpread, pelletCount);
+
+            var spreads = prototype.TryComp<ProjectileSpreadComponent>(out var spreadComponent, Factory);
+            if (spreads)
+            {
+                pelletSpread = spreadComponent!.Spread;
+                pelletCount = spreadComponent.Count;
+            }
 
             if (prototype.TryComp<FixturesComponent>(out var fixturesComponent, Factory) &&
                 fixturesComponent.Fixtures.TryGetValue(SharedProjectileSystem.ProjectileFixture, out var fixture))
-                return ((CollisionGroup) fixture.CollisionMask, false);
+                return new NpcShotInfo((CollisionGroup) fixture.CollisionMask, false, GetHalfWidth(fixture.Shape), pelletSpread, pelletCount);
 
             if (prototype.TryComp<CartridgeAmmoComponent>(out var cartridgeComponent, Factory))
                 prototypeId = cartridgeComponent.Prototype;
-            else if (prototype.TryComp<ProjectileSpreadComponent>(out var spreadComponent, Factory))
-                prototypeId = spreadComponent.Proto;
+            else if (spreads)
+                prototypeId = spreadComponent!.Proto;
             else
                 break;
         }
 
-        return (UnknownShotMask, false);
+        return UnknownShot with { PelletSpread = pelletSpread, PelletCount = pelletCount };
+    }
+
+    /// <summary>
+    ///     Half the narrow side of a projectile's shape: how far to either side of its line it hits things, flying along its
+    ///         long side.
+    /// </summary>
+    private static float GetHalfWidth(IPhysShape shape)
+    {
+        if (shape is PhysShapeCircle circle)
+            return circle.Radius;
+
+        var bounds = shape.ComputeAABB(Robust.Shared.Physics.Transform.Empty, 0);
+        var halfWidth = MathF.Min(bounds.Width, bounds.Height) / 2f;
+        return halfWidth > 0f ? halfWidth : DefaultHalfWidth;
     }
 }

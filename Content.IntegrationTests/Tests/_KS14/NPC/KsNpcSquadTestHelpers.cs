@@ -496,6 +496,16 @@ public static class KsNpcSquadTestHelpers
 ";
 
     /// <summary>
+    ///     A station has gravity. Without it every mob that walks drifts past each turn of its path and swings back, and
+    ///         walks a corridor at half the pace it would.
+    /// </summary>
+    public static void GiveGravity(IEntityManager entManager, EntityUid gridUid)
+    {
+        var gravityComponent = entManager.EnsureComponent<Content.Shared.Gravity.GravityComponent>(gridUid);
+        entManager.System<Content.Server.Gravity.GravitySystem>().EnableGravity(gridUid, gravityComponent);
+    }
+
+    /// <summary>
     ///     Replaces the test map's grid with one covering the given tile rectangle, inclusive.
     /// </summary>
     public static Entity<MapGridComponent> MakeGrid(

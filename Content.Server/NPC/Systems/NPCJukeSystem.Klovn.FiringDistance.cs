@@ -3,13 +3,10 @@ using Content.Server.Examine;
 using Content.Server.Interaction;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.Physics;
-using Content.Shared.Projectiles;
 using Content.Shared.Weapons.Ranged.Components;
-using Content.Shared.Weapons.Ranged.Events;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Physics;
-using Robust.Shared.Prototypes;
 
 namespace Content.Server.NPC.Systems;
 
@@ -18,63 +15,14 @@ public sealed partial class NPCJukeSystem : EntitySystem
     [Dependency] private GunSystem _gunSystem = default!;
     [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
 
-    [Dependency] private EntityQuery<CartridgeAmmoComponent> _cartridgeAmmoQuery = default!;
-    [Dependency] private EntityQuery<ProjectileSpreadComponent> _projectileSpreadQuery = default!;
-
     /// <summary>
-    ///     The whole cone <paramref name="gunEntity"/>'s next shot can land in, and how many projectiles it throws
-    ///         into it: the gun's own spread, plus a pellet spread if the ammo it will fire next splits into
-    ///         several projectiles (buckshot is one cartridge whose projectile spawns the pellets). With no ammo
-    ///         to look at, just the gun's spread and one projectile.
+    ///     The whole cone <paramref name="gunEntity"/>'s next shot can land in, at the widest the gun's spread ever gets, and how
+    ///         many projectiles it throws into it. See <see cref="NpcLineOfFireSystem.GetShotCone"/>.
     /// </summary>
     public (Angle Spread, int Projectiles) GetShotSpread(Entity<GunComponent> gunEntity)
     {
-        var gunSpread = gunEntity.Comp.MaxAngleModified;
-
-        if (!_npcLineOfFireSystem.TryGetNextAmmo(gunEntity.Owner, out var ammoUid, out var ammoPrototype) ||
-            !TryGetProjectileSpread(ammoUid, ammoPrototype, out var projectileSpread))
-            return (gunSpread, 1);
-
-        // Gun modifiers such as a choke narrow the pellet spread through this, as they do when it actually fires.
-        var spreadEvent = new GunGetAmmoSpreadEvent(projectileSpread.Spread);
-        RaiseLocalEvent(gunEntity.Owner, ref spreadEvent);
-
-        return (gunSpread + spreadEvent.Spread, Math.Max(projectileSpread.Count, 1));
-    }
-
-    /// <summary>
-    ///     Looks through a round to what it actually fires: a cartridge's projectile, or the round itself.
-    /// </summary>
-    private bool TryGetProjectileSpread(EntityUid? ammoUid, EntProtoId? ammoPrototype, out ProjectileSpreadComponent projectileSpread)
-    {
-        projectileSpread = default!;
-
-        EntProtoId? projectilePrototype = null;
-
-        if (ammoUid is { } uid)
-        {
-            if (_cartridgeAmmoQuery.TryComp(uid, out var cartridgeComponent))
-                projectilePrototype = cartridgeComponent.Prototype;
-            else if (_projectileSpreadQuery.TryComp(uid, out var ownSpread))
-            {
-                projectileSpread = ownSpread;
-                return true;
-            }
-        }
-        else if (ammoPrototype is { } prototypeId && ProtoMan.TryIndex(prototypeId, out var ammoEntityPrototype))
-        {
-            if (ammoEntityPrototype.TryComp<CartridgeAmmoComponent>(out var cartridgeComponent, Factory))
-                projectilePrototype = cartridgeComponent.Prototype;
-            else if (ammoEntityPrototype.TryComp<ProjectileSpreadComponent>(out var ownSpread, Factory))
-            {
-                projectileSpread = ownSpread;
-                return true;
-            }
-        }
-
-        return projectilePrototype is { } projectileId &&
-            ProtoMan.TryIndex(projectileId, out var projectileEntityPrototype) &&
-            projectileEntityPrototype.TryComp(out projectileSpread!, Factory);
+        var cone = _npcLineOfFireSystem.GetShotCone(gunEntity, worstCase: true);
+        return (cone.Spread, cone.Projectiles);
     }
 
     /// <summary>

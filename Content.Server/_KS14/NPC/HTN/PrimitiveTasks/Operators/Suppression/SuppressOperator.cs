@@ -22,19 +22,22 @@ public sealed partial class SuppressOperator : HTNOperator
     public TimeSpan Duration = TimeSpan.FromSeconds(1.5);
 
     /// <summary>
-    ///     How far to either side of the coordinates, in tiles, it may fire instead, where a friend is in the way. Not at all
-    ///         when it has to be that very spot, as a window to break is: a shot beside it hits the wall. With nowhere clear,
-    ///         it holds fire.
+    ///     The hostile that went there, if it is one: where it could be by now does as well as the spot, round a friend in the
+    ///         way. Without one it has to be that very spot, as a window to break is: a round beside it hits the wall. With
+    ///         nowhere clear, it holds fire.
     /// </summary>
     [DataField]
-    public float Spread;
+    public string? TargetKey;
 
     public override void Startup(NPCBlackboard blackboard)
     {
         base.Startup(blackboard);
 
-        if (blackboard.TryGetValue<EntityCoordinates>(CoordinatesKey, out var coordinates, _entityManager))
-            _npcSuppressiveFireSystem.Start(blackboard.GetOwner(), coordinates, Duration, spread: Spread);
+        if (!blackboard.TryGetCoordinates(CoordinatesKey, _entityManager, out var coordinates))
+            return;
+
+        EntityUid? targetUid = TargetKey is not null && blackboard.TryGetEntity(TargetKey, _entityManager, out var uid) ? uid : null;
+        _npcSuppressiveFireSystem.Start(blackboard.GetOwner(), coordinates, Duration, targetUid);
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)

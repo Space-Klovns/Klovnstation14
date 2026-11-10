@@ -50,6 +50,7 @@ component. Steps in order; "exit" means `continue` to the next NPC unless it say
 | 14 | `KsTryAim` (unless step 12 already ran it): lead target, compute goal angle, `TryRotateTo` | Returns false while further than the tolerance from the goal: exit. |
 | 15 | `!Enabled \|\| !_gun.CanShoot(gun)` | exit. `Enabled` is the system-wide public toggle (`NPCCombatSystem.Enabled`). |
 | 16 | `!_lockOnSystem.IsLocked(uid, target)` | exit. Missing `KsTargetLockOn` counts as locked. **Aim (step 14) has already happened**; lock-on only delays firing. |
+| 16a | Once `gun.NextFire <= CurTime`: `NpcSquadFireLaneSystem.TryGetClearShot(uid, from, leadSpot, tolerance: target's body radius)` | No clear direction: `NoteHeldFire`, `Status = KsFriendInTheWay` once held for `HoldFireTime` where it stands, exit. Otherwise the lead spot becomes the clear shot: the aim, or the nearest direction off it that misses every friend and still hits the target's body. See *Friends in the way* below. |
 | 17 | Build `targetCordinates` from the lead spot (grid-local if the target is over a grid) | |
 | 18 | `Status = Normal` | Only reached once aimed, able to shoot and locked. |
 | 19 | `gun.NextFire > CurTime` | **`return`, not `continue`** (verified still present). Ends the whole `UpdateRanged` pass, so NPCs later in the enumeration get no update that tick. Upstream quirk, left alone; keep in mind when profiling or debugging "other turrets lag". |
@@ -245,6 +246,39 @@ shooter locking onto them.
   history resets immediately.
 - Without any KS components, behaviour is identical to upstream except `rotateWhileWaiting` code path being skipped
   and the always-true `IsLocked`.
+
+### Friends in the way (`NpcSquadFireLaneSystem`, cvar `klovn.npc.squad_fire_lanes`)
+
+Every NPC round keeps off standing friends (faction-friendly, alive; not those a `KsFactionCollisionShooter` projectile
+passes through). It models where rounds actually go, not a line to the target:
+
+- **The cone.** `NpcLineOfFireSystem.GetShotCone(gun)` predicts the gun's spread the way `GetRecoilAngle` will work it
+  out, at the widest over the rest of a burst, plus any pellet spread (pellets go at the aim ± half the pellet
+  spread, without recoil). The round's half-width comes from its projectile fixture; a beam has no width or flight
+  time. `NPCJukeSystem.GetShotSpread` is the same cone with `worstCase: true` (the gun's `MaxAngle`).
+- **Misses fly on.** Any friend within `MissReach` (32 tiles) counts, however far past the target, unless a wall (the
+  shot's collision mask) is between it and the shooter.
+- **Motion, as the shooter sees it.** A projectile carries the shooter's velocity, so each friend is taken where it will
+  be, moving at its velocity minus the shooter's, when the round (or the last of a burst) gets there, plus
+  `FriendManeuverSpeed` (2.5 tiles/s) for course changes. A strafing shooter's rounds drift, and its friends drift
+  the other way relative to it.
+- **The muzzle.** A round reaches `ShotBackReach` (0.2) behind the shooter's middle as it spawns. A friend just behind
+  is hit by rounds going roughly away from it; one beside is not. Measured by
+  `KsNpcFriendlyFireTest.TestMapWhereAShotStarts`, which asserts the model against real rounds on a ring of offsets.
+  Re-run it if bullet fixtures or spawn positions change.
+- **Choosing a shot.** Each friend blocks an interval of directions; `TryGetClearShot` takes the aim if it is clear,
+  else the nearest interval edge within `asin(tolerance / distance)` whose round still lands, or passes, within
+  `tolerance` of the aim (one ray). Ranged combat passes the target's body radius; suppression passes where the hostile
+  could be by now (`NpcSuppressiveFireSystem.GetSpotRadius`), or 0 for a window to break.
+- **Every round, as it goes.** `ShotAttemptedEvent` on an `ActiveNPC` shooter re-checks the aim (`IsShotClear`) and
+  cancels the round if a friend is now in the way. It catches the rest of a burst, which `GunSystem.Update` fires on its
+  own, as the holder only if the holder has `Damageable` (a test shooter without it fires burst follow-ups as the gun,
+  past the check). The friends gathered are cached per shooter, spot and tick, so the check before a shot and the
+  one as it goes off share a lookup.
+
+Live coverage: `KsNpcFriendlyFireTest.TestNoFriendlyFireInAnOpenFight` (squads in an open room, crossfire, moving
+hostile; it logs and classifies any friendly hit: muzzle, burst, past target, cone, in line, with what the check said
+as the round was fired).
 
 ## 4. Recipes
 

@@ -4,9 +4,13 @@ using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.NPC.Squad;
 using Content.Shared._KS14.CCVar;
+using Content.Shared.Hands.Components;
+using Content.Shared.Hands.EntitySystems;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Pool;
 using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 
@@ -81,77 +85,151 @@ public sealed class KsNpcSquadFireLaneTest : GameTest
     }
 
     /// <summary>
-    ///     When shooting: A holds fire for B in the way, or on top of it, behind as well as in front, but not for B some way
-    ///         behind. Nor for a squadmate its shot would pass through: a projectile from a <c>KsFactionCollisionShooter</c>.
+    ///     When shooting, with a dead straight gun at a target 10 tiles east: a friend is held for in the way, past the target
+    ///         (a miss flies on), and where a round starts: on top of the shooter, or just behind it, as a round reaches back
+    ///         behind where it is spawned. Not for one some way behind, off to the side, or just beside it.
     /// </summary>
-    [TestCase(3, 0, true)] // in the way
-    [TestCase(11, 0, true)] // right behind what it shoots at
-    [TestCase(-3, 0, false)] // some way behind A
-    [TestCase(0, 4, false)] // off to the side
-    public async Task TestASquadmateInTheWayHoldsTheShot(int bX, int bY, bool held)
+    [TestCase(3f, 0f, true)] // in the way
+    [TestCase(12.5f, 0f, true)] // past what it shoots at, where a miss goes
+    [TestCase(-3f, 0f, false)] // some way behind
+    [TestCase(0f, 4f, false)] // off to the side
+    [TestCase(0.1f, 0.1f, true)] // on top of it
+    [TestCase(-0.6f, 0f, true)] // just behind: the round reaches back into it
+    [TestCase(-0.8f, 0f, false)] // a little further behind: it does not
+    [TestCase(0f, 0.55f, false)] // just beside: a round goes past
+    public async Task TestAFriendWhereARoundGoesHoldsTheShot(float friendX, float friendY, bool held)
     {
-        var (entManager, gridUid, aUid, _) = await SetUpSquad(new Vector2i(bX, bY));
+        var (entManager, gridUid, shooterUid) = await SetUpShooter(StraightGun);
+        await SpawnFriend(entManager, gridUid, friendX, friendY);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(IsShotClear(entManager, gridUid, shooterUid), Is.EqualTo(!held)));
+    }
+
+    /// <summary>
+    ///     A friend past the target, behind a wall the round stops at, is safe.
+    /// </summary>
+    [Test]
+    public async Task TestAFriendPastAWallIsClear()
+    {
+        var (entManager, gridUid, shooterUid) = await SetUpShooter(StraightGun);
+        await SpawnFriend(entManager, gridUid, 12.5f, 0f);
+        await Pair.Server.WaitPost(() => SpawnAt(entManager, "WallSolid", gridUid, 11, 0));
+        await Pair.RunTicksSync(1);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(IsShotClear(entManager, gridUid, shooterUid), Is.True));
+    }
+
+    /// <summary>
+    ///     A friend off the line, at range: clear of a dead straight gun, but inside the cone of one that sprays.
+    /// </summary>
+    [TestCase(StraightGun, false)]
+    [TestCase(SprayGun, true)]
+    public async Task TestTheGunsSpreadCounts(string gun, bool held)
+    {
+        var (entManager, gridUid, shooterUid) = await SetUpShooter(gun);
+        await SpawnFriend(entManager, gridUid, 8f, 1.2f);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(IsShotClear(entManager, gridUid, shooterUid), Is.EqualTo(!held)));
+    }
+
+    /// <summary>
+    ///     A friend just off the line, walking into it: held for where it will be by the time the round gets there.
+    /// </summary>
+    [TestCase(4f, true)]
+    [TestCase(0f, false)]
+    public async Task TestAFriendWalkingIntoTheWayHoldsTheShot(float speed, bool held)
+    {
+        var (entManager, gridUid, shooterUid) = await SetUpShooter(StraightGun);
+        var friendUid = await SpawnFriend(entManager, gridUid, 5f, -0.8f);
 
         await Pair.Server.WaitAssertion(() =>
         {
-            var fireLaneSystem = entManager.System<NpcSquadFireLaneSystem>();
-            var transformSystem = entManager.System<SharedTransformSystem>();
-            var from = transformSystem.GetMapCoordinates(aUid);
-            var to = transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, ThreatPosition));
-
-            Assert.That(fireLaneSystem.IsFriendInLineOfFire(aUid, from, to), Is.EqualTo(held));
-
-            // A projectile that goes through its own side holds for nobody.
-            entManager.AddComponent<Content.Shared._KS14.FactionCollision.KsFactionCollisionShooterComponent>(aUid);
-            Assert.That(fireLaneSystem.IsFriendInLineOfFire(aUid, from, to), Is.False, "a shot through its own side hits nobody");
+            entManager.System<SharedPhysicsSystem>().SetLinearVelocity(friendUid, new Vector2(0f, speed));
+            Assert.That(IsShotClear(entManager, gridUid, shooterUid), Is.EqualTo(!held));
         });
     }
 
     /// <summary>
-    ///     B in the way of A's aim: with room to aim beside it, A takes the nearest clear angle, one whose line misses B, and
-    ///         no further off than it has to; with none, it has no shot.
+    ///     A friend in the way of the aim: with no room off it, no shot; with room, the nearest clear direction, one that
+    ///         misses the friend, and lands within that room of the aim.
     /// </summary>
     [Test]
-    public async Task TestAClearAngleIsFoundBesideAFriend()
+    public async Task TestAClearDirectionIsFoundBesideAFriend()
     {
-        var (entManager, gridUid, aUid, bUid) = await SetUpSquad(new Vector2i(3, 0));
+        var (entManager, gridUid, shooterUid) = await SetUpShooter(StraightGun);
+        await SpawnFriend(entManager, gridUid, 3f, 0f);
 
         await Pair.Server.WaitAssertion(() =>
         {
             var fireLaneSystem = entManager.System<NpcSquadFireLaneSystem>();
             var transformSystem = entManager.System<SharedTransformSystem>();
-            var from = transformSystem.GetMapCoordinates(aUid);
+            var from = transformSystem.GetMapCoordinates(shooterUid);
             var aim = transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, ThreatPosition));
-            var friend = transformSystem.GetMapCoordinates(bUid).Position;
 
-            Assert.That(fireLaneSystem.TryGetClearShot(aUid, from, aim, spread: 0f, out _), Is.False, "straight at it is through B");
-            Assert.That(fireLaneSystem.TryGetClearShot(aUid, from, aim, spread: 3f, out var shot), Is.True, "beside it is not");
+            Assert.That(fireLaneSystem.TryGetClearShot(shooterUid, from, aim, tolerance: 0f, out _), Is.False, "straight at it is through the friend");
+            Assert.That(fireLaneSystem.TryGetClearShot(shooterUid, from, aim, tolerance: 3f, out var shot), Is.True, "beside it is not");
 
-            var offAim = (shot.Position - aim.Position).Length();
-            Assert.That(offAim, Is.GreaterThan(0f).And.LessThanOrEqualTo(3f));
-            Assert.That(NpcSquadFireLaneSystem.IsInLine(from.Position, shot.Position, friend,
-                NpcSquadFireLaneSystem.ShotRadius, NpcSquadFireLaneSystem.ShotOverrun, NpcSquadFireLaneSystem.ShotStartRadius), Is.False,
-                "and that line misses B");
+            Assert.That((shot.Position - aim.Position).Length(), Is.GreaterThan(0f).And.LessThanOrEqualTo(3f));
+            Assert.That(fireLaneSystem.IsShotClear(shooterUid, from, shot), Is.True, "and a round that way misses the friend");
         });
     }
 
     /// <summary>
-    ///     B just behind A, overlapping it: a bullet reaches back behind where it is spawned, and a shot from A hits B the
-    ///         moment it is fired. Seen live, at 0.6 tiles. The lane rule used to look only in front.
+    ///     A round that passes through its own side (a projectile from a <c>KsFactionCollisionShooter</c>) holds for nobody.
     /// </summary>
     [Test]
-    public async Task TestASquadmateOnTopHoldsTheShot()
+    public async Task TestARoundThroughItsOwnSideHoldsForNobody()
     {
-        var (entManager, gridUid, aUid, bUid) = await SetUpSquad(new Vector2i(-3, 0));
+        var (entManager, gridUid, shooterUid) = await SetUpShooter(StraightGun);
+        await SpawnFriend(entManager, gridUid, 3f, 0f);
 
         await Pair.Server.WaitAssertion(() =>
         {
-            var transformSystem = entManager.System<SharedTransformSystem>();
-            transformSystem.SetCoordinates(bUid, new EntityCoordinates(gridUid, new Vector2(-0.1f, 0.5f)));
+            entManager.AddComponent<Content.Shared._KS14.FactionCollision.KsFactionCollisionShooterComponent>(shooterUid);
+            Assert.That(IsShotClear(entManager, gridUid, shooterUid), Is.True);
+        });
+    }
 
-            Assert.That(entManager.System<NpcSquadFireLaneSystem>().IsFriendInLineOfFire(aUid,
-                transformSystem.GetMapCoordinates(aUid),
-                transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, ThreatPosition))), Is.True);
+    /// <summary>
+    ///     Live: the rest of a burst goes off by itself, after its first round. A friend that steps into the way meanwhile is
+    ///         held for, round by round, and never hit.
+    /// </summary>
+    [Test]
+    public async Task TestTheRestOfABurstHoldsForAFriendThatStepsIn()
+    {
+        var (entManager, gridUid, shooterUid) = await SetUpShooter(BurstGun);
+        var friendUid = await SpawnFriend(entManager, gridUid, 3f, 4f);
+        var probe = entManager.System<KsFriendlyFireProbeSystem>();
+        var gunSystem = entManager.System<Content.Server.Weapons.Ranged.Systems.GunSystem>();
+        var ammoAtStart = 0;
+
+        await Pair.RunTicksSync(30); // for the gun to be ready, once in hand
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.EnsureComponent<Content.Shared.NPC.ActiveNPCComponent>(shooterUid);
+            probe.Hits.Clear();
+
+            Assert.That(gunSystem.TryGetGun(shooterUid, out var gunEntity));
+            ammoAtStart = GetAmmo(entManager, gunEntity.Owner);
+            Assert.That(gunSystem.AttemptShoot(shooterUid, gunEntity, new EntityCoordinates(gridUid, ThreatPosition)), "the first round should go");
+        });
+
+        // Once the first round is past where it steps in, and before the next goes: a quarter second apart.
+        await Pair.RunTicksSync(5);
+        await Pair.Server.WaitPost(() =>
+            entManager.System<SharedTransformSystem>().SetCoordinates(friendUid, new EntityCoordinates(gridUid, new Vector2(2.5f, 0.5f))));
+
+        await Pair.RunTicksSync(30);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(gunSystem.TryGetGun(shooterUid, out var gunEntity));
+            Assert.That(GetAmmo(entManager, gunEntity.Owner), Is.EqualTo(ammoAtStart - 1), "only the first round, before the friend stepped in");
+            Assert.That(probe.Hits.Count(hit => hit.Target == friendUid), Is.Zero, "and the friend is never hit");
         });
     }
 
@@ -184,6 +262,122 @@ public sealed class KsNpcSquadFireLaneTest : GameTest
             fireLaneSystem.NoteClearShot(aUid);
             Assert.That(fireLaneSystem.IsHoldingFire(aUid), Is.False, "a clear shot ends it");
         });
+    }
+
+    private const string StraightGun = "KsFireLaneTestStraightGun";
+    private const string SprayGun = "KsFireLaneTestSprayGun";
+    private const string BurstGun = "KsFireLaneTestBurstGun";
+
+    /// <summary>
+    ///     A shooter, and guns: one dead straight, one with a 20 degree spread, and one that fires bursts of three.
+    /// </summary>
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  id: KsFireLaneTestShooter
+  components:
+  - type: Damageable # the gun fires the rest of a burst as whoever holds it only if that can be hurt, as a mob can
+  - type: Hands
+  - type: ComplexInteraction
+  - type: MobState
+  - type: CombatMode
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+
+- type: entity
+  id: KsFireLaneTestStraightGun
+  components:
+  - type: Item
+  - type: Gun
+    fireRate: 4
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: BasicEntityAmmoProvider
+    proto: BulletPistol
+    capacity: 100
+    count: 100
+
+- type: entity
+  parent: KsFireLaneTestStraightGun
+  id: KsFireLaneTestSprayGun
+  components:
+  - type: Gun
+    fireRate: 4
+    minAngle: 20
+    maxAngle: 20
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+
+- type: entity
+  parent: KsFireLaneTestStraightGun
+  id: KsFireLaneTestBurstGun
+  components:
+  - type: Gun
+    fireRate: 4
+    burstFireRate: 4
+    shotsPerBurst: 3
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: Burst
+    availableModes:
+    - Burst
+";
+
+    private async Task<(IEntityManager EntManager, EntityUid GridUid, EntityUid ShooterUid)> SetUpShooter(string gun)
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid gridUid = default, shooterUid = default;
+
+        await server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-5, -5), new Vector2i(16, 5)).Owner;
+            shooterUid = SpawnAt(entManager, "KsFireLaneTestShooter", gridUid, 0, 0);
+
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(shooterUid, "right", HandLocation.Right);
+
+            var gunUid = entManager.SpawnEntity(gun, entManager.GetComponent<TransformComponent>(shooterUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(shooterUid, gunUid, "right"));
+            handsSystem.TrySetActiveHand(shooterUid, "right");
+        });
+
+        return (entManager, gridUid, shooterUid);
+    }
+
+    /// <summary>
+    ///     A friend of the shooter's, <paramref name="x"/>, <paramref name="y"/> tiles from its middle; on the next tick, so the
+    ///         checks see it.
+    /// </summary>
+    private async Task<EntityUid> SpawnFriend(IEntityManager entManager, EntityUid gridUid, float x, float y)
+    {
+        EntityUid friendUid = default;
+        await Pair.Server.WaitPost(() =>
+            friendUid = entManager.SpawnEntity(SyndicateMob, new EntityCoordinates(gridUid, new Vector2(0.5f + x, 0.5f + y))));
+        await Pair.RunTicksSync(1);
+        return friendUid;
+    }
+
+    private static bool IsShotClear(IEntityManager entManager, EntityUid gridUid, EntityUid shooterUid)
+    {
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        return entManager.System<NpcSquadFireLaneSystem>().IsShotClear(shooterUid,
+            transformSystem.GetMapCoordinates(shooterUid),
+            transformSystem.ToMapCoordinates(new EntityCoordinates(gridUid, ThreatPosition)));
+    }
+
+    private static int GetAmmo(IEntityManager entManager, EntityUid gunUid)
+    {
+        var ev = new Content.Shared.Weapons.Ranged.Events.GetAmmoCountEvent();
+        entManager.EventBus.RaiseLocalEvent(gunUid, ref ev);
+        return ev.Count;
     }
 
     private async Task<(IEntityManager EntManager, EntityUid GridUid, EntityUid AUid, EntityUid BUid)> SetUpSquad(Vector2i bAt)

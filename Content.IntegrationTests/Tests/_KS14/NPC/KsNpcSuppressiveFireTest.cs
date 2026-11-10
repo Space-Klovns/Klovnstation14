@@ -40,6 +40,7 @@ public sealed class KsNpcSuppressiveFireTest : GameTest
   - type: ComplexInteraction
   - type: MobState
   - type: CombatMode
+  - type: NpcPerception
   - type: NpcFactionMember
     factions:
     - Syndicate
@@ -122,26 +123,31 @@ public sealed class KsNpcSuppressiveFireTest : GameTest
     }
 
     /// <summary>
-    ///     A friend between it and the spot: with room to either side of the spot it fires round the friend, as a squad
-    ///         holding a room keeps its lines off each other, and with none, or the friend on top of it, it holds fire.
+    ///     A friend about it and the spot, which is where a hostile went. Round a friend in the way, anywhere the hostile could
+    ///         be does as well as the spot, as a squad holding a room keeps its lines off each other; with no hostile, only the
+    ///         spot itself does, as for a window to break. With nowhere clear, or the friend on top of it, it holds fire. A
+    ///         friend just beside or behind it stops nothing: a round only starts inside one that is.
     /// </summary>
-    [TestCase(2f, 0f, 1.5f, true)] // in the way, room to fire round it
-    [TestCase(2f, 0f, 0f, false)] // in the way, and it has to be the very spot
-    [TestCase(0.2f, 0f, 1.5f, false)] // on top of it: a shot from there starts inside the friend, whichever way it goes
-    [TestCase(0f, 3f, 0f, true)] // control: off to the side
-    public async Task TestFiresRoundAFriendOrNotAtAll(float friendX, float friendY, float spread, bool fires)
+    [TestCase(2.5f, 0f, true, true)] // in the way, room to fire round it
+    [TestCase(2.5f, 0f, false, false)] // in the way, and it has to be the very spot
+    [TestCase(0.1f, 0f, true, false)] // on top of it: a round from there starts inside the friend, whichever way it goes
+    [TestCase(0f, 0.55f, false, true)] // just beside
+    [TestCase(-0.8f, 0f, false, true)] // just behind
+    [TestCase(0f, 3f, false, true)] // control: off to the side
+    public async Task TestFiresRoundAFriendOrNotAtAll(float friendX, float friendY, bool hostile, bool fires)
     {
         var (entManager, npcUid, gunUid) = await SetUp();
         var suppressiveFireSystem = entManager.System<NpcSuppressiveFireSystem>();
         var ammoAtStart = 0;
-        EntityUid friendUid = default;
 
         await Pair.Server.WaitPost(() =>
         {
             var npcCoordinates = entManager.GetComponent<TransformComponent>(npcUid).Coordinates;
-            friendUid = entManager.SpawnEntity(Friend, npcCoordinates.Offset(new Vector2(friendX, friendY)));
+            entManager.SpawnEntity(Friend, npcCoordinates.Offset(new Vector2(friendX, friendY)));
             ammoAtStart = GetAmmo(entManager, gunUid);
-            suppressiveFireSystem.Start(npcUid, npcCoordinates.Offset(new Vector2(4f, 0f)), System.TimeSpan.FromSeconds(0.5), spread);
+
+            var spot = npcCoordinates.Offset(new Vector2(4f, 0f));
+            suppressiveFireSystem.Start(npcUid, spot, System.TimeSpan.FromSeconds(0.5), hostile ? ReportHostile(entManager, npcUid, spot) : null);
         });
 
         await Pair.RunTicksSync(10);
@@ -155,6 +161,52 @@ public sealed class KsNpcSuppressiveFireTest : GameTest
             else
                 Assert.That(GetAmmo(entManager, gunUid), Is.EqualTo(ammoAtStart), "it should hold fire, with its friend in every way");
         });
+    }
+
+    /// <summary>
+    ///     The spot just round a corner, friends in the way of it and of the open side: a round into the corner wall, beside
+    ///         where the hostile went, keeps its head down as well, and is taken. It used to have to reach as far as the spot.
+    /// </summary>
+    [Test]
+    public async Task TestARoundIntoTheCornerBesideTheSpotCounts()
+    {
+        var (entManager, npcUid, gunUid) = await SetUp();
+        var suppressiveFireSystem = entManager.System<NpcSuppressiveFireSystem>();
+        var ammoAtStart = 0;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var npcCoordinates = entManager.GetComponent<TransformComponent>(npcUid).Coordinates;
+            var gridUid = npcCoordinates.EntityId;
+
+            for (var y = 1; y <= 4; y++)
+            {
+                SpawnAt(entManager, "WallSolid", gridUid, 4, y);
+            }
+
+            entManager.SpawnEntity(Friend, npcCoordinates.Offset(new Vector2(3f, 0f)));
+            entManager.SpawnEntity(Friend, npcCoordinates.Offset(new Vector2(3f, -0.8f)));
+            ammoAtStart = GetAmmo(entManager, gunUid);
+
+            var spot = npcCoordinates.Offset(new Vector2(4f, 0f));
+            suppressiveFireSystem.Start(npcUid, spot, System.TimeSpan.FromSeconds(0.5), ReportHostile(entManager, npcUid, spot));
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(GetAmmo(entManager, gunUid), Is.LessThan(ammoAtStart), "it should fire into the corner"));
+    }
+
+    /// <summary>
+    ///     A hostile, out of sight, that a squadmate just called out at <paramref name="spot"/>.
+    /// </summary>
+    private static EntityUid ReportHostile(IEntityManager entManager, EntityUid npcUid, EntityCoordinates spot)
+    {
+        var hostileUid = entManager.SpawnEntity(NanoTrasenMob, spot.Offset(new Vector2(0f, -4f)));
+        var ev = new Content.Server._KS14.NPC.Perception.NpcContactCalloutEvent(npcUid, hostileUid, spot);
+        entManager.EventBus.RaiseLocalEvent(npcUid, ref ev);
+        return hostileUid;
     }
 
     private static int GetAmmo(IEntityManager entManager, EntityUid gunUid)

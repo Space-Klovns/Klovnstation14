@@ -53,12 +53,6 @@ public sealed partial class NPCCombatSystem
             trackingComponent.LastGoalAngle = null;
     }
 
-    /// <summary>
-    ///     How far to either side of a target's middle, in tiles, a shot may be aimed instead, to get past a friend in the way:
-    ///         inside a mob's width, so it still hits.
-    /// </summary>
-    private const float KsTargetShotSpread = 0.25f;
-
     private void KsOnRangedShutdown(EntityUid shooterUid)
     {
         if (TerminatingOrDeleted(shooterUid))

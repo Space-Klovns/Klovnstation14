@@ -19,8 +19,9 @@ public sealed partial class NpcSuppressiveFireComponent : Component
     public TimeSpan EndTime;
 
     /// <summary>
-    ///     How far to either side of <see cref="Coordinates"/>, in tiles, it may fire instead, to keep its shots off a friend.
+    ///     The hostile it is keeping down, if it is one: where that could be by now is as good to fire at as the spot itself,
+    ///         and a round there clear of a friend does as well. Null for a spot that has to be hit as it is, such as a window.
     /// </summary>
     [ViewVariables]
-    public float Spread;
+    public EntityUid? TargetUid;
 }

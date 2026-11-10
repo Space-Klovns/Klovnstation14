@@ -216,14 +216,15 @@ public sealed partial class NPCCombatSystem
             if (!_lockOnSystem.IsLocked(uid, comp.Target)) // KS14: must finish locking on before firing
                 continue;
 
-            // KS14 start: never through a friend, nor from on top of one: at the target's clear side, if it has one, or not at
-            //      all. Held long enough, the gun gives way for a new spot. Only once the gun can fire, so the lookup is once a shot.
+            // KS14 start: never where a round could hit a friend, nor from on top of one: at whatever side of the target's body
+            //      is clear, if any, or not at all. Held long enough, the gun gives way for a new spot. Only once the gun can
+            //      fire, so the lookup is once a shot.
             if (gun.Comp.NextFire <= _timing.CurTime)
             {
                 if (!_npcSquadFireLaneSystem.TryGetClearShot(uid,
                         new MapCoordinates(worldPos, xform.MapID),
                         new MapCoordinates(targetSpot, xform.MapID),
-                        KsTargetShotSpread,
+                        _npcSquadFireLaneSystem.GetBodyRadius(comp.Target),
                         out var clearShot))
                 {
                     if (_npcSquadFireLaneSystem.NoteHeldFire(uid))
