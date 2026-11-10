@@ -1,7 +1,6 @@
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server.Weapons.Ranged.Systems;
-using Content.Shared._KS14.NPC;
 using Content.Shared.CombatMode;
 using Content.Shared.Interaction;
 using Robust.Shared.Map;
@@ -87,10 +86,10 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
 
     /// <summary>
     ///     How far from the spot, in tiles, a round still does the job, for <paramref name="uid"/> keeping
-    ///         <paramref name="targetUid"/> down: wherever it could be by now. A body's width round where it was if it is in
-    ///         sight, or else as far as it could have gone at the speed it was going since it was last seen, within
-    ///         <see cref="MinSpotRadius"/> and <see cref="MaxSpotRadius"/>. 0, the spot itself, for no hostile, or one this NPC
-    ///         knows nothing of.
+    ///         <paramref name="targetUid"/> down: wherever it could be by now. As far as it could have gone at the speed it was
+    ///         going since it was last seen, within <see cref="MinSpotRadius"/> and <see cref="MaxSpotRadius"/>: the spot is
+    ///         where it went, not where it is, even if it has since come back into sight. 0, the spot itself, for no hostile,
+    ///         or one this NPC knows nothing of.
     /// </summary>
     public float GetSpotRadius(EntityUid uid, EntityUid? targetUid, TimeSpan now)
     {
@@ -98,10 +97,6 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
             return 0f;
 
         var bodyRadius = _npcSquadFireLaneSystem.GetBodyRadius(hostileUid);
-
-        if (contact.State == NpcContactState.Visible)
-            return bodyRadius;
-
         var gone = MathF.Min((float) (now - contact.LastSeen).TotalSeconds, SpotGrowthTime);
         return Math.Clamp(bodyRadius + contact.LastKnownVelocity.Length() * MathF.Max(gone, 0f), MinSpotRadius, MaxSpotRadius);
     }

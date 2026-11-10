@@ -396,7 +396,11 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     /// </summary>
     private void OnShotAttempted(Entity<ActiveNPCComponent> entity, ref ShotAttemptedEvent args)
     {
-        if (args.Cancelled || args.Used.Comp.ShootCoordinates is not { } coordinates)
+        // Raised on every try, before the gun checks it is ready: a burst tries every tick between its rounds, and no round
+        //      goes off on those, so there is nothing to check.
+        if (args.Cancelled ||
+            args.Used.Comp.NextFire > _gameTiming.CurTime ||
+            args.Used.Comp.ShootCoordinates is not { } coordinates)
             return;
 
         if (!IsShotClear(entity.Owner, _transformSystem.GetMapCoordinates(entity.Owner), _transformSystem.ToMapCoordinates(coordinates)))
