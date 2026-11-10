@@ -253,7 +253,7 @@ public sealed partial class NPCCombatSystem
 
             if (gun.Comp.NextFire > _timing.CurTime)
             {
-                return;
+                continue; // KS14: was return, which skipped every NPC after this one for the tick
             }
 
             _gun.AttemptShoot(uid, gun, targetCordinates, comp.Target);
