@@ -117,22 +117,12 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
         if (_scopeUser is not { } user)
             return;
 
-        // An entity that already existed (an arrow): the user's client shot its networked copy, predicting it.
+        // An entity that already existed (an arrow): the user's client shot its networked copy, predicting it as it
+        //      predicts every networked projectile it is the shooter of.
         if (!_scopeSpawns.Contains(args.Projectile))
-        {
-            OnUserPredictedShot(args.Projectile, user);
             return;
-        }
 
         FlagPredicted(args.Projectile, user);
-    }
-
-    /// <summary>
-    ///     A projectile that is not a spawn of the user's prediction, such as an arrow that already existed, was shot by
-    ///         the user's own predicted request. That user's client predicts its flight and its hit itself.
-    /// </summary>
-    protected virtual void OnUserPredictedShot(EntityUid projectile, EntityUid user)
-    {
     }
 
     /// <summary>

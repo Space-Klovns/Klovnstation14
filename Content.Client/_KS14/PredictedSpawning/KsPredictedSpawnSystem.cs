@@ -157,6 +157,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             while (keptEnumerator.MoveNext(out var keptUid, out var keptComponent, out var keptMetaDataComponent))
             {
                 if (keptComponent.ServerCopy != null ||
+                    keptComponent.ServerCopyNetEntity != null ||
                     keptComponent.DeletionDeferred ||
                     keptMetaDataComponent.EntityPrototype != serverPrototype)
                     continue;
@@ -194,7 +195,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             if (keptUid is { } liveUid)
             {
                 var keptComponent = _keptQuery.GetComponent(liveUid);
-                if (keptComponent.ServerCopy != null)
+                if (keptComponent.ServerCopy != null || keptComponent.ServerCopyNetEntity != null)
                     continue;
 
                 keptComponent.ServerCopy = serverUid;
@@ -572,6 +573,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
         while (keptEnumerator.MoveNext(out var keptUid, out var candidateComponent, out var metaDataComponent))
         {
             if (candidateComponent.ServerCopy != null ||
+                candidateComponent.ServerCopyNetEntity != null ||
                 candidateComponent.SpawnTick != args.SpawnTick ||
                 metaDataComponent.EntityPrototype?.ID != args.Prototype)
                 continue;
@@ -600,8 +602,12 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             gone = candidate;
         }
 
+        // Either way it is now this server copy's shot, so another impact of the same tick and prototype (a shotgun's
+        //      next pellet) takes a different one.
         if (gone != null)
             gone.ServerCopyNetEntity = args.Projectile;
+        else if (keptComponent != null)
+            keptComponent.ServerCopyNetEntity = args.Projectile;
     }
 
     [SubscribeLocalEvent]

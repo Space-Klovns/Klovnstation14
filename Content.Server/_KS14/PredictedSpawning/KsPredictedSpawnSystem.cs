@@ -9,16 +9,10 @@ namespace Content.Server._KS14.PredictedSpawning;
 public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
 {
     [Dependency] private EntityQuery<KsPredictedSpawnComponent> _predictedSpawnQuery = default!;
-    [Dependency] private EntityQuery<KsUserPredictedProjectileComponent> _userPredictedQuery = default!;
 
     protected override void KeepForUser(EntityUid uid, EntityUid user)
     {
         SetPredictingUser((uid, EnsureComp<KsPredictedSpawnComponent>(uid)), user);
-    }
-
-    protected override void OnUserPredictedShot(EntityUid projectile, EntityUid user)
-    {
-        EnsureComp<KsUserPredictedProjectileComponent>(projectile).User = user;
     }
 
     public override void OnProjectileHit(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage)
@@ -49,10 +43,12 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             userEvent.SpawnTick = predictedSpawnComponent.SpawnTick;
             RaiseNetworkEvent(userEvent, keptByUser);
         }
-        else if (_userPredictedQuery.TryComp(projectile.Owner, out var userPredictedComponent) &&
-                 userPredictedComponent.User == projectile.Comp.Shooter)
+        else
         {
-            predictingUser = userPredictedComponent.User;
+            // A shooter's client predicts every networked projectile it shot (PredictedProjectileSystem on the client),
+            //      an arrow from its own request or a shot only the server made alike, and plays its hit itself. The
+            //      same rule here, so that client neither misses the impact nor gets it twice.
+            predictingUser = projectile.Comp.Shooter;
         }
 
         // Everyone else interpolates the server's copy rather than predicting it, so nothing plays its hit for them.
