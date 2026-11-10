@@ -78,6 +78,7 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
     private const int QuietSamplesToRemove = 10;
 
     private float _heatRecovery;
+    private float _unpoweredHeatRecovery;
     private float _maxLoadMultiplier;
 
     public override void Initialize()
@@ -85,16 +86,23 @@ public sealed partial class KsPumpHeatSystem : KsSharedPumpHeatSystem
         base.Initialize();
 
         Subs.CVar(_configurationManager, KsCCVars.AtmosPumpHeatRecovery, value => _heatRecovery = Math.Clamp(value, 0f, 1f), invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.AtmosUnpoweredHeatRecovery, value => _unpoweredHeatRecovery = Math.Clamp(value, 0f, 1f), invokeImmediately: true);
         Subs.CVar(_configurationManager, KsCCVars.AtmosPumpMaxLoadMultiplier, value => _maxLoadMultiplier = Math.Max(value, 0f), invokeImmediately: true);
     }
 
     /// <summary>
-    ///     How much of <paramref name="heat"/>, in unscaled joules, a device turns back into electricity. It needs to be on
-    ///         the grid to do that, so anything off it recovers nothing.
+    ///     How much of <paramref name="heat"/>, in unscaled joules, a device takes away rather than shedding into its room.
+    ///         A powered device turns it back into electricity, and one with a power receiver that is off the grid recovers
+    ///         nothing. A device with no power receiver at all, such as a filter or a mixer, never could be powered, so it
+    ///         recovers <see cref="KsCCVars.AtmosUnpoweredHeatRecovery"/> instead, or it would heat its room far more than a
+    ///         pump doing the same work.
     /// </summary>
     public float RecoverableHeat(EntityUid deviceUid, float heat)
     {
-        return _receiverQuery.TryComp(deviceUid, out var receiverComponent) && receiverComponent is { NeedsPower: true, Powered: true }
+        if (!_receiverQuery.TryComp(deviceUid, out var receiverComponent))
+            return heat * _unpoweredHeatRecovery;
+
+        return receiverComponent is { NeedsPower: true, Powered: true }
             ? heat * _heatRecovery
             : 0f;
     }

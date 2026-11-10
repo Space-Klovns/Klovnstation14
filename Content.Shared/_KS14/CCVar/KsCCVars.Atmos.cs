@@ -110,6 +110,17 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.atmos.pump_heat_recovery", 0.95f, CVar.SERVERONLY);
 
     /// <summary>
+    ///     Share of the compression heat a device with no power receiver at all, such as a filter or a mixer, doesn't keep in
+    ///         its gas that it takes away rather than heating its room, from 0 to 1. Such a device can't be billed or
+    ///         powered, so this stands in for <see cref="AtmosPumpHeatRecovery"/>; without it, a filter would heat its room
+    ///         twenty times more than a pump doing the same work. A device that has a receiver but no power still recovers
+    ///         nothing.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> AtmosUnpoweredHeatRecovery =
+        CVarDef.Create("klovn.atmos.unpowered_heat_recovery", 0.95f, CVar.SERVERONLY);
+
+    /// <summary>
     ///     How far past its idle load a compressing device's electrical load can climb, as a multiple of that idle load: at
     ///         4, a 200 W pump draws at most 1 kW. What is left of its work past that goes unpaid. Mind that this adds up:
     ///         an APC with many devices on it stops them climbing past what it can sustain.

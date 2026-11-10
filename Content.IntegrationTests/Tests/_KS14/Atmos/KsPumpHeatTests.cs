@@ -93,6 +93,13 @@ public sealed class KsPumpHeatTests : GameTest
     powerLoad: 200
   - type: ExtensionCableReceiver
 
+# A filter or a mixer: no power receiver at all.
+- type: entity
+  id: KsTestPumpReceiverlessDevice
+  components:
+  - type: Transform
+    anchored: true
+
 # Boils far below anything here, and no gas of its own, so its vapor lives in the fluid.
 - type: reagent
   id: KsTestPumpVapor
@@ -106,6 +113,7 @@ public sealed class KsPumpHeatTests : GameTest
 
     private readonly EntProtoId _apcPrototype = "KsTestPumpApc";
     private readonly EntProtoId _devicePrototype = "KsTestPumpDevice";
+    private readonly EntProtoId _receiverlessDevicePrototype = "KsTestPumpReceiverlessDevice";
     private readonly ProtoId<ReagentPrototype> _vaporReagent = "KsTestPumpVapor";
     private static readonly EntProtoId ApcExtensionPrototype = "CableApcExtension";
     private static readonly EntProtoId VolumePumpPrototype = "GasVolumePump";
@@ -364,28 +372,66 @@ public sealed class KsPumpHeatTests : GameTest
             "A device kept its raised load on an APC low on charge."));
     }
 
+    public enum DevicePower
+    {
+        Powered,
+        OffTheGrid,
+        LostPower,
+        NoReceiver,
+    }
+
     /// <summary>
     ///     On a real pump: the work that doesn't stay in the gas goes to the room and the recovered share, nothing is lost,
-    ///         and a device off the grid recovers nothing.
+    ///         and a device off the grid, or out of power, recovers nothing. A device with no power receiver, such as a filter,
+    ///         recovers its own share instead of dumping everything into its room.
     /// </summary>
     [Test]
-    public async Task ThePumpsWorkAddsUp([Values(true, false)] bool onTheGrid)
+    public async Task ThePumpsWorkAddsUp([Values] DevicePower power)
     {
         var server = Pair.Server;
         var entityManager = server.EntMan;
         var site = await BuildSite();
         var transferThermoSystem = server.System<KsTransferThermoSystem>();
-        var recovery = server.CfgMan.GetCVar(KsCCVars.AtmosPumpHeatRecovery);
+
+        // Apart from a pump's share, so a receiverless device recovering a pump's share instead still fails.
+        await OverrideCVar(Side.Server, KsCCVars.AtmosUnpoweredHeatRecovery, 0.5f);
+
+        var recovery = power switch
+        {
+            DevicePower.Powered => server.CfgMan.GetCVar(KsCCVars.AtmosPumpHeatRecovery),
+            DevicePower.NoReceiver => server.CfgMan.GetCVar(KsCCVars.AtmosUnpoweredHeatRecovery),
+            _ => 0f,
+        };
         var keptFraction = server.CfgMan.GetCVar(KsCCVars.AtmosPumpCompressionHeatFraction);
         EntityUid deviceUid = default;
 
         await server.WaitPost(() =>
         {
-            deviceUid = SpawnDevice(site, 3);
-            if (!onTheGrid)
-                entityManager.System<PowerReceiverSystem>().SetNeedsPower(deviceUid, false);
+            switch (power)
+            {
+                case DevicePower.Powered:
+                    deviceUid = SpawnDevice(site, 3);
+                    break;
+                case DevicePower.OffTheGrid:
+                    deviceUid = SpawnDevice(site, 3);
+                    entityManager.System<PowerReceiverSystem>().SetNeedsPower(deviceUid, false);
+                    break;
+                case DevicePower.LostPower:
+                    // Off the grid's floor, so no cable reaches it: it needs power and has none.
+                    deviceUid = entityManager.SpawnEntity(_devicePrototype, site.MapUid.ToCoordinates(0, 100));
+                    break;
+                case DevicePower.NoReceiver:
+                    deviceUid = entityManager.SpawnEntity(_receiverlessDevicePrototype, site.Grid.Owner.ToCoordinates(3, 0));
+                    break;
+            }
         });
         await server.WaitRunTicks(TicksPerSecond);
+
+        if (power == DevicePower.LostPower)
+        {
+            await server.WaitAssertion(() => Assert.That(entityManager.GetComponent<ApcPowerReceiverComponent>(deviceUid).Powered, Is.False,
+                "The device has power, so this proves nothing."));
+        }
 
         await server.WaitAssertion(() =>
         {
@@ -404,9 +450,9 @@ public sealed class KsPumpHeatTests : GameTest
             {
                 Assert.That(total, Is.GreaterThan(0f), "The pump did no work, so this proves nothing.");
                 Assert.That(pumpHeat.PendingGasHeat, Is.EqualTo(keptFraction * total).Within(total * 0.001f), "The gas didn't keep its share.");
-                Assert.That(pumpHeat.PendingRecoveredHeat, Is.EqualTo(onTheGrid ? recovery * unkept : 0f).Within(total * 0.001f),
+                Assert.That(pumpHeat.PendingRecoveredHeat, Is.EqualTo(recovery * unkept).Within(total * 0.001f),
                     "The wrong share came back as electricity.");
-                Assert.That(pumpHeat.PendingRoomHeat, Is.EqualTo(unkept - (onTheGrid ? recovery * unkept : 0f)).Within(total * 0.001f),
+                Assert.That(pumpHeat.PendingRoomHeat, Is.EqualTo(unkept - recovery * unkept).Within(total * 0.001f),
                     "The room didn't get the rest.");
             }
         });
