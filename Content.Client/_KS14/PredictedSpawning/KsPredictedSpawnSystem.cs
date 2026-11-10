@@ -328,7 +328,13 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     [SubscribeLocalEvent]
     private void OnUpdateIsPredicted(Entity<KsPredictedSpawnComponent> entity, ref UpdateIsPredictedEvent args)
     {
-        args.IsPredicted = true;
+        // Not the server's copy of another user's spawn. Predicted, it would run this client's whole lead ahead of
+        //      its last state, so another player's shot would appear that far out from where it was fired (#410);
+        //      left alone, it is interpolated like any other networked entity.
+        if (entity.Comp.PredictingUser is not { } predictingUser ||
+            predictingUser == _playerManager.LocalEntity ||
+            IsClientSide(entity.Owner))
+            args.IsPredicted = true;
 
         // A kept copy steps on first-time-predicted ticks only; the hidden server copy never steps here.
         if (_keptQuery.HasComponent(entity.Owner) ? !GameTiming.IsFirstTimePredicted : IsHiddenHere(entity))
@@ -402,14 +408,16 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     }
 
     /// <summary>
-    ///     The server's copy of this player's own projectile hit something. The kept copy usually played that hit
-    ///         already, on the same target, and then this plays nothing; when the kept copy missed it, or hit something
-    ///         else, the real hit's impact plays here as well.
+    ///     The server's copy of a projectile hit something. Unless it is this player's own, nothing here predicted that
+    ///         hit, and this is its impact. For this player's own, the kept copy usually played that hit already, on
+    ///         the same target, and then this plays nothing; when the kept copy missed it, or hit something else, the
+    ///         real hit's impact plays here as well.
     /// </summary>
     [SubscribeNetworkEvent]
     private void OnImpact(KsPredictedSpawnImpactEvent args)
     {
-        if (TryGetEntity(args.Target, out var targetUid))
+        TryGetEntity(args.Target, out var targetUid);
+        if (args.ToPredictingUser && targetUid != null)
         {
             if (TryTakeRecentImpact(targetUid.Value, fromServer: false))
                 return;

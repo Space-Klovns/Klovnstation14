@@ -24,7 +24,8 @@ namespace Content.Shared._KS14.PredictedSpawning;
 ///                 else sees the server's copy. This is the opposite of the engine's predicted spawn, where the
 ///                 client's copy is a stand-in deleted on every state reset and the server's replaces it - which
 ///                 for a fast projectile means a visible jump, since the server's copy is somewhere else (a
-///                 lag-compensated shot, most of all).
+///                 lag-compensated shot, most of all). Everyone else interpolates the server's copy rather than
+///                 predicting it, which would run it their whole lead ahead of where it was fired.
 ///         </item>
 ///     </list>
 ///
@@ -113,10 +114,25 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnPlayerShotProjectile(ref PlayerShotProjectileEvent args)
     {
-        if (_scopeUser is not { } user || !_scopeSpawns.Contains(args.Projectile))
+        if (_scopeUser is not { } user)
             return;
 
+        // An entity that already existed (an arrow): the user's client shot its networked copy, predicting it.
+        if (!_scopeSpawns.Contains(args.Projectile))
+        {
+            OnUserPredictedShot(args.Projectile, user);
+            return;
+        }
+
         FlagPredicted(args.Projectile, user);
+    }
+
+    /// <summary>
+    ///     A projectile that is not a spawn of the user's prediction, such as an arrow that already existed, was shot by
+    ///         the user's own predicted request. That user's client predicts its flight and its hit itself.
+    /// </summary>
+    protected virtual void OnUserPredictedShot(EntityUid projectile, EntityUid user)
+    {
     }
 
     /// <summary>
@@ -157,8 +173,9 @@ public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
     public virtual bool ClaimImpact(EntityUid projectile, EntityUid target) => true;
 
     /// <summary>
-    ///     Called when a projectile hits something. On the server, tells the user of a user-mode projectile, whose
-    ///         client plays this hit's impact in place of its kept copy's (see <see cref="KsPredictedSpawnImpactEvent"/>).
+    ///     Called when a projectile hits something. On the server, sends the hit's impact to every client that did not
+    ///         predict it, and to the user of a user-mode projectile, whose client reconciles it with its kept copy's
+    ///         (see <see cref="KsPredictedSpawnImpactEvent"/>).
     /// </summary>
     public virtual void OnProjectileHit(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier? damage)
     {

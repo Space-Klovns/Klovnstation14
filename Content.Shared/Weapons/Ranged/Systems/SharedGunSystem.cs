@@ -737,7 +737,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         Physics.UpdateIsPredicted(uid, physics); // Trauma - predict this shit
 
-        TransformSystem.SetWorldRotation(uid, direction.ToWorldAngle() + projectile.Angle);
+        TransformSystem.SetWorldRotationNoLerp/* KS14: SetWorldRotation -> NoLerp, a fresh projectile visibly turned from 0 */(uid, direction.ToWorldAngle() + projectile.Angle);
 
         if (user is { } userUid)
         {
