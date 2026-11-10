@@ -57,7 +57,7 @@ public record struct StandUpAttemptEvent(bool Autostand)
     public bool Cancelled = false;
 
     // Popup data to display to the entity if we so desire...
-    public (string, PopupType)? Message = null;
+    public (Content.Shared._KS14.PopupLocalization.KsPopupMessage /* KS14: string -> KsPopupMessage, localized on the recipient */, PopupType)? Message = null;
 }
 
 /// <summary>

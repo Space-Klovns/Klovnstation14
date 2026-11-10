@@ -61,6 +61,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private KsTranslationSystem _translation = default!; // KS14
     [Dependency] private KsLanguageSystem _ksLanguage = default!; // KS14
+    [Dependency] private Content.Shared._KS14.Mobs.Systems.KsSoftCritSystem _ksSoftCritSystem = default!; // KS14
     [Dependency] private EntityQuery<GhostHearingComponent> _ghostHearingQuery = default!;
 
     private bool _loocEnabled = true;
@@ -197,6 +198,11 @@ public sealed partial class ChatSystem : SharedChatSystem
             checkRadioPrefix = false;
             message = message[1..];
         }
+
+        // KS14 start: soft crit mobs can only whisper
+        if (desiredType == InGameICChatType.Speak && _ksSoftCritSystem.IsSoftCrit(source))
+            desiredType = InGameICChatType.Whisper;
+        // KS14 end
 
         bool shouldCapitalize = (desiredType != InGameICChatType.Emote);
         bool shouldPunctuate = _configurationManager.GetCVar(CCVars.ChatPunctuation);

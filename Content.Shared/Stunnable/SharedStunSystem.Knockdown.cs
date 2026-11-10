@@ -345,7 +345,7 @@ public abstract partial class SharedStunSystem
 
         if (ev.Message != null)
         {
-            _popup.PopupClient(ev.Message.Value.Item1, entity, entity, ev.Message.Value.Item2);
+            _popup.PopupEntity /* KS14: PopupClient -> PopupEntity, same recipient-only audience */(ev.Message.Value.Item1, entity, entity, ev.Message.Value.Item2);
         }
 
         return !ev.Cancelled;

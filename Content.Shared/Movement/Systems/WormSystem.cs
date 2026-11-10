@@ -40,7 +40,7 @@ public sealed partial class WormSystem : EntitySystem
             return;
 
         args.Cancelled = true;
-        args.Message = (Loc.GetString("worm-component-stand-attempt"), PopupType.SmallCaution);
+        args.Message = (Content.Shared._KS14.PopupLocalization.KsPopupMessage.Create /* KS14: Loc.GetString -> KsPopupMessage.Create, localized on the recipient */("worm-component-stand-attempt"), PopupType.SmallCaution);
         args.Autostand = false;
     }
 
