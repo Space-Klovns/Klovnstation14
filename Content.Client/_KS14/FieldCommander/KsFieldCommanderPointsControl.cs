@@ -14,9 +14,22 @@ namespace Content.Client._KS14.FieldCommander;
 public sealed class KsFieldCommanderPointsControl : LayoutContainer
 {
     private const float ChangeLifetime = 2.5f;
-    private const float ChangeRise = 36f;
-    private const float ChangeSpacing = 22f;
+
+    /// <summary>
+    ///     How far a change rises over its life. It starts this far below where it ends, which is
+    ///         <see cref="ChangeGap"/> under the total, so it never reaches the total.
+    /// </summary>
+    private const float ChangeRise = 18f;
+
+    private const float ChangeGap = 10f;
+    private const float ChangeSpacing = 24f;
     private const float TopMargin = 72f;
+
+    /// <summary>
+    ///     A dark rim around every letter, so the text reads on snow as well as on dark ground.
+    /// </summary>
+    private const float OutlineThickness = 2f;
+    private static readonly Color OutlineColor = Color.Black.WithAlpha(0.9f);
 
     private static readonly Color GainColor = Color.FromHex("#7CDB6A");
     private static readonly Color LossColor = Color.FromHex("#F05A4F");
@@ -40,7 +53,8 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
         {
             FontOverride = resourceCache.NotoStack(variation: "Bold", size: 15),
             FontColorOverride = Color.White,
-            FontColorShadowOverride = Color.Black,
+            OutlineThicknessOverride = OutlineThickness,
+            OutlineColorOverride = OutlineColor,
             MouseFilter = MouseFilterMode.Ignore,
         };
 
@@ -67,7 +81,8 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
             Text = text,
             FontOverride = _changeFont,
             FontColorOverride = delta > 0 ? GainColor : LossColor,
-            FontColorShadowOverride = Color.Black,
+            OutlineThicknessOverride = OutlineThickness,
+            OutlineColorOverride = OutlineColor,
             MouseFilter = MouseFilterMode.Ignore,
         };
 
@@ -106,7 +121,7 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
             label.Measure(Vector2Helpers.Infinity);
             SetPosition(label, new Vector2(
                 (Size.X - label.DesiredSize.X) / 2f,
-                TopMargin + _totalLabel.DesiredSize.Y + 4f + slot * ChangeSpacing - progress * ChangeRise));
+                TopMargin + _totalLabel.DesiredSize.Y + ChangeGap + slot * ChangeSpacing + (1f - progress) * ChangeRise));
 
             // Holds for the first half, then fades out.
             label.Modulate = Color.White.WithAlpha(Math.Clamp(2f - progress * 2f, 0f, 1f));

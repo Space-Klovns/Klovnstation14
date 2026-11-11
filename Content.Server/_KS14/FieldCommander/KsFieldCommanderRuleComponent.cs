@@ -304,10 +304,10 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public int UplinkPoints = 200;
 
     [DataField]
-    public SoundSpecifier PointsGainedSound = new SoundPathSpecifier("/Audio/Effects/kaching.ogg", AudioParams.Default.WithVolume(-8f));
+    public SoundSpecifier PointsGainedSound = new SoundPathSpecifier("/Audio/Effects/kaching.ogg", AudioParams.Default.WithVolume(-2f));
 
     [DataField]
-    public SoundSpecifier PointsLostSound = new SoundPathSpecifier("/Audio/Machines/buzz-two.ogg", AudioParams.Default.WithVolume(-6f));
+    public SoundSpecifier PointsLostSound = new SoundPathSpecifier("/Audio/Machines/buzz-two.ogg", AudioParams.Default.WithVolume(-1f));
 
     #endregion
 
