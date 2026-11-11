@@ -16,6 +16,11 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
     private const float ChangeLifetime = 2.5f;
 
     /// <summary>
+    ///     How long a change takes to fade in, as a fraction of its life.
+    /// </summary>
+    private const float FadeInFraction = 0.08f;
+
+    /// <summary>
     ///     How far a change rises over its life. It starts this far below where it ends, which is
     ///         <see cref="ChangeGap"/> under the total, so it never reaches the total.
     /// </summary>
@@ -56,19 +61,30 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
             OutlineThicknessOverride = OutlineThickness,
             OutlineColorOverride = OutlineColor,
             MouseFilter = MouseFilterMode.Ignore,
+            Visible = false,
         };
 
         AddChild(_totalLabel);
     }
 
-    public void SetTotal(int total)
+    /// <summary>
+    ///     Shows the player's points, or hides the readout for null.
+    /// </summary>
+    public void SetTotal(int? total)
     {
         if (_shownTotal == total)
             return;
 
         _shownTotal = total;
-        _totalLabel.Text = Loc.GetString("ks-fieldcommander-points-total", ("points", total));
+        _totalLabel.Visible = total != null;
+        if (total is { } points)
+            _totalLabel.Text = Loc.GetString("ks-fieldcommander-points-total", ("points", points));
     }
+
+    /// <summary>
+    ///     How many changes are on screen now, for tests.
+    /// </summary>
+    public int ChangeCount => _changes.Count;
 
     public void AddChange(int delta, string reason)
     {
@@ -86,6 +102,8 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
             MouseFilter = MouseFilterMode.Ignore,
         };
 
+        // Placed and transparent from the start, so it fades in where it belongs rather than popping in a frame late.
+        label.Modulate = Color.White.WithAlpha(0f);
         AddChild(label);
 
         // The lowest slot no change still on screen is using, so that several at once stack rather than overlap.
@@ -123,8 +141,9 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
                 (Size.X - label.DesiredSize.X) / 2f,
                 TopMargin + _totalLabel.DesiredSize.Y + ChangeGap + slot * ChangeSpacing + (1f - progress) * ChangeRise));
 
-            // Holds for the first half, then fades out.
-            label.Modulate = Color.White.WithAlpha(Math.Clamp(2f - progress * 2f, 0f, 1f));
+            // Fades in quickly, holds, then fades out over the second half.
+            var alpha = MathF.Min(progress / FadeInFraction, 2f - progress * 2f);
+            label.Modulate = Color.White.WithAlpha(Math.Clamp(alpha, 0f, 1f));
         }
     }
 }

@@ -70,7 +70,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         {
             component.BriefingSent = true;
             if (component.BriefingAnnouncement is { } briefing)
-                SendIntel(component, Loc.GetString(briefing));
+                SendIntel(component, Loc.GetString(briefing), sound: true);
         }
 
         SendDueIntel(component, curTime);
@@ -199,12 +199,12 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (phase.Announcement is { } announcement)
             Announce(rule.Comp, announcement, major: true);
 
-        Intel(rule.Comp, phase.Intel);
+        Intel(rule.Comp, phase.Intel, sound: phase.Announcement == null);
 
         if (phase.ReinforcementPod is { } reinforcementPod)
         {
             DropReinforcements(rule.Comp, reinforcementPod);
-            Intel(rule.Comp, rule.Comp.ReinforcementIntel);
+            Intel(rule.Comp, rule.Comp.ReinforcementIntel, sound: true);
         }
 
         if (phase.DeployUplink)
@@ -259,7 +259,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             if (ruleComponent.ObjectiveLostAnnouncement is { } announcement)
                 Announce(ruleComponent, announcement, major: true);
 
-            Intel(ruleComponent, ruleComponent.ObjectiveLostIntel, ("remaining", remaining));
+            Intel(ruleComponent, ruleComponent.ObjectiveLostIntel, sound: ruleComponent.ObjectiveLostAnnouncement == null, ("remaining", remaining));
         }
     }
 

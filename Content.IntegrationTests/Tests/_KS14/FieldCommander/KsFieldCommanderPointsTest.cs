@@ -414,6 +414,31 @@ public sealed class KsFieldCommanderPointsTest : GameTest
                 "intel should go out once its delay has passed"));
     }
 
+    /// <summary>
+    ///     A change can reach the client before the state that carries the new total, or while the player has no body
+    ///         with points (a ghost, a fresh body). It must still be shown, not dropped with a readout that has nothing
+    ///         to show.
+    /// </summary>
+    [Test]
+    public async Task ChangeIsShownEvenWithoutPointsOnTheBody()
+    {
+        var client = Pair.Client;
+
+        await client.WaitPost(() =>
+            client.EntMan.EventBus.RaiseEvent(EventSource.Network,
+                new KsFieldCommanderPointsChangedEvent(50, 50, "ks-fieldcommander-points-admin", null)));
+
+        // A few frames, which is when the readout used to be thrown away.
+        await Pair.RunTicksSync(5);
+
+        await client.WaitAssertion(() =>
+        {
+            var pointsSystem = client.System<KsFieldCommanderPointsSystem>();
+            Assert.That(pointsSystem.TryGetLocalPoints(out _), Is.False, "precondition: the local body has no points");
+            Assert.That(pointsSystem.Control?.ChangeCount, Is.EqualTo(1), "the change should still be on screen");
+        });
+    }
+
     [Test]
     public async Task PhaseCommandMovesTheTimelineAndItCarriesOn()
     {

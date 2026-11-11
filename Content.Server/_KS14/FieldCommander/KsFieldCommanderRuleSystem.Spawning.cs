@@ -399,7 +399,7 @@ public sealed partial class KsFieldCommanderRuleSystem
                 ? GetCompassDirection(arrivalSum / arrivals.Count - GetBaseCentre(rule.Comp, anchors))
                 : string.Empty;
 
-            Intel(rule.Comp, rule.Comp.WaveIntel, ("count", sent), ("direction", direction));
+            Intel(rule.Comp, rule.Comp.WaveIntel, sound: true, ("count", sent), ("direction", direction));
 
             var announced = new HashSet<LocId>();
             foreach (var assetIndex in purchases)
@@ -409,7 +409,7 @@ public sealed partial class KsFieldCommanderRuleSystem
                     Announce(rule.Comp, assetAnnouncement, major: false);
 
                 if (asset.Intel is { } assetIntel && announced.Add(assetIntel))
-                    Intel(rule.Comp, assetIntel);
+                    Intel(rule.Comp, assetIntel, sound: true);
             }
         }
 
@@ -687,7 +687,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
             SpawnAtPosition(component.StrikePrototype, strikeCoordinates);
             AnnounceRandom(component, component.StrikeAnnouncements, major: false);
-            Intel(component, component.StrikeIntel);
+            Intel(component, component.StrikeIntel, sound: true);
             return true;
         }
 

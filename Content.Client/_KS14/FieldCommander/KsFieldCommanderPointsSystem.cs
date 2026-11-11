@@ -17,6 +17,11 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
     private KsFieldCommanderPointsControl? _control;
 
     /// <summary>
+    ///     The on-screen points readout, once anything has needed it.
+    /// </summary>
+    public KsFieldCommanderPointsControl? Control => _control;
+
+    /// <summary>
     ///     The latest change this client was told of, for tests.
     /// </summary>
     [ViewVariables]
@@ -43,14 +48,13 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
     {
         base.FrameUpdate(frameTime);
 
+        // The control stays once made, and only the total hides: a change can arrive before the state that carries the
+        //      new total, or while the player has no body with points (a ghost, a fresh body), and dropping the control
+        //      then would drop the change with it.
         if (TryGetLocalPoints(out var points))
-        {
             EnsureControl().SetTotal(points);
-            return;
-        }
-
-        _control?.Orphan();
-        _control = null;
+        else
+            _control?.SetTotal(null);
     }
 
     /// <summary>

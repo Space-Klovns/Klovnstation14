@@ -225,13 +225,8 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public Color AnnouncementColor = Color.Red;
 
     /// <summary>
-    ///     Played for routine transmissions: waves, strikes.
-    /// </summary>
-    [DataField]
-    public SoundSpecifier RadioSound = new SoundPathSpecifier("/Audio/_KS14/Announcements/confirmdropoff.ogg");
-
-    /// <summary>
-    ///     Played for the moments that matter: phases, objectives, the uplink.
+    ///     The commander's march, played under its transmissions for the moments that matter: phases, objectives, the
+    ///         uplink. Its routine taunts go out silently.
     /// </summary>
     [DataField]
     public SoundSpecifier MajorSound = new SoundPathSpecifier("/Audio/_KS14/Announcements/fieldcommander.ogg");
@@ -483,7 +478,7 @@ public readonly record struct KsFieldCommanderSafeZone(MapCoordinates Center, fl
 /// <summary>
 ///     An intelligence message, already formatted, to send at <paramref name="At"/>.
 /// </summary>
-public readonly record struct KsFieldCommanderPendingIntel(TimeSpan At, string Message);
+public readonly record struct KsFieldCommanderPendingIntel(TimeSpan At, string Message, bool Sound);
 
 /// <summary>
 ///     One stage of the commander's timeline.

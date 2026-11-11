@@ -64,7 +64,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var origin = GetBaseCentre(component, anchors);
         var offset = uplinkMapCoordinates.Position - origin;
 
-        Intel(component, component.UplinkIntel,
+        Intel(component, component.UplinkIntel, sound: false,
             ("direction", GetCompassDirection(offset)),
             ("distance", (int)MathF.Round(offset.Length())),
             ("minutes", (int)Math.Ceiling(bombardmentIn?.TotalMinutes ?? 0)));
@@ -147,7 +147,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         component.UplinkWarned = true;
 
-        Intel(component, component.UplinkWarningIntel, ("minutes", (int)Math.Ceiling(component.UplinkWarningBefore.TotalMinutes)));
+        Intel(component, component.UplinkWarningIntel, sound: true, ("minutes", (int)Math.Ceiling(component.UplinkWarningBefore.TotalMinutes)));
     }
 
     private void OnUplinkLost(Entity<KsFieldCommanderRuleComponent> rule)
@@ -167,10 +167,11 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     private void Announce(KsFieldCommanderRuleComponent component, LocId messageId, bool major, params (string, object)[] arguments)
     {
+        // Only the moments that matter get the march; a routine taunt goes out silently.
         _chatSystem.DispatchGlobalAnnouncement(Loc.GetString(messageId, arguments),
             Loc.GetString(component.Sender),
-            playSound: true,
-            announcementSound: major ? component.MajorSound : component.RadioSound,
+            playSound: major,
+            announcementSound: major ? component.MajorSound : null,
             colorOverride: component.AnnouncementColor);
     }
 
@@ -178,12 +179,16 @@ public sealed partial class KsFieldCommanderRuleSystem
     ///     Queues the defenders' intelligence on what just happened, to follow the commander's taunt as a reply. The
     ///         text is formatted now, from the state it describes.
     /// </summary>
-    private void Intel(KsFieldCommanderRuleComponent component, LocId? messageId, params (string, object)[] arguments)
+    /// <param name="sound">
+    ///     Whether it comes with the radio chirp. Left off for intel that follows one of the commander's major
+    ///         transmissions, which already had its march, so that the two don't pile up.
+    /// </param>
+    private void Intel(KsFieldCommanderRuleComponent component, LocId? messageId, bool sound, params (string, object)[] arguments)
     {
         if (messageId is not { } id)
             return;
 
-        component.PendingIntel.Add(new KsFieldCommanderPendingIntel(_gameTiming.CurTime + component.IntelDelay, Loc.GetString(id, arguments)));
+        component.PendingIntel.Add(new KsFieldCommanderPendingIntel(_gameTiming.CurTime + component.IntelDelay, Loc.GetString(id, arguments), sound));
     }
 
     /// <summary>
@@ -196,18 +201,18 @@ public sealed partial class KsFieldCommanderRuleSystem
             if (component.PendingIntel[i].At > curTime)
                 continue;
 
-            SendIntel(component, component.PendingIntel[i].Message);
+            SendIntel(component, component.PendingIntel[i].Message, component.PendingIntel[i].Sound);
             component.PendingIntel.RemoveAt(i);
             i--;
         }
     }
 
-    private void SendIntel(KsFieldCommanderRuleComponent component, string message)
+    private void SendIntel(KsFieldCommanderRuleComponent component, string message, bool sound)
     {
         _chatSystem.DispatchGlobalAnnouncement(message,
             Loc.GetString(component.IntelSender),
-            playSound: true,
-            announcementSound: component.IntelSound,
+            playSound: sound,
+            announcementSound: sound ? component.IntelSound : null,
             colorOverride: component.IntelColor);
     }
 
