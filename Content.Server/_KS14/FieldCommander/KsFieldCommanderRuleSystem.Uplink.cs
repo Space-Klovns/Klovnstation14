@@ -157,6 +157,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         rule.Comp.UplinkDestroyedTime = _gameTiming.CurTime;
+        RewardUplink(rule);
     }
 
     #endregion
@@ -170,6 +171,18 @@ public sealed partial class KsFieldCommanderRuleSystem
             playSound: true,
             announcementSound: major ? component.MajorSound : component.RadioSound,
             colorOverride: component.AnnouncementColor);
+    }
+
+    private void SendIntro(KsFieldCommanderRuleComponent component)
+    {
+        if (component.IntroAnnouncement is not { } announcement)
+            return;
+
+        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString(announcement),
+            Loc.GetString(component.IntroSender),
+            playSound: true,
+            announcementSound: component.IntroSound,
+            colorOverride: component.IntroColor);
     }
 
     private void AnnounceRandom(KsFieldCommanderRuleComponent component, List<LocId> messageIds, bool major, params (string, object)[] arguments)

@@ -63,3 +63,18 @@ ks-fieldcommander-roundend-summary = The field commander reached the [color=red]
 } lost.
 ks-fieldcommander-roundend-uplink-destroyed = The uplink was taken down { $minutes }m { $seconds }s after it landed.
 ks-fieldcommander-roundend-uplink-bombarded = The uplink lasted long enough to call down the bombardment.
+
+## The defenders' briefing
+
+ks-fieldcommander-intro-sender = Nanotrasen Field Operations
+ks-fieldcommander-intro = Outpost, this is Field Operations, priority traffic. Long-range sensors have a Syndicate field command group making landfall around your position. Expect probing attacks within minutes and a full assault to follow. Fortify, hold the servers, and give no ground. Every confirmed kill earns you requisition credit: spend it at the requisitions terminal for ordnance and fire support. Field Operations out.
+
+## Points
+
+ks-fieldcommander-points-total = Requisition: { $points }
+ks-fieldcommander-points-gain = +{ $amount }  { $reason }
+ks-fieldcommander-points-loss = −{ $amount }  { $reason }
+ks-fieldcommander-points-kill = { $name }
+ks-fieldcommander-points-teamkill = Friendly kill: { $name }
+ks-fieldcommander-points-uplink = Uplink taken out
+ks-fieldcommander-points-admin = Adjusted by Field Operations

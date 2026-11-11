@@ -62,3 +62,18 @@ ks-fieldcommander-roundend-no-phase = нет
 ks-fieldcommander-roundend-summary = Полевой командир дошёл до фазы [color=red]{ $phase }[/color] и отправил { $waves } волн, всего { $sent } бойцов. Убито из них: { $killed }. Потеряно целей: { $lost }.
 ks-fieldcommander-roundend-uplink-destroyed = Аплинк уничтожен через { $minutes } мин. { $seconds } с. после высадки.
 ks-fieldcommander-roundend-uplink-bombarded = Аплинк продержался достаточно долго, чтобы навести орбитальный удар.
+
+## The defenders' briefing
+
+ks-fieldcommander-intro-sender = Полевое управление Nanotrasen
+ks-fieldcommander-intro = Аванпост, говорит Полевое управление, приоритетная связь. Дальние сенсоры фиксируют высадку полевой командной группы Синдиката вокруг вашей позиции. В ближайшие минуты ожидайте разведку боем, за ней — полноценный штурм. Укрепляйтесь, удерживайте серверы, ни шагу назад. За каждое подтверждённое уничтожение вам начисляется кредит снабжения: тратьте его в терминале снабжения на боеприпасы и огневую поддержку. Конец связи.
+
+## Points
+
+ks-fieldcommander-points-total = Снабжение: { $points }
+ks-fieldcommander-points-gain = +{ $amount }  { $reason }
+ks-fieldcommander-points-loss = −{ $amount }  { $reason }
+ks-fieldcommander-points-kill = { $name }
+ks-fieldcommander-points-teamkill = Убийство союзника: { $name }
+ks-fieldcommander-points-uplink = Аплинк уничтожен
+ks-fieldcommander-points-admin = Корректировка Полевого управления

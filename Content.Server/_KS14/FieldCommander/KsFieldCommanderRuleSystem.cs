@@ -7,11 +7,14 @@ using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
 using Content.Server.Humanoid.Systems;
 using Content.Shared._KS14.Scenario.Components;
+using Content.Shared._RMC14.Vendors;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Maps;
 using Content.Shared.Mobs;
 using Robust.Server.GameObjects;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Player;
 using Robust.Shared.Random;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
@@ -35,7 +38,11 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private RandomHumanoidSystem _randomHumanoidSystem = default!;
     [Dependency] private KsSupplyPodPassengerSystem _supplyPodPassengerSystem = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<KsFieldCommanderUnitComponent> _unitQuery = default!;
+    [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
 
     protected override void Started(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {
@@ -53,7 +60,14 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             return;
 
         var curTime = _gameTiming.CurTime;
-        var elapsed = curTime - gameRule.ActivatedAt;
+        var elapsed = GetElapsed(component, gameRule, curTime);
+
+        // The defenders' own command speaks first, before anything of the commander's.
+        if (!component.IntroSent && curTime - gameRule.ActivatedAt >= component.IntroDelay)
+        {
+            component.IntroSent = true;
+            SendIntro(component);
+        }
 
         while (component.PhaseIndex + 1 < component.Phases.Count &&
                elapsed >= component.Phases[component.PhaseIndex + 1].Start)
@@ -61,15 +75,8 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             EnterPhase((uid, component), component.PhaseIndex + 1, curTime);
         }
 
-        if (curTime >= component.NextWaveTime &&
-            TryGetPhase(component, out var phase))
-        {
-            component.NextWaveTime = phase.WaveInterval > TimeSpan.Zero
-                ? curTime + phase.WaveInterval
-                : TimeSpan.MaxValue;
-
-            SendWave((uid, component), phase);
-        }
+        if (curTime >= component.NextWaveTime)
+            ForceWave((uid, component));
 
         if (curTime >= component.NextOrderTime)
         {
@@ -106,8 +113,56 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         _scenarioSystem.SetObjectivePending(component.Faction, pending: true);
 
         FindSafeZones(component);
+        PrepareExistingDefenders(component);
         component.ObjectivesPrepared = true;
         return true;
+    }
+
+    /// <summary>
+    ///     How far along the timeline the rule is, counting any phase set by hand.
+    /// </summary>
+    private static TimeSpan GetElapsed(KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, TimeSpan curTime)
+    {
+        return curTime - gameRule.ActivatedAt + component.TimeOffset;
+    }
+
+    /// <summary>
+    ///     Moves the timeline to the start of a phase and enters it, announcement, pod and uplink included. For
+    ///         admins and tests; the timeline then carries on from there.
+    /// </summary>
+    public void SetPhase(Entity<KsFieldCommanderRuleComponent, GameRuleComponent> rule, int phaseIndex)
+    {
+        var component = rule.Comp1;
+        if (phaseIndex < 0 || phaseIndex >= component.Phases.Count)
+            return;
+
+        var curTime = _gameTiming.CurTime;
+        component.TimeOffset += component.Phases[phaseIndex].Start - GetElapsed(component, rule.Comp2, curTime);
+        EnterPhase((rule.Owner, component), phaseIndex, curTime);
+    }
+
+    /// <summary>
+    ///     Sends the current phase's next wave now, and counts the wait for the one after from here.
+    /// </summary>
+    public void ForceWave(Entity<KsFieldCommanderRuleComponent> rule)
+    {
+        if (!TryGetPhase(rule.Comp, out var phase))
+            return;
+
+        rule.Comp.NextWaveTime = phase.WaveInterval > TimeSpan.Zero
+            ? _gameTiming.CurTime + phase.WaveInterval
+            : TimeSpan.MaxValue;
+
+        SendWave(rule, phase);
+    }
+
+    /// <summary>
+    ///     Lands the uplink now, guarded as the current phase would guard it.
+    /// </summary>
+    public void ForceUplink(Entity<KsFieldCommanderRuleComponent> rule)
+    {
+        var phase = TryGetPhase(rule.Comp, out var currentPhase) ? currentPhase : new KsFieldCommanderPhase();
+        DeployUplink(rule, phase, _gameTiming.CurTime);
     }
 
     private static bool TryGetPhase(KsFieldCommanderRuleComponent component, out KsFieldCommanderPhase phase)
@@ -152,6 +207,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             return;
 
         ruleComponent.UnitsKilled++;
+        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity, args.Origin);
     }
 
     [SubscribeLocalEvent]

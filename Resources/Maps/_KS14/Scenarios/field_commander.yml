@@ -5,7 +5,7 @@ meta:
   forkId: ""
   forkVersion: ""
   time: 07/26/2026 21:26:31
-  entityCount: 2318
+  entityCount: 2319
 maps:
 - 1
 grids:
@@ -21193,6 +21193,13 @@ entities:
     components:
     - type: Transform
       pos: -0.5,4.5
+      parent: 1
+- proto: KsFieldCommanderShop
+  entities:
+  - uid: 2319
+    components:
+    - type: Transform
+      pos: 5.5,2.5
       parent: 1
 - proto: ConveyorBelt
   entities:

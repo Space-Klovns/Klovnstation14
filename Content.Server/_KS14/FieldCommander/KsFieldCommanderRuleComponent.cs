@@ -2,6 +2,7 @@ using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Humanoid.Prototypes;
 using Robust.Shared.Audio;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.FieldCommander;
@@ -245,12 +246,90 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [DataField]
     public LocId? UplinkWarningAnnouncement = "ks-fieldcommander-uplink-warning";
 
+    /// <summary>
+    ///     How long after the rule starts the defenders' own command first comes on the air.
+    /// </summary>
+    [DataField]
+    public TimeSpan IntroDelay = TimeSpan.FromSeconds(6);
+
+    /// <summary>
+    ///     The defenders' briefing, sent once after <see cref="IntroDelay"/>.
+    /// </summary>
+    [DataField]
+    public LocId? IntroAnnouncement = "ks-fieldcommander-intro";
+
+    [DataField]
+    public LocId IntroSender = "ks-fieldcommander-intro-sender";
+
+    [DataField]
+    public Color IntroColor = Color.FromHex("#3A5FAD");
+
+    [DataField]
+    public SoundSpecifier IntroSound = new SoundPathSpecifier("/Audio/_KS14/Announcements/confirmdropoff.ogg");
+
+    #endregion
+
+    #region Points
+
+    /// <summary>
+    ///     The key the defenders' points are kept under on their <see cref="Content.Shared._RMC14.Vendors.CMVendorUserComponent"/>,
+    ///         and so the <c>pointsType</c> of a vendor that sells for them.
+    /// </summary>
+    [DataField]
+    public string PointsType = Content.Shared._KS14.FieldCommander.KsFieldCommanderPoints.PointsType;
+
+    /// <summary>
+    ///     Points a defender starts the round with.
+    /// </summary>
+    [DataField]
+    public int StartingPoints;
+
+    /// <summary>
+    ///     Points per unit of <see cref="KsFieldCommanderAsset.Cost"/> for killing a unit, unless the asset sets its own
+    ///         <see cref="KsFieldCommanderAsset.KillPoints"/>.
+    /// </summary>
+    [DataField]
+    public float PointsPerCost = 25f;
+
+    /// <summary>
+    ///     Points for killing a fellow defender. Negative.
+    /// </summary>
+    [DataField]
+    public int TeamkillPoints = -150;
+
+    /// <summary>
+    ///     Points every living defender gets when the uplink is taken out.
+    /// </summary>
+    [DataField]
+    public int UplinkPoints = 200;
+
+    [DataField]
+    public SoundSpecifier PointsGainedSound = new SoundPathSpecifier("/Audio/Effects/kaching.ogg", AudioParams.Default.WithVolume(-8f));
+
+    [DataField]
+    public SoundSpecifier PointsLostSound = new SoundPathSpecifier("/Audio/Machines/buzz-two.ogg", AudioParams.Default.WithVolume(-6f));
+
     #endregion
 
     #region State
 
     [ViewVariables]
     public int PhaseIndex = -1;
+
+    /// <summary>
+    ///     Added to the time since the rule started when the timeline is walked, so that a phase set by hand stays set.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan TimeOffset;
+
+    [ViewVariables]
+    public bool IntroSent;
+
+    /// <summary>
+    ///     Every defender's points, by player rather than by body, so that they last through a death.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<NetUserId, int> Points = new();
 
     [ViewVariables]
     public TimeSpan NextWaveTime = TimeSpan.MaxValue;
@@ -436,6 +515,13 @@ public sealed partial class KsFieldCommanderAsset
 
     [DataField]
     public float Cost = 1f;
+
+    /// <summary>
+    ///     Points a defender gets for killing one of these. Unset is <see cref="Cost"/> times
+    ///         <see cref="KsFieldCommanderRuleComponent.PointsPerCost"/>.
+    /// </summary>
+    [DataField]
+    public int? KillPoints;
 
     [DataField]
     public float Weight = 1f;

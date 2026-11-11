@@ -22,7 +22,7 @@
     - ks-fieldcommander-strike-3
     phases:
     - name: ks-fieldcommander-phase-landfall
-      start: 0
+      start: 20 # after the defenders' own briefing (introDelay)
       announcement: ks-fieldcommander-phase-landfall-announcement
     - name: ks-fieldcommander-phase-probing
       start: 4m
