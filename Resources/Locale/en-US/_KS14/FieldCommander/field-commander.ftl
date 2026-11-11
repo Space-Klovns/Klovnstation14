@@ -20,7 +20,7 @@ ks-fieldcommander-phase-final-announcement = This ends now. I will burn your out
 
 ks-fieldcommander-intel-phase-landfall = Field Operations here. A Syndicate command signal is confirmed in your sector, with no hostile movement yet. Use the quiet: fortify, cover the servers, and get turrets up.
 ks-fieldcommander-intel-phase-probing = Field Operations. Expect small probing teams, mostly pistols. They're testing your lines. Don't chase them out into the fog.
-ks-fieldcommander-intel-phase-pressure = Field Operations. Elite squads and breaching borgs are cleared to deploy, some of them by drop pod. The borgs go straight for the servers, so kill them first.
+ks-fieldcommander-intel-phase-pressure = Field Operations. Elite squads and breaching cyborgs are cleared to deploy, some of them by drop pod. The borgs go straight for the servers, so kill them first.
 ks-fieldcommander-intel-phase-siege = Field Operations. Syndicate artillery is now cleared to fire on your fortifications, so expect strikes on anything you've built. Spread out, and keep the RCDs busy.
 ks-fieldcommander-intel-phase-final = Field Operations. This is the final assault. The Syndicate is landing a targeting uplink for an orbital strike on your position. Once we have a fix on it, take it down.
 
