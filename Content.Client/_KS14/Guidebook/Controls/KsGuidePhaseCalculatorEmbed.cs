@@ -25,6 +25,7 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
     [Dependency] private ILogManager _logManager = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private ILocalizationManager _localizationManager = default!;
 
     private readonly OptionButton _reagentButton = new() { HorizontalExpand = true };
     private readonly LineEdit _pressureEdit = new() { Text = "101.325", HorizontalExpand = true };
@@ -67,7 +68,9 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
                     return false;
                 }
 
-                _reagents.Add(reagent);
+                // Listed twice, it would show twice.
+                if (!_reagents.Contains(reagent))
+                    _reagents.Add(reagent);
             }
         }
         else
@@ -179,13 +182,36 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
     }
 
     /// <summary>
-    ///     A number as typed, with either a point or a comma for the decimals, or null.
+    ///     A number as typed, or null. A point is always a decimal point. A comma is a decimal point where the player's
+    ///         language writes one (Russian "7,4"), and otherwise groups thousands ("7,400"). With both, whichever comes last
+    ///         is the decimal point and the other groups thousands. Spaces group thousands too.
     /// </summary>
-    private static float? ParseNumber(string text)
+    public static float? ParseNumber(string text, CultureInfo culture)
     {
-        return float.TryParse(text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && float.IsFinite(value)
+        var cleaned = new string(text.Where(character => !char.IsWhiteSpace(character)).ToArray());
+        var lastComma = cleaned.LastIndexOf(',');
+        var lastPoint = cleaned.LastIndexOf('.');
+
+        if (lastComma >= 0 && lastPoint >= 0)
+        {
+            cleaned = lastComma > lastPoint
+                ? cleaned.Replace(".", string.Empty).Replace(',', '.')
+                : cleaned.Replace(",", string.Empty);
+        }
+        else if (lastComma >= 0)
+        {
+            var commaIsDecimal = culture.NumberFormat.NumberDecimalSeparator == "," && cleaned.IndexOf(',') == lastComma;
+            cleaned = commaIsDecimal ? cleaned.Replace(',', '.') : cleaned.Replace(",", string.Empty);
+        }
+
+        return float.TryParse(cleaned, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && float.IsFinite(value)
             ? value
             : null;
+    }
+
+    private float? ParseNumber(string text)
+    {
+        return ParseNumber(text, _localizationManager.DefaultCulture ?? CultureInfo.CurrentCulture);
     }
 
     private static BoxContainer MakeRow(string labelKey, Control input)

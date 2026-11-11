@@ -92,7 +92,8 @@ public sealed partial class KsFluidmosPhaseSystem
 
             var activity = amount.Liquid > 0f ? activities[i] : 1f;
             // Raised by a supercritical solvent, which holds what it dissolved past a cold wall too.
-            activity *= MathF.Exp(SupercriticalLogEnhancement(properties, solventDensity, temperature));
+            if (solventDensity > 1f)
+                activity *= MathF.Exp(SupercriticalLogEnhancement(properties, solventDensity, temperature));
             var saturationPressure = activity * KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature);
 
             // At constant pressure: the vapor whose share of the packet's vapor gives the saturation pressure. Past the

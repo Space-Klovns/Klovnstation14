@@ -157,6 +157,16 @@ public sealed partial class KsGasThermoSystem : EntitySystem
         return freeVolume > 0f ? ReducedSolventDensity(mixture, mixture.Temperature, 1f / freeVolume) : 0f;
     }
 
+    /// <summary>
+    ///     How many times over a supercritical solvent in <paramref name="mixture"/> raises a reagent's vapor pressure, at
+    ///         an affinity of 1: 1 when it holds none. For readouts; a polar reagent such as water gets far less.
+    /// </summary>
+    public float SolventEnhancement(GasMixture mixture)
+    {
+        var density = ReducedSolventDensity(mixture);
+        return density > 1f ? MathF.Exp(KsPhaseMath.SupercriticalLogEnhancement(density, affinity: 1f)) : 1f;
+    }
+
     private static float[] CreateInfinite()
     {
         var values = new float[Atmospherics.TotalNumberOfGases];

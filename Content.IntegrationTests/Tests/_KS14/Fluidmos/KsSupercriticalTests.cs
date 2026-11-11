@@ -274,7 +274,7 @@ public sealed class KsSupercriticalTests : GameTest
     {
         var server = Pair.Server;
         var propertiesSystem = server.System<KsFluidmosPropertiesSystem>();
-        var phaseSystem = server.System<KsFluidmosPhaseSystem>();
+        var gasThermoSystem = server.System<KsGasThermoSystem>();
 
         await server.WaitAssertion(() =>
         {
@@ -298,8 +298,8 @@ public sealed class KsSupercriticalTests : GameTest
                 Assert.That(waterAtOne.MeltingPoint, Is.EqualTo(273.15f).Within(0.5f), "Water's melting point is wrong.");
                 Assert.That(waterAtOne.Supercritical, Is.False, "Water at 320 K is marked supercritical.");
                 Assert.That(carbonDioxide.Supercritical, Is.True, "Carbon dioxide past its critical temperature isn't marked supercritical.");
-                Assert.That(phaseSystem.SolventEnhancement(dense), Is.GreaterThan(100f), "The analyzer reads dense carbon dioxide as a weak solvent.");
-                Assert.That(phaseSystem.SolventEnhancement(air), Is.EqualTo(1f), "The analyzer reads nitrogen in a canister as a solvent.");
+                Assert.That(gasThermoSystem.SolventEnhancement(dense), Is.GreaterThan(100f), "The analyzer reads dense carbon dioxide as a weak solvent.");
+                Assert.That(gasThermoSystem.SolventEnhancement(air), Is.EqualTo(1f), "The analyzer reads nitrogen in a canister as a solvent.");
             }
         });
     }
@@ -344,5 +344,24 @@ public sealed class KsSupercriticalTests : GameTest
                 Assert.That(water, Does.Contain("[color="), "The calculator's numbers aren't set apart from its text.");
             }
         });
+    }
+
+    /// <summary>
+    ///     The calculator reads numbers as a player types them: a comma is a decimal point in Russian and groups thousands in
+    ///         English, and with both, the last one is the decimal point.
+    /// </summary>
+    [TestCase("101.325", "en-US", 101.325f)]
+    [TestCase("7,400", "en-US", 7400f)]
+    [TestCase("7,400.5", "en-US", 7400.5f)]
+    [TestCase("7 400", "en-US", 7400f)]
+    [TestCase("7,4", "ru-RU", 7.4f)]
+    [TestCase("7.4", "ru-RU", 7.4f)]
+    [TestCase("7.400,5", "ru-RU", 7400.5f)]
+    [TestCase("1,000,000", "ru-RU", 1000000f)]
+    [TestCase("abc", "en-US", null)]
+    public void CalculatorReadsNumbersAsTyped(string text, string culture, float? expected)
+    {
+        var value = Content.Client._KS14.Guidebook.Controls.KsGuidePhaseCalculatorEmbed.ParseNumber(text, new System.Globalization.CultureInfo(culture));
+        Assert.That(value, expected is { } number ? Is.EqualTo(number).Within(0.001f) : Is.Null, $"\"{text}\" in {culture} was read wrong.");
     }
 }

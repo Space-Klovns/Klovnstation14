@@ -291,7 +291,7 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
 
         // A supercritical gas around it dissolves it, raising the vapor it holds in equilibrium. Not boiling: the bubble
         //     point and the flash are left as they were, so it dissolves at the Hertz–Knudsen rate.
-        var enhancement = MathF.Exp(SupercriticalLogEnhancement(properties, step.SolventDensity, temperature));
+        var enhancement = step.SolventDensity > 1f ? MathF.Exp(SupercriticalLogEnhancement(properties, step.SolventDensity, temperature)) : 1f;
 
         if (temperature < properties.MinActiveTemperature && enhancement <= 1f)
         {
@@ -455,15 +455,5 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
             return 0f;
 
         return KsPhaseMath.SupercriticalLogEnhancement(solventDensity, properties.SupercriticalAffinity);
-    }
-
-    /// <summary>
-    ///     How many times over a supercritical solvent in <paramref name="mixture"/> raises a reagent's vapor pressure, at
-    ///         an affinity of 1: 1 when it holds none. For readouts.
-    /// </summary>
-    public float SolventEnhancement(GasMixture mixture)
-    {
-        var density = _gasThermoSystem.ReducedSolventDensity(mixture);
-        return MathF.Exp(KsPhaseMath.SupercriticalLogEnhancement(density, affinity: 1f));
     }
 }
