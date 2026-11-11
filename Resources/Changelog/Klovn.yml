@@ -2652,3 +2652,13 @@ Entries:
       message: Dropdown arrows in the tgui theme no longer sit crooked.
   id: 252
   time: '2026-11-11T06:35:49.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Added fun!
+    - type: Remove
+      message: Removed obsessed power grid check event from normal gameplay.
+    - type: Add
+      message: 'Added the new Skeleton Crew gamemode: High Octane LRP'
+  id: 253
+  time: '2026-11-11T06:59:18.0000000+00:00'
