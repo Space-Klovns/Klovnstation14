@@ -106,4 +106,4 @@ ks-fieldcommander-points-admin = Adjusted by Field Operations
 ## Requisitions
 
 ks-fieldcommander-shop-maptext = REQUISITIONS
-ks-supplypod-passenger-name = nanotrasen paramilitary
+ks-supplypod-passenger-name = Nanotrasen paramilitary

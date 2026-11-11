@@ -11,6 +11,7 @@ ks-fieldcommander-phase-pressure = Давление
 ks-fieldcommander-phase-siege = Осада
 ks-fieldcommander-phase-final = Последний штурм
 
+# Командир лишь язвит. Всё, на что могут отреагировать защитники, приходит от Полевого управления в виде разведданных.
 ks-fieldcommander-phase-landfall-announcement = Nanotrasen. Я вижу вас отсюда: мечетесь за своими стенками, как насекомые. Окапывайтесь. Тем проще будет вас выкапывать.
 ks-fieldcommander-phase-probing-announcement = Мои псы спущены с поводка. Послушаем, как громко вы умеете кричать.
 ks-fieldcommander-phase-pressure-announcement = Ещё дышите? Это канцелярская ошибка, и я её сейчас исправлю.
@@ -82,7 +83,7 @@ ks-fieldcommander-intel-reinforcements = Полевое управление. К
 
 ks-fieldcommander-roundend-no-phase = нет
 ks-fieldcommander-roundend-summary = Полевой командир дошёл до фазы [color=red]{ $phase }[/color] и отправил { $waves } волн, всего { $sent } бойцов. Убито из них: { $killed }. Потеряно целей: { $lost }.
-ks-fieldcommander-roundend-uplink-destroyed = Аплинк уничтожен через { $minutes } мин. { $seconds } с. после высадки.
+ks-fieldcommander-roundend-uplink-destroyed = Аплинк уничтожен через { $minutes } мин. { $seconds } с после высадки.
 ks-fieldcommander-roundend-uplink-bombarded = Аплинк продержался достаточно долго, чтобы навести орбитальный удар.
 
 ## The defenders' briefing

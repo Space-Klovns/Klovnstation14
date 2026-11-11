@@ -14,7 +14,7 @@
     fogRange: 55
     minSpawnDistance: 63
     maxSpawnDistance: 90
-    # Many light units rather than a few tough ones: see the module's FieldCommand/units.yml.
+    # Many light units rather than a few tough ones, as the private module defines them.
     maxAlive: 12
     maxAlivePerDefender: 3
     waveAnnouncements:

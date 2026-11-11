@@ -9,20 +9,7 @@
   description: A hardened Syndicate relay, coordinating the assault and painting targets for an orbital bombardment. Take it down before it finishes.
   components:
   - type: Sprite
-    sprite: Structures/Machines/telecomms.rsi
-    snapCardinals: true
     color: '#FFB0B0'
-    layers:
-    - state: telecom-nopower
-    - state: telecom-stripe
-    - state: telecom-on
-      shader: unshaded
-      map: ["onstate"]
-    - state: variant-nokey
-      shader: unshaded
-      map: ["variant"]
-  - type: ScenarioObjective
-    factionId: Syndicate
   # The bombardment countdown.
   - type: TimedDespawn
     lifetime: 600
@@ -30,8 +17,6 @@
     radius: 4
     energy: 3
     color: '#FF2020'
-  - type: Physics
-    bodyType: Static
   - type: Fixtures
     fixtures:
       fix1:
@@ -63,5 +48,3 @@
             max: 1
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
-  - type: Transform
-    anchored: true
