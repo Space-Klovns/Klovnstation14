@@ -161,6 +161,23 @@ public static class KsPhaseMath
     }
 
     /// <summary>
+    ///     The log of the factor a supercritical solvent raises a dissolved reagent's saturation pressure by:
+    ///         <c>κ · affinity · max(0, δ - 1)</c>, capped at <see cref="KsFluidmos.MaxSupercriticalLogEnhancement"/>.
+    /// </summary>
+    /// <param name="reducedDensity">
+    ///     The solvent's reduced density <c>δ</c>, from <c>KsGasThermoSystem.ReducedSolventDensity</c>: 1 at about its
+    ///         critical density.
+    /// </param>
+    /// <param name="affinity">How readily the reagent dissolves in a dense gas, 1 by default.</param>
+    public static float SupercriticalLogEnhancement(float reducedDensity, float affinity)
+    {
+        if (reducedDensity <= 1f || affinity <= 0f || !float.IsFinite(reducedDensity))
+            return 0f;
+
+        return MathF.Min(KsFluidmos.SupercriticalSolvation * affinity * (reducedDensity - 1f), KsFluidmos.MaxSupercriticalLogEnhancement);
+    }
+
+    /// <summary>
     ///     Kelvin the Margules parameters are given at.
     /// </summary>
     public const float MargulesReferenceTemperature = 298.15f;

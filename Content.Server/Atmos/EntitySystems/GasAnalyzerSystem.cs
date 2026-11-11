@@ -18,6 +18,7 @@ public sealed partial class GasAnalyzerSystem : EntitySystem
     [Dependency] private PopupSystem _popup = default!;
     [Dependency] private AtmosphereSystem _atmo = default!;
     [Dependency] private Content.Shared._KS14.Fluidmos.KsFluidmosPropertiesSystem _ksFluidmosPropertiesSystem = default!; // KS14
+    [Dependency] private Content.Server._KS14.Fluidmos.KsFluidmosPhaseSystem _ksFluidmosPhaseSystem = default!; // KS14
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private UserInterfaceSystem _userInterface = default!;
     [Dependency] private SharedInteractionSystem _interactionSystem = default!;
@@ -248,7 +249,8 @@ public sealed partial class GasAnalyzerSystem : EntitySystem
             mixture.Pressure,
             mixture.Temperature,
             GenerateGasEntryArray(mixture),
-            Content.Shared._KS14.Fluidmos.KsFluidEntry.FromMixture(mixture.Fluid, _ksFluidmosPropertiesSystem) // KS14
+            Content.Shared._KS14.Fluidmos.KsFluidEntry.FromMixture(mixture.Fluid, _ksFluidmosPropertiesSystem, mixture.Pressure, mixture.Temperature), // KS14
+            _ksFluidmosPhaseSystem.SolventEnhancement(mixture) // KS14
         );
     }
 

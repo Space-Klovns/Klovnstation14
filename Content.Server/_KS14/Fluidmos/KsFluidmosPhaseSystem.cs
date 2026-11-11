@@ -1,5 +1,6 @@
 using Content.Server._KS14.Fluidmos.Reactions;
 using Content.Server.Atmos.EntitySystems;
+using Content.Shared._KS14.Atmos;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
 using Robust.Shared.Timing;
@@ -40,6 +41,7 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
     [Dependency] private KsFluidmosPropertiesSystem _propertiesSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private KsFluidReactionSystem _reactionSystem = default!;
+    [Dependency] private KsGasThermoSystem _gasThermoSystem = default!;
 
     /// <summary>
     ///     The longest time step a single phase step takes, however long the mixture went unprocessed.
@@ -136,7 +138,8 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         var bubbleTemperature = BubbleTemperature(amounts, activities, temperature, pressure, out var flashWeight);
 
         var unitsMoved = 0f;
-        var step = new PhaseStep(heatCapacity, temperature, pressure, freeVolume, interfaceArea, deltaTime, bubbleTemperature, flashWeight);
+        var solventDensity = freeVolume > 0f ? _gasThermoSystem.ReducedSolventDensity(mixture, temperature, 1f / freeVolume) : 0f;
+        var step = new PhaseStep(heatCapacity, temperature, pressure, freeVolume, interfaceArea, deltaTime, bubbleTemperature, flashWeight, solventDensity);
 
         for (var i = 0; i < entryCount; i++)
         {
@@ -286,7 +289,11 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
             : float.PositiveInfinity;
         float moles;
 
-        if (temperature < properties.MinActiveTemperature)
+        // A supercritical gas around it dissolves it, raising the vapor it holds in equilibrium. Not boiling: the bubble
+        //     point and the flash are left as they were, so it dissolves at the Hertz–Knudsen rate.
+        var enhancement = MathF.Exp(SupercriticalLogEnhancement(properties, step.SolventDensity, temperature));
+
+        if (temperature < properties.MinActiveTemperature && enhancement <= 1f)
         {
             // Its vapor pressure is negligible here: whatever vapor there is condenses.
             if (vaporMoles <= 0f || !canCondense)
@@ -302,7 +309,7 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
             //     which this does not model.
             var moleFraction = !fromSolid && amount.Liquid > 0f ? activity : 1f;
 
-            var equilibriumMoles = moleFraction * saturationPressure * step.FreeVolume / (Atmospherics.R * temperature);
+            var equilibriumMoles = moleFraction * saturationPressure * enhancement * step.FreeVolume / (Atmospherics.R * temperature);
             var gap = equilibriumMoles - vaporMoles;
             if (gap < 0f && !canCondense)
                 return;
@@ -325,7 +332,7 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
                 var partialPressure = vaporMoles * Atmospherics.R * temperature / step.FreeVolume;
                 var flux = KsPhaseMath.HertzKnudsenFlux(
                     KsFluidmos.HertzKnudsenAlpha,
-                    moleFraction * saturationPressure - partialPressure,
+                    moleFraction * saturationPressure * enhancement - partialPressure,
                     properties.InverseSqrtTwoPiMR,
                     temperature);
                 moles = flux * step.InterfaceArea * step.DeltaTime;
@@ -408,7 +415,8 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         float interfaceArea,
         float deltaTime,
         float bubbleTemperature,
-        float flashWeight)
+        float flashWeight,
+        float solventDensity)
     {
         /// <summary>
         ///     Unscaled J/K, updated as each phase change alters it.
@@ -430,5 +438,32 @@ public sealed partial class KsFluidmosPhaseSystem : EntitySystem
         ///     What's left of the sum the flash's energy is shared out by, as reagents take their turn at it.
         /// </summary>
         public float FlashWeight = flashWeight;
+
+        /// <summary>
+        ///     The mixture's reduced supercritical solvent density, <see cref="KsGasThermoSystem.ReducedSolventDensity(GasMixture, float, float)"/>.
+        /// </summary>
+        public readonly float SolventDensity = solventDensity;
+    }
+
+    /// <summary>
+    ///     The log of how far a supercritical solvent of <paramref name="solventDensity"/> raises the reagent's vapor
+    ///         pressure. Nothing for a linked reagent past its own critical temperature, whose gas is the solvent.
+    /// </summary>
+    private static float SupercriticalLogEnhancement(KsFluidReagentProperties properties, float solventDensity, float temperature)
+    {
+        if (solventDensity <= 1f || properties.Linked && temperature >= properties.CriticalTemperature)
+            return 0f;
+
+        return KsPhaseMath.SupercriticalLogEnhancement(solventDensity, properties.SupercriticalAffinity);
+    }
+
+    /// <summary>
+    ///     How many times over a supercritical solvent in <paramref name="mixture"/> raises a reagent's vapor pressure, at
+    ///         an affinity of 1: 1 when it holds none. For readouts.
+    /// </summary>
+    public float SolventEnhancement(GasMixture mixture)
+    {
+        var density = _gasThermoSystem.ReducedSolventDensity(mixture);
+        return MathF.Exp(KsPhaseMath.SupercriticalLogEnhancement(density, affinity: 1f));
     }
 }

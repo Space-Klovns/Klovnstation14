@@ -1,7 +1,6 @@
 using Content.Client._KS14.Tgui.Controls;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Prototypes;
-using Content.Shared._KS14.Fluidmos;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
 
@@ -101,7 +100,6 @@ public interface IKsGasCanisterWindow : IKsAtmosWindow
     void SetReleaseValve(bool valve);
     void SetShieldSettingsVisible(bool visible);
     void UpdateShieldState(bool enabled, float dischargeRate, float lastCharge, float maxCharge);
-    void SetKsFluid(KsFluidEntry[]? entries);
 }
 
 public interface IKsGasThermomachineWindow : IKsAtmosWindow

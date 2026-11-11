@@ -1,0 +1,11 @@
+ks-guidebook-phase-calculator-reagent = Вещество
+ks-guidebook-phase-calculator-pressure = Давление (кПа)
+ks-guidebook-phase-calculator-temperature = Температура (K)
+ks-guidebook-phase-calculator-boils = Кипит при { NATURALFIXED($kelvin, 1) } K ({ NATURALFIXED($celsius, 1) } °C) при этом давлении.
+ks-guidebook-phase-calculator-vapor-pressure = Давление пара при этой температуре: { NATURALFIXED($kpa, 2) } кПа. Ниже этого давления оно кипит.
+ks-guidebook-phase-calculator-melts = Плавится при { NATURALFIXED($kelvin, 1) } K ({ NATURALFIXED($celsius, 1) } °C).
+ks-guidebook-phase-calculator-never-boils = Никогда не кипит.
+ks-guidebook-phase-calculator-never-freezes = Никогда не замерзает.
+ks-guidebook-phase-calculator-bad-pressure = Введите давление больше нуля.
+ks-guidebook-phase-calculator-bad-temperature = Введите температуру больше нуля.
+ks-guidebook-phase-calculator-critical = Критическая точка: { NATURALFIXED($kelvin, 1) } K, { NATURALFIXED($kpa, 0) } кПа. Выше этой температуры оно не может быть жидкостью ни при каком давлении. Выше неё и сжатое сильнее этого давления, оно растворяет другие реагенты.

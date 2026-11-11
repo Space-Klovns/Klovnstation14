@@ -20,6 +20,20 @@
 
   Some of these liquids are gases you already know. Liquid water boils into water vapor, liquid oxygen into oxygen, liquid nitrogen into nitrogen, and the same goes for nitrous oxide, ammonia and hydrogen. Other reagents, such as ethanol, boil into a vapor that only exists in the pipe, and leave it as smoke.
 
+  ## Where it boils
+  Pressure moves the boiling point a long way, so the number on a reagent's card only holds at one atmosphere. A [color=yellow]gas analyzer[/color] shows where each reagent in a pipe boils at that pipe's pressure, and where it melts. Or work it out here: pick a substance and type a pressure and a temperature.
+
+  <KsGuidePhaseCalculatorEmbed/>
+
+  ## Supercritical fluids
+  Heat a gas past its critical temperature and squeeze it past its critical pressure, and it turns into something between a gas and a liquid. It still flows like a gas, but it dissolves other reagents as a liquid would. The calculator above shows each gas's critical point.
+  - [bold]Carbon dioxide is the easy one.[/bold] Warm it past about 31 °C and compress it past about 7400 kPa. A pressure pump stops at 4500 kPa, so you need a volume pump.
+  - [bold]The denser it gets, the more it dissolves.[/bold] Just past the critical point it does nothing yet. At around twice the critical pressure it starts to, and by three times it carries away reagents that would hardly evaporate at all. Keep it only a little past its critical temperature: hotter, it is thinner and dissolves less. A gas analyzer on the pipe shows how strong it is.
+  - [bold]Drop the pressure and it lets go.[/bold] Pass the loaded gas through an expansion valve or any other pressure drop, and what it dissolved falls back out as liquid.
+  - [bold]It is choosy.[/bold] Water hardly dissolves in it, so it can pull an oil out of water and leave the water behind.
+
+  A simple extractor: a volume pump and a heater push hot, dense carbon dioxide through the mixture. A [color=yellow]phase separator[/color] after it sends the gas on and leaves the liquid behind, then an expansion valve drops the pressure into a collecting pipe, where the extract falls out as liquid. Pump the carbon dioxide back round and do it again.
+
   ## Pressure and full pipes
   Liquid takes up room, so it squeezes the gas sharing the pipe. A pipe that fills right up with liquid has nowhere left to put anything, and its pressure shoots up. Pumps stop pushing into it and the gauge reads absurdly high. Drain it, or give it more pipe.
 

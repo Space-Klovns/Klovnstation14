@@ -236,9 +236,21 @@ namespace Content.Client.Atmos.UI
             // KS14 start: the reagents it carries, which a pipe of pure liquid has even with no gas
             if (gasMix.KsFluid != null)
             {
-                var ksFluidList = new Content.Client._KS14.Fluidmos.KsFluidListControl { Margin = new Thickness(0, 10, 0, 0) };
+                var ksFluidList = new Content.Client._KS14.Fluidmos.KsFluidListControl { Margin = new Thickness(0, 10, 0, 0), ShowPhasePoints = true };
                 ksFluidList.SetEntries(gasMix.KsFluid);
                 dataContainer.AddChild(ksFluidList);
+            }
+
+            // A supercritical gas that dissolves reagents, shown even in a dry pipe so it can be found before anything is in it.
+            if (gasMix.KsSolventEnhancement >= 1.05f)
+            {
+                dataContainer.AddChild(new Label
+                {
+                    Text = Loc.GetString("ks-gas-analyzer-supercritical-solvent", ("factor", $"{gasMix.KsSolventEnhancement:0.#}")),
+                    ToolTip = Loc.GetString("ks-gas-analyzer-supercritical-solvent-tooltip"),
+                    MouseFilter = MouseFilterMode.Pass,
+                    Margin = new Thickness(0, 10, 0, 0),
+                });
             }
             // KS14 end
 

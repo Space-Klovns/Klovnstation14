@@ -7,6 +7,8 @@
     gas: WaterVapor
     vaporizationEntropy: 13.1
     mixingFamily: KsAqueous
+    # Polar, so a supercritical nonpolar gas such as carbon dioxide barely takes it up, and so pulls oil out of water.
+    supercriticalAffinity: 0.25
 
 - type: !PartialOnly reagent
   id: Oxygen

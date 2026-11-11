@@ -147,10 +147,36 @@ A mixture whose last step moved almost nothing is marked settled, and skipped un
 composition changes. A dry mixture only wakes if a linked gas in it is past saturation, so steam pumped into a cold
 pipe can condense.
 
-### No supercritical fluids
+### Supercritical solvents
 
-Above Tc everything is ideal gas. There is no dense single phase. Unlinked reagents have no Tc. Their curve is only
-bounded by the clamp on the exponent in `SaturationPressure`. This is a deliberate scope limit, not an oversight.
+> Heat a gas past its critical temperature and squeeze it past its critical pressure [...] it dissolves other reagents
+> as a liquid would.
+
+There is still no dense single phase: pressure stays ideal everywhere, and nothing above Tc condenses. What a dense gas
+past Tc does instead is **raise the vapor pressure of whatever it surrounds**, which is all supercritical extraction
+needs:
+
+- **How dense.** `KsGasThermoSystem.ReducedSolventDensity` sums `KsThrottling.ReducedDensity` over every gas above its
+  own Tc (any gas with van der Waals constants, linked or not): `3 b ρ exp(-B ρ)`, with `ρ` the gas's ideal partial
+  density and `B = b - a/(RT)` its second virial coefficient, the correction exponent clamped to ±2. That is about its
+  density over its real critical density. The virial factor is what keeps it honest: ideal density alone made nitrogen at
+  200 bar and room temperature nearly as good a solvent as carbon dioxide just past Tc, when real nitrogen there is thin.
+- **How much.** `KsPhaseMath.SupercriticalLogEnhancement`: `ln E = κ · affinity · max(0, δ - 1)`, `κ =
+  SupercriticalSolvation` (6), capped at `MaxSupercriticalLogEnhancement` (12). Carbon dioxide at 313 K does nothing
+  below about 12 MPa, gives about 6 at 15 MPa and 600 at 20 MPa, and reaches the cap by 25 MPa. Getting there takes a
+  volume pump, since a pressure pump stops at 4500 kPa.
+- **Where.** `E` multiplies the solute's `x γ Psat` in the phase step's equilibrium and Hertz–Knudsen terms, and in
+  `ExchangeAtWall`, where the density comes from line pressure. Without the wall half, a radiator in a supercritical line
+  would strip the solute. Not in the bubble point or the flash: dissolving isn't boiling. A reagent below its
+  `MinActiveTemperature` still dissolves when `E > 1`.
+- **Not for the solvent itself**: a linked reagent past its own Tc gets no enhancement.
+- **Selectivity.** `supercriticalAffinity` in a reagent's Fluidmos block (default 1) scales `ln E`. Water sets 0.25, so
+  carbon dioxide pulls oil out of water.
+- **Dropping out.** Lower the pressure and `E` falls, the vapor is past its new equilibrium, and it condenses at the
+  Hertz–Knudsen rate. An extraction loop needs no device of its own: pump, heater, phase separator, expansion valve.
+
+Unlinked reagents have no Tc of their own, and their curve is only bounded by the clamp on the exponent in
+`SaturationPressure`.
 
 ### Pumps heat, valves chill
 
@@ -326,9 +352,16 @@ established convention throughout the puddle code, not a bug.
 - **Gas analyzer** (`GasAnalyzerSystem`, `GasAnalyzerWindow.xaml.cs`) lists reagents under the gases in
   `KsFluidListControl` (`Content.Client/_KS14/Fluidmos/`). It is a grid with liquid, solid and vapor columns. Linked
   reagents have no vapor cell, because their vapor is in the gas table, and the column is hidden entirely when every
-  reagent is linked. Each row has a bar showing that reagent's share of the total. The data is `KsFluidEntry`.
-- **Canister window** shows its liquid as a band under the gas (`GasCanisterBoundUserInterface`,
-  `GasCanisterOverlayDataSystem`).
+  reagent is linked. Each row has a bar showing that reagent's share of the total. The data is `KsFluidEntry`. With
+  `ShowPhasePoints`, which only the analyzer sets, two more columns show where each reagent boils at the mixture's pressure
+  and where it melts, or "supercritical" for a linked gas past its Tc. Under the list, a line shows the mixture's
+  supercritical solvent strength (`GasMixEntry.KsSolventEnhancement`, from `KsFluidmosPhaseSystem.SolventEnhancement`)
+  whenever it is above 1, even in a dry pipe.
+- **Canister UI** lists neither gas nor fluid, only pressures. The glass window on the canister's sprite
+  (`CanisterOverlay`, fed by `GasCanisterOverlayDataSystem`) shows its liquid and ice as bands under the gas.
+- **Guidebook calculator** (`KsGuidePhaseCalculatorEmbed`, on the Liquids in Pipes page): boiling point at a pressure,
+  vapor pressure at a temperature, melting point and a linked gas's critical point, all from the same `KsPhaseMath` curve
+  and property table as the pipes.
 
 ## Adding a reagent
 
@@ -456,6 +489,7 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/Fluidmos/`:
 | `KsRadiatorFluidTests` | Radiator sweep and wall exchange |
 | `KsFluidmosCycleTests` | Whole refrigeration loops: ammonia, N2O in space, a Linde nitrogen liquefier, the loop's energy balance |
 | `KsCanisterFillTests`, `KsFluidmosRpdTests`, `KsFluidListControlTests` | Canister fills, RPD, the analyzer UI |
+| `KsSupercriticalTests` | Supercritical extraction, drop-out, selectivity, the wall, the analyzer readouts, the guidebook calculator |
 | `KsFluidGuidebookTests` | Pipe reactions on reagent cards and the Oil Refining page |
 | `Atmos/KsAirHeatExchangeTests`, `Atmos/KsPumpHeatTests` | Heat with the air; pump recovery, load and APC safety |
 
@@ -476,7 +510,8 @@ measurable cost on a full station. Rerun them after touching `UpdatePhases`, `Me
 The original design brief, [fluidmos_plan.md](fluidmos_plan.md), has the full list of planned follow-ups in its
 section 7, and the reasoning behind most of the decisions above. The main ones:
 
-- **Supercritical fluids**, as above.
+- **A real equation of state.** Supercritical gases dissolve things, but pressure is still ideal, so a canister holds
+  no more of a dense gas than of a thin one.
 - **Henry's law.** Gases don't dissolve in liquids.
 - **Finite-volume pipes.** A pipe net is still one well-mixed mixture, so pressure drop along a run of radiators comes
   only from the radiators' own packet handling.

@@ -92,7 +92,6 @@ namespace Content.Client.Atmos.UI
             // KS14 end
             _window.SetReleasePressure(component.ReleasePressure);
             _window.SetReleaseValve(component.ReleaseValveOpen);
-            _window.SetKsFluid(cast.KsFluid); // KS14
         }
 
         protected override void Dispose(bool disposing)
