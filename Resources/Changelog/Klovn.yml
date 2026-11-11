@@ -2642,3 +2642,13 @@ Entries:
         crawl and whisper, but can't stand up or use your hands.
   id: 251
   time: '2026-11-10T17:33:18.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Collapsed sections, such as a reagent's Sources and Effects in the
+        guidebook, show their chevron again.
+    - type: Fix
+      message: Dropdown arrows in the tgui theme no longer sit crooked.
+  id: 252
+  time: '2026-11-11T06:35:49.0000000+00:00'
