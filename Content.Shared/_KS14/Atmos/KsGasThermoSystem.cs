@@ -37,6 +37,16 @@ public sealed partial class KsGasThermoSystem : EntitySystem
     /// </summary>
     public float[] RatioHeatCapacities { get; private set; } = new float[Atmospherics.TotalNumberOfGases];
 
+    /// <summary>
+    ///     Kelvin above which each gas can't be liquid at any pressure, <c>8a / (27 R b)</c>, or infinity for an ideal gas.
+    /// </summary>
+    public float[] CriticalTemperatures { get; private set; } = CreateInfinite();
+
+    /// <summary>
+    ///     kPa at each gas's critical point, <c>a / (27 b²)</c>, or infinity for an ideal gas.
+    /// </summary>
+    public float[] CriticalPressures { get; private set; } = CreateInfinite();
+
     public override void Initialize()
     {
         base.Initialize();
@@ -109,8 +119,65 @@ public sealed partial class KsGasThermoSystem : EntitySystem
         return (a, b);
     }
 
+    /// <summary>
+    ///     How dense a mixture's supercritical gas is, as a solvent: the sum of <see cref="KsThrottling.ReducedDensity"/>
+    ///         over the gases above their critical temperature, each at its own partial density. 1 is about each gas's
+    ///         real critical density. A gas below its critical temperature condenses rather than becoming dense, and an
+    ///         ideal gas has no constants, so neither counts.
+    /// </summary>
+    /// <param name="inverseVolume">
+    ///     One over the litres the gas occupies: the free volume's, or for a packet flowing at a line pressure, that
+    ///         pressure over <c>R T</c> times the packet's vapor moles.
+    /// </param>
+    public float ReducedSolventDensity(GasMixture mixture, float temperature, float inverseVolume)
+    {
+        if (inverseVolume <= 0f || !float.IsFinite(inverseVolume))
+            return 0f;
+
+        var moles = mixture.Moles;
+        var density = 0f;
+        for (var i = 0; i < Atmospherics.TotalNumberOfGases; i++)
+        {
+            var gasMoles = moles[i];
+            if (gasMoles <= 0f || temperature <= CriticalTemperatures[i])
+                continue;
+
+            density += KsThrottling.ReducedDensity(VanDerWaalsA[i], VanDerWaalsB[i], gasMoles * inverseVolume, temperature);
+        }
+
+        return density;
+    }
+
+    /// <summary>
+    ///     <see cref="ReducedSolventDensity(GasMixture, float, float)"/> of a mixture's own gas, in its free volume.
+    /// </summary>
+    public float ReducedSolventDensity(GasMixture mixture)
+    {
+        var freeVolume = mixture.FreeVolume;
+        return freeVolume > 0f ? ReducedSolventDensity(mixture, mixture.Temperature, 1f / freeVolume) : 0f;
+    }
+
+    /// <summary>
+    ///     How many times over a supercritical solvent in <paramref name="mixture"/> raises a reagent's vapor pressure, at
+    ///         an affinity of 1: 1 when it holds none. For readouts; a polar reagent such as water gets far less.
+    /// </summary>
+    public float SolventEnhancement(GasMixture mixture)
+    {
+        var density = ReducedSolventDensity(mixture);
+        return density > 1f ? MathF.Exp(KsPhaseMath.SupercriticalLogEnhancement(density, affinity: 1f)) : 1f;
+    }
+
+    private static float[] CreateInfinite()
+    {
+        var values = new float[Atmospherics.TotalNumberOfGases];
+        Array.Fill(values, float.PositiveInfinity);
+        return values;
+    }
+
     private void Rebuild()
     {
+        var criticalTemperatures = CreateInfinite();
+        var criticalPressures = CreateInfinite();
         var a = new float[Atmospherics.TotalNumberOfGases];
         var sqrtA = new float[Atmospherics.TotalNumberOfGases];
         var b = new float[Atmospherics.TotalNumberOfGases];
@@ -124,6 +191,11 @@ public sealed partial class KsGasThermoSystem : EntitySystem
             a[i] = MathF.Max(gasPrototype.KsVanDerWaalsA ?? 0f, 0f);
             sqrtA[i] = MathF.Sqrt(a[i]);
             b[i] = MathF.Max(gasPrototype.KsVanDerWaalsB ?? 0f, 0f);
+            if (a[i] > 0f && b[i] > 0f)
+            {
+                criticalTemperatures[i] = KsThrottling.CriticalTemperature(a[i], b[i]);
+                criticalPressures[i] = KsThrottling.CriticalPressure(a[i], b[i]);
+            }
 
             if (gasPrototype.KsHeatCapacityRatio is { } ratio)
             {
@@ -141,5 +213,7 @@ public sealed partial class KsGasThermoSystem : EntitySystem
         SqrtVanDerWaalsA = sqrtA;
         VanDerWaalsB = b;
         RatioHeatCapacities = ratioHeatCapacities;
+        CriticalTemperatures = criticalTemperatures;
+        CriticalPressures = criticalPressures;
     }
 }

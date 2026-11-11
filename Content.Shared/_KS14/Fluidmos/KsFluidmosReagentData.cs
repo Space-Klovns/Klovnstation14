@@ -75,4 +75,11 @@ public sealed partial class KsFluidmosReagentData
     /// </summary>
     [DataField]
     public ProtoId<KsFluidMixingFamilyPrototype>? MixingFamily;
+
+    /// <summary>
+    ///     How readily it dissolves in a supercritical gas, scaling how far that raises its vapor pressure. 1 by default;
+    ///         lower for a polar reagent, such as water, that a nonpolar solvent like carbon dioxide barely takes up.
+    /// </summary>
+    [DataField]
+    public float? SupercriticalAffinity;
 }

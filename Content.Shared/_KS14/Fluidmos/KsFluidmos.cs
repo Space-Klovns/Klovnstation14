@@ -149,4 +149,17 @@ public static class KsFluidmos
     ///         not oscillate.
     /// </summary>
     public const float SupersaturationMargin = 0.05f;
+
+    /// <summary>
+    ///     How strongly a supercritical gas dissolves reagents: the log of the factor their saturation pressure is raised
+    ///         by, per unit of reduced solvent density past the critical point
+    ///         (<see cref="KsPhaseMath.SupercriticalLogEnhancement"/>). Carbon dioxide at 313 K does nothing below about
+    ///         12 MPa, multiplies it by about 6 at 15 MPa and 600 at 20 MPa, and reaches the cap by 25 MPa.
+    /// </summary>
+    public const float SupercriticalSolvation = 6f;
+
+    /// <summary>
+    ///     Largest log of the supercritical enhancement, about 160,000 times, so no density makes it infinite.
+    /// </summary>
+    public const float MaxSupercriticalLogEnhancement = 12f;
 }

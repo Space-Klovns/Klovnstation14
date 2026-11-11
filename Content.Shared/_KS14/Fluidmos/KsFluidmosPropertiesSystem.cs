@@ -238,6 +238,7 @@ public sealed partial class KsFluidmosPropertiesSystem : EntitySystem
             MixingFamily = mixingFamily,
             HasInteractions = mixingFamily >= 0 || _pairedReagents.Contains(reagentPrototype.ID),
             InNamedPair = _pairedReagents.Contains(reagentPrototype.ID),
+            SupercriticalAffinity = MathF.Max(data?.SupercriticalAffinity ?? 1f, 0f),
         };
     }
 }

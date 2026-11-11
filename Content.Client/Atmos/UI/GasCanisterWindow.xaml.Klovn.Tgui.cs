@@ -17,9 +17,4 @@ public sealed partial class GasCanisterWindow : IKsGasCanisterWindow
     {
         // The stock window has no gauges.
     }
-
-    public void SetKsFluid(Content.Shared._KS14.Fluidmos.KsFluidEntry[]? entries)
-    {
-        KsFluidList.SetEntries(entries);
-    }
 }

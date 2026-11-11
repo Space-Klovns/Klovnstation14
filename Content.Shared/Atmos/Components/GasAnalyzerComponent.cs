@@ -45,7 +45,7 @@ public sealed class GasAnalyzerUserMessage(GasMixEntry[] nodeGasMixes, string de
 /// Contains information on a gas mix entry, turns into a tab in the UI.
 /// </summary>
 [Serializable, NetSerializable]
-public readonly record struct GasMixEntry(string Name, float Volume, float Pressure, float Temperature, GasEntry[]? Gases = null, Content.Shared._KS14.Fluidmos.KsFluidEntry[]? KsFluid = null /* KS14: added */)
+public readonly record struct GasMixEntry(string Name, float Volume, float Pressure, float Temperature, GasEntry[]? Gases = null, Content.Shared._KS14.Fluidmos.KsFluidEntry[]? KsFluid = null /* KS14: added */, float KsSolventEnhancement = 1f /* KS14: added */)
 {
     /// <summary>
     /// Name of the tab in the UI.
@@ -74,6 +74,11 @@ public readonly record struct GasMixEntry(string Name, float Volume, float Press
     /// The reagents this gas mixture carries as liquid, solid or unlinked vapor, or null for none.
     /// </summary>
     public readonly Content.Shared._KS14.Fluidmos.KsFluidEntry[]? KsFluid = KsFluid;
+
+    /// <summary>
+    /// How many times over a supercritical gas in this mixture raises the vapor pressure of what it dissolves; 1 for none.
+    /// </summary>
+    public readonly float KsSolventEnhancement = KsSolventEnhancement;
     // KS14 end
 }
 
