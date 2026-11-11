@@ -9,6 +9,11 @@
   - type: GameRule
     minPlayers: 0
   - type: KsFieldCommanderRule
+    # The play area: a lethal fog beyond 55 tiles, which the commander's units walk in from. They appear on foot
+    #     between 63 (the fog's edge plus fogSpawnMargin) and 90 tiles out.
+    fogRange: 55
+    minSpawnDistance: 63
+    maxSpawnDistance: 90
     waveAnnouncements:
     - ks-fieldcommander-wave-1
     - ks-fieldcommander-wave-2
@@ -22,8 +27,9 @@
     - ks-fieldcommander-strike-3
     phases:
     - name: ks-fieldcommander-phase-landfall
-      start: 20 # after the defenders' own briefing (introDelay)
+      start: 20 # after the defenders' own briefing (briefingDelay)
       announcement: ks-fieldcommander-phase-landfall-announcement
+      intel: ks-fieldcommander-intel-phase-landfall
     - name: ks-fieldcommander-phase-probing
       start: 4m
       waveInterval: 150
@@ -31,6 +37,7 @@
       budget: 3
       budgetPerExtraDefender: 0.25
       announcement: ks-fieldcommander-phase-probing-announcement
+      intel: ks-fieldcommander-intel-phase-probing
     - name: ks-fieldcommander-phase-pressure
       start: 12m
       waveInterval: 120
@@ -38,7 +45,8 @@
       budgetPerExtraDefender: 0.25
       strikeChance: 0.15
       announcement: ks-fieldcommander-phase-pressure-announcement
-      reinforcementPod: KsFieldCommanderReinforcementsAmmo
+      intel: ks-fieldcommander-intel-phase-pressure
+      reinforcementPod: KsFieldCommanderRequisitionResupply
     - name: ks-fieldcommander-phase-siege
       start: 22m
       waveInterval: 105
@@ -46,6 +54,7 @@
       budgetPerExtraDefender: 0.3
       strikeChance: 0.4
       announcement: ks-fieldcommander-phase-siege-announcement
+      intel: ks-fieldcommander-intel-phase-siege
       reinforcementPod: KsFieldCommanderReinforcementsSupport
     - name: ks-fieldcommander-phase-final
       start: 32m
@@ -54,6 +63,7 @@
       budgetPerExtraDefender: 0.3
       strikeChance: 0.6
       announcement: ks-fieldcommander-phase-final-announcement
+      intel: ks-fieldcommander-intel-phase-final
       reinforcementPod: KsFieldCommanderReinforcementsHeavy
       deployUplink: true
       uplinkGuardBudget: 9

@@ -39,7 +39,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
     private static readonly EntProtoId ScenarioRule = "KsScenarioFieldCommander";
     private static readonly EntProtoId NanotrasenObjective = "KsScenarioObjectiveNanotrasen";
     private static readonly EntProtoId Shop = "KsFieldCommanderShop";
-    private static readonly EntProtoId ResupplyFlare = "KsFlareSupplyPodReinforcementsAmmo";
+    private static readonly EntProtoId ResupplyFlare = "KsFlareSupplyPodRequisitionResupply";
 
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _commanderRule = "KsTestFieldCommanderPointsRule";
@@ -103,7 +103,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
     defenderSightRange: 1
     safeZoneRadius: 1
     uplinkPrototype: null
-    introDelay: 1
+    briefingDelay: 1
     pointsPerCost: 25
     teamkillPoints: -150
     phases:
@@ -129,7 +129,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
   components:
   - type: KsFieldCommanderRule
     uplinkPrototype: null
-    introAnnouncement: null
+    briefingAnnouncement: null
     phases:
     - name: ks-fieldcommander-phase-landfall
       start: 0
@@ -361,7 +361,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
         await server.WaitAssertion(() =>
         {
             var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
-            Assert.That(ruleComponent.IntroSent, Is.False, "the briefing waits for its delay");
+            Assert.That(ruleComponent.BriefingSent, Is.False, "the briefing waits for its delay");
             Assert.That(ruleComponent.PhaseIndex, Is.EqualTo(-1));
         });
 
@@ -370,7 +370,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
         await server.WaitAssertion(() =>
         {
             var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
-            Assert.That(ruleComponent.IntroSent, Is.True);
+            Assert.That(ruleComponent.BriefingSent, Is.True);
             Assert.That(ruleComponent.PhaseIndex, Is.EqualTo(-1), "the commander's first phase comes after the briefing");
         });
 
@@ -378,6 +378,40 @@ public sealed class KsFieldCommanderPointsTest : GameTest
 
         await server.WaitAssertion(() =>
             Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(0)));
+    }
+
+    /// <summary>
+    ///     The commander only taunts; what the defenders can act on comes from their own intelligence, a moment later.
+    /// </summary>
+    [Test]
+    public async Task WaveIntelFollowsTheTaunt()
+    {
+        var server = Pair.Server;
+        var (_, ruleUid, _) = await SetUpOutpost();
+        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
+        var intelDelay = 0f;
+
+        await server.WaitPost(() =>
+        {
+            var ruleSystem = server.System<KsFieldCommanderRuleSystem>();
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            intelDelay = (float)ruleComponent.IntelDelay.TotalSeconds;
+
+            ruleSystem.SetPhase((ruleUid, ruleComponent, server.EntMan.GetComponent<GameRuleComponent>(ruleUid)), 1);
+            ruleSystem.ForceWave((ruleUid, ruleComponent));
+
+            Assert.That(ruleComponent.PendingIntel, Has.Count.EqualTo(1), "the wave's intel should wait to follow the taunt");
+        });
+
+        await Pair.RunTicksSync((int)(intelDelay * 0.5f * tickRate));
+        await server.WaitAssertion(() =>
+            Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PendingIntel, Has.Count.EqualTo(1),
+                "intel shouldn't go out before its delay"));
+
+        await Pair.RunTicksSync((int)(intelDelay * tickRate) + 2);
+        await server.WaitAssertion(() =>
+            Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PendingIntel, Is.Empty,
+                "intel should go out once its delay has passed"));
     }
 
     [Test]

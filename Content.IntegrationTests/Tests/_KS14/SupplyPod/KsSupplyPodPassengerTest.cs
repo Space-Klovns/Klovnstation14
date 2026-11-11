@@ -25,6 +25,7 @@ public sealed class KsSupplyPodPassengerTest : GameTest
     private static readonly EntProtoId CargoPod = "SupplyPodCargoBaseSyndicate";
 
     private readonly EntProtoId _passenger = "KsTestPodPassenger";
+    private readonly EntProtoId _crewedPod = "KsTestCrewedPod";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -35,6 +36,22 @@ public sealed class KsSupplyPodPassengerTest : GameTest
   - type: HTN
     rootTask:
       task: IdleCompound
+
+- type: randomHumanoidSettings
+  id: KsTestPodHumanoid
+  components:
+  - type: HTN
+    rootTask:
+      task: IdleCompound
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsTestCrewedPod
+  components:
+  - type: KsSupplyPodHumanoidPassengers
+    settings:
+    - KsTestPodHumanoid
+    - KsTestPodHumanoid
 ";
 
     [Test]
@@ -83,6 +100,55 @@ public sealed class KsSupplyPodPassengerTest : GameTest
             Assert.That(server.EntMan.HasComponent<ActiveNPCComponent>(passengerUid), Is.True,
                 "an NPC let out of its pod should be awake");
             Assert.That(server.EntMan.HasComponent<KsSupplyPodPassengerComponent>(passengerUid), Is.False);
+        });
+    }
+
+    /// <summary>
+    ///     A pod that brings its own crew, such as a field support pod's paramilitaries, has them aboard and asleep from
+    ///         the moment it exists, and lets them out awake.
+    /// </summary>
+    [Test]
+    public async Task CrewedPodBoardsItsCrewAsleep()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        var containerSystem = server.System<SharedContainerSystem>();
+        var crew = new System.Collections.Generic.List<EntityUid>();
+
+        await server.WaitPost(() =>
+        {
+            var podUid = server.EntMan.SpawnAtPosition(_crewedPod, testMap.GridCoords);
+
+            var query = server.EntMan.AllEntityQueryEnumerator<KsSupplyPodPassengerComponent>();
+            while (query.MoveNext(out var passengerUid, out var passengerComponent))
+            {
+                if (passengerComponent.PodUid == podUid)
+                    crew.Add(passengerUid);
+            }
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(crew, Has.Count.EqualTo(2), "one passenger for each entry");
+            foreach (var passengerUid in crew)
+            {
+                Assert.That(containerSystem.IsEntityInContainer(passengerUid), Is.True, "the crew should ride inside the pod");
+                Assert.That(server.EntMan.HasComponent<ActiveNPCComponent>(passengerUid), Is.False, "the crew must sleep through the fall");
+            }
+        });
+
+        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
+        await Pair.RunTicksSync((int)(8f * tickRate));
+
+        await server.WaitAssertion(() =>
+        {
+            foreach (var passengerUid in crew)
+            {
+                Assert.That(containerSystem.IsEntityInContainer(passengerUid), Is.False, "the pod should have let its crew out");
+                Assert.That(server.EntMan.HasComponent<ActiveNPCComponent>(passengerUid), Is.True, "the crew should be awake once out");
+            }
         });
     }
 }

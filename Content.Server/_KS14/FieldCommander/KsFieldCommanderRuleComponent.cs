@@ -149,6 +149,29 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
 
     #endregion
 
+    #region Fog
+
+    /// <summary>
+    ///     Radius of the play area around the defenders' base. Beyond it lies a fog that hurts defenders, and that the
+    ///         commander's units are sent in from. Zero for no fog.
+    /// </summary>
+    [DataField]
+    public float FogRange;
+
+    /// <summary>
+    ///     How far beyond the fog's edge units on foot appear, so that nobody can camp the edge for them.
+    /// </summary>
+    [DataField]
+    public float FogSpawnMargin = 8f;
+
+    /// <summary>
+    ///     How far past the uplink the fog lifts when it lands, so that the defenders can fight around it.
+    /// </summary>
+    [DataField]
+    public float FogUplinkMargin = 12f;
+
+    #endregion
+
     #region Delivery
 
     /// <summary>
@@ -213,29 +236,53 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [DataField]
     public SoundSpecifier MajorSound = new SoundPathSpecifier("/Audio/_KS14/Announcements/fieldcommander.ogg");
 
+    // The commander only ever taunts: everything the defenders can act on comes from their own side's intelligence,
+    //      a few seconds later, as a reply.
+
     /// <summary>
-    ///     One of these is sent with each wave.
+    ///     The commander taunts with one of these with each wave.
     /// </summary>
     [DataField]
     public List<LocId> WaveAnnouncements = [];
 
     /// <summary>
-    ///     One of these is sent with each airstrike.
+    ///     Intelligence on each wave. Takes <c>count</c> and <c>direction</c>.
+    /// </summary>
+    [DataField]
+    public LocId? WaveIntel = "ks-fieldcommander-intel-wave";
+
+    /// <summary>
+    ///     The commander taunts with one of these with each airstrike.
     /// </summary>
     [DataField]
     public List<LocId> StrikeAnnouncements = [];
 
+    [DataField]
+    public LocId? StrikeIntel = "ks-fieldcommander-intel-strike";
+
     /// <summary>
-    ///     Sent when a defender objective falls. Takes <c>remaining</c>.
+    ///     The commander's gloat when a defender objective falls.
     /// </summary>
     [DataField]
     public LocId? ObjectiveLostAnnouncement = "ks-fieldcommander-objective-lost";
 
     /// <summary>
-    ///     Sent when the uplink lands. Takes <c>direction</c>, <c>distance</c> and <c>minutes</c>.
+    ///     Takes <c>remaining</c>.
+    /// </summary>
+    [DataField]
+    public LocId? ObjectiveLostIntel = "ks-fieldcommander-intel-objective-lost";
+
+    /// <summary>
+    ///     The commander's taunt when the uplink lands.
     /// </summary>
     [DataField]
     public LocId? UplinkAnnouncement = "ks-fieldcommander-uplink-deployed";
+
+    /// <summary>
+    ///     Takes <c>direction</c>, <c>distance</c> and <c>minutes</c>.
+    /// </summary>
+    [DataField]
+    public LocId? UplinkIntel = "ks-fieldcommander-intel-uplink";
 
     /// <summary>
     ///     How long before the uplink's bombardment the defenders are warned.
@@ -243,29 +290,44 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [DataField]
     public TimeSpan UplinkWarningBefore = TimeSpan.FromMinutes(2);
 
+    /// <summary>
+    ///     Takes <c>minutes</c>.
+    /// </summary>
     [DataField]
-    public LocId? UplinkWarningAnnouncement = "ks-fieldcommander-uplink-warning";
+    public LocId? UplinkWarningIntel = "ks-fieldcommander-intel-uplink-warning";
+
+    /// <summary>
+    ///     Sent when a phase drops the defenders a reinforcement pod.
+    /// </summary>
+    [DataField]
+    public LocId? ReinforcementIntel = "ks-fieldcommander-intel-reinforcements";
 
     /// <summary>
     ///     How long after the rule starts the defenders' own command first comes on the air.
     /// </summary>
     [DataField]
-    public TimeSpan IntroDelay = TimeSpan.FromSeconds(6);
+    public TimeSpan BriefingDelay = TimeSpan.FromSeconds(6);
 
     /// <summary>
-    ///     The defenders' briefing, sent once after <see cref="IntroDelay"/>.
+    ///     The defenders' briefing, sent once after <see cref="BriefingDelay"/>.
     /// </summary>
     [DataField]
-    public LocId? IntroAnnouncement = "ks-fieldcommander-intro";
+    public LocId? BriefingAnnouncement = "ks-fieldcommander-intro";
+
+    /// <summary>
+    ///     How long after the commander speaks the defenders' intelligence replies.
+    /// </summary>
+    [DataField]
+    public TimeSpan IntelDelay = TimeSpan.FromSeconds(3);
 
     [DataField]
-    public LocId IntroSender = "ks-fieldcommander-intro-sender";
+    public LocId IntelSender = "ks-fieldcommander-intro-sender";
 
     [DataField]
-    public Color IntroColor = Color.FromHex("#3A5FAD");
+    public Color IntelColor = Color.FromHex("#5B8CFF");
 
     [DataField]
-    public SoundSpecifier IntroSound = new SoundPathSpecifier("/Audio/_KS14/Announcements/confirmdropoff.ogg");
+    public SoundSpecifier IntelSound = new SoundPathSpecifier("/Audio/_KS14/Announcements/confirmdropoff.ogg");
 
     #endregion
 
@@ -323,7 +385,28 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public TimeSpan TimeOffset;
 
     [ViewVariables]
-    public bool IntroSent;
+    public bool BriefingSent;
+
+    /// <summary>
+    ///     The map the fog is on, once it is up.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? FogMapUid;
+
+    [ViewVariables]
+    public MapCoordinates FogOrigin;
+
+    /// <summary>
+    ///     The fog's radius now, which grows when the uplink lands.
+    /// </summary>
+    [ViewVariables]
+    public float FogCurrentRange;
+
+    /// <summary>
+    ///     Intelligence waiting to go out, in the order it was queued.
+    /// </summary>
+    [ViewVariables]
+    public List<KsFieldCommanderPendingIntel> PendingIntel = [];
 
     /// <summary>
     ///     Every defender's points, by player rather than by body, so that they last through a death.
@@ -398,6 +481,11 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
 public readonly record struct KsFieldCommanderSafeZone(MapCoordinates Center, float Radius);
 
 /// <summary>
+///     An intelligence message, already formatted, to send at <paramref name="At"/>.
+/// </summary>
+public readonly record struct KsFieldCommanderPendingIntel(TimeSpan At, string Message);
+
+/// <summary>
 ///     One stage of the commander's timeline.
 /// </summary>
 [DataDefinition]
@@ -446,10 +534,16 @@ public sealed partial class KsFieldCommanderPhase
     public float StrikeChance;
 
     /// <summary>
-    ///     Sent when the phase begins, with <see cref="KsFieldCommanderRuleComponent.MajorSound"/>.
+    ///     The commander's taunt when the phase begins, with <see cref="KsFieldCommanderRuleComponent.MajorSound"/>.
     /// </summary>
     [DataField]
     public LocId? Announcement;
+
+    /// <summary>
+    ///     The defenders' intelligence on what this phase brings.
+    /// </summary>
+    [DataField]
+    public LocId? Intel;
 
     /// <summary>
     ///     A pod dropped to the defenders when the phase begins, as their reward for lasting this long.
@@ -549,8 +643,14 @@ public sealed partial class KsFieldCommanderAsset
     public bool GiveOrders = true;
 
     /// <summary>
-    ///     Sent once with each wave this is part of.
+    ///     The commander's taunt, sent once with each wave this is part of.
     /// </summary>
     [DataField]
     public LocId? Announcement;
+
+    /// <summary>
+    ///     The defenders' intelligence on it, sent once with each wave this is part of.
+    /// </summary>
+    [DataField]
+    public LocId? Intel;
 }

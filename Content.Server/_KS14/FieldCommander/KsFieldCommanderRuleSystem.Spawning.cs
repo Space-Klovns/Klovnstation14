@@ -268,7 +268,8 @@ public sealed partial class KsFieldCommanderRuleSystem
         float minObjectiveDistance,
         float minDefenderDistance,
         bool hidden,
-        out EntityCoordinates coordinates)
+        out EntityCoordinates coordinates,
+        bool outsideFog = false)
     {
         coordinates = default;
 
@@ -288,6 +289,9 @@ public sealed partial class KsFieldCommanderRuleSystem
             if (IsInSafeZone(component, tileMapCoordinates) ||
                 IsNearAny(tileMapCoordinates, anchors, minObjectiveDistance) ||
                 IsNearAny(tileMapCoordinates, defenders, minDefenderDistance))
+                continue;
+
+            if (outsideFog && !IsBeyondFog(component, tileMapCoordinates, component.FogSpawnMargin))
                 continue;
 
             if (hidden && IsSeenByDefenders(component, tileMapCoordinates, defenders))
@@ -378,17 +382,34 @@ public sealed partial class KsFieldCommanderRuleSystem
         var objectives = new List<MapCoordinates>();
         CollectDefenderObjectives(rule.Comp, objectives);
 
-        var sent = Deliver(rule, purchases, objectives, defenders);
+        var arrivals = new List<MapCoordinates>();
+        var sent = Deliver(rule, purchases, objectives, defenders, arrivals);
 
         if (sent > 0)
         {
-            AnnounceRandom(rule.Comp, rule.Comp.WaveAnnouncements, major: false, ("count", sent));
+            AnnounceRandom(rule.Comp, rule.Comp.WaveAnnouncements, major: false);
+
+            // Where the wave as a whole is coming from, as the defenders' sensors would see it.
+            var arrivalSum = Vector2.Zero;
+            foreach (var arrival in arrivals)
+                arrivalSum += arrival.Position;
+
+            var anchors = objectives.Count > 0 ? objectives : defenders;
+            var direction = arrivals.Count > 0
+                ? GetCompassDirection(arrivalSum / arrivals.Count - GetBaseCentre(rule.Comp, anchors))
+                : string.Empty;
+
+            Intel(rule.Comp, rule.Comp.WaveIntel, ("count", sent), ("direction", direction));
 
             var announced = new HashSet<LocId>();
             foreach (var assetIndex in purchases)
             {
-                if (rule.Comp.Assets[assetIndex].Announcement is { } assetAnnouncement && announced.Add(assetAnnouncement))
+                var asset = rule.Comp.Assets[assetIndex];
+                if (asset.Announcement is { } assetAnnouncement && announced.Add(assetAnnouncement))
                     Announce(rule.Comp, assetAnnouncement, major: false);
+
+                if (asset.Intel is { } assetIntel && announced.Add(assetIntel))
+                    Intel(rule.Comp, assetIntel);
             }
         }
 
@@ -402,7 +423,8 @@ public sealed partial class KsFieldCommanderRuleSystem
     private int Deliver(Entity<KsFieldCommanderRuleComponent> rule,
         List<int> purchases,
         List<MapCoordinates> objectives,
-        List<MapCoordinates> defenders)
+        List<MapCoordinates> defenders,
+        List<MapCoordinates> arrivals)
     {
         var anchors = objectives.Count > 0 ? objectives : defenders;
         var footGroup = new List<int>();
@@ -417,15 +439,15 @@ public sealed partial class KsFieldCommanderRuleSystem
 
             if (group.Count > 0 && CountGroup(rule.Comp, group) + asset.Count > limit)
             {
-                sent += DeliverGroup(rule, group, asset.Delivery, anchors, defenders);
+                sent += DeliverGroup(rule, group, asset.Delivery, anchors, defenders, arrivals);
                 group.Clear();
             }
 
             group.Add(assetIndex);
         }
 
-        sent += DeliverGroup(rule, footGroup, KsFieldCommanderDelivery.Foot, anchors, defenders);
-        sent += DeliverGroup(rule, podGroup, KsFieldCommanderDelivery.Pod, anchors, defenders);
+        sent += DeliverGroup(rule, footGroup, KsFieldCommanderDelivery.Foot, anchors, defenders, arrivals);
+        sent += DeliverGroup(rule, podGroup, KsFieldCommanderDelivery.Pod, anchors, defenders, arrivals);
         return sent;
     }
 
@@ -442,7 +464,8 @@ public sealed partial class KsFieldCommanderRuleSystem
         List<int> group,
         KsFieldCommanderDelivery delivery,
         List<MapCoordinates> anchors,
-        List<MapCoordinates> defenders)
+        List<MapCoordinates> defenders,
+        List<MapCoordinates> arrivals)
     {
         if (group.Count == 0)
             return 0;
@@ -455,8 +478,10 @@ public sealed partial class KsFieldCommanderRuleSystem
                 minObjectiveDistance: component.MinSpawnDistance,
                 minDefenderDistance: component.MinDefenderDistance,
                 hidden: true,
-                out var footCoordinates))
+                out var footCoordinates,
+                outsideFog: true))
         {
+            arrivals.Add(_transformSystem.ToMapCoordinates(footCoordinates));
             return SpawnGroup(rule, group, footCoordinates, podUid: null);
         }
 
@@ -469,6 +494,7 @@ public sealed partial class KsFieldCommanderRuleSystem
                 out var podCoordinates))
             return 0;
 
+        arrivals.Add(_transformSystem.ToMapCoordinates(podCoordinates));
         var podUid = SpawnAtPosition(component.PodPrototype, podCoordinates);
         return SpawnGroup(rule, group, podCoordinates, podUid);
     }
@@ -661,6 +687,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
             SpawnAtPosition(component.StrikePrototype, strikeCoordinates);
             AnnounceRandom(component, component.StrikeAnnouncements, major: false);
+            Intel(component, component.StrikeIntel);
             return true;
         }
 

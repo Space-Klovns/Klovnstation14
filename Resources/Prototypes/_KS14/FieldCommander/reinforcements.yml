@@ -2,25 +2,6 @@
 
 - type: entity
   parent: SupplyPodCargoBase
-  id: KsFieldCommanderReinforcementsAmmo
-  name: ammunition cargo pod
-  description: A Nanotrasen drop pod packed with magazines.
-  components:
-  - type: EntityTableContainerFill
-    containers:
-      entity_storage: !type:AllSelector
-        children:
-        - id: MagazineRifle
-          amount: 6
-        - id: MagazinePistolSubMachineGun
-          amount: 4
-        - id: MagazinePistol
-          amount: 4
-        - id: GrenadeStinger
-          amount: 2
-
-- type: entity
-  parent: SupplyPodCargoBase
   id: KsFieldCommanderReinforcementsSupport
   name: field support cargo pod
   description: A Nanotrasen drop pod with medical supplies and a pair of turrets.
@@ -49,7 +30,7 @@
     containers:
       entity_storage: !type:AllSelector
         children:
-        - id: KsWeaponLauncherRocketAt4
+        - id: KsWeaponLauncherRocketAt4FieldCommander
           amount: 2
         - id: KsScenarioNanoplantSeismicChargeShort
           amount: 3

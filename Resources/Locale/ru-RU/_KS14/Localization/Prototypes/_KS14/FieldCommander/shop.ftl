@@ -1,8 +1,12 @@
 # Resources\Prototypes\_KS14\FieldCommander\shop.yml
 ent-KsFieldCommanderShop = терминал снабжения
-    .desc = Канал снабжения Полевого управления. Сюда начисляются подтверждённые уничтожения, а тратятся они на боеприпасы и огневую поддержку.
+    .desc = Позолоченный канал снабжения Полевого управления. Сюда начисляются подтверждённые уничтожения, а тратятся они на боеприпасы, турели и подкрепления.
     .suffix = Полевой командир
-ent-KsFlareSupplyPodReinforcementsAmmo = сигнальный фальшфейер снабжения
-    .desc = Вызывает в точку фальшфейера капсулу Nanotrasen с боеприпасами.
-ent-KsFlareSupplyPodReinforcementsSupport = сигнальный фальшфейер полевой поддержки
-    .desc = Вызывает в точку фальшфейера капсулу полевой поддержки Nanotrasen с турелями и пласталью.
+ent-KsFlareSupplyPodRequisitionResupply = фальшфейер снабжения
+    .desc = Вызывает в точку фальшфейера капсулу снабжения Nanotrasen с гранатами, зарядом, турелью и ракетой.
+ent-KsFlareSupplyPodRequisitionFieldSupport = фальшфейер полевой поддержки
+    .desc = Вызывает в точку фальшфейера десантную капсулу с отрядом военизированных сил Nanotrasen.
+ent-KsFieldCommanderRequisitionResupply = грузовая капсула снабжения
+    .desc = Десантная капсула Nanotrasen со всем, чего не хватает окопавшемуся отряду.
+ent-KsFieldCommanderRequisitionFieldSupport = капсула полевой поддержки
+    .desc = Десантная капсула Nanotrasen с отрядом военизированных сил, турелью и аптечкой для них.

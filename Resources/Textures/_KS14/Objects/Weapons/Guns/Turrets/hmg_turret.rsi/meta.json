@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Turret base taken from https://github.com/tgstation/tgstation/commit/42e0275d860551197687c571c689c270ff423288, laser turret variant by glueguzzleralpha used as reference, heavy NT variant for Klovnstation 14",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "nt_off",
+      "directions": 8
+    },
+    {
+      "name": "nt_lethal",
+      "directions": 8
+    },
+    {
+      "name": "nt_broken"
+    },
+    {
+      "name": "flatpack"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+using Content.Server.Humanoid.Systems;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Systems;
 using Content.Shared.Mobs;
@@ -15,6 +16,8 @@ public sealed partial class KsSupplyPodPassengerSystem : EntitySystem
 {
     [Dependency] private NPCSystem _npcSystem = default!;
     [Dependency] private SharedEntityStorageSystem _entityStorageSystem = default!;
+    [Dependency] private RandomHumanoidSystem _randomHumanoidSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
 
     /// <summary>
@@ -35,12 +38,30 @@ public sealed partial class KsSupplyPodPassengerSystem : EntitySystem
     }
 
     [SubscribeLocalEvent]
+    private void OnPassengerPodMapInit(Entity<KsSupplyPodHumanoidPassengersComponent> entity, ref MapInitEvent args)
+    {
+        var coordinates = _transformSystem.GetMoverCoordinates(entity.Owner);
+        var name = Loc.GetString(entity.Comp.Name);
+
+        foreach (var settingsId in entity.Comp.Settings)
+        {
+            var passengerUid = _randomHumanoidSystem.SpawnRandomHumanoid(settingsId, coordinates, name);
+            if (!TryBoard(passengerUid, entity.Owner))
+                Log.Warning($"{ToPrettyString(entity.Owner)} couldn't take aboard {ToPrettyString(passengerUid)}, which is left beside it.");
+        }
+    }
+
+    [SubscribeLocalEvent]
     private void OnRemovedFromContainer(Entity<KsSupplyPodPassengerComponent> entity, ref EntGotRemovedFromContainerMessage args)
     {
         if (args.Container.Owner != entity.Comp.PodUid)
             return;
 
         RemCompDeferred(entity.Owner, entity.Comp);
+
+        // Deleted along with the pod, rather than let out of it.
+        if (TerminatingOrDeleted(entity.Owner))
+            return;
 
         if (!_htnQuery.TryComp(entity.Owner, out var htnComponent) ||
             !CanWake(entity.Owner))

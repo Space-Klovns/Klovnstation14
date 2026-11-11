@@ -42,6 +42,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private ExplosionSystem _explosionSystem = default!;
+    [Dependency] private KsFieldCommanderFogSystem _fogSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<KsFieldCommanderUnitComponent> _unitQuery = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
@@ -65,11 +66,14 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         var elapsed = GetElapsed(component, gameRule, curTime);
 
         // The defenders' own command speaks first, before anything of the commander's.
-        if (!component.IntroSent && curTime - gameRule.ActivatedAt >= component.IntroDelay)
+        if (!component.BriefingSent && curTime - gameRule.ActivatedAt >= component.BriefingDelay)
         {
-            component.IntroSent = true;
-            SendIntro(component);
+            component.BriefingSent = true;
+            if (component.BriefingAnnouncement is { } briefing)
+                SendIntel(component, Loc.GetString(briefing));
         }
+
+        SendDueIntel(component, curTime);
 
         while (component.PhaseIndex + 1 < component.Phases.Count &&
                elapsed >= component.Phases[component.PhaseIndex + 1].Start)
@@ -116,6 +120,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         FindSafeZones(component);
         PrepareExistingDefenders(component);
+        RaiseFog(component);
         component.ObjectivesPrepared = true;
         return true;
     }
@@ -194,8 +199,13 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (phase.Announcement is { } announcement)
             Announce(rule.Comp, announcement, major: true);
 
+        Intel(rule.Comp, phase.Intel);
+
         if (phase.ReinforcementPod is { } reinforcementPod)
+        {
             DropReinforcements(rule.Comp, reinforcementPod);
+            Intel(rule.Comp, rule.Comp.ReinforcementIntel);
+        }
 
         if (phase.DeployUplink)
             DeployUplink(rule, phase, curTime);
@@ -243,8 +253,13 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             ruleComponent.ObjectivesLost++;
 
             var remaining = CountDefenderObjectives(ruleComponent, exceptUid: args.ObjectiveUid);
-            if (remaining > 0 && ruleComponent.ObjectiveLostAnnouncement is { } announcement)
-                Announce(ruleComponent, announcement, major: true, ("remaining", remaining));
+            if (remaining <= 0)
+                continue;
+
+            if (ruleComponent.ObjectiveLostAnnouncement is { } announcement)
+                Announce(ruleComponent, announcement, major: true);
+
+            Intel(ruleComponent, ruleComponent.ObjectiveLostIntel, ("remaining", remaining));
         }
     }
 

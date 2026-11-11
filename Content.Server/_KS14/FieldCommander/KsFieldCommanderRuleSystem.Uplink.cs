@@ -33,7 +33,8 @@ public sealed partial class KsFieldCommanderRuleSystem
                 minObjectiveDistance: component.MinSpawnDistance,
                 minDefenderDistance: component.MinDefenderDistance,
                 hidden: false,
-                out var uplinkCoordinates))
+                out var uplinkCoordinates,
+                outsideFog: true))
         {
             Log.Warning("Field commander found nowhere to land its uplink, and will try again with the next wave.");
             return;
@@ -54,16 +55,17 @@ public sealed partial class KsFieldCommanderRuleSystem
         }
 
         SpawnUplinkGuard(rule, phase, uplinkCoordinates);
+        LiftFogTo(component, _transformSystem.ToMapCoordinates(uplinkCoordinates));
 
-        if (component.UplinkAnnouncement is not { } announcement)
-            return;
+        if (component.UplinkAnnouncement is { } announcement)
+            Announce(component, announcement, major: true);
 
         var uplinkMapCoordinates = _transformSystem.ToMapCoordinates(uplinkCoordinates);
         var origin = GetBaseCentre(component, anchors);
         var offset = uplinkMapCoordinates.Position - origin;
 
-        Announce(component, announcement, major: true,
-            ("direction", offset.GetDir().ToString().ToLowerInvariant()),
+        Intel(component, component.UplinkIntel,
+            ("direction", GetCompassDirection(offset)),
             ("distance", (int)MathF.Round(offset.Length())),
             ("minutes", (int)Math.Ceiling(bombardmentIn?.TotalMinutes ?? 0)));
     }
@@ -145,8 +147,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         component.UplinkWarned = true;
 
-        if (component.UplinkWarningAnnouncement is { } announcement)
-            Announce(component, announcement, major: true, ("minutes", (int)Math.Ceiling(component.UplinkWarningBefore.TotalMinutes)));
+        Intel(component, component.UplinkWarningIntel, ("minutes", (int)Math.Ceiling(component.UplinkWarningBefore.TotalMinutes)));
     }
 
     private void OnUplinkLost(Entity<KsFieldCommanderRuleComponent> rule)
@@ -173,16 +174,49 @@ public sealed partial class KsFieldCommanderRuleSystem
             colorOverride: component.AnnouncementColor);
     }
 
-    private void SendIntro(KsFieldCommanderRuleComponent component)
+    /// <summary>
+    ///     Queues the defenders' intelligence on what just happened, to follow the commander's taunt as a reply. The
+    ///         text is formatted now, from the state it describes.
+    /// </summary>
+    private void Intel(KsFieldCommanderRuleComponent component, LocId? messageId, params (string, object)[] arguments)
     {
-        if (component.IntroAnnouncement is not { } announcement)
+        if (messageId is not { } id)
             return;
 
-        _chatSystem.DispatchGlobalAnnouncement(Loc.GetString(announcement),
-            Loc.GetString(component.IntroSender),
+        component.PendingIntel.Add(new KsFieldCommanderPendingIntel(_gameTiming.CurTime + component.IntelDelay, Loc.GetString(id, arguments)));
+    }
+
+    /// <summary>
+    ///     Sends whatever intelligence is due.
+    /// </summary>
+    private void SendDueIntel(KsFieldCommanderRuleComponent component, TimeSpan curTime)
+    {
+        for (var i = 0; i < component.PendingIntel.Count; i++)
+        {
+            if (component.PendingIntel[i].At > curTime)
+                continue;
+
+            SendIntel(component, component.PendingIntel[i].Message);
+            component.PendingIntel.RemoveAt(i);
+            i--;
+        }
+    }
+
+    private void SendIntel(KsFieldCommanderRuleComponent component, string message)
+    {
+        _chatSystem.DispatchGlobalAnnouncement(message,
+            Loc.GetString(component.IntelSender),
             playSound: true,
-            announcementSound: component.IntroSound,
-            colorOverride: component.IntroColor);
+            announcementSound: component.IntelSound,
+            colorOverride: component.IntelColor);
+    }
+
+    /// <summary>
+    ///     A compass direction for an offset from the defenders' base, for intelligence to give bearings in.
+    /// </summary>
+    private static string GetCompassDirection(Vector2 offset)
+    {
+        return offset.GetDir().ToString().ToLowerInvariant();
     }
 
     private void AnnounceRandom(KsFieldCommanderRuleComponent component, List<LocId> messageIds, bool major, params (string, object)[] arguments)

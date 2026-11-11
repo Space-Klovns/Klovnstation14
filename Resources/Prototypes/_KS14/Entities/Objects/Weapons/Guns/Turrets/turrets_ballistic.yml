@@ -43,3 +43,98 @@
   - type: KsNpcAimTracking
     accuracyThreshold: 5
     angularVelocityCompensation: 1
+
+# Field Commander requisitions: a disposable turret built to take a beating.
+- type: entity
+  parent: BaseFlatpack
+  id: KsFlatpackBallisticTurretNanotrasenRequisition
+  name: reinforced ballistic turret flatpack
+  description: A flatpack used for constructing a disposable, nanotrasen-aligned ballistic turret, with armour plating bolted on.
+  components:
+  - type: Item
+    shape:
+    - 0,0,1,1 # 2x2
+  - type: Flatpack
+    entity: KsWeaponTurretNanoTrasenRequisition
+  - type: Sprite
+    layers:
+    - state: solar-assembly-part
+      color: "#c9d6ff"
+
+- type: entity
+  parent: KsWeaponTurretNanoTrasenDisposable
+  id: KsWeaponTurretNanoTrasenRequisition
+  name: reinforced disposable ballistic turret
+  suffix: NanoTrasen, Disposable, Reinforced
+  components:
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 350
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:TriggerBehavior
+
+# Field Commander requisitions: a heavy machine-gun turret. Slow to bring round, deadly once it has a lock.
+- type: entity
+  parent: BaseFlatpack
+  id: KsFlatpackBallisticTurretNanotrasenHeavy
+  name: heavy machine-gun turret flatpack
+  description: A heavy crate holding a nanotrasen-aligned heavy machine-gun turret and a deep box of belted ammunition.
+  components:
+  - type: Item
+    shape:
+    - 0,0,1,1 # 2x2
+  - type: Flatpack
+    entity: KsWeaponTurretNanoTrasenHeavy
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Turrets/hmg_turret.rsi
+    layers:
+    - state: flatpack
+
+- type: entity
+  parent: KsWeaponTurretNanoTrasenDisposable
+  id: KsWeaponTurretNanoTrasenHeavy
+  name: heavy machine-gun turret
+  suffix: NanoTrasen, Heavy
+  description: A heavily armoured machine-gun emplacement with a laser rangefinder. It takes a moment to lock on, and then it does not miss.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Turrets/hmg_turret.rsi
+    drawdepth: Mobs
+    layers:
+    - state: nt_lethal
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 900
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:TriggerBehavior
+  - type: Gun
+    fireRate: 8
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/lmg.ogg
+  - type: BallisticAmmoProvider
+    proto: CartridgeLightRifle
+    capacity: 400
+  - type: KsLaserSight
+    enabled: false
+    onlyWhileTargeting: true
+    fadeStart: 0.4
+  - type: KsTargetLockOn
+    lockOnTime: 1.2
+    lockingSound:
+      path: /Audio/Machines/quickbeep.ogg
+    lockedSound:
+      path: /Audio/Machines/twobeep.ogg
+  - type: KsNpcAimTracking
+    accuracyThreshold: 5
+    angularVelocityCompensation: 1
