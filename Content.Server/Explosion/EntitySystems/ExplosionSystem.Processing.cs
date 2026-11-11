@@ -390,6 +390,9 @@ public sealed partial class ExplosionSystem
     private DamageSpecifier GetDamage(EntityUid uid,
         string id, DamageSpecifier damage)
     {
+        if (KsIsSpared(uid, id)) // KS14: explosions that leave some things alone, such as anti-personnel rounds and walls
+            return new DamageSpecifier();
+
         // TODO Explosion Performance
         // Cache this? I.e., instead of raising an event, check for a component?
         var resistanceEv = new GetExplosionResistanceEvent(id);
