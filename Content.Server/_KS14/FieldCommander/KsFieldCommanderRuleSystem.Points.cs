@@ -128,7 +128,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     private void OnMobStateChanged(MobStateChangedEvent args)
     {
         if (args.NewMobState != MobState.Dead ||
-            args.Origin is not { } killerUid ||
+            GetKiller(args.Origin) is not { } killerUid ||
             killerUid == args.Target ||
             !TryComp<ActorComponent>(killerUid, out var killerActorComponent))
             return;
@@ -143,9 +143,18 @@ public sealed partial class KsFieldCommanderRuleSystem
         }
     }
 
+    /// <summary>
+    ///     Who to credit a death to: whatever dealt the killing damage, or, for an explosion, which damages with no
+    ///         origin, whoever set it off.
+    /// </summary>
+    private EntityUid? GetKiller(EntityUid? origin)
+    {
+        return origin ?? _explosionSystem.KsProcessingUser;
+    }
+
     private void RewardUnitKill(Entity<KsFieldCommanderRuleComponent> rule, Entity<KsFieldCommanderUnitComponent> unit, EntityUid? killerUid)
     {
-        if (killerUid is not { } killer ||
+        if (GetKiller(killerUid) is not { } killer ||
             !IsDefender(rule.Comp, killer) ||
             !TryComp<ActorComponent>(killer, out var killerActorComponent) ||
             unit.Comp.AssetIndex < 0 ||

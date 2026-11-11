@@ -130,7 +130,9 @@ public sealed partial class ExplosionSystem
             try
             {
 #endif
+            KsProcessingUser = _activeExplosion.KsUser; // KS14: who set off what is being processed
             var processed = _activeExplosion.Process(tilesRemaining);
+            KsProcessingUser = null; // KS14
             tilesRemaining -= processed;
 
             // has the explosion finished processing?
@@ -146,6 +148,7 @@ public sealed partial class ExplosionSystem
             catch (Exception)
             {
                 // Ensure the system does not get stuck in an error-loop.
+                KsProcessingUser = null; // KS14
                 if (_activeExplosion != null)
                     QueueDel(_activeExplosion.VisualEnt);
                 _activeExplosion = null;
@@ -723,6 +726,8 @@ sealed class Explosion
 
     public readonly EntityUid? Cause;
 
+    public EntityUid? KsUser; // KS14: who set it off, which Cause (the explosive itself) is not
+
     /// <summary>
     ///     Initialize a new instance for processing
     /// </summary>
@@ -992,4 +997,5 @@ public sealed class QueuedExplosion(ExplosionPrototype proto)
     public int MaxTileBreak;
     public bool CanCreateVacuum;
     public EntityUid? Cause; // The entity that exploded, for logging purposes.
+    public EntityUid? KsUser; // KS14: who set it off
 }

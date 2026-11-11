@@ -10,7 +10,10 @@ using Content.Shared._KS14.FieldCommander;
 using Content.Shared._RMC14.Vendors;
 using Content.Shared.GameTicking;
 using Content.Shared.GameTicking.Components;
+using Content.Server.Explosion.EntitySystems;
 using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
+using Content.Shared.Projectiles;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Preferences;
 using Robust.Shared.Console;
@@ -42,6 +45,8 @@ public sealed class KsFieldCommanderPointsTest : GameTest
     private readonly EntProtoId _commanderRule = "KsTestFieldCommanderPointsRule";
     private readonly EntProtoId _defender = "KsTestFieldCommanderPointsDefender";
     private readonly EntProtoId _phaseRule = "KsTestFieldCommanderPhaseRule";
+    private readonly EntProtoId _bomb = "KsTestFieldCommanderPointsBomb";
+    private readonly EntProtoId _shell = "KsTestFieldCommanderPointsShell";
 
     // From the private module, which builds without it leave out; an instance field, so the YAML linter skips it.
     private readonly EntProtoId _modifiedXl8 = "KsWeaponRifleLecterXL8EliteOperative";
@@ -59,6 +64,31 @@ public sealed class KsFieldCommanderPointsTest : GameTest
   id: KsTestFieldCommanderPointsUnit
   components:
   - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      10: Dead
+  - type: Damageable
+    damageContainer: Biological
+  - type: Injurable
+
+- type: entity
+  id: KsTestFieldCommanderPointsBomb
+  components:
+  - type: Explosive
+    explosionType: Default
+    totalIntensity: 40
+    intensitySlope: 10
+    maxIntensity: 20
+
+- type: entity
+  parent: KsTestFieldCommanderPointsBomb
+  id: KsTestFieldCommanderPointsShell
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Blunt: 0
 
 - type: entity
   parent: BaseGameRule
@@ -229,6 +259,59 @@ public sealed class KsFieldCommanderPointsTest : GameTest
         await server.WaitAssertion(() =>
             Assert.That(server.EntMan.HasComponent<KsFactionCollisionShooterComponent>(playerBody), Is.True,
                 "defenders already in the round when the rule prepared should have been readied too"));
+    }
+
+    /// <summary>
+    ///     Explosion damage carries no origin, so an explosive kill is credited to whoever set it off: the thrower of
+    ///         a timed charge, or the shooter of a shell, whose trigger names what it hit rather than who fired it.
+    /// </summary>
+    [Test]
+    public async Task ExplosiveKillsPayWhoeverSetThemOff([Values] bool fired)
+    {
+        var server = Pair.Server;
+        var (testMap, ruleUid, playerBody) = await SetUpOutpost();
+        EntityUid unitUid = default;
+        var expected = 0;
+
+        await server.WaitPost(() =>
+        {
+            var ruleSystem = server.System<KsFieldCommanderRuleSystem>();
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            ruleSystem.SetPhase((ruleUid, ruleComponent, server.EntMan.GetComponent<GameRuleComponent>(ruleUid)), 1);
+            ruleSystem.ForceWave((ruleUid, ruleComponent));
+
+            var unitQuery = server.EntMan.AllEntityQueryEnumerator<KsFieldCommanderUnitComponent>();
+            Assert.That(unitQuery.MoveNext(out unitUid, out _), Is.True, "the wave should have sent a unit");
+            expected = KsFieldCommanderRuleSystem.GetKillPoints(ruleComponent, ruleComponent.Assets[0]);
+
+            var unitCoordinates = server.EntMan.GetComponent<TransformComponent>(unitUid).Coordinates;
+            var explosiveUid = server.EntMan.SpawnAtPosition(fired ? _shell : _bomb, unitCoordinates);
+
+            if (fired)
+            {
+                server.System<SharedProjectileSystem>().SetShooter(explosiveUid, server.EntMan.GetComponent<ProjectileComponent>(explosiveUid), playerBody);
+
+                // What a shell's collide trigger passes as its user: the thing it hit.
+                server.System<ExplosionSystem>().TriggerExplosive(explosiveUid, user: unitUid);
+            }
+            else
+            {
+                server.System<ExplosionSystem>().TriggerExplosive(explosiveUid, user: playerBody);
+            }
+        });
+
+        await Pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.GetComponent<MobStateComponent>(unitUid).CurrentState, Is.EqualTo(MobState.Dead),
+                "the explosion should have killed the unit");
+
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            Assert.That(server.System<KsFieldCommanderRuleSystem>().GetPoints(ruleComponent, Pair.Player!.UserId), Is.EqualTo(expected),
+                "an explosive kill should pay whoever set the explosive off");
+            Assert.That(server.System<ExplosionSystem>().KsProcessingUser, Is.Null, "nothing should be credited outside an explosion");
+        });
     }
 
     [Test]

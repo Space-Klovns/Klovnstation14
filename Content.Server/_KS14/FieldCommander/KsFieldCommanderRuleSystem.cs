@@ -3,6 +3,7 @@ using Content.Server._KS14.NPC.Systems;
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.SupplyPod.Passengers;
 using Content.Server.Chat.Systems;
+using Content.Server.Explosion.EntitySystems;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
 using Content.Server.Humanoid.Systems;
@@ -40,6 +41,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private KsSupplyPodPassengerSystem _supplyPodPassengerSystem = default!;
     [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private ExplosionSystem _explosionSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<KsFieldCommanderUnitComponent> _unitQuery = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
