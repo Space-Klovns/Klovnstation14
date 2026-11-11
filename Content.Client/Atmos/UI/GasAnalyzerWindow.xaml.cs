@@ -244,13 +244,16 @@ namespace Content.Client.Atmos.UI
             // A supercritical gas that dissolves reagents, shown even in a dry pipe so it can be found before anything is in it.
             if (gasMix.KsSolventEnhancement >= 1.05f)
             {
-                dataContainer.AddChild(new Label
+                // Markup, so the factor stands out from the words around it.
+                var ksSolventLabel = new RichTextLabel
                 {
-                    Text = Loc.GetString("ks-gas-analyzer-supercritical-solvent", ("factor", $"{gasMix.KsSolventEnhancement:0.#}")),
                     ToolTip = Loc.GetString("ks-gas-analyzer-supercritical-solvent-tooltip"),
                     MouseFilter = MouseFilterMode.Pass,
                     Margin = new Thickness(0, 10, 0, 0),
-                });
+                };
+                Content.Client.Message.RichTextLabelExt.SetMarkup(ksSolventLabel,
+                    Loc.GetString("ks-gas-analyzer-supercritical-solvent", ("factor", $"{gasMix.KsSolventEnhancement:0.#}")));
+                dataContainer.AddChild(ksSolventLabel);
             }
             // KS14 end
 

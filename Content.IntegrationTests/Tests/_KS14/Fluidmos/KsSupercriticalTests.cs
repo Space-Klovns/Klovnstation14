@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.Fluidmos;
 using Content.Shared._KS14.Atmos;
@@ -317,11 +318,14 @@ public sealed class KsSupercriticalTests : GameTest
             var calculator = new Content.Client._KS14.Guidebook.Controls.KsGuidePhaseCalculatorEmbed();
             Assert.That(calculator.TryParseTag(new Dictionary<string, string> { ["Reagents"] = "Water,CarbonDioxide" }, out _), "The calculator didn't parse its tag.");
 
-            calculator.SetInputs(0, "101.325", "373.15");
+            var waterIndex = calculator.Reagents.ToList().FindIndex(reagent => reagent.ID == WaterReagent);
+            var carbonDioxideIndex = calculator.Reagents.ToList().FindIndex(reagent => reagent.ID == CarbonDioxideReagent);
+
+            calculator.SetInputs(waterIndex, "101.325", "373.15");
             var water = calculator.ResultText;
-            calculator.SetInputs(0, "50", "293.15");
+            calculator.SetInputs(waterIndex, "50", "293.15");
             var waterAtHalf = calculator.ResultText;
-            calculator.SetInputs(1, "101.325", "293.15");
+            calculator.SetInputs(carbonDioxideIndex, "101.325", "293.15");
             var carbonDioxide = calculator.ResultText;
 
             var defaultCalculator = new Content.Client._KS14.Guidebook.Controls.KsGuidePhaseCalculatorEmbed();
@@ -333,6 +337,11 @@ public sealed class KsSupercriticalTests : GameTest
                 Assert.That(waterAtHalf, Does.Not.Contain("373."), "Water's boiling point didn't move with the pressure.");
                 Assert.That(carbonDioxide, Does.Contain("303.8"), "Carbon dioxide's critical point isn't shown.");
                 Assert.That(defaultCalculator.TryParseTag(new Dictionary<string, string>(), out _), "The calculator with no reagents listed didn't parse.");
+                Assert.That(defaultCalculator.Reagents.Select(reagent => reagent.LocalizedName), Is.Ordered.Using((IComparer<string>)StringComparer.CurrentCultureIgnoreCase),
+                    "The calculator's reagents aren't in alphabetical order.");
+                Assert.That(calculator.Reagents.Select(reagent => reagent.ID), Is.EqualTo(new[] { CarbonDioxideReagent.Id, WaterReagent.Id }),
+                    "Reagents listed on the page aren't sorted alphabetically.");
+                Assert.That(water, Does.Contain("[color="), "The calculator's numbers aren't set apart from its text.");
             }
         });
     }

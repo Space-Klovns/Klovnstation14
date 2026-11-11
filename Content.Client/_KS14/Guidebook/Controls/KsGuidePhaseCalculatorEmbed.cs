@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using Content.Client.Guidebook.Richtext;
+using Content.Client.Message;
 using Content.Shared._KS14.Atmos;
 using Content.Shared._KS14.Fluidmos;
 using Content.Shared.Atmos;
@@ -44,6 +45,11 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
     /// </summary>
     public int SelectedIndex => _reagentButton.SelectedId;
 
+    /// <summary>
+    ///     The reagents listed, in order, for tests.
+    /// </summary>
+    public IReadOnlyList<ReagentPrototype> Reagents => _reagents;
+
     public string ResultText => _result.GetMessage() ?? string.Empty;
 
     public bool TryParseTag(Dictionary<string, string> args, [NotNullWhen(true)] out Control? control)
@@ -67,9 +73,11 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
         else
         {
             _reagents.AddRange(_prototypeManager.EnumeratePrototypes<ReagentPrototype>()
-                .Where(reagent => reagent.Fluidmos != null && reagent.BoilingPoint != null)
-                .OrderBy(reagent => reagent.LocalizedName, StringComparer.CurrentCultureIgnoreCase));
+                .Where(reagent => reagent.Fluidmos != null && reagent.BoilingPoint != null));
         }
+
+        // Alphabetical by the name the player sees, in their language, however the page listed them.
+        _reagents.Sort((first, second) => StringComparer.CurrentCultureIgnoreCase.Compare(first.LocalizedName, second.LocalizedName));
 
         if (_reagents.Count == 0)
         {
@@ -117,7 +125,7 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
         var propertiesSystem = _entitySystemManager.GetEntitySystem<KsFluidmosPropertiesSystem>();
         if (!propertiesSystem.TryGetProperties(reagent.ID, out var properties))
         {
-            _result.SetMessage(string.Empty);
+            _result.SetMarkup(string.Empty);
             return;
         }
 
@@ -166,7 +174,8 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
                 ("kpa", criticalPressure)));
         }
 
-        _result.SetMessage(string.Join("\n", lines));
+        // Markup, so the numbers stand out from the words around them.
+        _result.SetMarkup(string.Join("\n", lines));
     }
 
     /// <summary>

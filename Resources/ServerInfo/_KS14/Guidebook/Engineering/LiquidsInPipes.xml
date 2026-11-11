@@ -27,7 +27,7 @@
 
   ## Supercritical fluids
   Heat a gas past its critical temperature and squeeze it past its critical pressure, and it turns into something between a gas and a liquid. It still flows like a gas, but it dissolves other reagents as a liquid would. The calculator above shows each gas's critical point.
-  - [bold]Carbon dioxide is the easy one.[/bold] Warm it past about 31 °C and compress it past about 7400 kPa. A pressure pump stops at 4500 kPa, so you need a volume pump.
+  - [bold]Carbon dioxide is the easy one.[/bold] Warm it past about [color=#a4885c]31 °C[/color] and compress it past about [color=#a4885c]7400 kPa[/color]. A pressure pump stops at [color=#a4885c]4500 kPa[/color], so you need a volume pump.
   - [bold]The denser it gets, the more it dissolves.[/bold] Just past the critical point it does nothing yet. At around twice the critical pressure it starts to, and by three times it carries away reagents that would hardly evaporate at all. Keep it only a little past its critical temperature: hotter, it is thinner and dissolves less. A gas analyzer on the pipe shows how strong it is.
   - [bold]Drop the pressure and it lets go.[/bold] Pass the loaded gas through an expansion valve or any other pressure drop, and what it dissolved falls back out as liquid.
   - [bold]It is choosy.[/bold] Water hardly dissolves in it, so it can pull an oil out of water and leave the water behind.
