@@ -1,0 +1,51 @@
+# tgstation's /datum/crafting_recipe/dragonator_spear_untreated: 15 plasteel, 5 titanium and 7 knives.
+#     There is no titanium here, so it takes 20 plasteel.
+
+- type: constructionGraph
+  id: KsSpearGiantslayerGraph
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: spear
+      steps:
+      - material: Plasteel
+        amount: 20
+      - tag: KitchenKnife
+        icon:
+          sprite: Objects/Weapons/Melee/kitchen_knife.rsi
+          state: icon
+        name: ks-construction-graph-tag-kitchen-knife
+      - tag: KitchenKnife
+        icon:
+          sprite: Objects/Weapons/Melee/kitchen_knife.rsi
+          state: icon
+        name: ks-construction-graph-tag-kitchen-knife
+      - tag: KitchenKnife
+        icon:
+          sprite: Objects/Weapons/Melee/kitchen_knife.rsi
+          state: icon
+        name: ks-construction-graph-tag-kitchen-knife
+      - tag: KitchenKnife
+        icon:
+          sprite: Objects/Weapons/Melee/kitchen_knife.rsi
+          state: icon
+        name: ks-construction-graph-tag-kitchen-knife
+      - tag: KitchenKnife
+        icon:
+          sprite: Objects/Weapons/Melee/kitchen_knife.rsi
+          state: icon
+        name: ks-construction-graph-tag-kitchen-knife
+      - tag: KitchenKnife
+        icon:
+          sprite: Objects/Weapons/Melee/kitchen_knife.rsi
+          state: icon
+        name: ks-construction-graph-tag-kitchen-knife
+      - tag: KitchenKnife
+        icon:
+          sprite: Objects/Weapons/Melee/kitchen_knife.rsi
+          state: icon
+        name: ks-construction-graph-tag-kitchen-knife
+        doAfter: 5
+  - node: spear
+    entity: KsSpearGiantslayerUnfired

@@ -1,0 +1,22 @@
+# Left behind by items that burn away in lava. Lava-proof, or the ash would burn again.
+
+- type: entity
+  parent: Ash
+  id: KsAsh
+  components:
+  - type: KsLavaProof
+
+- type: entity
+  parent: KsAsh
+  id: KsAshLarge
+  name: large pile of ash
+  components:
+  - type: Sprite
+    sprite: Objects/Materials/materials.rsi
+    state: ash
+    scale: 1.5,1.5
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Ash
+        Quantity: 30

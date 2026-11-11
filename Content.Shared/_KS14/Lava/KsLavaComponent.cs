@@ -20,6 +20,13 @@ public sealed partial class KsLavaComponent : Component
     [DataField(required: true)]
     public DamageSpecifier Damage = null!;
 
+    /// <summary>
+    ///     Dealt once to an item as it catches fire. tgstation's <c>fire_act</c> at lava temperature, halved by the
+    ///         50% fire armour lava leaves items.
+    /// </summary>
+    [DataField]
+    public DamageSpecifier ItemIgniteDamage = new() { DamageDict = new() { { "Heat", 10 } } };
+
     [DataField]
     public TimeSpan KnockdownDuration = TimeSpan.Zero;
 
