@@ -9,10 +9,14 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.Interaction;
 using Content.Shared.Inventory;
 using Content.Shared.Item;
+using Content.Shared.Physics;
 using Content.Shared.Popups;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -29,6 +33,8 @@ public sealed partial class KsItemBurningSystem : EntitySystem
     [Dependency] private InventorySystem _inventorySystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedItemSystem _itemSystem = default!;
+    [Dependency] private FixtureSystem _fixtureSystem = default!;
+    [Dependency] private CollisionWakeSystem _collisionWakeSystem = default!;
     [Dependency] private EntityQuery<ItemComponent> _itemQuery = default!;
 
     private static readonly ProtoId<EmotePrototype> ScreamEmote = "Scream";
@@ -37,6 +43,14 @@ public sealed partial class KsItemBurningSystem : EntitySystem
     ///     Items at least this big leave <see cref="KsItemBurningComponent.AshLarge"/>. tgstation's <c>WEIGHT_CLASS_HUGE</c>.
     /// </summary>
     private static readonly ProtoId<ItemSizePrototype> LargeAshSize = "Huge";
+
+    /// <summary>
+    ///     The fixture a burning item has for a fire extinguisher's spray to hit. The spray only collides with
+    ///         <see cref="CollisionGroup.HighImpassable"/>, which a loose item is not.
+    /// </summary>
+    public const string SprayTargetFixtureId = "ksBurningSprayTarget";
+
+    private const float SprayTargetRadius = 0.3f;
 
     public override void Update(float frameTime)
     {
@@ -101,6 +115,23 @@ public sealed partial class KsItemBurningSystem : EntitySystem
         burningComponent.NextTick = _gameTiming.CurTime + burningComponent.TickInterval;
         Dirty(uid, burningComponent);
 
+        if (HasComp<PhysicsComponent>(uid))
+        {
+            // A resting item sleeps, and collision wake keeps a sleeping one from colliding with anything at all.
+            if (TryComp<CollisionWakeComponent>(uid, out var collisionWakeComponent) && collisionWakeComponent.Enabled)
+            {
+                burningComponent.DisabledCollisionWake = true;
+                _collisionWakeSystem.SetEnabled(uid, false, collisionWakeComponent);
+            }
+
+            _fixtureSystem.TryCreateFixture(uid,
+                new PhysShapeCircle(SprayTargetRadius),
+                SprayTargetFixtureId,
+                density: 0f,
+                hard: false,
+                collisionLayer: (int)CollisionGroup.HighImpassable);
+        }
+
         if (initialDamage != null)
             Burn((uid, burningComponent), initialDamage);
     }
@@ -110,7 +141,21 @@ public sealed partial class KsItemBurningSystem : EntitySystem
         if (!Resolve(entity.Owner, ref entity.Comp, logMissing: false))
             return;
 
-        RemComp(entity.Owner, entity.Comp);
+        // Deferred: a spray puts it out from inside a collision, where its fixture can't be taken away yet.
+        RemCompDeferred(entity.Owner, entity.Comp);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnRemove(Entity<KsItemBurningComponent> entity, ref ComponentRemove args)
+    {
+        // The server made both changes, and its state undoes them on the client.
+        if (_netManager.IsClient || TerminatingOrDeleted(entity.Owner))
+            return;
+
+        _fixtureSystem.DestroyFixture(entity.Owner, SprayTargetFixtureId);
+
+        if (entity.Comp.DisabledCollisionWake)
+            _collisionWakeSystem.SetEnabled(entity.Owner, true);
     }
 
     private void Burn(Entity<KsItemBurningComponent> entity, DamageSpecifier damage)

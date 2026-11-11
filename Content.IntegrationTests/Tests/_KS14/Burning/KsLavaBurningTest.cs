@@ -2,15 +2,25 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.Server.Atmos.Components;
+using Content.Server.Atmos.EntitySystems;
 using Content.Server.Gravity;
 using Content.Shared._KS14.Burning;
+using Content.Shared.Atmos;
+using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Content.Shared.Gravity;
+using Content.Shared.Item.ItemToggle;
+using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Systems;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
@@ -26,6 +36,7 @@ public sealed class KsLavaBurningTest : GameTest
     private static readonly EntProtoId Lava = "FloorLavaEntity";
     private static readonly EntProtoId LiquidPlasma = "FloorLiquidPlasmaEntity";
     private static readonly EntProtoId WaterTile = "FloorWaterEntity";
+    private static readonly EntProtoId FireExtinguisher = "FireExtinguisher";
     private const string Water = "Water";
     private const string WeldingFuel = "WeldingFuel";
     private static readonly EntProtoId Ash = "KsAsh";
@@ -139,6 +150,13 @@ public sealed class KsLavaBurningTest : GameTest
             Assert.That(SEntMan.HasComponent<KsItemBurningComponent>(itemUid), Is.True, "Welding fuel must not put a burning item out.");
 
             SEntMan.System<ReactiveSystem>().ReactionEntity(itemUid, ReactionMethod.Touch, new ReagentQuantity(Water, FixedPoint2.New(5)));
+        });
+
+        // It goes out at the end of the tick.
+        await Pair.RunTicksSync(2);
+
+        await Server.WaitAssertion(() =>
+        {
             Assert.That(SEntMan.HasComponent<KsItemBurningComponent>(itemUid), Is.False, "Water must put a burning item out.");
         });
     }
@@ -168,6 +186,69 @@ public sealed class KsLavaBurningTest : GameTest
             Assert.That(SEntMan.Deleted(itemUid), Is.False);
             Assert.That(SEntMan.HasComponent<KsItemBurningComponent>(itemUid), Is.EqualTo(!inWater),
                 inWater ? "A water tile must put a burning item out." : "A burning item on dry floor must keep burning.");
+        });
+    }
+
+    /// <summary>
+    ///     The real fire extinguisher, shot along a row of floor with a burning item on it: the shot itself has to
+    ///         hit the item. Its shots collide with next to nothing, a loose item included, so a burning item carries
+    ///         a fixture for them to hit.
+    /// </summary>
+    [Test]
+    public async Task FireExtinguisherPutsABurningItemOut()
+    {
+        var (itemUid, coordinates) = await DropInAsync(null, _plainItem);
+        var gridUid = coordinates.EntityId;
+        var extinguisherUid = EntityUid.Invalid;
+        var gunSystem = SEntMan.System<SharedGunSystem>();
+
+        await Server.WaitAssertion(() =>
+        {
+            // Foam needs air to lie in.
+            var mixture = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C };
+            mixture.SetMoles(Gas.Oxygen, Atmospherics.OxygenMolesStandard);
+            mixture.SetMoles(Gas.Nitrogen, Atmospherics.NitrogenMolesStandard);
+            SEntMan.System<AtmosphereSystem>().SetMapAtmosphere(SEntMan.GetComponent<TransformComponent>(gridUid).MapUid!.Value, space: false, mixture);
+            SEntMan.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            var mapSystem = SEntMan.System<SharedMapSystem>();
+            var mapGridComponent = SEntMan.GetComponent<MapGridComponent>(gridUid);
+            var floorTile = mapSystem.GetTileRef(gridUid, mapGridComponent, Vector2i.Zero).Tile;
+            for (var x = 1; x <= 4; x++)
+                mapSystem.SetTile(gridUid, mapGridComponent, new Vector2i(x, 0), floorTile);
+
+            // One tile down the row from the muzzle.
+            SEntMan.System<SharedTransformSystem>().SetCoordinates(itemUid, new EntityCoordinates(gridUid, 1.5f, 0.5f));
+            SEntMan.System<KsItemBurningSystem>().Ignite(itemUid);
+            Assert.That(SEntMan.HasComponent<KsItemBurningComponent>(itemUid), Is.True, "The item never caught fire, so putting it out proves nothing.");
+
+            extinguisherUid = SEntMan.SpawnEntity(FireExtinguisher, coordinates);
+            SEntMan.System<ItemToggleSystem>().TryActivate(extinguisherUid, user: null); // safety off
+        });
+
+        await Pair.RunTicksSync(TicksFor(1f));
+
+        // A held trigger asks to shoot every tick.
+        var shotTarget = new EntityCoordinates(gridUid, 4.5f, 0.5f);
+        for (var tick = 0; tick < TicksFor(1f); tick++)
+        {
+            await Server.WaitPost(() =>
+            {
+                var gun = new Entity<GunComponent>(extinguisherUid, SEntMan.GetComponent<GunComponent>(extinguisherUid));
+                gunSystem.AttemptShoot(extinguisherUid, gun, shotTarget);
+            });
+
+            await Pair.RunTicksSync(1);
+        }
+
+        await Pair.RunTicksSync(TicksFor(2f));
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.Deleted(itemUid), Is.False);
+            Assert.That(SEntMan.HasComponent<KsItemBurningComponent>(itemUid), Is.False, "A fire extinguisher must put a burning item out.");
+            Assert.That(SEntMan.System<FixtureSystem>().GetFixtureOrNull(itemUid, KsItemBurningSystem.SprayTargetFixtureId), Is.Null,
+                "An item that is out must lose the fixture the spray hit it by.");
         });
     }
 

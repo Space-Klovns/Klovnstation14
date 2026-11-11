@@ -51,4 +51,11 @@ public sealed partial class KsItemBurningComponent : Component
 
     [DataField]
     public SoundSpecifier TouchSound = new SoundCollectionSpecifier("MeatLaserImpact");
+
+    /// <summary>
+    ///     Whether catching fire turned the item's collision wake off, to be turned back on once it is out. Without
+    ///         it a resting item collides with nothing, a fire extinguisher's spray included.
+    /// </summary>
+    [ViewVariables]
+    public bool DisabledCollisionWake;
 }

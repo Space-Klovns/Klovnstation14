@@ -3,14 +3,15 @@ using Content.Shared._KS14.Burning;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
+using Content.Shared.EntityEffects.Effects.Atmos;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Burning;
 
 /// <summary>
-///     Puts burning items out with whatever puts tile fires out: a reagent with an
-///         <see cref="ExtinguishTileReaction"/>, sprayed on the item or standing in a pool the item lies in.
+///     Puts burning items out with whatever puts other fires out: a reagent that extinguishes, sprayed on the item
+///         or standing in a pool the item lies in.
 ///
 ///     Server only, as the tile reaction is. A burning item has no <c>Flammable</c> or <c>Reactive</c> component, so
 ///         neither the <c>Extinguish</c> entity effect nor a reagent's reactive effects ever reach it.
@@ -24,7 +25,7 @@ public sealed partial class KsItemBurningExtinguishSystem : EntitySystem
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
     /// <summary>
-    ///     A fire extinguisher's vapor, a thrown bucket, a puddle splash.
+    ///     A fire extinguisher's shot or a spray bottle's vapor hitting the item, a thrown bucket, a puddle splash.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnReaction(Entity<KsItemBurningComponent> entity, ref ReactionEntityEvent args)
@@ -34,7 +35,7 @@ public sealed partial class KsItemBurningExtinguishSystem : EntitySystem
     }
 
     /// <summary>
-    ///     A water tile: nothing burns while it lies in a pool of something that puts fires out.
+    ///     Nothing burns while it lies in a pool of something that puts fires out, such as a water tile.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnBurnAttempt(Entity<KsItemBurningComponent> entity, ref KsItemBurnAttemptEvent args)
@@ -72,12 +73,30 @@ public sealed partial class KsItemBurningExtinguishSystem : EntitySystem
         return false;
     }
 
+    /// <summary>
+    ///     Whether the reagent puts fires out: tile fires, like water, or whoever it touches, like firefighting foam.
+    /// </summary>
     private static bool Extinguishes(ReagentPrototype reagentPrototype)
     {
         foreach (var tileReaction in reagentPrototype.TileReactions)
         {
             if (tileReaction is ExtinguishTileReaction)
                 return true;
+        }
+
+        if (reagentPrototype.ReactiveEffects == null)
+            return false;
+
+        foreach (var reactiveEffects in reagentPrototype.ReactiveEffects.Values)
+        {
+            if (!reactiveEffects.Methods.Contains(ReactionMethod.Touch))
+                continue;
+
+            foreach (var effect in reactiveEffects.Effects)
+            {
+                if (effect is Extinguish)
+                    return true;
+            }
         }
 
         return false;
