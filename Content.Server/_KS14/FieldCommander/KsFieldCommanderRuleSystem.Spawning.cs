@@ -37,9 +37,8 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// <summary>
     ///     Eases off after the defenders took a beating, and presses harder after a wave that cost them nothing.
     /// </summary>
-    public static float GetNextAdaptiveMultiplier(KsFieldCommanderRuleComponent component, int defenders, int defendersLost)
+    public static float GetNextAdaptiveMultiplier(KsFieldCommanderRuleComponent component, float multiplier, int defenders, int defendersLost)
     {
-        var multiplier = component.AdaptiveMultiplier;
 
         if (defendersLost == 0)
             multiplier *= component.AdaptiveStepUp;
@@ -353,7 +352,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         var defendersLost = Math.Max(0, deadDefenders - rule.Comp.DeadDefendersAtLastWave);
         if (rule.Comp.WavesSent > 0)
-            rule.Comp.AdaptiveMultiplier = GetNextAdaptiveMultiplier(rule.Comp, defenders.Count, defendersLost);
+            rule.Comp.AdaptiveMultiplier = GetNextAdaptiveMultiplier(rule.Comp, rule.Comp.AdaptiveMultiplier, defenders.Count, defendersLost);
 
         rule.Comp.DeadDefendersAtLastWave = deadDefenders;
 

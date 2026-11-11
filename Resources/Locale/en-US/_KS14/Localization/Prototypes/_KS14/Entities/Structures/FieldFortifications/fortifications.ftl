@@ -1,7 +1,7 @@
 # Resources\Prototypes\_KS14\Entities\Structures\FieldFortifications\fortifications.yml
-ent-KsFieldWallReinforced = { ent-WallReinforced }
-    .desc = { ent-WallReinforced.desc }
-ent-KsFieldBarricade = { ent-Barricade }
-    .desc = { ent-Barricade.desc }
-ent-KsFieldBarricadeDirectional = { ent-BarricadeDirectional }
-    .desc = { ent-BarricadeDirectional.desc }
+ent-KsFieldWallReinforced = reinforced wall
+    .desc = Keeps the air in and the greytide out.
+ent-KsFieldBarricade = wooden barricade
+    .desc = A barricade made out of wood planks. It looks like it can take a few solid hits.
+ent-KsFieldBarricadeDirectional = wooden barricade
+    .desc = A barricade made out of wood planks. It looks like it can take a few solid hits.
