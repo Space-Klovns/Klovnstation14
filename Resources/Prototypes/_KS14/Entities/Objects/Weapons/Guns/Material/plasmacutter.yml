@@ -24,8 +24,9 @@
   - type: Gun
     fireRate: 1
     projectileSpeed: 25
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" }
     soundGunshot:
-      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: gunshot collection
     selectedMode: SemiAuto
     availableModes:
     - SemiAuto
@@ -110,8 +111,9 @@
     sprite: _KS14/Objects/Weapons/Guns/Battery/advplasmacutter.rsi
   - type: Gun
     fireRate: 1.5
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" }
     soundGunshot:
-      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: gunshot collection
   - type: BatteryAmmoProvider
     proto: BulletPlasmaCutter
     fireCost: 250  # 40 shots (x2 of basic plascutter)

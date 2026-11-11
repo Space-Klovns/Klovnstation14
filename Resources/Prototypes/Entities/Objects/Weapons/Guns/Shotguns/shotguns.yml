@@ -26,10 +26,10 @@
     availableModes:
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
+      collection: KsGunshotShotgun1 # KS14: replaced shotgun.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      sound: { collection: KsGunshotShotgun1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg -> KsGunshotShotgun1Far
       range: 15,130
     # KS14: Farsound end
     soundEmpty:
@@ -86,10 +86,10 @@
     availableModes:
     - FullAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
+      collection: KsGunshotShotgun2 # KS14: magfed shotgun report
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      sound: { collection: KsGunshotShotgun2Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg -> KsGunshotShotgun2Far
       range: 15,145
     # KS14: Farsound end
     soundEmpty:
@@ -170,6 +170,9 @@
   - type: Item
     sprite: Objects/Weapons/Guns/Shotguns/enforcer_inhands_64x.rsi
   - type: BallisticAmmoProvider
+  - type: Gun # KS14: Enforcer report
+    farSoundGunshot: { sound: { collection: KsGunshotShotgun2Far }, range: "15, 130" } # KS14: matching far report
+    soundGunshot: { collection: KsGunshotShotgun2 } # KS14: shotgun_2
   - type: GunRequiresWield #remove when inaccuracy on spreads is fixed
 
 - type: entity

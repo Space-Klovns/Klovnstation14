@@ -15,8 +15,9 @@
     maxAngle: 5
     availableModes:
     - SemiAuto
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/energycrossbow_shoot.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: energycrossbow_shoot.ogg -> infantry plasma
   - type: AmmoCounter
   - type: Appearance
   - type: GenericVisualizer

@@ -29,10 +29,10 @@
     availableModes:
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
+      collection: KsGunshotRevolver1 # KS14: replaced revolver.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      sound: { collection: KsGunshotRevolver1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg -> KsGunshotRevolver1Far
       range: 15,95
     # KS14: Farsound end
   - type: UseDelay
@@ -126,10 +126,10 @@
   - type: Gun
     fireRate: 3
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/mateba.ogg
+      collection: KsGunshotRevolver1 # KS14: replaced mateba.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      sound: { collection: KsGunshotRevolver1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg -> KsGunshotRevolver1Far
       range: 15,90
     # KS14: Farsound end
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
@@ -160,12 +160,12 @@
     availableModes:
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
+      collection: KsGunshotRevolver1 # KS14: replaced revolver.ogg
       params:
         volume: 2.25
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      sound: { collection: KsGunshotRevolver1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg -> KsGunshotRevolver1Far
       range: 15,95
     # KS14: Farsound end
   - type: StaticPrice

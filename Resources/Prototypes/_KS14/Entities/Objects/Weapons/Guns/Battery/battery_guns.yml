@@ -42,6 +42,8 @@
   - type: StaticPrice
     price: 750
   - type: Gun
+    soundGunshot: { collection: KsGunshotInfantryPlasmaRifle } # KS14: gunshot collection
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" }
     minAngle: 1
     maxAngle: 25
     angleIncrease: 8
@@ -114,7 +116,10 @@
   id: WeaponLaserCarbineProjectile
   description: Favoured by Nanotrasen Security for being cheap and easy to use.
   components:
-    - type: BatteryAmmoProvider
-      proto: BulletLaserSmall
-      fireCost: 30
-    - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
+  - type: Gun
+    soundGunshot: { collection: KsGunshotInfantryPlasmaRifle } # KS14: gunshot collection
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" }
+  - type: BatteryAmmoProvider
+    proto: BulletLaserSmall
+    fireCost: 30
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution

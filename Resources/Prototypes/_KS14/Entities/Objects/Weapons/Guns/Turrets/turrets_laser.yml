@@ -26,8 +26,9 @@
     selectedMode: FullAuto
     availableModes:
     - FullAuto
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" }
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: gunshot collection
   - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100

@@ -3,3 +3,102 @@
   files:
     # - /Audio/Weapons/Guns/Gunshots/laser.ogg
     - /Audio/_KS14/Weapons/Guns/Gunshots/laser.ogg
+
+- type: soundCollection
+  id: KsGunshotM16
+  files:
+  - /Audio/_Crescent/Weapons/Guns/M16/rifle_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/M16/rifle_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/M16/rifle_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotDmr1
+  files:
+  - /Audio/_Crescent/Weapons/Guns/dmr_1/dmr_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/dmr_1/dmr_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/dmr_1/dmr_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotInfantryPlasmaRifle
+  files:
+  - /Audio/_Crescent/Weapons/Guns/infantry_plasma_rifle/Fire_01.ogg
+  - /Audio/_Crescent/Weapons/Guns/infantry_plasma_rifle/Fire_02.ogg
+  - /Audio/_Crescent/Weapons/Guns/infantry_plasma_rifle/Fire_03.ogg
+  - /Audio/_Crescent/Weapons/Guns/infantry_plasma_rifle/Fire_04.ogg
+
+- type: soundCollection
+  id: KsGunshotPulssiase
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Pulssiase/single_shot.ogg
+
+- type: soundCollection
+  id: KsGunshotAk47
+  files:
+  - /Audio/_Crescent/Weapons/Guns/AK_47/rifle_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/AK_47/rifle_gunshot_2.ogg
+
+- type: soundCollection
+  id: KsGunshotPistol2
+  files:
+  - /Audio/_Crescent/Weapons/Guns/pistol_2/pistol_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/pistol_2/pistol_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/pistol_2/pistol_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotM1911
+  files:
+  - /Audio/_Crescent/Weapons/Guns/M1911/pistol_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/M1911/pistol_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/M1911/pistol_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotRevolver1
+  files:
+  - /Audio/_Crescent/Weapons/Guns/revolver_1/revolver_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/revolver_1/revolver_gunshot_2.ogg
+
+- type: soundCollection
+  id: KsGunshotRifle1
+  files:
+  - /Audio/_Crescent/Weapons/Guns/rifle_1/rifle_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/rifle_1/rifle_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/rifle_1/rifle_gunshot_3.ogg
+  - /Audio/_Crescent/Weapons/Guns/rifle_1/rifle_gunshot_4.ogg
+  - /Audio/_Crescent/Weapons/Guns/rifle_1/rifle_gunshot_5.ogg
+  - /Audio/_Crescent/Weapons/Guns/rifle_1/rifle_gunshot_6.ogg
+
+- type: soundCollection
+  id: KsGunshotShotgun1
+  files:
+  - /Audio/_Crescent/Weapons/Guns/shotgun_1/shotgun_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_1/shotgun_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_1/shotgun_gunshot_3.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_1/shotgun_gunshot_4.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_1/shotgun_gunshot_5.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_1/shotgun_gunshot_6.ogg
+
+- type: soundCollection
+  id: KsGunshotShotgun2
+  files:
+  - /Audio/_Crescent/Weapons/Guns/shotgun_2/shotgun_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_2/shotgun_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_2/shotgun_gunshot_3.ogg
+  - /Audio/_Crescent/Weapons/Guns/shotgun_2/shotgun_gunshot_4.ogg
+
+- type: soundCollection
+  id: KsGunshotMadrugad
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Madrugad/madrugad_shot.ogg
+
+- type: soundCollection
+  id: KsGunshotLmg1
+  files:
+  - /Audio/_Crescent/Weapons/Guns/lmg_1/lmg_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/lmg_1/lmg_gunshot_2.ogg
+
+- type: soundCollection
+  id: KsGunshotSupressed1
+  files:
+  - /Audio/_Crescent/Weapons/Guns/supressed_1/supressed_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/supressed_1/supressed_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/supressed_1/supressed_gunshot_3.ogg

@@ -32,10 +32,10 @@
       - FullAuto
     soundGunshot:
       # path: /Audio/Weapons/Guns/Gunshots/lmg.ogg # KS14: replaced with tg sound
-      path: /Audio/_KS14/Weapons/Guns/Gunshots/lmg.ogg
+      collection: KsGunshotLmg1 # KS14: replaced lmg.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/lmg.ogg
+      sound: { collection: KsGunshotLmg1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/lmg.ogg -> KsGunshotLmg1Far
       range: 15,130
     # KS14: Farsound end
     soundEmpty:
@@ -116,8 +116,9 @@
       selectedMode: FullAuto
       availableModes:
         - FullAuto
+      farSoundGunshot: { sound: { collection: KsGunshotLmg1Far }, range: "15, 130" } # KS14: matching far report
       soundGunshot:
-        path: /Audio/Weapons/Guns/Gunshots/lmg.ogg
+        collection: KsGunshotLmg1 # KS14: replaced lmg.ogg
       soundEmpty:
         path: /Audio/Weapons/Guns/Empty/lmg_empty.ogg
     - type: Sprite

@@ -62,6 +62,8 @@
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/laser_gun.rsi
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
+    soundGunshot: { collection: KsGunshotInfantryPlasmaRifle } # KS14: energy report
     selectedMode: SemiAuto
     availableModes:
     - SemiAuto
@@ -94,8 +96,9 @@
     selectedMode: SemiAuto
     availableModes:
     - SemiAuto
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: RedLightLaser
     fireCost: 50
@@ -213,6 +216,8 @@
       shader: unshaded
   # KS14 start: retro laser blaster gun stats, not present upstream
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
+    soundGunshot: { collection: KsGunshotInfantryPlasmaRifle } # KS14: energy report
     minAngle: 1
     maxAngle: 25
     angleIncrease: 8
@@ -240,6 +245,9 @@
   id: WeaponMakeshiftLaser
   description: Better pray it won't burn your hands off.
   components:
+  - type: Gun # KS14: energy report
+    soundGunshot: { collection: KsGunshotInfantryPlasmaRifle }
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" }
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/makeshift.rsi
@@ -288,9 +296,10 @@
         map: ["enum.GunVisualLayers.MagUnshaded"]
         shader: unshaded
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     projectileSpeed: 10
     soundGunshot:
-      path: /Audio/Effects/Lightning/lightningshock.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: replaced lightningshock.ogg
       params:
         variation: 0.2
   - type: BatteryAmmoProvider
@@ -351,8 +360,9 @@
     selectedMode: SemiAuto
     availableModes:
     - SemiAuto
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser3.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: Pulse
     fireCost: 200
@@ -394,8 +404,9 @@
     availableModes:
       - SemiAuto
       - FullAuto
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser3.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: Pulse
     fireCost: 200
@@ -431,8 +442,9 @@
     sprite: Objects/Weapons/Guns/Battery/pulse_rifle.rsi
   - type: Gun
     fireRate: 1.5
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser3.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: Pulse
     fireCost: 100
@@ -468,8 +480,9 @@
     sprite: Objects/Weapons/Guns/Battery/laser_cannon.rsi
   - type: Gun
     fireRate: 1.5
+    farSoundGunshot: { sound: { collection: KsGunshotPulssiaseFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+      collection: KsGunshotPulssiase # KS14: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg -> KsGunshotPulssiase
   - type: BatteryAmmoProvider
     proto: RedHeavyLaser
     fireCost: 100
@@ -497,8 +510,9 @@
           map: ["enum.GunVisualLayers.Base"]
     - type: Gun
       fireRate: 0.5
+      farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
       soundGunshot:
-        path: /Audio/Weapons/emitter.ogg
+        collection: KsGunshotInfantryPlasmaRifle # KS14: emitter.ogg -> infantry plasma
         params:
           pitch: 2
     - type: BatteryAmmoProvider
@@ -530,8 +544,9 @@
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/xray.rsi
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotPulssiaseFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
+      collection: KsGunshotPulssiase # KS14: /Audio/Weapons/Guns/Gunshots/laser3.ogg -> KsGunshotPulssiase
   - type: BatteryAmmoProvider
     proto: XrayLaser
     fireCost: 100
@@ -726,8 +741,9 @@
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/antiquelasergun.rsi
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100
@@ -776,8 +792,9 @@
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/advancedlasergun.rsi
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100
@@ -874,9 +891,10 @@
     - state: base
       map: ["enum.GunVisualLayers.Base"]
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     fireRate: 1
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser_clown.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: laser_clown.ogg -> infantry plasma
   - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100
@@ -912,8 +930,9 @@
     sprite: Objects/Weapons/Guns/Battery/energy_shotgun.rsi
   - type: Gun
     fireRate: 2
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: BulletLaserSpreadNarrow
     fireCost: 80
@@ -962,8 +981,9 @@
   - type: StealTarget
     stealGroup: WeaponEnergyMagnum
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg -> KsGunshotInfantryPlasmaRifle
   - type: BatteryAmmoProvider
     proto: BulletLaserMagnum
     fireCost: 150
@@ -1005,8 +1025,9 @@
     sprite: Objects/Weapons/Guns/Battery/temp_gun.rsi
   - type: Gun
     fireRate: 1
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/taser2.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: taser2.ogg -> infantry plasma
   - type: BatteryAmmoProvider
     proto: BoltTempgunCold
     fireCost: 100

@@ -1,0 +1,98 @@
+- type: soundCollection
+  id: KsGunshotM16Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/M16/rifle_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/M16/rifle_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/M16/rifle_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotDmr1Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/dmr_1/dmr_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/dmr_1/dmr_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/dmr_1/dmr_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotInfantryPlasmaRifleFar
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/infantry_plasma_rifle/Fire_01.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/infantry_plasma_rifle/Fire_02.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/infantry_plasma_rifle/Fire_03.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/infantry_plasma_rifle/Fire_04.ogg
+
+- type: soundCollection
+  id: KsGunshotPulssiaseFar
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/Pulssiase/single_shot.ogg
+
+- type: soundCollection
+  id: KsGunshotAk47Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/AK_47/rifle_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/AK_47/rifle_gunshot_2.ogg
+
+- type: soundCollection
+  id: KsGunshotPistol2Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/pistol_2/pistol_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/pistol_2/pistol_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/pistol_2/pistol_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotM1911Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/M1911/pistol_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/M1911/pistol_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/M1911/pistol_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotRevolver1Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/revolver_1/revolver_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/revolver_1/revolver_gunshot_2.ogg
+
+- type: soundCollection
+  id: KsGunshotRifle1Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/rifle_1/rifle_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/rifle_1/rifle_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/rifle_1/rifle_gunshot_3.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/rifle_1/rifle_gunshot_4.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/rifle_1/rifle_gunshot_5.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/rifle_1/rifle_gunshot_6.ogg
+
+- type: soundCollection
+  id: KsGunshotShotgun1Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_1/shotgun_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_1/shotgun_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_1/shotgun_gunshot_3.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_1/shotgun_gunshot_4.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_1/shotgun_gunshot_5.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_1/shotgun_gunshot_6.ogg
+
+- type: soundCollection
+  id: KsGunshotShotgun2Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_2/shotgun_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_2/shotgun_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_2/shotgun_gunshot_3.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/shotgun_2/shotgun_gunshot_4.ogg
+
+- type: soundCollection
+  id: KsGunshotMadrugadFar
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/Madrugad/madrugad_shot.ogg
+
+- type: soundCollection
+  id: KsGunshotLmg1Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/lmg_1/lmg_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/lmg_1/lmg_gunshot_2.ogg
+
+- type: soundCollection
+  id: KsGunshotSupressed1Far
+  files:
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/supressed_1/supressed_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/supressed_1/supressed_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/Farsounds/supressed_1/supressed_gunshot_3.ogg

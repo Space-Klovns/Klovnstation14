@@ -27,10 +27,10 @@
     availableModes:
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
+      collection: KsGunshotRevolver1 # KS14: gunshot collection
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      sound: { collection: KsGunshotRevolver1Far }
       range: 15,95
     # KS14: Farsound end
   - type: UseDelay

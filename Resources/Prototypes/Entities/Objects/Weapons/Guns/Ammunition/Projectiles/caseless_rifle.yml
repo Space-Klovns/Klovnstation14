@@ -5,6 +5,7 @@
   name: bullet (.25 caseless)
   components:
   - type: Projectile
+    soundHit: { path: /Audio/Weapons/Guns/Hits/bullet_hit.ogg, params: { volume: -12.0412 } } # KS14: 25% impact amplitude
     damage:
       types:
         Piercing: 19

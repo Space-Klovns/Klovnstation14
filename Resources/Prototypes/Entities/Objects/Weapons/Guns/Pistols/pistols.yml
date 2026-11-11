@@ -32,8 +32,9 @@
     availableModes:
       - SemiAuto
       - FullAuto
+    farSoundGunshot: { sound: { collection: KsGunshotPistol2Far }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/pistol.ogg
+      collection: KsGunshotPistol2 # KS14: replaced pistol.ogg
   - type: ChamberMagazineAmmoProvider
     soundRack:
       path: /Audio/Weapons/Guns/Cock/pistol_cock.ogg
@@ -122,8 +123,9 @@
     availableModes:
     - SemiAuto
     - FullAuto
+    farSoundGunshot: { sound: { collection: KsGunshotPistol2Far }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/pistol.ogg
+      collection: KsGunshotPistol2 # KS14: replaced pistol.ogg
   - type: Sprite
     sprite: Objects/Weapons/Guns/Pistols/viper.rsi
     layers:
@@ -165,10 +167,11 @@
     boltClosed: null
   - type: Gun
     fireRate: 4
+    farSoundGunshot: { sound: { collection: KsGunshotSupressed1Far, params: { volume: -6.0206 } }, range: "8, 20" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/silenced.ogg
+      collection: KsGunshotSupressed1 # KS14: replaced silenced.ogg
       params:
-        volume: -14
+        volume: -6.0206 # KS14: -14 -> -6.0206, half source amplitude
     availableModes:
     - SemiAuto
   - type: ItemSlots
@@ -218,10 +221,10 @@
     availableModes:
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
+      collection: KsGunshotPistol2 # KS14: replaced mk58.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      sound: { collection: KsGunshotPistol2Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg -> KsGunshotPistol2Far
       range: 15,80
     # KS14: Farsound end
   - type: StealTarget
@@ -252,10 +255,10 @@
     availableModes:
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
+      collection: KsGunshotM1911 # KS14: replaced mk58.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      sound: { collection: KsGunshotM1911Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg -> KsGunshotM1911Far
       range: 15,80
     # KS14: Farsound end
   - type: ItemSlots

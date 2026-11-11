@@ -101,8 +101,9 @@
     availableModes:
     - SemiAuto
     fireRate: 2
+    farSoundGunshot: { sound: { collection: KsGunshotRevolver1Far }, range: "15, 95" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
+      collection: KsGunshotRevolver1 # KS14: revolver.ogg -> revolver_1
       params:
         volume: 2.25
   - type: RevolverAmmoProvider

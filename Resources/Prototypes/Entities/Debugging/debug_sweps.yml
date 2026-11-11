@@ -11,6 +11,8 @@
   - type: Clothing
     sprite: Objects/Weapons/Guns/Pistols/debug.rsi
   - type: Gun
+    soundGunshot: { collection: KsGunshotInfantryPlasmaRifle } # KS14: EnergyShot -> infantry plasma
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     fireRate: 10
     availableModes:
     - SemiAuto

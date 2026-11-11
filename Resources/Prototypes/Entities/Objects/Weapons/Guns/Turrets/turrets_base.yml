@@ -120,8 +120,9 @@
   - type: Gun
     projectileSpeed: 15
     fireRate: 1.5
+    farSoundGunshot: { sound: { collection: KsGunshotInfantryPlasmaRifleFar }, range: "15, 130" } # KS14: matching far report
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/taser2.ogg
+      collection: KsGunshotInfantryPlasmaRifle # KS14: taser2.ogg -> infantry plasma
   - type: BatteryAmmoProvider
     proto: BulletEnergyTurretLaser
     fireCost: 100

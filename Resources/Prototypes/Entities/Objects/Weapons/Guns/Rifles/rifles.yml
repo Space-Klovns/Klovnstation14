@@ -96,10 +96,10 @@
         map: ["enum.GunVisualLayers.Mag"]
   - type: Gun
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/rifle2.ogg
+      collection: KsGunshotAk47 # KS14: rifle2.ogg -> AK_47
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      sound: { collection: KsGunshotAk47Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg -> KsGunshotAk47Far
       range: 15,130
     # KS14: Farsound end
     # angleIncrease: 7 # KS14 modified
@@ -141,6 +141,8 @@
   description: "An older bullpup carbine model, with an attached underbarrel grenade launcher.\nFeeds from .20 rifle magazines."
   components:
   - type: Gun # KS14 modified
+    farSoundGunshot: { sound: { collection: KsGunshotM16Far }, range: "15, 130" } # KS14: matching far report
+    soundGunshot: { collection: KsGunshotM16 } # KS14: .20 rifle report
     angleIncrease: 0 # KS14 modified
   - type: Sprite
     sprite: Objects/Weapons/Guns/Rifles/carbine.rsi
@@ -200,10 +202,10 @@
     fireRate: 4
     angleIncrease: 1 # KS14 modified
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
+      collection: KsGunshotM16 # KS14: replaced ltrifle.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/ltrifle.ogg
+      sound: { collection: KsGunshotM16Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/ltrifle.ogg -> KsGunshotM16Far
       range: 15,130
     # KS14: Farsound end
   - type: ItemSlots
@@ -284,10 +286,10 @@
     sprite: Objects/Weapons/Guns/Rifles/estoc.rsi
   - type: Gun
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/estocshot.ogg
+      collection: KsGunshotDmr1 # KS14: replaced estocshot.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/estocshot.ogg
+      sound: { collection: KsGunshotDmr1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/estocshot.ogg -> KsGunshotDmr1Far
       range: 15,155
     # KS14: Farsound end
     shotsPerBurst: 3
