@@ -673,7 +673,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             FiredProjectiles = shotProjectiles,
         });
 
-        // KS14 start: KsAmmoUsedEvent
+        // KS14 start: KsAmmoUsedEvent, KsGunFiredProjectilesEvent
         if (shotProjectiles.Count > 0)
         {
             var ammoUsedEv = new _KS14.Weapons.Ranged.KsAmmoUsedEvent(shotProjectiles, user);
@@ -684,6 +684,10 @@ public abstract partial class SharedGunSystem : EntitySystem
 
                 RaiseLocalEvent(firedAmmoUid.Value, ref ammoUsedEv);
             }
+
+            // Once per shot, where AmmoShotEvent above is raised again for every cartridge.
+            var firedProjectilesEv = new _KS14.Weapons.Ranged.KsGunFiredProjectilesEvent(shotProjectiles, user);
+            RaiseLocalEvent(gun, ref firedProjectilesEv);
         }
         // KS14 end
 
