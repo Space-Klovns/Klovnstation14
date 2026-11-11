@@ -9,34 +9,18 @@ public sealed partial class KsFieldCommanderUnitComponent : Component
     /// <summary>
     ///     The rule that sent it.
     /// </summary>
-    [ViewVariables]
+    [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid RuleUid;
 
     /// <summary>
-    ///     Index into <see cref="KsFieldCommanderRuleComponent.Assets"/> of what it was bought as, or -1 when it was
-    ///         not bought from that list.
+    ///     Index into <see cref="KsFieldCommanderRuleComponent.Assets"/> of what it was bought as.
     /// </summary>
-    [ViewVariables]
-    public int AssetIndex = -1;
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int AssetIndex;
 
     /// <summary>
     ///     Whether the commander keeps pointing it at the defenders.
     /// </summary>
     [ViewVariables]
     public bool GiveOrders = true;
-}
-
-/// <summary>
-///     Marks the middle of a zone that a field commander never sends anything into, strikes or orders its units
-///         towards. Placed on a map, these replace the zones it would otherwise find around the defenders' spawn
-///         points.
-/// </summary>
-[RegisterComponent]
-public sealed partial class KsFieldCommanderSafeZoneComponent : Component
-{
-    /// <summary>
-    ///     Overrides <see cref="KsFieldCommanderRuleComponent.SafeZoneRadius"/> for this zone, when set.
-    /// </summary>
-    [DataField]
-    public float? Radius;
 }

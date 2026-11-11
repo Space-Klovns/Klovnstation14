@@ -3,9 +3,10 @@ using Content.Shared._KS14.FieldCommander;
 using Content.Shared._KS14.PopupLocalization;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
-using Content.Shared.Mobs.Systems;
 using Content.Shared.Popups;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.FieldCommander;
@@ -19,7 +20,6 @@ public sealed partial class KsFieldCommanderFogSystem : EntitySystem
     private static readonly TimeSpan PopupInterval = TimeSpan.FromSeconds(4);
 
     [Dependency] private DamageableSystem _damageableSystem = default!;
-    [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -29,13 +29,14 @@ public sealed partial class KsFieldCommanderFogSystem : EntitySystem
 
     /// <summary>
     ///     Puts a fog of war on the map: everything further than <paramref name="range"/> from
-    ///         <paramref name="origin"/> (map-local) is fogged.
+    ///         <paramref name="origin"/> (map-local) is fogged, and hurts members of <paramref name="faction"/>.
     /// </summary>
-    public void SetFog(EntityUid mapUid, Vector2 origin, float range)
+    public void SetFog(EntityUid mapUid, Vector2 origin, float range, ProtoId<ScenarioFactionPrototype> faction)
     {
         var fogComponent = EnsureComp<KsFieldCommanderFogComponent>(mapUid);
         fogComponent.Origin = origin;
         fogComponent.Range = range;
+        fogComponent.Faction = faction;
         Dirty(mapUid, fogComponent);
     }
 
@@ -53,15 +54,13 @@ public sealed partial class KsFieldCommanderFogSystem : EntitySystem
 
         var seconds = (float)CheckInterval.TotalSeconds;
         var query = EntityQueryEnumerator<ScenarioFactionMemberComponent, MobStateComponent, TransformComponent>();
-        while (query.MoveNext(out var uid, out var memberComponent, out _, out var transformComponent))
+        while (query.MoveNext(out var uid, out var memberComponent, out var mobStateComponent, out var transformComponent))
         {
-            if (transformComponent.MapUid is not { } mapUid
-                || !_fogQuery.TryComp(mapUid, out var fogComponent)
-                || memberComponent.Id != fogComponent.Faction
-                || _mobStateSystem.IsDead(uid))
-            {
+            if (mobStateComponent.CurrentState == MobState.Dead ||
+                transformComponent.MapUid is not { } mapUid ||
+                !_fogQuery.TryComp(mapUid, out var fogComponent) ||
+                memberComponent.Id != fogComponent.Faction)
                 continue;
-            }
 
             var distance = (_transformSystem.GetWorldPosition(transformComponent) - fogComponent.Origin).Length();
             var over = distance - fogComponent.Range;
@@ -81,18 +80,9 @@ public sealed partial class KsFieldCommanderFogSystem : EntitySystem
 
             victimComponent.NextPopup = _gameTiming.CurTime + PopupInterval;
 
-            if (outside)
-            {
-                _popupSystem.PopupEntity(
-                    KsPopupMessage.Create("ks-fieldcommander-fog-choking"),
-                    uid, uid, type: PopupType.LargeCaution);
-            }
-            else
-            {
-                _popupSystem.PopupEntity(
-                    KsPopupMessage.Create("ks-fieldcommander-fog-warning"),
-                    uid, uid, type: PopupType.MediumCaution);
-            }
+            _popupSystem.PopupEntity(
+                KsPopupMessage.Create(outside ? "ks-fieldcommander-fog-choking" : "ks-fieldcommander-fog-warning"),
+                uid, uid, type: outside ? PopupType.LargeCaution : PopupType.MediumCaution);
         }
     }
 }

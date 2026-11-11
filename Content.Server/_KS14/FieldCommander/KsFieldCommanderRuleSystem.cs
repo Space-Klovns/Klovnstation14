@@ -27,6 +27,12 @@ namespace Content.Server._KS14.FieldCommander;
 ///     Runs an AI field commander: walks its timeline of phases, sends waves bought from a threat budget, strikes the
 ///         defenders' works, keeps its units pointed at the defenders and lands the uplink that decides the round.
 /// </summary>
+/// <remarks>
+///     Split by concern: <c>.Waves</c> buys and sends units, <c>.Placement</c> finds where things go and keeps the
+///         safe zones, <c>.Orders</c> and <c>.Strikes</c> are what the units and missiles are pointed at,
+///         <c>.Uplink</c> the final objective, <c>.Announcements</c> both sides' transmissions, <c>.Fog</c> the play
+///         area, <c>.Points</c> the defenders' requisition points and <c>.Admin</c> the console API.
+/// </remarks>
 public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldCommanderRuleComponent>
 {
     [Dependency] private IGameTiming _gameTiming = default!;
@@ -46,7 +52,6 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private KsFieldCommanderFogSystem _fogSystem = default!;
     [Dependency] private KsNoBuildZoneSystem _noBuildZoneSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
-    [Dependency] private EntityQuery<KsFieldCommanderUnitComponent> _unitQuery = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
 
     protected override void Started(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
@@ -56,12 +61,20 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         component.NextOrderTime = _gameTiming.CurTime + component.OrderInterval;
     }
 
+    protected override void Ended(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, GameRuleEndedEvent args)
+    {
+        base.Ended(uid, component, gameRule, args);
+
+        // A rule ended mid-round, by an admin, takes its fog and no-build zones with it.
+        ClearFog(component);
+        AllowBuildingInSafeZones(component);
+    }
+
     protected override void ActiveTick(EntityUid uid, KsFieldCommanderRuleComponent component, GameRuleComponent gameRule, float frameTime)
     {
         base.ActiveTick(uid, component, gameRule, frameTime);
 
-        // Waits for the map: its objectives and spawn points are what everything else is placed around.
-        if (!component.ObjectivesPrepared && !TryPrepare(component))
+        if (!component.Prepared && !TryPrepare(component))
             return;
 
         var curTime = _gameTiming.CurTime;
@@ -96,35 +109,34 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     }
 
     /// <summary>
-    ///     Takes the timers off the defender objectives, counts the commander's side as alive and still to place its
-    ///         objective, and finds the safe zones. False until the map with the objectives is there.
+    ///     Sets up the battlefield (see <see cref="KsFieldCommanderRuleComponent.Prepared"/>). False, to be tried again
+    ///         next tick, until the map with the defenders' objectives is there and a scenario rule is running to count
+    ///         the commander's side.
     /// </summary>
     private bool TryPrepare(KsFieldCommanderRuleComponent component)
     {
-        var foundObjective = false;
+        var objectiveUids = new List<EntityUid>();
         var objectiveQuery = EntityQueryEnumerator<ScenarioObjectiveComponent>();
         while (objectiveQuery.MoveNext(out var objectiveUid, out var objectiveComponent))
         {
-            if (objectiveComponent.FactionId != component.DefenderFaction)
-                continue;
-
-            foundObjective = true;
-
-            // The commander decides how the round ends; an objective must not hand it to the defenders by lasting.
-            RemComp<TimedDespawnComponent>(objectiveUid);
+            if (objectiveComponent.FactionId == component.DefenderFaction)
+                objectiveUids.Add(objectiveUid);
         }
 
-        if (!foundObjective)
+        if (objectiveUids.Count == 0 ||
+            !_scenarioSystem.SetPersistent(component.Faction, persistent: true) ||
+            !_scenarioSystem.SetObjectivePending(component.Faction, pending: true))
             return false;
 
-        _scenarioSystem.SetPersistent(component.Faction, persistent: true);
-        _scenarioSystem.SetObjectivePending(component.Faction, pending: true);
+        // The commander decides how the round ends; an objective must not hand it to the defenders by lasting.
+        foreach (var objectiveUid in objectiveUids)
+            RemComp<TimedDespawnComponent>(objectiveUid);
 
         FindSafeZones(component);
         ForbidBuildingInSafeZones(component);
         PrepareExistingDefenders(component);
         RaiseFog(component);
-        component.ObjectivesPrepared = true;
+        component.Prepared = true;
         return true;
     }
 
@@ -159,10 +171,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (!TryGetPhase(rule.Comp, out var phase))
             return;
 
-        rule.Comp.NextWaveTime = phase.WaveInterval > TimeSpan.Zero
-            ? _gameTiming.CurTime + phase.WaveInterval
-            : TimeSpan.MaxValue;
-
+        rule.Comp.NextWaveTime = ScheduleWave(phase, _gameTiming.CurTime + phase.WaveInterval);
         SendWave(rule, phase);
     }
 
@@ -187,27 +196,40 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         return true;
     }
 
+    /// <summary>
+    ///     The current phase's name, for the round end summary and admins.
+    /// </summary>
+    private string GetPhaseName(KsFieldCommanderRuleComponent component)
+    {
+        return TryGetPhase(component, out var phase)
+            ? Loc.GetString(phase.Name)
+            : Loc.GetString("ks-fieldcommander-roundend-no-phase");
+    }
+
+    /// <summary>
+    ///     When a phase's next wave is due, if it is sent at <paramref name="due"/>: never, for a phase that sends none.
+    /// </summary>
+    private static TimeSpan ScheduleWave(KsFieldCommanderPhase phase, TimeSpan due)
+    {
+        return phase.WaveInterval > TimeSpan.Zero ? due : TimeSpan.MaxValue;
+    }
+
     private void EnterPhase(Entity<KsFieldCommanderRuleComponent> rule, int phaseIndex, TimeSpan curTime)
     {
         rule.Comp.PhaseIndex = phaseIndex;
         var phase = rule.Comp.Phases[phaseIndex];
 
-        rule.Comp.NextWaveTime = phase.WaveInterval > TimeSpan.Zero
-            ? curTime + phase.FirstWaveDelay
-            : TimeSpan.MaxValue;
+        rule.Comp.NextWaveTime = ScheduleWave(phase, curTime + phase.FirstWaveDelay);
 
         // Whatever was left over belongs to the old phase's waves.
         rule.Comp.CarriedBudget = 0f;
 
-        if (phase.Announcement is { } announcement)
-            Announce(rule.Comp, announcement, major: true);
-
-        Intel(rule.Comp, phase.Intel, sound: phase.Announcement == null);
+        Transmit(rule.Comp, phase.Announcement, major: true, phase.Intel);
 
         if (phase.ReinforcementPod is { } reinforcementPod)
         {
             DropReinforcements(rule.Comp, reinforcementPod);
-            Intel(rule.Comp, rule.Comp.ReinforcementIntel, sound: true);
+            Transmit(rule.Comp, taunt: null, major: false, rule.Comp.ReinforcementIntel);
         }
 
         if (phase.DeployUplink)
@@ -233,9 +255,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             return;
 
         // Straight out of the pod and at them, rather than standing about until the next round of orders.
-        var defenders = new List<MapCoordinates>();
-        CollectLivingDefenders(ruleComponent, defenders, out _);
-        OrderUnit(ruleComponent, entity.Owner, defenders);
+        OrderUnit(ruleComponent, entity.Owner, SurveyBattlefield(ruleComponent));
     }
 
     [SubscribeLocalEvent]
@@ -255,14 +275,13 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
             ruleComponent.ObjectivesLost++;
 
-            var remaining = CountDefenderObjectives(ruleComponent, exceptUid: args.ObjectiveUid);
-            if (remaining <= 0)
+            var remainingObjectives = new List<MapCoordinates>();
+            CollectDefenderObjectives(ruleComponent, remainingObjectives, exceptUid: args.ObjectiveUid);
+            if (remainingObjectives.Count == 0)
                 continue;
 
-            if (ruleComponent.ObjectiveLostAnnouncement is { } announcement)
-                Announce(ruleComponent, announcement, major: true);
-
-            Intel(ruleComponent, ruleComponent.ObjectiveLostIntel, sound: ruleComponent.ObjectiveLostAnnouncement == null, ("remaining", remaining));
+            Transmit(ruleComponent, ruleComponent.ObjectiveLostAnnouncement, major: true, ruleComponent.ObjectiveLostIntel,
+                ("remaining", remainingObjectives.Count));
         }
     }
 
@@ -270,12 +289,8 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     {
         base.AppendRoundEndText(uid, component, gameRule, ref args);
 
-        var phaseName = TryGetPhase(component, out var phase)
-            ? Loc.GetString(phase.Name)
-            : Loc.GetString("ks-fieldcommander-roundend-no-phase");
-
         args.AddLine(Loc.GetString("ks-fieldcommander-roundend-summary",
-            ("phase", phaseName),
+            ("phase", GetPhaseName(component)),
             ("waves", component.WavesSent),
             ("sent", component.UnitsSent),
             ("killed", component.UnitsKilled),

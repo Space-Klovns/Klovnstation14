@@ -53,7 +53,7 @@ public sealed partial class KsFieldCommanderFogComponent : Component
     public float MaxDamageScale = 6f;
 
     /// <summary>
-    ///     Only members of this faction are affected.
+    ///     Only members of this faction are affected: the side besieged, set by whatever raised the fog.
     /// </summary>
     [DataField(serverOnly: true)]
     public ProtoId<ScenarioFactionPrototype> Faction = "Nanotrasen";

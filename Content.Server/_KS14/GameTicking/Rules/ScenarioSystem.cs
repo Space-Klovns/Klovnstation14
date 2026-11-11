@@ -185,33 +185,39 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         => EntityQuery<ScenarioRuleComponent>().Any();
 
     /// <summary>
-    ///     Whether <paramref name="factionId"/> is counted as alive with no living members.
+    ///     Whether <paramref name="factionId"/> is counted as alive with no living members. False if no scenario is
+    ///         running to count it.
     /// </summary>
-    public void SetPersistent(ProtoId<ScenarioFactionPrototype> factionId, bool persistent)
+    public bool SetPersistent(ProtoId<ScenarioFactionPrototype> factionId, bool persistent)
     {
-        var query = QueryActiveRules();
-        while (query.MoveNext(out _, out _, out var scenario, out _))
-        {
-            if (persistent)
-                scenario.PersistentFactions.Add(factionId);
-            else
-                scenario.PersistentFactions.Remove(factionId);
-        }
+        return SetInEveryRule(scenario => scenario.PersistentFactions, factionId, persistent);
     }
 
     /// <summary>
-    ///     Whether <paramref name="factionId"/> is counted as holding an objective it has not placed yet.
+    ///     Whether <paramref name="factionId"/> is counted as holding an objective it has not placed yet. False if no
+    ///         scenario is running to count it.
     /// </summary>
-    public void SetObjectivePending(ProtoId<ScenarioFactionPrototype> factionId, bool pending)
+    public bool SetObjectivePending(ProtoId<ScenarioFactionPrototype> factionId, bool pending)
     {
+        return SetInEveryRule(scenario => scenario.PendingObjectiveFactions, factionId, pending);
+    }
+
+    private bool SetInEveryRule(Func<ScenarioRuleComponent, HashSet<ProtoId<ScenarioFactionPrototype>>> getSet,
+        ProtoId<ScenarioFactionPrototype> factionId,
+        bool include)
+    {
+        var anyRule = false;
         var query = QueryActiveRules();
         while (query.MoveNext(out _, out _, out var scenario, out _))
         {
-            if (pending)
-                scenario.PendingObjectiveFactions.Add(factionId);
+            anyRule = true;
+            if (include)
+                getSet(scenario).Add(factionId);
             else
-                scenario.PendingObjectiveFactions.Remove(factionId);
+                getSet(scenario).Remove(factionId);
         }
+
+        return anyRule;
     }
 
     /// <summary>
@@ -301,8 +307,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         var byFaction = uniqueFactionSet.Count > 0;
         var livingMembers = 0;
 
-        // Check if there are syndies still alive
-        // If there are, the round can continue.
+        // Who is still alive, and on which side.
         var query = EntityQuery<ScenarioFactionMemberComponent, MobStateComponent>();
         foreach (var (memberComponent, mobStateComponent) in query)
         {

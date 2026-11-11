@@ -90,8 +90,8 @@ ks-fieldcommander-roundend-uplink-bombarded = The uplink lasted long enough to c
 
 ## The defenders' briefing
 
-ks-fieldcommander-intro-sender = Nanotrasen Field Operations
-ks-fieldcommander-intro = Outpost, this is Field Operations, priority traffic. Long-range sensors have a Syndicate field command group making landfall around your position. Expect probing attacks within minutes and a full assault to follow. Fortify, hold the servers, and give no ground. Stay inside the perimeter: the fog beyond it will kill you. Every confirmed kill earns you requisition credit: spend it at the requisitions terminal for ordnance and fire support. Field Operations out.
+ks-fieldcommander-intel-sender = Nanotrasen Field Operations
+ks-fieldcommander-briefing = Outpost, this is Field Operations, priority traffic. Long-range sensors have a Syndicate field command group making landfall around your position. Expect probing attacks within minutes and a full assault to follow. Fortify, hold the servers, and give no ground. Stay inside the perimeter: the fog beyond it will kill you. Every confirmed kill earns you requisition credit: spend it at the requisitions terminal for ordnance and fire support. Field Operations out.
 
 ## Points
 

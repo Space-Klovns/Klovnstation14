@@ -96,19 +96,32 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     #region Placement
 
     /// <summary>
-    ///     Nearest distance from the defenders' objectives that units on foot appear at.
+    ///     Nearest distance from the defenders' objectives that units on foot appear at, and that the uplink lands at.
     /// </summary>
     [DataField]
     public float MinSpawnDistance = 28f;
 
     /// <summary>
-    ///     Furthest distance from the defenders' objectives that anything is sent in at.
+    ///     Furthest distance from the defenders' objectives that anything is sent in at, the uplink included.
     /// </summary>
     [DataField]
     public float MaxSpawnDistance = 60f;
 
     /// <summary>
-    ///     How close to a living defender units on foot may appear.
+    ///     The uplink lands at least this share of <see cref="MaxSpawnDistance"/> out, so that reaching it is an
+    ///         expedition.
+    /// </summary>
+    [DataField]
+    public float UplinkDistanceFraction = 0.6f;
+
+    /// <summary>
+    ///     How far from the uplink its guards are placed.
+    /// </summary>
+    [DataField]
+    public float UplinkGuardRadius = 4f;
+
+    /// <summary>
+    ///     How close to a living defender units on foot, and the uplink, may appear.
     /// </summary>
     [DataField]
     public float MinDefenderDistance = 16f;
@@ -131,21 +144,19 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [DataField]
     public float DefenderSightRange = 30f;
 
+    /// <summary>
+    ///     How many random spots are tried when looking for somewhere to put something.
+    /// </summary>
     [DataField]
     public int PlacementAttempts = 40;
 
     /// <summary>
-    ///     The radius around each defender spawn point that nothing is sent into, struck or ordered towards, so that
-    ///         players always have somewhere to come back to. Units can still walk in on their own.
+    ///     The radius of the zones that nothing is sent into, struck or ordered towards, so that players always have
+    ///         somewhere to come back to, and where nobody may build. Units can still walk in on their own. Used around
+    ///         each defender spawn point, and for any <see cref="KsFieldCommanderSafeZoneComponent"/> that sets none.
     /// </summary>
     [DataField]
     public float SafeZoneRadius = 8f;
-
-    /// <summary>
-    ///     Extra room kept between a strike's impact and the safe zone, for its blast.
-    /// </summary>
-    [DataField]
-    public float StrikeSafeMargin = 6f;
 
     #endregion
 
@@ -190,17 +201,27 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public int MaxPerGroup = 4;
 
     /// <summary>
-    ///     What an airstrike drops.
-    /// </summary>
-    [DataField]
-    public EntProtoId StrikePrototype = "SupplyPodMissileSyndicateExplosive";
-
-    /// <summary>
     ///     How often the commander points its units at the defenders again. A unit that loses track of its target
     ///         settles down where it is.
     /// </summary>
     [DataField]
     public TimeSpan OrderInterval = TimeSpan.FromSeconds(20);
+
+    #endregion
+
+    #region Strikes
+
+    /// <summary>
+    ///     The missile pod a strike drops on the defenders' works.
+    /// </summary>
+    [DataField]
+    public EntProtoId StrikePrototype = "SupplyPodMissileSyndicateExplosive";
+
+    /// <summary>
+    ///     Extra room kept between a strike's impact and the safe zones and defender objectives, for its blast.
+    /// </summary>
+    [DataField]
+    public float StrikeSafeMargin = 6f;
 
     #endregion
 
@@ -247,7 +268,7 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public LocId? WaveIntel = "ks-fieldcommander-intel-wave";
 
     /// <summary>
-    ///     The commander taunts with one of these with each airstrike.
+    ///     The commander taunts with one of these with each strike.
     /// </summary>
     [DataField]
     public List<LocId> StrikeAnnouncements = [];
@@ -297,6 +318,13 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [DataField]
     public LocId? ReinforcementIntel = "ks-fieldcommander-intel-reinforcements";
 
+    #endregion
+
+    #region Intel
+
+    // The defenders' own side on the air: everything they can act on comes from here, a few seconds after whatever
+    //      the commander said about it.
+
     /// <summary>
     ///     How long after the rule starts the defenders' own command first comes on the air.
     /// </summary>
@@ -307,7 +335,7 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     ///     The defenders' briefing, sent once after <see cref="BriefingDelay"/>.
     /// </summary>
     [DataField]
-    public LocId? BriefingAnnouncement = "ks-fieldcommander-intro";
+    public LocId? BriefingAnnouncement = "ks-fieldcommander-briefing";
 
     /// <summary>
     ///     How long after the commander speaks the defenders' intelligence replies.
@@ -315,12 +343,21 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [DataField]
     public TimeSpan IntelDelay = TimeSpan.FromSeconds(3);
 
+    /// <summary>
+    ///     Who every intelligence message, the briefing included, is signed by.
+    /// </summary>
     [DataField]
-    public LocId IntelSender = "ks-fieldcommander-intro-sender";
+    public LocId IntelSender = "ks-fieldcommander-intel-sender";
 
+    /// <summary>
+    ///     Readable over snow and ice, where the defenders spend the round.
+    /// </summary>
     [DataField]
     public Color IntelColor = Color.FromHex("#5B8CFF");
 
+    /// <summary>
+    ///     The radio chirp under intelligence, unless it follows one of the commander's major transmissions.
+    /// </summary>
     [DataField]
     public SoundSpecifier IntelSound = new SoundPathSpecifier("/Audio/_KS14/Announcements/confirmdropoff.ogg");
 
@@ -400,13 +437,15 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     /// <summary>
     ///     Intelligence waiting to go out, in the order it was queued.
     /// </summary>
-    [ViewVariables]
+    [ViewVariables(VVAccess.ReadOnly)]
     public List<KsFieldCommanderPendingIntel> PendingIntel = [];
 
     /// <summary>
-    ///     Every defender's points, by player rather than by body, so that they last through a death.
+    ///     Every defender's points, by player rather than by body, so that they last through a death. Read-only in VV,
+    ///         as <see cref="KsFieldCommanderRuleSystem.SetPoints"/> keeps each body's copy in step with it; admins use
+    ///         the <c>ks_fcpoints</c> command.
     /// </summary>
-    [ViewVariables]
+    [ViewVariables(VVAccess.ReadOnly)]
     public Dictionary<NetUserId, int> Points = new();
 
     [ViewVariables]
@@ -440,19 +479,26 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public int ObjectivesLost;
 
     /// <summary>
-    ///     Whether the defender objectives have had their own timers taken off. The commander decides how a round
-    ///         ends, so an objective must not win it by simply lasting.
+    ///     Whether the battlefield is set up, which waits for the map with the defenders' objectives:
+    ///         <list type="bullet">
+    ///             <item>their objectives' own timers are off (the commander decides how a round ends, so an objective
+    ///                 must not win it by simply lasting);</item>
+    ///             <item>the commander's side counts as alive, and as holding an objective still to come;</item>
+    ///             <item>the safe zones are found, and closed to building;</item>
+    ///             <item>the defenders are readied, and the fog is up.</item>
+    ///         </list>
     /// </summary>
     [ViewVariables]
-    public bool ObjectivesPrepared;
+    public bool Prepared;
 
     /// <summary>
-    ///     Centres of the zones nothing is sent into, found from the defenders' spawn points.
+    ///     The zones nothing is sent into: the map's <see cref="KsFieldCommanderSafeZoneComponent"/> markers if it has
+    ///         any, or else the defenders' spawn points.
     /// </summary>
-    [ViewVariables]
+    [ViewVariables(VVAccess.ReadOnly)]
     public List<KsFieldCommanderSafeZone> SafeZones = [];
 
-    [ViewVariables]
+    [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? UplinkUid;
 
     [ViewVariables]
@@ -473,6 +519,9 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     #endregion
 }
 
+/// <summary>
+///     A circle nothing is sent into, struck or ordered towards. See <see cref="KsFieldCommanderRuleComponent.SafeZones"/>.
+/// </summary>
 public readonly record struct KsFieldCommanderSafeZone(MapCoordinates Center, float Radius);
 
 /// <summary>
@@ -523,7 +572,7 @@ public sealed partial class KsFieldCommanderPhase
     public float BudgetPerExtraDefender = 0.35f;
 
     /// <summary>
-    ///     Chance for each wave to come with an airstrike.
+    ///     Chance for each wave to come with a strike.
     /// </summary>
     [DataField]
     public float StrikeChance;

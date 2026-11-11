@@ -1,12 +1,11 @@
 using System.Text;
 using Content.Shared.GameTicking.Components;
-using Robust.Shared.Map;
 
 namespace Content.Server._KS14.FieldCommander;
 
 public sealed partial class KsFieldCommanderRuleSystem
 {
-    #region Debug
+    #region Admin
 
     /// <summary>
     ///     Every field commander running now, for the admin commands.
@@ -50,12 +49,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         var curTime = _gameTiming.CurTime;
         var elapsed = GetElapsed(component, rule.Comp2, curTime);
 
-        var defenders = new List<MapCoordinates>();
-        CollectLivingDefenders(component, defenders, out var deadDefenders);
-
-        var phaseName = TryGetPhase(component, out var phase)
-            ? Loc.GetString(phase.Name)
-            : Loc.GetString("ks-fieldcommander-roundend-no-phase");
+        var battlefield = SurveyBattlefield(component);
 
         var nextPhaseIn = component.PhaseIndex + 1 < component.Phases.Count
             ? FormatSeconds(component.Phases[component.PhaseIndex + 1].Start - elapsed)
@@ -76,16 +70,16 @@ public sealed partial class KsFieldCommanderRuleSystem
         var builder = new StringBuilder();
         builder.AppendLine(Loc.GetString("cmd-ks_fcstatus-summary",
             ("rule", ToPrettyString(rule.Owner)),
-            ("phase", phaseName),
+            ("phase", GetPhaseName(component)),
             ("index", component.PhaseIndex),
             ("elapsed", FormatSeconds(elapsed)),
             ("nextPhase", nextPhaseIn),
             ("nextWave", nextWaveIn),
             ("adaptive", component.AdaptiveMultiplier.ToString("0.00")),
             ("alive", CountLivingUnits(rule.Owner, null)),
-            ("cap", GetMaxAlive(component, defenders.Count)),
-            ("defenders", defenders.Count),
-            ("dead", deadDefenders),
+            ("cap", GetMaxAlive(component, battlefield.Defenders.Count)),
+            ("defenders", battlefield.Defenders.Count),
+            ("dead", battlefield.DeadDefenders),
             ("waves", component.WavesSent),
             ("uplink", uplink)));
 

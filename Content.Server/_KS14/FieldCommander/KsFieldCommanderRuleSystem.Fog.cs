@@ -1,4 +1,3 @@
-using Content.Shared._KS14.RCD;
 using Robust.Shared.Map;
 
 namespace Content.Server._KS14.FieldCommander;
@@ -8,7 +7,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     #region Fog
 
     /// <summary>
-    ///     Brings the fog down around the defenders' base, if the rule has one.
+    ///     Brings the fog down around the defenders' base, if the rule has one. Only the defenders are hurt by it.
     /// </summary>
     private void RaiseFog(KsFieldCommanderRuleComponent component)
     {
@@ -23,7 +22,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         component.FogMapUid = mapUid;
         component.FogOrigin = new MapCoordinates(GetBaseCentre(component, objectives), objectives[0].MapId);
         component.FogCurrentRange = component.FogRange;
-        _fogSystem.SetFog(mapUid, component.FogOrigin.Position, component.FogCurrentRange);
+        _fogSystem.SetFog(mapUid, component.FogOrigin.Position, component.FogCurrentRange, component.DefenderFaction);
     }
 
     /// <summary>
@@ -39,7 +38,16 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         component.FogCurrentRange = range;
-        _fogSystem.SetFog(mapUid, component.FogOrigin.Position, range);
+        _fogSystem.SetFog(mapUid, component.FogOrigin.Position, range, component.DefenderFaction);
+    }
+
+    private void ClearFog(KsFieldCommanderRuleComponent component)
+    {
+        if (component.FogMapUid is not { } mapUid)
+            return;
+
+        _fogSystem.Clear(mapUid);
+        component.FogMapUid = null;
     }
 
     /// <summary>
@@ -53,27 +61,6 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         var distance = component.FogCurrentRange + margin;
         return (coordinates.Position - component.FogOrigin.Position).LengthSquared() >= distance * distance;
-    }
-
-    /// <summary>
-    ///     The spawn areas are for coming back to, not for fortifying: nobody may use an RCD in them.
-    /// </summary>
-    private void ForbidBuildingInSafeZones(KsFieldCommanderRuleComponent component)
-    {
-        var zonesByMap = new Dictionary<MapId, List<KsNoBuildZone>>();
-        foreach (var safeZone in component.SafeZones)
-        {
-            if (!zonesByMap.TryGetValue(safeZone.Center.MapId, out var zones))
-                zonesByMap[safeZone.Center.MapId] = zones = [];
-
-            zones.Add(new KsNoBuildZone(safeZone.Center.Position, safeZone.Radius));
-        }
-
-        foreach (var (mapId, zones) in zonesByMap)
-        {
-            if (_mapSystem.GetMapOrInvalid(mapId) is { Valid: true } mapUid)
-                _noBuildZoneSystem.SetZones(mapUid, zones);
-        }
     }
 
     #endregion

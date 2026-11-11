@@ -157,8 +157,7 @@ public sealed partial class KsFieldCommanderRuleSystem
         if (GetKiller(killerUid) is not { } killer ||
             !IsDefender(rule.Comp, killer) ||
             !TryComp<ActorComponent>(killer, out var killerActorComponent) ||
-            unit.Comp.AssetIndex < 0 ||
-            unit.Comp.AssetIndex >= rule.Comp.Assets.Count)
+            unit.Comp.AssetIndex >= rule.Comp.Assets.Count) // the list was changed since it was bought
             return;
 
         AddPoints(rule, killerActorComponent.PlayerSession, GetKillPoints(rule.Comp, rule.Comp.Assets[unit.Comp.AssetIndex]), KillReason, Name(unit));
