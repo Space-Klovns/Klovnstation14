@@ -17,7 +17,7 @@
     - id: MassHallucinations
     - id: MimicVendorRule
     - id: MouseMigration
-    - id: PowerGridCheck
+    # - id: PowerGridCheck # KS14: removed from normal gameplay, admin-only
     - id: RandomSentience
     - id: SlimesSpawnHorde
     - id: SolarFlare
@@ -352,7 +352,7 @@
   id: SolarFlare
   components:
   - type: StationEvent
-    weight: 8
+    weight: 4 # KS14: 8 -> 4, too common
     startAnnouncement: station-event-solar-flare-start-announcement
     endAnnouncement: station-event-solar-flare-end-announcement
     startAudio:
