@@ -1,0 +1,6 @@
+# tgstation's LAVA_PROOF items: lava neither burns nor sinks them.
+
+- type: !PartialOnly entity
+  id: NukeDisk
+  components:
+  - type: KsLavaProof

@@ -1,0 +1,36 @@
+# tgstation's MOB_MINING biotype, for bane weapons such as the giantslayer spear.
+
+- type: !PartialOnly entity
+  id: MobWatcherLavaland
+  components:
+  - type: KsMiningFauna
+
+- type: !PartialOnly entity
+  id: MobWatcherIcewing
+  components:
+  - type: KsMiningFauna
+
+- type: !PartialOnly entity
+  id: MobWatcherMagmawing
+  components:
+  - type: KsMiningFauna
+
+- type: !PartialOnly entity
+  id: MobWatcherPride
+  components:
+  - type: KsMiningFauna
+
+- type: !PartialOnly entity
+  id: MobGoliath
+  components:
+  - type: KsMiningFauna
+
+- type: !PartialOnly entity
+  id: MobHivelord
+  components:
+  - type: KsMiningFauna
+
+- type: !PartialOnly entity
+  id: MobBasilisk
+  components:
+  - type: KsMiningFauna

@@ -1,0 +1,52 @@
+# tgstation's shields: they hit for 10, right-click shoves, and banging one with a melee weapon makes a racket.
+
+- type: !PartialOnly entity
+  id: BaseShield
+  components:
+  - type: MeleeWeapon
+    attackRate: 1
+    damage:
+      types:
+        Blunt: 10
+    soundHit:
+      collection: MetalThud
+    animation: WeaponArcThrust
+  - type: UseDelay # the bash cooldown
+  - type: KsShieldBash
+  - type: KsShoveWeapon
+
+# The energy shield is not a BaseShield. Like tgstation's, it only bashes and shoves while on.
+- type: !PartialOnly entity
+  id: EnergyShield
+  components:
+  - type: MeleeWeapon
+    attackRate: 1
+    damage:
+      types:
+        Blunt: 10
+    soundHit:
+      collection: MetalThud
+    animation: WeaponArcThrust
+  - type: KsShieldBash
+    bashSound:
+      path: /Audio/_KS14/Effects/Shields/energyshieldbash.ogg
+      params:
+        variation: 0.1
+  - type: KsShoveWeapon
+    inactivePopup: ks-shove-weapon-inactive-energy
+
+- type: !PartialOnly entity
+  id: TelescopicShield
+  components:
+  - type: KsShoveWeapon
+    inactivePopup: ks-shove-weapon-inactive-telescopic
+
+# tgstation's cult (mirror) shield knocks like glass.
+- type: !PartialOnly entity
+  id: MirrorShield
+  components:
+  - type: KsShieldBash
+    bashSound:
+      path: /Audio/Effects/glass_knock.ogg
+      params:
+        variation: 0.1

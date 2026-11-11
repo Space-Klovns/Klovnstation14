@@ -91,6 +91,7 @@ namespace Content.Shared.Damage
                 PercentilePenetration = new(damageSpec.PercentilePenetration);
             if (damageSpec.FlatPenetration != null)
                 FlatPenetration = new(damageSpec.FlatPenetration);
+            DisableCrossInteraction = damageSpec.DisableCrossInteraction;
             //KS14 end
         }
 
@@ -135,6 +136,7 @@ namespace Content.Shared.Damage
             // more cause they're just bloody stumps.
             DamageSpecifier newDamage = new();
             newDamage.DamageDict.EnsureCapacity(damageSpec.DamageDict.Count);
+            damageSpec.KsCopyPenetrationTo(newDamage); // KS14: or the next modifier set, such as armour after a species set, sees none
 
             //basically all of this is KS modified past this point
             //KS14 START
@@ -226,6 +228,7 @@ namespace Content.Shared.Damage
         public static DamageSpecifier GetPositive(DamageSpecifier damageSpec)
         {
             DamageSpecifier newDamage = new();
+            damageSpec.KsCopyPenetrationTo(newDamage); // KS14
 
             foreach (var (key, value) in damageSpec.DamageDict)
             {
@@ -242,6 +245,7 @@ namespace Content.Shared.Damage
         public static DamageSpecifier GetNegative(DamageSpecifier damageSpec)
         {
             DamageSpecifier newDamage = new();
+            damageSpec.KsCopyPenetrationTo(newDamage); // KS14
 
             foreach (var (key, value) in damageSpec.DamageDict)
             {
@@ -405,6 +409,7 @@ namespace Content.Shared.Damage
         public static DamageSpecifier operator /(DamageSpecifier damageSpec, FixedPoint2 factor)
         {
             DamageSpecifier newDamage = new();
+            damageSpec.KsCopyPenetrationTo(newDamage); // KS14
             foreach (var entry in damageSpec.DamageDict)
             {
                 newDamage.DamageDict.Add(entry.Key, entry.Value / factor);
