@@ -384,17 +384,12 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         for (var i = 0; i < entry.Spawn; i++)
         {
             var offset = predictedRandom.NextVector2Box(min.X, min.Y, max.X, max.Y);
+            // KS14 start: a whole bundle is placed together, so that how it is listed doesn't decide what gets worn
             if (entity.TryGetComponent(out CMVendorBundleComponent? bundle, _compFactory))
-            {
-                foreach (var bundled in bundle.Bundle)
-                {
-                    Vend(vendor, actor, bundled, offset, entry.ReplaceSlot);
-                }
-            }
+                KsVendAll(vendor, actor, bundle.Bundle, offset, entry.ReplaceSlot);
             else
-            {
-                Vend(vendor, actor, entry.Id, offset, entry.ReplaceSlot);
-            }
+                KsVendAll(vendor, actor, [entry.Id], offset, entry.ReplaceSlot);
+            // KS14 end
         }
 
         if (entity.TryGetComponent(out CMChangeUserOnVendComponent? change, _compFactory) &&
@@ -404,6 +399,10 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         }
     }
 
+    // KS14: replaced by KsVendAll (SharedCMAutomatedVendorSystem.Klovn.Equip.cs). Grab equipped into every slot an
+    //      item fitted and then picked the item up regardless, so the first two items of a kit (jumpsuit, backpack)
+    //      were pulled back off into the hands, and what got worn depended on the order the kit listed it in.
+    /*
     private void Vend(EntityUid vendor, EntityUid player, EntProtoId toVend, Vector2 offset, SlotFlags? replaceSlot = null)
     {
 
@@ -474,6 +473,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
 
         return _hands.TryPickupAnyHand(playerUid, itemUid);
     }
+    */
 
     public void SetPoints(Entity<CMVendorUserComponent> user, int points)
     {
