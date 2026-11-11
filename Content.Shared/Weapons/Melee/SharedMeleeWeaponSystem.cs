@@ -922,6 +922,17 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 
         var chance = CalculateDisarmChance(user, target.Value, inTargetHand, combatMode);
 
+        // KS14 start: a held weapon, such as a shield, can change the shove
+        var ksWeaponAttempt = new Content.Shared._KS14.ShoveWeapon.KsDisarmWithWeaponAttemptEvent(user, target.Value, chance, combatMode.DisarmSuccessSound);
+        if (meleeUid != user)
+            RaiseLocalEvent(meleeUid, ref ksWeaponAttempt);
+
+        if (ksWeaponAttempt.Cancelled)
+            return false;
+
+        chance = ksWeaponAttempt.Chance;
+        // KS14 end
+
         // KS14 Start
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
             KsSharedRandomExtensions.GetNetId(user, EntityManager),
@@ -952,13 +963,21 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var eventArgs = new DisarmedEvent(target.Value, user, 1 - chance);
         RaiseLocalEvent(target.Value, ref eventArgs);
 
+        // KS14 start: let the weapon follow up on its shove
+        if (meleeUid != user)
+        {
+            var ksShovedEvent = new Content.Shared._KS14.ShoveWeapon.KsShovedWithWeaponEvent(user, target.Value);
+            RaiseLocalEvent(meleeUid, ref ksShovedEvent);
+        }
+        // KS14 end
+
         // KS14 start: Moved interaction, admin logs, and sound here
         Interaction.DoContactInteraction(user, target);
         AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
 
         AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
 
-        _audio.PlayPredicted/* KS14: use predicted variant */(combatMode.DisarmSuccessSound, target.Value, target /* KS14: added user */, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
+        _audio.PlayPredicted/* KS14: use predicted variant */(ksWeaponAttempt.SuccessSound /* KS14: was combatMode.DisarmSuccessSound */, target.Value, target /* KS14: added user */, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
         // KS14 end
 
         // Nothing handled it so abort.
