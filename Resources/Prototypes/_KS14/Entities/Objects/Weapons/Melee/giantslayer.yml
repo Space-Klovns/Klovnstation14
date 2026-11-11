@@ -106,7 +106,7 @@
       - KsMiningFauna
     damage:
       types:
-        Piercing: 80
+        Piercing: 50
     examineText: ks-bane-examine-mining-fauna
   - type: KsLavaProof
   - type: StaticPrice
