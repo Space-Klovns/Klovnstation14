@@ -1,0 +1,60 @@
+# Supply pods the defenders are sent for lasting each phase of a field commander's assault.
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsFieldCommanderReinforcementsAmmo
+  name: ammunition cargo pod
+  description: A Nanotrasen drop pod packed with magazines.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: MagazineRifle
+          amount: 6
+        - id: MagazinePistolSubMachineGun
+          amount: 4
+        - id: MagazinePistol
+          amount: 4
+        - id: GrenadeStinger
+          amount: 2
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsFieldCommanderReinforcementsSupport
+  name: field support cargo pod
+  description: A Nanotrasen drop pod with medical supplies and a pair of turrets.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: MedkitCombatFilled
+          amount: 3
+        - id: Gauze
+          amount: 4
+        - id: KsFlatpackBallisticTurretNanotrasenDisposable
+          amount: 2
+        - id: SheetPlasteel
+        - id: MagazineRifle
+          amount: 4
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: KsFieldCommanderReinforcementsHeavy
+  name: heavy weapons cargo pod
+  description: A Nanotrasen drop pod with everything needed to crack a hardened relay.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: KsWeaponLauncherRocketAt4
+          amount: 2
+        - id: KsScenarioNanoplantSeismicChargeShort
+          amount: 3
+        - id: WeaponRifleLecterXL8
+        - id: MagazineRifle
+          amount: 6
+        - id: MedkitCombatFilled
+          amount: 2

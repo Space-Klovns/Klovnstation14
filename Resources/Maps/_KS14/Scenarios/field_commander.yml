@@ -33306,7 +33306,7 @@ entities:
     - type: Transform
       pos: 2.7736166,-3.3994856
       parent: 1
-- proto: RCDExperimental
+- proto: KsRCDFieldEngineer
   entities:
   - uid: 67
     components:

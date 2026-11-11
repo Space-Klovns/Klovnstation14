@@ -1,0 +1,71 @@
+# An AI Syndicate field commander besieging the scenario's Nanotrasen defenders. What it can send is filled in
+#     from the private module's FieldCommand/Partials; without it, the commander still runs its timeline, strikes
+#     and uplink, but has no units to buy.
+
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderRule
+  components:
+  - type: GameRule
+    minPlayers: 0
+  - type: KsFieldCommanderRule
+    waveAnnouncements:
+    - ks-fieldcommander-wave-1
+    - ks-fieldcommander-wave-2
+    - ks-fieldcommander-wave-3
+    - ks-fieldcommander-wave-4
+    - ks-fieldcommander-wave-5
+    - ks-fieldcommander-wave-6
+    strikeAnnouncements:
+    - ks-fieldcommander-strike-1
+    - ks-fieldcommander-strike-2
+    - ks-fieldcommander-strike-3
+    phases:
+    - name: ks-fieldcommander-phase-landfall
+      start: 0
+      announcement: ks-fieldcommander-phase-landfall-announcement
+    - name: ks-fieldcommander-phase-probing
+      start: 4m
+      waveInterval: 150
+      firstWaveDelay: 20
+      budget: 3
+      budgetPerExtraDefender: 0.25
+      announcement: ks-fieldcommander-phase-probing-announcement
+    - name: ks-fieldcommander-phase-pressure
+      start: 12m
+      waveInterval: 120
+      budget: 6
+      budgetPerExtraDefender: 0.25
+      strikeChance: 0.15
+      announcement: ks-fieldcommander-phase-pressure-announcement
+      reinforcementPod: KsFieldCommanderReinforcementsAmmo
+    - name: ks-fieldcommander-phase-siege
+      start: 22m
+      waveInterval: 105
+      budget: 9
+      budgetPerExtraDefender: 0.3
+      strikeChance: 0.4
+      announcement: ks-fieldcommander-phase-siege-announcement
+      reinforcementPod: KsFieldCommanderReinforcementsSupport
+    - name: ks-fieldcommander-phase-final
+      start: 32m
+      waveInterval: 90
+      budget: 12
+      budgetPerExtraDefender: 0.3
+      strikeChance: 0.6
+      announcement: ks-fieldcommander-phase-final-announcement
+      reinforcementPod: KsFieldCommanderReinforcementsHeavy
+      deployUplink: true
+      uplinkGuardBudget: 9
+
+# The scenario rule for a field commander round: the commander's side never runs out of members, and holds an
+#     objective (its uplink) from the start, even before it lands.
+- type: entity
+  parent: Scenario
+  id: KsScenarioFieldCommander
+  components:
+  - type: ScenarioRule
+    persistentFactions:
+    - Syndicate
+    pendingObjectiveFactions:
+    - Syndicate

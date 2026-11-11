@@ -1,6 +1,6 @@
 - type: gameMap
   id: FieldCommander
-  mapName: 'Field Commander [Admin]'
+  mapName: 'Field Commander'
   mapPath: /Maps/_KS14/Scenarios/field_commander.yml
   minPlayers: 7
   maxPlayers: 40

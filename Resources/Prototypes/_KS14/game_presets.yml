@@ -39,3 +39,17 @@
   - KsSkeletonCrewDustScheduler
   - SpaceTrafficControlEventScheduler
   - BasicRoundstartVariation
+
+- type: gamePreset
+  id: KsFieldCommander
+  alias:
+  - fieldcommander
+  name: ks-fieldcommander-title
+  description: ks-fieldcommander-description
+  minPlayers: 7
+  maxPlayers: 40
+  showInVote: true
+  supportedMaps: KsFieldCommanderMapPool
+  rules:
+  - KsScenarioFieldCommander
+  - KsFieldCommanderRule
