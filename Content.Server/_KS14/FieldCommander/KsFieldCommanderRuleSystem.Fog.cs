@@ -1,3 +1,4 @@
+using Content.Shared._KS14.RCD;
 using Robust.Shared.Map;
 
 namespace Content.Server._KS14.FieldCommander;
@@ -52,6 +53,27 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         var distance = component.FogCurrentRange + margin;
         return (coordinates.Position - component.FogOrigin.Position).LengthSquared() >= distance * distance;
+    }
+
+    /// <summary>
+    ///     The spawn areas are for coming back to, not for fortifying: nobody may use an RCD in them.
+    /// </summary>
+    private void ForbidBuildingInSafeZones(KsFieldCommanderRuleComponent component)
+    {
+        var zonesByMap = new Dictionary<MapId, List<KsNoBuildZone>>();
+        foreach (var safeZone in component.SafeZones)
+        {
+            if (!zonesByMap.TryGetValue(safeZone.Center.MapId, out var zones))
+                zonesByMap[safeZone.Center.MapId] = zones = [];
+
+            zones.Add(new KsNoBuildZone(safeZone.Center.Position, safeZone.Radius));
+        }
+
+        foreach (var (mapId, zones) in zonesByMap)
+        {
+            if (_mapSystem.GetMapOrInvalid(mapId) is { Valid: true } mapUid)
+                _noBuildZoneSystem.SetZones(mapUid, zones);
+        }
     }
 
     #endregion

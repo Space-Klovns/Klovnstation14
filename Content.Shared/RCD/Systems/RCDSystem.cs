@@ -559,6 +559,9 @@ public sealed partial class RCDSystem : EntitySystem
     {
         var prototype = ProtoMan.Index(component.ProtoId);
 
+        if (KsIsInNoBuildZone(uid, gridUid, mapGrid, position, user, popMsgs)) // KS14: no-build zones, such as spawn areas
+            return false;
+
         // Check that the RCD has enough ammo to get the job done
         var charges = _sharedCharges.GetCurrentCharges(uid);
 

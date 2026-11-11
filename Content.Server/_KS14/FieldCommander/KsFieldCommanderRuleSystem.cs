@@ -7,6 +7,7 @@ using Content.Server.Explosion.EntitySystems;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
 using Content.Server.Humanoid.Systems;
+using Content.Shared._KS14.RCD;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared._RMC14.Vendors;
 using Content.Shared.GameTicking.Components;
@@ -43,6 +44,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private ExplosionSystem _explosionSystem = default!;
     [Dependency] private KsFieldCommanderFogSystem _fogSystem = default!;
+    [Dependency] private KsNoBuildZoneSystem _noBuildZoneSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<KsFieldCommanderUnitComponent> _unitQuery = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
@@ -119,6 +121,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         _scenarioSystem.SetObjectivePending(component.Faction, pending: true);
 
         FindSafeZones(component);
+        ForbidBuildingInSafeZones(component);
         PrepareExistingDefenders(component);
         RaiseFog(component);
         component.ObjectivesPrepared = true;
