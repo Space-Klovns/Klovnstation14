@@ -8,8 +8,9 @@ using Robust.UnitTesting.Pool;
 namespace Content.IntegrationTests.Tests._KS14.Scenario;
 
 /// <summary>
-///     A member's side reaches the client, which predicts what depends on it, such as being refused its own
-///         objective (<see cref="Content.Shared._KS14.Scenario.Systems.ScenarioObjectiveGuardSystem"/>).
+///     A member's side is networked, even when it is set at runtime, so that the client can predict what depends on it,
+///         such as being refused its own objective (<see cref="Content.Shared._KS14.Scenario.Systems.ScenarioObjectiveGuardSystem"/>).
+///         The refusal itself is not covered here.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(ScenarioFactionMemberComponent))]

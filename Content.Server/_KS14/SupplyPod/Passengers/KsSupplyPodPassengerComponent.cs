@@ -11,6 +11,6 @@ public sealed partial class KsSupplyPodPassengerComponent : Component
     /// <summary>
     ///     The pod carrying it.
     /// </summary>
-    [ViewVariables]
+    [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid PodUid;
 }

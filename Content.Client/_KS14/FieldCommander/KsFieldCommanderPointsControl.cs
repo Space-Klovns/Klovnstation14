@@ -13,6 +13,9 @@ namespace Content.Client._KS14.FieldCommander;
 /// </summary>
 public sealed class KsFieldCommanderPointsControl : LayoutContainer
 {
+    /// <summary>
+    ///     How long a change stays on screen, in seconds.
+    /// </summary>
     private const float ChangeLifetime = 2.5f;
 
     /// <summary>
@@ -26,8 +29,19 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
     /// </summary>
     private const float ChangeRise = 18f;
 
+    /// <summary>
+    ///     Room left between the total and the highest a change rises to.
+    /// </summary>
     private const float ChangeGap = 10f;
+
+    /// <summary>
+    ///     How far apart changes on screen at once are stacked.
+    /// </summary>
     private const float ChangeSpacing = 24f;
+
+    /// <summary>
+    ///     How far down the screen the total sits, clear of the top bar.
+    /// </summary>
     private const float TopMargin = 72f;
 
     /// <summary>
@@ -68,6 +82,11 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
     }
 
     /// <summary>
+    ///     How many changes are on screen now, for tests.
+    /// </summary>
+    public int ChangeCount => _changes.Count;
+
+    /// <summary>
     ///     Shows the player's points, or hides the readout for null.
     /// </summary>
     public void SetTotal(int? total)
@@ -80,11 +99,6 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
         if (total is { } points)
             _totalLabel.Text = Loc.GetString("ks-fieldcommander-points-total", ("points", points));
     }
-
-    /// <summary>
-    ///     How many changes are on screen now, for tests.
-    /// </summary>
-    public int ChangeCount => _changes.Count;
 
     public void AddChange(int delta, string reason)
     {

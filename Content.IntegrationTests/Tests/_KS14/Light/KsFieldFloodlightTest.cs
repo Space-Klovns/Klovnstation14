@@ -1,5 +1,5 @@
 using System.Numerics;
-using Content.IntegrationTests.Tests.Interaction;
+using Content.IntegrationTests.Tests._KS14.RCD;
 using Content.Server._KS14.Light;
 using Content.Shared.Light.Components;
 using Content.Shared.RCD;
@@ -15,9 +15,8 @@ namespace Content.IntegrationTests.Tests._KS14.Light;
 ///         that are already bolted down and lit.
 /// </summary>
 [TestOf(typeof(KsHandheldLightStartsOnSystem))]
-public sealed class KsFieldFloodlightTest : InteractionTest
+public sealed class KsFieldFloodlightTest : KsFieldEngineerRcdTest
 {
-    private static readonly EntProtoId Rcd = "KsRCDFieldEngineer";
     private static readonly EntProtoId Floodlight = "KsFloodlightField";
     private static readonly ProtoId<RCDPrototype> RcdSettingFloodlight = "KsFieldFloodlight";
 
@@ -61,11 +60,8 @@ public sealed class KsFieldFloodlightTest : InteractionTest
         var target = Transform.WithEntityId(new EntityCoordinates(SPlayer, new Vector2(0, 1)), MapData.Grid);
         await SetTile(PlatingRCD, SEntMan.GetNetCoordinates(target), MapData.Grid);
 
-        var rcd = await PlaceInHands(Rcd);
-        await UseInHand();
-        await RunTicks(3);
-        await SendBui(RcdUiKey.Key, new RCDSystemMessage(RcdSettingFloodlight), rcd);
-        await CloseBui(RcdUiKey.Key, rcd);
+        var rcd = await PlaceInHands(FieldEngineerRcd);
+        await SetRcdProto(rcd, RcdSettingFloodlight);
 
         await Interact(null, target, awaitDoAfters: true);
         await RunTicks(10);

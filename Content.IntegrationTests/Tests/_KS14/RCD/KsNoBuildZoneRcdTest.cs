@@ -16,20 +16,15 @@ namespace Content.IntegrationTests.Tests._KS14.RCD;
 ///         impossible, and the server refuses it.
 /// </summary>
 [TestOf(typeof(KsNoBuildZoneSystem))]
-public sealed class KsNoBuildZoneRcdTest : InteractionTest
+public sealed class KsNoBuildZoneRcdTest : KsFieldEngineerRcdTest
 {
-    private static readonly EntProtoId Rcd = "KsRCDFieldEngineer";
     private static readonly EntProtoId Wall = "WallSolid";
     private static readonly ProtoId<RCDPrototype> RcdSettingWall = "WallSolid";
 
     [Test]
     public async Task NoBuildingInsideTheZone()
     {
-        var pNorth = Transform.WithEntityId(new EntityCoordinates(SPlayer, new Vector2(0, 1)), MapData.Grid);
-        var pSouth = Transform.WithEntityId(new EntityCoordinates(SPlayer, new Vector2(0, -1)), MapData.Grid);
-
-        await SetTile(PlatingRCD, SEntMan.GetNetCoordinates(pNorth), MapData.Grid);
-        await SetTile(PlatingRCD, SEntMan.GetNetCoordinates(pSouth), MapData.Grid);
+        var (pNorth, pSouth) = await PlateNorthAndSouth();
 
         // The north tile is in the zone; the south one, two tiles away, isn't.
         await Server.WaitPost(() =>
@@ -39,7 +34,7 @@ public sealed class KsNoBuildZoneRcdTest : InteractionTest
                 [new KsNoBuildZone(northMapCoordinates.Position, 0.75f)]);
         });
 
-        var rcd = await PlaceInHands(Rcd);
+        var rcd = await PlaceInHands(FieldEngineerRcd);
         await SetRcdProto(rcd, RcdSettingWall);
         await RunTicks(5);
 
@@ -89,15 +84,5 @@ public sealed class KsNoBuildZoneRcdTest : InteractionTest
             Assert.That(northWall, Is.False, "no wall should go up in the zone");
             Assert.That(walls, Is.EqualTo(1), "the wall outside the zone should have gone up");
         });
-    }
-
-    private async Task SetRcdProto(NetEntity rcd, ProtoId<RCDPrototype> protoId)
-    {
-        await UseInHand();
-        await RunTicks(3);
-        Assert.That(IsUiOpen(RcdUiKey.Key), Is.True, "RCD UI was not opened when using the RCD while holding it.");
-
-        await SendBui(RcdUiKey.Key, new RCDSystemMessage(protoId), rcd);
-        await CloseBui(RcdUiKey.Key, rcd);
     }
 }

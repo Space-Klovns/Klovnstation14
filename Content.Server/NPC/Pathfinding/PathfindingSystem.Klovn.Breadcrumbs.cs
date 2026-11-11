@@ -77,7 +77,7 @@ public sealed partial class PathfindingSystem
     /// than the point itself, and so blocks the points around it; <see cref="BlockNarrowGaps"/> then blocks the rest of
     /// the tile if what is left beside it is too narrow for a mob. Anything wider is tested by point as before.
     /// </summary>
-    private static bool MissesEveryPoint(FixturesComponent fixturesComponent, Vector2i tilePos)
+    private static bool FitsBetweenPoints(FixturesComponent fixturesComponent, Vector2i tilePos)
     {
         foreach (var fixture in fixturesComponent.Fixtures.Values)
         {
@@ -86,8 +86,8 @@ public sealed partial class PathfindingSystem
 
             foreach (var proxy in fixture.Proxies)
             {
-                if (HoldsPoint(proxy.AABB.Left, proxy.AABB.Right, tilePos.X) &&
-                    HoldsPoint(proxy.AABB.Bottom, proxy.AABB.Top, tilePos.Y))
+                if (HasPointWithin(proxy.AABB.Left, proxy.AABB.Right, tilePos.X) &&
+                    HasPointWithin(proxy.AABB.Bottom, proxy.AABB.Top, tilePos.Y))
                     return false;
             }
         }
@@ -99,7 +99,7 @@ public sealed partial class PathfindingSystem
     /// Whether any of a tile's points along one axis, at <paramref name="tileOrigin"/> plus an odd number of eighths,
     /// lies within <paramref name="min"/> to <paramref name="max"/>.
     /// </summary>
-    private static bool HoldsPoint(float min, float max, int tileOrigin)
+    private static bool HasPointWithin(float min, float max, int tileOrigin)
     {
         var first = tileOrigin + StepOffset;
         var index = Math.Clamp((int)MathF.Ceiling((min - first) * SubStep), 0, SubStep - 1);
@@ -269,6 +269,6 @@ public sealed partial class PathfindingSystem
             blockedBesidesDoors,
             damage,
             pushable,
-            MissesEveryPoint(fixturesComponent, tilePos));
+            FitsBetweenPoints(fixturesComponent, tilePos));
     }
 }

@@ -14,9 +14,8 @@ namespace Content.IntegrationTests.Tests._KS14.RCD;
 ///         normal time over anything else.
 /// </summary>
 [TestOf(typeof(RCDSystem))]
-public sealed class KsInstantRcdTest : InteractionTest
+public sealed class KsInstantRcdTest : KsFieldEngineerRcdTest
 {
-    private static readonly EntProtoId InstantRcd = "KsRCDFieldEngineer";
     private static readonly EntProtoId Wall = "WallSolid";
     private static readonly ProtoId<RCDPrototype> RcdSettingWall = "WallSolid";
     private static readonly ProtoId<RCDPrototype> RcdSettingDeconstruct = "Deconstruct";
@@ -24,13 +23,9 @@ public sealed class KsInstantRcdTest : InteractionTest
     [Test]
     public async Task BuildsInstantlyAndDeconstructsOnlyItsOwnWorkInstantly()
     {
-        var pNorth = Transform.WithEntityId(new EntityCoordinates(SPlayer, new Vector2(0, 1)), MapData.Grid);
-        var pSouth = Transform.WithEntityId(new EntityCoordinates(SPlayer, new Vector2(0, -1)), MapData.Grid);
+        var (pNorth, pSouth) = await PlateNorthAndSouth();
 
-        await SetTile(PlatingRCD, SEntMan.GetNetCoordinates(pNorth), MapData.Grid);
-        await SetTile(PlatingRCD, SEntMan.GetNetCoordinates(pSouth), MapData.Grid);
-
-        var rcd = await PlaceInHands(InstantRcd);
+        var rcd = await PlaceInHands(FieldEngineerRcd);
         await SetRcdProto(rcd, RcdSettingWall);
 
         Assert.That(ProtoMan.Index(RcdSettingWall).Delay, Is.GreaterThan(0f),
@@ -65,15 +60,5 @@ public sealed class KsInstantRcdTest : InteractionTest
 
         await RunSeconds(otherDelay + 1f);
         AssertDeleted(otherWallNetUid);
-    }
-
-    private async Task SetRcdProto(NetEntity rcd, ProtoId<RCDPrototype> protoId)
-    {
-        await UseInHand();
-        await RunTicks(3);
-        Assert.That(IsUiOpen(RcdUiKey.Key), Is.True, "RCD UI was not opened when using the RCD while holding it.");
-
-        await SendBui(RcdUiKey.Key, new RCDSystemMessage(protoId), rcd);
-        await CloseBui(RcdUiKey.Key, rcd);
     }
 }

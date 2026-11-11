@@ -533,7 +533,7 @@ public sealed partial class PathfindingSystem
                                 var intersects = false;
 
                                 // Something thin enough to miss every point is tested against the point's cell
-                                //      instead, see TileEntity.MissesEveryPoint.
+                                //      instead: see FitsBetweenPoints.
                                 foreach (var proxy in fixture.Proxies)
                                 {
                                     if (!(tileEntity.MissesEveryPoint ? OverlapsPointCell(proxy.AABB, localPos) : proxy.AABB.Contains(localPos)))

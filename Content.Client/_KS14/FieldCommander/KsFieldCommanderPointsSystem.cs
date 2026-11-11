@@ -14,12 +14,10 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
     [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
     [Dependency] private EntityQuery<CMVendorUserComponent> _vendorUserQuery = default!;
 
-    private KsFieldCommanderPointsControl? _control;
-
     /// <summary>
     ///     The on-screen points readout, once anything has needed it.
     /// </summary>
-    public KsFieldCommanderPointsControl? Control => _control;
+    public KsFieldCommanderPointsControl? Control { get; private set; }
 
     /// <summary>
     ///     The latest change this client was told of, for tests.
@@ -31,8 +29,8 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
     {
         base.Shutdown();
 
-        _control?.Orphan();
-        _control = null;
+        Control?.Orphan();
+        Control = null;
     }
 
     [SubscribeNetworkEvent]
@@ -54,7 +52,7 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
         if (TryGetLocalPoints(out var points))
             EnsureControl().SetTotal(points);
         else
-            _control?.SetTotal(null);
+            Control?.SetTotal(null);
     }
 
     /// <summary>
@@ -74,11 +72,11 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
 
     private KsFieldCommanderPointsControl EnsureControl()
     {
-        if (_control is { Parent: not null })
-            return _control;
+        if (Control is { Parent: not null } control)
+            return control;
 
-        _control = new KsFieldCommanderPointsControl();
-        _userInterfaceManager.RootControl.AddChild(_control);
-        return _control;
+        Control = new KsFieldCommanderPointsControl();
+        _userInterfaceManager.RootControl.AddChild(Control);
+        return Control;
     }
 }

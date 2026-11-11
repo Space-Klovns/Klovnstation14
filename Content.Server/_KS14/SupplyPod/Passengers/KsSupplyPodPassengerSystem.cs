@@ -19,6 +19,7 @@ public sealed partial class KsSupplyPodPassengerSystem : EntitySystem
     [Dependency] private RandomHumanoidSystem _randomHumanoidSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
+    [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
 
     /// <summary>
     ///     Puts <paramref name="passengerUid"/> into the pod's storage and keeps it asleep until it leaves.
@@ -74,9 +75,11 @@ public sealed partial class KsSupplyPodPassengerSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Waking for being healed back up would let a passenger think inside the pod again.
+    ///     Waking for being healed back up would let a passenger think inside the pod again. Ordered after
+    ///         <see cref="HTNSystem"/>, whose handler (<c>NPCSystem.OnMobStateChange</c>) is what wakes it, so that this
+    ///         puts it back to sleep.
     /// </summary>
-    [SubscribeLocalEvent(after: [typeof(HTNSystem)])] // HTNSystem subscribes NPCSystem.OnMobStateChange, which wakes it
+    [SubscribeLocalEvent(after: [typeof(HTNSystem)])]
     private void OnMobStateChanged(Entity<KsSupplyPodPassengerComponent> entity, ref MobStateChangedEvent args)
     {
         if (args.NewMobState != MobState.Alive ||
@@ -90,12 +93,6 @@ public sealed partial class KsSupplyPodPassengerSystem : EntitySystem
     ///     A passenger that died or went critical on the way stays asleep, as it would have anywhere else.
     /// </summary>
     private bool CanWake(EntityUid passengerUid)
-        => !TryComp<MobStateComponent>(passengerUid, out var mobStateComponent) ||
+        => !_mobStateQuery.TryComp(passengerUid, out var mobStateComponent) ||
            mobStateComponent.CurrentState == MobState.Alive;
 }
-
-/// <summary>
-///     Raised on an NPC when the supply pod it rode in lets it out, awake.
-/// </summary>
-[ByRefEvent]
-public readonly record struct KsSupplyPodPassengerDisembarkedEvent(EntityUid PodUid);

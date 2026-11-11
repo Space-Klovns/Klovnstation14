@@ -184,12 +184,7 @@ public sealed class KsFieldCommanderRuleTest : GameTest
 
         await server.WaitPost(() =>
         {
-            var mapSystem = server.System<SharedMapSystem>();
-            for (var x = -HalfExtent; x <= HalfExtent; x++)
-            {
-                for (var y = -HalfExtent; y <= HalfExtent; y++)
-                    mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, y), testMap.Tile.Tile);
-            }
+            KsFieldCommanderTestHelpers.FillFloor(server, testMap, HalfExtent);
 
             server.EntMan.SpawnAtPosition(NanotrasenObjective, new EntityCoordinates(testMap.Grid, 3.5f, 0.5f));
             server.EntMan.SpawnAtPosition(_spawnPoint, new EntityCoordinates(testMap.Grid, spawnPosition));
@@ -209,12 +204,9 @@ public sealed class KsFieldCommanderRuleTest : GameTest
 
         await server.WaitPost(() =>
         {
-            var ticker = server.System<GameTicker>();
-            Assert.That(ticker.StartGameRule(ScenarioRule, out _), Is.True);
-            Assert.That(ticker.StartGameRule(_commanderRule, out ruleUid), Is.True);
+            ruleUid = KsFieldCommanderTestHelpers.StartRules(server, _commanderRule).CommanderUid;
         });
 
-        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
         var podded = 0;
         var strikes = 0;
 
@@ -222,7 +214,7 @@ public sealed class KsFieldCommanderRuleTest : GameTest
         //      safe zone only now and then even with nothing keeping it out.
         for (var wave = 0; wave < 8; wave++)
         {
-            await Pair.RunTicksSync((int)(1.1f * tickRate));
+            await RunSeconds(1.1f);
 
             await server.WaitPost(() =>
             {
@@ -334,10 +326,8 @@ public sealed class KsFieldCommanderRuleTest : GameTest
 
         await server.WaitPost(() =>
         {
-            var ticker = server.System<GameTicker>();
-            Assert.That(ticker.StartGameRule(ScenarioRule, out var scenarioUid), Is.True);
+            (var scenarioUid, commanderUid) = KsFieldCommanderTestHelpers.StartRules(server, _uplinkRule);
             rule = (scenarioUid, server.EntMan.GetComponent<ScenarioRuleComponent>(scenarioUid));
-            Assert.That(ticker.StartGameRule(_uplinkRule, out commanderUid), Is.True);
         });
 
         await Pair.RunTicksSync(5);
@@ -367,8 +357,7 @@ public sealed class KsFieldCommanderRuleTest : GameTest
         }
 
         // Left alone, it lasts until its bombardment.
-        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
-        await Pair.RunTicksSync((int)(4f * tickRate));
+        await RunSeconds(4f);
 
         await server.WaitAssertion(() =>
         {

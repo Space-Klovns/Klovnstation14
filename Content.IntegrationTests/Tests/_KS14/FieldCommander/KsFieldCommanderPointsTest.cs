@@ -152,25 +152,38 @@ public sealed class KsFieldCommanderPointsTest : GameTest
 
         await server.WaitPost(() =>
         {
-            var mapSystem = server.System<SharedMapSystem>();
-            for (var x = -16; x <= 16; x++)
-            {
-                for (var y = -16; y <= 16; y++)
-                    mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, y), testMap.Tile.Tile);
-            }
+            KsFieldCommanderTestHelpers.FillFloor(server, testMap, halfExtent: 16);
 
             server.EntMan.SpawnAtPosition(NanotrasenObjective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
             playerBody = server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
             server.PlayerMan.SetAttachedEntity(Pair.Player!, playerBody);
 
-            var ticker = server.System<GameTicker>();
-            Assert.That(ticker.StartGameRule(ScenarioRule, out _), Is.True);
-            Assert.That(ticker.StartGameRule(commanderRule ?? _commanderRule, out ruleUid), Is.True);
+            ruleUid = KsFieldCommanderTestHelpers.StartRules(server, commanderRule ?? _commanderRule).CommanderUid;
         });
 
         // Lets the rule find its objective and prepare the defenders already there.
         await Pair.RunTicksSync(3);
         return (testMap, ruleUid, playerBody);
+    }
+
+    private static (int Section, int Entry) FindPlainPricedEntry(CMAutomatedVendorComponent vendorComponent)
+    {
+        for (var sectionIndex = 0; sectionIndex < vendorComponent.Sections.Count; sectionIndex++)
+        {
+            var section = vendorComponent.Sections[sectionIndex];
+            if (section.TakeAll != null || section.TakeOne != null || section.Choices != null)
+                continue;
+
+            for (var entryIndex = 0; entryIndex < section.Entries.Count; entryIndex++)
+            {
+                var entry = section.Entries[entryIndex];
+                if (entry.Points > 0 && entry.LinkedEntries.Count == 0)
+                    return (sectionIndex, entryIndex);
+            }
+        }
+
+        Assert.Fail("the shop sells nothing for points");
+        return default;
     }
 
     /// <summary>
@@ -245,7 +258,9 @@ public sealed class KsFieldCommanderPointsTest : GameTest
             var lastChange = client.System<KsFieldCommanderPointsSystem>().LastChange;
             Assert.That(lastChange, Is.Not.Null, "the client should have been told its points changed");
             Assert.That(lastChange!.Delta, Is.LessThan(0));
-            Assert.That(lastChange.Total, Is.EqualTo(expected));
+            Assert.That(client.System<KsFieldCommanderPointsSystem>().TryGetLocalPoints(out var shownPoints), Is.True,
+                "the client reads its total off its body");
+            Assert.That(shownPoints, Is.EqualTo(expected));
         });
 
         var newBody = await Respawn(testMap);
@@ -320,22 +335,27 @@ public sealed class KsFieldCommanderPointsTest : GameTest
         var server = Pair.Server;
         var (testMap, ruleUid, playerBody) = await SetUpOutpost();
         var price = 0;
-        const int startingPoints = 1000;
+        var startingPoints = 0;
 
         await server.WaitPost(() =>
         {
             var ruleSystem = server.System<KsFieldCommanderRuleSystem>();
             var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
-            ruleSystem.SetPoints((ruleUid, ruleComponent), Pair.Player!, startingPoints);
 
             var shopUid = server.EntMan.SpawnAtPosition(Shop, new EntityCoordinates(testMap.Grid, 2.5f, 1.5f));
             var vendorComponent = server.EntMan.GetComponent<CMAutomatedVendorComponent>(shopUid);
             Assert.That(vendorComponent.PointsType, Is.EqualTo(ruleComponent.PointsType), "the shop should sell for field commander points");
 
-            price = vendorComponent.Sections[0].Entries[0].Points ?? 0;
-            Assert.That(price, Is.GreaterThan(0));
+            // Whatever plain priced item the shop sells first, wherever it is listed: no take-one sections or linked
+            //      entries, which buy more than the one thing.
+            var (sectionIndex, entryIndex) = FindPlainPricedEntry(vendorComponent);
+            price = vendorComponent.Sections[sectionIndex].Entries[entryIndex].Points!.Value;
 
-            server.EntMan.EventBus.RaiseLocalEvent(shopUid, new CMVendorVendBuiMsg(0, 0, new List<int>())
+            // Enough for it with some to spare, so what's left shows the price was taken.
+            startingPoints = price * 2;
+            ruleSystem.SetPoints((ruleUid, ruleComponent), Pair.Player!, startingPoints);
+
+            server.EntMan.EventBus.RaiseLocalEvent(shopUid, new CMVendorVendBuiMsg(sectionIndex, entryIndex, new List<int>())
             {
                 Actor = playerBody,
                 UiKey = CMAutomatedVendorUI.Key,
@@ -356,7 +376,6 @@ public sealed class KsFieldCommanderPointsTest : GameTest
     {
         var server = Pair.Server;
         var (_, ruleUid, _) = await SetUpOutpost();
-        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
 
         await server.WaitAssertion(() =>
         {
@@ -365,7 +384,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
             Assert.That(ruleComponent.PhaseIndex, Is.EqualTo(-1));
         });
 
-        await Pair.RunTicksSync((int)(1.5f * tickRate));
+        await RunSeconds(1.5f);
 
         await server.WaitAssertion(() =>
         {
@@ -374,7 +393,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
             Assert.That(ruleComponent.PhaseIndex, Is.EqualTo(-1), "the commander's first phase comes after the briefing");
         });
 
-        await Pair.RunTicksSync((int)(2f * tickRate));
+        await RunSeconds(2f);
 
         await server.WaitAssertion(() =>
             Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(0)));
@@ -388,7 +407,6 @@ public sealed class KsFieldCommanderPointsTest : GameTest
     {
         var server = Pair.Server;
         var (_, ruleUid, _) = await SetUpOutpost();
-        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
         var intelDelay = 0f;
 
         await server.WaitPost(() =>
@@ -403,12 +421,13 @@ public sealed class KsFieldCommanderPointsTest : GameTest
             Assert.That(ruleComponent.PendingIntel, Has.Count.EqualTo(1), "the wave's intel should wait to follow the taunt");
         });
 
-        await Pair.RunTicksSync((int)(intelDelay * 0.5f * tickRate));
+        await RunSeconds(intelDelay * 0.5f);
         await server.WaitAssertion(() =>
             Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PendingIntel, Has.Count.EqualTo(1),
                 "intel shouldn't go out before its delay"));
 
-        await Pair.RunTicksSync((int)(intelDelay * tickRate) + 2);
+        await RunSeconds(intelDelay);
+        await Pair.RunTicksSync(2);
         await server.WaitAssertion(() =>
             Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PendingIntel, Is.Empty,
                 "intel should go out once its delay has passed"));
@@ -426,7 +445,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
 
         await client.WaitPost(() =>
             client.EntMan.EventBus.RaiseEvent(EventSource.Network,
-                new KsFieldCommanderPointsChangedEvent(50, 50, "ks-fieldcommander-points-admin", null)));
+                new KsFieldCommanderPointsChangedEvent(50, "ks-fieldcommander-points-admin", null)));
 
         // A few frames, which is when the readout used to be thrown away.
         await Pair.RunTicksSync(5);
@@ -445,7 +464,6 @@ public sealed class KsFieldCommanderPointsTest : GameTest
         var server = Pair.Server;
         var (_, ruleUid, _) = await SetUpOutpost(_phaseRule);
         var consoleHost = server.ResolveDependency<IConsoleHost>();
-        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
 
         await server.WaitPost(() => consoleHost.ExecuteCommand("ks_fcphase ks-fieldcommander-phase-probing"));
         await Pair.RunTicksSync(5);
@@ -455,7 +473,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
                 "the phase should be found by name, and set"));
 
         // The next phase starts two seconds after the one jumped to, so the timeline has to carry on from the jump.
-        await Pair.RunTicksSync((int)(3f * tickRate));
+        await RunSeconds(3f);
 
         await server.WaitAssertion(() =>
             Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(2),
@@ -463,7 +481,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
 
         // Back to the start: the clock must not drag it straight forward again.
         await server.WaitPost(() => consoleHost.ExecuteCommand("ks_fcphase 0"));
-        await Pair.RunTicksSync((int)(1f * tickRate));
+        await RunSeconds(1f);
 
         await server.WaitAssertion(() =>
             Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(0),

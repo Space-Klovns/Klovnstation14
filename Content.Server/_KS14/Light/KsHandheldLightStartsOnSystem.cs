@@ -11,7 +11,10 @@ public sealed partial class KsHandheldLightStartsOnSystem : EntitySystem
 {
     [Dependency] private HandheldLightSystem _handheldLightSystem = default!;
 
-    // After its cell is put in, which happens on map init too.
+    /// <summary>
+    ///     Ordered after the item slots, which put the light's cell in on map init too: a light with no cell won't
+    ///         switch on.
+    /// </summary>
     [SubscribeLocalEvent(after: [typeof(ItemSlotsSystem), typeof(HandheldLightSystem)])]
     private void OnMapInit(Entity<KsHandheldLightStartsOnComponent> entity, ref MapInitEvent args)
     {

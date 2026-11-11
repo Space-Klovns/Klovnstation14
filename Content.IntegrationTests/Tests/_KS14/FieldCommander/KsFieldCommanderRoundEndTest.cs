@@ -69,9 +69,7 @@ public sealed class KsFieldCommanderRoundEndTest : GameTest
             defenderUid = server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
             server.PlayerMan.SetAttachedEntity(Pair.Player!, defenderUid);
 
-            var ticker = server.System<GameTicker>();
-            Assert.That(ticker.StartGameRule(ScenarioRule, out _), Is.True);
-            Assert.That(ticker.StartGameRule(_commanderRule, out _), Is.True);
+            KsFieldCommanderTestHelpers.StartRules(server, _commanderRule);
         });
 
         await Pair.RunTicksSync(5);

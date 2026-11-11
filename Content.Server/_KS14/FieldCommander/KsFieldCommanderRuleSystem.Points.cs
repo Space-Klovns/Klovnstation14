@@ -42,7 +42,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         var filter = Filter.SinglePlayer(session);
         _audioSystem.PlayGlobal(delta > 0 ? rule.Comp.PointsGainedSound : rule.Comp.PointsLostSound, filter, recordReplay: false);
-        RaiseNetworkEvent(new KsFieldCommanderPointsChangedEvent(delta, total, reason, reasonName), filter);
+        RaiseNetworkEvent(new KsFieldCommanderPointsChangedEvent(delta, reason, reasonName), filter);
     }
 
     /// <summary>

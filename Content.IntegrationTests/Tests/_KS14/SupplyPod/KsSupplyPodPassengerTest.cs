@@ -90,9 +90,8 @@ public sealed class KsSupplyPodPassengerTest : GameTest
                 "coming back from critical inside the pod must not wake it");
         });
 
-        // The cargo pod falls, then opens itself within a couple of seconds of landing.
-        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
-        await Pair.RunTicksSync((int)(8f * tickRate));
+        // The cargo pod falls, then opens itself a little after landing.
+        await RunUntilLetOut(passengerUid);
 
         await server.WaitAssertion(() =>
         {
@@ -139,8 +138,8 @@ public sealed class KsSupplyPodPassengerTest : GameTest
             }
         });
 
-        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
-        await Pair.RunTicksSync((int)(8f * tickRate));
+        foreach (var passengerUid in crew)
+            await RunUntilLetOut(passengerUid);
 
         await server.WaitAssertion(() =>
         {
@@ -150,5 +149,18 @@ public sealed class KsSupplyPodPassengerTest : GameTest
                 Assert.That(server.EntMan.HasComponent<ActiveNPCComponent>(passengerUid), Is.True, "the crew should be awake once out");
             }
         });
+    }
+
+    /// <summary>
+    ///     Runs until <paramref name="passengerUid"/> is out of its pod, however long the pod takes to fall and open,
+    ///         up to a limit no pod comes near.
+    /// </summary>
+    private async Task RunUntilLetOut(EntityUid passengerUid)
+    {
+        var containerSystem = Pair.Server.System<SharedContainerSystem>();
+        for (var second = 0; second < 60 && containerSystem.IsEntityInContainer(passengerUid); second++)
+        {
+            await RunSeconds(1f);
+        }
     }
 }

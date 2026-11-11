@@ -12,17 +12,20 @@ public sealed partial class RCDSystem
     private void KsApplyInstant(RCDComponent component, RCDPrototype prototype, EntityUid? targetUid, EntityUid userUid,
         ref float delay, ref EntProtoId? effectPrototype)
     {
-        if (!component.KsInstant)
-            return;
-
-        if (prototype.Mode == RcdMode.Deconstruct &&
-            (targetUid is not { } builtUid ||
-             !TryComp<KsRcdBuiltComponent>(builtUid, out var builtComponent) ||
-             builtComponent.Builder != userUid))
+        if (!component.KsInstant ||
+            prototype.Mode == RcdMode.Deconstruct && !IsOwnWork(targetUid, userUid))
             return;
 
         delay = _instantConstructionDelay;
         effectPrototype = _instantConstructionFx;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="targetUid"/> was built by <paramref name="userUid"/> with an instant RCD.
+    /// </summary>
+    private bool IsOwnWork(EntityUid? targetUid, EntityUid userUid)
+    {
+        return TryComp<KsRcdBuiltComponent>(targetUid, out var builtComponent) && builtComponent.Builder == userUid;
     }
 
     /// <summary>

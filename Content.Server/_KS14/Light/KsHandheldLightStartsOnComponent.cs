@@ -5,5 +5,5 @@ namespace Content.Server._KS14.Light;
 ///         <see cref="Content.Shared.Light.Components.HandheldLightComponent.Activated"/> alone leaves it dark, as nothing
 ///         lights it at spawn.
 /// </summary>
-[RegisterComponent, Access(typeof(KsHandheldLightStartsOnSystem))]
+[RegisterComponent]
 public sealed partial class KsHandheldLightStartsOnComponent : Component;
