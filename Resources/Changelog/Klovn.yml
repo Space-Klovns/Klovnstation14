@@ -2662,3 +2662,27 @@ Entries:
       message: 'Added the new Skeleton Crew gamemode: High Octane LRP'
   id: 253
   time: '2026-11-11T06:59:18.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Supercritical fluids: hot carbon dioxide compressed past its critical
+        point dissolves reagents in pipes, and drops them back out as liquid
+        when the pressure falls. Use it to extract reagents, or pull oil out of
+        water.
+    - type: Add
+      message: >-
+        The gas analyzer shows where each reagent in a pipe boils at that pipe's
+        pressure and where it melts, and how strong a supercritical solvent the
+        gas is.
+    - type: Add
+      message: >-
+        The Liquids in Pipes guidebook page has a calculator for boiling points
+        and vapor pressures at any pressure, and a section on supercritical
+        fluids.
+    - type: Tweak
+      message: >-
+        Gas canister windows no longer list the fluids inside, since they don't
+        list the gases either.
+  id: 254
+  time: '2026-11-11T07:03:32.0000000+00:00'
