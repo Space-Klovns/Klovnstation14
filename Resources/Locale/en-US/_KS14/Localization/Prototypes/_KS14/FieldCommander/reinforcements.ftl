@@ -6,4 +6,5 @@ ent-KsFieldCommanderReinforcementsHeavy = heavy weapons cargo pod
 ent-KsFieldCommanderRequisitionResupply = resupply cargo pod
     .desc = A Nanotrasen drop pod with everything a dug-in squad runs short of.
 ent-KsFieldCommanderRequisitionFieldSupport = field support pod
-    .desc = A Nanotrasen drop pod carrying a paramilitary squad, with a turret and a medkit for them.
+    .desc = A Nanotrasen drop pod carrying a paramilitary squad, with a turret and a medkit for them.
+

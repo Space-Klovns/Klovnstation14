@@ -6,4 +6,5 @@ ent-KsFieldCommanderReinforcementsHeavy = грузовая капсула с т�
 ent-KsFieldCommanderRequisitionResupply = грузовая капсула снабжения
     .desc = Десантная капсула Nanotrasen со всем, чего не хватает окопавшемуся отряду.
 ent-KsFieldCommanderRequisitionFieldSupport = капсула полевой поддержки
-    .desc = Десантная капсула Nanotrasen с отрядом военизированных сил, турелью и аптечкой для них.
+    .desc = Десантная капсула Nanotrasen с отрядом военизированных сил, турелью и аптечкой для них.
+
