@@ -2698,3 +2698,9 @@ Entries:
         your hands.
   id: 255
   time: '2026-11-11T10:21:46.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Remove
+      message: Removed the hold-to-attack control options.
+  id: 256
+  time: '2026-11-11T15:16:48.0000000+00:00'
