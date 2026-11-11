@@ -5,6 +5,7 @@ using Content.Shared._KS14.NPC;
 using Content.Shared.Body.Components;
 using Content.Shared.Trigger.Components.Effects;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 
 namespace Content.Server._KS14.NPC.Squad.Tactics;
 
@@ -24,6 +25,7 @@ public sealed partial class NpcSquadTacticsSystem
 {
     [Dependency] private InternalsSystem _internalsSystem = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private NpcInternalsSystem _npcInternalsSystem = default!;
 
     [Dependency] private EntityQuery<BloodstreamComponent> _bloodstreamQuery = default!;
@@ -32,7 +34,8 @@ public sealed partial class NpcSquadTacticsSystem
 
     /// <summary>
     ///     With the settle on top, over a grenade and under waiting at an open way, so a squad that can soften a room with it
-    ///         does, and uses a flashbang or a grenade first.
+    ///         does, and uses a flashbang first. Whether a grenade also comes first is down to chance: see
+    ///         <see cref="GetSofteningCosts"/>.
     /// </summary>
     private const float SmokeCost = 2.5f;
 
@@ -65,6 +68,22 @@ public sealed partial class NpcSquadTacticsSystem
             !SeesThroughSmoke(targetUid) &&
             _prototypeManager.TryIndex(smokeOnTriggerComponent.SmokePrototype, out var smokePrototype) &&
             smokePrototype.TryGetComponent<OccluderComponent>(out _, EntityManager.ComponentFactory);
+    }
+
+    /// <summary>
+    ///     What a grenade and smoke cost <paramref name="plan"/>. Which of the two goes first, where it could do either, is down
+    ///         to chance (<see cref="NpcSquadTacticsSettings.PlanSmokeOverFragChance"/>), rolled once a plan: the two swap
+    ///         costs, both still over a flashbang and under waiting at an open way.
+    /// </summary>
+    private void GetSofteningCosts(NpcSquadPlan plan, NpcSquadTacticsSettings settings, out float fragCost, out float smokeCost)
+    {
+        plan.SmokeOverFrag ??= _robustRandom.Prob(Math.Clamp(settings.PlanSmokeOverFragChance, 0f, 1f));
+
+        fragCost = FragCost;
+        smokeCost = SmokeCost + (float) settings.PlanSmokeSettle.TotalSeconds;
+
+        if (plan.SmokeOverFrag.Value)
+            (fragCost, smokeCost) = (smokeCost, fragCost);
     }
 
     private bool SeesThroughSmoke(EntityUid uid)

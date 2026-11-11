@@ -450,6 +450,22 @@ public sealed class KsNpcSquadPlanTest : GameTest
     seesThroughSmoke: true
 
 - type: entity
+  parent: KsSquadPlanTestMobSmokeSighted
+  id: KsSquadPlanTestMobSmokeFirst
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planSmokeOverFragChance: 1
+
+- type: entity
+  parent: KsSquadPlanTestMobSmokeSighted
+  id: KsSquadPlanTestMobFragFirst
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planSmokeOverFragChance: 0
+
+- type: entity
   parent: KsSquadPlanTestArmedHostile
   id: KsSquadPlanTestSmokeSightedHostile
   components:
@@ -963,6 +979,35 @@ public sealed class KsNpcSquadPlanTest : GameTest
             Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running));
             Assert.That(plan.Steps[..plan.StepCount].Contains(NpcSquadAction.SmokeRoom), Is.EqualTo(screened), plan.Facts.ToString());
             Assert.That(plan.SmokeGasses, Is.False, "plain smoke carries nothing");
+        });
+    }
+
+    /// <summary>
+    ///     With a grenade and smoke both to hand, which goes in is down to the plan's roll, and only one of them does.
+    /// </summary>
+    [TestCase("KsSquadPlanTestMobSmokeFirst", NpcSquadAction.SmokeRoom, NpcSquadAction.FragRoom)]
+    [TestCase("KsSquadPlanTestMobFragFirst", NpcSquadAction.FragRoom, NpcSquadAction.SmokeRoom)]
+    public async Task TestSmokeOrGrenadeIsRolled(string mob, NpcSquadAction used, NpcSquadAction unused)
+    {
+        var scene = await SetUp(mob, glass: ArmouredGlass, hostile: ArmedHostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Mask(scene, scene.LeaderUid);
+            Mask(scene, scene.MemberUid);
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, Frag);
+            GiveInHand(scene, scene.MemberUid, PlainSmoke);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running));
+            Assert.That(plan.Steps[..plan.StepCount], Does.Contain(used), plan.Facts.ToString());
+            Assert.That(plan.Steps[..plan.StepCount], Does.Not.Contain(unused), plan.Facts.ToString());
         });
     }
 

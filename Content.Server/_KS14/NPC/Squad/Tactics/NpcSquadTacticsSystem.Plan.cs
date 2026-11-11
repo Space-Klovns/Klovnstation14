@@ -1021,8 +1021,7 @@ public sealed partial class NpcSquadTacticsSystem
         costs[(int) NpcSquadAction.Enter] = EnterCost + GetRushRisk(plan, settings);
         costs[(int) NpcSquadAction.EnterSoftened] = EnterCost;
         costs[(int) NpcSquadAction.Flashbang] = FlashbangCost;
-        costs[(int) NpcSquadAction.FragRoom] = FragCost;
-        costs[(int) NpcSquadAction.SmokeRoom] = SmokeCost + (float) settings.PlanSmokeSettle.TotalSeconds;
+        GetSofteningCosts(plan, settings, out costs[(int) NpcSquadAction.FragRoom], out costs[(int) NpcSquadAction.SmokeRoom]);
         costs[(int) NpcSquadAction.HoldExits] = settings.PlanHoldCost + ((plan.Facts & NpcSquadFact.WayOpen) != 0x0 ? 0f : settings.PlanHoldShutCost);
         costs[(int) NpcSquadAction.PatchUp] = PatchUpCost;
         costs[(int) NpcSquadAction.TopUp] = TopUpCost;

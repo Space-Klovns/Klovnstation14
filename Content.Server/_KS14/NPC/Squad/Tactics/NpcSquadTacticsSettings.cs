@@ -280,6 +280,13 @@ public sealed partial class NpcSquadTacticsSettings
     public TimeSpan PlanSmokeInternalsTime = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    ///     The chance a plan puts smoke in before a grenade, where it could do either, from 0 to 1. Rolled once a plan, and
+    ///         holds for it. Flashbangs still come first.
+    /// </summary>
+    [DataField]
+    public float PlanSmokeOverFragChance = 0.5f;
+
+    /// <summary>
     ///     How long members have to get out of sight when they have to, before the plan ends.
     /// </summary>
     [DataField]

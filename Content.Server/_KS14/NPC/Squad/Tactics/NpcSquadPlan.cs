@@ -113,6 +113,13 @@ public sealed class NpcSquadPlan
     public bool SmokeGasses;
 
     /// <summary>
+    ///     Whether this plan puts smoke in before a grenade, where it could do either
+    ///         (<see cref="NpcSquadTacticsSettings.PlanSmokeOverFragChance"/>). Rolled the first time it plans, so it holds
+    ///         every time it plans again.
+    /// </summary>
+    public bool? SmokeOverFrag;
+
+    /// <summary>
     ///     When what was thrown left its hand, and what it was.
     /// </summary>
     public TimeSpan? ThrownAt;
