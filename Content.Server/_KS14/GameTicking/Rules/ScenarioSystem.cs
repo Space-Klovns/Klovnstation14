@@ -295,6 +295,12 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         // Factions that never die are alive from the start.
         CollectRuleFactions(uniqueFactionSet, pendingObjectives: false);
 
+        // With a faction that never dies, the round ends once it is the only side left standing. Without one, the
+        //      scenarios keep their original rule: the round goes on while more than one member is alive, whatever
+        //      their side.
+        var byFaction = uniqueFactionSet.Count > 0;
+        var livingMembers = 0;
+
         // Check if there are syndies still alive
         // If there are, the round can continue.
         var query = EntityQuery<ScenarioFactionMemberComponent, MobStateComponent>();
@@ -303,10 +309,11 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             if (mobStateComponent.CurrentState == MobState.Dead)
                 continue;
 
+            livingMembers++;
             uniqueFactionSet.Add(memberComponent.Id);
 
             // means that there is more than 1 faction alive, round shouldnt end so return
-            if (uniqueFactionSet.Count > 1)
+            if (byFaction ? uniqueFactionSet.Count > 1 : livingMembers > 1)
                 return;
         }
 

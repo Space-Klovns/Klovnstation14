@@ -4,6 +4,8 @@ using Content.Server._KS14.GameTicking.Rules;
 using Content.Server.GameTicking;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Destructible;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Trigger.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
@@ -161,6 +163,41 @@ public sealed class KsScenarioWinnerTest : GameTest
         await server.WaitAssertion(() =>
             Assert.That(rule!.Value.Comp.WinningFactionId, Is.EqualTo(Nanotrasen),
                 "the owner of a destroyed objective must not be named the winner"));
+    }
+
+    /// <summary>
+    ///     A scenario with no faction that never dies ends by deaths only once a single member is left alive, as it
+    ///         always has, even when that member's side is already the only one standing. Field Commander's
+    ///         faction-based check must not leak into the other scenarios.
+    /// </summary>
+    [Test]
+    public async Task DeathsEndTheRoundOnlyWithOneMemberLeft()
+    {
+        var server = Pair.Server;
+        var map = await Pair.CreateTestMap();
+        Entity<ScenarioRuleComponent>? rule = null;
+        EntityUid firstNanotrasen = default;
+
+        await server.WaitPost(() =>
+        {
+            Assert.That(server.EntMan.System<GameTicker>().StartGameRule(ScenarioRule, out var ruleUid), Is.True);
+            rule = (ruleUid, server.EntMan.GetComponent<ScenarioRuleComponent>(ruleUid));
+
+            firstNanotrasen = server.EntMan.SpawnEntity(_nanotrasenMember, map.GridCoords);
+            server.EntMan.SpawnEntity(_nanotrasenMember, map.GridCoords);
+            var syndicateUid = server.EntMan.SpawnEntity(_syndicateMember, map.GridCoords);
+
+            server.System<MobStateSystem>().ChangeMobState(syndicateUid, MobState.Dead);
+        });
+
+        await server.WaitAssertion(() =>
+            Assert.That(rule!.Value.Comp.WinningFactionId, Is.Null,
+                "two members are still alive, so the round goes on, though both are Nanotrasen"));
+
+        await server.WaitPost(() => server.System<MobStateSystem>().ChangeMobState(firstNanotrasen, MobState.Dead));
+
+        await server.WaitAssertion(() =>
+            Assert.That(rule!.Value.Comp.WinningFactionId, Is.EqualTo(Nanotrasen), "the last one standing wins it"));
     }
 
     /// <summary>
