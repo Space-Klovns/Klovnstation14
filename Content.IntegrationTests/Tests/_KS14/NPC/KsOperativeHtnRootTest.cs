@@ -98,6 +98,21 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
 - type: entity
   parent: KsOperativeRootTestMobCarrying
+  id: KsOperativeRootTestMobClosetHealer
+  components:
+  - type: NpcRecovery
+  - type: NpcClosetHealer
+    chance: 1
+
+- type: entity
+  parent: KsOperativeRootTestMobClosetHealer
+  id: KsOperativeRootTestMobNeverHides
+  components:
+  - type: NpcClosetHealer
+    chance: 0
+
+- type: entity
+  parent: KsOperativeRootTestMobCarrying
   id: KsOperativeRootTestMobAllOut
   components:
   - type: NpcRecovery
@@ -648,6 +663,38 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
         Assert.That(plan.Tasks.Any(task => task.Operator is UtilityOperator { Prototype.Id: "KsOperativeNearbyGrenades" }), Is.False,
             $"a grenade that cannot reach it is no reason to run, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     Hurt, with meds on it and a closet near enough, an operative that hides by its chance gets in to use them, and
+    ///         stays in. With no closet, or by its chance not, it falls back and uses them as ever.
+    /// </summary>
+    [TestCase("KsOperativeRootTestMobClosetHealer", true, true)]
+    [TestCase("KsOperativeRootTestMobClosetHealer", false, false)]
+    [TestCase("KsOperativeRootTestMobNeverHides", true, false)]
+    public async Task TestHurtItMayHideInACloset(string mob, bool closet, bool hides)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: false, inCombat: false, mobPrototype: mob, stage: (entManager, mobUid, gridUid) =>
+        {
+            var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var blunt = new Content.Shared.Damage.DamageSpecifier(protoManager.Index(BluntDamage), 40);
+            entManager.System<Content.Shared.Damage.Systems.DamageableSystem>().SetDamage(mobUid, blunt);
+            entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("HealDamageThreshold", 10f);
+            StageCarried(entManager, mobUid, TestMedipen);
+
+            // The test mobs come with no hands of their own, and meds want one.
+            var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+            handsSystem.AddHand(mobUid, "right", Content.Shared.Hands.Components.HandLocation.Right);
+            handsSystem.AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+
+            if (closet)
+                SpawnAt(entManager, TestLocker, gridUid, 2, 3);
+        }, root: "KsOperativeConsiderHealingCompound");
+
+        var operators = plan.Tasks.Select(task => task.Operator.GetType().Name).ToList();
+        Assert.That(operators, Does.Contain("InteractUsingOperator"), $"it should use its meds either way, got: {Describe(plan)}");
+        Assert.That(operators.Contains("EnterEntityStorageOperator"), Is.EqualTo(hides), Describe(plan));
+        Assert.That(operators.Contains("HideOperator"), Is.EqualTo(hides), Describe(plan));
     }
 
     /// <summary>
