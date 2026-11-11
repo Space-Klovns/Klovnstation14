@@ -1,0 +1,358 @@
+#nullable enable
+using System.Collections.Generic;
+using System.Numerics;
+using Content.Client._KS14.FieldCommander;
+using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.FieldCommander;
+using Content.Server.GameTicking;
+using Content.Shared._KS14.FactionCollision;
+using Content.Shared._KS14.FieldCommander;
+using Content.Shared._RMC14.Vendors;
+using Content.Shared.GameTicking;
+using Content.Shared.GameTicking.Components;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Preferences;
+using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+using Robust.UnitTesting.Pool;
+
+namespace Content.IntegrationTests.Tests._KS14.FieldCommander;
+
+/// <summary>
+///     Field commander points: earned per kill and lost per teamkill, kept by the player across bodies, spent at the
+///         shop; plus what the rule does to defenders' bodies, its intro, and its phase command.
+/// </summary>
+[TestFixture]
+[TestOf(typeof(KsFieldCommanderRuleSystem))]
+public sealed class KsFieldCommanderPointsTest : GameTest
+{
+    public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
+
+    private static readonly EntProtoId ScenarioRule = "KsScenarioFieldCommander";
+    private static readonly EntProtoId NanotrasenObjective = "KsScenarioObjectiveNanotrasen";
+    private static readonly EntProtoId Shop = "KsFieldCommanderShop";
+    private static readonly EntProtoId ResupplyFlare = "KsFlareSupplyPodReinforcementsAmmo";
+
+    // Ids that exist only in the test prototypes below.
+    private readonly EntProtoId _commanderRule = "KsTestFieldCommanderPointsRule";
+    private readonly EntProtoId _defender = "KsTestFieldCommanderPointsDefender";
+    private readonly EntProtoId _phaseRule = "KsTestFieldCommanderPhaseRule";
+
+    // From the private module, which builds without it leave out; an instance field, so the YAML linter skips it.
+    private readonly EntProtoId _modifiedXl8 = "KsWeaponRifleLecterXL8EliteOperative";
+
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  id: KsTestFieldCommanderPointsDefender
+  components:
+  - type: MobState
+  - type: ScenarioFactionMember
+    id: Nanotrasen
+
+- type: entity
+  id: KsTestFieldCommanderPointsUnit
+  components:
+  - type: MobState
+
+- type: entity
+  parent: BaseGameRule
+  id: KsTestFieldCommanderPointsRule
+  components:
+  - type: KsFieldCommanderRule
+    minSpawnDistance: 6
+    maxSpawnDistance: 12
+    minDefenderDistance: 2
+    minPodDefenderDistance: 2
+    minPodObjectiveDistance: 6
+    defenderSightRange: 1
+    safeZoneRadius: 1
+    uplinkPrototype: null
+    introDelay: 1
+    pointsPerCost: 25
+    teamkillPoints: -150
+    phases:
+    - name: ks-fieldcommander-phase-landfall
+      start: 3
+    - name: ks-fieldcommander-phase-probing
+      start: 300
+      waveInterval: 1000
+      firstWaveDelay: 1000
+      budget: 2
+    - name: ks-fieldcommander-phase-siege
+      start: 600
+      waveInterval: 1000
+      firstWaveDelay: 1000
+      budget: 2
+    assets:
+    - entity: KsTestFieldCommanderPointsUnit
+      cost: 2
+
+- type: entity
+  parent: BaseGameRule
+  id: KsTestFieldCommanderPhaseRule
+  components:
+  - type: KsFieldCommanderRule
+    uplinkPrototype: null
+    introAnnouncement: null
+    phases:
+    - name: ks-fieldcommander-phase-landfall
+      start: 0
+    - name: ks-fieldcommander-phase-probing
+      start: 100
+    - name: ks-fieldcommander-phase-pressure
+      start: 102
+";
+
+    /// <summary>
+    ///     Floor around the origin, a defender objective, and the player in a defender's body. The commander starts
+    ///         with no phase entered, so nothing is sent until a test asks.
+    /// </summary>
+    private async Task<(TestMapData Map, EntityUid RuleUid, EntityUid PlayerBody)> SetUpOutpost(EntProtoId? commanderRule = null)
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        EntityUid ruleUid = default;
+        EntityUid playerBody = default;
+
+        await server.WaitPost(() =>
+        {
+            var mapSystem = server.System<SharedMapSystem>();
+            for (var x = -16; x <= 16; x++)
+            {
+                for (var y = -16; y <= 16; y++)
+                    mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, y), testMap.Tile.Tile);
+            }
+
+            server.EntMan.SpawnAtPosition(NanotrasenObjective, new EntityCoordinates(testMap.Grid, 0.5f, 0.5f));
+            playerBody = server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 2.5f, 0.5f));
+            server.PlayerMan.SetAttachedEntity(Pair.Player!, playerBody);
+
+            var ticker = server.System<GameTicker>();
+            Assert.That(ticker.StartGameRule(ScenarioRule, out _), Is.True);
+            Assert.That(ticker.StartGameRule(commanderRule ?? _commanderRule, out ruleUid), Is.True);
+        });
+
+        // Lets the rule find its objective and prepare the defenders already there.
+        await Pair.RunTicksSync(3);
+        return (testMap, ruleUid, playerBody);
+    }
+
+    /// <summary>
+    ///     Gives the player a fresh body, the way the ticker does when they respawn.
+    /// </summary>
+    private async Task<EntityUid> Respawn(TestMapData testMap)
+    {
+        var server = Pair.Server;
+        EntityUid newBody = default;
+
+        await server.WaitPost(() =>
+        {
+            newBody = server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, -2.5f, 0.5f));
+            server.PlayerMan.SetAttachedEntity(Pair.Player!, newBody);
+            server.EntMan.EventBus.RaiseLocalEvent(newBody,
+                new PlayerSpawnCompleteEvent(newBody, Pair.Player!, null, lateJoin: true, silent: true, 0, EntityUid.Invalid, new HumanoidCharacterProfile()),
+                broadcast: true);
+        });
+
+        await Pair.RunTicksSync(2);
+        return newBody;
+    }
+
+    private int? GetMirroredPoints(EntityUid bodyUid)
+    {
+        var extraPoints = Pair.Server.EntMan.GetComponentOrNull<CMVendorUserComponent>(bodyUid)?.ExtraPoints;
+        if (extraPoints == null)
+            return null;
+
+        return extraPoints.TryGetValue(KsFieldCommanderPoints.PointsType, out var points) ? points : null;
+    }
+
+    [Test]
+    public async Task KillsPayTeamkillsCostAndPointsOutliveTheBody()
+    {
+        var server = Pair.Server;
+        var client = Pair.Client;
+        var (testMap, ruleUid, playerBody) = await SetUpOutpost();
+        var expected = 0;
+
+        await server.WaitPost(() =>
+        {
+            var ruleSystem = server.System<KsFieldCommanderRuleSystem>();
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+
+            // A wave of the one asset, so that the unit is the commander's own, with its asset known.
+            ruleSystem.SetPhase((ruleUid, ruleComponent, server.EntMan.GetComponent<GameRuleComponent>(ruleUid)), 1);
+            ruleSystem.ForceWave((ruleUid, ruleComponent));
+
+            var unitQuery = server.EntMan.AllEntityQueryEnumerator<KsFieldCommanderUnitComponent>();
+            Assert.That(unitQuery.MoveNext(out var unitUid, out _), Is.True, "the wave should have sent a unit");
+
+            expected = KsFieldCommanderRuleSystem.GetKillPoints(ruleComponent, ruleComponent.Assets[0]);
+            Assert.That(expected, Is.GreaterThan(0));
+
+            server.System<MobStateSystem>().ChangeMobState(unitUid, MobState.Dead, origin: playerBody);
+            Assert.That(ruleSystem.GetPoints(ruleComponent, Pair.Player!.UserId), Is.EqualTo(expected), "a kill should pay the killer");
+            Assert.That(GetMirroredPoints(playerBody), Is.EqualTo(expected), "the shop reads the points off the body");
+
+            // Killing a fellow defender costs more than the kill paid, so the total goes below zero.
+            var otherDefender = server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 4.5f, 0.5f));
+            server.System<MobStateSystem>().ChangeMobState(otherDefender, MobState.Dead, origin: playerBody);
+            expected += ruleComponent.TeamkillPoints;
+            Assert.That(expected, Is.LessThan(0));
+            Assert.That(ruleSystem.GetPoints(ruleComponent, Pair.Player!.UserId), Is.EqualTo(expected), "a teamkill should cost the killer");
+        });
+
+        await Pair.RunTicksSync(3);
+
+        await client.WaitAssertion(() =>
+        {
+            var lastChange = client.System<KsFieldCommanderPointsSystem>().LastChange;
+            Assert.That(lastChange, Is.Not.Null, "the client should have been told its points changed");
+            Assert.That(lastChange!.Delta, Is.LessThan(0));
+            Assert.That(lastChange.Total, Is.EqualTo(expected));
+        });
+
+        var newBody = await Respawn(testMap);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(GetMirroredPoints(newBody), Is.EqualTo(expected), "points belong to the player, not the body they died in");
+            Assert.That(server.EntMan.HasComponent<KsFactionCollisionShooterComponent>(newBody), Is.True,
+                "a defender's shots should pass through their own side");
+        });
+
+        await server.WaitAssertion(() =>
+            Assert.That(server.EntMan.HasComponent<KsFactionCollisionShooterComponent>(playerBody), Is.True,
+                "defenders already in the round when the rule prepared should have been readied too"));
+    }
+
+    [Test]
+    public async Task ShopSpendingIsKeptAcrossBodies()
+    {
+        var server = Pair.Server;
+        var (testMap, ruleUid, playerBody) = await SetUpOutpost();
+        var price = 0;
+        const int startingPoints = 1000;
+
+        await server.WaitPost(() =>
+        {
+            var ruleSystem = server.System<KsFieldCommanderRuleSystem>();
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            ruleSystem.SetPoints((ruleUid, ruleComponent), Pair.Player!, startingPoints);
+
+            var shopUid = server.EntMan.SpawnAtPosition(Shop, new EntityCoordinates(testMap.Grid, 2.5f, 1.5f));
+            var vendorComponent = server.EntMan.GetComponent<CMAutomatedVendorComponent>(shopUid);
+            Assert.That(vendorComponent.PointsType, Is.EqualTo(ruleComponent.PointsType), "the shop should sell for field commander points");
+
+            price = vendorComponent.Sections[0].Entries[0].Points ?? 0;
+            Assert.That(price, Is.GreaterThan(0));
+
+            server.EntMan.EventBus.RaiseLocalEvent(shopUid, new CMVendorVendBuiMsg(0, 0, new List<int>())
+            {
+                Actor = playerBody,
+                UiKey = CMAutomatedVendorUI.Key,
+            });
+
+            Assert.That(GetMirroredPoints(playerBody), Is.EqualTo(startingPoints - price), "the shop should have taken its price");
+            Assert.That(ruleSystem.GetPoints(ruleComponent, Pair.Player!.UserId), Is.EqualTo(startingPoints - price),
+                "the rule has to hear of the purchase, or dying would refund it");
+        });
+
+        var newBody = await Respawn(testMap);
+        await server.WaitAssertion(() =>
+            Assert.That(GetMirroredPoints(newBody), Is.EqualTo(startingPoints - price)));
+    }
+
+    [Test]
+    public async Task IntroGoesOutBeforeTheCommanderSpeaks()
+    {
+        var server = Pair.Server;
+        var (_, ruleUid, _) = await SetUpOutpost();
+        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
+
+        await server.WaitAssertion(() =>
+        {
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            Assert.That(ruleComponent.IntroSent, Is.False, "the briefing waits for its delay");
+            Assert.That(ruleComponent.PhaseIndex, Is.EqualTo(-1));
+        });
+
+        await Pair.RunTicksSync((int)(1.5f * tickRate));
+
+        await server.WaitAssertion(() =>
+        {
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            Assert.That(ruleComponent.IntroSent, Is.True);
+            Assert.That(ruleComponent.PhaseIndex, Is.EqualTo(-1), "the commander's first phase comes after the briefing");
+        });
+
+        await Pair.RunTicksSync((int)(2f * tickRate));
+
+        await server.WaitAssertion(() =>
+            Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(0)));
+    }
+
+    [Test]
+    public async Task PhaseCommandMovesTheTimelineAndItCarriesOn()
+    {
+        var server = Pair.Server;
+        var (_, ruleUid, _) = await SetUpOutpost(_phaseRule);
+        var consoleHost = server.ResolveDependency<IConsoleHost>();
+        var tickRate = (float)server.ResolveDependency<IGameTiming>().TickRate;
+
+        await server.WaitPost(() => consoleHost.ExecuteCommand("ks_fcphase ks-fieldcommander-phase-probing"));
+        await Pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+            Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(1),
+                "the phase should be found by name, and set"));
+
+        // The next phase starts two seconds after the one jumped to, so the timeline has to carry on from the jump.
+        await Pair.RunTicksSync((int)(3f * tickRate));
+
+        await server.WaitAssertion(() =>
+            Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(2),
+                "after a jump, the timeline should run on from the phase jumped to"));
+
+        // Back to the start: the clock must not drag it straight forward again.
+        await server.WaitPost(() => consoleHost.ExecuteCommand("ks_fcphase 0"));
+        await Pair.RunTicksSync((int)(1f * tickRate));
+
+        await server.WaitAssertion(() =>
+            Assert.That(server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid).PhaseIndex, Is.EqualTo(0),
+                "going back a phase should hold"));
+    }
+
+    /// <summary>
+    ///     The private module adds the NT Paramilitary's rifle to the shop through a partial, which silently does
+    ///         nothing if it stops matching. Builds without the module have neither, and skip this.
+    /// </summary>
+    [Test]
+    public async Task ShopSellsTheModuleRifleWhenTheModuleIsThere()
+    {
+        var server = Pair.Server;
+
+        await server.WaitAssertion(() =>
+        {
+            if (!server.ProtoMan.HasIndex(_modifiedXl8))
+                Assert.Ignore("built without the private module");
+
+            Assert.That(server.ProtoMan.Index(Shop).TryComp<CMAutomatedVendorComponent>(out var vendorComponent, server.EntMan.ComponentFactory), Is.True);
+
+            var entries = new List<EntProtoId>();
+            foreach (var section in vendorComponent!.Sections)
+            {
+                foreach (var entry in section.Entries)
+                    entries.Add(entry.Id);
+            }
+
+            Assert.That(entries, Does.Contain(_modifiedXl8), "the module's partial should add its rifle to the shop");
+            Assert.That(entries, Does.Contain(ResupplyFlare), "and leave the shop's own entries in place");
+        });
+    }
+}
