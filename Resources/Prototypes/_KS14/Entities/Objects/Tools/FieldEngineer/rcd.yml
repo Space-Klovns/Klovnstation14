@@ -1,0 +1,35 @@
+- type: entity
+  parent: RCD
+  id: KsRCDFieldEngineer
+  name: field engineer RCD
+  description: A military rapid construction device that fabricates its own compressed matter and builds in an instant. It takes apart its own user's work just as fast, but anyone else's at the usual pace.
+  components:
+  - type: RCD
+    ksInstant: true
+    availablePrototypes:
+    - WallSolid
+    - KsFieldWallReinforced
+    - KsFieldBarricade
+    - KsFieldBarricadeDirectional
+    - FloorSteel
+    - Plating
+    - Catwalk
+    - Grille
+    - Window
+    - WindowDirectional
+    - WindowReinforcedDirectional
+    - ReinforcedWindow
+    - Airlock
+    - AirlockGlass
+    - Firelock
+    - TubeLight
+    - BulbLight
+    - LVCable
+    - MVCable
+    - HVCable
+    - CableTerminal
+    - Deconstruct
+  - type: LimitedCharges
+    maxCharges: 60
+  - type: AutoRecharge
+    rechargeDuration: 1.5

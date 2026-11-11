@@ -378,6 +378,8 @@ public sealed partial class RCDSystem : EntitySystem
 
         #endregion
 
+        KsApplyInstant(component, prototype, args.Target, user, ref delay, ref effectPrototype); // KS14: instant RCDs
+
         // Try to start the do after
         var effect = Spawn(effectPrototype, _mapSystem.ToCenterCoordinates(tile, mapGrid));
         var ev = new RCDDoAfterEvent(
@@ -914,6 +916,8 @@ public sealed partial class RCDSystem : EntitySystem
 
                 var ent = Spawn(proto, mapCoords, rotation: rotation);
                 // Starlight edit End: RPD
+
+                KsMarkBuilt(component, ent, user); // KS14: instant RCDs remember who built what
 
                 switch (prototype.Rotation)
                 {

@@ -18,12 +18,28 @@ using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.GameTicking.Rules;
 
-[RegisterComponent]
+[RegisterComponent, Access(typeof(ScenarioSystem))]
 public sealed partial class ScenarioRuleComponent : Component
 {
+    [ViewVariables]
     public ProtoId<ScenarioFactionPrototype>? WinningFactionId = null;
 
+    [ViewVariables]
     public ScenarioWinType WinType;
+
+    /// <summary>
+    ///     Factions that count as alive whether or not any of their members are. For a side whose members come and
+    ///         go, such as an AI that keeps sending fresh units, so that the last unit dying is not a defeat.
+    /// </summary>
+    [DataField]
+    public HashSet<ProtoId<ScenarioFactionPrototype>> PersistentFactions = [];
+
+    /// <summary>
+    ///     Factions that count as still holding an objective while they have none on the map, because theirs arrives
+    ///         later. Cleared through <see cref="ScenarioSystem.SetObjectivePending"/> once it does.
+    /// </summary>
+    [DataField]
+    public HashSet<ProtoId<ScenarioFactionPrototype>> PendingObjectiveFactions = [];
 }
 
 public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
@@ -168,6 +184,54 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
     private bool IsRuleActive()
         => EntityQuery<ScenarioRuleComponent>().Any();
 
+    /// <summary>
+    ///     Whether <paramref name="factionId"/> is counted as holding an objective it has not placed yet.
+    /// </summary>
+    public void SetObjectivePending(ProtoId<ScenarioFactionPrototype> factionId, bool pending)
+    {
+        var query = QueryActiveRules();
+        while (query.MoveNext(out _, out _, out var scenario, out _))
+        {
+            if (pending)
+                scenario.PendingObjectiveFactions.Add(factionId);
+            else
+                scenario.PendingObjectiveFactions.Remove(factionId);
+        }
+    }
+
+    /// <summary>
+    ///     Ends the round now, with <paramref name="factionId"/> the winner. For victories decided by something other
+    ///         than an objective or a death, such as a timer running out.
+    /// </summary>
+    public void DeclareWinner(ProtoId<ScenarioFactionPrototype> factionId, ScenarioWinType winType)
+    {
+        if (!IsRuleActive())
+            return;
+
+        SetWinFaction(factionId);
+        SetWinType(winType);
+        EndRoundNow();
+    }
+
+    private void EndRoundNow()
+    {
+        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
+            TimeSpan.FromMinutes(3), // doesnt matter, it's instant
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom");
+    }
+
+    /// <summary>
+    ///     Every faction that a rule says is pending an objective or never dies.
+    /// </summary>
+    private void CollectRuleFactions(HashSet<ProtoId<ScenarioFactionPrototype>> factionIds, bool pendingObjectives)
+    {
+        var query = QueryActiveRules();
+        while (query.MoveNext(out _, out _, out var scenario, out _))
+            factionIds.UnionWith(pendingObjectives ? scenario.PendingObjectiveFactions : scenario.PersistentFactions);
+    }
+
     private void CheckRoundShouldEndViaObjective()
     {
         // Do nuffin if the game rule isnt active
@@ -176,18 +240,23 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
 
         // to win, a faction must be the only one with atleast 1 of their objectives remaining
 
-        ProtoId<ScenarioFactionPrototype>? winningFactionId = null;
+        var holdingFactionSet = _uniqueFactionSetLocal.Value!;
+        holdingFactionSet.Clear();
+
+        // A faction whose objective has not arrived yet is still in the running.
+        CollectRuleFactions(holdingFactionSet, pendingObjectives: true);
+
         foreach (var (factionId, factionActiveObjectiveUids) in _activeObjectiveUids)
         {
-            if (factionActiveObjectiveUids.Count == 0)
-                continue;
-
-            // means that there is more than 1 faction with objectives remaining
-            if (winningFactionId is { })
-                return;
-
-            winningFactionId = factionId;
+            if (factionActiveObjectiveUids.Count > 0)
+                holdingFactionSet.Add(factionId);
         }
+
+        // means that there is more than 1 faction with objectives remaining
+        if (holdingFactionSet.Count > 1)
+            return;
+
+        ProtoId<ScenarioFactionPrototype>? winningFactionId = holdingFactionSet.Count == 1 ? holdingFactionSet.First() : (ProtoId<ScenarioFactionPrototype>?)null;
 
         // The winner was already decided when the objective was captured (or defended); only fall back to the
         //      lone remaining faction if nothing decided it, and never overwrite a decided winner with null.
@@ -196,12 +265,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             SetWinFaction(winningFactionId);
 
         SetWinType(ScenarioWinType.Objective);
-
-        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
-            TimeSpan.FromMinutes(3), //doesnt matter
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom");
+        EndRoundNow();
     }
 
     private void CheckRoundShouldEndViaDeath()
@@ -213,7 +277,8 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         var uniqueFactionSet = _uniqueFactionSetLocal.Value!;
         uniqueFactionSet.Clear();
 
-        ProtoId<ScenarioFactionPrototype>? winningFactionId = null;
+        // Factions that never die are alive from the start.
+        CollectRuleFactions(uniqueFactionSet, pendingObjectives: false);
 
         // Check if there are syndies still alive
         // If there are, the round can continue.
@@ -223,19 +288,18 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             if (mobStateComponent.CurrentState == MobState.Dead)
                 continue;
 
-            // means that there is more than 1 faction alive, round shouldnt end so return
-            if (winningFactionId is { })
-                return;
+            uniqueFactionSet.Add(memberComponent.Id);
 
-            winningFactionId = memberComponent.Id;
+            // means that there is more than 1 faction alive, round shouldnt end so return
+            if (uniqueFactionSet.Count > 1)
+                return;
         }
 
-        SetWinFaction(winningFactionId);
-        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
-            TimeSpan.FromMinutes(3), //doesnt matter if its instant i think
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom");
+        if (uniqueFactionSet.Count > 1)
+            return;
+
+        SetWinFaction(uniqueFactionSet.Count == 1 ? uniqueFactionSet.First() : (ProtoId<ScenarioFactionPrototype>?)null);
+        EndRoundNow();
     }
 
     [SubscribeLocalEvent]
@@ -256,6 +320,10 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         //      must neither decide a winner nor end the round. Captures and defences remove the component alone.
         if (TerminatingOrDeleted(entity))
             return;
+
+        // Raised before the round can end over it, so that whatever reacts to a loss still sees a running round.
+        var ev = new ScenarioObjectiveLostEvent(entity.Owner, entity.Comp.FactionId);
+        RaiseLocalEvent(ref ev);
 
         // The winner is decided by CaptureObjective: the owner of a removed objective is the one that lost it.
         CheckRoundShouldEndViaObjective();
@@ -326,3 +394,10 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         return otherId;
     }
 }
+
+/// <summary>
+///     Broadcast when a faction loses one of its objectives, captured, destroyed or timed out, but not when it is
+///         deleted with its map.
+/// </summary>
+[ByRefEvent]
+public readonly record struct ScenarioObjectiveLostEvent(EntityUid ObjectiveUid, ProtoId<ScenarioFactionPrototype> FactionId);
