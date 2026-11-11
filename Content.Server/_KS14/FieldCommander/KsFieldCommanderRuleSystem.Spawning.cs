@@ -511,7 +511,9 @@ public sealed partial class KsFieldCommanderRuleSystem
             return null;
 
         // Joins the side so that what it captures is the commander's, and counted for the round.
-        EnsureComp<ScenarioFactionMemberComponent>(unitUid).Id = rule.Comp.Faction;
+        var factionMemberComponent = EnsureComp<ScenarioFactionMemberComponent>(unitUid);
+        factionMemberComponent.Id = rule.Comp.Faction;
+        Dirty(unitUid, factionMemberComponent);
 
         var unitComponent = EnsureComp<KsFieldCommanderUnitComponent>(unitUid);
         unitComponent.RuleUid = rule.Owner;
