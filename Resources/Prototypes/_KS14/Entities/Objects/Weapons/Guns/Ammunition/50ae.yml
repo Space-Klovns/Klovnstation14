@@ -1,0 +1,132 @@
+# .50 AE, for the Desert Eagle and the Regal Condor. tgstation's Regal Condor fires its own .45 reaper rounds;
+#     here both guns share the caliber, and the Condor's reaper rounds are a .50 AE load instead.
+
+# Projectiles
+
+- type: entity
+  parent: BaseBullet
+  id: KsBullet50AE
+  categories: [ HideSpawnMenu ]
+  name: bullet (.50 AE)
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 45
+
+- type: entity
+  parent: BaseBullet
+  id: KsBullet50AEReaper
+  categories: [ HideSpawnMenu ]
+  name: bullet (.50 AE reaper)
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 35
+      percentilePenetration: # KS14 nuarmor; tgstation's reaper rounds have 40 armour penetration
+        Piercing: 0.4
+
+# Cartridges
+
+- type: entity
+  parent: [ BaseCartridge, BaseMajorContraband ]
+  id: KsCartridge50AE
+  name: cartridge (.50 AE)
+  description: A fat jacketed hollow-point handgun round. Hits like a truck, kicks like one too.
+  components:
+  - type: Tag
+    tags:
+    - KsCartridge50AE
+  - type: CartridgeAmmo
+    proto: KsBullet50AE
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Ammunition/Casings/ammo_casing.rsi
+    layers:
+    - state: base
+      map: [ "enum.AmmoVisualLayers.Base" ]
+  - type: Appearance
+  - type: SpentAmmoVisuals
+
+- type: entity
+  parent: KsCartridge50AE
+  id: KsCartridge50AEReaper
+  name: cartridge (.50 AE reaper)
+  description: A gold-jacketed .50 AE round with a tungsten penetrator core. Very expensive, and dangerously effective against everything.
+  components:
+  - type: CartridgeAmmo
+    proto: KsBullet50AEReaper
+  - type: Sprite
+    layers:
+    - state: base
+      map: [ "enum.AmmoVisualLayers.Base" ]
+    - state: tip
+      map: [ "enum.AmmoVisualLayers.Tip" ]
+      color: "#d4af37"
+
+# Magazines
+
+- type: entity
+  parent: [ BaseItem, BaseMajorContraband ]
+  id: KsMagazine50AE
+  name: handgun magazine (.50 AE)
+  description: A .50 AE handgun magazine, suitable for the Desert Eagle.
+  components:
+  - type: Tag
+    tags:
+    - KsMagazine50AE
+  - type: BallisticAmmoProvider
+    mayTransfer: true
+    proto: KsCartridge50AE
+    whitelist:
+      tags:
+      - KsCartridge50AE
+    capacity: 7
+  - type: Item
+    size: Small
+  - type: ContainerContainer
+    containers:
+      ballistic-ammo: !type:Container
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Ammunition/Magazine/Pistol/magazine_50ae.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: MagazineVisuals
+    magState: mag
+    steps: 8
+    zeroVisible: false
+  - type: Appearance
+  - type: StaticPrice
+    price: 150
+
+- type: entity
+  parent: KsMagazine50AE
+  id: KsMagazine50AEEmpty
+  suffix: Empty
+  components:
+  - type: BallisticAmmoProvider
+    proto: null
+
+- type: entity
+  parent: KsMagazine50AE
+  id: KsMagazine50AEReaper
+  name: Regal Condor magazine (.50 AE reaper)
+  description: A very expensive .50 AE handgun magazine, suitable for the Regal Condor. Loaded with "reaper" rounds, which are dangerously effective against everything.
+  components:
+  - type: BallisticAmmoProvider
+    proto: KsCartridge50AEReaper
+    capacity: 8
+  - type: Construction
+    graph: KsRegalCondorMagazineGraph
+    node: magazine
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Ammunition/Magazine/Pistol/magazine_regal.rsi
+  - type: MagazineVisuals
+    magState: mag
+    steps: 9
+    zeroVisible: false
+  - type: StaticPrice
+    price: 2000

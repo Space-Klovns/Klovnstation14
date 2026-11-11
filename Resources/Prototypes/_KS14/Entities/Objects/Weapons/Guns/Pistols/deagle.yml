@@ -1,0 +1,160 @@
+# Ported from tgstation's /obj/item/gun/ballistic/automatic/pistol/deagle, /deagle/gold and /deagle/regal.
+# The Desert Eagles have no spawn sources: admin spawn only, for now.
+
+- type: entity
+  parent: [BaseWeaponPistol, BaseMajorContraband]
+  id: KsWeaponPistolDeagle
+  name: Desert Eagle
+  description: A robust .50 AE handgun.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/deagle.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-0
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: Item
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/deagle.rsi
+  - type: Tag
+    tags:
+    - Sidearm
+    - KsDeagleBase
+  - type: Gun
+    fireRate: 2
+    minAngle: 4
+    maxAngle: 24
+    angleIncrease: 6
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/mateba.ogg
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        startingItem: KsMagazine50AE
+        insertSound: /Audio/Weapons/Guns/MagIn/pistol_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/pistol_magout.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - KsMagazine50AE
+        whitelistFailPopup: gun-magazine-whitelist-fail
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+          - KsCartridge50AE
+  - type: StaticPrice
+    price: 1500
+
+- type: entity
+  parent: KsWeaponPistolDeagle
+  id: KsWeaponPistolDeagleEmpty
+  suffix: Empty
+  components:
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/Weapons/Guns/MagIn/pistol_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/pistol_magout.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - KsMagazine50AE
+        whitelistFailPopup: gun-magazine-whitelist-fail
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+          - KsCartridge50AE
+
+# A reskin: it is a Desert Eagle in every other way, the Regal Condor recipe included.
+- type: entity
+  parent: KsWeaponPistolDeagle
+  id: KsWeaponPistolDeagleGold
+  suffix: Gold
+  description: A gold plated Desert Eagle folded over a million times by superior martian gunsmiths. Uses .50 AE ammo.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/deagle_gold.rsi
+  - type: Item
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/deagle_gold.rsi
+
+- type: entity
+  parent: KsWeaponPistolDeagle
+  id: KsWeaponPistolRegalCondor
+  name: Regal Condor
+  description: Unlike the Desert Eagle, this weapon seems to utilize some kind of advanced internal stabilization system to significantly reduce felt recoil and increase overall accuracy. This allows it to fire a very quick 2-round burst. Chambered in .50 AE, and happiest on reaper rounds.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/regal_condor.rsi
+  - type: Item
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/regal_condor.rsi
+  - type: Tag # not KsDeagleBase: a Condor can't be crafted into another Condor
+    tags:
+    - Sidearm
+  - type: Gun
+    minAngle: 2
+    maxAngle: 14
+    angleIncrease: 3
+    selectedMode: Burst
+    availableModes:
+    - SemiAuto
+    - Burst
+    shotsPerBurst: 2
+    burstFireRate: 10
+    burstCooldown: 0.5
+  - type: KsGunDamageMultiplier
+    multiplier: 1.25
+  - type: Construction
+    graph: KsRegalCondorGraph
+    node: regalCondor
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        startingItem: KsMagazine50AEReaper
+        insertSound: /Audio/Weapons/Guns/MagIn/pistol_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/pistol_magout.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - KsMagazine50AE
+        whitelistFailPopup: gun-magazine-whitelist-fail
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+          - KsCartridge50AE
+  - type: StaticPrice
+    price: 20000
+
+- type: entity
+  parent: KsWeaponPistolRegalCondor
+  id: KsWeaponPistolRegalCondorEmpty
+  suffix: Empty
+  components:
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/Weapons/Guns/MagIn/pistol_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/pistol_magout.ogg
+        priority: 2
+        whitelist:
+          tags:
+          - KsMagazine50AE
+        whitelistFailPopup: gun-magazine-whitelist-fail
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+          - KsCartridge50AE

@@ -1,0 +1,15 @@
+# Products only an emagged order console offers. tgstation's ORDER_EMAG_ONLY.
+# They all go in the contraband category, so they get a tab of their own; KsCargoEmagOnlyTest holds them to it.
+
+- type: cargoProduct
+  id: KsCargoNullEntry
+  name: ks-cargo-product-null-entry-name
+  description: ks-cargo-product-null-entry-desc
+  icon:
+    sprite: Objects/Misc/books.rsi
+    state: book_icon
+  product: KsCrateNullEntry
+  cost: 20000
+  category: cargoproduct-category-name-contraband
+  group: market
+  ksEmagOnly: true

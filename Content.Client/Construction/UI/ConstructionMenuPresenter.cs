@@ -37,6 +37,7 @@ namespace Content.Client.Construction.UI
 
         private readonly IConstructionMenuView _constructionView;
         private readonly EntityWhitelistSystem _whitelistSystem;
+        private readonly Content.Shared._KS14.LearnedRecipes.KsLearnedRecipesSystem _learnedRecipesSystem; // KS14
 
         private ConstructionSystem? _constructionSystem;
         private ConstructionPrototype? _selected;
@@ -92,6 +93,10 @@ namespace Content.Client.Construction.UI
             IoCManager.InjectDependencies(this);
             _constructionView = new ConstructionMenu();
             _whitelistSystem = _entManager.System<EntityWhitelistSystem>();
+            // KS14 start: learned recipes
+            _learnedRecipesSystem = _entManager.System<Content.Shared._KS14.LearnedRecipes.KsLearnedRecipesSystem>();
+            _learnedRecipesSystem.RecipesChanged += OnLearnedRecipesChanged;
+            // KS14 end
             _spriteSystem = _entManager.System<SpriteSystem>();
             _sawmill = _logManager.GetSawmill("construction.ui");
 
@@ -141,7 +146,15 @@ namespace Content.Client.Construction.UI
             _systemManager.SystemUnloaded -= OnSystemUnloaded;
 
             _placementManager.PlacementChanged -= OnPlacementChanged;
+            _learnedRecipesSystem.RecipesChanged -= OnLearnedRecipesChanged; // KS14
         }
+
+        // KS14 start: learned recipes
+        private void OnLearnedRecipesChanged()
+        {
+            OnViewPopulateRecipes(_constructionView, (string.Empty, _selectedCategory));
+        }
+        // KS14 end
 
         private void OnPlacementChanged(object? sender, EventArgs e)
         {
@@ -271,7 +284,8 @@ namespace Content.Client.Construction.UI
 
                 if (_playerManager.LocalSession == null
                     || _playerManager.LocalEntity == null
-                    || _whitelistSystem.IsWhitelistFail(recipe.EntityWhitelist, _playerManager.LocalEntity.Value))
+                    || _whitelistSystem.IsWhitelistFail(recipe.EntityWhitelist, _playerManager.LocalEntity.Value)
+                    || !_learnedRecipesSystem.CanUse(_playerManager.LocalEntity.Value, recipe)) // KS14
                     continue;
 
                 if (!string.IsNullOrEmpty(search) && (recipe.Name is { } name &&

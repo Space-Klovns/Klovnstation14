@@ -694,9 +694,14 @@ namespace Content.Server.Cargo.Systems
 
             // Note that a market must be both on the station and on the console to be available.
             var markets = ent.Comp.AllowedGroups.Intersect(db.Markets).ToList();
+            var ksEmagged = _emag.CheckFlag(ent, EmagType.Interaction); // KS14
             foreach (var product in ProtoMan.EnumeratePrototypes<CargoProductPrototype>())
             {
                 if (!markets.Contains(product.Group))
+                    continue;
+
+                // KS14: emag-only products
+                if (product.KsEmagOnly && !ksEmagged)
                     continue;
 
                 products.Add(product.ID);

@@ -1,0 +1,7 @@
+- files:
+  - "pageturn1.ogg"
+  - "pageturn2.ogg"
+  - "pageturn3.ogg"
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from tgstation (master branch)"
+  source: "https://github.com/tgstation/tgstation/tree/master/sound/effects"
