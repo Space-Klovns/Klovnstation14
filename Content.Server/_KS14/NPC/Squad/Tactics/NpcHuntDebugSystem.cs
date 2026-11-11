@@ -120,6 +120,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
                 NpcHuntPhase.Stage => settings.StageTimeout,
                 NpcHuntPhase.Blast => settings.PlanChargeTimeout,
                 NpcHuntPhase.Breach => settings.BreachTimeout,
+                NpcHuntPhase.Soften => NpcSquadTacticsSystem.SoftenTimeLimit,
                 NpcHuntPhase.Entry => settings.EntryTimeout,
                 NpcHuntPhase.Exhausted => settings.HoldAreaTime,
                 _ => TimeSpan.Zero,

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server.NPC.Pathfinding;
 using Content.Shared._KS14.NPC;
 using Robust.Shared.Map;
@@ -9,6 +10,15 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 ///     Who would throw what, and where to.
 /// </summary>
 public readonly record struct NpcSquadThrow(EntityUid ThrowerUid, EntityUid GrenadeUid, EntityCoordinates Coordinates);
+
+/// <summary>
+///     What a throw into a room goes by: where to aim, if anywhere, and what the hostile is like. The hostile itself for one in
+///         sight; what the squad last saw of it for one that is not.
+/// </summary>
+/// <param name="Aim">Where it is, or is believed to be. Null for nowhere: the throw goes just inside.</param>
+/// <param name="Traits">What it is like. <see cref="NpcContactTraits.None"/> for nothing known, which rules out every softener
+///     that depends on it.</param>
+public readonly record struct NpcSofteningTarget(EntityCoordinates? Aim, NpcContactTraits Traits);
 
 /// <summary>
 ///     A squad's plan for a hostile it can see and cannot get at: everything from noticing that, through carrying the plan

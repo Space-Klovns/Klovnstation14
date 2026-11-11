@@ -129,4 +129,11 @@ public enum NpcHuntPhase : byte
     ///     Nowhere left to look: holding the area before standing down.
     /// </summary>
     Exhausted,
+
+    /// <summary>
+    ///     Stacked up on a room the hostile is believed to be in, with one member putting something in ahead of them: a
+    ///         flashbang, a grenade or smoke, chosen by what the squad last saw of it. Then <see cref="Entry"/>. Only for
+    ///         squads that plan (<c>NpcSquadTacticsSettings.HuntSoftening</c>).
+    /// </summary>
+    Soften,
 }

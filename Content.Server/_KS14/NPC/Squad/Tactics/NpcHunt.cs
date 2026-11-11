@@ -117,6 +117,30 @@ public sealed class NpcHunt
     public bool BlastTried;
 
     /// <summary>
+    ///     While putting something in ahead of going in (<see cref="NpcHuntPhase.Soften"/>): the plan that holds the throw, which
+    ///         nobody else sees, as for <see cref="Blast"/>. What it throws, and where, goes by what the squad last saw of the
+    ///         hostile, never the hostile itself.
+    /// </summary>
+    public NpcSquadPlan? Soften;
+
+    public NpcSquadAction SoftenAction;
+
+    /// <summary>
+    ///     Whether softening has been tried on this hunt: once only.
+    /// </summary>
+    public bool SoftenTried;
+
+    /// <summary>
+    ///     Whether the throw came to nothing: nobody to throw it, nowhere safe, or too long about it. They go in without.
+    /// </summary>
+    public bool SoftenGaveUp;
+
+    /// <summary>
+    ///     Whether something went in ahead of them: nothing more needs throwing on the way in.
+    /// </summary>
+    public bool Softened;
+
+    /// <summary>
     ///     With <see cref="ShutOut"/>, the nearest they can get to it, to wait at. Null for nowhere better than where they are.
     /// </summary>
     public EntityCoordinates? ShutOutCoordinates;

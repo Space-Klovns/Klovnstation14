@@ -161,8 +161,9 @@ public sealed partial class NpcSquadTacticsSystem
     private void UpdateHunt(EntityUid issuerUid, EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         // Not in the middle of a blast, which has timeouts of its own: given up on there, a charge would be left on the wall,
-        //      or the wire, with the squad waiting about beside it. The hunt starts over once it is through.
-        if (hunt.Phase is not (NpcHuntPhase.Exhausted or NpcHuntPhase.Blast) && now - hunt.StartedAt >= settings.HuntTimeout)
+        //      or the wire, with the squad waiting about beside it. The hunt starts over once it is through. Nor in the middle of
+        //      softening the room, which is soon over, and would leave a grenade in someone's hand.
+        if (hunt.Phase is not (NpcHuntPhase.Exhausted or NpcHuntPhase.Blast or NpcHuntPhase.Soften) && now - hunt.StartedAt >= settings.HuntTimeout)
             Exhaust(leaderUid, hunt, now);
 
         if (hunt.Phase == NpcHuntPhase.Watch)
@@ -188,6 +189,14 @@ public sealed partial class NpcSquadTacticsSystem
             return;
 
         if (hunt.Phase == NpcHuntPhase.Breach && !UpdateBreach(issuerUid, hunt, settings, now))
+            return;
+
+        // The moment they would go in, however they got there, and once only: something goes in ahead of them, if it is worth
+        //      it. A plan's own hunt has no hostile of its own, so never: the plan softens the room itself.
+        if (hunt.Phase == NpcHuntPhase.Entry)
+            TryStartSoften(hunt, settings, now);
+
+        if (hunt.Phase == NpcHuntPhase.Soften && !UpdateSoften(issuerUid, hunt, settings, now))
             return;
 
         if (hunt.Phase == NpcHuntPhase.Entry && !UpdateEntry(issuerUid, leaderUid, hunt, settings, now))

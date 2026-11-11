@@ -364,6 +364,14 @@ public sealed partial class NpcSquadTacticsSettings
     public bool HuntCharges;
 
     /// <summary>
+    ///     Whether a squad that plans (<see cref="Planning"/>), stacked up on a room it believes a lost hostile is in, puts a
+    ///         flashbang, a grenade or smoke in ahead of going in, as a plan would: chosen by what the squad last saw of it, and
+    ///         only if that was a hostile with a gun. Off, it goes straight in.
+    /// </summary>
+    [DataField]
+    public bool HuntSoftening = true;
+
+    /// <summary>
     ///     The least pressure either side of a charge can have, in kPa: nobody blows a hole through to a room with nothing in it.
     /// </summary>
     [DataField]

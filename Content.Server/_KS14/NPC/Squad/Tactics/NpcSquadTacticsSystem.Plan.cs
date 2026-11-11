@@ -3,6 +3,7 @@ using Content.Server._KS14.NPC.Doors;
 using Content.Server._KS14.NPC.Components;
 using Content.Server._KS14.NPC.Grenades;
 using Content.Server._KS14.NPC.LineOfFire;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared._KS14.NPC;
@@ -48,7 +49,6 @@ public sealed partial class NpcSquadTacticsSystem
     [Dependency] private NpcSquadPlanDebugSystem _npcSquadPlanDebugSystem = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private SharedDestructibleSystem _destructibleSystem = default!;
-    [Dependency] private SharedFlashSystem _flashSystem = default!;
 
     [Dependency] private EntityQuery<BallisticAmmoProviderComponent> _ballisticAmmoQuery = default!;
     [Dependency] private EntityQuery<ExplosiveComponent> _explosiveQuery = default!;
@@ -682,21 +682,23 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (chosen is not { } toThrow || !_members.Contains(toThrow.ThrowerUid) || now - plan.StepStartedAt >= ThrowTimeout)
         {
-            FailPlanStep(issuerUid, plan, action, settings, now);
+            FailThrow(issuerUid, plan, action, settings, now);
             return false;
         }
 
         // Where the hostile is now, not where it was when the plan was made: it has had a while to move since, more so for
-        //      a squad that had to go on internals first. A grenade that would now come down among them is not thrown.
+        //      a squad that had to go on internals first. Or, for one out of sight, where they now believe it to be. A grenade
+        //      that would now come down among them is not thrown.
         if (hunt.StagedMembers.TryGetValue(toThrow.ThrowerUid, out var throwerStaging))
         {
+            var target = GetSofteningTarget(plan);
             var coordinates = action == NpcSquadAction.FragRoom
-                ? GetFragLanding(plan, toThrow.ThrowerUid, throwerStaging)
-                : GetThrowCoordinates(plan, toThrow.ThrowerUid, throwerStaging);
+                ? GetFragLanding(plan, target, toThrow.ThrowerUid, throwerStaging)
+                : GetThrowCoordinates(plan, target, toThrow.ThrowerUid, throwerStaging);
 
             if (action == NpcSquadAction.FragRoom && !IsClearOfEveryone(hunt, coordinates, settings.PlanFragClearance))
             {
-                FailPlanStep(issuerUid, plan, action, settings, now);
+                FailThrow(issuerUid, plan, action, settings, now);
                 return false;
             }
 
@@ -718,6 +720,21 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     A throw that is not going to happen. A plan tries something else. A hunt's softening has nothing else to try, and
+    ///         goes in without.
+    /// </summary>
+    private void FailThrow(EntityUid issuerUid, NpcSquadPlan plan, NpcSquadAction action, NpcSquadTacticsSettings settings, TimeSpan now)
+    {
+        if (plan.Hunt is { } hunt && hunt.Soften == plan)
+        {
+            hunt.SoftenGaveUp = true;
+            return;
+        }
+
+        FailPlanStep(issuerUid, plan, action, settings, now);
     }
 
     private bool HasGoneOff(NpcSquadPlan plan, NpcSquadAction action, TimeSpan thrownAt, NpcSquadTacticsSettings settings, TimeSpan now)
@@ -1210,7 +1227,8 @@ public sealed partial class NpcSquadTacticsSystem
     /// <summary>
     ///     Finds who, stacked up on a way in, would throw what, and where to: where the hostile is, if a throw would get there,
     ///         and otherwise just inside. A flashbang is for something a flash would reach. A grenade is for somewhere that
-    ///         leaves all of them out of the blast, which just inside the door hardly ever does.
+    ///         leaves all of them out of the blast, which just inside the door hardly ever does. What the hostile is, and where,
+    ///         comes from <see cref="GetSofteningTarget"/>.
     /// </summary>
     private void FindThrowers(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
     {
@@ -1225,7 +1243,8 @@ public sealed partial class NpcSquadTacticsSystem
         plan.SmokeThrow = null;
         plan.SmokeGasses = false;
 
-        var canFlash = !TerminatingOrDeleted(plan.TargetUid) && _flashSystem.CanFlash(plan.TargetUid);
+        var target = GetSofteningTarget(plan);
+        var canFlash = (target.Traits & NpcContactTraits.Flashable) != 0x0;
         bool? squadOnInternals = null;
         bool? squadSeesThroughSmoke = null;
 
@@ -1238,7 +1257,7 @@ public sealed partial class NpcSquadTacticsSystem
                 if (_flashOnTriggerQuery.HasComp(itemUid))
                 {
                     if (canFlash)
-                        plan.FlashThrow ??= new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, memberUid, staging));
+                        plan.FlashThrow ??= new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, target, memberUid, staging));
 
                     continue;
                 }
@@ -1250,10 +1269,10 @@ public sealed partial class NpcSquadTacticsSystem
                     squadSeesThroughSmoke ??= DoesSquadSeeThroughSmoke();
 
                     if (!plan.SmokeGasses &&
-                        TryGetSmokeUse(itemUid, plan.TargetUid, squadOnInternals.Value, squadSeesThroughSmoke.Value, out var gasses) &&
+                        TryGetSmokeUse(itemUid, target.Traits, squadOnInternals.Value, squadSeesThroughSmoke.Value, out var gasses) &&
                         (gasses || plan.SmokeThrow == null))
                     {
-                        plan.SmokeThrow = new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, memberUid, staging));
+                        plan.SmokeThrow = new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, target, memberUid, staging));
                         plan.SmokeGasses = gasses;
                     }
 
@@ -1263,7 +1282,7 @@ public sealed partial class NpcSquadTacticsSystem
                 if (plan.FragThrow != null || !IsGrenade(itemUid))
                     continue;
 
-                var coordinates = GetFragLanding(plan, memberUid, staging);
+                var coordinates = GetFragLanding(plan, target, memberUid, staging);
 
                 if (IsClearOfEveryone(hunt, coordinates, settings.PlanFragClearance))
                     plan.FragThrow = new NpcSquadThrow(memberUid, itemUid, coordinates);
@@ -1272,27 +1291,45 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
+    ///     What a throw for <paramref name="plan"/> goes by. A plan's hostile is one the squad can see, so it goes by the hostile
+    ///         itself. A hunt's softening goes by what the squad last saw of it, and where it believes it is now.
+    /// </summary>
+    private NpcSofteningTarget GetSofteningTarget(NpcSquadPlan plan)
+    {
+        if (plan.Hunt is { } hunt && hunt.Soften == plan)
+            return GetBelievedSofteningTarget(hunt);
+
+        if (TerminatingOrDeleted(plan.TargetUid))
+            return default;
+
+        return new NpcSofteningTarget(_transformSystem.GetMoverCoordinates(plan.TargetUid), _npcPerceptionSystem.GetTraits(plan.TargetUid));
+    }
+
+    /// <summary>
     ///     Where a grenade would land, going by the view from the doorway, which is where it goes in through. Shut or open: a
     ///         plan has to be able to choose this before there is anything to throw it through, and the choice has to hold
     ///         once there is, from wherever the thrower stands beside it.
     /// </summary>
-    private EntityCoordinates GetFragLanding(NpcSquadPlan plan, EntityUid memberUid, NpcHuntStaging staging)
+    private EntityCoordinates GetFragLanding(NpcSquadPlan plan, NpcSofteningTarget target, EntityUid memberUid, NpcHuntStaging staging)
     {
         var entrance = plan.Hunt!.Entrances[staging.EntranceIndex];
 
-        if (!TerminatingOrDeleted(plan.TargetUid) &&
-            _npcLineOfFireSystem.IsClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.GetMapCoordinates(plan.TargetUid), CollisionGroup.ItemMask))
-            return _transformSystem.GetMoverCoordinates(plan.TargetUid);
+        if (target.Aim is { } aim &&
+            _npcLineOfFireSystem.IsClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.ToMapCoordinates(aim), CollisionGroup.ItemMask))
+            return aim;
 
-        return GetThrowCoordinates(plan, memberUid, staging);
+        return GetThrowCoordinates(plan, target, memberUid, staging);
     }
 
-    private EntityCoordinates GetThrowCoordinates(NpcSquadPlan plan, EntityUid memberUid, NpcHuntStaging staging)
+    /// <summary>
+    ///     At the hostile, if a throw from where <paramref name="memberUid"/> stands would get there, and otherwise just inside.
+    /// </summary>
+    private EntityCoordinates GetThrowCoordinates(NpcSquadPlan plan, NpcSofteningTarget target, EntityUid memberUid, NpcHuntStaging staging)
     {
-        return TerminatingOrDeleted(plan.TargetUid) ||
-            !_npcLineOfFireSystem.IsClear(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.GetMapCoordinates(plan.TargetUid), CollisionGroup.ItemMask)
-                ? plan.Hunt!.Entrances[staging.EntranceIndex].EntryCoordinates
-                : _transformSystem.GetMoverCoordinates(plan.TargetUid);
+        return target.Aim is { } aim &&
+            _npcLineOfFireSystem.IsClear(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.ToMapCoordinates(aim), CollisionGroup.ItemMask)
+                ? aim
+                : plan.Hunt!.Entrances[staging.EntranceIndex].EntryCoordinates;
     }
 
     /// <summary>

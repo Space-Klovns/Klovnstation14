@@ -202,6 +202,7 @@ public sealed partial class SquadDebugOverlay : Overlay
             NpcHuntPhase.Stage => Color.Orange,
             NpcHuntPhase.Breach => Color.Magenta,
             NpcHuntPhase.Blast => Color.OrangeRed,
+            NpcHuntPhase.Soften => Color.Pink,
             NpcHuntPhase.Entry => Color.Red,
             NpcHuntPhase.Search => Color.Cyan,
             _ => Color.Gray,
