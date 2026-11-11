@@ -24,7 +24,7 @@ namespace Content.Server._KS14.NPC.Hiding;
 ///             short included - lets it out too.
 ///     </para>
 /// </summary>
-public sealed class NpcHidingSystem : EntitySystem
+public sealed partial class NpcHidingSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
