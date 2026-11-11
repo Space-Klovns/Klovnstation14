@@ -54,6 +54,16 @@ public sealed partial class KsItemBurningSystem : EntitySystem
                 continue;
 
             burningComponent.NextTick = curTime + burningComponent.TickInterval;
+
+            var attemptEvent = new KsItemBurnAttemptEvent();
+            RaiseLocalEvent(uid, ref attemptEvent);
+            if (attemptEvent.Cancelled)
+            {
+                // Deferred: this is the query being enumerated.
+                RemCompDeferred(uid, burningComponent);
+                continue;
+            }
+
             Burn((uid, burningComponent), burningComponent.Damage);
         }
     }
@@ -79,6 +89,15 @@ public sealed partial class KsItemBurningSystem : EntitySystem
         }
 
         var burningComponent = AddComp<KsItemBurningComponent>(uid);
+
+        var attemptEvent = new KsItemBurnAttemptEvent();
+        RaiseLocalEvent(uid, ref attemptEvent);
+        if (attemptEvent.Cancelled)
+        {
+            RemComp(uid, burningComponent);
+            return;
+        }
+
         burningComponent.NextTick = _gameTiming.CurTime + burningComponent.TickInterval;
         Dirty(uid, burningComponent);
 

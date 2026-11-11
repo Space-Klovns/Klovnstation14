@@ -59,9 +59,13 @@ public sealed class KsBaneTest : GameTest
             var bystanderDamage = damageableSystem.GetTotalDamage(bystanderUid);
 #pragma warning restore CS0618
 
-            // The spear's ordinary thrown damage lands on both; only the fauna takes the bane's 80 on top.
-            Assert.That((float)(faunaDamage - bystanderDamage), Is.EqualTo(80f).Within(0.01f),
-                "Mining fauna must take the bane's extra 80 damage.");
+            // Read from the spear, so retuning it doesn't break the test.
+            var baneDamage = (float)SEntMan.GetComponent<KsBaneComponent>(spearUid).Damage.GetTotal();
+            Assert.That(baneDamage, Is.GreaterThan(0f), "The spear's bane deals nothing, so this proves nothing.");
+
+            // The spear's ordinary thrown damage lands on both; only the fauna takes the bane's on top.
+            Assert.That((float)(faunaDamage - bystanderDamage), Is.EqualTo(baneDamage).Within(0.01f),
+                "Mining fauna must take the bane's extra damage.");
         });
     }
 }
