@@ -18,7 +18,8 @@ public sealed partial class KsShieldBashComponent : Component
     public TimeSpan Cooldown = TimeSpan.FromSeconds(3);
 
     /// <summary>
-    ///     Narrows which melee weapons can bash it. Anything with a melee attack that isn't a tool can, by default.
+    ///     Narrows which melee weapons can bash it. By default anything with a melee attack can, other than
+    ///         another shield.
     /// </summary>
     [DataField]
     public EntityWhitelist? Whitelist;

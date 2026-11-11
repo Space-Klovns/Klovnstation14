@@ -26,11 +26,18 @@ public sealed class KsShieldBashTest : GameTest
     private static readonly EntProtoId Human = "MobHuman";
     private static readonly EntProtoId Shield = "RiotShield";
     private static readonly EntProtoId EnergyShield = "EnergyShield";
-    private static readonly EntProtoId Baton = "Stunbaton";
-    private static readonly EntProtoId Wrench = "Wrench";
 
-    [Test]
-    public async Task MeleeWeaponBashesShieldWithCooldown()
+    /// <summary>
+    ///     Anything with a melee attack bashes, tools included: the baseball bat (it rolls dough), the crowbar and
+    ///         the katana (it slices) are all tools. Another shield does not, nor does something that can't hit.
+    /// </summary>
+    [TestCase("Stunbaton", true)]
+    [TestCase("BaseBallBat", true)]
+    [TestCase("Crowbar", true)]
+    [TestCase("Katana", true)]
+    [TestCase("RiotShield", false)]
+    [TestCase("Paper", false)]
+    public async Task WeaponBashesShield(string weaponPrototype, bool bashes)
     {
         var testMap = await Pair.CreateTestMap();
 
@@ -38,19 +45,18 @@ public sealed class KsShieldBashTest : GameTest
         {
             var userUid = SEntMan.SpawnEntity(Human, testMap.GridCoords);
             var shieldUid = SEntMan.SpawnEntity(Shield, testMap.GridCoords);
-            var batonUid = SEntMan.SpawnEntity(Baton, testMap.GridCoords);
-            var wrenchUid = SEntMan.SpawnEntity(Wrench, testMap.GridCoords);
+            var weaponUid = SEntMan.SpawnEntity(weaponPrototype, testMap.GridCoords);
             var handsSystem = SEntMan.System<SharedHandsSystem>();
             var interactionSystem = SEntMan.System<SharedInteractionSystem>();
             var useDelaySystem = SEntMan.System<UseDelaySystem>();
             Assert.That(handsSystem.TryPickupAnyHand(userUid, shieldUid));
 
-            interactionSystem.InteractUsing(userUid, wrenchUid, shieldUid, testMap.GridCoords, checkCanInteract: false);
-            Assert.That(useDelaySystem.IsDelayed(shieldUid, KsShieldBashSystem.BashDelayId), Is.False, "A tool must not bash the shield.");
+            interactionSystem.InteractUsing(userUid, weaponUid, shieldUid, testMap.GridCoords, checkCanInteract: false);
 
-            interactionSystem.InteractUsing(userUid, batonUid, shieldUid, testMap.GridCoords, checkCanInteract: false);
-            Assert.That(useDelaySystem.IsDelayed(shieldUid, KsShieldBashSystem.BashDelayId), Is.True, "A baton must bash the shield.");
-            Assert.That(SEntMan.HasComponent<JitteringComponent>(userUid), Is.True, "Bashing must shake the basher.");
+            Assert.That(useDelaySystem.IsDelayed(shieldUid, KsShieldBashSystem.BashDelayId), Is.EqualTo(bashes),
+                bashes ? $"{weaponPrototype} must bash the shield." : $"{weaponPrototype} must not bash the shield.");
+            Assert.That(SEntMan.HasComponent<JitteringComponent>(userUid), Is.EqualTo(bashes),
+                "Bashing, and only bashing, must shake the basher.");
         });
     }
 

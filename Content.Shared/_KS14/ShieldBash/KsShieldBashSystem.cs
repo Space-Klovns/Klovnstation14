@@ -2,8 +2,8 @@ using Content.Shared.Chat;
 using Content.Shared.Interaction;
 using Content.Shared.Item.ItemToggle;
 using Content.Shared.Jittering;
+using Content.Shared.Repairable;
 using Content.Shared.Timing;
-using Content.Shared.Tools.Components;
 using Content.Shared.Weapons.Melee;
 using Content.Shared.Whitelist;
 using Robust.Shared.Audio.Systems;
@@ -21,14 +21,14 @@ public sealed partial class KsShieldBashSystem : EntitySystem
     [Dependency] private ItemToggleSystem _itemToggleSystem = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private EntityQuery<MeleeWeaponComponent> _meleeWeaponQuery = default!;
-    [Dependency] private EntityQuery<ToolComponent> _toolQuery = default!;
 
     /// <summary>
     ///     The shield's own delay, apart from the default one an energy shield's toggle uses.
     /// </summary>
     public const string BashDelayId = "ksShieldBash";
 
-    [SubscribeLocalEvent]
+    // After repairs, so a welder still mends a damaged shield instead of banging on it.
+    [SubscribeLocalEvent(after: [typeof(RepairableSystem)])]
     private void OnInteractUsing(Entity<KsShieldBashComponent> entity, ref InteractUsingEvent args)
     {
         if (args.Handled ||
@@ -58,13 +58,14 @@ public sealed partial class KsShieldBashSystem : EntitySystem
     }
 
     /// <summary>
-    ///     tgstation only lets <c>/obj/item/melee</c> bash: batons and blades, not tools or other shields.
+    ///     tgstation only lets <c>/obj/item/melee</c> bash: batons and blades, not tools or other shields. There is
+    ///         no such line to draw here, where a baseball bat, a crowbar and every sword are tools: anything with
+    ///         a melee attack bashes, other than another shield.
     /// </summary>
     private bool CanBashWith(Entity<KsShieldBashComponent> entity, EntityUid usedUid)
     {
         if (usedUid == entity.Owner ||
             !_meleeWeaponQuery.HasComp(usedUid) ||
-            _toolQuery.HasComp(usedUid) ||
             HasComp<KsShieldBashComponent>(usedUid))
             return false;
 
