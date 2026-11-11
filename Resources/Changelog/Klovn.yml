@@ -2686,3 +2686,15 @@ Entries:
         list the gases either.
   id: 254
   time: '2026-11-11T07:03:32.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Scenario vendors put your jumpsuit and bag on again, instead of leaving
+        them in your hands.
+    - type: Tweak
+      message: >-
+        Scenario vendors dress now pack loose items into your belt or bag before
+        your hands.
+  id: 255
+  time: '2026-11-11T10:21:46.0000000+00:00'
