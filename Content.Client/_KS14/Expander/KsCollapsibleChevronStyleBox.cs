@@ -43,8 +43,11 @@ public sealed class KsCollapsibleChevronStyleBox : StyleBox
         var topLeft = new Vector2(box.Left + LeftMargin * uiScale, (box.Top + box.Bottom - size.Y) / 2f);
         var rect = UIBox2.FromDimensions(topLeft, size);
 
+        // The handle's transform already places the control on screen, so the turn goes on top of it. Replacing it drew the
+        //     closed chevron about the screen's corner, outside the heading's clip, so it never showed.
+        var transform = handle.GetTransform();
         if (!Open)
-            handle.SetTransform(Matrix3x2.CreateRotation(-MathF.PI / 2f, topLeft + size / 2f));
+            handle.SetTransform(Matrix3x2.CreateRotation(-MathF.PI / 2f, topLeft + size / 2f) * transform);
 
         if (Texture != null)
         {
@@ -58,6 +61,6 @@ public sealed class KsCollapsibleChevronStyleBox : StyleBox
         }
 
         if (!Open)
-            handle.SetTransform(Matrix3x2.Identity);
+            handle.SetTransform(transform);
     }
 }
