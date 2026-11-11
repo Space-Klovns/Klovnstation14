@@ -142,26 +142,31 @@ public sealed partial class KsGuidePhaseCalculatorEmbed : BoxContainer, IDocumen
         }
         else
         {
-            if (pressure is > 0f)
-            {
-                var boilingPoint = KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure.Value);
-                lines.Add(float.IsFinite(boilingPoint)
-                    ? Loc.GetString("ks-guidebook-phase-calculator-boils", ("kelvin", boilingPoint), ("celsius", boilingPoint - Atmospherics.T0C))
-                    : Loc.GetString("ks-guidebook-phase-calculator-never-boils"));
-            }
-            else
-            {
-                lines.Add(Loc.GetString("ks-guidebook-phase-calculator-bad-pressure"));
-            }
+            var boilingPoint = pressure is > 0f
+                ? KsPhaseMath.BoilingPointAt(properties.VaporizationEntropy, properties.BoilingPoint, pressure.Value)
+                : float.NaN;
+            var vaporPressure = temperature is > 0f
+                ? KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature.Value)
+                : float.NaN;
 
-            if (temperature is > 0f)
+            // Either one meaning it never boils makes the other moot, and would contradict it: one line says so instead. A
+            //     vapor pressure under the pipes' own floor is one they treat as not evaporating at all.
+            if (float.IsPositiveInfinity(boilingPoint))
             {
-                var vaporPressure = KsPhaseMath.SaturationPressure(properties.VaporizationEntropy, properties.BoilingPoint, temperature.Value);
-                lines.Add(Loc.GetString("ks-guidebook-phase-calculator-vapor-pressure", ("kpa", vaporPressure)));
+                lines.Add(Loc.GetString("ks-guidebook-phase-calculator-never-boils-pressure"));
+            }
+            else if (vaporPressure < KsFluidmos.MinActivePressure)
+            {
+                lines.Add(Loc.GetString("ks-guidebook-phase-calculator-never-boils-temperature"));
             }
             else
             {
-                lines.Add(Loc.GetString("ks-guidebook-phase-calculator-bad-temperature"));
+                lines.Add(float.IsNaN(boilingPoint)
+                    ? Loc.GetString("ks-guidebook-phase-calculator-bad-pressure")
+                    : Loc.GetString("ks-guidebook-phase-calculator-boils", ("kelvin", boilingPoint), ("celsius", boilingPoint - Atmospherics.T0C)));
+                lines.Add(float.IsNaN(vaporPressure)
+                    ? Loc.GetString("ks-guidebook-phase-calculator-bad-temperature")
+                    : Loc.GetString("ks-guidebook-phase-calculator-vapor-pressure", ("kpa", vaporPressure)));
             }
         }
 

@@ -328,6 +328,14 @@ public sealed class KsSupercriticalTests : GameTest
             calculator.SetInputs(carbonDioxideIndex, "101.325", "293.15");
             var carbonDioxide = calculator.ResultText;
 
+            // Water can't boil under a hundred million kPa, and bitumen's vapor at room temperature is below what pipes count.
+            calculator.SetInputs(waterIndex, "100000000", "293.15");
+            var waterCrushed = calculator.ResultText;
+            var bitumenCalculator = new Content.Client._KS14.Guidebook.Controls.KsGuidePhaseCalculatorEmbed();
+            Assert.That(bitumenCalculator.TryParseTag(new Dictionary<string, string> { ["Reagents"] = "KsBitumen" }, out _));
+            bitumenCalculator.SetInputs(0, "101.325", "293.15");
+            var bitumen = bitumenCalculator.ResultText;
+
             var defaultCalculator = new Content.Client._KS14.Guidebook.Controls.KsGuidePhaseCalculatorEmbed();
 
             using (Assert.EnterMultipleScope())
@@ -342,6 +350,10 @@ public sealed class KsSupercriticalTests : GameTest
                 Assert.That(calculator.Reagents.Select(reagent => reagent.ID), Is.EqualTo(new[] { CarbonDioxideReagent.Id, WaterReagent.Id }),
                     "Reagents listed on the page aren't sorted alphabetically.");
                 Assert.That(water, Does.Contain("[color="), "The calculator's numbers aren't set apart from its text.");
+                Assert.That(waterCrushed, Does.Contain("never boils").And.Not.Contain("Vapor pressure"),
+                    "A pressure it can't boil at still shows a vapor pressure beside it.");
+                Assert.That(bitumen, Does.Contain("never boils").And.Not.Contain("Boils at").And.Not.Contain("Vapor pressure"),
+                    "A vapor pressure too small to count still shows a boiling point and a zero vapor pressure.");
             }
         });
     }
