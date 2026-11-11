@@ -185,6 +185,21 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         => EntityQuery<ScenarioRuleComponent>().Any();
 
     /// <summary>
+    ///     Whether <paramref name="factionId"/> is counted as alive with no living members.
+    /// </summary>
+    public void SetPersistent(ProtoId<ScenarioFactionPrototype> factionId, bool persistent)
+    {
+        var query = QueryActiveRules();
+        while (query.MoveNext(out _, out _, out var scenario, out _))
+        {
+            if (persistent)
+                scenario.PersistentFactions.Add(factionId);
+            else
+                scenario.PersistentFactions.Remove(factionId);
+        }
+    }
+
+    /// <summary>
     ///     Whether <paramref name="factionId"/> is counted as holding an objective it has not placed yet.
     /// </summary>
     public void SetObjectivePending(ProtoId<ScenarioFactionPrototype> factionId, bool pending)
