@@ -14,6 +14,9 @@
     fogRange: 55
     minSpawnDistance: 63
     maxSpawnDistance: 90
+    # Many light units rather than a few tough ones: see the module's FieldCommand/units.yml.
+    maxAlive: 12
+    maxAlivePerDefender: 3
     waveAnnouncements:
     - ks-fieldcommander-wave-1
     - ks-fieldcommander-wave-2
@@ -32,16 +35,16 @@
       intel: ks-fieldcommander-intel-phase-landfall
     - name: ks-fieldcommander-phase-probing
       start: 4m
-      waveInterval: 150
+      waveInterval: 110
       firstWaveDelay: 20
-      budget: 3
+      budget: 4.5
       budgetPerExtraDefender: 0.25
       announcement: ks-fieldcommander-phase-probing-announcement
       intel: ks-fieldcommander-intel-phase-probing
     - name: ks-fieldcommander-phase-pressure
       start: 12m
-      waveInterval: 120
-      budget: 6
+      waveInterval: 90
+      budget: 9
       budgetPerExtraDefender: 0.25
       strikeChance: 0.15
       announcement: ks-fieldcommander-phase-pressure-announcement
@@ -49,8 +52,8 @@
       reinforcementPod: KsFieldCommanderRequisitionResupply
     - name: ks-fieldcommander-phase-siege
       start: 22m
-      waveInterval: 105
-      budget: 9
+      waveInterval: 80
+      budget: 13.5
       budgetPerExtraDefender: 0.3
       strikeChance: 0.4
       announcement: ks-fieldcommander-phase-siege-announcement
@@ -58,8 +61,8 @@
       reinforcementPod: KsFieldCommanderReinforcementsSupport
     - name: ks-fieldcommander-phase-final
       start: 32m
-      waveInterval: 90
-      budget: 12
+      waveInterval: 65
+      budget: 18
       budgetPerExtraDefender: 0.3
       strikeChance: 0.6
       announcement: ks-fieldcommander-phase-final-announcement

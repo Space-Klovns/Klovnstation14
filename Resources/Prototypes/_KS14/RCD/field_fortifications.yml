@@ -39,3 +39,17 @@
   rotation: User
   fx: EffectRCDConstruct1
   allowMultiDirection: true
+
+- type: rcd
+  id: KsFieldFloodlight
+  category: Lighting
+  sprite:
+    sprite: Objects/Misc/Lights/lights.rsi
+    state: floodlight
+  mode: ConstructObject
+  prototype: KsFloodlightField
+  cost: 4
+  delay: 2
+  collisionMask: MachineMask
+  rotation: Fixed
+  fx: EffectRCDConstruct2
