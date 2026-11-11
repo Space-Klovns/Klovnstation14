@@ -24,11 +24,32 @@ public sealed class KsNavmeshNarrowGapTest : GameTest
 
     private static readonly Vector2i Gap = new(3, 3);
 
+    // A trunk as thin as a snowy tree's or a conifer's: a fifth of a tile wide, narrower than the gap between the
+    //      navmesh's points.
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  id: KsTestThinTrunk
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: ""-0.1,-0.3,0.1,0.3""
+        density: 1000
+        layer:
+        - WallLayer
+";
+
     /// <summary>
     ///     The only way through a wall is one tile wide, walked through from below. With a closet in it, centred or
     ///         pushed a little to one side - which leaves half a tile free beside it, too narrow for a mob - there is no
     ///         way through, unless the path may push it out of the way (<see cref="PathFlags.Pushing"/>), and it is not
-    ///         bolted to the floor. With a thin window along one side of it, or nothing, there is. So there is with a mob
+    ///         bolted to the floor. Nor with a tree trunk in it, thin enough to fit between the navmesh's points. With a
+    ///         thin window along one side of it, or nothing, there is. So there is with a mob
     ///         standing in it, mob pushing on or not: mobs move, and the navmesh does not count them.
     /// </summary>
     [TestCase(null, 0f, false, PathFlags.None, true)]
@@ -38,6 +59,7 @@ public sealed class KsNavmeshNarrowGapTest : GameTest
     [TestCase("ClosetSteelBase", 0.15f, false, PathFlags.Pushing, true)]
     [TestCase("ClosetSteelBase", 0f, true, PathFlags.Pushing, false)]
     [TestCase("WindowDirectional", 0f, true, PathFlags.None, true)]
+    [TestCase("KsTestThinTrunk", 0f, true, PathFlags.None, false)]
     [TestCase("MobHuman", 0f, false, PathFlags.None, true)]
     public async Task TestPartlyBlockedGap(string? obstacle, float offsetX, bool anchored, PathFlags flags, bool expectPath)
     {
