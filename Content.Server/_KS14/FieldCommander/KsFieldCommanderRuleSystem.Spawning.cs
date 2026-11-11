@@ -281,12 +281,13 @@ public sealed partial class KsFieldCommanderRuleSystem
             var offset = _robustRandom.NextAngle().ToVec() * _robustRandom.NextFloat(minDistance, maxDistance);
             var candidate = new MapCoordinates(anchor.Position + offset, anchor.MapId);
 
-            if (IsInSafeZone(component, candidate) ||
-                IsNearAny(candidate, anchors, minObjectiveDistance) ||
-                IsNearAny(candidate, defenders, minDefenderDistance))
+            // Everything is judged at the centre of the tile it would really land on, not at the point picked.
+            if (!TryGetFreeTile(candidate, out var tileCoordinates, out var tileMapCoordinates))
                 continue;
 
-            if (!TryGetFreeTile(candidate, out var tileCoordinates, out var tileMapCoordinates))
+            if (IsInSafeZone(component, tileMapCoordinates) ||
+                IsNearAny(tileMapCoordinates, anchors, minObjectiveDistance) ||
+                IsNearAny(tileMapCoordinates, defenders, minDefenderDistance))
                 continue;
 
             if (hidden && IsSeenByDefenders(component, tileMapCoordinates, defenders))
@@ -647,11 +648,13 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         foreach (var target in targets)
         {
-            if (IsInSafeZone(component, target, component.StrikeSafeMargin) ||
-                IsNearAny(target, objectives, component.StrikeSafeMargin))
+            if (!TryGetStrikeTile(target, out var strikeCoordinates))
                 continue;
 
-            if (!TryGetStrikeTile(target, out var strikeCoordinates))
+            // Judged where the missile really lands, the centre of the tile.
+            var strikeMapCoordinates = _transformSystem.ToMapCoordinates(strikeCoordinates);
+            if (IsInSafeZone(component, strikeMapCoordinates, component.StrikeSafeMargin) ||
+                IsNearAny(strikeMapCoordinates, objectives, component.StrikeSafeMargin))
                 continue;
 
             SpawnAtPosition(component.StrikePrototype, strikeCoordinates);
