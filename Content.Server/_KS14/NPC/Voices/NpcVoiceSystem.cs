@@ -1,6 +1,7 @@
 using Content.Shared.Random.Helpers;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
@@ -38,7 +39,7 @@ public sealed partial class NpcVoiceSystem : EntitySystem
     ///         speaker's gain and the NPC's own pitch.
     /// </summary>
     /// <returns>Whether a clip was played: false when the NPC has no speaker or the speaker has no clip for the string.</returns>
-    public bool TryPlayLine(Entity<NpcVoiceSetComponent?> speakerEntity, string locId)
+    public bool TryPlayLine(Entity<NpcVoiceSetComponent?> speakerEntity, LocId locId)
     {
         if (!Resolve(speakerEntity, ref speakerEntity.Comp, logMissing: false) ||
             speakerEntity.Comp.Speaker is not { } speakerId ||

@@ -1,12 +1,15 @@
 // KS14: added in this fork
 using Content.Server._KS14.NPC.Voices;
 using Content.Shared.Dataset;
+using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators;
 
 public sealed partial class SpeakOperator
 {
+    [Dependency] private NpcVoiceSystem _npcVoiceSystem = default!;
+
     /// <summary>
     ///     The line set the speaker actually speaks from: its own voice set's replacement for
     ///         <paramref name="lineSet"/>, if it has one, otherwise <paramref name="lineSet"/> itself. See
@@ -40,8 +43,8 @@ public sealed partial class SpeakOperator
     ///     Plays the clip of the speaker's recorded voice for <paramref name="locId"/>, if it has one. See
     ///         <see cref="NpcVoiceSystem"/>.
     /// </summary>
-    internal void KsPlayRecording(EntityUid speakerUid, string locId)
+    internal void KsPlayRecording(EntityUid speakerUid, LocId locId)
     {
-        _entMan.System<NpcVoiceSystem>().TryPlayLine(speakerUid, locId);
+        _npcVoiceSystem.TryPlayLine(speakerUid, locId);
     }
 }

@@ -1,4 +1,5 @@
 #nullable enable
+using System.Linq;
 using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Voices;
@@ -24,6 +25,7 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
     private static readonly string[] Speakers = ["KsRedactedSpeakerA", "KsRedactedSpeakerB"];
 
     private const string VoicedMob = "KsVoiceRecordingTestMob";
+    private const string RedactedSpawner = "KsRandomHumanoidSpawnerOperativeRedacted";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -75,7 +77,7 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
                     }
                 }
 
-                Assert.That(speaker.Lines.Keys, Is.EquivalentTo(voicedIds), $"{speakerId} should voice only strings that are spoken");
+                Assert.That(speaker.Lines.Keys.Select(locId => locId.Id), Is.EquivalentTo(voicedIds), $"{speakerId} should voice only strings that are spoken");
             }
         });
     }
@@ -125,6 +127,49 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
                 Assert.That(voice.Speaker?.Id, Is.EqualTo(rolled[i].Speaker), "the speaker should stay for life");
                 Assert.That(voice.Pitch, Is.EqualTo(rolled[i].Pitch), "the pitch should stay for life");
             }
+        });
+    }
+    /// <summary>
+    ///     A Redacted as the game spawns one, through its random humanoid spawner: it has a speaker, and every line it says
+    ///         plays that speaker's clip.
+    /// </summary>
+    [Test]
+    public async Task TestASpawnedRedactedSpeaksAloud()
+    {
+        var protoManager = Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex<EntityPrototype>(RedactedSpawner))
+            Assert.Ignore("the Redacted are in the private _KsModule submodule, which is not present");
+
+        var entManager = Server.ResolveDependency<IEntityManager>();
+        var voiceSystem = entManager.System<NpcVoiceSystem>();
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitPost(() => entManager.SpawnAtPosition(RedactedSpawner, map.GridCoords));
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var query = entManager.EntityQueryEnumerator<NpcVoiceSetComponent>();
+            Assert.That(query.MoveNext(out var mobUid, out var voice), "the spawner should have spawned a voiced Redacted");
+            Assert.That(voice!.Speaker, Is.Not.Null, "it should have a speaker");
+
+            foreach (var lineSetId in SpokenLineSets)
+            {
+                foreach (var locId in protoManager.Index<LocalizedDatasetPrototype>(lineSetId).Values)
+                {
+                    Assert.That(voiceSystem.TryPlayLine(mobUid, locId), $"{locId} should play {voice.Speaker}'s clip");
+                }
+            }
+
+            var audioQuery = entManager.EntityQueryEnumerator<Robust.Shared.Audio.Components.AudioComponent, TransformComponent>();
+            var playing = 0;
+            while (audioQuery.MoveNext(out _, out var audioComponent, out var transformComponent))
+            {
+                if (transformComponent.ParentUid == mobUid && $"{audioComponent.FileName}".Contains("/Voice/Redacted/"))
+                    playing++;
+            }
+
+            Assert.That(playing, Is.GreaterThan(0), "the clips should be playing on the mob");
         });
     }
 }

@@ -1,4 +1,5 @@
 using Robust.Shared.Audio;
+using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.NPC.Voices;
@@ -41,5 +42,5 @@ public sealed partial class NpcVoiceRecordingPrototype : IPrototype
     ///     The clip of this speaker for each locale string, by the string's id. One string has at most one clip.
     /// </summary>
     [DataField]
-    public Dictionary<string, SoundSpecifier> Lines = new();
+    public Dictionary<LocId, SoundSpecifier> Lines = new();
 }

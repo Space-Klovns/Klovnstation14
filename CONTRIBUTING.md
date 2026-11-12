@@ -282,6 +282,14 @@ For an id that exists only in a test's `[TestPrototypes]` YAML, make that field 
 
 Entity ids use `EntProtoId` rather than `ProtoId<EntityPrototype>`. `EntProtoId<T>` also requires the entity to have a `T`: as a `[DataField]`, the YAML linter rejects a prototype without one (`public EntProtoId<InstantActionComponent> Action;`).
 
+**Locale string ids are `LocId`, not `string` (C#)** — `LocId` (`Robust.Shared.Localization`) is just a wrapper around a `string`, there to mark it as the id of a locale (Fluent) string. It converts to and from `string` implicitly, so `Loc.GetString(locId)` and a literal both work. As a `[DataField]`, including as a dictionary key, the YAML linter checks its id against the locale files (`LocIdSerializer`), so a mistyped id fails the linter instead of showing up in game as the raw key:
+```csharp
+[DataField] public LocId Name = "ks-thing-name";                       // do this
+[DataField] public Dictionary<LocId, SoundSpecifier> Lines = new();
+
+[DataField] public string Name = "ks-thing-name";                      // not this
+```
+
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
 [Dependency] TransformSystem _transformSystem;   // not '_xform'
