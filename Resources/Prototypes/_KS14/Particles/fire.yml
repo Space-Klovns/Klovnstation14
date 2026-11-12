@@ -2,7 +2,7 @@
 
 - type: ksParticles
   id: KsBonfire
-  size: [ 3.125, 3.125 ]
+  size: 3.125, 3.125
   count: 1000
   spawning: 40
   lifespan: 0.7
@@ -21,7 +21,7 @@
     kind: vector
     a: [ 0, -0.0625 ]
     b: [ 0, 0.0625 ]
-  gravity: [ 0, 2.97 ]
+  gravity: 0, 2.97
   scale:
     kind: vector
     a: 0.3
@@ -36,7 +36,7 @@
 # Embers glow, so they ignore the dark: a KS14 addition to the tg definition.
 - type: ksParticles
   id: KsEmbers
-  size: [ 2, 3 ]
+  size: 2, 3
   count: 500
   spawning: 50
   lifespan: 3

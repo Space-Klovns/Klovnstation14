@@ -36,7 +36,7 @@ it yourself. `SetEmitting(entity, false)` stops spawning and lets the live parti
 ```yaml
 - type: ksParticles
   id: KsSmoke
-  size: [ 3.125, 3.125 ]        # the box about the emitter it is expected to fill, metres: for culling only
+  size: 3.125, 3.125        # the box about the emitter it is expected to fill, metres: for culling only
   count: 1000                   # most alive at once
   spawning: 40                  # per second; fractions accumulate
   lifespan: 1.5                 # seconds; a bare number is a constant
@@ -57,7 +57,7 @@ it yourself. `SetEmitting(entity, false)` stops spawning and lets the live parti
     b: 0.0625
     dist: normal
   friction: 0.89                # fraction of velocity lost per second
-  gravity: [ 0, 2.97 ]          # metres per second squared, y up
+  gravity: 0, 2.97          # metres per second squared, y up
   grow: 0.5                     # scale per second; a scalar broadcasts to both axes
 ```
 

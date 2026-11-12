@@ -2,7 +2,7 @@
 
 - type: ksParticles
   id: KsDroplets
-  size: [ 1, 1.125 ]
+  size: 1, 1.125
   count: 5
   spawning: 2
   lifespan: 1
@@ -26,4 +26,4 @@
     a: 0.9
     b: 1.1
     dist: normal
-  gravity: [ 0, -2.8125 ]
+  gravity: 0, -2.8125

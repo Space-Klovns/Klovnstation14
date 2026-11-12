@@ -45,7 +45,7 @@ public sealed class KsParticleEmitterTest : GameTest
   spawning: 20
   lifespan: 1
   velocity: [ 1, 0 ]
-  gravity: [ 0, -2 ]
+  gravity: 0, -2
   tickRate: 20
 
 - type: ksParticles
@@ -190,7 +190,9 @@ public sealed class KsParticleEmitterTest : GameTest
             }
 
             Assert.That(flood.Comp2.Alive, Is.EqualTo(10), "a flood fills the emitter to its count");
-            Assert.That(linear.Comp2.Alive, Is.EqualTo(10), "after a lifespan, one spawn per step is balanced by one death");
+            // At the cap, a step's spawn is refused and its death then frees a slot for the next step's spawn, so the
+            //      emitter sits one below the cap on every other step.
+            Assert.That(linear.Comp2.Alive, Is.InRange(9, 10), "after a lifespan, deaths and spawns balance at the cap");
         });
     }
 
@@ -243,10 +245,11 @@ public sealed class KsParticleEmitterTest : GameTest
 
         await Client.WaitAssertion(() =>
         {
-            Steps(emitter, 4);
-            Assert.That(emitter.Comp2.Alive, Is.EqualTo(4 * 5), "100 per second is 5 per step");
+            // Three steps: 0.15 s, so nothing has reached the 0.2 s lifespan yet.
+            Steps(emitter, 3);
+            Assert.That(emitter.Comp2.Alive, Is.EqualTo(3 * 5), "100 per second is 5 per step");
 
-            Steps(emitter, 20);
+            Steps(emitter, 21);
             Assert.That(emitter.Comp2.Age, Is.GreaterThan(0.5f));
             Assert.That(emitter.Comp2.Alive, Is.EqualTo(0), "0.5 s of emitting and 0.2 s lifespans: all gone by 1.2 s");
         });
@@ -289,7 +292,7 @@ public sealed class KsParticleEmitterTest : GameTest
             Assert.That(world.Comp2.Alive, Is.EqualTo(1));
 
             var worldParticleBefore = world.Comp2.Particles[0].Position;
-            var localBoundsBefore = local.Comp2.WorldBounds;
+            Box2 localBoundsBefore = local.Comp2.WorldBounds;
 
             CEntMan.System<SharedTransformSystem>().SetWorldPosition(clientParentUid, new Vector2(5f, 0f));
             ClientSystem.FrameUpdate(Dt);
@@ -298,7 +301,8 @@ public sealed class KsParticleEmitterTest : GameTest
             {
                 Assert.That(local.Comp2.Origin.X, Is.EqualTo(5f).Within(1e-4f), "the local emitter moved with its parent");
                 Assert.That(local.Comp2.Particles[0].Position.X, Is.EqualTo(0f).Within(1e-4f), "its particles are still at the origin of its frame");
-                Assert.That(local.Comp2.WorldBounds.Center.X, Is.EqualTo(localBoundsBefore.Center.X + 5f).Within(1e-3f), "so they are drawn, and culled, 5 m over");
+                Box2 localBoundsAfter = local.Comp2.WorldBounds;
+                Assert.That(localBoundsAfter.Center.X, Is.EqualTo(localBoundsBefore.Center.X + 5f).Within(1e-3f), "so they are drawn, and culled, 5 m over");
 
                 Assert.That(world.Comp2.Origin.X, Is.EqualTo(5f).Within(1e-4f), "the world emitter moved too");
                 Assert.That(world.Comp2.Particles[0].Position, Is.EqualTo(worldParticleBefore), "but its particle stayed where it was emitted");
@@ -318,13 +322,14 @@ public sealed class KsParticleEmitterTest : GameTest
         {
             ClientSystem.FrameUpdate(Dt);
             var layer = ClientSystem.Layers[(int)KsParticleLayer.Effects];
+            Box2 worldBounds = emitter.Comp2.WorldBounds;
 
             Assert.Multiple(() =>
             {
                 Assert.That(layer.Select(entry => entry.Uid), Does.Contain(emitter.Owner));
                 Assert.That(ClientSystem.Layers[(int)KsParticleLayer.Floor].Select(entry => entry.Uid), Does.Not.Contain(emitter.Owner));
                 Assert.That(emitter.Comp2.MapId, Is.Not.EqualTo(MapId.Nullspace));
-                Assert.That(emitter.Comp2.WorldBounds.Contains(emitter.Comp2.Origin), "the bounds cover the emitter");
+                Assert.That(worldBounds.Contains(emitter.Comp2.Origin), "the bounds cover the emitter");
                 Assert.That(ClientSystem.TotalAlive, Is.GreaterThanOrEqualTo(5));
             });
         });

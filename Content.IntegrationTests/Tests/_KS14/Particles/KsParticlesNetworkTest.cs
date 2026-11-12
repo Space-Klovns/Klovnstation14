@@ -3,7 +3,6 @@ using System.Linq;
 using System.Numerics;
 using Content.Client._KS14.Particles;
 using Content.IntegrationTests.Fixtures;
-using Content.Server._KS14.Particles;
 using Content.Shared._KS14.Particles;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -35,8 +34,8 @@ public sealed class KsParticlesNetworkTest : GameTest
   tickRate: 20
 ";
 
-    private KsParticlesSystem ServerSystem => (KsParticlesSystem)SEntMan.System<KsSharedParticlesSystem>();
-    private Client._KS14.Particles.KsParticlesSystem ClientSystem => (Client._KS14.Particles.KsParticlesSystem)CEntMan.System<KsSharedParticlesSystem>();
+    private Server._KS14.Particles.KsParticlesSystem ServerSystem => SEntMan.System<Server._KS14.Particles.KsParticlesSystem>();
+    private KsParticlesSystem ClientSystem => CEntMan.System<KsParticlesSystem>();
 
     [Test]
     public async Task ServerSpawnReachesTheClientAndLeavesWithIt()

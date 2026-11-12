@@ -4,7 +4,7 @@
 
 - type: ksParticles
   id: KsSmoke
-  size: [ 3.125, 3.125 ]
+  size: 3.125, 3.125
   count: 1000
   spawning: 40
   lifespan: 1.5
@@ -28,7 +28,7 @@
     b: 0.0625
     dist: normal
   friction: 0.89
-  gravity: [ 0, 2.97 ]
+  gravity: 0, 2.97
   grow: 0.5
 
 - type: ksParticles
@@ -91,7 +91,7 @@
   count: 1
   spawning: 0.5
   position: [ -0.1875, -0.0625 ]
-  gravity: [ 0, 2.34 ]
+  gravity: 0, 2.34
   lifespan: 0.75
   fade: 0.75
   velocity: [ 0, 0.0625 ]
@@ -115,7 +115,7 @@
   parent: KsSmokeCigarette
   id: KsSmokeCigaretteBig
   spawning: 10
-  gravity: [ 0, 1.5625 ]
+  gravity: 0, 1.5625
   velocity: [ 0, 0.03125 ]
   lifespan: 1
   fade: 1
@@ -177,7 +177,7 @@
 # A breath in the cold.
 - type: ksParticles
   id: KsFogBreath
-  size: [ 3.125, 3.125 ]
+  size: 3.125, 3.125
   count: 1
   spawning: 10
   lifespan: 1
@@ -200,7 +200,7 @@
 
 - type: ksParticles
   id: KsHotspringSteam
-  size: [ 3.125, 3.125 ]
+  size: 3.125, 3.125
   count: 5
   spawning: 3
   lifespan: 3
@@ -242,6 +242,6 @@
     a: -20
     b: 20
     dist: normal
-  gravity: [ 0.15625, 0.875 ]
+  gravity: 0.15625, 0.875
   friction: 0.972
   grow: 0.37
