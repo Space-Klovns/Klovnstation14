@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.NPC.Execution;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Execution;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Grenades;
@@ -60,6 +61,14 @@ public sealed class KsOperativeHtnRootTest : GameTest
 
     [TestPrototypes]
     private const string Prototypes = @"
+# A hostile that crawls while critical: soft crit is 100 to 130 damage on the thresholds of these mobs.
+- type: entity
+  parent: KsSquadTestMobNanoTrasen
+  id: KsOperativeRootTestSoftCritHostile
+  components:
+  - type: Injurable
+  - type: KsSoftCrit
+
 - type: entity
   parent: KsSquadTestMobSyndicate
   id: KsOperativeRootTestMobWithHands
@@ -814,6 +823,31 @@ public sealed class KsOperativeHtnRootTest : GameTest
                 StageArmed(entManager, mobUid);
                 StageCarried(entManager, mobUid, TestKnife);
                 StageDownedHostile(entManager, mobUid, gridUid, 1, 3);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is ExecuteOperator), Is.EqualTo(executes), Describe(plan));
+            Assert.That(plan.Tasks.Any(task => task.Operator is GunOperator), Is.Not.EqualTo(executes), Describe(plan));
+        });
+    }
+
+    /// <summary>
+    ///     One in soft crit can crawl, but is as much a target for an execution as any other that is down - until the
+    ///         executioners have given up on it, when they shoot it with the gun like anything else on the floor. One in
+    ///         hard crit cannot get away, so is still executed whatever happened before it got there.
+    /// </summary>
+    [TestCase(110, false, true)]
+    [TestCase(110, true, false)]
+    [TestCase(150, true, true)]
+    public async Task TestSoftCritHostileIsExecutedUntilItIsGivenUpOn(int damage, bool escaped, bool executes)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCarried(entManager, mobUid, TestKnife);
+                StageSoftCritHostile(entManager, mobUid, gridUid, 1, 3, damage: 110, escaped: escaped, thenDamage: damage - 110);
             });
 
         Assert.Multiple(() =>
@@ -2498,6 +2532,39 @@ public sealed class KsOperativeHtnRootTest : GameTest
     {
         var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, x, y);
         entManager.System<Content.Shared.Mobs.Systems.MobStateSystem>().ChangeMobState(hostileUid, Content.Shared.Mobs.MobState.Critical);
+
+        var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+        entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Visible,
+            now, now, now, entManager.GetComponent<TransformComponent>(hostileUid).Coordinates, default, null, Reacted: true));
+    }
+
+    /// <summary>
+    ///     <see cref="StageDownedHostile"/>, but in soft crit, having <paramref name="damage"/>. When
+    ///         <paramref name="escaped"/>, the staged NPC has also failed to execute it enough times to give up on it, and
+    ///         <paramref name="thenDamage"/> then takes it on from there, into hard crit if it is enough.
+    /// </summary>
+    private static void StageSoftCritHostile(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, int x, int y, int damage, bool escaped, int thenDamage)
+    {
+        var hostileUid = SpawnAt(entManager, "KsOperativeRootTestSoftCritHostile", gridUid, x, y);
+        var damageSystem = entManager.System<Content.Shared.Damage.Systems.DamageableSystem>();
+        var blunt = new Content.Shared.Damage.DamageSpecifier(
+            Robust.Shared.IoC.IoCManager.Resolve<IPrototypeManager>().Index(BluntDamage), Content.Shared.FixedPoint.FixedPoint2.New(damage));
+        damageSystem.TryChangeDamage(hostileUid, blunt, ignoreResistances: true);
+
+        if (escaped)
+        {
+            var executionSystem = entManager.System<NpcExecutionSystem>();
+            executionSystem.NoteAttempt(hostileUid);
+            executionSystem.NoteFailure(mobUid, hostileUid);
+            executionSystem.NoteFailure(mobUid, hostileUid);
+        }
+
+        if (thenDamage > 0)
+        {
+            blunt.DamageDict.Clear();
+            blunt.DamageDict["Blunt"] = Content.Shared.FixedPoint.FixedPoint2.New(thenDamage);
+            damageSystem.TryChangeDamage(hostileUid, blunt, ignoreResistances: true);
+        }
 
         var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
         entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Visible,

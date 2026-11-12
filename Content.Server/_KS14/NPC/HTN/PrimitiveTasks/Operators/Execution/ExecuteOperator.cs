@@ -8,7 +8,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Execution;
 
 /// <summary>
 ///     Executes the entity at <see cref="TargetKey"/> with the weapon at <see cref="WeaponKey"/>, and waits for it to be
-///         over (see <see cref="NpcExecutionSystem"/>). Fails if the target comes out of it alive. The owner has to be in
+///         over (see <see cref="NpcExecutionSystem"/>). Fails if the target comes out of it alive, which counts towards giving up on one that
+///         crawls away (see <see cref="NpcExecutionerComponent"/>). The owner has to be in
 ///         reach, and stay still until it is done.
 /// </summary>
 public sealed partial class ExecuteOperator : HTNOperator
@@ -29,7 +30,10 @@ public sealed partial class ExecuteOperator : HTNOperator
 
         if (blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid) &&
             blackboard.TryGetEntity(WeaponKey, _entityManager, out var weaponUid))
+        {
+            _npcExecutionSystem.NoteAttempt(targetUid);
             _npcExecutionSystem.TryStartExecution(blackboard.GetOwner(), targetUid, weaponUid);
+        }
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
@@ -37,9 +41,15 @@ public sealed partial class ExecuteOperator : HTNOperator
         if (_npcExecutionSystem.IsExecuting(blackboard.GetOwner()))
             return HTNOperatorStatus.Continuing;
 
-        return blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid) && _mobStateSystem.IsDead(targetUid)
-            ? HTNOperatorStatus.Finished
-            : HTNOperatorStatus.Failed;
+        if (!blackboard.TryGetEntity(TargetKey, _entityManager, out var targetUid))
+            return HTNOperatorStatus.Failed;
+
+        if (_mobStateSystem.IsDead(targetUid))
+            return HTNOperatorStatus.Finished;
+
+        // One in soft crit may have crawled out of it. Do that enough, and it is shot instead.
+        _npcExecutionSystem.NoteFailure(blackboard.GetOwner(), targetUid);
+        return HTNOperatorStatus.Failed;
     }
 
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)

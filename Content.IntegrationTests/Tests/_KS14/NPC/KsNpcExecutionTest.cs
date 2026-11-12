@@ -4,6 +4,11 @@ using Content.Server._KS14.NPC.Execution;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Execution;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
+using Content.Shared._KS14.Mobs.Systems;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
+using Content.Shared.FixedPoint;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory;
@@ -12,6 +17,7 @@ using Content.Shared.Mobs.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Pool;
 using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 
@@ -30,8 +36,11 @@ public sealed class KsNpcExecutionTest : GameTest
     private const string Weapon = "KsExecutionTestGun";
     private const string Knife = "KsExecutionTestKnife";
     private const string Victim = "KsExecutionTestVictim";
+    private const string SoftCritVictim = "KsExecutionTestSoftCritVictim";
 
     private const string WeaponHand = "right";
+
+    private static readonly ProtoId<DamageTypePrototype> BluntDamage = "Blunt";
 
     /// <summary>
     ///     Enough of a mob to hold things and start do-afters, and weapons that execute at once.
@@ -49,6 +58,7 @@ public sealed class KsNpcExecutionTest : GameTest
   - type: MobState
   - type: DoAfter
   - type: CombatMode
+  - type: NpcExecutioner
 
 # Takes damage, which the shared test mobs do not: they have no Injurable.
 - type: entity
@@ -56,6 +66,13 @@ public sealed class KsNpcExecutionTest : GameTest
   id: KsExecutionTestVictim
   components:
   - type: Injurable
+
+# One that can crawl while critical, up to 130 damage on these thresholds.
+- type: entity
+  parent: KsExecutionTestVictim
+  id: KsExecutionTestSoftCritVictim
+  components:
+  - type: KsSoftCrit
 
 - type: entity
   parent: KsNpcTestPistol
@@ -178,6 +195,73 @@ public sealed class KsNpcExecutionTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     A victim in soft crit that crawls out of reach breaks the execution off, every time. The second time, executioners
+    ///         give up on walking over to it and the target query passes it by, for the gun to take: a hard crit one that
+    ///         does the same is not, as nothing in hard crit is getting away.
+    /// </summary>
+    [TestCase(110, true)]
+    [TestCase(150, false)]
+    public async Task TestVictimThatCrawlsAwayIsGivenUpOn(int damage, bool givenUp)
+    {
+        var (entManager, npcUid, victimUid, gunUid) = await SetUp(SoftCritVictim, damage);
+        var executionSystem = entManager.System<NpcExecutionSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var executeOperator = new ExecuteOperator();
+        var blackboard = new NPCBlackboard();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            executeOperator.Initialize(entManager.EntitySysManager);
+            blackboard.SetValue(NPCBlackboard.Owner, npcUid);
+            blackboard.SetValue(executeOperator.TargetKey, victimUid);
+            blackboard.SetValue(executeOperator.WeaponKey, gunUid);
+
+            Assert.That(entManager.System<KsSoftCritSystem>().IsSoftCrit(victimUid), Is.EqualTo(givenUp), "the victim should be as deep in crit as the test means");
+            Assert.That(executionSystem.AwaitsExecution(victimUid), "it should await its execution to begin with");
+        });
+
+        for (var attempt = 1; attempt <= 2; attempt++)
+        {
+            await Pair.Server.WaitPost(() =>
+            {
+                // Back beside it, and the first thing it does is crawl off.
+                transformSystem.SetCoordinates(victimUid, entManager.GetComponent<TransformComponent>(npcUid).Coordinates.Offset(new System.Numerics.Vector2(1f, 0f)));
+
+                executeOperator.Startup(blackboard);
+                Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Continuing), "it should be waiting on the execution");
+                transformSystem.SetCoordinates(victimUid, entManager.GetComponent<TransformComponent>(npcUid).Coordinates.Offset(new System.Numerics.Vector2(3f, 0f)));
+            });
+
+            await RunUntilDone(executionSystem, npcUid);
+
+            await Pair.Server.WaitPost(() =>
+            {
+                Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Failed), "the victim got away");
+                executeOperator.TaskShutdown(blackboard, HTNOperatorStatus.Failed);
+
+                Assert.That(executionSystem.IsGivenUp(victimUid), Is.EqualTo(givenUp && attempt == 2), $"given up on after attempt {attempt}");
+                Assert.That(executionSystem.AwaitsExecution(victimUid), Is.Not.EqualTo(givenUp && attempt == 2), "and as a target for walking up to");
+            });
+        }
+
+        // Hard crit is executed as before: a victim that was given up on and then falls to hard crit is one again.
+        if (givenUp)
+        {
+            await Pair.Server.WaitPost(() =>
+            {
+                entManager.System<DamageableSystem>().TryChangeDamage(victimUid,
+                    new DamageSpecifier(SProtoMan.Index(BluntDamage), FixedPoint2.New(30)), ignoreResistances: true);
+            });
+            await Pair.RunTicksSync(2);
+            await Pair.Server.WaitPost(() =>
+            {
+                Assert.That(entManager.System<KsSoftCritSystem>().IsSoftCrit(victimUid), Is.False, "the victim should be in hard crit by now");
+                Assert.That(executionSystem.AwaitsExecution(victimUid), "a hard crit victim should be executed whatever happened before");
+            });
+        }
+    }
+
     private async Task RunUntilDone(NpcExecutionSystem executionSystem, EntityUid npcUid)
     {
         for (var i = 0; i < 120; i++)
@@ -195,7 +279,7 @@ public sealed class KsNpcExecutionTest : GameTest
     /// <summary>
     ///     An NPC with a loaded gun in hand, right beside a hostile that is down.
     /// </summary>
-    private async Task<(IEntityManager EntManager, EntityUid NpcUid, EntityUid VictimUid, EntityUid GunUid)> SetUp()
+    private async Task<(IEntityManager EntManager, EntityUid NpcUid, EntityUid VictimUid, EntityUid GunUid)> SetUp(string victimPrototype = Victim, int damage = 0)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -207,7 +291,7 @@ public sealed class KsNpcExecutionTest : GameTest
         {
             var gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-5, -5), new Vector2i(5, 5)).Owner;
             npcUid = SpawnAt(entManager, Npc, gridUid, 0, 0);
-            victimUid = SpawnAt(entManager, Victim, gridUid, 1, 0);
+            victimUid = SpawnAt(entManager, victimPrototype, gridUid, 1, 0);
 
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(npcUid, WeaponHand, HandLocation.Right);
@@ -221,7 +305,11 @@ public sealed class KsNpcExecutionTest : GameTest
             entManager.System<Content.Shared.Weapons.Ranged.Systems.SharedGunSystem>().UseChambered(gunUid,
                 entManager.GetComponent<Content.Shared.Weapons.Ranged.Components.ChamberMagazineAmmoProviderComponent>(gunUid), npcUid);
 
-            entManager.System<MobStateSystem>().ChangeMobState(victimUid, MobState.Critical);
+            if (damage > 0)
+                entManager.System<DamageableSystem>().TryChangeDamage(victimUid,
+                    new DamageSpecifier(SProtoMan.Index(BluntDamage), FixedPoint2.New(damage)), ignoreResistances: true);
+            else
+                entManager.System<MobStateSystem>().ChangeMobState(victimUid, MobState.Critical);
         });
 
         // A gun just put in hand has a moment before it can fire, and executing with one has to be able to.
