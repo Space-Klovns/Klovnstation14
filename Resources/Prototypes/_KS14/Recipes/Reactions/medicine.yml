@@ -1,0 +1,16 @@
+- type: reaction
+  id: PenthriteExplosion
+  impact: High
+  priority: 20
+  reactants:
+    Penthrite:
+      amount: 1
+    Epinephrine:
+      amount: 1
+  effects:
+  - !type:Explosion
+    explosionType: Default
+    intensityPerUnit: 1
+    maxTotalIntensity: 100
+    intensitySlope: 4
+    maxIntensity: 10

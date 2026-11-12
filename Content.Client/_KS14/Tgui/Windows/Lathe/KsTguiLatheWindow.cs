@@ -63,6 +63,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     public event Action<string, int>? RecipeQueueAction;
+    public event Action<string>? KsRecipeRequestAction;
     public event Action<int>? QueueDeleteAction;
     public event Action<int>? QueueMoveUpAction;
     public event Action<int>? QueueMoveDownAction;
@@ -380,6 +381,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             {
                 row = new KsTguiLatheRecipeRow(_lathe);
                 row.OnBuild += (recipeId, amount) => RecipeQueueAction?.Invoke(recipeId, amount);
+                row.OnRequest += recipeId => KsRecipeRequestAction?.Invoke(recipeId);
                 _recipeList.AddChild(row);
             }
             else

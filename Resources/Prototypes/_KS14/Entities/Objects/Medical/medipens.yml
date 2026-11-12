@@ -1,0 +1,86 @@
+# tg's mining medipens, which work properly only where the air is thin. tg's chemicals that have no match here are
+#   swapped for the nearest one: salicylic acid for bicaridine, oxandrolone for dermaline, salbutamol for dexalin plus.
+
+- type: entity
+  parent: ChemicalMedipen
+  id: KsSurvivalMedipen
+  name: survival emergency medipen
+  description: A medipen for surviving in harsh environments. Heals most common damage and keeps the cold out. Its low-pressure gauge has to be bled by hand anywhere the air is thick, and then only half the dose gets in.
+  components:
+  - type: Item
+    inhandVisuals:
+      left:
+      - state: base-needle-inhand-left
+      - state: base-colorA-inhand-left
+        color: "#d43a3a"
+      - state: base-colorB-inhand-left
+      right:
+      - state: base-needle-inhand-right
+      - state: base-colorA-inhand-right
+        color: "#d43a3a"
+      - state: base-colorB-inhand-right
+  - type: Sprite
+    sprite: _KS14/Objects/Specific/Medical/medipen.rsi
+    layers:
+    - state: stimpen
+      map: [ "enum.SolutionContainerLayers.Fill" ]
+  - type: SolutionContainerVisuals
+    maxFillLevels: 1
+    changeColor: false
+    emptySpriteName: stimpen_empty
+  - type: Solution
+    solution:
+      maxVol: 30
+      reagents:
+      - ReagentId: Bicaridine
+        Quantity: 10
+      - ReagentId: Dermaline
+        Quantity: 10
+      - ReagentId: Leporazine
+        Quantity: 4
+  - type: KsPressureGatedInjector
+
+- type: entity
+  parent: ChemicalMedipen
+  id: KsLuxuryMedipen
+  name: luxury medipen
+  description: Bluespace lets this medipen hold twice what a survival one does, of rarer and stronger chemicals, penthrite among them, for the very worst places a salvager goes. Like a survival medipen, it works properly only where the air is thin. Do not mix with epinephrine.
+  components:
+  - type: Item
+    inhandVisuals:
+      left:
+      - state: base-needle-inhand-left
+      - state: base-colorA-inhand-left
+        color: "#2a8fe0"
+      - state: base-colorB-inhand-left
+      right:
+      - state: base-needle-inhand-right
+      - state: base-colorA-inhand-right
+        color: "#2a8fe0"
+      - state: base-colorB-inhand-right
+  - type: Sprite
+    sprite: _KS14/Objects/Specific/Medical/medipen.rsi
+    layers:
+    - state: luxpen
+      map: [ "enum.SolutionContainerLayers.Fill" ]
+  - type: SolutionContainerVisuals
+    maxFillLevels: 1
+    changeColor: false
+    emptySpriteName: luxpen_empty
+  - type: Solution
+    solution:
+      maxVol: 60
+      reagents:
+      - ReagentId: DexalinPlus
+        Quantity: 10
+      - ReagentId: Dermaline
+        Quantity: 10
+      - ReagentId: Bicaridine
+        Quantity: 10
+      - ReagentId: Omnizine
+        Quantity: 10
+      - ReagentId: Leporazine
+        Quantity: 10
+      - ReagentId: Penthrite
+        Quantity: 10
+  - type: KsPressureGatedInjector

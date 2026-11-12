@@ -27,6 +27,7 @@ public sealed partial class LatheMenu : FancyWindow
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     public event Action<string, int>? RecipeQueueAction;
+    public event Action<string>? KsRecipeRequestAction; // KS14
     public event Action<int>? QueueDeleteAction;
     public event Action<int>? QueueMoveUpAction;
     public event Action<int>? QueueMoveDownAction;
@@ -150,6 +151,7 @@ public sealed partial class LatheMenu : FancyWindow
                         amount = 1;
                     RecipeQueueAction?.Invoke(s, amount);
                 };
+                control.KsOnRequestPressed += s => KsRecipeRequestAction?.Invoke(s); // KS14
                 RecipeList.AddChild(control);
             }
             else

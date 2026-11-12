@@ -1,0 +1,81 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      Title="{Loc 'ks-spam-window-title'}"
+                      MinWidth="800"
+                      Resizable="False">
+    <BoxContainer Orientation="Vertical">
+        <!-- Logged out: the prompt, then the boot sequence once Log in is pressed -->
+        <BoxContainer Name="LoginBox" Orientation="Vertical" Margin="20 60 20 60" SeparationOverride="10">
+            <Label Name="LoginStatusLabel" Text="{Loc 'ks-spam-login-prompt'}" HorizontalAlignment="Center"/>
+            <ProgressBar Name="LoginProgressBar" MinValue="0" MaxValue="1" MinHeight="12" MinWidth="320"
+                         HorizontalAlignment="Center" Visible="False"/>
+            <Button Name="LoginButton" Text="{Loc 'ks-spam-login-button'}" HorizontalAlignment="Center" MinWidth="160"/>
+        </BoxContainer>
+
+        <BoxContainer Name="MainBox" Orientation="Vertical" Margin="10 6 10 10" SeparationOverride="6" Visible="False">
+            <!-- Top right corner: out -->
+            <Button Name="LogoutButton" Text="{Loc 'ks-spam-logout-button'}" StyleClasses="negative" HorizontalAlignment="Right"/>
+
+            <BoxContainer Orientation="Horizontal" SeparationOverride="10">
+                <!-- Left: what the silo holds, with what the lathes have asked for and what is running low marked -->
+                <ksTgui:KsSectionPanel MinWidth="250" BaronColor="#1B1B1E">
+                    <BoxContainer Orientation="Vertical" Margin="8">
+                        <Label Text="{Loc 'ks-spam-silo-header'}" StyleClasses="LabelHeading"/>
+                        <Label Name="NoSiloLabel" Text="{Loc 'ks-spam-silo-empty'}" StyleClasses="LabelWeak" Visible="False"/>
+                        <BoxContainer Name="MaterialContainer" Orientation="Vertical" SeparationOverride="2" Margin="0 6 0 0"/>
+                    </BoxContainer>
+                </ksTgui:KsSectionPanel>
+
+                <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="10">
+                    <!-- Top right: the tasks, in a row that scrolls sideways -->
+                    <ksTgui:KsSectionPanel BaronColor="#1B1B1E">
+                        <BoxContainer Orientation="Vertical" Margin="8">
+                            <BoxContainer Orientation="Horizontal">
+                                <Label Text="{Loc 'ks-spam-tasks-header'}" StyleClasses="LabelHeading" HorizontalExpand="True"/>
+                                <Label Name="TrackedLabel" StyleClasses="LabelWeak" VerticalAlignment="Center"/>
+                            </BoxContainer>
+                            <Label Name="NoTasksLabel" Text="{Loc 'ks-spam-tasks-empty'}" StyleClasses="LabelWeak" Visible="False"/>
+                            <!-- Its height is the cards', its width is capped so the window doesn't grow to hold them all -->
+                            <ScrollContainer Name="TaskScroll" HScrollEnabled="True" VScrollEnabled="False"
+                                             ReturnMeasure="True" MaxWidth="510" Margin="0 6 0 0">
+                                <BoxContainer Name="TaskContainer" Orientation="Horizontal" SeparationOverride="8"/>
+                            </ScrollContainer>
+                        </BoxContainer>
+                    </ksTgui:KsSectionPanel>
+
+                    <!-- Bottom right: the salvager, their rank and what they can spend -->
+                    <ksTgui:KsSectionPanel BaronColor="#1B1B1E">
+                        <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="6">
+                            <BoxContainer Orientation="Horizontal" SeparationOverride="12">
+                                <SpriteView Name="OwnerView" SetSize="96 96" Scale="2 2" OverrideDirection="South"/>
+                                <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="2">
+                                    <Label Name="OwnerNameLabel" StyleClasses="LabelHeading"/>
+                                    <Label Name="JobLabel" StyleClasses="LabelWeak"/>
+                                    <Label Name="RankLabel"/>
+                                    <ProgressBar Name="ReputationBar" MinValue="0" MaxValue="1" MinHeight="10"/>
+                                    <Label Name="ReputationLabel"/>
+                                </BoxContainer>
+                            </BoxContainer>
+                            <BoxContainer Orientation="Horizontal" SeparationOverride="12">
+                                <Label Name="PointsLabel" HorizontalExpand="True" VerticalAlignment="Center"/>
+                                <Button Name="OrderButton" Text="{Loc 'ks-spam-order-open-button'}" VerticalAlignment="Center" MinWidth="170"/>
+                            </BoxContainer>
+                            <RichTextLabel Name="NextUnlocksLabel" MaxWidth="500"/>
+                        </BoxContainer>
+                    </ksTgui:KsSectionPanel>
+                </BoxContainer>
+            </BoxContainer>
+        </BoxContainer>
+
+        <!-- Footer -->
+        <BoxContainer Orientation="Vertical">
+            <PanelContainer StyleClasses="LowDivider"/>
+            <BoxContainer Orientation="Horizontal" Margin="10 2 5 0" VerticalAlignment="Bottom">
+                <TextureRect StyleClasses="NTLogoDark" Stretch="KeepAspectCentered"
+                             VerticalAlignment="Center" SetSize="19 19" Margin="0 0 5 0"/>
+                <Label Text="{Loc 'ks-spam-footer'}" StyleClasses="WindowFooterText" HorizontalExpand="True"/>
+            </BoxContainer>
+        </BoxContainer>
+    </BoxContainer>
+</controls:FancyWindow>

@@ -17,7 +17,7 @@ public sealed partial class SalvageJobBoardConsoleComponent : Component
     /// A label that this computer can print out.
     /// </summary>
     [DataField]
-    public EntProtoId LabelEntity = "PaperSalvageJobLabel";
+    public EntProtoId LabelEntity = "PaperCargoInvoice"; // KS14: "PaperSalvageJobLabel" -> "PaperCargoInvoice", the label went with the job board
 
     /// <summary>
     /// The sound made when printing occurs

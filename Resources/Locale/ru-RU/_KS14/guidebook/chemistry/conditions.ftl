@@ -9,3 +9,6 @@ reagent-effect-condition-guidebook-blood-reagent-threshold =
                *[other] есть между { NATURALFIXED($min, 2) }u и { NATURALFIXED($max, 2) }u из { $reagent }
             }
     }
+
+reagent-effect-condition-guidebook-total-damage =
+    цель получила не менее { NATURALFIXED($min, 2) } урона

@@ -1,3 +1,4 @@
+using Content.Client._KS14.SPAM;
 using Content.Client._KS14.Tgui.Controls;
 using Content.Client._KS14.Tgui.Tooltips;
 using Content.Client._KS14.Tgui.Windows.Materials;
@@ -85,6 +86,9 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
         _titleButton.DrawModeRefreshed += () => RefreshLook(_titleButton);
         AddChild(_titleButton);
 
+        // Not tg: a right click asks the salvagers for what the recipe is short of.
+        KsLatheRequestPopup.Attach(_titleButton, () => !_canProduce, () => OnRequest?.Invoke(_recipeId));
+
         _fiveButton = MakeAmountButton(5);
         _tenButton = MakeAmountButton(10);
 
@@ -154,6 +158,7 @@ public sealed class KsTguiLatheRecipeRow : BoxContainer
     ///     The recipe and how many to make.
     /// </summary>
     public event Action<string, int>? OnBuild;
+    public event Action<string>? OnRequest;
 
     private KsTguiButton MakeAmountButton(int amount)
     {

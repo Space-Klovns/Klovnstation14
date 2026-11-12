@@ -350,8 +350,10 @@
     # Ore
     - id: WallRockSalt
       prob: 0.6
-    - id: WallRockCoal
-      prob: 0.6
+    # KS14 start: coal is no longer mined
+    #- id: WallRockCoal
+    #  prob: 0.6
+    # KS14 end
     - id: WallRockTin
       prob: 0.4
     - id: WallMining

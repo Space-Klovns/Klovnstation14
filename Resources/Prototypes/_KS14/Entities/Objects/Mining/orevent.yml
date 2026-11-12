@@ -248,7 +248,7 @@
   resourceCountRange: 2,3
   possibleResourceTypes:
   - SteelOre
-  - Coal
+  # - Coal # KS14: coal is no longer mined
   - PlasmaOre
   - GoldOre
 

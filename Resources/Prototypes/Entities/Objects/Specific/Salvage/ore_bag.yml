@@ -27,6 +27,29 @@
         - ArtifactFragment
         - Ore
   - type: Dumpable
+  # KS14 start: a S.P.A.M. tablet clips on, and counts the ore that goes in for its tasks
+  - type: KsSPAMOreBag
+  - type: ItemSlots
+    slots:
+      ks_spam:
+        name: ks-spam-ore-bag-slot
+        whitelist:
+          components:
+          - KsSPAM
+  - type: ContainerContainer
+    containers:
+      storagebase: !type:Container
+        ents: []
+      ks_spam: !type:ContainerSlot
+  - type: ItemMapper # the attached tablet shows on the bag, under the magnet
+    sprite: _KS14/Objects/Specific/Mining/ore_bag_spam.rsi
+    containerWhitelist: [ ks_spam ]
+    mapLayers:
+      spam:
+        whitelist:
+          components:
+          - KsSPAM
+  # KS14 end
   # WHITE DREAM EDIT START - KS14 port
   - type: ItemToggle
     soundActivate:

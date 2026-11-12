@@ -37,6 +37,7 @@ namespace Content.Client.Lathe.UI
             {
                 SendMessage(new LatheQueueRecipeMessage(recipe, amount));
             };
+            _menu.KsRecipeRequestAction += recipe => SendMessage(new Content.Shared._KS14.SPAM.KsLatheRequestMaterialsMessage(recipe)); // KS14
             _menu.QueueDeleteAction += index => SendMessage(new LatheDeleteRequestMessage(index));
             _menu.QueueMoveUpAction += index => SendMessage(new LatheMoveRequestMessage(index, -1));
             _menu.QueueMoveDownAction += index => SendMessage(new LatheMoveRequestMessage(index, 1));

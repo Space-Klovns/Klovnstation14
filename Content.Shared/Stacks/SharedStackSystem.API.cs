@@ -68,6 +68,11 @@ public abstract partial class SharedStackSystem
         if (amount > 0)
             transferred = Math.Min(transferred, amount.Value);
 
+        // KS14 start: let whatever tracks units of a stack follow them to the other stack
+        var transferEvent = new Content.Shared._KS14.Stacks.KsStackTransferEvent(donor.Owner, recipient.Owner, transferred);
+        RaiseLocalEvent(recipient.Owner, ref transferEvent);
+        // KS14 end
+
         SetCount(donor, donor.Comp.Count - transferred);
         SetCount(recipient, recipient.Comp.Count + transferred);
         return true;

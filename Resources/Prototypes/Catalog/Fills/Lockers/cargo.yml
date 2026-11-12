@@ -24,6 +24,7 @@
     - id: WeaponPlasmaCutter # KS14
     - id: MineralScanner # KS14
     - id: ClothingOuterExplorerSuit # KS14
+    - id: KsSPAM # KS14
     # KS14: Removed slop plushie
 
 - type: entity

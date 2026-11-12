@@ -199,16 +199,18 @@
     prototype: ComputerCargoBounty
   - type: StaticPrice
 
-- type: entity
-  parent: BaseComputerCircuitboard
-  id: SalvageJobBoardComputerCircuitboard
-  name: salvage job board computer board
-  description: A computer printed circuit board for a salvage job board computer.
-  components:
-  - type: Sprite
-    state: cpu_supply
-  - type: ComputerBoard
-    prototype: ComputerSalvageJobBoard
+# KS14 start: the S.P.A.M. tablet replaces the salvage job board
+#- type: entity
+#  parent: BaseComputerCircuitboard
+#  id: SalvageJobBoardComputerCircuitboard
+#  name: salvage job board computer board
+#  description: A computer printed circuit board for a salvage job board computer.
+#  components:
+#  - type: Sprite
+#    state: cpu_supply
+#  - type: ComputerBoard
+#    prototype: ComputerSalvageJobBoard
+# KS14 end
 
 - type: entity
   parent: BaseComputerCircuitboard

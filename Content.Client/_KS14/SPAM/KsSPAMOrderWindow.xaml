@@ -1,0 +1,47 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:ksTgui="clr-namespace:Content.Client._KS14.Tgui.Controls"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      Title="{Loc 'ks-spam-order-window-title'}"
+                      SetSize="600 520"
+                      MinSize="500 360">
+    <BoxContainer Orientation="Vertical" Margin="10" SeparationOverride="6">
+        <!-- tgstation's two tabs: the shop, and the checkout list -->
+        <BoxContainer Orientation="Horizontal" SeparationOverride="4">
+            <Button Name="CatalogueTabButton" Text="{Loc 'ks-spam-order-tab-catalogue'}" ToggleMode="True" Pressed="True" StyleClasses="ButtonSquare"/>
+            <Button Name="CartTabButton" ToggleMode="True" StyleClasses="ButtonSquare"/>
+            <Control HorizontalExpand="True"/>
+            <Label Name="PointsLabel" VerticalAlignment="Center"/>
+        </BoxContainer>
+
+        <BoxContainer Name="CatalogueBox" Orientation="Vertical" VerticalExpand="True" SeparationOverride="6">
+            <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+                <BoxContainer Name="CategoryContainer" Orientation="Horizontal" SeparationOverride="4"/>
+                <LineEdit Name="SearchEdit" PlaceHolder="{Loc 'ks-spam-order-search'}" HorizontalExpand="True"/>
+            </BoxContainer>
+
+            <!-- The list takes whatever room the window has -->
+            <ksTgui:KsSectionPanel VerticalExpand="True" BaronColor="#1B1B1E">
+                <ScrollContainer HScrollEnabled="False" VerticalExpand="True" HorizontalExpand="True">
+                    <BoxContainer Name="ProductContainer" Orientation="Vertical" SeparationOverride="2" Margin="6"/>
+                </ScrollContainer>
+            </ksTgui:KsSectionPanel>
+        </BoxContainer>
+
+        <BoxContainer Name="CartBox" Orientation="Vertical" VerticalExpand="True" SeparationOverride="6" Visible="False">
+            <ksTgui:KsSectionPanel VerticalExpand="True" BaronColor="#1B1B1E">
+                <ScrollContainer HScrollEnabled="False" VerticalExpand="True" HorizontalExpand="True">
+                    <BoxContainer Orientation="Vertical" Margin="6">
+                        <Label Name="EmptyCartLabel" Text="{Loc 'ks-spam-order-cart-empty'}" StyleClasses="LabelWeak"/>
+                        <BoxContainer Name="CartContainer" Orientation="Vertical" SeparationOverride="2"/>
+                    </BoxContainer>
+                </ScrollContainer>
+            </ksTgui:KsSectionPanel>
+
+            <BoxContainer Orientation="Horizontal" SeparationOverride="12">
+                <Label Name="TotalLabel" HorizontalExpand="True" VerticalAlignment="Center"/>
+                <Button Name="ClearButton" Text="{Loc 'ks-spam-order-clear'}" VerticalAlignment="Center"/>
+                <Button Name="OrderButton" VerticalAlignment="Center" MinWidth="190"/>
+            </BoxContainer>
+        </BoxContainer>
+    </BoxContainer>
+</controls:FancyWindow>

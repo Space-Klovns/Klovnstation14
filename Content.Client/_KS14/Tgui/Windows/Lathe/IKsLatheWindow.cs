@@ -12,6 +12,11 @@ public interface IKsLatheWindow
 {
     event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     event Action<string, int>? RecipeQueueAction;
+
+    /// <summary>
+    ///     Ask the salvagers for what the recipe is short of.
+    /// </summary>
+    event Action<string>? KsRecipeRequestAction;
     event Action<int>? QueueDeleteAction;
     event Action<int>? QueueMoveUpAction;
     event Action<int>? QueueMoveDownAction;

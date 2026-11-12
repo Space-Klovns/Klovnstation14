@@ -1,0 +1,14 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      MinWidth="320"
+                      Resizable="False">
+    <BoxContainer Orientation="Vertical" Margin="10" SeparationOverride="6">
+        <!-- The plaques are made in code, as the task cards make theirs -->
+        <Control Name="IconHost"/>
+        <Control Name="TextHost"/>
+        <BoxContainer Orientation="Horizontal" SeparationOverride="6">
+            <Button Name="TrackButton" HorizontalExpand="True"/>
+            <Button Name="DropButton" StyleClasses="negative" MinWidth="40" ToolTip="{Loc 'ks-spam-task-drop-tooltip'}"/>
+        </BoxContainer>
+    </BoxContainer>
+</controls:FancyWindow>

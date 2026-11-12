@@ -43,7 +43,7 @@
   id: MeteorSpawnAsteroidWallTable
   weights:
     MeteorRock: 10
-    MeteorRockCoal: 5
+    # MeteorRockCoal: 5 # KS14: coal is no longer mined
     MeteorRockQuartz: 5
     MeteorRockTin: 5
     MeteorRockSilver: 2
