@@ -108,11 +108,15 @@ public sealed class KsNpcCalloutTest : GameTest
     }
 
     /// <summary>
-    ///     A squadmate that sees one go down says so by its callsign, a moment later, aloud. Going critical and then dying is
-    ///         one callout, not two.
+    ///     A squadmate that sees one go down - critical, dead outright, or gibbed - says so by its callsign, a moment later,
+    ///         aloud. Once only until it is back on its feet: going critical and then dying is one callout, but one that gets up
+    ///         and goes down again is called out again.
     /// </summary>
-    [Test]
-    public async Task TestAManDownIsCalledOutByCallsign()
+    [TestCase("crit then dead")]
+    [TestCase("dead")]
+    [TestCase("gibbed")]
+    [TestCase("revived")]
+    public async Task TestAManDownIsCalledOutByCallsign(string how)
     {
         var map = await Pair.CreateTestMap();
         EntityUid speakerUid = default, downedUid = default;
@@ -133,10 +137,22 @@ public sealed class KsNpcCalloutTest : GameTest
             Assert.That(squadSystem.TryGetSquad(speakerUid, out var squad) && squadSystem.TryGetSquad(downedUid, out var otherSquad) &&
                 squad.Value.Owner == otherSquad.Value.Owner, "the test needs the two in one squad");
 
-            var blunt = Server.ResolveDependency<IPrototypeManager>().Index(BluntDamage);
-            var damageableSystem = SEntMan.System<Content.Shared.Damage.Systems.DamageableSystem>();
-            damageableSystem.SetDamage(downedUid, new Content.Shared.Damage.DamageSpecifier(blunt, 150));
-            damageableSystem.SetDamage(downedUid, new Content.Shared.Damage.DamageSpecifier(blunt, 250));
+            switch (how)
+            {
+                case "crit then dead":
+                    SetDamage(downedUid, 150);
+                    SetDamage(downedUid, 250);
+                    break;
+                case "dead":
+                    SetDamage(downedUid, 250);
+                    break;
+                case "gibbed":
+                    SEntMan.System<Content.Shared.Gibbing.GibbingSystem>().Gib(downedUid);
+                    break;
+                case "revived":
+                    SetDamage(downedUid, 150);
+                    break;
+            }
         });
 
         await Server.WaitAssertion(() => Assert.That(CountClips(speakerUid), Is.Zero, "not straight away"));
@@ -147,6 +163,36 @@ public sealed class KsNpcCalloutTest : GameTest
             Assert.That(CountClips(speakerUid, "friendly_down_07_n"), Is.EqualTo(1), "Titan 1 down, said once");
             Assert.That(CountClips(speakerUid), Is.EqualTo(1));
         });
+
+        if (how != "revived")
+            return;
+
+        // Down again while still down: nothing. Back on its feet, then down again: called out again.
+        await Server.WaitPost(() => SetDamage(downedUid, 160));
+        for (var i = 0; i < 40; i++)
+        {
+            await Pair.RunTicksSync(15);
+            var playing = 0;
+            await Server.WaitPost(() => playing = CountClips(speakerUid));
+            if (playing == 0)
+                break;
+        }
+
+        await Server.WaitAssertion(() => Assert.That(CountClips(speakerUid), Is.Zero, "still down: not said again"));
+
+        await Server.WaitPost(() => SetDamage(downedUid, 0));
+        await Pair.RunTicksSync(90);
+        await Server.WaitPost(() => SetDamage(downedUid, 150));
+        await Pair.RunTicksSync(40);
+
+        await Server.WaitAssertion(() =>
+            Assert.That(CountClips(speakerUid, "friendly_down_07_n"), Is.EqualTo(1), "up and down again: said again"));
+    }
+
+    private void SetDamage(EntityUid uid, float damage)
+    {
+        var blunt = Server.ResolveDependency<IPrototypeManager>().Index(BluntDamage);
+        SEntMan.System<Content.Shared.Damage.Systems.DamageableSystem>().SetDamage(uid, new Content.Shared.Damage.DamageSpecifier(blunt, damage));
     }
 
     /// <summary>

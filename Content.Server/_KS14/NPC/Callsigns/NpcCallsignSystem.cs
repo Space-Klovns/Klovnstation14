@@ -1,7 +1,9 @@
 using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Voices;
+using Content.Shared.GameTicking;
 using Content.Shared.Mobs.Systems;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -9,9 +11,10 @@ using Robust.Shared.Timing;
 namespace Content.Server._KS14.NPC.Callsigns;
 
 /// <summary>
-///     Hands out callsigns (<see cref="NpcCallsignComponent"/>), and has a squadmate call out the one going down: the
-///         nearest that saw it, a moment later, by its callsign, or plainly for one with none. Only in a voice that calls
-///         out men down (<see cref="NpcCallout.ManDown"/>); one nobody saw go down goes unsaid.
+///     Hands out callsigns (<see cref="NpcCallsignComponent"/>), and has a squadmate call out the one going down - critical,
+///         dead outright, or gibbed: the nearest that saw it, a moment later, by its callsign, or plainly for one with none.
+///         Once only until it is back on its feet: going critical and then dying, or being gibbed, is one man down. Only in a
+///         voice that calls out men down (<see cref="NpcCallout.ManDown"/>); one nobody saw go down goes unsaid.
 /// </summary>
 public sealed partial class NpcCallsignSystem : EntitySystem
 {
@@ -37,13 +40,22 @@ public sealed partial class NpcCallsignSystem : EntitySystem
     public static readonly TimeSpan CalloutDelay = TimeSpan.FromSeconds(0.6);
 
     /// <summary>
-    ///     How long one called out stays called out: going critical and then dying is one man down, not two.
+    ///     How often those called out are looked at again, to forget the ones back on their feet, or gone.
     /// </summary>
-    private static readonly TimeSpan CalledOutMemory = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan ForgetInterval = TimeSpan.FromSeconds(1);
 
-    private readonly List<(EntityUid SpeakerUid, EntityUid DownedUid, TimeSpan At)> _pending = new();
-    private readonly Dictionary<EntityUid, TimeSpan> _calledOut = new();
+    /// <summary>
+    ///     Callouts to come: who says it, and the line, worked out as it went down: a gibbed one is gone by then.
+    /// </summary>
+    private readonly List<(EntityUid SpeakerUid, LocId? Line, TimeSpan At)> _pending = new();
+
+    /// <summary>
+    ///     Those called out down, until they are alive again.
+    /// </summary>
+    private readonly HashSet<EntityUid> _calledOut = new();
+
     private readonly List<EntityUid> _forget = new();
+    private TimeSpan _nextForget;
 
     public override void Initialize()
     {
@@ -51,6 +63,18 @@ public sealed partial class NpcCallsignSystem : EntitySystem
 
         SubscribeLocalEvent<NpcCallsignComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<NpcSquadMemberDownedEvent>(OnMemberDowned);
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
+    }
+
+    /// <summary>
+    ///     Nothing from the round before carries over: whoever it was about is gone.
+    /// </summary>
+    private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)
+    {
+        _pending.Clear();
+        _calledOut.Clear();
+        _forget.Clear();
+        _nextForget = TimeSpan.Zero;
     }
 
     /// <summary>
@@ -102,10 +126,7 @@ public sealed partial class NpcCallsignSystem : EntitySystem
 
     private void OnMemberDowned(ref NpcSquadMemberDownedEvent args)
     {
-        var now = _gameTiming.CurTime;
-
-        if (_calledOut.TryGetValue(args.MemberUid, out var calledOutAt) && now - calledOutAt < CalledOutMemory ||
-            !_squadQuery.TryComp(args.SquadUid, out var squadComponent))
+        if (_calledOut.Contains(args.MemberUid) || !_squadQuery.TryComp(args.SquadUid, out var squadComponent))
             return;
 
         var downedCoordinates = _transformSystem.GetMapCoordinates(args.MemberUid);
@@ -134,8 +155,9 @@ public sealed partial class NpcCallsignSystem : EntitySystem
         if (speakerUid is not { } chosenUid)
             return;
 
-        _calledOut[args.MemberUid] = now;
-        _pending.Add((chosenUid, args.MemberUid, now + CalloutDelay));
+        _calledOut.Add(args.MemberUid);
+        LocId? line = TryGetCallsign(args.MemberUid, out var callsign) ? (LocId?) callsign.DownLine : null;
+        _pending.Add((chosenUid, line, _gameTiming.CurTime + CalloutDelay));
     }
 
     public override void Update(float frameTime)
@@ -149,7 +171,7 @@ public sealed partial class NpcCallsignSystem : EntitySystem
 
         for (var i = _pending.Count - 1; i >= 0; i--)
         {
-            var (speakerUid, downedUid, at) = _pending[i];
+            var (speakerUid, line, at) = _pending[i];
             if (now < at)
                 continue;
 
@@ -158,10 +180,10 @@ public sealed partial class NpcCallsignSystem : EntitySystem
             if (TerminatingOrDeleted(speakerUid) || !_mobStateSystem.IsAlive(speakerUid))
                 continue;
 
-            if (TryGetCallsign(downedUid, out var callsign))
+            if (line is { } downLine)
             {
                 if (_npcVoiceSystem.MakesCallout(speakerUid, NpcCallout.ManDown))
-                    _npcVoiceSystem.SpeakLine(speakerUid, callsign.DownLine);
+                    _npcVoiceSystem.SpeakLine(speakerUid, downLine);
             }
             else
             {
@@ -169,10 +191,16 @@ public sealed partial class NpcCallsignSystem : EntitySystem
             }
         }
 
+        if (now < _nextForget)
+            return;
+
+        _nextForget = now + ForgetInterval;
         _forget.Clear();
-        foreach (var (downedUid, calledOutAt) in _calledOut)
+
+        // Back on its feet, it can go down again; gone, there is nothing to remember.
+        foreach (var downedUid in _calledOut)
         {
-            if (now - calledOutAt >= CalledOutMemory)
+            if (TerminatingOrDeleted(downedUid) || _mobStateSystem.IsAlive(downedUid))
                 _forget.Add(downedUid);
         }
 
