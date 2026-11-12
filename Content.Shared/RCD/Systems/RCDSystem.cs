@@ -378,6 +378,8 @@ public sealed partial class RCDSystem : EntitySystem
 
         #endregion
 
+        KsApplyInstant(component, prototype, args.Target, user, ref delay, ref effectPrototype); // KS14: instant RCDs
+
         // Try to start the do after
         var effect = Spawn(effectPrototype, _mapSystem.ToCenterCoordinates(tile, mapGrid));
         var ev = new RCDDoAfterEvent(
@@ -556,6 +558,9 @@ public sealed partial class RCDSystem : EntitySystem
     public bool IsRCDOperationStillValid(EntityUid uid, RCDComponent component, EntityUid gridUid, MapGridComponent mapGrid, TileRef tile, Vector2i position, Direction direction, EntityUid? target, EntityUid user, bool popMsgs = true)
     {
         var prototype = ProtoMan.Index(component.ProtoId);
+
+        if (KsIsInNoBuildZone(uid, gridUid, mapGrid, position, user, popMsgs)) // KS14: no-build zones, such as spawn areas
+            return false;
 
         // Check that the RCD has enough ammo to get the job done
         var charges = _sharedCharges.GetCurrentCharges(uid);
@@ -914,6 +919,8 @@ public sealed partial class RCDSystem : EntitySystem
 
                 var ent = Spawn(proto, mapCoords, rotation: rotation);
                 // Starlight edit End: RPD
+
+                KsMarkBuilt(component, ent, user); // KS14: instant RCDs remember who built what
 
                 switch (prototype.Rotation)
                 {

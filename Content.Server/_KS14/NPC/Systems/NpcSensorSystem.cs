@@ -16,7 +16,7 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
     [Dependency] private EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
 
-    private const string DisturbanceCoordinatesSensorKey = "__Sensor__Disturbance.TargetCoordinates";
+    public const string DisturbanceCoordinatesSensorKey = "__Sensor__Disturbance.TargetCoordinates";
 
     [SubscribeLocalEvent]
     private void OnTrigger(Entity<NpcDisturbOnTriggerComponent> entity, ref TriggerEvent args)

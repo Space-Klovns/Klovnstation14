@@ -467,7 +467,7 @@ public sealed partial class PathfindingSystem
                         continue;
                     }
 
-                    tileEntities.Add(GetTileEntity(ent, fixtures, xform));
+                    tileEntities.Add(GetTileEntity(ent, fixtures, xform, tilePos));
                 }
                 // KS14 end
                 // KS14: replaced above
@@ -532,9 +532,11 @@ public sealed partial class PathfindingSystem
                                 // Do an AABB check first as it's probably faster, then do an actual point check.
                                 var intersects = false;
 
+                                // Something thin enough to miss every point is tested against the point's cell
+                                //      instead: see FitsBetweenPoints.
                                 foreach (var proxy in fixture.Proxies)
                                 {
-                                    if (!proxy.AABB.Contains(localPos))
+                                    if (!(tileEntity.MissesEveryPoint ? OverlapsPointCell(proxy.AABB, localPos) : proxy.AABB.Contains(localPos)))
                                         continue;
 
                                     intersects = true;
@@ -542,6 +544,7 @@ public sealed partial class PathfindingSystem
                                 }
 
                                 if (!intersects ||
+                                    !tileEntity.MissesEveryPoint &&
                                     !_fixtures.TestPoint(fixture.Shape, tileEntity.LocalTransform, localPos))
                                 {
                                     continue;

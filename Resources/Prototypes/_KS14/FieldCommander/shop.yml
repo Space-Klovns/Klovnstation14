@@ -1,0 +1,97 @@
+# Where field commander defenders spend the points they earn killing the commander's units.
+# Players already spawn with armour, medical supplies and endless ammunition, so this sells only what changes a fight.
+
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: KsFieldCommanderShop
+  name: requisitions terminal
+  suffix: Field Commander
+  description: Field Operations' gilded supply uplink. Confirmed kills are credited here, and spent on ordnance, turrets and reinforcements.
+  components:
+  # No Damageable: like every ColMarTech vendor, nothing can break it.
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/requisitions_terminal.rsi
+    layers:
+    - state: "off"
+      map: [ "enum.VendingMachineVisualLayers.Base" ]
+    - state: "base"
+      map: [ "enum.VendingMachineVisualLayers.BaseUnshaded" ]
+    - state: normal-unshaded
+      shader: unshaded
+  - type: PointLight
+    radius: 1.8
+    energy: 1.2
+    color: "#E8B04A"
+  - type: MapText
+    locText: ks-fieldcommander-shop-maptext
+    color: "#F2CF6B"
+    fontSize: 6
+    offset: 0,-11
+  - type: CMAutomatedVendor
+    pointsType: KsFieldCommander
+    sections:
+    - name: Fire Support
+      entries:
+      - id: KsFlatpackBallisticTurretNanotrasenRequisition
+        points: 200
+      - id: KsFlareSupplyPodRequisitionResupply
+        points: 250
+      - id: KsFlareSupplyPodRequisitionFieldSupport
+        points: 450
+      - id: KsFlatpackBallisticTurretNanotrasenHeavy
+        points: 500
+    - name: Explosives
+      entries:
+      - id: GrenadeStinger
+        points: 40
+      - id: ExGrenade
+        points: 60
+      - id: KsScenarioNanoplantSeismicChargeShort
+        points: 120
+      - id: KsWeaponLauncherRocketAt4FieldCommander
+        points: 350
+
+# Flares that call a Nanotrasen requisition pod down on themselves, the way the airstrike flare calls a missile.
+
+- type: entity
+  abstract: true
+  parent: KsFlareSupplyPodMissile
+  id: KsFlareSupplyPodNanotrasenBase
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/flare.rsi
+    layers:
+    - map: [ enum.ExpendableLightVisualLayers.Base ]
+      state: flare_base
+      color: "#3A7BFF"
+    - map: [ enum.ExpendableLightVisualLayers.Overlay ]
+      state: flare_unlit
+      color: "#3A7BFF"
+  - type: PointLight
+    enabled: false
+    color: "#3A7BFF"
+    radius: 2.0
+    energy: 8
+    netsync: false
+
+- type: entity
+  parent: KsFlareSupplyPodNanotrasenBase
+  id: KsFlareSupplyPodRequisitionResupply
+  name: resupply flare
+  description: Calls a Nanotrasen resupply pod, packed with grenades, a charge, a turret and a rocket, down to the location of the flare.
+  components:
+  - type: SpawnOnTrigger
+    keysIn:
+    - timer
+    proto: KsFieldCommanderRequisitionResupply
+
+- type: entity
+  parent: KsFlareSupplyPodNanotrasenBase
+  id: KsFlareSupplyPodRequisitionFieldSupport
+  name: field support flare
+  description: Calls a squad of Nanotrasen paramilitary operatives down to the location of the flare, by drop pod.
+  components:
+  - type: SpawnOnTrigger
+    keysIn:
+    - timer
+    proto: KsFieldCommanderRequisitionFieldSupport

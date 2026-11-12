@@ -1,0 +1,14 @@
+# Put up by the field engineer RCD: already bolted down and lit, and never runs its cell flat.
+- type: entity
+  parent: Floodlight
+  id: KsFloodlightField
+  suffix: Anchored, Lit
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics # what anchoring it at spawn leaves it as; its fixture has no layer, so nothing hits it anyway
+    bodyType: Static
+    canCollide: false
+  - type: HandheldLight
+    wattage: 0
+  - type: KsHandheldLightStartsOn

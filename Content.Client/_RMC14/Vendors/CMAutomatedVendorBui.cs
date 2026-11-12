@@ -237,7 +237,7 @@ public sealed partial class CMAutomatedVendorBui : BoundUserInterface
             }
         }
 
-        _window.PointsLabel.Text = anyEntryWithPoints ? $"Points Remaining: {userPoints}" : string.Empty;
+        _window.PointsLabel.Text = anyEntryWithPoints ? Loc.GetString("ks-cm-vendor-points-remaining", ("points", userPoints)) /* KS14: localised, was $"Points Remaining: {userPoints}" */ : string.Empty;
     }
 
     protected override void ReceiveMessage(BoundUserInterfaceMessage message)

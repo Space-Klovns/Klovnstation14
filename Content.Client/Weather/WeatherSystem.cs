@@ -143,20 +143,7 @@ public sealed partial class WeatherSystem : SharedWeatherSystem
                 var rest = (MathF.Min(distance, maxX) - ksXCutoff) / (maxX - ksXCutoff);
                 alpha = float.Lerp(alpha, 0f, rest);
             }
-
-            if (alpha == 1f &&
-                playerXform.MapUid is { } mapUid)
-            {
-                if (weather.KsRainDropletMax > 0)
-                {
-                    var wetMapComponent = EnsureComp<Shared._KS14.WetOverlay.KsWetMapComponent>(mapUid);
-                    wetMapComponent.SoftDropletCap = weather.KsRainDropletMax;
-                }
-                else
-                    RemComp<Shared._KS14.WetOverlay.KsWetMapComponent>(mapUid);
-            }
             // KS14 End
-
 
             alpha *= SharedAudioSystem.VolumeToGain(weather.Sound.Params.Volume); // KS14: Moved multiplier to here
 
