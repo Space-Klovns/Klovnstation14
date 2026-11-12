@@ -197,7 +197,7 @@
     - ClothingMaskGasSyndicate
     - ClothingHeadsetAltSyndicate
     - ClothingBeltMilitaryWebbing
-    - TiderfallSyndiePDA # intentionally after webbing so it doesnt go on belt
+    - TiderfallSyndiePDA
     - ClothingEyesGlassesCommand # it's about time
     - BoxFlare
     - MedkitCombatFilled
