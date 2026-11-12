@@ -6,6 +6,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.Particles;
 using NUnit.Framework;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -204,6 +205,11 @@ public sealed class KsParticleGeneratorSerializerTest : GameTest
 {
     public override PoolSettings PoolSettings => new() { Connected = false };
 
+    private static readonly ProtoId<KsParticlesPrototype> SmokePrototype = "KsSmoke";
+    private static readonly ProtoId<KsParticlesPrototype> SteamPrototype = "KsSteam";
+    private static readonly ProtoId<KsParticlesPrototype> EmbersPrototype = "KsEmbers";
+    private static readonly ProtoId<KsParticlesPrototype> SparksPrototype = "KsSparks";
+
     private ISerializationManager SerializationManager => Server.ResolveDependency<ISerializationManager>();
 
     private static DataNode Parse(string yaml)
@@ -333,10 +339,10 @@ public sealed class KsParticleGeneratorSerializerTest : GameTest
     public void ShippedPrototypesLoad()
     {
         var prototypes = Server.ProtoMan.EnumeratePrototypes<KsParticlesPrototype>().Where(prototype => !prototype.Abstract).ToList();
-        Assert.That(prototypes.Select(prototype => prototype.ID), Does.Contain("KsSmoke").And.Contain("KsEmbers").And.Contain("KsSparks"));
+        Assert.That(prototypes.Select(prototype => prototype.ID), Does.Contain(SmokePrototype.Id).And.Contain(EmbersPrototype.Id).And.Contain(SparksPrototype.Id));
 
-        var smoke = Server.ProtoMan.Index<KsParticlesPrototype>("KsSmoke");
-        var steam = Server.ProtoMan.Index<KsParticlesPrototype>("KsSteam");
+        var smoke = Server.ProtoMan.Index(SmokePrototype);
+        var steam = Server.ProtoMan.Index(SteamPrototype);
         Assert.Multiple(() =>
         {
             Assert.That(smoke.Drift.Kind, Is.EqualTo(KsParticleGeneratorKind.Sphere));
