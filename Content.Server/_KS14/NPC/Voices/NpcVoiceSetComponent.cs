@@ -40,4 +40,11 @@ public sealed partial class NpcVoiceSetComponent : Component
     /// </summary>
     [DataField]
     public float Pitch = 1f;
+
+    /// <summary>
+    ///     Until when each callout is held back for this NPC, by <see cref="NpcCallout"/>: it says one no more often than
+    ///         the caller asks.
+    /// </summary>
+    [ViewVariables]
+    public readonly TimeSpan[] CalloutHeldUntil = new TimeSpan[Enum.GetValues<NpcCallout>().Length];
 }

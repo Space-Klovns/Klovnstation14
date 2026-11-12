@@ -72,6 +72,12 @@ public sealed partial class SpeakOperator : HTNOperator
             case SingleSpeakOperatorSpeech single:
                 speechLocId = single.Line;
                 break;
+            // KS14 start: a callout only some voices make
+            case VoiceCalloutSpeakOperatorSpeech callout:
+                if (!KsTryPickCalloutLine(blackboard, callout, out speechLocId))
+                    return base.Update(blackboard, frameTime);
+                break;
+            // KS14 end
             default:
                 throw new ArgumentOutOfRangeException(nameof(Speech));
         }

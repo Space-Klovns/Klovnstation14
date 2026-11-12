@@ -1,8 +1,10 @@
 using Content.Server._KS14.NPC.Hands;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
+using Content.Server._KS14.NPC.Voices;
 using Content.Server.Hands.Systems;
 using Content.Shared._Trauma.Hands;
+using Content.Shared.Explosion.Components;
 using Content.Shared.Throwing;
 using Content.Shared.Trigger;
 using Content.Shared.Trigger.Systems;
@@ -25,9 +27,11 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
     [Dependency] private NpcHandsSystem _npcHandsSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private NpcVoiceSystem _npcVoiceSystem = default!;
     [Dependency] private PredictedHandsSystem _predictedHandsSystem = default!;
     [Dependency] private TriggerSystem _triggerSystem = default!;
 
+    [Dependency] private EntityQuery<ExplosiveComponent> _explosiveQuery = default!;
     [Dependency] private EntityQuery<NpcGrenadePusherComponent> _grenadePusherQuery = default!;
     [Dependency] private EntityQuery<NpcGrenadePushComponent> _grenadePushQuery = default!;
     [Dependency] private EntityQuery<NpcGrenadeThrowerComponent> _grenadeThrowerQuery = default!;
@@ -52,6 +56,9 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
             thrownGrenadeComponent.Coordinates = coordinates;
 
             _triggerSystem.ActivateTimerTrigger(grenadeUid, uid);
+
+            // Said as it goes, by a voice that says it: what it is, so the squad knows whether to look away or get down.
+            _npcVoiceSystem.TrySpeakCallout(uid, _explosiveQuery.HasComp(grenadeUid) ? NpcCallout.ThrowFrag : NpcCallout.ThrowOther);
         }
 
         _npcHandsSystem.PutBack(uid, takenOut);

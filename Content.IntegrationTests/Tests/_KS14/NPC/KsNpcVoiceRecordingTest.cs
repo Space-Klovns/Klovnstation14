@@ -21,7 +21,14 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
-    private static readonly string[] SpokenLineSets = ["KsOperativeRedactedTargetDown", "KsOperativeExecution"];
+    private static readonly string[] SpokenLineSets =
+    [
+        "KsOperativeRedactedTargetDown", "KsOperativeExecution", "KsOperativeRedactedAlertGrenade", "KsOperativeRedactedThrowFrag",
+        "KsOperativeRedactedThrowOther", "KsOperativeRedactedManDown", "KsOperativeRedactedSuppressing", "KsOperativeRedactedPush",
+        "KsOperativeRedactedFlank",
+    ];
+
+    private const string Callsigns = "KsRedactedCallsigns";
     private static readonly string[] Speakers = ["KsRedactedSpeakerA", "KsRedactedSpeakerB"];
 
     private const string VoicedMob = "KsVoiceRecordingTestMob";
@@ -58,23 +65,33 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
                 var usedPaths = new HashSet<string>();
                 var voicedIds = new HashSet<string>();
 
+                // A string in two sets (a flashbang's "Fire in the hole" is a frag's too) is one string, with one clip.
+                var spokenIds = new HashSet<string>();
                 foreach (var lineSetId in SpokenLineSets)
                 {
-                    foreach (var locId in protoManager.Index<LocalizedDatasetPrototype>(lineSetId).Values)
+                    spokenIds.UnionWith(protoManager.Index<LocalizedDatasetPrototype>(lineSetId).Values);
+                }
+
+                foreach (var callsign in protoManager.Index<Content.Server._KS14.NPC.Callsigns.NpcCallsignSetPrototype>(Callsigns).Callsigns)
+                {
+                    Assert.That(Loc.TryGetString(callsign.Name, out _), $"{callsign.Name} should resolve");
+                    spokenIds.Add(callsign.DownLine);
+                }
+
+                foreach (var locId in spokenIds)
+                {
+                    Assert.That(Loc.TryGetString(locId, out var text) && !string.IsNullOrWhiteSpace(text), $"{locId} should resolve");
+                    Assert.That(speaker.Lines.TryGetValue(locId, out var clip), $"{speakerId} should have a clip for {locId}");
+
+                    if (clip is not SoundPathSpecifier pathClip)
                     {
-                        Assert.That(Loc.TryGetString(locId, out var text) && !string.IsNullOrWhiteSpace(text), $"{locId} should resolve");
-                        Assert.That(speaker.Lines.TryGetValue(locId, out var clip), $"{speakerId} should have a clip for {locId}");
-
-                        if (clip is not SoundPathSpecifier pathClip)
-                        {
-                            Assert.Fail($"{speakerId}'s clip for {locId} should be a single file");
-                            continue;
-                        }
-
-                        Assert.That(resourceManager.ContentFileExists(pathClip.Path), $"{pathClip.Path} should exist");
-                        Assert.That(usedPaths.Add(pathClip.Path.ToString()), $"{pathClip.Path} should be the clip of one string only");
-                        voicedIds.Add(locId);
+                        Assert.Fail($"{speakerId}'s clip for {locId} should be a single file");
+                        continue;
                     }
+
+                    Assert.That(resourceManager.ContentFileExists(pathClip.Path), $"{pathClip.Path} should exist");
+                    Assert.That(usedPaths.Add(pathClip.Path.ToString()), $"{pathClip.Path} should be the clip of one string only");
+                    voicedIds.Add(locId);
                 }
 
                 Assert.That(speaker.Lines.Keys.Select(locId => locId.Id), Is.EquivalentTo(voicedIds), $"{speakerId} should voice only strings that are spoken");
