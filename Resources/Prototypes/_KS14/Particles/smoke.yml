@@ -1,0 +1,247 @@
+# Ported from tgstation's code/game/objects/effects/particles/smoke.dm (BYOND /particles/smoke and kin).
+# BYOND values converted to SS14 units: pixels / 32 = metres, per decisecond x10 = per second, per ds^2 x100,
+# deciseconds / 10 = seconds, friction f per ds -> 1 - (1 - f)^10 per second. See Klovn/Docs/particles.md.
+
+- type: ksParticles
+  id: KsSmoke
+  size: [ 3.125, 3.125 ]
+  count: 1000
+  spawning: 40
+  lifespan: 1.5
+  fade: 1
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_3
+    weight: 2
+  velocity: [ 0, 0.125 ]
+  position: [ 0.1875, 0 ]
+  drift:
+    kind: sphere
+    a: 0
+    b: 0.0625
+    dist: normal
+  friction: 0.89
+  gravity: [ 0, 2.97 ]
+  grow: 0.5
+
+- type: ksParticles
+  parent: KsSmoke
+  id: KsSmokeBurning
+  position: [ 0, 0 ]
+
+- type: ksParticles
+  parent: KsSmokeBurning
+  id: KsSmokeBurningSmall
+  spawning: 10
+  scale: 0.8
+
+- type: ksParticles
+  parent: KsSmoke
+  id: KsSteam
+  fade: 1.5
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_3
+    weight: 2
+
+- type: ksParticles
+  parent: KsSteam
+  id: KsSteamMild
+  spawning: 10
+  velocity: [ 0, 0.09375 ]
+  friction: 0.944
+
+- type: ksParticles
+  parent: KsSteam
+  id: KsSteamBad
+  spawning: 20
+  velocity: [ 0, 0.078125 ]
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_3
+
+# One puff about every two seconds, paced to a breath.
+- type: ksParticles
+  parent: KsSmoke
+  id: KsSmokeCigarette
+  count: 1
+  spawning: 0.5
+  position: [ -0.1875, -0.0625 ]
+  gravity: [ 0, 2.34 ]
+  lifespan: 0.75
+  fade: 0.75
+  velocity: [ 0, 0.0625 ]
+  scale: 0.5
+  grow: 0.1
+  friction: 0.999
+  color: "#d0d0d09d"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_1
+    weight: 2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_3
+
+- type: ksParticles
+  parent: KsSmokeCigarette
+  id: KsSmokeCigaretteBig
+  spawning: 10
+  gravity: [ 0, 1.5625 ]
+  velocity: [ 0, 0.03125 ]
+  lifespan: 1
+  fade: 1
+  grow: 1
+  scale: 0.75
+  friction: 1
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_2
+    weight: 2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_3
+    weight: 2
+
+- type: ksParticles
+  parent: KsSmoke
+  id: KsSmokeAsh
+  count: 500
+  spawning: 10
+  lifespan: 1
+  fade: 0.2
+  fadeIn: 0.7
+  position:
+    kind: vector
+    a: [ -0.09375, 0.15625 ]
+    b: [ 0.09375, 0.203125 ]
+    dist: normal
+  velocity:
+    kind: vector
+    a: [ -0.03125, 0.125 ]
+    b: [ 0.03125, 0.15625 ]
+    dist: normal
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: ash_1
+    weight: 2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: ash_2
+    weight: 2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: ash_3
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_1
+    weight: 3
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: smoke_2
+    weight: 2
+
+# A breath in the cold.
+- type: ksParticles
+  id: KsFogBreath
+  size: [ 3.125, 3.125 ]
+  count: 1
+  spawning: 10
+  lifespan: 1
+  fade: 0.5
+  grow: 0.5
+  spin: 20
+  color: "#fcffff77"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: chill_1
+    weight: 2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: chill_2
+    weight: 2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: chill_3
+
+- type: ksParticles
+  id: KsHotspringSteam
+  size: [ 3.125, 3.125 ]
+  count: 5
+  spawning: 3
+  lifespan: 3
+  fade: 1.2
+  fadeIn: 0.4
+  color: "#FFFFFF8A"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_cloud_1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_cloud_2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_cloud_3
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_cloud_4
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/smoke.rsi
+      state: steam_cloud_5
+  position:
+    kind: box
+    a: [ -0.53125, -0.46875 ]
+    b: [ 0.75, 0.46875 ]
+    dist: normal
+  scale:
+    kind: vector
+    a: 0.9
+    b: 1.1
+    dist: normal
+  drift:
+    kind: sphere
+    a: -0.003125
+    b: 0.003125
+  spin:
+    kind: num
+    a: -20
+    b: 20
+    dist: normal
+  gravity: [ 0.15625, 0.875 ]
+  friction: 0.972
+  grow: 0.37

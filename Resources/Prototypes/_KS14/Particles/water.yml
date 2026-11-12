@@ -1,0 +1,29 @@
+# Ported from tgstation's code/game/objects/effects/particles/water.dm. Units converted as in smoke.yml.
+
+- type: ksParticles
+  id: KsDroplets
+  size: [ 1, 1.125 ]
+  count: 5
+  spawning: 2
+  lifespan: 1
+  fade: 0.5
+  color: "#549EFF"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/generic.rsi
+      state: dot
+    weight: 2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/generic.rsi
+      state: drop
+  position:
+    kind: box
+    a: [ -0.28125, -0.28125 ]
+    b: [ 0.28125, 0.5625 ]
+    dist: normal
+  scale:
+    kind: vector
+    a: 0.9
+    b: 1.1
+    dist: normal
+  gravity: [ 0, -2.8125 ]
