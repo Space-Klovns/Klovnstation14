@@ -119,7 +119,7 @@ public sealed class KsParticleEmitterTest : GameTest
             emitter = (uid!.Value, CEntMan.GetComponent<KsParticlesComponent>(uid.Value), CEntMan.GetComponent<KsParticleEmitterComponent>(uid.Value));
         });
 
-        Assert.That(emitter.Comp2.Prototype, Is.Not.Null, "the emitter resolved its prototype on startup");
+        Assert.That(emitter.Comp2!.Prototype, Is.Not.Null, "the emitter resolved its prototype on startup");
         Assert.That(CEntMan.IsClientSide(emitter.Owner), "a local emitter is a client-side entity");
         return emitter;
     }
@@ -279,7 +279,8 @@ public sealed class KsParticleEmitterTest : GameTest
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid clientParentUid = default;
-        await Client.WaitPost(() => clientParentUid = CEntMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, testMap.MapId)));
+        // Away from the map origin, so a world particle at the emitter is told apart from one at the local origin.
+        await Client.WaitPost(() => clientParentUid = CEntMan.SpawnEntity(null, new MapCoordinates(new Vector2(2f, 0f), testMap.MapId)));
 
         var local = await SpawnLocalAsync(_burst, clientParentUid);
         var world = await SpawnLocalAsync(_world, clientParentUid);
@@ -292,20 +293,21 @@ public sealed class KsParticleEmitterTest : GameTest
             Assert.That(world.Comp2.Alive, Is.EqualTo(1));
 
             var worldParticleBefore = world.Comp2.Particles[0].Position;
+            Assert.That(worldParticleBefore.X, Is.EqualTo(2f).Within(1e-4f), "a world particle is born at the emitter's map position");
             Box2 localBoundsBefore = local.Comp2.WorldBounds;
 
-            CEntMan.System<SharedTransformSystem>().SetWorldPosition(clientParentUid, new Vector2(5f, 0f));
+            CEntMan.System<SharedTransformSystem>().SetWorldPosition(clientParentUid, new Vector2(7f, 0f));
             ClientSystem.FrameUpdate(Dt);
 
             Assert.Multiple(() =>
             {
-                Assert.That(local.Comp2.Origin.X, Is.EqualTo(5f).Within(1e-4f), "the local emitter moved with its parent");
+                Assert.That(local.Comp2.Origin.X, Is.EqualTo(7f).Within(1e-4f), "the local emitter moved with its parent");
                 Assert.That(local.Comp2.Particles[0].Position.X, Is.EqualTo(0f).Within(1e-4f), "its particles are still at the origin of its frame");
                 Box2 localBoundsAfter = local.Comp2.WorldBounds;
                 Assert.That(localBoundsAfter.Center.X, Is.EqualTo(localBoundsBefore.Center.X + 5f).Within(1e-3f), "so they are drawn, and culled, 5 m over");
 
-                Assert.That(world.Comp2.Origin.X, Is.EqualTo(5f).Within(1e-4f), "the world emitter moved too");
-                Assert.That(world.Comp2.Particles[0].Position, Is.EqualTo(worldParticleBefore), "but its particle stayed where it was emitted");
+                Assert.That(world.Comp2.Origin.X, Is.EqualTo(7f).Within(1e-4f), "the world emitter moved too");
+                Assert.That(world.Comp2.Particles[0].Position.X, Is.EqualTo(2f).Within(1e-4f), "but its particle stayed where it was emitted");
             });
         });
     }
