@@ -101,11 +101,11 @@
 #   _KsModule/Audio/Partials/redacted_voice.yml; without it both are mute.
 - type: npcVoiceRecording
   id: KsRedactedSpeakerA
-  volume: 0
+  volume: 3.5
 
 - type: npcVoiceRecording
   id: KsRedactedSpeakerB
-  volume: -2
+  volume: 3.2
 
 # The Redacted's callsigns, handed out in this order, one each among the living on a map. A squadmate that sees one go
 #   down calls it out by callsign (NpcCallsignSystem).
