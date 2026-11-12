@@ -35,10 +35,21 @@
   id: KsOperativeRedactedTargetDown
   values:
     prefix: ks-operative-redacted-line-target-down-
-    count: 7
+    count: 20
 
 - type: localizedDataset
   id: KsOperativeExecution
   values:
     prefix: ks-operative-redacted-line-execution-
-    count: 1
+    count: 7
+
+# The two speakers the Redacted are recorded by, one per mob for life (see NpcVoiceSet on the Redacted). Speaker A's
+#   recordings are louder than speaker B's, so B is turned down. The clips themselves come from the private
+#   _KsModule/Audio/Partials/redacted_voice.yml; without it both are mute.
+- type: npcVoiceRecording
+  id: KsRedactedSpeakerA
+  volume: 0
+
+- type: npcVoiceRecording
+  id: KsRedactedSpeakerB
+  volume: -2

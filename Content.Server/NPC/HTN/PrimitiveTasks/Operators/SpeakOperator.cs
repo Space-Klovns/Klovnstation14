@@ -81,6 +81,7 @@ public sealed partial class SpeakOperator : HTNOperator
             hideChat: Hidden,
             hideLog: Hidden
         );
+        KsPlayRecording(speaker, speechLocId.Id); // KS14: the speaker's recorded clip of this line
 
         return base.Update(blackboard, frameTime);
     }

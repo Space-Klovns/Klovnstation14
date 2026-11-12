@@ -1,0 +1,130 @@
+#nullable enable
+using System.Collections.Generic;
+using Content.IntegrationTests.Fixtures;
+using Content.Server._KS14.NPC.Voices;
+using Content.Shared.Dataset;
+using Robust.Shared.Audio;
+using Robust.Shared.GameObjects;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Localization;
+using Robust.Shared.Prototypes;
+using Robust.UnitTesting.Pool;
+
+namespace Content.IntegrationTests.Tests._KS14.NPC;
+
+/// <summary>
+///     The Redacted's recorded voices: each locale string they speak has exactly one clip per speaker, every clip
+///         exists, and a mob keeps the speaker and pitch it was spawned with.
+/// </summary>
+public sealed class KsNpcVoiceRecordingTest : GameTest
+{
+    public override PoolSettings PoolSettings => PsDisconnected;
+
+    private static readonly string[] SpokenLineSets = ["KsOperativeRedactedTargetDown", "KsOperativeExecution"];
+    private static readonly string[] Speakers = ["KsRedactedSpeakerA", "KsRedactedSpeakerB"];
+
+    private const string VoicedMob = "KsVoiceRecordingTestMob";
+
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  id: KsVoiceRecordingTestMob
+  components:
+  - type: NpcVoiceSet
+    set: KsOperativeRedacted
+    speakers:
+    - KsRedactedSpeakerA
+    - KsRedactedSpeakerB
+    pitchSpread: 0.05
+";
+
+    /// <summary>
+    ///     Every string the Redacted speak resolves, and every speaker has a clip for it that exists, which no other
+    ///         string of the speaker shares.
+    /// </summary>
+    [Test]
+    public async Task TestEverySpokenLineHasOneClipPerSpeaker()
+    {
+        var protoManager = Server.ResolveDependency<IPrototypeManager>();
+        var resourceManager = Server.ResolveDependency<IResourceManager>();
+
+        await Server.WaitAssertion(() =>
+        {
+            foreach (var speakerId in Speakers)
+            {
+                var speaker = protoManager.Index<NpcVoiceRecordingPrototype>(speakerId);
+                var usedPaths = new HashSet<string>();
+                var voicedIds = new HashSet<string>();
+
+                foreach (var lineSetId in SpokenLineSets)
+                {
+                    foreach (var locId in protoManager.Index<LocalizedDatasetPrototype>(lineSetId).Values)
+                    {
+                        Assert.That(Loc.TryGetString(locId, out var text) && !string.IsNullOrWhiteSpace(text), $"{locId} should resolve");
+                        Assert.That(speaker.Lines.TryGetValue(locId, out var clip), $"{speakerId} should have a clip for {locId}");
+
+                        if (clip is not SoundPathSpecifier pathClip)
+                        {
+                            Assert.Fail($"{speakerId}'s clip for {locId} should be a single file");
+                            continue;
+                        }
+
+                        Assert.That(resourceManager.ContentFileExists(pathClip.Path), $"{pathClip.Path} should exist");
+                        Assert.That(usedPaths.Add(pathClip.Path.ToString()), $"{pathClip.Path} should be the clip of one string only");
+                        voicedIds.Add(locId);
+                    }
+                }
+
+                Assert.That(speaker.Lines.Keys, Is.EquivalentTo(voicedIds), $"{speakerId} should voice only strings that are spoken");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A mob is given one speaker and a pitch within the spread when it spawns, a population of them is not all the
+    ///         same, and neither changes afterwards.
+    /// </summary>
+    [Test]
+    public async Task TestSpeakerAndPitchAreRolledOnceAndKept()
+    {
+        var entManager = Server.ResolveDependency<IEntityManager>();
+        var voiceSystem = entManager.System<NpcVoiceSystem>();
+        var map = await Pair.CreateTestMap();
+        var mobs = new List<EntityUid>();
+        var rolled = new List<(string? Speaker, float Pitch)>();
+
+        await Server.WaitAssertion(() =>
+        {
+            for (var i = 0; i < 24; i++)
+            {
+                var mob = entManager.SpawnAtPosition(VoicedMob, map.GridCoords);
+                var voice = entManager.GetComponent<NpcVoiceSetComponent>(mob);
+                mobs.Add(mob);
+                rolled.Add((voice.Speaker?.Id, voice.Pitch));
+
+                Assert.That(voice.Speaker, Is.Not.Null);
+                Assert.That(voice.Pitch, Is.InRange(0.95f, 1.05f));
+            }
+
+            Assert.That(rolled.ConvertAll(roll => roll.Speaker), Does.Contain("KsRedactedSpeakerA").And.Contain("KsRedactedSpeakerB"),
+                "both speakers should turn up among 24 mobs");
+            Assert.That(new HashSet<float>(rolled.ConvertAll(roll => roll.Pitch)).Count, Is.GreaterThan(1), "mobs should not all share a pitch");
+
+            var mob0 = mobs[0];
+            Assert.That(voiceSystem.TryPlayLine(mob0, "ks-operative-redacted-line-execution-1"), "a voiced string plays its clip");
+            Assert.That(voiceSystem.TryPlayLine(mob0, "ks-not-a-line"), Is.False, "a string with no clip plays nothing");
+        });
+
+        await Pair.RunTicksSync(60);
+
+        await Server.WaitAssertion(() =>
+        {
+            for (var i = 0; i < mobs.Count; i++)
+            {
+                var voice = entManager.GetComponent<NpcVoiceSetComponent>(mobs[i]);
+                Assert.That(voice.Speaker?.Id, Is.EqualTo(rolled[i].Speaker), "the speaker should stay for life");
+                Assert.That(voice.Pitch, Is.EqualTo(rolled[i].Pitch), "the pitch should stay for life");
+            }
+        });
+    }
+}

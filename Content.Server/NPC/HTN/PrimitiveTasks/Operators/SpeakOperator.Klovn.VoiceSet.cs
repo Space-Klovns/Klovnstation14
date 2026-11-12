@@ -35,4 +35,13 @@ public sealed partial class SpeakOperator
 
         return lineSet;
     }
+
+    /// <summary>
+    ///     Plays the clip of the speaker's recorded voice for <paramref name="locId"/>, if it has one. See
+    ///         <see cref="NpcVoiceSystem"/>.
+    /// </summary>
+    internal void KsPlayRecording(EntityUid speakerUid, string locId)
+    {
+        _entMan.System<NpcVoiceSystem>().TryPlayLine(speakerUid, locId);
+    }
 }
