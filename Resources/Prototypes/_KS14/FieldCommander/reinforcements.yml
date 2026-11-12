@@ -58,7 +58,7 @@
           amount: 3
         - id: KsScenarioNanoplantSeismicChargeShort
         - id: KsFlatpackBallisticTurretNanotrasenRequisition
-        - id: KsWeaponLauncherRocketAt4FieldCommander
+          amount: 2
 
 - type: entity
   parent: SupplyPodCargoBase

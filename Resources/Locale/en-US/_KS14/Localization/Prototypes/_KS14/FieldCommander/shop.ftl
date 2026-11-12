@@ -5,4 +5,4 @@ ent-KsFieldCommanderShop = requisitions terminal
 ent-KsFlareSupplyPodRequisitionResupply = resupply flare
     .desc = Calls a Nanotrasen resupply pod, packed with grenades, a charge, a turret and a rocket, down to the location of the flare.
 ent-KsFlareSupplyPodRequisitionFieldSupport = field support flare
-    .desc = Calls a squad of Nanotrasen paramilitaries down to the location of the flare, by drop pod.
+    .desc = Calls a squad of Nanotrasen paramilitary operatives down to the location of the flare, by drop pod.

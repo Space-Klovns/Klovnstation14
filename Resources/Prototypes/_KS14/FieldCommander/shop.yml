@@ -89,7 +89,7 @@
   parent: KsFlareSupplyPodNanotrasenBase
   id: KsFlareSupplyPodRequisitionFieldSupport
   name: field support flare
-  description: Calls a squad of Nanotrasen paramilitaries down to the location of the flare, by drop pod.
+  description: Calls a squad of Nanotrasen paramilitary operatives down to the location of the flare, by drop pod.
   components:
   - type: SpawnOnTrigger
     keysIn:
