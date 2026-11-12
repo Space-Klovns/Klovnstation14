@@ -49,13 +49,13 @@
   id: KsOperativeRedactedAlertGrenade
   values:
     prefix: ks-operative-redacted-line-alert-grenade-
-    count: 5
+    count: 6
 
 - type: localizedDataset
   id: KsOperativeRedactedThrowFrag
   values:
     prefix: ks-operative-redacted-line-throw-
-    count: 3
+    count: 4
 
 # The first of the frag lines only, "Fire in the hole": the same string, so the same clip, for a flashbang or smoke.
 - type: localizedDataset

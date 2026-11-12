@@ -31,12 +31,14 @@ ks-operative-redacted-line-target-down-20 = Time's up.
 ks-operative-redacted-line-throw-1 = Fire in the hole.
 ks-operative-redacted-line-throw-2 = Frag out.
 ks-operative-redacted-line-throw-3 = Throwing frag.
+ks-operative-redacted-line-throw-4 = EFD out.
 
 ks-operative-redacted-line-alert-grenade-1 = Grenade, get out of there!
 ks-operative-redacted-line-alert-grenade-2 = Grenade!
 ks-operative-redacted-line-alert-grenade-3 = Grenade, move!
 ks-operative-redacted-line-alert-grenade-4 = Frag, get down!
 ks-operative-redacted-line-alert-grenade-5 = Enemy frag!
+ks-operative-redacted-line-alert-grenade-6 = EFD!
 
 ks-operative-redacted-line-man-down-1 = Teammate down.
 ks-operative-redacted-line-man-down-2 = Lost one.

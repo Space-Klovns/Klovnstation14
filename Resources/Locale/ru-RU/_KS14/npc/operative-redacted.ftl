@@ -31,12 +31,14 @@ ks-operative-redacted-line-target-down-20 = Время вышло.
 ks-operative-redacted-line-throw-1 = Ложись, бросаю!
 ks-operative-redacted-line-throw-2 = Осколочная пошла.
 ks-operative-redacted-line-throw-3 = Бросаю осколочную.
+ks-operative-redacted-line-throw-4 = Граната пошла!
 
 ks-operative-redacted-line-alert-grenade-1 = Граната, уходите оттуда!
 ks-operative-redacted-line-alert-grenade-2 = Граната!
 ks-operative-redacted-line-alert-grenade-3 = Граната, в сторону!
 ks-operative-redacted-line-alert-grenade-4 = Граната, ложись!
 ks-operative-redacted-line-alert-grenade-5 = Вражеская граната!
+ks-operative-redacted-line-alert-grenade-6 = Граната!
 
 ks-operative-redacted-line-man-down-1 = Товарищ выбыл.
 ks-operative-redacted-line-man-down-2 = Потеряли одного.
