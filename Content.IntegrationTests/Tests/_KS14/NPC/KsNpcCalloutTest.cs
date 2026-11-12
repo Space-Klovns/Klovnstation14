@@ -31,6 +31,7 @@ public sealed class KsNpcCalloutTest : GameTest
     private const string VoicedMob = "KsCalloutTestMob";
     private const string PlainMob = "KsCalloutTestMobPlain";
     private const string Grenade = "KsCalloutTestGrenade";
+    private const string RedactedSpawner = "KsRandomHumanoidSpawnerOperativeRedacted";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -104,6 +105,48 @@ public sealed class KsNpcCalloutTest : GameTest
             }
 
             Assert.That(names, Is.EqualTo(new[] { "Viper 1", "Titan 1", "Dagger 1" }));
+        });
+    }
+
+    /// <summary>
+    ///     A Redacted as the game spawns one goes by its codename alone, which is on its ID card too, so the name that shows
+    ///         behind its mask is the codename. Without the card, the mask hides who it is.
+    /// </summary>
+    [Test]
+    public async Task TestTheRedactedGoByCodenameAlone()
+    {
+        if (!Server.ProtoMan.HasIndex<EntityPrototype>(RedactedSpawner))
+            Assert.Ignore("the Redacted are in the private _KsModule submodule, which is not present");
+
+        var map = await Pair.CreateTestMap();
+        await Server.WaitPost(() => SEntMan.SpawnAtPosition(RedactedSpawner, map.GridCoords));
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            var query = SEntMan.EntityQueryEnumerator<NpcCallsignComponent>();
+            Assert.That(query.MoveNext(out var mobUid, out _), "the spawner should have spawned a Redacted");
+            Assert.That(SEntMan.System<NpcCallsignSystem>().TryGetCallsign(mobUid, out var callsign), "with a callsign");
+
+            var codename = Loc.GetString(callsign.Name);
+            Assert.That(SEntMan.GetComponent<MetaDataComponent>(mobUid).EntityName, Is.EqualTo(codename), "and no other name");
+
+            var idCardSystem = SEntMan.System<Content.Shared.Access.Systems.SharedIdCardSystem>();
+            Assert.That(idCardSystem.TryFindIdCard(mobUid, out var idCard), "the test needs its ID card");
+            Assert.That(idCard.Comp.FullName, Is.EqualTo(codename), "the codename is on its card");
+            Assert.That(Content.Shared.IdentityManagement.Identity.Name(mobUid, SEntMan), Is.EqualTo(codename), "and is what shows");
+
+            SEntMan.DeleteEntity(idCard.Owner);
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            var query = SEntMan.EntityQueryEnumerator<NpcCallsignComponent>();
+            query.MoveNext(out var mobUid, out _);
+            Assert.That(Content.Shared.IdentityManagement.Identity.Name(mobUid, SEntMan),
+                Is.Not.EqualTo(SEntMan.GetComponent<MetaDataComponent>(mobUid).EntityName), "without the card, the mask hides who it is");
         });
     }
 

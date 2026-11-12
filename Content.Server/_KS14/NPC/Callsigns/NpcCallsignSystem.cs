@@ -1,4 +1,5 @@
 using Content.Server._KS14.NPC.Perception;
+using Content.Shared.Access.Systems;
 using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Voices;
 using Content.Shared.GameTicking;
@@ -21,6 +22,7 @@ public sealed partial class NpcCallsignSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private SharedIdCardSystem _idCardSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private NpcVoiceSystem _npcVoiceSystem = default!;
@@ -57,6 +59,17 @@ public sealed partial class NpcCallsignSystem : EntitySystem
     private readonly List<EntityUid> _forget = new();
     private TimeSpan _nextForget;
 
+    /// <summary>
+    ///     Those whose ID card is still to get their callsign, and until when to wait for one: the card comes with the gear,
+    ///         which may only be put on after the callsign is handed out.
+    /// </summary>
+    private readonly List<(EntityUid Uid, string Name, TimeSpan Until)> _unnamedCards = new();
+
+    /// <summary>
+    ///     How long to wait for an ID card to turn up.
+    /// </summary>
+    private static readonly TimeSpan IdCardWait = TimeSpan.FromSeconds(2);
+
     public override void Initialize()
     {
         base.Initialize();
@@ -73,6 +86,7 @@ public sealed partial class NpcCallsignSystem : EntitySystem
     {
         _pending.Clear();
         _calledOut.Clear();
+        _unnamedCards.Clear();
         _forget.Clear();
         _nextForget = TimeSpan.Zero;
     }
@@ -119,7 +133,13 @@ public sealed partial class NpcCallsignSystem : EntitySystem
                 continue;
 
             entity.Comp.Index = i;
-            _metaDataSystem.SetEntityName(entity, $"{Name(entity)} {Loc.GetString(set.Callsigns[i].Name)}");
+
+            var callsignName = Loc.GetString(set.Callsigns[i].Name);
+            _metaDataSystem.SetEntityName(entity, entity.Comp.ReplacesName ? callsignName : $"{Name(entity)} {callsignName}");
+
+            if (entity.Comp.NamesIdCard)
+                _unnamedCards.Add((entity.Owner, callsignName, _gameTiming.CurTime + IdCardWait));
+
             return;
         }
     }
@@ -164,10 +184,22 @@ public sealed partial class NpcCallsignSystem : EntitySystem
     {
         base.Update(frameTime);
 
+        var now = _gameTiming.CurTime;
+
+        for (var i = _unnamedCards.Count - 1; i >= 0; i--)
+        {
+            var (uid, name, until) = _unnamedCards[i];
+
+            if (!TerminatingOrDeleted(uid) && _idCardSystem.TryFindIdCard(uid, out var idCard))
+                _idCardSystem.TryChangeFullName(idCard, name, idCard.Comp);
+            else if (!TerminatingOrDeleted(uid) && now < until)
+                continue;
+
+            _unnamedCards.RemoveAt(i);
+        }
+
         if (_pending.Count == 0 && _calledOut.Count == 0)
             return;
-
-        var now = _gameTiming.CurTime;
 
         for (var i = _pending.Count - 1; i >= 0; i--)
         {
