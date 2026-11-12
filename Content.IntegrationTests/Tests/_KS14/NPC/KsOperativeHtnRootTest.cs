@@ -833,21 +833,21 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     One in soft crit can crawl, but is as much a target for an execution as any other that is down - until the
-    ///         executioners have given up on it, when they shoot it with the gun like anything else on the floor. One in
-    ///         hard crit cannot get away, so is still executed whatever happened before it got there.
+    ///     Whatever shape it is in, a hostile that is down is executed - until an execution of it is cancelled, however that
+    ///         came about. Then it is shot with the gun, like anything else on the floor, and stays that way.
     /// </summary>
     [TestCase(110, false, true)]
     [TestCase(110, true, false)]
-    [TestCase(150, true, true)]
-    public async Task TestSoftCritHostileIsExecutedUntilItIsGivenUpOn(int damage, bool escaped, bool executes)
+    [TestCase(150, false, true)]
+    [TestCase(150, true, false)]
+    public async Task TestDownedHostileIsExecutedUntilAnExecutionIsCancelled(int damage, bool cancelled, bool executes)
     {
         var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: AllOutMob,
             stage: (entManager, mobUid, gridUid) =>
             {
                 StageArmed(entManager, mobUid);
                 StageCarried(entManager, mobUid, TestKnife);
-                StageSoftCritHostile(entManager, mobUid, gridUid, 1, 3, damage: 110, escaped: escaped, thenDamage: damage - 110);
+                StageSoftCritHostile(entManager, mobUid, gridUid, 1, 3, damage: damage, cancelled: cancelled);
             });
 
         Assert.Multiple(() =>
@@ -2581,32 +2581,17 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     <see cref="StageDownedHostile"/>, but in soft crit, having <paramref name="damage"/>. When
-    ///         <paramref name="escaped"/>, the staged NPC has also failed to execute it enough times to give up on it, and
-    ///         <paramref name="thenDamage"/> then takes it on from there, into hard crit if it is enough.
+    ///     <see cref="StageDownedHostile"/>, with <paramref name="damage"/> done to it (100 to 130 is soft crit, past that
+    ///         hard crit). When <paramref name="cancelled"/>, an execution of it has been cancelled.
     /// </summary>
-    private static void StageSoftCritHostile(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, int x, int y, int damage, bool escaped, int thenDamage)
+    private static void StageSoftCritHostile(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid, int x, int y, int damage, bool cancelled)
     {
         var hostileUid = SpawnAt(entManager, "KsOperativeRootTestSoftCritHostile", gridUid, x, y);
-        var damageSystem = entManager.System<Content.Shared.Damage.Systems.DamageableSystem>();
-        var blunt = new Content.Shared.Damage.DamageSpecifier(
-            Robust.Shared.IoC.IoCManager.Resolve<IPrototypeManager>().Index(BluntDamage), Content.Shared.FixedPoint.FixedPoint2.New(damage));
-        damageSystem.TryChangeDamage(hostileUid, blunt, ignoreResistances: true);
+        entManager.System<Content.Shared.Damage.Systems.DamageableSystem>().TryChangeDamage(hostileUid, new Content.Shared.Damage.DamageSpecifier(
+            Robust.Shared.IoC.IoCManager.Resolve<IPrototypeManager>().Index(BluntDamage), Content.Shared.FixedPoint.FixedPoint2.New(damage)), ignoreResistances: true);
 
-        if (escaped)
-        {
-            var executionSystem = entManager.System<NpcExecutionSystem>();
-            executionSystem.NoteAttempt(hostileUid);
-            executionSystem.NoteFailure(mobUid, hostileUid);
-            executionSystem.NoteFailure(mobUid, hostileUid);
-        }
-
-        if (thenDamage > 0)
-        {
-            blunt.DamageDict.Clear();
-            blunt.DamageDict["Blunt"] = Content.Shared.FixedPoint.FixedPoint2.New(thenDamage);
-            damageSystem.TryChangeDamage(hostileUid, blunt, ignoreResistances: true);
-        }
+        if (cancelled)
+            entManager.AddComponent<NpcExecutionRefusedComponent>(hostileUid);
 
         var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
         entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(NpcContactState.Visible,

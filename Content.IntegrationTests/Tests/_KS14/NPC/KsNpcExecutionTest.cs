@@ -4,7 +4,6 @@ using Content.Server._KS14.NPC.Execution;
 using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Execution;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
-using Content.Shared._KS14.Mobs.Systems;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
@@ -196,13 +195,13 @@ public sealed class KsNpcExecutionTest : GameTest
     }
 
     /// <summary>
-    ///     A victim in soft crit that crawls out of reach breaks the execution off, every time. The second time, executioners
-    ///         give up on walking over to it and the target query passes it by, for the gun to take: a hard crit one that
-    ///         does the same is not, as nothing in hard crit is getting away.
+    ///     An execution cancelled in any way - the victim crawling off, or dragged, or the executioner shoved - is given up
+    ///         on at once, in soft crit or hard: executioners shoot it from then on, and the target query passes it by.
     /// </summary>
     [TestCase(110, true)]
+    [TestCase(150, true)]
     [TestCase(150, false)]
-    public async Task TestVictimThatCrawlsAwayIsGivenUpOn(int damage, bool givenUp)
+    public async Task TestCancelledExecutionIsGivenUpOn(int damage, bool victimMoves)
     {
         var (entManager, npcUid, victimUid, gunUid) = await SetUp(SoftCritVictim, damage);
         var executionSystem = entManager.System<NpcExecutionSystem>();
@@ -217,49 +216,73 @@ public sealed class KsNpcExecutionTest : GameTest
             blackboard.SetValue(executeOperator.TargetKey, victimUid);
             blackboard.SetValue(executeOperator.WeaponKey, gunUid);
 
-            Assert.That(entManager.System<KsSoftCritSystem>().IsSoftCrit(victimUid), Is.EqualTo(givenUp), "the victim should be as deep in crit as the test means");
             Assert.That(executionSystem.AwaitsExecution(victimUid), "it should await its execution to begin with");
+
+            executeOperator.Startup(blackboard);
+            Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Continuing), "it should be waiting on the execution");
+
+            // Either the victim is moved away, or the executioner is.
+            var movedUid = victimMoves ? victimUid : npcUid;
+            transformSystem.SetCoordinates(movedUid, entManager.GetComponent<TransformComponent>(movedUid).Coordinates.Offset(new System.Numerics.Vector2(3f, 0f)));
         });
 
-        for (var attempt = 1; attempt <= 2; attempt++)
+        await RunUntilDone(executionSystem, npcUid);
+
+        await Pair.Server.WaitPost(() =>
         {
-            await Pair.Server.WaitPost(() =>
+            Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Failed), "the victim is still alive");
+            executeOperator.TaskShutdown(blackboard, HTNOperatorStatus.Failed);
+
+            Assert.That(executionSystem.IsRefused(victimUid), "one cancelled execution should be enough");
+            Assert.That(executionSystem.AwaitsExecution(victimUid), Is.False, "and the victim is one to shoot, not walk up to");
+        });
+    }
+
+    /// <summary>
+    ///     Only an execution that was started and then cancelled counts: one that goes through, and one the NPC's task is
+    ///         dropped from before it comes to anything, leave the victim to be executed.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestExecutionNotCancelledIsNotGivenUpOn(bool completes)
+    {
+        var (entManager, npcUid, victimUid, gunUid) = await SetUp(SoftCritVictim, 150);
+        var executionSystem = entManager.System<NpcExecutionSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var executeOperator = new ExecuteOperator();
+        var blackboard = new NPCBlackboard();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            executeOperator.Initialize(entManager.EntitySysManager);
+            blackboard.SetValue(NPCBlackboard.Owner, npcUid);
+            blackboard.SetValue(executeOperator.TargetKey, victimUid);
+            blackboard.SetValue(executeOperator.WeaponKey, gunUid);
+            executeOperator.Startup(blackboard);
+
+            if (!completes)
             {
-                // Back beside it, and the first thing it does is crawl off.
-                transformSystem.SetCoordinates(victimUid, entManager.GetComponent<TransformComponent>(npcUid).Coordinates.Offset(new System.Numerics.Vector2(1f, 0f)));
-
-                executeOperator.Startup(blackboard);
-                Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Continuing), "it should be waiting on the execution");
-                transformSystem.SetCoordinates(victimUid, entManager.GetComponent<TransformComponent>(npcUid).Coordinates.Offset(new System.Numerics.Vector2(3f, 0f)));
-            });
-
-            await RunUntilDone(executionSystem, npcUid);
-
-            await Pair.Server.WaitPost(() =>
-            {
-                Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Failed), "the victim got away");
+                // Replanned away: the task shuts down, and only afterwards does anything disturb the victim.
                 executeOperator.TaskShutdown(blackboard, HTNOperatorStatus.Failed);
+                transformSystem.SetCoordinates(victimUid, entManager.GetComponent<TransformComponent>(victimUid).Coordinates.Offset(new System.Numerics.Vector2(3f, 0f)));
+            }
+        });
 
-                Assert.That(executionSystem.IsGivenUp(victimUid), Is.EqualTo(givenUp && attempt == 2), $"given up on after attempt {attempt}");
-                Assert.That(executionSystem.AwaitsExecution(victimUid), Is.Not.EqualTo(givenUp && attempt == 2), "and as a target for walking up to");
-            });
-        }
+        await RunUntilDone(executionSystem, npcUid);
+        await Pair.RunTicksSync(5);
 
-        // Hard crit is executed as before: a victim that was given up on and then falls to hard crit is one again.
-        if (givenUp)
+        await Pair.Server.WaitPost(() =>
         {
-            await Pair.Server.WaitPost(() =>
+            Assert.That(executionSystem.IsRefused(victimUid), Is.False);
+
+            if (completes)
             {
-                entManager.System<DamageableSystem>().TryChangeDamage(victimUid,
-                    new DamageSpecifier(SProtoMan.Index(BluntDamage), FixedPoint2.New(30)), ignoreResistances: true);
-            });
-            await Pair.RunTicksSync(2);
-            await Pair.Server.WaitPost(() =>
-            {
-                Assert.That(entManager.System<KsSoftCritSystem>().IsSoftCrit(victimUid), Is.False, "the victim should be in hard crit by now");
-                Assert.That(executionSystem.AwaitsExecution(victimUid), "a hard crit victim should be executed whatever happened before");
-            });
-        }
+                Assert.That(executeOperator.Update(blackboard, 0f), Is.EqualTo(HTNOperatorStatus.Finished));
+                Assert.That(entManager.System<MobStateSystem>().IsDead(victimUid), "and the victim should be dead");
+            }
+
+            executeOperator.TaskShutdown(blackboard, HTNOperatorStatus.Finished);
+        });
     }
 
     private async Task RunUntilDone(NpcExecutionSystem executionSystem, EntityUid npcUid)

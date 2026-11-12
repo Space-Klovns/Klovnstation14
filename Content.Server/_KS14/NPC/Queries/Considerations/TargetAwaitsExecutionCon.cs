@@ -5,8 +5,7 @@ using Content.Server.NPC.Queries.Considerations;
 namespace Content.Server._KS14.NPC.Queries.Considerations;
 
 /// <summary>
-///     1 if the target is critical and still to be executed, 0 if it is not, or if executioners have given up on it
-///         because it keeps crawling away (see <see cref="NpcExecutionSystem.IsGivenUp"/>): then it is just another
+///     1 if the target is critical and still to be executed, 0 if it is not, or if an execution of it was cancelled (see <see cref="NpcExecutionSystem.IsRefused"/>): then it is just another
 ///         hostile to shoot.
 /// </summary>
 public sealed partial class TargetAwaitsExecutionCon : UtilityConsideration
