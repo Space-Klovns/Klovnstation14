@@ -1,14 +1,14 @@
 using Content.Shared.Stacks;
+using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.SPAM;
+namespace Content.Shared._KS14.SPAM;
 
 /// <summary>
 ///     A machine that pays mining points for the ore put into it. The points wait on the machine until a salvager
-///         claims them with their ID or S.P.A.M.
+///         claims them with their ID or S.P.A.M., and its window shows them where a lathe shows its queue.
 /// </summary>
-[RegisterComponent]
-[Access(typeof(KsSPAMSmelterSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
 public sealed partial class KsSPAMSmelterComponent : Component
 {
     /// <summary>
@@ -20,6 +20,6 @@ public sealed partial class KsSPAMSmelterComponent : Component
     /// <summary>
     ///     Points nobody has claimed yet.
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField]
     public float Unclaimed;
 }

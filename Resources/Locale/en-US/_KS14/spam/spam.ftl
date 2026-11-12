@@ -66,12 +66,14 @@ ks-spam-silo-low = Running low.
 
 ks-spam-profile-next-unlocks = Next rank unlocks: { $items }
 
-ks-spam-smelter-ready = { $points } mining points ready. Swipe your ID or S.P.A.M. to claim.
-ks-spam-smelter-claimed = Claimed { $points } mining points.
 ks-spam-smelter-nothing = Nothing to claim.
 ks-spam-smelter-no-account = No S.P.A.M. account. Log in to a S.P.A.M. first.
 ks-spam-smelter-claim-verb = Claim { $points } mining points
 ks-spam-smelter-examine = It holds [color=yellow]{ $points }[/color] unclaimed mining points.
+ks-spam-smelter-ui-title = Mining Points
+ks-spam-smelter-ui-unclaimed = Unclaimed
+ks-spam-smelter-ui-points = { $points } unclaimed
+ks-spam-smelter-ui-hint = Swipe your ID or S.P.A.M. on the machine to claim them.
 
 ks-spam-order-open-button = Order equipment
 ks-spam-order-window-title = S.P.A.M. equipment orders

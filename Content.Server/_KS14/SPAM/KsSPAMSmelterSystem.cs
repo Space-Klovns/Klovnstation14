@@ -34,6 +34,7 @@ public sealed partial class KsSPAMSmelterSystem : EntitySystem
             return 0;
 
         smelter.Comp.Unclaimed -= points;
+        Dirty(smelter);
         _spamSystem.AddPoints(account, points);
         return points;
     }
@@ -49,12 +50,9 @@ public sealed partial class KsSPAMSmelterSystem : EntitySystem
             return;
         }
 
-        var points = Claim(smelter, account);
-        _popupSystem.PopupEntity(points > 0
-                ? KsPopupMessage.Create("ks-spam-smelter-claimed", ("points", points))
-                : KsPopupMessage.Create("ks-spam-smelter-nothing"),
-            smelter.Owner,
-            user);
+        // A claim that worked shows in the machine's window and the S.P.A.M.: only a claim of nothing is told.
+        if (Claim(smelter, account) <= 0)
+            _popupSystem.PopupEntity(KsPopupMessage.Create("ks-spam-smelter-nothing"), smelter.Owner, user);
     }
 
     private bool TryFindAccount(EntityUid user, EntityUid? used, out Entity<KsMinerAccountComponent> account)
@@ -88,7 +86,7 @@ public sealed partial class KsSPAMSmelterSystem : EntitySystem
             return;
 
         entity.Comp.Unclaimed += pointsPerUnit * args.Units;
-        _popupSystem.PopupEntity(KsPopupMessage.Create("ks-spam-smelter-ready", ("points", (int)entity.Comp.Unclaimed)), entity.Owner, args.User);
+        Dirty(entity);
     }
 
     [SubscribeLocalEvent]

@@ -34,6 +34,8 @@
       reagents:
       - ReagentId: Bicaridine
         Quantity: 10
+      - ReagentId: Inaprovaline
+        Quantity: 6
       - ReagentId: Dermaline
         Quantity: 10
       - ReagentId: Leporazine

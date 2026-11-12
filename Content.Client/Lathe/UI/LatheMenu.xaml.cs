@@ -326,6 +326,17 @@ public sealed partial class LatheMenu : FancyWindow
         }
     }
 
+    // KS14 start
+    public void KsSetSmelterPoints(int points)
+    {
+        KsQueueTitleLabel.Text = Loc.GetString("ks-spam-smelter-ui-title");
+        KsQueueScroll.Visible = false;
+        KsSmelterContainer.Visible = true;
+        KsSmelterPointsLabel.Text = Loc.GetString("ks-spam-smelter-ui-points", ("points", points));
+        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-spam-smelter-ui-hint"), defaultColor: Color.FromHex("#A0A0A0"));
+    }
+    // KS14 end
+
     public void SetQueueInfo(ProtoId<LatheRecipePrototype>? recipeProto)
     {
         FabricatingContainer.Visible = recipeProto != null;

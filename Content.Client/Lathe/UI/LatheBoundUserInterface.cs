@@ -42,7 +42,18 @@ namespace Content.Client.Lathe.UI
             _menu.QueueMoveUpAction += index => SendMessage(new LatheMoveRequestMessage(index, -1));
             _menu.QueueMoveDownAction += index => SendMessage(new LatheMoveRequestMessage(index, 1));
             _menu.DeleteFabricatingAction += () => SendMessage(new LatheAbortFabricationMessage());
+            Update(); // KS14
         }
+
+        // KS14 start: a smelter shows the mining points it holds in place of the queue
+        public override void Update()
+        {
+            base.Update();
+
+            if (_menu != null && EntMan.TryGetComponent<Content.Shared._KS14.SPAM.KsSPAMSmelterComponent>(Owner, out var smelterComponent))
+                _menu.KsSetSmelterPoints((int)smelterComponent.Unclaimed);
+        }
+        // KS14 end
 
         protected override void UpdateState(BoundUserInterfaceState state)
         {

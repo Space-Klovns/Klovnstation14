@@ -11,6 +11,7 @@ using Content.Client.Lathe.UI;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.SPAM;
 using Content.Shared._KS14.Tgui;
 using Content.Shared.Lathe;
 using Content.Shared.Materials;
@@ -41,7 +42,7 @@ public sealed class KsTguiLatheWindowTest : GameTest
     private static readonly ProtoId<MaterialPrototype> SteelMaterial = "Steel";
     private static readonly ProtoId<MaterialPrototype> GlassMaterial = "Glass";
 
-    private async Task<EntityUid> OpenLathe(EntProtoId? prototype = null)
+    private async Task<EntityUid> OpenLathe(EntProtoId? prototype = null, bool fill = true)
     {
         var testMap = await Pair.CreateTestMap();
         EntityUid lathe = default;
@@ -53,8 +54,12 @@ public sealed class KsTguiLatheWindowTest : GameTest
             Server.PlayerMan.SetAttachedEntity(ServerSession!, user);
 
             var materials = SEntMan.System<SharedMaterialStorageSystem>();
-            Assert.That(materials.TryChangeMaterialAmount(lathe, SteelMaterial, 100000), Is.True, "The lathe should take steel.");
-            Assert.That(materials.TryChangeMaterialAmount(lathe, GlassMaterial, 100000), Is.True, "The lathe should take glass.");
+            // An ore processor takes only ore.
+            if (fill)
+            {
+                Assert.That(materials.TryChangeMaterialAmount(lathe, SteelMaterial, 100000), Is.True, "The lathe should take steel.");
+                Assert.That(materials.TryChangeMaterialAmount(lathe, GlassMaterial, 100000), Is.True, "The lathe should take glass.");
+            }
 
             SEntMan.System<SharedUserInterfaceSystem>().OpenUi(lathe, LatheUiKey.Key, user);
         });
@@ -993,5 +998,55 @@ public sealed class KsTguiLatheWindowTest : GameTest
                 }
             });
         });
+    }
+
+    /// <summary>
+    ///     A smelter makes what it makes at once, so in place of the queue its window shows the mining points it holds, and
+    ///         keeps them up to date.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ASmelterShowsItsPointsWhereTheQueueIs(bool tgui)
+    {
+        await OverrideCVar(Side.Client, KsCCVars.TguiStyle, tgui);
+        await Pair.RunTicksSync(2);
+
+        var processor = await OpenLathe("OreProcessor", fill: false);
+
+        async Task SetPoints(float points)
+        {
+            await Server.WaitPost(() =>
+            {
+                var smelterComponent = SEntMan.GetComponent<KsSPAMSmelterComponent>(processor);
+                smelterComponent.Unclaimed = points;
+                SEntMan.Dirty(processor, smelterComponent);
+            });
+            await Pair.RunTicksSync(10);
+        }
+
+        bool Shows(string text)
+        {
+            var windows = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children;
+            Control window = tgui ? windows.OfType<KsTguiLatheWindow>().Single() : windows.OfType<LatheMenu>().Single();
+            return tgui
+                ? Descendants<KsTguiLabeledListItem>(window).Any(item => item.Visible && item.Text == text)
+                : Descendants<Label>(window).Any(label => label.Visible && label.Text == text);
+        }
+
+        string Expected(int points) => tgui
+            ? points.ToString()
+            : Robust.Shared.Localization.Loc.GetString("ks-spam-smelter-ui-points", ("points", points));
+
+        await SetPoints(42f);
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(Shows(Expected(42)), Is.True, "The window must show the points the smelter holds.");
+            if (tgui)
+                Assert.That(Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children.OfType<KsTguiLatheWindow>().Single().QueueShown, Is.True,
+                    "A smelter's section must show even with nothing queued.");
+        });
+
+        await SetPoints(0f);
+        await Client.WaitAssertion(() => Assert.That(Shows(Expected(0)), Is.True, "The window must follow the points as they are claimed."));
     }
 }

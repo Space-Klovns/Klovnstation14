@@ -33,4 +33,9 @@ public interface IKsLatheWindow
     void PopulateQueueList(IReadOnlyCollection<LatheRecipeBatch> queue);
 
     void SetQueueInfo(ProtoId<LatheRecipePrototype>? recipeProto);
+
+    /// <summary>
+    ///     Shows the mining points a smelter holds where the queue would be: what it makes is made at once.
+    /// </summary>
+    void KsSetSmelterPoints(int points);
 }

@@ -66,12 +66,14 @@ ks-spam-silo-low = Заканчивается.
 
 ks-spam-profile-next-unlocks = Следующий ранг откроет: { $items }
 
-ks-spam-smelter-ready = Готово шахтёрских очков: { $points }. Проведите ID или S.P.A.M., чтобы получить их.
-ks-spam-smelter-claimed = Получено шахтёрских очков: { $points }.
 ks-spam-smelter-nothing = Получать нечего.
 ks-spam-smelter-no-account = Нет учётной записи S.P.A.M. Сначала войдите в S.P.A.M.
 ks-spam-smelter-claim-verb = Получить шахтёрские очки ({ $points })
 ks-spam-smelter-examine = Внутри [color=yellow]{ $points }[/color] неполученных шахтёрских очков.
+ks-spam-smelter-ui-title = Шахтёрские очки
+ks-spam-smelter-ui-unclaimed = Не получено
+ks-spam-smelter-ui-points = Не получено: { $points }
+ks-spam-smelter-ui-hint = Проведите по машине ID или S.P.A.M., чтобы получить их.
 
 ks-spam-order-open-button = Заказать снаряжение
 ks-spam-order-window-title = Заказ снаряжения S.P.A.M.

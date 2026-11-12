@@ -84,7 +84,7 @@
                         Mode="Press">
                     </Button>
                 </BoxContainer>
-                <Label Text="{Loc 'lathe-menu-queue-title'}" Margin="5 5 5 5" HorizontalAlignment="Center"/>
+                <Label Name="KsQueueTitleLabel" Text="{Loc 'lathe-menu-queue-title'}" Margin="5 5 5 5" HorizontalAlignment="Center"/> <!-- KS14: named, a smelter retitles it -->
                 <BoxContainer
                     Name="FabricatingContainer"
                     Orientation="Horizontal"
@@ -122,7 +122,7 @@
                             StyleClasses="negative OpenLeft" />
                     </PanelContainer>
                 </BoxContainer>
-                <ScrollContainer VerticalExpand="True" HScrollEnabled="False">
+                <ScrollContainer Name="KsQueueScroll" VerticalExpand="True" HScrollEnabled="False"> <!-- KS14: named, a smelter hides it -->
                     <BoxContainer
                         Name="QueueList"
                         Orientation="Vertical"
@@ -131,6 +131,12 @@
                         RectClipContent="True">
                     </BoxContainer>
                 </ScrollContainer>
+                <!-- KS14 start: a smelter's mining points, in place of the queue -->
+                <BoxContainer Name="KsSmelterContainer" Orientation="Vertical" VerticalExpand="True" Visible="False" Margin="5">
+                    <Label Name="KsSmelterPointsLabel" HorizontalAlignment="Center" StyleClasses="LabelHeadingBigger"/>
+                    <RichTextLabel Name="KsSmelterHintLabel" Margin="0 5 0 0"/>
+                </BoxContainer>
+                <!-- KS14 end -->
             </BoxContainer>
             <BoxContainer
             VerticalExpand="True"
