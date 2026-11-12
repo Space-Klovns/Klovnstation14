@@ -64,7 +64,10 @@ public sealed partial class SpeakOperator : HTNOperator
             case LocalizedSetSpeakOperatorSpeech localizedDataSet:
                 if (!_proto.TryIndex(KsResolveLineSet(blackboard, localizedDataSet.LineSet) /* KS14: per-mob voice sets */, out var speechSet))
                     return HTNOperatorStatus.Failed;
-                speechLocId = _random.Pick(speechSet);
+                // KS14: the id, not its text: Pick(LocalizedDatasetPrototype) returns the string already localised, which was
+                //      then localised again, and a recorded voice found no clip for it
+                // speechLocId = _random.Pick(speechSet);
+                speechLocId = _random.Pick(speechSet.Values);
                 break;
             case SingleSpeakOperatorSpeech single:
                 speechLocId = single.Line;

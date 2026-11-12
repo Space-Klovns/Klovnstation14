@@ -172,4 +172,52 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
             Assert.That(playing, Is.GreaterThan(0), "the clips should be playing on the mob");
         });
     }
+    /// <summary>
+    ///     A line the HTN has a Redacted say, through <c>SpeakOperator</c> as in game, plays its clip as well as going to chat.
+    ///         It once went silent: the operator looked the clip up by the line's text rather than its id.
+    /// </summary>
+    [TestCase("KsOperativeTargetDown")]
+    [TestCase("KsOperativeExecution")]
+    public async Task TestSpeakingALinePlaysItsClip(string lineSet)
+    {
+        var protoManager = Server.ResolveDependency<IPrototypeManager>();
+        if (!protoManager.HasIndex<EntityPrototype>(RedactedSpawner))
+            Assert.Ignore("the Redacted are in the private _KsModule submodule, which is not present");
+
+        var entManager = Server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitPost(() => entManager.SpawnAtPosition(RedactedSpawner, map.GridCoords));
+        await Pair.RunTicksSync(5);
+
+        await Server.WaitAssertion(() =>
+        {
+            var query = entManager.EntityQueryEnumerator<NpcVoiceSetComponent>();
+            Assert.That(query.MoveNext(out var mobUid, out _), "the spawner should have spawned a voiced Redacted");
+
+            var speakOperator = new Content.Server.NPC.HTN.PrimitiveTasks.Operators.SpeakOperator
+            {
+                Speech = new Content.Server.NPC.HTN.PrimitiveTasks.Operators.SpeakOperator.SpeakOperatorSpeech.LocalizedSetSpeakOperatorSpeech
+                {
+                    LineSet = lineSet,
+                },
+            };
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(speakOperator, oneOff: true);
+            speakOperator.Initialize(entManager.EntitySysManager);
+
+            var blackboard = new Content.Server.NPC.NPCBlackboard();
+            blackboard.SetValue(Content.Server.NPC.NPCBlackboard.Owner, mobUid);
+            speakOperator.Update(blackboard, 0f);
+
+            var audioQuery = entManager.EntityQueryEnumerator<Robust.Shared.Audio.Components.AudioComponent, TransformComponent>();
+            var playing = 0;
+            while (audioQuery.MoveNext(out _, out var audioComponent, out var transformComponent))
+            {
+                if (transformComponent.ParentUid == mobUid && $"{audioComponent.FileName}".Contains("/Voice/Redacted/"))
+                    playing++;
+            }
+
+            Assert.That(playing, Is.EqualTo(1), "saying the line should play its clip, once");
+        });
+    }
 }
