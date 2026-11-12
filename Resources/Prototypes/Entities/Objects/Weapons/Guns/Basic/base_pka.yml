@@ -22,8 +22,9 @@
     maxAngle: 45
     availableModes:
     - SemiAuto
+    farSoundGunshot: { sound: { collection: KsGunshotConscriptFar }, range: "15, 100" } # KS14: matching farsound
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/kinetic_accel.ogg
+      collection: KsGunshotConscript # KS14: /Audio/Weapons/Guns/Gunshots/kinetic_accel.ogg -> KsGunshotConscript
     projectileSpeed: 25
   - type: AmmoCounter
   - type: Appearance
@@ -37,7 +38,7 @@
   - type: RechargeBasicEntityAmmo
     rechargeCooldown: 0.75
     rechargeSound:
-      path: /Audio/Weapons/Guns/MagIn/kinetic_reload.ogg
+      path: /Audio/_Crescent/Weapons/Guns/conscript/rack.ogg # KS14: kinetic_reload.ogg -> conscript rack
   - type: BasicEntityAmmoProvider
     proto: BulletKinetic
     capacity: 1

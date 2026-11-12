@@ -102,3 +102,38 @@
   - /Audio/_Crescent/Weapons/Guns/supressed_1/supressed_gunshot_1.ogg
   - /Audio/_Crescent/Weapons/Guns/supressed_1/supressed_gunshot_2.ogg
   - /Audio/_Crescent/Weapons/Guns/supressed_1/supressed_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotSmg1
+  files:
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_3.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_4.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_5.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_6.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_7.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_8.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_1/smg_gunshot_9.ogg
+
+- type: soundCollection
+  id: KsGunshotSmg2
+  files:
+  - /Audio/_Crescent/Weapons/Guns/smg_2/smg_gunshot_1.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_2/smg_gunshot_2.ogg
+  - /Audio/_Crescent/Weapons/Guns/smg_2/smg_gunshot_3.ogg
+
+- type: soundCollection
+  id: KsGunshotMg42
+  files:
+  - /Audio/_Crescent/Weapons/Guns/MG42/gunshot.ogg
+
+- type: soundCollection
+  id: KsGunshotGlFire
+  files:
+  - /Audio/_Crescent/Weapons/Guns/non_collection/gl_fire.ogg
+
+- type: soundCollection
+  id: KsGunshotConscript
+  files:
+  - /Audio/_Crescent/Weapons/Guns/conscript/gunshot.ogg

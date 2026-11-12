@@ -34,6 +34,9 @@
   id: WeaponLauncherChinaLake
   description: PLOOP.
   components:
+  - type: Gun # KS14: grenade launcher report
+    soundGunshot: { path: /Audio/_Crescent/Weapons/Guns/non_collection/gl_fire.ogg } # KS14: grenade_launcher.ogg -> gl_fire.ogg
+    farSoundGunshot: { sound: { collection: KsGunshotGlFireFar }, range: "15, 130" } # KS14: matching farsound
   - type: Sprite
     sprite: Objects/Weapons/Guns/Launchers/china_lake.rsi
     layers:
@@ -67,6 +70,9 @@
   name: hydra
   description: PLOOP... FSSSSSS...
   components:
+  - type: Gun # KS14: grenade launcher report
+    soundGunshot: { path: /Audio/_Crescent/Weapons/Guns/non_collection/gl_fire.ogg } # KS14: grenade_launcher.ogg -> gl_fire.ogg
+    farSoundGunshot: { sound: { collection: KsGunshotGlFireFar }, range: "15, 130" } # KS14: matching farsound
   - type: Sprite
     sprite: Objects/Weapons/Guns/Launchers/hydra_launcher.rsi
     layers:

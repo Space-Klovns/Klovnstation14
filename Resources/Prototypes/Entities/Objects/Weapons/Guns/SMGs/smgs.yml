@@ -29,10 +29,10 @@
     - SemiAuto
     - FullAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/smg.ogg
+      collection: KsGunshotSmg1 # KS14: /Audio/Weapons/Guns/Gunshots/smg.ogg -> KsGunshotSmg1
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/smg.ogg
+      sound: { collection: KsGunshotSmg1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/smg.ogg -> KsGunshotSmg1Far
       range: 15,100
     # KS14: Farsound end
     defaultDirection: 1, 0
@@ -87,10 +87,10 @@
   - type: Gun
     fireRate: 10
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/atreides.ogg
+      collection: KsGunshotSmg2 # KS14: /Audio/Weapons/Guns/Gunshots/atreides.ogg -> KsGunshotSmg2
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/atreides.ogg
+      sound: { collection: KsGunshotSmg2Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/atreides.ogg -> KsGunshotSmg2Far
       range: 15,100
     # KS14: Farsound end
   - type: MagazineVisuals
@@ -131,10 +131,10 @@
     - FullAuto
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/c-20r.ogg
+      collection: KsGunshotSmg1 # KS14: /Audio/Weapons/Guns/Gunshots/c-20r.ogg -> KsGunshotSmg1
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      sound: { collection: KsGunshotSmg1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg -> KsGunshotSmg1Far
       range: 15,100
     # KS14: Farsound end
   - type: ChamberMagazineAmmoProvider
@@ -165,10 +165,10 @@
     # - Burst
     - FullAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/c-20r.ogg
+      collection: KsGunshotSmg1 # KS14: /Audio/Weapons/Guns/Gunshots/c-20r.ogg -> KsGunshotSmg1
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      sound: { collection: KsGunshotSmg1Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg -> KsGunshotSmg1Far
       range: 15,100
     # KS14: Farsound end
   - type: Sprite
@@ -220,8 +220,9 @@
       maxAngle: 29
       fireRate: 7 # KS14 change
       burstFireRate: 18
+      farSoundGunshot: { sound: { collection: KsGunshotSmg1Far }, range: "15, 100" } # KS14: matching farsound
       soundGunshot:
-        path: /Audio/Weapons/Guns/Gunshots/atreides.ogg
+        collection: KsGunshotSmg1 # KS14: /Audio/Weapons/Guns/Gunshots/atreides.ogg -> KsGunshotSmg1
       selectedMode: Burst
       availableModes:
       - Burst
@@ -286,6 +287,8 @@
   - type: ChamberMagazineAmmoProvider
     boltClosed: null
   - type: Gun
+    farSoundGunshot: { sound: { collection: KsGunshotSmg2Far }, range: "15, 100" } # KS14: matching farsound
+    soundGunshot: { collection: KsGunshotSmg2 } # KS14: gunshot collection
     fireRate: 5.5
     minAngle: 1
     maxAngle: 6
@@ -354,8 +357,9 @@
     maxAngle: 32
     availableModes:
     - FullAuto
+    farSoundGunshot: { sound: { collection: KsGunshotSmg1Far }, range: "15, 100" } # KS14: matching farsound
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/atreides.ogg
+      collection: KsGunshotSmg1 # KS14: /Audio/Weapons/Guns/Gunshots/atreides.ogg -> KsGunshotSmg1
   - type: ChamberMagazineAmmoProvider
     autoEject: false
   - type: Appearance

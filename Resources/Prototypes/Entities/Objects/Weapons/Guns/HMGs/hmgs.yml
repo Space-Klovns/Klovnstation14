@@ -47,10 +47,10 @@
   - type: Gun
     fireRate: 15
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/minigun.ogg
+      collection: KsGunshotMg42 # KS14: /Audio/Weapons/Guns/Gunshots/minigun.ogg -> KsGunshotMg42
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/minigun.ogg
+      sound: { collection: KsGunshotMg42Far } # KS14: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/minigun.ogg -> KsGunshotMg42Far
       range: 15,130
     # KS14: Farsound end
   - type: BallisticAmmoProvider
