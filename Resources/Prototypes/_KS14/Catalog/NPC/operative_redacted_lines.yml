@@ -61,7 +61,7 @@
 - type: localizedDataset
   id: KsOperativeRedactedThrowOther
   values:
-    prefix: ks-operative-redacted-line-throw-
+    prefix: ks-operative-redacted-line-throw-other-
     count: 1
 
 # For a squadmate with no callsign. One with a callsign is named: ks-operative-redacted-line-man-down-<callsign>, see
