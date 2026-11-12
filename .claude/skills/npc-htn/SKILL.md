@@ -31,7 +31,9 @@ Each NPC feature is split four ways, and each part has one job:
   `HasContactPrecondition` and `ContactVisiblePrecondition`. No operator ever raycasts for sight itself.
 - **`NpcSquadTacticsSystem`** (`Content.Server/_KS14/NPC/Squad/Tactics/`) is the same shape one level up. It reads
   every member's perception, decides what each should do about a hostile the squad has lost (watch, stack up,
-  go in, search, hold) or about nothing happening (regroup), and keeps the answer in `NpcOrderComponent`. HTN enters
+  go in, search, hold) or about nothing happening (regroup), and keeps the answer in `NpcOrderComponent`. While anyone
+  is fighting, it decides only what the squad does together in the fight (`NpcSquadTacticsSystem.Fight.cs`: a push, a
+  flank), as orders over combat; everything else waits for the fight to end. HTN enters
   an order through `HasOrderPrecondition`, reads it with `GetOrderOperator`, and every task carrying it out rechecks
   `OrderCurrentPrecondition`. A changed order gets a new id and a `RequestReplan`, so it is taken up on the next tick.
 - **`NpcSquadCoverSystem`** works out which member covers which way into a room. **`NpcLineOfSightSystem`** is the

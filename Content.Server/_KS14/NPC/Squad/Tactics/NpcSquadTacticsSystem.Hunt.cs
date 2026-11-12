@@ -138,7 +138,8 @@ public sealed partial class NpcSquadTacticsSystem
             IsSealedIn(walkerUid, disturbanceComponent.Coordinates);
     }
 
-    private void EndHunt(EntityUid issuerUid)
+    /// <param name="keepFightOrders">Whether to leave a push or a flank going: the fight goes on.</param>
+    private void EndHunt(EntityUid issuerUid, bool keepFightOrders = false)
     {
         if (_huntQuery.TryComp(issuerUid, out var huntComponent))
         {
@@ -151,7 +152,13 @@ public sealed partial class NpcSquadTacticsSystem
                 _npcHuntDebugSystem.SendEnded(issuerUid, _members);
         }
 
-        ClearOrders(issuerUid, _members);
+        foreach (var memberUid in _members)
+        {
+            if (keepFightOrders && _orderQuery.TryComp(memberUid, out var orderComponent) && IsFightOrder(orderComponent))
+                continue;
+
+            ClearOrder(memberUid, issuerUid);
+        }
     }
 
     /// <summary>

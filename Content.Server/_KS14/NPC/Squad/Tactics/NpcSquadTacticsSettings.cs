@@ -1,3 +1,4 @@
+using Content.Shared._KS14.NPC;
 using Content.Server._KS14.NPC.Meters;
 using Robust.Shared.Prototypes;
 
@@ -396,6 +397,102 @@ public sealed partial class NpcSquadTacticsSettings
     /// </summary>
     [DataField]
     public float Crossfire;
+
+    /// <summary>
+    ///     Whether the squad goes forward together on a hostile it is fighting, when it has a moment: the hostile has stopped
+    ///         shooting after shooting (reloading, or out), or one of the squad's grenades has just gone off on it. All but one,
+    ///         who keeps firing, go in close, each from its own side. See <see cref="NpcOrderKind.Push"/>.
+    /// </summary>
+    [DataField]
+    public bool Pushing;
+
+    /// <summary>
+    ///     How long a hostile that was shooting has to have gone quiet, while in sight, for that to be a moment to push.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushSilence = TimeSpan.FromSeconds(1.2);
+
+    /// <summary>
+    ///     How recently it has to have been shooting for going quiet to mean anything: one that never fired is not reloading.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushShotMemory = TimeSpan.FromSeconds(6);
+
+    /// <summary>
+    ///     How long after one of the squad's grenades goes off by a hostile it is a moment to push, and how near it, in tiles.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushBlastWindow = TimeSpan.FromSeconds(1.5);
+
+    [DataField]
+    public float PushBlastRange = 3f;
+
+    /// <summary>
+    ///     The furthest a hostile may be from the nearest member fighting it, in tiles, to push on. Further, going forward is
+    ///         a long walk in the open.
+    /// </summary>
+    [DataField]
+    public float PushMaxRange = 12f;
+
+    /// <summary>
+    ///     How near the hostile a pusher goes, in tiles.
+    /// </summary>
+    [DataField]
+    public float PushStandoff = 2.5f;
+
+    /// <summary>
+    ///     How long a push lasts at most. It ends sooner once everyone is there, or the moment the hostile shoots again.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushTime = TimeSpan.FromSeconds(4);
+
+    /// <summary>
+    ///     The least time between one push ending and the next.
+    /// </summary>
+    [DataField]
+    public TimeSpan PushCooldown = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    ///     Whether a squad all fighting a hostile from one side sends one member, two with five or more, round its side while
+    ///         the rest keep it pinned. See <see cref="NpcOrderKind.Flank"/>.
+    /// </summary>
+    [DataField]
+    public bool Flanking;
+
+    /// <summary>
+    ///     How many members have to be fighting the hostile to spare one to flank it.
+    /// </summary>
+    [DataField]
+    public int FlankMinFighters = 3;
+
+    /// <summary>
+    ///     How narrow, in degrees and seen from the hostile, the squad has to be for it to be on one side: every member
+    ///         fighting it within this arc.
+    /// </summary>
+    [DataField]
+    public float FlankArc = 70f;
+
+    /// <summary>
+    ///     How far from the hostile, in tiles, a flanker goes.
+    /// </summary>
+    [DataField]
+    public float FlankRange = 5f;
+
+    /// <summary>
+    ///     How long a flanker gets to get there. One that has got no nearer after <see cref="FlankProgressTime"/> is given up
+    ///         on sooner: it cannot get round that way.
+    /// </summary>
+    [DataField]
+    public TimeSpan FlankTimeout = TimeSpan.FromSeconds(12);
+
+    [DataField]
+    public TimeSpan FlankProgressTime = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///     The least time between one flank ending and the next.
+    /// </summary>
+    [DataField]
+    public TimeSpan FlankCooldown = TimeSpan.FromSeconds(15);
 
     #endregion
 }

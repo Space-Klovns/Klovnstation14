@@ -1,5 +1,6 @@
 using Content.Server._KS14.NPC.Hands;
 using Content.Server._KS14.NPC.Squad;
+using Content.Server._KS14.NPC.Squad.Tactics;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server._KS14.NPC.Voices;
 using Content.Server.Hands.Systems;
@@ -27,6 +28,7 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
     [Dependency] private NpcHandsSystem _npcHandsSystem = default!;
     [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
+    [Dependency] private NpcSquadTacticsSystem _npcSquadTacticsSystem = default!;
     [Dependency] private NpcVoiceSystem _npcVoiceSystem = default!;
     [Dependency] private PredictedHandsSystem _predictedHandsSystem = default!;
     [Dependency] private TriggerSystem _triggerSystem = default!;
@@ -130,6 +132,9 @@ public sealed partial class NpcGrenadeSystem : EntitySystem
             return;
 
         StartPush(throwerUid, coordinates);
+
+        // A squad that pushes in a fight may go in on a hostile caught by it.
+        _npcSquadTacticsSystem.NoteBlast(throwerUid, coordinates);
 
         if (!_grenadeThrowerQuery.TryComp(throwerUid, out var grenadeThrowerComponent) || !grenadeThrowerComponent.CallsOutBlasts)
             return;

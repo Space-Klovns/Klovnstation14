@@ -1550,6 +1550,48 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     A push or a flank, given in a fight, comes before the fighting it is part of: the operative goes for the spot,
+    ///         firing at the hostile on the way while it can see it, and just goes while it cannot.
+    /// </summary>
+    [TestCase(NpcOrderKind.Push, true)]
+    [TestCase(NpcOrderKind.Flank, true)]
+    [TestCase(NpcOrderKind.Push, false)]
+    public async Task TestAPushOrFlankFiresOnTheWay(NpcOrderKind kind, bool inSight)
+    {
+        var fighting = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+            });
+
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 0, 0);
+                entManager.System<Content.Shared.Damage.Systems.SharedGodmodeSystem>().EnableGodmode(hostileUid);
+                var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+                entManager.System<NpcPerceptionSystem>().SetContact(mobUid, hostileUid, new NpcContact(
+                    inSight ? NpcContactState.Visible : NpcContactState.Lost,
+                    now, now, now, entManager.GetComponent<TransformComponent>(hostileUid).Coordinates, default, null, Reacted: true));
+
+                var tacticsSystem = entManager.System<NpcSquadTacticsSystem>();
+                tacticsSystem.UpdatesPaused = true;
+                tacticsSystem.IssueOrder(mobUid, kind, new EntityCoordinates(gridUid, new System.Numerics.Vector2(1.5f, 2.5f)), targetUid: hostileUid, overCombat: true);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is GetOrderOperator), Describe(plan));
+            Assert.That(plan.Tasks.Any(task => task.Operator is GunOperator), Is.EqualTo(inSight), Describe(plan));
+            Assert.That(plan.Tasks.Any(task => task.Operator is MoveToOperator), Describe(plan));
+            if (inSight)
+                Assert.That(Replaces(plan, fighting), "it has to be able to break off the shooting it was doing");
+        });
+    }
+
+    /// <summary>
     ///     Live, the whole thing through the real root: a squad that can see a hostile through a window in a sealed room, with
     ///         one of them carrying a way through its locked door, goes and forces it, and gets a shot.
     /// </summary>

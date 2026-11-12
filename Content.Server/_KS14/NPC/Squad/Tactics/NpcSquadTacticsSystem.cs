@@ -183,14 +183,21 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
 
         // A hostile nobody can get at is the one fight that needs orders, so this comes before the check below.
         if (UpdateSquadPlan(issuerUid, leaderUid, settings, now))
-            return;
-
-        // A fight on: combat comes first, and a hostile in sight is not lost.
-        if (AnyoneInCombat())
         {
-            EndHunt(issuerUid);
+            EndFight(issuerUid, settings, now);
             return;
         }
+
+        // A fight on: combat comes first, and a hostile in sight is not lost. What the squad does together in it, it does
+        //      over that (see NpcSquadTacticsSystem.Fight.cs).
+        if (AnyoneInCombat())
+        {
+            EndHunt(issuerUid, keepFightOrders: true);
+            UpdateFight(issuerUid, leaderUid, settings, now);
+            return;
+        }
+
+        EndFight(issuerUid, settings, now);
 
         // Waiting for its meds to work: it will not come, so nothing below may count on it or wait for it. Only after
         //      the check above, because one with a hostile in sight is still in the fight.

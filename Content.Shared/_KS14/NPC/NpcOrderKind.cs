@@ -86,6 +86,18 @@ public enum NpcOrderKind : byte
     ///     Press the activator the order names, and set off the charge wired to it.
     /// </summary>
     Detonate,
+
+    /// <summary>
+    ///     In a fight, go forward to the spot the order names, close by the hostile it names, firing on the way: it has
+    ///         stopped shooting, or something has just gone off on it.
+    /// </summary>
+    Push,
+
+    /// <summary>
+    ///     In a fight, go round to the spot the order names, at the side of the hostile it names, firing when there is a shot:
+    ///         the rest of the squad keeps it pinned meanwhile.
+    /// </summary>
+    Flank,
 }
 
 /// <summary>
