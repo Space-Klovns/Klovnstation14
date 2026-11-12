@@ -82,3 +82,64 @@
     - Syndicate
     pendingObjectiveFactions:
     - Syndicate
+
+# The weather over a field commander round: mostly snow, now and then a sleet storm that brings rain, and some breaks
+#     in between.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderWeather
+  components:
+  - type: KsDynamicWeatherRule
+    initialState: LightSnow
+    states:
+    - name: Clear
+      minDuration: 3m
+      maxDuration: 6m
+      next:
+        LightSnow: 3
+        Snow: 1
+    - name: LightSnow
+      weathers:
+      - WeatherSnowfallLight
+      minDuration: 3m
+      maxDuration: 6m
+      next:
+        Clear: 1
+        Snow: 3
+        Sleet: 1
+    - name: Snow
+      weathers:
+      - WeatherSnowfallMedium
+      minDuration: 3m
+      maxDuration: 5m
+      next:
+        LightSnow: 2
+        Blizzard: 1
+        Sleet: 1
+    - name: Blizzard
+      weathers:
+      - WeatherSnowfallHeavy
+      minDuration: 2m
+      maxDuration: 4m
+      next:
+        Snow: 3
+        SleetStorm: 1
+    - name: Sleet
+      weathers:
+      - WeatherRain
+      - WeatherSnowfallMedium
+      minDuration: 2m
+      maxDuration: 4m
+      next:
+        Snow: 2
+        LightSnow: 2
+        SleetStorm: 1
+    - name: SleetStorm
+      weathers:
+      - WeatherStorm
+      - WeatherSnowfallLight
+      minDuration: 90
+      maxDuration: 3m
+      next:
+        Sleet: 2
+        Snow: 1

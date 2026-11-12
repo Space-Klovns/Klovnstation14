@@ -53,3 +53,4 @@
   rules:
   - KsScenarioFieldCommander
   - KsFieldCommanderRule
+  - KsFieldCommanderWeather

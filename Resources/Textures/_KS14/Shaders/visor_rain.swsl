@@ -1,0 +1,213 @@
+light_mode unshaded;
+
+// Water on an invisible visor in front of the screen: drops, the streaks they leave as they run down, wet snowflakes
+//      melting into drops, and a fine mist of tiny droplets. Drops come from KsVisorSimulation, the mist is made here.
+//      Everything is laid out in screen space measured in screen heights (x scaled by the aspect ratio), so drops stay
+//      round on any screen, and fixed to the screen whatever the camera does.
+
+uniform sampler2D SCREEN_TEXTURE;
+
+uniform lowp int drop_count;
+// Centre, 0 to 1 across the screen, y up.
+uniform highp vec2[32] drop_positions;
+// x: radius in screen heights. y: opacity.
+uniform highp vec2[32] drop_sizes;
+// x: length of the smudge above it, in screen heights. y: 0 for a snowflake, 1 once melted into water.
+uniform highp vec2[32] drop_trails;
+// x: a random seed for its shape. y: how far it has gathered from a splat into a running drop, 0 to 1.
+uniform highp vec2[32] drop_shapes;
+// How densely the fine mist covers the visor, 0 to 1.
+uniform highp float mist;
+
+// How strongly water magnifies the view behind it. Kept low: a film of water on a visor, not a bead.
+uniform highp float lens_strength = 0.1;
+
+// The smaller of two distances, blended over k so that where two shapes meet there's no crease.
+highp float smoothMin(highp float a, highp float b, highp float k)
+{
+    highp float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+    return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+highp float hash12(highp vec2 p)
+{
+    highp vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+void fragment()
+{
+    highp vec2 uv = SCREEN_UV;
+    highp float aspect = SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x;
+    highp vec2 p = vec2(uv.x * aspect, uv.y);
+
+    // Where to sample the screen from, as an offset in screen heights; and what the water does to the colour there.
+    highp vec2 bend = vec2(0.0);
+    highp float shade = 0.0;
+    highp float shine = 0.0;
+    highp float frost = 0.0;
+    highp float wet = 0.0;
+    // Where running water has smeared the view: blurred hard and dragged along the way it ran.
+    highp float smear = 0.0;
+    // How much of a drop lies over this pixel: the view through it is blurred, dimmed and greyed.
+    highp float cover = 0.0;
+
+    // ── Mist: a grid of tiny droplets, two sizes, each cell holding one or none. They come and go slowly.
+    for (int layer = 0; layer < 2; layer++)
+    {
+        highp float cellSize = layer == 0 ? 0.012 : 0.007;
+        highp vec2 grid = p / cellSize + vec2(float(layer) * 17.3, 0.0);
+        highp vec2 cell = floor(grid);
+        highp float cycle = TIME * 0.05 + hash12(cell + 91.7);
+        highp vec2 cellId = cell + floor(cycle) * 37.0;
+        highp float life = fract(cycle);
+        highp float fade = smoothstep(0.0, 0.15, life) * (1.0 - smoothstep(0.75, 1.0, life));
+
+        if (hash12(cellId) < mist * (layer == 0 ? 0.5 : 0.7))
+        {
+            highp vec2 centre = vec2(hash12(cellId + 3.1), hash12(cellId + 7.9)) * 0.5 + 0.25;
+            highp vec2 offset = (fract(grid) - centre) * cellSize;
+            highp float radius = cellSize * (0.15 + 0.15 * hash12(cellId + 1.3));
+            highp float q = length(offset) / radius;
+
+            if (q < 1.0)
+            {
+                highp float mask = (1.0 - smoothstep(0.8, 1.0, q)) * fade;
+                bend += -offset * lens_strength * 0.6 * mask;
+                shade += smoothstep(0.7, 1.0, q) * mask * 0.06;
+                wet += mask * 0.5;
+            }
+        }
+    }
+
+    // ── Drops.
+    for (int i = 0; i < 32; i++)
+    {
+        if (i >= drop_count)
+            break;
+
+        highp float radius = drop_sizes[i].x;
+        highp float opacity = drop_sizes[i].y;
+        highp float trail = drop_trails[i].x;
+        highp float water = drop_trails[i].y;
+        highp float seed = drop_shapes[i].x;
+        highp float gathered = drop_shapes[i].y;
+
+        highp vec2 offset = p - vec2(drop_positions[i].x * aspect, drop_positions[i].y);
+
+        // The wet trail of a running drop: as wide as the drop where it meets it, narrowing straight to a point up the
+        //      way it came, a little ragged at the edges, and drying from the top.
+        if (trail > 0.0005 && offset.y > -radius * 0.3 && offset.y < trail)
+        {
+            highp float along = clamp(offset.y / trail, 0.0, 1.0);
+            highp float ragged = (zNoise(vec2(offset.y * 70.0, seed * 31.0)) - 0.5) * 0.3;
+            // Keeps most of its width most of the way, closing off in a rounded end.
+            highp float width = radius * 0.85 * sqrt(max(0.0, 1.0 - along * along)) * (1.0 + ragged);
+            highp float across = abs(offset.x) / max(width, 0.00001);
+
+            if (across < 1.0)
+            {
+                // Fading in from inside the drop, so the two run together with no line between them.
+                highp float mask = (1.0 - smoothstep(0.15, 1.0, across)) * (1.0 - 0.6 * along)
+                    * smoothstep(-0.3, 0.2, offset.y / radius) * opacity;
+                smear += mask * 1.1;
+                cover += mask * 0.5;
+            }
+        }
+
+        // Its body. Just landed, an uneven splat: two blobs overlapping, each at its own angle. As it runs it gathers
+        //      into one rounded drop, a little flatter on top.
+        highp float tiltA = (hash12(vec2(seed * 97.0, 1.0)) - 0.5) * 2.4;
+        highp float tiltB = tiltA + 0.6 + hash12(vec2(seed * 13.0, 6.0)) * 1.2;
+        highp vec2 shiftB = (vec2(hash12(vec2(seed, 7.0)), hash12(vec2(seed, 8.0))) - 0.5) * radius * 0.5;
+        highp vec2 a = vec2(offset.x * cos(tiltA) - offset.y * sin(tiltA), offset.x * sin(tiltA) + offset.y * cos(tiltA));
+        highp vec2 bOffset = offset - shiftB;
+        highp vec2 b = vec2(bOffset.x * cos(tiltB) - bOffset.y * sin(tiltB), bOffset.x * sin(tiltB) + bOffset.y * cos(tiltB));
+        highp float splat = smoothMin(length(a * vec2(0.75, 1.3)), length(b * vec2(0.8, 1.25)) / 0.85, radius * 0.4);
+
+        // A running drop keeps a little of its own lean and stretch.
+        highp float lean = (hash12(vec2(seed * 29.0, 10.0)) - 0.5) * 1.0;
+        highp float stretch = 0.78 + 0.45 * hash12(vec2(seed * 53.0, 2.0));
+        highp vec2 rounded = vec2(offset.x * cos(lean) - offset.y * sin(lean), offset.x * sin(lean) + offset.y * cos(lean));
+        rounded = vec2(rounded.x * stretch, rounded.y / stretch * mix(1.0, 1.2, smoothstep(-0.4, 0.4, rounded.y / radius)));
+
+        // A lumpy outline, in two sizes of lump, different on every drop.
+        highp vec2 around = normalize(offset + vec2(0.00001));
+        // Fuller on one side than the other, like an egg, which way and how much its own.
+        highp float fullerAngle = hash12(vec2(seed * 61.0, 12.0)) * 6.2832;
+        highp float fuller = dot(around, vec2(cos(fullerAngle), sin(fullerAngle))) * 0.12 * hash12(vec2(seed * 67.0, 13.0));
+        highp float lumps = fuller + (zNoise(around * 1.5 + vec2(seed * 37.0, seed * 11.0)) - 0.5) * 0.38
+            + (zNoise(around * 4.0 + vec2(seed * 17.0, seed * 43.0)) - 0.5) * 0.12;
+        highp float q = mix(splat, length(rounded), gathered) / (radius * (1.0 + lumps));
+
+        if (q < 1.0)
+        {
+            // Out of focus, as anything that close to the eye is: no hard edge, it fades out from the middle, and what
+            //      is behind it comes through blurred and dimmed rather than bent.
+            highp float mask = (1.0 - smoothstep(0.25, 1.0, q)) * opacity;
+
+            // Not evenly thick: thinner and thicker patches, the water sagging to the bottom, and every drop of its own
+            //      weight. All of it slight.
+            highp float patches = 0.75 + 0.5 * zNoise(offset / radius * 2.2 + vec2(seed * 19.0, seed * 7.0));
+            highp float sag = 1.0 + 0.2 * clamp(-offset.y / radius, -1.0, 1.0);
+            highp float weight = 0.75 + 0.35 * hash12(vec2(seed * 41.0, 9.0));
+            mask *= patches * sag * weight;
+            bend += -offset * lens_strength * water * mask;
+            cover += mask * water;
+
+            // A flake: frosty, uneven white, thinning to water as it melts.
+            highp float grain = hash12(floor(p * 700.0) + seed * 100.0);
+            frost += (1.0 - water) * mask * (0.45 + 0.4 * grain) * (1.0 - q * q);
+        }
+    }
+
+    // Overlapping water can't bend the view without limit.
+    highp float bendLength = length(bend);
+    if (bendLength > 0.08)
+        bend *= 0.08 / bendLength;
+
+    highp vec2 bendUv = vec2(bend.x / aspect, bend.y);
+    highp vec2 sampleUv = clamp(uv + bendUv, vec2(0.0), vec2(1.0));
+
+    // Water splits the light a little at its edges.
+    highp vec2 split = bendUv * 0.08;
+    highp vec3 colour = vec3(
+        zTextureSpec(SCREEN_TEXTURE, sampleUv + split).r,
+        zTextureSpec(SCREEN_TEXTURE, sampleUv).g,
+        zTextureSpec(SCREEN_TEXTURE, sampleUv - split).b);
+
+    // Water blurs what is behind it: a wide disc of samples under a drop or a fresh smear, a slight softening under
+    //      each speck of mist. Nowhere else: the visor itself is clear.
+    highp float wetness = clamp(cover + smear * 0.6, 0.0, 1.0);
+    highp float soften = clamp(wetness + wet * 0.3, 0.0, 1.0);
+    if (soften > 0.01)
+    {
+        // Samples on a golden-angle spiral, evenly over the disc and weighted towards the middle, in a fixed pattern:
+        //      smooth, with neither grain nor ghosted copies of the scene. In a smear the blur is drawn out along the
+        //      way the water ran.
+        highp float reach = 1.5 + 12.0 * wetness;
+        highp float drawn = clamp(smear, 0.0, 1.0);
+        highp vec2 shape = vec2(mix(1.0, 0.6, drawn), mix(1.0, 1.8, drawn)) * reach * SCREEN_PIXEL_SIZE;
+        highp vec3 blurred = vec3(0.0);
+        highp float total = 0.0;
+        for (int k = 0; k < 24; k++)
+        {
+            highp float distanceOut = sqrt((float(k) + 0.5) / 24.0);
+            highp float angle = float(k) * 2.39996;
+            highp float weight = 1.0 - 0.6 * distanceOut;
+            blurred += zTextureSpec(SCREEN_TEXTURE, sampleUv + vec2(cos(angle), sin(angle)) * distanceOut * shape).rgb * weight;
+            total += weight;
+        }
+
+        colour = mix(colour, blurred / total, soften);
+    }
+
+    // Seen through water, the world is a little darker.
+    colour *= 1.0 - clamp(cover, 0.0, 1.0) * 0.15;
+    colour *= 1.0 - clamp(shade, 0.0, 0.65);
+    colour += vec3(0.9, 0.95, 1.0) * clamp(shine, 0.0, 0.8);
+    colour = mix(colour, vec3(0.9, 0.93, 0.97), clamp(frost, 0.0, 0.85));
+
+    COLOR = vec4(colour, 1.0);
+}
