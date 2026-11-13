@@ -28,7 +28,8 @@
   components:
   - type: Sprite
     sprite: _KS14/Structures/barbed_wire.rsi
-    drawdepth: FloorObjects
+    # Over puddles and anything dropped on it, still under the mobs caught in it.
+    drawdepth: BelowMobs
     # KsLineSmooth shows whichever of these the neighbours call for, each turned to its own direction.
     layers:
     - state: wire
