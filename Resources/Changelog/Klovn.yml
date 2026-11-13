@@ -2807,3 +2807,11 @@ Entries:
         8 tiles, half at 20 tiles.
   id: 260
   time: '2026-11-13T21:26:19.0000000+00:00'
+- author: FrauzJ
+  changes:
+    - type: Add
+      message: Shields can be used to hit and, with right click, to shove and stagger.
+    - type: Add
+      message: Hitting a shield with a melee weapon bangs on it.
+  id: 261
+  time: '2026-11-13T21:40:14.0000000+00:00'
