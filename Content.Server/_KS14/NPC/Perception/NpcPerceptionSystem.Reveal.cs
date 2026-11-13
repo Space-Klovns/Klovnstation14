@@ -53,6 +53,7 @@ public sealed partial class NpcPerceptionSystem
             hasContact ? contact : null,
             conspicuous: true,
             _physicsSystem.GetMapLinearVelocity(attackerUid),
+            seenLight: float.NaN, // not seen: worked out if it's ever needed
             alert: true,
             now);
         entity.Comp.Contacts[attackerUid] = revealed with { RevealedUntil = now + entity.Comp.RevealDuration };
@@ -82,6 +83,7 @@ public sealed partial class NpcPerceptionSystem
             contact,
             conspicuous: true,
             _physicsSystem.GetMapLinearVelocity(targetUid),
+            seenLight: float.NaN, // not seen: worked out if it's ever needed
             alert: true,
             now);
         entity.Comp.Contacts[targetUid] = updated with { RevealedUntil = contact.RevealedUntil };
