@@ -267,7 +267,12 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     private void UpdateFrame(KsParticlesComponent particlesComponent, KsParticleEmitterComponent emitterComponent, KsParticlesPrototype prototype, TransformComponent transformComponent)
     {
         var (worldPosition, worldRotation) = TransformSystem.GetWorldPositionRotation(transformComponent);
-        var rotation = prototype.FollowRotation ? worldRotation : Angle.Zero;
+
+        // Not following the entity means square to the grid it stands on, as sprites are drawn and as the eye is
+        //      turned, not square to the map: a station grid is usually turned, and "up" is the grid's up (#453).
+        var rotation = prototype.FollowRotation
+            ? worldRotation
+            : transformComponent.GridUid is { } gridUid ? TransformSystem.GetWorldRotation(gridUid) : Angle.Zero;
 
         emitterComponent.MapId = transformComponent.MapID;
         emitterComponent.Rotation = rotation;
@@ -414,6 +419,10 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         particle.Grow = grow;
         // BYOND turns clockwise for positive degrees; the engine's Angle turns counter-clockwise.
         particle.Rotation = -prototype.Rotation.SampleFloat(random) * DegreesToRadians;
+        // A world particle's quad is drawn in map axes, so its own rotation carries the emitter's frame. A local one
+        //      is drawn under the emitter matrix, which carries it already.
+        if (world)
+            particle.Rotation += (float)emitterComponent.Rotation.Theta;
         particle.PrevRotation = particle.Rotation;
         particle.Spin = -prototype.Spin.SampleFloat(random) * DegreesToRadians;
         particle.Friction = Math.Clamp(prototype.Friction.SampleFloat(random), 0f, 1f);
