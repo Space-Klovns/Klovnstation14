@@ -6,4 +6,4 @@ ent-KsSandbag1 = { ent-KsSandbag }
     .desc = { ent-KsSandbag.desc }
     .suffix = Single
 ent-KsSandbagWall = sandbag wall
-    .desc = A wall of stacked sandbags. It soaks up bullets, and it can be pulled apart again.
+    .desc = A low wall of stacked sandbags. Bullets fly over it unless aimed at it, and it can be pulled apart by hand.

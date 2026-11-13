@@ -24,6 +24,9 @@ public sealed class KsFieldCommanderLogisticsTest : GameTest
     private static readonly EntProtoId Silo = "KsMaterialSiloFieldCommander";
     private static readonly EntProtoId BarbedWire = "KsBarbedWire";
     private static readonly EntProtoId Human = "MobHuman";
+    private static readonly EntProtoId SandbagWall = "KsSandbagWall";
+    private static readonly EntProtoId PistolBullet = "BulletPistol";
+    private static readonly ProtoId<Content.Shared.Construction.Prototypes.ConstructionGraphPrototype> SandbagGraph = "KsSandbagWall";
     private static readonly ProtoId<MaterialPrototype> Plastic = "Plastic";
 
     private static readonly ProtoId<LatheRecipePrototype>[] FieldRecipes = ["RemoteDroneFpv", "Brutepack", "KsSandbag", "KsBarbedWireCoil"];
@@ -58,6 +61,122 @@ public sealed class KsFieldCommanderLogisticsTest : GameTest
             Assert.That(server.EntMan.HasComponent<GodmodeComponent>(siloUid), Is.True, "the silo should be indestructible");
             Assert.That(server.System<SharedMaterialStorageSystem>().GetMaterialAmount(siloUid, Plastic.Id, localOnly: true), Is.GreaterThan(0), "the silo should start with plastic");
         });
+    }
+
+    /// <summary>
+    ///     Fires a pistol bullet east across a sandbag wall at a mob behind it, and says which of the two it hurt.
+    /// </summary>
+    private async Task<(bool WallHit, bool TargetHit)> FireAcrossSandbags()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        EntityUid wallUid = default;
+        EntityUid targetUid = default;
+
+        await server.WaitPost(() =>
+        {
+            for (var x = 0; x <= 6; x++)
+            {
+                server.System<SharedMapSystem>().SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Robust.Shared.Maths.Vector2i(x, 0), testMap.Tile.Tile);
+            }
+
+            var shooterUid = SSpawnAtPosition(Human, testMap.GridCoords.Offset(new System.Numerics.Vector2(0.5f, 0.5f)));
+            wallUid = SSpawnAtPosition(SandbagWall, testMap.GridCoords.Offset(new System.Numerics.Vector2(3.5f, 0.5f)));
+            targetUid = SSpawnAtPosition(Human, testMap.GridCoords.Offset(new System.Numerics.Vector2(5.5f, 0.5f)));
+
+            var bulletUid = SSpawnAtPosition(PistolBullet, testMap.GridCoords.Offset(new System.Numerics.Vector2(1.5f, 0.5f)));
+            server.System<Content.Shared.Projectiles.SharedProjectileSystem>().SetShooter(bulletUid, SComp<Content.Shared.Projectiles.ProjectileComponent>(bulletUid), shooterUid);
+
+            var physicsSystem = server.System<Robust.Shared.Physics.Systems.SharedPhysicsSystem>();
+            physicsSystem.SetLinearVelocity(bulletUid, new System.Numerics.Vector2(20f, 0f));
+        });
+        await Pair.RunTicksSync(30);
+
+        var result = (false, false);
+        await server.WaitPost(() =>
+        {
+            var damageableSystem = server.System<Content.Shared.Damage.Systems.DamageableSystem>();
+            result = (damageableSystem.GetTotalDamage(wallUid) > 0, damageableSystem.GetTotalDamage(targetUid) > 0);
+        });
+        return result;
+    }
+
+    /// <summary>
+    ///     Sandbags are cover to shoot over, not a wall: a shot not aimed at them flies on. One aimed at them hits them, as
+    ///         with any <see cref="Content.Shared.Damage.Components.RequireProjectileTargetComponent"/>.
+    /// </summary>
+    [Test]
+    public async Task BulletsFlyOverSandbags()
+    {
+        var (wallHit, targetHit) = await FireAcrossSandbags();
+        Assert.Multiple(() =>
+        {
+            Assert.That(wallHit, Is.False, "a bullet aimed past the sandbags should fly over them");
+            Assert.That(targetHit, Is.True, "the bullet that flew over should reach the mob behind");
+        });
+    }
+
+    [Test]
+    public async Task SandbagWallComesApartByHandForEveryBag()
+    {
+        var server = Pair.Server;
+        var testMap = await Pair.CreateTestMap();
+        EntityUid wallUid = default;
+
+        await server.WaitPost(() =>
+        {
+            wallUid = SSpawnAtPosition(SandbagWall, testMap.GridCoords.Offset(new System.Numerics.Vector2(0.5f, 0.5f)));
+        });
+
+        EntityUid userUid = default;
+        var disassembleSeconds = 0f;
+        await server.WaitPost(() =>
+        {
+            userUid = SSpawnAtPosition(Human, testMap.GridCoords.Offset(new System.Numerics.Vector2(1.5f, 0.5f)));
+            Assert.That(server.EntMan.TryGetComponent<Content.Shared.Engineering.Components.DisassembleOnAltVerbComponent>(wallUid, out var disassembleComponent),
+                "the sandbag wall should come apart by hand");
+
+            // What the alt verb does when clicked.
+            disassembleSeconds = (float)disassembleComponent!.DisassembleTime.TotalSeconds;
+            server.System<Content.Shared.Engineering.Systems.DisassembleOnAltVerbSystem>().StartDisassembly((wallUid, disassembleComponent), userUid);
+        });
+        await Pair.RunTicksSync((int)((disassembleSeconds + 1f) * (float)server.Timing.TickRate));
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(server.EntMan.Deleted(wallUid), "the wall should be gone once pulled apart");
+
+            var bags = 0;
+            foreach (var heldUid in server.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>().EnumerateHeld(userUid))
+            {
+                if (server.EntMan.TryGetComponent<Content.Shared.Stacks.StackComponent>(heldUid, out var stackComponent))
+                    bags += stackComponent.Count;
+            }
+
+            Assert.That(bags, Is.EqualTo(SandbagWallCost()), "pulling a wall apart should hand back every bag it was built from");
+        });
+    }
+
+    /// <summary>
+    ///     How many sandbags the construction recipe puts into a wall.
+    /// </summary>
+    private int SandbagWallCost()
+    {
+        var graph = SProtoMan.Index<Content.Shared.Construction.Prototypes.ConstructionGraphPrototype>(SandbagGraph);
+        foreach (var node in graph.Nodes.Values)
+        {
+            foreach (var edge in node.Edges)
+            {
+                foreach (var step in edge.Steps)
+                {
+                    if (step is Content.Shared.Construction.Steps.MaterialConstructionGraphStep materialStep)
+                        return materialStep.Amount;
+                }
+            }
+        }
+
+        Assert.Fail("the sandbag wall's construction graph has no material step");
+        return 0;
     }
 
     [Test]

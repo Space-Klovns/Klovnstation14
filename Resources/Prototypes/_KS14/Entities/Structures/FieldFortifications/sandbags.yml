@@ -38,7 +38,7 @@
   parent: BaseStructure
   id: KsSandbagWall
   name: sandbag wall
-  description: A wall of stacked sandbags. It soaks up bullets, and it can be pulled apart again.
+  description: A low wall of stacked sandbags. Bullets fly over it unless aimed at it, and it can be pulled apart by hand.
   components:
   - type: Sprite
     sprite: _KS14/Structures/sandbags.rsi
@@ -70,12 +70,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 200
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-    - trigger:
-        !type:DamageTrigger
         damage: 120
       behaviors:
       - !type:SpawnEntitiesBehavior
@@ -85,6 +79,12 @@
             max: 3
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+  # Cover to shoot over: bullets pass unless they're aimed at the sandbags themselves, as with tables.
+  - type: RequireProjectileTarget
+  # Pulled apart by hand, for all five bags back.
+  - type: DisassembleOnAltVerb
+    prototypeToSpawn: KsSandbag
+    disassembleTime: 4
   - type: Construction
     graph: KsSandbagWall
     node: sandbagWall
@@ -106,19 +106,6 @@
         doAfter: 2
   - node: sandbagWall
     entity: KsSandbagWall
-    edges:
-    - to: start
-      completed:
-      - !type:SpawnPrototype
-        prototype: KsSandbag1
-        amount: 5
-      - !type:DeleteEntity {}
-      conditions:
-      - !type:EntityAnchored
-        anchored: true
-      steps:
-      - tool: Prying
-        doAfter: 2
 
 - type: construction
   id: KsSandbagWall
