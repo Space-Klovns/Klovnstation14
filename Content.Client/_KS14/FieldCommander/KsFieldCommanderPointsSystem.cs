@@ -2,6 +2,7 @@ using Content.Shared._KS14.FieldCommander;
 using Content.Shared._RMC14.Vendors;
 using Robust.Client.Player;
 using Robust.Client.UserInterface;
+using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.FieldCommander;
 
@@ -12,6 +13,8 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
 {
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private EntityQuery<KsFieldCommanderWaveStatusComponent> _waveStatusQuery = default!;
     [Dependency] private EntityQuery<CMVendorUserComponent> _vendorUserQuery = default!;
 
     /// <summary>
@@ -50,9 +53,46 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
         //      new total, or while the player has no body with points (a ghost, a fresh body), and dropping the control
         //      then would drop the change with it.
         if (TryGetLocalPoints(out var points))
-            EnsureControl().SetTotal(points);
+        {
+            var control = EnsureControl();
+            control.SetTotal(points);
+            control.SetWaveText(GetWaveText());
+        }
         else
+        {
             Control?.SetTotal(null);
+            Control?.SetWaveText(null);
+        }
+    }
+
+    /// <summary>
+    ///     The wave line for the map the local player is on, if the commander has set one.
+    /// </summary>
+    private string? GetWaveText()
+    {
+        if (_playerManager.LocalEntity is not { } localUid ||
+            !EntityManager.TransformQuery.TryComp(localUid, out var transformComponent) ||
+            transformComponent.MapUid is not { } mapUid ||
+            !_waveStatusQuery.TryComp(mapUid, out var statusComponent))
+            return null;
+
+        if (statusComponent.NextWaveTime is not { } nextWaveTime)
+        {
+            return statusComponent.Wave > 0
+                ? Loc.GetString("ks-fieldcommander-wave-status-none", ("wave", statusComponent.Wave))
+                : Loc.GetString("ks-fieldcommander-wave-status-idle");
+        }
+
+        var time = FormatCountdown(nextWaveTime - _gameTiming.CurTime);
+        return statusComponent.Wave > 0
+            ? Loc.GetString("ks-fieldcommander-wave-status", ("wave", statusComponent.Wave), ("time", time))
+            : Loc.GetString("ks-fieldcommander-wave-status-first", ("time", time));
+    }
+
+    private static string FormatCountdown(TimeSpan remaining)
+    {
+        var seconds = (int)Math.Ceiling(Math.Max(0d, remaining.TotalSeconds));
+        return $"{seconds / 60}:{seconds % 60:00}";
     }
 
     /// <summary>

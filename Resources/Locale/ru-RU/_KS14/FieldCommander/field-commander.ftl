@@ -26,14 +26,14 @@ ks-fieldcommander-intel-phase-final = Полевое управление. По�
 
 ## Waves
 
-ks-fieldcommander-wave-1 = Вот и они. Постарайтесь не умирать слишком быстро, моим людям станет скучно.
-ks-fieldcommander-wave-2 = Ещё отряд, Nanotrasen. Людей у меня больше, чем у вас патронов.
-ks-fieldcommander-wave-3 = Свежее мясо в мясорубку. Ваше, не моё.
-ks-fieldcommander-wave-4 = Пригните головы. Мои люди в них и целятся.
-ks-fieldcommander-wave-5 = Каждого убитого вами я заменю. Каждого убитого мной — вы нет.
-ks-fieldcommander-wave-6 = Держите строй, солдатики. Это последнее, что вы удержите.
+ks-fieldcommander-wave-1 = Волна { $number }. Вот и они. Постарайтесь не умирать слишком быстро, моим людям станет скучно.
+ks-fieldcommander-wave-2 = Волна { $number }. Ещё отряд, Nanotrasen. Людей у меня больше, чем у вас патронов.
+ks-fieldcommander-wave-3 = Волна { $number }. Свежее мясо в мясорубку. Ваше, не моё.
+ks-fieldcommander-wave-4 = Волна { $number }. Пригните головы. Мои люди в них и целятся.
+ks-fieldcommander-wave-5 = Волна { $number }. Каждого убитого вами я заменю. Каждого убитого мной — вы нет.
+ks-fieldcommander-wave-6 = Волна { $number }. Держите строй, солдатики. Это последнее, что вы удержите.
 
-ks-fieldcommander-intel-wave = Полевое управление. Сенсоры фиксируют { $count } { $count ->
+ks-fieldcommander-intel-wave = Полевое управление. Волна { $number }: Сенсоры фиксируют { $count } { $count ->
     [one] противника
     [few] противников
    *[other] противников
@@ -97,6 +97,7 @@ ks-fieldcommander-points-total = Снабжение: { $points }
 ks-fieldcommander-points-gain = +{ $amount }  { $reason }
 ks-fieldcommander-points-loss = −{ $amount }  { $reason }
 ks-fieldcommander-points-kill = { $name }
+ks-fieldcommander-points-assist = Помощь: { $name }
 ks-fieldcommander-points-teamkill = Убийство союзника: { $name }
 ks-fieldcommander-points-uplink = Аплинк уничтожен
 ks-fieldcommander-points-admin = Корректировка Полевого управления
@@ -105,3 +106,7 @@ ks-fieldcommander-points-admin = Корректировка Полевого у�
 
 ks-fieldcommander-shop-maptext = СНАБЖЕНИЕ
 ks-supplypod-passenger-name = боец Nanotrasen
+ks-fieldcommander-wave-status = Волна { $wave } · следующая через { $time }
+ks-fieldcommander-wave-status-first = Первая волна через { $time }
+ks-fieldcommander-wave-status-none = Волна { $wave } · новых не ожидается
+ks-fieldcommander-wave-status-idle = Волны ещё не начались

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Shared._KS14.FieldCommander;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -199,6 +200,50 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     #region Waves
 
+    /// <summary>
+    ///     Schedules the next wave, and tells the HUD.
+    /// </summary>
+    private void SetNextWave(KsFieldCommanderRuleComponent component, TimeSpan time)
+    {
+        component.NextWaveTime = time;
+        UpdateWaveStatus(component);
+    }
+
+    /// <summary>
+    ///     Finds the map the wave status lives on, once the rule has a battlefield, and puts it there.
+    /// </summary>
+    private void PrepareWaveStatus(KsFieldCommanderRuleComponent component)
+    {
+        var objectives = new List<MapCoordinates>();
+        CollectDefenderObjectives(component, objectives);
+        if (objectives.Count == 0 || _mapSystem.GetMapOrInvalid(objectives[0].MapId) is not { Valid: true } mapUid)
+            return;
+
+        component.WaveStatusMapUid = mapUid;
+        UpdateWaveStatus(component);
+    }
+
+    private void UpdateWaveStatus(KsFieldCommanderRuleComponent component)
+    {
+        if (component.WaveStatusMapUid is not { } mapUid || TerminatingOrDeleted(mapUid))
+            return;
+
+        var statusComponent = EnsureComp<KsFieldCommanderWaveStatusComponent>(mapUid);
+        statusComponent.Wave = component.WavesSent;
+        statusComponent.NextWaveTime = component.NextWaveTime == TimeSpan.MaxValue ? null : component.NextWaveTime;
+        Dirty(mapUid, statusComponent);
+    }
+
+    private void ClearWaveStatus(KsFieldCommanderRuleComponent component)
+    {
+        if (component.WaveStatusMapUid is not { } mapUid)
+            return;
+
+        component.WaveStatusMapUid = null;
+        if (!TerminatingOrDeleted(mapUid))
+            RemComp<KsFieldCommanderWaveStatusComponent>(mapUid);
+    }
+
     private void SendWave(Entity<KsFieldCommanderRuleComponent> rule, KsFieldCommanderPhase phase)
     {
         var battlefield = SurveyBattlefield(rule.Comp);
@@ -234,6 +279,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         rule.Comp.WavesSent++;
+        UpdateWaveStatus(rule.Comp);
 
         if (sent == 0)
             return;
@@ -244,7 +290,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             : string.Empty;
 
         Transmit(rule.Comp, PickRandom(rule.Comp.WaveAnnouncements), major: false, rule.Comp.WaveIntel,
-            ("count", sent), ("direction", direction));
+            ("count", sent), ("direction", direction), ("number", rule.Comp.WavesSent));
 
         // Once each for whatever came, however many of it.
         var reported = new HashSet<KsFieldCommanderAsset>();

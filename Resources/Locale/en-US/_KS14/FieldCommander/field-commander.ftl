@@ -26,14 +26,14 @@ ks-fieldcommander-intel-phase-final = Field Operations. This is the final assaul
 
 ## Waves
 
-ks-fieldcommander-wave-1 = Here they come. Try not to die too quickly, it bores my men.
-ks-fieldcommander-wave-2 = Another squad, Nanotrasen. I have more of them than you have bullets.
-ks-fieldcommander-wave-3 = Fresh meat for the grinder. Yours, not mine.
-ks-fieldcommander-wave-4 = Keep your heads down. My men are aiming for them.
-ks-fieldcommander-wave-5 = Every one you kill, I replace. Every one I kill, you don't.
-ks-fieldcommander-wave-6 = Hold the line, little soldiers. It's the last thing you'll ever hold.
+ks-fieldcommander-wave-1 = Wave { $number }. Here they come. Try not to die too quickly, it bores my men.
+ks-fieldcommander-wave-2 = Wave { $number }. Another squad, Nanotrasen. I have more of them than you have bullets.
+ks-fieldcommander-wave-3 = Wave { $number }. Fresh meat for the grinder. Yours, not mine.
+ks-fieldcommander-wave-4 = Wave { $number }. Keep your heads down. My men are aiming for them.
+ks-fieldcommander-wave-5 = Wave { $number }. Every one you kill, I replace. Every one I kill, you don't.
+ks-fieldcommander-wave-6 = Wave { $number }. Hold the line, little soldiers. It's the last thing you'll ever hold.
 
-ks-fieldcommander-intel-wave = Field Operations. Sensors read { $count } { $count ->
+ks-fieldcommander-intel-wave = Field Operations. Wave { $number }: Sensors read { $count } { $count ->
     [one] hostile
    *[other] hostiles
 } inbound from the { $direction ->
@@ -99,6 +99,7 @@ ks-fieldcommander-points-total = Requisition: { $points }
 ks-fieldcommander-points-gain = +{ $amount }  { $reason }
 ks-fieldcommander-points-loss = −{ $amount }  { $reason }
 ks-fieldcommander-points-kill = { $name }
+ks-fieldcommander-points-assist = Assist: { $name }
 ks-fieldcommander-points-teamkill = Friendly kill: { $name }
 ks-fieldcommander-points-uplink = Uplink taken out
 ks-fieldcommander-points-admin = Adjusted by Field Operations
@@ -107,3 +108,7 @@ ks-fieldcommander-points-admin = Adjusted by Field Operations
 
 ks-fieldcommander-shop-maptext = REQUISITIONS
 ks-supplypod-passenger-name = Nanotrasen paramilitary
+ks-fieldcommander-wave-status = Wave { $wave } · next in { $time }
+ks-fieldcommander-wave-status-first = First wave in { $time }
+ks-fieldcommander-wave-status-none = Wave { $wave } · no more scheduled
+ks-fieldcommander-wave-status-idle = Waves have not begun
