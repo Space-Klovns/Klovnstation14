@@ -1,6 +1,10 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Server._KS14.NPC.Squad;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.LockOn;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Weapons.Ranged.Events;
@@ -25,6 +29,7 @@ public sealed class KsNpcTurretTargetingTest : GameTest
     private const string FickleTurret = "KsTurretTargetingTestFickle";
     private const string FireThroughTurret = "KsTurretTargetingTestFireThrough";
     private const string HoldingTurret = "KsTurretTargetingTestHolding";
+    private const string FireThroughMob = "KsTurretTargetingTestMobFireThrough";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -47,6 +52,13 @@ public sealed class KsNpcTurretTargetingTest : GameTest
   id: KsTurretTargetingTestHolding
   components:
   - type: KsNpcAimTracking
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsTurretTargetingTestMobFireThrough
+  components:
+  - type: KsNpcAimTracking
+    ignoreFriendlyBlocking: true
 
 - type: entity
   parent: KsTurretTargetingTestHolding
@@ -140,12 +152,15 @@ public sealed class KsNpcTurretTargetingTest : GameTest
 
     /// <summary>
     ///     A hostile at the end of a line with a friend of the turret's in the middle of it. Only a turret that ignores
-    ///         friendly blocking fires; the control holds fire.
+    ///         friendly blocking fires; the control holds fire, and with no friend there it fires anyway.
     /// </summary>
-    [TestCase(true)]
-    [TestCase(false)]
-    public async Task TestIgnoreFriendlyBlocking(bool ignore)
+    [TestCase(true, true, true)]
+    [TestCase(false, true, false)]
+    [TestCase(false, false, true)]
+    public async Task TestIgnoreFriendlyBlocking(bool ignore, bool friendInTheWay, bool shouldFire)
     {
+        await OverrideCVar(Side.Server, KsCCVars.NpcSquadFireLanes, true);
+
         var (entManager, gridUid) = await SetUpOpenGrid();
         EntityUid turretUid = default;
 
@@ -153,10 +168,11 @@ public sealed class KsNpcTurretTargetingTest : GameTest
         {
             turretUid = SpawnAt(entManager, ignore ? FireThroughTurret : HoldingTurret, gridUid, 0, 0);
             var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
-            var friendUid = SpawnAt(entManager, SyndicateMob, gridUid, 3, 0);
             var godmodeSystem = entManager.System<SharedGodmodeSystem>();
             godmodeSystem.EnableGodmode(hostileUid);
-            godmodeSystem.EnableGodmode(friendUid);
+
+            if (friendInTheWay)
+                godmodeSystem.EnableGodmode(SpawnAt(entManager, SyndicateMob, gridUid, 3, 0));
         });
 
         var startAmmo = AmmoCount(entManager, turretUid);
@@ -164,10 +180,36 @@ public sealed class KsNpcTurretTargetingTest : GameTest
 
         await RunSeconds(4f);
 
-        if (ignore)
-            Assert.That(AmmoCount(entManager, turretUid), Is.LessThan(startAmmo), "it should fire through the friend");
+        if (shouldFire)
+            Assert.That(AmmoCount(entManager, turretUid), Is.LessThan(startAmmo), "it should have fired");
         else
             Assert.That(AmmoCount(entManager, turretUid), Is.EqualTo(startAmmo), "control: it should hold fire for the friend");
+    }
+
+    /// <summary>
+    ///     The fire-lane check itself, which a turret's own body hides friends from, so asked of a mob: a friend in the
+    ///         line of fire makes it hold fire, unless it ignores friendly blocking, for the aim and for a round as it goes.
+    /// </summary>
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task TestFireLaneCheckIgnoresFriendsWhenAsked(bool ignore)
+    {
+        await OverrideCVar(Side.Server, KsCCVars.NpcSquadFireLanes, true);
+
+        var (entManager, gridUid) = await SetUpOpenGrid();
+        var fireLaneSystem = entManager.System<NpcSquadFireLaneSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            var shooterUid = SpawnAt(entManager, ignore ? FireThroughMob : SyndicateMob, gridUid, 0, 0);
+            SpawnAt(entManager, SyndicateMob, gridUid, 3, 0);
+            var from = transformSystem.GetMapCoordinates(shooterUid);
+            var aim = new MapCoordinates(from.Position + new Vector2(6f, 0f), from.MapId);
+
+            Assert.That(fireLaneSystem.TryGetClearShot(shooterUid, from, aim, 0.35f, out _), Is.EqualTo(ignore));
+            Assert.That(fireLaneSystem.IsShotClear(shooterUid, from, aim), Is.EqualTo(ignore));
+        });
     }
 
     private async Task RunSeconds(float seconds)
