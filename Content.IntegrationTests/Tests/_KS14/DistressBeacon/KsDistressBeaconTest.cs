@@ -35,12 +35,12 @@ public sealed class KsDistressBeaconTest : InteractionTest
 
     private const string NeckSlot = "neck";
 
-    private readonly EntProtoId _beacon = "KsDistressBeacon";
-    private readonly ProtoId<ShaderPrototype> _dissolveShader = "KsDissolve";
+    private static readonly EntProtoId Beacon = "KsDistressBeacon";
+    private static readonly ProtoId<ShaderPrototype> DissolveShader = "KsDissolve";
 
     private EntityUid SpawnAndWear()
     {
-        var beaconUid = SEntMan.SpawnEntity(_beacon, SEntMan.GetCoordinates(PlayerCoords));
+        var beaconUid = SEntMan.SpawnEntity(Beacon, SEntMan.GetCoordinates(PlayerCoords));
         Assert.That(SEntMan.System<InventorySystem>().TryEquip(SPlayer, beaconUid, NeckSlot, silent: true, force: true), Is.True);
         return beaconUid;
     }
@@ -64,7 +64,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
     {
         await Server.WaitAssertion(() =>
         {
-            var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(SEntMan.SpawnEntity(_beacon, SEntMan.GetCoordinates(PlayerCoords)));
+            var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(SEntMan.SpawnEntity(Beacon, SEntMan.GetCoordinates(PlayerCoords)));
             Assert.That(beaconComponent.States[MobState.Critical].LightColor, Is.Not.EqualTo(beaconComponent.States[MobState.Dead].LightColor));
             Assert.That(beaconComponent.States[MobState.Critical].BeepInterval, Is.LessThan(beaconComponent.States[MobState.Dead].BeepInterval));
         });
@@ -163,8 +163,16 @@ public sealed class KsDistressBeaconTest : InteractionTest
         await Server.WaitAssertion(() => Assert.That(State(beaconUid), Is.EqualTo(MobState.Critical)));
         await Client.WaitAssertion(() => Assert.That(CEntMan.GetComponent<KsDistressBeaconComponent>(ToClient(beaconUid)).State, Is.EqualTo(MobState.Critical), "client state"));
 
+        // Two whole pulses, whatever the rate.
+        var pulseTicks = 0;
+        await Server.WaitPost(() =>
+        {
+            var pulseRate = SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).States[MobState.Critical].PulseRate;
+            pulseTicks = (int)MathF.Ceiling(2f / pulseRate / TickPeriod);
+        });
+
         var alphas = new List<float>();
-        for (var i = 0; i < 90; i++) // a few pulses, whatever the rate
+        for (var i = 0; i < pulseTicks; i++)
         {
             await RunTicks(1);
             await Client.WaitAssertion(() =>
@@ -204,7 +212,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
         {
             var spriteSystem = CEntMan.System<SpriteSystem>();
             var spriteComponent = CEntMan.GetComponent<SpriteComponent>(CPlayer);
-            var otherShader = Client.ResolveDependency<IPrototypeManager>().Index(_dissolveShader).InstanceUnique();
+            var otherShader = Client.ResolveDependency<IPrototypeManager>().Index(DissolveShader).InstanceUnique();
             spriteSystem.SetPostShader((CPlayer, spriteComponent), new SpriteComponent.PostShaderArgs(KsPostShaderIds.Dissolve, otherShader)
             {
                 Before = KsPostShaderIds.BeforeOutlines,
