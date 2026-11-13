@@ -113,7 +113,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
             PhaseElapsed = (float) (now - (hunt.Blast?.Charge is { } charge &&
                 (charge.Phase == NpcSquadChargePhase.Planting || charge.Phase == NpcSquadChargePhase.Clearing && charge.Pick.Charge.ActivatorUid != null)
                     ? charge.ProgressAt
-                    : hunt.PhaseStartedAt)).TotalSeconds,
+                    : hunt.Phase == NpcHuntPhase.Watch ? hunt.LostAt : hunt.PhaseStartedAt)).TotalSeconds, // the watch runs from the loss
             PhaseLimit = (float) (hunt.Phase switch
             {
                 NpcHuntPhase.Watch => settings.WatchTime,
@@ -126,6 +126,7 @@ public sealed partial class NpcHuntDebugSystem : EntitySystem
                 _ => TimeSpan.Zero,
             }).TotalSeconds,
             HuntElapsed = (float) (now - hunt.StartedAt).TotalSeconds,
+            LostElapsed = (float) (now - hunt.LostAt).TotalSeconds,
             HuntTimeout = (float) settings.HuntTimeout.TotalSeconds,
             Coverage = NpcSquadTacticsSystem.GetCoverage(hunt),
             RequiredCoverage = settings.SearchCoverage,

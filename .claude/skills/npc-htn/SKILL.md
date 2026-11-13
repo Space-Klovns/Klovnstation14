@@ -300,6 +300,15 @@ says nothing anchored is in the way (`NPCSteeringSystem.KsIsBeelineClear`, reche
 Climbing costs `PathfindingSystem.ClimbCost` on top of walking, so climbers walk round anything short; operatives have
 `NavClimb`. `KsNpcRailingTest` covers railings at every rotation.
 
+### A hunt's clock is the loss, not the hunt
+
+A squad often only gets round to hunting a few seconds after the hostile ducked out of sight: it was suppressing, pushing,
+or keeping a flank on (`KeepFlankWhileUnseen`). So `NpcHunt.LostAt`, the last sighting, is what the watch counts from,
+and the guess at where it went (`PredictedCoordinates`) is worked out again every update of the watch, from the spotter's
+contact. Only the hunt's own timeout counts from `StartedAt`. Callouts pass on when the caller saw it
+(`NpcContactCalloutEvent.LastSeen`), and a listener keeps a sighting of its own that is as fresh. A hostile suspected in a
+locker beside where it vanished starts a hunt like a lost one. `KsNpcHuntTimingTest` covers all of this.
+
 ### Navmesh flags are per point, and door avoidance is per tile
 
 A tile's navmesh points each take the flags (Door, Access, Climb, Pushable) of only what covers that point

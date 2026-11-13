@@ -201,6 +201,27 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
+    ///     With nobody in sight of the hostile: keeps a flank on, flankers following their routes, for
+    ///         <see cref="FlankSightGrace"/> after anyone last had it in sight, as the front ducking back into cover for a
+    ///         moment is no reason to call them back. A push is over at once: it was going in on what they could see. True if
+    ///         the flank is still on, and nothing else should give orders.
+    /// </summary>
+    private bool KeepFlankWhileUnseen(EntityUid issuerUid, TimeSpan now)
+    {
+        if (!_fightQuery.TryComp(issuerUid, out var fightComponent) ||
+            fightComponent.FlankTargetUid == null ||
+            now - fightComponent.LastFoughtAt >= FlankSightGrace)
+            return false;
+
+        using (GivePlanOrders())
+        {
+            FollowFlankRoutes(issuerUid, fightComponent, now);
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Whether a flank is on: flankers on their way round.
     /// </summary>
     private bool IsFlanking(EntityUid issuerUid)
@@ -221,21 +242,10 @@ public sealed partial class NpcSquadTacticsSystem
     {
         var fightComponent = EnsureComp<NpcSquadFightComponent>(issuerUid);
 
+        // Only those waiting for their meds have it in sight: nobody to fight it.
         if (!_hasFighters)
         {
             EndPush(issuerUid, fightComponent, settings, now);
-
-            // The front ducking for a moment is no reason to call the flankers back: they keep going a little while.
-            if (fightComponent.FlankTargetUid != null && now - fightComponent.LastFoughtAt < FlankSightGrace)
-            {
-                using (GivePlanOrders())
-                {
-                    FollowFlankRoutes(issuerUid, fightComponent, now);
-                }
-
-                return;
-            }
-
             EndFlank(issuerUid, fightComponent, settings, now);
             return;
         }

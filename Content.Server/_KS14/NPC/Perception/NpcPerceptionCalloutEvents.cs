@@ -5,12 +5,13 @@ namespace Content.Server._KS14.NPC.Perception;
 
 /// <summary>
 ///     Raised on each of <paramref name="CallerUid"/>'s squadmates (<see cref="NpcSquadSystem.CallOut{TEvent}"/>): it
-///         sees <paramref name="TargetUid"/> at <paramref name="Coordinates"/>.
+///         saw <paramref name="TargetUid"/> at <paramref name="Coordinates"/>, last at <paramref name="LastSeen"/>: now, for one in
+///         sight, or a moment ago, for one it only just reacted to after it slipped out of sight.
 /// </summary>
 /// <seealso cref="NpcPerceptionComponent.CallsOutContacts"/>
 /// <seealso cref="NpcPerceptionComponent.HearsCallouts"/>
 [ByRefEvent]
-public readonly record struct NpcContactCalloutEvent(EntityUid CallerUid, EntityUid TargetUid, EntityCoordinates Coordinates);
+public readonly record struct NpcContactCalloutEvent(EntityUid CallerUid, EntityUid TargetUid, EntityCoordinates Coordinates, TimeSpan LastSeen);
 
 /// <summary>
 ///     Raised on each of <paramref name="CallerUid"/>'s squadmates (<see cref="NpcSquadSystem.CallOut{TEvent}"/>): it

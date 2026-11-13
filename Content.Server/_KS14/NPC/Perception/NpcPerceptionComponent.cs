@@ -137,10 +137,11 @@ public sealed partial class NpcPerceptionComponent : Component
 
     /// <summary>
     ///     How far ahead of where a lost hostile was last seen, in seconds of its last velocity, the NPC guesses it
-    ///         has got to.
+    ///         has got to. A squad's hunt keeps asking through its watch (<c>NpcSquadTacticsSystem.UpdatePrediction</c>),
+    ///         so the guess moves on up to this long after the loss.
     /// </summary>
     [DataField]
-    public TimeSpan DeadReckoningTime = TimeSpan.FromSeconds(3);
+    public TimeSpan DeadReckoningTime = TimeSpan.FromSeconds(5);
 
     /// <summary>
     ///     A hostile that vanishes in plain sight within this many tiles of a closed locker is suspected to have

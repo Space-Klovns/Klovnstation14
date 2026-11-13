@@ -203,6 +203,11 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
             return;
         }
 
+        // Nobody in sight of it, but a flank is on and the front only ducked a moment ago: the flankers keep going, and the
+        //      hunt waits. It goes by when the hostile was lost, so waiting costs it nothing.
+        if (KeepFlankWhileUnseen(issuerUid, now))
+            return;
+
         EndFight(issuerUid, settings, now);
 
         // Waiting for its meds to work: it will not come, so nothing below may count on it or wait for it. Only after

@@ -32,11 +32,25 @@ public sealed class NpcHunt
     public required EntityCoordinates LastKnownCoordinates;
 
     /// <summary>
-    ///     Where it should have got to by now, had it carried on as it was going.
+    ///     Where it should have got to by now, had it carried on as it was going. Worked out again every update of the watch,
+    ///         as time since <see cref="LostAt"/> goes by; fixed from then on, once the room it went to is chosen.
     /// </summary>
     public required EntityCoordinates PredictedCoordinates;
 
+    /// <summary>
+    ///     The member whose contact the hunt started from: the last to see it. Its guess is the one followed during the watch.
+    /// </summary>
+    public EntityUid? SpotterUid;
+
     public required TimeSpan StartedAt;
+
+    /// <summary>
+    ///     When the hostile was lost: when the member that saw it last lost sight of it (its contact's
+    ///         <see cref="Perception.NpcContact.LastSeen"/>). For a disturbance or a plan's own hunt, when the hunt began. A
+    ///         squad that only gets round to hunting a few seconds later - it was suppressing, or pushing - has already spent
+    ///         those seconds: the watch, and the guess at where it has got to, go by this, not by <see cref="StartedAt"/>.
+    /// </summary>
+    public required TimeSpan LostAt;
 
     public NpcHuntPhase Phase = NpcHuntPhase.Watch;
 

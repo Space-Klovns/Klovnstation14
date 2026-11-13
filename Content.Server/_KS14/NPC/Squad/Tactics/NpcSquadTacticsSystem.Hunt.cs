@@ -91,7 +91,8 @@ public sealed partial class NpcSquadTacticsSystem
         if (!_npcPerceptionSystem.TryGetPredictedCoordinates(spotter, targetUid, out var predictedCoordinates))
             predictedCoordinates = latest.LastKnownCoordinates;
 
-        hunt = CreateHunt(targetUid, settings, latest.LastKnownCoordinates, predictedCoordinates, now);
+        hunt = CreateHunt(targetUid, settings, latest.LastKnownCoordinates, predictedCoordinates, now, lostAt: latest.LastSeen);
+        hunt.SpotterUid = spotter;
 
         EnsureComp<NpcHuntComponent>(issuerUid).Hunt = hunt;
         return true;
@@ -175,12 +176,17 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (hunt.Phase == NpcHuntPhase.Watch)
         {
-            // Nobody to watch for after a disturbance: straight on to going in.
-            if (hunt.TargetUid is { } targetUid && now - hunt.PhaseStartedAt < settings.WatchTime)
+            // Nobody to watch for after a disturbance: straight on to going in. Counted from the loss, not the hunt: a squad
+            //      that was busy for a few seconds after it lost the hostile has already watched for those.
+            if (hunt.TargetUid is { } targetUid && now - hunt.LostAt < settings.WatchTime)
             {
+                UpdatePrediction(hunt, targetUid);
                 IssueWatchOrders(issuerUid, hunt, targetUid, now);
                 return;
             }
+
+            if (hunt.TargetUid is { } lastTargetUid)
+                UpdatePrediction(hunt, lastTargetUid);
 
             PrepareSearch(leaderUid, hunt, settings, now);
         }
@@ -229,6 +235,19 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
+    ///     Moves the guess at where the hunted hostile has got to on with the time since it was lost, from what the spotter
+    ///         last saw of it (<see cref="Perception.NpcPerceptionSystem.TryGetPredictedCoordinates"/>). Kept as it was if the spotter has
+    ///         nothing to go by any more.
+    /// </summary>
+    private void UpdatePrediction(NpcHunt hunt, EntityUid targetUid)
+    {
+        if (hunt.SpotterUid is { } spotterUid &&
+            !TerminatingOrDeleted(spotterUid) &&
+            _npcPerceptionSystem.TryGetPredictedCoordinates(spotterUid, targetUid, out var predictedCoordinates))
+            hunt.PredictedCoordinates = predictedCoordinates;
+    }
+
+    /// <summary>
     ///     A hunt just begun, in <paramref name="phase"/> (the watch, unless a plan is running it) and with
     ///         <paramref name="allowCharges"/> for a plan's, which may use a charge to get in. A null
     ///         <paramref name="targetUid"/> is a disturbance.
@@ -239,10 +258,12 @@ public sealed partial class NpcSquadTacticsSystem
         EntityCoordinates predictedCoordinates,
         TimeSpan now,
         bool allowCharges = false,
-        NpcHuntPhase phase = NpcHuntPhase.Watch)
+        NpcHuntPhase phase = NpcHuntPhase.Watch,
+        TimeSpan? lostAt = null)
     {
         return new NpcHunt
         {
+            LostAt = lostAt ?? now,
             TargetUid = targetUid,
             Settings = settings,
             AllowCharges = allowCharges,

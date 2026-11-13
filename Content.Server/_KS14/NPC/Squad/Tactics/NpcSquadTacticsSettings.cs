@@ -14,13 +14,15 @@ public sealed partial class NpcSquadTacticsSettings
     #region Hunting
 
     /// <summary>
-    ///     A hostile lost longer ago than this does not start a hunt.
+    ///     A hostile lost longer ago than this does not start a hunt. Long enough for a squad kept busy after the loss -
+    ///         suppressing, pushing, a grenade - to still go after it when that is over.
     /// </summary>
     [DataField]
-    public TimeSpan HuntStartAge = TimeSpan.FromSeconds(6);
+    public TimeSpan HuntStartAge = TimeSpan.FromSeconds(15);
 
     /// <summary>
-    ///     How long members wait for a hostile they have just lost to show itself again, before going in after it.
+    ///     How long members wait for a hostile they have just lost to show itself again, before going in after it. From when
+    ///         it was lost (<see cref="NpcHunt.LostAt"/>), not when the hunt began.
     /// </summary>
     [DataField]
     public TimeSpan WatchTime = TimeSpan.FromSeconds(4);

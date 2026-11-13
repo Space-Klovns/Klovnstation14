@@ -507,7 +507,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
     /// <summary>
     ///     The hostile <paramref name="observer"/> lost sight of most recently, of those it had reacted to and lost no
-    ///         longer than <paramref name="maxAge"/> ago.
+    ///         longer than <paramref name="maxAge"/> ago: lost, or suspected to have slipped into a locker.
     /// </summary>
     public bool TryGetLatestLostContact(Entity<NpcPerceptionComponent?> observer,
         TimeSpan maxAge,
@@ -525,7 +525,9 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
         foreach (var (candidateUid, candidate) in observer.Comp.Contacts)
         {
-            if (candidate is not { State: NpcContactState.Lost, Reacted: true } ||
+            // Suspected in a locker it vanished beside is lost too, as far as a hunt goes: nobody saw it get in. One seen
+            //      getting in (Concealed) is not lost, and is gone after where it is (the search branches).
+            if (candidate is not { State: NpcContactState.Lost or NpcContactState.Suspected, Reacted: true } ||
                 now - candidate.LastSeen > maxAge ||
                 found && candidate.LastSeen <= contact.LastSeen)
                 continue;
