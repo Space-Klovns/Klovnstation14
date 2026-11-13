@@ -181,6 +181,16 @@ Nothing removes a key when the plan that wrote it ends, unless an operator does 
 - Fold "work out the value" and "act on it" into one operator that writes the key in `Plan` and removes it in
   `TaskShutdown`. `DiveOperator` replaced a `GetDivePoint` → `DoWorldAction` chain for exactly this reason.
 
+A key can also outlive what it names. A target gets gibbed, or a grid is deleted, while its uid or coordinates still sit
+on the blackboard. `NPCBlackboard.TryGetValue`, `GetValueOrDefault` and so `TryGetEntity` treat an entity (or
+coordinates on one) that is deleted or being deleted as missing. Read entities through them, not through
+`GetValue`/`_blackboard` directly.
+
+Two cases still need their own check, because a system method given a deleted uid throws (`EnsureComp`, transforms),
+and one throw in an operator aborts the NPC update for every NPC after it, every tick:
+- an entity a system holds itself across ticks;
+- an entity that may be deleted between the read and the use.
+
 ### Everything NPCs tell each other has a switch
 
 How smart a squad is should be tunable per NPC, and most of what makes one smart is what its members pass on. So each

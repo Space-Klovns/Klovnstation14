@@ -60,7 +60,8 @@ public sealed partial class NpcExecutionSystem : EntitySystem
     /// </summary>
     public void NoteIfCancelled(EntityUid uid, EntityUid targetUid)
     {
-        if (!_executingQuery.HasComp(uid) ||
+        if (TerminatingOrDeleted(targetUid) ||
+            !_executingQuery.HasComp(uid) ||
             IsExecuting(uid) ||
             _mobStateSystem.IsDead(uid) ||
             _mobStateSystem.IsDead(targetUid))
