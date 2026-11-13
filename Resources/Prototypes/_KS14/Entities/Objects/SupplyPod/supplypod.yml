@@ -245,6 +245,13 @@
         missile:
           True: { rotation: 180 }
           False: { rotation: 0 }
+      enum.SupplyPodVisuals.Landed:
+        rubble_bfg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
 
 # syndie
 - type: entity
