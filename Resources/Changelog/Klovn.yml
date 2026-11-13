@@ -2783,3 +2783,11 @@ Entries:
       message: You can no longer start capturing your own faction's scenario objective.
   id: 257
   time: '2026-11-12T16:30:10.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Particle effects now fall and drift relative to the station grid rather
+        than the map.
+  id: 258
+  time: '2026-11-13T07:49:39.0000000+00:00'
