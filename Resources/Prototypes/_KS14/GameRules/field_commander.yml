@@ -17,7 +17,7 @@
     # Many light units rather than a few tough ones, as the private module defines them.
     maxAlive: 12
     maxAlivePerDefender: 3
-    pointsPerCost: 37.5 # KS14: requisition x1.5
+    pointsPerCost: 37.5 # requisition x1.5
     uplinkPoints: 300
     waveAnnouncements:
     - ks-fieldcommander-wave-1
