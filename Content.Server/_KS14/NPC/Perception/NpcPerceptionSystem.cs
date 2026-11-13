@@ -107,6 +107,17 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Stops <paramref name="uid"/>'s perception updating by itself, so it only believes what a test tells it
+    ///         (<see cref="SetContact"/>) and only looks when told to (<see cref="UpdateNow"/>). For tests whose NPC has to stay
+    ///         awake for something else, where a look on its own schedule would undo a staged belief at random.
+    /// </summary>
+    internal void HoldUpdates(EntityUid uid)
+    {
+        if (_perceptionQuery.TryComp(uid, out var perceptionComponent))
+            perceptionComponent.NextUpdate = TimeSpan.MaxValue;
+    }
+
+    /// <summary>
     ///     Makes <paramref name="uid"/> believe <paramref name="contact"/> about <paramref name="targetUid"/>, as if it
     ///         had seen it. For tests that need a belief without staging the scene that would produce it.
     /// </summary>
@@ -214,8 +225,9 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         var isCandidate = _candidates.Contains(targetUid);
         var conspicuous = false;
         var targetVelocity = System.Numerics.Vector2.Zero;
+        var seenLight = float.NaN;
         var seen = (isCandidate || wasVisible) &&
-            CanSee(entity, observerMapCoordinates, targetUid, range, wasVisible ? contact : null, now, out conspicuous, out targetVelocity);
+            CanSee(entity, observerMapCoordinates, targetUid, range, wasVisible ? contact : null, now, out conspicuous, out targetVelocity, out seenLight);
 
         // In plain sight, but no longer a hostile: retaliation wore off, or it was told to be ignored. Not a
         //      hostile that vanished, so neither lost nor hiding - just not worth remembering.
@@ -225,7 +237,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         if (isCandidate && seen)
         {
             var reactedBefore = wasVisible && contact.Reacted;
-            contact = Sight(entity, targetUid, hasContact ? contact : null, conspicuous, targetVelocity, alert, now);
+            contact = Sight(entity, targetUid, hasContact ? contact : null, conspicuous, targetVelocity, seenLight, alert, now);
             entity.Comp.Contacts[targetUid] = contact;
 
             return contact.Reacted && !reactedBefore
@@ -270,6 +282,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         NpcContact? previous,
         bool conspicuous,
         Vector2 targetVelocity,
+        float seenLight,
         bool alert,
         TimeSpan now)
     {
@@ -292,7 +305,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         }
         else
         {
-            clock = new SightClock(now, now, alert ? now : now + GetReactionTime(entity, targetUid), false);
+            clock = new SightClock(now, now, alert ? now : now + GetReactionTime(entity, targetUid, seenLight), false);
         }
 
         var reacted = clock.Reacted;
@@ -307,7 +320,8 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
             targetVelocity,
             ContainerUid: null,
             reacted,
-            clock.ReactAt);
+            clock.ReactAt,
+            SeenLight: seenLight);
     }
 
     /// <summary>
@@ -375,10 +389,10 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         return blackboard.GetValueOrDefault<float>(blackboard.GetVisionRadiusKey(EntityManager), EntityManager);
     }
 
-    private TimeSpan GetReactionTime(Entity<NpcPerceptionComponent> entity, EntityUid targetUid)
+    /// <param name="seenLight">How lit the target looked as it was seen, if that was worked out; NaN if not.</param>
+    private TimeSpan GetReactionTime(Entity<NpcPerceptionComponent> entity, EntityUid targetUid, float seenLight)
     {
-        var lightLevel = _npcLightDetectionSystem.GetPerceivedLightLevel(entity.Owner, targetUid, entity.Comp.ProximityRange);
-        lightLevel = GetSeenLightLevel(entity.AsNullable(), lightLevel);
+        var lightLevel = float.IsNaN(seenLight) ? GetSeenLight(entity.AsNullable(), targetUid) : seenLight;
         return entity.Comp.ReactionTime * (1f + entity.Comp.DarknessReactionScale * (1f - lightLevel));
     }
 
@@ -508,7 +522,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
     /// <summary>
     ///     The hostile <paramref name="observer"/> lost sight of most recently, of those it had reacted to and lost no
-    ///         longer than <paramref name="maxAge"/> ago.
+    ///         longer than <paramref name="maxAge"/> ago: lost, or suspected to have slipped into a locker.
     /// </summary>
     public bool TryGetLatestLostContact(Entity<NpcPerceptionComponent?> observer,
         TimeSpan maxAge,
@@ -526,7 +540,9 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
 
         foreach (var (candidateUid, candidate) in observer.Comp.Contacts)
         {
-            if (candidate is not { State: NpcContactState.Lost, Reacted: true } ||
+            // Suspected in a locker it vanished beside is lost too, as far as a hunt goes: nobody saw it get in. One seen
+            //      getting in (Concealed) is not lost, and is gone after where it is (the search branches).
+            if (candidate is not { State: NpcContactState.Lost or NpcContactState.Suspected, Reacted: true } ||
                 now - candidate.LastSeen > maxAge ||
                 found && candidate.LastSeen <= contact.LastSeen)
                 continue;

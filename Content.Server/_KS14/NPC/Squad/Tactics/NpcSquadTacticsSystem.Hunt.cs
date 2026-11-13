@@ -91,7 +91,8 @@ public sealed partial class NpcSquadTacticsSystem
         if (!_npcPerceptionSystem.TryGetPredictedCoordinates(spotter, targetUid, out var predictedCoordinates))
             predictedCoordinates = latest.LastKnownCoordinates;
 
-        hunt = CreateHunt(targetUid, settings, latest.LastKnownCoordinates, predictedCoordinates, now);
+        hunt = CreateHunt(targetUid, settings, latest.LastKnownCoordinates, predictedCoordinates, now, lostAt: latest.LastSeen);
+        hunt.SpotterUid = spotter;
 
         EnsureComp<NpcHuntComponent>(issuerUid).Hunt = hunt;
         return true;
@@ -138,7 +139,8 @@ public sealed partial class NpcSquadTacticsSystem
             IsSealedIn(walkerUid, disturbanceComponent.Coordinates);
     }
 
-    private void EndHunt(EntityUid issuerUid)
+    /// <param name="keepFightOrders">Whether to leave a push or a flank going: the fight goes on.</param>
+    private void EndHunt(EntityUid issuerUid, bool keepFightOrders = false)
     {
         if (_huntQuery.TryComp(issuerUid, out var huntComponent))
         {
@@ -151,7 +153,13 @@ public sealed partial class NpcSquadTacticsSystem
                 _npcHuntDebugSystem.SendEnded(issuerUid, _members);
         }
 
-        ClearOrders(issuerUid, _members);
+        foreach (var memberUid in _members)
+        {
+            if (!_orderQuery.TryComp(memberUid, out var orderComponent) || keepFightOrders && IsFightOrder(orderComponent))
+                continue;
+
+            ClearOrder((memberUid, orderComponent), issuerUid);
+        }
     }
 
     /// <summary>
@@ -161,18 +169,24 @@ public sealed partial class NpcSquadTacticsSystem
     private void UpdateHunt(EntityUid issuerUid, EntityUid? leaderUid, NpcHunt hunt, NpcSquadTacticsSettings settings, TimeSpan now)
     {
         // Not in the middle of a blast, which has timeouts of its own: given up on there, a charge would be left on the wall,
-        //      or the wire, with the squad waiting about beside it. The hunt starts over once it is through.
-        if (hunt.Phase is not (NpcHuntPhase.Exhausted or NpcHuntPhase.Blast) && now - hunt.StartedAt >= settings.HuntTimeout)
+        //      or the wire, with the squad waiting about beside it. The hunt starts over once it is through. Nor in the middle of
+        //      softening the room, which is soon over, and would leave a grenade in someone's hand.
+        if (hunt.Phase is not (NpcHuntPhase.Exhausted or NpcHuntPhase.Blast or NpcHuntPhase.Soften) && now - hunt.StartedAt >= settings.HuntTimeout)
             Exhaust(leaderUid, hunt, now);
 
         if (hunt.Phase == NpcHuntPhase.Watch)
         {
-            // Nobody to watch for after a disturbance: straight on to going in.
-            if (hunt.TargetUid is { } targetUid && now - hunt.PhaseStartedAt < settings.WatchTime)
+            // Nobody to watch for after a disturbance: straight on to going in. Counted from the loss, not the hunt: a squad
+            //      that was busy for a few seconds after it lost the hostile has already watched for those.
+            if (hunt.TargetUid is { } targetUid && now - hunt.LostAt < settings.WatchTime)
             {
+                UpdatePrediction(hunt, targetUid);
                 IssueWatchOrders(issuerUid, hunt, targetUid, now);
                 return;
             }
+
+            if (hunt.TargetUid is { } lastTargetUid)
+                UpdatePrediction(hunt, lastTargetUid);
 
             PrepareSearch(leaderUid, hunt, settings, now);
         }
@@ -188,6 +202,14 @@ public sealed partial class NpcSquadTacticsSystem
             return;
 
         if (hunt.Phase == NpcHuntPhase.Breach && !UpdateBreach(issuerUid, hunt, settings, now))
+            return;
+
+        // The moment they would go in, however they got there, and once only: something goes in ahead of them, if it is worth
+        //      it. A plan's own hunt has no hostile of its own, so never: the plan softens the room itself.
+        if (hunt.Phase == NpcHuntPhase.Entry)
+            TryStartSoften(hunt, settings, now);
+
+        if (hunt.Phase == NpcHuntPhase.Soften && !UpdateSoften(issuerUid, hunt, settings, now))
             return;
 
         if (hunt.Phase == NpcHuntPhase.Entry && !UpdateEntry(issuerUid, leaderUid, hunt, settings, now))
@@ -213,6 +235,19 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
+    ///     Moves the guess at where the hunted hostile has got to on with the time since it was lost, from what the spotter
+    ///         last saw of it (<see cref="Perception.NpcPerceptionSystem.TryGetPredictedCoordinates"/>). Kept as it was if the spotter has
+    ///         nothing to go by any more.
+    /// </summary>
+    private void UpdatePrediction(NpcHunt hunt, EntityUid targetUid)
+    {
+        if (hunt.SpotterUid is { } spotterUid &&
+            !TerminatingOrDeleted(spotterUid) &&
+            _npcPerceptionSystem.TryGetPredictedCoordinates(spotterUid, targetUid, out var predictedCoordinates))
+            hunt.PredictedCoordinates = predictedCoordinates;
+    }
+
+    /// <summary>
     ///     A hunt just begun, in <paramref name="phase"/> (the watch, unless a plan is running it) and with
     ///         <paramref name="allowCharges"/> for a plan's, which may use a charge to get in. A null
     ///         <paramref name="targetUid"/> is a disturbance.
@@ -223,10 +258,12 @@ public sealed partial class NpcSquadTacticsSystem
         EntityCoordinates predictedCoordinates,
         TimeSpan now,
         bool allowCharges = false,
-        NpcHuntPhase phase = NpcHuntPhase.Watch)
+        NpcHuntPhase phase = NpcHuntPhase.Watch,
+        TimeSpan? lostAt = null)
     {
         return new NpcHunt
         {
+            LostAt = lostAt ?? now,
             TargetUid = targetUid,
             Settings = settings,
             AllowCharges = allowCharges,

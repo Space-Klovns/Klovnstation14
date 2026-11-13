@@ -34,4 +34,10 @@ public sealed partial class NpcVoiceSetPrototype : IPrototype
     /// </summary>
     [DataField]
     public HashSet<ProtoId<LocalizedDatasetPrototype>> Silenced = new();
+
+    /// <summary>
+    ///     The line set for each callout this voice says (<see cref="NpcCallout"/>). One it does not name, it never says.
+    /// </summary>
+    [DataField]
+    public Dictionary<NpcCallout, ProtoId<LocalizedDatasetPrototype>> Callouts = new();
 }

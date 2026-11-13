@@ -20,7 +20,7 @@ public sealed partial class ContactDistanceCon : KsBelievedContactCon
 
     protected override float UnknownScore => 1f;
 
-    protected override float GetBelievedScore(EntityUid ownerUid, EntityCoordinates believedCoordinates)
+    protected override float GetBelievedScore(EntityUid ownerUid, EntityUid targetUid, EntityCoordinates believedCoordinates)
     {
         if (!EntityManager.TransformQuery.GetComponent(ownerUid).Coordinates.TryDistance(EntityManager, _transformSystem, believedCoordinates, out var distance))
             return UnknownScore;

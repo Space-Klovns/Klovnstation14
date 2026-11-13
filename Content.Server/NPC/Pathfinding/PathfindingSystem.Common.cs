@@ -62,6 +62,13 @@ public sealed partial class PathfindingSystem
     /// What stepping onto <paramref name="end"/> costs per unit of distance for a request with these flags and
     /// collision, or 0 if it cannot.
     /// </summary>
+    /// <summary>
+    /// KS14: what a climb costs on top of walking, per unit of distance. Climbing takes a do-after, standing still and
+    /// open, so a climber walks round unless that is much further. The poly of a railing is a quarter of a tile deep, so
+    /// stepping over one costs about four tiles' walking; a table, a whole tile deep, about twelve.
+    /// </summary>
+    public const float ClimbCost = 12f;
+
     internal static float GetTileModifier(PathFlags flags, int collisionLayer, int collisionMask, PathPoly end)
     {
         // KS14 end
@@ -125,7 +132,7 @@ public sealed partial class PathfindingSystem
             }
             else if (isClimb && (flags /* KS14: request.Flags -> flags */ & PathFlags.Climbing) != 0x0)
             {
-                modifier += 0.5f;
+                modifier += ClimbCost; // KS14: was 0.5, which made climbing all but free; see ClimbCost
             }
             else
             {

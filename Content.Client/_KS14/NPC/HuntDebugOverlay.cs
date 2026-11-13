@@ -220,7 +220,7 @@ public sealed partial class HuntDebugOverlay : Overlay
                 ? $"{frame.PhaseElapsed:F1}/{frame.PhaseLimit:F0}s"
                 : $"{frame.PhaseElapsed:F1}s";
 
-            var text = $"{frame.Phase} {phaseTime}\nhunt {frame.HuntElapsed:F1}/{frame.HuntTimeout:F0}s\nseen {frame.Coverage:P0} of {frame.RequiredCoverage:P0}";
+            var text = $"{frame.Phase} {phaseTime}\nhunt {frame.HuntElapsed:F1}/{frame.HuntTimeout:F0}s, lost {frame.LostElapsed:F1}s ago\nseen {frame.Coverage:P0} of {frame.RequiredCoverage:P0}";
             var screenPosition = _eyeManager.WorldToScreen(predictedPosition) + new Vector2(12f, -12f);
 
             args.ScreenHandle.DrawString(_font, screenPosition, text, SquadDebugOverlay.GetPhaseColor(frame.Phase));

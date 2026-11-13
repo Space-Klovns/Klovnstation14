@@ -22,9 +22,6 @@ namespace Content.Shared.Throwing
     /// </summary>
     public sealed partial class ThrownItemSystem : EntitySystem
     {
-        // KS14 Start
-        [Dependency] private _KS14.RayCollision.KsRayCollisionSystem _ksRayCollision = default!;
-        // KS14 End
         [Dependency] private IGameTiming _gameTiming = default!;
         [Dependency] private INetManager _netMan = default!;
         [Dependency] private ISharedAdminLogManager _adminLogger = default!;
@@ -39,10 +36,6 @@ namespace Content.Shared.Throwing
         {
             base.Initialize();
 
-            // KS14 Start
-            SubscribeLocalEvent<ThrownItemComponent, _KS14.RayCollision.KsRayCollisionEvent>(KsOnRayCollision);
-            // KS14 End
-
             SubscribeLocalEvent<ThrownItemComponent, MapInitEvent>(OnMapInit);
             SubscribeLocalEvent<ThrownItemComponent, PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<ThrownItemComponent, StartCollideEvent>(HandleCollision);
@@ -50,16 +43,6 @@ namespace Content.Shared.Throwing
             SubscribeLocalEvent<ThrownItemComponent, ThrownEvent>(ThrowItem);
 
             SubscribeLocalEvent<PullStartedMessage>(HandlePullStarted);
-        }
-
-        private void KsOnRayCollision(Entity<ThrownItemComponent> entity, ref _KS14.RayCollision.KsRayCollisionEvent args)
-        {
-            // Basically prevent noclipping
-
-            ThrowCollideInteraction(entity, entity, args.OtherEntity);
-            _physics.SetLinearVelocity(entity.Owner, System.Numerics.Vector2.Zero);
-
-            StopThrow(entity, entity);
         }
 
         private void OnMapInit(EntityUid uid, ThrownItemComponent component, MapInitEvent args)
@@ -79,10 +62,6 @@ namespace Content.Shared.Throwing
             var fixture = fixturesComponent.Fixtures.Values.First();
             var shape = fixture.Shape;
             _fixtures.TryCreateFixture(uid, shape, ThrowingFixture, hard: false, collisionMask: (int)CollisionGroup.ThrownItem, manager: fixturesComponent, body: body);
-
-            // KS14 Start
-            _ksRayCollision.StartChecking(uid, exclusiveFixtureIds: [ThrowingFixture]);
-            // KS14 End
         }
 
         private void HandleCollision(EntityUid uid, ThrownItemComponent component, ref StartCollideEvent args)
@@ -143,10 +122,6 @@ namespace Content.Shared.Throwing
             if (_netMan.IsServer)
                 RemCompDeferred/*KS14: Deferred*/<PredictedThrownItemComponent>(uid);
             // </Trauma>
-
-            // KS14 Start
-            _ksRayCollision.StopChecking(uid); // if not you'll be stuck in eternal raycollision HELL
-            // KS14 End
         }
 
         public void LandComponent(EntityUid uid, ThrownItemComponent thrownItem, PhysicsComponent physics, bool playSound)

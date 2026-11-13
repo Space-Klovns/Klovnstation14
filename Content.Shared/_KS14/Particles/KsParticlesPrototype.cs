@@ -118,8 +118,9 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     public KsParticleSpace Space = KsParticleSpace.Local;
 
     /// <summary>
-    ///     Whether the emitter turns with its entity. Off, as in BYOND, smoke rises up the screen whichever way the
-    ///         thing it comes from is facing.
+    ///     Whether the emitter turns with its entity. Off, as in BYOND, it is square to the grid the entity stands on
+    ///         (the frame sprites are drawn in and the eye is turned to), so smoke rises up the screen whichever way
+    ///         the thing it comes from is facing. Off a grid, square to the map.
     /// </summary>
     [DataField]
     public bool FollowRotation;

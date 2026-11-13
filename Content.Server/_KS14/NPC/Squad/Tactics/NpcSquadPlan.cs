@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Perception;
 using Content.Server.NPC.Pathfinding;
 using Content.Shared._KS14.NPC;
 using Robust.Shared.Map;
@@ -9,6 +10,15 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 ///     Who would throw what, and where to.
 /// </summary>
 public readonly record struct NpcSquadThrow(EntityUid ThrowerUid, EntityUid GrenadeUid, EntityCoordinates Coordinates);
+
+/// <summary>
+///     What a throw into a room goes by: where to aim, if anywhere, and what the hostile is like. The hostile itself for one in
+///         sight; what the squad last saw of it for one that is not.
+/// </summary>
+/// <param name="Aim">Where it is, or is believed to be. Null for nowhere: the throw goes just inside.</param>
+/// <param name="Traits">What it is like. <see cref="NpcContactTraits.None"/> for nothing known, which rules out every softener
+///     that depends on it.</param>
+public readonly record struct NpcSofteningTarget(EntityCoordinates? Aim, NpcContactTraits Traits);
 
 /// <summary>
 ///     A squad's plan for a hostile it can see and cannot get at: everything from noticing that, through carrying the plan
@@ -22,6 +32,15 @@ public sealed class NpcSquadPlan
     public required EntityUid TargetUid;
 
     public required TimeSpan StartedAt;
+
+    /// <summary>
+    ///     What the squad made of the target when <see cref="NpcSquadTacticsSystem"/> last looked for throwers
+    ///         (<c>FindThrowers</c>): the traits <see cref="NpcPerceptionSystem.GetTraits"/> gave for the target itself, or, for a
+    ///         hunt softening, the squad belief (<see cref="NpcSquadTacticsSystem.TryGetSquadBelief"/>). Kept so that
+    ///         whether the target is armed (<see cref="NpcContactTraits.Armed"/>) is read from here, not asked of the gun system
+    ///         again. Only as fresh as the last <c>RefreshPlanCandidates</c>, which every fact and cost is worked out after.
+    /// </summary>
+    public NpcContactTraits TargetTraits;
 
     public NpcSquadPlanState State = NpcSquadPlanState.Grace;
 
@@ -111,6 +130,13 @@ public sealed class NpcSquadPlan
     public NpcSquadThrow? SmokeThrow;
 
     public bool SmokeGasses;
+
+    /// <summary>
+    ///     Whether this plan puts smoke in before a grenade, where it could do either
+    ///         (<see cref="NpcSquadTacticsSettings.PlanSmokeOverFragChance"/>). Rolled the first time it plans, so it holds
+    ///         every time it plans again.
+    /// </summary>
+    public bool? SmokeOverFrag;
 
     /// <summary>
     ///     When what was thrown left its hand, and what it was.

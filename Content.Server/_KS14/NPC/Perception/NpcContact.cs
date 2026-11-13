@@ -25,6 +25,11 @@ namespace Content.Server._KS14.NPC.Perception;
 ///     carries on and investigates; one that was holding stays put and watches for it to show itself again.</param>
 /// <param name="RevealedUntil">While this is in the future, the target is known wherever it is, however far or hidden:
 ///     it shot the NPC. See <see cref="NpcPerceptionComponent.RevealAttackers"/>. Default if it never did.</param>
+/// <param name="Traits">What it made of the hostile as it lost sight of it (<see cref="NpcPerceptionSystem.GetTraits"/>).
+///     <see cref="NpcContactTraits.None"/> for one never lost from sight, or only called out.</param>
+/// <param name="SeenLight">How lit it looked when last seen, after the NPC's dark vision: 1 within
+///     <see cref="NpcPerceptionComponent.ProximityRange"/>, NaN if seeing it did not need the light (it was moving fast).
+///     Read it through <see cref="NpcPerceptionSystem.GetSeenLight"/>, which works it out when it is missing.</param>
 public record struct NpcContact(
     NpcContactState State,
     TimeSpan FirstSeen,
@@ -36,4 +41,6 @@ public record struct NpcContact(
     bool Reacted,
     TimeSpan ReactAt = default,
     bool ObserverWasMoving = false,
-    TimeSpan RevealedUntil = default);
+    TimeSpan RevealedUntil = default,
+    NpcContactTraits Traits = NpcContactTraits.None,
+    float SeenLight = float.NaN);

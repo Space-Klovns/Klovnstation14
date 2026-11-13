@@ -275,7 +275,7 @@ public sealed class KsNpcHierarchicalPathTest : GameTest
             }
         });
 
-        await Pair.RunTicksSync(90); // navmesh
+        await WaitForNavmeshSettled(Pair, gridUid); // every wall in it: one missing is a short cut down the corridor
         return gridUid;
     }
 

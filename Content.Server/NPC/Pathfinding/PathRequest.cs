@@ -100,6 +100,13 @@ public sealed class AStarPathRequest : PathRequest
     ///     How many polys the search has expanded, over all its slices. For tests and benchmarks.
     /// </summary>
     public int KsExpansions;
+
+    /// <summary>
+    ///     KS14: polys this search has expanded, over every slice it took: what the node limit goes by. Counted per slice,
+    ///         as it was, a search suspended for time got a fresh limit on each one, so the busier the server the further
+    ///         it searched. Started over when the search is (<c>RestartIgnoringDangers</c>).
+    /// </summary>
+    public int KsSearchedNodes;
     // KS14 end
 
     public AStarPathRequest(

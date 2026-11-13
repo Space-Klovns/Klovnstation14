@@ -17,6 +17,7 @@ namespace Content.Server.Atmos.Piping.EntitySystems
         private float _timer;
 
         // Set of atmos devices that are off-grid but have JoinSystem set.
+        // KS14: and devices on a grid with no atmosphere, see AtmosDeviceSystem.Klovn.OffGrid.cs
         private readonly HashSet<Entity<AtmosDeviceComponent>> _joinedDevices = new();
 
         private static AtmosDeviceDisabledEvent _disabledEv = new();
@@ -75,7 +76,7 @@ namespace Content.Server.Atmos.Piping.EntitySystems
             // Attempt to add device to a grid atmosphere.
             bool onGrid = (transform.GridUid != null) && _atmosphereSystem.AddAtmosDevice(transform.GridUid!.Value, ent);
 
-            if (!onGrid && component.JoinSystem)
+            if (!onGrid && (component.JoinSystem || transform.GridUid != null /* KS14: added, a grid with no atmosphere */))
             {
                 _joinedDevices.Add(ent);
                 component.JoinedSystem = true;
@@ -153,20 +154,24 @@ namespace Content.Server.Atmos.Piping.EntitySystems
         {
             _timer += frameTime;
 
-            if (_timer < _atmosphereSystem.AtmosTime)
+            if (_timer < _atmosphereSystem.RealAtmosTime() /* KS14: AtmosTime -> RealAtmosTime() */)
                 return;
 
-            _timer -= _atmosphereSystem.AtmosTime;
+            _timer -= _atmosphereSystem.RealAtmosTime() /* KS14: AtmosTime -> RealAtmosTime() */;
+
+            _atmosphereSystem.UpdateOffGridPipeNets(); // KS14: pipe nets on a grid with no atmosphere
 
             var time = _gameTiming.CurTime;
-            var ev = new AtmosDeviceUpdateEvent(_atmosphereSystem.AtmosTime, null, null);
+            /* var ev = new AtmosDeviceUpdateEvent(_atmosphereSystem.AtmosTime, null, null); */ // KS14: moved into the loop, each device carries its own map
             foreach (var device in _joinedDevices)
             {
                 var deviceGrid = Transform(device).GridUid;
                 if (HasComp<GridAtmosphereComponent>(deviceGrid))
                 {
                     RejoinAtmosphere(device);
+                    continue; // KS14: added, the grid loop updates it from here on
                 }
+                var ev = KsGetDeviceUpdateEvent(device); // KS14: replaces the shared event above
                 RaiseLocalEvent(device, ref ev);
                 device.Comp.LastProcess = time;
             }

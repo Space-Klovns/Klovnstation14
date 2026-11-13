@@ -450,6 +450,30 @@ public sealed class KsNpcSquadPlanTest : GameTest
     seesThroughSmoke: true
 
 - type: entity
+  parent: KsSquadPlanTestMobSteady
+  id: KsSquadPlanTestMobSoftener
+  components:
+  - type: NpcSquadMember
+    tactics:
+      watchTime: 0s
+
+- type: entity
+  parent: KsSquadPlanTestMobSmokeSighted
+  id: KsSquadPlanTestMobSmokeFirst
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planSmokeOverFragChance: 1
+
+- type: entity
+  parent: KsSquadPlanTestMobSmokeSighted
+  id: KsSquadPlanTestMobFragFirst
+  components:
+  - type: NpcSquadMember
+    tactics:
+      planSmokeOverFragChance: 0
+
+- type: entity
   parent: KsSquadPlanTestArmedHostile
   id: KsSquadPlanTestSmokeSightedHostile
   components:
@@ -963,6 +987,144 @@ public sealed class KsNpcSquadPlanTest : GameTest
             Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running));
             Assert.That(plan.Steps[..plan.StepCount].Contains(NpcSquadAction.SmokeRoom), Is.EqualTo(screened), plan.Facts.ToString());
             Assert.That(plan.SmokeGasses, Is.False, "plain smoke carries nothing");
+        });
+    }
+
+    /// <summary>
+    ///     A squad that plans, going in after a hostile it lost, puts something in ahead of itself, if what it last saw was a
+    ///         hostile with a gun: going by that, never by the hostile itself, which here is the other way about. The throw goes
+    ///         where they believe it is, not where it went, and once it has gone off they go in.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestAHuntSoftensTheRoomOnWhatItLastSaw(bool seenArmed)
+    {
+        // Armed if it was seen unarmed, and the other way about: only what they saw may count.
+        var scene = await SetUp("KsSquadPlanTestMobSoftener", glass: ArmouredGlass, hostile: seenArmed ? "KsSquadTestMobNanoTrasen" : ArmedHostile);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            scene.EntManager.DeleteEntity(scene.DoorUid);
+            GiveInHand(scene, scene.MemberUid, Flashbang);
+
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var transformSystem = scene.EntManager.System<SharedTransformSystem>();
+            var believed = transformSystem.GetMoverCoordinates(scene.TargetUid);
+            var traits = NpcContactTraits.Seen | NpcContactTraits.Flashable | (seenArmed ? NpcContactTraits.Armed : NpcContactTraits.None);
+
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.EntManager.System<NpcPerceptionSystem>().SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, believed, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false, Traits: traits));
+            }
+
+            // Somewhere else in the room by now, unseen.
+            transformSystem.SetCoordinates(scene.TargetUid, new EntityCoordinates(scene.GridUid, 5.5f, 0.5f));
+
+            Assert.That(scene.TacticsSystem.IsHoldingThrows(scene.MemberUid), Is.False, "no hunt, nothing to hold throws for");
+            scene.TacticsSystem.UpdateNow();
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt, Is.Not.Null, "the test needs them hunting");
+            Assert.That(hunt!.StagedMembers, Is.Not.Empty, "the test needs them stacked up on the room");
+
+            for (var i = 0; i < 3 && hunt.Phase is NpcHuntPhase.Stage or NpcHuntPhase.Breach; i++)
+            {
+                scene.TacticsSystem.UpdateNow();
+            }
+
+            if (!seenArmed)
+            {
+                Assert.That(hunt.Phase, Is.Not.EqualTo(NpcHuntPhase.Soften), "nothing goes in ahead of them on a hostile last seen unarmed");
+                Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var walkIn) && walkIn.Kind == NpcOrderKind.ThrowGrenade, Is.False);
+                return;
+            }
+
+            Assert.That(hunt.Phase, Is.EqualTo(NpcHuntPhase.Soften), "a hostile last seen armed gets something in ahead of them");
+            Assert.That(scene.TacticsSystem.IsHoldingThrows(scene.LeaderUid), "nobody throws of their own accord while the squad does");
+            Assert.That(scene.TacticsSystem.TryGetOrder(scene.MemberUid, out var order), "the one with the flashbang should be told to throw it");
+            Assert.Multiple(() =>
+            {
+                Assert.That(order.Kind, Is.EqualTo(NpcOrderKind.ThrowGrenade));
+                Assert.That(order.OverCombat, "a throw, once begun, is not cut short");
+
+                var aimed = transformSystem.ToMapCoordinates(order.Coordinates).Position;
+                var live = transformSystem.GetMapCoordinates(scene.TargetUid).Position;
+                Assert.That((aimed - live).Length(), Is.GreaterThan(1f), "it should be thrown where they believe it is, not where it went");
+            });
+
+            // In the air, and gone off: they go in.
+            scene.EntManager.DeleteEntity(order.ToolUid!.Value);
+            scene.TacticsSystem.UpdateNow();
+            hunt.Soften!.ThrownAt = IoCManager.Resolve<IGameTiming>().CurTime - TimeSpan.FromSeconds(10);
+            scene.TacticsSystem.UpdateNow();
+
+            Assert.That(hunt.Phase, Is.Not.EqualTo(NpcHuntPhase.Soften), "once it has gone off, they go in");
+            Assert.That(hunt.Soften, Is.Null);
+            Assert.That(scene.TacticsSystem.IsHoldingThrows(scene.LeaderUid), "with something already gone in, nothing more is thrown on the way in");
+        });
+    }
+
+    /// <summary>
+    ///     A squad that does not plan goes straight in after a hostile it lost, armed or not.
+    /// </summary>
+    [Test]
+    public async Task TestAHuntThatDoesNotPlanDoesNotSoften()
+    {
+        var scene = await SetUp("KsSquadPlanTestMobHunter", glass: ArmouredGlass, hostile: ArmedHostile);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            scene.EntManager.DeleteEntity(scene.DoorUid);
+            GiveInHand(scene, scene.MemberUid, Flashbang);
+
+            var now = IoCManager.Resolve<IGameTiming>().CurTime;
+            var coordinates = scene.EntManager.GetComponent<TransformComponent>(scene.TargetUid).Coordinates;
+            const NpcContactTraits traits = NpcContactTraits.Seen | NpcContactTraits.Flashable | NpcContactTraits.Armed;
+
+            foreach (var memberUid in new[] { scene.LeaderUid, scene.MemberUid })
+            {
+                scene.EntManager.System<NpcPerceptionSystem>().SetContact(memberUid, scene.TargetUid, new NpcContact(NpcContactState.Lost,
+                    now, now, now, coordinates, default, null, Reacted: true, ReactAt: now, ObserverWasMoving: false, Traits: traits));
+            }
+
+            for (var i = 0; i < 4; i++)
+            {
+                scene.TacticsSystem.UpdateNow();
+            }
+
+            var hunt = scene.TacticsSystem.GetHunt(scene.SquadUid);
+            Assert.That(hunt, Is.Not.Null, "the test needs them hunting");
+            Assert.That(hunt!.SoftenTried, Is.False);
+            Assert.That(hunt.Phase, Is.Not.EqualTo(NpcHuntPhase.Soften));
+        });
+    }
+
+    /// <summary>
+    ///     With a grenade and smoke both to hand, which goes in is down to the plan's roll, and only one of them does.
+    /// </summary>
+    [TestCase("KsSquadPlanTestMobSmokeFirst", NpcSquadAction.SmokeRoom, NpcSquadAction.FragRoom)]
+    [TestCase("KsSquadPlanTestMobFragFirst", NpcSquadAction.FragRoom, NpcSquadAction.SmokeRoom)]
+    public async Task TestSmokeOrGrenadeIsRolled(string mob, NpcSquadAction used, NpcSquadAction unused)
+    {
+        var scene = await SetUp(mob, glass: ArmouredGlass, hostile: ArmedHostile);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Mask(scene, scene.LeaderUid);
+            Mask(scene, scene.MemberUid);
+            GiveInHand(scene, scene.MemberUid, TestJawsOfLife);
+            GiveInHand(scene, scene.MemberUid, Frag);
+            GiveInHand(scene, scene.MemberUid, PlainSmoke);
+        });
+
+        await Step(scene);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var plan = GetPlan(scene)!;
+            Assert.That(plan.State, Is.EqualTo(NpcSquadPlanState.Running));
+            Assert.That(plan.Steps[..plan.StepCount], Does.Contain(used), plan.Facts.ToString());
+            Assert.That(plan.Steps[..plan.StepCount], Does.Not.Contain(unused), plan.Facts.ToString());
         });
     }
 

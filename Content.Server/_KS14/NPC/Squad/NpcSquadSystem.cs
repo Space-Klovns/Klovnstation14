@@ -7,6 +7,7 @@ using Content.Server._KS14.NPC.Utility;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
+using Content.Shared.Gibbing;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
@@ -365,6 +366,27 @@ public sealed partial class NpcSquadSystem : EntitySystem
         }
 
         // Succession has to be immediate: a leaderless squad would otherwise hold for up to a whole update.
+        entity.Comp.LastSquad = entity.Comp.Squad ?? entity.Comp.LastSquad;
+        RemoveFromSquad(entity);
+    }
+
+    /// <summary>
+    ///     Gibbed: as down as it gets, though no mob state says so. Reported as dying, unless it was dead already.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnMemberGibbed(Entity<NpcSquadMemberComponent> entity, ref BeingGibbedEvent args)
+    {
+        if (_mobStateSystem.IsDead(entity.Owner))
+            return;
+
+        var squadUid = entity.Comp.Squad ?? entity.Comp.LastSquad;
+        if (squadUid is not { } downedInUid || !_squadQuery.TryComp(downedInUid, out var downedInComponent))
+            return;
+
+        var ev = new NpcSquadMemberDownedEvent(downedInUid, entity.Owner, MobState.Dead);
+        RaiseLocalEvent(ref ev);
+
+        downedInComponent.Downed.Remove(entity.Owner);
         entity.Comp.LastSquad = entity.Comp.Squad ?? entity.Comp.LastSquad;
         RemoveFromSquad(entity);
     }
