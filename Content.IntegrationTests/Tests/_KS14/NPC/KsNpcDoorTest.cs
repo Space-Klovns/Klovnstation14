@@ -1586,6 +1586,8 @@ public sealed class KsNpcDoorTest : GameTest
         });
 
         await Pair.RunTicksSync(90);
+        // Unsteered: a search steered by the coarse maps is let go as far as its path is long, see GetNodeLimit.
+        await OverrideCVar(Side.Server, KsCCVars.NpcPathHierarchical, false, sync: false);
         await OverrideCVar(Side.Server, KsCCVars.NpcPathNodeLimit, nodeLimit);
 
         Assert.That(await FindPath(entManager, pathfindingSystem, npcUid, gridUid), Is.EqualTo(expectPath ? PathResult.Path : PathResult.NoPath));
