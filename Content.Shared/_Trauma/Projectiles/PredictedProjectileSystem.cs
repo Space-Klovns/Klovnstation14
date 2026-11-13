@@ -46,6 +46,8 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private IConfigurationManager _config = default!; // KS14
     [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14
     [Dependency] private StandingStateSystem _standingStateSystem = default!; // KS14
+    [Dependency] private SharedTransformSystem _transformSystem = default!; // KS14
+    [Dependency] private _KS14.Projectiles.KsProjectileFalloffSystem _ksProjectileFalloffSystem = default!; // KS14
     [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
@@ -131,7 +133,10 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         }
 
         var shooter = comp.Shooter;
-        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier, target, shooter);
+        // KS14 start: damage falloff by distance flown
+        var falloffMultiplier = _ksProjectileFalloffSystem.GetMultiplier(uid, _transformSystem.GetMapCoordinates(uid));
+        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier * falloffMultiplier, target, shooter);
+        // KS14 end
         RaiseLocalEvent(uid, ref ev);
 
         var otherName = ToPrettyString(target);
