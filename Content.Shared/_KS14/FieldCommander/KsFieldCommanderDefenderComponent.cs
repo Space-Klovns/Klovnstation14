@@ -40,5 +40,5 @@ public sealed partial class KsFieldCommanderDownFlashSettings
     ///     How long the flash lasts.
     /// </summary>
     [DataField]
-    public TimeSpan Duration = TimeSpan.FromSeconds(0.45);
+    public TimeSpan Duration = TimeSpan.FromSeconds(2);
 }
