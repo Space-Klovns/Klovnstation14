@@ -1,5 +1,7 @@
+using Content.Shared._KS14.CCVar;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Projectiles;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 
 namespace Content.Shared._KS14.Projectiles;
@@ -10,6 +12,15 @@ namespace Content.Shared._KS14.Projectiles;
 public sealed partial class KsProjectileFalloffSystem : EntitySystem
 {
     [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+
+    private bool _falloffEnabled = true;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        Subs.CVar(_configurationManager, KsCCVars.ProjectileDamageFalloff, value => _falloffEnabled = value, invokeImmediately: true);
+    }
 
     [SubscribeLocalEvent]
     private void OnPlayerShotProjectile(ref PlayerShotProjectileEvent args)
@@ -39,7 +50,8 @@ public sealed partial class KsProjectileFalloffSystem : EntitySystem
     /// </summary>
     public float GetMultiplier(Entity<KsProjectileFalloffComponent?> projectile, MapCoordinates hitCoordinates)
     {
-        if (!Resolve(projectile.Owner, ref projectile.Comp, logMissing: false) ||
+        if (!_falloffEnabled ||
+            !Resolve(projectile.Owner, ref projectile.Comp, logMissing: false) ||
             projectile.Comp.OriginMap == MapId.Nullspace ||
             projectile.Comp.OriginMap != hitCoordinates.MapId)
             return 1f;

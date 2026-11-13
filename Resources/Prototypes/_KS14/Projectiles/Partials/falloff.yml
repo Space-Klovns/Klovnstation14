@@ -85,3 +85,10 @@
   id: PelletShotgunMech
   components:
   - type: KsProjectileFalloff
+
+# The Kardashev-Mosin is a sniper: its round (shared with other light rifles) does not fall off when fired from it.
+- type: !PartialOnly entity
+  id: WeaponSniperMosin
+  components:
+  - type: KsGunProjectileFalloff
+    minMultiplier: 1

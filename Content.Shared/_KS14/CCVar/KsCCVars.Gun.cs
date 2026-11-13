@@ -26,4 +26,12 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> GunTriggerSpasmChance =
         CVarDef.Create("klovn.gun.trigger_spasm_chance", 0.220f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     Whether projectiles with a falloff component lose damage with distance. Read by shared code, and the
+    ///         client predicts hits, so it is replicated.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> ProjectileDamageFalloff =
+        CVarDef.Create("klovn.projectile.damage_falloff", true, CVar.SERVER | CVar.REPLICATED);
 }

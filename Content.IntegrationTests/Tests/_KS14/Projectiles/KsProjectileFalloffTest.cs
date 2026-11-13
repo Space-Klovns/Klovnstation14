@@ -2,6 +2,8 @@
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Projectiles;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Damage.Systems;
@@ -22,6 +24,8 @@ public sealed class KsProjectileFalloffTest : GameTest
     private static readonly EntProtoId LaserBullet = "BulletLaser";
     private static readonly EntProtoId RocketBullet = "BulletRocket";
     private static readonly EntProtoId HristovSniper = "WeaponSniperHristov";
+    private static readonly EntProtoId MosinSniper = "WeaponSniperMosin";
+    private static readonly EntProtoId OtherLightRifle = "WeaponRifleAk";
 
     private readonly EntProtoId _bullet = "KsFalloffTestBullet";
     private readonly EntProtoId _target = "KsFalloffTestTarget";
@@ -174,6 +178,45 @@ public sealed class KsProjectileFalloffTest : GameTest
             Assert.That(scaledMid / near, Is.EqualTo(1f).Within(0.01f), "double range: 11 tiles is inside the 12 of full damage");
             Assert.That(scaledFar / near, Is.EqualTo(0.325f).Within(0.01f), "double range: 30 tiles is 90% of the way from 12 to 32");
             Assert.That(noFalloffFar / near, Is.EqualTo(1f).Within(0.01f), "a min multiplier override of 1 turns falloff off");
+        });
+    }
+
+    [Test]
+    public async Task MosinRoundDoesFullDamageAtRangeButOtherLightRiflesFallOff()
+    {
+        // The Mosin's real round, which other guns fire too.
+        Assert.That(SProtoMan.Index(MosinSniper).TryGetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(out var provider, Server.EntMan.ComponentFactory));
+        Assert.That(SProtoMan.Index(provider!.Proto!.Value).TryGetComponent<Content.Shared.Weapons.Ranged.Components.CartridgeAmmoComponent>(out var cartridgeAmmo, Server.EntMan.ComponentFactory));
+        var lightRifleBullet = cartridgeAmmo!.Prototype;
+
+        var testMap = await Pair.CreateTestMap();
+        var near = await DamageDealtAt(testMap.MapId, 4f, lightRifleBullet, MosinSniper);
+        var mosinFar = await DamageDealtAt(testMap.MapId, 30f, lightRifleBullet, MosinSniper);
+        var akFar = await DamageDealtAt(testMap.MapId, 30f, lightRifleBullet, OtherLightRifle);
+
+        Assert.That(near, Is.GreaterThan(0f));
+        Assert.Multiple(() =>
+        {
+            Assert.That(mosinFar, Is.EqualTo(near).Within(0.01f), "the Mosin does not fall off");
+            Assert.That(akFar, Is.LessThan(near), "the same cartridge from another rifle still falls off");
+        });
+    }
+
+    [Test]
+    public async Task FalloffCanBeSwitchedOffWithTheCVar()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var near = await DamageDealtAt(testMap.MapId, 2f, _bullet);
+        var farOn = await DamageDealtAt(testMap.MapId, 30f, _bullet);
+
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloff, false);
+        var farOff = await DamageDealtAt(testMap.MapId, 30f, _bullet);
+
+        Assert.That(near, Is.GreaterThan(0f));
+        Assert.Multiple(() =>
+        {
+            Assert.That(farOn / near, Is.EqualTo(0.25f).Within(0.01f), "falls off while on");
+            Assert.That(farOff, Is.EqualTo(near).Within(0.01f), "full damage while off");
         });
     }
 
