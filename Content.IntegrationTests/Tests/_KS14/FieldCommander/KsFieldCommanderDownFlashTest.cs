@@ -29,7 +29,8 @@ public sealed class KsFieldCommanderDownFlashTest : GameTest
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _defender = "KsTestDownFlashDefender";
     private readonly EntProtoId _bystander = "KsTestDownFlashBystander";
-    private readonly ProtoId<ShaderPrototype> _dissolveShader = "KsDissolve";
+
+    private static readonly ProtoId<ShaderPrototype> DissolveShader = "KsDissolve";
 
     private static readonly Color CriticalColor = Color.FromHex("#12AB34CC");
     private static readonly Color DeadColor = Color.FromHex("#000000EE");
@@ -150,8 +151,8 @@ public sealed class KsFieldCommanderDownFlashTest : GameTest
         {
             var spriteSystem = client.System<SpriteSystem>();
             var spriteComponent = client.EntMan.GetComponent<SpriteComponent>(clientDefender);
-            var dissolveShader = client.ProtoMan.Index(_dissolveShader).InstanceUnique();
-            var outlineShader = client.ProtoMan.Index(_dissolveShader).InstanceUnique();
+            var dissolveShader = client.ProtoMan.Index(DissolveShader).InstanceUnique();
+            var outlineShader = client.ProtoMan.Index(DissolveShader).InstanceUnique();
             spriteSystem.SetPostShader((clientDefender, spriteComponent), new SpriteComponent.PostShaderArgs(KsPostShaderIds.Dissolve, dissolveShader)
             {
                 Before = KsPostShaderIds.BeforeOutlines,
