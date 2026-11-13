@@ -34,9 +34,19 @@ public sealed partial class DamageContactsSystem : EntitySystem
             if (_timing.CurTime < damaged.NextSecond)
                 continue;
             damaged.NextSecond = _timing.CurTime + TimeSpan.FromSeconds(1);
+            Dirty(ent, damaged); // KS14: NextSecond is networked, so the client ticks with the server
 
+            // KS14 start: tell whatever cares that the damage landed (KsDamagedSoundSystem's rattle)
+            /*
             if (damaged.Damage != null)
                 _damageable.TryChangeDamage(ent, damaged.Damage, interruptsDoAfters: false);
+            */
+            if (damaged.Damage != null && _damageable.TryChangeDamage(ent, damaged.Damage, interruptsDoAfters: false))
+            {
+                var damagedEvent = new Content.Shared._KS14.Damage.Events.KsDamagedByContactEvent();
+                RaiseLocalEvent(ent, ref damagedEvent);
+            }
+            // KS14 end
         }
     }
 
