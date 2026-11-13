@@ -23,6 +23,8 @@ namespace Content.Server._KS14.NPC.Perception;
 ///     reaction is just late. Default for one that was never seen, only called out.</param>
 /// <param name="ObserverWasMoving">Whether the NPC was on the move when it lost sight of it. One that was pushing
 ///     carries on and investigates; one that was holding stays put and watches for it to show itself again.</param>
+/// <param name="RevealedUntil">While this is in the future, the target is known wherever it is, however far or hidden:
+///     it shot the NPC. See <see cref="NpcPerceptionComponent.RevealAttackers"/>. Default if it never did.</param>
 public record struct NpcContact(
     NpcContactState State,
     TimeSpan FirstSeen,
@@ -33,4 +35,5 @@ public record struct NpcContact(
     EntityUid? ContainerUid,
     bool Reacted,
     TimeSpan ReactAt = default,
-    bool ObserverWasMoving = false);
+    bool ObserverWasMoving = false,
+    TimeSpan RevealedUntil = default);
