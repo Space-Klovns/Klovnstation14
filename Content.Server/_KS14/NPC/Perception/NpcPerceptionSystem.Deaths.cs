@@ -76,7 +76,7 @@ public sealed partial class NpcPerceptionSystem
         var hasContact = entity.Comp.Contacts.TryGetValue(targetUid, out var contact);
         var watched = hasContact && contact.State == NpcContactState.Visible ? contact : (NpcContact?) null;
 
-        if (CanSee(entity, observerMapCoordinates, targetUid, range, watched, now, out _, out _))
+        if (CanSee(entity, observerMapCoordinates, targetUid, range, watched, now, out _, out _, out _))
         {
             ConfirmDead(entity, targetUid, now);
             return true;

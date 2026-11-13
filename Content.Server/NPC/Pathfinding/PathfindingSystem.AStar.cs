@@ -97,7 +97,7 @@ public sealed partial class PathfindingSystem
         var heuristic = request.KsHeuristic;
         // KS14 end
 
-        while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && count < _aStarNodeLimit /* KS14: NodeLimit -> cvar */)
+        while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && request.KsSearchedNodes < _aStarNodeLimit /* KS14: count < NodeLimit -> over every slice, and the cvar */)
         {
             // Handle whether we need to pause if we've taken too long
             if (count % 20 == 0 && count > 0 && request.Stopwatch.Elapsed > PathTime)
@@ -109,6 +109,7 @@ public sealed partial class PathfindingSystem
 
             count++;
             request.KsExpansions++; // KS14
+            request.KsSearchedNodes++; // KS14
 
             // Actual pathfinding here
             currentNode = request.PolyFrontier.Take(); // KS14: (_, currentNode) = request.Frontier.Take() -> PolyFrontier
@@ -191,7 +192,7 @@ public sealed partial class PathfindingSystem
         // KS14 start: a danger must never be what leaves it with no path: three of those and steering gives up on it. The
         //      coarse maps know nothing of dangers, so a fire across open floor has the search flood everything in front of
         //      it. Out of nodes, it goes again without them. Steering looks again as it gets nearer, where a search fits
-        if (!arrived && count >= _aStarNodeLimit && request.AvoidedDangers != NpcTileDangerKind.None)
+        if (!arrived && request.KsSearchedNodes >= _aStarNodeLimit && request.AvoidedDangers != NpcTileDangerKind.None)
         {
             RestartIgnoringDangers(request, startNode);
             return PathResult.Continuing;

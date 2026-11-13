@@ -247,6 +247,14 @@ shooter locking onto them.
 - Without any KS components, behaviour is identical to upstream except `rotateWhileWaiting` code path being skipped
   and the always-true `IsLocked`.
 
+### Shooting in the dark (`NPCCombatSystem.Klovn.DarkAim.cs`)
+
+An NPC with perception that sees its target in under `darkAimLightLevel` (0.10) of light, after night vision, turns its aim
+point off the target by up to `darkAimSpread` (12° in pitch dark), held for `darkAimHold`. It moves `targetSpot` just before
+`TryGetClearShot`, so the fire lane checks see where the shot really goes. Turrets and NPCs without `NpcPerception` are
+untouched. To make any other shooter miss, move the aim point the same way rather than widening the gun's spread, which
+`NpcLineOfFireSystem.GetShotCone` would also have to know about.
+
 ### Friends in the way (`NpcSquadFireLaneSystem`, cvar `klovn.npc.squad_fire_lanes`)
 
 Every NPC round keeps off standing friends (faction-friendly, alive; not those a `KsFactionCollisionShooter` projectile

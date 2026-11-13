@@ -73,7 +73,7 @@ public sealed partial class PathfindingSystem
             return NpcTileDangerKind.None;
 
         RefreshTileDangers();
-        return _tileDangers.Count > 0 ? avoidsTileDangerComponent.Dangers : NpcTileDangerKind.None;
+        return _tileDangers.Count > 0 ? WithoutHarmlessFlash(uid, avoidsTileDangerComponent.Dangers) : NpcTileDangerKind.None;
     }
 
     /// <summary>
@@ -167,6 +167,7 @@ public sealed partial class PathfindingSystem
     {
         request.AvoidedDangers = NpcTileDangerKind.None;
         request.IgnoredDangers = true;
+        request.KsSearchedNodes = 0; // a whole node limit for the search again
         request.CostSoFar.Clear();
         request.CameFrom.Clear();
         request.PolyFrontier!.Clear();
@@ -220,6 +221,8 @@ public sealed partial class PathfindingSystem
             AddTileDanger(gridUid, tile, NpcTileDangerKind.Fire);
             hash += HashCode.Combine(gridUid, tile, NpcTileDangerKind.Fire);
         }
+
+        AddBlastDangers(ref hash);
 
         if (hash == _tileDangerHash)
             return;

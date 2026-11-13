@@ -179,6 +179,8 @@ Every example is on `IPrototypeManager.PartialDirectory` (`RobustToolbox/Robust.
 - **`FixedPoint2` has its own conversions**: `FixedPoint2.New(float)` in, the `(float)` cast out (not `quantity.Float()`), never a hand-rolled rounding helper: `var used = (float)FixedPoint2.New(MathF.Min(availableFoam, foamPerTile));`. `New` applies an epsilon before truncating to 0.01u, so a copy of it can disagree with what lands in the solution by 0.01u.
 - **Name every optional argument**: `FindGridsIntersecting(mapId, bounds, ref _grids, approx: true)`, not `..., true)`. Required parameters stay positional.
 - **No string literals as prototype ids**, tests included: `RA0033` rejects a literal passed to `Index`, `TryIndex` and similar. Declare a typed id once: `private static readonly ProtoId<ReagentPrototype> WaterReagent = "Water";`. An id that only exists in a test's `[TestPrototypes]` goes in a non-`static` field (`private readonly ProtoId<T> _id = "..."`): the YAML linter validates only static ones, and an instance field still satisfies `RA0033`. Entity ids use `EntProtoId`; `EntProtoId<T>` also requires the entity to have a `T`, which the linter checks on a `[DataField]` (`public EntProtoId<InstantActionComponent> Action;`).
+- **Angles are `Angle`, not `float`**: bearings, turns, arcs and rotations are an `Angle` (`Robust.Shared.Maths`), made with `Angle.FromDegrees(25)`, `new Angle(radians)` or `vector.ToAngle()`, turned back with `.ToVec()`, compared with `Angle.ShortestDistance(a, b)` (which wraps; `bearing - other` on floats gets 359° against 1° wrong). Read `.Theta` or `.Degrees` only at the edge. As a `[DataField]`, YAML gives degrees (`flankArc: 70`), or radians with a `rad` suffix. A `float` only where `Angle`'s 64-bit `double` is specifically unwanted: a measurably hot loop over many angles, or a buffer for the GPU or the network.
+- **Locale string ids are `LocId`, not `string`**: `LocId` (`Robust.Shared.Localization`) is just a wrapper around a `string` marking it as the id of a locale (Fluent) string, converting to and from `string` implicitly. As a `[DataField]`, dictionary keys included, the YAML linter checks it against the locale files (`LocIdSerializer`), so a mistyped id fails the linter rather than showing in game as the raw key: `[DataField] public LocId Name = "ks-thing-name";`, `Dictionary<LocId, SoundSpecifier>`.
 - **Verbose names**, even where existing code is terse: `_transformSystem`, `physicsComponent`, `spriteComponent`, not `_xform`, `body`, `sprite`. `[DataField]` members get some leeway.
 - **Names imply type**: `...Uid` (`EntityUid`), `...Entity` (`Entity<T>`), `...NetEntity`, `...Component`, `...Query`. The primary subject of a handler may stay bare (`entity`, `ent`, `uid`) and a local event is `ev`; once a second thing of the same kind is in scope, use suffixes.
 - **`Ks` prefix** on a new prototype id or type name that could plausibly collide with upstream's, now or later (`KsCCVars`, `KsBlack`, `KsCatwalkIron`). Skip it when the name is distinctive enough already (`Anchorless`, `ArcFlash`). Ask "would upstream plausibly ship this exact name?".
@@ -291,6 +293,9 @@ The command is `vvwrite /entity/<uid>/KsPortalView/Width 3`: the local `EntityUi
 - **Use `EntityManager.TransformQuery` and `MetaQuery`**, not your own `EntityQuery<TransformComponent>` or `<MetaDataComponent>`. `Transform(uid)` and `MetaData(uid)` are fine when you only need the component.
 - **Inject `EntityQuery<T>`** (`[Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;`) rather than calling `GetEntityQuery<T>()` in `Initialize`: the systems' dependency collection (`IEntitySystemManager.DependencyCollection`) resolves queries and systems, unlike the default `IoCManager` one. Fall back to `GetEntityQuery<T>()` only where injection isn't available. Non-systems (overlays, UI, managers) can use `SystemCollectionHookManager.HookAction(collection => collection.InjectDependencies(overlay, oneOff: true))`.
 
+- **Every entity with all of up to four components**: `var query = EntityQueryEnumerator<TComp1, TComp2>(); while (query.MoveNext(out var uid, out var comp1, out var comp2)) { ... }` (`EntityManager.EntityQueryEnumerator` outside a system; `MoveNext(out comp1, out comp2)` without the uid). The components come back non-null; paused entities are skipped (below, *Engine helpers*). Adding or removing an enumerated component inside the loop needs the deferred forms (§6).
+- **Put the rarest component first.** It walks every entity with `TComp1` and looks each of the rest up by uid, skipping those without: the cost is how many have `TComp1`, whatever the others are. So `EntityQueryEnumerator<NpcSuppressiveFireComponent, TransformComponent>()`, never `<TransformComponent, ...>`, which visits every entity there is.
+
 ### Subscriptions (C#)
 
 **Subscribe with `[SubscribeLocalEvent]`, not a call in `Initialize`.** The generator infers the event and component from the handler's signature and emits an `AutoSubscriptions()` override, so the class must be `partial` (`RA0056`). Ordering goes in the attribute: `[SubscribeLocalEvent(after: [typeof(SharedGunSystem)])]`. `[SubscribeNetworkEvent]` and `[EventSubscription]` (for `SubscribeAllEvent`) work the same. Delete an `Initialize` left holding only `base.Initialize();`.
@@ -316,6 +321,24 @@ A broadcast `ref` handler (`void OnFoo(ref SomeByRefEvent args)`) is accepted, o
 ### Popups (C#)
 
 In shared code, call `PopupEntity`, `PopupCoordinates` or `PopupCursor` directly: they predict themselves, and the server's copy is matched to the client's rather than shown twice. `PopupPredicted*` and `PopupClient` are `[Obsolete]` wrappers. **`recipient` is a filter, not a prediction hint**: `PopupEntity(message, uid, recipientUid)` shows the popup to that player only. So `PopupPredicted(message, uid, recipient)` becomes `PopupEntity(message, uid)`, and `PopupClient(message, uid, recipient)` becomes `PopupEntity(message, uid, recipient)`. The message itself is a `KsPopupMessage` (§7).
+
+### Randomness in shared code (C#)
+
+Shared code runs on the client too, predicted, and runs again on every re-prediction. `IRobustRandom` rolls differently on each side and each run, so a roll the client predicts shows one result, then snaps to the server's. Where a roll in shared code decides something predicted (a dodge, a disarm, which limb, where blood lands), seed a `System.Random` from what both sides agree on, with `KsSharedRandomExtensions` (`Content.Shared/_KS14/Random/Helpers/`):
+
+```csharp
+var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+    (int) _gameTiming.CurTick.Value,
+    KsSharedRandomExtensions.GetNetId(bodyEntity.Owner, EntityManager),
+    (int) partType); // what tells this roll from another one this tick
+var dodged = predictedRandom.NextDouble() < (double) dodgeChance;
+```
+
+- **Same inputs, same rolls**: two rolls in one tick for one entity need an input that differs (`partType` above, the other entity's net id in a disarm). Two systems meant to agree on one roll seed it alike (`GunDodgerSystem.RollDodge`, for both the dodge and whether a hitscan shot is let through, the same tick).
+- **Seed once per action** and pass the `Random` down to what rolls after, rather than seeding again in each helper.
+- **Side effects still once**: the roll is the same on every re-prediction, but a popup or a sound off it is gated on `IsFirstTimePredicted` as ever .
+- **Extensions on `System.Random`**: `NextVector2(maxMagnitude)`, `NextUnitVector2`, `NextVector2Box`, besides `Next`/`NextDouble` and Robust's `Pick`/`Prob`.
+- **Each seed allocates a `Random`**: fine for an action, not in a per-tick loop over many entities. Server-only code keeps `IRobustRandom`.
 
 ### Engine helpers whose behaviour isn't in their name
 

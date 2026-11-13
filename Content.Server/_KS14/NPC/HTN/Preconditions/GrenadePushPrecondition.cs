@@ -11,8 +11,14 @@ public sealed partial class GrenadePushPrecondition : HTNPrecondition
 {
     [Dependency] private NpcGrenadeSystem _npcGrenadeSystem = default!;
 
+    /// <summary>
+    ///     Met while it should not be, instead.
+    /// </summary>
+    [DataField]
+    public bool Invert;
+
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return _npcGrenadeSystem.TryGetPush(blackboard.GetOwner(), out _);
+        return _npcGrenadeSystem.TryGetPush(blackboard.GetOwner(), out _) != Invert;
     }
 }
