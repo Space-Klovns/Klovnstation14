@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared.Construction.Prototypes;
+using Content.Shared.Stacks;
+using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 using Robust.UnitTesting.Pool;
 
 namespace Content.IntegrationTests.Tests._KS14.FieldCommander;
@@ -18,6 +22,8 @@ public sealed class KsFortificationsContentTest : GameTest
 
     private static readonly ProtoId<ConstructionPrototype> BarbedWireRecipe = "KsBarbedWire";
     private static readonly ProtoId<ConstructionPrototype> SandbagWallRecipe = "KsSandbagWall";
+    private static readonly EntProtoId Sandbags = "KsSandbag";
+    private static readonly ResPath SandbagItemRsi = new("/Textures/_KS14/Objects/Misc/sandbag.rsi");
     private static readonly ProtoId<ConstructionPrototype>[] Recipes = [BarbedWireRecipe, SandbagWallRecipe];
 
     /// <summary>
@@ -72,5 +78,40 @@ public sealed class KsFortificationsContentTest : GameTest
             Assert.That(Client.System<Content.Client.Construction.ConstructionSystem>().TryGetRecipePrototype(reloaded.ID, out _),
                 "a reloaded recipe should still show what it builds");
         });
+    }
+
+    /// <summary>
+    ///     Sandbags lying about look like bags, not like the wall they build, and the pile grows with the stack: a full
+    ///         stack shows the biggest pile, a single bag the smallest.
+    /// </summary>
+    [Test]
+    public async Task SandbagPileGrowsWithTheStack()
+    {
+        var testMap = await Pair.CreateTestMap();
+        EntityUid sandbagsUid = default;
+        await Server.WaitPost(() => sandbagsUid = SSpawnAtPosition(Sandbags, testMap.GridCoords));
+        await Pair.RunTicksSync(5);
+
+        var states = new List<string>();
+        async Task ReadState()
+        {
+            await Client.WaitPost(() =>
+            {
+                var clientUid = ToClientUid(sandbagsUid);
+                var spriteComponent = CComp<SpriteComponent>(clientUid);
+                Assert.That(Client.System<SpriteSystem>().LayerMapTryGet((clientUid, spriteComponent), "base", out var index, logMissing: false),
+                    "the sandbags should have a base layer for the stack to change");
+                var layer = spriteComponent[index];
+                Assert.That(layer.ActualRsi?.Path, Is.EqualTo(SandbagItemRsi), "sandbags should use the sandbag item sprite, not the wall's");
+                states.Add(layer.RsiState.Name ?? string.Empty);
+            });
+        }
+
+        await ReadState();
+        await Server.WaitPost(() => Server.System<SharedStackSystem>().SetCount(sandbagsUid, 1));
+        await Pair.RunTicksSync(5);
+        await ReadState();
+
+        Assert.That(states[0], Is.Not.EqualTo(states[1]), "a single bag should look smaller than a full stack");
     }
 }
