@@ -1,0 +1,4 @@
+- files: ["energyshieldbash.ogg", "glassbash.ogg", "shieldbash.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from tgstation at https://github.com/tgstation/tgstation/tree/4059afcdd20d38cf5e15b96d8c928eef5bab4693/sound/effects"
+  source: "https://github.com/tgstation/tgstation/tree/4059afcdd20d38cf5e15b96d8c928eef5bab4693/sound/effects"
