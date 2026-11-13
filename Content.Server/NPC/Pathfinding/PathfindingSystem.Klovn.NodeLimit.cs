@@ -23,7 +23,7 @@ public sealed partial class PathfindingSystem
     }
 
     /// <summary>
-    ///     The most a search may expand, per slice. A search steered by the coarse maps walks almost straight down its
+    ///     The most a search may expand, over all its slices (<see cref="PathRequest.KsSearchedNodes"/>). A search steered by the coarse maps walks almost straight down its
     ///         path, which costs about one expansion a tile, so a path longer than the limit would run out of nodes
     ///         with the way known. It may go to twice what the best walk costs, so a detour the estimate does not know
     ///         about still has room, but never past <see cref="SteeredNodeLimit"/>. A search that avoids dangers has

@@ -21,8 +21,9 @@ jobs:
         os: [ubuntu-latest]
         # KS14: integration test shards, sliced with NUnit.Where because VSTest --filter burns ~19 min
         # per job on this suite before any test runs. Shards are balanced by measured execution time,
-        # not case count. `rest` is the exact negation of the four positive slices, so the union
-        # always covers the whole suite; edit a positive slice and its negation twin together.
+        # not case count. `rest` is the exact negation of the positive slices (ks14 and
+        # ks14-npc split one slice, all of _KS14, between them), so the union always covers the whole suite;
+        # edit a positive slice and its negation twin together.
         # TSL gotcha: no backslash escapes in the regexes, a `\.` silently matches zero tests.
         shard: [prototypes, maps, rounds, ks14, ks14-npc, rest] # KS14: ks14-npc split off, the whole _KS14 slice outran the 30 min test watchdog
         include:
