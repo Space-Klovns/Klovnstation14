@@ -30,6 +30,7 @@
   - type: Construction
     graph: KsFieldCommanderFixture
     node: fixture
+    deconstructionTarget: null
   - type: Destructible
     thresholds:
     - trigger:
@@ -78,6 +79,7 @@
   - type: Construction
     graph: KsFieldCommanderFixture
     node: fixture
+    deconstructionTarget: null
   - type: MaterialStorage
     dropOnDeconstruct: false
     storage:
