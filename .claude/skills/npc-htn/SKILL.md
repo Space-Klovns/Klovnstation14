@@ -83,6 +83,30 @@ one end of a chain, check the other end. An arrow means "is read by" or "calls".
   - `NpcGrenadeSystem` → `NpcSquadTacticsSystem.NoteBlast`, for the thrower's squad.
   - `NpcGunfireSystem` keeps `NpcRecentShooterComponent.LastShotAt` for every shooter. `Fight.cs` reads it to tell a
     hostile that has stopped firing (reloading) from one still shooting.
+- **Lines of fire.** `NpcGunfireSystem` keeps every shooter's last shot, from anyone, on `NpcRecentShooterComponent`:
+  - when it was fired;
+  - where it was fired from;
+  - where it was aimed.
+
+  That makes a line of fire, to the first wall, for a second. Ask it from one NPC's side, `NpcFireSide.Friendly` or
+  `Hostile`, where hostile means anyone not friendly:
+  - `CrossesFire` for a path;
+  - `IsUnderFire` for where it stands. That one is meant for pinning-down mechanics.
+
+  `DiveOperator` uses it now:
+  - it never dives across friendly fire;
+  - it avoids hostile fire when it can;
+  - when straight ahead is blocked by fire (not by a wall), it turns aside to whichever side lands nearer the
+    destination.
+
+  Shooters don't allow for dives (`NpcSquadFireLaneSystem`); the diver does.
+- **Grenades in paths.** `PathfindingSystem.Klovn.Blast.cs` makes every tile a primed explosive's blast would reach a
+  `Blast` tile danger, around its landing spot while it's in the air. It reads `NpcGrenadeSystem.TryGetLanding` and
+  `ExplosionSystem.IntensityToRadius`.
+  - Operatives avoid it through `NpcAvoidsTileDanger`.
+  - The root's leave-danger branch is filtered to `dangers: Fire`, so getting out of a blast stays with the grenade
+    branch.
+  - Steering never refuses a step onto a danger the NPC is already standing in.
 - **Man down.** `NpcSquadSystem` raises `NpcSquadMemberDownedEvent` on critical, dead, or gibbed while not already
   dead.
   - `NpcMeterOnSquadLossSystem` reads it (caution).

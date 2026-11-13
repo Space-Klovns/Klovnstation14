@@ -22,7 +22,11 @@ public sealed partial class NpcGunfireSystem : EntitySystem
 
     private void OnGunShot(ref GunShotEvent args)
     {
-        EnsureComp<NpcRecentShooterComponent>(args.User).LastShotAt = _gameTiming.CurTime;
+        var recentShooterComponent = EnsureComp<NpcRecentShooterComponent>(args.User);
+        recentShooterComponent.LastShotAt = _gameTiming.CurTime;
+        recentShooterComponent.LastShotFrom = args.FromCoordinates;
+        recentShooterComponent.LastShotTo = args.ToCoordinates;
+        recentShooterComponent.LastShotReach = -1f;
     }
 
     /// <summary>

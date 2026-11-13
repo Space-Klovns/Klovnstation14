@@ -13,6 +13,7 @@ using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
+using Content.Shared.Trigger.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -61,6 +62,24 @@ public sealed class KsNpcTileDangerTest : GameTest
   components:
   - type: NpcAvoidsTileDanger
     dangers: Fire
+
+- type: entity
+  parent: KsTileDangerTestWalker
+  id: KsTileDangerTestBlastAvoider
+  components:
+  - type: NpcAvoidsTileDanger
+    dangers: Fire, Blast
+
+- type: entity
+  id: KsTileDangerTestGrenade
+  components:
+  - type: TimerTrigger
+    delay: 1000
+  - type: Explosive
+    explosionType: Default
+    totalIntensity: 30
+    intensitySlope: 5
+    maxIntensity: 5
 
 - type: entity
   id: KsTileDangerTestFire
@@ -135,6 +154,36 @@ public sealed class KsNpcTileDangerTest : GameTest
 
         Assert.That(path.Result, Is.EqualTo(PathResult.Path));
         Assert.That(path.Path.Any(poly => IsOnFireLine(poly, 2, -1, 1)), Is.EqualTo(crosses));
+    }
+
+    /// <summary>
+    ///     A primed grenade's reach is gone round by an NPC that avoids blasts, rather than walked up to; one not yet primed
+    ///         is nothing to go round. See <c>PathfindingSystem.Klovn.Blast.cs</c>.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestPrimedGrenadeIsGoneRound(bool primed)
+    {
+        var (entManager, gridUid) = await SetUpGrid(size: 10);
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, "KsTileDangerTestBlastAvoider", gridUid, -5, 0);
+            var grenadeUid = SpawnAt(entManager, "KsTileDangerTestGrenade", gridUid, 0, 0);
+
+            if (primed)
+                Assert.That(entManager.System<TriggerSystem>().ActivateTimerTrigger(grenadeUid), "the fuse should light");
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+        await Pair.Server.WaitPost(() => entManager.System<PathfindingSystem>().RefreshTileDangersNow());
+
+        var path = await FindPath(entManager, npcUid, new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
+
+        Assert.That(path.Result, Is.EqualTo(PathResult.Path));
+        Assert.That(path.Path.Any(poly => IsOnFireLine(poly, 0, -1, 1)), Is.EqualTo(!primed),
+            primed ? "a lit grenade's reach should be gone round" : "an unlit grenade is nothing to go round");
     }
 
     /// <summary>

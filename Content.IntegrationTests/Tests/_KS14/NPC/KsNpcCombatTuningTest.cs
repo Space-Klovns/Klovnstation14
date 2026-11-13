@@ -5,6 +5,8 @@ using Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Actions;
 using Content.Server.NPC;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat;
+using Content.Shared.Weapons.Ranged;
+using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -224,6 +226,51 @@ public sealed class KsNpcCombatTuningTest : GameTest
             var diverCoordinates = entManager.GetComponent<TransformComponent>(diverUid).Coordinates;
             Assert.That(diveCoordinates.TryDistance(entManager, entManager.System<SharedTransformSystem>(), diverCoordinates, out var dived));
             Assert.That(dived, Is.EqualTo(expected).Within(0.1f));
+        });
+    }
+
+    /// <summary>
+    ///     A dive never crosses a friend's line of fire: with one firing across the way straight ahead, the dive turns off to
+    ///         the side that is clear of it. Firing up and to the left from 6,-3, across the way east at 3.5,0: a dive turned
+    ///         left still crosses it, one turned right does not.
+    /// </summary>
+    [Test]
+    public async Task TestDiveTurnsAsideFromFriendlyFire()
+    {
+        var (entManager, gridUid) = await SetUpOpenGrid();
+        var diveOperator = new DiveOperator { Id = DiveAction };
+        EntityUid diverUid = default, friendUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            diverUid = SpawnAt(entManager, Diver, gridUid, 0, 0);
+            friendUid = SpawnAt(entManager, SyndicateMob, gridUid, 6, -3);
+        });
+
+        await Pair.RunTicksSync(5);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            entManager.EntitySysManager.DependencyCollection.InjectDependencies(diveOperator, oneOff: true);
+
+            var shot = new GunShotEvent(friendUid,
+                new System.Collections.Generic.List<(EntityUid?, IShootable)>(),
+                new EntityCoordinates(gridUid, new Vector2(6.5f, -2.5f)),
+                new EntityCoordinates(gridUid, new Vector2(2.5f, 1.5f)));
+            entManager.EventBus.RaiseEvent(EventSource.Local, ref shot);
+
+            var blackboard = new NPCBlackboard();
+            blackboard.SetValue(NPCBlackboard.Owner, diverUid);
+            blackboard.SetValue(diveOperator.DestinationKey, new EntityCoordinates(gridUid, new Vector2(10.5f, 0.5f)));
+
+#pragma warning disable RA0004 // completes synchronously
+            var (valid, effects) = diveOperator.Plan(blackboard, default).Result;
+#pragma warning restore RA0004
+
+            Assert.That(valid, "a way clear of the fire should be found");
+            var diveCoordinates = (EntityCoordinates) effects![diveOperator.Key];
+            Assert.That(diveCoordinates.Position.Y, Is.LessThan(0f), "turned off to the right, away from the fire");
+            Assert.That(diveCoordinates.Position.X, Is.GreaterThan(1.5f), "still towards where it was going");
         });
     }
 

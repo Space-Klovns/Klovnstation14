@@ -13,4 +13,10 @@ public enum NpcTileDangerKind : byte
     ///     On fire: a chemical fire, or a gas fire.
     /// </summary>
     Fire = 1 << 0,
+
+    /// <summary>
+    ///     Within reach of a primed explosive's blast, or of where one in the air will land. See
+    ///         <c>PathfindingSystem.Klovn.Blast.cs</c>.
+    /// </summary>
+    Blast = 1 << 1,
 }

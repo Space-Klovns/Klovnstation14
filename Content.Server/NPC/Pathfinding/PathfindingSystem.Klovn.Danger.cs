@@ -221,6 +221,8 @@ public sealed partial class PathfindingSystem
             hash += HashCode.Combine(gridUid, tile, NpcTileDangerKind.Fire);
         }
 
+        AddBlastDangers(ref hash);
+
         if (hash == _tileDangerHash)
             return;
 

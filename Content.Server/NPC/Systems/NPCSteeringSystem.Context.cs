@@ -493,11 +493,12 @@ public sealed partial class NPCSteeringSystem
 
     /// <summary>
     /// Whether <paramref name="uid"/> is stopped on a tile posing what it avoids. A path that has to cross a danger is
-    /// not stopped on it: turned back from the far side of a fire every time, it would never get across.
+    /// not stopped on it: turned back from the far side of a fire every time, it would never get across. Only the dangers in
+    /// <paramref name="only"/> count.
     /// </summary>
-    public bool IsStandingInDanger(EntityUid uid)
+    public bool IsStandingInDanger(EntityUid uid, NpcTileDangerKind only = (NpcTileDangerKind) byte.MaxValue)
     {
-        var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
+        var dangers = _pathfindingSystem.GetAvoidedDangers(uid) & only;
         if (dangers == NpcTileDangerKind.None || !_pathfindingSystem.IsDangerous(Transform(uid).Coordinates, dangers))
             return false;
 
@@ -547,6 +548,12 @@ public sealed partial class NPCSteeringSystem
     {
         var dangers = _pathfindingSystem.GetAvoidedDangers(uid);
         if (dangers == NpcTileDangerKind.None || xform.GridUid is not { } gridUid || xform.ParentUid != gridUid)
+            return;
+
+        // A step onto what it is standing in already is no worse than staying: inside a blast's reach every step is, and
+        //      ruling them all out would hold it there.
+        dangers &= ~_pathfindingSystem.GetDangersAt(xform.Coordinates).Posed;
+        if (dangers == NpcTileDangerKind.None)
             return;
 
         // Steering's directions are relative to the grid, so on one they are in the same terms as its local position.
