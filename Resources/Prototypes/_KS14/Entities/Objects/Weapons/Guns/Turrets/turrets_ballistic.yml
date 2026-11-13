@@ -103,6 +103,10 @@
   suffix: NanoTrasen, Heavy
   description: A heavily armoured machine-gun emplacement with a laser rangefinder. It takes a moment to lock on, and then it does not miss.
   components:
+  - type: KsTargetLockOn
+    keepTargetUntilLost: true
+  - type: KsNpcAimTracking
+    ignoreFriendlyBlocking: true
   - type: Sprite
     sprite: _KS14/Objects/Weapons/Guns/Turrets/hmg_turret.rsi
     drawdepth: Mobs

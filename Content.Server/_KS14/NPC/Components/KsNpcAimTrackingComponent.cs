@@ -31,6 +31,13 @@ public sealed partial class KsNpcAimTrackingComponent : Component
     [DataField]
     public Angle? AccuracyThreshold;
 
+    /// <summary>
+    ///     Fire even when a friend stands in the line of fire: the shooter never holds fire for one
+    ///         (<c>NpcSquadFireLaneSystem</c>), before a shot or as it goes off.
+    /// </summary>
+    [DataField]
+    public bool IgnoreFriendlyBlocking;
+
     [ViewVariables]
     public Angle? LastGoalAngle;
 
