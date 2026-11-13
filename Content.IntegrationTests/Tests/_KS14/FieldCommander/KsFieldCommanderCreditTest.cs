@@ -302,7 +302,7 @@ public sealed class KsFieldCommanderCreditTest : GameTest
 
         var turretQuery = server.EntMan.AllEntityQueryEnumerator<GunComponent, KsCreditOwnerComponent>();
         Assert.That(turretQuery.MoveNext(out var turretUid, out _, out var creditOwnerComponent), Is.True, "unpacking should have made a turret that answers to someone");
-        Assert.That(creditOwnerComponent.OwnerUid, Is.EqualTo(playerBody));
+        Assert.That(creditOwnerComponent!.OwnerUid, Is.EqualTo(playerBody));
         return turretUid;
     }
 
@@ -462,6 +462,27 @@ public sealed class KsFieldCommanderCreditTest : GameTest
             Assert.That(Pair.Client.System<KsFieldCommanderPointsSystem>().LastChange!.Reason,
                 Is.EqualTo(localDamage > otherDamage ? "ks-fieldcommander-points-teamkill" : "ks-fieldcommander-points-teamkill-assist"),
                 "the top contributor is the teamkiller, the other assisted"));
+    }
+
+    /// <summary>
+    ///     A defender is marked for the client, with the look of their going down from the rule, and the commander's units
+    ///         are not.
+    /// </summary>
+    [Test]
+    public async Task DefendersAreMarkedForTheClient()
+    {
+        var server = Pair.Server;
+        var (_, ruleUid, playerBody, unitUid) = await SetUpUnit();
+
+        await server.WaitAssertion(() =>
+        {
+            var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
+            var defenderComponent = server.EntMan.GetComponent<KsFieldCommanderDefenderComponent>(playerBody);
+            Assert.That(defenderComponent.CriticalFlash.Color, Is.EqualTo(ruleComponent.CriticalFlash.Color));
+            Assert.That(defenderComponent.DeadFlash.Color, Is.EqualTo(ruleComponent.DeadFlash.Color));
+            Assert.That(defenderComponent.DeadFlash.Color, Is.Not.EqualTo(defenderComponent.CriticalFlash.Color), "dying has its own colour");
+            Assert.That(server.EntMan.HasComponent<KsFieldCommanderDefenderComponent>(unitUid), Is.False);
+        });
     }
 
     /// <summary>

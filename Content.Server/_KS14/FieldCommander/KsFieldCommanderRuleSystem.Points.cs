@@ -81,6 +81,12 @@ public sealed partial class KsFieldCommanderRuleSystem
     {
         EnsureComp<KsFactionCollisionShooterComponent>(bodyUid);
 
+        // So the client knows who is a defender, and how to flash them as they go down.
+        var defenderComponent = EnsureComp<KsFieldCommanderDefenderComponent>(bodyUid);
+        defenderComponent.CriticalFlash = component.CriticalFlash;
+        defenderComponent.DeadFlash = component.DeadFlash;
+        Dirty(bodyUid, defenderComponent);
+
         if (session != null)
             MirrorPoints(component, bodyUid, GetPoints(component, session.UserId));
     }

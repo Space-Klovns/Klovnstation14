@@ -1,3 +1,4 @@
+using Content.Shared._KS14.FieldCommander;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Humanoid.Prototypes;
 using Robust.Shared.Audio;
@@ -390,6 +391,22 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     /// </summary>
     [DataField]
     public int TeamkillPoints = -150;
+
+    /// <summary>
+    ///     The flash of static over a defender as they go critical, which every defender is given.
+    /// </summary>
+    [DataField]
+    public KsFieldCommanderDownFlashSettings CriticalFlash = new();
+
+    /// <summary>
+    ///     The flash of static over a defender as they die: black.
+    /// </summary>
+    [DataField]
+    public KsFieldCommanderDownFlashSettings DeadFlash = new()
+    {
+        Color = Color.FromHex("#000000D0"),
+        Duration = 0.5f,
+    };
 
     /// <summary>
     ///     Points every living defender gets when the uplink is taken out.
