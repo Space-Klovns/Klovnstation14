@@ -2,7 +2,6 @@
 using System.Numerics;
 using Content.Server._KS14.NPC.Components;
 using Content.Server._KS14.NPC.Perception;
-using Content.Server._KS14.NPC.Systems;
 
 namespace Content.Server.NPC.Systems;
 
@@ -15,10 +14,14 @@ namespace Content.Server.NPC.Systems;
 ///             so a squadmate is no more at risk in the dark than in the light. Only for NPCs with perception, and none for
 ///             one that sees in the dark, or at a hostile close enough to be seen anyway.
 ///     </para>
+///     <para>
+///         How dark the target looks comes from perception (<see cref="NpcPerceptionSystem.GetSeenLight"/>), which worked
+///             it out when it last saw it, and is only asked when the offset is rolled: a tick in between costs a
+///             component read and a turn.
+///     </para>
 /// </summary>
 public sealed partial class NPCCombatSystem
 {
-    [Dependency] private NpcLightDetectionSystem _npcLightDetectionSystem = default!;
     [Dependency] private NpcPerceptionSystem _npcPerceptionSystem = default!;
 
     [Dependency] private EntityQuery<NpcDarkAimComponent> _darkAimQuery = default!;
@@ -30,39 +33,54 @@ public sealed partial class NPCCombatSystem
     /// </summary>
     internal void KsApplyDarkAim(EntityUid uid, EntityUid targetUid, Vector2 worldPos, ref Vector2 targetSpot)
     {
-        if (GetDarkAimSpread(uid, targetUid) is not { } spread)
-            return;
-
-        var now = _timing.CurTime;
         if (!_darkAimQuery.TryComp(uid, out var darkAimComponent))
-            darkAimComponent = AddComp<NpcDarkAimComponent>(uid);
-
-        if (now >= darkAimComponent.RollAt)
         {
-            darkAimComponent.Error = _random.NextFloat(-1f, 1f);
-            darkAimComponent.RollAt = now + _perceptionQuery.Comp(uid).DarkAimHold;
+            if (!_perceptionQuery.HasComp(uid))
+                return;
+
+            darkAimComponent = AddComp<NpcDarkAimComponent>(uid);
         }
 
-        var offset = new Angle(spread.Theta * darkAimComponent.Error);
-        targetSpot = worldPos + offset.RotateVec(targetSpot - worldPos);
+        var now = _timing.CurTime;
+        if (now >= darkAimComponent.RollAt || darkAimComponent.TargetUid != targetUid)
+            RollDarkAim((uid, darkAimComponent), targetUid, now);
+
+        if (darkAimComponent.Offset == Angle.Zero)
+            return;
+
+        targetSpot = worldPos + darkAimComponent.Offset.RotateVec(targetSpot - worldPos);
+    }
+
+    private void RollDarkAim(Entity<NpcDarkAimComponent> entity, EntityUid targetUid, TimeSpan now)
+    {
+        if (!_perceptionQuery.TryComp(entity.Owner, out var perceptionComponent))
+        {
+            entity.Comp.Offset = Angle.Zero;
+            entity.Comp.RollAt = TimeSpan.MaxValue;
+            return;
+        }
+
+        entity.Comp.TargetUid = targetUid;
+        entity.Comp.RollAt = now + perceptionComponent.DarkAimHold;
+        entity.Comp.Offset = GetDarkAimSpread((entity.Owner, perceptionComponent), targetUid) is { } spread
+            ? new Angle(spread.Theta * _random.NextFloat(-1f, 1f))
+            : Angle.Zero;
     }
 
     /// <summary>
-    ///     How far off <paramref name="uid"/>'s shots at <paramref name="targetUid"/> may go for the dark at most, or null for
-    ///         not at all: lit well enough, close enough, seen in the dark, or no perception to see it with.
+    ///     How far off <paramref name="observer"/>'s shots at <paramref name="targetUid"/> may go for the dark at most, or null
+    ///         for not at all: lit well enough, close enough, seen in the dark, or no perception to see it with.
     /// </summary>
-    public Angle? GetDarkAimSpread(EntityUid uid, EntityUid targetUid)
+    public Angle? GetDarkAimSpread(Entity<NpcPerceptionComponent?> observer, EntityUid targetUid)
     {
-        if (!_perceptionQuery.TryComp(uid, out var perceptionComponent) || perceptionComponent.DarkAimLightLevel <= 0f)
+        if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false) || observer.Comp.DarkAimLightLevel <= 0f)
             return null;
 
-        var lightLevel = _npcLightDetectionSystem.GetPerceivedLightLevel(uid, targetUid, perceptionComponent.ProximityRange);
-        var seenLight = _npcPerceptionSystem.GetSeenLightLevel((uid, perceptionComponent), lightLevel);
-
-        if (seenLight >= perceptionComponent.DarkAimLightLevel)
+        var seenLight = _npcPerceptionSystem.GetSeenLight(observer, targetUid);
+        if (seenLight >= observer.Comp.DarkAimLightLevel)
             return null;
 
-        var darkness = 1f - seenLight / perceptionComponent.DarkAimLightLevel;
-        return new Angle(perceptionComponent.DarkAimSpread.Theta * darkness);
+        var darkness = 1f - seenLight / observer.Comp.DarkAimLightLevel;
+        return new Angle(observer.Comp.DarkAimSpread.Theta * darkness);
     }
 }

@@ -56,8 +56,14 @@ public sealed partial class NpcCallsignSystem : EntitySystem
     /// </summary>
     private readonly HashSet<EntityUid> _calledOut = new();
 
+    /// <summary>
+    ///     How often the gear of those whose ID card is still to be named is looked through for one.
+    /// </summary>
+    private static readonly TimeSpan CardCheckInterval = TimeSpan.FromSeconds(0.25);
+
     private readonly List<EntityUid> _forget = new();
     private TimeSpan _nextForget;
+    private TimeSpan _nextCardCheck;
 
     /// <summary>
     ///     Those whose ID card is still to get their callsign, and until when to wait for one: the card comes with the gear,
@@ -186,16 +192,10 @@ public sealed partial class NpcCallsignSystem : EntitySystem
 
         var now = _gameTiming.CurTime;
 
-        for (var i = _unnamedCards.Count - 1; i >= 0; i--)
+        if (_unnamedCards.Count > 0 && now >= _nextCardCheck)
         {
-            var (uid, name, until) = _unnamedCards[i];
-
-            if (!TerminatingOrDeleted(uid) && _idCardSystem.TryFindIdCard(uid, out var idCard))
-                _idCardSystem.TryChangeFullName(idCard, name, idCard.Comp);
-            else if (!TerminatingOrDeleted(uid) && now < until)
-                continue;
-
-            _unnamedCards.RemoveAt(i);
+            _nextCardCheck = now + CardCheckInterval;
+            NameIdCards(now);
         }
 
         if (_pending.Count == 0 && _calledOut.Count == 0)
@@ -239,6 +239,24 @@ public sealed partial class NpcCallsignSystem : EntitySystem
         foreach (var downedUid in _forget)
         {
             _calledOut.Remove(downedUid);
+        }
+    }
+
+    private void NameIdCards(TimeSpan now)
+    {
+        for (var i = _unnamedCards.Count - 1; i >= 0; i--)
+        {
+            var (uid, name, until) = _unnamedCards[i];
+
+            if (!TerminatingOrDeleted(uid))
+            {
+                if (_idCardSystem.TryFindIdCard(uid, out var idCard))
+                    _idCardSystem.TryChangeFullName(idCard, name, idCard.Comp);
+                else if (now < until)
+                    continue;
+            }
+
+            _unnamedCards.RemoveAt(i);
         }
     }
 }

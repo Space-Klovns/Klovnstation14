@@ -29,10 +29,12 @@ public sealed partial class NpcPerceptionSystem
         NpcContact? watched,
         TimeSpan now,
         out bool conspicuous,
-        out Vector2 targetVelocity)
+        out Vector2 targetVelocity,
+        out float seenLight)
     {
         conspicuous = false;
         targetVelocity = Vector2.Zero;
+        seenLight = float.NaN;
 
         if (_containerSystem.IsEntityOrParentInContainer(targetUid))
             return false;
@@ -54,9 +56,16 @@ public sealed partial class NpcPerceptionSystem
         targetVelocity = _physicsSystem.GetMapLinearVelocity(targetUid);
         var speed = targetVelocity.Length();
 
-        // Cheapest first: the light level is the only part that is not a field read.
-        conspicuous = distanceSquared <= entity.Comp.ProximityRange * entity.Comp.ProximityRange ||
-            StandsOutAtRange(entity, targetUid, speed);
+        // Cheapest first: the light level is the only part that is not a field read. Close enough counts as lit.
+        if (distanceSquared <= entity.Comp.ProximityRange * entity.Comp.ProximityRange)
+        {
+            seenLight = 1f;
+            conspicuous = true;
+        }
+        else
+        {
+            conspicuous = StandsOutAtRange(entity, targetUid, speed, out seenLight);
+        }
 
         if (conspicuous)
             return true;
@@ -68,11 +77,36 @@ public sealed partial class NpcPerceptionSystem
     /// <summary>
     ///     Whether <paramref name="targetUid"/> stands out to the observer from further off than
     ///         <see cref="NpcPerceptionComponent.ProximityRange"/>: moving fast, or lit enough for its eyes.
+    ///         <paramref name="seenLight"/> is how lit it looked, or NaN if moving fast was enough.
     /// </summary>
-    private bool StandsOutAtRange(Entity<NpcPerceptionComponent> entity, EntityUid targetUid, float speed)
+    private bool StandsOutAtRange(Entity<NpcPerceptionComponent> entity, EntityUid targetUid, float speed, out float seenLight)
     {
-        return speed >= entity.Comp.RevealSpeed ||
-            GetSeenLightLevel(entity.AsNullable(), _npcLightDetectionSystem.GetLightLevel(targetUid)) >= entity.Comp.MinimumLightLevel;
+        seenLight = float.NaN;
+        if (speed >= entity.Comp.RevealSpeed)
+            return true;
+
+        seenLight = GetSeenLightLevel(entity.AsNullable(), _npcLightDetectionSystem.GetLightLevel(targetUid));
+        return seenLight >= entity.Comp.MinimumLightLevel;
+    }
+
+    /// <summary>
+    ///     How lit <paramref name="targetUid"/> looks to <paramref name="observer"/>, after its dark vision, from 0 to 1.
+    ///         For a target in sight, what perception made of it when it last looked (<see cref="NpcContact.SeenLight"/>),
+    ///         rather than a second working out that may disagree; otherwise worked out now. Fully lit within
+    ///         <see cref="NpcPerceptionComponent.ProximityRange"/>; the plain light level for an NPC without perception.
+    /// </summary>
+    public float GetSeenLight(Entity<NpcPerceptionComponent?> observer, EntityUid targetUid)
+    {
+        if (!_perceptionQuery.Resolve(observer.Owner, ref observer.Comp, false))
+            return _npcLightDetectionSystem.GetLightLevel(targetUid);
+
+        if (observer.Comp.Contacts.TryGetValue(targetUid, out var contact) &&
+            contact.State == NpcContactState.Visible &&
+            !float.IsNaN(contact.SeenLight))
+            return contact.SeenLight;
+
+        var lightLevel = _npcLightDetectionSystem.GetPerceivedLightLevel(observer.Owner, targetUid, observer.Comp.ProximityRange);
+        return GetSeenLightLevel(observer, lightLevel);
     }
 
     /// <summary>
@@ -90,8 +124,9 @@ public sealed partial class NpcPerceptionSystem
             return range;
 
         var speed = _physicsSystem.GetMapLinearVelocity(targetUid).Length();
-        return StandsOutAtRange((observer.Owner, observer.Comp), targetUid, speed)
-            ? range
-            : MathF.Min(range, observer.Comp.ProximityRange);
+        if (speed >= observer.Comp.RevealSpeed || GetSeenLight(observer, targetUid) >= observer.Comp.MinimumLightLevel)
+            return range;
+
+        return MathF.Min(range, observer.Comp.ProximityRange);
     }
 }

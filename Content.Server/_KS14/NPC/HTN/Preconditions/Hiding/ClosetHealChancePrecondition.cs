@@ -12,12 +12,13 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions.Hiding;
 /// </summary>
 public sealed partial class ClosetHealChancePrecondition : HTNPrecondition
 {
-    [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
+
+    [Dependency] private EntityQuery<NpcClosetHealerComponent> _closetHealerQuery = default!;
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return _entityManager.TryGetComponent<NpcClosetHealerComponent>(blackboard.GetOwner(), out var closetHealerComponent) &&
+        return _closetHealerQuery.TryComp(blackboard.GetOwner(), out var closetHealerComponent) &&
             _robustRandom.Prob(Math.Clamp(closetHealerComponent.Chance, 0f, 1f));
     }
 }

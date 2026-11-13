@@ -216,7 +216,9 @@ public sealed partial class NPCCombatSystem
             if (!_lockOnSystem.IsLocked(uid, comp.Target)) // KS14: must finish locking on before firing
                 continue;
 
-            KsApplyDarkAim(uid, comp.Target, worldPos, ref targetSpot); // KS14: barely seen in the dark, the aim goes astray
+            // KS14: barely seen in the dark, the aim goes astray. Before the clear-shot check below, so it judges the shot
+            //      as it will really go (NPCCombatSystem.Klovn.DarkAim.cs)
+            KsApplyDarkAim(uid, comp.Target, worldPos, ref targetSpot);
 
             // KS14 start: never where a round could hit a friend, nor from on top of one: at whatever side of the target's body
             //      is clear, if any, or not at all. Held long enough, the gun gives way for a new spot. Only once the gun can

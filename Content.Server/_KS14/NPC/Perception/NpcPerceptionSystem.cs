@@ -210,8 +210,9 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         var isCandidate = _candidates.Contains(targetUid);
         var conspicuous = false;
         var targetVelocity = System.Numerics.Vector2.Zero;
+        var seenLight = float.NaN;
         var seen = (isCandidate || wasVisible) &&
-            CanSee(entity, observerMapCoordinates, targetUid, range, wasVisible ? contact : null, now, out conspicuous, out targetVelocity);
+            CanSee(entity, observerMapCoordinates, targetUid, range, wasVisible ? contact : null, now, out conspicuous, out targetVelocity, out seenLight);
 
         // In plain sight, but no longer a hostile: retaliation wore off, or it was told to be ignored. Not a
         //      hostile that vanished, so neither lost nor hiding - just not worth remembering.
@@ -221,7 +222,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         if (isCandidate && seen)
         {
             var reactedBefore = wasVisible && contact.Reacted;
-            contact = Sight(entity, targetUid, hasContact ? contact : null, conspicuous, targetVelocity, alert, now);
+            contact = Sight(entity, targetUid, hasContact ? contact : null, conspicuous, targetVelocity, seenLight, alert, now);
             entity.Comp.Contacts[targetUid] = contact;
 
             return contact.Reacted && !reactedBefore
@@ -266,6 +267,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         NpcContact? previous,
         bool conspicuous,
         Vector2 targetVelocity,
+        float seenLight,
         bool alert,
         TimeSpan now)
     {
@@ -288,7 +290,7 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         }
         else
         {
-            clock = new SightClock(now, now, alert ? now : now + GetReactionTime(entity, targetUid), false);
+            clock = new SightClock(now, now, alert ? now : now + GetReactionTime(entity, targetUid, seenLight), false);
         }
 
         var reacted = clock.Reacted;
@@ -303,7 +305,8 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
             targetVelocity,
             ContainerUid: null,
             reacted,
-            clock.ReactAt);
+            clock.ReactAt,
+            SeenLight: seenLight);
     }
 
     /// <summary>
@@ -371,10 +374,10 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
         return blackboard.GetValueOrDefault<float>(blackboard.GetVisionRadiusKey(EntityManager), EntityManager);
     }
 
-    private TimeSpan GetReactionTime(Entity<NpcPerceptionComponent> entity, EntityUid targetUid)
+    /// <param name="seenLight">How lit the target looked as it was seen, if that was worked out; NaN if not.</param>
+    private TimeSpan GetReactionTime(Entity<NpcPerceptionComponent> entity, EntityUid targetUid, float seenLight)
     {
-        var lightLevel = _npcLightDetectionSystem.GetPerceivedLightLevel(entity.Owner, targetUid, entity.Comp.ProximityRange);
-        lightLevel = GetSeenLightLevel(entity.AsNullable(), lightLevel);
+        var lightLevel = float.IsNaN(seenLight) ? GetSeenLight(entity.AsNullable(), targetUid) : seenLight;
         return entity.Comp.ReactionTime * (1f + entity.Comp.DarknessReactionScale * (1f - lightLevel));
     }
 

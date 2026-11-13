@@ -17,7 +17,7 @@ public sealed partial class ContactThrowClearCon : KsBelievedContactCon
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
 
-    protected override float GetBelievedScore(EntityUid ownerUid, EntityCoordinates believedCoordinates)
+    protected override float GetBelievedScore(EntityUid ownerUid, EntityUid targetUid, EntityCoordinates believedCoordinates)
     {
         var ownerMapCoordinates = _transformSystem.GetMapCoordinates(ownerUid);
         var believedMapCoordinates = _transformSystem.ToMapCoordinates(believedCoordinates);

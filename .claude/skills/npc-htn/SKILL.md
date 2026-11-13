@@ -52,6 +52,62 @@ When a new feature needs the NPC to *know* something, it gets a system and a com
 *do* something, it gets operators. When it needs a *decision* spanning several NPCs, it gets a system that writes
 per-NPC results (like orders) for HTN to read.
 
+### How the systems feed each other
+
+The links below cross system and file boundaries, and nothing in any one file shows the whole chain. Before changing
+one end of a chain, check the other end. An arrow means "is read by" or "calls".
+
+- **Light, sight and aim.** `NpcLightDetectionSystem.GetLightLevel` caches the level per target per tick.
+  - `NpcPerceptionSystem.CanSee` reads it. With the observer's dark vision applied, it is kept on the contact as
+    `NpcContact.SeenLight`.
+  - `GetSeenLight` reads it from there for:
+    - reaction time;
+    - `GetNoticeRange` (support peek and push);
+    - dark aim.
+  - Dark aim: `NPCCombatSystem.UpdateRanged` → `KsApplyDarkAim`. It turns the aim point before
+    `NpcSquadFireLaneSystem.TryGetClearShot`, so the friendly-fire checks judge the shot as it will really go. Don't
+    move dark aim after that call.
+- **Losing a hostile.** `LoseSight` (`NpcPerceptionSystem.Containers.cs`) keeps `GetTraits` on the contact: armed,
+  flashable, breathes, sees through smoke.
+  - `NpcSquadTacticsSystem` reads the traits when choosing what to soften a room with (`Plan.cs` `FindThrowers`,
+    `Smoke.cs`).
+  - A new trait needs both ends: work it out in `GetTraits`, read it in the softener choice.
+- **Squad plans over combat.** Push and flank (`Fight.cs`), and the squad plan's steps (`Plan.cs`), give orders inside
+  `using (GivePlanOrders())`, which marks them `OverCombat`. Only the `squad_plan.yml` root branch, above Ranged and
+  Melee, carries those out. Ordinary orders sit below combat, so the same order given outside that block never beats a
+  fight.
+- **Flank routes.** `Fight.cs` `StartFlankProbes` → `PathfindingSystem.GetPathAvoiding`. That runs on worker threads,
+  with the tiles the squad's fire covers as extra-cost tiles. Each probe needs its own tile set, because the path job
+  adds to it.
+- **Pushing on a blast and on a pause in fire.**
+  - `NpcGrenadeSystem` → `NpcSquadTacticsSystem.NoteBlast`, for the thrower's squad.
+  - `NpcGunfireSystem` keeps `NpcRecentShooterComponent.LastShotAt` for every shooter. `Fight.cs` reads it to tell a
+    hostile that has stopped firing (reloading) from one still shooting.
+- **Man down.** `NpcSquadSystem` raises `NpcSquadMemberDownedEvent` on critical, dead, or gibbed while not already
+  dead.
+  - `NpcMeterOnSquadLossSystem` reads it (caution).
+  - So does `NpcCallsignSystem`. It picks the nearest squadmate that saw it go down, within 12 tiles and in line of
+    sight, and, 0.6s later, has `NpcVoiceSystem` say the callsign's line, or the plain man-down callout. It won't say it
+    again for that member until it is alive.
+- **Voices.** `SpeakOperator` and every callout go through `NpcVoiceSystem`.
+  - `npcVoiceSet` maps an `NpcCallout` to line sets.
+  - `npcVoiceRecording` maps each line's `LocId` to a clip. A line set picked in `SpeakOperator` must hand on the id,
+    not the localised text, or no clip is found.
+- **Healing in a closet.** In `healing.yml`:
+  - `ClosetHealChancePrecondition` rolls;
+  - `HidingPlaceCon` (→ `NpcHidingSystem.IsHidingPlace`) picks a closet;
+  - `EnterEntityStorageOperator` (→ `TryHideIn`) gets in;
+  - meds are used;
+  - `HideOperator` waits.
+
+  `NpcHidingSystem.Update` (4 Hz) decides when it comes out: healed, a hostile right outside, or in too long. The
+  operator only ends when it does, and `StopHiding` runs however it ends.
+- **Executions.** `ExecuteOperator` → `NpcExecutionSystem`. A cancelled do-after marks the victim with
+  `NpcExecutionRefusedComponent`. `TargetAwaitsExecutionCon` then rules it out, so it is shot instead, until it is
+  back on its feet.
+- **A gun in the other hand.** `TakeUpGunOperator` (`gun.yml`, before "Pick up a gun") →
+  `NpcHandsSystem.TryTakeUpGunInOtherHand`, for a magazine swap that was cut short.
+
 ## Rules that follow from the layers
 
 ### `Plan` has no side effects
@@ -69,6 +125,28 @@ date whether or not anything asks.
 The same goes for anything `Plan`, a precondition or a consideration raises. To ask the game something, raise a
 `Can...Event`, never an `...AttemptEvent`, whose handlers may respond to a try that never happened. See *Events* in
 CONTRIBUTING.
+
+### A fact worked out once is read, not worked out again
+
+Nothing in HTN remembers anything between calls:
+- every precondition runs again for each branch that has it;
+- every consideration runs again for each candidate;
+- a plan can span several ticks.
+
+Perception (every 0.2s), planning (every 0.45s) and combat (every tick) each run on their own schedule, so a cache
+that holds for one tick, like `NpcLightLevelCacheComponent`, rarely helps the second caller. So when a sense-layer
+system has worked something out on the way to a decision, it keeps it on its component, and everything after reads it
+from there:
+- **How lit a target looks:** perception keeps it on the contact as `NpcContact.SeenLight` when it decides it can see
+  it. Ask `NpcPerceptionSystem.GetSeenLight`, which uses that and only works it out for a target not in sight. Dark aim,
+  reaction time and notice range all do.
+- **Line of sight to a visible contact:** perception has just found it, with smoke counted (`ContactInLOSCon` checks
+  only the distance for one).
+- **What a hostile is like:** `GetTraits` is worked out once per target per tick, however many ask.
+
+Two answers to one question can also disagree, which is worse than slow: a stored value up to one perception interval
+old beats a second working out. A new fact more than one place needs goes the same way: work it out where the
+decision is made, keep it on the component, and give readers one method that falls back to working it out.
 
 ### The blackboard holds the plan's working values, not world state
 
