@@ -145,7 +145,10 @@ Summarised from the upstream conventions doc, which stays the authority.
 
 ### Assets from another repository
 
-Attribution (an RSI's `copyright`, an audio `attributions.yml`) names the source repository's URL and the **full hash of the commit** the asset was taken at, down to its path: `Taken from tgstation at https://github.com/tgstation/tgstation/blob/<full commit hash>/icons/mob/telegraphing/telegraph.dmi`, the form `/dmi-to-rsi` writes. "Taken from tgstation" alone makes the original very hard to trace.
+Attribution (an RSI's `copyright`, an audio `attributions.yml`) gives a source URL with at least the **full hash of the commit** the asset was taken at. "Taken from tgstation" alone makes the original very hard to trace.
+
+- One file: point at its exact path, `Taken from tgstation at https://github.com/tgstation/tgstation/blob/<full commit hash>/icons/mob/telegraphing/telegraph.dmi`, the form `/dmi-to-rsi` writes.
+- Several files from the same repository and commit: one entry for all of them, pointing at their shared parent folder, or at the repository at that hash and nothing more. An `attributions.yml` entry already lists many files under one licence, copyright and source; don't split them into an entry each.
 
 ### Partial prototypes: change an upstream prototype without editing its file
 
