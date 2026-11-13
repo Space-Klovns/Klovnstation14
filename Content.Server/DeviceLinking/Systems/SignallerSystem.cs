@@ -30,7 +30,7 @@ public sealed partial class SignallerSystem : EntitySystem
             return;
 
         _adminLogger.Add(LogType.Action, LogImpact.Low, $"{ToPrettyString(args.User):actor} triggered signaler {ToPrettyString(uid):tool}");
-        _link.KsInvokePortAsUser(args.User, uid, component.Port); // KS14: credit whoever used it
+        _link.KsInvokePortAsUser(args.User, /* KS14: InvokePort -> KsInvokePortAsUser, credits the user */ uid, component.Port);
         args.Handled = true;
     }
 }

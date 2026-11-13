@@ -30,7 +30,7 @@ public sealed partial class TriggerSystem
         if (args.Key != null && !ent.Comp.KeysIn.Contains(args.Key))
             return;
 
-        _deviceLink.KsInvokePortAsUser(args.User, ent.Owner, ent.Comp.Port); // KS14: credit whoever used it
+        _deviceLink.KsInvokePortAsUser(args.User, /* KS14: InvokePort -> KsInvokePortAsUser, credits the user */ ent.Owner, ent.Comp.Port);
         args.Handled = true;
     }
 
