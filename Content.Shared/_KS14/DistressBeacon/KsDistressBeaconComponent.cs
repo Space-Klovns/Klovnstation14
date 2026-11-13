@@ -19,16 +19,30 @@ public sealed partial class KsDistressBeaconComponent : Component
     public KsDistressBeaconState State;
 
     /// <summary>
-    ///     Time between beeps while the wearer is critical.
+    ///     What the beacon does while the wearer is critical.
     /// </summary>
     [DataField]
-    public TimeSpan CritBeepInterval = TimeSpan.FromSeconds(2);
+    public KsDistressBeaconStateSettings Critical = new()
+    {
+        BeepInterval = TimeSpan.FromSeconds(0.75),
+        LightColor = Color.FromHex("#FF3030"),
+        LightRadius = 4.2f,
+        LightEnergy = 2.2f,
+        PulseRate = 1.5f,
+    };
 
     /// <summary>
-    ///     Time between beeps while the wearer is dead.
+    ///     What the beacon does while the wearer is dead.
     /// </summary>
     [DataField]
-    public TimeSpan DeadBeepInterval = TimeSpan.FromSeconds(6);
+    public KsDistressBeaconStateSettings Dead = new()
+    {
+        BeepInterval = TimeSpan.FromSeconds(2),
+        LightColor = Color.FromHex("#FF8C1A"),
+        LightRadius = 3f,
+        LightEnergy = 1.2f,
+        PulseRate = 0.3f,
+    };
 
     /// <summary>
     ///     The beep, which carries a long way.
@@ -43,40 +57,17 @@ public sealed partial class KsDistressBeaconComponent : Component
     public TimeSpan NextBeep;
 
     /// <summary>
-    ///     Light radius while the wearer is critical.
+    ///     The settings for a state, or null for <see cref="KsDistressBeaconState.Off"/>.
     /// </summary>
-    [DataField]
-    public float CritLightRadius = 3f;
-
-    /// <summary>
-    ///     Peak light energy while the wearer is critical, which the client pulses between 0 and this.
-    /// </summary>
-    [DataField]
-    public float CritLightEnergy = 1.5f;
-
-    /// <summary>
-    ///     Pulses per second while the wearer is critical.
-    /// </summary>
-    [DataField]
-    public float CritPulseRate = 1.5f;
-
-    /// <summary>
-    ///     Light radius while the wearer is dead.
-    /// </summary>
-    [DataField]
-    public float DeadLightRadius = 2f;
-
-    /// <summary>
-    ///     Peak light energy while the wearer is dead.
-    /// </summary>
-    [DataField]
-    public float DeadLightEnergy = 0.6f;
-
-    /// <summary>
-    ///     Pulses per second while the wearer is dead.
-    /// </summary>
-    [DataField]
-    public float DeadPulseRate = 0.3f;
+    public KsDistressBeaconStateSettings? SettingsFor(KsDistressBeaconState state)
+    {
+        return state switch
+        {
+            KsDistressBeaconState.Critical => Critical,
+            KsDistressBeaconState.Dead => Dead,
+            _ => null,
+        };
+    }
 }
 
 [Serializable, NetSerializable]
@@ -85,4 +76,35 @@ public enum KsDistressBeaconState : byte
     Off,
     Critical,
     Dead,
+}
+
+/// <summary>
+///     How a distress beacon looks and sounds in one state.
+/// </summary>
+[DataDefinition]
+public sealed partial class KsDistressBeaconStateSettings
+{
+    /// <summary>
+    ///     Time between beeps.
+    /// </summary>
+    [DataField]
+    public TimeSpan BeepInterval = TimeSpan.FromSeconds(2);
+
+    [DataField]
+    public Color LightColor = Color.White;
+
+    [DataField]
+    public float LightRadius = 3f;
+
+    /// <summary>
+    ///     Peak light energy, which the client pulses between a faint glow and this.
+    /// </summary>
+    [DataField]
+    public float LightEnergy = 1.5f;
+
+    /// <summary>
+    ///     Light pulses per second.
+    /// </summary>
+    [DataField]
+    public float PulseRate = 1f;
 }

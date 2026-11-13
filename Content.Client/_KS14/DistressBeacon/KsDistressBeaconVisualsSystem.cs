@@ -21,6 +21,11 @@ public sealed partial class KsDistressBeaconVisualsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnAfterAutoHandleState(Entity<KsDistressBeaconComponent> entity, ref AfterAutoHandleStateEvent args)
     {
+        // The light's colour for the state, so it follows the state even where the light's own state lags.
+        var settings = entity.Comp.SettingsFor(entity.Comp.State);
+        if (settings != null)
+            _pointLightSystem.SetColor(entity.Owner, settings.LightColor);
+
         if (!_spriteQuery.TryComp(entity, out var spriteComponent))
             return;
 
@@ -37,17 +42,14 @@ public sealed partial class KsDistressBeaconVisualsSystem : EntitySystem
         var enumerator = EntityQueryEnumerator<KsDistressBeaconComponent, PointLightComponent>();
         while (enumerator.MoveNext(out var uid, out var beaconComponent, out var lightComponent))
         {
-            if (beaconComponent.State == KsDistressBeaconState.Off)
+            var settings = beaconComponent.SettingsFor(beaconComponent.State);
+            if (settings == null)
                 continue;
 
-            var critical = beaconComponent.State == KsDistressBeaconState.Critical;
-            var peak = critical ? beaconComponent.CritLightEnergy : beaconComponent.DeadLightEnergy;
-            var rate = critical ? beaconComponent.CritPulseRate : beaconComponent.DeadPulseRate;
-
             // A smooth rise and fall between a faint glow and the peak, so the light never quite goes out.
-            var wave = 0.5f - 0.5f * MathF.Cos(seconds * rate * MathF.Tau);
+            var wave = 0.5f - 0.5f * MathF.Cos(seconds * settings.PulseRate * MathF.Tau);
             // Only how the light looks this frame: the server owns it, and never hears of this.
-            _pointLightSystem.SetEnergy(uid, peak * (0.15f + 0.85f * wave), lightComponent);
+            _pointLightSystem.SetEnergy(uid, settings.LightEnergy * (0.15f + 0.85f * wave), lightComponent);
         }
     }
 }

@@ -41,6 +41,25 @@ public sealed class KsDistressBeaconTest : InteractionTest
     private bool LightOn(EntityUid beaconUid)
         => SEntMan.System<SharedPointLightSystem>().TryGetLight(beaconUid, out var lightComponent) && lightComponent.Enabled;
 
+    private void AssertLightMatches(EntityUid beaconUid, KsDistressBeaconStateSettings settings)
+    {
+        Assert.That(SEntMan.System<SharedPointLightSystem>().TryGetLight(beaconUid, out var lightComponent), Is.True);
+        Assert.That(lightComponent!.Color, Is.EqualTo(settings.LightColor), "The light's colour wasn't the state's.");
+        Assert.That(lightComponent.Radius, Is.EqualTo(settings.LightRadius));
+        Assert.That(lightComponent.Energy, Is.EqualTo(settings.LightEnergy));
+    }
+
+    [Test]
+    public async Task CriticalAndDeadLookDifferent()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(SEntMan.SpawnEntity(_beacon, SEntMan.GetCoordinates(PlayerCoords)));
+            Assert.That(beaconComponent.Critical.LightColor, Is.Not.EqualTo(beaconComponent.Dead.LightColor));
+            Assert.That(beaconComponent.Critical.BeepInterval, Is.LessThan(beaconComponent.Dead.BeepInterval));
+        });
+    }
+
     private void SetMobState(MobState mobState)
         => SEntMan.System<MobStateSystem>().ChangeMobState(SPlayer, mobState);
 
@@ -61,6 +80,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
         {
             Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Critical), "A critical wearer didn't turn the beacon to critical.");
             Assert.That(LightOn(beaconUid), Is.True, "The light wasn't on for a critical wearer.");
+            AssertLightMatches(beaconUid, SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).Critical);
             Assert.That(SEntMan.GetComponent<ClothingComponent>(beaconUid).EquippedPrefix, Is.Not.Null, "The worn sprite wasn't lit.");
         });
 
@@ -77,6 +97,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
         {
             Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Dead), "A dead wearer didn't turn the beacon to dead.");
             Assert.That(LightOn(beaconUid), Is.True);
+            AssertLightMatches(beaconUid, SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).Dead);
         });
 
         // The client's copy has the state, and so lights its icon.
@@ -124,7 +145,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
             var curTime = Server.Timing.CurTime;
             Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Critical));
             Assert.That(beaconComponent.NextBeep, Is.GreaterThan(curTime), "The beacon never beeped.");
-            Assert.That(beaconComponent.NextBeep, Is.LessThanOrEqualTo(curTime + beaconComponent.CritBeepInterval));
+            Assert.That(beaconComponent.NextBeep, Is.LessThanOrEqualTo(curTime + beaconComponent.Critical.BeepInterval));
         });
     }
 
