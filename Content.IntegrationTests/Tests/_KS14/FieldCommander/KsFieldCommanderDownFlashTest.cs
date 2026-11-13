@@ -47,12 +47,13 @@ public sealed class KsFieldCommanderDownFlashTest : GameTest
   id: KsTestDownFlashDefender
   components:
   - type: KsFieldCommanderDefender
-    criticalFlash:
-      color: '#12AB34CC'
-      duration: 0.4
-    deadFlash:
-      color: '#000000EE'
-      duration: 0.3
+    flashes:
+      Critical:
+        color: '#12AB34CC'
+        duration: 0.4
+      Dead:
+        color: '#000000EE'
+        duration: 0.3
 ";
 
     private bool Flashing(EntityUid clientUid)
@@ -101,7 +102,7 @@ public sealed class KsFieldCommanderDownFlashTest : GameTest
 
             var visualsComponent = client.EntMan.GetComponent<KsFieldCommanderDownFlashVisualsComponent>(clientDefender);
             Assert.That(visualsComponent.Color, Is.EqualTo(CriticalColor));
-            Assert.That(visualsComponent.Duration, Is.EqualTo(0.4f));
+            Assert.That(visualsComponent.Duration, Is.EqualTo(TimeSpan.FromSeconds(0.4)));
         });
 
         // It is over after its duration.
@@ -117,7 +118,7 @@ public sealed class KsFieldCommanderDownFlashTest : GameTest
             Assert.That(Flashing(clientDefender), Is.True, "a defender dying should flash");
             var visualsComponent = client.EntMan.GetComponent<KsFieldCommanderDownFlashVisualsComponent>(clientDefender);
             Assert.That(visualsComponent.Color, Is.EqualTo(DeadColor));
-            Assert.That(visualsComponent.Duration, Is.EqualTo(0.3f));
+            Assert.That(visualsComponent.Duration, Is.EqualTo(TimeSpan.FromSeconds(0.3)));
         });
 
         await Pair.RunTicksSync(TicksFor(0.3f));

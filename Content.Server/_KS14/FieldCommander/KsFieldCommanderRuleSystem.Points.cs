@@ -83,8 +83,8 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // So the client knows who is a defender, and how to flash them as they go down.
         var defenderComponent = EnsureComp<KsFieldCommanderDefenderComponent>(bodyUid);
-        defenderComponent.CriticalFlash = component.CriticalFlash;
-        defenderComponent.DeadFlash = component.DeadFlash;
+        // A copy of the rule's dictionary, so that no two components share one.
+        defenderComponent.Flashes = new Dictionary<MobState, KsFieldCommanderDownFlashSettings>(component.DownFlashes);
         Dirty(bodyUid, defenderComponent);
 
         if (session != null)
