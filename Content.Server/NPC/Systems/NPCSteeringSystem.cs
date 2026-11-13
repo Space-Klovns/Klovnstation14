@@ -105,6 +105,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     {
         base.Initialize();
 
+        _ksIsLoose = otherUid => !Transform(otherUid).Anchored; // KS14: see KsIsBeelineClear
         Log.Level = LogLevel.Info;
 
         for (var i = 0; i < InterestDirections; i++)
@@ -332,6 +333,15 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
             return;
         }
 
+        // KS14 start: part way over something it is climbing, it cannot move until it is over: that is waiting, not being
+        //      stuck for good, which is what giving up the path below would make of it
+        if (TryComp<ClimbingComponent>(uid, out var ksClimbingComponent) && ksClimbingComponent.NextTransition != null)
+        {
+            SetDirection(uid, mover, steering, Vector2.Zero);
+            return;
+        }
+        // KS14 end
+
         // Can't move at all, just noop input.
         if (!mover.CanMove)
         {
@@ -432,6 +442,41 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         return new EntityCoordinates(poly.GraphUid, poly.Box.Center);
     }
 
+    // KS14 start
+    /// <summary>
+    /// How long a clear straight line to a near target is trusted before it is looked at again: a ray, and the path
+    /// request is asked about every tick.
+    /// </summary>
+    private static readonly TimeSpan KsBeelineCheckInterval = TimeSpan.FromSeconds(0.3);
+
+    /// <summary>
+    /// Whether nothing anchored stands between <paramref name="uid"/> and its target, near enough to walk straight at
+    /// (<see cref="NPCSteeringComponent.RepathRange"/>). Mobs don't count: they move, and the path would ignore them too.
+    /// </summary>
+    private bool KsIsBeelineClear(EntityUid uid, NPCSteeringComponent steering, float targetDistance)
+    {
+        var now = _timing.CurTime;
+        if (now < steering.KsBeelineClearUntil)
+            return true;
+
+        if (!TryComp<PhysicsComponent>(uid, out var physics) ||
+            !_interaction.InRangeUnobstructed(uid,
+                steering.Coordinates,
+                targetDistance + 0.1f,
+                (CollisionGroup) physics.CollisionMask,
+                _ksIsLoose))
+            return false;
+
+        steering.KsBeelineClearUntil = now + KsBeelineCheckInterval;
+        return true;
+    }
+
+    /// <summary>
+    /// Ignores anything not anchored in place, for <see cref="KsIsBeelineClear"/>. Made once, not per call.
+    /// </summary>
+    private SharedInteractionSystem.Ignored _ksIsLoose = default!;
+    // KS14 end
+
     /// <summary>
     /// Get a new job from the pathfindingsystem
     /// </summary>
@@ -439,7 +484,9 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     {
         // If we already have a pathfinding request then don't grab another.
         // If we're in range then just beeline them; this can avoid stutter stepping and is an easy way to look nicer.
-        if (steering.Pathfind || targetDistance < steering.RepathRange)
+        // KS14: unless something is in the way - a railing, a table - when walking straight at it only presses it up
+        //      against that, for good
+        if (steering.Pathfind || targetDistance < steering.RepathRange && KsIsBeelineClear(uid, steering, targetDistance))
             return;
 
         // Short-circuit with no path.
