@@ -4,7 +4,7 @@
   name: stack-ks-sandbag
   icon:
     sprite: /Textures/_KS14/Objects/Misc/sandbag.rsi
-    state: sandbag_4
+    state: sandbag_3
   spawn: KsSandbag
   maxCount: 30
 
@@ -20,11 +20,11 @@
     size: Normal
   - type: Sprite
     sprite: _KS14/Objects/Misc/sandbag.rsi
-    state: sandbag_4
+    state: sandbag_3
     layers:
-    - state: sandbag_4
+    - state: sandbag_3
       map: [ "base" ]
-  # The pile grows with the stack, in broad steps: one bag, two, a small pile, then the full pile from a wall's worth.
+  # The pile grows with the stack: one bag, two, then a pile from three on.
   - type: Stack
     stackType: KsSandbag
     count: 5
@@ -33,10 +33,9 @@
     - sandbag
     - sandbag_2
     - sandbag_3
-    - sandbag_4
     layerFunction: Threshold
   - type: StackLayerThreshold
-    thresholds: [ 2, 3, 5 ]
+    thresholds: [ 2, 3 ]
   - type: StackPrice
     price: 5
   - type: GuideHelp
