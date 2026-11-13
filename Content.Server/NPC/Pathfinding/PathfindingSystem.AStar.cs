@@ -95,7 +95,7 @@ public sealed partial class PathfindingSystem
             return heuristicResult;
 
         var heuristic = request.KsHeuristic;
-        var nodeLimit = GetNodeLimit(heuristic);
+        var nodeLimit = GetNodeLimit(request, heuristic);
         // KS14 end
 
         while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && count < nodeLimit /* KS14: NodeLimit -> cvar, scaled to the path */)
