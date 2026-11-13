@@ -8,6 +8,9 @@ namespace Content.Shared._KS14.Projectiles;
 /// Scales a projectile's damage down with the distance it has flown: full damage up to
 /// <see cref="FullDamageRange"/> tiles from where it was fired, a linear fall to
 /// <see cref="MinMultiplier"/> at <see cref="MinDamageRange"/> tiles, flat beyond.
+/// Whether it applies depends on two cvars: <c>klovn.projectile.damage_falloff</c> off means never; on, it applies
+/// to every projectile with this component if <c>klovn.projectile.damage_falloff_everywhere</c> is on, and otherwise
+/// only if the firing gun has a <see cref="KsGunProjectileFalloffComponent"/> (<see cref="GunOptedIn"/>).
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class KsProjectileFalloffComponent : Component
@@ -33,4 +36,8 @@ public sealed partial class KsProjectileFalloffComponent : Component
 
     [ViewVariables, AutoNetworkedField, Access(typeof(KsProjectileFalloffSystem))]
     public Vector2 OriginPosition;
+
+    /// <summary>Set at fire time when the gun has a <see cref="KsGunProjectileFalloffComponent"/>.</summary>
+    [ViewVariables, AutoNetworkedField, Access(typeof(KsProjectileFalloffSystem))]
+    public bool GunOptedIn;
 }

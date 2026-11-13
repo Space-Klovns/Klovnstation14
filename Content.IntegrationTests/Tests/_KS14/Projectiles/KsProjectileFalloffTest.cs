@@ -29,6 +29,7 @@ public sealed class KsProjectileFalloffTest : GameTest
 
     private readonly EntProtoId _bullet = "KsFalloffTestBullet";
     private readonly EntProtoId _target = "KsFalloffTestTarget";
+    private readonly EntProtoId _plainBullet = "KsFalloffTestPlainBullet";
     private readonly EntProtoId _plainGun = "KsFalloffTestGun";
     private readonly EntProtoId _scaledGun = "KsFalloffTestScaledGun";
     private readonly EntProtoId _noFalloffGun = "KsFalloffTestNoFalloffGun";
@@ -48,6 +49,16 @@ public sealed class KsProjectileFalloffTest : GameTest
     fullDamageRange: 6
     minDamageRange: 16
     minMultiplier: 0.25
+
+- type: entity
+  id: KsFalloffTestPlainBullet
+  components:
+  - type: Physics
+    bodyType: Dynamic
+  - type: Projectile
+    damage:
+      types:
+        Blunt: 100
 
 - type: entity
   id: KsFalloffTestGun
@@ -133,6 +144,7 @@ public sealed class KsProjectileFalloffTest : GameTest
     [Test]
     public async Task HitDamageFallsOffWithDistance()
     {
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, true);
         var testMap = await Pair.CreateTestMap();
 
         float nearDamage = 0f, farDamage = 0f, midDamage = 0f;
@@ -159,6 +171,7 @@ public sealed class KsProjectileFalloffTest : GameTest
     [Test]
     public async Task GunTuningChangesTheFalloffOfItsBullets()
     {
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, true);
         var testMap = await Pair.CreateTestMap();
         var mapId = testMap.MapId;
 
@@ -184,6 +197,7 @@ public sealed class KsProjectileFalloffTest : GameTest
     [Test]
     public async Task MosinRoundDoesFullDamageAtRangeButOtherLightRiflesFallOff()
     {
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, true);
         // The Mosin's real round, which other guns fire too.
         Assert.That(SProtoMan.Index(MosinSniper).TryGetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(out var provider, Server.EntMan.ComponentFactory));
         Assert.That(SProtoMan.Index(provider!.Proto!.Value).TryGetComponent<Content.Shared.Weapons.Ranged.Components.CartridgeAmmoComponent>(out var cartridgeAmmo, Server.EntMan.ComponentFactory));
@@ -205,6 +219,7 @@ public sealed class KsProjectileFalloffTest : GameTest
     [Test]
     public async Task FalloffCanBeSwitchedOffWithTheCVar()
     {
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, true);
         var testMap = await Pair.CreateTestMap();
         var near = await DamageDealtAt(testMap.MapId, 2f, _bullet);
         var farOn = await DamageDealtAt(testMap.MapId, 30f, _bullet);
@@ -221,8 +236,73 @@ public sealed class KsProjectileFalloffTest : GameTest
     }
 
     [Test]
+    public async Task OnlyOptedInGunsMakeBulletsFallOffWhenNotEverywhere()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var mapId = testMap.MapId;
+
+        // Only a gun with the component qualifies. Set explicitly, whatever an earlier test on this pair left.
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloff, true);
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, false);
+        var near = await DamageDealtAt(mapId, 2f, _bullet);
+        var dataBulletPlainGun = await DamageDealtAt(mapId, 30f, _bullet, _plainGun);
+        var dataBulletOptedInGun = await DamageDealtAt(mapId, 30f, _bullet, _scaledGun);
+        var bareBulletPlainGun = await DamageDealtAt(mapId, 30f, _plainBullet, _plainGun);
+        var bareBulletOptedInGun = await DamageDealtAt(mapId, 30f, _plainBullet, _scaledGun);
+        var bareBulletOptedInGunNear = await DamageDealtAt(mapId, 2f, _plainBullet, _scaledGun);
+
+        Assert.That(near, Is.GreaterThan(0f));
+        Assert.Multiple(() =>
+        {
+            Assert.That(dataBulletPlainGun, Is.EqualTo(near).Within(0.01f), "a plain gun's bullet does full damage");
+            Assert.That(dataBulletOptedInGun / near, Is.EqualTo(0.325f).Within(0.01f), "an opted-in gun's bullet falls off");
+            Assert.That(bareBulletPlainGun, Is.EqualTo(near).Within(0.01f), "a bullet with no data from a plain gun does full damage");
+            // 100 damage, default 8 / 20 / 0.5 doubled in range by the gun: 16 / 40, so 30 tiles is 0.5833 of the way.
+            Assert.That(bareBulletOptedInGun / bareBulletOptedInGunNear, Is.EqualTo(1f - 0.5f * (14f / 24f)).Within(0.01f), "a gun adds falloff to a bullet that has none");
+        });
+    }
+
+    [Test]
+    public async Task TheMasterCVarTurnsOffEverything()
+    {
+        var testMap = await Pair.CreateTestMap();
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, true);
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloff, false);
+
+        var near = await DamageDealtAt(testMap.MapId, 2f, _bullet);
+        var plainFar = await DamageDealtAt(testMap.MapId, 30f, _bullet, _plainGun);
+        var optedInFar = await DamageDealtAt(testMap.MapId, 30f, _bullet, _scaledGun);
+
+        Assert.That(near, Is.GreaterThan(0f));
+        Assert.Multiple(() =>
+        {
+            Assert.That(plainFar, Is.EqualTo(near).Within(0.01f));
+            Assert.That(optedInFar, Is.EqualTo(near).Within(0.01f));
+        });
+    }
+
+    [Test]
+    public void FieldCommanderBotGunsOptIn()
+    {
+        // The guns live in the private module.
+        var botGuns = new[] { "KsWeaponPistolMk1FieldCommander", "KsWeaponShotgunBulldogFieldCommander", "KsWeaponRifleEstocFieldCommander" };
+        if (!SProtoMan.HasIndex<EntityPrototype>(botGuns[0]))
+            Assert.Ignore("_KsModule prototypes are not present.");
+
+        foreach (var botGun in botGuns)
+        {
+            Assert.That(SProtoMan.Index<EntityPrototype>(botGun).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Server.EntMan.ComponentFactory), $"{botGun} opts in");
+            Assert.That(CProtoMan.Index<EntityPrototype>(botGun).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Client.EntMan.ComponentFactory), $"{botGun} opts in on the client");
+        }
+
+        // An ordinary rifle does not.
+        Assert.That(SProtoMan.Index(OtherLightRifle).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Server.EntMan.ComponentFactory), Is.False);
+    }
+
+    [Test]
     public async Task SniperRoundDoesFullDamageAtRange()
     {
+        await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, true);
         // The Hristov's real round: gun -> cartridge -> bullet.
         var gun = SProtoMan.Index(HristovSniper);
         Assert.That(gun.TryGetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(out var provider, Server.EntMan.ComponentFactory));

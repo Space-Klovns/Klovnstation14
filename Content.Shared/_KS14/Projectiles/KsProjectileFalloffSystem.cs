@@ -15,24 +15,36 @@ public sealed partial class KsProjectileFalloffSystem : EntitySystem
     [Dependency] private IConfigurationManager _configurationManager = default!;
 
     private bool _falloffEnabled = true;
+    private bool _falloffEverywhere;
 
     public override void Initialize()
     {
         base.Initialize();
         Subs.CVar(_configurationManager, KsCCVars.ProjectileDamageFalloff, value => _falloffEnabled = value, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.ProjectileDamageFalloffEverywhere, value => _falloffEverywhere = value, invokeImmediately: true);
     }
 
     [SubscribeLocalEvent]
     private void OnPlayerShotProjectile(ref PlayerShotProjectileEvent args)
     {
+        // A gun with the component applies falloff to what it fires, even to a bullet that has none of its own.
+        KsGunProjectileFalloffComponent? gunFalloff = null;
+        if (TryComp<ProjectileComponent>(args.Projectile, out var projectileComponent) &&
+            projectileComponent.Weapon is { } weaponUid)
+            TryComp(weaponUid, out gunFalloff);
+
         if (!TryComp<KsProjectileFalloffComponent>(args.Projectile, out var falloffComponent))
-            return;
+        {
+            if (gunFalloff == null)
+                return;
+
+            falloffComponent = EnsureComp<KsProjectileFalloffComponent>(args.Projectile);
+        }
 
         // The gun's tuning, written onto the projectile once so the hit code only reads the projectile.
-        if (TryComp<ProjectileComponent>(args.Projectile, out var projectileComponent) &&
-            projectileComponent.Weapon is { } weaponUid &&
-            TryComp<KsGunProjectileFalloffComponent>(weaponUid, out var gunFalloff))
+        if (gunFalloff != null)
         {
+            falloffComponent.GunOptedIn = true;
             falloffComponent.FullDamageRange = (gunFalloff.FullDamageRange ?? falloffComponent.FullDamageRange) * gunFalloff.RangeScale;
             falloffComponent.MinDamageRange = (gunFalloff.MinDamageRange ?? falloffComponent.MinDamageRange) * gunFalloff.RangeScale;
             falloffComponent.MinMultiplier = gunFalloff.MinMultiplier ?? falloffComponent.MinMultiplier;
@@ -53,7 +65,8 @@ public sealed partial class KsProjectileFalloffSystem : EntitySystem
         if (!_falloffEnabled ||
             !Resolve(projectile.Owner, ref projectile.Comp, logMissing: false) ||
             projectile.Comp.OriginMap == MapId.Nullspace ||
-            projectile.Comp.OriginMap != hitCoordinates.MapId)
+            projectile.Comp.OriginMap != hitCoordinates.MapId ||
+            !(_falloffEverywhere || projectile.Comp.GunOptedIn))
             return 1f;
 
         var distance = (hitCoordinates.Position - projectile.Comp.OriginPosition).Length();
