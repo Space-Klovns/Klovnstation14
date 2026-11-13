@@ -190,10 +190,16 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
 
         // A fight on: combat comes first, and a hostile in sight is not lost. What the squad does together in it, it does
         //      over that (see NpcSquadTacticsSystem.Fight.cs).
-        if (AnyoneInCombat())
+        // The gather that finds the fight's fighters answers whether anyone is in one, rather than walking the contacts twice.
+        //      A group too small to push or flank, with neither going, has no use for the fighters and only asks.
+        var gathering = (settings.Pushing || settings.Flanking) && (_members.Count >= 2 || IsFightLive(issuerUid));
+        if (gathering ? GatherFight() : AnyoneInCombat())
         {
             EndHunt(issuerUid, keepFightOrders: true);
-            UpdateFight(issuerUid, leaderUid, settings, now);
+
+            if (gathering)
+                UpdateFight(issuerUid, leaderUid, settings, now);
+
             return;
         }
 
@@ -440,8 +446,14 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
 
     private void ClearOrder(EntityUid memberUid, EntityUid issuerUid)
     {
-        if (_orderQuery.TryComp(memberUid, out var orderComponent) && orderComponent.Order?.IssuerUid == issuerUid)
-            ClearOrder((memberUid, orderComponent));
+        if (_orderQuery.TryComp(memberUid, out var orderComponent))
+            ClearOrder((memberUid, orderComponent), issuerUid);
+    }
+
+    private void ClearOrder(Entity<NpcOrderComponent> entity, EntityUid issuerUid)
+    {
+        if (entity.Comp.Order?.IssuerUid == issuerUid)
+            ClearOrder(entity);
     }
 
     /// <summary>

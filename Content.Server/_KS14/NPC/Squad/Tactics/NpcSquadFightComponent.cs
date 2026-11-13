@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.NPC.Pathfinding;
 using Robust.Shared.Map;
@@ -61,6 +62,25 @@ public sealed partial class NpcSquadFightComponent : Component
     public TimeSpan NextFlankAt;
 
     /// <summary>
+    ///     When a squad that was spread too wide to flank may next be looked at again.
+    /// </summary>
+    [ViewVariables, AutoPausedField]
+    public TimeSpan NextFlankCheckAt;
+
+    /// <summary>
+    ///     Stops the path searches of <see cref="FlankProbes"/> when they are given up on. Runtime only, never a datafield.
+    ///     <para>
+    ///         Made by <c>StartFlankProbes</c> when the first probe is, and its token handed to every probe's path job (which
+    ///             runs on a worker thread). Cancelled and disposed, only ever together and only by
+    ///             <c>NpcSquadTacticsSystem.CancelFlankProbes</c>, when the probes end any way: they time out, the hostile
+    ///             changes, the fight ends or a grenade is about (<c>EndFlank</c>, which does so even with no flank yet), the
+    ///             answers are used, new probes start, or this component shuts down. Null when no probes are out.
+    ///     </para>
+    /// </summary>
+    [ViewVariables]
+    public CancellationTokenSource? FlankProbeCancel;
+
+    /// <summary>
     ///     When and where one of the squad's grenades last went off.
     /// </summary>
     [ViewVariables, AutoPausedField]
@@ -88,6 +108,12 @@ public sealed class NpcFlankRoute
     ///     How far it had to go when it set off, in tiles: for telling one that cannot get round from one on its way.
     /// </summary>
     public float StartRemaining;
+
+    /// <summary>
+    ///     For each waypoint, how far it is on along the way from there to the last, in tiles. Worked out once, when the route is
+    ///         made.
+    /// </summary>
+    public readonly List<float> TailLengths = new();
 }
 
 /// <summary>

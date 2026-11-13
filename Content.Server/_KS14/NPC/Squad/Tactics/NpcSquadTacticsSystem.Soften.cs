@@ -126,7 +126,7 @@ public sealed partial class NpcSquadTacticsSystem
         };
 
         hunt.Soften = plan;
-        FindThrowers(plan, settings);
+        FindThrowers(plan, settings, new NpcSofteningTarget(believedCoordinates, traits));
 
         if (PickSoftener(plan, settings) is not { } action)
         {

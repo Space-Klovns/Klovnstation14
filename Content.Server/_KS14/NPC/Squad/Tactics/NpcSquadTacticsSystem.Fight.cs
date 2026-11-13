@@ -5,7 +5,10 @@ using Content.Server._KS14.NPC.Perception;
 using Content.Server._KS14.NPC.Voices;
 using Content.Server.NPC.Pathfinding;
 using Content.Shared._KS14.NPC;
+using Content.Shared.Explosion.Components;
+using Content.Shared.Physics;
 using Content.Shared.Trigger.Components;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Random;
 using Robust.Shared.Map.Components;
@@ -25,6 +28,8 @@ public sealed partial class NpcSquadTacticsSystem
 {
     [Dependency] private NpcGunfireSystem _npcGunfireSystem = default!;
     [Dependency] private NpcVoiceSystem _npcVoiceSystem = default!;
+
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
 
     [Dependency] private EntityQuery<NpcSquadFightComponent> _fightQuery = default!;
 
@@ -103,14 +108,46 @@ public sealed partial class NpcSquadTacticsSystem
 
     private const float FlankWaypointReach = 1.5f;
 
+    /// <summary>
+    ///     How long a squad too spread out to flank is left before it is looked at again.
+    /// </summary>
+    private static readonly TimeSpan FlankRecheckDelay = TimeSpan.FromSeconds(1);
+
     private static readonly TimeSpan PushCalloutCooldown = TimeSpan.FromSeconds(8);
     private static readonly TimeSpan FlankCalloutCooldown = TimeSpan.FromSeconds(10);
 
     private readonly List<EntityUid> _fightContacts = new();
     private readonly Dictionary<EntityUid, int> _fightCounts = new();
+    private readonly List<EntityUid> _fightMembers = new();
+    private readonly List<(int Index, Angle Bearing)> _pushBearings = new();
+    private readonly List<Vector2> _orderSpotPositions = new();
+    private readonly List<MapCoordinates> _routePoints = new();
+
+    /// <summary>
+    ///     The fighters (<see cref="GatherFight"/>), and, by the same index, where each is (<see cref="_fighterCoordinates"/>)
+    ///         and, once asked for, whether it is armed and what its shots stop at (<see cref="_fighterArmed"/>,
+    ///         <see cref="_fighterShotMasks"/>, filled by <see cref="EnsureFighterTraits"/>).
+    ///     <para>
+    ///         Only <see cref="GatherFight"/> writes them, once for each group, at the start of that group's
+    ///             <c>UpdateGroup</c>; they are rewritten for the next group, so they mean something only inside the same update,
+    ///             on the main thread, and only after <see cref="GatherFight"/> has run for that group. Nothing may keep an index
+    ///             into them, or a copy, beyond it, and nothing on a worker thread may read them (the path jobs get their own
+    ///             data: see <see cref="GetFlankAvoidedTiles"/>). The armed and shot mask lists are empty until
+    ///             <see cref="EnsureFighterTraits"/>, which what is about to send someone somewhere (a push, ways round for a
+    ///             flank) calls first.
+    ///     </para>
+    /// </summary>
     private readonly List<EntityUid> _fighters = new();
-    private readonly List<(EntityUid Uid, Angle Bearing)> _pushBearings = new();
-    private readonly HashSet<Entity<ActiveTimerTriggerComponent>> _liveGrenades = new();
+    private readonly List<MapCoordinates> _fighterCoordinates = new();
+    private readonly List<bool> _fighterArmed = new();
+    private readonly List<CollisionGroup> _fighterShotMasks = new();
+    private bool _fighterTraitsKnown;
+
+    /// <summary>
+    ///     The hostile <see cref="GatherFight"/> found most of the group fighting, if it found fighters at all.
+    /// </summary>
+    private EntityUid _fightHostileUid;
+    private bool _hasFighters;
 
     /// <summary>
     ///     One of <paramref name="memberUid"/>'s grenades has gone off at <paramref name="coordinates"/>: its squad may push on
@@ -118,34 +155,72 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     public void NoteBlast(EntityUid memberUid, EntityCoordinates coordinates)
     {
-        var issuerUid = _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) ? squadEntity.Value.Owner : memberUid;
+        EntityUid issuerUid;
+        NpcSquadTacticsSettings settings;
+
+        if (_npcSquadSystem.TryGetSquad(memberUid, out var squadEntity))
+        {
+            if (!_npcSquadSystem.TryGetLeader(squadEntity.Value, out var leader))
+                return;
+
+            issuerUid = squadEntity.Value.Owner;
+            settings = leader.Comp.Tactics;
+        }
+        else if (_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent))
+        {
+            issuerUid = memberUid;
+            settings = squadMemberComponent.Tactics;
+        }
+        else
+        {
+            return;
+        }
+
+        // Only a push goes by a blast.
+        if (!settings.Pushing)
+            return;
+
         var fightComponent = EnsureComp<NpcSquadFightComponent>(issuerUid);
         fightComponent.LastBlastAt = _gameTiming.CurTime;
         fightComponent.LastBlastCoordinates = coordinates;
     }
 
     /// <summary>
-    ///     Starts, keeps up or ends a push and a flank on the hostile most of the squad is fighting.
+    ///     Whether a push or a flank is on, or ways round are being looked for: what has to be kept up or ended even by a squad
+    ///         too small to start another.
+    /// </summary>
+    private bool IsFightLive(EntityUid issuerUid)
+    {
+        return _fightQuery.TryComp(issuerUid, out var fightComponent) && IsFightLive(fightComponent);
+    }
+
+    private static bool IsFightLive(NpcSquadFightComponent fightComponent)
+    {
+        return fightComponent.PushTargetUid != null || fightComponent.FlankTargetUid != null || fightComponent.FlankProbes.Count > 0;
+    }
+
+    /// <summary>
+    ///     Starts, keeps up or ends a push and a flank on the hostile most of the squad is fighting, which
+    ///         <see cref="GatherFight"/> has just found.
     /// </summary>
     private void UpdateFight(EntityUid issuerUid, EntityUid? leaderUid, NpcSquadTacticsSettings settings, TimeSpan now)
     {
-        if (!settings.Pushing && !settings.Flanking)
-            return;
-
         var fightComponent = EnsureComp<NpcSquadFightComponent>(issuerUid);
 
-        if (!TryGatherFighters(out var hostileUid))
+        if (!_hasFighters)
         {
             EndPush(issuerUid, fightComponent, settings, now);
             EndFlank(issuerUid, fightComponent, settings, now);
             return;
         }
 
+        var hostileUid = _fightHostileUid;
         var hostileCoordinates = _transformSystem.GetMapCoordinates(hostileUid);
 
         // A live grenade about: nobody goes anywhere it is, and anyone on the way already stops. Getting away from it is
-        //      each member's own (grenade.yml), and then nothing would send it back into the blast.
-        if (IsGrenadeAbout(fightComponent, hostileCoordinates))
+        //      each member's own (grenade.yml), and then nothing would send it back into the blast. With nothing going, it
+        //      is only looked for where one would start.
+        if (IsFightLive(fightComponent) && IsGrenadeAbout(fightComponent, hostileCoordinates))
         {
             EndPush(issuerUid, fightComponent, settings, now);
             EndFlank(issuerUid, fightComponent, settings, now);
@@ -173,23 +248,36 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     The hostile most members can see and have reacted to, and those members (<see cref="_fighters"/>), those waiting
-    ///         for their meds to work left out.
+    ///     Looks at what the group is fighting: whether anyone in it (those waiting for their meds to work too) can see a
+    ///         hostile it has reacted to, which is what is returned; and the hostile most of them can, with those members
+    ///         (<see cref="_fighters"/>), those waiting for their meds left out. Sets <see cref="_hasFighters"/>.
     /// </summary>
-    private bool TryGatherFighters(out EntityUid hostileUid)
+    private bool GatherFight()
     {
-        hostileUid = default;
+        _fightHostileUid = default;
+        _hasFighters = false;
         _fighters.Clear();
+        _fighterCoordinates.Clear();
+        _fighterArmed.Clear();
+        _fighterShotMasks.Clear();
+        _fighterTraitsKnown = false;
         _fightCounts.Clear();
+        _fightMembers.Clear();
 
+        var inCombat = false;
         var best = 0;
         foreach (var memberUid in _members)
         {
             if (_npcRecoverySystem.IsRecovering(memberUid))
+            {
+                inCombat = inCombat || _npcPerceptionSystem.InCombatContact(memberUid);
                 continue;
+            }
 
+            _fightMembers.Add(memberUid);
             _fightContacts.Clear();
             _npcPerceptionSystem.GetCombatContacts(memberUid, _fightContacts);
+            inCombat = inCombat || _fightContacts.Count > 0;
 
             foreach (var contactUid in _fightContacts)
             {
@@ -200,20 +288,45 @@ public sealed partial class NpcSquadTacticsSystem
                     continue;
 
                 best = count;
-                hostileUid = contactUid;
+                _fightHostileUid = contactUid;
             }
         }
 
-        if (best == 0 || TerminatingOrDeleted(hostileUid))
-            return false;
+        if (best == 0 || TerminatingOrDeleted(_fightHostileUid))
+            return inCombat;
 
-        foreach (var memberUid in _members)
+        foreach (var memberUid in _fightMembers)
         {
-            if (!_npcRecoverySystem.IsRecovering(memberUid) && _npcPerceptionSystem.IsVisible(memberUid, hostileUid))
-                _fighters.Add(memberUid);
+            if (!_npcPerceptionSystem.IsVisible(memberUid, _fightHostileUid))
+                continue;
+
+            _fighters.Add(memberUid);
+            _fighterCoordinates.Add(_transformSystem.GetMapCoordinates(memberUid));
         }
 
-        return _fighters.Count > 0;
+        _hasFighters = _fighters.Count > 0;
+        return inCombat;
+    }
+
+    /// <summary>
+    ///     Works out, once for this update, which fighters are armed and what their shots stop at. Only asked for by what is
+    ///         about to send someone somewhere, which is rare.
+    /// </summary>
+    private void EnsureFighterTraits()
+    {
+        if (_fighterTraitsKnown)
+            return;
+
+        _fighterTraitsKnown = true;
+        _fighterArmed.Clear();
+        _fighterShotMasks.Clear();
+
+        foreach (var fighterUid in _fighters)
+        {
+            var armed = _gunSystem.TryGetGun(fighterUid, out _);
+            _fighterArmed.Add(armed);
+            _fighterShotMasks.Add(armed ? _npcLineOfFireSystem.GetShotMask(fighterUid) : default);
+        }
     }
 
     /// <summary>
@@ -222,49 +335,57 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private bool IsGrenadeAbout(NpcSquadFightComponent fightComponent, MapCoordinates hostileCoordinates)
     {
-        _liveGrenades.Clear();
-        _entityLookupSystem.GetEntitiesInRange(hostileCoordinates, GrenadeSearchRange, _liveGrenades);
+        var orderSpotsKnown = false;
 
-        foreach (var grenade in _liveGrenades)
+        var enumerator = EntityQueryEnumerator<ActiveTimerTriggerComponent, ExplosiveComponent, TransformComponent>();
+        while (enumerator.MoveNext(out var grenadeUid, out _, out _, out var transformComponent))
         {
-            if (!_explosiveQuery.HasComp(grenade.Owner))
+            if (transformComponent.MapID != hostileCoordinates.MapId || _containerSystem.IsEntityInContainer(grenadeUid))
                 continue;
 
-            var grenadePosition = _transformSystem.GetMapCoordinates(grenade.Owner).Position;
+            var grenadePosition = _transformSystem.GetWorldPosition(transformComponent);
+            if ((grenadePosition - hostileCoordinates.Position).Length() > GrenadeSearchRange)
+                continue;
 
-            foreach (var fighterUid in _fighters)
+            for (var i = 0; i < _fighterCoordinates.Count; i++)
             {
-                if ((_transformSystem.GetMapCoordinates(fighterUid).Position - grenadePosition).Length() <= GrenadeKeepOff)
+                if ((_fighterCoordinates[i].Position - grenadePosition).Length() <= GrenadeKeepOff)
                     return true;
             }
 
-            if (IsOrderSpotNear(fightComponent.Pushers, grenadePosition) || IsOrderSpotNear(fightComponent.Flankers, grenadePosition))
-                return true;
+            if (!orderSpotsKnown)
+            {
+                orderSpotsKnown = true;
+                _orderSpotPositions.Clear();
+                AddOrderSpotPositions(fightComponent.Pushers);
+                AddOrderSpotPositions(fightComponent.Flankers);
+            }
+
+            foreach (var spot in _orderSpotPositions)
+            {
+                if ((spot - grenadePosition).Length() <= GrenadeKeepOff)
+                    return true;
+            }
         }
 
         return false;
     }
 
-    private bool IsOrderSpotNear(List<EntityUid> memberUids, Vector2 position)
+    private void AddOrderSpotPositions(List<EntityUid> memberUids)
     {
         foreach (var memberUid in memberUids)
         {
             if (_orderQuery.TryComp(memberUid, out var orderComponent) &&
                 orderComponent.Order is { } order &&
-                order.Coordinates.IsValid(EntityManager) &&
-                (_transformSystem.ToMapCoordinates(order.Coordinates).Position - position).Length() <= GrenadeKeepOff)
-                return true;
+                order.Coordinates.IsValid(EntityManager))
+                _orderSpotPositions.Add(_transformSystem.ToMapCoordinates(order.Coordinates).Position);
         }
-
-        return false;
     }
 
-    /// <summary>
-    ///     Whether <paramref name="uid"/> has a gun in hand to go in with: not one halfway through a magazine swap.
-    /// </summary>
-    private bool IsArmed(EntityUid uid)
+    [SubscribeLocalEvent]
+    private void OnFightShutdown(Entity<NpcSquadFightComponent> entity, ref ComponentShutdown args)
     {
-        return _gunSystem.TryGetGun(uid, out _);
+        CancelFlankProbes(entity.Comp);
     }
 
     #region Push
@@ -293,8 +414,9 @@ public sealed partial class NpcSquadTacticsSystem
             now < fightComponent.NextPushAt ||
             fightComponent.FlankTargetUid != null ||
             _fighters.Count < 2 ||
+            !IsReloadWindow(hostileUid, settings, now) && !IsBlastWindow(fightComponent, hostileCoordinates, settings, now) ||
             GetNearestFighterDistance(hostileCoordinates) > settings.PushMaxRange ||
-            !IsReloadWindow(hostileUid, settings, now) && !IsBlastWindow(fightComponent, hostileCoordinates, settings, now))
+            IsGrenadeAbout(fightComponent, hostileCoordinates))
             return;
 
         StartPush(issuerUid, leaderUid, fightComponent, hostileUid, hostileCoordinates, settings, now);
@@ -339,16 +461,17 @@ public sealed partial class NpcSquadTacticsSystem
         NpcSquadTacticsSettings settings,
         TimeSpan now)
     {
-        var anchorUid = GetFurthestFighter(hostileCoordinates);
+        EnsureFighterTraits();
+        var anchorIndex = GetFurthestFighterIndex(hostileCoordinates);
 
         _pushBearings.Clear();
-        foreach (var fighterUid in _fighters)
+        for (var i = 0; i < _fighters.Count; i++)
         {
-            if (fighterUid == anchorUid || !IsArmed(fighterUid))
+            if (i == anchorIndex || !_fighterArmed[i])
                 continue;
 
-            var offset = _transformSystem.GetMapCoordinates(fighterUid).Position - hostileCoordinates.Position;
-            _pushBearings.Add((fighterUid, offset.ToAngle()));
+            var offset = _fighterCoordinates[i].Position - hostileCoordinates.Position;
+            _pushBearings.Add((i, offset.ToAngle()));
         }
 
         // Spread round it: no two closer than PushSpread, seen from the hostile.
@@ -356,13 +479,14 @@ public sealed partial class NpcSquadTacticsSystem
         for (var i = 1; i < _pushBearings.Count; i++)
         {
             if (_pushBearings[i].Bearing.Theta - _pushBearings[i - 1].Bearing.Theta < PushSpread.Theta)
-                _pushBearings[i] = (_pushBearings[i].Uid, _pushBearings[i - 1].Bearing + PushSpread);
+                _pushBearings[i] = (_pushBearings[i].Index, _pushBearings[i - 1].Bearing + PushSpread);
         }
 
         fightComponent.Pushers.Clear();
-        foreach (var (pusherUid, bearing) in _pushBearings)
+        foreach (var (pusherIndex, bearing) in _pushBearings)
         {
-            if (!TryFindStandSpot(pusherUid, hostileCoordinates, bearing, settings.PushStandoff, StandSpotTurns, out var spot))
+            var pusherUid = _fighters[pusherIndex];
+            if (!TryFindStandSpot(_fighterShotMasks[pusherIndex], hostileCoordinates, bearing, settings.PushStandoff, StandSpotTurns, out var spot))
                 continue;
 
             SetOrder(pusherUid, issuerUid, NpcOrderKind.Push, spot, Angle.Zero, FightOrderRange, hostileUid, now);
@@ -429,9 +553,19 @@ public sealed partial class NpcSquadTacticsSystem
 
         if (!settings.Flanking ||
             now < fightComponent.NextFlankAt ||
+            now < fightComponent.NextFlankCheckAt ||
             fightComponent.PushTargetUid != null ||
-            _fighters.Count < settings.FlankMinFighters ||
-            !IsSquadOnOneSide(hostileCoordinates, settings, out var squadBearing))
+            _fighters.Count < settings.FlankMinFighters)
+            return;
+
+        if (!IsSquadOnOneSide(hostileCoordinates, settings, out var squadBearing))
+        {
+            // A squad spread round it does not close up in a moment.
+            fightComponent.NextFlankCheckAt = now + FlankRecheckDelay;
+            return;
+        }
+
+        if (IsGrenadeAbout(fightComponent, hostileCoordinates))
             return;
 
         // Not every time: the roll stands until the cooldown is up.
@@ -451,9 +585,9 @@ public sealed partial class NpcSquadTacticsSystem
     private bool IsSquadOnOneSide(MapCoordinates hostileCoordinates, NpcSquadTacticsSettings settings, out Angle squadBearing)
     {
         var sum = Vector2.Zero;
-        foreach (var fighterUid in _fighters)
+        foreach (var fighterCoordinates in _fighterCoordinates)
         {
-            var offset = _transformSystem.GetMapCoordinates(fighterUid).Position - hostileCoordinates.Position;
+            var offset = fighterCoordinates.Position - hostileCoordinates.Position;
             if (offset.LengthSquared() > 0.0001f)
                 sum += Vector2.Normalize(offset);
         }
@@ -464,9 +598,9 @@ public sealed partial class NpcSquadTacticsSystem
             return false;
 
         var halfArc = settings.FlankArc.Theta / 2;
-        foreach (var fighterUid in _fighters)
+        foreach (var fighterCoordinates in _fighterCoordinates)
         {
-            var bearing = (_transformSystem.GetMapCoordinates(fighterUid).Position - hostileCoordinates.Position).ToAngle();
+            var bearing = (fighterCoordinates.Position - hostileCoordinates.Position).ToAngle();
 
             if (Math.Abs(Angle.ShortestDistance(squadBearing, bearing).Theta) > halfArc)
                 return false;
@@ -487,7 +621,13 @@ public sealed partial class NpcSquadTacticsSystem
         NpcSquadTacticsSettings settings,
         TimeSpan now)
     {
-        fightComponent.FlankProbes.Clear();
+        CancelFlankProbes(fightComponent);
+        EnsureFighterTraits();
+
+        HashSet<(EntityUid Grid, Vector2i Tile)>? baseAvoided = null;
+        var gridUid = EntityUid.Invalid;
+        var inverse = Matrix3x2.Identity;
+        var tileSize = 1f;
 
         foreach (var turn in FlankTurns)
         {
@@ -499,10 +639,16 @@ public sealed partial class NpcSquadTacticsSystem
                 var direction = (squadBearing + turn).ToVec();
                 var point = new MapCoordinates(hostileCoordinates.Position + direction * range, hostileCoordinates.MapId);
 
-                if (GetNearestArmedFighter(point.Position) is not { } flankerUid ||
-                    !IsStandSpot(flankerUid, hostileCoordinates, point, out var spot) ||
-                    IsInSquadLineOfFire(flankerUid, hostileCoordinates, point.Position))
+                if (GetNearestArmedFighterIndex(point.Position) is not { } flankerIndex ||
+                    IsInSquadLineOfFire(flankerIndex, hostileCoordinates, point.Position) ||
+                    !IsStandSpot(_fighterShotMasks[flankerIndex], hostileCoordinates, point, out var spot))
                     continue;
+
+                var flankerUid = _fighters[flankerIndex];
+
+                // The same for every way round but for the room left round the flanker, so only worked out once.
+                baseAvoided ??= GetFlankAvoidedBase(hostileCoordinates, out gridUid, out inverse, out tileSize);
+                fightComponent.FlankProbeCancel ??= new CancellationTokenSource();
 
                 fightComponent.FlankProbes.Add(new NpcFlankProbe
                 {
@@ -513,8 +659,8 @@ public sealed partial class NpcSquadTacticsSystem
                         Transform(flankerUid).Coordinates,
                         spot,
                         FightOrderRange,
-                        GetFlankAvoidedTiles(flankerUid, hostileCoordinates),
-                        CancellationToken.None,
+                        GetFlankAvoidedTiles(baseAvoided, gridUid, inverse, tileSize, _fighterCoordinates[flankerIndex].Position),
+                        fightComponent.FlankProbeCancel.Token,
                         _pathfindingSystem.GetFlags(flankerUid)),
                 });
 
@@ -532,59 +678,145 @@ public sealed partial class NpcSquadTacticsSystem
         fightComponent.FlankProbeStartedAt = now;
     }
 
+
     /// <summary>
-    ///     The tiles a way round keeps off, as walls: those by the hostile, and the squad's own front, between each fighter
-    ///         and the hostile. Not those by the flanker itself, which starts in that front.
+    ///     Stops the searches for ways round that are still going, and forgets them. The one place that cancels and disposes
+    ///         <see cref="NpcSquadFightComponent.FlankProbeCancel"/>: <see cref="EndFlank"/> (so for a fight that is over, no
+    ///         hostile, or a grenade about), <see cref="UpdateFlankProbes"/> (a timeout, a different hostile, and once the
+    ///         answers are in and used), <see cref="StartFlankProbes"/> (before it makes new ones) and the component shutting
+    ///         down.
     /// </summary>
-    private HashSet<(EntityUid Grid, Vector2i Tile)> GetFlankAvoidedTiles(EntityUid flankerUid, MapCoordinates hostileCoordinates)
+    private static void CancelFlankProbes(NpcSquadFightComponent fightComponent)
+    {
+        fightComponent.FlankProbes.Clear();
+
+        if (fightComponent.FlankProbeCancel is not { } source)
+            return;
+
+        fightComponent.FlankProbeCancel = null;
+        source.Cancel();
+        source.Dispose();
+    }
+
+    /// <summary>
+    ///     The tiles a way round keeps off, as walls, whichever fighter goes: those by the hostile, and the squad's own front,
+    ///         between each fighter and the hostile. Worked out in the hostile's grid's own space, with the grid's inverse
+    ///         matrix taken once, from the fighter positions of this update (<see cref="_fighterCoordinates"/>).
+    ///     <para>
+    ///         Built once by <see cref="StartFlankProbes"/> and never handed to a path job itself: the job adds this set to the
+    ///             walls it searches round (<c>GetPathAvoiding</c>) on a worker thread, long after this update. Each probe gets a
+    ///             copy of its own from <see cref="GetFlankAvoidedTiles"/>, so one probe's hole round its flanker, and the job
+    ///             reading it, never touch another's or this one.
+    ///     </para>
+    /// </summary>
+    private HashSet<(EntityUid Grid, Vector2i Tile)> GetFlankAvoidedBase(MapCoordinates hostileCoordinates,
+        out EntityUid gridUid,
+        out Matrix3x2 inverse,
+        out float tileSize)
     {
         var avoided = new HashSet<(EntityUid Grid, Vector2i Tile)>();
+        inverse = Matrix3x2.Identity;
+        tileSize = 1f;
 
-        if (!_mapSystem.TryFindGridAt(hostileCoordinates, out var gridUid, out var gridComponent))
+        if (!_mapSystem.TryFindGridAt(hostileCoordinates, out gridUid, out var gridComponent))
             return avoided;
 
-        var flankerPosition = _transformSystem.GetMapCoordinates(flankerUid).Position;
-        var reach = FlankHostileKeepOff;
+        tileSize = gridComponent.TileSize;
+        inverse = _transformSystem.GetInvWorldMatrix(gridUid);
 
-        foreach (var fighterUid in _fighters)
+        var reach = FlankHostileKeepOff;
+        foreach (var fighterCoordinates in _fighterCoordinates)
         {
-            reach = MathF.Max(reach, (_transformSystem.GetMapCoordinates(fighterUid).Position - hostileCoordinates.Position).Length() + 1f);
+            reach = MathF.Max(reach, (fighterCoordinates.Position - hostileCoordinates.Position).Length() + 1f);
         }
 
         var hostileTile = _mapSystem.TileIndicesFor(gridUid, gridComponent, hostileCoordinates);
         var tileReach = (int) MathF.Ceiling(reach);
+        var hostileLocal = Vector2.Transform(hostileCoordinates.Position, inverse);
 
-        for (var x = -tileReach; x <= tileReach; x++)
+        // Round the hostile.
+        var discReach = (int) MathF.Ceiling(FlankHostileKeepOff / tileSize) + 1;
+        for (var x = -discReach; x <= discReach; x++)
         {
-            for (var y = -tileReach; y <= tileReach; y++)
+            for (var y = -discReach; y <= discReach; y++)
             {
                 var tile = hostileTile + new Vector2i(x, y);
-                var position = _transformSystem.ToMapCoordinates(_mapSystem.GridTileToLocal(gridUid, gridComponent, tile)).Position;
-
-                if ((position - flankerPosition).Length() <= FlankStartClearance)
-                    continue;
-
-                if ((position - hostileCoordinates.Position).Length() <= FlankHostileKeepOff || IsOnSquadFront(position, hostileCoordinates.Position))
+                if ((GetTileCenter(tile, tileSize) - hostileLocal).Length() <= FlankHostileKeepOff && IsInFlankSquare(tile, hostileTile, tileReach))
                     avoided.Add((gridUid, tile));
+            }
+        }
+
+        // Along each fighter's line to it.
+        foreach (var fighterCoordinates in _fighterCoordinates)
+        {
+            var from = Vector2.Transform(fighterCoordinates.Position, inverse);
+            var segment = hostileLocal - from;
+            var segmentLengthSquared = MathF.Max(segment.LengthSquared(), 0.0001f);
+
+            var margin = FlankFrontWidth + tileSize;
+            var minTile = new Vector2i((int) MathF.Floor((MathF.Min(from.X, hostileLocal.X) - margin) / tileSize),
+                (int) MathF.Floor((MathF.Min(from.Y, hostileLocal.Y) - margin) / tileSize));
+            var maxTile = new Vector2i((int) MathF.Floor((MathF.Max(from.X, hostileLocal.X) + margin) / tileSize),
+                (int) MathF.Floor((MathF.Max(from.Y, hostileLocal.Y) + margin) / tileSize));
+
+            for (var x = Math.Max(minTile.X, hostileTile.X - tileReach); x <= Math.Min(maxTile.X, hostileTile.X + tileReach); x++)
+            {
+                for (var y = Math.Max(minTile.Y, hostileTile.Y - tileReach); y <= Math.Min(maxTile.Y, hostileTile.Y + tileReach); y++)
+                {
+                    var tile = new Vector2i(x, y);
+                    var position = GetTileCenter(tile, tileSize);
+                    var along = Math.Clamp(Vector2.Dot(position - from, segment) / segmentLengthSquared, 0f, 1f);
+
+                    if ((from + segment * along - position).Length() <= FlankFrontWidth)
+                        avoided.Add((gridUid, tile));
+                }
             }
         }
 
         return avoided;
     }
 
-    private bool IsOnSquadFront(Vector2 position, Vector2 hostilePosition)
+    /// <summary>
+    ///     <paramref name="baseAvoided"/> for one flanker: not the tiles by the flanker itself, which starts in the squad's
+    ///         front. A copy that is the probe's own, as its path job reads (and adds to its walls from) it on a worker thread
+    ///         after this update; <paramref name="baseAvoided"/> is not touched, and the next update's is a new one.
+    /// </summary>
+    private static HashSet<(EntityUid Grid, Vector2i Tile)> GetFlankAvoidedTiles(HashSet<(EntityUid Grid, Vector2i Tile)> baseAvoided,
+        EntityUid gridUid,
+        Matrix3x2 inverse,
+        float tileSize,
+        Vector2 flankerPosition)
     {
-        foreach (var fighterUid in _fighters)
-        {
-            var from = _transformSystem.GetMapCoordinates(fighterUid).Position;
-            var segment = hostilePosition - from;
-            var along = Math.Clamp(Vector2.Dot(position - from, segment) / MathF.Max(segment.LengthSquared(), 0.0001f), 0f, 1f);
+        var avoided = new HashSet<(EntityUid Grid, Vector2i Tile)>(baseAvoided);
 
-            if ((from + segment * along - position).Length() <= FlankFrontWidth)
-                return true;
+        if (baseAvoided.Count == 0)
+            return avoided;
+
+        var flankerLocal = Vector2.Transform(flankerPosition, inverse);
+        var flankerTile = new Vector2i((int) MathF.Floor(flankerLocal.X / tileSize), (int) MathF.Floor(flankerLocal.Y / tileSize));
+        var reach = (int) MathF.Ceiling(FlankStartClearance / tileSize) + 1;
+
+        for (var x = -reach; x <= reach; x++)
+        {
+            for (var y = -reach; y <= reach; y++)
+            {
+                var tile = flankerTile + new Vector2i(x, y);
+                if ((GetTileCenter(tile, tileSize) - flankerLocal).Length() <= FlankStartClearance)
+                    avoided.Remove((gridUid, tile));
+            }
         }
 
-        return false;
+        return avoided;
+    }
+
+    private static Vector2 GetTileCenter(Vector2i tile, float tileSize)
+    {
+        return new Vector2(tile.X + 0.5f, tile.Y + 0.5f) * tileSize;
+    }
+
+    private static bool IsInFlankSquare(Vector2i tile, Vector2i hostileTile, int tileReach)
+    {
+        return Math.Abs(tile.X - hostileTile.X) <= tileReach && Math.Abs(tile.Y - hostileTile.Y) <= tileReach;
     }
 
     /// <summary>
@@ -601,7 +833,7 @@ public sealed partial class NpcSquadTacticsSystem
     {
         if (fightComponent.FlankProbeTargetUid != hostileUid || now - fightComponent.FlankProbeStartedAt >= FlankProbeTimeout)
         {
-            fightComponent.FlankProbes.Clear();
+            CancelFlankProbes(fightComponent);
             fightComponent.NextFlankAt = now + settings.FlankCooldown;
             return;
         }
@@ -622,7 +854,8 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var probe in fightComponent.FlankProbes)
         {
-            if (!TryScoreFlankRoute(probe, hostileCoordinates, settings, out var path, out var score))
+            // Nothing dearer than the second best is of any use.
+            if (!TryScoreFlankRoute(probe, hostileCoordinates, settings, secondScore, out var path, out var score))
                 continue;
 
             if (score < firstScore)
@@ -638,7 +871,7 @@ public sealed partial class NpcSquadTacticsSystem
             }
         }
 
-        fightComponent.FlankProbes.Clear();
+        CancelFlankProbes(fightComponent);
 
         if (first == null || firstPath == null)
         {
@@ -679,18 +912,21 @@ public sealed partial class NpcSquadTacticsSystem
     /// <summary>
     ///     Whether a way found round is a flank at all, and what it costs: its length, and dearer the more of it the hostile
     ///         can see. Not one that is too long, or goes through a door the flanker cannot open; one past the hostile, or
-    ///         through the squad's front, was never found (<see cref="GetFlankAvoidedTiles"/>).
+    ///         through the squad's front, was never found (<see cref="GetFlankAvoidedBase"/>). Nor one whose length alone
+    ///         is <paramref name="cutoff"/> or more, which no sight could make cheaper than what is already found.
     /// </summary>
     private bool TryScoreFlankRoute(NpcFlankProbe probe,
         MapCoordinates hostileCoordinates,
         NpcSquadTacticsSettings settings,
+        float cutoff,
         [NotNullWhen(true)] out List<PathPoly>? path,
         out float score)
     {
         path = null;
         score = float.MaxValue;
 
-        if (!probe.Path.IsCompletedSuccessfully || TerminatingOrDeleted(probe.FlankerUid) || !_fighters.Contains(probe.FlankerUid))
+        var flankerIndex = _fighters.IndexOf(probe.FlankerUid);
+        if (!probe.Path.IsCompletedSuccessfully || TerminatingOrDeleted(probe.FlankerUid) || flankerIndex < 0)
             return false;
 
 #pragma warning disable RA0004 // checked above: it has finished, so this cannot wait on anything
@@ -700,30 +936,34 @@ public sealed partial class NpcSquadTacticsSystem
         if (result.Result != PathResult.Path || result.Path.Count == 0 || _npcDoorSystem.RunsThroughShutDoor(probe.FlankerUid, result.Path))
             return false;
 
+        // How long it is first: most are turned away by that alone, before a single sight check.
         var length = 0f;
-        var previous = _transformSystem.GetMapCoordinates(probe.FlankerUid).Position;
+        var previous = _fighterCoordinates[flankerIndex].Position;
+        _routePoints.Clear();
+
+        foreach (var poly in result.Path)
+        {
+            var point = _transformSystem.ToMapCoordinates(poly.Coordinates);
+            length += (point.Position - previous).Length();
+            previous = point.Position;
+            _routePoints.Add(point);
+        }
+
+        if (length > settings.FlankMaxWalk || length >= cutoff)
+            return false;
+
         var seen = 0;
         var looked = 0;
 
         // The last stretch has to be in sight of it, to shoot from: only the way there counts.
         var lookedUpTo = result.Path.Count - FlankFinalStretch;
 
-        for (var i = 0; i < result.Path.Count; i++)
+        for (var i = 0; i < lookedUpTo; i++)
         {
-            var point = _transformSystem.ToMapCoordinates(result.Path[i].Coordinates);
-            length += (point.Position - previous).Length();
-            previous = point.Position;
-
-            if (i >= lookedUpTo)
-                continue;
-
             looked++;
-            if (_npcLineOfSightSystem.InLineOfSight(hostileCoordinates, point, FlankSightRange))
+            if (_npcLineOfSightSystem.InLineOfSight(hostileCoordinates, _routePoints[i], FlankSightRange))
                 seen++;
         }
-
-        if (length > settings.FlankMaxWalk)
-            return false;
 
         var exposure = looked == 0 ? 0f : (float) seen / looked;
         path = result.Path;
@@ -745,6 +985,19 @@ public sealed partial class NpcSquadTacticsSystem
         }
 
         route.Waypoints.Add(probe.Spot);
+
+        // How far each has to go on from there, so that how far is left is one distance and a lookup.
+        for (var i = 0; i < route.Waypoints.Count; i++)
+        {
+            route.TailLengths.Add(0f);
+        }
+
+        for (var i = route.Waypoints.Count - 2; i >= 0; i--)
+        {
+            route.TailLengths[i] = route.TailLengths[i + 1] +
+                (route.Waypoints[i].TryDistance(EntityManager, _transformSystem, route.Waypoints[i + 1], out var leg) ? leg : 0f);
+        }
+
         route.StartRemaining = GetRemaining(route);
 
         fightComponent.Flankers.Add(probe.FlankerUid);
@@ -780,49 +1033,42 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private float GetRemaining(NpcFlankRoute route)
     {
-        var remaining = GetDistance(route.FlankerUid, route.Waypoints[route.Next]);
-
-        for (var i = route.Next + 1; i < route.Waypoints.Count; i++)
-        {
-            if (route.Waypoints[i - 1].TryDistance(EntityManager, _transformSystem, route.Waypoints[i], out var leg))
-                remaining += leg;
-        }
-
-        return remaining;
+        return GetDistance(route.FlankerUid, route.Waypoints[route.Next]) + route.TailLengths[route.Next];
     }
 
-    private EntityUid? GetNearestArmedFighter(Vector2 point)
+    private int? GetNearestArmedFighterIndex(Vector2 point)
     {
-        EntityUid? nearestUid = null;
+        int? nearestIndex = null;
         var nearest = float.MaxValue;
 
-        foreach (var fighterUid in _fighters)
+        for (var i = 0; i < _fighters.Count; i++)
         {
-            if (!IsArmed(fighterUid))
+            if (!_fighterArmed[i])
                 continue;
 
-            var distance = (_transformSystem.GetMapCoordinates(fighterUid).Position - point).Length();
+            var distance = (_fighterCoordinates[i].Position - point).Length();
             if (distance >= nearest)
                 continue;
 
             nearest = distance;
-            nearestUid = fighterUid;
+            nearestIndex = i;
         }
 
-        return nearestUid;
+        return nearestIndex;
     }
 
     /// <summary>
-    ///     Whether <paramref name="point"/> is in the way of a fighter other than <paramref name="exceptUid"/> shooting the hostile.
+    ///     Whether <paramref name="point"/> is in the way of a fighter other than the one at <paramref name="exceptIndex"/>
+    ///         shooting the hostile.
     /// </summary>
-    private bool IsInSquadLineOfFire(EntityUid exceptUid, MapCoordinates hostileCoordinates, Vector2 point)
+    private bool IsInSquadLineOfFire(int exceptIndex, MapCoordinates hostileCoordinates, Vector2 point)
     {
-        foreach (var fighterUid in _fighters)
+        for (var i = 0; i < _fighters.Count; i++)
         {
-            if (fighterUid == exceptUid)
+            if (i == exceptIndex)
                 continue;
 
-            var lane = new NpcFireLane(_transformSystem.GetMapCoordinates(fighterUid).Position, hostileCoordinates.Position);
+            var lane = new NpcFireLane(_fighterCoordinates[i].Position, hostileCoordinates.Position);
             if (NpcSquadFireLaneSystem.IsInLane(lane, point))
                 return true;
         }
@@ -857,8 +1103,17 @@ public sealed partial class NpcSquadTacticsSystem
 
     private void EndFlank(EntityUid issuerUid, NpcSquadFightComponent fightComponent, NpcSquadTacticsSettings settings, TimeSpan now)
     {
+        // Ways round still being looked for go too, flank or not yet.
+        var lookingForWays = fightComponent.FlankProbes.Count > 0;
+        CancelFlankProbes(fightComponent);
+
         if (fightComponent.FlankTargetUid == null)
+        {
+            if (lookingForWays)
+                fightComponent.NextFlankAt = now + settings.FlankCooldown;
+
             return;
+        }
 
         foreach (var flankerUid in fightComponent.Flankers)
         {
@@ -885,10 +1140,11 @@ public sealed partial class NpcSquadTacticsSystem
     #endregion
 
     /// <summary>
-    ///     Somewhere for <paramref name="uid"/> to stand <paramref name="distance"/> tiles from the hostile, about
-    ///         <paramref name="bearing"/> round it, with a shot at it: turned a little, or further out, if that is a wall.
+    ///     Somewhere to stand <paramref name="distance"/> tiles from the hostile, about <paramref name="bearing"/> round it,
+    ///         with a shot at it for a gun that stops at <paramref name="shotMask"/>: turned a little, or further out, if that
+    ///         is a wall.
     /// </summary>
-    private bool TryFindStandSpot(EntityUid uid,
+    private bool TryFindStandSpot(CollisionGroup shotMask,
         MapCoordinates hostileCoordinates,
         Angle bearing,
         float distance,
@@ -904,7 +1160,7 @@ public sealed partial class NpcSquadTacticsSystem
                 var direction = (bearing + turn).ToVec();
                 var point = new MapCoordinates(hostileCoordinates.Position + direction * (distance + further), hostileCoordinates.MapId);
 
-                if (IsStandSpot(uid, hostileCoordinates, point, out spot))
+                if (IsStandSpot(shotMask, hostileCoordinates, point, out spot))
                     return true;
             }
         }
@@ -913,11 +1169,11 @@ public sealed partial class NpcSquadTacticsSystem
     }
 
     /// <summary>
-    ///     Whether <paramref name="point"/> is floor, with a clear shot from there at the hostile for <paramref name="uid"/>'s gun,
-    ///         and where that is on its grid. The shot is looked at from the hostile's end: a ray from inside a wall does not
-    ///         see the wall it starts in, so a spot in one would pass.
+    ///     Whether <paramref name="point"/> is floor, with a clear shot from there at the hostile for a gun that stops at
+    ///         <paramref name="shotMask"/>, and where that is on its grid. The shot is looked at from the hostile's end: a ray
+    ///         from inside a wall does not see the wall it starts in, so a spot in one would pass.
     /// </summary>
-    private bool IsStandSpot(EntityUid uid, MapCoordinates hostileCoordinates, MapCoordinates point, out EntityCoordinates spot)
+    private bool IsStandSpot(CollisionGroup shotMask, MapCoordinates hostileCoordinates, MapCoordinates point, out EntityCoordinates spot)
     {
         spot = default;
 
@@ -926,7 +1182,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         var tile = _mapSystem.TileIndicesFor(gridUid, gridComponent, point);
         if (!_mapSystem.TryGetTileRef(gridUid, gridComponent, tile, out var tileRef) || tileRef.Tile.IsEmpty ||
-            !_npcLineOfFireSystem.IsClear(hostileCoordinates, point, _npcLineOfFireSystem.GetShotMask(uid)))
+            !_npcLineOfFireSystem.IsClear(hostileCoordinates, point, shotMask))
             return false;
 
         spot = _mapSystem.GridTileToLocal(gridUid, gridComponent, tile);
@@ -957,29 +1213,29 @@ public sealed partial class NpcSquadTacticsSystem
     private float GetNearestFighterDistance(MapCoordinates hostileCoordinates)
     {
         var nearest = float.MaxValue;
-        foreach (var fighterUid in _fighters)
+        foreach (var fighterCoordinates in _fighterCoordinates)
         {
-            nearest = MathF.Min(nearest, (_transformSystem.GetMapCoordinates(fighterUid).Position - hostileCoordinates.Position).Length());
+            nearest = MathF.Min(nearest, (fighterCoordinates.Position - hostileCoordinates.Position).Length());
         }
 
         return nearest;
     }
 
-    private EntityUid GetFurthestFighter(MapCoordinates hostileCoordinates)
+    private int GetFurthestFighterIndex(MapCoordinates hostileCoordinates)
     {
-        var furthestUid = _fighters[0];
+        var furthestIndex = 0;
         var furthest = -1f;
-        foreach (var fighterUid in _fighters)
+        for (var i = 0; i < _fighterCoordinates.Count; i++)
         {
-            var distance = (_transformSystem.GetMapCoordinates(fighterUid).Position - hostileCoordinates.Position).Length();
+            var distance = (_fighterCoordinates[i].Position - hostileCoordinates.Position).Length();
             if (distance <= furthest)
                 continue;
 
             furthest = distance;
-            furthestUid = fighterUid;
+            furthestIndex = i;
         }
 
-        return furthestUid;
+        return furthestIndex;
     }
 
     /// <summary>

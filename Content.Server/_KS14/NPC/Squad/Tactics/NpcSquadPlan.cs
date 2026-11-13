@@ -33,6 +33,15 @@ public sealed class NpcSquadPlan
 
     public required TimeSpan StartedAt;
 
+    /// <summary>
+    ///     What the squad made of the target when <see cref="NpcSquadTacticsSystem"/> last looked for throwers
+    ///         (<c>FindThrowers</c>): the traits <see cref="NpcPerceptionSystem.GetTraits"/> gave for the target itself, or, for a
+    ///         hunt softening, the squad belief (<see cref="NpcSquadTacticsSystem.TryGetSquadBelief"/>). Kept so that
+    ///         whether the target is armed (<see cref="NpcContactTraits.Armed"/>) is read from here, not asked of the gun system
+    ///         again. Only as fresh as the last <c>RefreshPlanCandidates</c>, which every fact and cost is worked out after.
+    /// </summary>
+    public NpcContactTraits TargetTraits;
+
     public NpcSquadPlanState State = NpcSquadPlanState.Grace;
 
     /// <summary>

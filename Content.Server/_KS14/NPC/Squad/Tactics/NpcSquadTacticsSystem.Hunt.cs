@@ -154,10 +154,10 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var memberUid in _members)
         {
-            if (keepFightOrders && _orderQuery.TryComp(memberUid, out var orderComponent) && IsFightOrder(orderComponent))
+            if (!_orderQuery.TryComp(memberUid, out var orderComponent) || keepFightOrders && IsFightOrder(orderComponent))
                 continue;
 
-            ClearOrder(memberUid, issuerUid);
+            ClearOrder((memberUid, orderComponent), issuerUid);
         }
     }
 

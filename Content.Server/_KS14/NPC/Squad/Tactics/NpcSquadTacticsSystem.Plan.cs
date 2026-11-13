@@ -111,6 +111,11 @@ public sealed partial class NpcSquadTacticsSystem
     private readonly List<EntityUid> _carried = new();
 
     /// <summary>
+    ///     Within one <c>FindThrowers</c>: whether the aim can be seen from each entrance, by its index.
+    /// </summary>
+    private readonly Dictionary<int, bool> _entranceAimClear = new();
+
+    /// <summary>
     ///     What the members who can see a hostile make of it.
     /// </summary>
     private enum NpcSquadSight : byte
@@ -691,10 +696,10 @@ public sealed partial class NpcSquadTacticsSystem
         //      that would now come down among them is not thrown.
         if (hunt.StagedMembers.TryGetValue(toThrow.ThrowerUid, out var throwerStaging))
         {
-            var target = GetSofteningTarget(plan);
+            var aim = GetSofteningAim(plan);
             var coordinates = action == NpcSquadAction.FragRoom
-                ? GetFragLanding(plan, target, toThrow.ThrowerUid, throwerStaging)
-                : GetThrowCoordinates(plan, target, toThrow.ThrowerUid, throwerStaging);
+                ? GetFragLanding(plan, aim, toThrow.ThrowerUid, throwerStaging)
+                : GetThrowCoordinates(plan, aim, toThrow.ThrowerUid, throwerStaging);
 
             if (action == NpcSquadAction.FragRoom && !IsClearOfEveryone(hunt, coordinates, settings.PlanFragClearance))
             {
@@ -1089,7 +1094,7 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private float GetRushRisk(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
     {
-        return _gunSystem.TryGetGun(plan.TargetUid, out _) ? settings.PlanRushRisk : 0f;
+        return (plan.TargetTraits & NpcContactTraits.Armed) != 0x0 ? settings.PlanRushRisk : 0f;
     }
 
     /// <summary>
@@ -1146,7 +1151,7 @@ public sealed partial class NpcSquadTacticsSystem
         if (CanBeHit(plan))
             facts |= NpcSquadFact.Threatened;
 
-        var armed = !TerminatingOrDeleted(plan.TargetUid) && _gunSystem.TryGetGun(plan.TargetUid, out _);
+        var armed = (plan.TargetTraits & NpcContactTraits.Armed) != 0x0;
 
         if (plan.PatchedUp || !armed || plan.Patients.Count == 0)
             facts |= NpcSquadFact.Patched;
@@ -1232,9 +1237,21 @@ public sealed partial class NpcSquadTacticsSystem
     /// </summary>
     private void FindThrowers(NpcSquadPlan plan, NpcSquadTacticsSettings settings)
     {
+        // Only one, and it already has it in the air.
+        if (plan.ThrownAt != null)
+            return;
+
+        FindThrowers(plan, settings, GetSofteningTarget(plan));
+    }
+
+    /// <summary>
+    ///     As above, for a <paramref name="target"/> the caller has already worked out. The traits in it are kept on the plan
+    ///         (<see cref="NpcSquadPlan.TargetTraits"/>) for the facts and costs that follow.
+    /// </summary>
+    private void FindThrowers(NpcSquadPlan plan, NpcSquadTacticsSettings settings, NpcSofteningTarget target)
+    {
         var hunt = plan.Hunt!;
 
-        // Only one, and it already has it in the air.
         if (plan.ThrownAt != null)
             return;
 
@@ -1242,8 +1259,9 @@ public sealed partial class NpcSquadTacticsSystem
         plan.FragThrow = null;
         plan.SmokeThrow = null;
         plan.SmokeGasses = false;
+        plan.TargetTraits = target.Traits;
 
-        var target = GetSofteningTarget(plan);
+        _entranceAimClear.Clear();
         var canFlash = (target.Traits & NpcContactTraits.Flashable) != 0x0;
         bool? squadOnInternals = null;
         bool? squadSeesThroughSmoke = null;
@@ -1252,12 +1270,18 @@ public sealed partial class NpcSquadTacticsSystem
         {
             _npcHandsSystem.GetCarried(memberUid, _carried);
 
+            // Where this member's throw would go, worked out when first wanted and then for every item it carries.
+            EntityCoordinates? throwCoordinates = null;
+
             foreach (var itemUid in _carried)
             {
                 if (_flashOnTriggerQuery.HasComp(itemUid))
                 {
-                    if (canFlash)
-                        plan.FlashThrow ??= new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, target, memberUid, staging));
+                    if (canFlash && plan.FlashThrow == null)
+                    {
+                        throwCoordinates ??= GetThrowCoordinates(plan, target.Aim, memberUid, staging);
+                        plan.FlashThrow = new NpcSquadThrow(memberUid, itemUid, throwCoordinates.Value);
+                    }
 
                     continue;
                 }
@@ -1272,7 +1296,8 @@ public sealed partial class NpcSquadTacticsSystem
                         TryGetSmokeUse(itemUid, target.Traits, squadOnInternals.Value, squadSeesThroughSmoke.Value, out var gasses) &&
                         (gasses || plan.SmokeThrow == null))
                     {
-                        plan.SmokeThrow = new NpcSquadThrow(memberUid, itemUid, GetThrowCoordinates(plan, target, memberUid, staging));
+                        throwCoordinates ??= GetThrowCoordinates(plan, target.Aim, memberUid, staging);
+                        plan.SmokeThrow = new NpcSquadThrow(memberUid, itemUid, throwCoordinates.Value);
                         plan.SmokeGasses = gasses;
                     }
 
@@ -1282,12 +1307,40 @@ public sealed partial class NpcSquadTacticsSystem
                 if (plan.FragThrow != null || !IsGrenade(itemUid))
                     continue;
 
-                var coordinates = GetFragLanding(plan, target, memberUid, staging);
+                // The view of the aim from the doorway is the same for everyone stacked on that way in.
+                if (!_entranceAimClear.TryGetValue(staging.EntranceIndex, out var aimClear))
+                {
+                    aimClear = IsAimClearFromEntrance(plan, target.Aim, staging);
+                    _entranceAimClear[staging.EntranceIndex] = aimClear;
+                }
+
+                EntityCoordinates coordinates;
+                if (aimClear)
+                {
+                    coordinates = target.Aim!.Value;
+                }
+                else
+                {
+                    throwCoordinates ??= GetThrowCoordinates(plan, target.Aim, memberUid, staging);
+                    coordinates = throwCoordinates.Value;
+                }
 
                 if (IsClearOfEveryone(hunt, coordinates, settings.PlanFragClearance))
                     plan.FragThrow = new NpcSquadThrow(memberUid, itemUid, coordinates);
             }
         }
+    }
+
+    /// <summary>
+    ///     Only where <see cref="GetSofteningTarget"/> would aim, for a throw being carried out, which has no use for what the
+    ///         hostile is like: a plan hostile is not asked about its traits every update.
+    /// </summary>
+    private EntityCoordinates? GetSofteningAim(NpcSquadPlan plan)
+    {
+        if (plan.Hunt is { } hunt && hunt.Soften == plan)
+            return GetBelievedSofteningTarget(hunt).Aim;
+
+        return TerminatingOrDeleted(plan.TargetUid) ? null : _transformSystem.GetMoverCoordinates(plan.TargetUid);
     }
 
     /// <summary>
@@ -1310,25 +1363,27 @@ public sealed partial class NpcSquadTacticsSystem
     ///         plan has to be able to choose this before there is anything to throw it through, and the choice has to hold
     ///         once there is, from wherever the thrower stands beside it.
     /// </summary>
-    private EntityCoordinates GetFragLanding(NpcSquadPlan plan, NpcSofteningTarget target, EntityUid memberUid, NpcHuntStaging staging)
+    private EntityCoordinates GetFragLanding(NpcSquadPlan plan, EntityCoordinates? aim, EntityUid memberUid, NpcHuntStaging staging)
+    {
+        return IsAimClearFromEntrance(plan, aim, staging) ? aim!.Value : GetThrowCoordinates(plan, aim, memberUid, staging);
+    }
+
+    private bool IsAimClearFromEntrance(NpcSquadPlan plan, EntityCoordinates? aim, NpcHuntStaging staging)
     {
         var entrance = plan.Hunt!.Entrances[staging.EntranceIndex];
 
-        if (target.Aim is { } aim &&
-            _npcLineOfFireSystem.IsClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.ToMapCoordinates(aim), CollisionGroup.ItemMask))
-            return aim;
-
-        return GetThrowCoordinates(plan, target, memberUid, staging);
+        return aim is { } at &&
+            _npcLineOfFireSystem.IsClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.ToMapCoordinates(at), CollisionGroup.ItemMask);
     }
 
     /// <summary>
     ///     At the hostile, if a throw from where <paramref name="memberUid"/> stands would get there, and otherwise just inside.
     /// </summary>
-    private EntityCoordinates GetThrowCoordinates(NpcSquadPlan plan, NpcSofteningTarget target, EntityUid memberUid, NpcHuntStaging staging)
+    private EntityCoordinates GetThrowCoordinates(NpcSquadPlan plan, EntityCoordinates? aim, EntityUid memberUid, NpcHuntStaging staging)
     {
-        return target.Aim is { } aim &&
-            _npcLineOfFireSystem.IsClear(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.ToMapCoordinates(aim), CollisionGroup.ItemMask)
-                ? aim
+        return aim is { } at &&
+            _npcLineOfFireSystem.IsClear(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.ToMapCoordinates(at), CollisionGroup.ItemMask)
+                ? at
                 : plan.Hunt!.Entrances[staging.EntranceIndex].EntryCoordinates;
     }
 
