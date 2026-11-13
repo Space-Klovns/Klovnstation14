@@ -301,7 +301,7 @@ public sealed class KsFieldCommanderCreditTest : GameTest
 
         await Pair.RunTicksSync(3);
 
-        TimeSpan? nextWaveTime = null;
+        var nextWaveTime = TimeSpan.Zero;
         await server.WaitAssertion(() =>
         {
             var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
@@ -309,7 +309,8 @@ public sealed class KsFieldCommanderCreditTest : GameTest
             Assert.That(ruleComponent.WavesSent, Is.GreaterThan(0));
             Assert.That(statusComponent.Wave, Is.EqualTo(ruleComponent.WavesSent));
             Assert.That(statusComponent.NextWaveTime, Is.EqualTo(ruleComponent.NextWaveTime));
-            nextWaveTime = statusComponent.NextWaveTime;
+            Assert.That(statusComponent.NextWaveTime, Is.Not.Null, "a wave should be scheduled after the first");
+            nextWaveTime = statusComponent.NextWaveTime!.Value;
         });
 
         // Another wave moves both.
