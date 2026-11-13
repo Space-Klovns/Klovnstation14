@@ -78,6 +78,10 @@
     damage:
       types:
         Slash: 3
+  - type: KsDamagedSound
+    sound:
+      collection: FenceRattle
+    playOnContactDamage: true
   - type: Damageable
     damageModifierSet: Metallic
   - type: Injurable
@@ -88,6 +92,9 @@
         !type:DamageTrigger
         damage: 60
       behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
   - type: Construction
