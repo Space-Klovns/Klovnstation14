@@ -26,12 +26,12 @@ ks-fieldcommander-intel-phase-final = Полевое управление. По�
 
 ## Waves
 
-ks-fieldcommander-wave-1 = Волна { $number }. Вот и они. Постарайтесь не умирать слишком быстро, моим людям станет скучно.
-ks-fieldcommander-wave-2 = Волна { $number }. Ещё отряд, Nanotrasen. Людей у меня больше, чем у вас патронов.
-ks-fieldcommander-wave-3 = Волна { $number }. Свежее мясо в мясорубку. Ваше, не моё.
-ks-fieldcommander-wave-4 = Волна { $number }. Пригните головы. Мои люди в них и целятся.
-ks-fieldcommander-wave-5 = Волна { $number }. Каждого убитого вами я заменю. Каждого убитого мной — вы нет.
-ks-fieldcommander-wave-6 = Волна { $number }. Держите строй, солдатики. Это последнее, что вы удержите.
+ks-fieldcommander-wave-1 = Вот и они. Постарайтесь не умирать слишком быстро, моим людям станет скучно.
+ks-fieldcommander-wave-2 = Ещё отряд, Nanotrasen. Людей у меня больше, чем у вас патронов.
+ks-fieldcommander-wave-3 = Свежее мясо в мясорубку. Ваше, не моё.
+ks-fieldcommander-wave-4 = Пригните головы. Мои люди в них и целятся.
+ks-fieldcommander-wave-5 = Каждого убитого вами я заменю. Каждого убитого мной — вы нет.
+ks-fieldcommander-wave-6 = Держите строй, солдатики. Это последнее, что вы удержите.
 
 ks-fieldcommander-intel-wave = Полевое управление. Волна { $number }: Сенсоры фиксируют { $count } { $count ->
     [one] противника
