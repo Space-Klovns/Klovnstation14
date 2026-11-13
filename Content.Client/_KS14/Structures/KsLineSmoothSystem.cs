@@ -1,3 +1,5 @@
+using System.Numerics;
+using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -100,25 +102,40 @@ public sealed partial class KsLineSmoothSystem : EntitySystem
             showEastPost = showWestPost = !vertical;
         }
 
-        SetLayer(sprite, entity.Comp.VerticalWireLayer, north && south, Direction.South, facing);
-        SetLayer(sprite, entity.Comp.HorizontalWireLayer, east && west, Direction.East, facing);
-        SetLayer(sprite, entity.Comp.NorthPostLayer, showNorthPost, Direction.North, facing);
-        SetLayer(sprite, entity.Comp.SouthPostLayer, showSouthPost, Direction.South, facing);
-        SetLayer(sprite, entity.Comp.EastPostLayer, showEastPost, Direction.East, facing);
-        SetLayer(sprite, entity.Comp.WestPostLayer, showWestPost, Direction.West, facing);
+        var rotation = transformComponent.LocalRotation;
+        SetLayer(sprite, entity.Comp.VerticalWire, north && south, Direction.South, facing, rotation);
+        SetLayer(sprite, entity.Comp.HorizontalWire, east && west, Direction.East, facing, rotation);
+        SetLayer(sprite, entity.Comp.NorthPost, showNorthPost, Direction.North, facing, rotation);
+        SetLayer(sprite, entity.Comp.SouthPost, showSouthPost, Direction.South, facing, rotation);
+        SetLayer(sprite, entity.Comp.EastPost, showEastPost, Direction.East, facing, rotation);
+        SetLayer(sprite, entity.Comp.WestPost, showWestPost, Direction.West, facing, rotation);
     }
 
     /// <summary>
-    ///     Shows or hides a layer, turned to draw its <paramref name="direction"/> state whichever way the structure faces.
+    ///     Shows or hides a layer, turned to draw its <paramref name="direction"/> state and placed at its offset along
+    ///         the grid, whichever way the structure faces.
     /// </summary>
-    private void SetLayer(Entity<SpriteComponent> sprite, string layerKey, bool visible, Direction direction, Direction facing)
+    private void SetLayer(Entity<SpriteComponent> sprite, KsLineSmoothLayer layer, bool visible, Direction direction, Direction facing, Angle rotation)
     {
-        if (!_spriteSystem.LayerMapTryGet(sprite.AsNullable(), layerKey, out var layerIndex, logMissing: true))
+        if (!_spriteSystem.LayerMapTryGet(sprite.AsNullable(), layer.Key, out var layerIndex, logMissing: true))
             return;
 
         _spriteSystem.LayerSetVisible(sprite.AsNullable(), layerIndex, visible);
-        if (visible)
-            _spriteSystem.LayerSetDirOffset(sprite.AsNullable(), layerIndex, GetDirOffset(facing, direction));
+        if (!visible)
+            return;
+
+        _spriteSystem.LayerSetDirOffset(sprite.AsNullable(), layerIndex, GetDirOffset(facing, direction));
+        _spriteSystem.LayerSetOffset(sprite.AsNullable(), layerIndex, GetLocalOffset(rotation, layer.Offset));
+    }
+
+    /// <summary>
+    ///     The layer offset that puts a layer <paramref name="gridPixels"/> along the grid on a structure turned by
+    ///         <paramref name="rotation"/>. A directional layer's texture is drawn upright whichever way the entity
+    ///         faces, but its offset still turns with the entity, so it is turned back here.
+    /// </summary>
+    public static Vector2 GetLocalOffset(Angle rotation, Vector2 gridPixels)
+    {
+        return (-rotation).RotateVec(gridPixels / EyeManager.PixelsPerMeter);
     }
 
     /// <summary>

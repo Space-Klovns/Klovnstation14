@@ -4,6 +4,7 @@ using System.Linq;
 using Content.Client._KS14.Structures;
 using Content.IntegrationTests.Fixtures;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -127,6 +128,24 @@ public sealed class KsLineSmoothTest : GameTest
             [new Vector2i(0, 0), new Vector2i(0, 1), new Vector2i(0, -1), new Vector2i(1, 0), new Vector2i(-1, 0)],
             new Vector2i(0, 0));
         Assert.That(cross, Is.EquivalentTo(new[] { "wireVertical", "wireHorizontal" }));
+    }
+
+    /// <summary>
+    ///     A layer's offset turns with the entity, so one placed facing east must have its grid offset turned back:
+    ///         two pixels east of centre stays two pixels east, whichever way the piece faces.
+    /// </summary>
+    [TestCase(0f)]
+    [TestCase(90f)]
+    [TestCase(180f)]
+    [TestCase(270f)]
+    public void LayerOffsetsStayAlongTheGrid(float degrees)
+    {
+        var rotation = Angle.FromDegrees(degrees);
+        var gridPixels = new System.Numerics.Vector2(2f, 0f);
+        var local = KsLineSmoothSystem.GetLocalOffset(rotation, gridPixels);
+        var world = rotation.RotateVec(local) * EyeManager.PixelsPerMeter;
+        Assert.That(world.X, Is.EqualTo(gridPixels.X).Within(0.001f));
+        Assert.That(world.Y, Is.EqualTo(gridPixels.Y).Within(0.001f));
     }
 
     [TestCase(Direction.South, Direction.South, SpriteComponent.DirectionOffset.None)]

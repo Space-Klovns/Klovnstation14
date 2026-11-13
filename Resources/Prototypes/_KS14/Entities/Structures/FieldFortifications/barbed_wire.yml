@@ -48,6 +48,17 @@
     state: wire
   - type: KsLineSmooth
     key: barbedWire
+    # The art's frames aren't centred alike: these bring the north-south wire, and the north-south half of each post,
+    #     onto the middle of the tile (measured from the frames' wire). The east-west pieces already agree.
+    verticalWire:
+      key: wireVertical
+      offset: -2, 0
+    southPost:
+      key: postSouth
+      offset: -1, 0
+    northPost:
+      key: postNorth
+      offset: 2, 0
   - type: Physics
     bodyType: Static
   - type: Fixtures

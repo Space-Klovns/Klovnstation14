@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Content.Client._KS14.Structures;
 
 /// <summary>
@@ -24,26 +26,47 @@ public sealed partial class KsLineSmoothComponent : Component
     ///     The wire running north to south, shown with neighbours both north and south.
     /// </summary>
     [DataField]
-    public string VerticalWireLayer = "wireVertical";
+    public KsLineSmoothLayer VerticalWire = new() { Key = "wireVertical" };
 
     /// <summary>
     ///     The wire running east to west, shown with neighbours both east and west.
     /// </summary>
     [DataField]
-    public string HorizontalWireLayer = "wireHorizontal";
+    public KsLineSmoothLayer HorizontalWire = new() { Key = "wireHorizontal" };
 
     /// <summary>
     ///     The post capping a line that runs north from here: shown with a neighbour north and none south.
     /// </summary>
     [DataField]
-    public string NorthPostLayer = "postNorth";
+    public KsLineSmoothLayer NorthPost = new() { Key = "postNorth" };
 
     [DataField]
-    public string SouthPostLayer = "postSouth";
+    public KsLineSmoothLayer SouthPost = new() { Key = "postSouth" };
 
     [DataField]
-    public string EastPostLayer = "postEast";
+    public KsLineSmoothLayer EastPost = new() { Key = "postEast" };
 
     [DataField]
-    public string WestPostLayer = "postWest";
+    public KsLineSmoothLayer WestPost = new() { Key = "postWest" };
+}
+
+/// <summary>
+///     One of a line's layers.
+/// </summary>
+[DataDefinition]
+public sealed partial class KsLineSmoothLayer
+{
+    /// <summary>
+    ///     The sprite layer's map key.
+    /// </summary>
+    [DataField(required: true)]
+    public string Key = string.Empty;
+
+    /// <summary>
+    ///     Where to draw it, in pixels along the grid (x east, y north), whichever way the structure faces: art whose
+    ///         directions aren't centred alike (a wire a few pixels right of centre in one frame and left in another) is
+    ///         lined up with this, so the pieces of a line meet.
+    /// </summary>
+    [DataField]
+    public Vector2 Offset;
 }
