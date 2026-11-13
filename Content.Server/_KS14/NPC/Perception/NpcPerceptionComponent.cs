@@ -86,6 +86,27 @@ public sealed partial class NpcPerceptionComponent : Component
     public float ProximityRange = 2.5f;
 
     /// <summary>
+    ///     How dark a hostile has to be, as the light the NPC sees it in from 0 to 1, for its shots at it to go astray: it can
+    ///         see where it is, not well enough to aim. None for an NPC that sees in the dark (<see cref="DarkVision"/>), or
+    ///         at a hostile within <see cref="ProximityRange"/>. See <c>NPCCombatSystem.Klovn.DarkAim.cs</c>.
+    /// </summary>
+    [DataField]
+    public float DarkAimLightLevel = 0.10f;
+
+    /// <summary>
+    ///     How far off the aim its shots may go at most, in pitch dark; less as the light rises to
+    ///         <see cref="DarkAimLightLevel"/>. In degrees in YAML.
+    /// </summary>
+    [DataField]
+    public Angle DarkAimSpread = Angle.FromDegrees(12);
+
+    /// <summary>
+    ///     How long its aim keeps the same error before it wanders to another: a burst goes the same way.
+    /// </summary>
+    [DataField]
+    public TimeSpan DarkAimHold = TimeSpan.FromSeconds(0.6);
+
+    /// <summary>
     ///     The least light, from 0 to 1, a hostile needs to be spotted from further than <see cref="ProximityRange"/>.
     /// </summary>
     [DataField]
