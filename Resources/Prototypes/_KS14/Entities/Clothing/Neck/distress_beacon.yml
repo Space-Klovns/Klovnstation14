@@ -18,3 +18,7 @@
     energy: 2.2
     castShadows: false
   - type: KsDistressBeacon
+    beepSound:
+      path: /Audio/Machines/quickbeep.ogg
+      params:
+        volume: 2
