@@ -36,7 +36,8 @@ public sealed class KsDistressBeaconTest : InteractionTest
     private const string NeckSlot = "neck";
 
     private static readonly EntProtoId Beacon = "KsDistressBeacon";
-    private static readonly ProtoId<ShaderPrototype> DissolveShader = "KsDissolve";
+    // Not static: shaders are a client-only kind, which the YAML linter does not know.
+    private readonly ProtoId<ShaderPrototype> _dissolveShader = "KsDissolve";
 
     private EntityUid SpawnAndWear()
     {
@@ -212,7 +213,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
         {
             var spriteSystem = CEntMan.System<SpriteSystem>();
             var spriteComponent = CEntMan.GetComponent<SpriteComponent>(CPlayer);
-            var otherShader = Client.ResolveDependency<IPrototypeManager>().Index(DissolveShader).InstanceUnique();
+            var otherShader = Client.ResolveDependency<IPrototypeManager>().Index(_dissolveShader).InstanceUnique();
             spriteSystem.SetPostShader((CPlayer, spriteComponent), new SpriteComponent.PostShaderArgs(KsPostShaderIds.Dissolve, otherShader)
             {
                 Before = KsPostShaderIds.BeforeOutlines,
