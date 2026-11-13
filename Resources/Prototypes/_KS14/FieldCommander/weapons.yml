@@ -1,0 +1,74 @@
+# Weapons the defenders are issued, tuned so that they can't wreck their own fortifications.
+
+- type: explosion
+  id: KsAntiPersonnelRocket
+  damagePerIntensity:
+    types:
+      Heat: 5
+      Blunt: 5
+      Piercing: 5
+  tileBreakChance: [ 0 ]
+  tileBreakIntensity: [ 0 ]
+  lightColor: Orange
+  texturePath: /Textures/Effects/fire.rsi
+  fireStates: 3
+  fireStacks: 2.5
+  temperature: 800
+  # Walls, windows, doors and other structures are left standing. The commander's uplink is not: rockets are how
+  #     the defenders crack it.
+  ksSpared:
+    tags:
+    - Wall
+    - Window
+    - Structure
+    components:
+    - Airtight
+    - Door
+  ksNotSpared:
+    components:
+    - ScenarioObjective
+
+- type: entity
+  parent: BulletRocket
+  id: KsBulletRocketFieldCommander
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Explosive
+    explosionType: KsAntiPersonnelRocket
+    maxIntensity: 40
+    intensitySlope: 6
+    totalIntensity: 200
+    maxTileBreak: 0
+
+- type: entity
+  parent: CartridgeRocket
+  id: KsCartridgeRocketFieldCommander
+  name: anti-personnel rocket
+  description: A rocket with a fragmentation warhead, made to clear men from cover without bringing the cover down.
+  components:
+  - type: CartridgeAmmo
+    proto: KsBulletRocketFieldCommander
+    deleteOnSpawn: true
+    detachedMuzzleFlash: StdaMuzzleSmokeEffectRpg
+
+- type: entity
+  parent: KsWeaponLauncherRocketAt4
+  id: KsWeaponLauncherRocketAt4FieldCommander
+  name: AT-4 (anti-personnel)
+  suffix: Field Commander
+  description: A single-use rocket launcher loaded with an anti-personnel round. It shreds anyone in the open and leaves walls standing.
+  components:
+  - type: BasicEntityAmmoProvider
+    proto: KsCartridgeRocketFieldCommander
+    capacity: 1
+  - type: GunBackblast
+    directionOffset: 180
+    radius: 1.5
+    effectField: 100
+    damage:
+      types:
+        Heat: 40
+        Blunt: 35
+    pushForce: 1000
+    knockdownTime: 3s
+    tilebreakChance: 0

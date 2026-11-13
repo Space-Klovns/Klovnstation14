@@ -3,3 +3,8 @@
   maps:
   - Tiderfall
   - Nanoplant
+
+- type: gameMapPool
+  id: KsFieldCommanderMapPool
+  maps:
+  - FieldCommander

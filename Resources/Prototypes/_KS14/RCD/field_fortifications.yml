@@ -1,0 +1,55 @@
+- type: rcd
+  id: KsFieldWallReinforced
+  category: WallsAndFlooring
+  sprite: /Textures/Interface/Radial/RCD/reinforced_wall.png
+  mode: ConstructObject
+  prototype: KsFieldWallReinforced
+  cost: 8
+  delay: 4
+  collisionMask: FullTileMask
+  rotation: Fixed
+  fx: EffectRCDConstruct4
+
+- type: rcd
+  id: KsFieldBarricade
+  category: WallsAndFlooring
+  sprite:
+    sprite: Structures/barricades.rsi
+    state: barricade
+  mode: ConstructObject
+  prototype: KsFieldBarricade
+  cost: 3
+  delay: 2
+  collisionMask: FullTileMask
+  rotation: Fixed
+  fx: EffectRCDConstruct2
+
+- type: rcd
+  id: KsFieldBarricadeDirectional
+  category: WallsAndFlooring
+  sprite:
+    sprite: Structures/barricades.rsi
+    state: barricade_directional
+  mode: ConstructObject
+  prototype: KsFieldBarricadeDirectional
+  cost: 2
+  delay: 1
+  collisionMask: Impassable
+  collisionBounds: "-0.23,-0.49,0.23,-0.36"
+  rotation: User
+  fx: EffectRCDConstruct1
+  allowMultiDirection: true
+
+- type: rcd
+  id: KsFieldFloodlight
+  category: Lighting
+  sprite:
+    sprite: Objects/Misc/Lights/lights.rsi
+    state: floodlight
+  mode: ConstructObject
+  prototype: KsFloodlightField
+  cost: 4
+  delay: 2
+  collisionMask: MachineMask
+  rotation: Fixed
+  fx: EffectRCDConstruct2

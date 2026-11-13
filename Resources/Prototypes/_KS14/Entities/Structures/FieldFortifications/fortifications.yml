@@ -1,0 +1,32 @@
+# Fortifications a field-engineer RCD can raise, and so take down again. Each is its upstream structure plus the
+#     RCDDeconstructable the RCD needs to remove it at all.
+
+- type: entity
+  parent: WallReinforced
+  id: KsFieldWallReinforced
+  suffix: Field fortification
+  components:
+  - type: RCDDeconstructable
+    cost: 8
+    delay: 10
+    fx: EffectRCDDeconstruct8
+
+- type: entity
+  parent: Barricade
+  id: KsFieldBarricade
+  suffix: Field fortification
+  components:
+  - type: RCDDeconstructable
+    cost: 2
+    delay: 4
+    fx: EffectRCDDeconstruct4
+
+- type: entity
+  parent: BarricadeDirectional
+  id: KsFieldBarricadeDirectional
+  suffix: Field fortification
+  components:
+  - type: RCDDeconstructable
+    cost: 2
+    delay: 2
+    fx: EffectRCDDeconstruct2

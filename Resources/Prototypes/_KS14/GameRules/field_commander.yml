@@ -1,0 +1,145 @@
+# An AI Syndicate field commander besieging the scenario's Nanotrasen defenders. What it can send is filled in
+#     from the private module's FieldCommand/Partials; without it, the commander still runs its timeline, strikes
+#     and uplink, but has no units to buy.
+
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderRule
+  components:
+  - type: GameRule
+    minPlayers: 0
+  - type: KsFieldCommanderRule
+    # The play area: a lethal fog beyond 55 tiles, which the commander's units walk in from. They appear on foot
+    #     between 63 (the fog's edge plus fogSpawnMargin) and 90 tiles out.
+    fogRange: 55
+    minSpawnDistance: 63
+    maxSpawnDistance: 90
+    # Many light units rather than a few tough ones, as the private module defines them.
+    maxAlive: 12
+    maxAlivePerDefender: 3
+    waveAnnouncements:
+    - ks-fieldcommander-wave-1
+    - ks-fieldcommander-wave-2
+    - ks-fieldcommander-wave-3
+    - ks-fieldcommander-wave-4
+    - ks-fieldcommander-wave-5
+    - ks-fieldcommander-wave-6
+    strikeAnnouncements:
+    - ks-fieldcommander-strike-1
+    - ks-fieldcommander-strike-2
+    - ks-fieldcommander-strike-3
+    phases:
+    - name: ks-fieldcommander-phase-landfall
+      start: 20 # after the defenders' own briefing (briefingDelay)
+      announcement: ks-fieldcommander-phase-landfall-announcement
+      intel: ks-fieldcommander-intel-phase-landfall
+    - name: ks-fieldcommander-phase-probing
+      start: 4m
+      waveInterval: 110
+      firstWaveDelay: 20
+      budget: 4.5
+      budgetPerExtraDefender: 0.25
+      announcement: ks-fieldcommander-phase-probing-announcement
+      intel: ks-fieldcommander-intel-phase-probing
+    - name: ks-fieldcommander-phase-pressure
+      start: 12m
+      waveInterval: 90
+      budget: 9
+      budgetPerExtraDefender: 0.25
+      strikeChance: 0.15
+      announcement: ks-fieldcommander-phase-pressure-announcement
+      intel: ks-fieldcommander-intel-phase-pressure
+      reinforcementPod: KsFieldCommanderRequisitionResupply
+    - name: ks-fieldcommander-phase-siege
+      start: 22m
+      waveInterval: 80
+      budget: 13.5
+      budgetPerExtraDefender: 0.3
+      strikeChance: 0.4
+      announcement: ks-fieldcommander-phase-siege-announcement
+      intel: ks-fieldcommander-intel-phase-siege
+      reinforcementPod: KsFieldCommanderReinforcementsSupport
+    - name: ks-fieldcommander-phase-final
+      start: 32m
+      waveInterval: 65
+      budget: 18
+      budgetPerExtraDefender: 0.3
+      strikeChance: 0.6
+      announcement: ks-fieldcommander-phase-final-announcement
+      intel: ks-fieldcommander-intel-phase-final
+      reinforcementPod: KsFieldCommanderReinforcementsHeavy
+      deployUplink: true
+      uplinkGuardBudget: 9
+
+# The scenario rule for a field commander round: the commander's side never runs out of members, and holds an
+#     objective (its uplink) from the start, even before it lands.
+- type: entity
+  parent: Scenario
+  id: KsScenarioFieldCommander
+  components:
+  - type: ScenarioRule
+    persistentFactions:
+    - Syndicate
+    pendingObjectiveFactions:
+    - Syndicate
+
+# The weather over a field commander round: mostly snow, now and then a sleet storm that brings rain, and some breaks
+#     in between.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderWeather
+  components:
+  - type: KsDynamicWeatherRule
+    initialState: LightSnow
+    states:
+    - name: Clear
+      minDuration: 3m
+      maxDuration: 6m
+      next:
+        LightSnow: 3
+        Snow: 1
+    - name: LightSnow
+      weathers:
+      - WeatherSnowfallLight
+      minDuration: 3m
+      maxDuration: 6m
+      next:
+        Clear: 1
+        Snow: 3
+        Sleet: 1
+    - name: Snow
+      weathers:
+      - WeatherSnowfallMedium
+      minDuration: 3m
+      maxDuration: 5m
+      next:
+        LightSnow: 2
+        Blizzard: 1
+        Sleet: 1
+    - name: Blizzard
+      weathers:
+      - WeatherSnowfallHeavy
+      minDuration: 2m
+      maxDuration: 4m
+      next:
+        Snow: 3
+        SleetStorm: 1
+    - name: Sleet
+      weathers:
+      - WeatherRain
+      - WeatherSnowfallMedium
+      minDuration: 2m
+      maxDuration: 4m
+      next:
+        Snow: 2
+        LightSnow: 2
+        SleetStorm: 1
+    - name: SleetStorm
+      weathers:
+      - WeatherStorm
+      - WeatherSnowfallLight
+      minDuration: 90
+      maxDuration: 3m
+      next:
+        Sleet: 2
+        Snow: 1
