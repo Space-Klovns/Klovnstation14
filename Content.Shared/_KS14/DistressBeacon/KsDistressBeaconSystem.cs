@@ -12,7 +12,7 @@ namespace Content.Shared._KS14.DistressBeacon;
 ///     Raised on a beacon when its state has changed, so the server can start its beeping.
 /// </summary>
 [ByRefEvent]
-public readonly record struct KsDistressBeaconStateChangedEvent(KsDistressBeaconState State);
+public readonly record struct KsDistressBeaconStateChangedEvent(MobState State);
 
 /// <summary>
 ///     Keeps a <see cref="KsDistressBeaconComponent"/> in step with its wearer: critical, dead or neither, as they
@@ -43,15 +43,15 @@ public sealed partial class KsDistressBeaconSystem : EntitySystem
 
         // Put on someone who is already down.
         var state = _mobStateQuery.TryComp(args.EquipTarget, out var mobStateComponent)
-            ? StateFor(mobStateComponent.CurrentState)
-            : KsDistressBeaconState.Off;
+            ? mobStateComponent.CurrentState
+            : MobState.Alive;
 
         SetState((uid, component), state);
     }
 
     [SubscribeLocalEvent]
     private void OnGotUnequipped(EntityUid uid, KsDistressBeaconComponent component, GotUnequippedEvent args)
-        => SetState((uid, component), KsDistressBeaconState.Off);
+        => SetState((uid, component), MobState.Alive);
 
     /// <summary>
     ///     By-value, as the event is (<c>RA0054</c> only allows <c>Entity&lt;T&gt;</c> handlers for <c>ref</c>
@@ -64,20 +64,10 @@ public sealed partial class KsDistressBeaconSystem : EntitySystem
             !TryComp<KsDistressBeaconComponent>(neckUid, out var beaconComponent))
             return;
 
-        SetState((neckUid.Value, beaconComponent), StateFor(args.NewMobState));
+        SetState((neckUid.Value, beaconComponent), args.NewMobState);
     }
 
-    private static KsDistressBeaconState StateFor(MobState mobState)
-    {
-        return mobState switch
-        {
-            MobState.Critical => KsDistressBeaconState.Critical,
-            MobState.Dead => KsDistressBeaconState.Dead,
-            _ => KsDistressBeaconState.Off,
-        };
-    }
-
-    private void SetState(Entity<KsDistressBeaconComponent> entity, KsDistressBeaconState state)
+    private void SetState(Entity<KsDistressBeaconComponent> entity, MobState state)
     {
         if (entity.Comp.State == state)
             return;

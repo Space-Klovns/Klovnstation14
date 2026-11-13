@@ -517,9 +517,9 @@ public sealed class KsFieldCommanderCreditTest : GameTest
         {
             var ruleComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(ruleUid);
             var defenderComponent = server.EntMan.GetComponent<KsFieldCommanderDefenderComponent>(playerBody);
-            Assert.That(defenderComponent.CriticalFlash.Color, Is.EqualTo(ruleComponent.CriticalFlash.Color));
-            Assert.That(defenderComponent.DeadFlash.Color, Is.EqualTo(ruleComponent.DeadFlash.Color));
-            Assert.That(defenderComponent.DeadFlash.Color, Is.Not.EqualTo(defenderComponent.CriticalFlash.Color), "dying has its own colour");
+            Assert.That(defenderComponent.Flashes[MobState.Critical].Color, Is.EqualTo(ruleComponent.DownFlashes[MobState.Critical].Color));
+            Assert.That(defenderComponent.Flashes[MobState.Dead].Color, Is.EqualTo(ruleComponent.DownFlashes[MobState.Dead].Color));
+            Assert.That(defenderComponent.Flashes[MobState.Dead].Color, Is.Not.EqualTo(defenderComponent.Flashes[MobState.Critical].Color), "dying has its own colour");
             Assert.That(server.EntMan.HasComponent<KsFieldCommanderDefenderComponent>(unitUid), Is.False);
         });
     }

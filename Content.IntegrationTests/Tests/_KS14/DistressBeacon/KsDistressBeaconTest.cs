@@ -44,7 +44,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
         return beaconUid;
     }
 
-    private KsDistressBeaconState State(EntityUid beaconUid)
+    private MobState State(EntityUid beaconUid)
         => SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).State;
 
     private bool LightOn(EntityUid beaconUid)
@@ -64,8 +64,8 @@ public sealed class KsDistressBeaconTest : InteractionTest
         await Server.WaitAssertion(() =>
         {
             var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(SEntMan.SpawnEntity(_beacon, SEntMan.GetCoordinates(PlayerCoords)));
-            Assert.That(beaconComponent.Critical.LightColor, Is.Not.EqualTo(beaconComponent.Dead.LightColor));
-            Assert.That(beaconComponent.Critical.BeepInterval, Is.LessThan(beaconComponent.Dead.BeepInterval));
+            Assert.That(beaconComponent.States[MobState.Critical].LightColor, Is.Not.EqualTo(beaconComponent.States[MobState.Dead].LightColor));
+            Assert.That(beaconComponent.States[MobState.Critical].BeepInterval, Is.LessThan(beaconComponent.States[MobState.Dead].BeepInterval));
         });
     }
 
@@ -80,23 +80,23 @@ public sealed class KsDistressBeaconTest : InteractionTest
 
         await Server.WaitAssertion(() =>
         {
-            Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Off), "A beacon on a healthy wearer was on.");
+            Assert.That(State(beaconUid), Is.EqualTo(MobState.Alive), "A beacon on a healthy wearer was on.");
             Assert.That(LightOn(beaconUid), Is.False);
         });
 
         await Server.WaitPost(() => SetMobState(MobState.Critical));
         await Server.WaitAssertion(() =>
         {
-            Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Critical), "A critical wearer didn't turn the beacon to critical.");
+            Assert.That(State(beaconUid), Is.EqualTo(MobState.Critical), "A critical wearer didn't turn the beacon to critical.");
             Assert.That(LightOn(beaconUid), Is.True, "The light wasn't on for a critical wearer.");
-            AssertLightMatches(beaconUid, SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).Critical);
+            AssertLightMatches(beaconUid, SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).States[MobState.Critical]);
             Assert.That(SEntMan.GetComponent<ClothingComponent>(beaconUid).EquippedPrefix, Is.Not.Null, "The worn sprite wasn't lit.");
         });
 
         await Server.WaitPost(() => SetMobState(MobState.Alive));
         await Server.WaitAssertion(() =>
         {
-            Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Off), "A revived wearer didn't turn the beacon off.");
+            Assert.That(State(beaconUid), Is.EqualTo(MobState.Alive), "A revived wearer didn't turn the beacon off.");
             Assert.That(LightOn(beaconUid), Is.False);
             Assert.That(SEntMan.GetComponent<ClothingComponent>(beaconUid).EquippedPrefix, Is.Null);
         });
@@ -104,9 +104,9 @@ public sealed class KsDistressBeaconTest : InteractionTest
         await Server.WaitPost(() => SetMobState(MobState.Dead));
         await Server.WaitAssertion(() =>
         {
-            Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Dead), "A dead wearer didn't turn the beacon to dead.");
+            Assert.That(State(beaconUid), Is.EqualTo(MobState.Dead), "A dead wearer didn't turn the beacon to dead.");
             Assert.That(LightOn(beaconUid), Is.True);
-            AssertLightMatches(beaconUid, SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).Dead);
+            AssertLightMatches(beaconUid, SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).States[MobState.Dead]);
         });
 
         // The client's copy has the state, and so lights its icon.
@@ -114,13 +114,13 @@ public sealed class KsDistressBeaconTest : InteractionTest
         await Client.WaitAssertion(() =>
         {
             var clientBeaconUid = ToClient(beaconUid);
-            Assert.That(CEntMan.GetComponent<KsDistressBeaconComponent>(clientBeaconUid).State, Is.EqualTo(KsDistressBeaconState.Dead));
+            Assert.That(CEntMan.GetComponent<KsDistressBeaconComponent>(clientBeaconUid).State, Is.EqualTo(MobState.Dead));
         });
 
         await Server.WaitPost(() => SEntMan.System<InventorySystem>().TryUnequip(SPlayer, NeckSlot, force: true));
         await Server.WaitAssertion(() =>
         {
-            Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Off), "Taking the beacon off didn't turn it off.");
+            Assert.That(State(beaconUid), Is.EqualTo(MobState.Alive), "Taking the beacon off didn't turn it off.");
             Assert.That(LightOn(beaconUid), Is.False);
         });
     }
@@ -157,8 +157,8 @@ public sealed class KsDistressBeaconTest : InteractionTest
 
         await Server.WaitPost(() => SetDownState(MobState.Critical));
         await RunTicks(5); // for the state to reach the client
-        await Server.WaitAssertion(() => Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Critical)));
-        await Client.WaitAssertion(() => Assert.That(CEntMan.GetComponent<KsDistressBeaconComponent>(ToClient(beaconUid)).State, Is.EqualTo(KsDistressBeaconState.Critical), "client state"));
+        await Server.WaitAssertion(() => Assert.That(State(beaconUid), Is.EqualTo(MobState.Critical)));
+        await Client.WaitAssertion(() => Assert.That(CEntMan.GetComponent<KsDistressBeaconComponent>(ToClient(beaconUid)).State, Is.EqualTo(MobState.Critical), "client state"));
 
         var alphas = new List<float>();
         for (var i = 0; i < 90; i++) // a few pulses, whatever the rate
@@ -171,7 +171,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
                 var clientBeaconUid = ToClient(beaconUid);
                 var beaconComponent = CEntMan.GetComponent<KsDistressBeaconComponent>(clientBeaconUid);
                 var visualsComponent = CEntMan.GetComponent<KsDistressBeaconVisualsComponent>(clientBeaconUid);
-                var settings = beaconComponent.Critical;
+                var settings = beaconComponent.States[MobState.Critical];
 
                 // The light and the outline come from the one pulse.
                 Assert.That(visualsComponent.OutlineAlpha, Is.EqualTo(KsDistressBeaconVisualsSystem.OutlineAlphaFor(settings, visualsComponent.Wave)).Within(0.0001f));
@@ -184,7 +184,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
 
         await Client.WaitAssertion(() =>
         {
-            var minAlpha = CEntMan.GetComponent<KsDistressBeaconComponent>(ToClient(beaconUid)).Critical.OutlineMinAlpha;
+            var minAlpha = CEntMan.GetComponent<KsDistressBeaconComponent>(ToClient(beaconUid)).States[MobState.Critical].OutlineMinAlpha;
             Assert.That(alphas.Min(), Is.LessThan(minAlpha + 0.1f), "the outline never got down to its minimum");
             Assert.That(alphas.Max(), Is.GreaterThan(0.9f), "the outline never got fully opaque");
         });
@@ -238,7 +238,7 @@ public sealed class KsDistressBeaconTest : InteractionTest
 
         await Server.WaitAssertion(() =>
         {
-            Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Critical), "A beacon put on a critical wearer stayed off.");
+            Assert.That(State(beaconUid), Is.EqualTo(MobState.Critical), "A beacon put on a critical wearer stayed off.");
         });
     }
 
@@ -255,9 +255,9 @@ public sealed class KsDistressBeaconTest : InteractionTest
         {
             var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid);
             var curTime = Server.Timing.CurTime;
-            Assert.That(State(beaconUid), Is.EqualTo(KsDistressBeaconState.Critical));
+            Assert.That(State(beaconUid), Is.EqualTo(MobState.Critical));
             Assert.That(beaconComponent.NextBeep, Is.GreaterThan(curTime), "The beacon never beeped.");
-            Assert.That(beaconComponent.NextBeep, Is.LessThanOrEqualTo(curTime + beaconComponent.Critical.BeepInterval));
+            Assert.That(beaconComponent.NextBeep, Is.LessThanOrEqualTo(curTime + beaconComponent.States[MobState.Critical].BeepInterval));
         });
     }
 

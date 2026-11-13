@@ -26,7 +26,7 @@ public sealed partial class KsFieldCommanderDownFlashVisualsComponent : Componen
     public TimeSpan StartTime;
 
     [ViewVariables]
-    public float Duration;
+    public TimeSpan Duration;
 
     /// <summary>
     ///     How far through the flash it was as of the last frame, 0 to 1.

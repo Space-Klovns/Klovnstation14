@@ -1,3 +1,4 @@
+using Content.Shared.Mobs;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
@@ -11,16 +12,15 @@ namespace Content.Shared._KS14.FieldCommander;
 public sealed partial class KsFieldCommanderDefenderComponent : Component
 {
     /// <summary>
-    ///     The flash over the defender as they go critical.
+    ///     The flash over the defender as they go into each state that has one. Read-only: the server copies the
+    ///         dictionary from the rule, but the settings in it are shared.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public KsFieldCommanderDownFlashSettings CriticalFlash = new();
-
-    /// <summary>
-    ///     The flash over the defender as they die.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public KsFieldCommanderDownFlashSettings DeadFlash = new();
+    public Dictionary<MobState, KsFieldCommanderDownFlashSettings> Flashes = new()
+    {
+        [MobState.Critical] = new(),
+        [MobState.Dead] = new(),
+    };
 }
 
 /// <summary>
@@ -36,8 +36,8 @@ public sealed partial class KsFieldCommanderDownFlashSettings
     public Color Color = Color.FromHex("#FF2020C0");
 
     /// <summary>
-    ///     How long the flash lasts, in seconds.
+    ///     How long the flash lasts.
     /// </summary>
     [DataField]
-    public float Duration = 0.45f;
+    public TimeSpan Duration = TimeSpan.FromSeconds(0.45);
 }

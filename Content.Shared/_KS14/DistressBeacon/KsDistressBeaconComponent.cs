@@ -1,6 +1,6 @@
+using Content.Shared.Mobs;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
-using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.DistressBeacon;
 
@@ -13,36 +13,36 @@ namespace Content.Shared._KS14.DistressBeacon;
 public sealed partial class KsDistressBeaconComponent : Component
 {
     /// <summary>
-    ///     What the wearer's state makes the beacon do. Set only by <see cref="KsDistressBeaconSystem"/>, which keeps
-    ///         the light and the worn sprite in step with it.
+    ///     The wearer's state, as the beacon follows it: <see cref="MobState.Alive"/> while it is not worn. The beacon
+    ///         is on in any state <see cref="States"/> has settings for. Set only by <see cref="KsDistressBeaconSystem"/>,
+    ///         which keeps the light and the worn sprite in step with it.
     /// </summary>
     [DataField, AutoNetworkedField, Access(typeof(KsDistressBeaconSystem)), ViewVariables(VVAccess.ReadOnly)]
-    public KsDistressBeaconState State;
+    public MobState State = MobState.Alive;
 
     /// <summary>
-    ///     What the beacon does while the wearer is critical.
+    ///     What the beacon does in each state of its wearer it is on for. Read-only: the settings may be shared with
+    ///         the prototype and other beacons.
     /// </summary>
     [DataField]
-    public KsDistressBeaconStateSettings Critical = new()
+    public Dictionary<MobState, KsDistressBeaconStateSettings> States = new()
     {
-        BeepInterval = TimeSpan.FromSeconds(0.75),
-        LightColor = Color.FromHex("#FF3030"),
-        LightRadius = 4.5f,
-        LightEnergy = 2.2f,
-        PulseRate = 1.5f,
-    };
-
-    /// <summary>
-    ///     What the beacon does while the wearer is dead.
-    /// </summary>
-    [DataField]
-    public KsDistressBeaconStateSettings Dead = new()
-    {
-        BeepInterval = TimeSpan.FromSeconds(2),
-        LightColor = Color.FromHex("#FF8C1A"),
-        LightRadius = 4.5f,
-        LightEnergy = 2.2f,
-        PulseRate = 0.3f,
+        [MobState.Critical] = new()
+        {
+            BeepInterval = TimeSpan.FromSeconds(0.75),
+            LightColor = Color.FromHex("#FF3030"),
+            LightRadius = 4.5f,
+            LightEnergy = 2.2f,
+            PulseRate = 1.5f,
+        },
+        [MobState.Dead] = new()
+        {
+            BeepInterval = TimeSpan.FromSeconds(2),
+            LightColor = Color.FromHex("#FF8C1A"),
+            LightRadius = 4.5f,
+            LightEnergy = 2.2f,
+            PulseRate = 0.3f,
+        },
     };
 
     /// <summary>
@@ -58,25 +58,12 @@ public sealed partial class KsDistressBeaconComponent : Component
     public TimeSpan NextBeep;
 
     /// <summary>
-    ///     The settings for a state, or null for <see cref="KsDistressBeaconState.Off"/>.
+    ///     The settings for a state, or null if the beacon is off in it.
     /// </summary>
-    public KsDistressBeaconStateSettings? SettingsFor(KsDistressBeaconState state)
+    public KsDistressBeaconStateSettings? SettingsFor(MobState state)
     {
-        return state switch
-        {
-            KsDistressBeaconState.Critical => Critical,
-            KsDistressBeaconState.Dead => Dead,
-            _ => null,
-        };
+        return States.GetValueOrDefault(state);
     }
-}
-
-[Serializable, NetSerializable]
-public enum KsDistressBeaconState : byte
-{
-    Off,
-    Critical,
-    Dead,
 }
 
 /// <summary>

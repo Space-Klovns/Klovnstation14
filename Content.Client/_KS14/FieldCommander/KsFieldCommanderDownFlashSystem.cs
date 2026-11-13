@@ -60,14 +60,7 @@ public sealed partial class KsFieldCommanderDownFlashSystem : EntitySystem
 
         visualsComponent.LastState = state;
 
-        var settings = state switch
-        {
-            MobState.Critical => defenderComponent.CriticalFlash,
-            MobState.Dead => defenderComponent.DeadFlash,
-            _ => null,
-        };
-
-        if (settings != null)
+        if (defenderComponent.Flashes.TryGetValue(state, out var settings))
             StartFlash((uid, visualsComponent), settings);
         else
             EndFlash((uid, visualsComponent)); // revived
@@ -136,8 +129,8 @@ public sealed partial class KsFieldCommanderDownFlashSystem : EntitySystem
             if (visualsComponent.Shader == null)
                 continue;
 
-            var progress = visualsComponent.Duration > 0f
-                ? (float)Math.Clamp((curTime - visualsComponent.StartTime).TotalSeconds / visualsComponent.Duration, 0d, 1d)
+            var progress = visualsComponent.Duration > TimeSpan.Zero
+                ? (float)Math.Clamp((curTime - visualsComponent.StartTime) / visualsComponent.Duration, 0d, 1d)
                 : 1f;
             visualsComponent.Progress = progress;
 

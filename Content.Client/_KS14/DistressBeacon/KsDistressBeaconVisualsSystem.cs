@@ -87,7 +87,7 @@ public sealed partial class KsDistressBeaconVisualsSystem : EntitySystem
 
         if (_spriteQuery.TryComp(entity, out var spriteComponent))
         {
-            var state = entity.Comp.State == KsDistressBeaconState.Off ? IconState : LitIconState;
+            var state = settings == null ? IconState : LitIconState;
             _spriteSystem.LayerSetRsiState((entity.Owner, spriteComponent), 0, state);
         }
 
@@ -126,7 +126,7 @@ public sealed partial class KsDistressBeaconVisualsSystem : EntitySystem
             return;
 
         EntityUid? wearerUid = null;
-        if (entity.Comp.State != KsDistressBeaconState.Off &&
+        if (entity.Comp.SettingsFor(entity.Comp.State) != null &&
             _containerSystem.TryGetContainingContainer(entity.Owner, out var container))
             wearerUid = container.Owner;
 
