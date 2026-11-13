@@ -74,7 +74,9 @@
   - type: SpeedModifierContacts
     walkSpeedModifier: 0.4
     sprintSpeedModifier: 0.4
+  # Cuts only those wading through: standing still in it is safe, the first step after hurts at once.
   - type: DamageContacts
+    onlyWhileMoving: true
     damage:
       types:
         Slash: 3
