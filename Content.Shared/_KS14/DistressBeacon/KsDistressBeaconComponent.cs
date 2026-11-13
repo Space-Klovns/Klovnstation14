@@ -27,7 +27,7 @@ public sealed partial class KsDistressBeaconComponent : Component
     {
         BeepInterval = TimeSpan.FromSeconds(0.75),
         LightColor = Color.FromHex("#FF3030"),
-        LightRadius = 4.2f,
+        LightRadius = 4.5f,
         LightEnergy = 2.2f,
         PulseRate = 1.5f,
     };
@@ -40,8 +40,8 @@ public sealed partial class KsDistressBeaconComponent : Component
     {
         BeepInterval = TimeSpan.FromSeconds(2),
         LightColor = Color.FromHex("#FF8C1A"),
-        LightRadius = 3f,
-        LightEnergy = 1.2f,
+        LightRadius = 4.5f,
+        LightEnergy = 2.2f,
         PulseRate = 0.3f,
     };
 
