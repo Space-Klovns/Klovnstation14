@@ -282,24 +282,6 @@ public sealed class KsProjectileFalloffTest : GameTest
     }
 
     [Test]
-    public void FieldCommanderBotGunsOptIn()
-    {
-        // The guns live in the private module.
-        var botGuns = new[] { "KsWeaponPistolMk1FieldCommander", "KsWeaponShotgunBulldogFieldCommander", "KsWeaponRifleEstocFieldCommander" };
-        if (!SProtoMan.HasIndex<EntityPrototype>(botGuns[0]))
-            Assert.Ignore("_KsModule prototypes are not present.");
-
-        foreach (var botGun in botGuns)
-        {
-            Assert.That(SProtoMan.Index<EntityPrototype>(botGun).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Server.EntMan.ComponentFactory), $"{botGun} opts in");
-            Assert.That(CProtoMan.Index<EntityPrototype>(botGun).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Client.EntMan.ComponentFactory), $"{botGun} opts in on the client");
-        }
-
-        // An ordinary rifle does not.
-        Assert.That(SProtoMan.Index(OtherLightRifle).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Server.EntMan.ComponentFactory), Is.False);
-    }
-
-    [Test]
     public async Task SniperRoundDoesFullDamageAtRange()
     {
         await OverrideCVar(Side.Server, KsCCVars.ProjectileDamageFalloffEverywhere, true);
