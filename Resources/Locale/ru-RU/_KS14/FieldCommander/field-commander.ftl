@@ -110,3 +110,14 @@ ks-fieldcommander-wave-status = Волна { $wave } · следующая че�
 ks-fieldcommander-wave-status-first = Первая волна через { $time }
 ks-fieldcommander-wave-status-none = Волна { $wave } · новых не ожидается
 ks-fieldcommander-wave-status-idle = Волны ещё не начались
+
+ks-fieldcommander-roundend-waves = Оборона продержалась до волны [color=yellow]{ $wave }[/color].
+ks-fieldcommander-roundend-waves-endless = Оборона продержалась до волны [color=yellow]{ $wave }[/color], из них { $endless } в бесконечном режиме.
+
+ks-fieldcommander-endless-vote-title = Аплинк уничтожен. Держать оборону в бесконечном режиме?
+ks-fieldcommander-endless-vote-initiator = Полевое управление
+ks-fieldcommander-endless-vote-yes = Держать оборону
+ks-fieldcommander-endless-vote-no = Отступить
+ks-fieldcommander-intel-endless-vote = Полевое управление. Аплинк уничтожен, поле за вами. Голосуйте в течение { $seconds } с: отступить или окопаться и узнать, сколько вы продержитесь.
+ks-fieldcommander-endless = Думали, это всё? Всё, что у меня осталось, идёт за вами, и будет идти дальше.
+ks-fieldcommander-intel-endless = Полевое управление. Вы держите оборону. Каждая волна будет больше и раньше предыдущей. Держитесь сколько сможете.

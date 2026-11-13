@@ -234,6 +234,15 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         EndRoundNow();
     }
 
+    /// <summary>
+    ///     Ends the round if only one faction still holds an objective, as when one is lost. For a rule that kept the
+    ///         round going with <see cref="SetObjectivePending"/> and has now stopped.
+    /// </summary>
+    public void CheckObjectiveRoundEnd()
+    {
+        CheckRoundShouldEndViaObjective();
+    }
+
     private void EndRoundNow()
     {
         _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,

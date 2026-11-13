@@ -34,7 +34,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// </summary>
     public static int GetMaxAlive(KsFieldCommanderRuleComponent component, int defenders)
     {
-        var maxAlive = component.MaxAlive + (int)MathF.Floor(component.MaxAlivePerDefender * defenders);
+        var maxAlive = component.MaxAlive + (int)MathF.Floor(component.MaxAlivePerDefender * defenders) + GetEndlessExtraAlive(component);
         return Math.Min(maxAlive, component.HardMaxAlive);
     }
 
@@ -261,7 +261,8 @@ public sealed partial class KsFieldCommanderRuleSystem
         var aliveByAsset = new Dictionary<int, int>();
         var capacity = GetMaxAlive(rule.Comp, defenderCount) - CountLivingUnits(rule.Owner, aliveByAsset);
 
-        var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier);
+        var budgetScale = GetEndlessBudgetScale(rule.Comp);
+        var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier) * budgetScale;
         var purchases = new List<int>();
         var leftover = BuyAssets(rule.Comp, budget, capacity, aliveByAsset, purchases);
 
@@ -271,7 +272,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // Saving up lets a later wave afford something big, but never more than one wave's worth. A wave that found
         //      nowhere to go keeps what it would have spent.
-        rule.Comp.CarriedBudget = MathF.Min(sent > 0 ? leftover : budget, phase.Budget);
+        rule.Comp.CarriedBudget = MathF.Min(sent > 0 ? leftover : budget, phase.Budget * budgetScale);
 
         var struck = _robustRandom.Prob(Math.Clamp(phase.StrikeChance, 0f, 1f)) && TryStrike(rule.Comp, battlefield);
 
@@ -279,6 +280,9 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         rule.Comp.WavesSent++;
+        if (rule.Comp.Endless)
+            rule.Comp.EndlessWavesSent++;
+
         UpdateWaveStatus(rule.Comp);
 
         if (sent == 0)

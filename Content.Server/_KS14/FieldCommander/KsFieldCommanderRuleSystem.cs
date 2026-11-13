@@ -174,7 +174,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (!TryGetPhase(rule.Comp, out var phase))
             return;
 
-        SetNextWave(rule.Comp, ScheduleWave(phase, _gameTiming.CurTime + phase.WaveInterval));
+        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, _gameTiming.CurTime));
         SendWave(rule, phase);
     }
 
@@ -270,6 +270,10 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             if (args.ObjectiveUid == ruleComponent.UplinkUid)
             {
                 OnUplinkLost((ruleUid, ruleComponent));
+
+                // Only a win over the uplink leads on; one that lasted to call down its bombardment ends the round.
+                if (ruleComponent.UplinkDestroyedTime != null)
+                    TryStartEndlessVote((ruleUid, ruleComponent));
                 continue;
             }
 
@@ -298,6 +302,12 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             ("sent", component.UnitsSent),
             ("killed", component.UnitsKilled),
             ("lost", component.ObjectivesLost)));
+
+        args.AddLine(component.Endless
+            ? Loc.GetString("ks-fieldcommander-roundend-waves-endless",
+                ("wave", component.WavesSent),
+                ("endless", component.EndlessWavesSent))
+            : Loc.GetString("ks-fieldcommander-roundend-waves", ("wave", component.WavesSent)));
 
         if (component.UplinkDestroyedTime is { } destroyedTime && component.UplinkDeployedTime is { } deployedTime)
         {

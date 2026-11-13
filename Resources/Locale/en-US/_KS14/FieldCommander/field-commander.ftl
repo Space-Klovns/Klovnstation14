@@ -112,3 +112,14 @@ ks-fieldcommander-wave-status = Wave { $wave } · next in { $time }
 ks-fieldcommander-wave-status-first = First wave in { $time }
 ks-fieldcommander-wave-status-none = Wave { $wave } · no more scheduled
 ks-fieldcommander-wave-status-idle = Waves have not begun
+
+ks-fieldcommander-roundend-waves = The defence held out until wave [color=yellow]{ $wave }[/color].
+ks-fieldcommander-roundend-waves-endless = The defence held out until wave [color=yellow]{ $wave }[/color], { $endless } of them in endless mode.
+
+ks-fieldcommander-endless-vote-title = The uplink is down. Hold the line in endless mode?
+ks-fieldcommander-endless-vote-initiator = Field Operations
+ks-fieldcommander-endless-vote-yes = Hold the line
+ks-fieldcommander-endless-vote-no = Pull out
+ks-fieldcommander-intel-endless-vote = Field Operations. The uplink is down, the field is yours. Vote within { $seconds } seconds: pull out, or dig in and see how long you last.
+ks-fieldcommander-endless = You think that was all of it? Everything I have left is coming for you, and it will keep coming.
+ks-fieldcommander-intel-endless = Field Operations. You're holding the line. Every wave will be bigger and sooner than the last. Hold as long as you can.
