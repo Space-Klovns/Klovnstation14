@@ -85,13 +85,14 @@ public sealed partial class KsDistressBeaconSystem : EntitySystem
         entity.Comp.State = state;
         Dirty(entity);
 
-        var lit = state != KsDistressBeaconState.Off;
+        var settings = entity.Comp.SettingsFor(state);
+        var lit = settings != null;
         _pointLightSystem.SetEnabled(entity.Owner, lit);
-        if (lit)
+        if (settings != null)
         {
-            var critical = state == KsDistressBeaconState.Critical;
-            _pointLightSystem.SetRadius(entity.Owner, critical ? entity.Comp.CritLightRadius : entity.Comp.DeadLightRadius);
-            _pointLightSystem.SetEnergy(entity.Owner, critical ? entity.Comp.CritLightEnergy : entity.Comp.DeadLightEnergy);
+            _pointLightSystem.SetColor(entity.Owner, settings.LightColor);
+            _pointLightSystem.SetRadius(entity.Owner, settings.LightRadius);
+            _pointLightSystem.SetEnergy(entity.Owner, settings.LightEnergy);
         }
 
         _clothingSystem.SetEquippedPrefix(entity.Owner, lit ? LitPrefix : null);

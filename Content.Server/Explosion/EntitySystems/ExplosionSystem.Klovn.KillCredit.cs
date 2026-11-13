@@ -1,9 +1,12 @@
+using Content.Server._KS14.KillCredit;
 using Content.Shared.Projectiles;
 
 namespace Content.Server.Explosion.EntitySystems;
 
 public sealed partial class ExplosionSystem
 {
+    [Dependency] private KsKillCreditSystem _ksKillCreditSystem = default!;
+
     /// <summary>
     ///     Whoever set off the explosion whose damage is being dealt right now, or null outside of that.
     /// </summary>
@@ -21,8 +24,12 @@ public sealed partial class ExplosionSystem
     /// </summary>
     private EntityUid? KsResolveUser(EntityUid explosiveUid, EntityUid? user)
     {
-        return TryComp<ProjectileComponent>(explosiveUid, out var projectileComponent) && projectileComponent.Shooter is { } shooterUid
+        var resolved = TryComp<ProjectileComponent>(explosiveUid, out var projectileComponent) && projectileComponent.Shooter is { } shooterUid
             ? shooterUid
             : user;
+
+        // Settled now, while a turret that blows itself up still exists to say whose it is: the explosion is dealt
+        //     over the next few ticks, by which time it has been deleted.
+        return resolved is { } resolvedUid ? _ksKillCreditSystem.ResolveCredit(resolvedUid) : null;
     }
 }

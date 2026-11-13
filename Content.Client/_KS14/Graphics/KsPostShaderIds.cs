@@ -12,6 +12,8 @@ public static class KsPostShaderIds
     public const string BotWranglerOutline = "ks-bot-wrangler-outline";
     public const string WaveDistortion = "ks-wave-distortion";
     public const string Dissolve = "ks-dissolve";
+    public const string DistressBeaconOutline = "ks-distress-beacon-outline";
+    public const string DownFlash = "ks-down-flash";
 
     /// <summary>
     ///     Prefix for KsPostShaderStatusEffect's ids, which get the effect entity's id appended so that several of
@@ -31,6 +33,7 @@ public static class KsPostShaderIds
     [
         ..ContentPostShaderIds.BeforeOutlines,
         BotWranglerOutline,
+        DistressBeaconOutline,
     ];
 
     /// <summary>
@@ -42,5 +45,6 @@ public static class KsPostShaderIds
         LavaSinking,
         WaveDistortion,
         Dissolve,
+        DownFlash,
     ];
 }

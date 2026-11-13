@@ -29,15 +29,12 @@ public sealed partial class KsDistressBeaconBeepSystem : EntitySystem
         var enumerator = EntityQueryEnumerator<KsDistressBeaconComponent>();
         while (enumerator.MoveNext(out var uid, out var beaconComponent))
         {
-            if (beaconComponent.State == KsDistressBeaconState.Off || curTime < beaconComponent.NextBeep)
+            var settings = beaconComponent.SettingsFor(beaconComponent.State);
+            if (settings == null || curTime < beaconComponent.NextBeep)
                 continue;
 
             _audioSystem.PlayPvs(beaconComponent.BeepSound, uid);
-
-            var interval = beaconComponent.State == KsDistressBeaconState.Critical
-                ? beaconComponent.CritBeepInterval
-                : beaconComponent.DeadBeepInterval;
-            beaconComponent.NextBeep = curTime + interval;
+            beaconComponent.NextBeep = curTime + settings.BeepInterval;
         }
     }
 }

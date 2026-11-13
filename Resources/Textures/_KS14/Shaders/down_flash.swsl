@@ -1,0 +1,32 @@
+light_mode unshaded;
+
+// A flash of coloured static over a whole sprite that fades out, for a unit going down. A post-shader: the sprite
+//      arrives finished, all layers together, and already lit; the static covers only where it has pixels.
+//
+// Its own shader, with every uniform set on every instance every frame: GL uniforms belong to the program, so an
+//      instance that left them alone would draw with the last value written (see sinking_cut.swsl).
+uniform highp float progress;      // 0 as it starts, 1 as it is over
+uniform highp float seed;          // per entity, so neighbours don't flash in lockstep
+uniform highp vec4 flashColor;     // rgb the colour, a how strong it is at the start
+
+// Static pixels per quad. The post-shader quad is the sprite's size times 1.25, so this makes pixels about the size
+//      of the sprite's own.
+const highp float pixels = 40.0;
+// How many times the static changes over the flash.
+const highp float frames = 8.0;
+
+void fragment()
+{
+    highp vec4 tex = zTexture(UV);
+
+    highp vec2 cell = floor(UV2 * pixels);
+    highp float frame = floor(progress * frames);
+    highp float n = zNoise(cell * 3.7 + vec2(seed * 5.13 + frame * 17.3, seed * 2.71 - frame * 9.1));
+
+    // Quick to fade: it is all but gone by the end, whatever the noise.
+    highp float fade = (1.0 - progress) * (1.0 - progress);
+    highp float k = clamp(flashColor.a * fade * (0.45 + 0.9 * n), 0.0, 1.0);
+
+    // Pre-multiplied: the sprite was drawn into a transparent target, so its colour already carries its alpha.
+    COLOR = vec4(mix(tex.rgb, flashColor.rgb * tex.a, k), tex.a);
+}

@@ -101,6 +101,7 @@ ks-fieldcommander-points-loss = −{ $amount }  { $reason }
 ks-fieldcommander-points-kill = { $name }
 ks-fieldcommander-points-assist = Assist: { $name }
 ks-fieldcommander-points-teamkill = Friendly kill: { $name }
+ks-fieldcommander-points-teamkill-assist = Friendly kill assist: { $name }
 ks-fieldcommander-points-uplink = Uplink taken out
 ks-fieldcommander-points-admin = Adjusted by Field Operations
 
