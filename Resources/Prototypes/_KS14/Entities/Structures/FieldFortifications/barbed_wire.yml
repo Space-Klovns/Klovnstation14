@@ -11,6 +11,7 @@
     size: Normal
     shape:
     - 0,0,0,1
+    storedRotation: -90
   - type: Sprite
     sprite: _KS14/Objects/Misc/barbed_wire_coil.rsi
     state: razor_wire
