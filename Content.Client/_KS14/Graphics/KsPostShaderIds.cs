@@ -11,6 +11,7 @@ public static class KsPostShaderIds
     public const string LavaSinking = "ks-lava-sinking";
     public const string BotWranglerOutline = "ks-bot-wrangler-outline";
     public const string WaveDistortion = "ks-wave-distortion";
+    public const string Dissolve = "ks-dissolve";
 
     /// <summary>
     ///     Prefix for KsPostShaderStatusEffect's ids, which get the effect entity's id appended so that several of
@@ -40,5 +41,6 @@ public static class KsPostShaderIds
         ..ContentPostShaderIds.AfterBaseEffects,
         LavaSinking,
         WaveDistortion,
+        Dissolve,
     ];
 }
