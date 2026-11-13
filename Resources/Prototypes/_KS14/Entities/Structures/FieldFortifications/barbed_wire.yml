@@ -17,6 +17,9 @@
     - KsBarbedWireCoil
   - type: StaticPrice
     price: 15
+  - type: GuideHelp
+    guides:
+    - KsFortifications
 
 - type: entity
   parent: BaseStructure
@@ -105,6 +108,9 @@
   - type: Construction
     graph: KsBarbedWire
     node: barbedWire
+  - type: GuideHelp
+    guides:
+    - KsFortifications
 
 - type: constructionGraph
   id: KsBarbedWire

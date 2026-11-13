@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
 using Content.Shared.Construction.Prototypes;
+using Content.Client.Guidebook.Components;
+using Content.Shared.Guidebook;
 using Content.Shared.Stacks;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
@@ -24,6 +26,9 @@ public sealed class KsFortificationsContentTest : GameTest
     private static readonly ProtoId<ConstructionPrototype> SandbagWallRecipe = "KsSandbagWall";
     private static readonly EntProtoId Sandbags = "KsSandbag";
     private static readonly ResPath SandbagItemRsi = new("/Textures/_KS14/Objects/Misc/sandbag.rsi");
+    private static readonly ProtoId<GuideEntryPrototype> FortificationsGuide = "KsFortifications";
+    private static readonly ProtoId<GuideEntryPrototype> ConstructionGuide = "Construction";
+    private static readonly EntProtoId[] Fortifications = ["KsSandbagWall", "KsSandbag", "KsBarbedWire", "KsBarbedWireCoil"];
     private static readonly ProtoId<ConstructionPrototype>[] Recipes = [BarbedWireRecipe, SandbagWallRecipe];
 
     /// <summary>
@@ -113,5 +118,29 @@ public sealed class KsFortificationsContentTest : GameTest
         await ReadState();
 
         Assert.That(states[0], Is.Not.EqualTo(states[1]), "a single bag should look smaller than a full stack");
+    }
+
+    /// <summary>
+    ///     The fortifications guide hangs under Construction, and examining a fortification's guidebook button opens it.
+    /// </summary>
+    [Test]
+    public async Task FortificationsHaveAGuideUnderConstruction()
+    {
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(CProtoMan.HasIndex(FortificationsGuide), "the fortifications guide should exist");
+            Assert.That(CProtoMan.Index(ConstructionGuide).Children, Does.Contain(FortificationsGuide),
+                "the fortifications guide should be listed under Construction");
+
+            Assert.Multiple(() =>
+            {
+                foreach (var fortification in Fortifications)
+                {
+                    Assert.That(CProtoMan.Index(fortification).TryComp<GuideHelpComponent>(out var guideHelpComponent, CEntMan.ComponentFactory),
+                        $"{fortification} should link to a guide");
+                    Assert.That(guideHelpComponent?.Guides, Does.Contain(FortificationsGuide), $"{fortification} should link to the fortifications guide");
+                }
+            });
+        });
     }
 }

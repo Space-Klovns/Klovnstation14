@@ -39,6 +39,9 @@
     thresholds: [ 2, 3, 5 ]
   - type: StackPrice
     price: 5
+  - type: GuideHelp
+    guides:
+    - KsFortifications
 
 - type: entity
   parent: KsSandbag
@@ -107,6 +110,9 @@
   - type: Construction
     graph: KsSandbagWall
     node: sandbagWall
+  - type: GuideHelp
+    guides:
+    - KsFortifications
   - type: AtmosExposed
 
 - type: constructionGraph
