@@ -9,7 +9,8 @@ namespace Content.Shared._KS14.DistressBeacon;
 ///         in the dark: fast and bright when they are critical, slow and dim when they are dead.
 /// </summary>
 // Raises AfterAutoHandleStateEvent, which the client draws the beacon from.
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true), AutoGenerateComponentPause]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
+[Access(typeof(KsDistressBeaconSystem), Other = AccessPermissions.ReadExecute)]
 public sealed partial class KsDistressBeaconComponent : Component
 {
     /// <summary>
@@ -50,12 +51,6 @@ public sealed partial class KsDistressBeaconComponent : Component
     /// </summary>
     [DataField]
     public SoundSpecifier BeepSound = new SoundPathSpecifier("/Audio/Machines/quickbeep.ogg", AudioParams.Default.WithMaxDistance(25f).WithVolume(-2f));
-
-    /// <summary>
-    ///     When it beeps next. Server only.
-    /// </summary>
-    [DataField, AutoPausedField]
-    public TimeSpan NextBeep;
 
     /// <summary>
     ///     The settings for a state, or null if the beacon is off in it.

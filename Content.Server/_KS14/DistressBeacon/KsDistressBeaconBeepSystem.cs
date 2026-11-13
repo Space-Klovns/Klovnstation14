@@ -13,12 +13,24 @@ public sealed partial class KsDistressBeaconBeepSystem : EntitySystem
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     /// <summary>
-    ///     The first beep comes as soon as the wearer goes down.
+    ///     The first beep comes as soon as the wearer goes down; a beacon that goes off stops being looked at.
     /// </summary>
     [SubscribeLocalEvent]
     private void OnStateChanged(Entity<KsDistressBeaconComponent> entity, ref KsDistressBeaconStateChangedEvent args)
     {
-        entity.Comp.NextBeep = _gameTiming.CurTime;
+        if (entity.Comp.SettingsFor(args.State) == null)
+        {
+            RemCompDeferred<KsDistressBeaconBeepingComponent>(entity);
+            return;
+        }
+
+        EnsureComp<KsDistressBeaconBeepingComponent>(entity).NextBeep = _gameTiming.CurTime;
+    }
+
+    [SubscribeLocalEvent]
+    private void OnShutdown(Entity<KsDistressBeaconComponent> entity, ref ComponentShutdown args)
+    {
+        RemCompDeferred<KsDistressBeaconBeepingComponent>(entity);
     }
 
     public override void Update(float frameTime)
@@ -26,15 +38,19 @@ public sealed partial class KsDistressBeaconBeepSystem : EntitySystem
         base.Update(frameTime);
 
         var curTime = _gameTiming.CurTime;
-        var enumerator = EntityQueryEnumerator<KsDistressBeaconComponent>();
-        while (enumerator.MoveNext(out var uid, out var beaconComponent))
+        var enumerator = EntityQueryEnumerator<KsDistressBeaconBeepingComponent, KsDistressBeaconComponent>();
+        while (enumerator.MoveNext(out var uid, out var beepingComponent, out var beaconComponent))
         {
+            if (curTime < beepingComponent.NextBeep ||
+                beepingComponent.LifeStage > ComponentLifeStage.Running)
+                continue;
+
             var settings = beaconComponent.SettingsFor(beaconComponent.State);
-            if (settings == null || curTime < beaconComponent.NextBeep)
+            if (settings == null)
                 continue;
 
             _audioSystem.PlayPvs(beaconComponent.BeepSound, uid);
-            beaconComponent.NextBeep = curTime + settings.BeepInterval;
+            beepingComponent.NextBeep = curTime + settings.BeepInterval;
         }
     }
 }
