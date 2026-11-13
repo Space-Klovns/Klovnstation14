@@ -9,6 +9,8 @@
   components:
   - type: Item
     size: Normal
+    shape:
+    - 0,0,0,1
   - type: Sprite
     sprite: _KS14/Objects/Misc/barbed_wire_coil.rsi
     state: razor_wire
@@ -68,7 +70,8 @@
         hard: false
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.5,-0.5,0.5,0.5"
+          # A bit inside the tile, so brushing past its edge doesn't catch on it.
+          bounds: "-0.425,-0.425,0.425,0.425"
         density: 60
         layer:
         - MidImpassable
