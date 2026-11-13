@@ -1,0 +1,117 @@
+- type: Tag
+  id: KsBarbedWireCoil
+
+- type: entity
+  parent: BaseItem
+  id: KsBarbedWireCoil
+  name: barbed wire coil
+  description: A coil of barbed wire. Unroll it across the ground to slow down and cut up anything that wades through.
+  components:
+  - type: Item
+    size: Normal
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/barbed_wire_coil.rsi
+    state: razor_wire
+  - type: Tag
+    tags:
+    - KsBarbedWireCoil
+  - type: StaticPrice
+    price: 15
+
+- type: entity
+  parent: BaseStructure
+  id: KsBarbedWire
+  name: barbed wire
+  description: Rolled-out barbed wire. It doesn't stop anyone, or any bullet, but wading through it is slow and bloody. Cut it with wirecutters to roll it back up.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/barbed_wire.rsi
+    drawdepth: FloorObjects
+    layers:
+    - state: wire
+      map: [ "wire" ]
+    - state: post
+      map: [ "postA" ]
+    - state: post
+      map: [ "postB" ]
+  - type: Icon
+    sprite: _KS14/Structures/barbed_wire.rsi
+    state: wire
+  - type: KsLineSmooth
+    key: barbedWire
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        hard: false
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        density: 60
+        layer:
+        - MidImpassable
+  - type: SpeedModifierContacts
+    walkSpeedModifier: 0.4
+    sprintSpeedModifier: 0.4
+  - type: DamageContacts
+    damage:
+      types:
+        Slash: 3
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 60
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Construction
+    graph: KsBarbedWire
+    node: barbedWire
+
+- type: constructionGraph
+  id: KsBarbedWire
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: barbedWire
+      steps:
+      - tag: KsBarbedWireCoil
+        name: ks-construction-step-barbed-wire-coil
+        icon:
+          sprite: _KS14/Objects/Misc/barbed_wire_coil.rsi
+          state: razor_wire
+        doAfter: 1
+  - node: barbedWire
+    entity: KsBarbedWire
+    edges:
+    - to: start
+      completed:
+      - !type:SpawnPrototype
+        prototype: KsBarbedWireCoil
+        amount: 1
+      - !type:DeleteEntity {}
+      conditions:
+      - !type:EntityAnchored
+        anchored: true
+      steps:
+      - tool: Cutting
+        doAfter: 2
+
+- type: construction
+  id: KsBarbedWire
+  graph: KsBarbedWire
+  startNode: start
+  targetNode: barbedWire
+  category: construction-category-structures
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false

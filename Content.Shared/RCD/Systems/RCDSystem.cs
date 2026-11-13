@@ -566,7 +566,7 @@ public sealed partial class RCDSystem : EntitySystem
         var charges = _sharedCharges.GetCurrentCharges(uid);
 
         // Both of these were messages were suppose to be predicted, but HasInsufficientCharges wasn't being checked on the client for some reason?
-        if (charges == 0)
+        if (charges == 0 && prototype.Cost > 0 /* KS14: free builds work with an empty RCD */)
         {
             if (popMsgs)
                 _popup.PopupClient(KsPopupMessage.Create /* KS14: localize popups on the recipient */("rcd-component-no-ammo-message"), uid, user);

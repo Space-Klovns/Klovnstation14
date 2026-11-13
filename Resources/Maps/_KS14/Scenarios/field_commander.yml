@@ -1131547,7 +1131547,7 @@ entities:
     - type: Transform
       parent: 1
       pos: 5.4577904,53.032494
-- proto: MachineMaterialSilo
+- proto: KsMaterialSiloFieldCommander
   entities:
   - uid: 1891
     components:
@@ -1132304,7 +1132304,7 @@ entities:
     - type: Transform
       parent: 1
       pos: 4.6037283,1.3787148
-- proto: SecurityTechFab
+- proto: KsFieldCommanderTechFab
   entities:
   - uid: 1861
     components:

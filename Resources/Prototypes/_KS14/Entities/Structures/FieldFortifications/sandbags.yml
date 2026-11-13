@@ -1,0 +1,134 @@
+- type: stack
+  parent: BaseMediumStack
+  id: KsSandbag
+  name: stack-ks-sandbag
+  icon:
+    sprite: /Textures/_KS14/Structures/sandbags.rsi
+    state: full
+  spawn: KsSandbag
+  maxCount: 30
+
+- type: entity
+  parent: BaseItem
+  id: KsSandbag
+  name: sandbags
+  suffix: Full
+  description: Sacks of sand. Stack five of them into a wall to take cover behind.
+  components:
+  - type: Item
+    size: Normal
+  - type: Sprite
+    sprite: _KS14/Structures/sandbags.rsi
+    state: full
+  - type: Stack
+    stackType: KsSandbag
+    count: 5
+  - type: StackPrice
+    price: 5
+
+- type: entity
+  parent: KsSandbag
+  id: KsSandbag1
+  suffix: Single
+  components:
+  - type: Stack
+    count: 1
+
+- type: entity
+  parent: BaseStructure
+  id: KsSandbagWall
+  name: sandbag wall
+  description: A wall of stacked sandbags. It soaks up bullets, and it can be pulled apart again.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/sandbags.rsi
+    drawdepth: BlastDoors
+  - type: Icon
+    sprite: _KS14/Structures/sandbags.rsi
+    state: full
+  - type: IconSmooth
+    key: sandbags
+    base: state_
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        density: 60
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+  - type: Damageable
+    damageModifierSet: Wood
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageTrigger
+        damage: 120
+      behaviors:
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          KsSandbag1:
+            min: 2
+            max: 3
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Construction
+    graph: KsSandbagWall
+    node: sandbagWall
+  - type: AtmosExposed
+
+- type: constructionGraph
+  id: KsSandbagWall
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: sandbagWall
+      completed:
+      - !type:SnapToGrid
+        southRotation: true
+      steps:
+      - material: KsSandbag
+        amount: 5
+        doAfter: 2
+  - node: sandbagWall
+    entity: KsSandbagWall
+    edges:
+    - to: start
+      completed:
+      - !type:SpawnPrototype
+        prototype: KsSandbag1
+        amount: 5
+      - !type:DeleteEntity {}
+      conditions:
+      - !type:EntityAnchored
+        anchored: true
+      steps:
+      - tool: Prying
+        doAfter: 2
+
+- type: construction
+  id: KsSandbagWall
+  graph: KsSandbagWall
+  startNode: start
+  targetNode: sandbagWall
+  category: construction-category-structures
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canRotate: false
+  canBuildInImpassable: false
+  conditions:
+  - !type:TileNotBlocked
