@@ -94,9 +94,12 @@
         !type:DamageTrigger
         damage: 60
       behaviors:
+      # The wire snapping: a wirecutter's snip, pitched down.
       - !type:PlaySoundBehavior
         sound:
-          collection: MetalBreak
+          path: /Audio/Items/wirecutter.ogg
+          params:
+            pitch: 0.7
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
   - type: Construction
