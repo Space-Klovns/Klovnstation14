@@ -3,6 +3,8 @@ using Content.Server._KS14.NPC.Dangers;
 using Content.Server._KS14.NPC.Grenades;
 using Content.Server.Explosion.EntitySystems;
 using Content.Shared.Explosion.Components;
+using Content.Shared.Flash;
+using Content.Shared.Trigger.Components.Effects;
 using Content.Shared.Trigger.Components;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
@@ -10,9 +12,11 @@ using Robust.Shared.Map;
 namespace Content.Server.NPC.Pathfinding;
 
 /// <summary>
-///     Primed explosives as tile dangers (<see cref="NpcTileDangerKind.Blast"/>): every tile their blast would reach, round
-///         where they will land if they are still in the air, so that a path goes round a grenade rather than up to it and
-///         then away. Worked out with the fires, in <see cref="RefreshTileDangers"/>, so as often and only when asked.
+///     Primed explosives and flashes as tile dangers (<see cref="NpcTileDangerKind.Blast"/>, <see cref="NpcTileDangerKind.Flash"/>):
+///         every tile their blast or flash would reach, round where they will land if they are still in the air, so that a
+///         path goes round a grenade rather than up to it and then away. Worked out with the fires, in
+///         <see cref="RefreshTileDangers"/>, so as often and only when asked. A flash is no danger to one it cannot blind,
+///         which <see cref="GetAvoidedDangers"/> leaves it out for.
 /// </summary>
 /// <remarks>
 ///     Only what the path is to cross. Getting out of a blast already started round the NPC is the grenade branch's
@@ -29,6 +33,19 @@ public sealed partial class PathfindingSystem
     [Dependency] private ExplosionSystem _explosionSystem = default!;
     [Dependency] private NpcGrenadeSystem _npcGrenadeSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private SharedFlashSystem _flashSystem = default!;
+
+    /// <summary>
+    ///     Whether there is any flash danger about, as of the last refresh: only then is anyone asked whether it can be
+    ///         blinded, which raises an event through its gear.
+    /// </summary>
+    private bool _anyFlashDanger;
+
+    /// <summary>
+    ///     Who cannot be blinded, as of the last refresh, by NPC: asked at most once a refresh each, and only while a flash is
+    ///         primed, as steering asks what an NPC avoids every tick.
+    /// </summary>
+    private readonly Dictionary<EntityUid, bool> _flashProof = new();
 
     /// <summary>
     ///     Adds every primed explosive's reach to the dangers, and to <paramref name="hash"/>.
@@ -52,12 +69,49 @@ public sealed partial class PathfindingSystem
                     explosiveComponent.MaxIntensity));
 
             var centre = _maps.TileIndicesFor(gridUid, mapGridComponent, coordinates);
-            AddBlastDanger(gridUid, centre, radius);
+            AddDiscDanger(gridUid, centre, radius, NpcTileDangerKind.Blast);
             hash += HashCode.Combine(gridUid, centre, (int) MathF.Ceiling(radius), NpcTileDangerKind.Blast);
+        }
+
+        _anyFlashDanger = false;
+        _flashProof.Clear();
+
+        var flashEnumerator = EntityQueryEnumerator<ActiveTimerTriggerComponent, FlashOnTriggerComponent, TransformComponent>();
+        while (flashEnumerator.MoveNext(out var flashUid, out _, out var flashOnTriggerComponent, out var transformComponent))
+        {
+            if (_containerSystem.IsEntityInContainer(flashUid))
+                continue;
+
+            var coordinates = _npcGrenadeSystem.TryGetLanding(flashUid, out var landing) ? landing : transformComponent.Coordinates;
+            if (_transform.GetGrid(coordinates) is not { } gridUid || !_mapGridQuery.TryComp(gridUid, out var mapGridComponent))
+                continue;
+
+            var radius = MathF.Min(MaxBlastDangerRadius, flashOnTriggerComponent.Range);
+            var centre = _maps.TileIndicesFor(gridUid, mapGridComponent, coordinates);
+            AddDiscDanger(gridUid, centre, radius, NpcTileDangerKind.Flash);
+            hash += HashCode.Combine(gridUid, centre, (int) MathF.Ceiling(radius), NpcTileDangerKind.Flash);
+            _anyFlashDanger = true;
         }
     }
 
-    private void AddBlastDanger(EntityUid gridUid, Vector2i centre, float radius)
+    /// <summary>
+    ///     <paramref name="dangers"/> without <see cref="NpcTileDangerKind.Flash"/> if <paramref name="uid"/> cannot be blinded.
+    /// </summary>
+    private NpcTileDangerKind WithoutHarmlessFlash(EntityUid uid, NpcTileDangerKind dangers)
+    {
+        if ((dangers & NpcTileDangerKind.Flash) == 0x0 || !_anyFlashDanger)
+            return dangers;
+
+        if (!_flashProof.TryGetValue(uid, out var flashProof))
+        {
+            flashProof = !_flashSystem.CanFlash(uid);
+            _flashProof[uid] = flashProof;
+        }
+
+        return flashProof ? dangers & ~NpcTileDangerKind.Flash : dangers;
+    }
+
+    private void AddDiscDanger(EntityUid gridUid, Vector2i centre, float radius, NpcTileDangerKind danger)
     {
         var reach = (int) MathF.Ceiling(radius);
         var radiusSquared = radius * radius;
@@ -67,7 +121,7 @@ public sealed partial class PathfindingSystem
             for (var y = -reach; y <= reach; y++)
             {
                 if (x * x + y * y <= radiusSquared)
-                    AddTileDanger(gridUid, centre + new Vector2i(x, y), NpcTileDangerKind.Blast);
+                    AddTileDanger(gridUid, centre + new Vector2i(x, y), danger);
             }
         }
     }

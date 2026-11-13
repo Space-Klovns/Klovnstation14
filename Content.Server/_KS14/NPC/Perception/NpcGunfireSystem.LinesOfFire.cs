@@ -1,21 +1,23 @@
 using System.Numerics;
 using Content.Server._KS14.NPC.Utility;
 using Content.Shared.NPC.Systems;
-using Content.Shared.Physics;
 using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Perception;
 
 /// <summary>
 ///     Whose fire is where: everyone that has fired lately (<see cref="NpcRecentShooterComponent"/>, players and NPCs alike)
-///         has a line of fire, from where it last fired along where it aimed, until a wall stops it. Asked of on behalf of
-///         one NPC, about fire friendly to it (<see cref="NpcFireSide.Friendly"/>) or not (<see cref="NpcFireSide.Hostile"/>).
+///         has a line of fire for each of its last few shots, from where it fired along where it aimed, until something
+///         anchored that its round collides with stops it: a laser goes on through a window, a bullet does not (the mask
+///         is <c>NpcLineOfFireSystem</c>'s, what NPC combat goes by). Asked of on behalf of one NPC, about fire friendly to
+///         it (<see cref="NpcFireSide.Friendly"/>) or not (<see cref="NpcFireSide.Hostile"/>).
 /// </summary>
 /// <remarks>
 ///     <para>
-///         Lines, not rounds: a gun that fired within <see cref="DefaultFireMemory"/> is taken to be firing still, the way
-///             it last did. That is what a squadmate in the middle of a burst looks like, and what a hostile spraying a
-///             corridor looks like to someone deciding whether to cross it.
+///         Lines, not rounds: a shot within <see cref="DefaultFireMemory"/> is taken to be firing still, the way it went.
+///             That is what a squadmate in the middle of a burst looks like, and what a hostile sweeping a corridor looks
+///             like - a fan of its last <see cref="NpcRecentShooterComponent.ShotHistory"/> shots - to someone deciding
+///             whether to cross it.
 ///     </para>
 ///     <para>
 ///         For now, read by <c>DiveOperator</c>: never across a friend's fire, and not across a hostile's if there is a
@@ -24,8 +26,9 @@ namespace Content.Server._KS14.NPC.Perception;
 ///     </para>
 ///     <para>
 ///         Every recent shooter is walked on each ask, rather than kept in a spatial index: shooters are few, the time
-///             test is first and costs a field read, and nothing asks every tick. A shot's reach to the first wall is a ray,
-///             cast the first time anyone asks about that shot and kept (<see cref="NpcRecentShooterComponent.LastShotReach"/>).
+///             test is first and costs a field read, and nothing asks every tick. A shot's reach is a ray against anchored
+///             things only - mobs share their layers with walls, and a miss flies on past them - cast the first time anyone
+///             asks about that shot and kept (<see cref="NpcRecentShot.Reach"/>).
 ///     </para>
 /// </remarks>
 public sealed partial class NpcGunfireSystem
@@ -74,14 +77,24 @@ public sealed partial class NpcGunfireSystem
             if (recentShooterComponent.LastShotAt < since || shooterUid == uid)
                 continue;
 
-            if (!TryGetLineOfFire((shooterUid, recentShooterComponent), out var fireFrom, out var fireTo) ||
-                fireFrom.MapId != from.MapId ||
-                NpcCoordinates.GetSegmentDistance(from.Position, to.Position, fireFrom.Position, fireTo.Position) > clearance)
-                continue;
+            NpcFireSide? side = null;
 
-            var side = _npcFactionSystem.IsEntityFriendly(uid, shooterUid) ? NpcFireSide.Friendly : NpcFireSide.Hostile;
-            if ((sides & side) != 0x0)
-                return true;
+            for (var i = 0; i < NpcRecentShooterComponent.ShotHistory; i++)
+            {
+                ref var shot = ref recentShooterComponent.Shots[i];
+                if (shot.At < since ||
+                    !TryGetLineOfFire(ref shot, out var fireFrom, out var fireTo) ||
+                    fireFrom.MapId != from.MapId ||
+                    NpcCoordinates.GetSegmentDistance(from.Position, to.Position, fireFrom.Position, fireTo.Position) > clearance)
+                    continue;
+
+                side ??= _npcFactionSystem.IsEntityFriendly(uid, shooterUid) ? NpcFireSide.Friendly : NpcFireSide.Hostile;
+                if ((sides & side.Value) != 0x0)
+                    return true;
+
+                // The same shooter is on the same side for every shot.
+                break;
+            }
         }
 
         return false;
@@ -99,18 +112,19 @@ public sealed partial class NpcGunfireSystem
     }
 
     /// <summary>
-    ///     <paramref name="shooter"/>'s last line of fire: from where it fired, along where it aimed, to the first wall or
-    ///         <see cref="MaxFireReach"/>. False if it has none to speak of: its grid gone, or aimed at itself.
+    ///     <paramref name="shot"/>'s line of fire: from where it was fired, along where it was aimed, to the first anchored
+    ///         thing its round collides with, or <see cref="MaxFireReach"/>. False if it has none to speak of: its grid gone,
+    ///         or aimed at where it was fired from.
     /// </summary>
-    public bool TryGetLineOfFire(Entity<NpcRecentShooterComponent> shooter, out MapCoordinates from, out MapCoordinates to)
+    private bool TryGetLineOfFire(ref NpcRecentShot shot, out MapCoordinates from, out MapCoordinates to)
     {
         from = to = MapCoordinates.Nullspace;
 
-        if (TerminatingOrDeleted(shooter.Comp.LastShotFrom.EntityId) || TerminatingOrDeleted(shooter.Comp.LastShotTo.EntityId))
+        if (TerminatingOrDeleted(shot.From.EntityId) || TerminatingOrDeleted(shot.To.EntityId))
             return false;
 
-        from = _transformSystem.ToMapCoordinates(shooter.Comp.LastShotFrom);
-        var aim = _transformSystem.ToMapCoordinates(shooter.Comp.LastShotTo);
+        from = _transformSystem.ToMapCoordinates(shot.From);
+        var aim = _transformSystem.ToMapCoordinates(shot.To);
         var offset = aim.Position - from.Position;
 
         if (aim.MapId != from.MapId || offset.LengthSquared() < 0.0001f)
@@ -118,15 +132,10 @@ public sealed partial class NpcGunfireSystem
 
         var direction = Vector2.Normalize(offset);
 
-        if (shooter.Comp.LastShotReach < 0f)
-        {
-            shooter.Comp.LastShotReach = _npcLineOfSightSystem.GetClearDistance(from,
-                direction,
-                MaxFireReach,
-                (int) CollisionGroup.Impassable);
-        }
+        if (shot.Reach < 0f)
+            shot.Reach = _npcLineOfSightSystem.GetClearDistance(from, direction, MaxFireReach, (int) shot.Mask, staticOnly: true);
 
-        to = from.Offset(direction * shooter.Comp.LastShotReach);
+        to = from.Offset(direction * shot.Reach);
         return true;
     }
 }

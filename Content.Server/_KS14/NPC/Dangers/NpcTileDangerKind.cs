@@ -19,4 +19,10 @@ public enum NpcTileDangerKind : byte
     ///         <c>PathfindingSystem.Klovn.Blast.cs</c>.
     /// </summary>
     Blast = 1 << 1,
+
+    /// <summary>
+    ///     Within range of a primed flash - a flashbang, a stinger's flash - or of where one in the air will land. Not a danger
+    ///         to one the flash cannot blind (eye protection, no eyes): see <c>PathfindingSystem.GetAvoidedDangers</c>.
+    /// </summary>
+    Flash = 1 << 2,
 }

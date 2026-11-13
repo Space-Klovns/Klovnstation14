@@ -71,6 +71,29 @@ public sealed class KsNpcTileDangerTest : GameTest
     dangers: Fire, Blast
 
 - type: entity
+  parent: KsTileDangerTestBlastAvoider
+  id: KsTileDangerTestFlashAvoider
+  components:
+  - type: NpcAvoidsTileDanger
+    dangers: Fire, Blast, Flash
+
+- type: entity
+  parent: KsTileDangerTestFlashAvoider
+  id: KsTileDangerTestFlashProof
+  components:
+  - type: FlashImmunity
+
+- type: entity
+  id: KsTileDangerTestFlashbang
+  components:
+  - type: TimerTrigger
+    delay: 1000
+  - type: FlashOnTrigger
+    keysIn:
+    - timer
+    range: 3
+
+- type: entity
   id: KsTileDangerTestGrenade
   components:
   - type: TimerTrigger
@@ -184,6 +207,33 @@ public sealed class KsNpcTileDangerTest : GameTest
         Assert.That(path.Result, Is.EqualTo(PathResult.Path));
         Assert.That(path.Path.Any(poly => IsOnFireLine(poly, 0, -1, 1)), Is.EqualTo(!primed),
             primed ? "a lit grenade's reach should be gone round" : "an unlit grenade is nothing to go round");
+    }
+
+    /// <summary>
+    ///     A primed flash's range is gone round too, by one it could blind; one it cannot (flash immunity) walks on through.
+    /// </summary>
+    [TestCase("KsTileDangerTestFlashAvoider", false)]
+    [TestCase("KsTileDangerTestFlashProof", true)]
+    public async Task TestPrimedFlashIsGoneRoundByThoseItBlinds(string mob, bool crosses)
+    {
+        var (entManager, gridUid) = await SetUpGrid(size: 10);
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, mob, gridUid, -5, 0);
+            var flashUid = SpawnAt(entManager, "KsTileDangerTestFlashbang", gridUid, 0, 0);
+            Assert.That(entManager.System<TriggerSystem>().ActivateTimerTrigger(flashUid), "the fuse should light");
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+        await Pair.Server.WaitPost(() => entManager.System<PathfindingSystem>().RefreshTileDangersNow());
+
+        var path = await FindPath(entManager, npcUid, new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
+
+        Assert.That(path.Result, Is.EqualTo(PathResult.Path));
+        Assert.That(path.Path.Any(poly => IsOnFireLine(poly, 0, -1, 1)), Is.EqualTo(crosses),
+            crosses ? "a flash it is immune to is nothing to go round" : "a lit flash's range should be gone round");
     }
 
     /// <summary>

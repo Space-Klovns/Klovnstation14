@@ -73,7 +73,7 @@ public sealed partial class PathfindingSystem
             return NpcTileDangerKind.None;
 
         RefreshTileDangers();
-        return _tileDangers.Count > 0 ? avoidsTileDangerComponent.Dangers : NpcTileDangerKind.None;
+        return _tileDangers.Count > 0 ? WithoutHarmlessFlash(uid, avoidsTileDangerComponent.Dangers) : NpcTileDangerKind.None;
     }
 
     /// <summary>

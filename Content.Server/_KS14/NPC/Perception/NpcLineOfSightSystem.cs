@@ -857,9 +857,11 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
     /// </summary>
     /// <remarks>
     ///     Hits what a physics ray with that mask would: hard fixtures on a layer in it. Allocates only for a hit, which it
-    ///         keeps one of.
+    ///         keeps one of. With <paramref name="staticOnly"/>, only what is anchored in place: walls, windows, machines.
+    ///         Mobs share their layers with walls (a bullet hits both), so that is the only way to ask how far a round
+    ///         flies past whoever is in the way.
     /// </remarks>
-    public float GetClearDistance(MapCoordinates origin, Vector2 direction, float maxDistance, int collisionMask)
+    public float GetClearDistance(MapCoordinates origin, Vector2 direction, float maxDistance, int collisionMask, bool staticOnly = false)
     {
         if (origin.MapId == MapId.Nullspace || direction.LengthSquared() < 0.0001f || maxDistance <= 0f)
             return 0f;
@@ -867,7 +869,11 @@ public sealed partial class NpcLineOfSightSystem : EntitySystem
         var result = _rayCastSystem.CastRayClosest(origin.MapId,
             origin.Position,
             Vector2.Normalize(direction) * maxDistance,
-            new QueryFilter { MaskBits = collisionMask });
+            new QueryFilter
+            {
+                MaskBits = collisionMask,
+                Flags = staticOnly ? QueryFlags.Static : QueryFlags.Dynamic | QueryFlags.Static,
+            });
 
         return result.Hit ? result.Results[0].Fraction * maxDistance : maxDistance;
     }

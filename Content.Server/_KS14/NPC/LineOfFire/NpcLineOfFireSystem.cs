@@ -108,6 +108,20 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     }
 
     /// <summary>
+    ///     What the next round from what <paramref name="shooterUid"/> is holding would collide with, if it can tell: what
+    ///         walls, windows and the like stop it. A laser goes through glass; a bullet does not.
+    /// </summary>
+    public bool TryGetShotMask(EntityUid shooterUid, out CollisionGroup mask)
+    {
+        mask = default;
+        if (!TryGetNextShot(shooterUid, out var shot))
+            return false;
+
+        mask = shot.Mask;
+        return true;
+    }
+
+    /// <summary>
     ///     Whether the next shot from what <paramref name="shooterUid"/> is holding is hitscan: a beam, not a projectile. Only a
     ///         projectile passes through those its shooter would rather not hit (<c>KsFactionCollisionShooter</c>).
     /// </summary>

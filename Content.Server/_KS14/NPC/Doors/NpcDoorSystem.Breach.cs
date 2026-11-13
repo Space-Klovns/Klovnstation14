@@ -45,12 +45,21 @@ public sealed partial class NpcDoorSystem
     /// <summary>
     ///     Whether <paramref name="npcUid"/> is forcing a door steering found in its way (<see cref="TryBreachBlockingDoor"/>),
     ///         rather than one it was sent to force. That breach ends with the move (<see cref="StopSteeringBreach"/>),
-    ///         so whatever would end the move part way - a new order - should wait for it.
+    ///         so whatever would end the move part way - a new order - should wait for it. Only for
+    ///         <see cref="MaxBreachOrderHold"/>: a pry that slow is not worth holding a squad up for.
     /// </summary>
     public bool IsBreachingOnTheWay(EntityUid npcUid)
     {
-        return _breachingQuery.TryComp(npcUid, out var breachingComponent) && breachingComponent.FromSteering;
+        return _breachingQuery.TryComp(npcUid, out var breachingComponent) &&
+            breachingComponent.FromSteering &&
+            _gameTiming.CurTime - breachingComponent.StartedAt < MaxBreachOrderHold;
     }
+
+    /// <summary>
+    ///     The longest a breach on the way holds new orders back (<see cref="IsBreachingOnTheWay"/>): longer than a crowbar
+    ///         takes on an unpowered airlock.
+    /// </summary>
+    public static readonly TimeSpan MaxBreachOrderHold = TimeSpan.FromSeconds(8);
 
     /// <summary>
     ///     Whether <paramref name="npcUid"/> is forcing <paramref name="doorUid"/> right now.
@@ -133,6 +142,7 @@ public sealed partial class NpcDoorSystem
         breachingComponent.ToolUid = toolUid;
         breachingComponent.Method = method;
         breachingComponent.FromSteering = fromSteering;
+        breachingComponent.StartedAt = _gameTiming.CurTime;
         breachingComponent.GiveUpAt = _gameTiming.CurTime + timeout;
 
         var tookOut = _npcHandsSystem.TryTakeOut(npcUid, toolUid, out var takenOut);
