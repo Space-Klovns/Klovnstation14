@@ -3,8 +3,8 @@
   id: KsSandbag
   name: stack-ks-sandbag
   icon:
-    sprite: /Textures/_KS14/Structures/sandbags.rsi
-    state: full
+    sprite: /Textures/_KS14/Objects/Misc/sandbag.rsi
+    state: sandbag_4
   spawn: KsSandbag
   maxCount: 30
 
@@ -15,22 +15,44 @@
   suffix: Full
   description: Sacks of sand. Stack five of them into a wall to take cover behind.
   components:
+  - type: Appearance
   - type: Item
     size: Normal
   - type: Sprite
-    sprite: _KS14/Structures/sandbags.rsi
-    state: full
+    sprite: _KS14/Objects/Misc/sandbag.rsi
+    state: sandbag_4
+    layers:
+    - state: sandbag_4
+      map: [ "base" ]
+  # The pile grows with the stack, in broad steps: one bag, two, a small pile, then the full pile from a wall's worth.
   - type: Stack
     stackType: KsSandbag
     count: 5
+    baseLayer: base
+    layerStates:
+    - sandbag
+    - sandbag_2
+    - sandbag_3
+    - sandbag_4
+    layerFunction: Threshold
+  - type: StackLayerThreshold
+    thresholds: [ 2, 3, 5 ]
   - type: StackPrice
     price: 5
+  - type: GuideHelp
+    guides:
+    - KsFortifications
 
 - type: entity
   parent: KsSandbag
   id: KsSandbag1
   suffix: Single
   components:
+  - type: Sprite
+    state: sandbag
+    layers:
+    - state: sandbag
+      map: [ "base" ]
   - type: Stack
     count: 1
 
@@ -88,6 +110,9 @@
   - type: Construction
     graph: KsSandbagWall
     node: sandbagWall
+  - type: GuideHelp
+    guides:
+    - KsFortifications
   - type: AtmosExposed
 
 - type: constructionGraph

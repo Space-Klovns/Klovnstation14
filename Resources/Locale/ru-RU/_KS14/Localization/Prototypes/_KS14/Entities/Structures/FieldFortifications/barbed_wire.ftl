@@ -1,4 +1,4 @@
-# Resources\Prototypes\_KS14\Entities\Structures\FieldFortificationsarbed_wire.yml
+# Resources\Prototypes\_KS14\Entities\Structures\FieldFortifications\barbed_wire.yml
 ent-KsBarbedWireCoil = бухта колючей проволоки
     .desc = Бухта колючей проволоки. Раскатайте её по земле, чтобы замедлять и рвать всех, кто через неё пробирается.
 ent-KsBarbedWire = колючая проволока

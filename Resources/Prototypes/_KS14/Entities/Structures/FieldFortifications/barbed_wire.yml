@@ -19,6 +19,9 @@
     - KsBarbedWireCoil
   - type: StaticPrice
     price: 15
+  - type: GuideHelp
+    guides:
+    - KsFortifications
 
 - type: entity
   parent: BaseStructure
@@ -78,7 +81,9 @@
   - type: SpeedModifierContacts
     walkSpeedModifier: 0.175
     sprintSpeedModifier: 0.175
+  # Cuts only those wading through: standing still in it is safe, the first step after hurts at once.
   - type: DamageContacts
+    onlyWhileMoving: true
     damage:
       types:
         Slash: 10
@@ -96,14 +101,20 @@
         !type:DamageTrigger
         damage: 60
       behaviors:
+      # The wire snapping: a wirecutter's snip, pitched down.
       - !type:PlaySoundBehavior
         sound:
-          collection: MetalBreak
+          path: /Audio/Items/wirecutter.ogg
+          params:
+            pitch: 0.7
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
   - type: Construction
     graph: KsBarbedWire
     node: barbedWire
+  - type: GuideHelp
+    guides:
+    - KsFortifications
 
 - type: constructionGraph
   id: KsBarbedWire

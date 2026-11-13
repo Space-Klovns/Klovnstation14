@@ -33,6 +33,10 @@ public sealed partial class DamageContactsSystem : EntitySystem
         {
             if (_timing.CurTime < damaged.NextSecond)
                 continue;
+            // KS14 start: a source may only hurt the moving; the tick stays due until they move
+            if (!KsCanTakeContactDamage((ent, damaged)))
+                continue;
+            // KS14 end
             damaged.NextSecond = _timing.CurTime + TimeSpan.FromSeconds(1);
             Dirty(ent, damaged); // KS14: NextSecond is networked, so the client ticks with the server
 
@@ -81,5 +85,6 @@ public sealed partial class DamageContactsSystem : EntitySystem
 
         var damagedByContact = EnsureComp<DamagedByContactComponent>(otherUid);
         damagedByContact.Damage = component.Damage;
+        damagedByContact.OnlyWhileMoving = component.OnlyWhileMoving; // KS14: carried with the damage
     }
 }
