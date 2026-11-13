@@ -1,4 +1,5 @@
 using Content.Shared._Trauma.Projectiles;
+using Content.Shared.Projectiles;
 using Robust.Shared.Map;
 
 namespace Content.Shared._KS14.Projectiles;
@@ -15,6 +16,16 @@ public sealed partial class KsProjectileFalloffSystem : EntitySystem
     {
         if (!TryComp<KsProjectileFalloffComponent>(args.Projectile, out var falloffComponent))
             return;
+
+        // The gun's tuning, written onto the projectile once so the hit code only reads the projectile.
+        if (TryComp<ProjectileComponent>(args.Projectile, out var projectileComponent) &&
+            projectileComponent.Weapon is { } weaponUid &&
+            TryComp<KsGunProjectileFalloffComponent>(weaponUid, out var gunFalloff))
+        {
+            falloffComponent.FullDamageRange = (gunFalloff.FullDamageRange ?? falloffComponent.FullDamageRange) * gunFalloff.RangeScale;
+            falloffComponent.MinDamageRange = (gunFalloff.MinDamageRange ?? falloffComponent.MinDamageRange) * gunFalloff.RangeScale;
+            falloffComponent.MinMultiplier = gunFalloff.MinMultiplier ?? falloffComponent.MinMultiplier;
+        }
 
         var origin = _transformSystem.GetMapCoordinates(args.Projectile);
         falloffComponent.OriginMap = origin.MapId;

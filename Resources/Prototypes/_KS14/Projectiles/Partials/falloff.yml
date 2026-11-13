@@ -1,5 +1,6 @@
 # Distance damage falloff for ballistic bullets. Lasers, rockets, grenades, energy and magic bolts also inherit
 # BaseBullet, so the component goes on the ballistic bullet roots instead of on BaseBullet itself.
+# Sniper rounds (BulletAntiMateriel, BulletAntiMaterielAP: the Hristov and the musket) are left out on purpose, they do not fall off.
 - type: !PartialOnly entity
   id: BaseBulletPractice
   components:
@@ -17,16 +18,6 @@
 
 - type: !PartialOnly entity
   id: BaseBulletUranium
-  components:
-  - type: KsProjectileFalloff
-
-- type: !PartialOnly entity
-  id: BulletAntiMateriel
-  components:
-  - type: KsProjectileFalloff
-
-- type: !PartialOnly entity
-  id: BulletAntiMaterielAP
   components:
   - type: KsProjectileFalloff
 

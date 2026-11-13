@@ -6,6 +6,7 @@ using Content.Shared._KS14.Projectiles;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Projectiles;
+using Content.Shared.Weapons.Ranged.Systems;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -20,9 +21,13 @@ public sealed class KsProjectileFalloffTest : GameTest
     private static readonly EntProtoId PistolBullet = "BulletPistol";
     private static readonly EntProtoId LaserBullet = "BulletLaser";
     private static readonly EntProtoId RocketBullet = "BulletRocket";
+    private static readonly EntProtoId HristovSniper = "WeaponSniperHristov";
 
     private readonly EntProtoId _bullet = "KsFalloffTestBullet";
     private readonly EntProtoId _target = "KsFalloffTestTarget";
+    private readonly EntProtoId _plainGun = "KsFalloffTestGun";
+    private readonly EntProtoId _scaledGun = "KsFalloffTestScaledGun";
+    private readonly EntProtoId _noFalloffGun = "KsFalloffTestNoFalloffGun";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -39,6 +44,21 @@ public sealed class KsProjectileFalloffTest : GameTest
     fullDamageRange: 6
     minDamageRange: 16
     minMultiplier: 0.25
+
+- type: entity
+  id: KsFalloffTestGun
+
+- type: entity
+  id: KsFalloffTestScaledGun
+  components:
+  - type: KsGunProjectileFalloff
+    rangeScale: 2
+
+- type: entity
+  id: KsFalloffTestNoFalloffGun
+  components:
+  - type: KsGunProjectileFalloff
+    minMultiplier: 1
 
 - type: entity
   id: KsFalloffTestTarget
@@ -81,7 +101,7 @@ public sealed class KsProjectileFalloffTest : GameTest
     /// Fires a bullet from the origin, moves it <paramref name="distance"/> tiles along, hits a fresh target and
     /// returns the damage it dealt.
     /// </summary>
-    private async Task<float> DamageDealtAt(MapId mapId, float distance)
+    private async Task<float> DamageDealtAt(MapId mapId, float distance, EntProtoId bullet, EntProtoId? gun = null)
     {
         var server = Pair.Server;
         var damage = 0f;
@@ -90,11 +110,11 @@ public sealed class KsProjectileFalloffTest : GameTest
         {
             var entMan = server.EntMan;
             var transformSystem = entMan.System<SharedTransformSystem>();
-            var bulletUid = entMan.SpawnEntity(_bullet, new MapCoordinates(Vector2.Zero, mapId));
+            var bulletUid = entMan.SpawnEntity(bullet, new MapCoordinates(Vector2.Zero, mapId));
 
-            // The same event the gun raises when it fires, which is what stamps the origin.
-            var shotEvent = new PlayerShotProjectileEvent(bulletUid, bulletUid);
-            entMan.EventBus.RaiseEvent(EventSource.Local, ref shotEvent);
+            // The real fire path: it stamps the origin and applies the gun's tuning.
+            var gunUid = entMan.SpawnEntity(gun ?? _plainGun, new MapCoordinates(Vector2.Zero, mapId));
+            entMan.System<SharedGunSystem>().ShootProjectile(bulletUid, Vector2.UnitX, Vector2.Zero, gunUid, gunUid);
 
             transformSystem.SetMapCoordinates(bulletUid, new MapCoordinates(new Vector2(distance, 0f), mapId));
             var targetUid = entMan.SpawnEntity(_target, new MapCoordinates(new Vector2(distance, 0f), mapId));
@@ -120,9 +140,9 @@ public sealed class KsProjectileFalloffTest : GameTest
             Pair.Server.EntMan.DeleteEntity(probe);
         });
 
-        nearDamage = await DamageDealtAt(testMap.MapId, 4f);
-        midDamage = await DamageDealtAt(testMap.MapId, 11f);
-        farDamage = await DamageDealtAt(testMap.MapId, 30f);
+        nearDamage = await DamageDealtAt(testMap.MapId, 4f, _bullet);
+        midDamage = await DamageDealtAt(testMap.MapId, 11f, _bullet);
+        farDamage = await DamageDealtAt(testMap.MapId, 30f, _bullet);
 
         Assert.That(nearDamage, Is.GreaterThan(0f));
         Assert.Multiple(() =>
@@ -130,6 +150,49 @@ public sealed class KsProjectileFalloffTest : GameTest
             Assert.That(farDamage / nearDamage, Is.EqualTo(falloff!.MinMultiplier).Within(0.01f), "far hit does the minimum fraction");
             Assert.That(midDamage / nearDamage, Is.EqualTo(0.625f).Within(0.01f), "mid hit is on the line between");
         });
+    }
+
+    [Test]
+    public async Task GunTuningChangesTheFalloffOfItsBullets()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var mapId = testMap.MapId;
+
+        // The bullet's own numbers are 6 / 16 / 0.25.
+        var near = await DamageDealtAt(mapId, 2f, _bullet);
+        var plainMid = await DamageDealtAt(mapId, 11f, _bullet, _plainGun);
+        var plainFar = await DamageDealtAt(mapId, 30f, _bullet, _plainGun);
+        var scaledMid = await DamageDealtAt(mapId, 11f, _bullet, _scaledGun);
+        var scaledFar = await DamageDealtAt(mapId, 30f, _bullet, _scaledGun);
+        var noFalloffFar = await DamageDealtAt(mapId, 30f, _bullet, _noFalloffGun);
+
+        Assert.That(near, Is.GreaterThan(0f));
+        Assert.Multiple(() =>
+        {
+            Assert.That(plainMid / near, Is.EqualTo(0.625f).Within(0.01f), "a plain gun keeps the bullet's values");
+            Assert.That(plainFar / near, Is.EqualTo(0.25f).Within(0.01f), "a plain gun keeps the bullet's values far out");
+            Assert.That(scaledMid / near, Is.EqualTo(1f).Within(0.01f), "double range: 11 tiles is inside the 12 of full damage");
+            Assert.That(scaledFar / near, Is.EqualTo(0.325f).Within(0.01f), "double range: 30 tiles is 90% of the way from 12 to 32");
+            Assert.That(noFalloffFar / near, Is.EqualTo(1f).Within(0.01f), "a min multiplier override of 1 turns falloff off");
+        });
+    }
+
+    [Test]
+    public async Task SniperRoundDoesFullDamageAtRange()
+    {
+        // The Hristov's real round: gun -> cartridge -> bullet.
+        var gun = SProtoMan.Index(HristovSniper);
+        Assert.That(gun.TryGetComponent<Content.Shared.Weapons.Ranged.Components.BallisticAmmoProviderComponent>(out var provider, Server.EntMan.ComponentFactory));
+        var cartridge = SProtoMan.Index(provider!.Proto!.Value);
+        Assert.That(cartridge.TryGetComponent<Content.Shared.Weapons.Ranged.Components.CartridgeAmmoComponent>(out var cartridgeAmmo, Server.EntMan.ComponentFactory));
+        var sniperBullet = cartridgeAmmo!.Prototype;
+
+        var testMap = await Pair.CreateTestMap();
+        var near = await DamageDealtAt(testMap.MapId, 4f, sniperBullet);
+        var far = await DamageDealtAt(testMap.MapId, 30f, sniperBullet);
+
+        Assert.That(near, Is.GreaterThan(0f));
+        Assert.That(far, Is.EqualTo(near).Within(0.01f), "a sniper round does not fall off");
     }
 
     [Test]
