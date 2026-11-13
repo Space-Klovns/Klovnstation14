@@ -1,4 +1,4 @@
-# Resources\Prototypes\_KS14\Entities\Structures\FieldFortificationsarbed_wire.yml
+# Resources\Prototypes\_KS14\Entities\Structures\FieldFortifications\barbed_wire.yml
 ent-KsBarbedWireCoil = barbed wire coil
     .desc = A coil of barbed wire. Unroll it across the ground to slow down and cut up anything that wades through.
 ent-KsBarbedWire = barbed wire
