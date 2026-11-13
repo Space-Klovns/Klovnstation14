@@ -30,6 +30,11 @@ public sealed class KsNpcRevealAttackersTest : GameTest
     // Far past the observer's vision, and off the grid: nothing but being shot could tell it about this hostile.
     private static readonly Vector2 FarAway = new(0.5f, 25.5f);
 
+    // Only in this test's [TestPrototypes], so instance fields: the linter checks static ones only.
+    private readonly EntProtoId _revealingMob = "KsRevealTestMobRevealing";
+    private readonly EntProtoId _blindMob = "KsRevealTestMobBlind";
+    private readonly EntProtoId _bullet = "KsRevealTestBullet";
+
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -76,7 +81,7 @@ public sealed class KsNpcRevealAttackersTest : GameTest
     [Test]
     public async Task TestShooterIsKnownWhereverItIsThenLost()
     {
-        var scene = await SetUpScene("KsRevealTestMobRevealing");
+        var scene = await SetUpScene(_revealingMob);
         var perceptionSystem = scene.EntManager.System<NpcPerceptionSystem>();
         var revealDuration = default(System.TimeSpan);
 
@@ -114,7 +119,7 @@ public sealed class KsNpcRevealAttackersTest : GameTest
     [Test]
     public async Task TestShooterIsNotKnownWithoutTheSwitch()
     {
-        var scene = await SetUpScene("KsRevealTestMobBlind");
+        var scene = await SetUpScene(_blindMob);
         var perceptionSystem = scene.EntManager.System<NpcPerceptionSystem>();
 
         await Pair.Server.WaitAssertion(() =>
@@ -132,7 +137,7 @@ public sealed class KsNpcRevealAttackersTest : GameTest
         scene.EntManager.System<DamageableSystem>().TryChangeDamage(scene.ObserverUid, damage, origin: scene.BulletUid);
     }
 
-    private async Task<Scene> SetUpScene(string observerPrototype)
+    private async Task<Scene> SetUpScene(EntProtoId observerPrototype)
     {
         var entManager = Pair.Server.EntMan;
         var map = await Pair.CreateTestMap();
@@ -149,7 +154,7 @@ public sealed class KsNpcRevealAttackersTest : GameTest
             attackerUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 1, 0);
             entManager.System<SharedTransformSystem>().SetCoordinates(attackerUid, new EntityCoordinates(gridUid, FarAway));
 
-            bulletUid = entManager.SpawnEntity("KsRevealTestBullet", new EntityCoordinates(gridUid, FarAway));
+            bulletUid = entManager.SpawnEntity(_bullet, new EntityCoordinates(gridUid, FarAway));
             entManager.GetComponent<ProjectileComponent>(bulletUid).Shooter = attackerUid;
         });
 
