@@ -36,6 +36,7 @@ public sealed class KsParticleEmitterTest : GameTest
     private readonly ProtoId<KsParticlesPrototype> _timed = "KsParticlesTestTimed";
     private readonly ProtoId<KsParticlesPrototype> _world = "KsParticlesTestWorld";
     private readonly ProtoId<KsParticlesPrototype> _bounded = "KsParticlesTestBounded";
+    private readonly ProtoId<KsParticlesPrototype> _worldGravity = "KsParticlesTestWorldGravity";
 
     [TestPrototypes]
     private const string Prototypes = @"
@@ -88,6 +89,16 @@ public sealed class KsParticleEmitterTest : GameTest
   burst: 1
   lifespan: 0
   space: World
+  tickRate: 20
+
+- type: ksParticles
+  id: KsParticlesTestWorldGravity
+  count: 5
+  spawning: 0
+  burst: 1
+  lifespan: 0
+  space: World
+  gravity: 0, -2
   tickRate: 20
 
 - type: ksParticles
@@ -308,6 +319,46 @@ public sealed class KsParticleEmitterTest : GameTest
 
                 Assert.That(world.Comp2.Origin.X, Is.EqualTo(7f).Within(1e-4f), "the world emitter moved too");
                 Assert.That(world.Comp2.Particles[0].Position.X, Is.EqualTo(2f).Within(1e-4f), "but its particle stayed where it was emitted");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     An emitter that does not follow its entity turns with the grid it stands on, as sprites do, not with the
+    ///         map: on a station turned a quarter, "down" is the grid's down. Regression test for issue #453.
+    /// </summary>
+    [Test]
+    public async Task ParticlesAreSquareToTheGridNotTheMap()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var quarterTurn = Angle.FromDegrees(90);
+        await Server.WaitPost(() => SEntMan.System<SharedTransformSystem>().SetWorldRotation(testMap.Grid.Owner, quarterTurn));
+        await RunTicksSync(5);
+
+        var world = await SpawnLocalAsync(_worldGravity, testMap.CGridUid);
+        var local = await SpawnLocalAsync(_burst, testMap.CGridUid);
+
+        await Client.WaitPost(() =>
+        {
+            Assert.That(CEntMan.System<SharedTransformSystem>().GetWorldRotation(testMap.CGridUid).Theta, Is.EqualTo(quarterTurn.Theta).Within(1e-3), "the client knows the grid turned");
+
+            for (var i = 0; i < 10; i++)
+                ClientSystem.FrameUpdate(Dt);
+
+            // The grid's down, (0, -1) turned a quarter counter-clockwise, is the map's +x.
+            var gridDown = quarterTurn.RotateVec(new Vector2(0f, -1f));
+            var particle = world.Comp2.Particles[0];
+            var fell = new Vector2(particle.Position.X, particle.Position.Y) - world.Comp2.Origin;
+            var localDown = Vector2.Transform(new Vector2(0f, -1f), local.Comp2.Matrix) - local.Comp2.Origin;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(world.Comp2.Rotation.Theta, Is.EqualTo(quarterTurn.Theta).Within(1e-3), "a world emitter takes the grid's rotation");
+                Assert.That(local.Comp2.Rotation.Theta, Is.EqualTo(quarterTurn.Theta).Within(1e-3), "so does a local one");
+                Assert.That(fell.Length(), Is.GreaterThan(0.1f), "the particle fell");
+                Assert.That(Vector2.Dot(Vector2.Normalize(fell), gridDown), Is.EqualTo(1f).Within(1e-3f), "along the grid's down, not the map's");
+                Assert.That(localDown.X, Is.EqualTo(gridDown.X).Within(1e-3f), "a local emitter's frame is the grid's too");
+                Assert.That(localDown.Y, Is.EqualTo(gridDown.Y).Within(1e-3f));
             });
         });
     }

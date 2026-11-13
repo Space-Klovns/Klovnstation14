@@ -116,7 +116,7 @@ Emitter-wide, no generators (BYOND's "affect entire set" group):
 | `transform` | identity | `Matrix3x2` applied to the whole emitter. |
 | `tickRate` | 20 | Simulation steps per second. |
 | `space` | `Local` | `Local`: particles move with the emitter. `World`: they stay where emitted. |
-| `followRotation` | false | Whether the emitter turns with its entity. |
+| `followRotation` | false | Whether the emitter turns with its entity. Off, it is square to the grid the entity stands on (screen-up on a station), as sprites are; off a grid, square to the map. |
 | `layer` | `Effects` | `Floor`, `BelowMobs`, `Effects`, `Top`: where it sits among sprites. |
 | `unshaded` | false | Ignore lighting (sparks, embers). |
 | `animated` | true | Play an animated sprite from the particle's birth. |
