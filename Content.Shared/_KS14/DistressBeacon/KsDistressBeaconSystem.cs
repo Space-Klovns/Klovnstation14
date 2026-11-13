@@ -26,7 +26,10 @@ public sealed partial class KsDistressBeaconSystem : EntitySystem
     /// </summary>
     private const string LitPrefix = "on";
 
-    private const string NeckSlot = "neck";
+    /// <summary>
+    ///     The slot a beacon is worn in.
+    /// </summary>
+    public const string NeckSlot = "neck";
 
     [Dependency] private SharedPointLightSystem _pointLightSystem = default!;
     [Dependency] private ClothingSystem _clothingSystem = default!;

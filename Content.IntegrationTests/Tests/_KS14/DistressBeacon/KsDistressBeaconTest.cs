@@ -1,3 +1,4 @@
+using Content.Server._KS14.DistressBeacon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,9 +119,11 @@ public sealed class KsDistressBeaconTest : InteractionTest
         });
 
         await Server.WaitPost(() => SEntMan.System<InventorySystem>().TryUnequip(SPlayer, NeckSlot, force: true));
+        await RunTicks(1); // the beeping marker goes at the end of the tick
         await Server.WaitAssertion(() =>
         {
             Assert.That(State(beaconUid), Is.EqualTo(MobState.Alive), "Taking the beacon off didn't turn it off.");
+            Assert.That(SEntMan.HasComponent<KsDistressBeaconBeepingComponent>(beaconUid), Is.False, "A beacon taken off was still looked at for beeping.");
             Assert.That(LightOn(beaconUid), Is.False);
         });
     }
@@ -254,10 +257,11 @@ public sealed class KsDistressBeaconTest : InteractionTest
         await Server.WaitAssertion(() =>
         {
             var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid);
+            var beepingComponent = SEntMan.GetComponent<KsDistressBeaconBeepingComponent>(beaconUid);
             var curTime = Server.Timing.CurTime;
             Assert.That(State(beaconUid), Is.EqualTo(MobState.Critical));
-            Assert.That(beaconComponent.NextBeep, Is.GreaterThan(curTime), "The beacon never beeped.");
-            Assert.That(beaconComponent.NextBeep, Is.LessThanOrEqualTo(curTime + beaconComponent.States[MobState.Critical].BeepInterval));
+            Assert.That(beepingComponent.NextBeep, Is.GreaterThan(curTime), "The beacon never beeped.");
+            Assert.That(beepingComponent.NextBeep, Is.LessThanOrEqualTo(curTime + beaconComponent.States[MobState.Critical].BeepInterval));
         });
     }
 

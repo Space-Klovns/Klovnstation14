@@ -1,3 +1,4 @@
+using Content.Shared._KS14.DistressBeacon;
 using Content.Shared.GameTicking;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.GameTicking.Components;
@@ -15,7 +16,6 @@ public sealed partial class KsFieldCommanderBeaconSystem : EntitySystem
 {
     public static readonly EntProtoId BeaconPrototype = "KsDistressBeacon";
 
-    private const string NeckSlot = "neck";
 
     [Dependency] private InventorySystem _inventorySystem = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _factionMemberQuery = default!;
@@ -42,12 +42,12 @@ public sealed partial class KsFieldCommanderBeaconSystem : EntitySystem
     /// </summary>
     public bool GiveBeacon(EntityUid uid)
     {
-        if (!_inventorySystem.HasSlot(uid, NeckSlot) ||
-            _inventorySystem.TryGetSlotEntity(uid, NeckSlot, out _))
+        if (!_inventorySystem.HasSlot(uid, KsDistressBeaconSystem.NeckSlot) ||
+            _inventorySystem.TryGetSlotEntity(uid, KsDistressBeaconSystem.NeckSlot, out _))
             return false;
 
         var beaconUid = Spawn(BeaconPrototype, Transform(uid).Coordinates);
-        if (_inventorySystem.TryEquip(uid, beaconUid, NeckSlot, silent: true))
+        if (_inventorySystem.TryEquip(uid, beaconUid, KsDistressBeaconSystem.NeckSlot, silent: true))
             return true;
 
         Del(beaconUid);

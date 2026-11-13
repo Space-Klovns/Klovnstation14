@@ -83,9 +83,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // So the client knows who is a defender, and how to flash them as they go down.
         var defenderComponent = EnsureComp<KsFieldCommanderDefenderComponent>(bodyUid);
-        // A copy of the rule's dictionary, so that no two components share one.
-        defenderComponent.Flashes = new Dictionary<MobState, KsFieldCommanderDownFlashSettings>(component.DownFlashes);
-        Dirty(bodyUid, defenderComponent);
+        _defenderSystem.SetFlashes((bodyUid, defenderComponent), component.DownFlashes);
 
         if (session != null)
             MirrorPoints(component, bodyUid, GetPoints(component, session.UserId));
@@ -186,7 +184,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     [SubscribeLocalEvent(before: [typeof(MobThresholdSystem)])]
     private void OnDefenderDamageChanged(EntityUid defenderUid, ScenarioFactionMemberComponent factionMemberComponent, DamageChangedEvent args)
     {
-        if (_damageableSystem.GetTotalDamage(defenderUid) <= FixedPoint2.Zero)
+        if (!_damageableSystem.GetAllDamage((defenderUid, args.Damageable)).AnyPositive())
         {
             RemCompDeferred<KsFieldCommanderDamageLedgerComponent>(defenderUid);
             return;
