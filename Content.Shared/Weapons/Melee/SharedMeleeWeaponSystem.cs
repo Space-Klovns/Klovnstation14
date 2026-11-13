@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Content.Shared._KS14.Random.Helpers; // KS14
+using Content.Shared._KS14.ShoveWeapon; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions.Events;
 using Content.Shared.Administration.Components;
@@ -923,7 +924,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         var chance = CalculateDisarmChance(user, target.Value, inTargetHand, combatMode);
 
         // KS14 start: a held weapon, such as a shield, can change the shove
-        var ksWeaponAttempt = new Content.Shared._KS14.ShoveWeapon.KsDisarmWithWeaponAttemptEvent(user, target.Value, chance, combatMode.DisarmSuccessSound);
+        var ksWeaponAttempt = new KsDisarmWithWeaponAttemptEvent(user, target.Value, chance, combatMode.DisarmSuccessSound);
         if (meleeUid != user)
             RaiseLocalEvent(meleeUid, ref ksWeaponAttempt);
 
@@ -966,7 +967,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         // KS14 start: let the weapon follow up on its shove
         if (meleeUid != user)
         {
-            var ksShovedEvent = new Content.Shared._KS14.ShoveWeapon.KsShovedWithWeaponEvent(user, target.Value);
+            var ksShovedEvent = new KsShovedWithWeaponEvent(user, target.Value);
             RaiseLocalEvent(meleeUid, ref ksShovedEvent);
         }
         // KS14 end

@@ -28,10 +28,13 @@ public sealed partial class KsShoveWeaponSystem : EntitySystem
             args.SuccessSound = successSound;
     }
 
+    /// <summary>
+    ///     Refreshes the stagger rather than adding to it, so shoving someone over and over can't slow them for good.
+    /// </summary>
     [SubscribeLocalEvent]
     private void OnShoved(Entity<KsShoveWeaponComponent> entity, ref KsShovedWithWeaponEvent args)
     {
-        _movementModStatusSystem.TryAddMovementSpeedModDuration(args.Target,
+        _movementModStatusSystem.TryUpdateMovementSpeedModDuration(args.Target,
             entity.Comp.StaggerEffect,
             entity.Comp.StaggerDuration,
             entity.Comp.StaggerSpeedModifier);
