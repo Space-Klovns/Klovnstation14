@@ -23,3 +23,12 @@
 
 - type: Tag
   id: AirGrenade
+
+- type: Tag # Only the plain Desert Eagle crafts into the Regal Condor
+  id: KsDeagleBase
+
+- type: Tag # .50 AE cartridges
+  id: KsCartridge50AE
+
+- type: Tag # .50 AE magazines, Desert Eagle and Regal Condor
+  id: KsMagazine50AE

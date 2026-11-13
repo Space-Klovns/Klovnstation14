@@ -1,0 +1,6 @@
+- type: soundCollection
+  id: KsPageTurn
+  files:
+  - /Audio/_KS14/Effects/Books/pageturn1.ogg
+  - /Audio/_KS14/Effects/Books/pageturn2.ogg
+  - /Audio/_KS14/Effects/Books/pageturn3.ogg
