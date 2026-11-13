@@ -42,7 +42,7 @@ public sealed class GridJoinTest : GameTest
             // Force AtmosDeviceSystem to update off-grid devices
             // This means the canister is now considered on-grid,
             // but it's still tracked as off-grid!
-            Assert.DoesNotThrow(() => atmosDeviceSystem.Update(atmosSystem.AtmosTime));
+            Assert.DoesNotThrow(() => atmosDeviceSystem.Update(atmosSystem.RealAtmosTime() /* KS14: AtmosTime -> RealAtmosTime(), off-grid devices run at the grid rate */));
 
             // Make sure that the canister is now properly tracked as on-grid
             Assert.That(atmosDeviceSystem.IsJoinedOffGrid(canisterEnt), Is.False);
