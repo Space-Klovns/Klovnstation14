@@ -2698,3 +2698,96 @@ Entries:
         your hands.
   id: 255
   time: '2026-11-11T10:21:46.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Remove
+      message: Removed the hold-to-attack control options.
+  id: 256
+  time: '2026-11-11T15:16:48.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Field Commander's weather now changes over the round: snow, blizzards
+        and the odd sleet storm.
+    - type: Tweak
+      message: >-
+        Rain and wet snow now leave water on your screen as if on a visor: drops
+        that smudge the view and run down, leaving wet smears.
+    - type: Tweak
+      message: >-
+        Field Commander's Syndicate attackers are much less tanky and fire
+        slower, but come in much larger and more frequent waves.
+    - type: Add
+      message: The field engineer RCD can put up floodlights, already anchored and lit.
+    - type: Tweak
+      message: >-
+        The field engineer RCD can't build in Field Commander's spawn areas; its
+        placement preview shows red there.
+    - type: Fix
+      message: NPCs no longer get stuck walking into trees.
+    - type: Add
+      message: >-
+        Field Commander has a fog of war around the outpost. Wander out and it
+        will kill you; the Syndicate comes in through it.
+    - type: Add
+      message: >-
+        The requisitions terminal sells a heavy machine-gun turret, reinforced
+        turrets, and flares that call down a resupply pod or a squad of
+        Nanotrasen paramilitaries.
+    - type: Tweak
+      message: >-
+        The Syndicate field commander now only taunts. Nanotrasen Field
+        Operations tells you what's actually coming.
+    - type: Tweak
+      message: >-
+        The Field Commander AT-4 fires anti-personnel rockets that leave walls
+        standing. The field engineer RCD recharges much faster.
+    - type: Remove
+      message: The airstrike flare is no longer sold at the requisitions terminal.
+    - type: Add
+      message: >-
+        Field Commander defenders earn requisition points for kills (and lose
+        them for teamkills), kept across deaths, and spend them at a
+        requisitions terminal on fire-support flares, turrets, explosives and a
+        modified XL8.
+    - type: Add
+      message: Field Commander opens with a briefing from Nanotrasen Field Operations.
+    - type: Tweak
+      message: Field Commander defenders' bullets pass through each other.
+    - type: Add
+      message: >-
+        Field Commander is now its own game mode, run by an AI Syndicate
+        commander. It escalates through five phases over about 40 minutes,
+        scales its waves to how many of you are alive, and ends by landing an
+        uplink you must hack or destroy before it calls down an orbital
+        bombardment.
+    - type: Add
+      message: >-
+        Nanotrasen sends reinforcement pods to Field Commander defenders as the
+        assault escalates.
+    - type: Add
+      message: >-
+        Field engineer RCD: builds instantly with self-refilling matter, can
+        raise reinforced walls and barricades, and instantly takes apart what
+        you built with it.
+    - type: Fix
+      message: >-
+        Syndicate operatives no longer see out of, and shoot from inside, supply
+        pods that are still falling.
+    - type: Fix
+      message: >-
+        Losing a single objective in Field Commander no longer ends the round in
+        Nanotrasen's favour.
+    - type: Tweak
+      message: You can no longer start capturing your own faction's scenario objective.
+  id: 257
+  time: '2026-11-12T16:30:10.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Particle effects now fall and drift relative to the station grid rather
+        than the map.
+  id: 258
+  time: '2026-11-13T07:49:39.0000000+00:00'

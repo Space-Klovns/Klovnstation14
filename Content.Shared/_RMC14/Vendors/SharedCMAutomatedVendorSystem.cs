@@ -344,6 +344,11 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 user.ExtraPoints[vendor.Comp.PointsType] = userPoints - (entry.Points ?? 0);
 
             Dirty(actor, user);
+
+            // KS14 start: let whatever keeps these points elsewhere follow the purchase
+            var ksPointsSpentEvent = new Content.Shared._KS14.Vendors.KsVendorPointsSpentEvent(actor, vendor.Comp.PointsType, userPoints - (entry.Points ?? 0));
+            RaiseLocalEvent(ref ksPointsSpentEvent);
+            // KS14 end
         }
 
         if (entry.Amount != null)

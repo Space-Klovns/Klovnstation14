@@ -659,7 +659,7 @@ Tests live in `Content.IntegrationTests/Tests/_KS14/NPC/`, with shared grids and
   under the repo, where the content root is still found as `../../`:
   `dotnet test ... -c Debug -p:OutputPath="<repo>/bin/kstest/"`.
 - **Measure allocations** with `GC.GetAllocatedBytesForCurrentThread()` around a few hundred updates after a
-  warm-up, and assert a bound. To find *what* allocates, see the `EventListener` approach in CONTRIBUTING.md §6.
+  warm-up, and assert a bound. To find *what* allocates, see the `EventListener` approach in CONTRIBUTING.md §4 (*Engine helpers whose behaviour isn't in their name*).
 - **Build `Release` too.** A member named like an inherited one (`Paused` on an `EntitySystem`) is only a warning in
   Debug, and an error in Release.
 

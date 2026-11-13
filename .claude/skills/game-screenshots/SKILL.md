@@ -61,6 +61,17 @@ version is newer (version-compare loop in PowerShell; only reads the user's fold
 **Trap: build the client first, then the server.** The dll downgrade happens only when the client build runs last; client
 then server leaves the newer dlls in `bin/kstest` with no copying (hand-overwriting dlls may be refused by the permission classifier).
 
+**Trap: the game in `bin/kstest` does not run the content built into `bin/kstest`.** The client and server mount their
+content assemblies from `bin/Content.Client/` and `bin/Content.Server/` (two levels up from wherever they're started,
+then `bin/<ContentBuildDirectory>/`: `ProgramShared.DoMounts`). So a fresh build of your change in `bin/kstest` is
+silently ignored, and the game runs whatever the user last built, with none of your code. To run yours, copy the
+`Content.*.dll` and `.pdb` files from `bin/kstest/` over their twins there: `Content.Client`, `Content.Shared`,
+`Content.Klovn.Concentus` and `Content.Shared.Database` for the client; `Content.Server`, `Content.Server.Database` and
+the same shared ones for the server. **That overwrites the user's own build.** One user was fine with it; others may
+well not be, so ask before doing it, and say that it has happened when you report. If the client dies at start-up with a
+`NullReferenceException` in `AssemblyTypeChecker.DoVerifyIL`, the sandbox's IL verifier found a problem in those mounted
+assemblies and crashed formatting it: run `SandboxTest` against your build for the readable message.
+
 **Trap: teleporting the player onto a wall-mounted machine (to use the map's real one) puts them in vacuum.** They crit,
 and every later window silently fails to open. Offset by the machine's rotation (`LocalRotation.RotateVec((0,-1))`).
 

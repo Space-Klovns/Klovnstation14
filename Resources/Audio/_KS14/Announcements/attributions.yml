@@ -7,3 +7,8 @@
   license: Custom
   copyright: "Created for Klovnstation with sounds from freesound.org by https://freesound.org/people/stib/ (CC0-1.0) and https://freesound.org/people/theplax/ (CC-BY-4.0) respectively"
   source: "https://freesound.org/"
+
+- files: ["confirmdropoff.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from https://github.com/tgstation/SS13-sounds at commit 2f4f510edf8ae539c53bc078b07fa75dc199ab00"
+  source: "https://github.com/tgstation/SS13-sounds/blob/2f4f510edf8ae539c53bc078b07fa75dc199ab00/effects/confirmdropoff.ogg"

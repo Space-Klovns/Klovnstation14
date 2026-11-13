@@ -239,7 +239,7 @@ public sealed partial class ExplosionSystem : SharedExplosionSystem
 
         var posFound = _transformSystem.TryGetMapOrGridCoordinates(uid, out var gridPos, pos);
 
-        QueueExplosion(mapPos, typeId, totalIntensity, slope, maxTileIntensity, uid, tileBreakScale, maxTileBreak, canCreateVacuum, addLog: false);
+        QueueExplosion(mapPos, typeId, totalIntensity, slope, maxTileIntensity, uid, tileBreakScale, maxTileBreak, canCreateVacuum, addLog: false, ksUser: KsResolveUser(uid, user) /* KS14: remember who set it off */);
 
         if (!addLog)
             return;
@@ -275,7 +275,8 @@ public sealed partial class ExplosionSystem : SharedExplosionSystem
         float tileBreakScale = 1f,
         int maxTileBreak = int.MaxValue,
         bool canCreateVacuum = true,
-        bool addLog = true)
+        bool addLog = true,
+        EntityUid? ksUser = null /* KS14: added param, who set it off */)
     {
         if (totalIntensity <= 0 || slope <= 0)
             return;
@@ -315,7 +316,8 @@ public sealed partial class ExplosionSystem : SharedExplosionSystem
             TileBreakScale = tileBreakScale,
             MaxTileBreak = maxTileBreak,
             CanCreateVacuum = canCreateVacuum,
-            Cause = cause
+            Cause = cause,
+            KsUser = ksUser, // KS14: who set it off
         };
         _explosionQueue.Enqueue(boom);
         _queuedExplosions.Add(boom);
@@ -392,7 +394,10 @@ public sealed partial class ExplosionSystem : SharedExplosionSystem
             queued.Cause,
             _map,
             _damageableSystem,
-            _tileHistoryQuery);
+            _tileHistoryQuery)
+        {
+            KsUser = queued.KsUser, // KS14: who set it off
+        };
     }
 
     private void CameraShake(float range, MapCoordinates epicenter, float totalIntensity)

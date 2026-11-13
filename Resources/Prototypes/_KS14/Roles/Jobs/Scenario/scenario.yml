@@ -22,6 +22,7 @@
     - type: NpcFactionMember
       factions:
       - NanoTrasen
+      - KsNanoTrasenOperative # the NT paramilitary NPCs (field support pods) fight alongside, not against, NT agents
 
 - type: job
   id: ScenarioSyndie

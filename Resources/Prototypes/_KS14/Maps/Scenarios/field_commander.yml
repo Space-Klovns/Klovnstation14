@@ -1,8 +1,8 @@
 - type: gameMap
   id: FieldCommander
-  mapName: 'Field Commander [Admin]'
+  mapName: 'Field Commander'
   mapPath: /Maps/_KS14/Scenarios/field_commander.yml
-  minPlayers: 7
+  minPlayers: 0 # the KsFieldCommander preset holds the player count; this is its only map, so it must always be eligible
   maxPlayers: 40
   stations:
     FieldCommander:
