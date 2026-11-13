@@ -788,6 +788,20 @@ public sealed partial class NPCSteeringSystem
     }
 
     /// <summary>
+    ///     KS14: whether <paramref name="uid"/> stands on the tile <paramref name="poly"/> is part of. A poly never spans tiles.
+    /// </summary>
+    private bool KsIsOnPolyTile(EntityUid uid, PathPoly poly)
+    {
+        var transformComponent = _xformQuery.GetComponent(uid);
+        if (transformComponent.ParentUid != poly.GraphUid)
+            return false;
+
+        var position = transformComponent.LocalPosition;
+        var center = poly.Box.Center;
+        return MathF.Floor(position.X) == MathF.Floor(center.X) && MathF.Floor(position.Y) == MathF.Floor(center.Y);
+    }
+
+    /// <summary>
     /// Filter down a list of entities into what can be considered obstacles.
     ///
     /// If allObstacles is set to false, don't filter out obstacles that can
@@ -837,6 +851,8 @@ public sealed partial class NPCSteeringSystem
 
             // If we're walking into a door we can handle...
             if (checkDoors &&
+                KsIsOnPolyTile(nearbyEnt, poly) && // KS14: that door, not every door nearby: a closed windoor beside the one
+                                                   //      being gone through is as much in the way as a wall
                 CanHandleDoor(ent, poly.Data.Flags, nearbyEnt))
                 nearbyEntities.Remove(nearbyEnt);
             // Then check climbability

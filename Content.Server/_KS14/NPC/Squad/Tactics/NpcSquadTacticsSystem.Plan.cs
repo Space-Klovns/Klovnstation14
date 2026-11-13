@@ -141,7 +141,8 @@ public sealed partial class NpcSquadTacticsSystem
                 planComponent = EnsureComp<NpcSquadPlanComponent>(issuerUid);
                 planComponent.Plan = StartWithdrawal(threatUid, now);
             }
-            else if (LookForShot(out var targetUid) == NpcSquadSight.Stuck)
+            // Not while a flank is going round to get one: the flankers are out of sight on purpose, and the plan would end it.
+            else if (!IsFlanking(issuerUid) && LookForShot(out var targetUid) == NpcSquadSight.Stuck)
             {
                 planComponent = EnsureComp<NpcSquadPlanComponent>(issuerUid);
                 planComponent.Plan = new NpcSquadPlan { TargetUid = targetUid, StartedAt = now, Reason = "nobody has a shot" };
@@ -1373,7 +1374,7 @@ public sealed partial class NpcSquadTacticsSystem
         var entrance = plan.Hunt!.Entrances[staging.EntranceIndex];
 
         return aim is { } at &&
-            _npcLineOfFireSystem.IsClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.ToMapCoordinates(at), CollisionGroup.ItemMask);
+            _npcLineOfFireSystem.IsThrowClear(_transformSystem.ToMapCoordinates(entrance.EntryCoordinates), _transformSystem.ToMapCoordinates(at));
     }
 
     /// <summary>
@@ -1382,7 +1383,7 @@ public sealed partial class NpcSquadTacticsSystem
     private EntityCoordinates GetThrowCoordinates(NpcSquadPlan plan, EntityCoordinates? aim, EntityUid memberUid, NpcHuntStaging staging)
     {
         return aim is { } at &&
-            _npcLineOfFireSystem.IsClear(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.ToMapCoordinates(at), CollisionGroup.ItemMask)
+            _npcLineOfFireSystem.IsThrowClear(_transformSystem.GetMapCoordinates(memberUid), _transformSystem.ToMapCoordinates(at))
                 ? at
                 : plan.Hunt!.Entrances[staging.EntranceIndex].EntryCoordinates;
     }

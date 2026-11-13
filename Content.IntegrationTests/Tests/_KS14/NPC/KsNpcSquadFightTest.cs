@@ -150,7 +150,7 @@ public sealed class KsNpcSquadFightTest : GameTest
     }
 
     /// <summary>
-    ///     One of the squad's grenades going off by the hostile is a moment too.
+    ///     One of the squad's grenades going off by the hostile is a moment too, and one where nobody hangs back: all three go.
     /// </summary>
     [Test]
     public async Task TestABlastOnTheHostileIsPushedOn()
@@ -163,7 +163,7 @@ public sealed class KsNpcSquadFightTest : GameTest
             scene.TacticsSystem.NoteBlast(scene.Members[0], hostileCoordinates);
             StageVisible(scene);
             scene.TacticsSystem.UpdateNow();
-            Assert.That(CountOrders(scene, NpcOrderKind.Push), Is.EqualTo(2));
+            Assert.That(CountOrders(scene, NpcOrderKind.Push), Is.EqualTo(3));
         });
     }
 
@@ -181,7 +181,7 @@ public sealed class KsNpcSquadFightTest : GameTest
             scene.TacticsSystem.NoteBlast(scene.Members[0], hostileCoordinates);
             StageVisible(scene);
             scene.TacticsSystem.UpdateNow();
-            Assert.That(CountOrders(scene, NpcOrderKind.Push), Is.EqualTo(2), "the test needs a push on");
+            Assert.That(CountOrders(scene, NpcOrderKind.Push), Is.EqualTo(3), "the test needs a push on");
 
             var grenadeUid = SpawnAt(scene.EntManager, "KsSquadFightTestGrenade", scene.GridUid, -5, 1);
             scene.EntManager.System<Content.Shared.Trigger.Systems.TriggerSystem>().ActivateTimerTrigger(grenadeUid);

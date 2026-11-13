@@ -78,6 +78,12 @@ public sealed partial class NpcSquadTacticsSystem
     private static readonly TimeSpan FlankProbeTimeout = TimeSpan.FromSeconds(3);
 
     /// <summary>
+    ///     How long a flank goes on with nobody in the squad in sight of the hostile: the front ducking back into cover for a
+    ///         moment, while the flankers are on their way round.
+    /// </summary>
+    private static readonly TimeSpan FlankSightGrace = TimeSpan.FromSeconds(2);
+
+    /// <summary>
     ///     How near the hostile, in tiles, a way round may not go; and how near the line from a fighter to it, which is the
     ///         squad's own front.
     /// </summary>
@@ -194,6 +200,14 @@ public sealed partial class NpcSquadTacticsSystem
         return _fightQuery.TryComp(issuerUid, out var fightComponent) && IsFightLive(fightComponent);
     }
 
+    /// <summary>
+    ///     Whether a flank is on: flankers on their way round.
+    /// </summary>
+    private bool IsFlanking(EntityUid issuerUid)
+    {
+        return _fightQuery.TryComp(issuerUid, out var fightComponent) && fightComponent.FlankTargetUid != null;
+    }
+
     private static bool IsFightLive(NpcSquadFightComponent fightComponent)
     {
         return fightComponent.PushTargetUid != null || fightComponent.FlankTargetUid != null || fightComponent.FlankProbes.Count > 0;
@@ -210,9 +224,23 @@ public sealed partial class NpcSquadTacticsSystem
         if (!_hasFighters)
         {
             EndPush(issuerUid, fightComponent, settings, now);
+
+            // The front ducking for a moment is no reason to call the flankers back: they keep going a little while.
+            if (fightComponent.FlankTargetUid != null && now - fightComponent.LastFoughtAt < FlankSightGrace)
+            {
+                using (GivePlanOrders())
+                {
+                    FollowFlankRoutes(issuerUid, fightComponent, now);
+                }
+
+                return;
+            }
+
             EndFlank(issuerUid, fightComponent, settings, now);
             return;
         }
+
+        fightComponent.LastFoughtAt = now;
 
         var hostileUid = _fightHostileUid;
         var hostileCoordinates = _transformSystem.GetMapCoordinates(hostileUid);
@@ -401,25 +429,30 @@ public sealed partial class NpcSquadTacticsSystem
         if (fightComponent.PushTargetUid is { } pushedUid)
         {
             // Over once they are all there, or it has gone on long enough; or the moment it shoots again, as it has reloaded.
+            //      Not on a blast: one that fires back half dazed is what the push is for.
             if (pushedUid != hostileUid ||
                 now - fightComponent.PushStartedAt >= settings.PushTime ||
-                _npcGunfireSystem.TryGetLastShot(pushedUid, out var lastShotAt) && lastShotAt >= fightComponent.PushStartedAt ||
+                !fightComponent.PushOnBlast && _npcGunfireSystem.TryGetLastShot(pushedUid, out var lastShotAt) && lastShotAt >= fightComponent.PushStartedAt ||
                 HaveAllArrived(fightComponent.Pushers))
                 EndPush(issuerUid, fightComponent, settings, now);
 
             return;
         }
 
-        if (!settings.Pushing ||
-            now < fightComponent.NextPushAt ||
-            fightComponent.FlankTargetUid != null ||
-            _fighters.Count < 2 ||
-            !IsReloadWindow(hostileUid, settings, now) && !IsBlastWindow(fightComponent, hostileCoordinates, settings, now) ||
+        if (!settings.Pushing || fightComponent.FlankTargetUid != null)
+            return;
+
+        // A squad grenade going off by it is a moment worth the push whatever the cooldown says (the grenades have their own),
+        //      and wants nobody hanging back to keep firing: one member in sight of it is enough, as the rest are going in on
+        //      the blast already (NpcGrenadePusher, grenade_throw.yml). A reload is two at least, and one stays.
+        var blast = IsBlastWindow(fightComponent, hostileCoordinates, settings, now);
+
+        if (!blast && (now < fightComponent.NextPushAt || _fighters.Count < 2 || !IsReloadWindow(hostileUid, settings, now)) ||
             GetNearestFighterDistance(hostileCoordinates) > settings.PushMaxRange ||
             IsGrenadeAbout(fightComponent, hostileCoordinates))
             return;
 
-        StartPush(issuerUid, leaderUid, fightComponent, hostileUid, hostileCoordinates, settings, now);
+        StartPush(issuerUid, leaderUid, fightComponent, hostileUid, hostileCoordinates, blast, settings, now);
     }
 
     /// <summary>
@@ -458,11 +491,12 @@ public sealed partial class NpcSquadTacticsSystem
         NpcSquadFightComponent fightComponent,
         EntityUid hostileUid,
         MapCoordinates hostileCoordinates,
+        bool onBlast,
         NpcSquadTacticsSettings settings,
         TimeSpan now)
     {
         EnsureFighterTraits();
-        var anchorIndex = GetFurthestFighterIndex(hostileCoordinates);
+        var anchorIndex = onBlast ? -1 : GetFurthestFighterIndex(hostileCoordinates);
 
         _pushBearings.Clear();
         for (var i = 0; i < _fighters.Count; i++)
@@ -501,6 +535,7 @@ public sealed partial class NpcSquadTacticsSystem
 
         fightComponent.PushTargetUid = hostileUid;
         fightComponent.PushStartedAt = now;
+        fightComponent.PushOnBlast = onBlast;
 
         var speakerUid = leaderUid is { } leader && _fighters.Contains(leader) ? leader : fightComponent.Pushers[0];
         _npcVoiceSystem.TrySpeakCallout(speakerUid, NpcCallout.Push, PushCalloutCooldown);
@@ -535,7 +570,10 @@ public sealed partial class NpcSquadTacticsSystem
     {
         if (fightComponent.FlankTargetUid is { } flankedUid)
         {
-            if (flankedUid != hostileUid || now - fightComponent.FlankStartedAt >= settings.FlankTimeout || IsFlankDone(fightComponent, settings, now))
+            // Another hostile now the one most of the squad is on is no end to it while someone is still fighting this one.
+            if (flankedUid != hostileUid && !_fightCounts.ContainsKey(flankedUid) ||
+                now - fightComponent.FlankStartedAt >= settings.FlankTimeout ||
+                IsFlankDone(fightComponent, settings, now))
             {
                 EndFlank(issuerUid, fightComponent, settings, now);
                 return;
@@ -1087,7 +1125,9 @@ public sealed partial class NpcSquadTacticsSystem
 
         foreach (var route in fightComponent.FlankRoutes)
         {
-            if (TerminatingOrDeleted(route.FlankerUid) || !_fighters.Contains(route.FlankerUid))
+            // Gone: dead, out of the squad, or waiting for its meds. Not out of sight of the hostile: a flank route is chosen
+            //      to be, and a flanker dropping out of the fighters the moment it set off was every flank's end.
+            if (TerminatingOrDeleted(route.FlankerUid) || !_fightMembers.Contains(route.FlankerUid))
                 return true;
 
             var remaining = GetRemaining(route);

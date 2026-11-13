@@ -401,7 +401,7 @@ public sealed partial class NpcSquadTacticsSettings
     /// <summary>
     ///     Whether the squad goes forward together on a hostile it is fighting, when it has a moment: the hostile has stopped
     ///         shooting after shooting (reloading, or out), or one of the squad's grenades has just gone off on it. All but one,
-    ///         who keeps firing, go in close, each from its own side. See <see cref="NpcOrderKind.Push"/>.
+    ///         who keeps firing, go in close, each from its own side; everyone, on a grenade. See <see cref="NpcOrderKind.Push"/>.
     /// </summary>
     [DataField]
     public bool Pushing;
@@ -420,9 +420,10 @@ public sealed partial class NpcSquadTacticsSettings
 
     /// <summary>
     ///     How long after one of the squad's grenades goes off by a hostile it is a moment to push, and how near it, in tiles.
+    ///         Long enough for a hostile that ducked from the blast to show again.
     /// </summary>
     [DataField]
-    public TimeSpan PushBlastWindow = TimeSpan.FromSeconds(1.5);
+    public TimeSpan PushBlastWindow = TimeSpan.FromSeconds(2.5);
 
     [DataField]
     public float PushBlastRange = 3f;

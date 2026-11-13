@@ -14,6 +14,12 @@ namespace Content.Server._KS14.NPC.Squad.Tactics;
 public sealed partial class NpcSquadFightComponent : Component
 {
     /// <summary>
+    ///     When someone in the squad last had the fight's hostile in sight. A flank outlasts losing it by a little.
+    /// </summary>
+    [ViewVariables, AutoPausedField]
+    public TimeSpan LastFoughtAt;
+
+    /// <summary>
     ///     The hostile being pushed on, while a push is on.
     /// </summary>
     [ViewVariables]
@@ -21,6 +27,12 @@ public sealed partial class NpcSquadFightComponent : Component
 
     [ViewVariables, AutoPausedField]
     public TimeSpan PushStartedAt;
+
+    /// <summary>
+    ///     Whether the push on is one a squad grenade gave: everyone went, and the hostile shooting again does not end it.
+    /// </summary>
+    [ViewVariables]
+    public bool PushOnBlast;
 
     [ViewVariables]
     public readonly List<EntityUid> Pushers = new();

@@ -1,7 +1,10 @@
+using System.Numerics;
+using Content.Server._KS14.NPC.LineOfFire;
 using Content.Server._KS14.NPC.Voices;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Hands.Components;
 using Content.Shared.Mobs.Systems;
+using Content.Shared.Physics;
 using Content.Shared.Trigger.Components;
 using Content.Shared.Trigger.Systems;
 using Robust.Shared.Map;
@@ -86,6 +89,7 @@ public sealed partial class NpcGrenadeSystem
 
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private NpcLineOfFireSystem _npcLineOfFireSystem = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -193,6 +197,45 @@ public sealed partial class NpcGrenadeSystem
             _npcVoiceSystem.TrySpeakCallout(uid, NpcCallout.ThrowFrag);
 
         _npcHandsSystem.PutBack(uid, takenOut);
+    }
+
+    /// <summary>
+    ///     How far to one side of the line it throws along a thrower steps while it holds a grenade, in tiles.
+    /// </summary>
+    private const float CookStepLength = 1.5f;
+
+    /// <summary>
+    ///     Somewhere for <paramref name="uid"/> to step to while it holds a grenade for a throw at
+    ///         <paramref name="coordinates"/>, rather than stand still in the open for the whole of it: a little to one side of
+    ///         the line it throws along (either, at random, then the other), where nothing is in the way of getting there or of
+    ///         the throw from there. False if neither side will do. The throw is made from wherever it got to, a little further
+    ///         off, which costs a few hundredths of a second of the margin and no more.
+    /// </summary>
+    public bool TryGetCookStep(EntityUid uid, EntityCoordinates coordinates, out EntityCoordinates step)
+    {
+        step = default;
+
+        var from = _transformSystem.GetMapCoordinates(uid);
+        var to = _transformSystem.ToMapCoordinates(coordinates);
+        var offset = to.Position - from.Position;
+        if (from.MapId != to.MapId || offset.LengthSquared() < 0.01f)
+            return false;
+
+        var across = Vector2.Normalize(new Vector2(-offset.Y, offset.X)) * CookStepLength;
+        var side = _random.Prob(0.5f) ? 1f : -1f;
+
+        for (var i = 0; i < 2; i++, side = -side)
+        {
+            var spot = from.Offset(across * side);
+            if (!_npcLineOfFireSystem.IsClear(from, spot, CollisionGroup.MobMask) ||
+                !_npcLineOfFireSystem.IsThrowClear(spot, to))
+                continue;
+
+            step = _transformSystem.ToCoordinates(spot);
+            return true;
+        }
+
+        return false;
     }
 
     public override void Update(float frameTime)

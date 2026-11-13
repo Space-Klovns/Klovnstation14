@@ -300,6 +300,14 @@ says nothing anchored is in the way (`NPCSteeringSystem.KsIsBeelineClear`, reche
 Climbing costs `PathfindingSystem.ClimbCost` on top of walking, so climbers walk round anything short; operatives have
 `NavClimb`. `KsNpcRailingTest` covers railings at every rotation.
 
+### Navmesh flags are per point, and door avoidance is per tile
+
+A tile's navmesh points each take the flags (Door, Access, Climb, Pushable) of only what covers that point
+(`PathfindingSystem.Grid.cs`). They used to share one value per tile, so a windoor on one edge made the tile's open side
+a Door too. Steering lets doors through its collision avoidance while its next poly is a Door, so it would walk into the
+closed windoor it was beside. That avoidance now lets through only doors on the next poly's own tile
+(`NPCSteeringSystem.KsIsOnPolyTile`): a closed door beside the one being gone through is a wall.
+
 ### A background move shares the NPC with the tasks after it
 
 A `MoveToOperator` with `shutdownState: PlanFinished` or `Never` reports itself finished at once and keeps steering

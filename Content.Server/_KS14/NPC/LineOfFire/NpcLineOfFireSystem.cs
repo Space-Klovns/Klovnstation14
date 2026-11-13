@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Server.Interaction;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.Interaction;
@@ -247,6 +248,32 @@ public sealed partial class NpcLineOfFireSystem : EntitySystem
     public bool IsClear(MapCoordinates from, MapCoordinates to, CollisionGroup shotMask)
     {
         return _interactionSystem.InRangeUnobstructed(from, to, -1f, shotMask, _isMob);
+    }
+
+    /// <summary>
+    ///     How far either side of its line a thrown grenade hits things, in tiles: the radius of a hand grenade's fixture
+    ///         (<c>GrenadeBase</c>). Asked before there is a grenade to look at, while choosing what to throw at.
+    /// </summary>
+    public const float GrenadeRadius = 0.2f;
+
+    /// <summary>
+    ///     Whether something thrown from one place would get to the other: <see cref="IsClear"/> for what a thrown item
+    ///         collides with, along the line and along either side of it, <paramref name="radius"/> out, as a grenade is not a
+    ///         point. Glass can be seen through and stops a throw; a doorway taken at a slant clips its frame.
+    /// </summary>
+    public bool IsThrowClear(MapCoordinates from, MapCoordinates to, float radius = GrenadeRadius)
+    {
+        if (!IsClear(from, to, CollisionGroup.ItemMask))
+            return false;
+
+        var offset = to.Position - from.Position;
+        var length = offset.Length();
+        if (radius <= 0f || length < 0.01f)
+            return true;
+
+        var side = new Vector2(-offset.Y, offset.X) * (radius / length);
+        return IsClear(from.Offset(side), to.Offset(side), CollisionGroup.ItemMask) &&
+            IsClear(from.Offset(-side), to.Offset(-side), CollisionGroup.ItemMask);
     }
 
     /// <summary>

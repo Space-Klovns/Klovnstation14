@@ -2,6 +2,8 @@ using Content.Server._KS14.NPC.Grenades;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
+using Content.Server.NPC.Pathfinding;
+using Content.Server.NPC.Systems;
 
 namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Grenades;
 
@@ -12,7 +14,9 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Grenades;
 ///         For a thrower that cooks (<see cref="NpcGrenadeThrowerComponent.Cooks"/>) this task is the hold: it carries on while
 ///             the grenade is in hand, and is finished once it has been thrown. The hold itself belongs to the system, so
 ///             this task being cut short in any way (<see cref="TaskShutdown"/>) throws the grenade at once rather than
-///             leave a lit one in the hand.
+///             leave a lit one in the hand. While it holds the grenade it steps a little to one side of the line it throws
+///             along, where the throw is still clear (<see cref="NpcGrenadeSystem.TryGetCookStep"/>), rather than stand still
+///             in the open for the whole of it; the step ends with the task.
 ///     </para>
 /// </summary>
 public sealed partial class ThrowGrenadeOperator : HTNOperator
@@ -23,8 +27,16 @@ public sealed partial class ThrowGrenadeOperator : HTNOperator
     /// </summary>
     private const string BegunKey = "GrenadeThrowBegun";
 
+    /// <summary>
+    ///     Set while this task is steering its step aside during a cook, so that <see cref="TaskShutdown"/> stops only steering
+    ///         it started.
+    /// </summary>
+    private const string SteppingKey = "GrenadeCookStepping";
+
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private NpcGrenadeSystem _npcGrenadeSystem = default!;
+    [Dependency] private NPCSteeringSystem _npcSteeringSystem = default!;
+    [Dependency] private PathfindingSystem _pathfindingSystem = default!;
 
     [DataField]
     public string GrenadeKey = "ChosenGrenade";
@@ -55,6 +67,15 @@ public sealed partial class ThrowGrenadeOperator : HTNOperator
                 return HTNOperatorStatus.Finished;
             case NpcGrenadeThrowResult.Cooking:
                 blackboard.SetValue(BegunKey, true);
+
+                if (_npcGrenadeSystem.TryGetCookStep(ownerUid, coordinates, out var step))
+                {
+                    var steeringComponent = _npcSteeringSystem.Register(ownerUid, step);
+                    steeringComponent.Range = 0.3f;
+                    steeringComponent.Flags = _pathfindingSystem.GetFlags(blackboard);
+                    blackboard.SetValue(SteppingKey, true);
+                }
+
                 return HTNOperatorStatus.Continuing;
             default:
                 return HTNOperatorStatus.Failed;
@@ -70,5 +91,8 @@ public sealed partial class ThrowGrenadeOperator : HTNOperator
 
         blackboard.Remove<bool>(BegunKey);
         _npcGrenadeSystem.EndCook(blackboard.GetOwner());
+
+        if (blackboard.Remove<bool>(SteppingKey))
+            _npcSteeringSystem.Unregister(blackboard.GetOwner());
     }
 }
