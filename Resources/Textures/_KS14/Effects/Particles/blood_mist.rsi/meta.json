@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "license": "CC-BY-NC-SA-3.0",
+  "copyright": "Taken from TerraGov-Marine-Corps at https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/icons/effects/96x96.dmi (smoke5)",
+  "size": {
+    "x": 96,
+    "y": 96
+  },
+  "states": [
+    {
+      "name": "mist"
+    }
+  ]
+}

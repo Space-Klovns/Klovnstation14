@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "license": "CC-BY-NC-SA-3.0",
+  "copyright": "Taken from TerraGov-Marine-Corps at https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/icons/effects/blood.dmi (splatter1-6, mgibbl3, mgibbl5) and https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/icons/effects/effects.dmi (smoke), south direction only",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "splatter1"
+    },
+    {
+      "name": "splatter2"
+    },
+    {
+      "name": "splatter3"
+    },
+    {
+      "name": "splatter4"
+    },
+    {
+      "name": "splatter5"
+    },
+    {
+      "name": "splatter6"
+    },
+    {
+      "name": "gib_chunk_1"
+    },
+    {
+      "name": "gib_chunk_2"
+    },
+    {
+      "name": "gib_smoke",
+      "delays": [
+        [
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      ]
+    }
+  ]
+}

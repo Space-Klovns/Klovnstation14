@@ -1,7 +1,9 @@
 using System.Numerics;
 using Content.Shared._KS14.PredictedSpawning;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Spawners;
 
 namespace Content.Shared._KS14.Particles;
 
@@ -23,6 +25,7 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
     [Dependency] protected KsSharedPredictedSpawnSystem PredictedSpawnSystem = default!;
     [Dependency] protected SharedTransformSystem TransformSystem = default!;
     [Dependency] private EntityQuery<KsParticlesComponent> _particlesQuery = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     /// <summary>
     ///     The bare emitter entity the spawn methods make.
@@ -72,6 +75,34 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
 
     #endregion
 
+    #region One-shot
+
+    [SubscribeLocalEvent]
+    private void OnMapInit(Entity<KsParticlesComponent> entity, ref MapInitEvent args)
+    {
+        ApplyOneShot(entity);
+    }
+
+    /// <summary>
+    ///     Gives the entity of a <see cref="KsParticlesPrototype.OneShot"/> emitter a <see cref="TimedDespawnComponent"/>
+    ///         that deletes it once its particles are gone. Only on the side that owns the entity: the server for
+    ///         networked ones, which the client couldn't delete anyway, and the client for its own.
+    /// </summary>
+    private void ApplyOneShot(Entity<KsParticlesComponent> entity)
+    {
+        if (_netManager.IsClient && !IsClientSide(entity.Owner))
+            return;
+
+        if (entity.Comp.Prototype is not { } prototypeId ||
+            !ProtoMan.TryIndex(prototypeId, out var prototype) ||
+            prototype.OneShotLifetime is not { } lifetime)
+            return;
+
+        EnsureComp<TimedDespawnComponent>(entity.Owner).Lifetime = lifetime;
+    }
+
+    #endregion
+
     #region Setters
 
     public void SetPrototype(Entity<KsParticlesComponent?> entity, ProtoId<KsParticlesPrototype>? prototype)
@@ -81,6 +112,7 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
 
         entity.Comp.Prototype = prototype;
         Dirty(entity);
+        ApplyOneShot((entity.Owner, entity.Comp));
         AfterPrototypeChanged((entity.Owner, entity.Comp));
     }
 
@@ -116,6 +148,15 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
             return;
 
         entity.Comp.Offset = offset;
+        Dirty(entity);
+    }
+
+    public void SetRotation(Entity<KsParticlesComponent?> entity, Angle rotation)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Rotation.Equals(rotation))
+            return;
+
+        entity.Comp.Rotation = rotation;
         Dirty(entity);
     }
 

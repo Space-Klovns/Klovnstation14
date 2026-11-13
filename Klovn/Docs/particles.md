@@ -9,7 +9,7 @@ client only. Issue #446.
 | Piece | Where | Role |
 | --- | --- | --- |
 | `KsParticlesPrototype` (`type: ksParticles`) | `Content.Shared/_KS14/Particles/` | The effect: what spawns, how each particle moves and looks, where it draws. |
-| `KsParticlesComponent` | shared, networked | "This entity emits that prototype", plus `emitting`, `color`, `offset`, `scale`. Nothing else crosses the network. |
+| `KsParticlesComponent` | shared, networked | "This entity emits that prototype", plus `emitting`, `color`, `offset`, `rotation`, `scale`. Nothing else crosses the network. |
 | `KsSharedParticlesSystem` | shared | The spawn helpers and the setters. |
 | `KsParticleEmitterComponent` | `Content.Client/_KS14/Particles/` | The client's simulation: the live particles, a struct array. Added to any entity carrying the shared component. |
 | `KsParticlesSystem` (client) | client | Steps every emitter in `FrameUpdate`, at the prototype's fixed tick rate. |
@@ -28,8 +28,19 @@ particles are made and owned by each client that can see it. So all three ways o
 `SpawnPredicted` has the rule every user-mode spawn has: call it only on the user's own predicted path. From a
 server-only path, pass no user.
 
-The spawn helpers make the bare entity `KsParticles`; give it a `TimedDespawn` for a one-shot burst, or delete
-it yourself. `SetEmitting(entity, false)` stops spawning and lets the live particles finish.
+The spawn helpers make the bare entity `KsParticles`. For an effect that fires once and is gone (BYOND's
+`temp_visual`), set `oneShot: true` on the prototype: the entity, however it was made, deletes itself once its
+last particle has died (`emitDuration` plus the longest `lifespan`, plus a step). Otherwise delete it yourself.
+`SetEmitting(entity, false)` stops spawning and lets the live particles finish.
+
+```yaml
+- type: ksParticles
+  id: KsBloodSplatterMist
+  burst: 10                     # everything at once
+  spawning: 0
+  oneShot: true                 # and gone 0.5 s later
+  lifespan: 0.5
+```
 
 ## Writing a prototype
 
@@ -109,6 +120,7 @@ Emitter-wide, no generators (BYOND's "affect entire set" group):
 | `spawning` | 10 | Particles per second. |
 | `burst` | 0 | Spawned all at once when the emitter starts. |
 | `emitDuration` | none | Seconds the emitter spawns for; then it stops and the live particles finish. |
+| `oneShot` | false | Delete the emitter's entity once its last particle has died. Needs a finite `lifespan`, and a `burst` or an `emitDuration`. |
 | `size` | 3 × 3 | Culling box about the emitter, metres. Not a clip: particles outside it still draw. The live particles' real extent is tracked as well. |
 | `bounds` | none | `Box2` about the emitter; particles outside it die (`bound1`/`bound2`). |
 | `gravity` | 0 | Acceleration, m/s². |
@@ -141,8 +153,9 @@ Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), exc
 | `friction` | 0 | Fraction of velocity lost per second, 0..1. |
 | `drift` | 0 | m/s, sampled afresh every step: a random walk. |
 
-The component adds a `color` multiplied over everything, an `offset` in metres, a `scale` that scales
-positions, velocities and sizes together, and `emitting`.
+The component adds a `color` multiplied over everything, an `offset` in metres, a `rotation` that turns the
+whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn't rotate), a `scale` that
+scales positions, velocities and sizes together, and `emitting`.
 
 ## Porting a /tg/ particle
 
@@ -198,7 +211,7 @@ component on the atom itself; its `shared_particle_holder` has no equivalent yet
 - **Rotation follows the engine.** `rotation` and `spin` are still clockwise-positive degrees as written, and
   converted on the way in.
 - **Interpolated by default.** Set `interpolate: false` for BYOND's stepped look.
-- **Additions:** `burst`, `emitDuration`, `space: World`, `followRotation`, `layer`, `unshaded`, `animated`,
+- **Additions:** `burst`, `emitDuration`, `oneShot`, `space: World`, `followRotation`, `layer`, `unshaded`, `animated`,
   `pixelSnap`, prototype inheritance, and the component's `color`, `offset`, `scale`.
 
 ## Trying it in game

@@ -273,6 +273,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         var rotation = prototype.FollowRotation
             ? worldRotation
             : transformComponent.GridUid is { } gridUid ? TransformSystem.GetWorldRotation(gridUid) : Angle.Zero;
+        rotation += particlesComponent.Rotation;
 
         emitterComponent.MapId = transformComponent.MapID;
         emitterComponent.Rotation = rotation;

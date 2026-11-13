@@ -38,6 +38,14 @@ public sealed partial class KsParticlesComponent : Component
     public Vector2 Offset;
 
     /// <summary>
+    ///     Turns the whole emitter, counter-clockwise, on top of the frame it would otherwise be in (see
+    ///         <see cref="KsParticlesPrototype.FollowRotation"/>): a spray aimed one way. Unlike turning the entity, this
+    ///         works on the bare emitter entity, which doesn't rotate.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Angle Rotation;
+
+    /// <summary>
     ///     Scales the whole effect: positions, velocities and sizes alike.
     /// </summary>
     [DataField, AutoNetworkedField]
