@@ -14,7 +14,7 @@
   - type: PointLight
     enabled: false
     color: "#FF3030"
-    radius: 6
-    energy: 3
+    radius: 3
+    energy: 1.5
     castShadows: false
   - type: KsDistressBeacon

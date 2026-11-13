@@ -46,13 +46,13 @@ public sealed partial class KsDistressBeaconComponent : Component
     ///     Light radius while the wearer is critical.
     /// </summary>
     [DataField]
-    public float CritLightRadius = 6f;
+    public float CritLightRadius = 3f;
 
     /// <summary>
     ///     Peak light energy while the wearer is critical, which the client pulses between 0 and this.
     /// </summary>
     [DataField]
-    public float CritLightEnergy = 3f;
+    public float CritLightEnergy = 1.5f;
 
     /// <summary>
     ///     Pulses per second while the wearer is critical.
@@ -64,13 +64,13 @@ public sealed partial class KsDistressBeaconComponent : Component
     ///     Light radius while the wearer is dead.
     /// </summary>
     [DataField]
-    public float DeadLightRadius = 4f;
+    public float DeadLightRadius = 2f;
 
     /// <summary>
     ///     Peak light energy while the wearer is dead.
     /// </summary>
     [DataField]
-    public float DeadLightEnergy = 1.2f;
+    public float DeadLightEnergy = 0.6f;
 
     /// <summary>
     ///     Pulses per second while the wearer is dead.
