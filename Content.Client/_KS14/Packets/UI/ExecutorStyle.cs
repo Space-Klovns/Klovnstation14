@@ -68,7 +68,6 @@ public sealed class ExecutorStyle : Sheetlet<NanotrasenStylesheet>
 
     private StyleBoxTexture MakeBox(string texture, int patch = 16)
     {
-        Logger.Info("Text!");
         var box = new StyleBoxTexture
         {
             Texture = ResCache.GetTexture(TextureRoot / texture),

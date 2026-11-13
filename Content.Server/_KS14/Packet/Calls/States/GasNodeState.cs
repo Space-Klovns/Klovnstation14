@@ -17,9 +17,9 @@ public sealed class GasNodeState : DeviceCall
     public string NodeName = "pipe";
 
     [PacketField(PacketFieldType.Returns)]
-    public string[] Gas = [];
+    public string[] Gas = new string[Atmospherics.TotalNumberOfGases];
     [PacketField(PacketFieldType.Returns)]
-    public float[] Moles = [];
+    public float[] Moles = new float[Atmospherics.TotalNumberOfGases];
     [PacketField(PacketFieldType.Returns)]
     public float Temperature { get; set; }
     [PacketField(PacketFieldType.Returns)]

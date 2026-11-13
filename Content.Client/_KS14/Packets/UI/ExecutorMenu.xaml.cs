@@ -19,7 +19,9 @@ public sealed partial class ExecutorMenu : FancyWindow
     public event Action? OnLoadButton;
     public event Action? OnTerminateButton;
 
-    public static string? FormattedDefinitions;
+    public bool _closed = false;
+
+    public static List<DeviceCallEntry> Entries = [];
     public ExecutorMenu()
     {
         RobustXamlLoader.Load(this);
@@ -27,36 +29,51 @@ public sealed partial class ExecutorMenu : FancyWindow
         ExecuteButton.OnPressed += _ => OnExecutionButton?.Invoke();
         LoadButton.OnPressed += _ => OnLoadButton?.Invoke();
         TerminateButton.OnPressed += _ => OnTerminateButton?.Invoke();
+        FilterText.OnTextChanged += _ => FormatDefinitions();
 
-        if (FormattedDefinitions != null)
-            Definitions.TextRope = Rope.Concat(Rope.Leaf.Empty, FormattedDefinitions);
+        FormatDefinitions();
+        FilterText.Placeholder = Rope.Concat(Rope.Leaf.Empty, "Filter calls");
     }
 
-    public void UpdateState(ExecutorBoundUserInterfaceState state)
+    public void UpdateState(ExecutorBoundUserInterfaceState state, PacketExecutorComponent? component)
     {
+        if (_closed)
+            return;
+
+        component?.Command = state.Command;
+        var command = component?.Command ?? state.Command;
+
         DataLabel.Text = Loc.GetString("executor-menu-data",  ("maxMemory", state.MaxMemory), ("maxStatements", state.MaxStatements));
 
         Input.TextRope = Rope.Leaf.Empty;
         Input.CursorPosition = new TextEdit.CursorPos();
-        Input.InsertAtCursor(state.Command);
+        Input.InsertAtCursor(command);
     }
 
     public void UpdateDefinitions(List<DeviceCallEntry>? entries)
     {
-
-        if (FormattedDefinitions != null)
+        if (Entries.Count != 0)
         {
-            Definitions.TextRope = Rope.Concat(Rope.Leaf.Empty, FormattedDefinitions);
+            FormatDefinitions();
             return;
         }
 
         if (entries == null)
             return;
 
+        Entries = [..entries];
+        FormatDefinitions();
+    }
+
+    public void FormatDefinitions()
+    {
         var text = new StringBuilder();
 
-        foreach (var entry in entries)
+        foreach (var entry in Entries)
         {
+            if (!entry.DeviceCallName.Contains(Rope.Collapse(FilterText.TextRope), StringComparison.OrdinalIgnoreCase))
+                continue;
+
             text.Append(entry.DeviceCallName).Append(": ").AppendLine().AppendLine();
 
             text.Append("In:").AppendLine();
@@ -74,7 +91,6 @@ public sealed partial class ExecutorMenu : FancyWindow
         }
 
         Definitions.TextRope = Rope.Concat(Rope.Leaf.Empty, text.ToString());
-        FormattedDefinitions = text.ToString();
     }
 
     public void WriteLog(string log)
