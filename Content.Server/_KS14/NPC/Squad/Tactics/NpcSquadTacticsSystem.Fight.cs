@@ -203,8 +203,8 @@ public sealed partial class NpcSquadTacticsSystem
     /// <summary>
     ///     With nobody in sight of the hostile: keeps a flank on, flankers following their routes, for
     ///         <see cref="FlankSightGrace"/> after anyone last had it in sight, as the front ducking back into cover for a
-    ///         moment is no reason to call them back. A push is over at once: it was going in on what they could see. True if
-    ///         the flank is still on, and nothing else should give orders.
+    ///         moment is no reason to call them back. (A push is never on alongside a flank.) True if the flank is still on,
+    ///         and nothing else should give orders.
     /// </summary>
     private bool KeepFlankWhileUnseen(EntityUid issuerUid, TimeSpan now)
     {
@@ -546,6 +546,10 @@ public sealed partial class NpcSquadTacticsSystem
         fightComponent.PushTargetUid = hostileUid;
         fightComponent.PushStartedAt = now;
         fightComponent.PushOnBlast = onBlast;
+
+        // One push to a blast: one that is over quickly, everyone there, does not start another on the same one.
+        if (onBlast)
+            fightComponent.LastBlastAt = TimeSpan.Zero;
 
         var speakerUid = leaderUid is { } leader && _fighters.Contains(leader) ? leader : fightComponent.Pushers[0];
         _npcVoiceSystem.TrySpeakCallout(speakerUid, NpcCallout.Push, PushCalloutCooldown);
