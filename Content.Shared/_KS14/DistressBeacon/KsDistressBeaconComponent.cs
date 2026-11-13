@@ -8,7 +8,8 @@ namespace Content.Shared._KS14.DistressBeacon;
 ///     A beacon worn on the neck that strobes and beeps while its wearer is down, so that their side can find them
 ///         in the dark: fast and bright when they are critical, slow and dim when they are dead.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
+// Raises AfterAutoHandleStateEvent, which the client draws the beacon from.
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true), AutoGenerateComponentPause]
 public sealed partial class KsDistressBeaconComponent : Component
 {
     /// <summary>
@@ -107,4 +108,11 @@ public sealed partial class KsDistressBeaconStateSettings
     /// </summary>
     [DataField]
     public float PulseRate = 1f;
+
+    /// <summary>
+    ///     Opacity of the outline the wearer gets, at the trough of the light's pulse. It is fully opaque at the peak
+    ///         and takes the light's colour.
+    /// </summary>
+    [DataField]
+    public float OutlineMinAlpha = 0.25f;
 }

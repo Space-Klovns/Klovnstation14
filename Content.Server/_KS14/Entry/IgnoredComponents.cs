@@ -14,6 +14,8 @@ public static class KsIgnoredComponents
         "KsPostShaderStatusEffect",
         "KsAudioStatusEffect",
         "KsAudioPitchStatusEffect",
-        "KsDissolveVisuals"
+        "KsDissolveVisuals",
+        "KsDistressBeaconVisuals",
+        "KsFieldCommanderDownFlashVisuals"
     ];
 }
