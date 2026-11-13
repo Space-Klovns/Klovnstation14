@@ -1,4 +1,8 @@
+using Content.Server._KS14.KillCredit;
 using Content.Shared.GameTicking;
+using Content.Shared.Damage.Systems;
+using Content.Shared.FixedPoint;
+using Content.Shared.Mobs.Systems;
 using Content.Shared._KS14.FactionCollision;
 using Content.Shared._KS14.FieldCommander;
 using Content.Shared._KS14.Scenario.Components;
@@ -16,6 +20,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     #region Points
 
     private const string KillReason = "ks-fieldcommander-points-kill";
+    private const string AssistReason = "ks-fieldcommander-points-assist";
     private const string TeamkillReason = "ks-fieldcommander-points-teamkill";
     private const string UplinkReason = "ks-fieldcommander-points-uplink";
     private const string AdminReason = "ks-fieldcommander-points-admin";
@@ -149,18 +154,97 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// </summary>
     private EntityUid? GetKiller(EntityUid? origin)
     {
-        return origin ?? _explosionSystem.KsProcessingUser;
+        return _killCreditSystem.ResolveCredit(origin);
+    }
+
+    /// <summary>
+    ///     Keeps count of who damaged a unit, for <see cref="RewardUnitKill"/> to split the kill by.
+    /// </summary>
+    // DamageChangedEvent is a by-value class event, so the engine can't give this an Entity<T>.
+    // Before the thresholds system, whose handler is what kills the unit: the last shot has to be counted by then.
+    [SubscribeLocalEvent(before: [typeof(MobThresholdSystem)])]
+    private void OnUnitDamageChanged(EntityUid unitUid, KsFieldCommanderUnitComponent unitComponent, DamageChangedEvent args)
+    {
+        if (args.DamageDelta is not { } delta ||
+            !args.DamageIncreased ||
+            GetKiller(args.Origin) is not { } attacker ||
+            !TryComp<ActorComponent>(attacker, out var attackerActorComponent) ||
+            !TryComp<KsFieldCommanderRuleComponent>(unitComponent.RuleUid, out var ruleComponent) ||
+            !IsDefender(ruleComponent, attacker))
+            return;
+
+        var dealt = 0f;
+        foreach (var amount in delta.DamageDict.Values)
+        {
+            if (amount > FixedPoint2.Zero)
+                dealt += (float)amount;
+        }
+
+        if (dealt <= 0f)
+            return;
+
+        var ledgerComponent = EnsureComp<KsFieldCommanderDamageLedgerComponent>(unitUid);
+        var userId = attackerActorComponent.PlayerSession.UserId;
+        ledgerComponent.Damage[userId] = ledgerComponent.Damage.GetValueOrDefault(userId) + dealt;
     }
 
     private void RewardUnitKill(Entity<KsFieldCommanderRuleComponent> rule, Entity<KsFieldCommanderUnitComponent> unit, EntityUid? killerUid)
     {
-        if (GetKiller(killerUid) is not { } killer ||
-            !IsDefender(rule.Comp, killer) ||
-            !TryComp<ActorComponent>(killer, out var killerActorComponent) ||
-            unit.Comp.AssetIndex >= rule.Comp.Assets.Count) // the list was changed since it was bought
+        if (unit.Comp.AssetIndex >= rule.Comp.Assets.Count) // the list was changed since it was bought
             return;
 
-        AddPoints(rule, killerActorComponent.PlayerSession, GetKillPoints(rule.Comp, rule.Comp.Assets[unit.Comp.AssetIndex]), KillReason, Name(unit));
+        var killPoints = GetKillPoints(rule.Comp, rule.Comp.Assets[unit.Comp.AssetIndex]);
+
+        var finalBlowUserId = GetKiller(killerUid) is { } killer &&
+                              IsDefender(rule.Comp, killer) &&
+                              TryComp<ActorComponent>(killer, out var killerActorComponent)
+            ? killerActorComponent.PlayerSession.UserId
+            : (NetUserId?)null;
+
+        if (!TryComp<KsFieldCommanderDamageLedgerComponent>(unit, out var ledgerComponent) ||
+            ledgerComponent.Damage.Count == 0)
+        {
+            // Nobody is on record as having hurt it: the killing blow takes it all.
+            if (finalBlowUserId is { } soleUserId && _playerManager.TryGetSessionById(soleUserId, out var soleSession))
+                AddPoints(rule, soleSession, killPoints, KillReason, Name(unit));
+
+            return;
+        }
+
+        // Even defenders who've died since still collect, as long as they're connected: dying shouldn't erase an assist.
+        var totalDamage = 0f;
+        foreach (var damage in ledgerComponent.Damage.Values)
+        {
+            totalDamage += damage;
+        }
+
+        var shares = new List<(NetUserId UserId, float Share, int Points)>();
+        var paid = 0;
+        foreach (var (userId, damage) in ledgerComponent.Damage)
+        {
+            var share = damage / totalDamage;
+            var points = (int)MathF.Round(killPoints * share);
+            paid += points;
+            shares.Add((userId, share, points));
+        }
+
+        // Rounding can leave a point or two over or short: the biggest share absorbs it, so the total stays the kill's value.
+        var largest = 0;
+        for (var i = 1; i < shares.Count; i++)
+        {
+            if (shares[i].Share > shares[largest].Share)
+                largest = i;
+        }
+
+        shares[largest] = shares[largest] with { Points = shares[largest].Points + killPoints - paid };
+
+        foreach (var (userId, _, points) in shares)
+        {
+            if (points == 0 || !_playerManager.TryGetSessionById(userId, out var session))
+                continue;
+
+            AddPoints(rule, session, points, userId == finalBlowUserId ? KillReason : AssistReason, Name(unit));
+        }
     }
 
     public static int GetKillPoints(KsFieldCommanderRuleComponent component, KsFieldCommanderAsset asset)

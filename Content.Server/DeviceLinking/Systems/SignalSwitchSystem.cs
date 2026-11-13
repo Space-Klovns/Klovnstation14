@@ -35,7 +35,7 @@ public sealed partial class SignalSwitchSystem : EntitySystem
             return;
 
         comp.State = !comp.State;
-        _deviceLink.InvokePort(uid, comp.State ? comp.OnPort : comp.OffPort);
+        _deviceLink.KsInvokePortAsUser(args.User, uid, comp.State ? comp.OnPort : comp.OffPort); // KS14: credit whoever used it
 
         // only send status if it's a toggle switch and not a button
         if (comp.OnPort != comp.OffPort)

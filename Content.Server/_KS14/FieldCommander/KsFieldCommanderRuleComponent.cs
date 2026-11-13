@@ -425,6 +425,12 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     [ViewVariables]
     public EntityUid? FogMapUid;
 
+    /// <summary>
+    ///     The map carrying the wave status the defenders' HUD reads.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? WaveStatusMapUid;
+
     [ViewVariables]
     public MapCoordinates FogOrigin;
 
