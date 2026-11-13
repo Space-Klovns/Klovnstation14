@@ -289,6 +289,45 @@ public sealed class KsFieldCommanderCreditTest : GameTest
     }
 
     /// <summary>
+    ///     A unit a turret puts down rarely dies to a bullet: it dies to what it takes while down, bleeding or
+    ///         suffocating, which nobody dealt. That must not turn the turret's kill into its owner's assist.
+    /// </summary>
+    [Test]
+    public async Task TurretKillFinishedByNobodyIsTheOwnersKill()
+    {
+        var server = Pair.Server;
+        var (testMap, ruleUid, playerBody, unitUid) = await SetUpUnit();
+        var killPoints = 0;
+
+        await server.WaitPost(() =>
+        {
+            killPoints = GetKillPoints(ruleUid);
+
+            var turretUid = server.EntMan.SpawnAtPosition(_turret, new EntityCoordinates(testMap.Grid, 4.5f, 0.5f));
+            var flatpackUid = server.EntMan.SpawnEntity(null, new EntityCoordinates(testMap.Grid, 4.5f, 1.5f));
+            server.EntMan.AddComponent<FlatpackComponent>(flatpackUid);
+            var unpackedEvent = new KsFlatpackUnpackedEvent(turretUid, playerBody);
+            server.EntMan.EventBus.RaiseLocalEvent(flatpackUid, ref unpackedEvent);
+
+            var bulletUid = server.EntMan.SpawnAtPosition(_bullet, new EntityCoordinates(testMap.Grid, 4.5f, 0.5f));
+            server.System<SharedProjectileSystem>().SetShooter(bulletUid, server.EntMan.GetComponent<ProjectileComponent>(bulletUid), turretUid);
+
+            // It takes 10 to kill: the turret does most of it, and nobody finishes it off.
+            Hurt(unitUid, bulletUid, 8);
+            Hurt(unitUid, origin: null, 2);
+            Assert.That(server.EntMan.GetComponent<MobStateComponent>(unitUid).CurrentState, Is.EqualTo(MobState.Dead));
+        });
+
+        await server.WaitAssertion(() =>
+            Assert.That(GetPoints(ruleUid, Pair.Player!.UserId), Is.EqualTo(killPoints), "the turret's owner should have the whole kill"));
+
+        await Pair.RunTicksSync(3);
+        await Pair.Client.WaitAssertion(() =>
+            Assert.That(Pair.Client.System<KsFieldCommanderPointsSystem>().LastChange!.Reason, Is.EqualTo("ks-fieldcommander-points-kill"),
+                "a turret's kill finished by nobody should still be its owner's kill, not an assist"));
+    }
+
+    /// <summary>
     ///     Unpacks a real requisition flatpack with a multitool, as a player does, and returns the turret it made.
     /// </summary>
     private EntityUid UnpackTurret(TestMapData testMap, EntityUid playerBody)
