@@ -130,7 +130,7 @@ public sealed partial class NPCCombatSystem
             comp.LOSAccumulator -= frameTime;
 
             var worldPos = _transform.GetWorldPosition(xform);
-            var targetPos = _transform.GetWorldPosition(targetXform);
+            var targetPos = KsGetTargetPosition(comp.Target, _transform.GetWorldPosition(targetXform)); // KS14: a light is hit at its fixture, not its tile's middle
 
             // We'll work out the projected spot of the target and shoot there instead of where they are.
             var distance = (targetPos - worldPos).Length();
@@ -228,7 +228,7 @@ public sealed partial class NPCCombatSystem
                 if (!_npcSquadFireLaneSystem.TryGetClearShot(uid,
                         new MapCoordinates(worldPos, xform.MapID),
                         new MapCoordinates(targetSpot, xform.MapID),
-                        _npcSquadFireLaneSystem.GetBodyRadius(comp.Target),
+                        KsGetTargetRadius(comp.Target), // KS14: a light is the same shot as any other, with little to spare
                         out var clearShot))
                 {
                     if (_npcSquadFireLaneSystem.NoteHeldFire(uid))

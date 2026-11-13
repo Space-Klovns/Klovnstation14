@@ -422,14 +422,14 @@ public sealed class KsOperativeHtnRootTest : GameTest
     ///         entry, so changing how an order's compounds nest changes what may interrupt it. Reshaping the YAML
     ///         must leave these as they are.
     /// </summary>
-    [TestCase(NpcOrderKind.Investigate, "23,0,0")]
-    [TestCase(NpcOrderKind.Watch, "24,0,0")]
-    [TestCase(NpcOrderKind.Stage, "25,0,0")]
-    [TestCase(NpcOrderKind.Breach, "26,0,0")]
-    [TestCase(NpcOrderKind.Enter, "27,0,0")]
-    [TestCase(NpcOrderKind.Search, "29,0")]
-    [TestCase(NpcOrderKind.HoldArea, "30,0")]
-    [TestCase(NpcOrderKind.Regroup, "31,0")]
+    [TestCase(NpcOrderKind.Investigate, "28,0,0")]
+    [TestCase(NpcOrderKind.Watch, "29,0,0")]
+    [TestCase(NpcOrderKind.Stage, "30,0,0")]
+    [TestCase(NpcOrderKind.Breach, "31,0,0")]
+    [TestCase(NpcOrderKind.Enter, "32,0,0")]
+    [TestCase(NpcOrderKind.Search, "34,0")]
+    [TestCase(NpcOrderKind.HoldArea, "35,0")]
+    [TestCase(NpcOrderKind.Regroup, "36,0")]
     public async Task TestOrderBranchTraversalRecord(NpcOrderKind kind, string expected)
     {
         var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true,
@@ -457,7 +457,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
                     lockerUid);
             });
 
-        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo("28,0"), Describe(plan));
+        Assert.That(string.Join(",", plan.BranchTraversalRecord), Is.EqualTo("33,0"), Describe(plan));
     }
 
     /// <summary>
@@ -621,7 +621,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
             Assert.That(pickedAnExit, Is.EqualTo(leaves), $"got: {Describe(plan)}");
 
             if (leaves)
-                Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(1), "getting out of a fire should come first, with being stunned the only thing before it");
+                Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(2), "getting out of a fire should come first, with being stunned and staying in a closet the only things before it");
         });
     }
 
@@ -675,8 +675,9 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
-    ///     Hurt, with meds on it and a closet near enough, an operative that hides by its chance gets in to use them, and
-    ///         stays in. With no closet, or by its chance not, it falls back and uses them as ever.
+    ///     Hurt, with meds on it and a closet near enough, an operative that hides by its chance gets in; what it does in there
+    ///         is the root's In a closet branch (<see cref="TestInAClosetItStaysPut"/>). With no closet, or by its chance not,
+    ///         it falls back and uses them as ever.
     /// </summary>
     [TestCase("KsOperativeRootTestMobClosetHealer", true, true)]
     [TestCase("KsOperativeRootTestMobClosetHealer", false, false)]
@@ -701,9 +702,41 @@ public sealed class KsOperativeHtnRootTest : GameTest
         }, root: "KsOperativeConsiderHealingCompound");
 
         var operators = plan.Tasks.Select(task => task.Operator.GetType().Name).ToList();
-        Assert.That(operators, Does.Contain("InteractUsingOperator"), $"it should use its meds either way, got: {Describe(plan)}");
+        Assert.That(operators.Contains("InteractUsingOperator"), Is.Not.EqualTo(hides), $"it uses its meds here only if it does not hide, got: {Describe(plan)}");
         Assert.That(operators.Contains("EnterEntityStorageOperator"), Is.EqualTo(hides), Describe(plan));
-        Assert.That(operators.Contains("HideOperator"), Is.EqualTo(hides), Describe(plan));
+        Assert.That(operators, Does.Not.Contain("HideOperator"), $"staying in is the root's In a closet branch, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     In a closet it hid in to heal, an operative uses its meds there and stays in, in a root branch below only being
+    ///         stunned: nothing it might otherwise take up - a retreat once pulled one out - gets it out early.
+    /// </summary>
+    [Test]
+    public async Task TestInAClosetItStaysPut()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: "KsOperativeRootTestMobClosetHealer", stage: (entManager, mobUid, gridUid) =>
+        {
+            var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+            var blunt = new Content.Shared.Damage.DamageSpecifier(protoManager.Index(BluntDamage), 40);
+            entManager.System<Content.Shared.Damage.Systems.DamageableSystem>().SetDamage(mobUid, blunt);
+            entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("HealDamageThreshold", 10f);
+            StageCarried(entManager, mobUid, TestMedipen);
+
+            var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+            handsSystem.AddHand(mobUid, "right", Content.Shared.Hands.Components.HandLocation.Right);
+            handsSystem.AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+
+            var lockerUid = SpawnAt(entManager, TestLocker, gridUid, 0, 0);
+            Assert.That(entManager.System<Content.Server._KS14.NPC.Hiding.NpcHidingSystem>().TryHideIn(mobUid, lockerUid), "the test needs it in the closet");
+        });
+
+        var operators = plan.Tasks.Select(task => task.Operator.GetType().Name).ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.BranchTraversalRecord[0], Is.EqualTo(1), $"right below being stunned, got: {Describe(plan)}");
+            Assert.That(operators, Does.Contain("InteractUsingOperator"), $"it uses its meds in there, got: {Describe(plan)}");
+            Assert.That(operators[^1], Is.EqualTo("HideOperator"), $"then stays in, got: {Describe(plan)}");
+        });
     }
 
     /// <summary>
@@ -2446,6 +2479,160 @@ public sealed class KsOperativeHtnRootTest : GameTest
             Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "FiringPosition" }), Is.False,
                 $"with no budget left, the spot search should wait, got: {Describe(plan)}");
         });
+    }
+
+    /// <summary>
+    ///     A short wall in the operative's room, at 2,2 to 2,4, with the operative moved to 4.5,1.5 below its end: the hostile
+    ///         <see cref="StageVisibleHostile"/> puts in the corner at 0,0 is in plain sight from there, and a corner to fight
+    ///         from is a step away, at 3.5,1.5, beyond which the floor to the north is hidden behind the wall.
+    /// </summary>
+    private static void StageCoverStub(IEntityManager entManager, EntityUid mobUid, EntityUid gridUid)
+    {
+        for (var y = 2; y <= 4; y++)
+            SpawnAt(entManager, "WallSolid", gridUid, 2, y);
+
+        entManager.System<SharedTransformSystem>().SetCoordinates(mobUid, new EntityCoordinates(gridUid, new Vector2(4.5f, 1.5f)));
+    }
+
+    /// <summary>
+    ///     Pinned down (<c>KsSuppressed</c> over 60, <c>gun.yml</c>'s first branch): an operative fighting in the open with a
+    ///         corner near goes there at once, even with its ordinary new spot not yet due, and fires from it; not pinned, it
+    ///         keeps what it had. Either way it shoots: a reaction, not a freeze.
+    /// </summary>
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestPinnedDownOperativeGoesToCover(bool pinned)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCoverStub(entManager, mobUid, gridUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+
+                var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+                entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("RepositionDueAt", now + System.TimeSpan.FromSeconds(4));
+
+                if (pinned)
+                    entManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>().Set(mobUid, "KsSuppressed", 100f);
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is GunOperator), $"expected the operative to shoot, got: {Describe(plan)} [{string.Join(",", plan.BranchTraversalRecord)}]");
+            Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "FiringPosition" }), Is.EqualTo(pinned),
+                pinned ? $"pinned down, expected a dash to cover, got: {Describe(plan)}"
+                    : $"not pinned and not due a new spot, expected none, got: {Describe(plan)}");
+            Assert.That(plan.Effects.Any(effects => effects?.ContainsKey("PinnedCoverDueAt") == true), Is.EqualTo(pinned),
+                "the pinned branch, and only it, holds its own search off for a while");
+        });
+    }
+
+    /// <summary>
+    ///     Having found its cover, a pinned operative does not search again until that time is up.
+    /// </summary>
+    [Test]
+    public async Task TestPinnedDownOperativeSearchesOncePerHold()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCoverStub(entManager, mobUid, gridUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+
+                var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+                var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+                blackboard.SetValue("RepositionDueAt", now + System.TimeSpan.FromSeconds(4));
+                blackboard.SetValue("PinnedCoverDueAt", now + System.TimeSpan.FromSeconds(4));
+                entManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>().Set(mobUid, "KsSuppressed", 100f);
+            });
+
+        Assert.That(plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "FiringPosition" }), Is.False,
+            $"it is holding its cover, got: {Describe(plan)}");
+        Assert.That(plan.Tasks.Any(task => task.Operator is GunOperator), $"and shooting, got: {Describe(plan)}");
+    }
+
+    /// <summary>
+    ///     Pinned down, an operative called to a squadmate's fight takes the peek (the same compound, a good deal less often
+    ///         and never the push), where one that is not pinned would push up if it had no peek spot. Not pinned and a peek
+    ///         just taken, it pushes; pinned and one just taken, it neither pushes nor peeks.
+    /// </summary>
+    [TestCase(false, false, true)]
+    [TestCase(true, false, true)]
+    [TestCase(false, true, false)]
+    [TestCase(true, true, false)]
+    public async Task TestPinnedDownPeeksLessAndNeverPushes(bool pinned, bool peekJustTaken, bool expectPeek)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCalledOutRoundTheCorner(entManager, mobUid, gridUid);
+
+                var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+                var blackboard = entManager.GetComponent<HTNComponent>(mobUid).Blackboard;
+
+                if (pinned)
+                    entManager.System<Content.Server._KS14.NPC.Meters.NpcMeterSystem>().Set(mobUid, "KsSuppressed", 100f);
+
+                if (peekJustTaken)
+                {
+                    blackboard.SetValue("PeekDueAt", now + System.TimeSpan.FromSeconds(5));
+                    blackboard.SetValue("PeekPinnedDueAt", now + System.TimeSpan.FromSeconds(14));
+                }
+            });
+
+        var peeks = plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "PeekPosition" });
+        var pushes = plan.Tasks.Any(task => task.Operator is MoveToOperator { TargetKey: "SupportTargetCoordinates" });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(peeks, Is.EqualTo(expectPeek), $"peek: got {Describe(plan)}");
+            Assert.That(pushes, Is.EqualTo(!pinned && !expectPeek), $"push: got {Describe(plan)}");
+        });
+    }
+
+    /// <summary>
+    ///     A hostile an operative lost a moment ago, with nobody calling it out, is peeked at: the operative looks for a spot that
+    ///         sees where it went (<c>peek.yml</c>), and not before it has been gone a moment (suppressive fire's time), nor
+    ///         when it was only just taken, nor for long after.
+    /// </summary>
+    [TestCase(2.0, false, true)]
+    [TestCase(0.5, false, false)]
+    [TestCase(2.0, true, false)]
+    [TestCase(12.0, false, false)]
+    public async Task TestLostHostileIsPeeked(double lostSecondsAgo, bool peekJustTaken, bool expectPeek)
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageCalledOutRoundTheCorner(entManager, mobUid, gridUid);
+
+                // The same hostile, lost rather than called out.
+                var perceptionSystem = entManager.System<NpcPerceptionSystem>();
+                var now = Robust.Shared.IoC.IoCManager.Resolve<IGameTiming>().CurTime;
+                var seenAt = now - System.TimeSpan.FromSeconds(lostSecondsAgo);
+                var perceptionComponent = entManager.GetComponent<NpcPerceptionComponent>(mobUid);
+
+                foreach (var (hostileUid, contact) in perceptionComponent.Contacts.ToList())
+                {
+                    perceptionSystem.SetContact(mobUid, hostileUid, contact with { State = NpcContactState.Lost, LastSeen = seenAt, Reacted = true });
+                }
+
+                if (peekJustTaken)
+                    entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue("PeekDueAt", now + System.TimeSpan.FromSeconds(5));
+            });
+
+        var peeksLost = plan.Tasks.Any(task => task.Operator is TacticalPositionOperator { Key: "PeekPosition" });
+        Assert.That(peeksLost, Is.EqualTo(expectPeek), $"got: {Describe(plan)}");
+
+        if (expectPeek)
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is MoveToOperator { TargetKey: "PeekHomeCoordinates" }),
+                $"and step back, got: {Describe(plan)}");
+        }
     }
 
     /// <summary>

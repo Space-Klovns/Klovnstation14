@@ -91,7 +91,10 @@ one end of a chain, check the other end. An arrow means "is read by" or "calls".
   That makes a line of fire, to the first wall, for a second. Ask it from one NPC's side, `NpcFireSide.Friendly` or
   `Hostile`, where hostile means anyone not friendly:
   - `CrossesFire` for a path;
-  - `IsUnderFire` for where it stands. That one is meant for pinning-down mechanics.
+  - `IsUnderFire` for where it stands. `NpcPinnedDownSystem` (`Content.Server/_KS14/NPC/Pinning/`) asks it, on a 0.25s
+    throttle and only for mobs with `NpcPinnable`, and raises the `KsSuppressed` meter: operatives read it in `gun.yml`
+    (go to real cover, hold it longer) and `root.yml` (peek less). Elites have `gain: 0`. See the operative README's
+    *Pinned down*.
 
   `DiveOperator` uses it now:
   - it never dives across friendly fire;
@@ -107,6 +110,21 @@ one end of a chain, check the other end. An arrow means "is read by" or "calls".
   - The root's leave-danger branch is filtered to `dangers: Fire`, so getting out of a blast stays with the grenade
     branch.
   - Steering never refuses a step onto a danger the NPC is already standing in.
+- **Cooked grenades.** A thrower with `NpcGrenadeThrower.cooks` lights a frag and holds it (`NpcGrenadeSystem.Cooking.cs`).
+  - The hold belongs to the system, not to the task. `ThrowGrenadeOperator` only starts it and renews it each update, and
+    `TaskShutdown` ends it. The system ends it too: time up, no renewal for 0.5s (death, sleep and a removed HTN end no
+    task), or the NPC dead or unable to throw. Ending is always throwing it at the spot aimed for, or dropping it if it
+    cannot be thrown. Never leave a lit grenade in a hand with only a task to end it.
+  - The blast tile dangers skip what is in a container, so `NpcGrenadeSystem.TryGetLanding` answers for a cooked one too:
+    where it is going. `TargetDangerRangeCon` and `grenade.yml` then have the squad leave the spot as the cook starts,
+    and the callout is made then.
+- **Shooting out lights.** `NpcLightShooterSystem` picks the light (two moments: the staging room's lit lights, or the light
+  on a hostile who cannot see in the dark) and keeps it on `NpcLightShooterComponent`. `LightPickPrecondition` and
+  `LightPickQuery` expose it, and `light_shoot.yml` shoots it with `GunOperator`, a light being a ranged target like any
+  other (`NPCCombatSystem.Klovn.LightTargets.cs` aims at its fixture, not the entity's own spot, which is mid-tile). So the
+  shot goes through `NpcSquadFireLaneSystem.TryGetClearShot` like every shot. A wall light breaks only when it is the
+  target (`RequireProjectileTarget`), and any damage breaks the bulb. The root branch is below ranged combat, so a hostile that
+  can be hit is shot instead. Settings are on `NpcLightShooter`, listed in the operative README.
 - **Man down.** `NpcSquadSystem` raises `NpcSquadMemberDownedEvent` on critical, dead, or gibbed while not already
   dead.
   - `NpcMeterOnSquadLossSystem` reads it (caution).
@@ -272,6 +290,16 @@ way. The gun task's recheck ends it, the next plan picks a new spot, and the bra
 costly spot search only runs when one is due. Give such a timer a `jitter`: NPCs that start together otherwise stay
 in step for good, and their costly searches all land on the same tick.
 
+### Steering only walks straight at a near target if the way is clear
+
+Within `RepathRange` (1.5 tiles) steering skips the path and walks straight at its target. It does that only while a ray
+says nothing anchored is in the way (`NPCSteeringSystem.KsIsBeelineClear`, rechecked every 0.3s). Otherwise it paths:
+- a target just over a railing or table would otherwise have it pressed against that for good;
+- a climb (`ClimbingComponent.NextTransition`) is waited out, not taken for being stuck.
+
+Climbing costs `PathfindingSystem.ClimbCost` on top of walking, so climbers walk round anything short; operatives have
+`NavClimb`. `KsNpcRailingTest` covers railings at every rotation.
+
 ### A background move shares the NPC with the tasks after it
 
 A `MoveToOperator` with `shutdownState: PlanFinished` or `Never` reports itself finished at once and keeps steering
@@ -336,6 +364,7 @@ Consequences:
 `Resources/Prototypes/_KsModule/NPCs/Operative/root.yml` (private submodule) runs:
 
 1. Stunned (does nothing until it can act: nearly everything below starts with a line, so anything else repeats itself)
+1a. In a closet (hid to heal: the meds, then staying in until `NpcHidingSystem` lets it out; nothing below can get it out early; see `healing.yml`)
 2. Out of the fire (see `danger.yml`)
 3. Play dead
 4. Healing
@@ -343,6 +372,7 @@ Consequences:
 6. Recovering: fall back (waiting for meds to work and found; see `recovering.yml`)
 7. Target down (a one-line callout, from `NpcPerceptionSystem`; interrupts a fight for a tick)
 8. Throw grenade (opt-in; at a hostile in the fight or out of sight; interrupts a fight for a tick; see `grenade_throw.yml`)
+8a. Shoot out a light (opt-in, `NpcLightShooter`; never with a hostile in sight it can hit; above the squad plan, whose orders a squad that lost a hostile is on, or it would never get a turn; see `light_shoot.yml`)
 9. Squad plan orders (one branch above combat, for orders with `OverCombat`; see `squad_plan.yml`)
 10. Ranged, then Melee
 11. Execution (opt-in; being below combat is what "nothing left to fight" means; see `execution.yml`)
@@ -350,7 +380,8 @@ Consequences:
 13. Grenade push (opt-in; going in on a squad grenade that just went off; see `grenade_throw.yml`)
 14. Buddy aid (opt-in; see `buddy_aid.yml`)
 15. Tactical reload (opt-in, through `TacticalReload` on the blackboard)
-16. Support: peek, then push (backing up a squadmate fighting a hostile this one can't see; see `support.yml`)
+16. Support: peek (two root branches, not pinned down and pinned down, the latter a third as often), then push (never when pinned down), backing up a squadmate fighting a hostile this one can't see; see `support.yml`
+16a. Peek a lost hostile (the same two branches again; a hostile this one lost 1.5s to 8s ago, with nobody calling it out: step out to a spot that sees where it went, look, step back; see `peek.yml`). Both peeks are gated on `PeekDueAt` / `PeekPinnedDueAt`, which the peek sets when it finds a spot, and stop at a `PeekRange` of a quarter tile, not `CampingRange`, which stopped short behind the corner.
 17. Follow
 18. Recovering: hold (nothing below runs until the meds have worked; see `recovering.yml`)
 19. Search open, then Search cover
