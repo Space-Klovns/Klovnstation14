@@ -1550,6 +1550,32 @@ public sealed class KsOperativeHtnRootTest : GameTest
     }
 
     /// <summary>
+    ///     A magazine swap cut short leaves the gun in the other hand, and the active one empty or holding the magazine. The
+    ///         operative takes the gun up again, rather than finding no gun in hand and pulling a knife.
+    /// </summary>
+    [Test]
+    public async Task TestAGunLeftInTheOtherHandIsTakenUpAgain()
+    {
+        var plan = await PlanOperative(pendingSensorData: false, recentlyFought: true, mobPrototype: HandsMob,
+            stage: (entManager, mobUid, gridUid) =>
+            {
+                StageArmed(entManager, mobUid);
+                StageVisibleHostile(entManager, mobUid, gridUid);
+
+                var handsSystem = entManager.System<Content.Shared.Hands.EntitySystems.SharedHandsSystem>();
+                handsSystem.AddHand(mobUid, "left", Content.Shared.Hands.Components.HandLocation.Left);
+                Assert.That(handsSystem.TrySetActiveHand(mobUid, "left"), "the test needs the empty hand active");
+                entManager.GetComponent<HTNComponent>(mobUid).Blackboard.SetValue(NPCBlackboard.ActiveHand, "left");
+            });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Tasks.Any(task => task.Operator is Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.TakeUpGunOperator), Describe(plan));
+            Assert.That(plan.Tasks.Any(task => task.Operator is Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat.Melee.MeleeOperator), Is.False, "no knife: " + Describe(plan));
+        });
+    }
+
+    /// <summary>
     ///     A push or a flank, given in a fight, comes before the fighting it is part of: the operative goes for the spot,
     ///         firing at the hostile on the way while it can see it, and just goes while it cannot.
     /// </summary>

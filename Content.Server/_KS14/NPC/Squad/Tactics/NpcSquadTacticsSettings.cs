@@ -466,17 +466,30 @@ public sealed partial class NpcSquadTacticsSettings
     public int FlankMinFighters = 3;
 
     /// <summary>
-    ///     How narrow, in degrees and seen from the hostile, the squad has to be for it to be on one side: every member
-    ///         fighting it within this arc.
+    ///     The chance, from 0 to 1, that a squad that could flank does. Rolled once each time it could, and a roll that fails
+    ///         stands until <see cref="FlankCooldown"/> is up.
     /// </summary>
     [DataField]
-    public float FlankArc = 70f;
+    public float FlankChance = 1f;
+
+    /// <summary>
+    ///     How narrow, seen from the hostile, the squad has to be for it to be on one side: every member fighting it within this
+    ///         arc. In degrees in YAML.
+    /// </summary>
+    [DataField]
+    public Angle FlankArc = Angle.FromDegrees(70);
 
     /// <summary>
     ///     How far from the hostile, in tiles, a flanker goes.
     /// </summary>
     [DataField]
     public float FlankRange = 5f;
+
+    /// <summary>
+    ///     The longest way round a flanker may take, in tiles: further, the fight is over by the time it gets there.
+    /// </summary>
+    [DataField]
+    public float FlankMaxWalk = 32f;
 
     /// <summary>
     ///     How long a flanker gets to get there. One that has got no nearer after <see cref="FlankProgressTime"/> is given up

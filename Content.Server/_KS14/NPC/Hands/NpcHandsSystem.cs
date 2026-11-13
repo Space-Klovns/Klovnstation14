@@ -4,6 +4,7 @@ using Content.Shared.Inventory;
 using Content.Shared.Inventory.VirtualItem;
 using Content.Shared.Storage;
 using Content.Shared.Storage.EntitySystems;
+using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Wieldable;
 using Content.Shared.Wieldable.Components;
 using Robust.Shared.Containers;
@@ -46,6 +47,7 @@ public sealed partial class NpcHandsSystem : EntitySystem
     [Dependency] private SharedStorageSystem _storageSystem = default!;
     [Dependency] private SharedWieldableSystem _wieldableSystem = default!;
 
+    [Dependency] private EntityQuery<GunComponent> _gunQuery = default!;
     [Dependency] private EntityQuery<StorageComponent> _storageQuery = default!;
     [Dependency] private EntityQuery<VirtualItemComponent> _virtualItemQuery = default!;
     [Dependency] private EntityQuery<WieldableComponent> _wieldableQuery = default!;
@@ -164,6 +166,50 @@ public sealed partial class NpcHandsSystem : EntitySystem
     public bool MakeActive(EntityUid npcUid, string hand)
     {
         return _handsSystem.GetActiveHand(npcUid) == hand || _handsSystem.TrySetActiveHand(npcUid, hand);
+    }
+
+    /// <summary>
+    ///     A hand other than the active one with a gun in it, while the active one has none: what a magazine swap cut short
+    ///         leaves, the gun in one hand and the magazine, or nothing, in the other. Changes nothing.
+    /// </summary>
+    public bool TryFindGunInOtherHand(EntityUid npcUid, [NotNullWhen(true)] out string? hand)
+    {
+        hand = null;
+        var activeHand = _handsSystem.GetActiveHand(npcUid);
+
+        if (activeHand != null && _handsSystem.TryGetHeldItem(npcUid, activeHand, out var activeUid) && _gunQuery.HasComp(activeUid))
+            return false;
+
+        foreach (var otherHand in _handsSystem.EnumerateHands(npcUid))
+        {
+            if (otherHand == activeHand ||
+                !_handsSystem.TryGetHeldItem(npcUid, otherHand, out var heldUid) ||
+                !_gunQuery.HasComp(heldUid))
+                continue;
+
+            hand = otherHand;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Takes the gun in <paramref name="npcUid"/>'s other hand up again (<see cref="TryFindGunInOtherHand"/>), dropping
+    ///         whatever the active hand holds, so it can be wielded: the loose magazine of a swap cut short.
+    /// </summary>
+    /// <returns>Whether the gun is in the active hand now.</returns>
+    public bool TryTakeUpGunInOtherHand(EntityUid npcUid)
+    {
+        if (!TryFindGunInOtherHand(npcUid, out var gunHand))
+            return false;
+
+        if (_handsSystem.GetActiveHand(npcUid) is { } activeHand &&
+            _handsSystem.TryGetHeldItem(npcUid, activeHand, out var heldUid) &&
+            !_virtualItemQuery.HasComp(heldUid))
+            _handsSystem.TryDrop(npcUid, activeHand, checkActionBlocker: false, doDropInteraction: false);
+
+        return MakeActive(npcUid, gunHand);
     }
 
     /// <summary>

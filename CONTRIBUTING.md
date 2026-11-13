@@ -282,6 +282,21 @@ For an id that exists only in a test's `[TestPrototypes]` YAML, make that field 
 
 Entity ids use `EntProtoId` rather than `ProtoId<EntityPrototype>`. `EntProtoId<T>` also requires the entity to have a `T`: as a `[DataField]`, the YAML linter rejects a prototype without one (`public EntProtoId<InstantActionComponent> Action;`).
 
+**Angles are `Angle`, not `float` (C#)**: bearings, turns, arcs, rotations and anything else that is an angle are an
+`Angle` (`Robust.Shared.Maths`), not a `float` or `double` of degrees or radians. Make one with `Angle.FromDegrees(90)`,
+`new Angle(radians)` or `vector.ToAngle()`, turn it back with `.ToVec()`, compare two with `Angle.ShortestDistance(a, b)`
+(which wraps), and read `.Theta` (radians) or `.Degrees` only at the edge. As a `[DataField]`, YAML gives it in degrees
+(`flankArc: 70`), or in radians with a `rad` suffix. A raw `float` leaves the unit to a comment and the wrapping to the
+caller, and both get forgotten. Use a `float` only where `Angle`'s 64-bit `double` is specifically unwanted: a hot loop
+over many angles that is measurably faster in `float`, or a buffer handed to the GPU or the network.
+```csharp
+private static readonly Angle PushSpread = Angle.FromDegrees(25);                 // do this
+if (Math.Abs(Angle.ShortestDistance(squadBearing, bearing).Theta) > halfArc.Theta)
+
+private const float PushSpreadDegrees = 25f;                                      // not this
+if (MathF.Abs(bearing - squadBearing) > halfArcDegrees)                           // and the 359/1 degree wrap is a bug
+```
+
 **Locale string ids are `LocId`, not `string` (C#)** — `LocId` (`Robust.Shared.Localization`) is just a wrapper around a `string`, there to mark it as the id of a locale (Fluent) string. It converts to and from `string` implicitly, so `Loc.GetString(locId)` and a literal both work. As a `[DataField]`, including as a dictionary key, the YAML linter checks its id against the locale files (`LocIdSerializer`), so a mistyped id fails the linter instead of showing up in game as the raw key:
 ```csharp
 [DataField] public LocId Name = "ks-thing-name";                       // do this

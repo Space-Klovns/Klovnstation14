@@ -48,8 +48,8 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
 ";
 
     /// <summary>
-    ///     Every string the Redacted speak resolves, and every speaker has a clip for it that exists, which no other
-    ///         string of the speaker shares.
+    ///     Every string the Redacted speak resolves, and every speaker has a clip for it that exists, which no string of the
+    ///         speaker saying something else shares.
     /// </summary>
     [Test]
     public async Task TestEverySpokenLineHasOneClipPerSpeaker()
@@ -62,7 +62,7 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
             foreach (var speakerId in Speakers)
             {
                 var speaker = protoManager.Index<NpcVoiceRecordingPrototype>(speakerId);
-                var usedPaths = new HashSet<string>();
+                var usedPaths = new Dictionary<string, string>(); // clip, and the text it says
                 var voicedIds = new HashSet<string>();
 
                 // A string in two sets (a flashbang's "Fire in the hole" is a frag's too) is one string, with one clip.
@@ -90,7 +90,11 @@ public sealed class KsNpcVoiceRecordingTest : GameTest
                     }
 
                     Assert.That(resourceManager.ContentFileExists(pathClip.Path), $"{pathClip.Path} should exist");
-                    Assert.That(usedPaths.Add(pathClip.Path.ToString()), $"{pathClip.Path} should be the clip of one string only");
+                    // One clip may serve two strings only if they say the same: "Fire in the hole" for a frag and for anything else.
+                    if (usedPaths.TryGetValue(pathClip.Path.ToString(), out var saidAs))
+                        Assert.That(text, Is.EqualTo(saidAs), $"{pathClip.Path} should be the clip of one line only");
+                    else
+                        usedPaths[pathClip.Path.ToString()] = text!;
                     voicedIds.Add(locId);
                 }
 

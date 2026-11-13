@@ -27,11 +27,12 @@ ks-operative-redacted-line-target-down-18 = Больше не угроза.
 ks-operative-redacted-line-target-down-19 = Обезврежен.
 ks-operative-redacted-line-target-down-20 = Время вышло.
 
-
 ks-operative-redacted-line-throw-1 = Ложись, бросаю!
 ks-operative-redacted-line-throw-2 = Осколочная пошла.
 ks-operative-redacted-line-throw-3 = Бросаю осколочную.
 ks-operative-redacted-line-throw-4 = Граната пошла!
+
+ks-operative-redacted-line-throw-other-1 = Ложись, бросаю!
 
 ks-operative-redacted-line-alert-grenade-1 = Граната, уходите оттуда!
 ks-operative-redacted-line-alert-grenade-2 = Граната!

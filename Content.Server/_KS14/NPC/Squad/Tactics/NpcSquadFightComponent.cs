@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+using Content.Server.NPC.Pathfinding;
 using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Squad.Tactics;
@@ -38,11 +40,22 @@ public sealed partial class NpcSquadFightComponent : Component
     public readonly List<EntityUid> Flankers = new();
 
     /// <summary>
-    ///     How far each flanker had to go when it set off, by its index in <see cref="Flankers"/>: for telling one that cannot
-    ///         get round from one on its way.
+    ///     The way each flanker goes round, by its index in <see cref="Flankers"/>.
     /// </summary>
     [ViewVariables]
-    public readonly List<float> FlankStartDistances = new();
+    public readonly List<NpcFlankRoute> FlankRoutes = new();
+
+    /// <summary>
+    ///     Ways round being looked for, before a flank starts: one for each spot it might go to.
+    /// </summary>
+    [ViewVariables]
+    public readonly List<NpcFlankProbe> FlankProbes = new();
+
+    [ViewVariables]
+    public EntityUid? FlankProbeTargetUid;
+
+    [ViewVariables, AutoPausedField]
+    public TimeSpan FlankProbeStartedAt;
 
     [ViewVariables, AutoPausedField]
     public TimeSpan NextFlankAt;
@@ -55,4 +68,41 @@ public sealed partial class NpcSquadFightComponent : Component
 
     [ViewVariables]
     public EntityCoordinates LastBlastCoordinates;
+}
+
+/// <summary>
+///     The way a flanker goes round: the turns of the way it was found, ending at the spot it is going to.
+/// </summary>
+public sealed class NpcFlankRoute
+{
+    public required EntityUid FlankerUid;
+
+    public readonly List<EntityCoordinates> Waypoints = new();
+
+    /// <summary>
+    ///     The waypoint it is on its way to.
+    /// </summary>
+    public int Next;
+
+    /// <summary>
+    ///     How far it had to go when it set off, in tiles: for telling one that cannot get round from one on its way.
+    /// </summary>
+    public float StartRemaining;
+}
+
+/// <summary>
+///     A way round to one spot by a hostile's side, being looked for.
+/// </summary>
+public sealed class NpcFlankProbe
+{
+    public required EntityUid FlankerUid;
+
+    public required EntityCoordinates Spot;
+
+    /// <summary>
+    ///     How far round the hostile the spot is from the squad, either way: for sending two flankers round different sides.
+    /// </summary>
+    public required Angle Turn;
+
+    public required Task<PathResultEvent> Path;
 }

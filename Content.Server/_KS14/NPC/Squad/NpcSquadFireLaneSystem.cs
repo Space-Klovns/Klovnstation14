@@ -62,6 +62,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
     [Dependency] private EntityQuery<NpcHoldingFireComponent> _holdingFireQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private EntityQuery<Content.Server.NPC.Components.NPCSteeringComponent> _steeringQuery = default!;
 
     /// <summary>
     ///     Score multiplier for a spot that crosses a line of fire. Soft rather than zero: a crossed line beats
@@ -552,7 +553,9 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
             //      standing still is where it is: KsNpcFriendlyFireTest.TestMapWhereAShotStarts. Where the round starts is as
             //      far off again as the shooter goes in a tick: seen live, a friend 0.7 tiles behind a shooter juking about,
             //      outside where a still one's round starts, was hit.
-            var moving = friendVelocity.LengthSquared() > MovingSpeed * MovingSpeed;
+            // On the move, or about to be: one being steered somewhere sets off whenever its steering says, this tick
+            //      included. Seen live: a flanker standing among its squad set off the tick a squadmate fired past it.
+            var moving = friendVelocity.LengthSquared() > MovingSpeed * MovingSpeed || _steeringQuery.HasComp(mob.Owner);
             var maneuverSpeed = moving ? MovingFriendManeuverSpeed : FriendManeuverSpeed;
             var nearReach = (moving ? reach + maneuverSpeed * tickTime : reach) + shooterVelocity.Length() * tickTime;
 

@@ -1,6 +1,9 @@
 // KS14: added in this fork
 using Content.Server._KS14.NPC.Doors;
 using Content.Server._KS14.NPC.Pushing;
+using System.Threading;
+using System.Threading.Tasks;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 
 namespace Content.Server.NPC.Pathfinding;
@@ -43,6 +46,28 @@ public sealed partial class PathfindingSystem
         }
 
         return avoidedTiles;
+    }
+
+    /// <summary>
+    ///     A path for <paramref name="entity"/> that keeps off <paramref name="extraAvoidedTiles"/> as well, as if they were
+    ///         walls: for a way round somewhere, rather than through it. The set becomes the request's, read by the worker
+    ///         threads, and must not be changed after.
+    /// </summary>
+    public async Task<PathResultEvent> GetPathAvoiding(EntityUid entity,
+        EntityCoordinates start,
+        EntityCoordinates end,
+        float range,
+        HashSet<(EntityUid Grid, Vector2i Tile)> extraAvoidedTiles,
+        CancellationToken cancelToken,
+        PathFlags flags = PathFlags.None)
+    {
+        var request = GetRequest(entity, start, end, range, cancelToken, flags);
+
+        if (request.AvoidedTiles is { } ownAvoidedTiles)
+            extraAvoidedTiles.UnionWith(ownAvoidedTiles);
+
+        request.AvoidedTiles = extraAvoidedTiles;
+        return await GetPath(request);
     }
 
     /// <summary>
