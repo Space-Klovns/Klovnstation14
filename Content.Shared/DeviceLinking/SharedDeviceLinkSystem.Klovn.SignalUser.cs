@@ -5,19 +5,15 @@ namespace Content.Shared.DeviceLinking;
 public abstract partial class SharedDeviceLinkSystem
 {
     /// <summary>
-    ///     Who pressed the button whose signal is being delivered right now, or null outside of that.
+    ///     <see cref="InvokePort"/> for a signal sent by using the device: remembers <paramref name="user"/> on it
+    ///         (<see cref="DeviceLinkSourceComponent.KsSignalUser"/>) as who answers for what the signal sets off.
     /// </summary>
     /// <remarks>
-    ///     A signal names the device that sent it, not the person who used the device. Anything that reacts to a
-    ///         signal by setting off an explosive reads this to credit whoever caused it.
+    ///     The user is kept on the device rather than handed to what receives the signal as the user of its trigger:
+    ///         a trigger's user is whose client is taken to have predicted its sounds already, and no client predicts
+    ///         a signal, so they would hear nothing of what they set off. It also holds however late the signal
+    ///         arrives, over the device network or after a timer.
     /// </remarks>
-    [ViewVariables]
-    public EntityUid? KsSignalUser { get; private set; }
-
-    /// <summary>
-    ///     <see cref="InvokePort"/> for a signal a player sent: everything it sets off synchronously can credit
-    ///         <paramref name="user"/>.
-    /// </summary>
     public void KsInvokePortAsUser(
         EntityUid? user,
         EntityUid uid,
@@ -25,16 +21,9 @@ public abstract partial class SharedDeviceLinkSystem
         NetworkPayload? data = null,
         DeviceLinkSourceComponent? sourceComponent = null)
     {
-        var previousUser = KsSignalUser;
-        KsSignalUser = user ?? previousUser;
+        if (Resolve(uid, ref sourceComponent, logMissing: false))
+            sourceComponent.KsSignalUser = user;
 
-        try
-        {
-            InvokePort(uid, port, data, sourceComponent);
-        }
-        finally
-        {
-            KsSignalUser = previousUser;
-        }
+        InvokePort(uid, port, data, sourceComponent);
     }
 }

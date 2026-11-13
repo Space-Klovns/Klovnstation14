@@ -578,7 +578,6 @@ public sealed class KsFieldCommanderCreditTest : GameTest
             Assert.That(server.EntMan.GetComponent<MobStateComponent>(unitUid).CurrentState, Is.EqualTo(MobState.Dead),
                 "the charge should have killed the unit");
             Assert.That(GetPoints(ruleUid, Pair.Player!.UserId), Is.EqualTo(killPoints), "the presser should be paid for the explosion");
-            Assert.That(server.System<DeviceLinkSystem>().KsSignalUser, Is.Null, "the presser is only remembered while the signal is delivered");
         });
     }
 
