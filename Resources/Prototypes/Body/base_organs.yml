@@ -397,7 +397,7 @@
     layers:
     - state: heart-on
   - type: Metabolizer
-    maxReagents: 2
+    maxReagents: 6 # KS14: was 2
     stages: [ Bloodstream ]
 
 - type: entity

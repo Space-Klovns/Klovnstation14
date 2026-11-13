@@ -384,9 +384,9 @@
         - !type:DoActsBehavior
           acts: [ "Destruction" ]
 
-# What a supply pod leaves behind when it despawns: a bluespace flash, and sparks.
+# What a supply pod leaves behind when it despawns: sparks.
 - type: entity
-  parent: AdminInstantEffectBluespace
+  parent: AdminInstantEffectBase
   id: KsEffectSupplyPodDespawn
   categories: [ HideSpawnMenu ]
   components:

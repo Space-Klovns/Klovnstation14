@@ -3,7 +3,7 @@
   weights:
     OreIron: 1.0
     OreQuartz: 1.0
-    OreCoal: 0.33
+    # OreCoal: 0.33 # KS14: coal is no longer mined
     OreSalt: 0.20
     OreGold: 0.25
     OreSilver: 0.25

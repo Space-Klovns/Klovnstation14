@@ -1,0 +1,118 @@
+# Ore: put it in an ore bag that has the tablet attached.
+
+- type: ksSPAMTask
+  id: KsSPAMTaskIron
+  name: ks-spam-task-iron
+  icon: SteelOre1
+  objective: !type:KsSPAMOreObjective
+    stack: SteelOre
+  minAmount: 30
+  maxAmount: 60
+  pointsPerUnit: 2
+  reputation: 2
+
+- type: ksSPAMTask
+  id: KsSPAMTaskQuartz
+  name: ks-spam-task-quartz
+  icon: SpaceQuartz1
+  objective: !type:KsSPAMOreObjective
+    stack: SpaceQuartz
+  minAmount: 20
+  maxAmount: 40
+  pointsPerUnit: 2
+  reputation: 2
+
+- type: ksSPAMTask
+  id: KsSPAMTaskPlasma
+  name: ks-spam-task-plasma
+  icon: PlasmaOre1
+  objective: !type:KsSPAMOreObjective
+    stack: PlasmaOre
+  minAmount: 15
+  maxAmount: 30
+  pointsPerUnit: 8
+  reputation: 3
+
+- type: ksSPAMTask
+  id: KsSPAMTaskSilver
+  name: ks-spam-task-silver
+  icon: SilverOre1
+  objective: !type:KsSPAMOreObjective
+    stack: SilverOre
+  minAmount: 15
+  maxAmount: 30
+  pointsPerUnit: 8
+  reputation: 3
+  minRank: 1
+
+- type: ksSPAMTask
+  id: KsSPAMTaskGold
+  name: ks-spam-task-gold
+  icon: GoldOre1
+  objective: !type:KsSPAMOreObjective
+    stack: GoldOre
+  minAmount: 15
+  maxAmount: 30
+  pointsPerUnit: 9
+  reputation: 3
+  minRank: 1
+
+- type: ksSPAMTask
+  id: KsSPAMTaskUranium
+  name: ks-spam-task-uranium
+  icon: UraniumOre1
+  objective: !type:KsSPAMOreObjective
+    stack: UraniumOre
+  minAmount: 10
+  maxAmount: 25
+  pointsPerUnit: 15
+  reputation: 4
+  minRank: 2
+
+- type: ksSPAMTask
+  id: KsSPAMTaskDiamond
+  name: ks-spam-task-diamond
+  icon: DiamondOre1
+  objective: !type:KsSPAMOreObjective
+    stack: DiamondOre
+  minAmount: 5
+  maxAmount: 12
+  pointsPerUnit: 25
+  reputation: 5
+  minRank: 3
+
+# Fauna: kill it, then use the tablet on the body.
+
+- type: ksSPAMTask
+  id: KsSPAMTaskBasilisk
+  name: ks-spam-task-basilisk
+  icon: MobBasilisk
+  objective: !type:KsSPAMCorpseObjective
+    prototypes: [ MobBasilisk ]
+  minAmount: 1
+  maxAmount: 3
+  pointsPerUnit: 120
+  reputation: 3
+
+- type: ksSPAMTask
+  id: KsSPAMTaskGoliath
+  name: ks-spam-task-goliath
+  icon: MobGoliath
+  objective: !type:KsSPAMCorpseObjective
+    prototypes: [ MobGoliath ]
+  minAmount: 1
+  maxAmount: 3
+  pointsPerUnit: 150
+  reputation: 4
+
+- type: ksSPAMTask
+  id: KsSPAMTaskWatcher
+  name: ks-spam-task-watcher
+  icon: MobWatcherLavaland
+  objective: !type:KsSPAMCorpseObjective
+    prototypes: [ MobWatcherLavaland, MobWatcherIcewing, MobWatcherMagmawing, MobWatcherPride ]
+  minAmount: 2
+  maxAmount: 4
+  pointsPerUnit: 100
+  reputation: 3
+  minRank: 1

@@ -1,0 +1,177 @@
+# What a salvager can order from the S.P.A.M. with mining points. minRank counts from zero: 0 is Trainee.
+
+- type: ksSPAMProduct
+  id: KsSPAMProductFlare
+  entity: Flare
+  cost: 20
+  category: ks-spam-category-survival
+
+- type: ksSPAMProduct
+  id: KsSPAMProductEmergencyMedipen
+  entity: EmergencyMedipen
+  cost: 150
+  category: ks-spam-category-survival
+
+- type: ksSPAMProduct
+  id: KsSPAMProductSurvivalMedipen
+  entity: KsSurvivalMedipen
+  cost: 250
+  category: ks-spam-category-survival
+
+- type: ksSPAMProduct
+  id: KsSPAMProductPickaxe
+  entity: Pickaxe
+  cost: 100
+  category: ks-spam-category-tools
+
+- type: ksSPAMProduct
+  id: KsSPAMProductOreBag
+  entity: OreBag
+  cost: 100
+  category: ks-spam-category-tools
+
+- type: ksSPAMProduct
+  id: KsSPAMProductSpaceMedipen
+  entity: SpaceMedipen
+  cost: 250
+  category: ks-spam-category-survival
+  minRank: 1
+
+- type: ksSPAMProduct
+  id: KsSPAMProductSeismicCharge
+  entity: SeismicCharge
+  cost: 300
+  category: ks-spam-category-tools
+  minRank: 1
+
+- type: ksSPAMProduct
+  id: KsSPAMProductPKAUpgradeDamage
+  entity: PKAUpgradeDamage
+  cost: 675
+  category: ks-spam-category-weapons
+  minRank: 1
+
+- type: ksSPAMProduct
+  id: KsSPAMProductPKAUpgradeRange
+  entity: PKAUpgradeRange
+  cost: 675
+  category: ks-spam-category-weapons
+  minRank: 1
+
+- type: ksSPAMProduct
+  id: KsSPAMProductPKAUpgradeFireRate
+  entity: PKAUpgradeFireRate
+  cost: 675
+  category: ks-spam-category-weapons
+  minRank: 1
+
+- type: ksSPAMProduct
+  id: KsSPAMProductCrusherDagger
+  entity: WeaponCrusherDagger
+  cost: 400
+  category: ks-spam-category-weapons
+
+- type: ksSPAMProduct
+  id: KsSPAMProductAdvancedMineralScanner
+  entity: AdvancedMineralScanner
+  cost: 675
+  category: ks-spam-category-tools
+  minRank: 1
+
+- type: ksSPAMProduct
+  id: KsSPAMProductLuxuryMedipen
+  entity: KsLuxuryMedipen
+  cost: 750
+  category: ks-spam-category-survival
+  minRank: 2
+
+- type: ksSPAMProduct
+  id: KsSPAMProductCrusher
+  entity: WeaponCrusher
+  cost: 650
+  category: ks-spam-category-weapons
+  minRank: 1
+
+- type: ksSPAMProduct
+  id: KsSPAMProductMiningDrill
+  entity: MiningDrill
+  cost: 800
+  category: ks-spam-category-tools
+  minRank: 2
+
+- type: ksSPAMProduct
+  id: KsSPAMProductFulton
+  entity: Fulton
+  cost: 800
+  category: ks-spam-category-tools
+  minRank: 2
+
+- type: ksSPAMProduct
+  id: KsSPAMProductFultonBeacon
+  entity: FultonBeacon
+  cost: 320
+  category: ks-spam-category-tools
+  minRank: 2
+
+- type: ksSPAMProduct
+  id: KsSPAMProductHardsuitSalvage
+  entity: ClothingOuterHardsuitSalvage
+  cost: 2000
+  category: ks-spam-category-suits
+  minRank: 2
+
+- type: ksSPAMProduct
+  id: KsSPAMProductCrusherGlaive
+  entity: WeaponCrusherGlaive
+  cost: 1500
+  category: ks-spam-category-weapons
+  minRank: 3
+
+- type: ksSPAMProduct
+  id: KsSPAMProductJetpackVoid
+  entity: JetpackVoidFilled
+  cost: 1500
+  category: ks-spam-category-survival
+  minRank: 3
+
+- type: ksSPAMProduct
+  id: KsSPAMProductMiningDrillDiamond
+  entity: MiningDrillDiamond
+  cost: 2000
+  category: ks-spam-category-tools
+  minRank: 3
+
+- type: ksSPAMProduct
+  id: KsSPAMProductOreBagOfHolding
+  entity: OreBagOfHolding
+  cost: 2000
+  category: ks-spam-category-tools
+  minRank: 3
+
+- type: ksSPAMProduct
+  id: KsSPAMProductHardsuitSpatio
+  entity: ClothingOuterHardsuitSpatio
+  cost: 2500
+  category: ks-spam-category-suits
+  minRank: 3
+
+- type: ksSPAMProduct
+  id: KsSPAMProductGoliathCloak
+  entity: ClothingNeckCloakGoliathCloak
+  cost: 1200
+  category: ks-spam-category-suits
+  minRank: 3
+
+- type: ksSPAMProduct
+  id: KsSPAMProductHardsuitMaxim
+  entity: ClothingOuterHardsuitMaxim
+  cost: 6000
+  category: ks-spam-category-suits
+  minRank: 4
+
+- type: ksSPAMProduct
+  id: KsSPAMProductSalvagerSupremeCloak
+  entity: ClothingNeckCloakSalvagerSupreme
+  cost: 7000
+  category: ks-spam-category-suits
+  minRank: 4

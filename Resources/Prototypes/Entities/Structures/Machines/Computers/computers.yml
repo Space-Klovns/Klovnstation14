@@ -1203,41 +1203,43 @@
     guides:
     - Cloning
 
-- type: entity
-  parent: BaseComputerAiAccess
-  id: ComputerSalvageJobBoard
-  name: salvage job board
-  description: Console for accessing salvage jobs, if you're tough enough.
-  components:
-  - type: Sprite
-    layers:
-    - map: ["computerLayerBody"]
-      state: computer
-    - map: ["computerLayerKeyboard"]
-      state: generic_keyboard
-    - map: ["computerLayerScreen"]
-      state: salvjob # givin em a salvjob like hawk tuah
-    - map: ["computerLayerKeys"]
-      state: generic_keys
-    - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
-      state: generic_panel_open
-  - type: SalvageJobBoardConsole
-  - type: ActivatableUI
-    key: enum.SalvageJobBoardUiKey.Key
-  - type: UserInterface
-    interfaces:
-      enum.SalvageJobBoardUiKey.Key:
-        type: SalvageJobBoardBoundUserInterface
-      enum.WiresUiKey.Key:
-        type: WiresBoundUserInterface
-  - type: ActiveRadio
-    channels: [ Supply ]
-  - type: Computer
-    board: SalvageJobBoardComputerCircuitboard
-  - type: PointLight
-    radius: 1.5
-    energy: 4.0
-    color: "#b89f25"
+# KS14 start: the S.P.A.M. tablet replaces the salvage job board
+#- type: entity
+#  parent: BaseComputerAiAccess
+#  id: ComputerSalvageJobBoard
+#  name: salvage job board
+#  description: Console for accessing salvage jobs, if you're tough enough.
+#  components:
+#  - type: Sprite
+#    layers:
+#    - map: ["computerLayerBody"]
+#      state: computer
+#    - map: ["computerLayerKeyboard"]
+#      state: generic_keyboard
+#    - map: ["computerLayerScreen"]
+#      state: salvjob # givin em a salvjob like hawk tuah
+#    - map: ["computerLayerKeys"]
+#      state: generic_keys
+#    - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
+#      state: generic_panel_open
+#  - type: SalvageJobBoardConsole
+#  - type: ActivatableUI
+#    key: enum.SalvageJobBoardUiKey.Key
+#  - type: UserInterface
+#    interfaces:
+#      enum.SalvageJobBoardUiKey.Key:
+#        type: SalvageJobBoardBoundUserInterface
+#      enum.WiresUiKey.Key:
+#        type: WiresBoundUserInterface
+#  - type: ActiveRadio
+#    channels: [ Supply ]
+#  - type: Computer
+#    board: SalvageJobBoardComputerCircuitboard
+#  - type: PointLight
+#    radius: 1.5
+#    energy: 4.0
+#    color: "#b89f25"
+# KS14 end
 
 - type: entity
   id: ComputerSalvageExpedition

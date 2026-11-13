@@ -625,6 +625,23 @@
       whitelist:
         tags:
           - Ore
+      # KS14 start: ore pays mining points as it goes in, so it must never come back out as ore
+      canEjectStoredMaterials: false
+      dropOnDeconstruct: false
+      # KS14 end
+    # KS14 start: tgstation's ore values, per unit of ore
+    - type: KsSPAMSmelter
+      pointsPerUnit:
+        SteelOre: 1
+        SpaceQuartz: 1
+        SaltOre: 1
+        PlasmaOre: 15
+        SilverOre: 16
+        GoldOre: 18
+        UraniumOre: 30
+        DiamondOre: 50
+        BananiumOre: 60
+    # KS14 end
     - type: Lathe
       idleState: icon
       runningState: building

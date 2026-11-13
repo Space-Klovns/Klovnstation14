@@ -14,7 +14,7 @@
     - BaseStationAlertLevels
     - BaseStationMagnet
     - BaseStationExpeditions
-    - BaseStationSalvageJobs
+    # - BaseStationSalvageJobs # KS14: the S.P.A.M. tablet replaces the salvage job board
     - BaseStationSiliconLawAsimov
     - BaseStationAllEventsEligible
     - BaseStationNanotrasen

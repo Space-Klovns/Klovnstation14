@@ -129,15 +129,18 @@
 
   While your starting equipment is all you need to do your job at a basic level, advanced gear makes your work far easier, and gives you the equipment necessary to let you tackle the dreaded [color=red]Mining Asteroid[/color]
 
-  ### Salvage Job Board
+<!-- KS14: the S.P.A.M. replaces the salvage job board -->
+  ### S.P.A.M.
 
   <Box>
-    <GuideEntityEmbed Entity="ComputerSalvageJobBoard"/>
+    <GuideEntityEmbed Entity="KsSPAM"/>
   </Box>
 
-  The [color=cyan]Salvage Job Board[/color] is a computer located in the Salvage Bay. It serves as Salvage's version of the [color=cyan]Cargo Bounty Computer[/color], allowing Salvagers to fulfill specific jobs with Salvage-specific materials in order to earn Spesos and unlock [color=yellow]Advanced Salvage Gear[/color].
+  The [color=cyan]S.P.A.M.[/color] is a Salvager's handheld. Log in with your ID to see your tasks, your rank and your mining points, along with what the station's silo holds and what the lathes have asked for.
 
-  Once you gather the supplies necessary to complete a job, print out a [color=cyan]Salvage Job Shipment Label[/color] and attach it to the crate or locker containing the goods. You can use your [color=cyan]Appraisal Tool[/color] to double-check that it's ready for sale. The prepared bounty can then be brought to the [color=cyan]Automated Trade Station[/color] to earn Cargo Spesos and to unlock new Salvage-specific crates in the [color=cyan]Cargo Request Computer[/color].
+  It offers six tasks at a time: ore to bring in, or creatures to kill and then scan with the S.P.A.M. Track up to two of them. Only a tracked task counts progress, and its timer starts when you track it. A task you don't want can be thrown away with its [color=red]X[/color], but only once every few minutes.
+
+  Tasks pay mining points and reputation, and smelting ore pays mining points too. Reputation raises your rank, which unlocks more of the S.P.A.M.'s catalogue. Add what you want to the cart and order it, and it arrives by drop pod.
 
   <Box>
     <GuideEntityEmbed Entity="Fulton1"/>
@@ -145,7 +148,7 @@
     <GuideEntityEmbed Entity="SeismicCharge"/>
   </Box>
 
-  Completing Salvage Jobs will upgrade your rank and unlock new equipment purchases in the [color=cyan]Cargo Request Computer[/color], including:
+  Completing tasks raises your rank and unlocks new purchases in the S.P.A.M., including:
 
   - [color=cyan]Fultons[/color]: Once a Fulton has been linked to a Fulton Beacon, they can be attached to unanchored structures like crates or machines to teleport them back to the Beacon after a short wait. Exceptionally useful for moving both items and people.
   - [color=cyan]Crusher Weapons[/color]: A series of upgraded melee options for Salvagers to purchase. The [color=red]Crusher Dagger[/color] is an upgrade to your Survival knife, swinging automatically and far faster than a regular knife. The [color=red]Crusher[/color] and upgraded [color=red]Crusher Glaive[/color] are gigantic polearms which can fire special projectiles when wielded. These projectiles do no damage on their own, but if a marked enemy is meleed quickly enough, you'll leech some of their life away to heal yourself. All Crusher weaponry comes with a built-in floodlamp.

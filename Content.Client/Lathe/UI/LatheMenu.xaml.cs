@@ -27,6 +27,7 @@ public sealed partial class LatheMenu : FancyWindow
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     public event Action<string, int>? RecipeQueueAction;
+    public event Action<string>? KsRecipeRequestAction; // KS14
     public event Action<int>? QueueDeleteAction;
     public event Action<int>? QueueMoveUpAction;
     public event Action<int>? QueueMoveDownAction;
@@ -150,6 +151,7 @@ public sealed partial class LatheMenu : FancyWindow
                         amount = 1;
                     RecipeQueueAction?.Invoke(s, amount);
                 };
+                control.KsOnRequestPressed += s => KsRecipeRequestAction?.Invoke(s); // KS14
                 RecipeList.AddChild(control);
             }
             else
@@ -323,6 +325,17 @@ public sealed partial class LatheMenu : FancyWindow
             QueueList.RemoveChild(childIdx);
         }
     }
+
+    // KS14 start
+    public void KsSetSmelterPoints(int points)
+    {
+        KsQueueTitleLabel.Text = Loc.GetString("ks-spam-smelter-ui-title");
+        KsQueueScroll.Visible = false;
+        KsSmelterContainer.Visible = true;
+        KsSmelterPointsLabel.Text = Loc.GetString("ks-spam-smelter-ui-points", ("points", points));
+        KsSmelterHintLabel.SetMessage(Loc.GetString("ks-spam-smelter-ui-hint"), defaultColor: Color.FromHex("#A0A0A0"));
+    }
+    // KS14 end
 
     public void SetQueueInfo(ProtoId<LatheRecipePrototype>? recipeProto)
     {

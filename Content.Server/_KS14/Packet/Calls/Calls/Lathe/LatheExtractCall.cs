@@ -17,6 +17,11 @@ public sealed class LatheExtractCall : DeviceCall
 
     protected override void GetCall(EntityUid entity, PacketSystem packetSystem, EntityManager entityMan, IPrototypeManager protoMan, PacketExecutorComponent executor)
     {
+        // Some machines keep what they are given, ore processors for one.
+        if (entityMan.TryGetComponent<MaterialStorageComponent>(entity, out var materialStorageComponent) &&
+            !materialStorageComponent.CanEjectStoredMaterials)
+            return;
+
         for (var i = 0; i < Materials.Length; i++)
         {
             packetSystem.MaterialStorageSystem.EjectMaterial(entity, Materials[i], Amount[i]);

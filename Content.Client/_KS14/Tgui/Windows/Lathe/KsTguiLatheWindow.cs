@@ -59,10 +59,15 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     private readonly Label _queueEmptyLabel;
     private bool _isFabricating;
     private int _queuedBatches;
+    private readonly BoxContainer _queueBody;
+    private readonly BoxContainer _smelterBody;
+    private readonly KsTguiLabeledListItem _smelterPointsItem;
+    private bool _isSmelter;
     private readonly KsTguiMaterialList _materialsList;
 
     public event Action<BaseButton.ButtonEventArgs>? OnServerListButtonPressed;
     public event Action<string, int>? RecipeQueueAction;
+    public event Action<string>? KsRecipeRequestAction;
     public event Action<int>? QueueDeleteAction;
     public event Action<int>? QueueMoveUpAction;
     public event Action<int>? QueueMoveDownAction;
@@ -147,11 +152,25 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         _queueEmptyLabel = new Label { Text = Loc.GetString("ks-tgui-lathe-queue-empty"), HorizontalAlignment = HAlignment.Center };
 
         _queueSection = new KsTguiSection { Title = Loc.GetString("lathe-menu-queue-title") };
-        var queueBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true };
-        queueBody.AddChild(_fabricatingContainer);
-        queueBody.AddChild(_queueEmptyLabel);
-        queueBody.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _queueList } });
-        _queueSection.AddChild(queueBody);
+        _queueBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true };
+        _queueBody.AddChild(_fabricatingContainer);
+        _queueBody.AddChild(_queueEmptyLabel);
+        _queueBody.AddChild(new KsTguiScrollContainer { VerticalExpand = true, HScrollEnabled = false, Children = { _queueList } });
+
+        // A smelter makes what it makes at once, so its queue is always empty: the section shows its mining points instead.
+        var smelterList = new KsTguiLabeledList();
+        _smelterPointsItem = smelterList.AddItem(Loc.GetString("ks-spam-smelter-ui-unclaimed"), textColor: KsTguiPalettes.Good);
+        _smelterBody = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true, SeparationOverride = 6, Visible = false };
+        _smelterBody.AddChild(smelterList);
+        // Rich text so it wraps: the queue column is only 250 wide.
+        var smelterHint = new RichTextLabel();
+        smelterHint.SetMessage(Loc.GetString("ks-spam-smelter-ui-hint"), defaultColor: KsTguiPalettes.Label);
+        _smelterBody.AddChild(smelterHint);
+
+        var queueContents = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, VerticalExpand = true };
+        queueContents.AddChild(_queueBody);
+        queueContents.AddChild(_smelterBody);
+        _queueSection.AddChild(queueContents);
 
         // Materials: the Fabricator's bar along the bottom, or the Autolathe's Total Materials section on top.
         _materialsList = new KsTguiMaterialList();
@@ -220,7 +239,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             _queueSection.Fill = false;
             _queueSection.MinWidth = 0f;
             _queueSection.MinHeight = QueueMinHeight;
-            _queueSection.Visible = _isFabricating || _queuedBatches > 0;
+            _queueSection.Visible = _isSmelter || _isFabricating || _queuedBatches > 0;
 
             var designsColumn = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, HorizontalExpand = true, VerticalExpand = true, SeparationOverride = KsTguiSection.Gap };
             designsColumn.AddChild(_designsSection);
@@ -380,6 +399,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
             {
                 row = new KsTguiLatheRecipeRow(_lathe);
                 row.OnBuild += (recipeId, amount) => RecipeQueueAction?.Invoke(recipeId, amount);
+                row.OnRequest += recipeId => KsRecipeRequestAction?.Invoke(recipeId);
                 _recipeList.AddChild(row);
             }
             else
@@ -539,7 +559,7 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
     {
         // The Autolathe layout shows the queue only while it has something in it; the other has a column for it.
         if (_autolatheLayout)
-            _queueSection.Visible = _isFabricating || _queuedBatches > 0;
+            _queueSection.Visible = _isSmelter || _isFabricating || _queuedBatches > 0;
     }
 
     private void RefreshQueueEmptyLabel()
@@ -567,6 +587,20 @@ public sealed partial class KsTguiLatheWindow : FancyWindow, IKsLatheWindow
         }
 
         _fabricatingName.Text = _lathe.GetRecipeName(recipe);
+    }
+
+    public void KsSetSmelterPoints(int points)
+    {
+        if (!_isSmelter)
+        {
+            _isSmelter = true;
+            _queueSection.Title = Loc.GetString("ks-spam-smelter-ui-title");
+            _queueBody.Visible = false;
+            _smelterBody.Visible = true;
+            RefreshQueueSection();
+        }
+
+        _smelterPointsItem.Text = points.ToString();
     }
 
     private Control GetRecipeDisplayControl(LatheRecipePrototype recipe)

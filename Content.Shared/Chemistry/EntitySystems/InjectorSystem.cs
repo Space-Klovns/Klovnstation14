@@ -307,6 +307,11 @@ public sealed partial class InjectorSystem : EntitySystem
         else if (_standingState.IsDown(target))
             doAfterTime *= activeMode.DownedModifier;
 
+        // KS14: an injector may take longer still, after the modifiers
+        var ksDelayEv = new Content.Shared._KS14.Chemistry.PressureGatedInjector.KsGetInjectorMobDelayEvent(user, target, doAfterTime);
+        RaiseLocalEvent(injector, ref ksDelayEv);
+        doAfterTime = ksDelayEv.Delay;
+
         return true;
     }
     #endregion Mob Interaction
@@ -491,6 +496,10 @@ public sealed partial class InjectorSystem : EntitySystem
 
         // Get transfer amount. It may be smaller than _transferAmount if not enough room
         var plannedTransferAmount = FixedPoint2.Min(injector.Comp.CurrentTransferAmount ?? injectorSolution.Volume, injectorSolution.Volume);
+        // KS14: an injector may get only part of its dose in
+        var ksAmountEv = new Content.Shared._KS14.Chemistry.PressureGatedInjector.KsGetInjectorAmountEvent(plannedTransferAmount);
+        RaiseLocalEvent(injector, ref ksAmountEv);
+        plannedTransferAmount = ksAmountEv.Amount;
         var realTransferAmount = FixedPoint2.Min(plannedTransferAmount, targetSolution.Comp.Solution.AvailableVolume);
 
         if (realTransferAmount <= 0)
@@ -517,6 +526,9 @@ public sealed partial class InjectorSystem : EntitySystem
             _solutionContainer.Inject(target, targetSolution, removedSolution);
         else
             _solutionContainer.Refill(target, targetSolution, removedSolution);
+
+        if (ksAmountEv.DiscardRest) // KS14: what didn't get in is lost
+            _solutionContainer.RemoveAllSolution(injector.Comp.Solution.Value);
 
         LocId msgSuccess = target == user ? "injector-component-inject-success-message-self" : "injector-component-inject-success-message";
 

@@ -1,0 +1,13 @@
+- type: ksSPAMRankLadder
+  id: KsSPAMSalvage
+  ranks:
+  - title: ks-spam-rank-trainee
+    reputation: 0
+  - title: ks-spam-rank-prospector
+    reputation: 10
+  - title: ks-spam-rank-excavator
+    reputation: 30
+  - title: ks-spam-rank-veteran
+    reputation: 60
+  - title: ks-spam-rank-legend
+    reputation: 100
