@@ -420,6 +420,13 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
             moved < OrderMoveTolerance)
             return;
 
+        // Forcing a door on its way, the new order waits: it would end the move, the breach with it, and the move it gives
+        //      would likely start the same breach over - for good, on a search that keeps moving members on. Orders are
+        //      given again every update, so it gets this one once the door is open or the breach has failed. Taking cover
+        //      from a blast does not wait.
+        if (orderComponent.Order != null && kind != NpcOrderKind.TakeCover && _npcDoorSystem.IsBreachingOnTheWay(memberUid))
+            return;
+
         orderComponent.Order = new NpcOrder(++_lastOrderId, kind, issuerUid, coordinates, facing, range, targetUid, now, toolUid, _givingPlanOrders);
         _npcSensorSystem.RequestReplan(memberUid);
     }

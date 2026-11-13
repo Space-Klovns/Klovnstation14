@@ -43,6 +43,16 @@ public sealed partial class NpcDoorSystem
     }
 
     /// <summary>
+    ///     Whether <paramref name="npcUid"/> is forcing a door steering found in its way (<see cref="TryBreachBlockingDoor"/>),
+    ///         rather than one it was sent to force. That breach ends with the move (<see cref="StopSteeringBreach"/>),
+    ///         so whatever would end the move part way - a new order - should wait for it.
+    /// </summary>
+    public bool IsBreachingOnTheWay(EntityUid npcUid)
+    {
+        return _breachingQuery.TryComp(npcUid, out var breachingComponent) && breachingComponent.FromSteering;
+    }
+
+    /// <summary>
     ///     Whether <paramref name="npcUid"/> is forcing <paramref name="doorUid"/> right now.
     /// </summary>
     public bool IsBreaching(EntityUid npcUid, EntityUid doorUid)
