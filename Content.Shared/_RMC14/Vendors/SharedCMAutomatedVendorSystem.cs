@@ -379,6 +379,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
                 AmountUpdated(vendor, entry);
             }
         }
+        KsVendAlongside(vendor, actor, section); // KS14: vend the section's also-vend entry (base gear) before the pick
         var min = comp.MinOffset;
         var max = comp.MaxOffset;
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(

@@ -1,0 +1,66 @@
+# The defenders' loadout vendor in the Field Commander scenario. It is the Nanoplant Nanotrasen one with an engineer who
+#     carries the field engineer RCD, tricordrazine and brute injectors among the utilities, and base gear that comes
+#     with the first loadout a defender takes.
+
+- type: entity
+  parent: ColMarTechScenarioNanoplantNt
+  id: KsColMarTechFieldCommanderNt
+  suffix: Field Commander
+  components:
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      choices: { BaseGear: 1 }
+      entries:
+      - id: KsScenarioVendorBundleFieldCommanderNtBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      ksAlsoVend: KsScenarioVendorBundleFieldCommanderNtBase
+      entries:
+      - id: ScenarioVendorBundleNanoplantNtRifleman
+        recommended: true
+        replaceSlot: [ IDCARD, FEET, GLOVES, BELT ]
+      - id: KsScenarioVendorBundleFieldCommanderNtEngineer
+        replaceSlot: [ IDCARD, FEET, GLOVES, BELT ]
+      - id: ScenarioVendorBundleNanoplantNtMarksman
+        replaceSlot: [ IDCARD, FEET, GLOVES, BELT ]
+      - id: ScenarioVendorBundleNanoplantNtDroneOperator
+        replaceSlot: [ IDCARD, FEET, GLOVES, BELT ]
+      - id: ScenarioVendorBundleNanoplantNtCounterAssault
+        replaceSlot: [ IDCARD, FEET, GLOVES, BELT ]
+    - name: Utilities
+      entries:
+      - id: DefibrillatorCompact
+        amount: 2
+      - id: ScenarioNightVisionGogglesBasic
+        amount: 1
+      - id: KsHyposprayTricordrazine
+        amount: 4
+      - id: BruteAutoInjector
+        amount: 1
+
+- type: entity
+  parent: ScenarioVendorBundleNanoplantNtBase
+  id: KsScenarioVendorBundleFieldCommanderNtBase
+  name: base gear
+
+- type: entity
+  parent: ScenarioVendorBundleNanoplantNtEngineer
+  id: KsScenarioVendorBundleFieldCommanderNtEngineer
+  description: Stand your ground and fortify the base, or take the offensive route by laying traps for unsuspecting attackers (and teammates). Comes with a CE belt, materials, 3 short-fuse seismic charges, 2 turret flatpacks, a sidearm, and a field engineer RCD that builds in an instant.
+  components:
+  - type: CMVendorBundle
+    bundle:
+    - ClothingBeltChiefEngineerFilled
+    - SheetSteel
+    - SheetRGlass
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsFlatpackBallisticTurretNanotrasenDisposable
+    - KsFlatpackBallisticTurretNanotrasenDisposable
+    - WeaponPistolMk1
+    - MagazinePistol
+    - MagazinePistol
+    - KsRCDFieldEngineer
