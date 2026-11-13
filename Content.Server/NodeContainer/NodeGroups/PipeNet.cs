@@ -41,7 +41,8 @@ public sealed class PipeNet : BaseNodeGroup, IPipeNet
         }
 
         _atmosphereSystem = entMan.EntitySysManager.GetEntitySystem<AtmosphereSystem>();
-        _atmosphereSystem.AddPipeNet(Grid.Value, this);
+        if (!_atmosphereSystem.AddPipeNet(Grid.Value, this))
+            _atmosphereSystem.AddOffGridPipeNet(this); // KS14: grid without an atmosphere, update it off-grid
     }
 
     public void Update()
@@ -89,6 +90,8 @@ public sealed class PipeNet : BaseNodeGroup, IPipeNet
 
     private void RemoveFromGridAtmos()
     {
+        _atmosphereSystem?.RemoveOffGridPipeNet(this); // KS14
+
         if (Grid == null)
             return;
 

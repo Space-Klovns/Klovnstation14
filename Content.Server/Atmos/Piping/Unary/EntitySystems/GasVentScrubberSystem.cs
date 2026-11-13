@@ -65,11 +65,13 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
             if (!scrubber.Enabled || !_nodeContainer.TryGetNode(uid, scrubber.OutletName, out PipeNode? outlet))
                 return;
 
-            if (args.Grid is not { } grid)
+            // KS14 start: off-grid devices scrub the map's air
+            if (args.Grid is null && args.Map is null)
                 return;
+            // KS14 end
 
             var position = _transformSystem.GetGridTilePositionOrDefault(uid);
-            var environment = _atmosphereSystem.GetTileMixture(grid, args.Map, position, true);
+            var environment = _atmosphereSystem.GetTileMixture(args.Grid, args.Map, position, true);
 
             Scrub(timeDelta, scrubber, environment, outlet, uid /* KS14: added */);
 
@@ -81,7 +83,7 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
             }
             // KS14 end
 
-            if (!scrubber.WideNet)
+            if (!scrubber.WideNet || args.Grid is not { } grid /* KS14: no adjacent tiles off-grid */)
                 return;
 
             // Scrub adjacent tiles too.

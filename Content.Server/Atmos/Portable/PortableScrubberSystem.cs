@@ -68,11 +68,13 @@ namespace Content.Server.Atmos.Portable
                 return;
             }
 
-            if (args.Grid is not { } grid)
+            // KS14 start: off-grid devices scrub the map's air
+            if (args.Grid is null && args.Map is null)
                 return;
+            // KS14 end
 
             var position = _transformSystem.GetGridTilePositionOrDefault(uid);
-            var environment = _atmosphereSystem.GetTileMixture(grid, args.Map, position, true);
+            var environment = _atmosphereSystem.GetTileMixture(args.Grid, args.Map, position, true);
 
             var running = Scrub(timeDelta, component, environment, uid /* KS14: added */);
 
@@ -90,6 +92,9 @@ namespace Content.Server.Atmos.Portable
                 return;
 
             // widenet
+            if (args.Grid is not { } grid) // KS14: no adjacent tiles off-grid
+                return;
+
             var enumerator = _atmosphereSystem.GetAdjacentTileMixtures(grid, position, false, true);
             while (enumerator.MoveNext(out var adjacent))
             {

@@ -75,7 +75,7 @@ namespace Content.Server.Atmos.Piping.EntitySystems
             // Attempt to add device to a grid atmosphere.
             bool onGrid = (transform.GridUid != null) && _atmosphereSystem.AddAtmosDevice(transform.GridUid!.Value, ent);
 
-            if (!onGrid && component.JoinSystem)
+            if (!onGrid && (component.JoinSystem || transform.GridUid != null /* KS14: devices on a grid with no atmosphere are processed too */))
             {
                 _joinedDevices.Add(ent);
                 component.JoinedSystem = true;
@@ -153,20 +153,24 @@ namespace Content.Server.Atmos.Piping.EntitySystems
         {
             _timer += frameTime;
 
-            if (_timer < _atmosphereSystem.AtmosTime)
+            var realAtmosTime = _atmosphereSystem.RealAtmosTime(); // KS14: AtmosTime -> RealAtmosTime(), the rate and dt devices on a grid experience
+            if (_timer < realAtmosTime)
                 return;
 
-            _timer -= _atmosphereSystem.AtmosTime;
+            _timer -= realAtmosTime;
+
+            _atmosphereSystem.UpdateOffGridPipeNets(); // KS14
 
             var time = _gameTiming.CurTime;
-            var ev = new AtmosDeviceUpdateEvent(_atmosphereSystem.AtmosTime, null, null);
             foreach (var device in _joinedDevices)
             {
                 var deviceGrid = Transform(device).GridUid;
                 if (HasComp<GridAtmosphereComponent>(deviceGrid))
                 {
                     RejoinAtmosphere(device);
+                    continue; // KS14: the grid loop updates it from here on
                 }
+                var ev = new AtmosDeviceUpdateEvent(realAtmosTime, null, KsGetDeviceMap(device)); // KS14: moved into the loop, carries the map
                 RaiseLocalEvent(device, ref ev);
                 device.Comp.LastProcess = time;
             }
