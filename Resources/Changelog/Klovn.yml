@@ -2799,3 +2799,11 @@ Entries:
         atmosphere, such as Field Commander's.
   id: 259
   time: '2026-11-13T12:18:30.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        Field Commander attackers now lose damage with range: full damage up to
+        8 tiles, half at 20 tiles.
+  id: 260
+  time: '2026-11-13T21:26:19.0000000+00:00'
