@@ -97,7 +97,9 @@ public sealed class KsFieldCommanderVendorTest : GameTest
                 if (!protoMan.Index(entry.Id).TryGetComponent<CMVendorBundleComponent>(out var bundle, factory))
                     continue;
 
-                if (bundle.Bundle.Contains(FieldEngineerRcd))
+                // The component only lets its system call into its list, but anyone may read it.
+                IReadOnlyList<EntProtoId> items = bundle.Bundle;
+                if (items.Contains(FieldEngineerRcd))
                     carriesRcd = true;
             }
 
