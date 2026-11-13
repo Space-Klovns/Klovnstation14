@@ -33,6 +33,12 @@ public sealed class KsNpcPeekTest : GameTest
     private readonly ProtoId<HTNCompoundPrototype> _operativeRoot = "KsOperativeCombatCompound";
 
     /// <summary>
+    ///     How long it gets, at most, in ticks: 50s. Planning shares 4ms of real time a tick (<c>HTNSystem._planQueue</c>), so on a
+    ///         busy machine each of the several plans a peek takes spans more ticks; the loops end the moment it is done.
+    /// </summary>
+    private const int MaxTicks = 1500;
+
+    /// <summary>
     ///     The operative at -3.5,-3.5, behind a wall that ends at y=-1, with a hostile at 6.5,0.5 it lost a moment ago (a
     ///         belief, staged). From the corner, at about -2.5,-0.5, it can see it; from where it stands it cannot.
     ///         <paramref name="hostileThere"/>: whether the hostile really is there, or walled in elsewhere.
@@ -116,7 +122,7 @@ public sealed class KsNpcPeekTest : GameTest
         var fired = false;
         var log = new System.Text.StringBuilder();
 
-        for (var tick = 0; tick < 600 && !fired; tick += 5)
+        for (var tick = 0; tick < MaxTicks && !fired; tick += 5)
         {
             await Pair.RunTicksSync(5);
             await Server.WaitPost(() =>
@@ -154,7 +160,7 @@ public sealed class KsNpcPeekTest : GameTest
 
         await Server.WaitPost(() => home = transformSystem.GetWorldPosition(operativeUid));
 
-        for (var tick = 0; tick < 600 && !backHome; tick += 5)
+        for (var tick = 0; tick < MaxTicks && !backHome; tick += 5)
         {
             await Pair.RunTicksSync(5);
             await Server.WaitPost(() =>

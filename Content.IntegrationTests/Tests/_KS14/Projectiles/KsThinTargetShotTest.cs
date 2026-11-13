@@ -15,9 +15,10 @@ using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
 namespace Content.IntegrationTests.Tests._KS14.Projectiles;
 
 /// <summary>
-///     A round aimed at a wall light puts it out, whatever the range. The light's fixture is 0.15 of a tile deep and a round
+///     A round aimed at a wall light puts it out, and one aimed at someone standing there hits them, whatever the range. The light's fixture is 0.15 of a tile deep and a round
 ///         moves more than a tile a tick: without the sweep (<c>PredictedProjectileSystem.Klovn.Sweep.cs</c>) it stepped over
 ///         it at some ranges, and on a wall it stepped onto the light and the wall at once, and the wall could take the hit.
+///         Looked ahead for by <c>KsRayCollisionSystem</c>, which every round goes through: someone standing is hit as ever.
 /// </summary>
 public sealed class KsThinTargetShotTest : GameTest
 {
@@ -110,5 +111,44 @@ public sealed class KsThinTargetShotTest : GameTest
 
         await Server.WaitAssertion(() =>
             Assert.That(entManager.GetComponent<PoweredLightComponent>(lightUid).CurrentLit, Is.False, "one round should put it out"));
+    }
+
+    /// <param name="range">How far south of the mob the shooter stands, in tiles.</param>
+    [Test]
+    public async Task TestOneRoundHitsSomeoneStanding([Range(2, 9)] int range)
+    {
+        var entManager = Server.EntMan;
+        var tileDefinitionManager = Server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid shooterUid = default, gunUid = default, mobUid = default, gridUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-3, -12), new Vector2i(3, 4)).Owner;
+            mobUid = SpawnAt(entManager, "MobHuman", gridUid, 0, 0);
+
+            shooterUid = SpawnAt(entManager, "KsThinTargetTestShooter", gridUid, 0, -range);
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(shooterUid, "right", HandLocation.Right);
+            gunUid = entManager.SpawnAtPosition("KsThinTargetTestGun", entManager.GetComponent<TransformComponent>(shooterUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(shooterUid, gunUid, "right"));
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            var gunSystem = entManager.System<GunSystem>();
+            Assert.That(gunSystem.TryGetGun(shooterUid, out var gun));
+            gunSystem.AttemptShoot(shooterUid, gun, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)), mobUid);
+        });
+
+        await Pair.RunTicksSync(60);
+
+        await Server.WaitAssertion(() =>
+#pragma warning disable CS0618 // a hit at all is what is asked, not how much
+            Assert.That(entManager.System<Content.Shared.Damage.Systems.DamageableSystem>().GetTotalDamage(mobUid).Float(), Is.GreaterThan(0f),
+                "one round should hit them"));
+#pragma warning restore CS0618
     }
 }
