@@ -1,4 +1,5 @@
 using Content.Server.Interaction;
+using Content.Shared.NPC.Systems; // KS14
 using Content.Shared.Physics;
 
 namespace Content.Server.NPC.HTN.Preconditions;
@@ -7,7 +8,7 @@ public sealed partial class TargetInLOSPrecondition : HTNPrecondition
 {
     [Dependency] private IEntityManager _entManager = default!;
     private InteractionSystem _interaction = default!;
-    private Content.Shared.NPC.Systems.NpcFactionSystem _npcFactionSystem = default!; // KS14: friends in the way, see IgnoreFriendlyBlocking
+    private NpcFactionSystem _npcFactionSystem = default!; // KS14: friends in the way, see IgnoreFriendlyBlocking
 
     [DataField("targetKey")]
     public string TargetKey = "Target";
@@ -22,7 +23,7 @@ public sealed partial class TargetInLOSPrecondition : HTNPrecondition
     {
         base.Initialize(sysManager);
         _interaction = sysManager.GetEntitySystem<InteractionSystem>();
-        _npcFactionSystem = sysManager.GetEntitySystem<Content.Shared.NPC.Systems.NpcFactionSystem>(); // KS14
+        _npcFactionSystem = sysManager.GetEntitySystem<NpcFactionSystem>(); // KS14
     }
 
     public override bool IsMet(NPCBlackboard blackboard)
@@ -39,8 +40,8 @@ public sealed partial class TargetInLOSPrecondition : HTNPrecondition
         if (_entManager.TryGetComponent(owner, out Content.Server._KS14.NPC.Components.KsNpcAimTrackingComponent? aimTrackingComponent) &&
             aimTrackingComponent.IgnoreFriendlyBlocking)
         {
-            return _interaction.InRangeUnobstructed(owner, target, range, collisionGroup,
-                friend => _entManager.HasComponent<Content.Shared.Mobs.Components.MobStateComponent>(friend) &&
+            return _interaction.InRangeUnobstructed(owner, target, range: range, collisionMask: collisionGroup,
+                predicate: friend => _entManager.HasComponent<Content.Shared.Mobs.Components.MobStateComponent>(friend) &&
                     _npcFactionSystem.IsEntityFriendly(owner, friend));
         }
         // KS14 end
