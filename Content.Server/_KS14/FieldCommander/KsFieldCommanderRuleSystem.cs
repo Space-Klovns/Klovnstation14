@@ -1,3 +1,4 @@
+using Content.Shared.Damage.Systems;
 using Content.Server._KS14.KillCredit;
 using Content.Server._KS14.GameTicking.Rules;
 using Content.Server._KS14.NPC.Systems;
@@ -50,6 +51,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private KsKillCreditSystem _killCreditSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private KsFieldCommanderFogSystem _fogSystem = default!;
     [Dependency] private KsNoBuildZoneSystem _noBuildZoneSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
@@ -247,7 +249,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             return;
 
         ruleComponent.UnitsKilled++;
-        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity, args.Origin);
+        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity);
     }
 
     [SubscribeLocalEvent]

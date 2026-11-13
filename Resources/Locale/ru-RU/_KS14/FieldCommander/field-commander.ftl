@@ -99,6 +99,7 @@ ks-fieldcommander-points-loss = −{ $amount }  { $reason }
 ks-fieldcommander-points-kill = { $name }
 ks-fieldcommander-points-assist = Помощь: { $name }
 ks-fieldcommander-points-teamkill = Убийство союзника: { $name }
+ks-fieldcommander-points-teamkill-assist = Помощь в убийстве союзника: { $name }
 ks-fieldcommander-points-uplink = Аплинк уничтожен
 ks-fieldcommander-points-admin = Корректировка Полевого управления
 

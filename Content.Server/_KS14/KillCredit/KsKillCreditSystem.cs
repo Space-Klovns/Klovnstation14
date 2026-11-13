@@ -1,5 +1,6 @@
 using Content.Server.Explosion.EntitySystems;
 using Content.Shared._KS14.Construction;
+using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Construction.Components;
 using Content.Shared.Projectiles;
 
@@ -7,6 +8,8 @@ namespace Content.Server._KS14.KillCredit;
 
 /// <summary>
 ///     Works out who to credit for damage: the hand behind a bullet, a turret's owner, whoever set off an explosion.
+///         Credit has to be settled while the thing it hangs on still exists: a turret's bullets are stamped with its
+///         owner as they leave it, and an explosion is given its user when it is queued.
 /// </summary>
 public sealed partial class KsKillCreditSystem : EntitySystem
 {
@@ -30,17 +33,19 @@ public sealed partial class KsKillCreditSystem : EntitySystem
 
         for (var hop = 0; hop < MaxChainLength && current is { } uid; hop++)
         {
-            if (_projectileQuery.TryComp(uid, out var projectileComponent) &&
-                projectileComponent.Shooter is { } shooterUid &&
-                shooterUid != uid)
-            {
-                current = shooterUid;
-            }
-            else if (_creditOwnerQuery.TryComp(uid, out var creditOwnerComponent) &&
-                     creditOwnerComponent.OwnerUid is { } ownerUid &&
-                     ownerUid != uid)
+            // Before the projectile's shooter: a bullet carries its owner itself, as the turret that shot it may be
+            //     gone (a disposable one blows up on its last shot) before the bullet lands.
+            if (_creditOwnerQuery.TryComp(uid, out var creditOwnerComponent) &&
+                creditOwnerComponent.OwnerUid is { } ownerUid &&
+                ownerUid != uid)
             {
                 current = ownerUid;
+            }
+            else if (_projectileQuery.TryComp(uid, out var projectileComponent) &&
+                     projectileComponent.Shooter is { } shooterUid &&
+                     shooterUid != uid)
+            {
+                current = shooterUid;
             }
             else
             {
@@ -49,6 +54,21 @@ public sealed partial class KsKillCreditSystem : EntitySystem
         }
 
         return current;
+    }
+
+    /// <summary>
+    ///     A bullet from something with an owner is stamped with it, which outlives the turret.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnPlayerShotProjectile(ref PlayerShotProjectileEvent args)
+    {
+        if (!_creditOwnerQuery.HasComp(args.User) ||
+            ResolveCredit(args.User) is not { } ownerUid ||
+            ownerUid == args.User)
+            return;
+
+        var creditOwnerComponent = EnsureComp<KsCreditOwnerComponent>(args.Projectile);
+        creditOwnerComponent.OwnerUid = ownerUid;
     }
 
     [SubscribeLocalEvent]
