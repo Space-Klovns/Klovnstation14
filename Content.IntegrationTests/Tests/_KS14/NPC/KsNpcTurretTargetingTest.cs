@@ -212,12 +212,6 @@ public sealed class KsNpcTurretTargetingTest : GameTest
         });
     }
 
-    private async Task RunSeconds(float seconds)
-    {
-        var tickRate = (float)Pair.Server.ResolveDependency<IGameTiming>().TickRate;
-        await Pair.RunTicksSync((int)Math.Ceiling(seconds * tickRate));
-    }
-
     private static int AmmoCount(IEntityManager entManager, EntityUid gunUid)
     {
         var ev = new GetAmmoCountEvent();
