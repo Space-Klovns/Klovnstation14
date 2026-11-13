@@ -145,3 +145,14 @@
       next:
         Sleet: 2
         Snow: 1
+
+# Keeps the battlefield from filling up with litter: spent casings, loose guns and magazines, and the commander's dead
+#     units dissolve away after a while. Delays are in seconds.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderLitterDespawn
+  components:
+  - type: KsLitterDespawnRule
+    casingDelay: 60
+    itemDelay: 300
+    bodyDelay: 300

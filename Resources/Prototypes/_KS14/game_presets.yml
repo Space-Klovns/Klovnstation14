@@ -54,3 +54,4 @@
   - KsScenarioFieldCommander
   - KsFieldCommanderRule
   - KsFieldCommanderWeather
+  - KsFieldCommanderLitterDespawn

@@ -1,0 +1,102 @@
+using Content.Shared.Clothing;
+using Content.Shared.Clothing.EntitySystems;
+using Content.Shared.Inventory;
+using Content.Shared.Inventory.Events;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
+using Robust.Shared.Timing;
+
+namespace Content.Shared._KS14.DistressBeacon;
+
+/// <summary>
+///     Raised on a beacon when its state has changed, so the server can start its beeping.
+/// </summary>
+[ByRefEvent]
+public readonly record struct KsDistressBeaconStateChangedEvent(KsDistressBeaconState State);
+
+/// <summary>
+///     Keeps a <see cref="KsDistressBeaconComponent"/> in step with its wearer: critical, dead or neither, as they
+///         change state and as the beacon is put on and taken off. Sets the light and the worn sprite's state; the
+///         client pulses the light and the server beeps.
+/// </summary>
+public sealed partial class KsDistressBeaconSystem : EntitySystem
+{
+    /// <summary>
+    ///     The prefix of the lit worn and icon sprites (<c>on-equipped-NECK</c>, <c>on-icon</c>).
+    /// </summary>
+    private const string LitPrefix = "on";
+
+    private const string NeckSlot = "neck";
+
+    [Dependency] private SharedPointLightSystem _pointLightSystem = default!;
+    [Dependency] private ClothingSystem _clothingSystem = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
+    [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+
+    // GotEquippedEvent and GotUnequippedEvent are by-value class events, which RA0054 lets only take the uid and
+    //     component apart.
+    [SubscribeLocalEvent]
+    private void OnGotEquipped(EntityUid uid, KsDistressBeaconComponent component, GotEquippedEvent args)
+    {
+        if (args.Slot != NeckSlot)
+            return;
+
+        // Put on someone who is already down.
+        var state = _mobStateQuery.TryComp(args.EquipTarget, out var mobStateComponent)
+            ? StateFor(mobStateComponent.CurrentState)
+            : KsDistressBeaconState.Off;
+
+        SetState((uid, component), state);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnGotUnequipped(EntityUid uid, KsDistressBeaconComponent component, GotUnequippedEvent args)
+        => SetState((uid, component), KsDistressBeaconState.Off);
+
+    /// <summary>
+    ///     By-value, as the event is (<c>RA0054</c> only allows <c>Entity&lt;T&gt;</c> handlers for <c>ref</c>
+    ///         events), and broadcast: the beacon is not the one that changed state.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnMobStateChanged(MobStateChangedEvent args)
+    {
+        if (!_inventorySystem.TryGetSlotEntity(args.Target, NeckSlot, out var neckUid) ||
+            !TryComp<KsDistressBeaconComponent>(neckUid, out var beaconComponent))
+            return;
+
+        SetState((neckUid.Value, beaconComponent), StateFor(args.NewMobState));
+    }
+
+    private static KsDistressBeaconState StateFor(MobState mobState)
+    {
+        return mobState switch
+        {
+            MobState.Critical => KsDistressBeaconState.Critical,
+            MobState.Dead => KsDistressBeaconState.Dead,
+            _ => KsDistressBeaconState.Off,
+        };
+    }
+
+    private void SetState(Entity<KsDistressBeaconComponent> entity, KsDistressBeaconState state)
+    {
+        if (entity.Comp.State == state)
+            return;
+
+        entity.Comp.State = state;
+        Dirty(entity);
+
+        var lit = state != KsDistressBeaconState.Off;
+        _pointLightSystem.SetEnabled(entity.Owner, lit);
+        if (lit)
+        {
+            var critical = state == KsDistressBeaconState.Critical;
+            _pointLightSystem.SetRadius(entity.Owner, critical ? entity.Comp.CritLightRadius : entity.Comp.DeadLightRadius);
+            _pointLightSystem.SetEnergy(entity.Owner, critical ? entity.Comp.CritLightEnergy : entity.Comp.DeadLightEnergy);
+        }
+
+        _clothingSystem.SetEquippedPrefix(entity.Owner, lit ? LitPrefix : null);
+
+        var ev = new KsDistressBeaconStateChangedEvent(state);
+        RaiseLocalEvent(entity.Owner, ref ev);
+    }
+}

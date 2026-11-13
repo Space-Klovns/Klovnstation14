@@ -1,0 +1,20 @@
+- type: entity
+  parent: ClothingNeckBase
+  id: KsDistressBeacon
+  name: distress beacon
+  description: A neck-worn transponder. It strobes and beeps while its wearer is down, so that their side can find them in the dark.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _KS14/Clothing/Neck/distress_beacon.rsi
+    state: icon
+  - type: Clothing
+    sprite: _KS14/Clothing/Neck/distress_beacon.rsi
+  - type: PointLight
+    enabled: false
+    color: "#FF3030"
+    radius: 6
+    energy: 3
+    castShadows: false
+  - type: KsDistressBeacon
