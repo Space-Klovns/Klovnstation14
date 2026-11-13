@@ -43,6 +43,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private SharedGunSystem _gun = default!;
     [Dependency] private SharedProjectileSystem _projectile = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!; // KS14
+    [Dependency] private SharedTransformSystem _transformSystem = default!; // KS14
     [Dependency] private IConfigurationManager _config = default!; // KS14
     [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14
     [Dependency] private StandingStateSystem _standingStateSystem = default!; // KS14
@@ -71,12 +72,17 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         _fixturesQuery = GetEntityQuery<FixturesComponent>();
 
         SubscribeLocalEvent<ProjectileComponent, StartCollideEvent>(OnStartCollide);
+        KsInitializeSweep(); // KS14: rounds that would step over what they were aimed at, see PredictedProjectileSystem.Klovn.Sweep.cs
     }
 
     private void OnStartCollide(EntityUid uid, ProjectileComponent component, ref StartCollideEvent args)
     {
         // This is so entities that shouldn't get a collision are ignored.
         if (args.OurFixtureId != SharedProjectileSystem.ProjectileFixture || !args.OtherFixture.Hard)
+            return;
+
+        // KS14: already hit, by the sweep before this step (PredictedProjectileSystem.Klovn.Sweep.cs)
+        if (KsIsSweptHit(uid, args.OtherEntity))
             return;
 
         DoHit((uid, component, args.OurBody), args.OtherEntity, args.OtherFixture);

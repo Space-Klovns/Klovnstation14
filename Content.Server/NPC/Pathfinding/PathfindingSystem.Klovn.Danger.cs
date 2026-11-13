@@ -167,6 +167,7 @@ public sealed partial class PathfindingSystem
     {
         request.AvoidedDangers = NpcTileDangerKind.None;
         request.IgnoredDangers = true;
+        request.KsSearchedNodes = 0; // a whole node limit for the search again
         request.CostSoFar.Clear();
         request.CameFrom.Clear();
         request.PolyFrontier!.Clear();

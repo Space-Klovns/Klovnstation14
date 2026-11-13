@@ -1,0 +1,114 @@
+#nullable enable
+using System.Numerics;
+using Content.IntegrationTests.Fixtures;
+using Content.Server.Weapons.Ranged.Systems;
+using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Hands.Components;
+using Content.Shared.Light.Components;
+using Content.Shared.Power.EntitySystems;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.UnitTesting.Pool;
+using static Content.IntegrationTests.Tests._KS14.NPC.KsNpcSquadTestHelpers;
+
+namespace Content.IntegrationTests.Tests._KS14.Projectiles;
+
+/// <summary>
+///     A round aimed at a wall light puts it out, whatever the range. The light's fixture is 0.15 of a tile deep and a round
+///         moves more than a tile a tick: without the sweep (<c>PredictedProjectileSystem.Klovn.Sweep.cs</c>) it stepped over
+///         it at some ranges, and on a wall it stepped onto the light and the wall at once, and the wall could take the hit.
+/// </summary>
+public sealed class KsThinTargetShotTest : GameTest
+{
+    public override PoolSettings PoolSettings => PsDisconnected;
+
+    [TestPrototypes]
+    private const string Prototypes = @"
+- type: entity
+  id: KsThinTargetTestShooter
+  components:
+  - type: Hands
+  - type: ComplexInteraction
+  - type: CombatMode
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.35
+        density: 185
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+
+- type: entity
+  id: KsThinTargetTestGun
+  components:
+  - type: Item
+  - type: Gun
+    fireRate: 4
+    minAngle: 0
+    maxAngle: 0
+  - type: BallisticAmmoProvider
+    proto: CartridgePistol
+    capacity: 10
+
+- type: entity
+  parent: Poweredlight
+  id: KsThinTargetTestLight
+  components:
+  - type: ApcPowerReceiver
+    needsPower: false
+";
+
+    /// <param name="range">How far south of the light the shooter stands, in tiles: each lands the round's steps differently.</param>
+    /// <param name="wall">Whether the light is on a wall, as on a station, or stands alone.</param>
+    [Test]
+    public async Task TestOneRoundPutsALightOut([Range(2, 9)] int range, [Values] bool wall)
+    {
+        var entManager = Server.EntMan;
+        var tileDefinitionManager = Server.ResolveDependency<ITileDefinitionManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid shooterUid = default, gunUid = default, lightUid = default, gridUid = default;
+
+        await Server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-3, -12), new Vector2i(3, 4)).Owner;
+
+            // Its fixture is along the top of its tile, where the wall above it is.
+            lightUid = SpawnAt(entManager, "KsThinTargetTestLight", gridUid, 0, 0);
+            entManager.System<SharedPowerReceiverSystem>().SetNeedsPower(lightUid, false);
+
+            if (wall)
+                SpawnAt(entManager, "WallSolid", gridUid, 0, 1);
+
+            shooterUid = SpawnAt(entManager, "KsThinTargetTestShooter", gridUid, 0, -range);
+            var handsSystem = entManager.System<SharedHandsSystem>();
+            handsSystem.AddHand(shooterUid, "right", HandLocation.Right);
+            gunUid = entManager.SpawnAtPosition("KsThinTargetTestGun", entManager.GetComponent<TransformComponent>(shooterUid).Coordinates);
+            Assert.That(handsSystem.TryPickup(shooterUid, gunUid, "right"));
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.GetComponent<PoweredLightComponent>(lightUid).CurrentLit, "the test light should be lit");
+
+            var gunSystem = entManager.System<GunSystem>();
+            Assert.That(gunSystem.TryGetGun(shooterUid, out var gun));
+            gunSystem.AttemptShoot(shooterUid,
+                gun,
+                new EntityCoordinates(gridUid, new Vector2(0.5f, 0.925f)), // the middle of the fixture
+                lightUid);
+        });
+
+        await Pair.RunTicksSync(60);
+
+        await Server.WaitAssertion(() =>
+            Assert.That(entManager.GetComponent<PoweredLightComponent>(lightUid).CurrentLit, Is.False, "one round should put it out"));
+    }
+}

@@ -102,7 +102,7 @@ public sealed class KsNavmeshNarrowGapTest : GameTest
             Assert.That(SEntMan.GetComponent<TransformComponent>(obstacleUid).Anchored, Is.EqualTo(anchored));
         });
 
-        await Pair.RunTicksSync(90); // navmesh
+        await WaitForNavmeshSettled(Pair, gridUid);
 
         System.Threading.Tasks.Task<PathResultEvent> pathTask = default!;
         await Server.WaitPost(() => pathTask = pathfindingSystem.GetPath(new EntityCoordinates(gridUid, new Vector2(Gap.X + 0.5f, 0.5f)),

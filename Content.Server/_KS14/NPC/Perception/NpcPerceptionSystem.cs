@@ -107,6 +107,17 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Stops <paramref name="uid"/>'s perception updating by itself, so it only believes what a test tells it
+    ///         (<see cref="SetContact"/>) and only looks when told to (<see cref="UpdateNow"/>). For tests whose NPC has to stay
+    ///         awake for something else, where a look on its own schedule would undo a staged belief at random.
+    /// </summary>
+    internal void HoldUpdates(EntityUid uid)
+    {
+        if (_perceptionQuery.TryComp(uid, out var perceptionComponent))
+            perceptionComponent.NextUpdate = TimeSpan.MaxValue;
+    }
+
+    /// <summary>
     ///     Makes <paramref name="uid"/> believe <paramref name="contact"/> about <paramref name="targetUid"/>, as if it
     ///         had seen it. For tests that need a belief without staging the scene that would produce it.
     /// </summary>

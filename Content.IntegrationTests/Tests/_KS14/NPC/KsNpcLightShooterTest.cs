@@ -252,7 +252,7 @@ public sealed class KsNpcLightShooterTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
         {
-            SetContact(entManager, scene, NpcContactState.Lost); // perception has had a look since: keep it lost
+            SetContact(entManager, scene, NpcContactState.Lost);
             shooterSystem.UpdateNow(scene.ShooterUid);
             Assert.That(shooterSystem.TryGetPick(scene.ShooterUid, out var first),
                 $"the first (lit: {entManager.GetComponent<PoweredLightComponent>(scene.LightUid).CurrentLit}, {entManager.GetComponent<PoweredLightComponent>(secondLightUid).CurrentLit}; "
@@ -261,9 +261,9 @@ public sealed class KsNpcLightShooterTest : GameTest
             first0 = first;
             // Put out by something else: the pick is over, and the next is not at once.
             Assert.That(entManager.System<SharedPoweredLightSystem>().TryDestroyBulb(first));
-            SetContact(entManager, scene, NpcContactState.Lost); // perception has had a look since: keep it lost
+            SetContact(entManager, scene, NpcContactState.Lost);
             shooterSystem.UpdateNow(scene.ShooterUid);
-            SetContact(entManager, scene, NpcContactState.Lost); // perception has had a look since: keep it lost
+            SetContact(entManager, scene, NpcContactState.Lost);
             shooterSystem.UpdateNow(scene.ShooterUid);
             Assert.That(shooterSystem.TryGetPick(scene.ShooterUid, out _), Is.False, "it waits");
         });
@@ -273,7 +273,7 @@ public sealed class KsNpcLightShooterTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
         {
-            SetContact(entManager, scene, NpcContactState.Lost); // perception has had a look since: keep it lost
+            SetContact(entManager, scene, NpcContactState.Lost);
             shooterSystem.UpdateNow(scene.ShooterUid);
             Assert.That(shooterSystem.TryGetPick(scene.ShooterUid, out var second), "then the next: " + Why(scene) + $" second lit {entManager.GetComponent<PoweredLightComponent>(secondLightUid).CurrentLit}, first {first0}, comp {System.Text.Json.JsonSerializer.Serialize(new { t = entManager.GetComponent<NpcLightShooterComponent>(scene.ShooterUid).Target?.ToString(), now = Pair.Server.ResolveDependency<IGameTiming>().CurTime.ToString() })}");
             Assert.That(second, Is.Not.EqualTo(first0), "not the one that is out");
@@ -285,9 +285,9 @@ public sealed class KsNpcLightShooterTest : GameTest
         await Pair.Server.WaitAssertion(() =>
         {
             Assert.That(shooterSystem.TryGetPick(scene.ShooterUid, out _), Is.False, "out of time");
-            SetContact(entManager, scene, NpcContactState.Lost); // perception has had a look since: keep it lost
+            SetContact(entManager, scene, NpcContactState.Lost);
             shooterSystem.UpdateNow(scene.ShooterUid);
-            SetContact(entManager, scene, NpcContactState.Lost); // perception has had a look since: keep it lost
+            SetContact(entManager, scene, NpcContactState.Lost);
             shooterSystem.UpdateNow(scene.ShooterUid);
             Assert.That(shooterSystem.TryGetPick(scene.ShooterUid, out _), Is.False, "and in no hurry to try again");
         });
@@ -367,7 +367,7 @@ public sealed class KsNpcLightShooterTest : GameTest
     /// <summary>
     ///     A shooter with a pistol, five tiles south of a lit light at the middle of the grid, and a hostile standing by it.
     /// </summary>
-    private async Task<Scene> SetUp(string shooter, int lightY = 2)
+    private async Task<Scene> SetUp(string shooter, int lightY = 2, string gun = Pistol)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -387,8 +387,12 @@ public sealed class KsNpcLightShooterTest : GameTest
 
             var handsSystem = entManager.System<SharedHandsSystem>();
             handsSystem.AddHand(shooterUid, "right", HandLocation.Right);
-            var gunUid = entManager.SpawnEntity(Pistol, entManager.GetComponent<TransformComponent>(shooterUid).Coordinates);
+            var gunUid = entManager.SpawnEntity(gun, entManager.GetComponent<TransformComponent>(shooterUid).Coordinates);
             Assert.That(handsSystem.TryPickup(shooterUid, gunUid, "right"));
+
+            // What it believes is the test's to say: its own look, every 0.2s from a random start, would see the hostile three
+            //      tiles off in plain view and undo a staged loss, sometimes before the pick and sometimes after.
+            entManager.System<NpcPerceptionSystem>().HoldUpdates(shooterUid);
 
             scene = new Scene(entManager, gridUid, shooterUid, gunUid, hostileUid, lightUid);
         });

@@ -33,6 +33,10 @@ public sealed partial class NPCCombatSystem
     /// </summary>
     internal void KsApplyDarkAim(EntityUid uid, EntityUid targetUid, Vector2 worldPos, ref Vector2 targetSpot)
     {
+        // A lit bulb is never hard to see, however dark it is round its fixture.
+        if (_npcLightShooterSystem.IsLight(targetUid))
+            return;
+
         if (!_darkAimQuery.TryComp(uid, out var darkAimComponent))
         {
             if (!_perceptionQuery.HasComp(uid))

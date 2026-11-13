@@ -25,8 +25,6 @@ public sealed class KsNpcRailingTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
-    private const int NavmeshTicks = 90;
-
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -192,7 +190,7 @@ public sealed class KsNpcRailingTest : GameTest
             entManager.GetComponent<HTNComponent>(npcUid).Blackboard.SetValue(NPCBlackboard.NavClimb, climbs);
         });
 
-        await Pair.RunTicksSync(NavmeshTicks);
+        await WaitForNavmeshSettled(Pair, gridUid);
         return (entManager, gridUid, npcUid);
     }
 

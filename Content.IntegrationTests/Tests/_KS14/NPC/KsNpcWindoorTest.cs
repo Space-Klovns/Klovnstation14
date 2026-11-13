@@ -39,7 +39,7 @@ public sealed class KsNpcWindoorTest : GameTest
             entManager.System<SharedTransformSystem>().SetLocalRotation(windoorUid, Angle.FromDegrees(facing));
         });
 
-        await Pair.RunTicksSync(90);
+        await WaitForNavmeshSettled(Pair, gridUid);
 
         // Turned anticlockwise from the south edge: east at 90, north at 180, west at 270. The far side is the open one.
         var edge = Angle.FromDegrees(facing).RotateVec(new Vector2(0f, -0.375f));
