@@ -36,10 +36,10 @@ highp float smoothMin(highp float a, highp float b, highp float k)
 
 // Two values from 0 to 1 packed into one float by KsVisorSimulation.Pack: the first in the whole part, out of 1023, the
 //      second in the fraction.
-highp vec2 unpack(highp float packed)
+highp vec2 unpack(highp float value)
 {
-    highp float whole = floor(packed);
-    return vec2(whole / 1023.0, clamp((packed - whole) / 0.999, 0.0, 1.0));
+    highp float whole = floor(value);
+    return vec2(whole / 1023.0, clamp((value - whole) / 0.999, 0.0, 1.0));
 }
 
 highp float hash12(highp vec2 p)
