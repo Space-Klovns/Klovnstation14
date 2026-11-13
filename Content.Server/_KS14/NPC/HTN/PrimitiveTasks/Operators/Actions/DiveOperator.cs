@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server._KS14.NPC.Perception;
+using Content.Server._KS14.NPC.Squad;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Shared.Physics;
@@ -12,7 +13,9 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Actions;
 ///     Dives towards <see cref="DestinationKey"/> with the world-targeted jump action <see cref="KsBaseActionOperator.Id"/>:
 ///         straight at it, as far as <see cref="MaxDistance"/>, stopping short of the first thing the owner would
 ///         crash into. Fails to plan if the owner has no such action, it is on cooldown, or the way is blocked within
-///         <see cref="MinDistance"/> - a dive into a wall is not getting away - so make it optional.
+///         <see cref="MinDistance"/> - a dive into a wall is not getting away - so make it optional. Nor across a friend's
+///         line of fire (<see cref="NpcSquadFireLaneSystem.CrossesFriendlyFire"/>): asked when planning, and again as it
+///         goes, the dive being far too fast for the shooter to allow for.
 /// </summary>
 /// <remarks>
 ///     The jump goes all the way to its target, however far that is, which is why the target is worked out here and
@@ -21,6 +24,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Actions;
 public sealed partial class DiveOperator : KsBaseActionOperator
 {
     [Dependency] private NpcLineOfSightSystem _npcLineOfSightSystem = default!;
+    [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [DataField] public string DestinationKey = "RetreatTargetCoordinates";
@@ -55,6 +59,7 @@ public sealed partial class DiveOperator : KsBaseActionOperator
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
         if (!blackboard.TryGetCoordinates(Key, EntityManager, out var diveCoordinates) ||
+            CrossesFriendlyFire(blackboard.GetOwner(), diveCoordinates) ||
             !TryPerformWorldAction(blackboard, diveCoordinates, throwOnWrongEvent: false))
             return HTNOperatorStatus.Failed;
 
@@ -93,7 +98,18 @@ public sealed partial class DiveOperator : KsBaseActionOperator
         if (distance < MinDistance)
             return false;
 
-        diveCoordinates = _transformSystem.ToCoordinates(ownerMapCoordinates.Offset(direction * distance));
+        var landingMapCoordinates = ownerMapCoordinates.Offset(direction * distance);
+        if (_npcSquadFireLaneSystem.CrossesFriendlyFire(ownerUid, ownerMapCoordinates, landingMapCoordinates))
+            return false;
+
+        diveCoordinates = _transformSystem.ToCoordinates(landingMapCoordinates);
         return true;
+    }
+
+    private bool CrossesFriendlyFire(EntityUid ownerUid, EntityCoordinates diveCoordinates)
+    {
+        return _npcSquadFireLaneSystem.CrossesFriendlyFire(ownerUid,
+            _transformSystem.GetMapCoordinates(ownerUid),
+            _transformSystem.ToMapCoordinates(diveCoordinates));
     }
 }

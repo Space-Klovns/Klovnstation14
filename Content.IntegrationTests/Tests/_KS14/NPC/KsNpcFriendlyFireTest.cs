@@ -53,18 +53,6 @@ public sealed partial class KsFriendlyFireProbeSystem : EntitySystem
     /// </summary>
     public readonly List<EntityUid> Watched = new();
 
-    public readonly List<(EntityUid, uint, Vector2, Vector2)> Track = new(); // DBGTEMP
-
-    public void Sample()
-    {
-        foreach (var w in Watched)
-        {
-            if (TerminatingOrDeleted(w)) continue;
-            var v = TryComp<Robust.Shared.Physics.Components.PhysicsComponent>(w, out var ph) ? ph.LinearVelocity : Vector2.Zero;
-            Track.Add((w, (uint) _gameTiming.CurTime.TotalMilliseconds, _transformSystem.GetWorldPosition(w), v));
-        }
-    }
-
     public override void Initialize()
     {
         base.Initialize();
@@ -177,15 +165,6 @@ public sealed partial class KsFriendlyFireProbeSystem : EntitySystem
                     $"{(match.Clear ? "clear" : "held")} as fired;{match.Others}");
             }
 
-            // DBGTEMP
-            {
-                var hitTick = (uint) at.TotalMilliseconds;
-                var near = EntityManager.System<NpcSquadFireLaneSystem>().DbgSnaps.Where(x => x.Item1 == shooterUid && x.Item2 <= hitTick + 20 && x.Item2 + 250 >= hitTick).ToList();
-                log.AppendLine($"  DBG hit target {targetUid} at {targetPosition} hitMs {hitTick}; pre-shot snapshots:");
-                foreach (var t in Track.Where(x => (x.Item1 == targetUid || x.Item1 == shooterUid) && x.Item2 <= hitTick + 20 && x.Item2 + 250 >= hitTick))
-                    log.AppendLine($"    track {t.Item1} ms {t.Item2} pos {t.Item3} vel {t.Item4}");
-                foreach (var n in near) log.AppendLine($"    ms {n.Item2} " + n.Item3);
-            }
             counts[kind] = counts.GetValueOrDefault(kind) + 1;
         }
 
@@ -376,11 +355,7 @@ public sealed class KsNpcFriendlyFireTest : GameTest
         // Across their front and back, a step at a time, as one walking.
         for (var tick = 0; tick < 600; tick += 5)
         {
-            for (var sub = 0; sub < 5; sub++)
-            {
-                await Pair.RunTicksSync(1);
-                await Server.WaitPost(() => probe.Sample()); // DBGTEMP
-            }
+            await Pair.RunTicksSync(5);
             var y = 0.5f + 4f * System.MathF.Sin(tick / 90f);
             await Server.WaitPost(() => transformSystem.SetCoordinates(hostileUid, new EntityCoordinates(gridUid, new Vector2(0.5f, y))));
         }

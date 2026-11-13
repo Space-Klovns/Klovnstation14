@@ -418,31 +418,9 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
             args.Used.Comp.ShootCoordinates is not { } coordinates)
             return;
 
-        var dbgFrom = _transformSystem.GetMapCoordinates(entity.Owner);
-        var dbgAim = _transformSystem.ToMapCoordinates(coordinates);
-        if (!IsShotClear(entity.Owner, dbgFrom, dbgAim))
+        if (!IsShotClear(entity.Owner, _transformSystem.GetMapCoordinates(entity.Owner), _transformSystem.ToMapCoordinates(coordinates)))
             args.Cancel();
-        else
-        {
-            // DBGTEMP
-            var sb = new System.Text.StringBuilder();
-            var sv = _physicsQuery.TryComp(entity.Owner, out var sp) ? sp.LinearVelocity : Vector2.Zero;
-            sb.Append($"tick {_gameTiming.CurTick} shooter {entity.Owner} at {dbgFrom.Position} vel {sv} aim {dbgAim.Position} cone±{_npcLineOfFireSystem.GetShotCone(args.Used).HalfAngle * 180 / MathF.PI:0.0} friends:");
-            foreach (var m in _entityLookupSystem.GetEntitiesInRange<MobStateComponent>(dbgFrom, 14f))
-            {
-                if (m.Owner == entity.Owner) continue;
-                var fv = _physicsQuery.TryComp(m.Owner, out var fp) ? fp.LinearVelocity : Vector2.Zero;
-                var fpos = _transformSystem.GetWorldPosition(m.Owner);
-                sb.Append($" [{m.Owner} d{(fpos - dbgFrom.Position).Length():0.00} brg{Angle.ShortestDistance((dbgAim.Position - dbgFrom.Position).ToAngle(), (fpos - dbgFrom.Position).ToAngle()).Degrees:0.0} v{fv} steer{_steeringQuery.HasComp(m.Owner)} fr{_npcFactionSystem.IsEntityFriendly(entity.Owner, m.Owner)}]");
-            }
-            sb.Append(" || _friends:");
-            foreach (var f in _friends)
-                sb.Append($" [d{f.Distance:0.00} brg{Angle.ShortestDistance((dbgAim.Position - dbgFrom.Position).ToAngle(), new Angle(f.Bearing)).Degrees:0.0} hw{f.HalfWidth * 180 / MathF.PI:0.0} reach{f.Reachable} rear{f.RearHalfWidth}]");
-            DbgSnaps.Add((entity.Owner, (uint) (_gameTiming.CurTime.TotalMilliseconds), sb.ToString()));
-        }
     }
-
-    public readonly List<(EntityUid, uint, string)> DbgSnaps = new(); // DBGTEMP
 
     private void AddCandidate(float edge, float aimAngle, float window)
     {
@@ -549,6 +527,8 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
         // A projectile flies at its own speed plus the shooter's velocity: straight out from the shooter as the shooter sees
         //      it, with everything else moving by it the other way. A strafing shooter's rounds drift as far aside as it went.
         var shooterVelocity = _physicsQuery.TryComp(shooterUid, out var shooterPhysicsComponent) ? shooterPhysicsComponent.LinearVelocity : Vector2.Zero;
+        var shooterSpeed = shooterVelocity.Length();
+        var tickTime = (float) _gameTiming.TickPeriod.TotalSeconds;
 
         _scratchMobs.Clear();
         _entityLookupSystem.GetEntitiesInRange(from, MissReach, _scratchMobs);
@@ -565,7 +545,6 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
             var offset = position - from.Position;
             var distance = offset.Length();
             var reach = GetBodyRadius(mob.Owner) + cone.HalfWidth + ShotClearance;
-            var tickTime = (float) _gameTiming.TickPeriod.TotalSeconds;
             var friendVelocity = _physicsQuery.TryComp(mob.Owner, out var physicsComponent) ? physicsComponent.LinearVelocity : Vector2.Zero;
 
             // A friend on the move may go off the way it was going this very tick: its steering may set it a new velocity after
@@ -579,7 +558,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
             //      included. Seen live: a flanker standing among its squad set off the tick a squadmate fired past it.
             var moving = friendVelocity.LengthSquared() > MovingSpeed * MovingSpeed || _steeringQuery.HasComp(mob.Owner);
             var maneuverSpeed = moving ? MovingFriendManeuverSpeed : FriendManeuverSpeed;
-            var nearReach = (moving ? reach + maneuverSpeed * tickTime : reach) + shooterVelocity.Length() * tickTime;
+            var nearReach = (moving ? reach + maneuverSpeed * tickTime : reach) + shooterSpeed * tickTime;
 
             if (distance <= nearReach)
             {
