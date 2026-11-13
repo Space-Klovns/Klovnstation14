@@ -1,5 +1,3 @@
-using System.Numerics;
-using Content.Shared._KS14.Structures;
 using Robust.Client.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -7,9 +5,7 @@ using Robust.Shared.Map.Components;
 namespace Content.Client._KS14.Structures;
 
 /// <summary>
-///     Draws <see cref="KsLineSmoothComponent"/> structures as one line: the <c>wire</c> layer is always shown, and each
-///         end carries a post (<c>postA</c> at the end the structure faces away from, <c>postB</c> at the other) only
-///         when no anchored structure of the same key continues the line there.
+///     Joins <see cref="KsLineSmoothComponent"/> structures into lines; see the component for the rules.
 /// </summary>
 /// <remarks>
 ///     Redrawn when a structure is set up, torn down, anchored, unanchored, moved or turned, and then for its
@@ -17,24 +13,15 @@ namespace Content.Client._KS14.Structures;
 /// </remarks>
 public sealed partial class KsLineSmoothSystem : EntitySystem
 {
-    public const string WireLayer = "wire";
-    public const string PostLayerA = "postA";
-    public const string PostLayerB = "postB";
-
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private EntityQuery<KsLineSmoothComponent> _lineSmoothQuery = default!;
 
+    private static readonly Direction[] Cardinals = [Direction.North, Direction.East, Direction.South, Direction.West];
+
     [SubscribeLocalEvent]
     private void OnStartup(Entity<KsLineSmoothComponent> entity, ref ComponentStartup args)
     {
-        // The far end's post is the same art turned round.
-        if (TryComp<SpriteComponent>(entity, out var spriteComponent) &&
-            _spriteSystem.LayerMapTryGet((entity.Owner, spriteComponent), PostLayerB, out var postLayerIndex, logMissing: false))
-        {
-            _spriteSystem.LayerSetDirOffset((entity.Owner, spriteComponent), postLayerIndex, SpriteComponent.DirectionOffset.Flip);
-        }
-
         RefreshWithNeighbours(entity);
     }
 
@@ -65,13 +52,12 @@ public sealed partial class KsLineSmoothSystem : EntitySystem
 
     private void RefreshNeighbours(Entity<KsLineSmoothComponent> entity)
     {
-        var transformComponent = Transform(entity);
-        if (!TryGetGridTile(transformComponent, out var gridUid, out var gridComponent, out var tile))
+        if (!TryGetGridTile(Transform(entity), out var grid, out var tile))
             return;
 
-        foreach (var offset in CardinalOffsets)
+        foreach (var direction in Cardinals)
         {
-            foreach (var neighbourUid in _mapSystem.GetAnchoredEntities((gridUid, gridComponent), tile + offset))
+            foreach (var neighbourUid in _mapSystem.GetAnchoredEntities(grid, tile + direction.ToIntVec()))
             {
                 if (neighbourUid != entity.Owner && _lineSmoothQuery.TryComp(neighbourUid, out var neighbourComponent))
                     Refresh((neighbourUid, neighbourComponent));
@@ -79,71 +65,115 @@ public sealed partial class KsLineSmoothSystem : EntitySystem
         }
     }
 
-    private static readonly Vector2i[] CardinalOffsets = [new(0, 1), new(0, -1), new(1, 0), new(-1, 0)];
-
     private void Refresh(Entity<KsLineSmoothComponent> entity)
     {
         if (!TryComp<SpriteComponent>(entity, out var spriteComponent))
             return;
 
-        var transformComponent = Transform(entity);
-        var axis = GetAxis(transformComponent);
-
-        // An unanchored structure isn't part of any line, so it shows both posts.
-        var hasNeighbourA = transformComponent.Anchored && HasNeighbour(entity, transformComponent, axis);
-        var hasNeighbourB = transformComponent.Anchored && HasNeighbour(entity, transformComponent, -axis);
-
         var sprite = (entity.Owner, spriteComponent);
-        _spriteSystem.LayerSetVisible(sprite, WireLayer, true);
-        _spriteSystem.LayerSetVisible(sprite, PostLayerA, !hasNeighbourA);
-        _spriteSystem.LayerSetVisible(sprite, PostLayerB, !hasNeighbourB);
+        var transformComponent = Transform(entity);
+        var facing = transformComponent.LocalRotation.GetCardinalDir();
+
+        // An unanchored structure isn't part of any line.
+        var north = false;
+        var east = false;
+        var south = false;
+        var west = false;
+        if (transformComponent.Anchored && TryGetGridTile(transformComponent, out var grid, out var tile))
+        {
+            north = HasNeighbour(entity, grid, tile, Direction.North);
+            east = HasNeighbour(entity, grid, tile, Direction.East);
+            south = HasNeighbour(entity, grid, tile, Direction.South);
+            west = HasNeighbour(entity, grid, tile, Direction.West);
+        }
+
+        var showNorthPost = north && !south;
+        var showSouthPost = south && !north;
+        var showEastPost = east && !west;
+        var showWestPost = west && !east;
+
+        // Alone, it's a short run of its own: a post at each end of the way it faces.
+        if (!north && !east && !south && !west)
+        {
+            var vertical = facing is Direction.North or Direction.South;
+            showNorthPost = showSouthPost = vertical;
+            showEastPost = showWestPost = !vertical;
+        }
+
+        SetLayer(sprite, entity.Comp.VerticalWireLayer, north && south, Direction.South, facing);
+        SetLayer(sprite, entity.Comp.HorizontalWireLayer, east && west, Direction.East, facing);
+        SetLayer(sprite, entity.Comp.NorthPostLayer, showNorthPost, Direction.North, facing);
+        SetLayer(sprite, entity.Comp.SouthPostLayer, showSouthPost, Direction.South, facing);
+        SetLayer(sprite, entity.Comp.EastPostLayer, showEastPost, Direction.East, facing);
+        SetLayer(sprite, entity.Comp.WestPostLayer, showWestPost, Direction.West, facing);
     }
 
     /// <summary>
-    ///     The way the line runs, as a grid offset towards the end that <c>postA</c> caps: a south-facing structure
-    ///         runs north to south, with its first post at the north end.
+    ///     Shows or hides a layer, turned to draw its <paramref name="direction"/> state whichever way the structure faces.
     /// </summary>
-    private static Vector2i GetAxis(TransformComponent transformComponent)
+    private void SetLayer(Entity<SpriteComponent> sprite, string layerKey, bool visible, Direction direction, Direction facing)
     {
-        return -transformComponent.LocalRotation.GetCardinalDir().ToIntVec();
+        if (!_spriteSystem.LayerMapTryGet(sprite.AsNullable(), layerKey, out var layerIndex, logMissing: true))
+            return;
+
+        _spriteSystem.LayerSetVisible(sprite.AsNullable(), layerIndex, visible);
+        if (visible)
+            _spriteSystem.LayerSetDirOffset(sprite.AsNullable(), layerIndex, GetDirOffset(facing, direction));
     }
 
-    private bool HasNeighbour(Entity<KsLineSmoothComponent> entity, TransformComponent transformComponent, Vector2i axis)
+    /// <summary>
+    ///     The offset that turns a layer drawn facing <paramref name="facing"/> into one drawn facing
+    ///         <paramref name="direction"/>.
+    /// </summary>
+    public static SpriteComponent.DirectionOffset GetDirOffset(Direction facing, Direction direction)
     {
-        if (!TryGetGridTile(transformComponent, out var gridUid, out var gridComponent, out var tile))
-            return false;
-
-        foreach (var neighbourUid in _mapSystem.GetAnchoredEntities((gridUid, gridComponent), tile + axis))
+        var quarterTurns = (ClockwiseIndex(direction) - ClockwiseIndex(facing) + 4) % 4;
+        return quarterTurns switch
         {
-            if (neighbourUid == entity.Owner ||
-                TerminatingOrDeleted(neighbourUid) ||
-                !_lineSmoothQuery.TryComp(neighbourUid, out var neighbourComponent) ||
-                neighbourComponent.Key != entity.Comp.Key)
-            {
-                continue;
-            }
+            1 => SpriteComponent.DirectionOffset.Clockwise,
+            2 => SpriteComponent.DirectionOffset.Flip,
+            3 => SpriteComponent.DirectionOffset.CounterClockwise,
+            _ => SpriteComponent.DirectionOffset.None,
+        };
+    }
 
-            // Only a structure running the same way carries the line on.
-            var neighbourAxis = GetAxis(Transform(neighbourUid));
-            if (neighbourAxis == axis || neighbourAxis == -axis)
+    private static int ClockwiseIndex(Direction direction)
+    {
+        return direction switch
+        {
+            Direction.East => 1,
+            Direction.South => 2,
+            Direction.West => 3,
+            _ => 0,
+        };
+    }
+
+    private bool HasNeighbour(Entity<KsLineSmoothComponent> entity, Entity<MapGridComponent> grid, Vector2i tile, Direction direction)
+    {
+        foreach (var neighbourUid in _mapSystem.GetAnchoredEntities(grid, tile + direction.ToIntVec()))
+        {
+            if (neighbourUid != entity.Owner &&
+                !TerminatingOrDeleted(neighbourUid) &&
+                _lineSmoothQuery.TryComp(neighbourUid, out var neighbourComponent) &&
+                neighbourComponent.Key == entity.Comp.Key)
+            {
                 return true;
+            }
         }
 
         return false;
     }
 
-    private bool TryGetGridTile(TransformComponent transformComponent, out EntityUid gridUid, out MapGridComponent gridComponent, out Vector2i tile)
+    private bool TryGetGridTile(TransformComponent transformComponent, out Entity<MapGridComponent> grid, out Vector2i tile)
     {
-        gridUid = default;
-        gridComponent = default!;
+        grid = default;
         tile = default;
 
-        if (transformComponent.GridUid is not { } foundGridUid || !TryComp(foundGridUid, out MapGridComponent? foundGridComponent))
+        if (transformComponent.GridUid is not { } gridUid || !TryComp(gridUid, out MapGridComponent? gridComponent))
             return false;
 
-        gridUid = foundGridUid;
-        gridComponent = foundGridComponent;
-        tile = _mapSystem.TileIndicesFor(foundGridUid, foundGridComponent, transformComponent.Coordinates);
+        grid = (gridUid, gridComponent);
+        tile = _mapSystem.TileIndicesFor(grid, transformComponent.Coordinates);
         return true;
     }
 }

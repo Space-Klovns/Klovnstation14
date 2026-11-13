@@ -29,13 +29,20 @@
   - type: Sprite
     sprite: _KS14/Structures/barbed_wire.rsi
     drawdepth: FloorObjects
+    # KsLineSmooth shows whichever of these the neighbours call for, each turned to its own direction.
     layers:
     - state: wire
-      map: [ "wire" ]
+      map: [ "wireVertical" ]
+    - state: wire
+      map: [ "wireHorizontal" ]
     - state: post
-      map: [ "postA" ]
+      map: [ "postNorth" ]
     - state: post
-      map: [ "postB" ]
+      map: [ "postSouth" ]
+    - state: post
+      map: [ "postEast" ]
+    - state: post
+      map: [ "postWest" ]
   - type: Icon
     sprite: _KS14/Structures/barbed_wire.rsi
     state: wire
