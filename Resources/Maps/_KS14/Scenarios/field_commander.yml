@@ -703130,7 +703130,7 @@ entities:
     - type: Transform
       parent: 1
       pos: 6.507304,2.730465
-- proto: ColMarTechScenarioNanoplantNt
+- proto: KsColMarTechFieldCommanderNt
   entities:
   - uid: 283
     components:
