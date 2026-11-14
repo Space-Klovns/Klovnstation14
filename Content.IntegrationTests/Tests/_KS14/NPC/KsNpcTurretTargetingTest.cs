@@ -141,9 +141,9 @@ public sealed class KsNpcTurretTargetingTest : GameTest
             entManager.SpawnEntity(TestWall, new EntityCoordinates(gridUid, wallPosition));
         });
 
-        // However long the turret takes to notice and plan again, up to a cap.
+        // However long the turret takes to give the first up and plan again, up to a cap.
         EntityUid? newTarget = keptUid;
-        for (var tick = 0; tick < (int)(15f * tickRate) && newTarget == keptUid; tick++)
+        for (var tick = 0; tick < (int)(15f * tickRate) && (newTarget == null || newTarget == keptUid); tick++)
         {
             await Pair.RunTicksSync(1);
             await Pair.Server.WaitPost(() => newTarget = entManager.GetComponent<KsTargetLockOnComponent>(turretUid).Target);
