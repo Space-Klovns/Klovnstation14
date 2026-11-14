@@ -183,6 +183,21 @@ public sealed partial class NpcPerceptionComponent : Component
     [DataField]
     public bool SharesKills = true;
 
+    /// <summary>
+    ///     Whether a hostile that damages the NPC becomes known to it wherever it is: out of vision range, out of
+    ///         sight, or in the dark. Then it turns and fires back, and cannot be sniped from where it is unseen.
+    ///         Off, it only fights what it can see for itself.
+    /// </summary>
+    [DataField]
+    public bool RevealAttackers;
+
+    /// <summary>
+    ///     How long after its last hit an attacker stays known wherever it is. After that it is remembered like
+    ///         any other hostile gone out of sight, for <see cref="MemoryTime"/>.
+    /// </summary>
+    [DataField]
+    public TimeSpan RevealDuration = TimeSpan.FromSeconds(3);
+
     #endregion
 
     [ViewVariables]

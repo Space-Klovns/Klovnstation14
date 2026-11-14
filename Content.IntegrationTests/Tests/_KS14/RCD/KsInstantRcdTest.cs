@@ -17,7 +17,7 @@ namespace Content.IntegrationTests.Tests._KS14.RCD;
 public sealed class KsInstantRcdTest : KsFieldEngineerRcdTest
 {
     private static readonly EntProtoId Wall = "WallSolid";
-    private static readonly ProtoId<RCDPrototype> RcdSettingWall = "WallSolid";
+    private static readonly ProtoId<RCDPrototype> RcdSettingWall = "KsFieldWallSolid";
     private static readonly ProtoId<RCDPrototype> RcdSettingDeconstruct = "Deconstruct";
 
     [Test]

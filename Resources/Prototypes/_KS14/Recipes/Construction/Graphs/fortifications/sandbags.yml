@@ -1,0 +1,16 @@
+- type: constructionGraph
+  id: KsSandbagWall
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: sandbagWall
+      completed:
+      - !type:SnapToGrid
+        southRotation: true
+      steps:
+      - material: KsSandbag
+        amount: 5
+        doAfter: 2
+  - node: sandbagWall
+    entity: KsSandbagWall

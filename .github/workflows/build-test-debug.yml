@@ -21,10 +21,11 @@ jobs:
         os: [ubuntu-latest]
         # KS14: integration test shards, sliced with NUnit.Where because VSTest --filter burns ~19 min
         # per job on this suite before any test runs. Shards are balanced by measured execution time,
-        # not case count. `rest` is the exact negation of the four positive slices, so the union
-        # always covers the whole suite; edit a positive slice and its negation twin together.
+        # not case count. `rest` is the exact negation of the positive slices (ks14 and
+        # ks14-npc split one slice, all of _KS14, between them), so the union always covers the whole suite;
+        # edit a positive slice and its negation twin together.
         # TSL gotcha: no backslash escapes in the regexes, a `\.` silently matches zero tests.
-        shard: [prototypes, maps, rounds, ks14, rest]
+        shard: [prototypes, maps, rounds, ks14, ks14-npc, rest] # KS14: ks14-npc split off, the whole _KS14 slice outran the 30 min test watchdog
         include:
           - shard: prototypes
             where: "test =~ 'Tests.Damageable.DamageAllPrototypesTest' or test =~ 'IntegrationTests.Tests.Construction'"
@@ -33,7 +34,11 @@ jobs:
           - shard: rounds
             where: "test =~ 'IntegrationTests.Tests.GameRules.' or test =~ 'IntegrationTests.Tests.EntityTest.'"
           - shard: ks14
-            where: "test =~ 'IntegrationTests.Tests._KS14.'"
+            where: "test =~ 'IntegrationTests.Tests._KS14.' and test !~ 'IntegrationTests.Tests._KS14.NPC.'" # KS14: NPC tests moved to ks14-npc
+          # KS14 start: about 60% of the _KS14 slice's time; `rest` already excludes all of _KS14
+          - shard: ks14-npc
+            where: "test =~ 'IntegrationTests.Tests._KS14.NPC.'"
+          # KS14 end
           - shard: rest
             where: "test !~ 'Tests.Damageable.DamageAllPrototypesTest' and test !~ 'IntegrationTests.Tests.Construction' and class != 'Content.IntegrationTests.Tests.PostMapInitTest' and test !~ 'IntegrationTests.Tests.GameRules.' and test !~ 'IntegrationTests.Tests.EntityTest.' and test !~ 'IntegrationTests.Tests._KS14.'"
 

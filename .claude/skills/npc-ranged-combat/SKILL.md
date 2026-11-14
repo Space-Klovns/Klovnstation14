@@ -167,6 +167,7 @@ Sources: server hooks in `NPCCombatSystem.Klovn.TurretTracking.cs`; components a
 | `maxRotationSpeed` | Angle? | null | Hard cap on the final speed per second. Plain YAML number = degrees, `3.14 rad` for radians (`AngleSerializer`). null = none. |
 | `rotateWhileWaiting` | bool | `true` | Aim every tick in LOS, including during `ShootDelay` and lock-on. `false` = upstream behaviour (turn only after the delay). |
 | `accuracyThreshold` | Angle? | null | Replaces `NPCRangedCombat.AccuracyThreshold` (30 degrees) as the tolerance in step 14. Plain number = degrees (examples use `5`). |
+| `ignoreFriendlyBlocking` | bool | `false` | Fire with a friend in the line of fire: `NpcSquadFireLaneSystem.TryGetClearShot`/`IsShotClear` pass, and `TargetInLOSPrecondition` ignores friendly mobs (mobs are on the `Opaque` layer, so a friend otherwise ends the plan before `GunOperator` starts). A turret's own body already hides friends from the fire-lane ray, so for turrets the precondition is what matters. On the heavy MG turret. |
 | `LastGoalAngle`, `LastTarget` | VV only | | Runtime state. |
 
 Math in `KsTryAim`, per tick:
@@ -194,6 +195,7 @@ only; aiming continues.
 | --- | --- | --- | --- |
 | `lockOnTime` | TimeSpan (seconds number) | `1.5` | Time from acquiring a visible target to being allowed to fire. |
 | `loseLockGrace` | TimeSpan | `0.5` | Sight lost for longer than this clears the lock (full `lockOnTime` again on reacquire); shorter keeps progress. |
+| `keepTargetUntilLost` | bool | `false` | The turret's target query (`NPCUtilitySystem.KsTryKeepCurrentTarget`) returns the current `Target` alone while it is still a candidate, still scores above 0 on every consideration and is in sight (occlusion check, plus the shooter's own `TargetInLOS`). Without it two alternately-closest hostiles keep swapping the lock and neither finishes. On the heavy MG turret. |
 | `indicatorColor` | Color | Red | Reticle colour drawn on the target's screen. |
 | `lockingSound` | SoundSpecifier? | null | Played by the server from the **turret** (`PlayPvs`, so everyone in range hears it) when a lock starts. Not networked. |
 | `lockedSound` | SoundSpecifier? | null | Same, when the lock completes. |

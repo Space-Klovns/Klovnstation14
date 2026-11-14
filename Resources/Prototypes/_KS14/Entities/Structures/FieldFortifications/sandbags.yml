@@ -1,0 +1,105 @@
+- type: entity
+  parent: BaseItem
+  id: KsSandbag
+  name: sandbags
+  suffix: Full
+  description: Sacks of sand. Stack five of them into a wall to take cover behind.
+  components:
+  - type: Appearance
+  - type: Item
+    size: Normal
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/sandbag.rsi
+    state: sandbag_3
+    layers:
+    - state: sandbag_3
+      map: [ "base" ]
+  # The pile grows with the stack: one bag, two, then a pile from three on.
+  - type: Stack
+    stackType: KsSandbag
+    count: 5
+    baseLayer: base
+    layerStates:
+    - sandbag
+    - sandbag_2
+    - sandbag_3
+    layerFunction: Threshold
+  - type: StackLayerThreshold
+    thresholds: [ 2, 3 ]
+  - type: StackPrice
+    price: 5
+  - type: GuideHelp
+    guides:
+    - KsFortifications
+
+- type: entity
+  parent: KsSandbag
+  id: KsSandbag1
+  suffix: Single
+  components:
+  - type: Sprite
+    state: sandbag
+    layers:
+    - state: sandbag
+      map: [ "base" ]
+  - type: Stack
+    count: 1
+
+- type: entity
+  parent: BaseStructure
+  id: KsSandbagWall
+  name: sandbag wall
+  description: A low wall of stacked sandbags. Bullets fly over it unless aimed at it, and it can be pulled apart by hand.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/sandbags.rsi
+    drawdepth: BlastDoors
+  - type: Icon
+    sprite: _KS14/Structures/sandbags.rsi
+    state: full
+  - type: IconSmooth
+    key: sandbags
+    base: state_
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        density: 60
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+  - type: Damageable
+    damageModifierSet: Wood
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 120
+      behaviors:
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          KsSandbag1:
+            min: 2
+            max: 3
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  # Cover to shoot over: bullets pass unless they're aimed at the sandbags themselves, as with tables.
+  - type: RequireProjectileTarget
+  # Pulled apart by hand, for all five bags back.
+  - type: DisassembleOnAltVerb
+    prototypeToSpawn: KsSandbag
+    disassembleTime: 4
+  - type: Construction
+    graph: KsSandbagWall
+    node: sandbagWall
+  - type: GuideHelp
+    guides:
+    - KsFortifications
+  - type: AtmosExposed

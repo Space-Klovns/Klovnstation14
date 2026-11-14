@@ -22,6 +22,14 @@ public sealed partial class KsTargetLockOnComponent : Component
     [DataField]
     public TimeSpan LoseLockGrace = TimeSpan.FromSeconds(0.5);
 
+    /// <summary>
+    ///     Keep the target this shooter has, while it is still valid and in sight, rather than re-ranking the
+    ///         candidates every replan. Without it, two targets taking turns at being the closest keep taking the
+    ///         lock from each other and neither lock finishes. Read by <c>NPCUtilitySystem</c>.
+    /// </summary>
+    [DataField]
+    public bool KeepTargetUntilLost;
+
     [DataField, AutoNetworkedField]
     public EntityUid? Target;
 

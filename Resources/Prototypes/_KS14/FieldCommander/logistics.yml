@@ -1,0 +1,86 @@
+# The field commander's own tech fab and material silo. Neither can be taken apart: a tech fab's board would carry its
+#     exclusive recipes out of the scenario, and the silo's plastic is not meant to be carried off.
+
+# One node and no way out of it, so nothing built on it can be deconstructed into a frame and a board.
+- type: constructionGraph
+  id: KsFieldCommanderFixture
+  start: fixture
+  graph:
+  - node: fixture
+
+- type: entity
+  parent: SecurityTechFab
+  id: KsFieldCommanderTechFab
+  name: field tech fab
+  description: A military tech fab that prints what a field commander needs, anything an autolathe or a security tech fab makes, plus drones, bandages, sandbags and barbed wire. It is bolted to the ground and cannot be taken apart.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/field_techfab.rsi
+    layers:
+    - state: icon
+      map: ["enum.LatheVisualLayers.IsRunning"]
+    - state: sec
+    - state: unlit
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: inserting
+      map: ["enum.MaterialStorageVisualLayers.Inserting"]
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+  - type: Construction
+    graph: KsFieldCommanderFixture
+    node: fixture
+    deconstructionTarget: null
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: Lathe
+    staticPacks:
+    # Security tech fab
+    - SecurityEquipmentStatic
+    - SecurityPracticeStatic
+    - SecurityAmmoStatic
+    - SecurityWeaponsStatic
+    - KlovnSecurityStatic
+    # Autolathe, without its emag packs
+    - ToolsStatic
+    - PartsStatic
+    - AtmosStatic
+    - CablesStatic
+    - PaperworkStatic
+    - TowelsStatic
+    - CargoStatic
+    - MaterialsStatic
+    - BasicChemistryStatic
+    - RollerBedsStatic
+    - LightsStatic
+    - ServiceStatic
+    - PowerCellsStatic
+    - ElectronicsStatic
+    - KlovnSignalStatic
+    # Only this fab
+    - KsFieldCommanderStatic
+
+- type: entity
+  parent: MachineMaterialSilo
+  id: KsMaterialSiloFieldCommander
+  suffix: Field Commander
+  description: An advanced machine, capable of using bluespace technology to transmit materials to nearby machines. This one starts stocked with plastic, cannot be damaged and cannot be taken apart.
+  components:
+  - type: Godmode
+  - type: Construction
+    graph: KsFieldCommanderFixture
+    node: fixture
+    deconstructionTarget: null
+  - type: MaterialStorage
+    dropOnDeconstruct: false
+    storage:
+      Plastic: 50000 # 500 sheets

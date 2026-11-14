@@ -86,4 +86,23 @@ public sealed class KsVisorSimulationTest
         Run(simulation, KsVisorExposure.None, 5f);
         Assert.That(simulation.Drops[0].Melt, Is.EqualTo(1f), "a wet snowflake melts within a few seconds");
     }
+
+    /// <summary>
+    ///     Two values from 0 to 1 share a float on their way to the shader. Both have to come back as they went in,
+    ///         including the ends, which are where a value most easily spills into its neighbour's part.
+    /// </summary>
+    [Test]
+    public void PackedValuesComeBackIntact()
+    {
+        var values = new[] { 0f, 0.0005f, 0.25f, 0.5f, 0.731f, 0.999f, 1f };
+        foreach (var whole in values)
+        {
+            foreach (var fraction in values)
+            {
+                var (unpackedWhole, unpackedFraction) = KsVisorSimulation.Unpack(KsVisorSimulation.Pack(whole, fraction));
+                Assert.That(unpackedWhole, Is.EqualTo(whole).Within(0.5f / 1023f), $"the first of ({whole}, {fraction})");
+                Assert.That(unpackedFraction, Is.EqualTo(fraction).Within(0.001f), $"the second of ({whole}, {fraction})");
+            }
+        }
+    }
 }

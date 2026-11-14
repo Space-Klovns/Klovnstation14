@@ -648,6 +648,13 @@ start, before A* begins, which says what is left to walk from anywhere near the 
 its path (at most 238 expansions on Box), and a goal that cannot be reached is given up on without searching. Coarse
 maps are built when first needed and dropped when their chunk or a neighbour is rebuilt.
 
+The estimate for a cluster the search from the goal never settled is only the least it could cost, which in open ground
+is exactly what the best walk costs: A* ties with the real path and floods the field (a 100 poly detour around a wall took
+3418 expansions, 5787 on the Field Commander map, worse than no coarse maps). So that search goes a little past the best
+walk (`GetSearchLimit`, over A*'s own tie-break) and everything unsettled loses to the path: expansions equal the path's polys
+(`KsNpcOpenFieldPathTest`). A steered search's node limit grows with the best walk (`GetNodeLimit`, up to 8192), as it needs
+a poly a tile and a path of 600 tiles would run out of the usual 512.
+
 Two things it does not know: an NPC's own avoided tiles (doors it has found it cannot get through), which only make the
 walk longer than it thinks, so it stays a lower bound and paths stay the shortest; and anything that changes the
 navmesh without marking the chunk dirty, which the pathfinder misses with or without the coarse maps. Deleting a wall

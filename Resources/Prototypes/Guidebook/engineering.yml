@@ -19,6 +19,7 @@
   - Airlocks
   - ExpandingRepairingStation
   - WirePanels
+  - KsFortifications # KS14
 
 - type: guideEntry
   id: ExpandingRepairingStation

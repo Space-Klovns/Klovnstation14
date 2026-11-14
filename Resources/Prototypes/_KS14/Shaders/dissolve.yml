@@ -1,0 +1,5 @@
+# Dissolves a sprite away with an animated threshold (progress, seed). Per entity: take InstanceUnique().
+- type: shader
+  id: KsDissolve
+  kind: source
+  path: "/Textures/_KS14/Shaders/dissolve.swsl"

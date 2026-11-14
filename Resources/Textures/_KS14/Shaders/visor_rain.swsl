@@ -8,14 +8,19 @@ light_mode unshaded;
 uniform sampler2D SCREEN_TEXTURE;
 
 uniform lowp int drop_count;
+// TODO ENGINE: back to four plain arrays once RobustToolbox caches built-in uniform locations as int, not sbyte
+//      (GLShaderProgram._uniformIntCache).
+// Three arrays, not four: each array element takes a uniform location of its own, and the engine keeps the locations
+//      of its built-in uniforms (modelMatrix and the like) in a signed byte, so with 128 locations of arrays those land
+//      past 127, wrap negative and are never set. Two values from 0 to 1 share a float instead; see unpack below and
+//      KsVisorSimulation.Pack.
 // Centre, 0 to 1 across the screen, y up.
 uniform highp vec2[32] drop_positions;
-// x: radius in screen heights. y: opacity.
+// x: radius in screen heights. y: opacity, and how far it has gathered from a splat into a running drop.
 uniform highp vec2[32] drop_sizes;
-// x: length of the smudge above it, in screen heights. y: 0 for a snowflake, 1 once melted into water.
+// x: length of the smudge above it, in screen heights. y: 0 for a snowflake to 1 once melted into water, and a random
+//      seed for its shape.
 uniform highp vec2[32] drop_trails;
-// x: a random seed for its shape. y: how far it has gathered from a splat into a running drop, 0 to 1.
-uniform highp vec2[32] drop_shapes;
 // How densely the fine mist covers the visor, 0 to 1.
 uniform highp float mist;
 
@@ -27,6 +32,14 @@ highp float smoothMin(highp float a, highp float b, highp float k)
 {
     highp float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
     return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+// Two values from 0 to 1 packed into one float by KsVisorSimulation.Pack: the first in the whole part, out of 1023, the
+//      second in the fraction.
+highp vec2 unpack(highp float value)
+{
+    highp float whole = floor(value);
+    return vec2(whole / 1023.0, clamp((value - whole) / 0.999, 0.0, 1.0));
 }
 
 highp float hash12(highp vec2 p)
@@ -88,11 +101,13 @@ void fragment()
             break;
 
         highp float radius = drop_sizes[i].x;
-        highp float opacity = drop_sizes[i].y;
+        highp vec2 opacityGathered = unpack(drop_sizes[i].y);
+        highp float opacity = opacityGathered.x;
+        highp float gathered = opacityGathered.y;
         highp float trail = drop_trails[i].x;
-        highp float water = drop_trails[i].y;
-        highp float seed = drop_shapes[i].x;
-        highp float gathered = drop_shapes[i].y;
+        highp vec2 waterSeed = unpack(drop_trails[i].y);
+        highp float water = waterSeed.x;
+        highp float seed = waterSeed.y;
 
         highp vec2 offset = p - vec2(drop_positions[i].x * aspect, drop_positions[i].y);
 

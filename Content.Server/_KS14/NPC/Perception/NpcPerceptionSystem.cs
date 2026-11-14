@@ -218,6 +218,10 @@ public sealed partial class NpcPerceptionSystem : EntitySystem
             return ContactOutcome.None;
         }
 
+        // Shot by it a moment ago: it is known wherever it is. See NpcPerceptionSystem.Reveal.cs.
+        if (hasContact && contact.RevealedUntil > now)
+            return UpdateRevealed(entity, targetUid, contact, now);
+
         var isCandidate = _candidates.Contains(targetUid);
         var conspicuous = false;
         var targetVelocity = System.Numerics.Vector2.Zero;

@@ -1,0 +1,5 @@
+# The outline a distress beacon's wearer gets while it is on (outlineColor, outlineWidth). Per entity: take InstanceUnique().
+- type: shader
+  id: KsDistressBeaconOutline
+  kind: source
+  path: "/Textures/_KS14/Shaders/distress_outline.swsl"

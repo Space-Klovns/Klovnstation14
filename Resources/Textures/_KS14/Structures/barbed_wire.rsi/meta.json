@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "license": "CC-BY-SA-3.0",
+  "copyright": "CORVAX STALKER; taken from Zona-14 at https://github.com/LaCumbiaDelCoronavirus/Zona-14/blob/4efbea661afaa84ebc869a4ffbebbce0e412e77b/Resources/Textures/_Stalker/Objects/Decoration/barrier_wire.rsi",
+  "states": [
+    {
+      "name": "wire",
+      "directions": 4
+    },
+    {
+      "name": "post",
+      "directions": 4
+    }
+  ]
+}

@@ -17,6 +17,8 @@
     # Many light units rather than a few tough ones, as the private module defines them.
     maxAlive: 12
     maxAlivePerDefender: 3
+    pointsPerCost: 37.5 # requisition x1.5
+    uplinkPoints: 300
     waveAnnouncements:
     - ks-fieldcommander-wave-1
     - ks-fieldcommander-wave-2
@@ -35,16 +37,16 @@
       intel: ks-fieldcommander-intel-phase-landfall
     - name: ks-fieldcommander-phase-probing
       start: 4m
-      waveInterval: 110
+      waveInterval: 193
       firstWaveDelay: 20
-      budget: 4.5
+      budget: 7.9
       budgetPerExtraDefender: 0.25
       announcement: ks-fieldcommander-phase-probing-announcement
       intel: ks-fieldcommander-intel-phase-probing
     - name: ks-fieldcommander-phase-pressure
       start: 12m
-      waveInterval: 90
-      budget: 9
+      waveInterval: 158
+      budget: 15.8
       budgetPerExtraDefender: 0.25
       strikeChance: 0.15
       announcement: ks-fieldcommander-phase-pressure-announcement
@@ -52,8 +54,8 @@
       reinforcementPod: KsFieldCommanderRequisitionResupply
     - name: ks-fieldcommander-phase-siege
       start: 22m
-      waveInterval: 80
-      budget: 13.5
+      waveInterval: 140
+      budget: 23.6
       budgetPerExtraDefender: 0.3
       strikeChance: 0.4
       announcement: ks-fieldcommander-phase-siege-announcement
@@ -61,8 +63,8 @@
       reinforcementPod: KsFieldCommanderReinforcementsSupport
     - name: ks-fieldcommander-phase-final
       start: 32m
-      waveInterval: 65
-      budget: 18
+      waveInterval: 114
+      budget: 31.5
       budgetPerExtraDefender: 0.3
       strikeChance: 0.6
       announcement: ks-fieldcommander-phase-final-announcement
@@ -143,3 +145,14 @@
       next:
         Sleet: 2
         Snow: 1
+
+# Keeps the battlefield from filling up with litter: spent casings, loose guns and magazines, and the commander's dead
+#     units dissolve away after a while. Delays are in seconds.
+- type: entity
+  parent: BaseGameRule
+  id: KsFieldCommanderLitterDespawn
+  components:
+  - type: KsLitterDespawnRule
+    casingDelay: 60
+    itemDelay: 300
+    bodyDelay: 300

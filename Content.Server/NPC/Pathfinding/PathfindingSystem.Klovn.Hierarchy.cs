@@ -49,6 +49,11 @@ public sealed partial class PathfindingSystem
 
     private bool _hierarchical = true;
 
+    /// <summary>
+    ///     The share A* scales its estimate up by, to prefer the polys closest to the goal among equal ones.
+    /// </summary>
+    private const float HeuristicTieBreak = 1f / 1000f;
+
     private readonly ObjectPool<PathHeuristic> _heuristicPool =
         new DefaultObjectPool<PathHeuristic>(new PathHeuristicPolicy(), SearchPoolSize);
 
@@ -452,7 +457,7 @@ public sealed partial class PathfindingSystem
 
         while (heuristic.Queue.TryPeek(out var cluster, out var priority))
         {
-            if (priority >= heuristic.BestFromStart)
+            if (priority >= GetSearchLimit(heuristic.BestFromStart))
             {
                 heuristic.Frontier = priority;
                 break;
@@ -502,6 +507,20 @@ public sealed partial class PathfindingSystem
 
         heuristic.SearchDone = true;
         return true;
+    }
+
+    /// <summary>
+    ///     How far past the best walk found the search from the goal goes before it stops. The estimate for what it never
+    ///         settled is the least it could be, which is as good as exact for a poly on a straight line from the start:
+    ///         in open ground that is all of it, each costing about what the best walk does, so A* ties with the real path
+    ///         and expands the lot (a 98 poly path took 5787 expansions, far more than no coarse maps at all). Settling
+    ///         a little beyond the best walk puts every unsettled poly over it by more than A*'s own tie-break
+    ///         (<see cref="HeuristicTieBreak"/>), so it looks at none of them. Still a lower bound, so paths stay
+    ///         the shortest.
+    /// </summary>
+    private static float GetSearchLimit(float best)
+    {
+        return float.IsPositiveInfinity(best) ? best : best * (1f + 2f * HeuristicTieBreak) + 0.05f;
     }
 
     /// <summary>

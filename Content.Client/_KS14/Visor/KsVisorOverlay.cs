@@ -41,7 +41,6 @@ public sealed partial class KsVisorOverlay : Overlay
     private readonly Vector2[] _dropPositions = new Vector2[KsVisorSimulation.MaxDrops];
     private readonly Vector2[] _dropSizes = new Vector2[KsVisorSimulation.MaxDrops];
     private readonly Vector2[] _dropTrails = new Vector2[KsVisorSimulation.MaxDrops];
-    private readonly Vector2[] _dropShapes = new Vector2[KsVisorSimulation.MaxDrops];
 
     public KsVisorOverlay(ShaderInstance shader, IRobustRandom random)
     {
@@ -123,9 +122,11 @@ public sealed partial class KsVisorOverlay : Overlay
         {
             var drop = _simulation.Drops[i];
             _dropPositions[i] = drop.Position;
-            _dropSizes[i] = new Vector2(KsVisorSimulation.GetDrawnRadius(drop), KsVisorSimulation.GetAlpha(drop));
-            _dropTrails[i] = new Vector2(drop.Trail, drop.Melt);
-            _dropShapes[i] = new Vector2(drop.Seed, KsVisorSimulation.GetGathered(drop));
+            // TODO ENGINE: three arrays, two values from 0 to 1 sharing each y, only because the engine keeps built-in
+            //      uniform locations in an sbyte; see the top of visor_rain.swsl.
+            _dropSizes[i] = new Vector2(KsVisorSimulation.GetDrawnRadius(drop),
+                KsVisorSimulation.Pack(KsVisorSimulation.GetAlpha(drop), KsVisorSimulation.GetGathered(drop)));
+            _dropTrails[i] = new Vector2(drop.Trail, KsVisorSimulation.Pack(drop.Melt, drop.Seed));
         }
 
         _shader.SetParameter("SCREEN_TEXTURE", screenTexture);
@@ -133,7 +134,6 @@ public sealed partial class KsVisorOverlay : Overlay
         _shader.SetParameter("drop_positions", _dropPositions);
         _shader.SetParameter("drop_sizes", _dropSizes);
         _shader.SetParameter("drop_trails", _dropTrails);
-        _shader.SetParameter("drop_shapes", _dropShapes);
         _shader.SetParameter("mist", _simulation.Mist);
 
         var handle = args.WorldHandle;

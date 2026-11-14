@@ -57,6 +57,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
+    [Dependency] private EntityQuery<KsNpcAimTrackingComponent> _aimTrackingQuery = default!;
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<KsFactionCollisionShooterComponent> _factionCollisionShooterQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
@@ -331,7 +332,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     {
         shot = aim;
 
-        if (!Enabled || from.MapId != aim.MapId)
+        if (!Enabled || from.MapId != aim.MapId || IgnoresFriendlyBlocking(shooterUid))
             return true;
 
         GatherFriends(shooterUid, from);
@@ -393,7 +394,7 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
     /// </summary>
     public bool IsShotClear(EntityUid shooterUid, MapCoordinates from, MapCoordinates aim)
     {
-        if (!Enabled || from.MapId != aim.MapId)
+        if (!Enabled || from.MapId != aim.MapId || IgnoresFriendlyBlocking(shooterUid))
             return true;
 
         GatherFriends(shooterUid, from);
@@ -403,6 +404,12 @@ public sealed partial class NpcSquadFireLaneSystem : EntitySystem
 
         var direction = aim.Position - from.Position;
         return direction.LengthSquared() < 0.0001f || !IsBlocked(MathF.Atan2(direction.Y, direction.X));
+    }
+
+    private bool IgnoresFriendlyBlocking(EntityUid shooterUid)
+    {
+        return _aimTrackingQuery.TryComp(shooterUid, out var aimTrackingComponent) &&
+            aimTrackingComponent.IgnoreFriendlyBlocking;
     }
 
     /// <summary>

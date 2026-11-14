@@ -48,6 +48,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14
     [Dependency] private StandingStateSystem _standingStateSystem = default!; // KS14
     [Dependency] private SharedTransformSystem _transformSystem = default!; // KS14
+    [Dependency] private SharedMapSystem _mapSystem = default!; // KS14
     [Dependency] private _KS14.Projectiles.KsProjectileFalloffSystem _ksProjectileFalloffSystem = default!; // KS14
     [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
 
@@ -77,12 +78,22 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         // KS14 start: a round moves more than a tile a tick, and steps over what is thinner than that, or onto it and what is
         //      behind it at once: what it is about to go through is looked for before each step (KsRayCollisionSystem)
         SubscribeLocalEvent<ProjectileComponent, ComponentStartup>(KsOnProjectileStartup);
+        SubscribeLocalEvent<ProjectileComponent, MapInitEvent>(KsOnProjectileMapInit);
         SubscribeLocalEvent<ProjectileComponent, _KS14.RayCollision.KsRayCollisionEvent>(KsOnRayCollision);
         // KS14 end
     }
 
     // KS14 start
     private void KsOnProjectileStartup(Entity<ProjectileComponent> entity, ref ComponentStartup args)
+    {
+        // Not on a map yet to be initialised, where nothing moves and a save of it would write the component into the
+        //      map (UninitializedSaveTest): there it starts with the map. Startup rather than map init alone, as a
+        //      client is not told of the map init of what the server sends it.
+        if (_mapSystem.IsInitialized(Transform(entity).MapUid))
+            _ksRayCollisionSystem.StartChecking(entity, SharedProjectileSystem.ProjectileFixture);
+    }
+
+    private void KsOnProjectileMapInit(Entity<ProjectileComponent> entity, ref MapInitEvent args)
     {
         _ksRayCollisionSystem.StartChecking(entity, SharedProjectileSystem.ProjectileFixture);
     }

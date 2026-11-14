@@ -1,0 +1,55 @@
+light_mode unshaded;
+
+// A burst of coloured TV static over a whole sprite that fades out, for a unit going down. A post-shader: the sprite
+//      arrives finished, all layers together, and already lit; the static covers only where it has pixels.
+//
+// Its own shader, with every uniform set on every instance every frame: GL uniforms belong to the program, so an
+//      instance that left them alone would draw with the last value written (see sinking_cut.swsl).
+uniform highp float progress;      // 0 as it starts, 1 as it is over
+uniform highp float seed;          // per entity, so neighbours don't flash in lockstep
+uniform highp vec4 flashColor;     // rgb the colour, a how strong it is at the start
+
+// Static pixels per quad. The post-shader quad is the sprite's size times 1.25, so this makes them about the size of
+//      the sprite's own pixels.
+const highp float pixels = 40.0;
+// How often the static changes, a second: fast enough to crawl rather than step.
+const highp float flicker = 30.0;
+// Horizontal tear bands per quad, and how far a band may slip sideways, in static pixels.
+const highp float bands = 10.0;
+const highp float tear = 3.0;
+
+// White noise: every cell its own, unlike zNoise's smooth blobs.
+highp float hash(highp vec2 p)
+{
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void fragment()
+{
+    highp vec4 tex = zTexture(UV);
+
+    highp float frame = floor(TIME * flicker);
+    highp vec2 cell = floor(UV2 * pixels);
+
+    // A bad signal: each band slips sideways by its own amount, a new one every frame.
+    highp float band = floor(UV2.y * bands);
+    cell.x += floor((hash(vec2(band, frame + seed * 31.0)) - 0.5) * 2.0 * tear);
+
+    highp vec2 at = cell + vec2(seed * 57.0 + frame * 13.0, seed * 91.0 - frame * 7.0);
+    highp float grain = hash(at);              // how bright this speck is
+    highp float speck = hash(at + 101.7);      // whether it is a speck at all
+
+    // Coloured static: dark to over-bright specks of the flash colour. A dark colour (black, for death) has grey snow
+    //      on it instead, or its static would be no more than a shade.
+    highp float luminance = dot(flashColor.rgb, vec3(0.299, 0.587, 0.114));
+    highp vec3 snow = clamp(flashColor.rgb * (0.25 + 1.3 * grain), 0.0, 1.0)
+        + vec3(0.45 * grain * (1.0 - luminance));
+
+    // Hard at first, all but gone by the end; most pixels are specks, the rest only tinted.
+    highp float fade = (1.0 - progress) * (1.0 - progress);
+    highp float coverage = speck > 0.35 ? 1.0 : 0.3;
+    highp float k = clamp(flashColor.a * fade * coverage, 0.0, 1.0);
+
+    // Pre-multiplied: the sprite was drawn into a transparent target, so its colour already carries its alpha.
+    COLOR = vec4(mix(tex.rgb, snow * tex.a, k), tex.a);
+}

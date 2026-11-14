@@ -1,0 +1,28 @@
+<Document>
+  # Fortifications
+  Sandbag walls and barbed wire are quick field defences. Sandbags give you cover to shoot from; barbed wire makes the ground in front of it slow and painful to cross.
+
+  <Box>
+    <GuideEntityEmbed Entity="KsSandbagWall"/>
+    <GuideEntityEmbed Entity="KsSandbag"/>
+    <GuideEntityEmbed Entity="KsBarbedWire"/>
+    <GuideEntityEmbed Entity="KsBarbedWireCoil"/>
+  </Box>
+
+  ## Getting the materials
+  A field commander's [bold]field tech fab[/bold] prints both: [bold]sandbags[/bold], which stack, and [bold]barbed wire coils[/bold].
+
+  ## Sandbag walls
+  - [bold]Building one.[/bold] Hold five sandbags, open the construction menu with [color=yellow][bold][keybind="OpenCraftingMenu"][/bold][/color] and pick the [bold]sandbag wall[/bold] from the structures. It goes on a free tile.
+  - [bold]Cover, not a wall.[/bold] Nobody walks through sandbags, but bullets fly over them unless they are aimed at the sandbags themselves. Stand behind a line of them and shoot over it; to break through one, shoot it directly.
+  - [bold]Taking it down.[/bold] Pull a wall apart by hand with its alternative action, [color=yellow][bold][keybind="AltActivateItemInWorld"][/bold][/color], and you get every bag back. A wall shot or beaten to pieces leaves only some of its bags behind.
+
+  ## Barbed wire
+  - [bold]Laying it.[/bold] Hold a barbed wire coil, open the construction menu and pick [bold]barbed wire[/bold]. Pieces laid next to each other join up into one line.
+  - [bold]What it does.[/bold] Barbed wire stops nobody and no bullet. Anyone wading through it slows right down and is cut with every step. Standing still in it is safe, but the first step after hurts at once.
+  - [bold]Taking it up.[/bold] Cut a piece with [bold]wirecutters[/bold] to roll it back into a coil.
+
+  ## Tips
+  - [bold]Put wire in front of your sandbags.[/bold] Attackers stuck in the wire are slow targets for whoever is behind the bags.
+  - [bold]Carry wirecutters when attacking.[/bold] Cutting a path is slower than walking, but cheaper than wading through.
+</Document>

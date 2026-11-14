@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Made for Klovnstation 14 from the sandbag wall sprite taken from Zona-14 at https://github.com/LaCumbiaDelCoronavirus/Zona-14/blob/4efbea661afaa84ebc869a4ffbebbce0e412e77b/Resources/Textures/_Stalker/Structures/sandbags.rsi, itself taken from tgstation at https://github.com/tgstation/tgstation/blob/47f6d91b37609b940152de62befa931dba35adf0/icons/obj/smooth_structures/sandbags.dmi",
+  "states": [
+    {
+      "name": "sandbag"
+    },
+    {
+      "name": "sandbag_2"
+    },
+    {
+      "name": "sandbag_3"
+    }
+  ]
+}

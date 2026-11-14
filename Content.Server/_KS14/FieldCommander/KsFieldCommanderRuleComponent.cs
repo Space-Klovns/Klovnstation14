@@ -1,3 +1,5 @@
+using Content.Shared.Mobs;
+using Content.Shared._KS14.FieldCommander;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Humanoid.Prototypes;
 using Robust.Shared.Audio;
@@ -392,6 +394,21 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     public int TeamkillPoints = -150;
 
     /// <summary>
+    ///     The flash of static over a defender as they go into each state that has one, which every defender is given:
+    ///         black as they die.
+    /// </summary>
+    [DataField]
+    public Dictionary<MobState, KsFieldCommanderDownFlashSettings> DownFlashes = new()
+    {
+        [MobState.Critical] = new(),
+        [MobState.Dead] = new()
+        {
+            Color = Color.FromHex("#000000D0"),
+            Duration = TimeSpan.FromSeconds(0.5),
+        },
+    };
+
+    /// <summary>
     ///     Points every living defender gets when the uplink is taken out.
     /// </summary>
     [DataField]
@@ -424,6 +441,12 @@ public sealed partial class KsFieldCommanderRuleComponent : Component
     /// </summary>
     [ViewVariables]
     public EntityUid? FogMapUid;
+
+    /// <summary>
+    ///     The map carrying the wave status the defenders' HUD reads.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? WaveStatusMapUid;
 
     [ViewVariables]
     public MapCoordinates FogOrigin;

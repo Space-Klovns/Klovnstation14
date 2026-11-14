@@ -290,6 +290,14 @@ public sealed partial class CMAutomatedVendorBui : BoundUserInterface
             }
         }
 
+        // KS14 start: a pick from this section also brings the base gear, until the player has had it
+        if (EntMan.TryGetComponent(Owner, out CMAutomatedVendorComponent? alsoVendVendor) &&
+            EntMan.System<SharedCMAutomatedVendorSystem>().KsAlsoVendPending(alsoVendVendor, section, user))
+        {
+            name.AddText(Loc.GetString("ks-cm-vendor-also-vend"));
+        }
+        // KS14 end
+
         name.Pop();
         return name;
     }

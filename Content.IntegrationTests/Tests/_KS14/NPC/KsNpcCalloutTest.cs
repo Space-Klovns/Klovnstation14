@@ -33,6 +33,17 @@ public sealed class KsNpcCalloutTest : GameTest
     private const string Grenade = "KsCalloutTestGrenade";
     private const string RedactedSpawner = "KsRandomHumanoidSpawnerOperativeRedacted";
 
+    private static readonly ProtoId<NpcVoiceRecordingPrototype> RedactedSpeaker = "KsRedactedSpeakerA";
+
+    /// <summary>
+    ///     Whether the Redacted's speakers have their clips. The speakers are public and mute; the clips are a private
+    ///         partial of them (<see cref="NpcVoiceRecordingPrototype"/>), so without the _KsModule submodule, as on CI
+    ///         for a pull request, a line is spoken and nothing plays.
+    /// </summary>
+    private bool HasVoiceClips => Server.ProtoMan.Index(RedactedSpeaker).Lines.Count > 0;
+
+    private const string NoVoiceClips = "the Redacted's voice clips are in the private _KsModule submodule, which is not present";
+
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -64,6 +75,7 @@ public sealed class KsNpcCalloutTest : GameTest
     public async Task TestACalloutIsOnlyInAVoiceThatMakesIt()
     {
         var map = await Pair.CreateTestMap();
+        var hasVoiceClips = HasVoiceClips;
 
         await Server.WaitAssertion(() =>
         {
@@ -74,7 +86,7 @@ public sealed class KsNpcCalloutTest : GameTest
             Assert.That(voiceSystem.TrySpeakCallout(voicedUid, NpcCallout.ThrowFrag, TimeSpan.FromSeconds(5)), "the Redacted call out their throws");
             Assert.That(voiceSystem.TrySpeakCallout(voicedUid, NpcCallout.ThrowFrag, TimeSpan.FromSeconds(5)), Is.False, "but not twice at once");
             Assert.That(voiceSystem.TrySpeakCallout(voicedUid, NpcCallout.Push), "another callout has a cooldown of its own");
-            Assert.That(CountClips(voicedUid), Is.EqualTo(2), "each said aloud");
+            Assert.That(CountClips(voicedUid), Is.EqualTo(hasVoiceClips ? 2 : 0), "each said aloud, where there are clips");
 
             foreach (var callout in Enum.GetValues<NpcCallout>())
             {
@@ -161,6 +173,9 @@ public sealed class KsNpcCalloutTest : GameTest
     [TestCase("revived")]
     public async Task TestAManDownIsCalledOutByCallsign(string how)
     {
+        if (!HasVoiceClips)
+            Assert.Ignore(NoVoiceClips);
+
         var map = await Pair.CreateTestMap();
         EntityUid speakerUid = default, downedUid = default;
 

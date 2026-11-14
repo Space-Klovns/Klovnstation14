@@ -95,9 +95,10 @@ public sealed partial class PathfindingSystem
             return heuristicResult;
 
         var heuristic = request.KsHeuristic;
+        var nodeLimit = GetNodeLimit(request, heuristic);
         // KS14 end
 
-        while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && request.KsSearchedNodes < _aStarNodeLimit /* KS14: count < NodeLimit -> over every slice, and the cvar */)
+        while (request.PolyFrontier.Count /* KS14: Frontier -> PolyFrontier */ > 0 && request.KsSearchedNodes < nodeLimit /* KS14: count < NodeLimit -> over every slice, and the cvar scaled to the path */)
         {
             // Handle whether we need to pause if we've taken too long
             if (count % 20 == 0 && count > 0 && request.Stopwatch.Elapsed > PathTime)
@@ -181,7 +182,7 @@ public sealed partial class PathfindingSystem
                 if (float.IsPositiveInfinity(estimate))
                     continue;
 
-                var hScore = (estimate >= 0f ? estimate : OctileDistance(endNode, neighbor)) * (1.0f + 1.0f / 1000.0f);
+                var hScore = (estimate >= 0f ? estimate : OctileDistance(endNode, neighbor)) * (1.0f + HeuristicTieBreak);
                 // KS14 end
                 /* var hScore = OctileDistance(endNode, neighbor) * (1.0f + 1.0f / 1000.0f); */ // KS14: replaced above
                 var fScore = gScore + hScore;
@@ -192,7 +193,7 @@ public sealed partial class PathfindingSystem
         // KS14 start: a danger must never be what leaves it with no path: three of those and steering gives up on it. The
         //      coarse maps know nothing of dangers, so a fire across open floor has the search flood everything in front of
         //      it. Out of nodes, it goes again without them. Steering looks again as it gets nearer, where a search fits
-        if (!arrived && request.KsSearchedNodes >= _aStarNodeLimit && request.AvoidedDangers != NpcTileDangerKind.None)
+        if (!arrived && request.KsSearchedNodes >= nodeLimit && request.AvoidedDangers != NpcTileDangerKind.None)
         {
             RestartIgnoringDangers(request, startNode);
             return PathResult.Continuing;

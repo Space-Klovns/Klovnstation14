@@ -27,6 +27,10 @@ public sealed class KsProjectileFalloffTest : GameTest
     private static readonly EntProtoId MosinSniper = "WeaponSniperMosin";
     private static readonly EntProtoId OtherLightRifle = "WeaponRifleAk";
 
+    // The Field Commander bots' guns live in the private module. Instance fields: the YAML linter checks static ones, and
+    //     has to pass without the module.
+    private readonly EntProtoId[] _botGuns = ["KsWeaponPistolMk1FieldCommander", "KsWeaponShotgunBulldogFieldCommander", "KsWeaponRifleEstocFieldCommander"];
+
     private readonly EntProtoId _bullet = "KsFalloffTestBullet";
     private readonly EntProtoId _target = "KsFalloffTestTarget";
     private readonly EntProtoId _plainBullet = "KsFalloffTestPlainBullet";
@@ -279,6 +283,22 @@ public sealed class KsProjectileFalloffTest : GameTest
             Assert.That(plainFar, Is.EqualTo(near).Within(0.01f));
             Assert.That(optedInFar, Is.EqualTo(near).Within(0.01f));
         });
+    }
+
+    [Test]
+    public void FieldCommanderBotGunsOptIn()
+    {
+        if (!SProtoMan.HasIndex(_botGuns[0]))
+            Assert.Ignore("_KsModule prototypes are not present.");
+
+        foreach (var botGun in _botGuns)
+        {
+            Assert.That(SProtoMan.Index(botGun).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Server.EntMan.ComponentFactory), $"{botGun} opts in");
+            Assert.That(CProtoMan.Index(botGun).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Client.EntMan.ComponentFactory), $"{botGun} opts in on the client");
+        }
+
+        // An ordinary rifle does not.
+        Assert.That(SProtoMan.Index(OtherLightRifle).TryGetComponent<KsGunProjectileFalloffComponent>(out _, Server.EntMan.ComponentFactory), Is.False);
     }
 
     [Test]

@@ -1,0 +1,29 @@
+- type: constructionGraph
+  id: KsBarbedWire
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: barbedWire
+      steps:
+      - tag: KsBarbedWireCoil
+        name: ks-construction-step-barbed-wire-coil
+        icon:
+          sprite: _KS14/Objects/Misc/barbed_wire_coil.rsi
+          state: razor_wire
+        doAfter: 1
+  - node: barbedWire
+    entity: KsBarbedWire
+    edges:
+    - to: start
+      completed:
+      - !type:SpawnPrototype
+        prototype: KsBarbedWireCoil
+        amount: 1
+      - !type:DeleteEntity {}
+      conditions:
+      - !type:EntityAnchored
+        anchored: true
+      steps:
+      - tool: Cutting
+        doAfter: 2

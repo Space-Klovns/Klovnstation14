@@ -592,6 +592,35 @@ public sealed class KsNpcTileDangerTest : GameTest
     }
 
     /// <summary>
+    ///     A fire across open floor, a good way off: going round it takes looking at about the area between the two, which
+    ///         is more than the usual node limit once the walk is some tiles long. The search for it must have room, not
+    ///         give up on the fire (and walk the NPC into it) while the NPC is still too far away to have it in sight.
+    /// </summary>
+    [Test]
+    public async Task TestFireAFewTilesAheadIsGoneRoundWithoutGivingUpOnIt()
+    {
+        var (entManager, gridUid) = await SetUpGrid(14);
+        EntityUid npcUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            npcUid = SpawnAt(entManager, Avoider, gridUid, -7, 0);
+            SpawnFireLine(entManager, gridUid, 6, -2, 2);
+        });
+
+        await Pair.RunTicksSync(NavmeshTicks);
+
+        var path = await FindPath(entManager, npcUid, new EntityCoordinates(gridUid, new Vector2(12.5f, 0.5f)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(path.Result, Is.EqualTo(PathResult.Path));
+            Assert.That(path.KsIgnoredDangers, Is.False, "it should have found its way round the fire, not given up on it");
+            Assert.That(path.Path.Any(poly => new Box2(6, -2, 7, 3).Contains(poly.Box.Center)), Is.False, "and not through it");
+        });
+    }
+
+    /// <summary>
     ///     Once a fire goes out, the tile is a tile again.
     /// </summary>
     [Test]
