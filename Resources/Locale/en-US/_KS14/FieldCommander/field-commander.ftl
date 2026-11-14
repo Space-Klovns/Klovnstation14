@@ -33,7 +33,7 @@ ks-fieldcommander-wave-4 = Keep your heads down. My men are aiming for them.
 ks-fieldcommander-wave-5 = Every one you kill, I replace. Every one I kill, you don't.
 ks-fieldcommander-wave-6 = Hold the line, little soldiers. It's the last thing you'll ever hold.
 
-ks-fieldcommander-intel-wave = Field Operations. Wave { $number }: Sensors read { $count } { $count ->
+ks-fieldcommander-intel-wave = Field Operations. Wave { $number }: sensors read { $count } { $count ->
     [one] hostile
    *[other] hostiles
 } inbound from the { $direction ->
