@@ -107,6 +107,11 @@
     keepTargetUntilLost: true
   - type: KsNpcAimTracking
     ignoreFriendlyBlocking: true
+  # Smokes after a long burst, as TGMC's overheated guns do. Only a visual: it never stops firing.
+  - type: KsParticles
+    prototype: KsGunOverheatSmoke
+    emitting: false
+  - type: KsGunOverheatSmoke
   - type: Sprite
     sprite: _KS14/Objects/Weapons/Guns/Turrets/hmg_turret.rsi
     drawdepth: Mobs

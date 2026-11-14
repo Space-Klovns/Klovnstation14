@@ -217,6 +217,20 @@ component on the atom itself; its `shared_particle_holder` has no equivalent yet
 - **Additions:** `burst`, `emitDuration`, `oneShot`, `space: World`, `followRotation`, `layer`, `unshaded`, `animated`,
   `pixelSnap`, prototype inheritance, and the component's `color`, `offset`, `scale`.
 
+### Bullet impacts and gun smoke
+
+TGMC's debris element is `KsImpactSurfaceSystem` (`Content.Shared/_KS14/Impacts/`). A surface names a
+`ksImpactMaterial` (`Resources/Prototypes/_KS14/Impacts/materials.yml`: its smoke, its debris, a sound and its
+chance) with `- type: KsImpactSurface`; upstream surfaces get theirs by partial in `Impacts/Partials/surfaces.yml`.
+A non-mob without one only smokes. `KsImpactSurfaceStorageFill` swaps in another material with a chance of how
+full the entity's storage is (bookshelves: paper), worked out as items go in and out. The impact plays on each
+client for itself, `SpawnLocal`, from the hit it predicted or from the server's `KsPredictedSpawnImpactEvent`:
+nothing is networked per bullet. Its emitters are aimed back along the shot, with `SetRotation`.
+
+`KsGunFiringSmoke` on a gun puffs `KsGunFiringSmoke` out along each shot (`SpawnPredictedEffect`, the gun as
+source). `KsGunOverheatSmoke`, with a `KsParticles` that starts `emitting: false`, turns it on after a burst
+and off once a purely visual heat cools.
+
 ## Trying it in game
 
 `ksparticles KsSmoke` attaches an emitter to you; `ksparticles KsEmbers 1234` to net entity 1234;

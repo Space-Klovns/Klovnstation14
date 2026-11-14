@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Shared._KS14.Impacts;
 using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared.Projectiles;
 using Content.Shared.Weapons.Ranged.Systems;
@@ -26,6 +27,7 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
     [Dependency] private SharedGunSystem _gunSystem = default!;
+    [Dependency] private KsImpactSurfaceSystem _impactSurfaceSystem = default!;
 
     /// <summary>
     ///     How far, in metres, a server copy may be from a kept copy for the two to be matched as one spawn.
@@ -491,7 +493,10 @@ public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSyste
             RaiseLocalEvent(new ImpactEffectEvent(impactEffect, args.Coordinates));
 
         if (targetUid != null && !TerminatingOrDeleted(targetUid.Value))
+        {
             _gunSystem.PlayImpactSound(targetUid.Value, args.Damage, args.SoundHit, args.ForceSound);
+            _impactSurfaceSystem.PlayImpact(targetUid.Value, GetCoordinates(args.Coordinates), args.Direction, args.RawDamage, args.Damage);
+        }
     }
 
     /// <summary>

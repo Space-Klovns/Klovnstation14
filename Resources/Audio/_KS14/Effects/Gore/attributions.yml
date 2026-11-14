@@ -1,0 +1,9 @@
+- files: ["tgmc_gib.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Taken from TerraGov-Marine-Corps (sound/effects/gib.ogg), added in TGMC PR #16927. No original source is credited there. Downmixed to mono."
+  source: "https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/sound/effects/gib.ogg"
+
+- files: ["bone_break1.ogg", "bone_break2.ogg", "bone_break3.ogg", "bone_break4.ogg", "bone_break5.ogg", "bone_break6.ogg", "bone_break7.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Taken from TerraGov-Marine-Corps (sound/effects/bone_break1-7). No original source is credited there."
+  source: "https://github.com/tgstation/TerraGov-Marine-Corps/blob/c3c072e3644f4526d0099a79f361bde3aee9b4c7/sound/effects/"

@@ -1,0 +1,47 @@
+# TGMC's firing smoke (GUN_SMOKE_PARTICLES, /particles/firing_smoke), which TGMC gives its pistols, revolvers, SMGs,
+# rifles, shotguns, snipers, machine guns and sentries alike. KsGunFiringSmokeSystem.
+
+- type: !PartialOnly entity
+  id: BaseWeaponPistol
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponRevolver
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponSubMachineGun
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponRifle
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponShotgun
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponSniper
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponLightMachineGun
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponHeavyMachineGun
+  components:
+  - type: KsGunFiringSmoke
+
+- type: !PartialOnly entity
+  id: BaseWeaponBallisticTurret
+  components:
+  - type: KsGunFiringSmoke

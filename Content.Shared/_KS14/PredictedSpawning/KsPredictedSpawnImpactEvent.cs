@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Shared.Damage;
 using Robust.Shared.Audio;
 using Robust.Shared.Map;
@@ -56,4 +57,14 @@ public sealed class KsPredictedSpawnImpactEvent : EntityEventArgs
     ///     The damage the hit dealt, which picks the target's impact sound.
     /// </summary>
     public DamageSpecifier? Damage;
+
+    /// <summary>
+    ///     The projectile's damage before anything resisted it, which tells a ballistic hit and one armour soaked.
+    /// </summary>
+    public DamageSpecifier? RawDamage;
+
+    /// <summary>
+    ///     Which way the projectile flew, in world space; its impact particles fly back against it.
+    /// </summary>
+    public Vector2 Direction;
 }
