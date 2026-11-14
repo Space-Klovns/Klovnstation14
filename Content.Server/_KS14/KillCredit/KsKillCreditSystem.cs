@@ -2,12 +2,14 @@ using Content.Server.Explosion.EntitySystems;
 using Content.Shared._KS14.Construction;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Construction.Components;
+using Content.Shared.DeviceLinking;
 using Content.Shared.Projectiles;
 
 namespace Content.Server._KS14.KillCredit;
 
 /// <summary>
-///     Works out who to credit for damage: the hand behind a bullet, a turret's owner, whoever set off an explosion.
+///     Works out who to credit for damage: the hand behind a bullet, a turret's owner, whoever set off an explosion
+///         or pressed the signaller that did.
 ///         Credit has to be settled while the thing it hangs on still exists: a turret's bullets are stamped with its
 ///         owner as they leave it, and an explosion is given its user when it is queued.
 /// </summary>
@@ -21,11 +23,14 @@ public sealed partial class KsKillCreditSystem : EntitySystem
     [Dependency] private ExplosionSystem _explosionSystem = default!;
     [Dependency] private EntityQuery<ProjectileComponent> _projectileQuery = default!;
     [Dependency] private EntityQuery<KsCreditOwnerComponent> _creditOwnerQuery = default!;
+    [Dependency] private EntityQuery<DeviceLinkSourceComponent> _deviceLinkSourceQuery = default!;
 
     /// <summary>
     ///     Who deserves the credit for damage dealt by <paramref name="origin"/>. A projectile is credited to
-    ///         whoever fired it, anything with a <see cref="KsCreditOwnerComponent"/> to its owner, and no origin
-    ///         at all, inside an explosion, to whoever set it off. Null if nobody.
+    ///         whoever fired it, anything with a <see cref="KsCreditOwnerComponent"/> to its owner, a device whose
+    ///         signal set something off to whoever sent the signal by using it
+    ///         (<see cref="DeviceLinkSourceComponent.KsSignalUser"/>), and no origin at all, inside an explosion, to
+    ///         whoever set it off. Null if nobody.
     /// </summary>
     public EntityUid? ResolveCredit(EntityUid? origin)
     {
@@ -46,6 +51,13 @@ public sealed partial class KsKillCreditSystem : EntitySystem
                      shooterUid != uid)
             {
                 current = shooterUid;
+            }
+            else if (_deviceLinkSourceQuery.TryComp(uid, out var deviceLinkSourceComponent) &&
+                     deviceLinkSourceComponent.KsSignalUser is { } signalUserUid &&
+                     signalUserUid != uid &&
+                     !TerminatingOrDeleted(signalUserUid))
+            {
+                current = signalUserUid;
             }
             else
             {

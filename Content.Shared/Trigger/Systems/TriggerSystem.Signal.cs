@@ -39,6 +39,6 @@ public sealed partial class TriggerSystem
         if (args.Port != ent.Comp.Port)
             return;
 
-        Trigger(ent.Owner, _deviceLink.KsSignalUser ?? args.Trigger /* KS14: the presser, not the signaller */, ent.Comp.KeyOut);
+        Trigger(ent.Owner, args.Trigger, ent.Comp.KeyOut);
     }
 }

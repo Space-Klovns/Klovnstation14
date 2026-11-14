@@ -41,7 +41,7 @@ public sealed partial class NPCUtilitySystem
 
         var radius = blackboard.GetValueOrDefault<float>(blackboard.GetVisionRadiusKey(EntityManager), EntityManager);
 
-        if (!_examine.InRangeUnOccluded(owner, currentTarget, radius + 0.5f, null))
+        if (!_examine.InRangeUnOccluded(owner, currentTarget, range: radius + 0.5f))
             return false;
 
         var score = 1f;
