@@ -7,30 +7,29 @@
   - type: RCD
     ksInstant: true
     availablePrototypes:
-    - WallSolid
-    - KsFieldWallReinforced
+    - KsFieldWallSolid
     - KsFieldBarricade
     - KsFieldBarricadeDirectional
-    - FloorSteel
-    - Plating
-    - Catwalk
-    - Grille
-    - Window
-    - WindowDirectional
-    - WindowReinforcedDirectional
-    - ReinforcedWindow
-    - Airlock
-    - AirlockGlass
-    - Firelock
-    - TubeLight
-    - BulbLight
+    - KsFieldFloorSteel
+    - KsFieldPlating
+    - KsFieldCatwalk
+    - KsFieldGrille
+    - KsFieldWindow
+    - KsFieldWindowDirectional
+    - KsFieldWindowReinforcedDirectional
+    - KsFieldReinforcedWindow
+    - KsFieldAirlock
+    - KsFieldAirlockGlass
+    - KsFieldFirelock
+    - KsFieldTubeLight
+    - KsFieldBulbLight
     - KsFieldFloodlight
-    - LVCable
-    - MVCable
-    - HVCable
-    - CableTerminal
+    - KsFieldLVCable
+    - KsFieldMVCable
+    - KsFieldHVCable
+    - KsFieldCableTerminal
     - Deconstruct
   - type: LimitedCharges
     maxCharges: 60
   - type: AutoRecharge
-    rechargeDuration: 0.2
+    rechargeDuration: 1

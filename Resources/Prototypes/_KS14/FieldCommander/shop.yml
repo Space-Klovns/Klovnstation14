@@ -30,6 +30,10 @@
   - type: CMAutomatedVendor
     pointsType: KsFieldCommander
     sections:
+    - name: Equipment
+      entries:
+      - id: KsDistressBeacon # a replacement for a lost one
+        points: 0
     - name: Fire Support
       entries:
       - id: KsFlatpackBallisticTurretNanotrasenRequisition

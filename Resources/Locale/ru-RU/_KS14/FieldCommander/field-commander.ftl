@@ -33,7 +33,7 @@ ks-fieldcommander-wave-4 = Пригните головы. Мои люди в н�
 ks-fieldcommander-wave-5 = Каждого убитого вами я заменю. Каждого убитого мной — вы нет.
 ks-fieldcommander-wave-6 = Держите строй, солдатики. Это последнее, что вы удержите.
 
-ks-fieldcommander-intel-wave = Полевое управление. Сенсоры фиксируют { $count } { $count ->
+ks-fieldcommander-intel-wave = Полевое управление. Волна { $number }: сенсоры фиксируют { $count } { $count ->
     [one] противника
     [few] противников
    *[other] противников
@@ -97,7 +97,9 @@ ks-fieldcommander-points-total = Снабжение: { $points }
 ks-fieldcommander-points-gain = +{ $amount }  { $reason }
 ks-fieldcommander-points-loss = −{ $amount }  { $reason }
 ks-fieldcommander-points-kill = { $name }
+ks-fieldcommander-points-assist = Помощь: { $name }
 ks-fieldcommander-points-teamkill = Убийство союзника: { $name }
+ks-fieldcommander-points-teamkill-assist = Помощь в убийстве союзника: { $name }
 ks-fieldcommander-points-uplink = Аплинк уничтожен
 ks-fieldcommander-points-admin = Корректировка Полевого управления
 
@@ -105,3 +107,18 @@ ks-fieldcommander-points-admin = Корректировка Полевого у�
 
 ks-fieldcommander-shop-maptext = СНАБЖЕНИЕ
 ks-supplypod-passenger-name = боец Nanotrasen
+ks-fieldcommander-wave-status = Волна { $wave } · следующая через { $time }
+ks-fieldcommander-wave-status-first = Первая волна через { $time }
+ks-fieldcommander-wave-status-none = Волна { $wave } · новых не ожидается
+ks-fieldcommander-wave-status-idle = Волны ещё не начались
+
+ks-fieldcommander-roundend-waves = Оборона продержалась до волны [color=yellow]{ $wave }[/color].
+ks-fieldcommander-roundend-waves-endless = Оборона продержалась до волны [color=yellow]{ $wave }[/color], из них { $endless } в бесконечном режиме.
+
+ks-fieldcommander-endless-vote-title = Аплинк уничтожен. Держать оборону в бесконечном режиме?
+ks-fieldcommander-endless-vote-initiator = Полевое управление
+ks-fieldcommander-endless-vote-yes = Держать оборону
+ks-fieldcommander-endless-vote-no = Отступить
+ks-fieldcommander-intel-endless-vote = Полевое управление. Аплинк уничтожен, поле за вами. Голосуйте в течение { $seconds } с: отступить или окопаться и узнать, сколько вы продержитесь.
+ks-fieldcommander-endless = Думали, это всё? Всё, что у меня осталось, идёт за вами, и будет идти дальше.
+ks-fieldcommander-intel-endless = Полевое управление. Вы держите оборону. Каждая волна будет больше и раньше предыдущей. Держитесь сколько сможете.

@@ -2,6 +2,7 @@ using Content.Shared._KS14.FieldCommander;
 using Content.Shared._RMC14.Vendors;
 using Robust.Client.Player;
 using Robust.Client.UserInterface;
+using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.FieldCommander;
 
@@ -12,6 +13,8 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
 {
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private EntityQuery<KsFieldCommanderWaveStatusComponent> _waveStatusQuery = default!;
     [Dependency] private EntityQuery<CMVendorUserComponent> _vendorUserQuery = default!;
 
     /// <summary>
@@ -24,6 +27,14 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
     /// </summary>
     [ViewVariables]
     public KsFieldCommanderPointsChangedEvent? LastChange { get; private set; }
+
+    /// <summary>
+    ///     The wave line as last formatted, and what it was formatted from, the language included.
+    /// </summary>
+    private string? _waveText;
+    private System.Globalization.CultureInfo? _waveTextCulture;
+    private int _waveTextWave;
+    private int? _waveTextSecondsLeft;
 
     public override void Shutdown()
     {
@@ -38,7 +49,7 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
     {
         LastChange = args;
 
-        var reason = Loc.GetString(args.Reason, ("name", args.ReasonName ?? string.Empty));
+        var reason = args.Reason.Format(EntityManager);
         EnsureControl().AddChange(args.Delta, reason);
     }
 
@@ -50,9 +61,62 @@ public sealed partial class KsFieldCommanderPointsSystem : EntitySystem
         //      new total, or while the player has no body with points (a ghost, a fresh body), and dropping the control
         //      then would drop the change with it.
         if (TryGetLocalPoints(out var points))
-            EnsureControl().SetTotal(points);
+        {
+            var control = EnsureControl();
+            control.SetTotal(points);
+            control.SetWaveText(GetWaveText());
+        }
         else
+        {
             Control?.SetTotal(null);
+            Control?.SetWaveText(null);
+        }
+    }
+
+    /// <summary>
+    ///     The wave line for the map the local player is on, if the commander has set one.
+    /// </summary>
+    private string? GetWaveText()
+    {
+        if (_playerManager.LocalEntity is not { } localUid ||
+            !EntityManager.TransformQuery.TryComp(localUid, out var transformComponent) ||
+            transformComponent.MapUid is not { } mapUid ||
+            !_waveStatusQuery.TryComp(mapUid, out var statusComponent))
+            return null;
+
+        // Null for no wave scheduled. Whole seconds: the line only changes when one of these does.
+        int? secondsLeft = statusComponent.NextWaveTime is { } nextWaveTime
+            ? (int)Math.Ceiling(Math.Max(0d, (nextWaveTime - _gameTiming.CurTime).TotalSeconds))
+            : null;
+
+        // This runs every frame, and formatting a localised string every frame is a waste.
+        var culture = Loc.DefaultCulture;
+        if (_waveText != null &&
+            _waveTextWave == statusComponent.Wave &&
+            _waveTextSecondsLeft == secondsLeft &&
+            ReferenceEquals(_waveTextCulture, culture))
+            return _waveText;
+
+        _waveTextCulture = culture;
+        _waveTextWave = statusComponent.Wave;
+        _waveTextSecondsLeft = secondsLeft;
+        _waveText = FormatWaveText(statusComponent.Wave, secondsLeft);
+        return _waveText;
+    }
+
+    private string FormatWaveText(int wave, int? secondsLeft)
+    {
+        if (secondsLeft is not { } seconds)
+        {
+            return wave > 0
+                ? Loc.GetString("ks-fieldcommander-wave-status-none", ("wave", wave))
+                : Loc.GetString("ks-fieldcommander-wave-status-idle");
+        }
+
+        var time = $"{seconds / 60}:{seconds % 60:00}";
+        return wave > 0
+            ? Loc.GetString("ks-fieldcommander-wave-status", ("wave", wave), ("time", time))
+            : Loc.GetString("ks-fieldcommander-wave-status-first", ("time", time));
     }
 
     /// <summary>

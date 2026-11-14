@@ -13,6 +13,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Pool;
@@ -38,6 +39,8 @@ public sealed class KsFieldCommanderRuleTest : GameTest
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _commanderRule = "KsTestFieldCommanderRule";
     private readonly EntProtoId _uplinkRule = "KsTestFieldCommanderUplinkRule";
+    private readonly EntProtoId _uplinkVoteRule = "KsTestFieldCommanderUplinkVoteRule";
+    private readonly EntProtoId _endlessRule = "KsTestFieldCommanderEndlessRule";
     private readonly EntProtoId _defender = "KsTestFieldCommanderDefender";
     private readonly EntProtoId _spawnPoint = "KsTestFieldCommanderSpawnPoint";
     private readonly EntProtoId _strikeMarker = "KsTestFieldCommanderStrike";
@@ -121,10 +124,29 @@ public sealed class KsFieldCommanderRuleTest : GameTest
     defenderSightRange: 4
     safeZoneRadius: 6
     uplinkPrototype: KsTestFieldCommanderUplink
+    endlessVote: false
     phases:
     - name: ks-fieldcommander-phase-final
       start: 0
       deployUplink: true
+
+- type: entity
+  parent: KsTestFieldCommanderUplinkRule
+  id: KsTestFieldCommanderUplinkVoteRule
+  components:
+  - type: KsFieldCommanderRule
+    endlessVote: true
+    endlessVoteDuration: 1
+
+- type: entity
+  parent: KsTestFieldCommanderRule
+  id: KsTestFieldCommanderEndlessRule
+  components:
+  - type: KsFieldCommanderRule
+    endlessFirstWaveDelay: 0
+    endlessWaveInterval: 10
+    endlessIntervalScale: 0.5
+    endlessMinInterval: 3
 ";
 
     #region Scaling
@@ -365,4 +387,139 @@ public sealed class KsFieldCommanderRuleTest : GameTest
             Assert.That(rule.Value.Comp.WinType, Is.EqualTo(ScenarioWinType.Objective));
         });
     }
+
+    #region Endless
+
+    /// <summary>
+    ///     Taking the uplink no longer ends the round on the spot: a vote on endless mode holds it open. One nobody votes in
+    ///         fails, and the round ends as it would have, won by the defenders.
+    /// </summary>
+    [Test]
+    public async Task TakingTheUplinkHoldsTheRoundForTheEndlessVote()
+    {
+        var server = Pair.Server;
+        var voteManager = server.ResolveDependency<Content.Server.Voting.Managers.IVoteManager>();
+        var (_, _, outsideDefender, _) = await SetUpOutpost();
+        Entity<ScenarioRuleComponent>? rule = null;
+        EntityUid commanderUid = default;
+
+        await server.WaitPost(() =>
+        {
+            (var scenarioUid, commanderUid) = KsFieldCommanderTestHelpers.StartRules(server, _uplinkVoteRule);
+            rule = (scenarioUid, server.EntMan.GetComponent<ScenarioRuleComponent>(scenarioUid));
+        });
+        await Pair.RunTicksSync(5);
+
+        var votesBefore = 0;
+        await server.WaitPost(() =>
+        {
+            votesBefore = voteManager.ActiveVotes.Count();
+            var uplinkUid = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(commanderUid).UplinkUid!.Value;
+            server.System<TriggerSystem>().Trigger(uplinkUid, outsideDefender, key: "win");
+        });
+        await Pair.RunTicksSync(2);
+
+        var voteSeconds = 0f;
+        await server.WaitAssertion(() =>
+        {
+            var commanderComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(commanderUid);
+            Assert.That(commanderComponent.EndlessVoteRunning, Is.True, "taking the uplink should open the vote on endless mode");
+            Assert.That(voteManager.ActiveVotes.Count(), Is.EqualTo(votesBefore + 1));
+            Assert.That(voteManager.ActiveVotes.All(vote => Content.Shared._KS14.Voting.KsVoteText.IsDeferred(vote.Title)), Is.True,
+                "the vote's title should leave the server unformatted, for each client to read in its own language");
+            Assert.That(rule!.Value.Comp.PendingObjectiveFactions, Does.Contain(Syndicate),
+                "the round should be held open while the vote runs");
+            Assert.That(rule.Value.Comp.WinType, Is.Not.EqualTo(ScenarioWinType.Objective), "nor should the round have ended over it");
+            voteSeconds = (float)commanderComponent.EndlessVoteDuration.TotalSeconds;
+        });
+
+        // Votes end on real time, not game time, so this waits for the clock rather than for ticks.
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(voteSeconds + 10f);
+        var voteRunning = true;
+        while (voteRunning && DateTime.UtcNow < deadline)
+        {
+            await Pair.RunTicksSync(5);
+            await server.WaitPost(() => voteRunning = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(commanderUid).EndlessVoteRunning);
+            await Task.Delay(100);
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            var commanderComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(commanderUid);
+            Assert.That(commanderComponent.EndlessVoteRunning, Is.False);
+            Assert.That(commanderComponent.Endless, Is.False, "a vote nobody voted in should not carry on");
+            Assert.That(rule!.Value.Comp.PendingObjectiveFactions, Does.Not.Contain(Syndicate));
+            Assert.That(rule.Value.Comp.WinningFactionId, Is.EqualTo(Nanotrasen));
+            Assert.That(rule.Value.Comp.WinType, Is.EqualTo(ScenarioWinType.Objective),
+                "a failed vote should let the round end over the uplink");
+        });
+    }
+
+    /// <summary>
+    ///     In endless mode each wave comes sooner than the last, down to the floor, and spends more.
+    /// </summary>
+    [Test]
+    public async Task EndlessWavesComeSoonerAndSpendMore()
+    {
+        var server = Pair.Server;
+        await SetUpOutpost();
+        EntityUid commanderUid = default;
+
+        await server.WaitPost(() => (_, commanderUid) = KsFieldCommanderTestHelpers.StartRules(server, _endlessRule));
+        await Pair.RunTicksSync(5);
+
+        var gaps = new List<TimeSpan>();
+        var scales = new List<float>();
+        await server.WaitPost(() =>
+        {
+            var system = server.System<KsFieldCommanderRuleSystem>();
+            var commander = new Entity<KsFieldCommanderRuleComponent>(commanderUid, server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(commanderUid));
+            system.StartEndless(commander);
+
+            for (var i = 0; i < 4; i++)
+            {
+                scales.Add(KsFieldCommanderRuleSystem.GetEndlessBudgetScale(commander.Comp));
+                system.ForceWave(commander);
+                gaps.Add(commander.Comp.NextWaveTime - server.Timing.CurTime);
+            }
+        });
+
+        await server.WaitAssertion(() =>
+        {
+            var commanderComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(commanderUid);
+            Assert.That(commanderComponent.Endless, Is.True);
+            Assert.That(commanderComponent.EndlessWavesSent, Is.EqualTo(gaps.Count), "every endless wave should be counted");
+            Assert.That(gaps[1], Is.LessThan(gaps[0]), "the second endless wave should come sooner than the first");
+            Assert.That(gaps[^1], Is.EqualTo(commanderComponent.EndlessMinInterval), "the interval should bottom out at the floor");
+            Assert.That(scales[^1], Is.GreaterThan(scales[0]), "later endless waves should spend more");
+        });
+    }
+
+    /// <summary>
+    ///     The round end summary says how far the defence got.
+    /// </summary>
+    [Test]
+    public async Task RoundEndTextGivesTheWave()
+    {
+        var server = Pair.Server;
+        await SetUpOutpost();
+        EntityUid commanderUid = default;
+
+        await server.WaitPost(() => (_, commanderUid) = KsFieldCommanderTestHelpers.StartRules(server, _commanderRule));
+        await Pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var commanderComponent = server.EntMan.GetComponent<KsFieldCommanderRuleComponent>(commanderUid);
+            Assert.That(commanderComponent.WavesSent, Is.GreaterThan(0), "the test rule sends waves at once");
+
+            var ev = new RoundEndTextAppendEvent();
+            server.EntMan.EventBus.RaiseEvent(EventSource.Local, ev);
+            var expected = server.ResolveDependency<Robust.Shared.Localization.ILocalizationManager>()
+                .GetString("ks-fieldcommander-roundend-waves", ("wave", commanderComponent.WavesSent));
+            Assert.That(ev.Text, Does.Contain(expected));
+        });
+    }
+
+    #endregion
 }

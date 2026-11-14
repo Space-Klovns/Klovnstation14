@@ -1,0 +1,95 @@
+# What the field commander's tech fab prints beyond an autolathe's and a security tech fab's own recipes. The silo beside
+#     it holds plastic only, so each recipe here that upstream prices in something rarer is its own cheaper copy.
+
+- type: latheRecipePack
+  id: KsFieldCommanderStatic
+  recipes:
+  - KsFieldRemoteDroneFpv
+  - KsFieldRemoteDroneLaptop
+  - KsFieldSignallerAdvanced
+  - KsFieldSignalTrigger
+  - KsFieldExplosivePayload
+  - Brutepack
+  - Ointment
+  - KsFieldGauze
+  - KsSandbag
+  - KsBarbedWireCoil
+
+- type: latheRecipe
+  id: KsFieldRemoteDroneFpv
+  result: RemoteDroneFpv
+  categories:
+  - Weapons
+  completetime: 10
+  materials:
+    Steel: 500
+    Plastic: 1000
+    Glass: 200
+
+- type: latheRecipe
+  id: KsFieldRemoteDroneLaptop
+  result: RemoteDroneLaptop
+  categories:
+  - Weapons
+  completetime: 10
+  materials:
+    Steel: 300
+    Plastic: 500
+    Glass: 500
+
+- type: latheRecipe
+  id: KsFieldSignallerAdvanced
+  result: RemoteSignallerAdvanced
+  categories:
+  - Parts
+  completetime: 2
+  materials:
+    Steel: 100
+    Plastic: 200
+
+- type: latheRecipe
+  id: KsFieldSignalTrigger
+  result: SignalTrigger
+  categories:
+  - Parts
+  completetime: 2
+  materials:
+    Steel: 100
+    Plastic: 100
+
+- type: latheRecipe
+  id: KsFieldExplosivePayload
+  result: ExplosivePayload
+  categories:
+  - Weapons
+  completetime: 4
+  materials:
+    Steel: 300
+    Plastic: 300
+
+- type: latheRecipe
+  id: KsFieldGauze
+  result: Gauze1
+  categories:
+  - Medical
+  completetime: 1
+  materials:
+    Plastic: 50
+
+- type: latheRecipe
+  id: KsSandbag
+  result: KsSandbag
+  categories:
+  - Parts
+  completetime: 2
+  materials:
+    Plastic: 250
+
+- type: latheRecipe
+  id: KsBarbedWireCoil
+  result: KsBarbedWireCoil
+  categories:
+  - Parts
+  completetime: 2
+  materials:
+    Steel: 300

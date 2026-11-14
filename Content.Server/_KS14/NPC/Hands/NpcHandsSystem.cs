@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Server.Hands.Systems;
+using Content.Shared.Hands.Components;
 using Content.Shared.Inventory;
 using Content.Shared.Inventory.VirtualItem;
 using Content.Shared.Storage;
 using Content.Shared.Storage.EntitySystems;
+using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Wieldable;
 using Content.Shared.Wieldable.Components;
 using Robust.Shared.Containers;
@@ -46,6 +48,8 @@ public sealed partial class NpcHandsSystem : EntitySystem
     [Dependency] private SharedStorageSystem _storageSystem = default!;
     [Dependency] private SharedWieldableSystem _wieldableSystem = default!;
 
+    [Dependency] private EntityQuery<GunComponent> _gunQuery = default!;
+    [Dependency] private EntityQuery<HandsComponent> _handsQuery = default!;
     [Dependency] private EntityQuery<StorageComponent> _storageQuery = default!;
     [Dependency] private EntityQuery<VirtualItemComponent> _virtualItemQuery = default!;
     [Dependency] private EntityQuery<WieldableComponent> _wieldableQuery = default!;
@@ -167,22 +171,92 @@ public sealed partial class NpcHandsSystem : EntitySystem
     }
 
     /// <summary>
+    ///     A hand other than the active one with a gun in it, while the active one has none: what a magazine swap cut short
+    ///         leaves, the gun in one hand and the magazine, or nothing, in the other. Changes nothing.
+    /// </summary>
+    public bool TryFindGunInOtherHand(EntityUid npcUid, [NotNullWhen(true)] out string? hand)
+    {
+        hand = null;
+
+        // Asked whenever a fighter with no ammo plans, so the hands are looked up once and walked without an iterator.
+        if (!_handsQuery.TryComp(npcUid, out var handsComponent))
+            return false;
+
+        Entity<HandsComponent?> hands = (npcUid, handsComponent);
+        var activeHand = handsComponent.ActiveHandId;
+
+        if (activeHand != null && _handsSystem.TryGetHeldItem(hands, activeHand, out var activeUid) && _gunQuery.HasComp(activeUid))
+            return false;
+
+        foreach (var otherHand in handsComponent.SortedHands)
+        {
+            if (otherHand == activeHand ||
+                !_handsSystem.TryGetHeldItem(hands, otherHand, out var heldUid) ||
+                !_gunQuery.HasComp(heldUid))
+                continue;
+
+            hand = otherHand;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Takes the gun in <paramref name="npcUid"/>'s other hand up again (<see cref="TryFindGunInOtherHand"/>), dropping
+    ///         whatever the active hand holds, so it can be wielded: the loose magazine of a swap cut short.
+    /// </summary>
+    /// <returns>Whether the gun is in the active hand now.</returns>
+    public bool TryTakeUpGunInOtherHand(EntityUid npcUid)
+    {
+        if (!TryFindGunInOtherHand(npcUid, out var gunHand))
+            return false;
+
+        if (_handsSystem.GetActiveHand(npcUid) is { } activeHand &&
+            _handsSystem.TryGetHeldItem(npcUid, activeHand, out var heldUid) &&
+            !_virtualItemQuery.HasComp(heldUid))
+            _handsSystem.TryDrop(npcUid, activeHand, checkActionBlocker: false, doDropInteraction: false);
+
+        return MakeActive(npcUid, gunHand);
+    }
+
+    /// <summary>
     ///     An empty hand, or failing that one holding only a virtual item. Changes nothing.
     /// </summary>
     private string? FindFreeHand(EntityUid npcUid)
     {
+        if (!_handsQuery.TryComp(npcUid, out var handsComponent))
+            return null;
+
+        Entity<HandsComponent?> hands = (npcUid, handsComponent);
         string? virtualHand = null;
 
-        foreach (var hand in _handsSystem.EnumerateHands(npcUid))
-        {
-            if (!_handsSystem.TryGetHeldItem(npcUid, hand, out var heldUid))
-                return hand;
+        // The active hand first, as EnumerateHands goes, without its iterator.
+        if (handsComponent.ActiveHandId is { } activeHand && IsFreeHand(hands, activeHand, ref virtualHand))
+            return activeHand;
 
-            if (virtualHand == null && _virtualItemQuery.HasComp(heldUid))
-                virtualHand = hand;
+        foreach (var hand in handsComponent.SortedHands)
+        {
+            if (hand != handsComponent.ActiveHandId && IsFreeHand(hands, hand, ref virtualHand))
+                return hand;
         }
 
         return virtualHand;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="hand"/> is empty; failing that, notes it in <paramref name="virtualHand"/> if it is the
+    ///         first found holding only a virtual item.
+    /// </summary>
+    private bool IsFreeHand(Entity<HandsComponent?> hands, string hand, ref string? virtualHand)
+    {
+        if (!_handsSystem.TryGetHeldItem(hands, hand, out var heldUid))
+            return true;
+
+        if (virtualHand == null && _virtualItemQuery.HasComp(heldUid))
+            virtualHand = hand;
+
+        return false;
     }
 
     /// <summary>

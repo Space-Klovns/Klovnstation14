@@ -183,14 +183,32 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
 
         // A hostile nobody can get at is the one fight that needs orders, so this comes before the check below.
         if (UpdateSquadPlan(issuerUid, leaderUid, settings, now))
-            return;
-
-        // A fight on: combat comes first, and a hostile in sight is not lost.
-        if (AnyoneInCombat())
         {
-            EndHunt(issuerUid);
+            EndFight(issuerUid, settings, now);
             return;
         }
+
+        // A fight on: combat comes first, and a hostile in sight is not lost. What the squad does together in it, it does
+        //      over that (see NpcSquadTacticsSystem.Fight.cs).
+        // The gather that finds the fight's fighters answers whether anyone is in one, rather than walking the contacts twice.
+        //      A group too small to push or flank, with neither going, has no use for the fighters and only asks.
+        var gathering = (settings.Pushing || settings.Flanking) && (_members.Count >= 2 || IsFightLive(issuerUid));
+        if (gathering ? GatherFight() : AnyoneInCombat())
+        {
+            EndHunt(issuerUid, keepFightOrders: true);
+
+            if (gathering)
+                UpdateFight(issuerUid, leaderUid, settings, now);
+
+            return;
+        }
+
+        // Nobody in sight of it, but a flank is on and the front only ducked a moment ago: the flankers keep going, and the
+        //      hunt waits. It goes by when the hostile was lost, so waiting costs it nothing.
+        if (KeepFlankWhileUnseen(issuerUid, now))
+            return;
+
+        EndFight(issuerUid, settings, now);
 
         // Waiting for its meds to work: it will not come, so nothing below may count on it or wait for it. Only after
         //      the check above, because one with a hostile in sight is still in the fight.
@@ -407,6 +425,13 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
             moved < OrderMoveTolerance)
             return;
 
+        // Forcing a door on its way, the new order waits: it would end the move, the breach with it, and the move it gives
+        //      would likely start the same breach over - for good, on a search that keeps moving members on. Orders are
+        //      given again every update, so it gets this one once the door is open or the breach has failed. Taking cover
+        //      from a blast does not wait.
+        if (orderComponent.Order != null && kind != NpcOrderKind.TakeCover && _npcDoorSystem.IsBreachingOnTheWay(memberUid))
+            return;
+
         orderComponent.Order = new NpcOrder(++_lastOrderId, kind, issuerUid, coordinates, facing, range, targetUid, now, toolUid, _givingPlanOrders);
         _npcSensorSystem.RequestReplan(memberUid);
     }
@@ -433,8 +458,14 @@ public sealed partial class NpcSquadTacticsSystem : EntitySystem
 
     private void ClearOrder(EntityUid memberUid, EntityUid issuerUid)
     {
-        if (_orderQuery.TryComp(memberUid, out var orderComponent) && orderComponent.Order?.IssuerUid == issuerUid)
-            ClearOrder((memberUid, orderComponent));
+        if (_orderQuery.TryComp(memberUid, out var orderComponent))
+            ClearOrder((memberUid, orderComponent), issuerUid);
+    }
+
+    private void ClearOrder(Entity<NpcOrderComponent> entity, EntityUid issuerUid)
+    {
+        if (entity.Comp.Order?.IssuerUid == issuerUid)
+            ClearOrder(entity);
     }
 
     /// <summary>

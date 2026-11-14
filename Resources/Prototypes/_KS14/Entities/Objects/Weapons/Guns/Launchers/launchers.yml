@@ -12,6 +12,9 @@
       map: ["enum.GunVisualLayers.Base"]
   - type: Clothing
     sprite: _Battlefield14/Objects/Weapons/Guns/Launchers/AT4.rsi
+    slots:
+    - Back
+    - suitStorage
   - type: Gun
     fireRate: 0.5
     soundGunshot:

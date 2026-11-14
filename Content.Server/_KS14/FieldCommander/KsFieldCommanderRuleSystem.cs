@@ -1,3 +1,6 @@
+using Content.Shared._KS14.FieldCommander;
+using Content.Shared.Damage.Systems;
+using Content.Server._KS14.KillCredit;
 using Content.Server._KS14.GameTicking.Rules;
 using Content.Server._KS14.NPC.Systems;
 using Content.Server._KS14.NPC.Perception;
@@ -48,8 +51,11 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
     [Dependency] private KsSupplyPodPassengerSystem _supplyPodPassengerSystem = default!;
     [Dependency] private ISharedPlayerManager _playerManager = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
-    [Dependency] private ExplosionSystem _explosionSystem = default!;
+    [Dependency] private KsKillCreditSystem _killCreditSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
     [Dependency] private KsFieldCommanderFogSystem _fogSystem = default!;
+    [Dependency] private KsFieldCommanderDefenderSystem _defenderSystem = default!;
+    [Dependency] private KsFieldCommanderBeaconSystem _beaconSystem = default!;
     [Dependency] private KsNoBuildZoneSystem _noBuildZoneSystem = default!;
     [Dependency] private SharedCMAutomatedVendorSystem _automatedVendorSystem = default!;
     [Dependency] private EntityQuery<ScenarioFactionMemberComponent> _scenarioFactionMemberQuery = default!;
@@ -67,6 +73,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
 
         // A rule ended mid-round, by an admin, takes its fog and no-build zones with it.
         ClearFog(component);
+        ClearWaveStatus(component);
         AllowBuildingInSafeZones(component);
     }
 
@@ -136,6 +143,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         ForbidBuildingInSafeZones(component);
         PrepareExistingDefenders(component);
         RaiseFog(component);
+        PrepareWaveStatus(component);
         component.Prepared = true;
         return true;
     }
@@ -171,7 +179,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         if (!TryGetPhase(rule.Comp, out var phase))
             return;
 
-        rule.Comp.NextWaveTime = ScheduleWave(phase, _gameTiming.CurTime + phase.WaveInterval);
+        SetNextWave(rule.Comp, GetNextWaveTime(rule.Comp, phase, _gameTiming.CurTime));
         SendWave(rule, phase);
     }
 
@@ -219,7 +227,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
         rule.Comp.PhaseIndex = phaseIndex;
         var phase = rule.Comp.Phases[phaseIndex];
 
-        rule.Comp.NextWaveTime = ScheduleWave(phase, curTime + phase.FirstWaveDelay);
+        SetNextWave(rule.Comp, ScheduleWave(phase, curTime + phase.FirstWaveDelay));
 
         // Whatever was left over belongs to the old phase's waves.
         rule.Comp.CarriedBudget = 0f;
@@ -244,7 +252,7 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             return;
 
         ruleComponent.UnitsKilled++;
-        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity, args.Origin);
+        RewardUnitKill((entity.Comp.RuleUid, ruleComponent), entity);
     }
 
     [SubscribeLocalEvent]
@@ -267,6 +275,10 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             if (args.ObjectiveUid == ruleComponent.UplinkUid)
             {
                 OnUplinkLost((ruleUid, ruleComponent));
+
+                // Only a win over the uplink leads on; one that lasted to call down its bombardment ends the round.
+                if (ruleComponent.UplinkDestroyedTime != null)
+                    TryStartEndlessVote((ruleUid, ruleComponent));
                 continue;
             }
 
@@ -295,6 +307,12 @@ public sealed partial class KsFieldCommanderRuleSystem : GameRuleSystem<KsFieldC
             ("sent", component.UnitsSent),
             ("killed", component.UnitsKilled),
             ("lost", component.ObjectivesLost)));
+
+        args.AddLine(component.Endless
+            ? Loc.GetString("ks-fieldcommander-roundend-waves-endless",
+                ("wave", component.WavesSent),
+                ("endless", component.EndlessWavesSent))
+            : Loc.GetString("ks-fieldcommander-roundend-waves", ("wave", component.WavesSent)));
 
         if (component.UplinkDestroyedTime is { } destroyedTime && component.UplinkDeployedTime is { } deployedTime)
         {

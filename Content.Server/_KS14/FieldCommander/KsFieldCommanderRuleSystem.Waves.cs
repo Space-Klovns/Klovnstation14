@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Shared._KS14.FieldCommander;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -33,7 +34,7 @@ public sealed partial class KsFieldCommanderRuleSystem
     /// </summary>
     public static int GetMaxAlive(KsFieldCommanderRuleComponent component, int defenders)
     {
-        var maxAlive = component.MaxAlive + (int)MathF.Floor(component.MaxAlivePerDefender * defenders);
+        var maxAlive = component.MaxAlive + (int)MathF.Floor(component.MaxAlivePerDefender * defenders) + GetEndlessExtraAlive(component);
         return Math.Min(maxAlive, component.HardMaxAlive);
     }
 
@@ -199,6 +200,50 @@ public sealed partial class KsFieldCommanderRuleSystem
 
     #region Waves
 
+    /// <summary>
+    ///     Schedules the next wave, and tells the HUD.
+    /// </summary>
+    private void SetNextWave(KsFieldCommanderRuleComponent component, TimeSpan time)
+    {
+        component.NextWaveTime = time;
+        UpdateWaveStatus(component);
+    }
+
+    /// <summary>
+    ///     Finds the map the wave status lives on, once the rule has a battlefield, and puts it there.
+    /// </summary>
+    private void PrepareWaveStatus(KsFieldCommanderRuleComponent component)
+    {
+        var objectives = new List<MapCoordinates>();
+        CollectDefenderObjectives(component, objectives);
+        if (objectives.Count == 0 || _mapSystem.GetMapOrInvalid(objectives[0].MapId) is not { Valid: true } mapUid)
+            return;
+
+        component.WaveStatusMapUid = mapUid;
+        UpdateWaveStatus(component);
+    }
+
+    private void UpdateWaveStatus(KsFieldCommanderRuleComponent component)
+    {
+        if (component.WaveStatusMapUid is not { } mapUid || TerminatingOrDeleted(mapUid))
+            return;
+
+        var statusComponent = EnsureComp<KsFieldCommanderWaveStatusComponent>(mapUid);
+        statusComponent.Wave = component.WavesSent;
+        statusComponent.NextWaveTime = component.NextWaveTime == TimeSpan.MaxValue ? null : component.NextWaveTime;
+        Dirty(mapUid, statusComponent);
+    }
+
+    private void ClearWaveStatus(KsFieldCommanderRuleComponent component)
+    {
+        if (component.WaveStatusMapUid is not { } mapUid)
+            return;
+
+        component.WaveStatusMapUid = null;
+        if (!TerminatingOrDeleted(mapUid))
+            RemComp<KsFieldCommanderWaveStatusComponent>(mapUid);
+    }
+
     private void SendWave(Entity<KsFieldCommanderRuleComponent> rule, KsFieldCommanderPhase phase)
     {
         var battlefield = SurveyBattlefield(rule.Comp);
@@ -216,7 +261,8 @@ public sealed partial class KsFieldCommanderRuleSystem
         var aliveByAsset = new Dictionary<int, int>();
         var capacity = GetMaxAlive(rule.Comp, defenderCount) - CountLivingUnits(rule.Owner, aliveByAsset);
 
-        var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier);
+        var budgetScale = GetEndlessBudgetScale(rule.Comp);
+        var budget = rule.Comp.CarriedBudget + GetWaveBudget(phase, defenderCount, rule.Comp.AdaptiveMultiplier) * budgetScale;
         var purchases = new List<int>();
         var leftover = BuyAssets(rule.Comp, budget, capacity, aliveByAsset, purchases);
 
@@ -226,7 +272,7 @@ public sealed partial class KsFieldCommanderRuleSystem
 
         // Saving up lets a later wave afford something big, but never more than one wave's worth. A wave that found
         //      nowhere to go keeps what it would have spent.
-        rule.Comp.CarriedBudget = MathF.Min(sent > 0 ? leftover : budget, phase.Budget);
+        rule.Comp.CarriedBudget = MathF.Min(sent > 0 ? leftover : budget, phase.Budget * budgetScale);
 
         var struck = _robustRandom.Prob(Math.Clamp(phase.StrikeChance, 0f, 1f)) && TryStrike(rule.Comp, battlefield);
 
@@ -234,6 +280,10 @@ public sealed partial class KsFieldCommanderRuleSystem
             return;
 
         rule.Comp.WavesSent++;
+        if (rule.Comp.Endless)
+            rule.Comp.EndlessWavesSent++;
+
+        UpdateWaveStatus(rule.Comp);
 
         if (sent == 0)
             return;
@@ -244,7 +294,7 @@ public sealed partial class KsFieldCommanderRuleSystem
             : string.Empty;
 
         Transmit(rule.Comp, PickRandom(rule.Comp.WaveAnnouncements), major: false, rule.Comp.WaveIntel,
-            ("count", sent), ("direction", direction));
+            ("count", sent), ("direction", direction), ("number", rule.Comp.WavesSent));
 
         // Once each for whatever came, however many of it.
         var reported = new HashSet<KsFieldCommanderAsset>();

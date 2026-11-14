@@ -21,7 +21,7 @@ public sealed partial class ContactClearOfSquadCon : KsBelievedContactCon
 
     private readonly HashSet<EntityUid> _squadmates = new();
 
-    protected override float GetBelievedScore(EntityUid ownerUid, EntityCoordinates believedCoordinates)
+    protected override float GetBelievedScore(EntityUid ownerUid, EntityUid targetUid, EntityCoordinates believedCoordinates)
     {
         var believedMapCoordinates = _transformSystem.ToMapCoordinates(believedCoordinates);
 

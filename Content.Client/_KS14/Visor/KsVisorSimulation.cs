@@ -64,7 +64,33 @@ public sealed class KsVisorSimulation
     /// <summary>
     ///     The most drops on the visor at once. The shader's arrays are this long.
     /// </summary>
+    /// <remarks>
+    ///     TODO ENGINE: drop the packing once RobustToolbox caches built-in uniform locations as int, not sbyte
+    ///         (<c>GLShaderProgram._uniformIntCache</c>).
+    ///     Every array element takes a uniform location, and the engine keeps its built-in uniforms' locations in a
+    ///         signed byte, so the shader's arrays must stay under about 120 elements together, or those wrap negative
+    ///         and are never set. That is why two values share a float (<see cref="Pack"/>).
+    /// </remarks>
     public const int MaxDrops = 32;
+
+    /// <summary>
+    ///     Packs two values from 0 to 1 into one float for the shader: <paramref name="whole"/> to 1/1023 in the whole
+    ///         part, <paramref name="fraction"/> to well under 1/1000 in the fraction. The shader's <c>unpack</c> reads
+    ///         them back; <see cref="Unpack"/> is the same in C#.
+    /// </summary>
+    public static float Pack(float whole, float fraction)
+    {
+        return MathF.Floor(Math.Clamp(whole, 0f, 1f) * 1023f + 0.5f) + Math.Clamp(fraction, 0f, 1f) * 0.999f;
+    }
+
+    /// <summary>
+    ///     What the shader reads back from <see cref="Pack"/>.
+    /// </summary>
+    public static (float Whole, float Fraction) Unpack(float packed)
+    {
+        var whole = MathF.Floor(packed);
+        return (whole / 1023f, Math.Clamp((packed - whole) / 0.999f, 0f, 1f));
+    }
 
     /// <summary>
     ///     Drops this big and over slide, once they have clung a while.

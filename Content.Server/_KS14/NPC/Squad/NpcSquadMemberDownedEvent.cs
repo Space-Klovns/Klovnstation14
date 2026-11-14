@@ -3,7 +3,8 @@ using Content.Shared.Mobs;
 namespace Content.Server._KS14.NPC.Squad;
 
 /// <summary>
-///     Raised (broadcast) by <see cref="NpcSquadSystem"/> when a squad member goes critical or dies, before it is taken
+///     Raised (broadcast) by <see cref="NpcSquadSystem"/> when a squad member goes critical, dies, or is gibbed alive or
+///         critical (as <see cref="MobState.Dead"/>), before it is taken
 ///         out of the squad, so <paramref name="SquadUid"/>'s members are still the people it went down with. A member
 ///         that dies after going critical has already left the squad, and is reported against the squad it was in.
 /// </summary>

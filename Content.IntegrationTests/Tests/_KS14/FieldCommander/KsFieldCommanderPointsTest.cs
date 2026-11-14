@@ -8,6 +8,9 @@ using Content.Server.GameTicking;
 using Content.Shared._KS14.FactionCollision;
 using Content.Shared._KS14.FieldCommander;
 using Content.Shared._RMC14.Vendors;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
+using Content.Shared.FixedPoint;
 using Content.Shared.GameTicking;
 using Content.Shared.GameTicking.Components;
 using Content.Server.Explosion.EntitySystems;
@@ -57,6 +60,13 @@ public sealed class KsFieldCommanderPointsTest : GameTest
   id: KsTestFieldCommanderPointsDefender
   components:
   - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      10: Dead
+  - type: Damageable
+    damageContainer: Biological
+  - type: Injurable
   - type: ScenarioFactionMember
     id: Nanotrasen
 
@@ -216,6 +226,16 @@ public sealed class KsFieldCommanderPointsTest : GameTest
         return extraPoints.TryGetValue(KsFieldCommanderPoints.PointsType, out var points) ? points : null;
     }
 
+    /// <summary>
+    ///     Deals <paramref name="victimUid"/> all it can take, as <paramref name="attackerUid"/>.
+    /// </summary>
+    private void Kill(EntityUid victimUid, EntityUid attackerUid)
+    {
+        var damage = new DamageSpecifier { DamageDict = { ["Blunt"] = FixedPoint2.New(10) } };
+        Pair.Server.System<DamageableSystem>().ChangeDamage(victimUid, damage, ignoreResistances: true, origin: attackerUid);
+        Assert.That(Pair.Server.EntMan.GetComponent<MobStateComponent>(victimUid).CurrentState, Is.EqualTo(MobState.Dead));
+    }
+
     [Test]
     public async Task KillsPayTeamkillsCostAndPointsOutliveTheBody()
     {
@@ -239,13 +259,13 @@ public sealed class KsFieldCommanderPointsTest : GameTest
             expected = KsFieldCommanderRuleSystem.GetKillPoints(ruleComponent, ruleComponent.Assets[0]);
             Assert.That(expected, Is.GreaterThan(0));
 
-            server.System<MobStateSystem>().ChangeMobState(unitUid, MobState.Dead, origin: playerBody);
+            Kill(unitUid, playerBody);
             Assert.That(ruleSystem.GetPoints(ruleComponent, Pair.Player!.UserId), Is.EqualTo(expected), "a kill should pay the killer");
             Assert.That(GetMirroredPoints(playerBody), Is.EqualTo(expected), "the shop reads the points off the body");
 
             // Killing a fellow defender costs more than the kill paid, so the total goes below zero.
             var otherDefender = server.EntMan.SpawnAtPosition(_defender, new EntityCoordinates(testMap.Grid, 4.5f, 0.5f));
-            server.System<MobStateSystem>().ChangeMobState(otherDefender, MobState.Dead, origin: playerBody);
+            Kill(otherDefender, playerBody);
             expected += ruleComponent.TeamkillPoints;
             Assert.That(expected, Is.LessThan(0));
             Assert.That(ruleSystem.GetPoints(ruleComponent, Pair.Player!.UserId), Is.EqualTo(expected), "a teamkill should cost the killer");
@@ -445,7 +465,7 @@ public sealed class KsFieldCommanderPointsTest : GameTest
 
         await client.WaitPost(() =>
             client.EntMan.EventBus.RaiseEvent(EventSource.Network,
-                new KsFieldCommanderPointsChangedEvent(50, "ks-fieldcommander-points-admin", null)));
+                new KsFieldCommanderPointsChangedEvent(50, new Content.Shared._KS14.PopupLocalization.KsPopupPayload("ks-fieldcommander-points-admin", null))));
 
         // A few frames, which is when the readout used to be thrown away.
         await Pair.RunTicksSync(5);

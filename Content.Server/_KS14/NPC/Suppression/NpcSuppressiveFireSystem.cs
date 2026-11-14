@@ -60,8 +60,10 @@ public sealed partial class NpcSuppressiveFireSystem : EntitySystem
         while (enumerator.MoveNext(out var uid, out var suppressiveFireComponent, out var transformComponent))
         {
             // Or the spot went with whatever it was on, say a shuttle that left: it would only fire at the middle of the map.
+            //      Or the hostile it is keeping down is gone from the world altogether: nobody is there to keep down.
             if (now >= suppressiveFireComponent.EndTime ||
                 !suppressiveFireComponent.Coordinates.IsValid(EntityManager) ||
+                suppressiveFireComponent.TargetUid is { } targetUid && TerminatingOrDeleted(targetUid) ||
                 !_gunSystem.TryGetGun(uid, out var gunEntity))
             {
                 Stop(uid);

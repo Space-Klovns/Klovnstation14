@@ -26,4 +26,22 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> GunTriggerSpasmChance =
         CVarDef.Create("klovn.gun.trigger_spasm_chance", 0.220f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     The master switch for projectile damage falloff: off, nothing falls off. On, a projectile falls off if it
+    ///         qualifies, see <see cref="ProjectileDamageFalloffEverywhere"/>. Read by shared code, and the client
+    ///         predicts hits, so it is replicated.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> ProjectileDamageFalloff =
+        CVarDef.Create("klovn.projectile.damage_falloff", true, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     Which projectiles qualify for falloff while <see cref="ProjectileDamageFalloff"/> is on. True: every
+    ///         projectile carrying a falloff component (the ballistic bullets). False (the default): only those fired by
+    ///         a gun with a KsGunProjectileFalloff component, such as the Field Commander bots' guns.
+    /// </summary>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> ProjectileDamageFalloffEverywhere =
+        CVarDef.Create("klovn.projectile.damage_falloff_everywhere", false, CVar.SERVER | CVar.REPLICATED);
 }

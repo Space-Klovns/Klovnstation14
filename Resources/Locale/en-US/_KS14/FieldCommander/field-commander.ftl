@@ -33,7 +33,7 @@ ks-fieldcommander-wave-4 = Keep your heads down. My men are aiming for them.
 ks-fieldcommander-wave-5 = Every one you kill, I replace. Every one I kill, you don't.
 ks-fieldcommander-wave-6 = Hold the line, little soldiers. It's the last thing you'll ever hold.
 
-ks-fieldcommander-intel-wave = Field Operations. Sensors read { $count } { $count ->
+ks-fieldcommander-intel-wave = Field Operations. Wave { $number }: sensors read { $count } { $count ->
     [one] hostile
    *[other] hostiles
 } inbound from the { $direction ->
@@ -99,7 +99,9 @@ ks-fieldcommander-points-total = Requisition: { $points }
 ks-fieldcommander-points-gain = +{ $amount }  { $reason }
 ks-fieldcommander-points-loss = −{ $amount }  { $reason }
 ks-fieldcommander-points-kill = { $name }
+ks-fieldcommander-points-assist = Assist: { $name }
 ks-fieldcommander-points-teamkill = Friendly kill: { $name }
+ks-fieldcommander-points-teamkill-assist = Friendly kill assist: { $name }
 ks-fieldcommander-points-uplink = Uplink taken out
 ks-fieldcommander-points-admin = Adjusted by Field Operations
 
@@ -107,3 +109,18 @@ ks-fieldcommander-points-admin = Adjusted by Field Operations
 
 ks-fieldcommander-shop-maptext = REQUISITIONS
 ks-supplypod-passenger-name = Nanotrasen paramilitary
+ks-fieldcommander-wave-status = Wave { $wave } · next in { $time }
+ks-fieldcommander-wave-status-first = First wave in { $time }
+ks-fieldcommander-wave-status-none = Wave { $wave } · no more scheduled
+ks-fieldcommander-wave-status-idle = Waves have not begun
+
+ks-fieldcommander-roundend-waves = The defence held out until wave [color=yellow]{ $wave }[/color].
+ks-fieldcommander-roundend-waves-endless = The defence held out until wave [color=yellow]{ $wave }[/color], { $endless } of them in endless mode.
+
+ks-fieldcommander-endless-vote-title = The uplink is down. Hold the line in endless mode?
+ks-fieldcommander-endless-vote-initiator = Field Operations
+ks-fieldcommander-endless-vote-yes = Hold the line
+ks-fieldcommander-endless-vote-no = Pull out
+ks-fieldcommander-intel-endless-vote = Field Operations. The uplink is down, the field is yours. Vote within { $seconds } seconds: pull out, or dig in and see how long you last.
+ks-fieldcommander-endless = You think that was all of it? Everything I have left is coming for you, and it will keep coming.
+ks-fieldcommander-intel-endless = Field Operations. You're holding the line. Every wave will be bigger and sooner than the last. Hold as long as you can.

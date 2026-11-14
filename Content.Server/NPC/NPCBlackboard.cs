@@ -7,6 +7,7 @@ using Content.Shared.Hands.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Inventory.VirtualItem;
 using JetBrains.Annotations;
+using Robust.Shared.Map; // KS14
 using Robust.Shared.Utility;
 
 namespace Content.Server.NPC;
@@ -89,7 +90,7 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     [Pure]
     public T? GetValueOrDefault<T>(string key, IEntityManager entManager)
     {
-        if (_blackboard.TryGetValue(key, out var value))
+        if (_blackboard.TryGetValue(key, out var value) && !KsIsGone(value, entManager)) // KS14: not a deleted entity
         {
             return (T)value;
         }
@@ -107,12 +108,38 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
         return default;
     }
 
+    // KS14 start
+    /// <summary>
+    ///     Whether <paramref name="data"/> is an entity, or coordinates on one, that is deleted or being deleted. The
+    ///         blackboard keeps whatever was written to it, and an entity written by one plan can be gibbed, deleted or
+    ///         gone with its grid before the next reads it: handing it out makes every reader that calls into a system
+    ///         with it (EnsureComp, transforms) throw, and a throw in an operator aborts the NPC update for every NPC
+    ///         after it, every tick, until the key is gone. Read as missing instead: a type test and a lookup.
+    /// </summary>
+    private static bool KsIsGone(object data, IEntityManager entManager)
+    {
+        var uid = data switch
+        {
+            EntityUid entityUid => entityUid,
+            EntityCoordinates coordinates => coordinates.EntityId,
+            _ => EntityUid.Invalid,
+        };
+
+        // Not an entity, or one written as invalid on purpose: as it ever was.
+        if (!uid.IsValid())
+            return false;
+
+        return !entManager.TryGetComponent(uid, out MetaDataComponent? metaDataComponent) ||
+            metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating;
+    }
+    // KS14 end
+
     /// <summary>
     /// Tries to get the blackboard data for a particular key.
     /// </summary>
     public bool TryGetValue<T>(string key, [NotNullWhen(true)] out T? value, IEntityManager entManager)
     {
-        if (_blackboard.TryGetValue(key, out var data))
+        if (_blackboard.TryGetValue(key, out var data) && !KsIsGone(data, entManager)) // KS14: not a deleted entity
         {
             value = (T)data;
             return true;

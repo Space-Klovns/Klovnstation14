@@ -43,9 +43,13 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
     [Dependency] private SharedGunSystem _gun = default!;
     [Dependency] private SharedProjectileSystem _projectile = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!; // KS14
+    [Dependency] private _KS14.RayCollision.KsRayCollisionSystem _ksRayCollisionSystem = default!; // KS14
     [Dependency] private IConfigurationManager _config = default!; // KS14
     [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14
     [Dependency] private StandingStateSystem _standingStateSystem = default!; // KS14
+    [Dependency] private SharedTransformSystem _transformSystem = default!; // KS14
+    [Dependency] private SharedMapSystem _mapSystem = default!; // KS14
+    [Dependency] private _KS14.Projectiles.KsProjectileFalloffSystem _ksProjectileFalloffSystem = default!; // KS14
     [Dependency] private _KS14.PredictedSpawning.KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
@@ -71,12 +75,46 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         _fixturesQuery = GetEntityQuery<FixturesComponent>();
 
         SubscribeLocalEvent<ProjectileComponent, StartCollideEvent>(OnStartCollide);
+        // KS14 start: a round moves more than a tile a tick, and steps over what is thinner than that, or onto it and what is
+        //      behind it at once: what it is about to go through is looked for before each step (KsRayCollisionSystem)
+        SubscribeLocalEvent<ProjectileComponent, ComponentStartup>(KsOnProjectileStartup);
+        SubscribeLocalEvent<ProjectileComponent, MapInitEvent>(KsOnProjectileMapInit);
+        SubscribeLocalEvent<ProjectileComponent, _KS14.RayCollision.KsRayCollisionEvent>(KsOnRayCollision);
+        // KS14 end
     }
+
+    // KS14 start
+    private void KsOnProjectileStartup(Entity<ProjectileComponent> entity, ref ComponentStartup args)
+    {
+        // Not on a map yet to be initialised, where nothing moves and a save of it would write the component into the
+        //      map (UninitializedSaveTest): there it starts with the map. Startup rather than map init alone, as a
+        //      client is not told of the map init of what the server sends it.
+        if (_mapSystem.IsInitialized(Transform(entity).MapUid))
+            _ksRayCollisionSystem.StartChecking(entity, SharedProjectileSystem.ProjectileFixture);
+    }
+
+    private void KsOnProjectileMapInit(Entity<ProjectileComponent> entity, ref MapInitEvent args)
+    {
+        _ksRayCollisionSystem.StartChecking(entity, SharedProjectileSystem.ProjectileFixture);
+    }
+
+    /// <summary>
+    ///     About to go through something this step: hit it now, from where it was moved up to.
+    /// </summary>
+    private void KsOnRayCollision(Entity<ProjectileComponent> entity, ref _KS14.RayCollision.KsRayCollisionEvent args)
+    {
+        DoHit(entity, args.OtherUid);
+    }
+    // KS14 end
 
     private void OnStartCollide(EntityUid uid, ProjectileComponent component, ref StartCollideEvent args)
     {
         // This is so entities that shouldn't get a collision are ignored.
         if (args.OurFixtureId != SharedProjectileSystem.ProjectileFixture || !args.OtherFixture.Hard)
+            return;
+
+        // KS14: already hit, by looking ahead before this step (KsRayCollisionSystem)
+        if (_ksRayCollisionSystem.WasSwept(uid, args.OtherEntity))
             return;
 
         DoHit((uid, component, args.OurBody), args.OtherEntity, args.OtherFixture);
@@ -131,7 +169,10 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         }
 
         var shooter = comp.Shooter;
-        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier, target, shooter);
+        // KS14 start: damage falloff by distance flown
+        var falloffMultiplier = _ksProjectileFalloffSystem.GetMultiplier(uid, _transformSystem.GetMapCoordinates(uid));
+        var ev = new ProjectileHitEvent(comp.Damage * _damageable.UniversalProjectileDamageModifier * falloffMultiplier, target, shooter);
+        // KS14 end
         RaiseLocalEvent(uid, ref ev);
 
         var otherName = ToPrettyString(target);

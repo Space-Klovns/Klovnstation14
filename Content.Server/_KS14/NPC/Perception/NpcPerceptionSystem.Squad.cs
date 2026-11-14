@@ -31,7 +31,7 @@ public sealed partial class NpcPerceptionSystem
                 contact.State != NpcContactState.Visible && !_newlyReactedUnseen.Contains(targetUid))
                 continue;
 
-            var ev = new NpcContactCalloutEvent(entity.Owner, targetUid, contact.LastKnownCoordinates);
+            var ev = new NpcContactCalloutEvent(entity.Owner, targetUid, contact.LastKnownCoordinates, contact.LastSeen);
             _npcSquadSystem.CallOut(entity.Owner, ref ev);
         }
     }
@@ -50,10 +50,14 @@ public sealed partial class NpcPerceptionSystem
         if (known && contact.State == NpcContactState.Visible)
             return;
 
-        var now = _gameTiming.CurTime;
+        // What it saw itself, as recently, beats being told: kept, with the way it was going, which a callout has not got.
+        if (known && contact.State != NpcContactState.Reported && contact.LastSeen >= args.LastSeen)
+            return;
+
+        // As of when the caller saw it, not when this one heard: a hunt goes by when it was really lost (NpcHunt.LostAt).
         entity.Comp.Contacts[args.TargetUid] = new NpcContact(NpcContactState.Reported,
-            FirstSeen: now,
-            LastSeen: now,
+            FirstSeen: args.LastSeen,
+            LastSeen: args.LastSeen,
             LastConspicuous: default,
             args.Coordinates,
             LastKnownVelocity: default,

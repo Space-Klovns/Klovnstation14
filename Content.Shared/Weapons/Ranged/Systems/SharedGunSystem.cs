@@ -815,6 +815,9 @@ public abstract partial class SharedGunSystem : EntitySystem
             glowComponent.StartTime = Timing.CurTime;
             Dirty(entity, glowComponent);
         }
+
+        var ejectedEvent = new _KS14.Despawn.KsCartridgeEjectedEvent(entity);
+        RaiseLocalEvent(ref ejectedEvent);
         // KS14 end
     }
 

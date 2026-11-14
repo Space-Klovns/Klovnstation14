@@ -1,0 +1,37 @@
+light_mode unshaded;
+
+// Dissolves a whole sprite away in ragged, pixel-sized blobs with a glowing rim, like the foam blanket's dissolve.
+// A post-shader: the sprite arrives finished, all layers together, and already lit.
+//
+// Its own shader, with `progress` and `seed` set on every instance every frame: GL uniforms belong to the program,
+//      so an instance that left them alone would draw with the last value written (see sinking_cut.swsl).
+uniform highp float progress; // 0 intact, 1 gone
+uniform highp float seed;     // per entity, so neighbours dissolve differently
+
+// Blobs per quad. The post-shader quad is the sprite's size times 1.25 (about 40 px for a 32 px sprite), so this
+//      makes blobs of roughly 3 px.
+const highp float blobs = 13.0;
+const highp float rimWidth = 0.13;
+
+void fragment()
+{
+    highp vec4 tex = zTexture(UV);
+
+    // Snapped to a grid of blocks, so the edge is made of pixels like the rest of the sprite.
+    highp vec2 cell = floor(UV2 * 40.0) / 40.0;
+    highp vec2 p = cell * blobs + vec2(seed * 7.31, seed * 3.17);
+    highp float n = zNoise(p) * 0.6 + zNoise(p * 2.1 + 11.0) * 0.4;
+
+    // Starts a little below the noise's lowest and ends above its highest, so 0 and 1 are really whole and gone.
+    highp float threshold = progress * (1.0 + rimWidth) - 0.05;
+
+    highp float alive = step(threshold + rimWidth, n);
+    highp float rim = step(threshold, n) * (1.0 - alive);
+
+    // Pre-multiplied: the sprite was drawn into a transparent target, so its colour already carries its alpha.
+    highp vec3 rimColor = mix(tex.rgb, vec3(1.0, 0.9, 0.7), 0.7) * tex.a;
+    highp vec3 rgb = tex.rgb * alive + rimColor * rim;
+    highp float a = tex.a * (alive + rim);
+
+    COLOR = vec4(rgb, a);
+}

@@ -42,6 +42,11 @@ public sealed class HuntDebugDataMessage : EntityEventArgs
 
     public float HuntElapsed;
 
+    /// <summary>
+    ///     Seconds since the hostile was lost: since the hunt began, or longer, if the squad was busy when it was.
+    /// </summary>
+    public float LostElapsed;
+
     public float HuntTimeout;
 
     /// <summary>

@@ -1,0 +1,5 @@
+# tgstation's stagger: a shove with a shield slows you down for a few seconds.
+- type: entity
+  parent: StatusEffectSlowdown
+  id: KsStatusEffectStaggered
+  name: staggered

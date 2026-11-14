@@ -1,16 +1,4 @@
 - type: rcd
-  id: KsFieldWallReinforced
-  category: WallsAndFlooring
-  sprite: /Textures/Interface/Radial/RCD/reinforced_wall.png
-  mode: ConstructObject
-  prototype: KsFieldWallReinforced
-  cost: 8
-  delay: 4
-  collisionMask: FullTileMask
-  rotation: Fixed
-  fx: EffectRCDConstruct4
-
-- type: rcd
   id: KsFieldBarricade
   category: WallsAndFlooring
   sprite:
@@ -18,7 +6,7 @@
     state: barricade
   mode: ConstructObject
   prototype: KsFieldBarricade
-  cost: 3
+  cost: 0
   delay: 2
   collisionMask: FullTileMask
   rotation: Fixed
@@ -32,7 +20,7 @@
     state: barricade_directional
   mode: ConstructObject
   prototype: KsFieldBarricadeDirectional
-  cost: 2
+  cost: 0
   delay: 1
   collisionMask: Impassable
   collisionBounds: "-0.23,-0.49,0.23,-0.36"
@@ -53,3 +41,245 @@
   collisionMask: MachineMask
   rotation: Fixed
   fx: EffectRCDConstruct2
+
+- type: rcd
+  id: KsFieldPlating
+  name: rcd-component-plating
+  category: WallsAndFlooring
+  sprite: /Textures/Interface/Radial/RCD/plating.png
+  mode: ConstructTile
+  prototype: PlatingRCD
+  cost: 0
+  delay: 1
+  collisionMask: InteractImpassable
+  rules:
+  - CanBuildOnEmptyTile
+  fx: EffectRCDConstruct1
+
+- type: rcd
+  id: KsFieldFloorSteel
+  name: rcd-component-floor-steel
+  category: WallsAndFlooring
+  sprite: /Textures/Interface/Radial/RCD/metal_tile.png
+  mode: ConstructTile
+  prototype: FloorSteel
+  cost: 0
+  delay: 1
+  collisionMask: InteractImpassable
+  rules:
+  - CanBuildOnEmptyTile
+  fx: EffectRCDConstruct1
+
+- type: rcd
+  id: KsFieldCatwalk
+  category: WallsAndFlooring
+  sprite: /Textures/Interface/Radial/RCD/catwalk.png
+  mode: ConstructObject
+  prototype: Catwalk
+  cost: 0
+  delay: 1
+  collisionMask: InteractImpassable
+  rules:
+  - MustBuildOnSubfloor
+  - IsCatwalk
+  rotation: Fixed
+  fx: EffectRCDConstruct1
+
+- type: rcd
+  id: KsFieldWallSolid
+  category: WallsAndFlooring
+  sprite: /Textures/Interface/Radial/RCD/solid_wall.png
+  mode: ConstructObject
+  prototype: WallSolid
+  cost: 10
+  delay: 2
+  collisionMask: FullTileMask
+  rotation: Fixed
+  fx: EffectRCDConstruct2
+
+- type: rcd
+  id: KsFieldGrille
+  category: WindowsAndGrilles
+  sprite: /Textures/Interface/Radial/RCD/grille.png
+  mode: ConstructObject
+  prototype: Grille
+  cost: 0
+  delay: 2
+  collisionMask: Impassable
+  rotation: Fixed
+  fx: EffectRCDConstruct2
+
+- type: rcd
+  id: KsFieldWindow
+  category: WindowsAndGrilles
+  sprite: /Textures/Interface/Radial/RCD/window.png
+  mode: ConstructObject
+  prototype: Window
+  cost: 0
+  delay: 2
+  collisionMask: Impassable
+  rules:
+  - IsWindow
+  rotation: Fixed
+  fx: EffectRCDConstruct2
+
+- type: rcd
+  id: KsFieldWindowDirectional
+  category: WindowsAndGrilles
+  sprite: /Textures/Interface/Radial/RCD/directional.png
+  mode: ConstructObject
+  prototype: WindowDirectional
+  cost: 0
+  delay: 1
+  collisionMask: Impassable
+  collisionBounds: "-0.23,-0.49,0.23,-0.36"
+  rules:
+  - IsWindow
+  rotation: User
+  fx: EffectRCDConstruct1
+  allowMultiDirection: true
+
+- type: rcd
+  id: KsFieldReinforcedWindow
+  category: WindowsAndGrilles
+  sprite: /Textures/Interface/Radial/RCD/window_reinforced.png
+  mode: ConstructObject
+  prototype: ReinforcedWindow
+  cost: 0
+  delay: 3
+  collisionMask: Impassable
+  rules:
+  - IsWindow
+  rotation: User
+  fx: EffectRCDConstruct3
+
+- type: rcd
+  id: KsFieldWindowReinforcedDirectional
+  category: WindowsAndGrilles
+  sprite: /Textures/Interface/Radial/RCD/directional_reinforced.png
+  mode: ConstructObject
+  prototype: WindowReinforcedDirectional
+  cost: 0
+  delay: 2
+  collisionMask: Impassable
+  collisionBounds: "-0.23,-0.49,0.23,-0.36"
+  rules:
+  - IsWindow
+  rotation: User
+  fx: EffectRCDConstruct2
+  allowMultiDirection: true
+
+- type: rcd
+  id: KsFieldAirlock
+  category: Airlocks
+  sprite: /Textures/Interface/Radial/RCD/airlock.png
+  mode: ConstructObject
+  prototype: Airlock
+  cost: 15
+  delay: 4
+  collisionMask: FullTileMask
+  rotation: Camera
+  fx: EffectRCDConstruct4
+
+- type: rcd
+  id: KsFieldAirlockGlass
+  category: Airlocks
+  sprite: /Textures/Interface/Radial/RCD/glass_airlock.png
+  mode: ConstructObject
+  prototype: AirlockGlass
+  cost: 15
+  delay: 4
+  collisionMask: FullTileMask
+  rotation: Camera
+  fx: EffectRCDConstruct4
+
+- type: rcd
+  id: KsFieldFirelock
+  category: Airlocks
+  sprite: /Textures/Interface/Radial/RCD/firelock.png
+  mode: ConstructObject
+  prototype: Firelock
+  cost: 10
+  delay: 3
+  collisionMask: FullTileMask
+  rotation: Camera
+  fx: EffectRCDConstruct3
+
+- type: rcd
+  id: KsFieldTubeLight
+  category: Lighting
+  sprite: /Textures/Interface/Radial/RCD/tube_light.png
+  mode: ConstructObject
+  prototype: Poweredlight
+  cost: 0
+  delay: 1
+  collisionMask: TabletopMachineMask
+  collisionBounds: "-0.23,-0.49,0.23,-0.36"
+  rotation: User
+  fx: EffectRCDConstruct1
+  allowMultiDirection: true
+
+- type: rcd
+  id: KsFieldBulbLight
+  category: Lighting
+  sprite: /Textures/Interface/Radial/RCD/bulb_light.png
+  mode: ConstructObject
+  prototype: PoweredSmallLight
+  cost: 0
+  delay: 1
+  collisionMask: TabletopMachineMask
+  collisionBounds: "-0.23,-0.49,0.23,-0.36"
+  rotation: User
+  fx: EffectRCDConstruct1
+  allowMultiDirection: true
+
+- type: rcd
+  id: KsFieldLVCable
+  category: Electrical
+  sprite: /Textures/Interface/Radial/RCD/lv_coil.png
+  mode: ConstructObject
+  prototype: CableApcExtension
+  cost: 0
+  delay: 0
+  rules:
+  - MustBuildOnSubfloor
+  rotation: Fixed
+  fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsFieldMVCable
+  category: Electrical
+  sprite: /Textures/Interface/Radial/RCD/mv_coil.png
+  mode: ConstructObject
+  prototype: CableMV
+  cost: 0
+  delay: 0
+  rules:
+  - MustBuildOnSubfloor
+  rotation: Fixed
+  fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsFieldHVCable
+  category: Electrical
+  sprite: /Textures/Interface/Radial/RCD/hv_coil.png
+  mode: ConstructObject
+  prototype: CableHV
+  cost: 0
+  delay: 0
+  rules:
+  - MustBuildOnSubfloor
+  rotation: Fixed
+  fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsFieldCableTerminal
+  category: Electrical
+  sprite: /Textures/Interface/Radial/RCD/cable_terminal.png
+  mode: ConstructObject
+  prototype: CableTerminal
+  cost: 0
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  fx: EffectRCDConstruct0

@@ -2799,3 +2799,87 @@ Entries:
         atmosphere, such as Field Commander's.
   id: 259
   time: '2026-11-13T12:18:30.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        Field Commander attackers now lose damage with range: full damage up to
+        8 tiles, half at 20 tiles.
+  id: 260
+  time: '2026-11-13T21:26:19.0000000+00:00'
+- author: FrauzJ
+  changes:
+    - type: Add
+      message: Shields can be used to hit and, with right click, to shove and stagger.
+    - type: Add
+      message: Hitting a shield with a melee weapon bangs on it.
+  id: 261
+  time: '2026-11-13T21:40:14.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        Field Commander attackers see less far until they're in a fight, and
+        turn on whoever shoots them.
+    - type: Add
+      message: >-
+        Field Commander kills are split between everyone who did damage, as
+        kills and assists. Turrets earn points for whoever set them up, and
+        explosives for whoever pressed the signaller.
+    - type: Tweak
+      message: >-
+        Field Commander waves come further apart but hit harder, and a counter
+        shows the wave and the time until the next one. Requisition gains are
+        50% higher.
+    - type: Tweak
+      message: >-
+        The field engineer RCD builds windows, barricades, floors, lights and
+        cables for free, but walls and airlocks cost more, and it recharges
+        slower. It no longer builds reinforced walls.
+    - type: Add
+      message: >-
+        Field Commander's base has field techfabs that print FPV drones,
+        signallers and explosives, brute packs, ointment and gauze, sandbags and
+        barbed wire. Its material silo is indestructible and full of plastic.
+    - type: Add
+      message: Sandbag walls you can shoot over, and barbed wire that slows and cuts.
+    - type: Tweak
+      message: The AT-4 fits in suit storage.
+    - type: Add
+      message: >-
+        Defenders wear a distress beacon that strobes and beeps when they're
+        down.
+    - type: Tweak
+      message: >-
+        In Field Commander, casings, dropped guns and magazines, and enemy
+        bodies dissolve away after a while.
+    - type: Tweak
+      message: >-
+        Field Commander kills go to whoever did the most damage; everyone else
+        who helped gets an assist, turrets included. Teamkill penalties are
+        shared the same way.
+    - type: Add
+      message: >-
+        After the uplink falls, players vote on holding the line in an endless
+        mode that gets harder with every wave. The round end summary says which
+        wave the defence reached.
+    - type: Tweak
+      message: >-
+        Distress beacons beep faster, glow red when critical and amber when
+        dead, and outline their wearer. Defenders flash red when they go down
+        and black when they die.
+    - type: Tweak
+      message: >-
+        Field Commander's vendor gives engineers the field RCD, stocks
+        Tricordrazine hyposprays and a brute autoinjector, and hands out base
+        gear with your loadout.
+    - type: Tweak
+      message: >-
+        The HMG turret sticks to its target until it loses sight of it and fires
+        past friends in the way.
+    - type: Fix
+      message: >-
+        NPCs find their way across long, open, cluttered ground much more
+        reliably.
+  id: 262
+  time: '2026-11-14T16:23:18.0000000+00:00'

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Made by Tornado-Technology (Github) for Stalker14; taken from Zona-14 at https://github.com/LaCumbiaDelCoronavirus/Zona-14/blob/4efbea661afaa84ebc869a4ffbebbce0e412e77b/Resources/Textures/_Stalker/Objects/Craft/craft.rsi",
+  "states": [
+    {
+      "name": "razor_wire"
+    }
+  ]
+}

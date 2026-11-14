@@ -1,0 +1,12 @@
+- type: entity
+  parent: Hypospray
+  id: KsHyposprayTricordrazine
+  name: tricordrazine hypospray
+  description: A sterile injector for rapid administration of drugs to patients. This one comes loaded with tricordrazine.
+  components:
+  - type: Solution
+    solution:
+      maxVol: 30
+      reagents:
+      - ReagentId: Tricordrazine
+        Quantity: 30

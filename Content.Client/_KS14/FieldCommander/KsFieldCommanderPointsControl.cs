@@ -54,6 +54,7 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
     private static readonly Color LossColor = Color.FromHex("#F05A4F");
 
     private readonly Label _totalLabel;
+    private readonly Label _waveLabel;
     private readonly Font _changeFont;
     private readonly List<(Label Label, float Age, int Slot)> _changes = [];
 
@@ -78,7 +79,33 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
             Visible = false,
         };
 
+        _waveLabel = new Label
+        {
+            FontOverride = resourceCache.NotoStack(variation: "Bold", size: 12),
+            FontColorOverride = Color.FromHex("#E8C77A"),
+            OutlineThicknessOverride = OutlineThickness,
+            OutlineColorOverride = OutlineColor,
+            MouseFilter = MouseFilterMode.Ignore,
+            Visible = false,
+        };
+
+        AddChild(_waveLabel);
         AddChild(_totalLabel);
+    }
+
+    /// <summary>
+    ///     What the wave line says now, or null if it's hidden, for tests.
+    /// </summary>
+    public string? WaveText => _waveLabel.Visible ? _waveLabel.Text : null;
+
+    /// <summary>
+    ///     Shows the wave line above the total, or hides it for null.
+    /// </summary>
+    public void SetWaveText(string? text)
+    {
+        _waveLabel.Visible = text != null;
+        if (text != null && _waveLabel.Text != text)
+            _waveLabel.Text = text;
     }
 
     /// <summary>
@@ -134,6 +161,9 @@ public sealed class KsFieldCommanderPointsControl : LayoutContainer
 
         _totalLabel.Measure(Vector2Helpers.Infinity);
         SetPosition(_totalLabel, new Vector2((Size.X - _totalLabel.DesiredSize.X) / 2f, TopMargin));
+
+        _waveLabel.Measure(Vector2Helpers.Infinity);
+        SetPosition(_waveLabel, new Vector2((Size.X - _waveLabel.DesiredSize.X) / 2f, TopMargin - _waveLabel.DesiredSize.Y));
 
         for (var i = _changes.Count - 1; i >= 0; i--)
         {

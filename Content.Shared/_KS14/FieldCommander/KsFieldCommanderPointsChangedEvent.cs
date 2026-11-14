@@ -1,3 +1,4 @@
+using Content.Shared._KS14.PopupLocalization;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.FieldCommander;
@@ -9,14 +10,14 @@ namespace Content.Shared._KS14.FieldCommander;
 ///     The new total isn't sent: the client reads it off the body, where the shop keeps it too.
 /// </remarks>
 /// <param name="Delta">What changed. Negative for a loss.</param>
-/// <param name="Reason">Localisation id of a short reason, such as what was killed. Takes <c>name</c>.</param>
-/// <param name="ReasonName">The name inserted into <paramref name="Reason"/>, if any.</param>
+/// <param name="Reason">
+///     A short reason, such as what was killed, unformatted: the client formats it in its own language, names in it
+///         included.
+/// </param>
 [Serializable, NetSerializable]
-public sealed class KsFieldCommanderPointsChangedEvent(int delta, string reason, string? reasonName) : EntityEventArgs
+public sealed class KsFieldCommanderPointsChangedEvent(int delta, KsPopupPayload reason) : EntityEventArgs
 {
     public readonly int Delta = delta;
 
-    public readonly string Reason = reason;
-
-    public readonly string? ReasonName = reasonName;
+    public readonly KsPopupPayload Reason = reason;
 }
