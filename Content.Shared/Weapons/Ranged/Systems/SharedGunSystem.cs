@@ -947,7 +947,7 @@ public abstract partial class SharedGunSystem : EntitySystem
     /// Trauma - made concrete, only played by client.
     /// All callers are predicted so anyone in PVS range would already play it locally anyway.
     /// </summary>
-    public void PlayImpactSound(EntityUid otherEntity, DamageSpecifier? modifiedDamage, SoundSpecifier? weaponSound, bool forceWeaponSound)
+    public void PlayImpactSound(EntityUid otherEntity, DamageSpecifier? modifiedDamage, SoundSpecifier? weaponSound, bool forceWeaponSound, bool once = false /* KS14: added param, see KsPlayImpactAudio */)
     {
         if (_netManager.IsServer)
             return;
@@ -964,17 +964,17 @@ public abstract partial class SharedGunSystem : EntitySystem
 
             if (type != null && rangedSound.SoundTypes?.TryGetValue(type, out var damageSoundType) == true)
             {
-                Audio.PlayLocal(damageSoundType, otherEntity, null, AudioParams.Default.WithVariation(MeleeSoundSystem.DamagePitchVariation));
+                KsPlayImpactAudio/* KS14: Audio.PlayLocal -> */(damageSoundType, otherEntity, AudioParams.Default.WithVariation(MeleeSoundSystem.DamagePitchVariation), once);
                 return;
             }
             if (type != null && rangedSound.SoundGroups?.TryGetValue(type, out var damageSoundGroup) == true)
             {
-                Audio.PlayLocal(damageSoundGroup, otherEntity, null, AudioParams.Default.WithVariation(MeleeSoundSystem.DamagePitchVariation));
+                KsPlayImpactAudio/* KS14: Audio.PlayLocal -> */(damageSoundGroup, otherEntity, AudioParams.Default.WithVariation(MeleeSoundSystem.DamagePitchVariation), once);
                 return;
             }
         }
 
-        Audio.PlayLocal(weaponSound, otherEntity, null);
+        KsPlayImpactAudio/* KS14: Audio.PlayLocal -> */(weaponSound, otherEntity, null, once);
     }
 
     /// <summary>

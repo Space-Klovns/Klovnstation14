@@ -38,9 +38,13 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
 
     /// <summary>
     ///     Spawns an emitter this client alone sees, attached to <paramref name="coordinates"/>. Null on the server,
-    ///         or while re-predicting.
+    ///         or while re-predicting, unless <paramref name="once"/>.
     /// </summary>
-    public abstract EntityUid? SpawnLocal(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates);
+    /// <param name="once">
+    ///     The caller makes sure this runs once, so it spawns even on a re-predicted tick: a kept projectile's hit
+    ///         (<see cref="KsSharedPredictedSpawnSystem.IsFirstTimePredicted(EntityUid)"/>), which can land on one.
+    /// </param>
+    public abstract EntityUid? SpawnLocal(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, bool once = false);
 
     /// <inheritdoc cref="SpawnLocal(ProtoId{KsParticlesPrototype}, EntityCoordinates)"/>
     public EntityUid? SpawnLocal(ProtoId<KsParticlesPrototype> prototype, EntityUid parentUid)

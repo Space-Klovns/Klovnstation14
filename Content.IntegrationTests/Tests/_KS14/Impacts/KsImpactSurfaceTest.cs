@@ -526,6 +526,107 @@ public sealed class KsImpactSurfaceTest : InteractionTest
         });
     }
 
+    /// <summary>
+    ///     A kept projectile's hit can land on a re-predicted tick, and happens only then: its impact, and its sound,
+    ///         still play. The engine's local spawns and sounds play nothing on such a tick.
+    /// </summary>
+    [Test]
+    public async Task ImpactPlaysOnARePredictedTick()
+    {
+        NetEntity wallNetEntity = default, mobNetEntity = default;
+        await Server.WaitPost(() =>
+        {
+            wallNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testWall, SpaceCoordinates(6f)));
+            mobNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testMob, SpaceCoordinates(-6f)));
+        });
+        await RunTicks(5);
+
+        var piercing = new DamageSpecifier();
+        piercing.DamageDict[PiercingDamage] = 10;
+
+        await Client.WaitAssertion(() =>
+        {
+            var impactSurfaceSystem = CEntMan.System<KsImpactSurfaceSystem>();
+            var clientTiming = Client.ResolveDependency<Robust.Client.Timing.IClientGameTiming>();
+            var coordinates = CEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(5.4f));
+            int AudioCount() => CEntMan.Count<Robust.Shared.Audio.Components.AudioComponent>();
+
+            var audioBefore = AudioCount();
+            using (clientTiming.StartPastPredictionArea())
+            {
+                Assert.That(clientTiming.IsFirstTimePredicted, Is.False);
+                impactSurfaceSystem.PlayImpact(CEntMan.GetEntity(wallNetEntity), coordinates, new Vector2(1f, 0f), piercing, piercing);
+                // Armour soaked it all: the armour sound.
+                impactSurfaceSystem.PlayImpact(CEntMan.GetEntity(mobNetEntity), coordinates, new Vector2(1f, 0f), piercing, null);
+            }
+
+            Assert.That(ClientEmitters([_testSmoke]), Has.Count.EqualTo(1), "a hit on a re-predicted tick puffed no smoke");
+            Assert.That(ClientEmitters([_testDebris]), Has.Count.EqualTo(1), "a hit on a re-predicted tick threw no debris");
+            Assert.That(AudioCount(), Is.GreaterThan(audioBefore), "a hit on a re-predicted tick played no sound");
+        });
+    }
+
+    /// <summary>
+    ///     A projectile found inside a wall by the time its hit is handled (or past its middle) still makes its impact
+    ///         at the face it came in by, not out of the far side.
+    /// </summary>
+    [Test]
+    public async Task ImpactComesOutOfTheFaceItCameInBy()
+    {
+        NetEntity wallNetEntity = default;
+        await Server.WaitPost(() => wallNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testWall, SpaceCoordinates(6f))));
+        await RunTicks(5);
+
+        var piercing = new DamageSpecifier();
+        piercing.DamageDict[PiercingDamage] = 10;
+
+        await Client.WaitAssertion(() =>
+        {
+            var transformSystem = CEntMan.System<SharedTransformSystem>();
+            var deepInside = transformSystem.ToCoordinates(SpaceCoordinates(6.4f));
+            CEntMan.System<KsImpactSurfaceSystem>().PlayImpact(CEntMan.GetEntity(wallNetEntity), deepInside, new Vector2(1f, 0f), piercing, piercing);
+
+            var origin = SpaceCoordinates(0f).Position;
+            var emitters = ClientEmitters([_testSmoke, _testDebris]);
+            Assert.That(emitters, Has.Count.EqualTo(2));
+            foreach (var (uid, prototype) in emitters)
+            {
+                var x = transformSystem.GetWorldPosition(uid).X - origin.X;
+                Assert.That(x, Is.InRange(5.3f, 5.5f), $"{prototype} came out at {x}, not at the near face (5.5)");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A bullet's hit sound (the flesh hit on a mob) plays on the re-predicted tick a kept projectile's hit lands on,
+    ///         when the caller says it is that hit's only time; otherwise the tick's re-predictions stay silent.
+    /// </summary>
+    [Test]
+    public async Task HitSoundPlaysOnARePredictedTickOnce()
+    {
+        NetEntity mobNetEntity = default;
+        await Server.WaitPost(() => mobNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testMob, SpaceCoordinates(0f))));
+        await RunTicks(5);
+
+        await Client.WaitAssertion(() =>
+        {
+            var gunSystem = CEntMan.System<SharedGunSystem>();
+            var clientTiming = Client.ResolveDependency<Robust.Client.Timing.IClientGameTiming>();
+            var sound = new Robust.Shared.Audio.SoundPathSpecifier("/Audio/Weapons/Guns/Hits/bullet_hit.ogg");
+            int AudioCount() => CEntMan.Count<Robust.Shared.Audio.Components.AudioComponent>();
+            var mobUid = CEntMan.GetEntity(mobNetEntity);
+
+            var audioBefore = AudioCount();
+            using (clientTiming.StartPastPredictionArea())
+                gunSystem.PlayImpactSound(mobUid, null, sound, forceWeaponSound: true);
+            Assert.That(AudioCount(), Is.EqualTo(audioBefore), "a re-prediction played the hit's sound again");
+
+            using (clientTiming.StartPastPredictionArea())
+                gunSystem.PlayImpactSound(mobUid, null, sound, forceWeaponSound: true, once: true);
+            Assert.That(AudioCount(), Is.GreaterThan(audioBefore), "a kept projectile's hit on a re-predicted tick played no sound");
+        });
+    }
+
     private async Task Shoot(NetEntity gunNetEntity, Vector2 worldTarget)
     {
         var targetCoordinates = SEntMan.GetNetCoordinates(new EntityCoordinates(MapData.MapUid, worldTarget));

@@ -10,7 +10,7 @@ namespace Content.Server._KS14.Particles;
 /// </summary>
 public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 {
-    public override EntityUid? SpawnLocal(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates) => null;
+    public override EntityUid? SpawnLocal(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, bool once = false) => null;
 
     public override EntityUid? SpawnPvs(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates)
     {

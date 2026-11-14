@@ -5,6 +5,7 @@ using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Mobs.Components;
+using Content.Shared.Physics;
 using Content.Shared.Storage;
 using Content.Shared.Storage.EntitySystems;
 using Robust.Shared.Audio;
@@ -12,6 +13,8 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -37,6 +40,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedStorageSystem _storageSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private KsSharedParticlesSystem _particlesSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
@@ -67,6 +71,16 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     /// </summary>
     public const float ArmorSoakFraction = 0.5f;
 
+    /// <summary>
+    ///     How far back along the shot <see cref="GetEntryPoint"/> starts looking for where it came in, in metres.
+    /// </summary>
+    private const float EntryCastBack = 1.5f;
+
+    /// <summary>
+    ///     How far off the surface an impact plays, so its emitter is not inside the wall.
+    /// </summary>
+    private const float EntrySurfaceOffset = 0.05f;
+
     // TGMC's playsound(source, sound_bounce, 50, TRUE, ...): half volume, varied.
     private static readonly AudioParams RicochetParams = AudioParams.Default.WithVolume(-6f).WithVariation(0.1f);
 
@@ -87,7 +101,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         if (_mobStateQuery.HasComp(target))
         {
             if (ballistic && IsSoaked(target, rawDamage!, dealtDamage))
-                _audioSystem.PlayLocal(ArmorSound, target, null);
+                PlayHere(ArmorSound, coordinates, null);
 
             return;
         }
@@ -95,6 +109,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         if (!ProtoMan.TryIndex(PickMaterial(target), out var material))
             return;
 
+        coordinates = GetEntryPoint(target, coordinates, worldDirection);
         var localRotation = GetLocalRotation(coordinates, -worldDirection);
         SpawnImpactParticles(material.Smoke, coordinates, localRotation);
         if (!ballistic)
@@ -102,7 +117,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         SpawnImpactParticles(material.Debris, coordinates, localRotation);
         if (material.Sound != null && _random.Prob(material.SoundChance))
-            _audioSystem.PlayLocal(material.Sound, target, null, RicochetParams);
+            PlayHere(material.Sound, coordinates, RicochetParams);
     }
 
     /// <summary>
@@ -192,6 +207,48 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Where the shot came into <paramref name="target"/>: the projectile is often found inside or past a wall by
+    ///         the time its contact is handled, and its impact would come out of the far side. Casts back along the
+    ///         shot from a little behind it, against the target alone, and takes the nearest hit, stepped back off the
+    ///         surface. Leaves <paramref name="coordinates"/> as they are when nothing is found.
+    /// </summary>
+    private EntityCoordinates GetEntryPoint(EntityUid target, EntityCoordinates coordinates, Vector2 worldDirection)
+    {
+        if (worldDirection.LengthSquared() <= float.Epsilon)
+            return coordinates;
+
+        var mapCoordinates = _transformSystem.ToMapCoordinates(coordinates);
+        var direction = Vector2.Normalize(worldDirection);
+        var start = mapCoordinates.Position - direction * EntryCastBack;
+        var ray = new CollisionRay(start, direction, (int)CollisionGroup.AllMask);
+
+        float? nearest = null;
+        foreach (var hit in _physicsSystem.IntersectRayWithPredicate(mapCoordinates.MapId, ray, target,
+                     static (uid, targetUid) => uid != targetUid, maxLength: EntryCastBack * 2f, returnOnFirstHit: false))
+        {
+            if (nearest == null || hit.Distance < nearest)
+                nearest = hit.Distance;
+        }
+
+        // Nothing between the cast's start and the projectile: it stopped short of the surface, where it is.
+        if (nearest is not { } distance || distance >= EntryCastBack)
+            return coordinates;
+
+        var entry = start + direction * Math.Max(0f, distance - EntrySurfaceOffset);
+        return _transformSystem.ToCoordinates(coordinates.EntityId, new MapCoordinates(entry, mapCoordinates.MapId));
+    }
+
+    /// <summary>
+    ///     Plays a sound for this client alone at <paramref name="coordinates"/>. Not <c>PlayLocal</c>, which is
+    ///         <c>PlayPredicted</c> on the client and so silent on the re-predicted tick a kept projectile's hit can land
+    ///         on; the callers make sure each hit plays once.
+    /// </summary>
+    private void PlayHere(SoundSpecifier sound, EntityCoordinates coordinates, AudioParams? audioParams)
+    {
+        _audioSystem.PlayStatic(sound, Filter.Local(), coordinates, recordReplay: false, audioParams ?? sound.Params);
+    }
+
+    /// <summary>
     ///     The rotation in the coordinates' parent's frame that points a prototype's -y along
     ///         <paramref name="worldDirection"/>. The emitter is square to that parent (followRotation off).
     /// </summary>
@@ -207,7 +264,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
     private void SpawnImpactParticles(ProtoId<KsParticlesPrototype>? prototype, EntityCoordinates coordinates, Angle localRotation)
     {
         if (prototype is not { } prototypeId ||
-            _particlesSystem.SpawnLocal(prototypeId, coordinates) is not { } emitterUid)
+            _particlesSystem.SpawnLocal(prototypeId, coordinates, once: true) is not { } emitterUid)
             return;
 
         _particlesSystem.SetRotation(emitterUid, localRotation);

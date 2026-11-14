@@ -124,10 +124,10 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
     #region Spawning
 
-    public override EntityUid? SpawnLocal(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates)
+    public override EntityUid? SpawnLocal(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, bool once = false)
     {
         // Re-predicting an input that already spawned this; the first prediction's copy is still here.
-        if (!_gameTiming.IsFirstTimePredicted)
+        if (!once && !_gameTiming.IsFirstTimePredicted)
             return null;
 
         var uid = SpawnAttachedTo(ParticlesEntity, coordinates);

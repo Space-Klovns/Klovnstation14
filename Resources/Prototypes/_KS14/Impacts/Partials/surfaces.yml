@@ -107,6 +107,21 @@
   # Paper instead, with a chance of how full the shelf is: an empty one only throws wood.
   - type: KsImpactSurfaceStorageFill
     material: Paper
+  # Stops bullets, and lasers (it is already an occluder): BaseStructure's fixture, plus Opaque and BulletImpassable.
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 60
+        mask:
+        - MachineMask
+        layer:
+        - Opaque
+        - MidImpassable
+        - LowImpassable
+        - BulletImpassable
 
 # DEBRIS_GLASS: windows.
 - type: !PartialOnly entity

@@ -106,27 +106,28 @@
       sprite: /Textures/_KS14/Effects/Particles/impact_debris.rsi
       state: paper
 
-# /particles/firing_smoke: a puff out of the muzzle along the shot. TGMC stops it spawning at 0.5 s and deletes the
-# holder at 0.6 s, with five alive at most, each living 0.5 s: one burst of five. KsGunFiringSmokeSystem turns -y
-# along the shot.
+# /particles/firing_smoke: a puff out of the muzzle along the shot. KsGunFiringSmokeSystem turns -y along the shot.
+# Toned down from TGMC's (five puffs at 12.5 m/s, growing to two tiles across), which fired constantly reads as fog:
+# three, slower, smaller and shorter-lived, but still a visible puff.
 - type: ksParticles
   id: KsGunFiringSmoke
-  count: 5
-  burst: 5
+  count: 3
+  burst: 3
   spawning: 0
   oneShot: true
-  lifespan: 0.5
-  fade: 2.4
+  lifespan: 0.6
+  fade: 1.2
+  color: "#FFFFFFB3"
   sprites:
   - sprite:
       sprite: /Textures/_KS14/Effects/Particles/blood_mist.rsi
       state: mist
-  scale: 0.1
-  grow: 1.2
+  scale: 0.08
+  grow: 0.35
   spin: { kind: num, a: -200, b: 200 }
-  velocity: [ 0, -12.5 ]
+  velocity: { kind: box, a: [ -0.3, -3 ], b: [ 0.3, -2 ] }
   friction: { kind: num, a: 0.9718, b: 0.9999 }
-  drift: { kind: circle, a: 2.5, b: 2.5 }
+  drift: { kind: circle, a: 0, b: 0.5 }
 
 # /particles/overheat_smoke: smoke curling up off a hot gun, for as long as it is hot. KsGunOverheatSmokeSystem turns
 # it on and off. TGMC's 3 per ds into a cap of 1000, its z-drift (GEN_SPHERE) only ordering them.
@@ -149,7 +150,7 @@
       sprite: /Textures/_KS14/Effects/Particles/smoke_small.rsi
       state: smoke_3
     weight: 2
-  position: [ 0.25, 0.25 ]
+  # TGMC's position list(8, 8) only moves BYOND's corner origin onto the gun; here the emitter is already on it.
   velocity: [ 0, 0.09375 ]
   gravity: 0, 2.96875
   friction: 0.8926

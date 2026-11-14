@@ -1,6 +1,9 @@
 using Content.IntegrationTests.Fixtures;
 using Content.Shared._KS14.Impacts;
+using System.Linq;
+using Content.Shared.Physics;
 using Content.Shared.Storage;
+using Robust.Shared.Physics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
@@ -48,6 +51,12 @@ public sealed class KsImpactSurfacePartialsTest : GameTest
                 Assert.That(bookshelf.TryComp<KsImpactSurfaceStorageFillComponent>(out var storageFillComponent, SEntMan.ComponentFactory) ? storageFillComponent.Material.Id : "none",
                     Is.EqualTo(Paper.Id), "a bookshelf's books are not paper");
                 Assert.That(bookshelf.TryComp<StorageComponent>(out _, SEntMan.ComponentFactory), "a bookshelf has no storage to fill");
+
+                // Bullets and lasers stop at a bookshelf, or none of this is ever seen.
+                Assert.That(bookshelf.TryComp<FixturesComponent>(out var fixturesComponent, SEntMan.ComponentFactory), "a bookshelf has no fixtures");
+                var layer = fixturesComponent!.Fixtures.Values.Aggregate(0, (mask, fixture) => mask | fixture.CollisionLayer);
+                Assert.That(layer & (int)CollisionGroup.BulletImpassable, Is.Not.Zero, "bullets pass through a bookshelf");
+                Assert.That(layer & (int)CollisionGroup.Opaque, Is.Not.Zero, "lasers pass through a bookshelf");
             });
         });
     }
