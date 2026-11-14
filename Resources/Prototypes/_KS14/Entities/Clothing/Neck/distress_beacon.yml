@@ -2,7 +2,7 @@
   parent: ClothingNeckBase
   id: KsDistressBeacon
   name: distress beacon
-  description: A neck-worn transponder. It strobes and beeps while its wearer is down, so that their side can find them in the dark.
+  description: 'A neck-worn transponder. It strobes and beeps while its wearer is down: quick and bright when they are critical, slow and dim when they are dead, so that their side can find them in the dark.'
   components:
   - type: Item
     size: Tiny

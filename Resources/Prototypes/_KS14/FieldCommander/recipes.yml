@@ -4,8 +4,8 @@
 - type: latheRecipePack
   id: KsFieldCommanderStatic
   recipes:
-  - RemoteDroneFpv
-  - RemoteDroneLaptop
+  - KsFieldRemoteDroneFpv
+  - KsFieldRemoteDroneLaptop
   - KsFieldSignallerAdvanced
   - KsFieldSignalTrigger
   - KsFieldExplosivePayload
@@ -16,7 +16,7 @@
   - KsBarbedWireCoil
 
 - type: latheRecipe
-  id: RemoteDroneFpv
+  id: KsFieldRemoteDroneFpv
   result: RemoteDroneFpv
   categories:
   - Weapons
@@ -27,7 +27,7 @@
     Glass: 200
 
 - type: latheRecipe
-  id: RemoteDroneLaptop
+  id: KsFieldRemoteDroneLaptop
   result: RemoteDroneLaptop
   categories:
   - Weapons
@@ -70,6 +70,8 @@
 - type: latheRecipe
   id: KsFieldGauze
   result: Gauze1
+  categories:
+  - Medical
   completetime: 1
   materials:
     Plastic: 50

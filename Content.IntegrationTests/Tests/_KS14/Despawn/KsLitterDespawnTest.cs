@@ -198,9 +198,21 @@ public sealed class KsLitterDespawnTest : InteractionTest
     public async Task DeadPlayerBodyStays()
     {
         await Server.WaitPost(StartRule);
-        await Server.WaitPost(() => SEntMan.System<MobStateSystem>().ChangeMobState(SPlayer, MobState.Dead));
+
+        // A player in one of the commander's units, and a unit nobody plays beside them: only being played tells them apart.
+        var unplayedUid = EntityUid.Invalid;
+        await Server.WaitPost(() =>
+        {
+            SEntMan.EnsureComponent<Content.Server._KS14.FieldCommander.KsFieldCommanderUnitComponent>(SPlayer);
+            unplayedUid = SEntMan.SpawnEntity(_unit, SEntMan.GetCoordinates(PlayerCoords));
+
+            var mobStateSystem = SEntMan.System<MobStateSystem>();
+            mobStateSystem.ChangeMobState(SPlayer, MobState.Dead);
+            mobStateSystem.ChangeMobState(unplayedUid, MobState.Dead);
+        });
 
         await RunSeconds(BodyDelay + DissolveSlack);
+        Assert.That(Gone(unplayedUid), Is.True, "A dead unit nobody plays never dissolved.");
         Assert.That(Gone(SPlayer), Is.False, "A player's body dissolved.");
     }
 }

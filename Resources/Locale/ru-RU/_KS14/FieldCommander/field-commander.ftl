@@ -33,7 +33,7 @@ ks-fieldcommander-wave-4 = Пригните головы. Мои люди в н�
 ks-fieldcommander-wave-5 = Каждого убитого вами я заменю. Каждого убитого мной — вы нет.
 ks-fieldcommander-wave-6 = Держите строй, солдатики. Это последнее, что вы удержите.
 
-ks-fieldcommander-intel-wave = Полевое управление. Волна { $number }: Сенсоры фиксируют { $count } { $count ->
+ks-fieldcommander-intel-wave = Полевое управление. Волна { $number }: сенсоры фиксируют { $count } { $count ->
     [one] противника
     [few] противников
    *[other] противников

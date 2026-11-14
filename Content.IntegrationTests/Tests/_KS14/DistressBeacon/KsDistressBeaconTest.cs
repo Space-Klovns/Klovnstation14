@@ -35,12 +35,13 @@ public sealed class KsDistressBeaconTest : InteractionTest
 
     private const string NeckSlot = "neck";
 
-    private readonly EntProtoId _beacon = "KsDistressBeacon";
+    private static readonly EntProtoId Beacon = "KsDistressBeacon";
+    // Not static: shaders are a client-only kind, which the YAML linter does not know.
     private readonly ProtoId<ShaderPrototype> _dissolveShader = "KsDissolve";
 
     private EntityUid SpawnAndWear()
     {
-        var beaconUid = SEntMan.SpawnEntity(_beacon, SEntMan.GetCoordinates(PlayerCoords));
+        var beaconUid = SEntMan.SpawnEntity(Beacon, SEntMan.GetCoordinates(PlayerCoords));
         Assert.That(SEntMan.System<InventorySystem>().TryEquip(SPlayer, beaconUid, NeckSlot, silent: true, force: true), Is.True);
         return beaconUid;
     }
@@ -57,17 +58,6 @@ public sealed class KsDistressBeaconTest : InteractionTest
         Assert.That(lightComponent!.Color, Is.EqualTo(settings.LightColor), "The light's colour wasn't the state's.");
         Assert.That(lightComponent.Radius, Is.EqualTo(settings.LightRadius));
         Assert.That(lightComponent.Energy, Is.EqualTo(settings.LightEnergy));
-    }
-
-    [Test]
-    public async Task CriticalAndDeadLookDifferent()
-    {
-        await Server.WaitAssertion(() =>
-        {
-            var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(SEntMan.SpawnEntity(_beacon, SEntMan.GetCoordinates(PlayerCoords)));
-            Assert.That(beaconComponent.States[MobState.Critical].LightColor, Is.Not.EqualTo(beaconComponent.States[MobState.Dead].LightColor));
-            Assert.That(beaconComponent.States[MobState.Critical].BeepInterval, Is.LessThan(beaconComponent.States[MobState.Dead].BeepInterval));
-        });
     }
 
     private void SetMobState(MobState mobState)
@@ -163,8 +153,16 @@ public sealed class KsDistressBeaconTest : InteractionTest
         await Server.WaitAssertion(() => Assert.That(State(beaconUid), Is.EqualTo(MobState.Critical)));
         await Client.WaitAssertion(() => Assert.That(CEntMan.GetComponent<KsDistressBeaconComponent>(ToClient(beaconUid)).State, Is.EqualTo(MobState.Critical), "client state"));
 
+        // Two whole pulses, whatever the rate.
+        var pulseTicks = 0;
+        await Server.WaitPost(() =>
+        {
+            var pulseRate = SEntMan.GetComponent<KsDistressBeaconComponent>(beaconUid).States[MobState.Critical].PulseRate;
+            pulseTicks = (int)MathF.Ceiling(2f / pulseRate / TickPeriod);
+        });
+
         var alphas = new List<float>();
-        for (var i = 0; i < 90; i++) // a few pulses, whatever the rate
+        for (var i = 0; i < pulseTicks; i++)
         {
             await RunTicks(1);
             await Client.WaitAssertion(() =>

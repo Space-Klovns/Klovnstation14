@@ -127,6 +127,8 @@ public sealed class KsNpcRevealAttackersTest : GameTest
             Shoot(scene);
             perceptionSystem.UpdateNow(scene.ObserverUid);
 
+            Assert.That(scene.EntManager.System<DamageableSystem>().GetTotalDamage(scene.ObserverUid), Is.GreaterThan(Content.Shared.FixedPoint.FixedPoint2.Zero),
+                "the shot should have landed, or this proves nothing");
             Assert.That(perceptionSystem.TryGetContact(scene.ObserverUid, scene.AttackerUid, out _), Is.False);
         });
     }

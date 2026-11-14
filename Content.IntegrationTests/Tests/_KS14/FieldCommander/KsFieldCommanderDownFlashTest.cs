@@ -29,6 +29,8 @@ public sealed class KsFieldCommanderDownFlashTest : GameTest
     // Ids that exist only in the test prototypes below.
     private readonly EntProtoId _defender = "KsTestDownFlashDefender";
     private readonly EntProtoId _bystander = "KsTestDownFlashBystander";
+
+    // Not static: shaders are a client-only kind, which the YAML linter does not know.
     private readonly ProtoId<ShaderPrototype> _dissolveShader = "KsDissolve";
 
     private static readonly Color CriticalColor = Color.FromHex("#12AB34CC");
@@ -128,6 +130,23 @@ public sealed class KsFieldCommanderDownFlashTest : GameTest
         await server.WaitPost(() => server.System<MobStateSystem>().ChangeMobState(defenderUid, MobState.Alive));
         await Pair.RunTicksSync(3);
         await client.WaitAssertion(() => Assert.That(Flashing(clientDefender), Is.False, "getting up flashed"));
+
+        // Revived while still flashing: getting up ends the flash there and then, well inside its own time.
+        const int syncTicks = 3;
+        var criticalDuration = TimeSpan.Zero;
+        await server.WaitPost(() => server.System<MobStateSystem>().ChangeMobState(defenderUid, MobState.Critical));
+        await Pair.RunTicksSync(syncTicks);
+        await client.WaitAssertion(() =>
+        {
+            Assert.That(Flashing(clientDefender), Is.True, "a defender going critical again should flash");
+            criticalDuration = client.EntMan.GetComponent<KsFieldCommanderDownFlashVisualsComponent>(clientDefender).Duration;
+        });
+
+        await server.WaitPost(() => server.System<MobStateSystem>().ChangeMobState(defenderUid, MobState.Alive));
+        await Pair.RunTicksSync(syncTicks);
+        Assert.That(server.Timing.TickPeriod * (syncTicks * 2 + 2), Is.LessThan(criticalDuration),
+            "the flash must still have time to run, or its ending proves nothing");
+        await client.WaitAssertion(() => Assert.That(Flashing(clientDefender), Is.False, "getting up should end a flash in progress"));
     }
 
     /// <summary>

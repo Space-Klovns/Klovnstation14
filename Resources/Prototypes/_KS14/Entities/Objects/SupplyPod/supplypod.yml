@@ -118,7 +118,7 @@
   - type: GenericVisualizer
     visuals:
       enum.SupplyPodVisuals.Landed:
-        rubble_bfg:
+        rubble_bg:
           False: { visible: false }
           True: { visible: true }
         rubble_fg:
@@ -246,7 +246,7 @@
           True: { rotation: 180 }
           False: { rotation: 0 }
       enum.SupplyPodVisuals.Landed:
-        rubble_bfg:
+        rubble_bg:
           False: { visible: false }
           True: { visible: true }
         rubble_fg:

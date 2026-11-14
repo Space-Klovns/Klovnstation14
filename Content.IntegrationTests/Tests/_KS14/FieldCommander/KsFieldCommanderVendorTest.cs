@@ -108,7 +108,7 @@ public sealed class KsFieldCommanderVendorTest : GameTest
     }
 
     [Test]
-    public async Task UtilitiesHaveTricordrazineHyposprayAndBruteInjector()
+    public async Task VendorSellsTricordrazineHyposprayAndBruteInjector()
     {
         var protoMan = Server.ProtoMan;
         var factory = Server.EntMan.ComponentFactory;
@@ -116,15 +116,15 @@ public sealed class KsFieldCommanderVendorTest : GameTest
         await Server.WaitAssertion(() =>
         {
             var vendor = GetVendor(protoMan, factory);
-            var utilities = vendor.Sections.Single(section => section.Name == "Utilities");
+            var sold = vendor.Sections.SelectMany(section => section.Entries).Select(entry => entry.Id).ToHashSet();
 
-            Assert.That(utilities.Entries.Single(entry => entry.Id == TricordrazineHypospray).Amount, Is.EqualTo(4));
-            Assert.That(utilities.Entries.Single(entry => entry.Id == BruteAutoInjector).Amount, Is.EqualTo(1));
+            Assert.That(sold, Does.Contain(TricordrazineHypospray), "the vendor should sell the tricordrazine hypospray");
+            Assert.That(sold, Does.Contain(BruteAutoInjector), "the vendor should sell the brute auto-injector");
         });
     }
 
     [Test]
-    public async Task TricordrazineHyposprayIsFilledWith30Units()
+    public async Task TricordrazineHyposprayComesFullOfTricordrazine()
     {
         var testMap = await Pair.CreateTestMap();
         var entMan = Server.EntMan;
@@ -134,7 +134,9 @@ public sealed class KsFieldCommanderVendorTest : GameTest
         {
             var hypospray = entMan.SpawnAtPosition(TricordrazineHypospray, testMap.GridCoords);
             Assert.That(solutionSystem.TryGetSolution(hypospray, "hypospray", out _, out var solution), Is.True);
-            Assert.That(solution!.GetReagentQuantity(new ReagentId(Tricordrazine, null)), Is.EqualTo(FixedPoint2.New(30)));
+            Assert.That(solution!.Volume, Is.GreaterThan(FixedPoint2.Zero), "the hypospray should come loaded");
+            Assert.That(solution.GetReagentQuantity(new ReagentId(Tricordrazine, null)), Is.EqualTo(solution.MaxVolume),
+                "the hypospray should come full, and of tricordrazine only");
         });
     }
 

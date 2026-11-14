@@ -141,49 +141,84 @@ public sealed class KsNpcTurretTargetingTest : GameTest
             entManager.SpawnEntity(TestWall, new EntityCoordinates(gridUid, wallPosition));
         });
 
-        await RunSeconds(1.5f);
-
-        await Pair.Server.WaitPost(() =>
+        // However long the turret takes to give the first up and plan again, up to a cap.
+        EntityUid? newTarget = keptUid;
+        for (var tick = 0; tick < (int)(15f * tickRate) && (newTarget == null || newTarget == keptUid); tick++)
         {
-            var lockOn = entManager.GetComponent<KsTargetLockOnComponent>(turretUid);
-            Assert.That(lockOn.Target, Is.EqualTo(keptUid == firstUid ? secondUid : firstUid), "once the first is out of sight it should take the other");
-        });
+            await Pair.RunTicksSync(1);
+            await Pair.Server.WaitPost(() => newTarget = entManager.GetComponent<KsTargetLockOnComponent>(turretUid).Target);
+        }
+
+        Assert.That(newTarget, Is.EqualTo(keptUid == firstUid ? secondUid : firstUid), "once the first is out of sight it should take the other");
     }
 
     /// <summary>
     ///     A hostile at the end of a line with a friend of the turret's in the middle of it. Only a turret that ignores
     ///         friendly blocking fires; the control holds fire, and with no friend there it fires anyway.
     /// </summary>
-    [TestCase(true, true, true)]
-    [TestCase(false, true, false)]
-    [TestCase(false, false, true)]
-    public async Task TestIgnoreFriendlyBlocking(bool ignore, bool friendInTheWay, bool shouldFire)
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestIgnoreFriendlyBlocking(bool ignore)
     {
         await OverrideCVar(Side.Server, KsCCVars.NpcSquadFireLanes, true);
 
+        var tickRate = (float)Pair.Server.ResolveDependency<IGameTiming>().TickRate;
+        var capTicks = (int)(30f * tickRate);
+        var turret = ignore ? FireThroughTurret : HoldingTurret;
+
+        // With nobody in the way either turret fires. How long that takes is how long the turret needs to wake, turn
+        //      and shoot, which is what a turret holding fire has to be given, and more, before its silence means anything.
+        var clearTicks = await TicksUntilFired(turret, friendInTheWay: false, capTicks);
+        Assert.That(clearTicks, Is.Not.Null, "with no friend in the way it should have fired");
+
+        if (ignore)
+        {
+            Assert.That(await TicksUntilFired(turret, friendInTheWay: true, capTicks), Is.Not.Null,
+                "a turret that ignores friendly blocking should have fired past the friend");
+            return;
+        }
+
+        var heldTicks = clearTicks!.Value * 3 + (int)tickRate;
+        Assert.That(await TicksUntilFired(turret, friendInTheWay: true, heldTicks), Is.Null,
+            $"control: it should hold fire for the friend (it fired within {clearTicks} ticks with nobody there)");
+    }
+
+    /// <summary>
+    ///     Sets a turret against a hostile down a line, on a field of its own, and runs until it has fired. Returns the
+    ///         ticks that took, or null if it had not by <paramref name="maxTicks"/>.
+    /// </summary>
+    private async Task<int?> TicksUntilFired(string turret, bool friendInTheWay, int maxTicks)
+    {
         var (entManager, gridUid) = await SetUpOpenGrid();
         EntityUid turretUid = default;
+        var startAmmo = 0;
 
         await Pair.Server.WaitPost(() =>
         {
-            turretUid = SpawnAt(entManager, ignore ? FireThroughTurret : HoldingTurret, gridUid, 0, 0);
+            turretUid = SpawnAt(entManager, turret, gridUid, 0, 0);
             var hostileUid = SpawnAt(entManager, NanoTrasenMob, gridUid, 6, 0);
             var godmodeSystem = entManager.System<SharedGodmodeSystem>();
             godmodeSystem.EnableGodmode(hostileUid);
 
             if (friendInTheWay)
                 godmodeSystem.EnableGodmode(SpawnAt(entManager, SyndicateMob, gridUid, 3, 0));
+
+            startAmmo = AmmoCount(entManager, turretUid);
         });
 
-        var startAmmo = AmmoCount(entManager, turretUid);
         Assert.That(startAmmo, Is.GreaterThan(0));
 
-        await RunSeconds(4f);
+        for (var tick = 1; tick <= maxTicks; tick++)
+        {
+            await Pair.RunTicksSync(1);
 
-        if (shouldFire)
-            Assert.That(AmmoCount(entManager, turretUid), Is.LessThan(startAmmo), "it should have fired");
-        else
-            Assert.That(AmmoCount(entManager, turretUid), Is.EqualTo(startAmmo), "control: it should hold fire for the friend");
+            var fired = false;
+            await Pair.Server.WaitPost(() => fired = AmmoCount(entManager, turretUid) < startAmmo);
+            if (fired)
+                return tick;
+        }
+
+        return null;
     }
 
     /// <summary>

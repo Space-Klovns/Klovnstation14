@@ -136,16 +136,29 @@ public sealed class KsDamagedSoundTest : GameTest
             }
         });
 
+        // Each damage tick moves a mob's next one on, so the times seen are the ticks there were, however far apart
+        //      contact damage puts them.
         const float seconds = 4f;
         var heard = new Dictionary<EntityUid, HeardSound>();
+        var damageTickTimes = new HashSet<TimeSpan>();
         for (var tick = 0; tick < TicksFor(TimeSpan.FromSeconds(seconds)); tick++)
         {
             await Pair.RunTicksSync(1);
-            await server.WaitPost(() => CollectSounds(server.EntMan, testMap.MapId, TestSoundPath, heard));
+            await server.WaitPost(() =>
+            {
+                CollectSounds(server.EntMan, testMap.MapId, TestSoundPath, heard);
+
+                if (server.EntMan.TryGetComponent<Content.Shared.Damage.Components.DamagedByContactComponent>(mobUids[0], out var damagedComponent)
+                    && damagedComponent.NextSecond > TimeSpan.Zero)
+                {
+                    damageTickTimes.Add(damagedComponent.NextSecond);
+                }
+            });
         }
 
-        // Contact damage ticks once a second.
-        Assert.That(heard, Has.Count.InRange((int)seconds - 1, (int)seconds + 1),
+        var damageTicks = damageTickTimes.Count;
+        Assert.That(damageTicks, Is.GreaterThanOrEqualTo(2), "the mobs should have taken contact damage more than once, or this proves nothing");
+        Assert.That(heard, Has.Count.InRange(damageTicks - 1, damageTicks + 1),
             "contact damage should play the sound once per damage tick, not once per mob in the wire");
         Assert.That(heard.Values.Select(sound => sound.ExcludedEntity), Is.All.AnyOf(mobUids[0], mobUids[1]),
             "the sound should leave out the mob in the wire, whose client predicts it");

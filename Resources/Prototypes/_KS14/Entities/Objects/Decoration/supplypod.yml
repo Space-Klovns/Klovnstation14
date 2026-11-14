@@ -3,8 +3,8 @@
 - type: entity
   id: DecorationSupplyPodFake
   name: cargo pod
-  description: Sent from orbit, down to you. It seems to have failed its self-destruct procedure. It's been derelict for too long to be of any use.
   suffix: Fake, Decorative Setpiece
+  description: Sent from orbit, down to you. It seems to have failed its self-destruct procedure. It's been derelict for too long to be of any use.
   components:
   - type: Sprite
     sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
@@ -60,7 +60,6 @@
         sound:
           collection: MetalBreak
   - type: EntityStorage
-    #masksToRemove: 0
     openOnMove: false
   - type: PlaceableSurface
     isPlaceable: true

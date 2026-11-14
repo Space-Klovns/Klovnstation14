@@ -28,8 +28,9 @@ public sealed class KsFieldCommanderLogisticsTest : GameTest
     private static readonly EntProtoId PistolBullet = "BulletPistol";
     private static readonly ProtoId<Content.Shared.Construction.Prototypes.ConstructionGraphPrototype> SandbagGraph = "KsSandbagWall";
     private static readonly ProtoId<MaterialPrototype> Plastic = "Plastic";
+    private static readonly ProtoId<Content.Shared.Damage.Prototypes.DamageTypePrototype> Blunt = "Blunt";
 
-    private static readonly ProtoId<LatheRecipePrototype>[] FieldRecipes = ["RemoteDroneFpv", "Brutepack", "KsSandbag", "KsBarbedWireCoil"];
+    private static readonly ProtoId<LatheRecipePrototype>[] FieldRecipes = ["KsFieldRemoteDroneFpv", "Brutepack", "KsSandbag", "KsBarbedWireCoil"];
 
     [Test]
     public async Task TechFabOffersFieldCommanderRecipes()
@@ -49,7 +50,7 @@ public sealed class KsFieldCommanderLogisticsTest : GameTest
     }
 
     [Test]
-    public async Task SiloIsGodmodeAndStockedWithPlastic()
+    public async Task SiloCannotBeDamagedAndIsStockedWithPlastic()
     {
         var server = Pair.Server;
         var testMap = await Pair.CreateTestMap();
@@ -58,7 +59,11 @@ public sealed class KsFieldCommanderLogisticsTest : GameTest
         {
             var siloUid = SSpawnAtPosition(Silo, testMap.GridCoords);
 
-            Assert.That(server.EntMan.HasComponent<GodmodeComponent>(siloUid), Is.True, "the silo should be indestructible");
+            var damageableSystem = server.System<Content.Shared.Damage.Systems.DamageableSystem>();
+            var damage = new Content.Shared.Damage.DamageSpecifier(SProtoMan.Index(Blunt), Content.Shared.FixedPoint.FixedPoint2.New(1000));
+            damageableSystem.TryChangeDamage(siloUid, damage, ignoreResistances: true);
+            Assert.That(server.EntMan.Deleted(siloUid), Is.False, "the silo should be indestructible");
+            Assert.That(damageableSystem.GetTotalDamage(siloUid), Is.EqualTo(Content.Shared.FixedPoint.FixedPoint2.Zero), "the silo should take no damage");
             Assert.That(server.System<SharedMaterialStorageSystem>().GetMaterialAmount(siloUid, Plastic.Id, localOnly: true), Is.GreaterThan(0), "the silo should start with plastic");
         });
     }
