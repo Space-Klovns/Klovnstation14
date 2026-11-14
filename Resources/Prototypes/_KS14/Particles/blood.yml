@@ -99,8 +99,10 @@
   burst: 22
   spawning: 0
   oneShot: true
-  lifespan: 1
-  fade: 1.7
+  # TGMC: lifespan 1, fade 1.7, scale 1 to 1.25, which starts each chunk part-faded and leaves them hard to see.
+  #   Bigger, and solid until the last half second.
+  lifespan: 1.2
+  fade: 0.5
   sprites:
   - sprite:
       sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
@@ -109,7 +111,7 @@
       sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
       state: gib_chunk_2
   gravity: 0, -9.375
-  scale: { kind: num, a: 1, b: 1.25 }
+  scale: { kind: num, a: 1.5, b: 2 }
   grow: 0.5
   rotation: { kind: num, a: -10, b: 10 }
   spin: { kind: num, a: -100, b: 100 }

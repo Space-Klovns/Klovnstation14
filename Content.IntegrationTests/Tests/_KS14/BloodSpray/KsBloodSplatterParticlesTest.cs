@@ -8,6 +8,7 @@ using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Particles;
 using Content.Shared.Body.Components;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Decals;
 using Content.Shared.Gibbing;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -282,6 +283,69 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
                     }
                 }
             });
+        });
+    }
+
+    private List<Vector2> ClientDecalPositions()
+    {
+        var positions = new List<Vector2>();
+        var query = CEntMan.AllEntityQueryEnumerator<DecalChunkComponent>();
+        while (query.MoveNext(out var chunkComponent))
+        {
+            foreach (var decal in chunkComponent.Decals.Values)
+                positions.Add(decal.Coordinates);
+        }
+
+        return positions;
+    }
+
+    /// <summary>
+    ///     A client re-predicts a hit's tick after each server state, with a moving target wherever that state put
+    ///         it. The decals of every re-prediction land where the first prediction put them, not on the target.
+    /// </summary>
+    [Test]
+    public async Task RepredictedHitOnAMovedTargetBleedsWhereItWasHit()
+    {
+        var testMap = await Pair.CreateTestMap();
+        var exitDirection = new Vector2(1f, 0f);
+        var moved = new Vector2(0f, 2f);
+
+        EntityUid mobUid = default;
+        await Server.WaitPost(() =>
+        {
+            // Floor all round, so every decal of the spray has a tile to land on, wherever it starts.
+            var mapSystem = SEntMan.System<SharedMapSystem>();
+            for (var x = -6; x <= 6; x++)
+            {
+                for (var y = -6; y <= 6; y++)
+                    mapSystem.SetTile(testMap.Grid.Owner, testMap.Grid.Comp, new Vector2i(x, y), testMap.Tile.Tile);
+            }
+
+            mobUid = SEntMan.SpawnEntity(_mob, new EntityCoordinates(testMap.Grid.Owner, new Vector2(0.5f, 0.5f)));
+        });
+        await RunTicksSync(5);
+
+        var clientMobUid = ToClientUid(mobUid);
+        await Client.WaitAssertion(() =>
+        {
+            var bloodstreamComponent = CEntMan.GetComponent<BloodstreamComponent>(clientMobUid);
+            var bloodSpraySystem = CEntMan.System<BloodSpraySystem>();
+            var transformSystem = CEntMan.System<SharedTransformSystem>();
+
+            bloodSpraySystem.HandleBleedEffects((clientMobUid, bloodstreamComponent), 20f, exitDirection);
+            var firstPrediction = ClientDecalPositions();
+            Assert.That(firstPrediction, Is.Not.Empty, "the client predicts the decals");
+
+            // The same tick again, as a re-prediction runs it, with the target moved on by a newer state.
+            var clientTransform = CEntMan.GetComponent<TransformComponent>(clientMobUid);
+            transformSystem.SetLocalPosition(clientMobUid, clientTransform.LocalPosition + moved, clientTransform);
+            bloodSpraySystem.HandleBleedEffects((clientMobUid, bloodstreamComponent), 20f, exitDirection);
+
+            foreach (var position in ClientDecalPositions())
+            {
+                Assert.That(firstPrediction.Exists(firstPosition => Vector2.Distance(firstPosition, position) < 0.001f),
+                    $"a re-predicted decal at {position} is not where the first prediction put one: it followed the target");
+            }
         });
     }
 }

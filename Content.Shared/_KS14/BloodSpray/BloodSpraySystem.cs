@@ -8,6 +8,7 @@ using Content.Shared.Damage;
 using Content.Shared.Decals;
 using Content.Shared.Physics;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -26,6 +27,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
     [Dependency] private EntityLookupSystem _lookupSystem = default!;
     [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private KsSharedParticlesSystem _particlesSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 0L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
     private static readonly Vector2 DecalOffset = Vector2.One / 2; // this is related to texture size of the blood splatter
@@ -53,6 +55,19 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
     public const float MinDismemberSpeedMultiplier = 0.5f;
     public const float MaxDismemberSpeedMultiplier = 2f;
+
+    /// <summary>
+    ///     How many ticks a client remembers where a predicted hit bled from: more than it ever re-predicts.
+    /// </summary>
+    private const int PredictedHitOriginTicks = 256;
+
+    /// <summary>
+    ///     Where a hit on <see cref="Target"/> predicted on <see cref="Tick"/> bled from, in the frame of
+    ///         <see cref="Broadphase"/>. A transient cache on the client, pruned by tick, not per-entity state.
+    /// </summary>
+    private record struct PredictedHitOrigin(EntityUid Target, GameTick Tick, EntityUid Broadphase, Vector2 LocalPosition, Vector2 LocalDeltaUnit);
+
+    private readonly List<PredictedHitOrigin> _predictedHitOrigins = new();
 
     private static readonly SpriteSpecifier.Rsi[] Textures =
     {
@@ -100,17 +115,11 @@ public sealed partial class BloodSpraySystem : EntitySystem
         // TODO: fix occasional mispredict here
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_gameTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(entity.Owner, EntityManager));
 
-        var targetTransform = Transform(entity);
-        if ((targetTransform.GridUid ?? targetTransform.MapUid) is not { } broadphaseUid)
+        if (!TryResolveHitOrigin(entity.Owner, worldDeltaUnit, out var broadphaseUid, out var localPosition, out var localDeltaUnit))
             return;
 
-        var broadphaseInvWorldMatrix = _transformSystem.GetInvWorldMatrix(broadphaseUid);
-        var localPosition = Vector2.Transform(_transformSystem.GetWorldPosition(targetTransform), broadphaseInvWorldMatrix);
-        // `Transform` instead of `TransformNormal` would apply translation, which a direction must not have.
-        var localDeltaUnit = Vector2.TransformNormal(worldDeltaUnit, broadphaseInvWorldMatrix);
-
         var bloodColor = bloodSolution.GetColor(ProtoMan);
-        SpawnSplatterParticles(entity.Owner, bloodColor, worldDeltaUnit);
+        SpawnSplatterParticles(entity.Owner, new EntityCoordinates(broadphaseUid, localPosition), bloodColor, localDeltaUnit);
 
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.12f, 0.2f)); // random alpha
 
@@ -174,15 +183,65 @@ public sealed partial class BloodSpraySystem : EntitySystem
     }
 
     /// <summary>
-    ///     A hit's spray of blood, TGMC's bloodsplatter: a puff of mist and a splatter, both flying out along
-    ///         <paramref name="worldDeltaUnit"/>. Predicted: the client that predicted the hit shows its own at once.
+    ///     Where the hit on <paramref name="targetUid"/> bleeds from, in the frame of the broadphase it is on (its
+    ///         grid, or its map in space): that is the frame the ray is cast in, the frame its hit point comes back
+    ///         in, and the frame the decals are placed in.
     /// </summary>
-    private void SpawnSplatterParticles(EntityUid uid, Color bloodColor, Vector2 worldDeltaUnit)
+    /// <remarks>
+    ///     A client re-predicts a hit's tick after every server state, with the target wherever that state put it.
+    ///         Worked out afresh each time, a moving target's predicted decals would follow it until the server's
+    ///         arrived. So the client keeps the origin of the tick's first prediction and reuses it.
+    /// </remarks>
+    private bool TryResolveHitOrigin(EntityUid targetUid, Vector2 worldDeltaUnit, out EntityUid broadphaseUid, out Vector2 localPosition, out Vector2 localDeltaUnit)
+    {
+        var tick = _gameTiming.CurTick;
+        if (_netManager.IsClient)
+        {
+            _predictedHitOrigins.RemoveAll(origin => origin.Tick.Value + PredictedHitOriginTicks < tick.Value);
+            foreach (var origin in _predictedHitOrigins)
+            {
+                if (origin.Target != targetUid || origin.Tick != tick || TerminatingOrDeleted(origin.Broadphase))
+                    continue;
+
+                broadphaseUid = origin.Broadphase;
+                localPosition = origin.LocalPosition;
+                localDeltaUnit = origin.LocalDeltaUnit;
+                return true;
+            }
+        }
+
+        localPosition = default;
+        localDeltaUnit = default;
+        var targetTransform = Transform(targetUid);
+        if ((targetTransform.GridUid ?? targetTransform.MapUid) is not { } resolvedBroadphaseUid)
+        {
+            broadphaseUid = default;
+            return false;
+        }
+
+        broadphaseUid = resolvedBroadphaseUid;
+        var broadphaseInvWorldMatrix = _transformSystem.GetInvWorldMatrix(broadphaseUid);
+        localPosition = Vector2.Transform(_transformSystem.GetWorldPosition(targetTransform), broadphaseInvWorldMatrix);
+        // `Transform` instead of `TransformNormal` would apply translation, which a direction must not have.
+        localDeltaUnit = Vector2.TransformNormal(worldDeltaUnit, broadphaseInvWorldMatrix);
+
+        if (_netManager.IsClient)
+            _predictedHitOrigins.Add(new PredictedHitOrigin(targetUid, tick, broadphaseUid, localPosition, localDeltaUnit));
+
+        return true;
+    }
+
+    /// <summary>
+    ///     A hit's spray of blood, TGMC's bloodsplatter: a puff of mist and a splatter at <paramref name="coordinates"/>,
+    ///         both flying out along <paramref name="localDeltaUnit"/>, a direction in the frame of the coordinates'
+    ///         parent. Predicted: the client that predicted the hit shows its own at once.
+    /// </summary>
+    private void SpawnSplatterParticles(EntityUid uid, EntityCoordinates coordinates, Color bloodColor, Vector2 localDeltaUnit)
     {
         // The prototypes spray along their emitter's -y, which FromWorldVec turns onto the direction.
-        var worldRotation = Angle.FromWorldVec(worldDeltaUnit);
-        SpawnBloodParticles(SplatterMistParticles, uid, bloodColor, worldRotation, speed: 1f);
-        SpawnBloodParticles(SplatterSpriteParticles, uid, bloodColor, worldRotation, speed: 1f);
+        var localRotation = Angle.FromWorldVec(localDeltaUnit);
+        SpawnBloodParticles(SplatterMistParticles, uid, coordinates, bloodColor, localRotation, speed: 1f);
+        SpawnBloodParticles(SplatterSpriteParticles, uid, coordinates, bloodColor, localRotation, speed: 1f);
     }
 
     /// <summary>
@@ -194,8 +253,9 @@ public sealed partial class BloodSpraySystem : EntitySystem
         if (!TryGetBloodColor(entity, out var bloodColor))
             return;
 
-        SpawnBloodParticles(GibExplosionParticles, entity.Owner, bloodColor, worldRotation: null, speed: 1f);
-        SpawnBloodParticles(GibSplatterParticles, entity.Owner, bloodColor, worldRotation: null, speed: 1f);
+        var coordinates = Transform(entity.Owner).Coordinates;
+        SpawnBloodParticles(GibExplosionParticles, entity.Owner, coordinates, bloodColor, localRotation: null, speed: 1f);
+        SpawnBloodParticles(GibSplatterParticles, entity.Owner, coordinates, bloodColor, localRotation: null, speed: 1f);
     }
 
     /// <summary>
@@ -213,10 +273,13 @@ public sealed partial class BloodSpraySystem : EntitySystem
         if (!TryGetBloodColor(entity, out var bloodColor))
             return;
 
-        var worldRotation = Angle.FromWorldVec(Vector2.Normalize(worldDirection));
+        var transformComponent = Transform(entity.Owner);
+        // The emitter goes on the mob's parent (its grid), so the throw is turned into that frame.
+        var parentRotation = transformComponent.ParentUid.IsValid() ? _transformSystem.GetWorldRotation(transformComponent.ParentUid) : Angle.Zero;
+        var localRotation = Angle.FromWorldVec(Vector2.Normalize(worldDirection)) - parentRotation;
         var speed = Math.Clamp(throwSpeed / DismemberReferenceThrowSpeed, MinDismemberSpeedMultiplier, MaxDismemberSpeedMultiplier);
-        SpawnBloodParticles(DismemberExplosionParticles, entity.Owner, bloodColor, worldRotation, speed);
-        SpawnBloodParticles(DismemberSplatterParticles, entity.Owner, bloodColor, worldRotation, speed);
+        SpawnBloodParticles(DismemberExplosionParticles, entity.Owner, transformComponent.Coordinates, bloodColor, localRotation, speed);
+        SpawnBloodParticles(DismemberSplatterParticles, entity.Owner, transformComponent.Coordinates, bloodColor, localRotation, speed);
     }
 
     private bool TryGetBloodColor(Entity<BloodstreamComponent?> entity, out Color bloodColor)
@@ -231,22 +294,24 @@ public sealed partial class BloodSpraySystem : EntitySystem
     }
 
     /// <summary>
-    ///     Spawns a one-shot emitter where <paramref name="uid"/> stands, rather than on it, so it stays behind
-    ///         when the mob moves or is deleted, as TGMC's temp_visuals do. <paramref name="worldRotation"/> aims the
-    ///         prototype's -y; <paramref name="speed"/> multiplies its velocities.
+    ///     Spawns a one-shot emitter at <paramref name="coordinates"/>, on the ground rather than on the mob, so it
+    ///         stays behind when the mob moves or is deleted, as TGMC's temp_visuals do. <paramref name="localRotation"/>
+    ///         aims the prototype's -y in the frame of the coordinates' parent; <paramref name="speed"/> multiplies its
+    ///         velocities. <paramref name="sourceUid"/> is the mob it is about, which tells a predicted spawn's
+    ///         re-predictions apart from a second spawn.
     /// </summary>
-    private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid uid, Color bloodColor, Angle? worldRotation, float speed)
+    private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid sourceUid, EntityCoordinates coordinates, Color bloodColor, Angle? localRotation, float speed)
     {
-        if (_particlesSystem.SpawnPredictedEffect(prototype, Transform(uid).Coordinates, uid) is not { } emitterUid)
+        if (_particlesSystem.SpawnPredictedEffect(prototype, coordinates, sourceUid) is not { } emitterUid)
             return;
 
         _particlesSystem.SetColor(emitterUid, bloodColor);
         _particlesSystem.SetSpeed(emitterUid, speed);
-        if (worldRotation is not { } rotation)
+        if (localRotation is not { } rotation)
             return;
 
-        // The emitter is square to its grid (the prototypes leave followRotation off), so aim it in the grid's frame.
-        var gridRotation = Transform(emitterUid).GridUid is { } gridUid ? _transformSystem.GetWorldRotation(gridUid) : Angle.Zero;
-        _particlesSystem.SetRotation(emitterUid, rotation - gridRotation);
+        // The emitter is square to its grid (the prototypes leave followRotation off). Its parent is that grid, or
+        //      the map in space, so a rotation in the parent's frame is already in the emitter's.
+        _particlesSystem.SetRotation(emitterUid, rotation);
     }
 }
