@@ -406,4 +406,44 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
             Assert.That(ClientEmitters(SplatterSprite, clientSide: true), Has.Count.EqualTo(1));
         });
     }
+
+    /// <summary>
+    ///     A heavier hit sprays more mist and a bigger splatter: the reference damage sprays the prototypes as they are.
+    /// </summary>
+    [Test]
+    public async Task SprayGrowsWithTheDamage()
+    {
+        var testMap = await Pair.CreateTestMap();
+
+        (float Damage, float ExpectedAmount)[] cases =
+        [
+            (BloodSpraySystem.ReferenceSprayDamage, 1f),
+            (BloodSpraySystem.ReferenceSprayDamage * 2f, 2f),
+            (BloodSpraySystem.ReferenceSprayDamage * 100f, BloodSpraySystem.MaxSprayAmount),
+        ];
+
+        await Server.WaitAssertion(() =>
+        {
+            var bloodSpraySystem = SEntMan.System<BloodSpraySystem>();
+            Assert.Multiple(() =>
+            {
+                foreach (var (damage, expectedAmount) in cases)
+                {
+                    var mobUid = SEntMan.SpawnEntity(_mob, new MapCoordinates(Vector2.Zero, testMap.MapId));
+                    var bloodstreamComponent = SEntMan.GetComponent<BloodstreamComponent>(mobUid);
+                    bloodSpraySystem.HandleBleedEffects((mobUid, bloodstreamComponent), 20f, new Vector2(1f, 0f), damage: damage);
+
+                    var emitters = ServerEmitters();
+                    var mist = SEntMan.GetComponent<KsParticlesComponent>(emitters[SplatterMist.Id]);
+                    var splatter = SEntMan.GetComponent<KsParticlesComponent>(emitters[SplatterSprite.Id]);
+                    Assert.That(mist.Amount, Is.EqualTo(expectedAmount).Within(0.001f), $"mist at {damage} damage");
+                    Assert.That(splatter.Scale, Is.EqualTo(MathF.Sqrt(expectedAmount)).Within(0.001f), $"splatter at {damage} damage");
+
+                    foreach (var emitterUid in emitters.Values)
+                        SEntMan.DeleteEntity(emitterUid);
+                    SEntMan.DeleteEntity(mobUid);
+                }
+            });
+        });
+    }
 }

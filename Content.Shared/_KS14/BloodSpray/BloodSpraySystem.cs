@@ -57,6 +57,15 @@ public sealed partial class BloodSpraySystem : EntitySystem
     public const float MaxDismemberSpeedMultiplier = 2f;
 
     /// <summary>
+    ///     The damage of a hit whose spray is the prototypes' own size. A hit of twice this sprays twice the mist,
+    ///         between <see cref="MinSprayAmount"/> and <see cref="MaxSprayAmount"/> times.
+    /// </summary>
+    public const float ReferenceSprayDamage = 15f;
+
+    public const float MinSprayAmount = 0.3f;
+    public const float MaxSprayAmount = 3f;
+
+    /// <summary>
     ///     How many ticks a client remembers where a predicted hit bled from: more than it ever re-predicts.
     /// </summary>
     private const int PredictedHitOriginTicks = 256;
@@ -83,7 +92,10 @@ public sealed partial class BloodSpraySystem : EntitySystem
     /// <summary>
     ///     Sprays blood away from <paramref name="originUid"/>, whatever caused the bleeding.
     /// </summary>
-    public void HandleBleedEffects(Entity<BloodstreamComponent?> entity, float bloodloss, EntityUid originUid)
+    /// <param name="damage">
+    ///     The damage the hit dealt, which sizes the spray of particles. Null sizes it by <paramref name="bloodloss"/>.
+    /// </param>
+    public void HandleBleedEffects(Entity<BloodstreamComponent?> entity, float bloodloss, EntityUid originUid, float? damage = null)
     {
         if (!Resolve(entity, ref entity.Comp) ||
             TerminatingOrDeleted(originUid))
@@ -92,7 +104,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
         var worldDeltaUnit = _transformSystem.GetWorldPosition(entity.Owner) - _transformSystem.GetWorldPosition(originUid);
 
         Vector2Helpers.Normalize(ref worldDeltaUnit);
-        HandleBleedEffects(entity!, bloodloss, worldDeltaUnit);
+        HandleBleedEffects(entity!, bloodloss, worldDeltaUnit, damage: damage);
     }
 
     /// <summary>
@@ -104,7 +116,10 @@ public sealed partial class BloodSpraySystem : EntitySystem
     ///         if it is in space): that is the frame the ray is cast in, the frame its hit point comes back in,
     ///         and the frame the decals are placed in.
     /// </remarks>
-    public void HandleBleedEffects(Entity<BloodstreamComponent> entity, float bloodloss, Vector2 worldDeltaUnit)
+    /// <param name="damage">
+    ///     The damage the hit dealt, which sizes the spray of particles. Null sizes it by <paramref name="bloodloss"/>.
+    /// </param>
+    public void HandleBleedEffects(Entity<BloodstreamComponent> entity, float bloodloss, Vector2 worldDeltaUnit, float? damage = null)
     {
         if (bloodloss <= 5f)
             return;
@@ -119,7 +134,8 @@ public sealed partial class BloodSpraySystem : EntitySystem
             return;
 
         var bloodColor = bloodSolution.GetColor(ProtoMan);
-        SpawnSplatterParticles(entity.Owner, new EntityCoordinates(broadphaseUid, localPosition), bloodColor, localDeltaUnit);
+        var sprayAmount = Math.Clamp((damage ?? bloodloss) / ReferenceSprayDamage, MinSprayAmount, MaxSprayAmount);
+        SpawnSplatterParticles(entity.Owner, new EntityCoordinates(broadphaseUid, localPosition), bloodColor, localDeltaUnit, sprayAmount);
 
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.12f, 0.2f)); // random alpha
 
@@ -234,14 +250,15 @@ public sealed partial class BloodSpraySystem : EntitySystem
     /// <summary>
     ///     A hit's spray of blood, TGMC's bloodsplatter: a puff of mist and a splatter at <paramref name="coordinates"/>,
     ///         both flying out along <paramref name="localDeltaUnit"/>, a direction in the frame of the coordinates'
-    ///         parent. Predicted: the client that predicted the hit shows its own at once.
+    ///         parent. Predicted: the client that predicted the hit shows its own at once. <paramref name="amount"/>
+    ///         multiplies the mist; the single splatter grows with its square root.
     /// </summary>
-    private void SpawnSplatterParticles(EntityUid uid, EntityCoordinates coordinates, Color bloodColor, Vector2 localDeltaUnit)
+    private void SpawnSplatterParticles(EntityUid uid, EntityCoordinates coordinates, Color bloodColor, Vector2 localDeltaUnit, float amount)
     {
         // The prototypes spray along their emitter's -y, which FromWorldVec turns onto the direction.
         var localRotation = Angle.FromWorldVec(localDeltaUnit);
-        SpawnBloodParticles(SplatterMistParticles, uid, coordinates, bloodColor, localRotation, speed: 1f);
-        SpawnBloodParticles(SplatterSpriteParticles, uid, coordinates, bloodColor, localRotation, speed: 1f);
+        SpawnBloodParticles(SplatterMistParticles, uid, coordinates, bloodColor, localRotation, speed: 1f, amount: amount);
+        SpawnBloodParticles(SplatterSpriteParticles, uid, coordinates, bloodColor, localRotation, speed: 1f, scale: MathF.Sqrt(amount));
     }
 
     /// <summary>
@@ -297,16 +314,19 @@ public sealed partial class BloodSpraySystem : EntitySystem
     ///     Spawns a one-shot emitter at <paramref name="coordinates"/>, on the ground rather than on the mob, so it
     ///         stays behind when the mob moves or is deleted, as TGMC's temp_visuals do. <paramref name="localRotation"/>
     ///         aims the prototype's -y in the frame of the coordinates' parent; <paramref name="speed"/> multiplies its
-    ///         velocities. <paramref name="sourceUid"/> is the mob it is about, which tells a predicted spawn's
+    ///         velocities, <paramref name="amount"/> how many particles spawn and <paramref name="scale"/> the whole
+    ///         effect. <paramref name="sourceUid"/> is the mob it is about, which tells a predicted spawn's
     ///         re-predictions apart from a second spawn.
     /// </summary>
-    private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid sourceUid, EntityCoordinates coordinates, Color bloodColor, Angle? localRotation, float speed)
+    private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid sourceUid, EntityCoordinates coordinates, Color bloodColor, Angle? localRotation, float speed, float amount = 1f, float scale = 1f)
     {
         if (_particlesSystem.SpawnPredictedEffect(prototype, coordinates, sourceUid) is not { } emitterUid)
             return;
 
         _particlesSystem.SetColor(emitterUid, bloodColor);
         _particlesSystem.SetSpeed(emitterUid, speed);
+        _particlesSystem.SetAmount(emitterUid, amount);
+        _particlesSystem.SetScale(emitterUid, scale);
         if (localRotation is not { } rotation)
             return;
 

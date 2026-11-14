@@ -46,6 +46,13 @@ public sealed partial class KsParticlesComponent : Component
     public Angle Rotation;
 
     /// <summary>
+    ///     Multiplies how many particles spawn: the burst, the rate and the most alive at once. A heavier hit, a
+    ///         bigger spray.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Amount = 1f;
+
+    /// <summary>
     ///     Multiplies every particle's starting velocity, and nothing else: a harder throw, a faster spray.
     /// </summary>
     [DataField, AutoNetworkedField]

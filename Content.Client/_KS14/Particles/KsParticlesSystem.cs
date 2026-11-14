@@ -376,12 +376,12 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     /// </summary>
     public void Step(KsParticlesComponent particlesComponent, KsParticleEmitterComponent emitterComponent, KsParticlesPrototype prototype, float dt)
     {
-        var maxCount = Math.Max(0, (int)MathF.Ceiling(prototype.Count * _density));
+        var maxCount = Math.Max(0, (int)MathF.Ceiling(prototype.Count * _density * particlesComponent.Amount));
 
         if (!emitterComponent.BurstDone)
         {
             emitterComponent.BurstDone = true;
-            var burst = (int)MathF.Ceiling(prototype.Burst * _density);
+            var burst = (int)MathF.Ceiling(prototype.Burst * _density * particlesComponent.Amount);
             for (var i = 0; i < burst && TrySpawn(particlesComponent, emitterComponent, prototype, maxCount); i++)
             {
             }
@@ -392,7 +392,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
         if (emitting)
         {
-            emitterComponent.SpawnAccumulator += prototype.Spawning * _density * dt;
+            emitterComponent.SpawnAccumulator += prototype.Spawning * _density * particlesComponent.Amount * dt;
             var owed = (int)emitterComponent.SpawnAccumulator;
             emitterComponent.SpawnAccumulator -= owed;
             for (var i = 0; i < owed && TrySpawn(particlesComponent, emitterComponent, prototype, maxCount); i++)

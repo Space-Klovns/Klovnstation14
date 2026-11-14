@@ -200,7 +200,7 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
             {
                 var stateBloodloss = DamageSpecifier.ApplyModifierSet(DamageSpecifier.GetPositive(stateDamageDelta), stateModifiers);
                 if (!stateBloodloss.Empty)
-                    _bloodSpraySystem.HandleBleedEffects(ent!, (float)stateBloodloss.GetTotal() * 2f, stateOriginUid);
+                    _bloodSpraySystem.HandleBleedEffects(ent!, (float)stateBloodloss.GetTotal() * 2f, stateOriginUid, damage: (float)DamageSpecifier.GetPositive(stateDamageDelta).GetTotal());
             }
             // KS14 end
 
@@ -232,7 +232,7 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
 
         // KS14 Addition: effects
         if (args.Origin is { } originUid)
-            _bloodSpraySystem.HandleBleedEffects(ent!, totalFloat * 2f, originUid);
+            _bloodSpraySystem.HandleBleedEffects(ent!, totalFloat * 2f, originUid, damage: (float)damage.GetTotal()/* KS14: added, sizes the spray */);
 
         // Critical hit. Causes target to lose blood, using the bleed rate modifier of the weapon, currently divided by 5
         // The crit chance is currently the bleed rate modifier divided by 25.

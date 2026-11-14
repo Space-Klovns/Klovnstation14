@@ -9,7 +9,7 @@ client only. Issue #446.
 | Piece | Where | Role |
 | --- | --- | --- |
 | `KsParticlesPrototype` (`type: ksParticles`) | `Content.Shared/_KS14/Particles/` | The effect: what spawns, how each particle moves and looks, where it draws. |
-| `KsParticlesComponent` | shared, networked | "This entity emits that prototype", plus `emitting`, `color`, `offset`, `rotation`, `speed`, `scale`. Nothing else crosses the network. |
+| `KsParticlesComponent` | shared, networked | "This entity emits that prototype", plus `emitting`, `color`, `offset`, `rotation`, `speed`, `amount`, `scale`. Nothing else crosses the network. |
 | `KsSharedParticlesSystem` | shared | The spawn helpers and the setters. |
 | `KsParticleEmitterComponent` | `Content.Client/_KS14/Particles/` | The client's simulation: the live particles, a struct array. Added to any entity carrying the shared component. |
 | `KsParticlesSystem` (client) | client | Steps every emitter in `FrameUpdate`, at the prototype's fixed tick rate. |
@@ -156,7 +156,8 @@ Per particle, all generators, sampled at spawn (BYOND's "applied on spawn"), exc
 
 The component adds a `color` multiplied over everything, an `offset` in metres, a `rotation` that turns the
 whole emitter on top of its frame (to aim a spray: the bare emitter entity doesn't rotate), a `speed` that
-multiplies starting velocities alone (a harder throw), a `scale` that scales positions, velocities and sizes
+multiplies starting velocities alone (a harder throw), an `amount` that multiplies how many spawn (burst,
+rate and the most alive at once: a heavier hit), a `scale` that scales positions, velocities and sizes
 together, and `emitting`.
 
 ## Porting a /tg/ particle

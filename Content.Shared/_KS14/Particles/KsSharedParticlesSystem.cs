@@ -176,6 +176,15 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
         Dirty(entity);
     }
 
+    public void SetAmount(Entity<KsParticlesComponent?> entity, float amount)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Amount.Equals(amount))
+            return;
+
+        entity.Comp.Amount = amount;
+        Dirty(entity);
+    }
+
     public void SetSpeed(Entity<KsParticlesComponent?> entity, float speed)
     {
         if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Speed.Equals(speed))
