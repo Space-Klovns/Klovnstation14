@@ -1,0 +1,113 @@
+# tgstation's giantslayer spear (/obj/item/spear/dragonator): "WHERES MY DRAGONATOR?!"
+# It is crafted unfired, and fire or lava forges it into the finished spear.
+
+- type: entity
+  abstract: true
+  parent: [ BaseItem, BaseMinorContraband ]
+  id: KsBaseSpearGiantslayer
+  components:
+  - type: EmbeddableProjectile
+    offset: -0.15,0.0
+  - type: ThrowingAngle
+    angle: 225
+  - type: LandAtCursor
+  - type: Tag
+    tags:
+    - Spear
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PolygonShape
+          vertices:
+            - -0.40,-0.30
+            - -0.30,-0.40
+            - 0.40,0.30
+            - 0.30,0.40
+        density: 20
+        mask:
+        - ItemMask
+        restitution: 0.3
+        friction: 0.2
+  - type: Sharp
+  - type: Item
+    size: Ginormous
+  - type: Wieldable
+  - type: UseDelay
+
+- type: entity
+  parent: KsBaseSpearGiantslayer
+  id: KsSpearGiantslayerUnfired
+  name: unfired giantslayer spear
+  description: A half-finished giantslayer spear, needs to be thrown in lava to forge the metals to a killing edge.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Melee/giantslayer_unfired.rsi
+    state: spear
+  - type: Item
+    sprite: _KS14/Objects/Weapons/Melee/giantslayer_unfired_inhands.rsi
+  - type: MeleeWeapon
+    wideAnimationRotation: -135
+    damage:
+      types:
+        Piercing: 5
+    angle: 0
+    animation: WeaponArcThrust
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Piercing: 10
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Piercing: 5
+  - type: KsTransformOnBurn
+    prototype: KsSpearGiantslayer
+  - type: Construction
+    graph: KsSpearGiantslayerGraph
+    node: spear
+  - type: StaticPrice
+    price: 400
+
+- type: entity
+  parent: KsBaseSpearGiantslayer
+  id: KsSpearGiantslayer
+  name: giantslayer spear
+  description: An oversized multi-bladed spear designed to kill large hostile xenoforms such as space dragons or the creatures of lavaland.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Melee/giantslayer.rsi
+    state: spear
+  - type: Item
+    sprite: _KS14/Objects/Weapons/Melee/giantslayer_inhands.rsi
+  - type: MeleeWeapon
+    wideAnimationRotation: -135
+    damage:
+      types:
+        Piercing: 13
+      percentilePenetration: # KS14 nuarmor; tgstation's 15 armour penetration
+        Piercing: 0.15
+    angle: 0
+    animation: WeaponArcThrust
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Piercing: 23
+  - type: IncreaseDamageOnWield
+    damage:
+      types:
+        Piercing: 8
+  - type: KsBane
+    whitelist:
+      components:
+      - KsMiningFauna
+    damage:
+      types:
+        Piercing: 50
+    examineText: ks-bane-examine-mining-fauna
+  - type: KsLavaProof
+  - type: StaticPrice
+    price: 1500

@@ -34,4 +34,19 @@ public sealed partial class DamageSpecifier
     /// </summary>
     [DataField]
     public bool DisableCrossInteraction = false;
+
+    /// <summary>
+    ///     Gives <paramref name="target"/> this specifier's penetration. Anything that builds a new specifier out of
+    ///         this one's damage has to call it, or whatever is applied next treats the damage as having none.
+    /// </summary>
+    private void KsCopyPenetrationTo(DamageSpecifier target)
+    {
+        if (PercentilePenetration != null)
+            target.PercentilePenetration = new(PercentilePenetration);
+
+        if (FlatPenetration != null)
+            target.FlatPenetration = new(FlatPenetration);
+
+        target.DisableCrossInteraction = DisableCrossInteraction;
+    }
 }
