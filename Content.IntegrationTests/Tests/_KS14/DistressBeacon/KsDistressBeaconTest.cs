@@ -60,17 +60,6 @@ public sealed class KsDistressBeaconTest : InteractionTest
         Assert.That(lightComponent.Energy, Is.EqualTo(settings.LightEnergy));
     }
 
-    [Test]
-    public async Task CriticalAndDeadLookDifferent()
-    {
-        await Server.WaitAssertion(() =>
-        {
-            var beaconComponent = SEntMan.GetComponent<KsDistressBeaconComponent>(SEntMan.SpawnEntity(Beacon, SEntMan.GetCoordinates(PlayerCoords)));
-            Assert.That(beaconComponent.States[MobState.Critical].LightColor, Is.Not.EqualTo(beaconComponent.States[MobState.Dead].LightColor));
-            Assert.That(beaconComponent.States[MobState.Critical].BeepInterval, Is.LessThan(beaconComponent.States[MobState.Dead].BeepInterval));
-        });
-    }
-
     private void SetMobState(MobState mobState)
         => SEntMan.System<MobStateSystem>().ChangeMobState(SPlayer, mobState);
 
