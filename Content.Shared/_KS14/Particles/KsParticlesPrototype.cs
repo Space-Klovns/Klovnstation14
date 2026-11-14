@@ -70,6 +70,35 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     public float? EmitDuration;
 
     /// <summary>
+    ///     Whether the emitter's entity deletes itself once its last particle has died: <see cref="EmitDuration"/>
+    ///         (zero if unset) plus the longest <see cref="Lifespan"/>. For effects that fire once and are gone, like
+    ///         BYOND's <c>temp_visual</c>, with <see cref="Burst"/> and/or <see cref="EmitDuration"/>. Needs a positive
+    ///         lifespan; one that lives forever is never deleted.
+    /// </summary>
+    [DataField]
+    public bool OneShot;
+
+    /// <summary>
+    ///     How long after it starts a <see cref="OneShot"/> emitter's entity lives, in seconds. Null when the emitter
+    ///         is not one-shot, or its particles can live forever.
+    /// </summary>
+    public float? OneShotLifetime
+    {
+        get
+        {
+            if (!OneShot)
+                return null;
+
+            var lifespan = Lifespan.MaxFloat;
+            if (lifespan <= 0f)
+                return null;
+
+            // One simulation step on top: the burst spawns on the emitter's first step, not the instant it appears.
+            return (EmitDuration ?? 0f) + lifespan + 1f / TickRate;
+        }
+    }
+
+    /// <summary>
     ///     The region about the emitter that its particles are expected to stay inside, in metres, used to decide
     ///         whether it is on screen. BYOND's <c>width</c> and <c>height</c>, except that particles outside it are
     ///         still drawn rather than clipped. The actual extent of the live particles is tracked as well, so this

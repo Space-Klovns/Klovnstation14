@@ -118,6 +118,13 @@ public readonly struct KsParticleGenerator
         _ => A.Z != 0f || B.Z != 0f,
     };
 
+    /// <summary>
+    ///     The largest first component this can produce: the bound a <see cref="KsParticlesPrototype.Lifespan"/> needs
+    ///         for <see cref="KsParticlesPrototype.OneShot"/>. Shapes measured by distance (circle, sphere, square,
+    ///         cube) report their largest radius.
+    /// </summary>
+    public float MaxFloat => Kind == KsParticleGeneratorKind.Constant ? A.X : MathF.Max(A.X, B.X);
+
     public static Vector4 ToVector(Color color) => new(color.R, color.G, color.B, color.A);
     public static Color ToColor(Vector4 vector) => new(vector.X, vector.Y, vector.Z, vector.W);
 

@@ -38,6 +38,27 @@ public sealed partial class KsParticlesComponent : Component
     public Vector2 Offset;
 
     /// <summary>
+    ///     Turns the whole emitter, counter-clockwise, on top of the frame it would otherwise be in (see
+    ///         <see cref="KsParticlesPrototype.FollowRotation"/>): a spray aimed one way. Unlike turning the entity, this
+    ///         works on the bare emitter entity, which doesn't rotate.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Angle Rotation;
+
+    /// <summary>
+    ///     Multiplies how many particles spawn: the burst, the rate and the most alive at once. A heavier hit, a
+    ///         bigger spray.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Amount = 1f;
+
+    /// <summary>
+    ///     Multiplies every particle's starting velocity, and nothing else: a harder throw, a faster spray.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float Speed = 1f;
+
+    /// <summary>
     ///     Scales the whole effect: positions, velocities and sizes alike.
     /// </summary>
     [DataField, AutoNetworkedField]

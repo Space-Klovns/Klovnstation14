@@ -64,6 +64,33 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
     private readonly Dictionary<string, KsParticleSpriteSet> _spriteSets = new();
 
+    /// <summary>
+    ///     How long after a predicted effect its server copy may still arrive and be matched to it: a round trip,
+    ///         with room to spare.
+    /// </summary>
+    public static readonly TimeSpan PredictedEffectMatchWindow = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    ///     How far from a predicted effect its server copy may be and still be matched to it: the predicted mob and
+    ///         the server's need not stand on the same spot.
+    /// </summary>
+    public const float PredictedEffectMatchDistance = 1.5f;
+
+    /// <summary>
+    ///     A predicted effect this client spawned (<see cref="SpawnPredictedEffect"/>), kept until its server copy
+    ///         arrives or <see cref="PredictedEffectMatchWindow"/> passes. A transient work list, not per-entity
+    ///         state: it outlives the local emitter, which may be gone before the server's copy arrives.
+    /// </summary>
+    private record struct PredictedEffect(
+        ProtoId<KsParticlesPrototype> Prototype,
+        EntityUid Source,
+        GameTick Tick,
+        MapCoordinates Coordinates,
+        TimeSpan Time,
+        bool Matched);
+
+    private readonly List<PredictedEffect> _predictedEffects = new();
+
     private bool _enabled;
     private float _density;
     private int _maxAlive;
@@ -109,6 +136,59 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     }
 
     public override EntityUid? SpawnPvs(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates) => null;
+
+    public override EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source)
+    {
+        // Not gated on IsFirstTimePredicted: a kept projectile's hit can land on a re-predicted tick, and happens
+        //      once. A re-prediction of the same spawn is the same prototype, source and tick instead.
+        // Nor on ApplyingState: a kept projectile's hit can land during the state reset, which raises its
+        //      collisions, and that is prediction too.
+        var tick = _gameTiming.CurTick;
+        foreach (var predictedEffect in _predictedEffects)
+        {
+            if (predictedEffect.Prototype == prototype && predictedEffect.Source == source && predictedEffect.Tick == tick)
+                return null;
+        }
+
+        var uid = SpawnAttachedTo(ParticlesEntity, coordinates);
+        SetPrototype(uid, prototype);
+        _predictedEffects.Add(new PredictedEffect(
+            prototype,
+            source,
+            tick,
+            TransformSystem.ToMapCoordinates(coordinates),
+            _gameTiming.RealTime,
+            Matched: false));
+        return uid;
+    }
+
+    /// <summary>
+    ///     Hides <paramref name="entity"/> here if it is the server's copy of an effect this client predicted: the
+    ///         oldest unmatched one of the same prototype, close enough, within the window.
+    /// </summary>
+    private void TryMatchPredictedEffect(Entity<KsParticlesComponent> entity, KsParticleEmitterComponent emitterComponent)
+    {
+        if (_predictedEffects.Count == 0 ||
+            IsClientSide(entity.Owner) ||
+            emitterComponent.SupersededByPrediction ||
+            entity.Comp.Prototype is not { } prototype)
+            return;
+
+        var coordinates = TransformSystem.GetMapCoordinates(entity.Owner);
+        for (var i = 0; i < _predictedEffects.Count; i++)
+        {
+            var predictedEffect = _predictedEffects[i];
+            if (predictedEffect.Matched ||
+                predictedEffect.Prototype != prototype ||
+                predictedEffect.Coordinates.MapId != coordinates.MapId ||
+                (predictedEffect.Coordinates.Position - coordinates.Position).Length() > PredictedEffectMatchDistance)
+                continue;
+
+            _predictedEffects[i] = predictedEffect with { Matched = true };
+            emitterComponent.SupersededByPrediction = true;
+            return;
+        }
+    }
 
     #endregion
 
@@ -184,6 +264,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         }
 
         emitterComponent.Sprites = GetSpriteSet(prototype);
+        TryMatchPredictedEffect(entity, emitterComponent);
         emitterComponent.TickLength = 1f / Math.Clamp(prototype.TickRate, 1f, MaxTickRate);
         emitterComponent.UsesZ = prototype.Position.CanProduceZ || prototype.Velocity.CanProduceZ || prototype.Drift.CanProduceZ;
 
@@ -204,11 +285,15 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     }
 
     /// <summary>
-    ///     Whether this is the server's copy of a spawn this client's player made and keeps a copy of, which
-    ///         <see cref="KsSharedPredictedSpawnSystem"/> hides here: that copy's particles would double the kept one's.
+    ///     Whether this is the server's copy of something this client already shows its own copy of, so its
+    ///         particles would double the local ones: a spawn this client's player made and keeps a copy of
+    ///         (<see cref="KsSharedPredictedSpawnSystem"/>), or a predicted effect (<see cref="SpawnPredictedEffect"/>).
     /// </summary>
     public bool IsHiddenHere(EntityUid uid)
     {
+        if (_emitterQuery.TryComp(uid, out var emitterComponent) && emitterComponent.SupersededByPrediction)
+            return true;
+
         return _predictedSpawnQuery.TryComp(uid, out var predictedSpawnComponent) &&
                predictedSpawnComponent.PredictingUser is { } predictingUser &&
                predictingUser == _playerManager.LocalEntity &&
@@ -222,6 +307,9 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     public override void FrameUpdate(float frameTime)
     {
         base.FrameUpdate(frameTime);
+
+        var now = _gameTiming.RealTime;
+        _predictedEffects.RemoveAll(predictedEffect => now - predictedEffect.Time > PredictedEffectMatchWindow);
 
         foreach (var layer in Layers)
             layer.Clear();
@@ -273,6 +361,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         var rotation = prototype.FollowRotation
             ? worldRotation
             : transformComponent.GridUid is { } gridUid ? TransformSystem.GetWorldRotation(gridUid) : Angle.Zero;
+        rotation += particlesComponent.Rotation;
 
         emitterComponent.MapId = transformComponent.MapID;
         emitterComponent.Rotation = rotation;
@@ -287,12 +376,12 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
     /// </summary>
     public void Step(KsParticlesComponent particlesComponent, KsParticleEmitterComponent emitterComponent, KsParticlesPrototype prototype, float dt)
     {
-        var maxCount = Math.Max(0, (int)MathF.Ceiling(prototype.Count * _density));
+        var maxCount = Math.Max(0, (int)MathF.Ceiling(prototype.Count * _density * particlesComponent.Amount));
 
         if (!emitterComponent.BurstDone)
         {
             emitterComponent.BurstDone = true;
-            var burst = (int)MathF.Ceiling(prototype.Burst * _density);
+            var burst = (int)MathF.Ceiling(prototype.Burst * _density * particlesComponent.Amount);
             for (var i = 0; i < burst && TrySpawn(particlesComponent, emitterComponent, prototype, maxCount); i++)
             {
             }
@@ -303,7 +392,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
         if (emitting)
         {
-            emitterComponent.SpawnAccumulator += prototype.Spawning * _density * dt;
+            emitterComponent.SpawnAccumulator += prototype.Spawning * _density * particlesComponent.Amount * dt;
             var owed = (int)emitterComponent.SpawnAccumulator;
             emitterComponent.SpawnAccumulator -= owed;
             for (var i = 0; i < owed && TrySpawn(particlesComponent, emitterComponent, prototype, maxCount); i++)
@@ -396,7 +485,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         ref var particle = ref emitterComponent.Particles[emitterComponent.Alive];
 
         var position = prototype.Position.SampleVector3(random);
-        var velocity = prototype.Velocity.SampleVector3(random);
+        var velocity = prototype.Velocity.SampleVector3(random) * particlesComponent.Speed;
         var scale = prototype.Scale.SampleVector2(random);
         var grow = prototype.Grow.SampleVector2(random);
         if (world)

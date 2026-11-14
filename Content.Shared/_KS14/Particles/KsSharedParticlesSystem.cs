@@ -1,7 +1,9 @@
 using System.Numerics;
 using Content.Shared._KS14.PredictedSpawning;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Spawners;
 
 namespace Content.Shared._KS14.Particles;
 
@@ -14,6 +16,8 @@ namespace Content.Shared._KS14.Particles;
 ///         <item><see cref="SpawnPredicted"/>: from a user's own predicted input. Their client keeps a copy of its
 ///             own; the server's copy is shown to everyone else (see <see cref="KsSharedPredictedSpawnSystem"/>).</item>
 ///         <item><see cref="SpawnPvs"/>: a server entity, for everyone in range. Does nothing on the client.</item>
+///         <item><see cref="SpawnPredictedEffect"/>: from shared code both sides run, whoever caused it (a hit's
+///             spray). The client that predicted it shows its own copy at once and hides the server's.</item>
 ///     </list>
 ///     An existing entity can carry the component itself instead, in its prototype or by <c>EnsureComp</c> on the
 ///         server.
@@ -23,6 +27,7 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
     [Dependency] protected KsSharedPredictedSpawnSystem PredictedSpawnSystem = default!;
     [Dependency] protected SharedTransformSystem TransformSystem = default!;
     [Dependency] private EntityQuery<KsParticlesComponent> _particlesQuery = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     /// <summary>
     ///     The bare emitter entity the spawn methods make.
@@ -70,6 +75,48 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
         return uid;
     }
 
+    /// <summary>
+    ///     Spawns a short effect from shared code that both sides run, such as the reaction to a predicted hit,
+    ///         without knowing whose input caused it. The server spawns it for everyone in range. A client predicting
+    ///         that code spawns its own copy at once, only once however often the tick is re-predicted, and hides the
+    ///         server's copy when it arrives (the same prototype, close by, soon after). A client that did not predict
+    ///         it shows the server's, a round trip later, so the effect is never lost.
+    /// </summary>
+    /// <param name="source">
+    ///     What the effect is about (the mob that was hit): with the prototype and the tick, it tells a re-prediction
+    ///         of this spawn from a second spawn.
+    /// </param>
+    /// <returns>The new emitter, or null on a client re-predicting a spawn it already made.</returns>
+    public abstract EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source);
+
+    #endregion
+
+    #region One-shot
+
+    [SubscribeLocalEvent]
+    private void OnMapInit(Entity<KsParticlesComponent> entity, ref MapInitEvent args)
+    {
+        ApplyOneShot(entity);
+    }
+
+    /// <summary>
+    ///     Gives the entity of a <see cref="KsParticlesPrototype.OneShot"/> emitter a <see cref="TimedDespawnComponent"/>
+    ///         that deletes it once its particles are gone. Only on the side that owns the entity: the server for
+    ///         networked ones, which the client couldn't delete anyway, and the client for its own.
+    /// </summary>
+    private void ApplyOneShot(Entity<KsParticlesComponent> entity)
+    {
+        if (_netManager.IsClient && !IsClientSide(entity.Owner))
+            return;
+
+        if (entity.Comp.Prototype is not { } prototypeId ||
+            !ProtoMan.TryIndex(prototypeId, out var prototype) ||
+            prototype.OneShotLifetime is not { } lifetime)
+            return;
+
+        EnsureComp<TimedDespawnComponent>(entity.Owner).Lifetime = lifetime;
+    }
+
     #endregion
 
     #region Setters
@@ -81,6 +128,7 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
 
         entity.Comp.Prototype = prototype;
         Dirty(entity);
+        ApplyOneShot((entity.Owner, entity.Comp));
         AfterPrototypeChanged((entity.Owner, entity.Comp));
     }
 
@@ -116,6 +164,33 @@ public abstract partial class KsSharedParticlesSystem : EntitySystem
             return;
 
         entity.Comp.Offset = offset;
+        Dirty(entity);
+    }
+
+    public void SetRotation(Entity<KsParticlesComponent?> entity, Angle rotation)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Rotation.Equals(rotation))
+            return;
+
+        entity.Comp.Rotation = rotation;
+        Dirty(entity);
+    }
+
+    public void SetAmount(Entity<KsParticlesComponent?> entity, float amount)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Amount.Equals(amount))
+            return;
+
+        entity.Comp.Amount = amount;
+        Dirty(entity);
+    }
+
+    public void SetSpeed(Entity<KsParticlesComponent?> entity, float speed)
+    {
+        if (!_particlesQuery.Resolve(entity.Owner, ref entity.Comp) || entity.Comp.Speed.Equals(speed))
+            return;
+
+        entity.Comp.Speed = speed;
         Dirty(entity);
     }
 

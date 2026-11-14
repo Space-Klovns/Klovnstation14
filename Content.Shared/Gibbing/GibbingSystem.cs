@@ -16,6 +16,7 @@ public sealed partial class GibbingSystem : EntitySystem
     [Dependency] private SharedDestructibleSystem _destructible = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private Content.Shared._KS14.BloodSpray.BloodSpraySystem _bloodSpraySystem = default!; // KS14
 
     private static readonly SoundSpecifier? GibSound = new SoundCollectionSpecifier("gib", AudioParams.Default.WithVariation(0.025f));
 
@@ -45,7 +46,10 @@ public sealed partial class GibbingSystem : EntitySystem
 
         // KS14 Addition: Gib effect
         if (doGibVisFx)
+        {
             PredictedSpawnAtPosition(GibEffectProtoId, Transform(ent).Coordinates);
+            _bloodSpraySystem.SpawnGibParticles(ent); // KS14: blood burst particles
+        }
 
         var gibbed = new HashSet<EntityUid>();
         var beingGibbed = new BeingGibbedEvent(gibbed);

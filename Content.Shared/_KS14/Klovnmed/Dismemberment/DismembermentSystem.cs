@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
 using Content.Shared.Chat;
@@ -29,6 +30,7 @@ public sealed partial class DismembermentSystem : EntitySystem
     //[Dependency] private KsPopupSystem _ksPopupSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SharedChatSystem _chatSystem = default!;
+    [Dependency] private BloodSpraySystem _bloodSpraySystem = default!;
 
     [Dependency] private EntityQuery<BodyComponent> _bodyQuery = default!;
     private static readonly ProtoId<EmotePrototype> DismemberEmote = "Scream";
@@ -92,6 +94,12 @@ public sealed partial class DismembermentSystem : EntitySystem
 
             _throwingSystem.TryThrow(partUid, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
         }
+
+        // The gore follows the limb; one that falls where it was still bursts, every way at once.
+        if (direction is { } sprayDirection && throwSpeed != 0f)
+            _bloodSpraySystem.SpawnDismemberParticles(bodyEntity.Owner, sprayDirection, throwSpeed);
+        else
+            _bloodSpraySystem.SpawnGibParticles(bodyEntity.Owner);
     }
 
     public void DoFixedEmote(EntityUid victimUid)
