@@ -70,6 +70,8 @@
 - type: latheRecipe
   id: KsFieldGauze
   result: Gauze1
+  categories:
+  - Medical
   completetime: 1
   materials:
     Plastic: 50
