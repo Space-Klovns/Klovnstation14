@@ -30,7 +30,7 @@ public sealed class KsFieldCommanderLogisticsTest : GameTest
     private static readonly ProtoId<MaterialPrototype> Plastic = "Plastic";
     private static readonly ProtoId<Content.Shared.Damage.Prototypes.DamageTypePrototype> Blunt = "Blunt";
 
-    private static readonly ProtoId<LatheRecipePrototype>[] FieldRecipes = ["RemoteDroneFpv", "Brutepack", "KsSandbag", "KsBarbedWireCoil"];
+    private static readonly ProtoId<LatheRecipePrototype>[] FieldRecipes = ["KsFieldRemoteDroneFpv", "Brutepack", "KsSandbag", "KsBarbedWireCoil"];
 
     [Test]
     public async Task TechFabOffersFieldCommanderRecipes()
