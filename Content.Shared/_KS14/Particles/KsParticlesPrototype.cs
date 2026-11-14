@@ -186,6 +186,13 @@ public sealed partial class KsParticlesPrototype : IPrototype, IInheritingProtot
     [DataField]
     public bool PixelSnap;
 
+    /// <summary>
+    ///     Whether, and how, particles collide with walls. Null, the default, never tests anything and costs
+    ///         nothing; particles pass through everything, as BYOND's do.
+    /// </summary>
+    [DataField]
+    public KsParticleCollision? Collision;
+
     #endregion
 
     #region Per particle

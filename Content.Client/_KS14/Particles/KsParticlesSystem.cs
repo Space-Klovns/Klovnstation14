@@ -260,6 +260,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         if (prototype == null)
         {
             emitterComponent.Sprites = null;
+            emitterComponent.Collision = null;
             return;
         }
 
@@ -267,6 +268,17 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         TryMatchPredictedEffect(entity, emitterComponent);
         emitterComponent.TickLength = 1f / Math.Clamp(prototype.TickRate, 1f, MaxTickRate);
         emitterComponent.UsesZ = prototype.Position.CanProduceZ || prototype.Velocity.CanProduceZ || prototype.Drift.CanProduceZ;
+
+        // Only an emitter that collides keeps walls; every other tests nothing.
+        if (prototype.Collision is { Enabled: true })
+        {
+            emitterComponent.Collision ??= new KsParticleCollisionCache();
+            emitterComponent.Collision.Invalidate();
+        }
+        else
+        {
+            emitterComponent.Collision = null;
+        }
 
         var initial = Math.Clamp(Math.Max(prototype.Burst, InitialCapacity), 1, Math.Max(1, prototype.Count));
         if (emitterComponent.Particles.Length < initial)
@@ -426,18 +438,22 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
                 continue;
             }
 
-            particle.Velocity += gravity * dt;
-            if (particle.Friction > 0f)
-                particle.Velocity *= MathF.Pow(1f - particle.Friction, dt);
-
-            var motion = particle.Velocity;
-            if (hasDrift)
+            // Stuck to a wall by collision: it stays where it hit.
+            if (!particle.Stuck)
             {
-                var drift = prototype.Drift.SampleVector3(random);
-                motion += world ? ToEmitter(drift, particlesComponent, emitterComponent) : drift;
-            }
+                particle.Velocity += gravity * dt;
+                if (particle.Friction > 0f)
+                    particle.Velocity *= MathF.Pow(1f - particle.Friction, dt);
 
-            particle.Position += motion * dt;
+                var motion = particle.Velocity;
+                if (hasDrift)
+                {
+                    var drift = prototype.Drift.SampleVector3(random);
+                    motion += world ? ToEmitter(drift, particlesComponent, emitterComponent) : drift;
+                }
+
+                particle.Position += motion * dt;
+            }
             particle.Rotation += particle.Spin * dt;
             particle.Scale += particle.Grow * dt;
 
@@ -466,6 +482,9 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
                 particle.Color = gradient.Evaluate(particle.GradientIndex);
             }
         }
+
+        if (emitterComponent.Collision is { } collisionCache && prototype.Collision is { } collision)
+            Collide(particlesComponent, emitterComponent, prototype, collision, collisionCache, dt);
     }
 
     private bool TrySpawn(KsParticlesComponent particlesComponent, KsParticleEmitterComponent emitterComponent, KsParticlesPrototype prototype, int maxCount)
@@ -516,6 +535,7 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
         particle.Spin = -prototype.Spin.SampleFloat(random) * DegreesToRadians;
         particle.Friction = Math.Clamp(prototype.Friction.SampleFloat(random), 0f, 1f);
         particle.Sprite = emitterComponent.Sprites?.Pick(random) ?? -1;
+        particle.Stuck = false;
 
         if (prototype.Gradient is { } gradient)
         {
