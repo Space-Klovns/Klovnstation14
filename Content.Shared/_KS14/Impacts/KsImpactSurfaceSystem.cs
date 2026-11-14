@@ -1,6 +1,8 @@
 using System.Numerics;
 using Content.Shared._KS14.Particles;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Storage;
@@ -10,8 +12,10 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Impacts;
 
@@ -22,20 +26,24 @@ namespace Content.Shared._KS14.Impacts;
 ///
 ///     All of it is cosmetic and fired for every bullet, so it only ever plays on a client, for itself
 ///         (<see cref="PlayImpact"/>): from the hit it predicted, or from the server's relayed hit when it predicted
-///         none. Nothing is networked per shot.
+///         none. No entity is networked for it: a bullet's hit rides its existing relay, and a hitscan's is one small
+///         event (<see cref="PlayImpactPredicted"/>), as its beam sprites are.
 /// </summary>
 public sealed partial class KsImpactSurfaceSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedStorageSystem _storageSystem = default!;
     [Dependency] private KsSharedParticlesSystem _particlesSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
     [Dependency] private EntityQuery<KsImpactSurfaceComponent> _surfaceQuery = default!;
     [Dependency] private EntityQuery<KsImpactSurfaceStorageFillComponent> _storageFillQuery = default!;
     [Dependency] private EntityQuery<MobStateComponent> _mobStateQuery = default!;
+    [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
 
     /// <summary>
     ///     A hit on anything else that is not a mob: smoke only, as TGMC gives every object.
@@ -78,7 +86,7 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
 
         if (_mobStateQuery.HasComp(target))
         {
-            if (ballistic && IsSoaked(rawDamage!, dealtDamage))
+            if (ballistic && IsSoaked(target, rawDamage!, dealtDamage))
                 _audioSystem.PlayLocal(ArmorSound, target, null);
 
             return;
@@ -95,6 +103,46 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
         SpawnImpactParticles(material.Debris, coordinates, localRotation);
         if (material.Sound != null && _random.Prob(material.SoundChance))
             _audioSystem.PlayLocal(material.Sound, target, null, RicochetParams);
+    }
+
+    /// <summary>
+    ///     Plays a hit's impact from shared code both sides run, for a shot only its shooter's client predicts (a
+    ///         hitscan): that client plays it at once; the server sends it to everyone else who can see it, as the
+    ///         hitscan's beam sprites are.
+    /// </summary>
+    /// <param name="hitCoordinates">Where the shot met the target, on its near side.</param>
+    /// <param name="user">Whoever fired it, whose client predicted it; none for a gun firing by itself.</param>
+    public void PlayImpactPredicted(EntityUid target, MapCoordinates hitCoordinates, Vector2 worldDirection, DamageSpecifier? rawDamage, DamageSpecifier? dealtDamage, EntityUid? user)
+    {
+        var coordinates = _transformSystem.ToCoordinates(hitCoordinates);
+        if (_netManager.IsClient)
+        {
+            if (_gameTiming.IsFirstTimePredicted)
+                PlayImpact(target, coordinates, worldDirection, rawDamage, dealtDamage);
+
+            return;
+        }
+
+        var filter = Filter.Pvs(hitCoordinates);
+        if (user is { } userUid)
+            filter.RemovePlayerByAttachedEntity(userUid);
+
+        RaiseNetworkEvent(new KsImpactSurfaceHitEvent
+        {
+            Target = GetNetEntity(target),
+            Coordinates = GetNetCoordinates(coordinates),
+            Direction = worldDirection,
+            RawDamage = rawDamage,
+            Damage = dealtDamage,
+        }, filter);
+    }
+
+    // Only a client plays these; one a client sent the server is ignored there (PlayImpact does nothing on a server).
+    [SubscribeNetworkEvent]
+    private void OnImpactSurfaceHit(KsImpactSurfaceHitEvent args)
+    {
+        if (TryGetEntity(args.Target, out var targetUid))
+            PlayImpact(targetUid.Value, GetCoordinates(args.Coordinates), args.Direction, args.RawDamage, args.Damage);
     }
 
     /// <summary>
@@ -120,14 +168,27 @@ public sealed partial class KsImpactSurfaceSystem : EntitySystem
                damage.DamageDict.TryGetValue(BluntDamage, out var blunt) && blunt > 0;
     }
 
-    public static bool IsSoaked(DamageSpecifier rawDamage, DamageSpecifier? dealtDamage)
+    /// <summary>
+    ///     Whether armour (or other protection) soaked a hit on <paramref name="target"/>: it dealt less than
+    ///         <see cref="ArmorSoakFraction"/> of what <paramref name="rawDamage"/> comes to after the target's own
+    ///         resistances (its <see cref="DamageableComponent.DamageModifierSetId"/>, which is networked) and the global
+    ///         damage modifiers. Those are taken out first, so a species that shrugs off bullets does not count as
+    ///         armoured; what is left between the two is what <c>DamageModifyEvent</c> took, which is where armour works.
+    /// </summary>
+    public bool IsSoaked(EntityUid target, DamageSpecifier rawDamage, DamageSpecifier? dealtDamage)
     {
-        var raw = (float)rawDamage.GetTotal();
-        if (raw <= 0f)
+        var expectedDamage = rawDamage;
+        if (_damageableQuery.TryComp(target, out var damageableComponent) &&
+            damageableComponent.DamageModifierSetId is { } modifierSetId &&
+            ProtoMan.Resolve(modifierSetId, out var modifierSet))
+            expectedDamage = DamageSpecifier.ApplyModifierSet(expectedDamage, modifierSet);
+
+        var expected = (float)_damageableSystem.ApplyUniversalAllModifiers(expectedDamage).GetTotal();
+        if (expected <= 0f)
             return false;
 
         var dealt = dealtDamage == null ? 0f : (float)dealtDamage.GetTotal();
-        return dealt < raw * ArmorSoakFraction;
+        return dealt < expected * ArmorSoakFraction;
     }
 
     /// <summary>

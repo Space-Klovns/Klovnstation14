@@ -30,9 +30,11 @@ public sealed class KsImpactSurfaceTest : InteractionTest
 
     private const string TestGun = "KsImpactTestGun";
     private const string TestWall = "KsImpactTestWall";
+    private const string TestLaser = "KsImpactTestLaserGun";
 
     private readonly EntProtoId _testWall = TestWall;
     private readonly EntProtoId _testMob = "KsImpactTestMob";
+    private readonly EntProtoId _testBulletproofMob = "KsImpactTestBulletproofMob";
     private readonly EntProtoId _testShelf = "KsImpactTestShelf";
     private readonly EntProtoId _testBook = "KsImpactTestBook";
     private readonly ProtoId<KsParticlesPrototype> _testSmoke = "KsImpactTestSmoke";
@@ -85,6 +87,44 @@ public sealed class KsImpactSurfaceTest : InteractionTest
     proto: CartridgePistol
     capacity: 10
     count: 10
+
+- type: entity
+  id: KsImpactTestRay
+  components:
+  - type: HitscanAmmo
+  - type: HitscanBasicRaycast
+  - type: HitscanBasicDamage
+    damage:
+      types:
+        Piercing: 10
+
+- type: entity
+  id: {TestLaser}
+  components:
+  - type: Item
+  - type: Gun
+    fireRate: 2
+    minAngle: 0
+    maxAngle: 0
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: BasicEntityAmmoProvider
+    proto: KsImpactTestRay
+    capacity: 10
+    count: 10
+
+- type: damageModifierSet
+  id: KsImpactTestBulletproofSpecies
+  coefficients:
+    Piercing: 0.25
+
+- type: entity
+  id: KsImpactTestBulletproofMob
+  components:
+  - type: MobState
+  - type: Damageable
+    damageModifierSet: KsImpactTestBulletproofSpecies
 
 - type: entity
   id: {TestWall}
@@ -359,6 +399,131 @@ public sealed class KsImpactSurfaceTest : InteractionTest
         await RunTicks(5);
         await Server.WaitAssertion(() => Assert.That(ServerFill(), Is.Zero, "emptying the shelf left a chance of paper"));
         await Client.WaitAssertion(() => Assert.That(ClientFill(), Is.Zero, "emptying the client's shelf left a chance of paper"));
+    }
+
+    /// <summary>
+    ///     A laser hit carries where it landed: the shooter's own plays its smoke and debris once, at once, back along the
+    ///         beam, and the server's relay to everyone else leaves the shooter out.
+    /// </summary>
+    [Test]
+    public async Task ShootersLaserHitThrowsDebrisBackOnce()
+    {
+        var shooterPosition = Vector2.Zero;
+        await Server.WaitPost(() =>
+        {
+            shooterPosition = SEntMan.System<SharedTransformSystem>().GetWorldPosition(SPlayer);
+            SEntMan.SpawnEntity(_testWall, new MapCoordinates(shooterPosition + new Vector2(6f, 0f), MapData.MapId));
+        });
+        await RunTicks(5);
+
+        var gunNetEntity = await PlaceInHands(TestLaser);
+        await SetCombatMode(true);
+        await RunSeconds(2f); // the pickup cooldown
+        await Shoot(gunNetEntity, shooterPosition + new Vector2(10f, 0f));
+
+        var seen = new Dictionary<EntityUid, (ProtoId<KsParticlesPrototype> Prototype, Vector2 Travel, float X)>();
+        for (var tick = 0; tick < 30; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitPost(() =>
+            {
+                var transformSystem = CEntMan.System<SharedTransformSystem>();
+                foreach (var (uid, prototype) in ClientEmitters([_testSmoke, _testDebris]))
+                    seen.TryAdd(uid, (prototype, ClientTravel(uid), transformSystem.GetWorldPosition(uid).X - shooterPosition.X));
+            });
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(seen.Values.Count(e => e.Prototype == _testSmoke), Is.EqualTo(1), "the laser's hit did not puff exactly one smoke");
+            Assert.That(seen.Values.Count(e => e.Prototype == _testDebris), Is.EqualTo(1), "the laser's hit did not throw exactly one burst of debris");
+            foreach (var (prototype, travel, x) in seen.Values)
+            {
+                Assert.That(Vector2.Dot(travel, new Vector2(-1f, 0f)), Is.GreaterThan(0.99f), $"{prototype} flies {travel}, not back along the beam");
+                Assert.That(x, Is.EqualTo(5.5f).Within(0.1f), $"{prototype} is not where the beam met the wall's near face");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     A laser nobody here fired (a turret's) still plays its impact here, once, from the server.
+    /// </summary>
+    [Test]
+    public async Task ObserverSeesTheLasersImpactOnce()
+    {
+        EntityUid gunUid = default;
+        await Server.WaitPost(() =>
+        {
+            SEntMan.SpawnEntity(_testWall, SpaceCoordinates(6f));
+            gunUid = SEntMan.SpawnEntity(TestLaser, SpaceCoordinates(0f));
+        });
+        await RunTicks(5);
+
+        await Server.WaitPost(() =>
+        {
+            var gunSystem = SEntMan.System<SharedGunSystem>();
+            var gun = new Entity<GunComponent>(gunUid, SEntMan.GetComponent<GunComponent>(gunUid));
+            var target = SEntMan.System<SharedTransformSystem>().ToCoordinates(SpaceCoordinates(10f));
+            Assert.That(gunSystem.AttemptShoot(gunUid, gun, target), "the server's laser did not fire");
+        });
+
+        var seen = new Dictionary<EntityUid, ProtoId<KsParticlesPrototype>>();
+        for (var tick = 0; tick < 30; tick++)
+        {
+            await RunTicks(1);
+            await Client.WaitPost(() =>
+            {
+                foreach (var (uid, prototype) in ClientEmitters([_testSmoke, _testDebris]))
+                    seen.TryAdd(uid, prototype);
+            });
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(seen.Values.Count(p => p == _testSmoke), Is.EqualTo(1), "the server's laser hit did not puff exactly one smoke here");
+            Assert.That(seen.Values.Count(p => p == _testDebris), Is.EqualTo(1), "the server's laser hit did not throw exactly one burst of debris here");
+        });
+    }
+
+    /// <summary>
+    ///     Armour soaking a hit is judged against what the target's own resistances leave of it: a species that takes a
+    ///         quarter of a bullet is not armoured for that, but it is once it takes less still.
+    /// </summary>
+    [Test]
+    public async Task SpeciesResistanceIsNotArmour()
+    {
+        NetEntity bulletproofNetEntity = default, plainNetEntity = default;
+        await Server.WaitPost(() =>
+        {
+            bulletproofNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testBulletproofMob, SpaceCoordinates(0f)));
+            plainNetEntity = SEntMan.GetNetEntity(SEntMan.SpawnEntity(_testMob, SpaceCoordinates(2f)));
+        });
+        await RunTicks(5);
+
+        DamageSpecifier Piercing(float amount)
+        {
+            var damage = new DamageSpecifier();
+            damage.DamageDict[PiercingDamage] = amount;
+            return damage;
+        }
+
+        await Client.WaitAssertion(() =>
+        {
+            var impactSurfaceSystem = CEntMan.System<KsImpactSurfaceSystem>();
+            var bulletproofUid = CEntMan.GetEntity(bulletproofNetEntity);
+            var plainUid = CEntMan.GetEntity(plainNetEntity);
+            Assert.Multiple(() =>
+            {
+                Assert.That(impactSurfaceSystem.IsSoaked(bulletproofUid, Piercing(10f), Piercing(2.5f)), Is.False,
+                    "the species' own resistance counted as armour");
+                Assert.That(impactSurfaceSystem.IsSoaked(bulletproofUid, Piercing(10f), Piercing(1f)),
+                    "armour soaking most of what the species let through did not count");
+                Assert.That(impactSurfaceSystem.IsSoaked(plainUid, Piercing(10f), Piercing(2.5f)),
+                    "armour soaking three quarters of a hit on a plain mob did not count");
+                Assert.That(impactSurfaceSystem.IsSoaked(plainUid, Piercing(10f), Piercing(10f)), Is.False,
+                    "an unarmoured hit counted as soaked");
+            });
+        });
     }
 
     private async Task Shoot(NetEntity gunNetEntity, Vector2 worldTarget)

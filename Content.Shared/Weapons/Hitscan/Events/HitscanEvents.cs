@@ -52,6 +52,13 @@ public record struct HitscanRaycastFiredData
     /// </summary>
     public EntityUid? HitEntity;
 
+    // KS14 start: where the ray met it, for impact effects (KsImpactSurfaceSystem)
+    /// <summary>
+    /// Where the ray met <see cref="HitEntity"/>, on its near side; null if it hit nothing.
+    /// </summary>
+    public MapCoordinates? HitCoordinates;
+    // KS14 end
+
     /// <summary>
     /// Gun that fired the raycast.
     /// </summary>
