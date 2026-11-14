@@ -2883,3 +2883,15 @@ Entries:
         reliably.
   id: 262
   time: '2026-11-14T16:23:18.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Bloody hits now spray a puff of blood mist and a splatter out of the
+        wound.
+    - type: Add
+      message: >-
+        Gibbing and losing a limb now burst out blood and gore; a lost limb's
+        gore flies after it.
+  id: 263
+  time: '2026-11-14T19:56:53.0000000+00:00'
