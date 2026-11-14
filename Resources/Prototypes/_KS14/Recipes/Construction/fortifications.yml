@@ -1,0 +1,22 @@
+- type: construction
+  id: KsBarbedWire
+  graph: KsBarbedWire
+  startNode: start
+  targetNode: barbedWire
+  category: construction-category-structures
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+
+- type: construction
+  id: KsSandbagWall
+  graph: KsSandbagWall
+  startNode: start
+  targetNode: sandbagWall
+  category: construction-category-structures
+  objectType: Structure
+  placementMode: SnapgridCenter
+  canRotate: false
+  canBuildInImpassable: false
+  conditions:
+  - !type:TileNotBlocked
