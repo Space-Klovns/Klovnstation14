@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._KS14.OverlayStains;
+using Content.Shared._KS14.Particles;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body.Components;
 using Content.Shared.Chemistry.EntitySystems;
@@ -24,6 +25,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
     [Dependency] private StainSystem _stainSystem = default!;
     [Dependency] private EntityLookupSystem _lookupSystem = default!;
     [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private KsSharedParticlesSystem _particlesSystem = default!;
 
     private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 0L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
     private static readonly Vector2 DecalOffset = Vector2.One / 2; // this is related to texture size of the blood splatter
@@ -35,6 +37,11 @@ public sealed partial class BloodSpraySystem : EntitySystem
         "KsSplatter2",
         "KsSplatter3"
     };
+
+    private static readonly ProtoId<KsParticlesPrototype> SplatterMistParticles = "KsBloodSplatterMist";
+    private static readonly ProtoId<KsParticlesPrototype> SplatterSpriteParticles = "KsBloodSplatterSprite";
+    private static readonly ProtoId<KsParticlesPrototype> GibExplosionParticles = "KsBloodExplosion";
+    private static readonly ProtoId<KsParticlesPrototype> GibSplatterParticles = "KsGibSplatter";
 
     private static readonly SpriteSpecifier.Rsi[] Textures =
     {
@@ -92,6 +99,8 @@ public sealed partial class BloodSpraySystem : EntitySystem
         var localDeltaUnit = Vector2.TransformNormal(worldDeltaUnit, broadphaseInvWorldMatrix);
 
         var bloodColor = bloodSolution.GetColor(ProtoMan);
+        SpawnSplatterParticles(entity.Owner, bloodColor, worldDeltaUnit);
+
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.12f, 0.2f)); // random alpha
 
         const float maxPower = 1.75f;
@@ -151,5 +160,50 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
             _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f), texture: predictedRandom.Pick(Textures));
+    }
+
+    /// <summary>
+    ///     A hit's spray of blood, TGMC's bloodsplatter: a puff of mist and a splatter, both flying out along
+    ///         <paramref name="worldDeltaUnit"/>. Server only; the client is sent the emitters.
+    /// </summary>
+    private void SpawnSplatterParticles(EntityUid uid, Color bloodColor, Vector2 worldDeltaUnit)
+    {
+        // The prototypes spray along their emitter's -y, which FromWorldVec turns onto the direction.
+        var worldRotation = Angle.FromWorldVec(worldDeltaUnit);
+        SpawnBloodParticles(SplatterMistParticles, uid, bloodColor, worldRotation);
+        SpawnBloodParticles(SplatterSpriteParticles, uid, bloodColor, worldRotation);
+    }
+
+    /// <summary>
+    ///     A burst of blood and gore, TGMC's gib_particles, at <paramref name="entity"/> in its blood colour: for a
+    ///         gibbing or a lost limb. Does nothing for something without blood, or on the client.
+    /// </summary>
+    public void SpawnGibParticles(Entity<BloodstreamComponent?> entity)
+    {
+        if (!Resolve(entity, ref entity.Comp, logMissing: false) ||
+            !_solutionContainerSystem.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
+            return;
+
+        var bloodColor = bloodSolution.GetColor(ProtoMan);
+        SpawnBloodParticles(GibExplosionParticles, entity.Owner, bloodColor, worldRotation: null);
+        SpawnBloodParticles(GibSplatterParticles, entity.Owner, bloodColor, worldRotation: null);
+    }
+
+    /// <summary>
+    ///     Spawns a one-shot emitter where <paramref name="uid"/> stands, rather than on it, so it stays behind
+    ///         when the mob moves or is deleted, as TGMC's temp_visuals do.
+    /// </summary>
+    private void SpawnBloodParticles(ProtoId<KsParticlesPrototype> prototype, EntityUid uid, Color bloodColor, Angle? worldRotation)
+    {
+        if (_particlesSystem.SpawnPvs(prototype, Transform(uid).Coordinates) is not { } emitterUid)
+            return;
+
+        _particlesSystem.SetColor(emitterUid, bloodColor);
+        if (worldRotation is not { } rotation)
+            return;
+
+        // The emitter is square to its grid (the prototypes leave followRotation off), so aim it in the grid's frame.
+        var gridRotation = Transform(emitterUid).GridUid is { } gridUid ? _transformSystem.GetWorldRotation(gridUid) : Angle.Zero;
+        _particlesSystem.SetRotation(emitterUid, rotation - gridRotation);
     }
 }

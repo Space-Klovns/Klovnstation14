@@ -1,0 +1,114 @@
+# Ported from TerraGov-Marine-Corps at c3c072e3644f4526d0099a79f361bde3aee9b4c7:
+#   code/game/objects/effects/temporary_visuals/miscellaneous.dm: /particles/splatter, /obj/effect/temp_visual/dir_setting/bloodsplatter
+#   code/game/objects/effects/temporary_visuals/temporary_visual.dm: /particles/blood_explosion, /particles/gib_splatter
+# BYOND values converted to SS14 units: pixels / 32 = metres, per decisecond x10 = per second, per ds^2 x100,
+# deciseconds / 10 = seconds, friction f per ds -> 1 - (1 - f)^10 per second. See Klovn/Docs/particles.md.
+# Every one of these is tinted with the blood colour by the component, as TGMC sets the holder's colour.
+
+# A hit's spray. BloodSpraySystem turns the emitter (KsParticles rotation) so that its -y points along the spray,
+# which is where TGMC turns its splatter (matrix().Turn(angle)) and sends its velocity.
+
+# /particles/splatter: count 10, spawning 10 per ds, so ten at once; the 0.5 s temp_visual deletes the holder.
+- type: ksParticles
+  id: KsBloodSplatterMist
+  size: 4, 4
+  count: 10
+  burst: 10
+  spawning: 0
+  oneShot: true
+  lifespan: 0.5
+  fade: 0.2
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_mist.rsi
+      state: mist
+  scale: 0.25
+  velocity: [ 0, -6.25 ]
+  friction: { kind: num, a: 0.9718, b: 0.9999 }
+  drift: { kind: circle, a: 0.9375, b: 0.9375 }
+  position: { kind: circle, a: 0.125, b: 0.125 }
+  spin: { kind: num, a: -200, b: 200 }
+
+# The bloodsplatter temp_visual itself: one of six sprays at alpha 200, sliding 8 px along the spray while it fades
+# out over its 0.5 s.
+- type: ksParticles
+  id: KsBloodSplatterSprite
+  size: 2, 2
+  count: 1
+  burst: 1
+  spawning: 0
+  oneShot: true
+  lifespan: 0.5
+  fade: 0.5
+  color: "#FFFFFFC8"
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: splatter1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: splatter2
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: splatter3
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: splatter4
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: splatter5
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: splatter6
+  velocity: [ 0, -0.5 ]
+
+# A gibbing or a lost limb: /obj/effect/temp_visual/gib_particles, which stops spawning at 0.5 s, before any of the
+# first wave has died, so each is one burst.
+
+# /particles/blood_explosion
+- type: ksParticles
+  id: KsBloodExplosion
+  size: 5, 5
+  count: 45
+  burst: 45
+  spawning: 0
+  oneShot: true
+  lifespan: 0.7
+  fade: 0.9
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: gib_smoke
+  scale: 0.4
+  grow: 1
+  spin: { kind: num, a: -200, b: 200 }
+  velocity: { kind: circle, a: 4.6875, b: 4.6875 }
+  friction: { kind: num, a: 0.8031, b: 0.9999 }
+  position: { kind: circle, a: 0.1875, b: 0.1875 }
+
+# /particles/gib_splatter
+- type: ksParticles
+  id: KsGibSplatter
+  size: 5, 5
+  count: 22
+  burst: 22
+  spawning: 0
+  oneShot: true
+  lifespan: 1
+  fade: 1.7
+  sprites:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: gib_chunk_1
+  - sprite:
+      sprite: /Textures/_KS14/Effects/Particles/blood_splatter.rsi
+      state: gib_chunk_2
+  gravity: 0, -9.375
+  scale: { kind: num, a: 1, b: 1.25 }
+  grow: 0.5
+  rotation: { kind: num, a: -10, b: 10 }
+  spin: { kind: num, a: -100, b: 100 }
+  velocity: [ 0, 5.625 ]
+  friction: { kind: num, a: 0.8031, b: 0.6513 }
+  position: { kind: circle, a: 0.28125, b: 0.28125 }
+  drift: { kind: circle, a: 0.625, b: 0.3125 }

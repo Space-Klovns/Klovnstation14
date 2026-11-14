@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
 using Content.Shared.Chat;
@@ -29,6 +30,7 @@ public sealed partial class DismembermentSystem : EntitySystem
     //[Dependency] private KsPopupSystem _ksPopupSystem = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SharedChatSystem _chatSystem = default!;
+    [Dependency] private BloodSpraySystem _bloodSpraySystem = default!;
 
     [Dependency] private EntityQuery<BodyComponent> _bodyQuery = default!;
     private static readonly ProtoId<EmotePrototype> DismemberEmote = "Scream";
@@ -82,6 +84,7 @@ public sealed partial class DismembermentSystem : EntitySystem
 
         var partTransform = Transform(partUid);
         _containerSystem.Remove(partUid, _containerSystem.GetContainer(partTransform.ParentUid, BodyHierarchySystem.ConstContainerId), force: true, destination: bodyEntity.Comp.Coordinates);
+        _bloodSpraySystem.SpawnGibParticles(bodyEntity.Owner);
 
         if (throwSpeed != 0f)
         {
