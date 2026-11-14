@@ -24,8 +24,6 @@ public sealed class KsNpcOpenFieldPathTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
-    private const string Wall = "WallSolid";
-
     /// <summary>
     ///     A long wall across the field with a way round at one end: the straight line to the goal runs into it. Every
     ///         poly on the near side that can see straight to the start costs, by the coarse maps' least estimate, about
@@ -66,9 +64,11 @@ public sealed class KsNpcOpenFieldPathTest : GameTest
     [Test]
     public async Task TestPathLongerThanTheNodeLimitIsFound()
     {
-        var gridUid = await MakeLayout(new Vector2i(0, 0), new Vector2i(699, 2), []);
+        // A strip a good deal longer than the limit, whatever the limit is set to.
         var nodeLimit = Server.ResolveDependency<Robust.Shared.Configuration.IConfigurationManager>().GetCVar(KsCCVars.NpcPathNodeLimit);
-        var result = await FindPath(gridUid, new Vector2i(0, 1), new Vector2i(699, 1));
+        var end = nodeLimit + nodeLimit / 3;
+        var gridUid = await MakeLayout(new Vector2i(0, 0), new Vector2i(end, 2), []);
+        var result = await FindPath(gridUid, new Vector2i(0, 1), new Vector2i(end, 1));
 
         Assert.Multiple(() =>
         {
@@ -89,7 +89,7 @@ public sealed class KsNpcOpenFieldPathTest : GameTest
 
             foreach (var wall in walls)
             {
-                SpawnAt(SEntMan, Wall, gridUid, wall.X, wall.Y);
+                SpawnAt(SEntMan, TestWall, gridUid, wall.X, wall.Y);
             }
         });
 
