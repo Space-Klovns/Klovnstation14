@@ -8,6 +8,9 @@ using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Particles;
 using Content.Shared.Body.Components;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Decals;
 using Content.Shared.Gibbing;
 using NUnit.Framework;
@@ -30,6 +33,8 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
 
     private readonly EntProtoId _mob = "KsBloodSplatterTestMob";
+    private readonly EntProtoId _damageableMob = "KsBloodSplatterTestDamageableMob";
+    private static readonly ProtoId<DamageTypePrototype> PiercingDamage = "Piercing";
 
     private static readonly ProtoId<KsParticlesPrototype> SplatterMist = "KsBloodSplatterMist";
     private static readonly ProtoId<KsParticlesPrototype> SplatterSprite = "KsBloodSplatterSprite";
@@ -45,6 +50,26 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
   components:
   - type: SolutionContainerManager
   - type: Bloodstream
+    bloodlossDamage:
+      types:
+        Bloodloss: 1
+    bloodlossHealDamage:
+      types:
+        Bloodloss: -1
+
+- type: damageModifierSet
+  id: KsBloodSplatterTestBleed
+  coefficients:
+    Piercing: 1
+
+- type: entity
+  parent: KsBloodSplatterTestMob
+  id: KsBloodSplatterTestDamageableMob
+  components:
+  - type: Damageable
+  - type: Injurable
+  - type: Bloodstream
+    damageBleedModifiers: KsBloodSplatterTestBleed
     bloodlossDamage:
       types:
         Bloodloss: 1
@@ -346,6 +371,39 @@ public sealed class KsBloodSplatterParticlesTest : GameTest
                 Assert.That(firstPrediction.Exists(firstPosition => Vector2.Distance(firstPosition, position) < 0.001f),
                     $"a re-predicted decal at {position} is not where the first prediction put one: it followed the target");
             }
+        });
+    }
+
+    /// <summary>
+    ///     The client's state reset raises collisions, so a kept projectile's predicted hit can land while a state is
+    ///         being applied. Its damage still sprays blood there at once: only a state's own damage, which has no
+    ///         origin, is left to the server.
+    /// </summary>
+    [Test]
+    public async Task HitPredictedDuringTheStateResetStillSprays()
+    {
+        var testMap = await Pair.CreateTestMap();
+
+        EntityUid mobUid = default, shooterUid = default;
+        await Server.WaitPost(() =>
+        {
+            mobUid = SEntMan.SpawnEntity(_damageableMob, new MapCoordinates(Vector2.Zero, testMap.MapId));
+            shooterUid = SEntMan.SpawnEntity(null, new MapCoordinates(new Vector2(-2f, 0f), testMap.MapId));
+        });
+        await RunTicksSync(5);
+
+        var clientMobUid = ToClientUid(mobUid);
+        var clientShooterUid = ToClientUid(shooterUid);
+        await Client.WaitAssertion(() =>
+        {
+            var damageableSystem = CEntMan.System<DamageableSystem>();
+            var damage = new DamageSpecifier(Client.ProtoMan.Index(PiercingDamage), 20);
+
+            using (Client.ResolveDependency<Robust.Client.Timing.IClientGameTiming>().StartStateApplicationArea())
+                damageableSystem.TryChangeDamage(clientMobUid, damage, origin: clientShooterUid);
+
+            Assert.That(ClientEmitters(SplatterMist, clientSide: true), Has.Count.EqualTo(1), "the hit sprays at once, state reset or not");
+            Assert.That(ClientEmitters(SplatterSprite, clientSide: true), Has.Count.EqualTo(1));
         });
     }
 }

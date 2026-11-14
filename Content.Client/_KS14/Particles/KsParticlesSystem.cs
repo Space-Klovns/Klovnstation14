@@ -139,12 +139,10 @@ public sealed partial class KsParticlesSystem : KsSharedParticlesSystem
 
     public override EntityUid? SpawnPredictedEffect(ProtoId<KsParticlesPrototype> prototype, EntityCoordinates coordinates, EntityUid source)
     {
-        // Applying a server state is not prediction: the server's copy is on its way.
-        if (_gameTiming.ApplyingState)
-            return null;
-
         // Not gated on IsFirstTimePredicted: a kept projectile's hit can land on a re-predicted tick, and happens
         //      once. A re-prediction of the same spawn is the same prototype, source and tick instead.
+        // Nor on ApplyingState: a kept projectile's hit can land during the state reset, which raises its
+        //      collisions, and that is prediction too.
         var tick = _gameTiming.CurTick;
         foreach (var predictedEffect in _predictedEffects)
         {

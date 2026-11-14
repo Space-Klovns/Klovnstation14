@@ -190,7 +190,22 @@ public abstract partial class SharedBloodstreamSystem : EntitySystem
         // But the changes to the bloodstream have also been dirtied,
         // so we prevent applying them twice.
         if (_timing.ApplyingState)
+        {
+            // KS14 start: a predicted hit can land during the client's state reset too (a kept projectile's collision
+            //      raised by it). A state's own DamageChangedEvent has no origin; a hit's still sprays its blood.
+            if (args.Origin is { } stateOriginUid &&
+                args.DamageDelta is { } stateDamageDelta &&
+                args.DamageIncreased &&
+                ProtoMan.Resolve(ent.Comp.DamageBleedModifiers, out var stateModifiers))
+            {
+                var stateBloodloss = DamageSpecifier.ApplyModifierSet(DamageSpecifier.GetPositive(stateDamageDelta), stateModifiers);
+                if (!stateBloodloss.Empty)
+                    _bloodSpraySystem.HandleBleedEffects(ent!, (float)stateBloodloss.GetTotal() * 2f, stateOriginUid);
+            }
+            // KS14 end
+
             return;
+        }
 
         if (args.DamageDelta is null || !args.DamageIncreased)
         {
